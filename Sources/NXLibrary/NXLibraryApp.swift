@@ -4,10 +4,11 @@ import SwiftUI
 struct NXLibraryApp: App {
     var body: some Scene {
         WindowGroup {
-            Text("NX Library")
-                .frame(minWidth: 1100, minHeight: 700)
+            MainView()
         }
         .windowStyle(.titleBar)
+        .windowToolbarStyle(.unified)
         .defaultSize(width: 1280, height: 800)
+        .commands { SidebarCommands() }
     }
 }
