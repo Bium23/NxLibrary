@@ -73,7 +73,9 @@ public final class CompatibilityChecker {
                             status: metalOK ? .pass : .block,
                             detail: "installed \(metal), required \(required)"))
 
-        let help = run(pythonURL.path, ["-h"]).stdout
+        let help = run(pythonURL.path, [
+            repoURL.appendingPathComponent("scripts/build_ipa_from_nsp.py").path, "-h"
+        ]).stdout
         let requiredFlags = ["--platform", "--progress", "-o", "-k", "--app-name", "--bundle-id"]
         let missing = requiredFlags.filter { !help.contains($0) }
         checks.append(.init(id: "cli", title: "nxnative CLI",

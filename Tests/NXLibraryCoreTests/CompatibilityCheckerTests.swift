@@ -37,13 +37,17 @@ final class CompatibilityCheckerTests: XCTestCase {
                              developerDir: nil, runner: runner)
     }
 
+    private var cliKey: String {
+        "python " + repo.appendingPathComponent("scripts/build_ipa_from_nsp.py").path + " -h"
+    }
+
     func testMatchingMetalAndCommitPasses() throws {
         let r = FakeRunner()
         r.outputs["git rev-parse HEAD"] = .init(status: 0, stdout: "06b7b3e\n", stderr: "")
         r.outputs["git status --porcelain"] = .init(status: 0, stdout: "", stderr: "")
         r.outputs["xcrun metal --version"] = .init(status: 0,
             stdout: "Apple metal version 32023.921 (metalfe-32023.921.6)\n", stderr: "")
-        r.outputs["python -h"] = .init(status: 0,
+        r.outputs[cliKey] = .init(status: 0,
             stdout: "--platform --progress -o -k --app-name --bundle-id\n", stderr: "")
         let report = try checker(r).check(expectedEngineCommit: "06b7b3e")
         XCTAssertTrue(report.ok)
@@ -55,7 +59,7 @@ final class CompatibilityCheckerTests: XCTestCase {
         r.outputs["git status --porcelain"] = .init(status: 0, stdout: "", stderr: "")
         r.outputs["xcrun metal --version"] = .init(status: 0,
             stdout: "Apple metal version 32023.917\n", stderr: "")
-        r.outputs["python -h"] = .init(status: 0,
+        r.outputs[cliKey] = .init(status: 0,
             stdout: "--platform --progress -o -k --app-name --bundle-id\n", stderr: "")
         let report = try checker(r).check(expectedEngineCommit: "06b7b3e")
         XCTAssertFalse(report.ok)
@@ -69,7 +73,7 @@ final class CompatibilityCheckerTests: XCTestCase {
             stdout: " M dm/gfx/nvn/dmsh_chain.h\n M dm/gfx/nvn/nvn_mtl.m\n", stderr: "")
         r.outputs["xcrun metal --version"] = .init(status: 0,
             stdout: "Apple metal version 32023.921\n", stderr: "")
-        r.outputs["python -h"] = .init(status: 0,
+        r.outputs[cliKey] = .init(status: 0,
             stdout: "--platform --progress -o -k --app-name --bundle-id\n", stderr: "")
         let report = try checker(r).check(expectedEngineCommit: "06b7b3e")
         XCTAssertFalse(report.ok)
