@@ -3,7 +3,7 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
-public final class AppViewModel: ObservableObject, BuildRunnerDelegate, InstallerServiceDelegate {
+public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     // MARK: - Storage Keys for Persistence
     private enum StorageKeys {
         static let savedGameFolder = "NXNative_SavedGameFolder"
@@ -14,6 +14,7 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
         static let savedKeepExtracted = "NXNative_SavedKeepExtracted"
         static let savedPlatform = "NXNative_SavedPlatform"
         static let savedIconAppearanceMode = "NXNative_SavedIconAppearanceMode"
+        static let allowUntestedToolchain = "NXLibrary_AllowUntestedToolchain"
     }
     
     // MARK: - Workspace & Paths
@@ -135,6 +136,19 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
     @Published public var librarySearchText: String = ""
     @Published public var isScanningLibrary: Bool = false
     @Published public var gameForSettingsSheet: PortedGame? = nil
+    @Published public var importedApps: [ImportedApp] = []
+    @Published public var environmentStatus: EnvironmentStatus? = nil
+    @Published public var compatibilityReport: CompatibilityReport? = nil
+    @Published public var keySummary: KeySummary? = nil
+    @Published public var buildState: BuildState = .idle
+    @Published public var lastError: String? = nil
+    @Published public var isCancellingBuild: Bool = false
+    @Published public var buildLogURL: URL? = nil
+    @Published public var allowUntestedToolchain: Bool = false {
+        didSet {
+            UserDefaults.standard.set(allowUntestedToolchain, forKey: StorageKeys.allowUntestedToolchain)
+        }
+    }
     
     // MARK: - System Prerequisites & Installer
     @Published public var prerequisites: SystemPrerequisites = SystemPrerequisites()
@@ -198,11 +212,22 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
         ("ko", "Korean")
     ]
     
-    private let runner = BuildRunner()
+    public let pinnedEngineCommit = "06b7b3e56303bc67213a98cae61925f9253bdf89"
+    private let core = FileManager.default.homeDirectoryForCurrentUser
+        .appendingPathComponent("Library/Application Support/NXLibrary")
+    private lazy var libraryStore = LibraryStore(directory: core)
+    private lazy var keyStore = KeyStore(directory: core.appendingPathComponent("keys"))
+    private let importService = ImportService()
+    private let launchService = LaunchService()
+    private let sourceCatalog = SourceCatalog()
+    private lazy var workspaceManager = WorkspaceManager(root: core.appendingPathComponent("workspaces"))
+    private var buildService: BuildService?
+    private var buildPreviousStatus: GameStatus?
+    private var buildStartedAt: Date?
+    private var buildTempDirectory: URL?
     private let installer = InstallerService.shared
     
     public init() {
-        runner.delegate = self
         installer.delegate = self
         
         // 1. Resolve safe root directory (anchored to SSD / Bundle, NEVER "/")
@@ -214,7 +239,7 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
            FileManager.default.fileExists(atPath: savedLib) {
             self.libraryFolder = URL(fileURLWithPath: savedLib)
         } else {
-            self.libraryFolder = root.appendingPathComponent("Games")
+            self.libraryFolder = root.appendingPathComponent("Applications")
         }
         
         // Restore custom output settings
@@ -238,6 +263,9 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
            let mode = AppIconAppearanceMode(rawValue: savedMode) {
             self.iconAppearanceMode = mode
         }
+        if UserDefaults.standard.object(forKey: StorageKeys.allowUntestedToolchain) != nil {
+            self.allowUntestedToolchain = UserDefaults.standard.bool(forKey: StorageKeys.allowUntestedToolchain)
+        }
         
         detectEnvironment()
         
@@ -249,7 +277,7 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
             }
         }
         
-        refreshLibrary()
+        loadLibrary()
         updateDockIcon()
         
         NotificationService.shared.requestAuthorization()
@@ -275,26 +303,107 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
     
     // MARK: - Environment Detection
     public func detectEnvironment(customRyujinxDir: String? = nil) {
-        if let savedKeys = UserDefaults.standard.string(forKey: StorageKeys.savedProdKeysPath),
-           FileManager.default.fileExists(atPath: savedKeys),
-           savedKeys.hasSuffix("prod.keys") {
-            self.prodKeysPath = savedKeys
-            self.prodKeysSource = "Saved Preference"
-            self.isProdKeysValid = true
-        } else if let keysResult = SystemDetector.shared.detectProdKeys(additionalSearchDir: customRyujinxDir) {
-            self.prodKeysPath = keysResult.path
-            self.prodKeysSource = keysResult.sourceName
-            self.isProdKeysValid = keysResult.isValid
-        } else {
-            self.isProdKeysValid = false
-            self.prodKeysSource = "Not Found"
-        }
-        
         let nxResult = SystemDetector.shared.detectNxnativeDirectory()
         self.nxnativePath = nxResult.path
         self.isNxnativeValid = nxResult.isValid
-        
+        ensureKeysImported(customRyujinxDir: customRyujinxDir)
         refreshPrerequisites()
+        refreshCompatibility()
+    }
+
+    private func ensureKeysImported(customRyujinxDir: String? = nil) {
+        let fm = FileManager.default
+        if fm.fileExists(atPath: keyStore.keyURL.path) {
+            do {
+                let summary = try keyStore.validate(at: keyStore.keyURL)
+                keySummary = summary
+                isProdKeysValid = summary.hasHeaderKey
+                prodKeysPath = keyStore.keyURL.path
+                prodKeysSource = "NX Library"
+            } catch {
+                keySummary = nil
+                isProdKeysValid = false
+                prodKeysSource = "Invalid stored copy"
+                logs.append(LogEntry(level: .error,
+                                     message: "Stored prod.keys is invalid: \(error.localizedDescription)"))
+            }
+            return
+        }
+        let saved = UserDefaults.standard.string(forKey: StorageKeys.savedProdKeysPath)
+        let detected = SystemDetector.shared.detectProdKeys(additionalSearchDir: customRyujinxDir)
+        let candidate = [saved, detected?.path].compactMap { $0 }.first {
+            !$0.isEmpty && fm.fileExists(atPath: $0)
+        }
+        guard let candidate else {
+            keySummary = nil
+            isProdKeysValid = false
+            prodKeysSource = "Not Found"
+            prodKeysPath = ""
+            return
+        }
+        importKeys(from: URL(fileURLWithPath: candidate))
+    }
+
+    public func importKeys(from url: URL) {
+        do {
+            let summary = try keyStore.importKey(from: url)
+            keySummary = summary
+            isProdKeysValid = summary.hasHeaderKey
+            prodKeysPath = keyStore.keyURL.path
+            prodKeysSource = "Imported once"
+            lastError = nil
+            logs.append(LogEntry(
+                level: .success,
+                message: "prod.keys imported: header key present, \(summary.applicationKeyGenerations.count) application key generations."
+            ))
+        } catch {
+            keySummary = nil
+            isProdKeysValid = false
+            lastError = error.localizedDescription
+            logs.append(LogEntry(level: .error,
+                                 message: "Could not import prod.keys: \(error.localizedDescription)"))
+        }
+    }
+
+    public func refreshCompatibility() {
+        guard isNxnativeValid, !nxnativePath.isEmpty else {
+            compatibilityReport = nil
+            environmentStatus = nil
+            return
+        }
+        let repo = URL(fileURLWithPath: nxnativePath)
+        let python = repo.appendingPathComponent(".venv/bin/python")
+        let developerDir = resolvedDeveloperDir()
+        let expected = pinnedEngineCommit
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let environment = NXNativeEnvironment(repoURL: repo, pythonURL: python,
+                                                  developerDir: developerDir)
+            let status = environment.inspect()
+            let checker = CompatibilityChecker(repoURL: repo, pythonURL: python,
+                                               developerDir: developerDir)
+            let report = try? checker.check(expectedEngineCommit: expected)
+            DispatchQueue.main.async {
+                self?.environmentStatus = status
+                self?.compatibilityReport = report
+                if let report, !report.ok {
+                    let blocked = report.checks.filter { $0.status == .block }
+                        .map { "\($0.title): \($0.detail)" }.joined(separator: " | ")
+                    self?.logs.append(LogEntry(level: .warning, message: "Toolchain gate: \(blocked)"))
+                }
+            }
+        }
+    }
+
+    private func resolvedDeveloperDir() -> URL {
+        let candidates = [
+            "/Applications/Xcode-beta.app/Contents/Developer",
+            "/Applications/Xcode.app/Contents/Developer",
+            "/Library/Developer/CommandLineTools",
+        ]
+        for path in candidates where FileManager.default.fileExists(atPath: path) {
+            return URL(fileURLWithPath: path)
+        }
+        return URL(fileURLWithPath: "/Library/Developer/CommandLineTools")
     }
     
     public func installAppleCommandLineTools() {
@@ -424,83 +533,164 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
         }
     }
     
-    // MARK: - Library Operations (Privacy-guarded)
+    // MARK: - Library
     public func refreshLibrary() {
+        loadLibrary()
+    }
+
+    public func loadLibrary() {
+        guard !isScanningLibrary else { return }
         isScanningLibrary = true
-        var searchDirs: [URL] = []
-        
-        let root = URL(fileURLWithPath: defaultInstallPath)
-        let gamesDir = root.appendingPathComponent("Games")
-        searchDirs.append(gamesDir)
-        
-        if let custom = libraryFolder, custom.path != "/" && custom.path != gamesDir.path {
-            searchDirs.append(custom)
+        let fm = FileManager.default
+        let home = URL(fileURLWithPath: NSHomeDirectory())
+        var directories = [home.appendingPathComponent("Applications")]
+        if let libraryFolder, !libraryFolder.path.isEmpty, libraryFolder.path != "/",
+           !directories.contains(where: { $0.standardizedFileURL == libraryFolder.standardizedFileURL }) {
+            directories.append(libraryFolder)
         }
-        
+        let store = libraryStore
+        let importer = importService
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let games = LibraryScanner.shared.scan(directories: searchDirs)
+            let loaded = (try? store.load()) ?? LibraryFile()
+            let scanned = importer.scan(directories: directories)
+            let importedGames = scanned.map { importer.makeGame(from: $0) }
             DispatchQueue.main.async {
-                self?.libraryGames = games
-                self?.isScanningLibrary = false
+                guard let self else { return }
+                self.importedApps = scanned
+                var library = loaded
+                do {
+                    library = try store.merge(scanned: importedGames)
+                } catch {
+                    self.lastError = error.localizedDescription
+                    self.logs.append(LogEntry(level: .error,
+                                              message: "Could not update the library: \(error.localizedDescription)"))
+                }
+                for index in library.games.indices {
+                    let appExists = fm.fileExists(atPath: library.games[index].url.path)
+                    let sourcesExist = !library.games[index].sources.isEmpty
+                        && library.games[index].sources.allSatisfy { fm.fileExists(atPath: $0.url.path) }
+                    if !appExists {
+                        library.games[index].status = .appMissing
+                    } else if !sourcesExist {
+                        if library.games[index].sources.isEmpty
+                            || library.games[index].status == .built
+                            || library.games[index].status == .builtSourcesMissing
+                            || library.games[index].status == .needsRebuild {
+                            library.games[index].status = .builtSourcesMissing
+                        }
+                    } else if library.games[index].status == .builtSourcesMissing
+                                || library.games[index].status == .needsRebuild {
+                        library.games[index].status = .built
+                    }
+                }
+                try? store.save(library)
+                self.libraryGames = library.games.sorted {
+                    $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+                }
+                self.isScanningLibrary = false
             }
         }
     }
-    
+
+    public func importExistingBuilds() {
+        loadLibrary()
+    }
+
     public func selectLibraryFolder() {
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
         panel.prompt = "Select Library Folder"
-        panel.message = "Choose a folder containing your built Mac Apps or IPAs."
-        
+        panel.message = "Choose a folder containing built Mac apps."
+
         if panel.runModal() == .OK, let url = panel.url {
             self.libraryFolder = url
-            refreshLibrary()
+            loadLibrary()
         }
     }
-    
+
     public func launchGame(_ game: PortedGame) {
         guard launchingGameId == nil else { return }
+        guard FileManager.default.fileExists(atPath: game.url.path) else {
+            lastError = NXLibraryError.appMissing(game.url.path).localizedDescription
+            updateStoredStatus(.appMissing, for: game)
+            SoundEffectService.shared.play(.error)
+            logs.append(LogEntry(level: .error, message: lastError!))
+            return
+        }
+        guard let titleId = game.titleId, !titleId.isEmpty else {
+            lastError = NXLibraryError.missingTitleId.localizedDescription
+            SoundEffectService.shared.play(.error)
+            logs.append(LogEntry(level: .error, message: lastError!))
+            return
+        }
+
         launchingGameId = game.id
         SoundEffectService.shared.play(.launch)
-        
+
         let config = GameRuntimeConfig.load(for: game)
-        config.applyToDisk(for: game)
-        
-        LibraryScanner.shared.launchGame(at: game.url, env: config.toEnvironmentDict()) { [weak self] success, error in
-            DispatchQueue.main.async {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
-                    self?.launchingGameId = nil
-                }
-                if success {
-                    self?.logs.append(LogEntry(level: .success, message: "Launched game: \(game.name)"))
-                } else if let err = error {
-                    SoundEffectService.shared.play(.error)
-                    self?.logs.append(LogEntry(level: .error, message: "Failed to launch game: \(err)"))
-                }
-            }
+        do {
+            try launchService.writeEnvironment(settings: config, titleId: titleId)
+        } catch {
+            launchingGameId = nil
+            lastError = error.localizedDescription
+            SoundEffectService.shared.play(.error)
+            logs.append(LogEntry(level: .error,
+                                 message: "Could not write the runtime environment: \(error.localizedDescription)"))
+            return
+        }
+
+        guard launchService.launch(appURL: game.url) else {
+            launchingGameId = nil
+            lastError = NXLibraryError.launchFailed(game.name).localizedDescription
+            SoundEffectService.shared.play(.error)
+            logs.append(LogEntry(level: .error, message: lastError!))
+            return
+        }
+
+        lastError = nil
+        logs.append(LogEntry(level: .success, message: "Launched game: \(game.name)"))
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) { [weak self] in
+            if self?.launchingGameId == game.id { self?.launchingGameId = nil }
         }
     }
-    
+
+    private func updateStoredStatus(_ status: GameStatus, for game: PortedGame) {
+        guard var library = try? libraryStore.load(),
+              let index = library.games.firstIndex(where: { $0.id == game.id }) else { return }
+        library.games[index].status = status
+        try? libraryStore.save(library)
+        libraryGames = library.games.sorted {
+            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        }
+    }
+
     public func loadRuntimeConfig(for game: PortedGame) -> GameRuntimeConfig {
         GameRuntimeConfig.load(for: game)
     }
-    
+
     public func saveRuntimeConfig(_ config: GameRuntimeConfig, for game: PortedGame) {
         config.save(for: game)
         logs.append(LogEntry(level: .success, message: "Saved settings for \(game.name)"))
     }
-    
+
     public func revealInFinder(url: URL) {
         NSWorkspace.shared.activateFileViewerSelecting([url])
     }
-    
+
     public func deletePortedGame(_ game: PortedGame) {
         do {
-            try FileManager.default.removeItem(at: game.url)
+            if FileManager.default.fileExists(atPath: game.url.path) {
+                try FileManager.default.removeItem(at: game.url)
+            }
+            var library = try libraryStore.load()
+            library.games.removeAll { $0.id == game.id }
+            try libraryStore.save(library)
+            libraryGames = library.games.sorted {
+                $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+            }
             logs.append(LogEntry(level: .warning, message: "Game removed: \(game.name)"))
-            refreshLibrary()
         } catch {
             logs.append(LogEntry(level: .error, message: "Failed to delete game: \(error.localizedDescription)"))
         }
@@ -538,6 +728,7 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
             self.isNxnativeValid = res.isValid
             if res.isValid {
                 refreshPrerequisites()
+                refreshCompatibility()
             }
         }
     }
@@ -561,7 +752,7 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
         panel.prompt = "Choose Output Folder"
-        panel.message = "Select the folder where the IPA or Mac App will be saved."
+        panel.message = "Select the folder where the Mac app will be saved."
         
         if panel.runModal() == .OK, let url = panel.url {
             self.customOutputFolder = url
@@ -578,9 +769,7 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
         panel.message = "Choose your Nintendo Switch prod.keys file."
         
         if panel.runModal() == .OK, let url = panel.url {
-            self.prodKeysPath = url.path
-            self.prodKeysSource = "User Selected"
-            self.isProdKeysValid = true
+            importKeys(from: url)
         }
     }
     
@@ -599,170 +788,516 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
     
     // MARK: - Build Actions
     public var canStartBuild: Bool {
-        !isBuilding &&
-        selectedGameFolder != nil &&
-        selectedGame != nil &&
-        isProdKeysValid &&
-        isNxnativeValid &&
-        !isDiskSpaceLow
+        guard !isBuilding,
+              selectedGameFolder != nil,
+              selectedGame != nil,
+              isProdKeysValid,
+              isNxnativeValid,
+              environmentStatus?.canBuild == true,
+              !isDiskSpaceLow else { return false }
+        return canPassToolchainGate
     }
-    
+
+    public func canBuild(_ game: PortedGame) -> Bool {
+        guard !isBuilding,
+              isProdKeysValid,
+              isNxnativeValid,
+              environmentStatus?.canBuild == true,
+              !game.sources.isEmpty,
+              game.sources.contains(where: { $0.kind == .base }) else { return false }
+        return canPassToolchainGate
+    }
+
+    public var canPassToolchainGate: Bool {
+        compatibilityReport?.ok == true || allowUntestedToolchain
+    }
+
     public func goToWizardStep(_ step: Int) {
         guard step >= 1 && step <= 3 else { return }
         if step == 2 && selectedGame == nil { return }
         buildWizardStep = step
     }
-    
+
     public func resetWizard() {
         buildWizardStep = 1
         buildError = nil
         buildSuccessPath = nil
+        buildState = .idle
+        lastError = nil
     }
-    
+
     public func startBuild() {
-        guard canStartBuild, let gameDir = selectedGameFolder, let sel = selectedGame else { return }
-        
+        guard let selected = selectedGame, selectedGameFolder != nil else {
+            presentBuildError(NXLibraryError.noSelectedGame)
+            return
+        }
+        let sources = selected.files.compactMap(Self.detectedSource(from:))
+        guard let base = sources.first(where: { $0.kind == .base }), !sources.isEmpty else {
+            presentBuildError(NXLibraryError.baseRequired)
+            return
+        }
+        var detected = DetectedGame(
+            baseTitleId: base.titleId,
+            name: selected.name,
+            base: base,
+            updates: sources.filter { $0.kind == .update },
+            dlcs: sources.filter { $0.kind == .dlc }
+        )
+        let customName = appName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !customName.isEmpty { detected.name = customName }
+        do {
+            let game = try addGame(
+                detected: detected,
+                selected: sources,
+                folder: nil,
+                bundleId: bundleId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    ? nil : bundleId.trimmingCharacters(in: .whitespacesAndNewlines)
+            )
+            startBuild(for: game)
+        } catch {
+            presentBuildError(error)
+        }
+    }
+
+    @discardableResult
+    public func addGame(detected: DetectedGame, selected: [DetectedSource],
+                        folder: URL?, bundleId: String? = nil) throws -> PortedGame {
+        guard let base = selected.first(where: { $0.kind == .base }) else {
+            throw NXLibraryError.baseRequired
+        }
+        let selectedGame = DetectedGame(
+            baseTitleId: detected.baseTitleId,
+            name: detected.name,
+            base: base,
+            updates: selected.filter { $0.kind == .update },
+            dlcs: selected.filter { $0.kind == .dlc }
+        )
+        let mode: WorkspaceMode = folder.map { .folder($0) } ?? .staged
+        let workspace = try workspaceManager.makeWorkspace(for: selectedGame, mode: mode)
+        let titleId = String(format: "%016llX", detected.baseTitleId)
+        let updateVersion = selected.filter { $0.kind == .update }
+            .compactMap { $0.version }.max().map(String.init)
+
+        var game = PortedGame(
+            name: detected.name,
+            url: workspace.buildCache.deletingLastPathComponent(),
+            platform: .macApp,
+            sizeBytes: selected.reduce(0) { $0 + $1.sizeBytes },
+            modificationDate: Date(),
+            bundleId: bundleId ?? "org.nxnative.\(titleId.lowercased())",
+            titleId: titleId,
+            versionString: updateVersion
+        )
+        game.sources = selected.map {
+            GameFileItem(url: $0.url, kind: $0.kind,
+                         titleId: String(format: "%016llX", $0.titleId),
+                         versionString: $0.version.map(String.init),
+                         sizeBytes: $0.sizeBytes, isSymlink: folder == nil)
+        }
+        game.workspacePath = workspace.directory.path
+        game.buildCachePath = workspace.buildCache.path
+        game.status = .notBuilt
+        game.settings = GameRuntimeConfig()
+
+        let library = try libraryStore.merge(scanned: [game])
+        libraryGames = library.games.sorted {
+            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        }
+        return library.games.first(where: { $0.titleId == titleId }) ?? game
+    }
+
+    public func startBuild(for game: PortedGame) {
+        do {
+            try beginBuild(for: game)
+        } catch {
+            presentBuildError(error)
+        }
+    }
+
+    private func beginBuild(for game: PortedGame) throws {
+        guard !isBuilding else { throw NXLibraryError.buildAlreadyRunning }
+        var target = libraryGames.first(where: { $0.id == game.id }) ?? game
+        guard let titleId = target.titleId,
+              UInt64(titleId, radix: 16) != nil else {
+            throw NXLibraryError.missingTitleId
+        }
+        guard !target.sources.isEmpty,
+              target.sources.contains(where: { $0.kind == .base }) else {
+            throw NXLibraryError.missingSources
+        }
+        guard isProdKeysValid,
+              FileManager.default.fileExists(atPath: keyStore.keyURL.path) else {
+            throw NXLibraryError.missingKeys
+        }
+        guard isNxnativeValid else { throw NXLibraryError.engineMissing }
+        guard let environmentStatus else {
+            throw NXLibraryError.environmentBlocked("the environment check is still running")
+        }
+        guard environmentStatus.canBuild else {
+            throw NXLibraryError.environmentBlocked(environmentStatus.issues.joined(separator: "; "))
+        }
+
+        let report = compatibilityReport ?? (try? CompatibilityChecker(
+            repoURL: URL(fileURLWithPath: nxnativePath),
+            pythonURL: URL(fileURLWithPath: nxnativePath).appendingPathComponent(".venv/bin/python"),
+            developerDir: resolvedDeveloperDir()
+        ).check(expectedEngineCommit: pinnedEngineCommit))
+        if report?.ok != true && !allowUntestedToolchain {
+            let reason = report?.checks.filter { $0.status == .block }
+                .map { "\($0.title): \($0.detail)" }.joined(separator: "; ")
+                ?? "the compatibility check is unavailable"
+            throw NXLibraryError.incompatibleToolchain(reason)
+        }
+
+        let merged = try libraryStore.merge(scanned: [target])
+        libraryGames = merged.games.sorted {
+            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        }
+        guard let stored = merged.games.first(where: { $0.titleId == titleId }) else {
+            throw NXLibraryError.missingSources
+        }
+        target = stored
+        buildPreviousStatus = target.status
+
+        let workspace: Workspace
+        if let path = target.workspacePath {
+            let directory = URL(fileURLWithPath: path)
+            let cache = target.buildCachePath.map(URL.init(fileURLWithPath:))
+                ?? directory.appendingPathComponent("\(titleId)_build")
+            try FileManager.default.createDirectory(at: cache, withIntermediateDirectories: true)
+            workspace = Workspace(directory: directory, buildCache: cache, links: [])
+        } else {
+            let detected = try detectedGame(from: target)
+            workspace = try workspaceManager.makeWorkspace(for: detected, mode: .staged)
+            target.workspacePath = workspace.directory.path
+            target.buildCachePath = workspace.buildCache.path
+        }
+
+        if var library = try? libraryStore.load(),
+           let index = library.games.firstIndex(where: { $0.id == target.id }) {
+            library.games[index].workspacePath = target.workspacePath
+            library.games[index].buildCachePath = target.buildCachePath
+            try? libraryStore.save(library)
+            libraryGames = library.games.sorted {
+                $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+            }
+        }
+
+        let finalApp = finalAppURL(for: target, titleId: titleId)
+        let tempRoot = core.appendingPathComponent("Temp").appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempRoot, withIntermediateDirectories: true)
+        let tempApp = tempRoot.appendingPathComponent(finalApp.lastPathComponent)
+        let logURL = core.appendingPathComponent("Logs").appendingPathComponent("\(titleId).log")
+        try FileManager.default.createDirectory(at: logURL.deletingLastPathComponent(),
+                                                withIntermediateDirectories: true)
+
+        let repo = URL(fileURLWithPath: nxnativePath)
+        let python = repo.appendingPathComponent(".venv/bin/python")
+        guard FileManager.default.isExecutableFile(atPath: python.path) else {
+            throw NXLibraryError.environmentBlocked("the nxnative venv Python is missing")
+        }
+        let command = BuildCommandBuilder.make(
+            repo: repo,
+            python: python,
+            workspace: workspace.directory,
+            keys: keyStore.keyURL,
+            output: tempApp,
+            developerDir: resolvedDeveloperDir(),
+            appName: target.name,
+            bundleId: target.bundleId ?? "org.nxnative.\(titleId.lowercased())",
+            language: selectedLanguage == "auto" ? nil : selectedLanguage
+        )
+
+        buildStartedAt = Date()
+        buildTempDirectory = tempRoot
+        buildLogURL = logURL
         buildWizardStep = 3
         isBuilding = true
+        isCancellingBuild = false
+        buildState = .running
         buildError = nil
+        lastError = nil
         buildSuccessPath = nil
-        progressFraction = 0.0
-        currentStageName = "Preparing Build..."
+        progressFraction = 0
+        currentStageName = "Preparing build"
         currentStepName = ""
         stageIndex = 0
         totalStages = 0
         etaSeconds = nil
         buildStages.removeAll()
-        logs.removeAll()
-        
-        // Staging: isolate selected game files via symlinks if multiple games exist in folder or files are shared
-        var targetGameDirectory = gameDir
-        if detectedGames.count > 1 || sel.files.count < detectedFiles.count {
-            let safeName = sel.name.replacingOccurrences(of: "[^a-zA-Z0-9._-]", with: "_", options: .regularExpression)
-            let stagingDir = URL(fileURLWithPath: defaultInstallPath)
-                .appendingPathComponent("Staging")
-                .appendingPathComponent(safeName)
-            
-            let fm = FileManager.default
-            if fm.fileExists(atPath: stagingDir.path) {
-                try? fm.removeItem(at: stagingDir)
-            }
-            do {
-                try fm.createDirectory(at: stagingDir, withIntermediateDirectories: true)
-                for item in sel.files {
-                    let linkURL = stagingDir.appendingPathComponent(item.url.lastPathComponent)
-                    try fm.createSymbolicLink(at: linkURL, withDestinationURL: item.url)
+        logs.append(LogEntry(level: .info,
+                             message: "Build started for \(target.name) (\(titleId))."))
+        logs.append(LogEntry(level: .info,
+                             message: "Workspace: \(workspace.directory.path)"))
+        logs.append(LogEntry(
+            level: .info,
+            message: report?.ok == true
+                ? "Toolchain gate: certified."
+                : "Toolchain gate: overridden; this build will be recorded as untested."
+        ))
+
+        let service = BuildService()
+        buildService = service
+        service.start(
+            command: command,
+            logURL: logURL,
+            tempApp: tempApp,
+            finalApp: finalApp,
+            eventHandler: { [weak self] event in
+                DispatchQueue.main.async { self?.handleBuildEvent(event) }
+            },
+            completion: { [weak self] result in
+                DispatchQueue.main.async {
+                    self?.finishBuild(result, gameID: target.id,
+                                      finalApp: finalApp, tempDir: tempRoot)
                 }
-                targetGameDirectory = stagingDir
-                logs.append(LogEntry(level: .info, message: "Isolated '\(sel.name)' (\(sel.files.count) files) in staging environment."))
-            } catch {
-                logs.append(LogEntry(level: .warning, message: "Could not create staging symlinks (\(error.localizedDescription)). Using original directory."))
             }
-        }
-        
-        let targetOutDir = useCustomOutputFolder ? customOutputFolder : URL(fileURLWithPath: defaultInstallPath).appendingPathComponent("Games")
-        
-        runner.startBuild(
-            nxnativePath: nxnativePath,
-            gameDirectory: targetGameDirectory,
-            prodKeysPath: prodKeysPath,
-            platform: platform,
-            customOutputFolder: targetOutDir,
-            appName: appName.isEmpty ? sel.name : appName,
-            bundleId: bundleId.isEmpty ? nil : bundleId,
-            language: selectedLanguage,
-            keepExtracted: keepExtracted,
-            surveyOnly: surveyOnly
         )
     }
-    
+
     public func cancelBuild() {
-        runner.cancel()
+        guard isBuilding, let buildService else { return }
+        isCancellingBuild = true
+        currentStageName = "Cancelling build..."
+        logs.append(LogEntry(level: .warning, message: "Cancelling build..."))
+        buildService.cancel()
     }
-    
+
     public func openOutputInFinder() {
         guard let path = buildSuccessPath else { return }
-        let url = URL(fileURLWithPath: path)
-        NSWorkspace.shared.activateFileViewerSelecting([url])
+        NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
     }
-    
-    // MARK: - Delegates
-    public func buildRunner(_ runner: BuildRunner, didProduceLog entry: LogEntry) {
-        logs.append(entry)
-    }
-    
-    public func buildRunner(_ runner: BuildRunner, didUpdateStage stage: String, index: Int, total: Int) {
-        self.currentStageName = stage
-        self.stageIndex = index
-        self.totalStages = total
-        
-        // Mark any previous running stages as completed
-        for i in 0..<buildStages.count {
-            if buildStages[i].id < index && buildStages[i].isRunning {
-                buildStages[i].isRunning = false
-                buildStages[i].isCompleted = true
+
+    private func handleBuildEvent(_ event: BuildEvent) {
+        switch event {
+        case .stage(let k, let n, let name, let step):
+            currentStageName = name
+            stageIndex = k
+            totalStages = n
+            for index in buildStages.indices
+            where buildStages[index].id < k && buildStages[index].isRunning {
+                buildStages[index].isRunning = false
+                buildStages[index].isCompleted = true
+            }
+            if let index = buildStages.firstIndex(where: { $0.id == k }) {
+                buildStages[index].isRunning = true
+                buildStages[index].step = step ?? ""
+            } else {
+                buildStages.append(BuildStageItem(id: k, name: name,
+                                                  step: step ?? "", isRunning: true))
+            }
+            if let step, !step.isEmpty { currentStepName = step }
+            logs.append(LogEntry(level: .step, message: "[\(k)/\(n)] \(name)"))
+
+        case .step(let step):
+            currentStepName = step
+            if let index = buildStages.firstIndex(where: { $0.id == stageIndex }) {
+                buildStages[index].step = step
+            }
+            logs.append(LogEntry(level: .info, message: "↳ \(step)"))
+
+        case .progress(let fraction, let done, let total, let unit, let eta):
+            progressFraction = min(max(fraction, 0), 1)
+            etaSeconds = eta
+            if let done, let total, total > 0 {
+                let doneText = ByteCountFormatter.string(
+                    fromByteCount: Int64(done), countStyle: .file)
+                let totalText = ByteCountFormatter.string(
+                    fromByteCount: Int64(total), countStyle: .file)
+                currentStepName = "\(doneText) of \(totalText)\(unit.map { " (\($0))" } ?? "")"
+            }
+
+        case .stageEnd(let name, let ok, let elapsed, let summary):
+            if let index = buildStages.firstIndex(where: { $0.name == name })
+                ?? buildStages.firstIndex(where: { $0.isRunning }) {
+                buildStages[index].isRunning = false
+                buildStages[index].isCompleted = ok
+                buildStages[index].isFailed = !ok
+                buildStages[index].elapsedSeconds = elapsed
+                buildStages[index].summary = summary
+            }
+            logs.append(LogEntry(
+                level: ok ? .success : .error,
+                message: "\(ok ? "✓" : "✗") \(name)\(summary.map { " — \($0)" } ?? "")"
+            ))
+
+        case .say(let message):
+            logs.append(LogEntry(level: .info, message: message))
+
+        case .log(let line):
+            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                logs.append(LogEntry(level: .info, message: trimmed))
             }
         }
-        
-        if let existingIdx = buildStages.firstIndex(where: { $0.id == index }) {
-            buildStages[existingIdx].isRunning = true
-            buildStages[existingIdx].step = ""
+    }
+
+    private func finishBuild(_ result: BuildResult, gameID: UUID,
+                             finalApp: URL, tempDir: URL) {
+        isBuilding = false
+        isCancellingBuild = false
+        buildService = nil
+        try? FileManager.default.removeItem(at: tempDir)
+        buildTempDirectory = nil
+
+        var library = (try? libraryStore.load()) ?? LibraryFile(games: libraryGames)
+        if let index = library.games.firstIndex(where: { $0.id == gameID }) {
+            var game = library.games[index]
+            let verified = compatibilityReport?.ok == true
+            let record = BuildRecord(
+                startedAt: buildStartedAt ?? Date(),
+                endedAt: Date(),
+                exitCode: result.exitCode,
+                logPath: result.logURL.path,
+                outputPath: result.success ? finalApp.path : nil,
+                engineCommit: pinnedEngineCommit,
+                metalVersion: environmentStatus?.metalVersion,
+                xcodeVersion: environmentStatus?.xcodeVersion,
+                toolchainVerified: verified,
+                cancelled: result.cancelled
+            )
+
+            if result.success {
+                game.status = .built
+                game.url = finalApp
+                game.modificationDate = Date()
+                game.versionString = Self.appVersion(at: finalApp) ?? game.versionString
+                game.toolchain = ToolchainInfo(
+                    engineCommit: pinnedEngineCommit,
+                    metalVersion: environmentStatus?.metalVersion,
+                    xcodeVersion: environmentStatus?.xcodeVersion,
+                    verified: verified,
+                    note: verified ? "Certified toolchain"
+                                   : "Untested toolchain (explicit override)"
+                )
+                game.lastBuild = record
+                progressFraction = 1
+                currentStageName = "Build completed"
+                buildState = .succeeded
+                buildSuccessPath = finalApp.path
+                buildError = nil
+                lastError = nil
+                logs.append(LogEntry(level: .success,
+                                     message: "Build succeeded: \(finalApp.path)"))
+                SoundEffectService.shared.play(.launch)
+                NotificationService.shared.sendPortSuccessNotification(
+                    gameName: game.name, outputPath: finalApp.path)
+            } else if result.cancelled {
+                game.status = buildPreviousStatus
+                    ?? (game.sources.isEmpty ? .builtSourcesMissing : .notBuilt)
+                buildState = .cancelled
+                buildError = nil
+                lastError = "Build cancelled."
+                logs.append(LogEntry(level: .warning, message: "Build cancelled."))
+            } else {
+                let message = result.error ?? "Build failed (exit code \(result.exitCode))."
+                game.status = .failed
+                buildState = .failed
+                buildError = message
+                lastError = message
+                logs.append(LogEntry(level: .error, message: message))
+                SoundEffectService.shared.play(.error)
+                NotificationService.shared.sendPortErrorNotification(
+                    gameName: game.name, error: message)
+            }
+
+            library.games[index] = game
+            try? libraryStore.save(library)
+            libraryGames = library.games.sorted {
+                $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+            }
+            if result.success { loadLibrary() }
         } else {
-            buildStages.append(BuildStageItem(id: index, name: stage, isRunning: true))
+            buildState = result.success ? .succeeded
+                : (result.cancelled ? .cancelled : .failed)
+            if !result.success && !result.cancelled {
+                buildError = result.error
+                lastError = result.error
+            }
         }
+
+        buildStartedAt = nil
+        buildPreviousStatus = nil
     }
-    
-    public func buildRunner(_ runner: BuildRunner, didUpdateStep step: String) {
-        self.currentStepName = step
-        if let idx = buildStages.firstIndex(where: { $0.id == stageIndex }) {
-            buildStages[idx].step = step
-        }
-    }
-    
-    public func buildRunner(_ runner: BuildRunner, didUpdateProgress fraction: Double, doneBytes: Double?, totalBytes: Double?, etaSeconds: Double?) {
-        self.progressFraction = fraction
-        self.etaSeconds = etaSeconds
-    }
-    
-    public func buildRunner(_ runner: BuildRunner, didEndStage stage: String, index: Int, ok: Bool, elapsed: Double?, summary: String?) {
-        if let idx = buildStages.firstIndex(where: { $0.id == index }) {
-            buildStages[idx].isRunning = false
-            buildStages[idx].isCompleted = ok
-            buildStages[idx].isFailed = !ok
-            buildStages[idx].elapsedSeconds = elapsed
-            buildStages[idx].summary = summary
-        }
-    }
-    
-    public func buildRunner(_ runner: BuildRunner, didFinishSuccess outputPath: String?) {
-        self.isBuilding = false
-        self.progressFraction = 1.0
-        self.currentStageName = "Build Completed!"
-        for i in 0..<buildStages.count {
-            buildStages[i].isRunning = false
-            buildStages[i].isCompleted = true
-        }
-        self.buildSuccessPath = outputPath
-        self.logs.append(LogEntry(level: .success, message: "Build succeeded! Output: \(outputPath ?? "Unknown")"))
-        refreshLibrary()
-        
-        SoundEffectService.shared.play(.launch)
-        NotificationService.shared.sendPortSuccessNotification(gameName: appName.isEmpty ? "Ported Game" : appName, outputPath: outputPath)
-    }
-    
-    public func buildRunner(_ runner: BuildRunner, didFinishWithError error: String) {
-        self.isBuilding = false
-        if let idx = buildStages.firstIndex(where: { $0.isRunning }) {
-            buildStages[idx].isRunning = false
-            buildStages[idx].isFailed = true
-        }
-        self.buildError = error
-        self.logs.append(LogEntry(level: .error, message: error))
-        
+
+    private func presentBuildError(_ error: Error) {
+        let message = error.localizedDescription
+        buildState = .failed
+        buildError = message
+        lastError = message
+        logs.append(LogEntry(level: .error, message: message))
         SoundEffectService.shared.play(.error)
-        NotificationService.shared.sendPortErrorNotification(gameName: appName.isEmpty ? "Game" : appName, error: error)
     }
-    
+
+    private func detectedGame(from game: PortedGame) throws -> DetectedGame {
+        let sources = game.sources.compactMap { item -> DetectedSource? in
+            guard let titleId = item.titleId.flatMap({ UInt64($0, radix: 16) }) else {
+                return nil
+            }
+            let version = item.versionString.flatMap {
+                Int($0.lowercased().hasPrefix("v") ? String($0.dropFirst()) : $0)
+            }
+            return DetectedSource(url: item.url, kind: item.kind, titleId: titleId,
+                                  version: version, sizeBytes: item.sizeBytes)
+        }
+        guard let base = sources.first(where: { $0.kind == .base }) else {
+            throw NXLibraryError.baseRequired
+        }
+        guard let titleId = game.titleId.flatMap({ UInt64($0, radix: 16) }) else {
+            throw NXLibraryError.missingTitleId
+        }
+        return DetectedGame(baseTitleId: titleId, name: game.name, base: base,
+                            updates: sources.filter { $0.kind == .update },
+                            dlcs: sources.filter { $0.kind == .dlc })
+    }
+
+    private static func detectedSource(from file: GameFileItem) -> DetectedSource? {
+        guard let titleId = file.titleId.flatMap({ UInt64($0, radix: 16) }) else {
+            return nil
+        }
+        let version = file.versionString.flatMap {
+            Int($0.lowercased().hasPrefix("v") ? String($0.dropFirst()) : $0)
+        }
+        return DetectedSource(url: file.url, kind: file.type, titleId: titleId,
+                              version: version, sizeBytes: file.sizeBytes)
+    }
+
+    private func finalAppURL(for game: PortedGame, titleId: String) -> URL {
+        if game.url.pathExtension.lowercased() == "app",
+           game.status != .notBuilt,
+           FileManager.default.fileExists(atPath: game.url.path) {
+            return game.url
+        }
+        let applications = URL(fileURLWithPath: NSHomeDirectory())
+            .appendingPathComponent("Applications")
+        let base = Self.sanitizedAppFileName(game.name)
+        var candidate = applications.appendingPathComponent(base + ".app")
+        if FileManager.default.fileExists(atPath: candidate.path),
+           let other = libraryGames.first(where: {
+               $0.id != game.id && $0.url.standardizedFileURL == candidate.standardizedFileURL
+           }), other.titleId != titleId {
+            candidate = applications.appendingPathComponent("\(base) (\(titleId)).app")
+        }
+        return candidate
+    }
+
+    private static func sanitizedAppFileName(_ name: String) -> String {
+        var value = name
+            .replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: ":", with: " -")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if value.isEmpty { value = "Game" }
+        return value
+    }
+
+    private static func appVersion(at app: URL) -> String? {
+        let plist = app.appendingPathComponent("Contents/Info.plist")
+        guard let data = try? Data(contentsOf: plist),
+              let object = try? PropertyListSerialization.propertyList(
+                from: data, options: [], format: nil) as? [String: Any] else { return nil }
+        return object["CFBundleShortVersionString"] as? String
+    }
+
     public func installerDidProduceOutput(_ line: String) {
         installerLogs.append(line)
     }

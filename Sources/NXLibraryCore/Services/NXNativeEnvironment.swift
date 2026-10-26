@@ -47,6 +47,8 @@ public final class NXNativeEnvironment {
 
     private func run(_ executable: String, _ args: [String]) -> CommandResult {
         var env = ProcessInfo.processInfo.environment
+        let base = "/opt/homebrew/bin:/usr/local/bin:/usr/local/share/dotnet:/usr/bin:/bin:/usr/sbin:/sbin"
+        env["PATH"] = base + ":" + (env["PATH"] ?? "")
         if let developerDir { env["DEVELOPER_DIR"] = developerDir.path }
         return (try? runner.run(URL(fileURLWithPath: executable), args,
                                 environment: env, currentDirectory: repoURL))
@@ -81,7 +83,9 @@ public final class NXNativeEnvironment {
 
         var tools: [ToolStatus] = []
         for tool in ["xcodegen", "zstd", "spirv-cross", "glslang"] {
-            let result = run("/usr/bin/env", [tool, "--version"])
+            // spirv-cross exits 1 for --version/-h but 0 for --help.
+            let flag = tool == "spirv-cross" ? "--help" : "--version"
+            let result = run("/usr/bin/env", [tool, flag])
             let ok = result.status == 0
             tools.append(ToolStatus(id: tool, name: tool, ok: ok,
                                     detail: ok ? "available" : "missing"))

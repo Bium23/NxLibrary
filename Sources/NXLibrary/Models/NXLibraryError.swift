@@ -1,0 +1,42 @@
+import Foundation
+
+public enum NXLibraryError: Error, LocalizedError {
+    case baseRequired
+    case missingSources
+    case missingTitleId
+    case missingKeys
+    case engineMissing
+    case environmentBlocked(String)
+    case incompatibleToolchain(String)
+    case buildAlreadyRunning
+    case appMissing(String)
+    case launchFailed(String)
+    case noSelectedGame
+
+    public var errorDescription: String? {
+        switch self {
+        case .baseRequired:
+            return "Select a base game. Updates and DLC alone cannot be built."
+        case .missingSources:
+            return "This game has no source files attached. Locate its base, update and DLC first."
+        case .missingTitleId:
+            return "The game has no title ID. Choose a valid NSP, XCI, NSZ or XCZ source."
+        case .missingKeys:
+            return "prod.keys is missing. Import it in Settings."
+        case .engineMissing:
+            return "The nxnative checkout was not found at ~/nxnative."
+        case .environmentBlocked(let detail):
+            return "The build environment is incomplete: \(detail)"
+        case .incompatibleToolchain(let detail):
+            return "The toolchain is not certified: \(detail)"
+        case .buildAlreadyRunning:
+            return "A build is already running."
+        case .appMissing(let path):
+            return "The app bundle is missing: \(path)"
+        case .launchFailed(let name):
+            return "macOS could not launch \(name)."
+        case .noSelectedGame:
+            return "Select a game first."
+        }
+    }
+}
