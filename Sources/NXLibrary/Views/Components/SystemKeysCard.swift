@@ -2,11 +2,11 @@ import SwiftUI
 
 public struct SystemKeysCard: View {
     @ObservedObject public var viewModel: AppViewModel
-    
+
     public init(viewModel: AppViewModel) {
         self.viewModel = viewModel
     }
-    
+
     public var body: some View {
         GlassCard {
             VStack(alignment: .leading, spacing: 10) {
@@ -15,16 +15,16 @@ public struct SystemKeysCard: View {
                         .symbolRenderingMode(.hierarchical)
                         .font(.system(size: 13, weight: .bold, design: .rounded))
                         .foregroundColor(NXTheme.textPrimary)
-                        .help("Keys are auto-detected from Ryujinx or chosen manually and used by nxnative to decrypt Switch game files.")
-                    
+                        .help("The key file is copied once into Application Support, mode 0600. Values are never shown or logged.")
+
                     Spacer()
-                    
+
                     StatusBadge(
                         isPositive: viewModel.isProdKeysValid,
-                        text: viewModel.isProdKeysValid ? "Detected: \(viewModel.prodKeysSource)" : "Keys Missing"
+                        text: viewModel.isProdKeysValid ? "Keys OK" : "Keys missing"
                     )
                 }
-                
+
                 HStack(spacing: 8) {
                     HStack {
                         if viewModel.isProdKeysValid && !viewModel.prodKeysPath.isEmpty {
@@ -34,7 +34,7 @@ public struct SystemKeysCard: View {
                                 .lineLimit(1)
                                 .truncationMode(.middle)
                         } else {
-                            Text("No prod.keys located. Auto-detected from Ryujinx or choose manually.")
+                            Text("No prod.keys imported yet. Choose your file once.")
                                 .font(.system(size: 12))
                                 .foregroundColor(NXTheme.textSecondary)
                         }
@@ -48,17 +48,33 @@ public struct SystemKeysCard: View {
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
                             .stroke(NXTheme.specularRim, lineWidth: 0.8)
                     )
-                    
-                    Button("Choose File...") {
+
+                    Button(viewModel.isProdKeysValid ? "Replace Key..." : "Import Key...") {
                         viewModel.selectProdKeysFile()
                     }
                     .buttonStyle(NXSecondaryButtonStyle())
-                    
-                    Button("Find in Ryujinx...") {
+
+                    Button("Detect Ryujinx...") {
                         viewModel.selectRyujinxFolder()
                     }
                     .buttonStyle(NXSecondaryButtonStyle())
                 }
+
+                if let summary = viewModel.keySummary {
+                    HStack(spacing: 10) {
+                        Text("header_key present")
+                            .foregroundColor(NXTheme.success)
+                        Text("·")
+                            .foregroundColor(NXTheme.textMuted)
+                        Text("\(summary.applicationKeyGenerations.count) application key generations")
+                            .foregroundColor(NXTheme.textSecondary)
+                    }
+                    .font(.system(size: 10, design: .monospaced))
+                }
+
+                Text("Your original file is untouched. The stored copy is used by nxnative and is never logged.")
+                    .font(.system(size: 10))
+                    .foregroundColor(NXTheme.textMuted)
             }
         }
     }

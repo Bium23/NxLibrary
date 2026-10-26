@@ -34,6 +34,9 @@ public struct MainView: View {
             }
         }
         .frame(minWidth: 1100, minHeight: 700)
+        .sheet(isPresented: $viewModel.showSetupSheet) {
+            SetupView(viewModel: viewModel)
+        }
     }
 
     private var content: some View {

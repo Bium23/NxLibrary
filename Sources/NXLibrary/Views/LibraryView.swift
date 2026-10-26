@@ -70,14 +70,14 @@ public struct LibraryView: View {
             isPresented: $showDeleteConfirm,
             titleVisibility: .visible
         ) {
-            Button("Delete File", role: .destructive) {
+            Button("Delete App Bundle", role: .destructive) {
                 if let g = gameToDelete {
                     viewModel.deletePortedGame(g)
                 }
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This action will permanently delete the compiled game file from your storage.")
+            Text("This permanently deletes only this app bundle:\n\(gameToDelete?.url.path ?? "unknown path")\n\nSource files, saves and build caches are not deleted.")
         }
     }
     

@@ -47,17 +47,38 @@ public struct SystemRepoCard: View {
                         viewModel.selectNxnativeFolder()
                     }
                     .buttonStyle(NXSecondaryButtonStyle())
+
+                    Button("Reveal") {
+                        viewModel.revealInFinder(url: URL(fileURLWithPath: viewModel.nxnativePath))
+                    }
+                    .buttonStyle(NXSecondaryButtonStyle())
+                    .disabled(!viewModel.isNxnativeValid)
                 }
 
                 Divider().opacity(0.2)
 
-                Text("Pinned engine: 06b7b3e")
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundColor(NXTheme.textMuted)
+                HStack(spacing: 8) {
+                    Text("Pinned: \(short(viewModel.pinnedEngineCommit))")
+                    Text("·")
+                    Text("Current: \(short(viewModel.currentEngineCommit))")
+                    Spacer()
+                    if let env = viewModel.environmentStatus {
+                        Text(env.canBuild ? "environment complete" : "environment incomplete")
+                            .foregroundColor(env.canBuild ? NXTheme.success : NXTheme.warning)
+                    }
+                }
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundColor(NXTheme.textMuted)
+
                 Text("Updates are manual; the app never changes the engine checkout.")
                     .font(.system(size: 11))
                     .foregroundColor(NXTheme.textSecondary)
             }
         }
+    }
+
+    private func short(_ commit: String?) -> String {
+        guard let commit, !commit.isEmpty else { return "unknown" }
+        return String(commit.prefix(7))
     }
 }

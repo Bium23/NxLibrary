@@ -52,6 +52,8 @@ public struct BottomDock: View {
                 .nxNoFocusRing()
                 .accessibilityLabel(item.title)
                 .help(item.title)
+                .keyboardShortcut(KeyEquivalent(Character(String(item.tag + 1))),
+                                  modifiers: [.command, .option])
             }
         }
         .padding(.horizontal, 18)

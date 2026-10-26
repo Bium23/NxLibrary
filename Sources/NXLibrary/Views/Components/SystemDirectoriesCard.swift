@@ -72,7 +72,7 @@ public struct SystemDirectoriesCard: View {
                 
                 // Ported Games Library Directory
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Ported Games Library Folder (Mac Apps & IPAs)")
+                    Text("App Library Folder (Mac apps)")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(NXTheme.textPrimary)
                     
@@ -85,7 +85,7 @@ public struct SystemDirectoriesCard: View {
                                     .lineLimit(1)
                                     .truncationMode(.middle)
                             } else {
-                                Text("Default: ~/Games")
+                                Text("Default: ~/Applications")
                                     .font(.system(size: 12))
                                     .foregroundColor(NXTheme.textSecondary)
                             }
@@ -106,9 +106,9 @@ public struct SystemDirectoriesCard: View {
                         .buttonStyle(NXSecondaryButtonStyle())
                         
                         Button("Reset Default") {
-                            let defaultDir = URL(fileURLWithPath: viewModel.defaultInstallPath).appendingPathComponent("Games")
+                            let defaultDir = URL(fileURLWithPath: viewModel.defaultInstallPath).appendingPathComponent("Applications")
                             viewModel.libraryFolder = defaultDir
-                            viewModel.refreshLibrary()
+                            viewModel.loadLibrary()
                         }
                         .buttonStyle(NXSecondaryButtonStyle())
                     }

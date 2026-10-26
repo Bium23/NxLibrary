@@ -11,6 +11,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         static let savedProdKeysPath = "NXNative_SavedProdKeysPath"
         static let savedIconAppearanceMode = "NXNative_SavedIconAppearanceMode"
         static let allowUntestedToolchain = "NXLibrary_AllowUntestedToolchain"
+        static let setupCompleted = "NXLibrary_SetupCompleted"
     }
     
     // MARK: - Workspace & Paths
@@ -163,6 +164,11 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     @Published public var environmentStatus: EnvironmentStatus? = nil
     @Published public var compatibilityReport: CompatibilityReport? = nil
     @Published public var keySummary: KeySummary? = nil
+    @Published public var currentEngineCommit: String? = nil
+    @Published public var storageUsage: StorageUsage? = nil
+    @Published public var isCalculatingStorage: Bool = false
+    @Published public var showSetupSheet: Bool = false
+    @Published public var setupCompleted: Bool = false
     @Published public var buildState: BuildState = .idle
     @Published public var lastError: String? = nil
     @Published public var isCancellingBuild: Bool = false
@@ -238,6 +244,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     private lazy var keyStore = KeyStore(directory: core.appendingPathComponent("keys"))
     private let importService = ImportService()
     private let launchService = LaunchService()
+    private lazy var storageManager = StorageManager()
     private let sourceCatalog = SourceCatalog()
     private lazy var workspaceManager = WorkspaceManager(root: core.appendingPathComponent("workspaces"))
     private var buildService: BuildService?
@@ -248,6 +255,9 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     
     public init() {
         installer.delegate = self
+        let didCompleteSetup = UserDefaults.standard.bool(forKey: StorageKeys.setupCompleted)
+        self.setupCompleted = didCompleteSetup
+        self.showSetupSheet = !didCompleteSetup
         
         // 1. Resolve safe root directory (anchored to SSD / Bundle, NEVER "/")
         let root = SystemDetector.shared.resolveRootDirectory()
@@ -290,6 +300,9 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         setupControllerNavigation()
 
         #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--show-setup") {
+            self.showSetupSheet = true
+        }
         if ProcessInfo.processInfo.arguments.contains("--preview-build") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
                 self?.previewBuild()
@@ -396,9 +409,14 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             let checker = CompatibilityChecker(repoURL: repo, pythonURL: python,
                                                developerDir: developerDir)
             let report = try? checker.check(expectedEngineCommit: expected)
+            let currentCommit = report?.checks.first(where: { $0.id == "commit" })?.detail
+                .components(separatedBy: ", expected").first?
+                .replacingOccurrences(of: "current ", with: "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
             DispatchQueue.main.async {
                 self?.environmentStatus = status
                 self?.compatibilityReport = report
+                self?.currentEngineCommit = (currentCommit?.isEmpty == false) ? currentCommit : nil
                 if let report, !report.ok {
                     let blocked = report.checks.filter { $0.status == .block }
                         .map { "\($0.title): \($0.detail)" }.joined(separator: " | ")
@@ -418,6 +436,105 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             return URL(fileURLWithPath: path)
         }
         return URL(fileURLWithPath: "/Library/Developer/CommandLineTools")
+    }
+
+    public var requiredMetalVersion: String? {
+        let lock = URL(fileURLWithPath: nxnativePath)
+            .appendingPathComponent("dm/gfx/tools/dmsh_chain.lock")
+        guard let text = try? String(contentsOf: lock, encoding: .utf8) else { return nil }
+        for line in text.split(separator: "\n") where line.hasPrefix("metal_macosx\t") {
+            return line.split(separator: "\t").last.map(String.init)
+        }
+        return nil
+    }
+
+    public var installedMetalVersion: String? { environmentStatus?.metalVersion }
+
+    public var canCompleteSetup: Bool {
+        isNxnativeValid
+            && isProdKeysValid
+            && environmentStatus?.canBuild == true
+            && libraryFolder != nil
+    }
+
+    public func completeSetup() {
+        setupCompleted = true
+        showSetupSheet = false
+        UserDefaults.standard.set(true, forKey: StorageKeys.setupCompleted)
+        logs.append(LogEntry(level: .success, message: "Setup completed."))
+    }
+
+    public func reopenSetup() {
+        showSetupSheet = true
+    }
+
+    public func refreshStorageUsage() {
+        guard !isCalculatingStorage else { return }
+        isCalculatingStorage = true
+        let manager = storageManager
+        let games = libraryGames
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            let usage = manager.usage(games: games)
+            DispatchQueue.main.async {
+                self?.storageUsage = usage
+                self?.isCalculatingStorage = false
+            }
+        }
+    }
+
+    public func deleteCaches() {
+        var removed = 0
+        for game in libraryGames {
+            do {
+                try storageManager.deleteCache(for: game)
+                removed += 1
+            } catch {
+                logs.append(LogEntry(level: .error,
+                                     message: "Could not delete the cache for \(game.name): \(error.localizedDescription)"))
+            }
+        }
+        logs.append(LogEntry(level: .info, message: "Cleaned build caches for \(removed) game\(removed == 1 ? "" : "s")."))
+        refreshStorageUsage()
+    }
+
+    public func deleteLogs() {
+        var removed = 0
+        for game in libraryGames {
+            do {
+                try storageManager.deleteLogs(for: game)
+                removed += 1
+            } catch {
+                logs.append(LogEntry(level: .error,
+                                     message: "Could not delete the logs for \(game.name): \(error.localizedDescription)"))
+            }
+        }
+        logs.append(LogEntry(level: .info, message: "Deleted logs for \(removed) game\(removed == 1 ? "" : "s")."))
+        refreshStorageUsage()
+    }
+
+    public func backupSave(for game: PortedGame) {
+        let profile = GameDetailsProfile.inspect(for: game)
+        guard profile.saveExists else {
+            lastError = "No save folder exists for \(game.name)."
+            logs.append(LogEntry(level: .warning, message: lastError!))
+            return
+        }
+        let panel = NSSavePanel()
+        panel.canCreateDirectories = true
+        panel.nameFieldStringValue = "\(game.name) save.zip"
+        panel.title = "Back Up Save"
+        panel.prompt = "Back Up"
+        if panel.runModal() == .OK, let destination = panel.url {
+            do {
+                try storageManager.backupSave(for: game, to: destination)
+                logs.append(LogEntry(level: .success,
+                                     message: "Save backed up to \(destination.path)"))
+            } catch {
+                lastError = error.localizedDescription
+                logs.append(LogEntry(level: .error,
+                                     message: "Save backup failed: \(error.localizedDescription)"))
+            }
+        }
     }
     
     public func installAppleCommandLineTools() {

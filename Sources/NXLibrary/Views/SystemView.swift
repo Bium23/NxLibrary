@@ -1,105 +1,106 @@
 import SwiftUI
+import NXLibraryCore
 
 public struct SystemView: View {
     @ObservedObject public var viewModel: AppViewModel
-    
+    @State private var selectedSection: SettingsSection = .keys
+
     public init(viewModel: AppViewModel) {
         self.viewModel = viewModel
     }
-    
-    public var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                // Header & Action Bar
-                headerView
-                
-                // MARK: - Category 1: Environment & Decryption Keys
-                categoryHeader(title: "Environment & Decryption Keys", icon: "key.fill")
-                VStack(spacing: 12) {
-                    SystemKeysCard(viewModel: viewModel)
-                    SystemToolsCard(viewModel: viewModel)
-                }
-                
-                // MARK: - Category 2: Core Engine & Patches
-                categoryHeader(title: "Core Engine", icon: "cpu.fill")
-                VStack(spacing: 12) {
-                    SystemRepoCard(viewModel: viewModel)
-                    SystemCreditsCard()
-                }
-                
-                // MARK: - Category 3: Storage & Working Directories
-                categoryHeader(title: "Storage & Library Directories", icon: "folder.fill")
-                SystemDirectoriesCard(viewModel: viewModel)
-                
-                // MARK: - Category 4: Gamepad & Audio Experience
-                categoryHeader(title: "Gamepad & Audio Feedback", icon: "gamecontroller.fill")
-                SystemAudioGamepadCard(viewModel: viewModel)
-                
-                // MARK: - Category 5: Personalization & Themes (Placed Last)
-                categoryHeader(title: "Personalization & Appearance", icon: "paintpalette.fill")
-                SystemAppearanceCard(viewModel: viewModel)
+
+    public enum SettingsSection: String, CaseIterable, Identifiable {
+        case keys = "Keys"
+        case storage = "Storage"
+        case engine = "Engine"
+        case controls = "Controls"
+        case appearance = "Appearance"
+        case about = "About"
+
+        public var id: String { rawValue }
+
+        public var icon: String {
+            switch self {
+            case .keys: return "key.fill"
+            case .storage: return "externaldrive.fill"
+            case .engine: return "cpu.fill"
+            case .controls: return "gamecontroller.fill"
+            case .appearance: return "paintpalette.fill"
+            case .about: return "info.circle.fill"
             }
-            .padding(20)
-        }
-        .sheet(isPresented: $viewModel.showInstallerSheet) {
-            InstallerSheetView(viewModel: viewModel)
-        }
-        .alert("Apple Command Line Tools", isPresented: $viewModel.showCltInstallAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Apple's official installer dialog has opened on screen. Follow Apple's prompt to complete the installation. Once finished, click 'Re-check' to verify.")
-        }
-        .confirmationDialog(
-            "Uninstall \(viewModel.dependencyToUninstall?.name ?? "this tool")?",
-            isPresented: $viewModel.showUninstallConfirm,
-            titleVisibility: .visible
-        ) {
-            Button("Uninstall Tool", role: .destructive) {
-                viewModel.executeUninstall()
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("This will remove the selected package from your system environment. You can reinstall it at any time.")
         }
     }
-    
+
+    public var body: some View {
+        VStack(spacing: 0) {
+            headerView
+            sectionBar
+            ScrollView {
+                content
+                    .padding(20)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch selectedSection {
+        case .keys:
+            VStack(spacing: 12) {
+                SystemKeysCard(viewModel: viewModel)
+                infoCard(
+                    "Key handling",
+                    text: "The key file is copied once to Application Support/NXLibrary/keys with mode 0600. The app never displays or logs key values."
+                )
+            }
+        case .storage:
+            VStack(spacing: 12) {
+                StorageCard(viewModel: viewModel)
+                SystemDirectoriesCard(viewModel: viewModel)
+            }
+        case .engine:
+            VStack(spacing: 12) {
+                SystemRepoCard(viewModel: viewModel)
+                CompatibilityCard(viewModel: viewModel)
+                SystemToolsCard(viewModel: viewModel)
+            }
+        case .controls:
+            VStack(spacing: 12) {
+                ControllerLiveStatusCard()
+                SystemAudioGamepadCard(viewModel: viewModel)
+            }
+        case .appearance:
+            SystemAppearanceCard(viewModel: viewModel)
+        case .about:
+            VStack(spacing: 12) {
+                SystemCreditsCard()
+                infoCard(
+                    "About NX Library",
+                    text: "NX Library is a personal tool for building and launching your own Switch games on this Mac. It is not affiliated with Nintendo. No Nintendo logos, fonts, sounds or UI assets are included; the engine is nxnative (MIT)."
+                )
+            }
+        }
+    }
+
     private var headerView: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Settings & System Architecture")
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Settings")
                     .font(.system(size: 18, weight: .bold, design: .rounded))
                     .foregroundColor(NXTheme.textPrimary)
-                Text("Manage decryption keys, toolchains, gamepad mappings, and visual themes.")
+                Text("Keys, storage, engine gate, controls and appearance.")
                     .font(.system(size: 12))
                     .foregroundColor(NXTheme.textSecondary)
             }
-            
+
             Spacer()
-            
-            if !viewModel.prerequisites.missingList.isEmpty {
-                Button(action: {
-                    SoundEffectService.shared.play(.click)
-                    viewModel.installAllMissingDependencies()
-                }) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "arrow.down.circle.fill")
-                        Text("Install Missing (\(viewModel.prerequisites.missingList.count))")
-                    }
-                }
-                .buttonStyle(NXAccentButtonStyle())
-            } else {
-                Button(action: {
-                    SoundEffectService.shared.play(.click)
-                    viewModel.repairAllDependencies()
-                }) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "arrow.triangle.2.circlepath")
-                        Text("Repair All")
-                    }
-                }
-                .buttonStyle(NXSecondaryButtonStyle())
+
+            Button("Setup") {
+                SoundEffectService.shared.play(.click)
+                viewModel.reopenSetup()
             }
-            
+            .buttonStyle(NXSecondaryButtonStyle())
+
             Button(action: {
                 SoundEffectService.shared.play(.click)
                 viewModel.detectEnvironment()
@@ -115,21 +116,67 @@ public struct SystemView: View {
             }
             .buttonStyle(NXSecondaryButtonStyle())
         }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
+        .background(
+            ZStack {
+                NXTheme.canvasObsidian.opacity(0.6)
+                Rectangle().fill(.ultraThinMaterial)
+            }
+        )
+        .overlay(
+            Rectangle().frame(height: 1).foregroundColor(NXTheme.borderSubtle),
+            alignment: .bottom
+        )
     }
-    
-    private func categoryHeader(title: String, icon: String) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 12, weight: .bold))
-                .foregroundColor(NXTheme.secondary)
-            
-            Text(title.uppercased())
-                .font(.system(size: 11, weight: .bold, design: .rounded))
-                .foregroundColor(NXTheme.textSecondary)
-                .tracking(0.5)
-            
+
+    private var sectionBar: some View {
+        HStack(spacing: 4) {
+            ForEach(Array(SettingsSection.allCases.enumerated()), id: \.element) { index, section in
+                let isSelected = selectedSection == section
+                Button {
+                    SoundEffectService.shared.play(.tabSwitch)
+                    withAnimation(.easeInOut(duration: 0.16)) {
+                        selectedSection = section
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: section.icon)
+                            .font(.system(size: 12, weight: isSelected ? .bold : .medium))
+                        Text(section.rawValue)
+                            .font(.system(size: 11, weight: isSelected ? .bold : .medium,
+                                          design: .rounded))
+                    }
+                    .foregroundColor(isSelected ? NXTheme.primary : NXTheme.textSecondary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(isSelected ? NXTheme.primary.opacity(0.13) : Color.clear)
+                    )
+                }
+                .buttonStyle(.plain)
+                .nxNoFocusRing()
+                .keyboardShortcut(KeyEquivalent(Character(String(index + 1))), modifiers: .command)
+            }
             Spacer()
         }
-        .padding(.top, 6)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(NXTheme.glassSurface.opacity(0.5))
+    }
+
+    private func infoCard(_ title: String, text: String) -> some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title)
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundColor(NXTheme.textPrimary)
+                Text(text)
+                    .font(.system(size: 11))
+                    .foregroundColor(NXTheme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
     }
 }

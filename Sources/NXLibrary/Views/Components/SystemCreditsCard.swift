@@ -24,7 +24,7 @@ public struct SystemCreditsCard: View {
                     }
                 }
                 
-                Text("NxNative Launcher is a native macOS graphical interface and game library built on top of the breakthrough translation engine created by seedds and foundational open-source engineering.")
+                Text("NX Library is a personal macOS interface and game library built on the nxnative engine by seedds and the open-source work below. It is not affiliated with Nintendo.")
                     .font(.system(size: 11))
                     .foregroundColor(NXTheme.textSecondary)
                 
