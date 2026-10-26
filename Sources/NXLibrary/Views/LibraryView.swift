@@ -77,19 +77,17 @@ public struct LibraryView: View {
         .sheet(item: $viewModel.gameForSettingsSheet) { game in
             GameSettingsSheetView(viewModel: viewModel, game: game)
         }
-        .confirmationDialog(
-            "Delete \(gameToDelete?.name ?? "this game")?",
-            isPresented: $showDeleteConfirm,
-            titleVisibility: .visible
-        ) {
-            Button("Delete App Bundle", role: .destructive) {
+        .confirmationDialog(deleteTitle, isPresented: $showDeleteConfirm,
+                            titleVisibility: .visible) {
+            Button(deleteTargetIsBundle ? "Delete App Bundle" : "Remove from Library",
+                   role: .destructive) {
                 if let g = gameToDelete {
                     viewModel.deletePortedGame(g)
                 }
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This permanently deletes only this app bundle:\n\(gameToDelete?.url.path ?? "unknown path")\n\nSource files, saves and build caches are not deleted.")
+            Text(deleteMessage)
         }
     }
     

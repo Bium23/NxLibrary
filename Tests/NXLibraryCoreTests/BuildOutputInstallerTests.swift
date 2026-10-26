@@ -37,4 +37,16 @@ final class BuildOutputInstallerTests: XCTestCase {
         XCTAssertEqual(try String(contentsOf: final.appendingPathComponent("Contents/Info.plist")),
                        "old")
     }
+
+    func testRefusesToReplaceANonAppItem() throws {
+        let temp = try makeApp("Temp.app", marker: "new")
+        let final = root.appendingPathComponent("Final.app")
+        try FileManager.default.createDirectory(at: final, withIntermediateDirectories: true)
+        try Data("source".utf8).write(to: final.appendingPathComponent("source.nsp"))
+        XCTAssertThrowsError(try BuildOutputInstaller.install(tempApp: temp, finalApp: final))
+        XCTAssertTrue(FileManager.default.fileExists(
+            atPath: final.appendingPathComponent("source.nsp").path))
+        XCTAssertEqual(try String(contentsOf: temp.appendingPathComponent("Contents/Info.plist")),
+                       "new")
+    }
 }

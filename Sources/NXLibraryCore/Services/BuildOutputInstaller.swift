@@ -21,6 +21,13 @@ public enum BuildOutputInstaller {
         let parent = finalApp.deletingLastPathComponent()
         try fileManager.createDirectory(at: parent, withIntermediateDirectories: true)
         if fileManager.fileExists(atPath: finalApp.path) {
+            // Never replace a source folder or other non-app item that happens
+            // to share the final .app name.
+            let finalPlist = finalApp.appendingPathComponent("Contents/Info.plist")
+            guard fileManager.fileExists(atPath: finalPlist.path) else {
+                throw BuildInstallError.replaceFailed(
+                    "refusing to replace a non-app item at \(finalApp.path)")
+            }
             let backup = parent.appendingPathComponent(finalApp.lastPathComponent + ".old")
             try? fileManager.removeItem(at: backup)
             try fileManager.moveItem(at: finalApp, to: backup)

@@ -126,6 +126,11 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         selectedSourcesSizeBytes * 2 + 10_000_000_000
     }
     
+    public var isAddDiskSpaceLow: Bool {
+        guard let avail = availableDiskBytes, selectedSourcesSizeBytes > 0 else { return false }
+        return avail < requiredBuildDiskBytes
+    }
+
     public var isDiskSpaceLow: Bool {
         guard let avail = availableBuildDiskBytes, selectedSourcesSizeBytes > 0 else { return false }
         return avail < requiredBuildDiskBytes
@@ -145,7 +150,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         return game.hasBase
             && selectedSources.contains(where: { $0.type == .base })
             && selectedSourcesSizeBytes > 0
-            && !isDiskSpaceLow
+            && !isAddDiskSpaceLow
     }
     
     public func resetSourceSelection(for game: SelectableGame) {
@@ -335,13 +340,15 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         
         NotificationService.shared.requestAuthorization()
         setupControllerNavigation()
-        sweepStaleBuildTemp()
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            self?.sweepStaleBuildTemp()
+        }
         NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.buildService?.cancel()
+            self?.buildService?.terminateNow()
             if let temp = self?.buildTempDirectory {
                 try? FileManager.default.removeItem(at: temp)
             }
@@ -985,6 +992,21 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             if deleteBundle, FileManager.default.fileExists(atPath: game.url.path) {
                 try FileManager.default.removeItem(at: game.url)
             }
+
+            // Remove only the app-owned staged workspace. A folder-mode game's
+            // workspace is the user's source folder and must never be touched.
+            var removedWorkspace = false
+            let workspaceRoot = core.appendingPathComponent("workspaces")
+                .standardizedFileURL.path
+            if let path = game.workspacePath {
+                let workspace = URL(fileURLWithPath: path).standardizedFileURL
+                if workspace.path.hasPrefix(workspaceRoot + "/"),
+                   FileManager.default.fileExists(atPath: workspace.path) {
+                    try? FileManager.default.removeItem(at: workspace)
+                    removedWorkspace = !FileManager.default.fileExists(atPath: workspace.path)
+                }
+            }
+
             var library = try libraryStore.load()
             library.games.removeAll { $0.id == game.id }
             try libraryStore.save(library)
@@ -992,13 +1014,16 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                 $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
             }
             if deleteBundle {
-                logs.append(LogEntry(level: .warning, message: "Game app deleted: \(game.name)"))
+                logs.append(LogEntry(level: .warning,
+                    message: "Game app deleted: \(game.name)\(removedWorkspace ? "; staged workspace removed" : "")"))
             } else {
                 logs.append(LogEntry(level: .warning,
-                    message: "Removed \(game.name) from the library; its files and source folders were left in place."))
+                    message: "Removed \(game.name) from the library; its source folders were left in place."))
             }
         } catch {
-            logs.append(LogEntry(level: .error, message: "Failed to delete game: \(error.localizedDescription)"))
+            let message = "Failed to delete game: \(error.localizedDescription)"
+            alertMessage = message
+            logs.append(LogEntry(level: .error, message: message))
         }
     }
     
@@ -1156,6 +1181,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             && isProdKeysValid
             && isNxnativeValid
             && environmentStatus?.canBuild == true
+            && !isDiskSpaceLow
             && canPassToolchainGate
     }
 
@@ -1170,7 +1196,12 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             return false
         }
         let required = game.sources.reduce(0) { $0 + $1.sizeBytes } * 2 + 10_000_000_000
-        if let free = availableOutputDiskBytes, free < required { return false }
+        if let titleId = game.titleId {
+            let parent = finalAppURL(for: game, titleId: titleId).deletingLastPathComponent()
+            if let free = freeBytes(at: parent), free < required { return false }
+        } else if let free = availableOutputDiskBytes, free < required {
+            return false
+        }
         if let path = game.workspacePath,
            let free = freeBytes(at: URL(fileURLWithPath: path)), free < required {
             return false
@@ -1418,10 +1449,9 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             }
         }
 
+        let finalApp = finalAppURL(for: target, titleId: titleId)
         let requiredDisk = target.sources.reduce(0) { $0 + $1.sizeBytes } * 2 + 10_000_000_000
-        let applications = URL(fileURLWithPath: NSHomeDirectory())
-            .appendingPathComponent("Applications")
-        for volume in [workspace.directory, applications] {
+        for volume in [workspace.directory, finalApp.deletingLastPathComponent()] {
             if let free = freeBytes(at: volume), free < requiredDisk {
                 let freeText = ByteCountFormatter.string(fromByteCount: free, countStyle: .file)
                 let requiredText = ByteCountFormatter.string(
@@ -1437,7 +1467,6 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             throw NXLibraryError.environmentBlocked("the nxnative venv Python is missing")
         }
 
-        let finalApp = finalAppURL(for: target, titleId: titleId)
         let tempRoot = core.appendingPathComponent("Temp").appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempRoot, withIntermediateDirectories: true)
         let tempApp = tempRoot.appendingPathComponent(finalApp.lastPathComponent)

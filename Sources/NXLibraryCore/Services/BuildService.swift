@@ -138,6 +138,17 @@ public final class BuildService {
         }
     }
 
+    /// Synchronous backstop for app termination. The normal cancel path gives
+    /// the toolchain a grace period; shutting down cannot wait for it.
+    public func terminateNow() {
+        stateLock.lock()
+        cancelled = true
+        let process = self.process
+        stateLock.unlock()
+        guard let process, process.isRunning else { return }
+        killpg(process.processIdentifier, SIGKILL)
+    }
+
     private func consume(_ data: Data, isError: Bool) {
         guard !data.isEmpty else { return }
         ioQueue.async { [weak self] in

@@ -67,7 +67,10 @@ public final class LibraryStore {
     public func merge(scanned: [PortedGame]) throws -> LibraryFile {
         var library = try load()
         for game in scanned {
-            if let index = library.games.firstIndex(where: { $0.titleId == game.titleId }) {
+            if let index = library.games.firstIndex(where: { existing in
+                guard let target = game.titleId else { return existing.titleId == nil }
+                return existing.titleId?.caseInsensitiveCompare(target) == .orderedSame
+            }) {
                 let old = library.games[index]
                 var merged = game
                 merged.id = old.id

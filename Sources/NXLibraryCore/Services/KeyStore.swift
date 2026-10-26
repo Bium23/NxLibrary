@@ -38,8 +38,8 @@ public final class KeyStore {
         }
         var hasHeader = false
         var generations: [Int] = []
-        for (index, raw) in text.components(separatedBy: .newlines).enumerated() {
-            let line = raw.trimmingCharacters(in: .whitespaces)
+        for (index, raw) in text.components(separatedBy: "\n").enumerated() {
+            let line = raw.trimmingCharacters(in: .whitespacesAndNewlines)
             if line.isEmpty || line.hasPrefix("#") { continue }
             let parts = line.split(separator: "=", maxSplits: 1).map {
                 $0.trimmingCharacters(in: .whitespaces)

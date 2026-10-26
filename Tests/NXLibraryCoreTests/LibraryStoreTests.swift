@@ -166,4 +166,20 @@ final class LibraryStoreTests: XCTestCase {
         XCTAssertEqual(merged.games.first?.status, .built)
         XCTAssertEqual(merged.games.first?.url, app)
     }
+
+    func testMergeTitleIdsCaseInsensitively() throws {
+        let store = LibraryStore(directory: dir)
+        var old = PortedGame(name: "G", url: URL(fileURLWithPath: "/tmp/G.app"),
+                             platform: .macApp, sizeBytes: 1, modificationDate: Date(),
+                             titleId: "01007EF00011E000")
+        old.status = .builtSourcesMissing
+        try store.save(LibraryFile(schemaVersion: 1, games: [old]))
+
+        var scanned = old
+        scanned.titleId = "01007ef00011e000"
+        scanned.status = .builtSourcesMissing
+        let merged = try store.merge(scanned: [scanned])
+        XCTAssertEqual(merged.games.count, 1)
+        XCTAssertEqual(merged.games.first?.titleId, "01007ef00011e000")
+    }
 }

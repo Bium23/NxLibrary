@@ -41,4 +41,13 @@ final class KeyStoreTests: XCTestCase {
             XCTAssertFalse(error.localizedDescription.contains("TOP_SECRET"))
         }
     }
+
+    func testCRLFLineNumber() throws {
+        let source = dir.appendingPathComponent("crlf.keys")
+        try (fakeKeys().replacingOccurrences(of: "\n", with: "\r\n") + "BAD\r\n")
+            .write(to: source, atomically: true, encoding: .utf8)
+        XCTAssertThrowsError(try KeyStore(directory: dir.appendingPathComponent("k4")).importKey(from: source)) { error in
+            XCTAssertTrue(error.localizedDescription.contains("3"), error.localizedDescription)
+        }
+    }
 }
