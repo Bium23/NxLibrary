@@ -2,7 +2,6 @@ import SwiftUI
 
 public struct BuildView: View {
     @ObservedObject public var viewModel: AppViewModel
-    @State private var isCreditsDismissed: Bool = false
     
     public init(viewModel: AppViewModel) {
         self.viewModel = viewModel
@@ -12,7 +11,7 @@ public struct BuildView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 // Notifications, Updates & Quick-Fix Banners
-                BuildBanners(viewModel: viewModel, isCreditsDismissed: $isCreditsDismissed)
+                BuildBanners(viewModel: viewModel)
                 
                 // 3-Step Wizard Navigation Stepper
                 wizardStepperHeader
@@ -53,11 +52,11 @@ public struct BuildView: View {
                 
                 stepDivider(isCompleted: viewModel.buildWizardStep > 1)
                 
-                stepIndicator(step: 2, title: "2. Configure & Output", icon: "slider.horizontal.3")
+                stepIndicator(step: 2, title: "2. Review & Add", icon: "checklist")
                 
                 stepDivider(isCompleted: viewModel.buildWizardStep > 2)
                 
-                stepIndicator(step: 3, title: "3. Porting Execution", icon: "hammer.fill")
+                stepIndicator(step: 3, title: "3. Build", icon: "hammer.fill")
             }
         }
     }

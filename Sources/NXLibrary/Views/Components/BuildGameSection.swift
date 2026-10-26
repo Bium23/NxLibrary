@@ -1,95 +1,95 @@
 import SwiftUI
+import NXLibraryCore
 
 public struct BuildGameSection: View {
     @ObservedObject public var viewModel: AppViewModel
-    
+
     public init(viewModel: AppViewModel) {
         self.viewModel = viewModel
     }
-    
+
     public var body: some View {
         GlassCard {
             VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    Label("1. Game Files (NSP / NSZ / XCI)", systemImage: "gamecontroller.fill")
+                HStack(spacing: 8) {
+                    Label("1. Game Sources (NSP / NSZ / XCI / XCZ)", systemImage: "gamecontroller.fill")
                         .symbolRenderingMode(.hierarchical)
                         .font(.system(size: 14, weight: .bold, design: .rounded))
                         .foregroundColor(NXTheme.textPrimary)
+
+                    if viewModel.isScanningGameFolder {
+                        ProgressView().controlSize(.small)
+                    }
+
                     Spacer()
                 }
-                
-                // Drag & Drop Area
+
                 DropZoneView(viewModel: viewModel)
-                
+
                 if viewModel.selectedGameFolder != nil {
-                    if viewModel.detectedFiles.isEmpty {
+                    if viewModel.isScanningGameFolder {
+                        HStack(spacing: 8) {
+                            ProgressView().controlSize(.small)
+                            Text("Scanning sources with nxnative rules...")
+                                .font(.system(size: 12))
+                                .foregroundColor(NXTheme.textSecondary)
+                        }
+                        .padding(8)
+                    } else if viewModel.detectedGames.isEmpty {
                         noFilesWarning
                     } else {
                         detectedGamesList
-                    }
-                }
-                
-                // Storage Space Status Alert
-                storageStatusView
-                
-                // Continue to Step 2 Action
-                if viewModel.selectedGame != nil {
-                    HStack {
-                        Spacer()
-                        Button(action: {
-                            withAnimation(.easeInOut(duration: 0.25)) {
-                                viewModel.goToWizardStep(2)
-                            }
-                        }) {
-                            HStack(spacing: 8) {
-                                Text("Continue to Configuration")
-                                Image(systemName: "arrow.right.circle.fill")
-                            }
-                            .font(.system(size: 13, weight: .bold, design: .rounded))
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 8)
+                        if let selected = viewModel.selectedGame {
+                            sourceChecklist(for: selected)
                         }
-                        .buttonStyle(NXPrimaryButtonStyle())
                     }
-                    .padding(.top, 4)
                 }
+
+                keysStatusView
+                diskStatusView
+                continueRow
             }
         }
     }
-    
+
     private var noFilesWarning: some View {
-        HStack(spacing: 8) {
+        HStack(alignment: .top, spacing: 8) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundColor(NXTheme.tertiary)
-            Text("No .nsp, .nsz, or .xci files found in this folder.")
+                .foregroundColor(NXTheme.warning)
+            Text(viewModel.scanError
+                 ?? "No readable NSP, XCI, NSZ or XCZ files were found in this folder.")
                 .font(.system(size: 12))
                 .foregroundColor(NXTheme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(8)
-        .background(NXTheme.tertiary.opacity(0.12))
+        .padding(9)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(NXTheme.warning.opacity(0.09))
         .cornerRadius(8)
     }
-    
+
     private var detectedGamesList: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Select Game to Port (\(viewModel.detectedGames.count) detected):")
+                Text("Detected games (\(viewModel.detectedGames.count))")
                     .font(.system(size: 12, weight: .bold, design: .rounded))
                     .foregroundColor(NXTheme.textPrimary)
                 Spacer()
-                if let sel = viewModel.selectedGame {
-                    Text("Selected: \(sel.formattedSize)")
+                if let selected = viewModel.selectedGame {
+                    Text("\(selected.files.count) files · \(selected.formattedSize)")
                         .font(.system(size: 11, weight: .semibold, design: .monospaced))
                         .foregroundColor(NXTheme.secondary)
                 }
             }
-            
+
             VStack(spacing: 6) {
                 ForEach(viewModel.detectedGames) { game in
                     SelectableGameCard(
                         game: game,
                         isSelected: viewModel.selectedGame?.id == game.id,
                         onSelect: {
+                            guard viewModel.selectedGame?.id != game.id else { return }
+                            SoundEffectService.shared.play(.click)
                             viewModel.selectedGame = game
                         }
                     )
@@ -98,44 +98,147 @@ public struct BuildGameSection: View {
         }
         .padding(.top, 4)
     }
-    
-    @ViewBuilder
-    private var storageStatusView: some View {
-        if let diskWarning = viewModel.diskSpaceWarningMessage {
-            HStack(alignment: .top, spacing: 10) {
-                Image(systemName: "externaldrive.badge.xmark")
-                    .font(.system(size: 20))
-                    .foregroundColor(NXTheme.tertiary)
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Low Disk Space Alert")
-                        .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .foregroundColor(NXTheme.tertiary)
-                    Text(diskWarning)
+
+    private func sourceChecklist(for game: SelectableGame) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Sources to include")
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundColor(NXTheme.textPrimary)
+                Spacer()
+                Text("\(viewModel.selectedSources.count) of \(game.files.count) · \(viewModel.formattedSelectedSourcesSize)")
+                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    .foregroundColor(NXTheme.secondary)
+            }
+
+            if !game.hasBase {
+                HStack(spacing: 7) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(NXTheme.warning)
+                    Text("Base required: this group has an update or DLC but no base game.")
                         .font(.system(size: 11))
+                        .foregroundColor(NXTheme.warning)
+                }
+                .padding(8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(NXTheme.warning.opacity(0.09))
+                .cornerRadius(8)
+            }
+
+            VStack(spacing: 6) {
+                ForEach(game.files) { item in
+                    FileCard(
+                        item: item,
+                        isSelected: viewModel.selectedSourceIDs.contains(item.id),
+                        isLocked: item.type == .base,
+                        onToggle: { viewModel.toggleSource(item) }
+                    )
+                }
+            }
+
+            Text("The base game stays selected. One update can be active; DLC files can be selected individually.")
+                .font(.system(size: 10))
+                .foregroundColor(NXTheme.textMuted)
+        }
+        .padding(.top, 4)
+    }
+
+    private var keysStatusView: some View {
+        HStack(spacing: 10) {
+            Image(systemName: viewModel.isProdKeysValid ? "key.fill" : "key.slash.fill")
+                .font(.system(size: 16))
+                .foregroundColor(viewModel.isProdKeysValid ? NXTheme.success : NXTheme.warning)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(viewModel.isProdKeysValid ? "Keys: OK" : "Keys: missing")
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundColor(NXTheme.textPrimary)
+                if let summary = viewModel.keySummary, viewModel.isProdKeysValid {
+                    Text("header_key present · \(summary.applicationKeyGenerations.count) application key generations")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(NXTheme.textSecondary)
+                } else {
+                    Text("Import prod.keys once. It is copied to Application Support with 0600 permissions.")
+                        .font(.system(size: 10))
                         .foregroundColor(NXTheme.textSecondary)
                 }
             }
-            .padding(10)
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(NXTheme.tertiary.opacity(0.12))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(NXTheme.tertiary.opacity(0.35), lineWidth: 1)
-            )
-        } else if let avail = viewModel.availableDiskBytes, let sel = viewModel.selectedGame {
-            let availStr = ByteCountFormatter.string(fromByteCount: avail, countStyle: .file)
-            HStack(spacing: 8) {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(Color(red: 0.13, green: 0.77, blue: 0.37))
-                    .font(.system(size: 14))
-                Text("Storage ready: ~\(availStr) available on volume for \(sel.name) (\(sel.formattedSize))")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(NXTheme.textSecondary)
+
+            Spacer()
+
+            Button(viewModel.isProdKeysValid ? "Replace Key..." : "Import Key...") {
+                viewModel.selectProdKeysFile()
             }
-            .padding(.horizontal, 4)
+            .buttonStyle(NXSecondaryButtonStyle())
+            .controlSize(.small)
         }
+        .padding(9)
+        .background(NXTheme.glassSurfaceElevated.opacity(0.55))
+        .cornerRadius(8)
+    }
+
+    @ViewBuilder
+    private var diskStatusView: some View {
+        if let available = viewModel.availableDiskBytes, viewModel.selectedSourcesSizeBytes > 0 {
+            let required = viewModel.requiredBuildDiskBytes
+            let availableText = ByteCountFormatter.string(fromByteCount: available, countStyle: .file)
+            let requiredText = ByteCountFormatter.string(fromByteCount: required, countStyle: .file)
+            let low = viewModel.isDiskSpaceLow
+            HStack(spacing: 9) {
+                Image(systemName: low ? "externaldrive.badge.xmark" : "externaldrive.badge.checkmark")
+                    .font(.system(size: 16))
+                    .foregroundColor(low ? NXTheme.warning : NXTheme.success)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(low ? "Not enough disk space" : "Disk space ready")
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .foregroundColor(low ? NXTheme.warning : NXTheme.textPrimary)
+                    Text("\(availableText) available · \(requiredText) needed (twice the sources + 10 GB)")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(NXTheme.textSecondary)
+                }
+                Spacer()
+            }
+            .padding(9)
+            .background((low ? NXTheme.warning : NXTheme.success).opacity(0.08))
+            .cornerRadius(8)
+        }
+    }
+
+    private var continueRow: some View {
+        HStack {
+            if let hint = continueHint {
+                Text(hint)
+                    .font(.system(size: 11))
+                    .foregroundColor(NXTheme.warning)
+                    .lineLimit(2)
+            }
+            Spacer()
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    viewModel.goToWizardStep(2)
+                }
+            }) {
+                HStack(spacing: 8) {
+                    Text("Continue to Review")
+                    Image(systemName: "arrow.right.circle.fill")
+                }
+                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .padding(.horizontal, 18)
+                .padding(.vertical, 8)
+            }
+            .buttonStyle(NXPrimaryButtonStyle())
+            .disabled(!viewModel.canAddSelectedGame)
+            .opacity(viewModel.canAddSelectedGame ? 1 : 0.45)
+            .keyboardShortcut(.defaultAction)
+        }
+        .padding(.top, 2)
+    }
+
+    private var continueHint: String? {
+        guard let game = viewModel.selectedGame else { return nil }
+        if !game.hasBase { return "Base required: add the base game before continuing." }
+        if viewModel.selectedSources.isEmpty { return "Select at least the base game." }
+        if viewModel.isDiskSpaceLow { return "Free disk space before continuing." }
+        return nil
     }
 }

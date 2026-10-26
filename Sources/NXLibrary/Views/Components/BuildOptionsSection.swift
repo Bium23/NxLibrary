@@ -4,58 +4,114 @@ import NXLibraryCore
 public struct BuildOptionsSection: View {
     @ObservedObject public var viewModel: AppViewModel
     @State private var isAdvancedExpanded: Bool = false
-    
+
     public init(viewModel: AppViewModel) {
         self.viewModel = viewModel
     }
-    
+
     public var body: some View {
         VStack(spacing: 16) {
-            // Selected Game Summary Banner
             SelectedGameSummaryCard(viewModel: viewModel)
-            
-            // MARK: - Target Platform & Output Card
-            GlassCard {
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack {
-                        Label("2. Target Platform & Output", systemImage: "macbook.and.iphone")
-                            .symbolRenderingMode(.hierarchical)
-                            .font(.system(size: 14, weight: .bold, design: .rounded))
+            destinationCard
+            sourceSummaryCard
+            advancedOptionsCard
+            stepNavigationFooter
+        }
+    }
+
+    private var destinationCard: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 12) {
+                Label("2. Install Destination", systemImage: "arrow.down.app.fill")
+                    .symbolRenderingMode(.hierarchical)
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundColor(NXTheme.textPrimary)
+
+                HStack(spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(NXTheme.primary.opacity(0.16))
+                            .frame(width: 42, height: 42)
+                        Image(systemName: "macbook.gen2")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(NXTheme.primary)
+                    }
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("macOS app · Apple Silicon")
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
                             .foregroundColor(NXTheme.textPrimary)
-                        Spacer()
+                        Text("~/Applications/<game>.app")
+                            .font(.system(size: 11, design: .monospaced))
+                            .foregroundColor(NXTheme.textSecondary)
                     }
-                    
-                    // Platform Selector Cards
-                    HStack(spacing: 12) {
-                        ForEach(TargetPlatform.allCases) { plat in
-                            platformCard(plat)
-                        }
-                    }
-                    
-                    Divider().opacity(0.2)
-                    
-                    // Output Folder Option
-                    VStack(alignment: .leading, spacing: 8) {
-                        Toggle("Custom output folder (defaults to game directory)", isOn: $viewModel.useCustomOutputFolder)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(NXTheme.textPrimary)
-                        
-                        if viewModel.useCustomOutputFolder {
-                            PathPickerRow(
-                                title: "Destination Directory",
-                                icon: "arrow.down.doc.fill",
-                                path: viewModel.customOutputFolder?.path,
-                                placeholder: "Choose folder where the .app will be saved...",
-                                actionTitle: "Choose..."
-                            ) {
-                                viewModel.selectOutputFolder()
-                            }
-                        }
-                    }
+
+                    Spacer()
+
+                    Text("No DMG")
+                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(NXTheme.glassSurfaceElevated)
+                        .foregroundColor(NXTheme.textSecondary)
+                        .clipShape(Capsule())
                 }
+                .padding(12)
+                .background(NXTheme.glassSurfaceElevated.opacity(0.55))
+                .cornerRadius(10)
+
+                Text("The app is built into a temporary folder and moved into place atomically. The previous app stays untouched on failure or cancel.")
+                    .font(.system(size: 11))
+                    .foregroundColor(NXTheme.textSecondary)
             }
-            
-            // MARK: - Advanced Options Disclosure Group
+        }
+    }
+
+    private var sourceSummaryCard: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Label("3. Sources to Include", systemImage: "shippingbox.fill")
+                        .symbolRenderingMode(.hierarchical)
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(NXTheme.textPrimary)
+                    Spacer()
+                    Text("\(viewModel.selectedSources.count) selected · \(viewModel.formattedSelectedSourcesSize)")
+                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                        .foregroundColor(NXTheme.secondary)
+                }
+
+                if let game = viewModel.selectedGame {
+                    Text(game.name)
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundColor(NXTheme.textSecondary)
+
+                    HStack(spacing: 8) {
+                        sourcePill("Base", count: viewModel.selectedSources.filter { $0.type == .base }.count)
+                        sourcePill("Updates", count: viewModel.selectedSources.filter { $0.type == .update }.count)
+                        sourcePill("DLC", count: viewModel.selectedSources.filter { $0.type == .dlc }.count)
+                    }
+
+                    if !game.hasBase {
+                        warning("Base required: this folder has an update or DLC without the base game.")
+                    } else if !viewModel.selectedSources.contains(where: { $0.type == .base }) {
+                        warning("The base game must stay selected.")
+                    }
+                } else {
+                    Text("No game selected. Go back to step 1.")
+                        .font(.system(size: 11))
+                        .foregroundColor(NXTheme.textSecondary)
+                }
+
+                Text("The base game, newest update and all non-empty DLC are selected by default. You can change the selection in step 1.")
+                    .font(.system(size: 11))
+                    .foregroundColor(NXTheme.textMuted)
+            }
+        }
+    }
+
+    private var advancedOptionsCard: some View {
+        GlassCard {
             DisclosureGroup(isExpanded: $isAdvancedExpanded) {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack(spacing: 20) {
@@ -63,7 +119,7 @@ public struct BuildOptionsSection: View {
                             Text("Application Name (Optional):")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(NXTheme.textSecondary)
-                            TextField("Custom name displayed in macOS / iOS", text: $viewModel.appName)
+                            TextField("Name displayed in macOS", text: $viewModel.appName)
                                 .textFieldStyle(.plain)
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 6)
@@ -74,7 +130,7 @@ public struct BuildOptionsSection: View {
                                         .stroke(NXTheme.specularRim, lineWidth: 0.8)
                                 )
                         }
-                        
+
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Bundle Identifier (Optional):")
                                 .font(.system(size: 12, weight: .medium))
@@ -91,7 +147,7 @@ public struct BuildOptionsSection: View {
                                 )
                         }
                     }
-                    
+
                     HStack(spacing: 20) {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Game Language:")
@@ -106,152 +162,117 @@ public struct BuildOptionsSection: View {
                         }
                         Spacer()
                     }
-                    
-                    Divider().opacity(0.2)
-                    
-                    Text("Mac builds always keep their extracted files, so a rebuild does not decrypt the sources again.")
+
+                    Text("Extracted files are always kept for fast rebuilds on macOS.")
                         .font(.system(size: 11))
-                        .foregroundColor(NXTheme.textSecondary)
+                        .foregroundColor(NXTheme.textMuted)
                 }
                 .padding(.top, 8)
             } label: {
-                Label("Advanced Options & Build Flags", systemImage: "slider.horizontal.3")
+                Label("Advanced Options", systemImage: "slider.horizontal.3")
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundColor(NXTheme.textSecondary)
             }
-            .padding(12)
-            .background(
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(NXTheme.glassSurface.opacity(0.7))
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                }
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(NXTheme.specularRim, lineWidth: 0.8)
-            )
-            
-            // Step 2 Navigation Footer
-            stepNavigationFooter
         }
     }
-    
+
     private var stepNavigationFooter: some View {
         GlassCard {
-            HStack {
-                Button(action: {
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        viewModel.goToWizardStep(1)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            viewModel.goToWizardStep(1)
+                        }
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.left.circle.fill")
+                            Text("Back to Sources")
+                        }
+                        .font(.system(size: 13, weight: .semibold))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 7)
                     }
-                }) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "arrow.left.circle.fill")
-                        Text("Back to Game Selection")
+                    .buttonStyle(NXSecondaryButtonStyle())
+
+                    Spacer()
+
+                    if viewModel.canStartBuild {
+                        Button("Add to Library") {
+                            viewModel.addSelectedGame(buildNow: false)
+                        }
+                        .buttonStyle(NXSecondaryButtonStyle())
+
+                        Button("Add & Build") {
+                            viewModel.addSelectedGame(buildNow: true)
+                        }
+                        .buttonStyle(NXPrimaryButtonStyle())
+                    } else {
+                        Button("Add & Build") {
+                            viewModel.addSelectedGame(buildNow: true)
+                        }
+                        .buttonStyle(NXSecondaryButtonStyle())
+                        .opacity(0.45)
+                        .disabled(true)
+
+                        Button("Add to Library") {
+                            viewModel.addSelectedGame(buildNow: false)
+                        }
+                        .buttonStyle(NXPrimaryButtonStyle())
+                        .disabled(!viewModel.canAddSelectedGame)
                     }
-                    .font(.system(size: 13, weight: .semibold))
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 7)
                 }
-                .buttonStyle(NXSecondaryButtonStyle())
-                
-                Spacer()
-                
-                if !viewModel.canStartBuild {
-                    Text(missingRequirementHint())
-                        .font(.system(size: 11))
-                        .foregroundColor(NXTheme.tertiary)
-                        .lineLimit(1)
-                }
-                
-                Button(action: {
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        viewModel.startBuild()
-                    }
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "play.fill")
-                        Text("Port Game")
-                    }
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                    .padding(.horizontal, 22)
-                    .padding(.vertical, 8)
-                }
-                .buttonStyle(NXPrimaryButtonStyle())
-                .disabled(!viewModel.canStartBuild)
+
+                Text(footerHint)
+                    .font(.system(size: 11))
+                    .foregroundColor(viewModel.canAddSelectedGame ? NXTheme.textSecondary : NXTheme.warning)
+                    .lineLimit(2)
             }
         }
     }
-    
-    private func missingRequirementHint() -> String {
-        if viewModel.selectedGame == nil {
-            return "Please select a game first."
+
+    private var footerHint: String {
+        guard viewModel.selectedGame != nil else { return "Select a game in step 1." }
+        guard let selected = viewModel.selectedGame, selected.hasBase else {
+            return "Base required: add the base game NSP/XCI before adding it."
         }
-        if !viewModel.isProdKeysValid {
-            return "prod.keys missing. Configure in Settings."
-        }
-        if !viewModel.isNxnativeValid {
-            return "nxnative core missing. Configure in Settings."
-        }
+        guard !viewModel.selectedSources.isEmpty else { return "Select at least the base game." }
         if viewModel.isDiskSpaceLow {
-            return "Insufficient disk space."
+            return viewModel.diskSpaceWarningMessage ?? "Not enough free disk space."
         }
+        if viewModel.canStartBuild { return "Ready to add and build." }
+        if !viewModel.isProdKeysValid { return "You can add it now; import prod.keys to build it." }
+        if !viewModel.isNxnativeValid { return "You can add it now; the nxnative checkout is missing." }
         if viewModel.environmentStatus?.canBuild != true {
-            return "The build environment is incomplete. Check Settings."
+            return "You can add it now; the build environment is incomplete."
         }
         if !viewModel.canPassToolchainGate {
-            return "Toolchain not certified. Enable the override in Settings."
+            return "You can add it now; the toolchain is not certified, so building is blocked until you enable the override in Settings."
         }
-        return "Complete setup requirements to port."
+        return "You can add it now."
     }
-    
-    private func platformCard(_ plat: TargetPlatform) -> some View {
-        Button(action: {
-            viewModel.platform = plat
-        }) {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Image(systemName: plat.iconName)
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(viewModel.platform == plat ? NXTheme.secondary : NXTheme.textSecondary)
-                    Text(plat.title)
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
-                        .foregroundColor(NXTheme.textPrimary)
-                    Spacer()
-                    if viewModel.platform == plat {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(NXTheme.secondary)
-                            .font(.system(size: 16))
-                    }
-                }
-                
-                Text(plat.subtitle)
-                    .font(.system(size: 11))
-                    .foregroundColor(NXTheme.textSecondary)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(viewModel.platform == plat ? NXTheme.primary.opacity(0.18) : NXTheme.glassSurfaceElevated.opacity(0.6))
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                }
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(
-                        viewModel.platform == plat ? NXTheme.selectedBorder : NXTheme.specularRim,
-                        lineWidth: viewModel.platform == plat ? 1.5 : 0.8
-                    )
-            )
-            .shadow(color: viewModel.platform == plat ? NXTheme.primary.opacity(0.25) : Color.clear, radius: 8, x: 0, y: 2)
+
+    private func sourcePill(_ title: String, count: Int) -> some View {
+        Text("\(title): \(count)")
+            .font(.system(size: 10, weight: .bold, design: .rounded))
+            .padding(.horizontal, 7)
+            .padding(.vertical, 2)
+            .background(NXTheme.glassSurfaceElevated)
+            .foregroundColor(count > 0 ? NXTheme.textPrimary : NXTheme.textMuted)
+            .clipShape(Capsule())
+    }
+
+    private func warning(_ text: String) -> some View {
+        HStack(spacing: 7) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundColor(NXTheme.warning)
+            Text(text)
+                .font(.system(size: 11))
+                .foregroundColor(NXTheme.warning)
         }
-        .buttonStyle(.plain)
-        .nxNoFocusRing()
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(NXTheme.warning.opacity(0.09))
+        .cornerRadius(8)
     }
 }

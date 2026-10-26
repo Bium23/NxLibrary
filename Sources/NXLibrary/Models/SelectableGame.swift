@@ -23,7 +23,22 @@ public struct SelectableGame: Identifiable, Equatable {
     }
     
     public var baseFile: GameFileItem? {
-        files.first(where: { $0.type == .base }) ?? files.first
+        files.first(where: { $0.type == .base })
+    }
+
+    public var newestUpdate: GameFileItem? {
+        files.filter { $0.type == .update }
+            .max { lhs, rhs in
+                Self.versionNumber(lhs.versionString) < Self.versionNumber(rhs.versionString)
+            }
+    }
+
+    public var hasBase: Bool { baseFile != nil }
+
+    private static func versionNumber(_ value: String?) -> Int {
+        guard let value else { return -1 }
+        let digits = value.lowercased().hasPrefix("v") ? String(value.dropFirst()) : value
+        return Int(digits) ?? -1
     }
     
     public var updateCount: Int {

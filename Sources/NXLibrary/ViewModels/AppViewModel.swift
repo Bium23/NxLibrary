@@ -8,11 +8,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     private enum StorageKeys {
         static let savedGameFolder = "NXNative_SavedGameFolder"
         static let savedLibraryFolder = "NXNative_SavedLibraryFolder"
-        static let savedCustomOutputFolder = "NXNative_SavedCustomOutputFolder"
-        static let savedUseCustomOutput = "NXNative_SavedUseCustomOutput"
         static let savedProdKeysPath = "NXNative_SavedProdKeysPath"
-        static let savedKeepExtracted = "NXNative_SavedKeepExtracted"
-        static let savedPlatform = "NXNative_SavedPlatform"
         static let savedIconAppearanceMode = "NXNative_SavedIconAppearanceMode"
         static let allowUntestedToolchain = "NXLibrary_AllowUntestedToolchain"
     }
@@ -44,21 +40,27 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                 scanGameFolder(folder)
             } else {
                 UserDefaults.standard.removeObject(forKey: StorageKeys.savedGameFolder)
-                detectedFiles = []
                 detectedGames = []
                 selectedGame = nil
+                selectedSourceIDs = []
+                scanError = nil
             }
         }
     }
-    @Published public var detectedFiles: [GameFileItem] = []
     @Published public var detectedGames: [SelectableGame] = []
     @Published public var selectedGame: SelectableGame? = nil {
         didSet {
             if let game = selectedGame {
                 self.appName = game.name
+                resetSourceSelection(for: game)
+            } else {
+                selectedSourceIDs = []
             }
         }
     }
+    @Published public var selectedSourceIDs: Set<UUID> = []
+    @Published public var isScanningGameFolder: Bool = false
+    @Published public var scanError: String? = nil
     
     // MARK: - Disk Capacity Pre-flight
     public var availableDiskBytes: Int64? {
@@ -75,54 +77,75 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         return values?.volumeAvailableCapacity.map { Int64($0) }
     }
     
+    public var selectedSources: [GameFileItem] {
+        guard let game = selectedGame else { return [] }
+        return game.files.filter { selectedSourceIDs.contains($0.id) }
+    }
+    
+    public var selectedSourcesSizeBytes: Int64 {
+        selectedSources.reduce(0) { $0 + $1.sizeBytes }
+    }
+    
+    public var formattedSelectedSourcesSize: String {
+        ByteCountFormatter.string(fromByteCount: selectedSourcesSizeBytes, countStyle: .file)
+    }
+    
+    /// The build keeps an extracted copy and writes a temporary app before the
+    /// atomic install, so plan for roughly twice the source size plus 10 GB.
+    public var requiredBuildDiskBytes: Int64 {
+        selectedSourcesSizeBytes * 2 + 10_000_000_000
+    }
+    
     public var isDiskSpaceLow: Bool {
-        guard let avail = availableDiskBytes else { return false }
-        let targetBytes: Int64
-        if let sel = selectedGame {
-            targetBytes = sel.totalSizeBytes
-        } else if !detectedFiles.isEmpty {
-            targetBytes = detectedFiles.reduce(0) { $0 + $1.sizeBytes }
-        } else {
-            return false
-        }
-        // Extraction requires at least the game size plus ~300MB buffer
-        return avail < (targetBytes + 300_000_000)
+        guard let avail = availableDiskBytes, selectedSourcesSizeBytes > 0 else { return false }
+        return avail < requiredBuildDiskBytes
     }
     
     public var diskSpaceWarningMessage: String? {
         guard isDiskSpaceLow, let avail = availableDiskBytes else { return nil }
-        let targetBytes: Int64 = selectedGame?.totalSizeBytes ?? detectedFiles.reduce(0) { $0 + $1.sizeBytes }
-        let needed = (targetBytes + 300_000_000) - avail
+        let needed = requiredBuildDiskBytes - avail
         let availStr = ByteCountFormatter.string(fromByteCount: avail, countStyle: .file)
-        let totalStr = ByteCountFormatter.string(fromByteCount: targetBytes, countStyle: .file)
+        let requiredStr = ByteCountFormatter.string(fromByteCount: requiredBuildDiskBytes, countStyle: .file)
         let neededStr = ByteCountFormatter.string(fromByteCount: needed, countStyle: .file)
-        let gameName = selectedGame?.name ?? "Game"
-        return "Storage warning: \(gameName) extraction requires ~\(totalStr), but only \(availStr) is free on this volume. Please free up at least \(neededStr) to ensure the .app can be extracted and built."
+        return "Storage warning: this build needs ~\(requiredStr) free (twice the selected sources plus 10 GB), but only \(availStr) is available. Free at least \(neededStr) before adding it."
+    }
+    
+    public var canAddSelectedGame: Bool {
+        guard !isBuilding, let game = selectedGame else { return false }
+        return game.hasBase
+            && selectedSources.contains(where: { $0.type == .base })
+            && selectedSourcesSizeBytes > 0
+            && !isDiskSpaceLow
+    }
+    
+    public func resetSourceSelection(for game: SelectableGame) {
+        var ids = Set<UUID>()
+        if let base = game.baseFile { ids.insert(base.id) }
+        if let update = game.newestUpdate { ids.insert(update.id) }
+        for dlc in game.files where dlc.type == .dlc && dlc.sizeBytes > 0 {
+            ids.insert(dlc.id)
+        }
+        selectedSourceIDs = ids
+    }
+    
+    public func toggleSource(_ item: GameFileItem) {
+        guard let game = selectedGame,
+              let file = game.files.first(where: { $0.id == item.id }) else { return }
+        if file.type == .base { return }
+        if selectedSourceIDs.contains(file.id) {
+            selectedSourceIDs.remove(file.id)
+        } else {
+            if file.type == .update {
+                selectedSourceIDs.subtract(
+                    game.files.filter { $0.type == .update }.map(\.id)
+                )
+            }
+            selectedSourceIDs.insert(file.id)
+        }
     }
     
     // MARK: - Drag & Drop & ZIP
     @Published public var dropErrorMessage: String? = nil
-    
-    // MARK: - Target & Output
-    @Published public var platform: TargetPlatform = .macApp {
-        didSet {
-            UserDefaults.standard.set(platform.rawValue, forKey: StorageKeys.savedPlatform)
-        }
-    }
-    @Published public var useCustomOutputFolder: Bool = false {
-        didSet {
-            UserDefaults.standard.set(useCustomOutputFolder, forKey: StorageKeys.savedUseCustomOutput)
-        }
-    }
-    @Published public var customOutputFolder: URL? {
-        didSet {
-            if let folder = customOutputFolder {
-                UserDefaults.standard.set(folder.path, forKey: StorageKeys.savedCustomOutputFolder)
-            } else {
-                UserDefaults.standard.removeObject(forKey: StorageKeys.savedCustomOutputFolder)
-            }
-        }
-    }
     
     // MARK: - Library
     @Published public var libraryGames: [PortedGame] = []
@@ -165,12 +188,6 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     @Published public var appName: String = ""
     @Published public var bundleId: String = ""
     @Published public var selectedLanguage: String = "auto"
-    @Published public var keepExtracted: Bool = true {
-        didSet {
-            UserDefaults.standard.set(keepExtracted, forKey: StorageKeys.savedKeepExtracted)
-        }
-    }
-    @Published public var surveyOnly: Bool = false
     
     // MARK: - Build State
     @Published public var isBuilding: Bool = false
@@ -246,23 +263,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             UserDefaults.standard.removeObject(forKey: StorageKeys.savedLibraryFolder)
         }
         
-        // Restore custom output settings
-        if UserDefaults.standard.object(forKey: StorageKeys.savedUseCustomOutput) != nil {
-            self.useCustomOutputFolder = UserDefaults.standard.bool(forKey: StorageKeys.savedUseCustomOutput)
-        }
-        if let savedOut = UserDefaults.standard.string(forKey: StorageKeys.savedCustomOutputFolder),
-           FileManager.default.fileExists(atPath: savedOut) {
-            self.customOutputFolder = URL(fileURLWithPath: savedOut)
-        }
-        
         // Restore user preferences
-        if let savedKeep = UserDefaults.standard.object(forKey: StorageKeys.savedKeepExtracted) as? Bool {
-            self.keepExtracted = savedKeep
-        }
-        if let savedPlat = UserDefaults.standard.string(forKey: StorageKeys.savedPlatform),
-           let p = TargetPlatform(rawValue: savedPlat) {
-            self.platform = p
-        }
         if let savedMode = UserDefaults.standard.string(forKey: StorageKeys.savedIconAppearanceMode),
            let mode = AppIconAppearanceMode(rawValue: savedMode) {
             self.iconAppearanceMode = mode
@@ -722,19 +723,74 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     
     // MARK: - Game Scan
     private func scanGameFolder(_ folder: URL) {
+        scanError = nil
+        isScanningGameFolder = true
+        let catalog = sourceCatalog
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let files = GameScanner.shared.scan(directory: folder)
-            let games = GameScanner.shared.groupFilesIntoGames(files: files)
+            let urls = Self.sourceFileURLs(in: folder)
+            let readable = urls.filter { (try? catalog.inspect($0)) != nil }
+            let detected = (try? catalog.scan(files: readable)) ?? []
+            let games = detected.map(Self.selectableGame(from:))
             DispatchQueue.main.async {
-                self?.detectedFiles = files
-                self?.detectedGames = games
-                self?.selectedGame = games.first
-                
-                if let self = self, let firstGame = games.first {
-                    self.appName = firstGame.name
+                guard let self else { return }
+                self.isScanningGameFolder = false
+                self.detectedGames = games
+                self.selectedGame = games.first
+                if games.isEmpty {
+                    self.scanError = urls.isEmpty
+                        ? "No NSP, XCI, NSZ or XCZ files were found in this folder."
+                        : "No readable game files were found. Check that the files are complete and have a title ID or ticket."
+                    self.logs.append(LogEntry(level: .warning, message: self.scanError!))
+                } else {
+                    self.logs.append(LogEntry(level: .info,
+                        message: "Detected \(games.count) game\(games.count == 1 ? "" : "s") in \(folder.lastPathComponent)."))
                 }
             }
         }
+    }
+    
+    private static func sourceFileURLs(in folder: URL) -> [URL] {
+        let allowed = Set(["nsp", "nsz", "xci", "xcz"])
+        let fm = FileManager.default
+        guard let enumerator = fm.enumerator(
+            at: folder,
+            includingPropertiesForKeys: [.isRegularFileKey, .fileSizeKey],
+            options: [.skipsHiddenFiles, .skipsPackageDescendants]
+        ) else { return [] }
+        var urls: [URL] = []
+        for case let url as URL in enumerator {
+            guard allowed.contains(url.pathExtension.lowercased()) else { continue }
+            let values = try? url.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
+            guard values?.isRegularFile == true, (values?.fileSize ?? 0) > 0 else { continue }
+            urls.append(url)
+        }
+        return urls.sorted {
+            $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending
+        }
+    }
+    
+    private static func selectableGame(from game: DetectedGame) -> SelectableGame {
+        var ordered = [game.base].compactMap { $0 }
+        ordered += game.updates.sorted {
+            ($0.version ?? -1) > ($1.version ?? -1)
+        }
+        ordered += game.dlcs.sorted {
+            $0.url.lastPathComponent.localizedStandardCompare($1.url.lastPathComponent) == .orderedAscending
+        }
+        return SelectableGame(
+            id: String(format: "%016llX", game.baseTitleId),
+            name: game.name,
+            titleId: String(format: "%016llX", game.baseTitleId),
+            files: ordered.map { source in
+                GameFileItem(
+                    url: source.url,
+                    kind: source.kind,
+                    titleId: String(format: "%016llX", source.titleId),
+                    versionString: source.version.map { "v\($0)" },
+                    sizeBytes: source.sizeBytes
+                )
+            }
+        )
     }
     
     // MARK: - File Pickers
@@ -770,19 +826,6 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         }
     }
     
-    public func selectOutputFolder() {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.allowsMultipleSelection = false
-        panel.prompt = "Choose Output Folder"
-        panel.message = "Select the folder where the Mac app will be saved."
-        
-        if panel.runModal() == .OK, let url = panel.url {
-            self.customOutputFolder = url
-        }
-    }
-    
     public func selectProdKeysFile() {
         let panel = NSOpenPanel()
         panel.canChooseFiles = true
@@ -812,14 +855,12 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     
     // MARK: - Build Actions
     public var canStartBuild: Bool {
-        guard !isBuilding,
-              selectedGameFolder != nil,
-              selectedGame != nil,
-              isProdKeysValid,
-              isNxnativeValid,
-              environmentStatus?.canBuild == true,
-              !isDiskSpaceLow else { return false }
-        return canPassToolchainGate
+        !isBuilding
+            && canAddSelectedGame
+            && isProdKeysValid
+            && isNxnativeValid
+            && environmentStatus?.canBuild == true
+            && canPassToolchainGate
     }
 
     public func canBuild(_ game: PortedGame) -> Bool {
@@ -853,34 +894,54 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         lastError = nil
     }
 
-    public func startBuild() {
-        guard let selected = selectedGame, selectedGameFolder != nil else {
+    public func addSelectedGame(buildNow: Bool = false) {
+        guard let selection = selectedGame else {
             presentBuildError(NXLibraryError.noSelectedGame)
             return
         }
-        let sources = selected.files.compactMap(Self.detectedSource(from:))
-        guard let base = sources.first(where: { $0.kind == .base }), !sources.isEmpty else {
+        let files = selectedSources
+        guard let baseFile = files.first(where: { $0.type == .base }),
+              let baseSource = Self.detectedSource(from: baseFile),
+              let baseTitleId = UInt64(selection.titleId ?? "", radix: 16) else {
+            presentBuildError(NXLibraryError.baseRequired)
+            return
+        }
+        let sources = files.compactMap(Self.detectedSource(from:))
+        guard sources.contains(where: { $0.kind == .base }) else {
             presentBuildError(NXLibraryError.baseRequired)
             return
         }
         var detected = DetectedGame(
-            baseTitleId: base.titleId,
-            name: selected.name,
-            base: base,
+            baseTitleId: baseTitleId,
+            name: selection.name,
+            base: baseSource,
             updates: sources.filter { $0.kind == .update },
             dlcs: sources.filter { $0.kind == .dlc }
         )
         let customName = appName.trimmingCharacters(in: .whitespacesAndNewlines)
         if !customName.isEmpty { detected.name = customName }
+        let useFolderMode = selectedGameFolder != nil
+            && detectedGames.count == 1
+            && files.count == selection.files.count
         do {
             let game = try addGame(
                 detected: detected,
                 selected: sources,
-                folder: nil,
+                folder: useFolderMode ? selectedGameFolder : nil,
                 bundleId: bundleId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     ? nil : bundleId.trimmingCharacters(in: .whitespacesAndNewlines)
             )
-            startBuild(for: game)
+            if let index = libraryGames.firstIndex(where: { $0.id == game.id }) {
+                focusedGameIndex = index
+            }
+            logs.append(LogEntry(level: .success, message: "Added \(game.name) to the library."))
+            if buildNow, canStartBuild {
+                selectedTab = 1
+                startBuild(for: game)
+            } else {
+                selectedTab = 0
+                resetWizard()
+            }
         } catch {
             presentBuildError(error)
         }

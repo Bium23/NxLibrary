@@ -2,20 +2,13 @@ import SwiftUI
 
 public struct BuildBanners: View {
     @ObservedObject public var viewModel: AppViewModel
-    @Binding public var isCreditsDismissed: Bool
-    
-    public init(viewModel: AppViewModel, isCreditsDismissed: Binding<Bool>) {
+
+    public init(viewModel: AppViewModel) {
         self.viewModel = viewModel
-        self._isCreditsDismissed = isCreditsDismissed
     }
     
     public var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            // Upstream Developer Credits & Notice
-            if !isCreditsDismissed {
-                creditsBanner
-            }
-            
             // Setup Quick-Fix Banners
             BuildPrerequisiteBanners(viewModel: viewModel)
             
@@ -31,59 +24,6 @@ public struct BuildBanners: View {
     }
     
     // MARK: - Banner Subviews
-    
-    private var creditsBanner: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "heart.circle.fill")
-                .symbolRenderingMode(.hierarchical)
-                .font(.system(size: 24))
-                .foregroundColor(NXTheme.secondary)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Text("nxnative by @seedds")
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
-                        .foregroundColor(NXTheme.textPrimary)
-                    
-                    Link("GitHub Repository ↗", destination: URL(string: "https://github.com/seedds/nxnative")!)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(NXTheme.secondary)
-                }
-                
-                Text("This community GUI is a helper tool to make porting Switch games accessible without terminal commands. Notice: As soon as the upstream developer releases an official launcher, this project will be deprecated in favor of the official release.")
-                    .font(.system(size: 11))
-                    .foregroundColor(NXTheme.textSecondary)
-                    .lineSpacing(2)
-            }
-            
-            Spacer()
-            
-            Button(action: {
-                withAnimation {
-                    isCreditsDismissed = true
-                }
-            }) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(NXTheme.textSecondary)
-            }
-            .buttonStyle(.plain)
-            .padding(4)
-        }
-        .padding(14)
-        .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(NXTheme.primary.opacity(0.12))
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(.ultraThinMaterial)
-            }
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(NXTheme.primary.opacity(0.35), lineWidth: 1)
-        )
-    }
     
     private func successBanner(path: String) -> some View {
         HStack(spacing: 12) {

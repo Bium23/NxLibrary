@@ -44,6 +44,14 @@ public struct SelectableGameCard: View {
                                 .background(NXTheme.primary.opacity(0.35))
                                 .foregroundColor(.white)
                                 .clipShape(Capsule())
+                        } else {
+                            Text("Base required")
+                                .font(.system(size: 10, weight: .bold))
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 2)
+                                .background(NXTheme.warning.opacity(0.25))
+                                .foregroundColor(NXTheme.warning)
+                                .clipShape(Capsule())
                         }
                         
                         // Badge: Updates (White text for high contrast)
