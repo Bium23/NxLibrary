@@ -46,7 +46,16 @@ public struct PortedGame: Identifiable, Codable, Equatable {
         return name
     }
 
-    public var isPlayableLocally: Bool { platform == .macApp }
+    public var isPlayableLocally: Bool {
+        guard platform == .macApp,
+              url.pathExtension.lowercased() == "app" else { return false }
+        switch status {
+        case .notBuilt, .building, .appMissing:
+            return false
+        default:
+            return true
+        }
+    }
 
     public var formattedSize: String {
         ByteCountFormatter.string(fromByteCount: sizeBytes, countStyle: .file)
