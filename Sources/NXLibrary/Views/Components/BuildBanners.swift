@@ -16,15 +16,6 @@ public struct BuildBanners: View {
                 creditsBanner
             }
             
-            // Git Repository Update Available
-            if let update = viewModel.updateInfo, update.hasUpdate {
-                updateBanner(update: update)
-            }
-            
-            if let updateSuccess = viewModel.updateSuccessBanner {
-                updateSuccessBanner(updateSuccess)
-            }
-            
             // Setup Quick-Fix Banners
             BuildPrerequisiteBanners(viewModel: viewModel)
             
@@ -91,76 +82,6 @@ public struct BuildBanners: View {
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .strokeBorder(NXTheme.primary.opacity(0.35), lineWidth: 1)
-        )
-    }
-    
-    private func updateBanner(update: UpdateInfo) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
-                .symbolRenderingMode(.hierarchical)
-                .font(.system(size: 26))
-                .foregroundColor(NXTheme.secondary)
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text("nxnative Update Available")
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                    .foregroundColor(NXTheme.textPrimary)
-                Text("\(update.commitMessages.count) new commits available on GitHub repository.")
-                    .font(.system(size: 11))
-                    .foregroundColor(NXTheme.textSecondary)
-            }
-            
-            Spacer()
-            
-            if viewModel.isApplyingUpdate {
-                ProgressView().controlSize(.small)
-            } else {
-                Button("Update Now") {
-                    viewModel.applyUpdate()
-                }
-                .buttonStyle(NXPrimaryButtonStyle())
-                .controlSize(.regular)
-            }
-        }
-        .padding(12)
-        .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(NXTheme.primary.opacity(0.12))
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(.ultraThinMaterial)
-            }
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(NXTheme.secondary.opacity(0.4), lineWidth: 1)
-        )
-    }
-    
-    private func updateSuccessBanner(_ message: String) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: "checkmark.seal.fill")
-                .foregroundColor(Color(red: 0.13, green: 0.77, blue: 0.37))
-                .font(.system(size: 18))
-            Text(message)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(NXTheme.textPrimary)
-            Spacer()
-            Button("Dismiss") {
-                viewModel.updateSuccessBanner = nil
-            }
-            .buttonStyle(.plain)
-            .font(.system(size: 11, weight: .bold))
-            .foregroundColor(NXTheme.textSecondary)
-        }
-        .padding(10)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color(red: 0.13, green: 0.77, blue: 0.37).opacity(0.12))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(Color(red: 0.13, green: 0.77, blue: 0.37).opacity(0.35), lineWidth: 1)
         )
     }
     

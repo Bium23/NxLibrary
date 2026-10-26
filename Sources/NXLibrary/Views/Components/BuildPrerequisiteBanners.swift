@@ -33,27 +33,18 @@ public struct BuildPrerequisiteBanners: View {
                 Text("nxnative Core Repository Not Installed")
                     .font(.system(size: 13, weight: .bold, design: .rounded))
                     .foregroundColor(NXTheme.textPrimary)
-                Text("The conversion scripts are required to build native ports. Download with 1 click.")
+                Text("The conversion scripts are required to build native ports. Choose the ~/nxnative folder.")
                     .font(.system(size: 11))
                     .foregroundColor(NXTheme.textSecondary)
             }
             
             Spacer()
             
-            if viewModel.isCloningRepository {
-                HStack(spacing: 6) {
-                    ProgressView().controlSize(.small)
-                    Text("Downloading...")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(NXTheme.secondary)
-                }
-            } else {
-                Button("Download & Setup (1-Click)") {
-                    viewModel.cloneNxnativeRepository()
-                }
-                .buttonStyle(NXPrimaryButtonStyle())
-                .controlSize(.regular)
+            Button("Choose repository...") {
+                viewModel.selectNxnativeFolder()
             }
+            .buttonStyle(NXPrimaryButtonStyle())
+            .controlSize(.regular)
         }
         .padding(12)
         .background(

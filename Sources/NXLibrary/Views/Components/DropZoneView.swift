@@ -4,94 +4,82 @@ import UniformTypeIdentifiers
 public struct DropZoneView: View {
     @ObservedObject public var viewModel: AppViewModel
     @State private var isTargeted: Bool = false
-    
+
     public init(viewModel: AppViewModel) {
         self.viewModel = viewModel
     }
-    
+
     public var body: some View {
         VStack(spacing: 12) {
-            if viewModel.isExtractingZip {
-                VStack(spacing: 10) {
-                    ProgressView()
-                        .controlSize(.regular)
-                    Text(viewModel.zipExtractionMessage)
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundColor(NXTheme.secondary)
+            VStack(spacing: 10) {
+                Image(systemName: isTargeted ? "arrow.down.doc.fill" : "square.and.arrow.down.on.square.fill")
+                    .symbolRenderingMode(.hierarchical)
+                    .font(.system(size: 34))
+                    .foregroundColor(isTargeted ? NXTheme.secondary : NXTheme.textSecondary)
+                    .scaleEffect(isTargeted ? 1.15 : 1.0)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isTargeted)
+
+                VStack(spacing: 4) {
+                    Text(isTargeted ? "Drop files here!" : "Drag & drop game folder or Switch files here")
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundColor(NXTheme.textPrimary)
+
+                    Text("Supports game folders, NSP, XCI, and NSZ")
+                        .font(.system(size: 11))
+                        .foregroundColor(NXTheme.textSecondary)
                 }
-                .frame(maxWidth: .infinity, minHeight: 110)
-            } else {
-                VStack(spacing: 10) {
-                    Image(systemName: isTargeted ? "arrow.down.doc.fill" : "square.and.arrow.down.on.square.fill")
-                        .symbolRenderingMode(.hierarchical)
-                        .font(.system(size: 34))
-                        .foregroundColor(isTargeted ? NXTheme.secondary : NXTheme.textSecondary)
-                        .scaleEffect(isTargeted ? 1.15 : 1.0)
-                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isTargeted)
-                    
-                    VStack(spacing: 4) {
-                        Text(isTargeted ? "Drop files here!" : "Drag & drop game folder or Switch files here")
-                            .font(.system(size: 13, weight: .bold, design: .rounded))
-                            .foregroundColor(NXTheme.textPrimary)
-                        
-                        Text("Supports game folders, NSP, XCI, NSZ, and ZIP archives")
-                            .font(.system(size: 11))
-                            .foregroundColor(NXTheme.textSecondary)
+
+                HStack(spacing: 8) {
+                    formatPill("NSP")
+                    formatPill("XCI")
+                    formatPill("NSZ")
+
+                    Text("or")
+                        .font(.system(size: 11))
+                        .foregroundColor(NXTheme.textMuted)
+
+                    Button("Choose Folder...") {
+                        viewModel.selectGameFolder()
                     }
-                    
+                    .buttonStyle(NXSecondaryButtonStyle())
+                    .controlSize(.small)
+                }
+                .padding(.top, 4)
+
+                if let folder = viewModel.selectedGameFolder {
                     HStack(spacing: 8) {
-                        formatPill("NSP")
-                        formatPill("XCI")
-                        formatPill("NSZ")
-                        formatPill("ZIP")
-                        
-                        Text("or")
-                            .font(.system(size: 11))
-                            .foregroundColor(NXTheme.textMuted)
-                        
-                        Button("Choose Folder...") {
+                        Image(systemName: "folder.fill")
+                            .foregroundColor(NXTheme.secondary)
+                        Text("Active Folder: \(folder.path)")
+                            .font(.system(size: 11, weight: .medium, design: .monospaced))
+                            .foregroundColor(NXTheme.textPrimary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Spacer()
+                        Button("Change...") {
                             viewModel.selectGameFolder()
                         }
                         .buttonStyle(NXSecondaryButtonStyle())
-                        .controlSize(.small)
-                    }
-                    .padding(.top, 4)
-                    
-                    if let folder = viewModel.selectedGameFolder {
-                        HStack(spacing: 8) {
-                            Image(systemName: "folder.fill")
-                                .foregroundColor(NXTheme.secondary)
-                            Text("Active Folder: \(folder.path)")
-                                .font(.system(size: 11, weight: .medium, design: .monospaced))
-                                .foregroundColor(NXTheme.textPrimary)
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                            Spacer()
-                            Button("Change...") {
-                                viewModel.selectGameFolder()
-                            }
-                            .buttonStyle(NXSecondaryButtonStyle())
-                            .controlSize(.mini)
-                            
-                            Button("Clear") {
-                                viewModel.selectedGameFolder = nil
-                            }
-                            .buttonStyle(NXSecondaryButtonStyle())
-                            .controlSize(.mini)
+                        .controlSize(.mini)
+
+                        Button("Clear") {
+                            viewModel.selectedGameFolder = nil
                         }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(NXTheme.primary.opacity(0.12))
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .strokeBorder(NXTheme.primary.opacity(0.35), lineWidth: 1)
-                        )
+                        .buttonStyle(NXSecondaryButtonStyle())
+                        .controlSize(.mini)
                     }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(NXTheme.primary.opacity(0.12))
+                    .cornerRadius(8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .strokeBorder(NXTheme.primary.opacity(0.35), lineWidth: 1)
+                    )
                 }
-                .frame(maxWidth: .infinity, minHeight: 120)
             }
-            
+            .frame(maxWidth: .infinity, minHeight: 120)
+
             if let err = viewModel.dropErrorMessage {
                 HStack(spacing: 6) {
                     Image(systemName: "exclamationmark.triangle.fill")
@@ -124,26 +112,20 @@ public struct DropZoneView: View {
         .onDrop(of: [.fileURL], isTargeted: $isTargeted) { providers in
             var urls: [URL] = []
             let group = DispatchGroup()
-            
             for provider in providers {
                 group.enter()
                 _ = provider.loadObject(ofClass: URL.self) { url, _ in
                     defer { group.leave() }
-                    if let fileURL = url {
-                        urls.append(fileURL)
-                    }
+                    if let fileURL = url { urls.append(fileURL) }
                 }
             }
-            
             group.notify(queue: .main) {
-                if !urls.isEmpty {
-                    viewModel.handleDroppedURLs(urls)
-                }
+                if !urls.isEmpty { viewModel.handleDroppedURLs(urls) }
             }
             return true
         }
     }
-    
+
     private func formatPill(_ name: String) -> some View {
         Text(name)
             .font(.system(size: 9, weight: .bold, design: .monospaced))
@@ -153,8 +135,7 @@ public struct DropZoneView: View {
             .foregroundColor(NXTheme.secondary)
             .clipShape(Capsule())
             .overlay(
-                Capsule()
-                    .strokeBorder(NXTheme.secondary.opacity(0.3), lineWidth: 0.6)
+                Capsule().strokeBorder(NXTheme.secondary.opacity(0.3), lineWidth: 0.6)
             )
     }
 }

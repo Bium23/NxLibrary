@@ -94,13 +94,6 @@ public struct GameRuntimeConfig: Codable, Equatable {
             let envFile = appSupDir.appendingPathComponent("env.txt")
             try? content.write(to: envFile, atomically: true, encoding: .utf8)
         }
-        
-        // 2. Also write to <Game.app>/Contents/Resources/dm/env.txt
-        let dmDir = game.url.appendingPathComponent("Contents/Resources/dm")
-        if fm.fileExists(atPath: dmDir.path) {
-            let bundleEnv = dmDir.appendingPathComponent("env.txt")
-            try? content.write(to: bundleEnv, atomically: true, encoding: .utf8)
-        }
     }
     
     private static func parseEnvContent(_ text: String) -> GameRuntimeConfig {

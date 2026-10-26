@@ -53,13 +53,6 @@ public final class LibraryScanner {
                             games.append(game)
                         }
                     }
-                } else if ext == "ipa" {
-                    if !seenURLs.contains(itemURL) {
-                        seenURLs.insert(itemURL)
-                        if let game = parseIPA(at: itemURL) {
-                            games.append(game)
-                        }
-                    }
                 }
             }
         }
@@ -104,21 +97,6 @@ public final class LibraryScanner {
             bundleId: bundleId,
             titleId: titleId,
             versionString: version
-        )
-    }
-    
-    private func parseIPA(at url: URL) -> PortedGame? {
-        let name = url.deletingPathExtension().lastPathComponent
-        let values = try? url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
-        let size = Int64(values?.fileSize ?? 0)
-        let modDate = values?.contentModificationDate ?? Date()
-        
-        return PortedGame(
-            name: name,
-            url: url,
-            platform: .ios,
-            sizeBytes: size,
-            modificationDate: modDate
         )
     }
     

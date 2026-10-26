@@ -16,86 +16,21 @@ public final class SystemDetector {
     
     private init() {}
     
-    /// Resolves the true workspace directory (folder containing NXNative.app or external SSD)
+    /// Resolves the personal workspace root. The app is not tied to a bundle sibling or an external SSD.
     public func resolveRootDirectory() -> URL {
-        let bundleDir = Bundle.main.bundleURL.deletingLastPathComponent()
-        let fm = FileManager.default
-        
-        // 1. Check if nxnative is a sibling of the bundle
-        if fm.fileExists(atPath: bundleDir.appendingPathComponent("nxnative").path) {
-            return bundleDir
-        }
-        
-        // 2. Check the specific external SSD location
-        let ssdPath = URL(fileURLWithPath: "/Volumes/SSD FN501 PRO/Emulations/NativePort")
-        if fm.fileExists(atPath: ssdPath.path) {
-            return ssdPath
-        }
-        
-        // 3. Fallback to bundle directory, ensuring it is never "/" or system Applications
-        if bundleDir.path != "/" && !bundleDir.path.hasPrefix("/Applications") {
-            return bundleDir
-        }
-        
-        return URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("NativePort")
+        URL(fileURLWithPath: NSHomeDirectory())
     }
-    
-    /// Locates the nxnative repository directory
+
+    /// Locates the pinned nxnative checkout. It never clones or changes it.
     public func detectNxnativeDirectory(customDir: String? = nil) -> NxNativeDetectionResult {
-        let root = resolveRootDirectory()
-        let fileManager = FileManager.default
-        
-        var candidatePaths: [String] = []
-        if let custom = customDir, !custom.isEmpty {
-            candidatePaths.append(custom)
-        }
-        candidatePaths.append(contentsOf: [
-            root.appendingPathComponent("nxnative").standardized.path,
-            root.standardized.path,
-            Bundle.main.resourceURL?.appendingPathComponent("nxnative").path ?? ""
-        ])
-        
-        for path in candidatePaths where !path.isEmpty {
-            let scriptPath = URL(fileURLWithPath: path).appendingPathComponent("scripts/build_ipa_from_nsp.py").path
-            let dmPath = URL(fileURLWithPath: path).appendingPathComponent("dm").path
-            
-            if fileManager.fileExists(atPath: scriptPath) && fileManager.fileExists(atPath: dmPath) {
-                return NxNativeDetectionResult(path: path, isValid: true)
-            }
-        }
-        
-        let fallbackPath = root.appendingPathComponent("nxnative").path
-        return NxNativeDetectionResult(path: fallbackPath, isValid: false)
+        let path = (customDir?.isEmpty == false ? customDir! : NSString(string: "~/nxnative").expandingTildeInPath)
+        let scriptPath = URL(fileURLWithPath: path).appendingPathComponent("scripts/build_ipa_from_nsp.py").path
+        let dmPath = URL(fileURLWithPath: path).appendingPathComponent("dm").path
+        let valid = FileManager.default.fileExists(atPath: scriptPath)
+            && FileManager.default.fileExists(atPath: dmPath)
+        return NxNativeDetectionResult(path: path, isValid: valid)
     }
-    
-    /// Clones the official nxnative repository if missing
-    public func cloneNxnativeRepository(to destinationURL: URL, completion: @escaping (Bool, String) -> Void) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
-            process.arguments = ["clone", "https://github.com/seedds/nxnative.git", destinationURL.path]
-            
-            let pipe = Pipe()
-            process.standardOutput = pipe
-            process.standardError = pipe
-            
-            do {
-                try process.run()
-                process.waitUntilExit()
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                let output = String(data: data, encoding: .utf8) ?? ""
-                let success = process.terminationStatus == 0
-                DispatchQueue.main.async {
-                    completion(success, output)
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    completion(false, error.localizedDescription)
-                }
-            }
-        }
-    }
-    
+
     /// Auto-detects prod.keys from Ryujinx and Switch homebrew locations
     public func detectProdKeys(additionalSearchDir: String? = nil) -> ProdKeysDetectionResult? {
         var candidateLocations: [(path: String, name: String)] = [

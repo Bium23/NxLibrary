@@ -15,7 +15,7 @@ public struct SystemDirectoriesCard: View {
                         .symbolRenderingMode(.hierarchical)
                         .font(.system(size: 13, weight: .bold, design: .rounded))
                         .foregroundColor(NXTheme.textPrimary)
-                        .help("Directories where ROMs are scanned and where built Mac applications (.app) and iOS packages (.ipa) are saved.")
+                        .help("Directories where ROMs are scanned and where built Mac applications (.app) are saved.")
                     
                     Spacer()
                     

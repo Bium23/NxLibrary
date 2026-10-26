@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 import AppKit
 
-public final class AppViewModel: ObservableObject, BuildRunnerDelegate, InstallerServiceDelegate, UpdateCheckerDelegate {
+public final class AppViewModel: ObservableObject, BuildRunnerDelegate, InstallerServiceDelegate {
     // MARK: - Storage Keys for Persistence
     private enum StorageKeys {
         static let savedGameFolder = "NXNative_SavedGameFolder"
@@ -10,11 +10,9 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
         static let savedCustomOutputFolder = "NXNative_SavedCustomOutputFolder"
         static let savedUseCustomOutput = "NXNative_SavedUseCustomOutput"
         static let savedProdKeysPath = "NXNative_SavedProdKeysPath"
-        static let savedShowFps = "NXNative_SavedShowFps"
         static let savedKeepExtracted = "NXNative_SavedKeepExtracted"
         static let savedPlatform = "NXNative_SavedPlatform"
         static let savedIconAppearanceMode = "NXNative_SavedIconAppearanceMode"
-        static let savedCompatibilityDisplayMode = "NXNative_SavedCompatibilityDisplayMode"
     }
     
     // MARK: - Workspace & Paths
@@ -23,7 +21,6 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
     @Published public var isNxnativeValid: Bool = false
     @Published public var isCloningRepository: Bool = false
     @Published public var cloneErrorMessage: String? = nil
-    @Published public var enginePatches: [EnginePatchItem] = []
     @Published public var showCltInstallAlert: Bool = false
     
     // MARK: - Keys
@@ -102,8 +99,6 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
     }
     
     // MARK: - Drag & Drop & ZIP
-    @Published public var isExtractingZip: Bool = false
-    @Published public var zipExtractionMessage: String = ""
     @Published public var dropErrorMessage: String? = nil
     
     // MARK: - Target & Output
@@ -140,14 +135,6 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
     @Published public var isScanningLibrary: Bool = false
     @Published public var gameForSettingsSheet: PortedGame? = nil
     
-    // MARK: - Compatibility Database
-    @Published public var compatibleGames: [CompatibleGameItem] = []
-    @Published public var isLoadingCompatibility: Bool = false
-    @Published public var compatibilityFilter: String = "All"
-    @Published public var compatibilitySearchText: String = ""
-    @Published public var compatibilityLastUpdated: Date? = nil
-    @Published public var isCompatibilityFromOnline: Bool = false
-    
     // MARK: - System Prerequisites & Installer
     @Published public var prerequisites: SystemPrerequisites = SystemPrerequisites()
     @Published public var isCheckingPrerequisites: Bool = false
@@ -158,21 +145,10 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
     @Published public var dependencyToUninstall: DependencyStatus? = nil
     @Published public var showUninstallConfirm: Bool = false
     
-    // MARK: - Update Checker
-    @Published public var isCheckingUpdate: Bool = false
-    @Published public var updateInfo: UpdateInfo? = nil
-    @Published public var isApplyingUpdate: Bool = false
-    @Published public var updateSuccessBanner: String? = nil
-    
     // MARK: - Advanced Options
     @Published public var appName: String = ""
     @Published public var bundleId: String = ""
     @Published public var selectedLanguage: String = "auto"
-    @Published public var showFps: Bool = true {
-        didSet {
-            UserDefaults.standard.set(showFps, forKey: StorageKeys.savedShowFps)
-        }
-    }
     @Published public var keepExtracted: Bool = true {
         didSet {
             UserDefaults.standard.set(keepExtracted, forKey: StorageKeys.savedKeepExtracted)
@@ -206,11 +182,6 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
     @Published public var focusedGameIndex: Int = 0
     @Published public var isFocusOnDeck: Bool = false
     @Published public var launchingGameId: UUID? = nil
-    @Published public var compatibilityDisplayMode: CompatibilityDisplayMode = .list {
-        didSet {
-            UserDefaults.standard.set(compatibilityDisplayMode.rawValue, forKey: StorageKeys.savedCompatibilityDisplayMode)
-        }
-    }
     
     public let availableLanguages: [(code: String, label: String)] = [
         ("auto", "Game Default"),
@@ -228,12 +199,10 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
     
     private let runner = BuildRunner()
     private let installer = InstallerService.shared
-    private let updateChecker = UpdateCheckerService.shared
     
     public init() {
         runner.delegate = self
         installer.delegate = self
-        updateChecker.delegate = self
         
         // 1. Resolve safe root directory (anchored to SSD / Bundle, NEVER "/")
         let root = SystemDetector.shared.resolveRootDirectory()
@@ -257,9 +226,6 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
         }
         
         // Restore user preferences
-        if let savedFps = UserDefaults.standard.object(forKey: StorageKeys.savedShowFps) as? Bool {
-            self.showFps = savedFps
-        }
         if let savedKeep = UserDefaults.standard.object(forKey: StorageKeys.savedKeepExtracted) as? Bool {
             self.keepExtracted = savedKeep
         }
@@ -270,11 +236,6 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
         if let savedMode = UserDefaults.standard.string(forKey: StorageKeys.savedIconAppearanceMode),
            let mode = AppIconAppearanceMode(rawValue: savedMode) {
             self.iconAppearanceMode = mode
-        }
-        
-        if let savedDisplay = UserDefaults.standard.string(forKey: StorageKeys.savedCompatibilityDisplayMode),
-           let dispMode = CompatibilityDisplayMode(rawValue: savedDisplay) {
-            self.compatibilityDisplayMode = dispMode
         }
         
         detectEnvironment()
@@ -288,8 +249,6 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
         }
         
         refreshLibrary()
-        checkForUpdates()
-        loadCompatibleGames()
         updateDockIcon()
         
         NotificationService.shared.requestAuthorization()
@@ -310,18 +269,6 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
         if let url = Bundle.main.url(forResource: resName, withExtension: "png"),
            let img = NSImage(contentsOf: url) {
             NSApplication.shared.applicationIconImage = img
-        }
-    }
-    
-    // MARK: - Compatibility
-    public func loadCompatibleGames(forceRefresh: Bool = false) {
-        isLoadingCompatibility = true
-        CompatibilityService.shared.fetchCompatibleGames(localNxnativePath: nxnativePath) { [weak self] games, isOnline in
-            guard let self = self else { return }
-            self.compatibleGames = games
-            self.isCompatibilityFromOnline = isOnline
-            self.compatibilityLastUpdated = Date()
-            self.isLoadingCompatibility = false
         }
     }
     
@@ -346,26 +293,7 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
         self.nxnativePath = nxResult.path
         self.isNxnativeValid = nxResult.isValid
         
-        refreshEnginePatches()
         refreshPrerequisites()
-    }
-    
-    public func refreshEnginePatches() {
-        guard !nxnativePath.isEmpty else { return }
-        self.enginePatches = PatchService.shared.checkPatchStatuses(nxnativePath: nxnativePath)
-    }
-    
-    public func applyEnginePatches() {
-        guard !nxnativePath.isEmpty else { return }
-        let (applied, skipped, errors) = PatchService.shared.applyPatchesIfNeeded(nxnativePath: nxnativePath) { [weak self] msg, ok in
-            self?.logs.append(LogEntry(level: ok ? .success : .info, message: msg))
-        }
-        refreshEnginePatches()
-        if !errors.isEmpty {
-            self.logs.append(LogEntry(level: .warning, message: "Engine patches completed with notices: \(errors.joined(separator: ", "))"))
-        } else {
-            self.logs.append(LogEntry(level: .success, message: "Engine patches verified: \(applied) applied, \(skipped) already present."))
-        }
     }
     
     public func installAppleCommandLineTools() {
@@ -382,25 +310,6 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
             DispatchQueue.main.async {
                 self?.prerequisites = res
                 self?.isCheckingPrerequisites = false
-            }
-        }
-    }
-    
-    public func cloneNxnativeRepository() {
-        let dest = URL(fileURLWithPath: defaultInstallPath).appendingPathComponent("nxnative")
-        isCloningRepository = true
-        cloneErrorMessage = nil
-        
-        SystemDetector.shared.cloneNxnativeRepository(to: dest) { [weak self] success, output in
-            guard let self = self else { return }
-            self.isCloningRepository = false
-            if success {
-                PatchService.shared.applyPatchesIfNeeded(nxnativePath: dest.path)
-                self.detectEnvironment()
-                self.logs.append(LogEntry(level: .success, message: "nxnative repository cloned and compatibility patches applied."))
-            } else {
-                self.cloneErrorMessage = output
-                self.logs.append(LogEntry(level: .error, message: "Failed to clone repository: \(output)"))
             }
         }
     }
@@ -507,40 +416,11 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
         if FileManager.default.fileExists(atPath: first.path, isDirectory: &isDir) {
             if isDir.boolValue {
                 self.selectedGameFolder = first
-            } else if first.pathExtension.lowercased() == "zip" {
-                extractDroppedZip(zipURL: first)
             } else {
                 let parent = first.deletingLastPathComponent()
                 self.selectedGameFolder = parent
             }
         }
-    }
-    
-    private func extractDroppedZip(zipURL: URL) {
-        let gamesDir = URL(fileURLWithPath: defaultInstallPath).appendingPathComponent("Games")
-        isExtractingZip = true
-        zipExtractionMessage = "Analyzing ZIP archive..."
-        
-        ZipExtractor.shared.extract(
-            zipURL: zipURL,
-            destinationFolder: gamesDir,
-            progressCallback: { [weak self] msg in
-                self?.zipExtractionMessage = msg
-            },
-            completion: { [weak self] result in
-                guard let self = self else { return }
-                self.isExtractingZip = false
-                
-                switch result {
-                case .success(let extractedDir):
-                    self.selectedGameFolder = extractedDir
-                    self.logs.append(LogEntry(level: .success, message: "Archive extracted to: \(extractedDir.path)"))
-                case .failure(let error):
-                    self.dropErrorMessage = error.localizedDescription
-                    self.logs.append(LogEntry(level: .error, message: "Failed to extract archive: \(error.localizedDescription)"))
-                }
-            }
-        )
     }
     
     // MARK: - Library Operations (Privacy-guarded)
@@ -625,32 +505,6 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
         }
     }
     
-    // MARK: - GitHub Updates
-    public func checkForUpdates() {
-        guard isNxnativeValid, !nxnativePath.isEmpty else { return }
-        isCheckingUpdate = true
-        updateChecker.checkForUpdates(nxnativePath: nxnativePath) { [weak self] info in
-            self?.isCheckingUpdate = false
-            self?.updateInfo = info
-        }
-    }
-    
-    public func applyUpdate() {
-        guard isNxnativeValid, !nxnativePath.isEmpty else { return }
-        isApplyingUpdate = true
-        updateChecker.applyUpdate(nxnativePath: nxnativePath) { [weak self] success, message in
-            self?.isApplyingUpdate = false
-            if success {
-                self?.updateSuccessBanner = message
-                self?.updateInfo = nil
-                self?.refreshPrerequisites()
-                self?.logs.append(LogEntry(level: .success, message: message))
-            } else {
-                self?.logs.append(LogEntry(level: .error, message: "Update error: \(message)"))
-            }
-        }
-    }
-    
     // MARK: - Game Scan
     private func scanGameFolder(_ folder: URL) {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
@@ -683,7 +537,6 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
             self.isNxnativeValid = res.isValid
             if res.isValid {
                 refreshPrerequisites()
-                checkForUpdates()
             }
         }
     }
@@ -817,7 +670,6 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
             appName: appName.isEmpty ? sel.name : appName,
             bundleId: bundleId.isEmpty ? nil : bundleId,
             language: selectedLanguage,
-            showFps: showFps,
             keepExtracted: keepExtracted,
             surveyOnly: surveyOnly
         )
@@ -924,11 +776,4 @@ public final class AppViewModel: ObservableObject, BuildRunnerDelegate, Installe
         installerCurrentItem = nil
     }
     
-    public func updateCheckerDidFindUpdate(_ info: UpdateInfo) {
-        self.logs.append(LogEntry(level: .info, message: "nxnative update available: \(info.commitMessages.count) new commits."))
-    }
-    
-    public func updateCheckerDidProduceLog(_ message: String) {
-        self.logs.append(LogEntry(level: .info, message: message))
-    }
 }

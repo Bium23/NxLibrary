@@ -9,10 +9,9 @@ public struct MainView: View {
     private let tabs: [(tag: Int, title: String, icon: String)] = [
         (0, "Port Game", "play.circle.fill"),
         (1, "Library", "books.vertical.fill"),
-        (2, "Compatibility", "checklist.checked"),
-        (3, "Controls", "gamecontroller.fill"),
-        (4, "Settings", "gearshape.fill"),
-        (5, "Console", "terminal.fill")
+        (2, "Controls", "gamecontroller.fill"),
+        (3, "Settings", "gearshape.fill"),
+        (4, "Console", "terminal.fill")
     ]
     
     private var isCompactNav: Bool {
@@ -53,12 +52,10 @@ public struct MainView: View {
                         case 1:
                             LibraryView(viewModel: viewModel)
                         case 2:
-                            CompatibilityView(viewModel: viewModel)
-                        case 3:
                             ControlsView()
-                        case 4:
+                        case 3:
                             SystemView(viewModel: viewModel)
-                        case 5:
+                        case 4:
                             LogsView(viewModel: viewModel)
                         default:
                             BuildView(viewModel: viewModel)
@@ -89,20 +86,6 @@ public struct MainView: View {
                             .font(.system(size: 15, weight: .bold, design: .rounded))
                             .foregroundColor(NXTheme.textPrimary)
                         
-                        if let update = viewModel.updateInfo, update.hasUpdate {
-                            HStack(spacing: 4) {
-                                Circle()
-                                    .fill(NXTheme.secondary)
-                                    .frame(width: 5, height: 5)
-                                Text("Update")
-                                    .font(.system(size: 9, weight: .bold))
-                                    .foregroundColor(.white)
-                            }
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(NXTheme.secondary.opacity(0.35))
-                            .clipShape(Capsule())
-                        }
                     }
                     
                     if !isCompactNav {

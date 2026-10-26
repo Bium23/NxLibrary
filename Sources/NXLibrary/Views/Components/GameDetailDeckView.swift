@@ -28,7 +28,7 @@ public struct GameDetailDeckView: View {
                                 .font(.system(size: 20, weight: .bold, design: .rounded))
                                 .foregroundColor(NXTheme.textPrimary)
                             
-                            Text(game.platform == .macApp ? "Mac Native" : "iOS IPA")
+                            Text("Mac Native")
                                 .font(.system(size: 10, weight: .bold, design: .rounded))
                                 .padding(.horizontal, 7)
                                 .padding(.vertical, 3)

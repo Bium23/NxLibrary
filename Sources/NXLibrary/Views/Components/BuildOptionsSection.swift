@@ -44,7 +44,7 @@ public struct BuildOptionsSection: View {
                                 title: "Destination Directory",
                                 icon: "arrow.down.doc.fill",
                                 path: viewModel.customOutputFolder?.path,
-                                placeholder: "Choose folder where .app or .ipa will be saved...",
+                                placeholder: "Choose folder where the .app will be saved...",
                                 actionTitle: "Choose..."
                             ) {
                                 viewModel.selectOutputFolder()
@@ -109,7 +109,6 @@ public struct BuildOptionsSection: View {
                     Divider().opacity(0.2)
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Toggle("Display real-time FPS counter and overlay (--show-fps)", isOn: $viewModel.showFps)
                         Toggle("Keep intermediate extracted files for fast rebuilds (--keep-extracted)", isOn: $viewModel.keepExtracted)
                         Toggle("Survey inspection only (Survey Only)", isOn: $viewModel.surveyOnly)
                     }

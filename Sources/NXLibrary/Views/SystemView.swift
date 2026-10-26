@@ -21,10 +21,9 @@ public struct SystemView: View {
                 }
                 
                 // MARK: - Category 2: Core Engine & Patches
-                categoryHeader(title: "Core Engine & Compatibility Patches", icon: "cpu.fill")
+                categoryHeader(title: "Core Engine", icon: "cpu.fill")
                 VStack(spacing: 12) {
                     SystemRepoCard(viewModel: viewModel)
-                    SystemPatchesCard(viewModel: viewModel)
                     SystemCreditsCard()
                 }
                 
@@ -104,10 +103,9 @@ public struct SystemView: View {
             Button(action: {
                 SoundEffectService.shared.play(.click)
                 viewModel.detectEnvironment()
-                viewModel.checkForUpdates()
             }) {
                 HStack(spacing: 6) {
-                    if viewModel.isCheckingPrerequisites || viewModel.isCheckingUpdate {
+                    if viewModel.isCheckingPrerequisites {
                         ProgressView().controlSize(.small)
                     } else {
                         Image(systemName: "arrow.clockwise")

@@ -33,7 +33,6 @@ public final class BuildRunner {
         appName: String?,
         bundleId: String?,
         language: String?,
-        showFps: Bool,
         keepExtracted: Bool,
         surveyOnly: Bool
     ) {
@@ -47,12 +46,6 @@ public final class BuildRunner {
         guard FileManager.default.fileExists(atPath: scriptPath) else {
             delegate?.buildRunner(self, didFinishWithError: "Build script not found at: \(scriptPath)")
             return
-        }
-        
-        // Ensure engine patches (60 FPS, allocators, shader fallback) are applied
-        PatchService.shared.applyPatchesIfNeeded(nxnativePath: nxnativePath) { [weak self] message, isSuccess in
-            guard let self = self else { return }
-            self.delegate?.buildRunner(self, didProduceLog: LogEntry(level: isSuccess ? .success : .info, message: message))
         }
         
         // Determina caminho do python
@@ -73,13 +66,7 @@ public final class BuildRunner {
             "--progress", "json"
         ]
         
-        // Plataforma
-        switch platform {
-        case .ios:
-            arguments.append(contentsOf: ["--platform", "ios"])
-        case .macApp:
-            arguments.append(contentsOf: ["--platform", "mac-app"])
-        }
+        arguments.append(contentsOf: ["--platform", "mac-app"])
         
         // Output path (always explicitly provided so .app is generated for Mac App)
         let outDir = customOutputFolder ?? gameDirectory
@@ -87,7 +74,7 @@ public final class BuildRunner {
             .replacingOccurrences(of: "\\[[^\\]]+\\]", with: "", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let cleanName = rawName.isEmpty ? "Game" : rawName
-        let ext = (platform == .macApp ? ".app" : ".ipa")
+        let ext = ".app"
         let outPath = outDir.appendingPathComponent(cleanName + ext).path
         arguments.append(contentsOf: ["-o", outPath])
         
@@ -101,12 +88,6 @@ public final class BuildRunner {
         
         if let lang = language, lang != "auto", !lang.isEmpty {
             arguments.append(contentsOf: ["-l", lang])
-        }
-        
-        if showFps {
-            arguments.append("--show-fps")
-        } else {
-            arguments.append("--no-show-fps")
         }
         
         if keepExtracted {

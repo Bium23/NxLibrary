@@ -11,7 +11,7 @@ public struct BuildGameSection: View {
         GlassCard {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Label("1. Game Files (NSP / NSZ / XCI / ZIP)", systemImage: "gamecontroller.fill")
+                    Label("1. Game Files (NSP / NSZ / XCI)", systemImage: "gamecontroller.fill")
                         .symbolRenderingMode(.hierarchical)
                         .font(.system(size: 14, weight: .bold, design: .rounded))
                         .foregroundColor(NXTheme.textPrimary)

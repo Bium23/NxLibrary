@@ -170,7 +170,7 @@ public struct LibraryView: View {
                 Text("No Ported Games Found")
                     .font(.system(size: 14, weight: .bold, design: .rounded))
                     .foregroundColor(NXTheme.textPrimary)
-                Text("Games you convert (.app and .ipa) will automatically appear here.")
+                Text("Games you convert (.app) will automatically appear here.")
                     .font(.system(size: 12))
                     .foregroundColor(NXTheme.textSecondary)
             }
