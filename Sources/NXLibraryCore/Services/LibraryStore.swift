@@ -68,9 +68,14 @@ public final class LibraryStore {
                 merged.buildCachePath = old.buildCachePath ?? game.buildCachePath
                 if old.status == .built || old.status == .builtSourcesMissing
                     || old.status == .needsRebuild {
-                    let sourcesExist = !merged.sources.isEmpty
-                        && merged.sources.allSatisfy { fm.fileExists(atPath: $0.url.path) }
-                    merged.status = sourcesExist ? .built : .builtSourcesMissing
+                    if merged.sources.isEmpty {
+                        merged.status = game.status == .built ? .built : .builtSourcesMissing
+                    } else {
+                        let sourcesExist = merged.sources.allSatisfy {
+                            fm.fileExists(atPath: $0.url.path)
+                        }
+                        merged.status = sourcesExist ? .built : .builtSourcesMissing
+                    }
                     merged.toolchain = old.toolchain
                     merged.lastBuild = old.lastBuild
                 }
