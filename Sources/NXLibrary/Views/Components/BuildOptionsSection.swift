@@ -202,11 +202,13 @@ public struct BuildOptionsSection: View {
                             viewModel.addSelectedGame(buildNow: false)
                         }
                         .buttonStyle(NXSecondaryButtonStyle())
+                        .keyboardShortcut("l", modifiers: [.command])
 
                         Button("Add & Build") {
                             viewModel.addSelectedGame(buildNow: true)
                         }
                         .buttonStyle(NXPrimaryButtonStyle())
+                        .keyboardShortcut(.return, modifiers: [.command])
                     } else {
                         Button("Add & Build") {
                             viewModel.addSelectedGame(buildNow: true)
@@ -220,6 +222,7 @@ public struct BuildOptionsSection: View {
                         }
                         .buttonStyle(NXPrimaryButtonStyle())
                         .disabled(!viewModel.canAddSelectedGame)
+                        .keyboardShortcut(.return, modifiers: [.command])
                     }
                 }
 

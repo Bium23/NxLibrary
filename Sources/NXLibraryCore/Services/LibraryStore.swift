@@ -63,7 +63,15 @@ public final class LibraryStore {
                 var merged = game
                 merged.id = old.id
                 merged.settings = old.settings
-                merged.sources = old.sources.isEmpty ? game.sources : old.sources
+                if old.sources.isEmpty {
+                    merged.sources = game.sources
+                } else {
+                    let oldSourcesExist = old.sources.allSatisfy {
+                        fm.fileExists(atPath: $0.url.path)
+                    }
+                    merged.sources = (oldSourcesExist || game.sources.isEmpty)
+                        ? old.sources : game.sources
+                }
                 merged.workspacePath = old.workspacePath ?? game.workspacePath
                 merged.buildCachePath = old.buildCachePath ?? game.buildCachePath
                 if (old.status == .built || old.status == .builtSourcesMissing

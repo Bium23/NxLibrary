@@ -60,14 +60,20 @@ public struct GameDetailDeckView: View {
                     }
                 }
                 
-                if game.status == .builtSourcesMissing && game.sources.isEmpty {
+                if game.status == .builtSourcesMissing {
                     HStack(spacing: 8) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(NXTheme.warning)
-                        Text("Play works. Rebuilding is disabled until the original base, update and DLC files are attached with Add Game.")
+                        Text("Play works. Rebuilding is disabled until the original base, update and DLC files are attached.")
                             .font(.system(size: 11))
                             .foregroundColor(NXTheme.textSecondary)
                         Spacer()
+                        Button("Locate Sources...") {
+                            SoundEffectService.shared.play(.click)
+                            viewModel.locateSources(for: game)
+                        }
+                        .buttonStyle(NXSecondaryButtonStyle())
+                        .controlSize(.small)
                     }
                     .padding(9)
                     .background(NXTheme.warning.opacity(0.09))
@@ -357,8 +363,10 @@ public struct GameDetailDeckView: View {
     }
 
     private var rebuildHint: String {
-        if game.sources.isEmpty {
-            return "Sources are missing. Attach the original base/update/DLC files before rebuilding."
+        let sourcesExist = !game.sources.isEmpty
+            && game.sources.allSatisfy { FileManager.default.fileExists(atPath: $0.url.path) }
+        if !sourcesExist {
+            return "Sources are missing. Use Locate Sources before rebuilding."
         }
         if !viewModel.isProdKeysValid {
             return "Import prod.keys in Settings before rebuilding."

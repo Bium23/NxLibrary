@@ -118,4 +118,35 @@ final class LibraryStoreTests: XCTestCase {
         XCTAssertEqual(merged.games.first?.versionString, "1.9.0")
         XCTAssertEqual(merged.games.first?.bundleId, "org.nxnative.0100000000010000")
     }
+
+    func testLocateSourcesReplacesMissingRecordedSources() throws {
+        let store = LibraryStore(directory: dir)
+        let app = dir.appendingPathComponent("Game.app")
+        try FileManager.default.createDirectory(
+            at: app.appendingPathComponent("Contents"), withIntermediateDirectories: true)
+        try Data("plist".utf8).write(to: app.appendingPathComponent("Contents/Info.plist"))
+        let oldSource = dir.appendingPathComponent("old.nsp")
+        let newSource = dir.appendingPathComponent("new.nsp")
+        try Data("new".utf8).write(to: newSource)
+
+        var old = PortedGame(name: "G", url: app, platform: .macApp,
+                             sizeBytes: 1, modificationDate: Date(),
+                             titleId: "0100000000010000")
+        old.status = .builtSourcesMissing
+        old.sources = [GameFileItem(url: oldSource, kind: .base,
+                                    titleId: "0100000000010000", sizeBytes: 1)]
+        try store.save(LibraryFile(schemaVersion: 1, games: [old]))
+
+        var scanned = PortedGame(name: "G", url: dir.appendingPathComponent("workspace"),
+                                 platform: .macApp, sizeBytes: 1, modificationDate: Date(),
+                                 titleId: "0100000000010000")
+        scanned.status = .notBuilt
+        scanned.sources = [GameFileItem(url: newSource, kind: .base,
+                                        titleId: "0100000000010000", sizeBytes: 1)]
+
+        let merged = try store.merge(scanned: [scanned])
+        XCTAssertEqual(merged.games.first?.sources.first?.url, newSource)
+        XCTAssertEqual(merged.games.first?.status, .built)
+        XCTAssertEqual(merged.games.first?.url, app)
+    }
 }

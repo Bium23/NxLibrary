@@ -37,6 +37,14 @@ public struct MainView: View {
         .sheet(isPresented: $viewModel.showSetupSheet) {
             SetupView(viewModel: viewModel)
         }
+        .alert("NX Library", isPresented: Binding(
+            get: { viewModel.alertMessage != nil },
+            set: { if !$0 { viewModel.alertMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) { viewModel.alertMessage = nil }
+        } message: {
+            Text(viewModel.alertMessage ?? "")
+        }
     }
 
     private var content: some View {

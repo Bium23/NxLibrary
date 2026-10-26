@@ -171,6 +171,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     @Published public var setupCompleted: Bool = false
     @Published public var buildState: BuildState = .idle
     @Published public var lastError: String? = nil
+    @Published public var alertMessage: String? = nil
     @Published public var isCancellingBuild: Bool = false
     @Published public var buildLogURL: URL? = nil
     @Published public var currentBuildGameID: UUID? = nil
@@ -747,6 +748,67 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         loadLibrary()
     }
 
+    /// Attach source files to an already-imported app. The app URL, version and
+    /// build metadata stay intact; the library entry is merged, never duplicated.
+    public func locateSources(for game: PortedGame) {
+        guard let titleId = game.titleId, !titleId.isEmpty else {
+            alertMessage = "This game has no title ID, so its sources cannot be matched."
+            return
+        }
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Locate Sources"
+        panel.message = "Choose the folder holding the base, update and DLC files for \(game.name)."
+        guard panel.runModal() == .OK, let folder = panel.url else { return }
+
+        isScanningGameFolder = true
+        let catalog = sourceCatalog
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let urls = Self.sourceFileURLs(in: folder)
+            let readable = urls.filter { (try? catalog.inspect($0)) != nil }
+            let detected = (try? catalog.scan(files: readable)) ?? []
+            let match = detected.first {
+                String(format: "%016llX", $0.baseTitleId)
+                    .caseInsensitiveCompare(titleId) == .orderedSame
+            }
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.isScanningGameFolder = false
+                guard let match, let base = match.base else {
+                    self.alertMessage = "No base, update or DLC files for \(game.name) were found in that folder."
+                    self.logs.append(LogEntry(level: .warning, message: self.alertMessage!))
+                    return
+                }
+                var selected = [base]
+                if let newest = match.updates.max(by: {
+                    ($0.version ?? -1) < ($1.version ?? -1)
+                }) {
+                    selected.append(newest)
+                }
+                selected += match.dlcs
+                do {
+                    let updated = try self.addGame(
+                        detected: match,
+                        selected: selected,
+                        folder: nil,
+                        bundleId: game.bundleId
+                    )
+                    if let index = self.libraryGames.firstIndex(where: { $0.id == updated.id }) {
+                        self.focusedGameIndex = index
+                    }
+                    self.selectedTab = 0
+                    self.logs.append(LogEntry(level: .success,
+                        message: "Sources attached to \(game.name); rebuild is now available if the toolchain gate allows it."))
+                } catch {
+                    self.alertMessage = error.localizedDescription
+                    self.logs.append(LogEntry(level: .error, message: error.localizedDescription))
+                }
+            }
+        }
+    }
+
     public func selectLibraryFolder() {
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
@@ -886,8 +948,17 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         var urls: [URL] = []
         for case let url as URL in enumerator {
             guard allowed.contains(url.pathExtension.lowercased()) else { continue }
-            let values = try? url.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
-            guard values?.isRegularFile == true, (values?.fileSize ?? 0) > 0 else { continue }
+            let values = try? url.resourceValues(
+                forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+            let isLink = values?.isSymbolicLink == true
+            guard values?.isRegularFile == true || isLink else { continue }
+            // A symlink must point at a real, non-empty file; its own file size
+            // is just the length of the link path.
+            let target = isLink ? url.resolvingSymlinksInPath() : url
+            let targetValues = try? target.resourceValues(
+                forKeys: [.isRegularFileKey, .fileSizeKey])
+            guard targetValues?.isRegularFile == true,
+                  (targetValues?.fileSize ?? 0) > 0 else { continue }
             urls.append(url)
         }
         return urls.sorted {
@@ -1538,6 +1609,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     }
 
     private static func formatAmount(_ value: Double) -> String {
+        if value.rounded() == value { return String(format: "%.0f", value) }
         if value >= 100 { return String(format: "%.0f", value) }
         if value >= 10 { return String(format: "%.1f", value) }
         return String(format: "%.2f", value)

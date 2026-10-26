@@ -67,6 +67,30 @@ final class SourceCatalogTests: XCTestCase {
             ("meta.cnmt.xml", Data(xml.utf8)),
         ])
     }
+
+    func testPrefersCNMTXMLOverBinaryNCA() throws {
+        let url = dir.appendingPathComponent("Game [0100000000010000][v0].nsp")
+        let xml = """
+        <?xml version="1.0" encoding="utf-8"?>
+        <ContentMeta><Type>Application</Type><Id>0x0100000000010000</Id>\
+        <Version>0</Version><OriginalId>0x0100000000010000</OriginalId></ContentMeta>
+        """
+        try PFS0Fixture.write(to: url, files: [
+            ("meta.cnmt.nca", Data(repeating: 0xAB, count: 64)),
+            ("meta.cnmt.xml", Data(xml.utf8)),
+        ])
+        let source = try SourceCatalog().inspect(url)
+        XCTAssertEqual(source.kind, .base)
+        XCTAssertEqual(source.titleId, 0x0100000000010000)
+        XCTAssertEqual(source.version, 0)
+    }
+
+
+    func testCleanNameStripsSiteTagAndVersion() {
+        let url = URL(fileURLWithPath: "/tmp/Neon Inferno (axekin.com) [01008DD0249BC000][v0].nsp")
+        XCTAssertEqual(SourceCatalog.cleanName(url), "Neon Inferno")
+    }
+
 }
 
 enum PFS0Fixture {

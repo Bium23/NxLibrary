@@ -132,7 +132,15 @@ public final class SourceCatalog {
         }
 
         if let archive = try? PFS0Archive.open(url, fileManager: fm) {
-            if let meta = archive.firstEntry(where: { $0.name.lowercased().contains(".cnmt") }),
+            // Prefer the plaintext manifest. A ".cnmt.nca" entry is an NCA
+            // container, not a raw CNMT header; parsing it as one yields a hash
+            // for the title ID.
+            let meta = archive.firstEntry(where: {
+                $0.name.lowercased().hasSuffix(".cnmt.xml")
+            }) ?? archive.firstEntry(where: {
+                $0.name.lowercased().hasSuffix(".cnmt")
+            })
+            if let meta,
                let data = try? archive.read(meta, maxLength: 4 * 1024 * 1024),
                let parsed = Self.parseCNMT(data, url: url) {
                 return DetectedSource(url: url, kind: parsed.kind, titleId: parsed.titleId,
@@ -192,8 +200,15 @@ public final class SourceCatalog {
 
     static func cleanName(_ url: URL) -> String {
         var name = url.deletingPathExtension().lastPathComponent
-        while let range = name.range(of: #"\[[^\]]*\]"#, options: .regularExpression) {
-            name.removeSubrange(range)
+        let patterns = [
+            #"\[[^\]]*\]"#,
+            #"(?i)\([^)]*\.(com|net|org|fr|io|cc|me|tv|co|xyz|site)[^)]*\)"#,
+            #"(?i)\((usa|europe|eur|jpn|japan|world|eshop|nsp|xci|nsz|xcz|update|dlc)\)"#,
+        ]
+        for pattern in patterns {
+            while let range = name.range(of: pattern, options: .regularExpression) {
+                name.removeSubrange(range)
+            }
         }
         name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         return name.isEmpty ? url.lastPathComponent : name
