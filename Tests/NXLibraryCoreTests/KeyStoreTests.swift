@@ -32,4 +32,13 @@ final class KeyStoreTests: XCTestCase {
         try fakeKeys(header: false).write(to: source, atomically: true, encoding: .utf8)
         XCTAssertThrowsError(try KeyStore(directory: dir.appendingPathComponent("k2")).importKey(from: source))
     }
+
+    func testMalformedLineDoesNotLeakContent() throws {
+        let source = dir.appendingPathComponent("malformed.keys")
+        try (fakeKeys() + "TOP_SECRET_KEY_MATERIAL\n")
+            .write(to: source, atomically: true, encoding: .utf8)
+        XCTAssertThrowsError(try KeyStore(directory: dir.appendingPathComponent("k3")).importKey(from: source)) { error in
+            XCTAssertFalse(error.localizedDescription.contains("TOP_SECRET"))
+        }
+    }
 }

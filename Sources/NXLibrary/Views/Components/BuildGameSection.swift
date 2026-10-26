@@ -179,7 +179,7 @@ public struct BuildGameSection: View {
 
     @ViewBuilder
     private var diskStatusView: some View {
-        if let available = viewModel.availableDiskBytes, viewModel.selectedSourcesSizeBytes > 0 {
+        if let available = viewModel.availableBuildDiskBytes, viewModel.selectedSourcesSizeBytes > 0 {
             let required = viewModel.requiredBuildDiskBytes
             let availableText = ByteCountFormatter.string(fromByteCount: available, countStyle: .file)
             let requiredText = ByteCountFormatter.string(fromByteCount: required, countStyle: .file)

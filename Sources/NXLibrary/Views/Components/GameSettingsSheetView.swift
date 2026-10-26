@@ -109,7 +109,27 @@ public struct GameSettingsSheetView: View {
                             .toggleStyle(.switch)
                         }
                         
-                        // Section 2: Metal HUD
+                        // Section 2: Runtime language
+                        settingCard(
+                            title: "Game Language (Runtime)",
+                            icon: "globe",
+                            iconColor: NXTheme.secondary
+                        ) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Picker("", selection: $config.language) {
+                                    ForEach(viewModel.availableLanguages, id: \.code) { item in
+                                        Text(item.label).tag(item.code)
+                                    }
+                                }
+                                .pickerStyle(.menu)
+
+                                Text("“Game Default” leaves the engine's DMLanguage untouched. An explicit choice writes DM_LANG to env.txt at launch.")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(NXTheme.textSecondary)
+                            }
+                        }
+
+                        // Section 3: Metal HUD
                         settingCard(
                             title: "Performance Overlay (Metal HUD)",
                             icon: "gauge.with.needle.fill",
@@ -128,7 +148,7 @@ public struct GameSettingsSheetView: View {
                             .toggleStyle(.switch)
                         }
                         
-                        // Section 3: Console Mode
+                        // Section 4: Console Mode
                         settingCard(
                             title: "Console Mode (Operation Profile)",
                             icon: "tv.and.mediabox",
@@ -149,7 +169,7 @@ public struct GameSettingsSheetView: View {
                             }
                         }
                         
-                        // Section 4: 3D Render Scale
+                        // Section 5: 3D Render Scale
                         settingCard(
                             title: "3D Render Scale",
                             icon: "viewfinder.circle.fill",
@@ -183,7 +203,7 @@ public struct GameSettingsSheetView: View {
                             }
                         }
                         
-                        // Section 5: MetalFX Upscaling
+                        // Section 6: MetalFX Upscaling
                         settingCard(
                             title: "Spatial Upscaling (MetalFX)",
                             icon: "sparkles.tv.fill",

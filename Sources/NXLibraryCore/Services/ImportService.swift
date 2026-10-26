@@ -40,10 +40,13 @@ public final class ImportService {
                 guard let info = info(at: item) else { continue }
                 let bundleId = info["CFBundleIdentifier"] as? String
                 let dmTitle = info["DMTitleID"] as? String
-                let suffix = bundleId?.split(separator: ".").last.map(String.init)
-                let titleId = dmTitle
-                    ?? (bundleId?.hasPrefix("org.nxnative.") == true ? suffix : nil)
-                guard bundleId != "local.nxlibrary", titleId != nil else { continue }
+                let suffix = bundleId?.hasPrefix("org.nxnative.") == true
+                    ? bundleId?.split(separator: ".").last.map(String.init) : nil
+                let titleId = [dmTitle, suffix]
+                    .compactMap { $0 }
+                    .compactMap(Self.normalizedTitleId)
+                    .first
+                guard bundleId != "local.nxlibrary", let titleId else { continue }
                 let name = (info["CFBundleDisplayName"] as? String)
                     ?? (info["CFBundleName"] as? String)
                     ?? item.deletingPathExtension().lastPathComponent
@@ -64,7 +67,8 @@ public final class ImportService {
         var game = PortedGame(
             name: app.name, url: app.appURL, platform: .macApp,
             sizeBytes: app.sizeBytes, modificationDate: app.modificationDate,
-            bundleId: app.bundleId, titleId: app.titleId,
+            bundleId: app.bundleId,
+            titleId: app.titleId.flatMap(Self.normalizedTitleId),
             versionString: app.version
         )
         game.status = .builtSourcesMissing
@@ -74,6 +78,14 @@ public final class ImportService {
         )
         game.settings = GameRuntimeConfig()
         return game
+    }
+
+    static func normalizedTitleId(_ value: String) -> String? {
+        var text = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        if text.lowercased().hasPrefix("0x") { text.removeFirst(2) }
+        guard text.count == 16,
+              text.allSatisfy({ $0.isHexDigit }) else { return nil }
+        return text.uppercased()
     }
 
     private func info(at app: URL) -> [String: Any]? {

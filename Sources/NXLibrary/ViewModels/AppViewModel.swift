@@ -41,10 +41,12 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                 scanGameFolder(folder)
             } else {
                 UserDefaults.standard.removeObject(forKey: StorageKeys.savedGameFolder)
+                scanGeneration = UUID()
                 detectedGames = []
                 selectedGame = nil
                 selectedSourceIDs = []
                 scanError = nil
+                isScanningGameFolder = false
             }
         }
     }
@@ -64,20 +66,47 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     @Published public var scanError: String? = nil
     
     // MARK: - Disk Capacity Pre-flight
-    public var availableDiskBytes: Int64? {
-        let checkPath = selectedGameFolder?.path ?? (defaultInstallPath.isEmpty ? NSHomeDirectory() : defaultInstallPath)
+    public func freeBytes(at url: URL) -> Int64? {
+        let fm = FileManager.default
+        let target = fm.fileExists(atPath: url.path)
+            ? url
+            : url.deletingLastPathComponent()
         var stat = statvfs()
-        if statvfs(checkPath, &stat) == 0 {
+        if statvfs(target.path, &stat) == 0 {
             return Int64(stat.f_bavail) * Int64(stat.f_frsize)
         }
-        let url = URL(fileURLWithPath: checkPath)
-        let values = try? url.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey, .volumeAvailableCapacityKey])
+        let values = try? target.resourceValues(
+            forKeys: [.volumeAvailableCapacityForImportantUsageKey,
+                      .volumeAvailableCapacityKey])
         if let cap = values?.volumeAvailableCapacityForImportantUsage {
             return cap
         }
         return values?.volumeAvailableCapacity.map { Int64($0) }
     }
+
+    public var availableDiskBytes: Int64? {
+        freeBytes(at: selectedGameFolder
+            ?? URL(fileURLWithPath: defaultInstallPath.isEmpty
+                ? NSHomeDirectory() : defaultInstallPath))
+    }
+
+    public var availableOutputDiskBytes: Int64? {
+        freeBytes(at: URL(fileURLWithPath: NSHomeDirectory())
+            .appendingPathComponent("Applications"))
+    }
+
+    /// The wizard reserves space for both the extracted cache and the temporary
+    /// app. Use the tighter of the source/cache volume and the output volume.
+    public var availableBuildDiskBytes: Int64? {
+        [availableDiskBytes, availableOutputDiskBytes].compactMap { $0 }.min()
+    }
     
+    public var filteredLibraryGames: [PortedGame] {
+        let query = librarySearchText.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else { return libraryGames }
+        return libraryGames.filter { $0.name.localizedCaseInsensitiveContains(query) }
+    }
+
     public var selectedSources: [GameFileItem] {
         guard let game = selectedGame else { return [] }
         return game.files.filter { selectedSourceIDs.contains($0.id) }
@@ -98,12 +127,12 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     }
     
     public var isDiskSpaceLow: Bool {
-        guard let avail = availableDiskBytes, selectedSourcesSizeBytes > 0 else { return false }
+        guard let avail = availableBuildDiskBytes, selectedSourcesSizeBytes > 0 else { return false }
         return avail < requiredBuildDiskBytes
     }
     
     public var diskSpaceWarningMessage: String? {
-        guard isDiskSpaceLow, let avail = availableDiskBytes else { return nil }
+        guard isDiskSpaceLow, let avail = availableBuildDiskBytes else { return nil }
         let needed = requiredBuildDiskBytes - avail
         let availStr = ByteCountFormatter.string(fromByteCount: avail, countStyle: .file)
         let requiredStr = ByteCountFormatter.string(fromByteCount: requiredBuildDiskBytes, countStyle: .file)
@@ -157,7 +186,12 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             }
         }
     }
-    @Published public var librarySearchText: String = ""
+    @Published public var librarySearchText: String = "" {
+        didSet {
+            focusedGameIndex = 0
+            isFocusOnDeck = false
+        }
+    }
     @Published public var isScanningLibrary: Bool = false
     @Published public var gameForSettingsSheet: PortedGame? = nil
     @Published public var importedApps: [ImportedApp] = []
@@ -248,8 +282,10 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     private lazy var storageManager = StorageManager()
     private let sourceCatalog = SourceCatalog()
     private lazy var workspaceManager = WorkspaceManager(root: core.appendingPathComponent("workspaces"))
+    private var scanGeneration = UUID()
     private var buildService: BuildService?
     private var buildPreviousStatus: GameStatus?
+    private var activeBuildToolchainVerified = false
     private var buildStartedAt: Date?
     private var buildTempDirectory: URL?
     private let installer = InstallerService.shared
@@ -299,6 +335,17 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         
         NotificationService.shared.requestAuthorization()
         setupControllerNavigation()
+        sweepStaleBuildTemp()
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.buildService?.cancel()
+            if let temp = self?.buildTempDirectory {
+                try? FileManager.default.removeItem(at: temp)
+            }
+        }
 
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--show-setup") {
@@ -469,6 +516,20 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         showSetupSheet = true
     }
 
+    private func sweepStaleBuildTemp() {
+        let temp = core.appendingPathComponent("Temp")
+        guard let items = try? FileManager.default.contentsOfDirectory(
+            at: temp, includingPropertiesForKeys: [.contentModificationDateKey]
+        ) else { return }
+        let cutoff = Date().addingTimeInterval(-24 * 60 * 60)
+        for item in items {
+            let date = (try? item.resourceValues(
+                forKeys: [.contentModificationDateKey]).contentModificationDate)
+                ?? Date.distantPast
+            if date < cutoff { try? FileManager.default.removeItem(at: item) }
+        }
+    }
+
     public func refreshStorageUsage() {
         guard !isCalculatingStorage else { return }
         isCalculatingStorage = true
@@ -484,6 +545,10 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     }
 
     public func deleteCaches() {
+        guard !isBuilding else {
+            alertMessage = "Finish or cancel the active build before cleaning caches."
+            return
+        }
         var removed = 0
         for game in libraryGames {
             do {
@@ -499,6 +564,10 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     }
 
     public func deleteLogs() {
+        guard !isBuilding else {
+            alertMessage = "Finish or cancel the active build before deleting logs."
+            return
+        }
         var removed = 0
         for game in libraryGames {
             do {
@@ -795,6 +864,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                         folder: nil,
                         bundleId: game.bundleId
                     )
+                    self.librarySearchText = ""
                     if let index = self.libraryGames.firstIndex(where: { $0.id == updated.id }) {
                         self.focusedGameIndex = index
                     }
@@ -825,8 +895,17 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
 
     public func launchGame(_ game: PortedGame) {
         guard launchingGameId == nil else { return }
+        guard game.isPlayableLocally else {
+            let message = "This game is not built yet. Add sources and build it first."
+            lastError = message
+            alertMessage = message
+            SoundEffectService.shared.play(.error)
+            logs.append(LogEntry(level: .error, message: message))
+            return
+        }
         guard FileManager.default.fileExists(atPath: game.url.path) else {
             lastError = NXLibraryError.appMissing(game.url.path).localizedDescription
+            alertMessage = lastError
             updateStoredStatus(.appMissing, for: game)
             SoundEffectService.shared.play(.error)
             logs.append(LogEntry(level: .error, message: lastError!))
@@ -834,6 +913,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         }
         guard let titleId = game.titleId, !titleId.isEmpty else {
             lastError = NXLibraryError.missingTitleId.localizedDescription
+            alertMessage = lastError
             SoundEffectService.shared.play(.error)
             logs.append(LogEntry(level: .error, message: lastError!))
             return
@@ -848,24 +928,31 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         } catch {
             launchingGameId = nil
             lastError = error.localizedDescription
+            alertMessage = lastError
             SoundEffectService.shared.play(.error)
             logs.append(LogEntry(level: .error,
                                  message: "Could not write the runtime environment: \(error.localizedDescription)"))
             return
         }
 
-        guard launchService.launch(appURL: game.url) else {
-            launchingGameId = nil
-            lastError = NXLibraryError.launchFailed(game.name).localizedDescription
-            SoundEffectService.shared.play(.error)
-            logs.append(LogEntry(level: .error, message: lastError!))
-            return
-        }
-
-        lastError = nil
-        logs.append(LogEntry(level: .success, message: "Launched game: \(game.name)"))
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) { [weak self] in
-            if self?.launchingGameId == game.id { self?.launchingGameId = nil }
+        launchService.launch(appURL: game.url) { [weak self] success, error in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                if success {
+                    self.lastError = nil
+                    self.logs.append(LogEntry(level: .success, message: "Launched game: \(game.name)"))
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        if self.launchingGameId == game.id { self.launchingGameId = nil }
+                    }
+                } else {
+                    let message = error ?? NXLibraryError.launchFailed(game.name).localizedDescription
+                    self.launchingGameId = nil
+                    self.lastError = message
+                    self.alertMessage = message
+                    SoundEffectService.shared.play(.error)
+                    self.logs.append(LogEntry(level: .error, message: message))
+                }
+            }
         }
     }
 
@@ -894,7 +981,8 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
 
     public func deletePortedGame(_ game: PortedGame) {
         do {
-            if FileManager.default.fileExists(atPath: game.url.path) {
+            let deleteBundle = game.canDeleteAppBundle()
+            if deleteBundle, FileManager.default.fileExists(atPath: game.url.path) {
                 try FileManager.default.removeItem(at: game.url)
             }
             var library = try libraryStore.load()
@@ -903,7 +991,12 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             libraryGames = library.games.sorted {
                 $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
             }
-            logs.append(LogEntry(level: .warning, message: "Game removed: \(game.name)"))
+            if deleteBundle {
+                logs.append(LogEntry(level: .warning, message: "Game app deleted: \(game.name)"))
+            } else {
+                logs.append(LogEntry(level: .warning,
+                    message: "Removed \(game.name) from the library; its files and source folders were left in place."))
+            }
         } catch {
             logs.append(LogEntry(level: .error, message: "Failed to delete game: \(error.localizedDescription)"))
         }
@@ -913,6 +1006,8 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     private func scanGameFolder(_ folder: URL) {
         scanError = nil
         isScanningGameFolder = true
+        let generation = UUID()
+        scanGeneration = generation
         let catalog = sourceCatalog
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let urls = Self.sourceFileURLs(in: folder)
@@ -920,7 +1015,11 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             let detected = (try? catalog.scan(files: readable)) ?? []
             let games = detected.map(Self.selectableGame(from:))
             DispatchQueue.main.async {
-                guard let self else { return }
+                guard let self,
+                      self.scanGeneration == generation,
+                      self.selectedGameFolder?.standardizedFileURL == folder.standardizedFileURL else {
+                    return
+                }
                 self.isScanningGameFolder = false
                 self.detectedGames = games
                 self.selectedGame = games.first
@@ -1070,6 +1169,12 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
               game.sources.allSatisfy({ FileManager.default.fileExists(atPath: $0.url.path) }) else {
             return false
         }
+        let required = game.sources.reduce(0) { $0 + $1.sizeBytes } * 2 + 10_000_000_000
+        if let free = availableOutputDiskBytes, free < required { return false }
+        if let path = game.workspacePath,
+           let free = freeBytes(at: URL(fileURLWithPath: path)), free < required {
+            return false
+        }
         return canPassToolchainGate
     }
 
@@ -1155,6 +1260,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                 bundleId: bundleId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     ? nil : bundleId.trimmingCharacters(in: .whitespacesAndNewlines)
             )
+            librarySearchText = ""
             if let index = libraryGames.firstIndex(where: { $0.id == game.id }) {
                 focusedGameIndex = index
             }
@@ -1250,17 +1356,22 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             throw NXLibraryError.environmentBlocked(environmentStatus.issues.joined(separator: "; "))
         }
 
-        let report = compatibilityReport ?? (try? CompatibilityChecker(
+        // Re-check at build time: the engine tree, Metal compiler or CLI may
+        // have changed since the last Settings/launch check.
+        let checker = CompatibilityChecker(
             repoURL: URL(fileURLWithPath: nxnativePath),
             pythonURL: URL(fileURLWithPath: nxnativePath).appendingPathComponent(".venv/bin/python"),
             developerDir: resolvedDeveloperDir()
-        ).check(expectedEngineCommit: pinnedEngineCommit))
+        )
+        let report = try? checker.check(expectedEngineCommit: pinnedEngineCommit)
+        compatibilityReport = report
         if report?.ok != true && !allowUntestedToolchain {
             let reason = report?.checks.filter { $0.status == .block }
                 .map { "\($0.title): \($0.detail)" }.joined(separator: "; ")
                 ?? "the compatibility check is unavailable"
             throw NXLibraryError.incompatibleToolchain(reason)
         }
+        activeBuildToolchainVerified = report?.ok == true
 
         let merged = try libraryStore.merge(scanned: [target])
         libraryGames = merged.games.sorted {
@@ -1307,6 +1418,25 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             }
         }
 
+        let requiredDisk = target.sources.reduce(0) { $0 + $1.sizeBytes } * 2 + 10_000_000_000
+        let applications = URL(fileURLWithPath: NSHomeDirectory())
+            .appendingPathComponent("Applications")
+        for volume in [workspace.directory, applications] {
+            if let free = freeBytes(at: volume), free < requiredDisk {
+                let freeText = ByteCountFormatter.string(fromByteCount: free, countStyle: .file)
+                let requiredText = ByteCountFormatter.string(
+                    fromByteCount: requiredDisk, countStyle: .file)
+                throw NXLibraryError.environmentBlocked(
+                    "Not enough free space at \(volume.path): \(freeText) available, \(requiredText) needed.")
+            }
+        }
+
+        let repo = URL(fileURLWithPath: nxnativePath)
+        let python = repo.appendingPathComponent(".venv/bin/python")
+        guard FileManager.default.isExecutableFile(atPath: python.path) else {
+            throw NXLibraryError.environmentBlocked("the nxnative venv Python is missing")
+        }
+
         let finalApp = finalAppURL(for: target, titleId: titleId)
         let tempRoot = core.appendingPathComponent("Temp").appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempRoot, withIntermediateDirectories: true)
@@ -1315,11 +1445,6 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         try FileManager.default.createDirectory(at: logURL.deletingLastPathComponent(),
                                                 withIntermediateDirectories: true)
 
-        let repo = URL(fileURLWithPath: nxnativePath)
-        let python = repo.appendingPathComponent(".venv/bin/python")
-        guard FileManager.default.isExecutableFile(atPath: python.path) else {
-            throw NXLibraryError.environmentBlocked("the nxnative venv Python is missing")
-        }
         let command = BuildCommandBuilder.make(
             repo: repo,
             python: python,
@@ -1497,7 +1622,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         var library = (try? libraryStore.load()) ?? LibraryFile(games: libraryGames)
         if let index = library.games.firstIndex(where: { $0.id == gameID }) {
             var game = library.games[index]
-            let verified = compatibilityReport?.ok == true
+            let verified = activeBuildToolchainVerified
             let record = BuildRecord(
                 startedAt: buildStartedAt ?? Date(),
                 endedAt: Date(),
@@ -1573,6 +1698,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         buildStartedAt = nil
         buildPreviousStatus = nil
         currentBuildGameID = nil
+        activeBuildToolchainVerified = false
     }
 
     public func logURL(for game: PortedGame) -> URL? {
@@ -1604,6 +1730,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         buildState = .failed
         buildError = message
         lastError = message
+        alertMessage = message
         logs.append(LogEntry(level: .error, message: message))
         SoundEffectService.shared.play(.error)
     }
@@ -1651,6 +1778,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     private func finalAppURL(for game: PortedGame, titleId: String) -> URL {
         if game.url.pathExtension.lowercased() == "app",
            game.status != .notBuilt,
+           game.canDeleteAppBundle(),
            FileManager.default.fileExists(atPath: game.url.path) {
             return game.url
         }

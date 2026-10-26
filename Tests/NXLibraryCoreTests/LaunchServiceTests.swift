@@ -4,7 +4,11 @@ import XCTest
 final class LaunchServiceTests: XCTestCase {
     final class FakeLauncher: AppLaunching {
         var opened: URL?
-        func open(_ url: URL) -> Bool { opened = url; return true }
+        var shouldSucceed = true
+        func open(_ url: URL, completion: @escaping (Bool, String?) -> Void) {
+            opened = url
+            completion(shouldSucceed, shouldSucceed ? nil : "sample launch error")
+        }
     }
 
     func testWritesEnvAndLaunches() throws {
@@ -22,7 +26,28 @@ final class LaunchServiceTests: XCTestCase {
         let env = try String(contentsOf: dir.appendingPathComponent("0100000000010000/env.txt"))
         XCTAssertTrue(env.contains("DM_FPS_TARGET=30"))
         XCTAssertTrue(env.contains("DM_METAL_HUD=1"))
-        XCTAssertTrue(service.launch(appURL: game.url))
+        var launched = false
+        var launchError: String?
+        service.launch(appURL: game.url) { success, error in
+            launched = success
+            launchError = error
+        }
+        XCTAssertTrue(launched)
+        XCTAssertNil(launchError)
         XCTAssertEqual(launcher.opened, game.url)
+    }
+
+    func testLaunchFailureIsReported() throws {
+        let launcher = FakeLauncher()
+        launcher.shouldSucceed = false
+        let service = LaunchService(launcher: launcher)
+        var launched = true
+        var launchError: String?
+        service.launch(appURL: URL(fileURLWithPath: "/tmp/Missing.app")) { success, error in
+            launched = success
+            launchError = error
+        }
+        XCTAssertFalse(launched)
+        XCTAssertEqual(launchError, "sample launch error")
     }
 }

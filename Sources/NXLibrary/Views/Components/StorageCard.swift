@@ -63,14 +63,22 @@ public struct StorageCard: View {
                     }
                     .buttonStyle(NXSecondaryButtonStyle())
                     .controlSize(.small)
+                    .disabled(viewModel.isBuilding)
 
                     Button("Delete Logs") {
                         cleanupToConfirm = .logs
                     }
                     .buttonStyle(NXSecondaryButtonStyle())
                     .controlSize(.small)
+                    .disabled(viewModel.isBuilding)
 
                     Spacer()
+                }
+
+                if viewModel.isBuilding {
+                    Text("Available after the active build finishes or is cancelled.")
+                        .font(.system(size: 10))
+                        .foregroundColor(NXTheme.warning)
                 }
 
                 Text("Cleanup only removes build caches and logs. Apps and source files are never deleted here.")

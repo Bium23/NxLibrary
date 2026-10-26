@@ -2,18 +2,24 @@ import Foundation
 import AppKit
 
 public protocol AppLaunching {
-    func open(_ url: URL) -> Bool
+    func open(_ url: URL, completion: @escaping (Bool, String?) -> Void)
 }
 
 public final class NSWorkspaceLauncher: AppLaunching {
     public init() {}
 
-    public func open(_ url: URL) -> Bool {
-        guard FileManager.default.fileExists(atPath: url.path) else { return false }
-        NSWorkspace.shared.openApplication(at: url, configuration: .init()) { _, error in
-            if let error { NSLog("Launch failed: %@", error.localizedDescription) }
+    public func open(_ url: URL, completion: @escaping (Bool, String?) -> Void) {
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            completion(false, "The app bundle is missing: \(url.path)")
+            return
         }
-        return true
+        NSWorkspace.shared.openApplication(at: url, configuration: .init()) { _, error in
+            if let error {
+                completion(false, error.localizedDescription)
+            } else {
+                completion(true, nil)
+            }
+        }
     }
 }
 
@@ -32,12 +38,14 @@ public final class LaunchService {
     ) throws {
         let dir = baseDirectory.appendingPathComponent(titleId)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        try settings.envFileContent().write(
-            to: dir.appendingPathComponent("env.txt"), atomically: true, encoding: .utf8)
+        let envURL = dir.appendingPathComponent("env.txt")
+        let existing = try? String(contentsOf: envURL, encoding: .utf8)
+        try settings.mergedEnvContent(existing: existing).write(
+            to: envURL, atomically: true, encoding: .utf8)
     }
 
-    public func launch(appURL: URL) -> Bool {
-        launcher.open(appURL)
+    public func launch(appURL: URL, completion: @escaping (Bool, String?) -> Void) {
+        launcher.open(appURL, completion: completion)
     }
 
     public func saveDirectory(for titleId: String) -> URL {

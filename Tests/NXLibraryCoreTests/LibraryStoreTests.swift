@@ -49,6 +49,23 @@ final class LibraryStoreTests: XCTestCase {
         game.titleId = "0100000000010000"
         try store.save(LibraryFile(schemaVersion: 1, games: [game]))
         try Data("not json".utf8).write(to: store.fileURL)
+        let recovered = try store.load()
+        XCTAssertEqual(recovered.games.count, 1)
+
+        // Saving the recovered value must not replace the good backup with the
+        // corrupt main file. Corrupt the main again and recover again.
+        try store.save(recovered)
+        try Data("still not json".utf8).write(to: store.fileURL)
+        XCTAssertEqual(try store.load().games.count, 1)
+    }
+
+    func testLoadUsesBackupWhenMainIsMissing() throws {
+        let store = LibraryStore(directory: dir)
+        var game = PortedGame(name: "G", url: URL(fileURLWithPath: "/tmp/g.app"),
+                              platform: .macApp, sizeBytes: 1, modificationDate: Date())
+        game.titleId = "0100000000010000"
+        try store.save(LibraryFile(schemaVersion: 1, games: [game]))
+        try FileManager.default.removeItem(at: store.fileURL)
         XCTAssertEqual(try store.load().games.count, 1)
     }
 

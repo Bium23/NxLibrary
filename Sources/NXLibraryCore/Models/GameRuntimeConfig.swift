@@ -13,7 +13,7 @@ public struct GameRuntimeConfig: Codable, Equatable {
 
     public init(enable60FPS: Bool = true, enableMetalHUD: Bool = false,
                 isDockedMode: Bool = true, renderScale: Double = 1.0,
-                enableMetalFXUpscale: Bool = false, language: String = "en-US",
+                enableMetalFXUpscale: Bool = false, language: String = "auto",
                 rumble: Bool = true, rumbleGain: Int = 1, fullscreen: Bool = false) {
         self.enable60FPS = enable60FPS
         self.enableMetalHUD = enableMetalHUD
@@ -45,31 +45,37 @@ public struct GameRuntimeConfig: Codable, Equatable {
     }
 
     public func toEnvironmentDict() -> [String: String] {
-        [
+        var values: [String: String] = [
             "DM_FPS_TARGET": enable60FPS ? "60" : "30",
             "DM_METAL_HUD": enableMetalHUD ? "1" : "0",
             "DM_OPMODE": isDockedMode ? "1" : "0",
             "DM_RENDER_SCALE": String(format: "%.2f", renderScale),
             "DM_PRESENT_UPSCALE": enableMetalFXUpscale ? "metalfx" : "off",
-            "DM_LANG": language,
             "DM_RUMBLE": rumble ? "1" : "0",
             "DM_RUMBLE_GAIN": "\(rumbleGain)",
             "DM_FULLSCREEN": fullscreen ? "1" : "0",
         ]
+        // "auto" lets the engine's own language (DMLanguage) apply.
+        if language != "auto", !language.isEmpty {
+            values["DM_LANG"] = language
+        }
+        return values
+    }
+
+    public func mergedEnvContent(existing: String?) -> String {
+        var values = Self.parseEnvDict(existing)
+        for (key, value) in toEnvironmentDict() {
+            values[key] = value
+        }
+        if language == "auto" || language.isEmpty {
+            values.removeValue(forKey: "DM_LANG")
+        }
+        return values.keys.sorted().map { "\($0)=\(values[$0]!)" }
+            .joined(separator: "\n") + "\n"
     }
 
     public func envFileContent() -> String {
-        """
-        DM_FPS_TARGET=\(enable60FPS ? "60" : "30")
-        DM_METAL_HUD=\(enableMetalHUD ? "1" : "0")
-        DM_OPMODE=\(isDockedMode ? "1" : "0")
-        DM_RENDER_SCALE=\(String(format: "%.2f", renderScale))
-        DM_PRESENT_UPSCALE=\(enableMetalFXUpscale ? "metalfx" : "off")
-        DM_LANG=\(language)
-        DM_RUMBLE=\(rumble ? "1" : "0")
-        DM_RUMBLE_GAIN=\(rumbleGain)
-        DM_FULLSCREEN=\(fullscreen ? "1" : "0")
-        """
+        mergedEnvContent(existing: nil)
     }
 
     public static func storageKey(for game: PortedGame) -> String {
@@ -111,11 +117,25 @@ public struct GameRuntimeConfig: Codable, Equatable {
             .appendingPathComponent("Library/Application Support/nxnative")
             .appendingPathComponent(titleId)
         try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
-        try? envFileContent().write(
-            to: dir.appendingPathComponent("env.txt"),
-            atomically: true,
-            encoding: .utf8
+        let envURL = dir.appendingPathComponent("env.txt")
+        let existing = try? String(contentsOf: envURL, encoding: .utf8)
+        try? mergedEnvContent(existing: existing).write(
+            to: envURL, atomically: true, encoding: .utf8
         )
+    }
+
+    private static func parseEnvDict(_ text: String?) -> [String: String] {
+        guard let text else { return [:] }
+        var values: [String: String] = [:]
+        for line in text.components(separatedBy: .newlines) {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix("#") || !trimmed.contains("=") { continue }
+            let parts = trimmed.split(separator: "=", maxSplits: 1).map(String.init)
+            guard parts.count == 2 else { continue }
+            values[parts[0].trimmingCharacters(in: .whitespaces)] =
+                parts[1].trimmingCharacters(in: .whitespaces)
+        }
+        return values
     }
 
     static func parseEnvContent(_ text: String) -> GameRuntimeConfig {

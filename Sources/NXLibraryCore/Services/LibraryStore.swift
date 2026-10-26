@@ -28,7 +28,14 @@ public final class LibraryStore {
 
     public func load() throws -> LibraryFile {
         try fm.createDirectory(at: directory, withIntermediateDirectories: true)
-        guard fm.fileExists(atPath: fileURL.path) else { return LibraryFile() }
+        if !fm.fileExists(atPath: fileURL.path) {
+            if fm.fileExists(atPath: backupURL.path),
+               let backup = try? Self.decoder().decode(LibraryFile.self,
+                                                       from: Data(contentsOf: backupURL)) {
+                return backup
+            }
+            return LibraryFile()
+        }
         do {
             return try Self.decoder().decode(LibraryFile.self, from: Data(contentsOf: fileURL))
         } catch {
@@ -42,14 +49,16 @@ public final class LibraryStore {
 
     public func save(_ library: LibraryFile) throws {
         try fm.createDirectory(at: directory, withIntermediateDirectories: true)
-        if fm.fileExists(atPath: fileURL.path) {
+        // Never rotate a corrupt main file over the last known good backup.
+        if let existing = try? Data(contentsOf: fileURL),
+           (try? Self.decoder().decode(LibraryFile.self, from: existing)) != nil {
             try? fm.removeItem(at: backupURL)
             try? fm.copyItem(at: fileURL, to: backupURL)
         }
         let data = try Self.encoder().encode(library)
         try data.write(to: fileURL, options: .atomic)
         // Keep a restore point even on the first save; later saves keep the
-        // previous file because it was copied before the write.
+        // previous valid file because it was copied before the write.
         if !fm.fileExists(atPath: backupURL.path) {
             try? fm.copyItem(at: fileURL, to: backupURL)
         }

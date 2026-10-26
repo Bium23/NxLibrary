@@ -12,14 +12,26 @@ public struct LibraryView: View {
     }
     
     private var filteredGames: [PortedGame] {
-        if viewModel.librarySearchText.trimmingCharacters(in: .whitespaces).isEmpty {
-            return viewModel.libraryGames
-        }
-        return viewModel.libraryGames.filter {
-            $0.name.localizedCaseInsensitiveContains(viewModel.librarySearchText)
-        }
+        viewModel.filteredLibraryGames
     }
     
+    private var deleteTargetIsBundle: Bool {
+        gameToDelete?.canDeleteAppBundle() == true
+    }
+
+    private var deleteTitle: String {
+        deleteTargetIsBundle
+            ? "Delete \(gameToDelete?.name ?? "this game")?"
+            : "Remove \(gameToDelete?.name ?? "this game") from the library?"
+    }
+
+    private var deleteMessage: String {
+        if deleteTargetIsBundle {
+            return "This permanently deletes only this app bundle:\n\(gameToDelete?.url.path ?? "unknown path")\n\nSource files, saves and build caches are not deleted."
+        }
+        return "This removes only the library record. The folder and its contents are left in place:\n\(gameToDelete?.url.path ?? "unknown path")"
+    }
+
     private var currentSelectedGame: PortedGame? {
         guard !filteredGames.isEmpty else { return nil }
         let index = max(0, min(viewModel.focusedGameIndex, filteredGames.count - 1))

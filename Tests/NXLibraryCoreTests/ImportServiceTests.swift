@@ -39,4 +39,27 @@ final class ImportServiceTests: XCTestCase {
             "CFBundleIdentifier": "com.example.other",
         ], format: .xml, options: 0)
     }
+
+    func testRejectsInvalidTitleIdsAndFallsBackToBundleSuffix() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("NXImportIDs-\(UUID().uuidString)")
+        let bad = root.appendingPathComponent("Bad.app/Contents")
+        let suffixOnly = root.appendingPathComponent("Suffix.app/Contents")
+        try FileManager.default.createDirectory(at: bad, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: suffixOnly, withIntermediateDirectories: true)
+        try PropertyListSerialization.data(fromPropertyList: [
+            "CFBundleName": "Bad",
+            "CFBundleIdentifier": "org.nxnative.app",
+            "DMTitleID": "../../../Documents/x",
+        ], format: .xml, options: 0).write(to: bad.appendingPathComponent("Info.plist"))
+        try PropertyListSerialization.data(fromPropertyList: [
+            "CFBundleName": "Suffix",
+            "CFBundleIdentifier": "org.nxnative.01007ef00011e000",
+        ], format: .xml, options: 0).write(to: suffixOnly.appendingPathComponent("Info.plist"))
+
+        let apps = ImportService().scan(directories: [root])
+        XCTAssertEqual(apps.count, 1)
+        XCTAssertEqual(apps.first?.titleId, "01007EF00011E000")
+        try? FileManager.default.removeItem(at: root)
+    }
 }

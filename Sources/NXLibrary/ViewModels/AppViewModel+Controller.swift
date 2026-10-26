@@ -34,7 +34,7 @@ extension AppViewModel {
             
         case .navigateRight:
             if selectedTab == 0 && !isFocusOnDeck { // Library Tab Carousel
-                if focusedGameIndex < libraryGames.count - 1 {
+                if focusedGameIndex < filteredLibraryGames.count - 1 {
                     focusedGameIndex += 1
                     SoundEffectService.shared.play(.focus)
                 }
@@ -89,9 +89,10 @@ extension AppViewModel {
     }
     
     public var currentFocusedGame: PortedGame? {
-        guard !libraryGames.isEmpty else { return nil }
-        let clamped = max(0, min(focusedGameIndex, libraryGames.count - 1))
-        return libraryGames[clamped]
+        let games = filteredLibraryGames
+        guard !games.isEmpty else { return nil }
+        let clamped = max(0, min(focusedGameIndex, games.count - 1))
+        return games[clamped]
     }
     
     public func revealSaveFolder(_ url: URL) {

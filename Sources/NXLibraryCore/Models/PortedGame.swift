@@ -46,6 +46,29 @@ public struct PortedGame: Identifiable, Codable, Equatable {
         return name
     }
 
+    /// True only when `url` is an installed app bundle and none of the source
+    /// files live inside it. This prevents "delete game" from removing a source
+    /// folder that happens to be used as the workspace before a build.
+    public func canDeleteAppBundle() -> Bool {
+        guard url.pathExtension.lowercased() == "app",
+              FileManager.default.fileExists(
+                atPath: url.appendingPathComponent("Contents/Info.plist").path) else {
+            return false
+        }
+        let appPath = url.standardizedFileURL.path
+        if let workspacePath,
+           URL(fileURLWithPath: workspacePath).standardizedFileURL.path == appPath {
+            return false
+        }
+        for source in sources {
+            let sourcePath = source.url.standardizedFileURL.path
+            if sourcePath == appPath || sourcePath.hasPrefix(appPath + "/") {
+                return false
+            }
+        }
+        return true
+    }
+
     public var isPlayableLocally: Bool {
         guard platform == .macApp,
               url.pathExtension.lowercased() == "app" else { return false }

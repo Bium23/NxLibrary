@@ -13,12 +13,12 @@ public struct KeySummary: Equatable {
 public enum KeyStoreError: Error, LocalizedError {
     case unreadable
     case missingHeaderKey
-    case invalidLine(String)
+    case invalidLine(Int)
     public var errorDescription: String? {
         switch self {
         case .unreadable: return "The key file could not be read."
         case .missingHeaderKey: return "The key file has no header_key."
-        case .invalidLine(let line): return "Invalid key line: \(line)"
+        case .invalidLine(let line): return "Invalid key line number \(line)."
         }
     }
 }
@@ -38,14 +38,14 @@ public final class KeyStore {
         }
         var hasHeader = false
         var generations: [Int] = []
-        for raw in text.split(separator: "\n") {
-            let line = String(raw).trimmingCharacters(in: .whitespaces)
+        for (index, raw) in text.components(separatedBy: .newlines).enumerated() {
+            let line = raw.trimmingCharacters(in: .whitespaces)
             if line.isEmpty || line.hasPrefix("#") { continue }
             let parts = line.split(separator: "=", maxSplits: 1).map {
                 $0.trimmingCharacters(in: .whitespaces)
             }
             guard parts.count == 2, !parts[1].isEmpty else {
-                throw KeyStoreError.invalidLine(line)
+                throw KeyStoreError.invalidLine(index + 1)
             }
             if parts[0] == "header_key" { hasHeader = true }
             if parts[0].hasPrefix("key_area_key_application_"),

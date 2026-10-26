@@ -36,6 +36,16 @@ public final class BuildService {
 
     public init(fileManager: FileManager = .default) { self.fm = fileManager }
 
+    deinit {
+        // A backstop for callers that drop the service without cancelling.
+        stateLock.lock()
+        let running = process
+        stateLock.unlock()
+        if let running, running.isRunning {
+            killpg(running.processIdentifier, SIGKILL)
+        }
+    }
+
     public var isRunning: Bool {
         stateLock.lock()
         defer { stateLock.unlock() }
