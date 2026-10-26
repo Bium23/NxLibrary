@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import GameController
 
 public final class GameControllerService: ObservableObject {
@@ -9,10 +10,10 @@ public final class GameControllerService: ObservableObject {
     @Published public var activeBrand: GamepadBrand = .generic
     
     public var onAction: ((GamepadAction) -> Void)?
-    
+    public var deadzone: Float = 0.35
+    public var navigationInterval: TimeInterval = 0.12
+    private var isAppActive = true
     private var lastNavTime: TimeInterval = 0
-    private let navCooldown: TimeInterval = 0.20
-    private let stickDeadzone: Float = 0.35
     
     private init() {
         setupObservers()
@@ -34,6 +35,22 @@ public final class GameControllerService: ObservableObject {
             queue: .main
         ) { [weak self] notif in
             self?.refreshControllers()
+        }
+
+        isAppActive = NSApplication.shared.isActive
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.isAppActive = true
+        }
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didResignActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.isAppActive = false
         }
     }
     
@@ -86,18 +103,18 @@ public final class GameControllerService: ObservableObject {
         gamepad.leftThumbstick.valueChangedHandler = { [weak self] _, xVal, yVal in
             guard let self = self else { return }
             let now = ProcessInfo.processInfo.systemUptime
-            guard now - self.lastNavTime > self.navCooldown else { return }
+            guard now - self.lastNavTime > self.navigationInterval else { return }
             
-            if xVal > self.stickDeadzone {
+            if xVal > self.deadzone {
                 self.lastNavTime = now
                 self.triggerAction(.navigateRight)
-            } else if xVal < -self.stickDeadzone {
+            } else if xVal < -self.deadzone {
                 self.lastNavTime = now
                 self.triggerAction(.navigateLeft)
-            } else if yVal > self.stickDeadzone {
+            } else if yVal > self.deadzone {
                 self.lastNavTime = now
                 self.triggerAction(.navigateUp)
-            } else if yVal < -self.stickDeadzone {
+            } else if yVal < -self.deadzone {
                 self.lastNavTime = now
                 self.triggerAction(.navigateDown)
             }
@@ -133,7 +150,8 @@ public final class GameControllerService: ObservableObject {
     
     private func triggerAction(_ action: GamepadAction) {
         DispatchQueue.main.async { [weak self] in
-            self?.onAction?(action)
+            guard let self, self.isAppActive else { return }
+            self.onAction?(action)
         }
     }
 }

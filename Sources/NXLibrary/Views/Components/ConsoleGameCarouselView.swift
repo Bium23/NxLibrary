@@ -106,6 +106,13 @@ public struct ConsoleGameCarouselView: View {
                 .frame(width: 250, height: 32, alignment: .top)
         }
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(game.name)
+        .accessibilityHint("Select this game, then press A or Return to play.")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction(named: "Play") {
+            viewModel.launchGame(game)
+        }
     }
 
     private func tileBadge(for game: PortedGame) -> (text: String, color: Color)? {

@@ -79,6 +79,7 @@ public struct AppLogoView: View {
         .clipped()
         .onHover { isHovered = $0 }
         .help("NX Library icon. Click to choose its appearance.")
+        .accessibilityLabel("NX Library icon. Choose appearance.")
         .onChange(of: colorScheme) { _ in
             if viewModel.iconAppearanceMode == .auto {
                 viewModel.updateDockIcon()

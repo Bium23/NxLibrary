@@ -17,7 +17,7 @@ public struct ControlsView: View {
                         Text("Controls & Keyboard Mapping")
                             .font(.system(size: 18, weight: .bold, design: .rounded))
                             .foregroundColor(NXTheme.textPrimary)
-                        Text("Games ported by NxNative Launcher simultaneously support your Mac keyboard and any USB or Bluetooth gamepad with instant plug-and-play recognition.")
+                        Text("Games in NX Library simultaneously support your Mac keyboard and any USB or Bluetooth gamepad with instant plug-and-play recognition.")
                             .font(.system(size: 12))
                             .foregroundColor(NXTheme.textSecondary)
                     }
@@ -117,7 +117,7 @@ public struct ControlsView: View {
                                 .foregroundColor(Color(red: 0.13, green: 0.77, blue: 0.37))
                         }
                         
-                        Text("Connect via Bluetooth or USB-C before or during gameplay. NxNative Launcher automatically maps standard inputs:")
+                        Text("Connect via Bluetooth or USB-C before or during gameplay. NX Library automatically maps standard inputs:")
                             .font(.system(size: 12))
                             .foregroundColor(NXTheme.textSecondary)
                         

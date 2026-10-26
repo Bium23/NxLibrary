@@ -52,6 +52,14 @@ public enum GamepadBrand: String, CaseIterable, Identifiable {
         case .generic: return "L / R"
         }
     }
+
+    public var menuButtonGlyph: String {
+        switch self {
+        case .nintendoSwitch: return "＋"
+        case .playstation: return "☰"
+        case .xbox, .generic: return "≡"
+        }
+    }
 }
 
 public enum GamepadAction: Hashable {

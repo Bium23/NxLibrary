@@ -11,9 +11,9 @@ public struct ControllerPromptBar: View {
             HStack(spacing: 6) {
                 Image(systemName: "gamecontroller.fill")
                     .font(.system(size: 11))
-                    .foregroundColor(controllerService.isGamepadConnected ? Color(red: 0.13, green: 0.77, blue: 0.37) : NXTheme.textMuted)
+                    .foregroundColor(controllerService.isGamepadConnected ? NXTheme.success : NXTheme.textMuted)
                 
-                Text(controllerService.isGamepadConnected ? controllerService.activeControllerName : "Gamepad Ready")
+                Text(controllerService.isGamepadConnected ? controllerService.activeControllerName : "No Gamepad Connected")
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .foregroundColor(controllerService.isGamepadConnected ? NXTheme.textPrimary : NXTheme.textMuted)
                     .lineLimit(1)
@@ -42,24 +42,30 @@ public struct ControllerPromptBar: View {
                 promptPill(
                     glyph: controllerService.activeBrand == .playstation ? "○" : "B",
                     action: "Back",
-                    color: Color(red: 0.9, green: 0.3, blue: 0.3)
+                    color: NXTheme.error
                 )
                 
                 promptPill(
                     glyph: controllerService.activeBrand == .playstation ? "□" : "X",
-                    action: "Settings",
+                    action: "Game Settings",
                     color: NXTheme.secondary
                 )
                 
                 promptPill(
                     glyph: controllerService.activeBrand == .playstation ? "△" : "Y",
                     action: "Save Folder",
-                    color: Color(red: 0.95, green: 0.75, blue: 0.2)
+                    color: NXTheme.warning
                 )
                 
                 promptPill(
                     glyph: controllerService.activeBrand.shoulderTabsPrompt,
                     action: "Switch Tabs",
+                    color: NXTheme.textSecondary
+                )
+                
+                promptPill(
+                    glyph: controllerService.activeBrand.menuButtonGlyph,
+                    action: "Options",
                     color: NXTheme.textSecondary
                 )
             }

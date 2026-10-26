@@ -50,7 +50,7 @@ public struct SystemAppearanceCard: View {
                         .clipShape(Capsule())
                 }
                 
-                Text("Select an appearance style for NxNative Launcher. The chosen icon dynamically updates the title bar logo, in-app branding, and the macOS Dock icon in real time.")
+                Text("Select an appearance style for NX Library. The chosen icon dynamically updates the title bar logo, in-app branding, and the macOS Dock icon in real time.")
                     .font(.system(size: 12))
                     .foregroundColor(NXTheme.textSecondary)
                 

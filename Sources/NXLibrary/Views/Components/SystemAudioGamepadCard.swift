@@ -23,8 +23,8 @@ public struct SystemAudioGamepadCard: View {
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
                         .padding(.horizontal, 7)
                         .padding(.vertical, 3)
-                        .background(controllerService.isGamepadConnected ? Color(red: 0.13, green: 0.77, blue: 0.37).opacity(0.2) : NXTheme.glassSurfaceElevated)
-                        .foregroundColor(controllerService.isGamepadConnected ? Color(red: 0.13, green: 0.77, blue: 0.37) : NXTheme.textMuted)
+                        .background(controllerService.isGamepadConnected ? NXTheme.success.opacity(0.2) : NXTheme.glassSurfaceElevated)
+                        .foregroundColor(controllerService.isGamepadConnected ? NXTheme.success : NXTheme.textMuted)
                         .clipShape(Capsule())
                 }
                 
@@ -52,6 +52,34 @@ public struct SystemAudioGamepadCard: View {
                 }
                 
                 Divider().opacity(0.15)
+
+                // Navigation deadzone
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Stick Navigation Deadzone")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(NXTheme.textPrimary)
+                        Text("How far the left stick must move before the library focus changes.")
+                            .font(.system(size: 10))
+                            .foregroundColor(NXTheme.textSecondary)
+                    }
+
+                    Spacer()
+
+                    Slider(value: Binding(
+                        get: { Double(controllerService.deadzone) },
+                        set: { controllerService.deadzone = Float($0) }
+                    ), in: 0.10...0.60)
+                    .frame(width: 160)
+                    .tint(NXTheme.primary)
+
+                    Text(String(format: "%.2f", controllerService.deadzone))
+                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .foregroundColor(NXTheme.secondary)
+                        .frame(width: 34, alignment: .trailing)
+                }
+
+                Divider().opacity(0.15)
                 
                 // Audio Toggle Row
                 HStack {
@@ -59,7 +87,7 @@ public struct SystemAudioGamepadCard: View {
                         Text("Console UI Sound Effects")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(NXTheme.textPrimary)
-                        Text("Play mechanical feedback tones when clicking buttons, navigating tabs, and launching games.")
+                        Text("Play short synthesized feedback tones when clicking buttons, navigating tabs, and launching games.")
                             .font(.system(size: 10))
                             .foregroundColor(NXTheme.textSecondary)
                     }

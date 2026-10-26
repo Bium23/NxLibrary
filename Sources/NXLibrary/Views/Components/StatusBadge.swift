@@ -39,6 +39,7 @@ public struct StatusBadge: View {
                 Capsule().strokeBorder(badgeColor.opacity(0.35), lineWidth: 0.8)
             )
             .help(text)
+            .accessibilityLabel(text)
         } else {
             // Clean icon-only checkmark with system hover tooltip
             Image(systemName: isPositive ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
@@ -46,6 +47,7 @@ public struct StatusBadge: View {
                 .font(.system(size: 16, weight: .bold))
                 .shadow(color: badgeColor.opacity(0.4), radius: 4)
                 .help(text)
+                .accessibilityLabel(text)
         }
     }
 }
