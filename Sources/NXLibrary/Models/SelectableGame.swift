@@ -1,4 +1,5 @@
 import Foundation
+import NXLibraryCore
 
 public struct SelectableGame: Identifiable, Equatable {
     public let id: String

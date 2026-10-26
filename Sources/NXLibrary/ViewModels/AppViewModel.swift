@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import AppKit
+import NXLibraryCore
 
 public final class AppViewModel: ObservableObject, BuildRunnerDelegate, InstallerServiceDelegate {
     // MARK: - Storage Keys for Persistence

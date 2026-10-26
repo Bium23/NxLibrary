@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import NXLibraryCore
 
 public struct GameDetailDeckView: View {
     public let game: PortedGame

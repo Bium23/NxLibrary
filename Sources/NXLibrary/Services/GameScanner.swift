@@ -1,4 +1,5 @@
 import Foundation
+import NXLibraryCore
 
 public final class GameScanner {
     public static let shared = GameScanner()
@@ -51,7 +52,7 @@ public final class GameScanner {
             
             // Determina tipo
             let lower = filename.lowercased()
-            let type: GameFileType
+            let type: SourceKind
             if let tid = titleId {
                 if tid.hasSuffix("000") {
                     type = .base

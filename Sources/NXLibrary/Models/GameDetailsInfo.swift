@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import NXLibraryCore
 
 public struct GameDLCItem: Identifiable, Hashable {
     public let id: String

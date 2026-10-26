@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import AppKit
+import NXLibraryCore
 
 extension AppViewModel {
     public func setupControllerNavigation() {

@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import NXLibraryCore
 
 public struct LibraryView: View {
     @ObservedObject public var viewModel: AppViewModel

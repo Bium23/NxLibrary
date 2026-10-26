@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import NXLibraryCore
 
 public final class LibraryScanner {
     public static let shared = LibraryScanner()

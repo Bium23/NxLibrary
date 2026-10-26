@@ -1,4 +1,5 @@
 import SwiftUI
+import NXLibraryCore
 
 public struct BuildOptionsSection: View {
     @ObservedObject public var viewModel: AppViewModel

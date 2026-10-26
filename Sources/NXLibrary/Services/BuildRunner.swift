@@ -1,4 +1,5 @@
 import Foundation
+import NXLibraryCore
 
 public protocol BuildRunnerDelegate: AnyObject {
     func buildRunner(_ runner: BuildRunner, didProduceLog entry: LogEntry)

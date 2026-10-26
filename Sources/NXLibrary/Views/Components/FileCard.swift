@@ -1,4 +1,5 @@
 import SwiftUI
+import NXLibraryCore
 
 public struct FileCard: View {
     public let item: GameFileItem
@@ -67,7 +68,7 @@ public struct FileCard: View {
         )
     }
     
-    private func colorForType(_ type: GameFileType) -> Color {
+    private func colorForType(_ type: SourceKind) -> Color {
         switch type {
         case .base: return NXTheme.primary
         case .update: return NXTheme.secondary

@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import NXLibraryCore
 
 public struct ConsoleGameCarouselView: View {
     @ObservedObject public var viewModel: AppViewModel
