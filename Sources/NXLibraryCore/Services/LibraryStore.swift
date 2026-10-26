@@ -61,11 +61,19 @@ public final class LibraryStore {
             if let index = library.games.firstIndex(where: { $0.titleId == game.titleId }) {
                 let old = library.games[index]
                 var merged = game
+                merged.id = old.id
                 merged.settings = old.settings
                 merged.sources = old.sources.isEmpty ? game.sources : old.sources
                 merged.workspacePath = old.workspacePath ?? game.workspacePath
                 merged.buildCachePath = old.buildCachePath ?? game.buildCachePath
-                if !old.sources.isEmpty { merged.status = .built }
+                if old.status == .built || old.status == .builtSourcesMissing
+                    || old.status == .needsRebuild {
+                    let sourcesExist = !merged.sources.isEmpty
+                        && merged.sources.allSatisfy { fm.fileExists(atPath: $0.url.path) }
+                    merged.status = sourcesExist ? .built : .builtSourcesMissing
+                    merged.toolchain = old.toolchain
+                    merged.lastBuild = old.lastBuild
+                }
                 library.games[index] = merged
             } else {
                 library.games.append(game)

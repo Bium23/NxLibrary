@@ -51,4 +51,38 @@ final class LibraryStoreTests: XCTestCase {
         try Data("not json".utf8).write(to: store.fileURL)
         XCTAssertEqual(try store.load().games.count, 1)
     }
+
+    func testMergePreservesBuildMetadataAndMarksMissingSources() throws {
+        let store = LibraryStore(directory: dir)
+        let sourceFile = dir.appendingPathComponent("Game [0100000000010000].nsp")
+        try Data("x".utf8).write(to: sourceFile)
+        var game = PortedGame(name: "G", url: URL(fileURLWithPath: "/tmp/G.app"),
+                              platform: .macApp, sizeBytes: 1, modificationDate: Date(),
+                              titleId: "0100000000010000")
+        game.status = .built
+        game.sources = [GameFileItem(url: sourceFile, kind: .base,
+                                     titleId: "0100000000010000", sizeBytes: 1)]
+        game.toolchain = ToolchainInfo(engineCommit: "06b7b3e",
+                                       metalVersion: "32023.921",
+                                       xcodeVersion: "27.1", verified: true)
+        game.lastBuild = BuildRecord(endedAt: Date(), exitCode: 0,
+                                     outputPath: "/tmp/G.app", toolchainVerified: true)
+        try store.save(LibraryFile(schemaVersion: 1, games: [game]))
+
+        var imported = game
+        imported.status = .builtSourcesMissing
+        imported.toolchain = ToolchainInfo(note: "Imported build; build record unavailable")
+        imported.lastBuild = nil
+        imported.sources = []
+
+        let merged = try store.merge(scanned: [imported])
+        XCTAssertEqual(merged.games.first?.status, .built)
+        XCTAssertEqual(merged.games.first?.toolchain.verified, true)
+        XCTAssertEqual(merged.games.first?.lastBuild?.exitCode, 0)
+
+        try FileManager.default.removeItem(at: sourceFile)
+        let afterDeletion = try store.merge(scanned: [imported])
+        XCTAssertEqual(afterDeletion.games.first?.status, .builtSourcesMissing)
+        XCTAssertEqual(afterDeletion.games.first?.toolchain.verified, true)
+    }
 }
