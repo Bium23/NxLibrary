@@ -37,6 +37,11 @@ public struct MainView: View {
         .sheet(isPresented: $viewModel.showSetupSheet) {
             SetupView(viewModel: viewModel)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .nxLibraryPlayFocused)) { _ in
+            guard viewModel.selectedTab == 0,
+                  let game = viewModel.currentFocusedGame else { return }
+            viewModel.launchGame(game)
+        }
         .alert("NX Library", isPresented: Binding(
             get: { viewModel.alertMessage != nil },
             set: { if !$0 { viewModel.alertMessage = nil } }
