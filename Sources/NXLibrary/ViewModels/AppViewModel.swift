@@ -168,6 +168,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     @Published public var isCancellingBuild: Bool = false
     @Published public var buildLogURL: URL? = nil
     @Published public var currentBuildGameID: UUID? = nil
+    @Published public var lastBuildGameID: UUID? = nil
     @Published public var allowUntestedToolchain: Bool = false {
         didSet {
             UserDefaults.standard.set(allowUntestedToolchain, forKey: StorageKeys.allowUntestedToolchain)
@@ -287,6 +288,14 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         
         NotificationService.shared.requestAuthorization()
         setupControllerNavigation()
+
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--preview-build") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+                self?.previewBuild()
+            }
+        }
+        #endif
     }
     
     // MARK: - Dynamic Dock Icon
@@ -880,6 +889,10 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         compatibilityReport?.ok == true || allowUntestedToolchain
     }
 
+    public var buildProgress: Double { progressFraction }
+    public var buildETA: Double? { etaSeconds }
+    public var buildLog: [LogEntry] { logs }
+
     public func goToWizardStep(_ step: Int) {
         guard step >= 1 && step <= 3 else { return }
         if step == 2 && selectedGame == nil { return }
@@ -893,6 +906,29 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         buildState = .idle
         lastError = nil
     }
+
+    #if DEBUG
+    /// Feeds sample events through the same reducer as a real build, for
+    /// SwiftUI previews and UI work without running nxnative.
+    public func previewBuild() {
+        isBuilding = true
+        buildState = .running
+        buildWizardStep = 3
+        selectedTab = 1
+        currentBuildGameID = libraryGames.first?.id
+        logs.removeAll()
+        buildStages.removeAll()
+        currentStageName = "Preparing build"
+        currentStepName = ""
+        progressFraction = 0
+        etaSeconds = nil
+        handleBuildEvent(.stage(k: 1, n: 8, name: "extract", step: "reading NSP"))
+        handleBuildEvent(.stageEnd(name: "extract", ok: true, elapsed: 1.2, summary: "done"))
+        handleBuildEvent(.stage(k: 2, n: 8, name: "translate shaders", step: "metal"))
+        handleBuildEvent(.progress(fraction: 0.34, done: 120, total: 350, unit: "MB", eta: 42))
+        handleBuildEvent(.say("Sample event: this is the live build reducer."))
+    }
+    #endif
 
     public func addSelectedGame(buildNow: Bool = false) {
         guard let selection = selectedGame else {
@@ -1048,6 +1084,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         target = stored
         buildPreviousStatus = target.status
         currentBuildGameID = target.id
+        lastBuildGameID = target.id
 
         let workspace: Workspace
         let existingDirectory = target.workspacePath.map { URL(fileURLWithPath: $0) }
@@ -1167,6 +1204,31 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
     }
 
+    public func openBuildLog() {
+        guard let url = buildLogURL else {
+            lastError = "No build log is available yet."
+            logs.append(LogEntry(level: .warning, message: lastError!))
+            return
+        }
+        let directory = url.deletingLastPathComponent()
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        if FileManager.default.fileExists(atPath: url.path) {
+            NSWorkspace.shared.activateFileViewerSelecting([url])
+        } else {
+            NSWorkspace.shared.activateFileViewerSelecting([directory])
+        }
+    }
+
+    public func retryLastBuild() {
+        guard let id = lastBuildGameID,
+              let game = libraryGames.first(where: { $0.id == id }) else {
+            lastError = "The last built game is no longer in the library."
+            logs.append(LogEntry(level: .error, message: lastError!))
+            return
+        }
+        startBuild(for: game)
+    }
+
     private func handleBuildEvent(_ event: BuildEvent) {
         switch event {
         case .stage(let k, let n, let name, let step):
@@ -1199,11 +1261,16 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             progressFraction = min(max(fraction, 0), 1)
             etaSeconds = eta
             if let done, let total, total > 0 {
-                let doneText = ByteCountFormatter.string(
-                    fromByteCount: Int64(done), countStyle: .file)
-                let totalText = ByteCountFormatter.string(
-                    fromByteCount: Int64(total), countStyle: .file)
-                currentStepName = "\(doneText) of \(totalText)\(unit.map { " (\($0))" } ?? "")"
+                if let unit, !unit.isEmpty,
+                   unit.lowercased() != "b", unit.lowercased() != "bytes" {
+                    currentStepName = "\(Self.formatAmount(done)) / \(Self.formatAmount(total)) \(unit)"
+                } else {
+                    let doneText = ByteCountFormatter.string(
+                        fromByteCount: Int64(done), countStyle: .file)
+                    let totalText = ByteCountFormatter.string(
+                        fromByteCount: Int64(total), countStyle: .file)
+                    currentStepName = "\(doneText) / \(totalText)"
+                }
             }
 
         case .stageEnd(let name, let ok, let elapsed, let summary):
@@ -1351,6 +1418,12 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         lastError = message
         logs.append(LogEntry(level: .error, message: message))
         SoundEffectService.shared.play(.error)
+    }
+
+    private static func formatAmount(_ value: Double) -> String {
+        if value >= 100 { return String(format: "%.0f", value) }
+        if value >= 10 { return String(format: "%.1f", value) }
+        return String(format: "%.2f", value)
     }
 
     private func detectedGame(from game: PortedGame) throws -> DetectedGame {

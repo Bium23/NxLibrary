@@ -29,7 +29,7 @@ public struct BuildBanners: View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 28))
-                .foregroundColor(Color(red: 0.13, green: 0.77, blue: 0.37))
+                .foregroundColor(NXTheme.success)
             
             VStack(alignment: .leading, spacing: 3) {
                 Text("Game Port Succeeded!")
@@ -57,11 +57,11 @@ public struct BuildBanners: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color(red: 0.13, green: 0.77, blue: 0.37).opacity(0.14))
+                .fill(NXTheme.success.opacity(0.12))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(Color(red: 0.13, green: 0.77, blue: 0.37).opacity(0.4), lineWidth: 1)
+                .strokeBorder(NXTheme.success.opacity(0.38), lineWidth: 1)
         )
     }
     
@@ -83,7 +83,12 @@ public struct BuildBanners: View {
             
             Spacer()
             
-            Button("View Logs") {
+            Button("Open Log") {
+                viewModel.openBuildLog()
+            }
+            .buttonStyle(NXSecondaryButtonStyle())
+
+            Button("Console") {
                 viewModel.selectedTab = 4
             }
             .buttonStyle(NXSecondaryButtonStyle())

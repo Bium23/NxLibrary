@@ -9,7 +9,7 @@ public struct BuildStageStepperView: View {
     
     public var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Porting Stages (\(viewModel.stageIndex)/\(max(viewModel.totalStages, viewModel.buildStages.count))):")
+            Text("Build Stages (\(viewModel.stageIndex)/\(max(viewModel.totalStages, viewModel.buildStages.count)))")
                 .font(.system(size: 11, weight: .bold))
                 .foregroundColor(NXTheme.textSecondary)
             
@@ -42,12 +42,12 @@ public struct BuildStageStepperView: View {
                     .frame(width: 16)
             } else if stage.isCompleted {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(Color(red: 0.13, green: 0.77, blue: 0.37))
+                    .foregroundColor(NXTheme.success)
                     .font(.system(size: 13))
                     .frame(width: 16)
             } else if stage.isFailed {
                 Image(systemName: "xmark.circle.fill")
-                    .foregroundColor(.red)
+                    .foregroundColor(NXTheme.error)
                     .font(.system(size: 13))
                     .frame(width: 16)
             } else {

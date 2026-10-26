@@ -22,6 +22,11 @@ public struct BuildLiveLogsDrawer: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 3) {
+                        if viewModel.logs.isEmpty {
+                            Text("Waiting for build output...")
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundColor(NXTheme.textMuted)
+                        }
                         let recentLogs = viewModel.logs.suffix(60)
                         ForEach(Array(recentLogs.enumerated()), id: \.offset) { idx, log in
                             HStack(alignment: .top, spacing: 6) {
@@ -58,9 +63,9 @@ public struct BuildLiveLogsDrawer: View {
         switch level {
         case .info: return NXTheme.textPrimary.opacity(0.85)
         case .step: return NXTheme.secondary
-        case .success: return Color(red: 0.13, green: 0.77, blue: 0.37)
-        case .warning: return NXTheme.tertiary
-        case .error: return .red
+        case .success: return NXTheme.success
+        case .warning: return NXTheme.warning
+        case .error: return NXTheme.error
         }
     }
 }

@@ -2,11 +2,11 @@ import SwiftUI
 
 public struct BuildExecutionSection: View {
     @ObservedObject public var viewModel: AppViewModel
-    
+
     public init(viewModel: AppViewModel) {
         self.viewModel = viewModel
     }
-    
+
     public var body: some View {
         GlassCard {
             VStack(alignment: .leading, spacing: 16) {
@@ -24,17 +24,17 @@ public struct BuildExecutionSection: View {
             }
         }
     }
-    
-    // MARK: - Active Execution Pipeline
-    
+
+    // MARK: - Active Execution
+
     private var activeExecutionView: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 8) {
-                        ProgressView()
-                            .controlSize(.small)
-                        Text(viewModel.currentStageName)
+                        ProgressView().controlSize(.small)
+                        Text(viewModel.currentStageName.isEmpty
+                             ? "Building..." : viewModel.currentStageName)
                             .font(.system(size: 15, weight: .bold, design: .rounded))
                             .foregroundColor(NXTheme.textPrimary)
                     }
@@ -43,69 +43,87 @@ public struct BuildExecutionSection: View {
                             .font(.system(size: 12, design: .monospaced))
                             .foregroundColor(NXTheme.secondary)
                             .padding(.leading, 24)
+                            .lineLimit(1)
                     }
                 }
-                
+
                 Spacer()
-                
-                if let eta = viewModel.etaSeconds, eta > 0 {
-                    let minutes = Int(eta) / 60
-                    let seconds = Int(eta) % 60
-                    Text(String(format: "ETA: ~%02d:%02d", minutes, seconds))
+
+                if let eta = viewModel.buildETA, eta > 0 {
+                    Text("ETA \(formatted(eta))")
                         .font(.system(size: 12, weight: .semibold, design: .monospaced))
                         .foregroundColor(NXTheme.textSecondary)
                 }
-                
-                Text("\(Int(viewModel.progressFraction * 100))%")
+
+                Text("\(Int(viewModel.buildProgress * 100))%")
                     .font(.system(size: 18, weight: .bold, design: .monospaced))
-                    .foregroundColor(NXTheme.secondary)
+                    .foregroundColor(NXTheme.primary)
             }
-            
-            ProgressView(value: viewModel.progressFraction)
-                .progressViewStyle(.linear)
-                .tint(NXTheme.primary)
-            
-            // Live Pipeline Stages Stepper
+
+            Group {
+                if viewModel.buildProgress > 0 {
+                    ProgressView(value: viewModel.buildProgress)
+                } else {
+                    ProgressView()
+                }
+            }
+            .progressViewStyle(.linear)
+            .tint(NXTheme.primary)
+
             if !viewModel.buildStages.isEmpty {
                 BuildStageStepperView(viewModel: viewModel)
             }
-            
-            // Live Terminal Output Drawer
-            BuildLiveLogsDrawer(viewModel: viewModel)
-            
+
             HStack {
+                Button(action: {
+                    viewModel.showLiveLogsInBuild.toggle()
+                }) {
+                    Label(viewModel.showLiveLogsInBuild ? "Hide Log" : "Show Log",
+                          systemImage: "terminal.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .buttonStyle(NXSecondaryButtonStyle())
+                .controlSize(.small)
+
+                Spacer()
+
                 Button(action: {
                     viewModel.cancelBuild()
                 }) {
-                    Label("Cancel Porting", systemImage: "xmark.circle.fill")
-                        .font(.system(size: 13, weight: .medium))
+                    HStack(spacing: 6) {
+                        if viewModel.isCancellingBuild {
+                            ProgressView().controlSize(.mini)
+                            Text("Cancelling...")
+                        } else {
+                            Image(systemName: "stop.circle.fill")
+                            Text("Cancel Build")
+                        }
+                    }
+                    .font(.system(size: 12, weight: .semibold))
                 }
-                .buttonStyle(.bordered)
-                .tint(.red)
-                
-                Spacer()
-                
-                Button("Open Full Console") {
-                    viewModel.selectedTab = 4
-                }
-                .buttonStyle(.link)
-                .font(.system(size: 12))
-                .foregroundColor(NXTheme.secondary)
+                .buttonStyle(NXSecondaryButtonStyle())
+                .tint(NXTheme.error)
+                .disabled(viewModel.isCancellingBuild)
+                .opacity(viewModel.isCancellingBuild ? 0.6 : 1)
+            }
+
+            if viewModel.showLiveLogsInBuild {
+                BuildLiveLogsDrawer(viewModel: viewModel)
             }
         }
     }
-    
-    // MARK: - Completion States
-    
+
+    // MARK: - Completion
+
     private func completedSuccessView(outputPath: String) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 12) {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(Color(red: 0.13, green: 0.77, blue: 0.37))
+                    .foregroundColor(NXTheme.success)
                     .font(.system(size: 28))
-                
+
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Porting Completed Successfully!")
+                    Text("Build Completed")
                         .font(.system(size: 16, weight: .bold, design: .rounded))
                         .foregroundColor(NXTheme.textPrimary)
                     Text(outputPath)
@@ -114,97 +132,95 @@ public struct BuildExecutionSection: View {
                         .lineLimit(2)
                 }
             }
-            
+
             Divider().opacity(0.2)
-            
-            HStack(spacing: 12) {
+
+            HStack(spacing: 10) {
                 if outputPath.hasSuffix(".app") {
                     Button(action: {
-                        NSWorkspace.shared.open(URL(fileURLWithPath: outputPath))
-                    }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "play.fill")
-                            Text("Launch Game")
+                        if let game = viewModel.libraryGames.first(where: {
+                            $0.url.path == outputPath
+                        }) {
+                            viewModel.launchGame(game)
+                        } else {
+                            NSWorkspace.shared.open(URL(fileURLWithPath: outputPath))
                         }
-                        .font(.system(size: 13, weight: .bold))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
+                    }) {
+                        Label("Play", systemImage: "play.fill")
+                            .font(.system(size: 13, weight: .bold))
                     }
                     .buttonStyle(NXPrimaryButtonStyle())
                 }
-                
-                Button(action: {
-                    NSWorkspace.shared.selectFile(outputPath, inFileViewerRootedAtPath: "")
-                }) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "folder.fill")
-                        Text("Reveal in Finder")
-                    }
-                    .font(.system(size: 13, weight: .semibold))
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
+
+                Button("Open Log") {
+                    viewModel.openBuildLog()
                 }
                 .buttonStyle(NXSecondaryButtonStyle())
-                
+                .controlSize(.regular)
+
+                Button("Reveal in Finder") {
+                    viewModel.openOutputInFinder()
+                }
+                .buttonStyle(NXSecondaryButtonStyle())
+                .controlSize(.regular)
+
                 Spacer()
-                
-                Button(action: {
+
+                Button("Build Another Game") {
                     withAnimation(.easeInOut(duration: 0.25)) {
                         viewModel.resetWizard()
                     }
-                }) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "arrow.counterclockwise.circle.fill")
-                        Text("Port Another Game")
-                    }
-                    .font(.system(size: 13, weight: .semibold))
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
                 }
                 .buttonStyle(NXSecondaryButtonStyle())
+                .controlSize(.regular)
             }
         }
     }
-    
+
     private func failedExecutionView(errorMessage: String) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 12) {
                 Image(systemName: "xmark.circle.fill")
-                    .foregroundColor(.red)
+                    .foregroundColor(NXTheme.error)
                     .font(.system(size: 28))
-                
+
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Porting Failed")
+                    Text("Build Failed")
                         .font(.system(size: 16, weight: .bold, design: .rounded))
-                        .foregroundColor(.red)
+                        .foregroundColor(NXTheme.error)
                     Text(errorMessage)
                         .font(.system(size: 12))
                         .foregroundColor(NXTheme.textSecondary)
                         .lineLimit(3)
                 }
             }
-            
+
             Divider().opacity(0.2)
-            
-            HStack {
-                Button(action: {
+
+            HStack(spacing: 10) {
+                Button("Open Log") {
+                    viewModel.openBuildLog()
+                }
+                .buttonStyle(NXSecondaryButtonStyle())
+                .controlSize(.regular)
+
+                Button("Retry") {
+                    viewModel.retryLastBuild()
+                }
+                .buttonStyle(NXPrimaryButtonStyle())
+                .controlSize(.regular)
+
+                Button("Back to Options") {
                     withAnimation(.easeInOut(duration: 0.25)) {
                         viewModel.goToWizardStep(2)
                     }
-                }) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "arrow.left.circle.fill")
-                        Text("Back to Options & Try Again")
-                    }
-                    .font(.system(size: 13, weight: .semibold))
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
                 }
                 .buttonStyle(NXSecondaryButtonStyle())
-                
+                .controlSize(.regular)
+
                 Spacer()
-                
-                Button("Open Full Console") {
+
+                Button("Open Console") {
                     viewModel.selectedTab = 4
                 }
                 .buttonStyle(.link)
@@ -213,19 +229,19 @@ public struct BuildExecutionSection: View {
             }
         }
     }
-    
+
     private var cancelledExecutionView: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 12) {
                 Image(systemName: "stop.circle.fill")
-                    .foregroundColor(NXTheme.tertiary)
+                    .foregroundColor(NXTheme.warning)
                     .font(.system(size: 28))
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Build Cancelled")
                         .font(.system(size: 16, weight: .bold, design: .rounded))
                         .foregroundColor(NXTheme.textPrimary)
-                    Text("The previous app was left untouched. You can review the log and retry.")
+                    Text("The previous app was left untouched. You can open the log or retry.")
                         .font(.system(size: 12))
                         .foregroundColor(NXTheme.textSecondary)
                 }
@@ -233,22 +249,28 @@ public struct BuildExecutionSection: View {
 
             Divider().opacity(0.2)
 
-            HStack {
+            HStack(spacing: 10) {
+                Button("Open Log") {
+                    viewModel.openBuildLog()
+                }
+                .buttonStyle(NXSecondaryButtonStyle())
+                .controlSize(.regular)
+
+                Button("Retry") {
+                    viewModel.retryLastBuild()
+                }
+                .buttonStyle(NXPrimaryButtonStyle())
+                .controlSize(.regular)
+
                 Button("Back to Options") {
                     withAnimation(.easeInOut(duration: 0.25)) {
                         viewModel.goToWizardStep(2)
                     }
                 }
                 .buttonStyle(NXSecondaryButtonStyle())
+                .controlSize(.regular)
 
                 Spacer()
-
-                Button("Open Full Console") {
-                    viewModel.selectedTab = 4
-                }
-                .buttonStyle(.link)
-                .font(.system(size: 12))
-                .foregroundColor(NXTheme.secondary)
             }
         }
     }
@@ -256,30 +278,30 @@ public struct BuildExecutionSection: View {
     private var idleExecutionView: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("No Porting Task Active")
+                Text("No Build Active")
                     .font(.system(size: 14, weight: .bold, design: .rounded))
                     .foregroundColor(NXTheme.textPrimary)
-                Text("Select a game in Step 1 and configure options in Step 2 to start.")
+                Text("Select a game and sources, then choose Add & Build.")
                     .font(.system(size: 12))
                     .foregroundColor(NXTheme.textSecondary)
             }
-            
+
             Spacer()
-            
+
             Button(action: {
                 withAnimation(.easeInOut(duration: 0.25)) {
                     viewModel.goToWizardStep(1)
                 }
             }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "arrow.left.circle.fill")
-                    Text("Go to Step 1")
-                }
-                .font(.system(size: 13, weight: .semibold))
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
+                Label("Choose a Game", systemImage: "arrow.left.circle.fill")
+                    .font(.system(size: 13, weight: .semibold))
             }
             .buttonStyle(NXPrimaryButtonStyle())
         }
+    }
+
+    private func formatted(_ seconds: Double) -> String {
+        let total = Int(seconds.rounded())
+        return String(format: "%02d:%02d", total / 60, total % 60)
     }
 }

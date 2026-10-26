@@ -123,3 +123,11 @@ public struct BuildView: View {
         .padding(.horizontal, 10)
     }
 }
+
+#if DEBUG
+#Preview("Build progress (fake events)") {
+    let viewModel = AppViewModel()
+    viewModel.previewBuild()
+    return BuildView(viewModel: viewModel)
+}
+#endif
