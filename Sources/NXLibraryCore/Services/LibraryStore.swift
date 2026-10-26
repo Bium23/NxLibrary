@@ -66,6 +66,15 @@ public final class LibraryStore {
                 merged.sources = old.sources.isEmpty ? game.sources : old.sources
                 merged.workspacePath = old.workspacePath ?? game.workspacePath
                 merged.buildCachePath = old.buildCachePath ?? game.buildCachePath
+                if (old.status == .built || old.status == .builtSourcesMissing
+                    || old.status == .needsRebuild),
+                   old.url.pathExtension.lowercased() == "app",
+                   fm.fileExists(atPath: old.url.path) {
+                    merged.url = old.url
+                    merged.sizeBytes = old.sizeBytes
+                    merged.bundleId = old.bundleId ?? merged.bundleId
+                    merged.versionString = old.versionString ?? merged.versionString
+                }
                 if old.status == .built || old.status == .builtSourcesMissing
                     || old.status == .needsRebuild {
                     if merged.sources.isEmpty {

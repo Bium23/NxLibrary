@@ -85,4 +85,37 @@ final class LibraryStoreTests: XCTestCase {
         XCTAssertEqual(afterDeletion.games.first?.status, .builtSourcesMissing)
         XCTAssertEqual(afterDeletion.games.first?.toolchain.verified, true)
     }
+
+    func testAttachingSourcesKeepsTheImportedAppURL() throws {
+        let store = LibraryStore(directory: dir)
+        let app = dir.appendingPathComponent("Old.app")
+        try FileManager.default.createDirectory(
+            at: app.appendingPathComponent("Contents"), withIntermediateDirectories: true)
+        try Data("plist".utf8).write(to: app.appendingPathComponent("Contents/Info.plist"))
+        let sourceFile = dir.appendingPathComponent("Game [0100000000010000].nsp")
+        try Data("x".utf8).write(to: sourceFile)
+
+        var imported = PortedGame(name: "G", url: app, platform: .macApp,
+                                  sizeBytes: 17, modificationDate: Date(),
+                                  bundleId: "org.nxnative.0100000000010000",
+                                  titleId: "0100000000010000",
+                                  versionString: "1.9.0")
+        imported.status = .builtSourcesMissing
+        try store.save(LibraryFile(schemaVersion: 1, games: [imported]))
+
+        var added = PortedGame(name: "G", url: dir.appendingPathComponent("workspace"),
+                               platform: .macApp, sizeBytes: 1, modificationDate: Date(),
+                               titleId: "0100000000010000")
+        added.status = .notBuilt
+        added.sources = [GameFileItem(url: sourceFile, kind: .base,
+                                      titleId: "0100000000010000", sizeBytes: 1)]
+        added.bundleId = "org.nxnative.0100000000010000"
+        added.versionString = "65536"
+
+        let merged = try store.merge(scanned: [added])
+        XCTAssertEqual(merged.games.first?.url, app)
+        XCTAssertEqual(merged.games.first?.status, .built)
+        XCTAssertEqual(merged.games.first?.versionString, "1.9.0")
+        XCTAssertEqual(merged.games.first?.bundleId, "org.nxnative.0100000000010000")
+    }
 }

@@ -109,12 +109,9 @@ public struct BuildOptionsSection: View {
                     
                     Divider().opacity(0.2)
                     
-                    VStack(alignment: .leading, spacing: 8) {
-                        Toggle("Keep intermediate extracted files for fast rebuilds (--keep-extracted)", isOn: $viewModel.keepExtracted)
-                        Toggle("Survey inspection only (Survey Only)", isOn: $viewModel.surveyOnly)
-                    }
-                    .font(.system(size: 12))
-                    .foregroundColor(NXTheme.textSecondary)
+                    Text("Mac builds always keep their extracted files, so a rebuild does not decrypt the sources again.")
+                        .font(.system(size: 11))
+                        .foregroundColor(NXTheme.textSecondary)
                 }
                 .padding(.top, 8)
             } label: {
@@ -199,6 +196,12 @@ public struct BuildOptionsSection: View {
         }
         if viewModel.isDiskSpaceLow {
             return "Insufficient disk space."
+        }
+        if viewModel.environmentStatus?.canBuild != true {
+            return "The build environment is incomplete. Check Settings."
+        }
+        if !viewModel.canPassToolchainGate {
+            return "Toolchain not certified. Enable the override in Settings."
         }
         return "Complete setup requirements to port."
     }

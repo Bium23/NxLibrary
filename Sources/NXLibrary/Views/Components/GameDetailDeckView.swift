@@ -33,9 +33,11 @@ public struct GameDetailDeckView: View {
                                 .font(.system(size: 10, weight: .bold, design: .rounded))
                                 .padding(.horizontal, 7)
                                 .padding(.vertical, 3)
-                                .background(game.platform == .macApp ? NXTheme.primary.opacity(0.35) : NXTheme.secondary.opacity(0.35))
+                                .background(NXTheme.primary.opacity(0.35))
                                 .foregroundColor(.white)
                                 .clipShape(Capsule())
+
+                            statusPill
                         }
                         
                         if let tid = game.titleId, !tid.isEmpty {
@@ -90,7 +92,26 @@ public struct GameDetailDeckView: View {
                             .disabled(isLaunching || viewModel.launchingGameId != nil)
                             .shadow(color: isDeckFocused ? NXTheme.primary.opacity(0.6) : Color.clear, radius: 8)
                         }
-                        
+
+                        Button(action: {
+                            SoundEffectService.shared.play(.click)
+                            viewModel.startBuild(for: game)
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "hammer.fill")
+                                Text(game.sources.isEmpty
+                                     ? "Rebuild — sources missing"
+                                     : (game.status == .notBuilt ? "Build App" : "Rebuild App"))
+                            }
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(NXSecondaryButtonStyle())
+                        .controlSize(.regular)
+                        .disabled(!viewModel.canBuild(game))
+                        .opacity(viewModel.canBuild(game) ? 1 : 0.45)
+                        .help(rebuildHint)
+
                         HStack(spacing: 10) {
                             Button(action: {
                                 SoundEffectService.shared.play(.click)
@@ -229,6 +250,59 @@ public struct GameDetailDeckView: View {
         )
     }
     
+    private var statusPill: some View {
+        Group {
+            switch game.status {
+            case .built:
+                pill("Built", color: Color(red: 0.13, green: 0.77, blue: 0.37))
+            case .builtSourcesMissing:
+                pill("Sources missing", color: NXTheme.tertiary)
+            case .appMissing:
+                pill("App missing", color: .red)
+            case .notBuilt:
+                pill("Not built", color: NXTheme.textMuted)
+            case .building:
+                pill("Building", color: NXTheme.secondary)
+            case .failed:
+                pill("Build failed", color: .red)
+            case .cancelled:
+                pill("Cancelled", color: NXTheme.textMuted)
+            case .needsRebuild:
+                pill("Needs rebuild", color: NXTheme.tertiary)
+            }
+        }
+    }
+
+    private func pill(_ title: String, color: Color) -> some View {
+        Text(title)
+            .font(.system(size: 10, weight: .bold, design: .rounded))
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(color.opacity(0.25))
+            .foregroundColor(color)
+            .clipShape(Capsule())
+            .overlay(Capsule().strokeBorder(color.opacity(0.5), lineWidth: 0.6))
+    }
+
+    private var rebuildHint: String {
+        if game.sources.isEmpty {
+            return "Sources are missing. Attach the original base/update/DLC files before rebuilding."
+        }
+        if !viewModel.isProdKeysValid {
+            return "Import prod.keys in Settings before rebuilding."
+        }
+        if !viewModel.isNxnativeValid {
+            return "The nxnative checkout is missing. Choose it in Settings."
+        }
+        if viewModel.environmentStatus?.canBuild != true {
+            return "The build environment is incomplete. Check Settings."
+        }
+        if !viewModel.canPassToolchainGate {
+            return "The installed toolchain is not certified. Enable the untested-toolchain override in Settings."
+        }
+        return "Rebuild this app from its attached sources."
+    }
+
     private func configPill(title: String, active: Bool) -> some View {
         Text(title)
             .font(.system(size: 9, weight: .bold, design: .monospaced))

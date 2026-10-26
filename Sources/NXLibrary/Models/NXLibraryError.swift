@@ -18,7 +18,7 @@ public enum NXLibraryError: Error, LocalizedError {
         case .baseRequired:
             return "Select a base game. Updates and DLC alone cannot be built."
         case .missingSources:
-            return "This game has no source files attached. Locate its base, update and DLC first."
+            return "The source files are missing. Attach or locate the original base, update and DLC files first."
         case .missingTitleId:
             return "The game has no title ID. Choose a valid NSP, XCI, NSZ or XCZ source."
         case .missingKeys:

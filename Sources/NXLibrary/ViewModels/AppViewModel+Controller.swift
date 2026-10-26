@@ -15,13 +15,13 @@ extension AppViewModel {
         case .tabPrevious:
             SoundEffectService.shared.play(.tabSwitch)
             withAnimation(.easeInOut(duration: 0.18)) {
-                selectedTab = (selectedTab - 1 + 6) % 6
+                selectedTab = (selectedTab - 1 + 5) % 5
             }
             
         case .tabNext:
             SoundEffectService.shared.play(.tabSwitch)
             withAnimation(.easeInOut(duration: 0.18)) {
-                selectedTab = (selectedTab + 1) % 6
+                selectedTab = (selectedTab + 1) % 5
             }
             
         case .navigateLeft:
@@ -84,7 +84,7 @@ extension AppViewModel {
             
         case .menu:
             SoundEffectService.shared.play(.click)
-            selectedTab = 4 // Settings
+            selectedTab = 3 // Settings
         }
     }
     

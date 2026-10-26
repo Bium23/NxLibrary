@@ -16,6 +16,8 @@ public struct BuildExecutionSection: View {
                     completedSuccessView(outputPath: successPath)
                 } else if let error = viewModel.buildError {
                     failedExecutionView(errorMessage: error)
+                } else if viewModel.buildState == .cancelled {
+                    cancelledExecutionView
                 } else {
                     idleExecutionView
                 }
@@ -84,7 +86,7 @@ public struct BuildExecutionSection: View {
                 Spacer()
                 
                 Button("Open Full Console") {
-                    viewModel.selectedTab = 5
+                    viewModel.selectedTab = 4
                 }
                 .buttonStyle(.link)
                 .font(.system(size: 12))
@@ -203,7 +205,7 @@ public struct BuildExecutionSection: View {
                 Spacer()
                 
                 Button("Open Full Console") {
-                    viewModel.selectedTab = 5
+                    viewModel.selectedTab = 4
                 }
                 .buttonStyle(.link)
                 .font(.system(size: 12))
@@ -212,6 +214,45 @@ public struct BuildExecutionSection: View {
         }
     }
     
+    private var cancelledExecutionView: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 12) {
+                Image(systemName: "stop.circle.fill")
+                    .foregroundColor(NXTheme.tertiary)
+                    .font(.system(size: 28))
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Build Cancelled")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundColor(NXTheme.textPrimary)
+                    Text("The previous app was left untouched. You can review the log and retry.")
+                        .font(.system(size: 12))
+                        .foregroundColor(NXTheme.textSecondary)
+                }
+            }
+
+            Divider().opacity(0.2)
+
+            HStack {
+                Button("Back to Options") {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        viewModel.goToWizardStep(2)
+                    }
+                }
+                .buttonStyle(NXSecondaryButtonStyle())
+
+                Spacer()
+
+                Button("Open Full Console") {
+                    viewModel.selectedTab = 4
+                }
+                .buttonStyle(.link)
+                .font(.system(size: 12))
+                .foregroundColor(NXTheme.secondary)
+            }
+        }
+    }
+
     private var idleExecutionView: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {

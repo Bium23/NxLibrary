@@ -193,7 +193,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     }
     
     // MARK: - Navigation
-    @Published public var selectedTab: Int = 0 // 0: Convert, 1: Library, 2: Compatibility, 3: Controls, 4: Settings, 5: Console
+    @Published public var selectedTab: Int = 1 // 0: Add Game, 1: Library, 2: Controls, 3: Settings, 4: Console
     @Published public var focusedGameIndex: Int = 0
     @Published public var isFocusOnDeck: Bool = false
     @Published public var launchingGameId: UUID? = nil
@@ -234,12 +234,15 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         let root = SystemDetector.shared.resolveRootDirectory()
         self.defaultInstallPath = root.path
         
-        // Restore saved library folder or default to root/Games
+        // The launcher's old ~/Games default is not a Mac-app library.
+        let oldGamesDefault = root.appendingPathComponent("Games").standardized.path
         if let savedLib = UserDefaults.standard.string(forKey: StorageKeys.savedLibraryFolder),
+           savedLib != oldGamesDefault,
            FileManager.default.fileExists(atPath: savedLib) {
             self.libraryFolder = URL(fileURLWithPath: savedLib)
         } else {
             self.libraryFolder = root.appendingPathComponent("Applications")
+            UserDefaults.standard.removeObject(forKey: StorageKeys.savedLibraryFolder)
         }
         
         // Restore custom output settings
@@ -557,6 +560,12 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             DispatchQueue.main.async {
                 guard let self else { return }
                 self.importedApps = scanned
+                var scannedByTitle: [String: ImportedApp] = [:]
+                for app in scanned {
+                    if let titleId = app.titleId {
+                        scannedByTitle[titleId.uppercased()] = app
+                    }
+                }
                 var library = loaded
                 do {
                     library = try store.merge(scanned: importedGames)
@@ -566,6 +575,19 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                                               message: "Could not update the library: \(error.localizedDescription)"))
                 }
                 for index in library.games.indices {
+                    let scannedApp = library.games[index].titleId
+                        .flatMap { scannedByTitle[$0.uppercased()] }
+                    if let scannedApp, !fm.fileExists(atPath: library.games[index].url.path),
+                       fm.fileExists(atPath: scannedApp.appURL.path) {
+                        library.games[index].url = scannedApp.appURL
+                    }
+                    if let scannedApp, fm.fileExists(atPath: scannedApp.appURL.path) {
+                        library.games[index].sizeBytes = scannedApp.sizeBytes
+                        library.games[index].versionString = scannedApp.version
+                            ?? library.games[index].versionString
+                        library.games[index].bundleId = scannedApp.bundleId
+                            ?? library.games[index].bundleId
+                    }
                     let appExists = fm.fileExists(atPath: library.games[index].url.path)
                     let sourcesExist = !library.games[index].sources.isEmpty
                         && library.games[index].sources.allSatisfy { fm.fileExists(atPath: $0.url.path) }
@@ -579,7 +601,8 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                             library.games[index].status = .builtSourcesMissing
                         }
                     } else if library.games[index].status == .builtSourcesMissing
-                                || library.games[index].status == .needsRebuild {
+                                || library.games[index].status == .needsRebuild
+                                || library.games[index].status == .appMissing {
                         library.games[index].status = .built
                     }
                 }
@@ -804,7 +827,10 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
               isNxnativeValid,
               environmentStatus?.canBuild == true,
               !game.sources.isEmpty,
-              game.sources.contains(where: { $0.kind == .base }) else { return false }
+              game.sources.contains(where: { $0.kind == .base }),
+              game.sources.allSatisfy({ FileManager.default.fileExists(atPath: $0.url.path) }) else {
+            return false
+        }
         return canPassToolchainGate
     }
 
@@ -922,7 +948,8 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             throw NXLibraryError.missingTitleId
         }
         guard !target.sources.isEmpty,
-              target.sources.contains(where: { $0.kind == .base }) else {
+              target.sources.contains(where: { $0.kind == .base }),
+              target.sources.allSatisfy({ FileManager.default.fileExists(atPath: $0.url.path) }) else {
             throw NXLibraryError.missingSources
         }
         guard isProdKeysValid,
@@ -960,8 +987,17 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         buildPreviousStatus = target.status
 
         let workspace: Workspace
-        if let path = target.workspacePath {
-            let directory = URL(fileURLWithPath: path)
+        let existingDirectory = target.workspacePath.map { URL(fileURLWithPath: $0) }
+        let existingNames = Set(existingDirectory.flatMap {
+            (try? FileManager.default.contentsOfDirectory(atPath: $0.path)) ?? []
+        } ?? [])
+        let expectedNames = target.sources.map { $0.url.lastPathComponent }
+        let existingLinksOK = existingDirectory.map { directory in
+            FileManager.default.fileExists(atPath: directory.path)
+                && workspaceManager.brokenLinks(in: directory).isEmpty
+                && expectedNames.allSatisfy { existingNames.contains($0) }
+        } ?? false
+        if let directory = existingDirectory, existingLinksOK {
             let cache = target.buildCachePath.map(URL.init(fileURLWithPath:))
                 ?? directory.appendingPathComponent("\(titleId)_build")
             try FileManager.default.createDirectory(at: cache, withIntermediateDirectories: true)
@@ -1271,12 +1307,10 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         let applications = URL(fileURLWithPath: NSHomeDirectory())
             .appendingPathComponent("Applications")
         let base = Self.sanitizedAppFileName(game.name)
-        var candidate = applications.appendingPathComponent(base + ".app")
+        let candidate = applications.appendingPathComponent(base + ".app")
         if FileManager.default.fileExists(atPath: candidate.path),
-           let other = libraryGames.first(where: {
-               $0.id != game.id && $0.url.standardizedFileURL == candidate.standardizedFileURL
-           }), other.titleId != titleId {
-            candidate = applications.appendingPathComponent("\(base) (\(titleId)).app")
+           Self.appTitleId(at: candidate)?.caseInsensitiveCompare(titleId) != .orderedSame {
+            return applications.appendingPathComponent("\(base) (\(titleId)).app")
         }
         return candidate
     }
@@ -1288,6 +1322,19 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             .trimmingCharacters(in: .whitespacesAndNewlines)
         if value.isEmpty { value = "Game" }
         return value
+    }
+
+    private static func appTitleId(at app: URL) -> String? {
+        let info = app.appendingPathComponent("Contents/Info.plist")
+        guard let data = try? Data(contentsOf: info),
+              let object = try? PropertyListSerialization.propertyList(
+                from: data, options: [], format: nil) as? [String: Any] else { return nil }
+        if let title = object["DMTitleID"] as? String { return title }
+        if let bundle = object["CFBundleIdentifier"] as? String,
+           bundle.hasPrefix("org.nxnative.") {
+            return bundle.split(separator: ".").last.map(String.init)
+        }
+        return nil
     }
 
     private static func appVersion(at app: URL) -> String? {
