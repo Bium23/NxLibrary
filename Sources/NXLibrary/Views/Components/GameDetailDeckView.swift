@@ -38,6 +38,7 @@ public struct GameDetailDeckView: View {
                                 .clipShape(Capsule())
 
                             statusPill
+                            toolchainPill
                         }
                         
                         if let tid = game.titleId, !tid.isEmpty {
@@ -59,6 +60,24 @@ public struct GameDetailDeckView: View {
                     }
                 }
                 
+                if game.status == .builtSourcesMissing && game.sources.isEmpty {
+                    HStack(spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(NXTheme.warning)
+                        Text("Play works. Rebuilding is disabled until the original base, update and DLC files are attached with Add Game.")
+                            .font(.system(size: 11))
+                            .foregroundColor(NXTheme.textSecondary)
+                        Spacer()
+                    }
+                    .padding(9)
+                    .background(NXTheme.warning.opacity(0.09))
+                    .cornerRadius(8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .strokeBorder(NXTheme.warning.opacity(0.25), lineWidth: 0.8)
+                    )
+                }
+
                 Divider().opacity(0.25)
                 
                 // Main Grid: Actions & Details
@@ -112,6 +131,33 @@ public struct GameDetailDeckView: View {
                         .opacity(viewModel.canBuild(game) ? 1 : 0.45)
                         .help(rebuildHint)
 
+                        if viewModel.currentBuildGameID == game.id {
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack {
+                                    Text(viewModel.currentStageName.isEmpty
+                                         ? "Building..." : viewModel.currentStageName)
+                                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                        .foregroundColor(NXTheme.textPrimary)
+                                    Spacer()
+                                    Text("\(Int(viewModel.progressFraction * 100))%")
+                                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                        .foregroundColor(NXTheme.secondary)
+                                }
+                                ProgressView(value: viewModel.progressFraction)
+                                    .progressViewStyle(.linear)
+                                    .tint(NXTheme.primary)
+                                if !viewModel.currentStepName.isEmpty {
+                                    Text(viewModel.currentStepName)
+                                        .font(.system(size: 10, design: .monospaced))
+                                        .foregroundColor(NXTheme.textSecondary)
+                                        .lineLimit(1)
+                                }
+                            }
+                            .padding(10)
+                            .background(NXTheme.primary.opacity(0.08))
+                            .cornerRadius(8)
+                        }
+
                         HStack(spacing: 10) {
                             Button(action: {
                                 SoundEffectService.shared.play(.click)
@@ -140,6 +186,21 @@ public struct GameDetailDeckView: View {
                             }
                             .buttonStyle(NXSecondaryButtonStyle())
                             .controlSize(.regular)
+
+                            Button(action: {
+                                SoundEffectService.shared.play(.click)
+                                viewModel.revealLog(for: game)
+                            }) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "doc.text.magnifyingglass")
+                                    Text("Log")
+                                }
+                                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(NXSecondaryButtonStyle())
+                            .controlSize(.regular)
+                            .help("Open the build or runtime log for this game.")
                             
                             Button(action: {
                                 SoundEffectService.shared.play(.click)
@@ -254,21 +315,32 @@ public struct GameDetailDeckView: View {
         Group {
             switch game.status {
             case .built:
-                pill("Built", color: Color(red: 0.13, green: 0.77, blue: 0.37))
+                pill("Built", color: NXTheme.success)
             case .builtSourcesMissing:
-                pill("Sources missing", color: NXTheme.tertiary)
+                pill("Sources missing", color: NXTheme.warning)
             case .appMissing:
-                pill("App missing", color: .red)
+                pill("App missing", color: NXTheme.error)
             case .notBuilt:
                 pill("Not built", color: NXTheme.textMuted)
             case .building:
                 pill("Building", color: NXTheme.secondary)
             case .failed:
-                pill("Build failed", color: .red)
+                pill("Build failed", color: NXTheme.error)
             case .cancelled:
                 pill("Cancelled", color: NXTheme.textMuted)
             case .needsRebuild:
-                pill("Needs rebuild", color: NXTheme.tertiary)
+                pill("Needs rebuild", color: NXTheme.warning)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var toolchainPill: some View {
+        if game.status == .built && !game.toolchain.verified {
+            if game.lastBuild != nil {
+                pill("Untested toolchain", color: NXTheme.warning)
+            } else if game.toolchain.note?.lowercased().contains("imported") == true {
+                pill("Imported", color: NXTheme.textMuted)
             }
         }
     }

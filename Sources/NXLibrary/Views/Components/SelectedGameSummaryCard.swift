@@ -46,7 +46,7 @@ public struct SelectedGameSummaryCard: View {
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 1)
-                                    .background(Color.purple.opacity(0.4))
+                                    .background(NXTheme.secondary.opacity(0.35))
                                     .clipShape(Capsule())
                             }
                         }

@@ -30,6 +30,10 @@ public struct LibraryView: View {
         VStack(spacing: 0) {
             // MARK: - Library Toolbar (Liquid Glass & Search)
             toolbarView
+
+            HomeStatusStrip(viewModel: viewModel)
+                .padding(.horizontal, 18)
+                .padding(.top, 10)
             
             // MARK: - Console Game Showcase & Detail Deck
             if filteredGames.isEmpty {
@@ -83,7 +87,7 @@ public struct LibraryView: View {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(NXTheme.textSecondary)
-                TextField("Search ported games...", text: $viewModel.librarySearchText)
+                TextField("Search your library...", text: $viewModel.librarySearchText)
                     .textFieldStyle(.plain)
                     .foregroundColor(NXTheme.textPrimary)
                 if !viewModel.librarySearchText.isEmpty {
@@ -168,20 +172,29 @@ public struct LibraryView: View {
                 .foregroundColor(NXTheme.secondary.opacity(0.4))
             
             VStack(spacing: 4) {
-                Text("No Ported Games Found")
+                Text("Your library is empty")
                     .font(.system(size: 14, weight: .bold, design: .rounded))
                     .foregroundColor(NXTheme.textPrimary)
-                Text("Games you convert (.app) will automatically appear here.")
+                Text("Add a game or import an app already built with nxnative.")
                     .font(.system(size: 12))
                     .foregroundColor(NXTheme.textSecondary)
             }
-            
-            Button("Convert a Game Now") {
-                SoundEffectService.shared.play(.click)
-                viewModel.selectedTab = 0
+
+            HStack(spacing: 10) {
+                Button("Add a Game") {
+                    SoundEffectService.shared.play(.click)
+                    viewModel.selectedTab = 1
+                }
+                .buttonStyle(NXPrimaryButtonStyle())
+                .controlSize(.regular)
+
+                Button("Import Existing Builds") {
+                    SoundEffectService.shared.play(.click)
+                    viewModel.importExistingBuilds()
+                }
+                .buttonStyle(NXSecondaryButtonStyle())
+                .controlSize(.regular)
             }
-            .buttonStyle(NXPrimaryButtonStyle())
-            .controlSize(.regular)
         }
         .frame(maxWidth: .infinity, minHeight: 320)
         .padding(40)

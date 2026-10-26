@@ -12,7 +12,7 @@ public struct StatusBadge: View {
     }
     
     private var badgeColor: Color {
-        isPositive ? Color(red: 0.13, green: 0.77, blue: 0.37) : NXTheme.tertiary
+        isPositive ? NXTheme.success : NXTheme.warning
     }
     
     public var body: some View {
@@ -25,7 +25,7 @@ public struct StatusBadge: View {
                 
                 Text(text)
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundColor(isPositive ? NXTheme.textPrimary : Color(red: 1.0, green: 0.65, blue: 0.35))
+                    .foregroundColor(isPositive ? NXTheme.textPrimary : NXTheme.warning)
             }
             .padding(.horizontal, 9)
             .padding(.vertical, 4)

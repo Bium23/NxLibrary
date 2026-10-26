@@ -2,198 +2,127 @@ import SwiftUI
 
 public struct MainView: View {
     @StateObject private var viewModel = AppViewModel()
-    @State private var windowWidth: CGFloat = 1100
-    
+
     public init() {}
-    
-    private let tabs: [(tag: Int, title: String, icon: String)] = [
-        (0, "Port Game", "play.circle.fill"),
-        (1, "Library", "books.vertical.fill"),
-        (2, "Controls", "gamecontroller.fill"),
-        (3, "Settings", "gearshape.fill"),
-        (4, "Console", "terminal.fill")
-    ]
-    
-    private var isCompactNav: Bool {
-        windowWidth < 1000
-    }
-    
+
     public var body: some View {
-        GeometryReader { windowGeo in
+        GeometryReader { geo in
             ZStack {
-                // MARK: - Obsidian Liquid Glass Canvas & Atmospheric Refractions
                 Color.nxCanvas.ignoresSafeArea()
-                
-                // Atmospheric ambient glows
+
                 ZStack {
                     Circle()
-                        .fill(NXTheme.primary.opacity(0.15))
-                        .frame(width: 450, height: 450)
-                        .blur(radius: 90)
-                        .position(x: 100, y: 40)
-                    
-                    Circle()
-                        .fill(NXTheme.tertiary.opacity(0.07))
-                        .frame(width: 400, height: 400)
+                        .fill(NXTheme.primary.opacity(0.13))
+                        .frame(width: 460, height: 460)
                         .blur(radius: 100)
-                        .position(x: windowGeo.size.width - 80, y: windowGeo.size.height - 60)
+                        .position(x: 90, y: 30)
+
+                    Circle()
+                        .fill(NXTheme.secondary.opacity(0.06))
+                        .frame(width: 420, height: 420)
+                        .blur(radius: 110)
+                        .position(x: geo.size.width - 60, y: geo.size.height - 40)
                 }
                 .ignoresSafeArea()
-                
+
                 VStack(spacing: 0) {
-                    // MARK: - Liquid Glass Navigation Bar
-                    navigationHeader
-                    
-                    // MARK: - Selected Content Surface
-                    Group {
-                        switch viewModel.selectedTab {
-                        case 0:
-                            BuildView(viewModel: viewModel)
-                        case 1:
-                            LibraryView(viewModel: viewModel)
-                        case 2:
-                            ControlsView()
-                        case 3:
-                            SystemView(viewModel: viewModel)
-                        case 4:
-                            LogsView(viewModel: viewModel)
-                        default:
-                            BuildView(viewModel: viewModel)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    topBar
+                    content
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    BottomDock(viewModel: viewModel)
                 }
-            }
-            .onAppear {
-                self.windowWidth = windowGeo.size.width
-            }
-            .onChange(of: windowGeo.size.width) { newWidth in
-                self.windowWidth = newWidth
             }
         }
-        .frame(minWidth: 880, minHeight: 620)
+        .frame(minWidth: 1100, minHeight: 700)
     }
-    
-    private var navigationHeader: some View {
-        HStack(spacing: 16) {
-            // Brand Logo & Subtitle
-            HStack(spacing: 10) {
-                AppLogoView(viewModel: viewModel)
-                
-                VStack(alignment: .leading, spacing: 1) {
-                    HStack(spacing: 6) {
-                        Text("NxNative Launcher")
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
-                            .foregroundColor(NXTheme.textPrimary)
-                        
-                    }
-                    
-                    if !isCompactNav {
-                        Text("Switch Native Port Builder · Apple Silicon")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(NXTheme.textSecondary)
-                    }
-                }
+
+    private var content: some View {
+        Group {
+            switch viewModel.selectedTab {
+            case 0:
+                LibraryView(viewModel: viewModel)
+            case 1:
+                BuildView(viewModel: viewModel)
+            case 2:
+                ControlsView()
+            case 3:
+                SystemView(viewModel: viewModel)
+            case 4:
+                LogsView(viewModel: viewModel)
+            default:
+                LibraryView(viewModel: viewModel)
             }
-            
+        }
+    }
+
+    private var readiness: Bool {
+        viewModel.isProdKeysValid
+            && viewModel.isNxnativeValid
+            && viewModel.environmentStatus?.canBuild == true
+            && viewModel.canPassToolchainGate
+    }
+
+    private var readinessText: String {
+        if readiness { return "Ready" }
+        if viewModel.compatibilityReport != nil && !viewModel.canPassToolchainGate {
+            return "Toolchain blocked"
+        }
+        return "Setup needed"
+    }
+
+    private var topBar: some View {
+        HStack(spacing: 10) {
+            AppLogoView(viewModel: viewModel)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text("NX Library")
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundColor(NXTheme.textPrimary)
+                Text("Native Switch games on Mac")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(NXTheme.textSecondary)
+            }
+
             Spacer()
-            
-            // Epic Liquid Glass Navigation Tabs (Responsive: Icons only when window is small)
-            HStack(spacing: isCompactNav ? 3 : 4) {
-                ForEach(tabs, id: \.tag) { item in
-                    let isSelected = viewModel.selectedTab == item.tag
-                    Button(action: {
-                        SoundEffectService.shared.play(.tabSwitch)
-                        withAnimation(.easeInOut(duration: 0.18)) {
-                            viewModel.selectedTab = item.tag
-                        }
-                    }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: item.icon)
-                                .font(.system(size: isCompactNav ? 13 : 12, weight: isSelected ? .bold : .medium))
-                            
-                            if !isCompactNav {
-                                Text(item.title)
-                                    .font(.system(size: 12, weight: isSelected ? .bold : .medium, design: .rounded))
-                            }
-                        }
-                        .foregroundColor(isSelected ? .white : NXTheme.textSecondary)
-                        .padding(.horizontal, isCompactNav ? 9 : 11)
-                        .padding(.vertical, 6)
-                        .background(
-                            ZStack {
-                                if isSelected {
-                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                        .fill(NXTheme.primaryGradient)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                                .strokeBorder(Color.white.opacity(0.25), lineWidth: 0.8)
-                                        )
-                                        .shadow(color: NXTheme.primary.opacity(0.5), radius: 6, x: 0, y: 2)
-                                } else {
-                                    Color.clear
-                                }
-                            }
-                        )
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .help(item.title)
-                    .nxNoFocusRing()
+
+            if viewModel.isBuilding {
+                HStack(spacing: 7) {
+                    ProgressView().controlSize(.small)
+                    Text(viewModel.currentStageName.isEmpty ? "Building..." : viewModel.currentStageName)
+                        .lineLimit(1)
+                    Text("\(Int(viewModel.progressFraction * 100))%")
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
                 }
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundColor(NXTheme.textPrimary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(NXTheme.primary.opacity(0.16))
+                .clipShape(Capsule())
+                .overlay(Capsule().strokeBorder(NXTheme.primary.opacity(0.4), lineWidth: 0.8))
+            } else {
+                if viewModel.allowUntestedToolchain && viewModel.compatibilityReport?.ok != true {
+                    Text("Untested toolchain")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundColor(NXTheme.warning)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(NXTheme.warning.opacity(0.12))
+                        .clipShape(Capsule())
+                }
+                StatusBadge(
+                    isPositive: readiness,
+                    text: readinessText,
+                    showText: true
+                )
             }
-            .padding(4)
-            .background(
-                ZStack {
-                    RoundedRectangle(cornerRadius: 11, style: .continuous)
-                        .fill(NXTheme.glassSurfaceElevated.opacity(0.7))
-                    RoundedRectangle(cornerRadius: 11, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                }
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 11, style: .continuous)
-                    .strokeBorder(NXTheme.specularRim, lineWidth: 0.8)
-            )
-            
-            Spacer()
-            
-            // Build & Readiness Status Indicator
-            HStack(spacing: 8) {
-                if viewModel.isBuilding {
-                    HStack(spacing: 6) {
-                        ProgressView()
-                            .controlSize(.small)
-                        Text("Building...")
-                            .font(.system(size: 11, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(
-                        Capsule()
-                            .fill(NXTheme.primary.opacity(0.35))
-                    )
-                    .overlay(
-                        Capsule()
-                            .strokeBorder(NXTheme.secondary.opacity(0.6), lineWidth: 0.8)
-                    )
-                } else {
-                    StatusBadge(
-                        isPositive: viewModel.isProdKeysValid && viewModel.isNxnativeValid,
-                        text: (viewModel.isProdKeysValid && viewModel.isNxnativeValid) ? "Environment Ready" : "Setup Required (Check Settings)",
-                        showText: false
-                    )
-                }
-            }
-            .fixedSize(horizontal: true, vertical: false)
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 10)
-        .frame(height: 54)
+        .frame(height: 56)
         .background(
             ZStack {
-                NXTheme.canvasObsidian.opacity(0.85)
+                NXTheme.canvasObsidian.opacity(0.86)
                 Rectangle().fill(.ultraThinMaterial)
             }
         )

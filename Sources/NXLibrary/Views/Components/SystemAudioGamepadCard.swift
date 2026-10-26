@@ -45,7 +45,7 @@ public struct SystemAudioGamepadCard: View {
                     
                     Button("View Button Layout") {
                         SoundEffectService.shared.play(.click)
-                        viewModel.selectedTab = 3 // Controls tab
+                        viewModel.selectedTab = 2 // Controls tab
                     }
                     .buttonStyle(NXSecondaryButtonStyle())
                     .controlSize(.small)

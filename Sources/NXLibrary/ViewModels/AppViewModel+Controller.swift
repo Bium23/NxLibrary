@@ -25,7 +25,7 @@ extension AppViewModel {
             }
             
         case .navigateLeft:
-            if selectedTab == 1 && !isFocusOnDeck { // Library Tab Carousel
+            if selectedTab == 0 && !isFocusOnDeck { // Library Tab Carousel
                 if focusedGameIndex > 0 {
                     focusedGameIndex -= 1
                     SoundEffectService.shared.play(.focus)
@@ -33,7 +33,7 @@ extension AppViewModel {
             }
             
         case .navigateRight:
-            if selectedTab == 1 && !isFocusOnDeck { // Library Tab Carousel
+            if selectedTab == 0 && !isFocusOnDeck { // Library Tab Carousel
                 if focusedGameIndex < libraryGames.count - 1 {
                     focusedGameIndex += 1
                     SoundEffectService.shared.play(.focus)
@@ -41,27 +41,27 @@ extension AppViewModel {
             }
             
         case .navigateDown:
-            if selectedTab == 1 && !isFocusOnDeck {
+            if selectedTab == 0 && !isFocusOnDeck {
                 isFocusOnDeck = true
                 SoundEffectService.shared.play(.focus)
             }
             
         case .navigateUp:
-            if selectedTab == 1 && isFocusOnDeck {
+            if selectedTab == 0 && isFocusOnDeck {
                 isFocusOnDeck = false
                 SoundEffectService.shared.play(.focus)
             }
             
         case .confirm:
             SoundEffectService.shared.play(.click)
-            if selectedTab == 1 {
+            if selectedTab == 0 {
                 if let game = currentFocusedGame {
                     launchGame(game)
                 }
             }
             
         case .cancel:
-            if selectedTab == 1 && isFocusOnDeck {
+            if selectedTab == 0 && isFocusOnDeck {
                 isFocusOnDeck = false
                 SoundEffectService.shared.play(.focus)
             } else if gameForSettingsSheet != nil {
@@ -70,13 +70,13 @@ extension AppViewModel {
             }
             
         case .secondaryAction: // X: Open Settings
-            if selectedTab == 1, let game = currentFocusedGame {
+            if selectedTab == 0, let game = currentFocusedGame {
                 SoundEffectService.shared.play(.click)
                 gameForSettingsSheet = game
             }
             
         case .contextAction: // Y: Reveal Save Folder
-            if selectedTab == 1, let game = currentFocusedGame {
+            if selectedTab == 0, let game = currentFocusedGame {
                 SoundEffectService.shared.play(.click)
                 let profile = GameDetailsProfile.inspect(for: game)
                 revealSaveFolder(profile.saveDirectory)

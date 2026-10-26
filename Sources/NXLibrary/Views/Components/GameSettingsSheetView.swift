@@ -42,7 +42,7 @@ public struct GameSettingsSheetView: View {
                             .lineLimit(1)
                         
                         HStack(spacing: 6) {
-                            Text(game.platform == .macApp ? "Mac App" : "iOS IPA")
+                            Text("Mac App")
                                 .font(.system(size: 10, weight: .bold))
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
@@ -185,7 +185,7 @@ public struct GameSettingsSheetView: View {
                         
                         // Section 5: MetalFX Upscaling
                         settingCard(
-                            title: "Intelligent Upscaling (MetalFX)",
+                            title: "Spatial Upscaling (MetalFX)",
                             icon: "sparkles.tv.fill",
                             iconColor: NXTheme.secondary
                         ) {
@@ -194,7 +194,7 @@ public struct GameSettingsSheetView: View {
                                     Text(config.enableMetalFXUpscale ? "MetalFX Spatial Upscaler Enabled" : "Standard Bilinear Upscaling")
                                         .font(.system(size: 13, weight: .semibold, design: .rounded))
                                         .foregroundColor(NXTheme.textPrimary)
-                                    Text("Uses Apple Silicon spatial neural upscaling for crisp high-resolution presentation.")
+                                    Text("Uses Apple Silicon MetalFX spatial upscaling for a crisper high-resolution presentation.")
                                         .font(.system(size: 11))
                                         .foregroundColor(NXTheme.textSecondary)
                                 }

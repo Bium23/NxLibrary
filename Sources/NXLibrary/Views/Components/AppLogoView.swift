@@ -78,7 +78,7 @@ public struct AppLogoView: View {
         .frame(width: 30, height: 30)
         .clipped()
         .onHover { isHovered = $0 }
-        .help("NxNative Logo: Adapts to Light, Dark & Mono modes. Click to choose appearance.")
+        .help("NX Library icon. Click to choose its appearance.")
         .onChange(of: colorScheme) { _ in
             if viewModel.iconAppearanceMode == .auto {
                 viewModel.updateDockIcon()

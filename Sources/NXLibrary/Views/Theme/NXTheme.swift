@@ -1,32 +1,37 @@
 import SwiftUI
 
 public enum NXTheme {
-    // MARK: - Core Palette (#6F31FF, #8B5CF6, #AA4500, #141418)
-    public static let primary = Color(red: 0x6F / 255.0, green: 0x31 / 255.0, blue: 0xFF / 255.0)
-    public static let secondary = Color(red: 0x8B / 255.0, green: 0x5C / 255.0, blue: 0xF6 / 255.0)
-    public static let tertiary = Color(red: 0xAA / 255.0, green: 0x45 / 255.0, blue: 0x00 / 255.0)
-    public static let canvasObsidian = Color(red: 0x14 / 255.0, green: 0x14 / 255.0, blue: 0x18 / 255.0)
+    // MARK: - Coral / Graphite Palette
+    public static let primary = Color(red: 1.00, green: 0.35, blue: 0.37)   // coral
+    public static let secondary = Color(red: 0.35, green: 0.78, blue: 0.98) // cyan selection
+    public static let tertiary = Color(red: 0.20, green: 0.78, blue: 0.35)  // green
+    public static let canvasObsidian = Color(red: 0.082, green: 0.082, blue: 0.090)
     
-    // MARK: - Liquid Glass Surfaces
-    public static let glassSurface = Color(red: 0x1B / 255.0, green: 0x1B / 255.0, blue: 0x22 / 255.0)
-    public static let glassSurfaceElevated = Color(red: 0x23 / 255.0, green: 0x23 / 255.0, blue: 0x2E / 255.0)
-    public static let glassSurfaceActive = Color(red: 0x2C / 255.0, green: 0x28 / 255.0, blue: 0x3C / 255.0)
-    public static let borderSubtle = Color(red: 0x2D / 255.0, green: 0x2D / 255.0, blue: 0x3C / 255.0)
+    // MARK: - Glass Surfaces
+    public static let glassSurface = Color(red: 0.118, green: 0.118, blue: 0.133)
+    public static let glassSurfaceElevated = Color(red: 0.165, green: 0.165, blue: 0.188)
+    public static let glassSurfaceActive = Color(red: 0.215, green: 0.215, blue: 0.245)
+    public static let borderSubtle = Color(red: 0.22, green: 0.22, blue: 0.25)
     
     // MARK: - Typography Colors
     public static let textPrimary = Color.white
-    public static let textSecondary = Color(red: 0x9E / 255.0, green: 0x9E / 255.0, blue: 0xB2 / 255.0)
-    public static let textMuted = Color(red: 0x65 / 255.0, green: 0x65 / 255.0, blue: 0x7A / 255.0)
+    public static let textSecondary = Color(red: 0.63, green: 0.63, blue: 0.67)
+    public static let textMuted = Color(red: 0.38, green: 0.38, blue: 0.42)
+    
+    // MARK: - Semantic Colors
+    public static let success = Color(red: 0.20, green: 0.78, blue: 0.35)
+    public static let warning = Color(red: 1.00, green: 0.62, blue: 0.04)
+    public static let error = Color(red: 1.00, green: 0.27, blue: 0.23)
     
     // MARK: - Gradients
     public static let primaryGradient = LinearGradient(
-        colors: [primary, Color(red: 0x7C / 255.0, green: 0x3A / 255.0, blue: 0xED / 255.0)],
+        colors: [primary, Color(red: 0.91, green: 0.22, blue: 0.25)],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
     
     public static let logoGradient = LinearGradient(
-        colors: [primary, Color(red: 0xF0 / 255.0, green: 0x3B / 255.0, blue: 0x3B / 255.0)],
+        colors: [primary, warning],
         startPoint: .leading,
         endPoint: .trailing
     )
@@ -42,10 +47,7 @@ public enum NXTheme {
     )
     
     public static let selectedBorder = LinearGradient(
-        colors: [
-            secondary,
-            primary
-        ],
+        colors: [secondary, primary],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )

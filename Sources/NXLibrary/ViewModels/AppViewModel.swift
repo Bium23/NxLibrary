@@ -144,6 +144,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     @Published public var lastError: String? = nil
     @Published public var isCancellingBuild: Bool = false
     @Published public var buildLogURL: URL? = nil
+    @Published public var currentBuildGameID: UUID? = nil
     @Published public var allowUntestedToolchain: Bool = false {
         didSet {
             UserDefaults.standard.set(allowUntestedToolchain, forKey: StorageKeys.allowUntestedToolchain)
@@ -193,7 +194,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     }
     
     // MARK: - Navigation
-    @Published public var selectedTab: Int = 1 // 0: Add Game, 1: Library, 2: Controls, 3: Settings, 4: Console
+    @Published public var selectedTab: Int = 0 // 0: Library, 1: Add Game, 2: Controls, 3: Settings, 4: Console
     @Published public var focusedGameIndex: Int = 0
     @Published public var isFocusOnDeck: Bool = false
     @Published public var launchingGameId: UUID? = nil
@@ -985,6 +986,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         }
         target = stored
         buildPreviousStatus = target.status
+        currentBuildGameID = target.id
 
         let workspace: Workspace
         let existingDirectory = target.workspacePath.map { URL(fileURLWithPath: $0) }
@@ -1254,6 +1256,31 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
 
         buildStartedAt = nil
         buildPreviousStatus = nil
+        currentBuildGameID = nil
+    }
+
+    public func logURL(for game: PortedGame) -> URL? {
+        if let path = game.lastBuild?.logPath, !path.isEmpty {
+            return URL(fileURLWithPath: path)
+        }
+        guard let titleId = game.titleId, !titleId.isEmpty else { return nil }
+        return launchService.logURL(for: titleId)
+    }
+
+    public func revealLog(for game: PortedGame) {
+        guard let url = logURL(for: game) else {
+            logs.append(LogEntry(level: .warning, message: "No log path is known for \(game.name)."))
+            return
+        }
+        let directory = url.deletingLastPathComponent()
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        if FileManager.default.fileExists(atPath: url.path) {
+            NSWorkspace.shared.activateFileViewerSelecting([url])
+        } else {
+            NSWorkspace.shared.activateFileViewerSelecting([directory])
+            logs.append(LogEntry(level: .info,
+                                 message: "No log yet for \(game.name); opened the log folder."))
+        }
     }
 
     private func presentBuildError(_ error: Error) {

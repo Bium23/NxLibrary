@@ -105,7 +105,7 @@ public struct BuildBanners: View {
             Spacer()
             
             Button("View in Library") {
-                viewModel.selectedTab = 1
+                viewModel.selectedTab = 0
             }
             .buttonStyle(NXSecondaryButtonStyle())
             
@@ -144,7 +144,7 @@ public struct BuildBanners: View {
             Spacer()
             
             Button("View Logs") {
-                viewModel.selectedTab = 3
+                viewModel.selectedTab = 4
             }
             .buttonStyle(NXSecondaryButtonStyle())
         }
