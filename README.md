@@ -58,9 +58,13 @@ Builds go to `~/Applications/<game>.app`. Sources stay where they are; a staged 
 
 ## Compatibility gate
 
-New builds are blocked unless the installed engine commit, working tree, Metal compiler and nxnative CLI match the certified combination. This Mac currently has Metal `32023.917`; the engine lock requires `32023.921`. The gate is visible under **Settings → Engine**.
+New builds are blocked unless the installed engine commit, working tree, Metal compiler and nxnative CLI match the certified combination. This Mac has Xcode 27.1 and Metal `32023.921`, matching the engine lock. The gate is visible under **Settings → Engine**.
 
-An explicit **Build anyway with an untested toolchain** override exists. It requires confirmation, persists in `UserDefaults`, and records every build made under it as **untested**. Corrupted graphics are a documented upstream risk; the existing BotW build is left untouched.
+An explicit **Build anyway with an untested toolchain** override exists. It requires confirmation, persists in `UserDefaults`, passes `--allow-other-metal` to the engine, and records every build made under it as **untested**. Corrupted graphics are a documented upstream risk; the existing BotW build is left untouched.
+
+## Updating the engine
+
+Engine upgrades are manual and never follow `main`. Before changing the pin, review the commits and decide what belongs in the UI and what stays backend-only. The checklist and dated notes are in [`docs/upstream-upgrades/`](docs/upstream-upgrades/); the current pin is `4f24ce6489a28aa84575e38711f3a318d7ab2a4f`.
 
 ## Tests
 
