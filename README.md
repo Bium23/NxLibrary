@@ -95,4 +95,4 @@ No games, keys, Nintendo logos, fonts, sounds, or other Nintendo assets are incl
 - Super Mario Odyssey 1.4.1 builds with engine `4f24ce6` (27,984 shaders and 32,864 pipeline pairs) and reaches the controller screen; gameplay beyond that is not yet verified.
 - No DMG, no iOS/IPA output, no online compatibility database and no automatic engine updates. The upstream changelog check is manual and read-only; only the commit hash is sent to `api.github.com`.
 - The engine checkout is never modified; nxnative upgrades are manual and re-pin the engine commit in `AppViewModel.pinnedEngineCommit`.
-- A detached-sources game shows no source badge over its tile and keeps its artwork; the detail card offers **Locate Sources…** to attach the files again.
+- A detached-sources game shows no source badge over its tile and keeps its artwork; the detail card shows **Sources detached** with an info tooltip and **Attach Sources…** next to Rebuild.

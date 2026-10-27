@@ -51,21 +51,23 @@ public struct LibraryView: View {
             if filteredGames.isEmpty {
                 emptyLibraryView
             } else {
-                ScrollView {
-                    VStack(spacing: 20) {
-                        // 1. Console Carousel (Elevated Cover on Focus)
-                        ConsoleGameCarouselView(viewModel: viewModel, games: filteredGames)
-                        
-                        // 2. Focused Game Detail Deck (Play, DLC, Sizes, Saves, Settings)
+                // The carousel stays outside the vertical scroll view: nesting a
+                // horizontal ScrollView inside it made the tiles lose mouse clicks
+                // to the scroll gesture. The detail card scrolls independently.
+                VStack(spacing: 0) {
+                    ConsoleGameCarouselView(viewModel: viewModel, games: filteredGames)
+
+                    ScrollView {
                         if let selected = currentSelectedGame {
                             GameDetailDeckView(game: selected, viewModel: viewModel) { target in
                                 self.gameToDelete = target
                                 self.showDeleteConfirm = true
                             }
                             .padding(.horizontal, 24)
+                            .padding(.bottom, 20)
                         }
                     }
-                    .padding(.bottom, 20)
+                    .frame(maxHeight: .infinity)
                 }
             }
             

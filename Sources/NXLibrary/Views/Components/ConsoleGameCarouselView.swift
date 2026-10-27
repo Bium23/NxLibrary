@@ -17,11 +17,7 @@ public struct ConsoleGameCarouselView: View {
                 HStack(alignment: .top, spacing: 24) {
                     ForEach(Array(games.enumerated()), id: \.element.id) { index, game in
                         Button {
-                            SoundEffectService.shared.play(.focus)
-                            withAnimation(.spring(response: 0.28, dampingFraction: 0.75)) {
-                                viewModel.focusedGameIndex = index
-                                viewModel.isFocusOnDeck = false
-                            }
+                            selectGame(at: index)
                         } label: {
                             gameTile(
                                 game: game,
@@ -49,6 +45,14 @@ public struct ConsoleGameCarouselView: View {
             }
         }
         .frame(height: 320)
+    }
+
+    private func selectGame(at index: Int) {
+        SoundEffectService.shared.play(.focus)
+        withAnimation(.spring(response: 0.28, dampingFraction: 0.75)) {
+            viewModel.focusedGameIndex = index
+            viewModel.isFocusOnDeck = false
+        }
     }
 
     private func gameTile(game: PortedGame, isFocused: Bool, isLaunching: Bool) -> some View {

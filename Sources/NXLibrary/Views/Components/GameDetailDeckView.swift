@@ -82,30 +82,6 @@ public struct GameDetailDeckView: View {
                 .background(headerBackdrop)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 
-                if game.status == .builtSourcesMissing {
-                    HStack(spacing: 8) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(NXTheme.warning)
-                        Text("Play works. Sources are detached; attach the original base, update and DLC files again to rebuild.")
-                            .font(.system(size: 11))
-                            .foregroundColor(NXTheme.textSecondary)
-                        Spacer()
-                        Button("Locate Sources...") {
-                            SoundEffectService.shared.play(.click)
-                            viewModel.locateSources(for: game)
-                        }
-                        .buttonStyle(NXSecondaryButtonStyle())
-                        .controlSize(.small)
-                    }
-                    .padding(9)
-                    .background(NXTheme.warning.opacity(0.09))
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .strokeBorder(NXTheme.warning.opacity(0.25), lineWidth: 0.8)
-                    )
-                }
-
                 if !hasVerifiedProfile {
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "flask.fill")
@@ -164,24 +140,40 @@ public struct GameDetailDeckView: View {
                             .shadow(color: isDeckFocused ? NXTheme.primary.opacity(0.6) : Color.clear, radius: 8)
                         }
 
-                        Button(action: {
-                            SoundEffectService.shared.play(.click)
-                            viewModel.startBuild(for: game)
-                        }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "hammer.fill")
-                                Text(game.sources.isEmpty
-                                     ? "Rebuild — sources detached"
-                                     : (game.status == .notBuilt ? "Build App" : "Rebuild App"))
+                        HStack(spacing: 8) {
+                            Button(action: {
+                                SoundEffectService.shared.play(.click)
+                                viewModel.startBuild(for: game)
+                            }) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "hammer.fill")
+                                    Text(game.sources.isEmpty
+                                         ? "Rebuild — sources detached"
+                                         : (game.status == .notBuilt ? "Build App" : "Rebuild App"))
+                                }
+                                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                .frame(maxWidth: .infinity)
                             }
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
-                            .frame(maxWidth: .infinity)
+                            .buttonStyle(NXSecondaryButtonStyle())
+                            .controlSize(.regular)
+                            .disabled(!viewModel.canBuild(game))
+                            .opacity(viewModel.canBuild(game) ? 1 : 0.45)
+                            .help(rebuildHint)
+
+                            if game.status == .builtSourcesMissing {
+                                Image(systemName: "info.circle.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(NXTheme.textMuted)
+                                    .help("Play works. Sources are detached; attach the original base, update and DLC files again to rebuild.")
+                                Button("Attach Sources...") {
+                                    SoundEffectService.shared.play(.click)
+                                    viewModel.locateSources(for: game)
+                                }
+                                .buttonStyle(NXSecondaryButtonStyle())
+                                .controlSize(.small)
+                                .help("Attach the original base, update and DLC files again.")
+                            }
                         }
-                        .buttonStyle(NXSecondaryButtonStyle())
-                        .controlSize(.regular)
-                        .disabled(!viewModel.canBuild(game))
-                        .opacity(viewModel.canBuild(game) ? 1 : 0.45)
-                        .help(rebuildHint)
 
                         if viewModel.currentBuildGameID == game.id {
                             VStack(alignment: .leading, spacing: 6) {
