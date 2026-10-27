@@ -17,6 +17,21 @@ final class BuildCommandBuilderTests: XCTestCase {
         XCTAssertTrue(cmd.arguments.contains("--progress"))
         XCTAssertTrue(cmd.arguments.contains("json"))
         XCTAssertFalse(cmd.arguments.contains("--show-fps"))
+        XCTAssertFalse(cmd.arguments.contains("--allow-other-metal"))
         XCTAssertTrue(cmd.environment["DEVELOPER_DIR"]?.contains("Xcode-beta") == true)
+    }
+
+    func testUntestedToolchainOverrideReachesTheEngine() {
+        let repo = URL(fileURLWithPath: "/tmp/repo")
+        let cmd = BuildCommandBuilder.make(
+            repo: repo,
+            python: repo.appendingPathComponent(".venv/bin/python"),
+            workspace: URL(fileURLWithPath: "/tmp/work"),
+            keys: URL(fileURLWithPath: "/tmp/prod.keys"),
+            output: URL(fileURLWithPath: "/tmp/Game.app"),
+            developerDir: URL(fileURLWithPath: "/Applications/Xcode.app/Contents/Developer"),
+            allowUntestedToolchain: true
+        )
+        XCTAssertTrue(cmd.arguments.contains("--allow-other-metal"))
     }
 }

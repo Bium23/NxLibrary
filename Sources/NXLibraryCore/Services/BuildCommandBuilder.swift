@@ -13,6 +13,7 @@ public enum BuildCommandBuilder {
         language: String? = nil,
         gpu: String? = nil,
         envFile: URL? = nil,
+        allowUntestedToolchain: Bool = false,
         extraArguments: [String] = []
     ) -> BuildCommand {
         var args = [
@@ -29,6 +30,10 @@ public enum BuildCommandBuilder {
         if let language, !language.isEmpty { args += ["-l", language] }
         if let gpu, !gpu.isEmpty { args += ["--gpu", gpu] }
         if let envFile { args += ["--env-file", envFile.path] }
+        // Since nxnative 4f24ce6 the engine itself refuses a non-certified
+        // Metal compiler unless this flag is present. Keep it tied to the
+        // app's explicit, persisted override.
+        if allowUntestedToolchain { args.append("--allow-other-metal") }
         args += extraArguments
 
         var env = ProcessInfo.processInfo.environment

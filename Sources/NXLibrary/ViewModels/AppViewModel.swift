@@ -1543,7 +1543,8 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             developerDir: resolvedDeveloperDir(),
             appName: target.name,
             bundleId: target.bundleId ?? "org.nxnative.\(titleId.lowercased())",
-            language: selectedLanguage == "auto" ? nil : selectedLanguage
+            language: selectedLanguage == "auto" ? nil : selectedLanguage,
+            allowUntestedToolchain: allowUntestedToolchain
         )
 
         buildStartedAt = Date()
