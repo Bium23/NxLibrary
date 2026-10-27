@@ -4,9 +4,12 @@ import XCTest
 final class LaunchServiceTests: XCTestCase {
     final class FakeLauncher: AppLaunching {
         var opened: URL?
+        var environment: [String: String] = [:]
         var shouldSucceed = true
-        func open(_ url: URL, completion: @escaping (Bool, String?) -> Void) {
+        func open(_ url: URL, environment: [String: String],
+                  completion: @escaping (Bool, String?) -> Void) {
             opened = url
+            self.environment = environment
             completion(shouldSucceed, shouldSucceed ? nil : "sample launch error")
         }
     }
@@ -28,13 +31,14 @@ final class LaunchServiceTests: XCTestCase {
         XCTAssertTrue(env.contains("DM_METAL_HUD=1"))
         var launched = false
         var launchError: String?
-        service.launch(appURL: game.url) { success, error in
+        service.launch(appURL: game.url, environment: ["DM_FPS_TARGET": "30"]) { success, error in
             launched = success
             launchError = error
         }
         XCTAssertTrue(launched)
         XCTAssertNil(launchError)
         XCTAssertEqual(launcher.opened, game.url)
+        XCTAssertEqual(launcher.environment["DM_FPS_TARGET"], "30")
     }
 
     func testLaunchFailureIsReported() throws {

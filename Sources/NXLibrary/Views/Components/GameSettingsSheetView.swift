@@ -5,21 +5,21 @@ import NXLibraryCore
 public struct GameSettingsSheetView: View {
     @ObservedObject public var viewModel: AppViewModel
     public let game: PortedGame
-    
+
     @State private var config: GameRuntimeConfig
     @State private var showSavedAlert: Bool = false
     @Environment(\.dismiss) private var dismiss
-    
+
     public init(viewModel: AppViewModel, game: PortedGame) {
         self.viewModel = viewModel
         self.game = game
         _config = State(initialValue: viewModel.loadRuntimeConfig(for: game))
     }
-    
+
     public var body: some View {
         ZStack {
             NXTheme.canvasObsidian.ignoresSafeArea()
-            
+
             VStack(spacing: 0) {
                 // MARK: - Header
                 HStack(spacing: 14) {
@@ -34,13 +34,13 @@ public struct GameSettingsSheetView: View {
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
                                 .stroke(NXTheme.specularRim, lineWidth: 1)
                         )
-                    
+
                     VStack(alignment: .leading, spacing: 3) {
                         Text(game.name)
                             .font(.system(size: 16, weight: .bold, design: .rounded))
                             .foregroundColor(NXTheme.textPrimary)
                             .lineLimit(1)
-                        
+
                         HStack(spacing: 6) {
                             Text("Mac App")
                                 .font(.system(size: 10, weight: .bold))
@@ -49,13 +49,13 @@ public struct GameSettingsSheetView: View {
                                 .background(NXTheme.primary.opacity(0.2))
                                 .foregroundColor(NXTheme.secondary)
                                 .clipShape(Capsule())
-                            
+
                             if let ver = game.versionString {
                                 Text("v\(ver)")
                                     .font(.system(size: 11, design: .monospaced))
                                     .foregroundColor(NXTheme.textSecondary)
                             }
-                            
+
                             if let tid = game.titleId {
                                 Text("[\(tid)]")
                                     .font(.system(size: 10, design: .monospaced))
@@ -63,9 +63,9 @@ public struct GameSettingsSheetView: View {
                             }
                         }
                     }
-                    
+
                     Spacer()
-                    
+
                     Button(action: { dismiss() }) {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 18))
@@ -86,7 +86,7 @@ public struct GameSettingsSheetView: View {
                         .foregroundColor(NXTheme.borderSubtle),
                     alignment: .bottom
                 )
-                
+
                 // MARK: - Settings Form
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
@@ -108,7 +108,7 @@ public struct GameSettingsSheetView: View {
                             }
                             .toggleStyle(.switch)
                         }
-                        
+
                         // Section 2: Runtime language
                         settingCard(
                             title: "Game Language (Runtime)",
@@ -147,7 +147,7 @@ public struct GameSettingsSheetView: View {
                             }
                             .toggleStyle(.switch)
                         }
-                        
+
                         // Section 4: Console Mode
                         settingCard(
                             title: "Console Mode (Operation Profile)",
@@ -160,7 +160,7 @@ public struct GameSettingsSheetView: View {
                                     Text("Handheld (Portable · 720p)").tag(false)
                                 }
                                 .pickerStyle(.segmented)
-                                
+
                                 Text(config.isDockedMode
                                      ? "Docked Mode: Uses maximum graphics profile and render resolution (1080p/900p)."
                                      : "Handheld Mode: Renders at native 720p with reduced GPU workload.")
@@ -168,42 +168,79 @@ public struct GameSettingsSheetView: View {
                                     .foregroundColor(NXTheme.textSecondary)
                             }
                         }
-                        
-                        // Section 5: 3D Render Scale
+
+                        // Section 5: Display
                         settingCard(
-                            title: "3D Render Scale",
-                            icon: "viewfinder.circle.fill",
-                            iconColor: Color(red: 1.0, green: 0.65, blue: 0.35)
+                            title: "Display",
+                            icon: "display",
+                            iconColor: NXTheme.secondary
                         ) {
-                            VStack(alignment: .leading, spacing: 10) {
-                                HStack {
-                                    Text("Render Resolution Scale:")
-                                        .font(.system(size: 12, weight: .medium))
-                                        .foregroundColor(NXTheme.textSecondary)
-                                    Spacer()
-                                    Text("\(Int(config.renderScale * 100))%")
-                                        .font(.system(size: 13, weight: .bold, design: .monospaced))
-                                        .foregroundColor(NXTheme.secondary)
+                            VStack(alignment: .leading, spacing: 8) {
+                                Toggle(isOn: $config.fullscreen) {
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(config.fullscreen ? "Fullscreen" : "Windowed")
+                                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                            .foregroundColor(NXTheme.textPrimary)
+                                        Text("Fullscreen follows the display resolution. The window/display sets the output size; render scale changes the internal 3D resolution separately.")
+                                            .font(.system(size: 11))
+                                            .foregroundColor(NXTheme.textSecondary)
+                                    }
                                 }
-                                
-                                Slider(value: $config.renderScale, in: 0.5...1.0, step: 0.05)
-                                    .tint(NXTheme.primary)
-                                
-                                HStack(spacing: 8) {
-                                    Button("50% (Performance)") { config.renderScale = 0.5 }
-                                        .buttonStyle(NXSecondaryButtonStyle())
-                                        .controlSize(.mini)
-                                    Button("75% (Balanced)") { config.renderScale = 0.75 }
-                                        .buttonStyle(NXSecondaryButtonStyle())
-                                        .controlSize(.mini)
-                                    Button("100% (Native)") { config.renderScale = 1.0 }
-                                        .buttonStyle(NXSecondaryButtonStyle())
-                                        .controlSize(.mini)
-                                }
+                                .toggleStyle(.switch)
                             }
                         }
-                        
-                        // Section 6: MetalFX Upscaling
+
+                        // Section 6: 3D Render Scale
+                        if viewModel.supportsSetting("DM_RENDER_SCALE", for: game) {
+                            settingCard(
+                                title: "3D Render Scale",
+                                icon: "viewfinder.circle.fill",
+                                iconColor: Color(red: 1.0, green: 0.65, blue: 0.35)
+                            ) {
+                                VStack(alignment: .leading, spacing: 10) {
+                                    HStack {
+                                        Text("Render Resolution Scale:")
+                                            .font(.system(size: 12, weight: .medium))
+                                            .foregroundColor(NXTheme.textSecondary)
+                                        Spacer()
+                                        Text("\(Int(config.renderScale * 100))%")
+                                            .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                            .foregroundColor(NXTheme.secondary)
+                                    }
+
+                                    Slider(value: $config.renderScale, in: 0.5...1.0, step: 0.05)
+                                        .tint(NXTheme.primary)
+
+                                    HStack(spacing: 8) {
+                                        Button("50% (Performance)") { config.renderScale = 0.5 }
+                                            .buttonStyle(NXSecondaryButtonStyle())
+                                            .controlSize(.mini)
+                                        Button("75% (Balanced)") { config.renderScale = 0.75 }
+                                            .buttonStyle(NXSecondaryButtonStyle())
+                                            .controlSize(.mini)
+                                        Button("100% (Game's own)") { config.renderScale = 1.0 }
+                                            .buttonStyle(NXSecondaryButtonStyle())
+                                            .controlSize(.mini)
+                                    }
+
+                                    Text("Below 100% fixes the 3D views at that fraction and turns the game's dynamic resolution off. 100% keeps the game's own resolution.")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(NXTheme.textSecondary)
+                                }
+                            }
+                        } else {
+                            settingCard(
+                                title: "Internal Resolution",
+                                icon: "info.circle.fill",
+                                iconColor: NXTheme.textMuted
+                            ) {
+                                Text("This build has no render-scale stub. The game keeps its own internal resolution; the window/display and MetalFX control the output.")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(NXTheme.textSecondary)
+                            }
+                        }
+
+                        // Section 7: MetalFX Upscaling
                         settingCard(
                             title: "Spatial Upscaling (MetalFX)",
                             icon: "sparkles.tv.fill",
@@ -214,7 +251,7 @@ public struct GameSettingsSheetView: View {
                                     Text(config.enableMetalFXUpscale ? "MetalFX Spatial Upscaler Enabled" : "Standard Bilinear Upscaling")
                                         .font(.system(size: 13, weight: .semibold, design: .rounded))
                                         .foregroundColor(NXTheme.textPrimary)
-                                    Text("Uses Apple Silicon MetalFX spatial upscaling for a crisper high-resolution presentation.")
+                                    Text("Upscales the finished picture to the window/display. It improves the presentation, but does not increase the game's internal render resolution.")
                                         .font(.system(size: 11))
                                         .foregroundColor(NXTheme.textSecondary)
                                 }
@@ -224,7 +261,7 @@ public struct GameSettingsSheetView: View {
                     }
                     .padding(20)
                 }
-                
+
                 // MARK: - Footer Actions
                 HStack(spacing: 12) {
                     Button("Restore Defaults") {
@@ -232,9 +269,9 @@ public struct GameSettingsSheetView: View {
                     }
                     .buttonStyle(NXSecondaryButtonStyle())
                     .controlSize(.regular)
-                    
+
                     Spacer()
-                    
+
                     Button("Cancel") {
                         dismiss()
                     }
@@ -242,7 +279,7 @@ public struct GameSettingsSheetView: View {
                     .foregroundColor(NXTheme.textSecondary)
                     .font(.system(size: 12))
                     .padding(.horizontal, 8)
-                    
+
                     Button("Save Settings") {
                         viewModel.saveRuntimeConfig(config, for: game)
                         dismiss()
@@ -268,7 +305,7 @@ public struct GameSettingsSheetView: View {
         }
         .frame(minWidth: 480, idealWidth: 540, maxWidth: 620, minHeight: 540, idealHeight: 620, maxHeight: 720)
     }
-    
+
     private func settingCard<Content: View>(
         title: String,
         icon: String,
@@ -285,7 +322,7 @@ public struct GameSettingsSheetView: View {
                     .foregroundColor(NXTheme.textPrimary)
                 Spacer()
             }
-            
+
             content()
         }
         .padding(14)

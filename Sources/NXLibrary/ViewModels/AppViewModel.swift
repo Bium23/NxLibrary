@@ -278,7 +278,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         ("ko", "Korean")
     ]
     
-    public let pinnedEngineCommit = "4f24ce6489a28aa84575e38711f3a318d7ab2a4f"
+    public let pinnedEngineCommit = "1963fab7eeafa46ab618868549b2dd0d5b8bae7d"
     private let core = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/NXLibrary")
     private lazy var libraryStore = LibraryStore(directory: core)
@@ -1002,7 +1002,8 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             return
         }
 
-        launchService.launch(appURL: game.url) { [weak self] success, error in
+        launchService.launch(appURL: game.url,
+                             environment: config.toEnvironmentDict()) { [weak self] success, error in
             DispatchQueue.main.async {
                 guard let self else { return }
                 if success {
@@ -1035,6 +1036,14 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
 
     public func loadRuntimeConfig(for game: PortedGame) -> GameRuntimeConfig {
         GameRuntimeConfig.load(for: game)
+    }
+
+    public func supportsSetting(_ env: String, for game: PortedGame) -> Bool {
+        LauncherSettingsReader.supports(env, for: game.url)
+    }
+
+    public func launcherSettings(for game: PortedGame) -> LauncherSettingsFile? {
+        LauncherSettingsReader.load(for: game.url)
     }
 
     public func saveRuntimeConfig(_ config: GameRuntimeConfig, for game: PortedGame) {
