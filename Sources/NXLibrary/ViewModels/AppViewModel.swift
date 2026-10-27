@@ -278,7 +278,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         ("ko", "Korean")
     ]
     
-    public let pinnedEngineCommit = "06b7b3e56303bc67213a98cae61925f9253bdf89"
+    public let pinnedEngineCommit = "4f24ce6489a28aa84575e38711f3a318d7ab2a4f"
     private let core = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/NXLibrary")
     private lazy var libraryStore = LibraryStore(directory: core)
@@ -340,7 +340,8 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         
         loadLibrary()
         if let data = UserDefaults.standard.data(forKey: upstreamCacheKey),
-           let cached = try? JSONDecoder().decode(UpstreamStatus.self, from: data) {
+           let cached = try? JSONDecoder().decode(UpstreamStatus.self, from: data),
+           cached.baseCommit == pinnedEngineCommit {
             self.upstreamState = .loaded(cached)
         }
         updateDockIcon()

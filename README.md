@@ -21,16 +21,16 @@ A personal, native macOS front-end for [nxnative](https://github.com/seedds/nxna
 ## Requirements
 
 - Apple-silicon Mac, macOS 13 or newer.
-- Xcode (this machine uses `/Applications/Xcode-beta.app`) and Metal toolchain.
+- Xcode 27.1 or newer (with the matching Metal toolchain) on this machine.
 - .NET 10 runtime (`/usr/local/share/dotnet`).
 - Homebrew `xcodegen`, `zstd`, `spirv-cross`, `glslang`.
-- The nxnative checkout at `~/nxnative`, pinned to `06b7b3e56303bc67213a98cae61925f9253bdf89`, with its Python venv containing `lz4`, `capstone`, `fontTools`, `backports.zstd` and the other engine dependencies.
+- The nxnative checkout at `~/nxnative`, pinned to `4f24ce6489a28aa84575e38711f3a318d7ab2a4f`, with its Python venv containing `lz4`, `capstone`, `fontTools`, `backports.zstd` and the other engine dependencies.
 
 ## Build and run
 
 ```bash
 cd ~/Developer/NXLibrary
-DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer bash scripts/build_app.sh
+bash scripts/build_app.sh
 open "$HOME/Applications/NXLibrary.app"
 ```
 
@@ -65,7 +65,7 @@ An explicit **Build anyway with an untested toolchain** override exists. It requ
 ## Tests
 
 ```bash
-DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift test
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 ```
 
 The suite covers models and persistence, source parsing (including a regression for `*.cnmt.nca` vs `*.cnmt.xml`), symlink workspaces, key import/permissions, the compatibility gate, build-command construction, atomic install, process cancellation, launch environment writing, import, storage, and game playability.
@@ -88,6 +88,6 @@ No games, keys, Nintendo logos, fonts, sounds, or other Nintendo assets are incl
 ## Known limitations
 
 - The Breath of the Wild sources were removed from this Mac. Its imported app remains playable, but a BotW rebuild is blocked until the XCI base, update 1.9.0 and DLC are restored and attached.
-- The installed Metal compiler is older than the engine's certified version, so new builds require the explicit untested override.
+- Super Mario Odyssey 1.4.1 builds with engine `4f24ce6` (27,984 shaders and 32,864 pipeline pairs) and reaches the controller screen; gameplay beyond that is not yet verified.
 - No DMG, no iOS/IPA output, no online compatibility database and no automatic engine updates. The upstream changelog check is manual and read-only; only the commit hash is sent to `api.github.com`.
 - The engine checkout is never modified; nxnative upgrades are manual and re-pin the engine commit in `AppViewModel.pinnedEngineCommit`.
