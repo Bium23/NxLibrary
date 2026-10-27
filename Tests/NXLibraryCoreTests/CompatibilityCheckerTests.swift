@@ -8,6 +8,9 @@ final class CompatibilityCheckerTests: XCTestCase {
                  environment: [String: String]?,
                  currentDirectory: URL?) throws -> CommandResult {
             let key = ([executable.lastPathComponent] + arguments).joined(separator: " ")
+            if key == CompatibilityCheckerTests.pythonVersionKey {
+                return outputs[key] ?? CommandResult(status: 0, stdout: "3.14\n", stderr: "")
+            }
             return outputs[key] ?? CommandResult(status: 0, stdout: "", stderr: "")
         }
     }
@@ -40,6 +43,8 @@ final class CompatibilityCheckerTests: XCTestCase {
     private var cliKey: String {
         "python " + repo.appendingPathComponent("scripts/build_ipa_from_nsp.py").path + " -h"
     }
+
+    private static let pythonVersionKey = "python -c import sys; print(f'{sys.version_info[0]}.{sys.version_info[1]}')"
 
     func testMatchingMetalAndCommitPasses() throws {
         let r = FakeRunner()
@@ -78,5 +83,19 @@ final class CompatibilityCheckerTests: XCTestCase {
         let report = try checker(r).check(expectedEngineCommit: "06b7b3e")
         XCTAssertFalse(report.ok)
         XCTAssertTrue(report.checks.contains { $0.id == "tree" && $0.status == .block })
+    }
+
+    func testOldPythonVenvBlocks() throws {
+        let r = FakeRunner()
+        r.outputs["git rev-parse HEAD"] = .init(status: 0, stdout: "06b7b3e\n", stderr: "")
+        r.outputs["git status --porcelain"] = .init(status: 0, stdout: "", stderr: "")
+        r.outputs["xcrun metal --version"] = .init(status: 0,
+            stdout: "Apple metal version 32023.921\n", stderr: "")
+        r.outputs[Self.pythonVersionKey] = .init(status: 0, stdout: "3.11\n", stderr: "")
+        r.outputs[cliKey] = .init(status: 0,
+            stdout: "--platform --progress -o -k --app-name --bundle-id\n", stderr: "")
+        let report = try checker(r).check(expectedEngineCommit: "06b7b3e")
+        XCTAssertFalse(report.ok)
+        XCTAssertTrue(report.checks.contains { $0.id == "python" && $0.status == .block })
     }
 }

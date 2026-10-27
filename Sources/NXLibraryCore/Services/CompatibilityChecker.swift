@@ -73,6 +73,17 @@ public final class CompatibilityChecker {
                             status: metalOK ? .pass : .block,
                             detail: "installed \(metal), required \(required)"))
 
+        let pythonVersion = run(pythonURL.path, [
+            "-c", "import sys; print(f'{sys.version_info[0]}.{sys.version_info[1]}')"
+        ]).stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        let versionParts = pythonVersion.split(separator: ".").compactMap { Int($0) }
+        let pythonOK = versionParts.count >= 2
+            && (versionParts[0] > 3 || (versionParts[0] == 3 && versionParts[1] >= 12))
+        checks.append(.init(id: "python", title: "Python venv",
+                            status: pythonOK ? .pass : .block,
+                            detail: pythonVersion.isEmpty ? "version unavailable (requires 3.12+)"
+                                                          : "\(pythonVersion) (requires 3.12+)"))
+
         let help = run(pythonURL.path, [
             repoURL.appendingPathComponent("scripts/build_ipa_from_nsp.py").path, "-h"
         ]).stdout

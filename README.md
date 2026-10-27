@@ -24,7 +24,7 @@ A personal, native macOS front-end for [nxnative](https://github.com/seedds/nxna
 - Xcode 27.1 or newer (with the matching Metal toolchain) on this machine.
 - .NET 10 runtime (`/usr/local/share/dotnet`).
 - Homebrew `xcodegen`, `zstd`, `spirv-cross`, `glslang`.
-- The nxnative checkout at `~/nxnative`, pinned to `1963fab7eeafa46ab618868549b2dd0d5b8bae7d`, with its Python venv containing `lz4`, `capstone`, `fontTools`, `backports.zstd` and the other engine dependencies.
+- The nxnative checkout at `~/nxnative`, pinned to `1963fab7eeafa46ab618868549b2dd0d5b8bae7d`, with a Python 3.14 venv (3.12 or newer is required) containing `lz4`, `capstone` and `fontTools`; Python 3.14 uses the standard-library zstd.
 
 ## Build and run
 

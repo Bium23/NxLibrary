@@ -55,6 +55,12 @@ public final class NXNativeEnvironment {
             ?? CommandResult(status: -1, stdout: "", stderr: "failed")
     }
 
+    private static func pythonAtLeast312(_ version: String) -> Bool {
+        let parts = version.split(separator: ".").compactMap { Int($0) }
+        guard parts.count >= 2 else { return false }
+        return parts[0] > 3 || (parts[0] == 3 && parts[1] >= 12)
+    }
+
     public func inspect() -> EnvironmentStatus {
         var issues: [String] = []
         let fm = FileManager.default
@@ -66,8 +72,13 @@ public final class NXNativeEnvironment {
         if !fm.fileExists(atPath: pythonURL.path) {
             issues.append("venv Python not found at \(pythonURL.path)")
         } else {
-            let probe = run(pythonURL.path, ["-c", "import lz4.block, capstone, fontTools, backports.zstd"])
-            if probe.status != 0 { issues.append("venv is missing lz4/capstone/fontTools/backports.zstd") }
+            let version = run(pythonURL.path, ["-c", "import sys; print(f'{sys.version_info[0]}.{sys.version_info[1]}')"])
+                .stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !version.isEmpty, !Self.pythonAtLeast312(version) {
+                issues.append("venv Python \(version) is too old; nxnative 1963fab needs Python 3.12+ for RomFS image builds (3.14 recommended)")
+            }
+            let probe = run(pythonURL.path, ["-c", "import lz4.block, capstone, fontTools\nimport sys\ntry:\n import compression.zstd\nexcept ImportError:\n import backports.zstd"])
+            if probe.status != 0 { issues.append("venv is missing lz4/capstone/fontTools or zstd (stdlib on Python 3.14, backports.zstd before)") }
         }
 
         let xcode = run("/usr/bin/xcodebuild", ["-version"])
