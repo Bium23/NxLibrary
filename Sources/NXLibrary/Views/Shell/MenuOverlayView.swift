@@ -12,9 +12,7 @@ public struct MenuOverlayView: View {
 
     public var body: some View {
         ZStack {
-            Rectangle()
-                .fill(.black.opacity(0.55))
-                .background(.ultraThinMaterial)
+            Color.black.opacity(0.55)
                 .ignoresSafeArea()
                 .onTapGesture { router.closeMenu() }
 
