@@ -17,19 +17,19 @@ public struct MainView: View {
 
                 ZStack {
                     Circle()
-                        .fill(NXTheme.primary.opacity(0.20))
+                        .fill(NXTheme.primary.opacity(0.10))
                         .frame(width: 560, height: 560)
                         .blur(radius: 130)
                         .position(x: 60, y: -40)
 
                     Circle()
-                        .fill(NXTheme.secondary.opacity(0.10))
+                        .fill(NXTheme.secondary.opacity(0.08))
                         .frame(width: 520, height: 520)
                         .blur(radius: 140)
                         .position(x: geo.size.width - 40, y: geo.size.height * 0.12)
 
                     Circle()
-                        .fill(NXTheme.ambientIndigo.opacity(0.12))
+                        .fill(NXTheme.ambientIndigo.opacity(0.06))
                         .frame(width: 620, height: 620)
                         .blur(radius: 160)
                         .position(x: geo.size.width * 0.52, y: geo.size.height + 120)
@@ -37,7 +37,7 @@ public struct MainView: View {
                 .ignoresSafeArea()
 
                 LinearGradient(
-                    colors: [Color.clear, NXTheme.canvasObsidian.opacity(0.55)],
+                    colors: [Color.clear, NXTheme.canvasObsidian.opacity(0.35)],
                     startPoint: .center,
                     endPoint: .bottom
                 )

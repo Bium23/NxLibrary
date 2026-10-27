@@ -16,18 +16,26 @@ public struct ConsoleGameCarouselView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .top, spacing: 24) {
                     ForEach(Array(games.enumerated()), id: \.element.id) { index, game in
-                        gameTile(
-                            game: game,
-                            isFocused: viewModel.focusedGameIndex == index,
-                            isLaunching: viewModel.launchingGameId == game.id
-                        )
-                        .id(index)
-                        .onTapGesture {
+                        Button {
                             SoundEffectService.shared.play(.focus)
                             withAnimation(.spring(response: 0.28, dampingFraction: 0.75)) {
                                 viewModel.focusedGameIndex = index
                                 viewModel.isFocusOnDeck = false
                             }
+                        } label: {
+                            gameTile(
+                                game: game,
+                                isFocused: viewModel.focusedGameIndex == index,
+                                isLaunching: viewModel.launchingGameId == game.id
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .nxNoFocusRing()
+                        .id(index)
+                        .accessibilityLabel(game.name)
+                        .accessibilityHint("Select this game, then press A or Return to play.")
+                        .accessibilityAction(named: "Play") {
+                            viewModel.launchGame(game)
                         }
                     }
                 }
@@ -58,13 +66,13 @@ public struct ConsoleGameCarouselView: View {
                             .strokeBorder(
                                 isFocused
                                     ? AnyShapeStyle(NXTheme.selectedBorder)
-                                    : AnyShapeStyle(Color.white.opacity(0.10)),
+                                    : AnyShapeStyle(NXTheme.borderSubtle.opacity(0.75)),
                                 lineWidth: isFocused ? 2.5 : 1
                             )
                     )
                     .shadow(
                         color: isFocused
-                            ? NXTheme.secondary.opacity(0.42)
+                            ? NXTheme.secondary.opacity(0.30)
                             : NXTheme.cardShadow,
                         radius: isFocused ? 26 : 10,
                         x: 0,
@@ -72,7 +80,7 @@ public struct ConsoleGameCarouselView: View {
                     )
                     .shadow(
                         color: isFocused
-                            ? NXTheme.primary.opacity(0.22)
+                            ? NXTheme.primary.opacity(0.16)
                             : Color.clear,
                         radius: isFocused ? 44 : 0
                     )
@@ -114,13 +122,6 @@ public struct ConsoleGameCarouselView: View {
                 .frame(width: 250, height: 32, alignment: .top)
         }
         .contentShape(Rectangle())
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(game.name)
-        .accessibilityHint("Select this game, then press A or Return to play.")
-        .accessibilityAddTraits(.isButton)
-        .accessibilityAction(named: "Play") {
-            viewModel.launchGame(game)
-        }
     }
 
     private func tileBadge(for game: PortedGame) -> (text: String, color: Color)? {
@@ -129,7 +130,7 @@ public struct ConsoleGameCarouselView: View {
         }
         switch game.status {
         case .builtSourcesMissing:
-            return ("Sources missing", NXTheme.warning)
+            return nil
         case .appMissing:
             return ("App missing", NXTheme.error)
         case .failed:

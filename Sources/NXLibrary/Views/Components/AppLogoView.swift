@@ -60,7 +60,7 @@ public struct AppLogoView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 7.5, style: .continuous))
                         .overlay(
                             RoundedRectangle(cornerRadius: 7.5, style: .continuous)
-                                .strokeBorder(isHovered ? Color.cyan.opacity(0.6) : Color.white.opacity(0.15), lineWidth: 1)
+                                .strokeBorder(isHovered ? NXTheme.secondary.opacity(0.7) : NXTheme.borderSubtle, lineWidth: 1)
                         )
                         .shadow(color: NXTheme.primary.opacity(isHovered ? 0.5 : 0.25), radius: isHovered ? 8 : 4, x: 0, y: 2)
                 } else {

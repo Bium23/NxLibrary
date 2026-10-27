@@ -41,7 +41,7 @@ public struct SelectableGameCard: View {
                                 .font(.system(size: 10, weight: .bold))
                                 .padding(.horizontal, 7)
                                 .padding(.vertical, 2)
-                                .background(NXTheme.primary.opacity(0.35))
+                                .background(NXTheme.primary)
                                 .foregroundColor(.white)
                                 .clipShape(Capsule())
                         } else {
@@ -60,7 +60,7 @@ public struct SelectableGameCard: View {
                                 .font(.system(size: 10, weight: .bold))
                                 .padding(.horizontal, 7)
                                 .padding(.vertical, 2)
-                                .background(NXTheme.secondary.opacity(0.35))
+                                .background(NXTheme.secondary)
                                 .foregroundColor(.white)
                                 .clipShape(Capsule())
                         }
@@ -71,7 +71,7 @@ public struct SelectableGameCard: View {
                                 .font(.system(size: 10, weight: .bold))
                                 .padding(.horizontal, 7)
                                 .padding(.vertical, 2)
-                                .background(NXTheme.tertiary.opacity(0.4))
+                                .background(NXTheme.tertiary)
                                 .foregroundColor(.white)
                                 .clipShape(Capsule())
                         }

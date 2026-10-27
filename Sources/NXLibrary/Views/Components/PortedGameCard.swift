@@ -24,7 +24,7 @@ public struct PortedGameCard: View {
                         .font(.system(size: 10, weight: .bold, design: .rounded))
                         .padding(.horizontal, 7)
                         .padding(.vertical, 3)
-                        .background(game.platform == .macApp ? NXTheme.primary.opacity(0.35) : NXTheme.secondary.opacity(0.35))
+                        .background(game.platform == .macApp ? NXTheme.primary : NXTheme.secondary)
                         .foregroundColor(.white)
                         .clipShape(Capsule())
                     
@@ -36,15 +36,15 @@ public struct PortedGameCard: View {
                             .font(.system(size: 9, weight: .bold, design: .monospaced))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(config.enable60FPS ? Color(red: 0.13, green: 0.77, blue: 0.37).opacity(0.35) : NXTheme.textMuted.opacity(0.3))
-                            .foregroundColor(.white)
+                            .background(config.enable60FPS ? NXTheme.tertiary : NXTheme.textMuted.opacity(0.16))
+                            .foregroundColor(config.enable60FPS ? .white : NXTheme.textSecondary)
                             .clipShape(Capsule())
                         
                         Text(config.isDockedMode ? "Docked" : "Handheld")
                             .font(.system(size: 9, weight: .bold, design: .monospaced))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(NXTheme.primary.opacity(0.35))
+                            .background(NXTheme.primary)
                             .foregroundColor(.white)
                             .clipShape(Capsule())
                         
@@ -53,7 +53,7 @@ public struct PortedGameCard: View {
                                 .font(.system(size: 9, weight: .bold, design: .monospaced))
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(NXTheme.secondary.opacity(0.35))
+                                .background(NXTheme.secondary)
                                 .foregroundColor(.white)
                                 .clipShape(Capsule())
                         }

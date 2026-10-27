@@ -115,7 +115,7 @@ public struct BuildView: View {
                     .fill(Color(red: 0.13, green: 0.77, blue: 0.37).opacity(0.7))
             } else {
                 Rectangle()
-                    .fill(Color.white.opacity(0.12))
+                    .fill(NXTheme.borderSubtle.opacity(0.5))
             }
         }
         .frame(height: 2)

@@ -71,9 +71,9 @@ public struct SystemAppearanceCard: View {
                                         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                                .strokeBorder(isSelected ? Color.cyan : Color.white.opacity(0.15), lineWidth: isSelected ? 2 : 1)
+                                                .strokeBorder(isSelected ? NXTheme.secondary : NXTheme.borderSubtle, lineWidth: isSelected ? 2 : 1)
                                         )
-                                        .shadow(color: isSelected ? Color.cyan.opacity(0.4) : Color.black.opacity(0.2), radius: isSelected ? 8 : 3, x: 0, y: 2)
+                                        .shadow(color: isSelected ? NXTheme.secondary.opacity(0.3) : NXTheme.cardShadow, radius: isSelected ? 8 : 3, x: 0, y: 2)
                                     
                                     if isSelected {
                                         VStack {
@@ -82,7 +82,7 @@ public struct SystemAppearanceCard: View {
                                                 Image(systemName: "checkmark.circle.fill")
                                                     .font(.system(size: 14, weight: .bold))
                                                     .foregroundColor(.white)
-                                                    .background(Circle().fill(Color.cyan))
+                                                    .background(Circle().fill(NXTheme.secondary))
                                                     .offset(x: 4, y: -4)
                                             }
                                             Spacer()
@@ -93,7 +93,7 @@ public struct SystemAppearanceCard: View {
                                 
                                 Text(mode.rawValue)
                                     .font(.system(size: 11, weight: isSelected ? .bold : .medium, design: .rounded))
-                                    .foregroundColor(isSelected ? .white : NXTheme.textSecondary)
+                                    .foregroundColor(isSelected ? NXTheme.primary : NXTheme.textSecondary)
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
@@ -104,7 +104,7 @@ public struct SystemAppearanceCard: View {
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .strokeBorder(isSelected ? Color.cyan.opacity(0.5) : Color.white.opacity(0.15), lineWidth: 0.8)
+                                    .strokeBorder(isSelected ? NXTheme.secondary.opacity(0.5) : NXTheme.borderSubtle, lineWidth: 0.8)
                             )
                         }
                         .buttonStyle(.plain)

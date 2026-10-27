@@ -6,6 +6,8 @@ public struct GameDetailDeckView: View {
     public let game: PortedGame
     @ObservedObject public var viewModel: AppViewModel
     public let onDelete: (PortedGame) -> Void
+    @State private var showRemoveSourcesConfirm = false
+    @State private var removeSourcesMessage = ""
     
     public init(game: PortedGame, viewModel: AppViewModel, onDelete: @escaping (PortedGame) -> Void) {
         self.game = game
@@ -45,7 +47,7 @@ public struct GameDetailDeckView: View {
                                 .font(.system(size: 10, weight: .bold, design: .rounded))
                                 .padding(.horizontal, 7)
                                 .padding(.vertical, 3)
-                                .background(NXTheme.primary.opacity(0.35))
+                                .background(NXTheme.primary)
                                 .foregroundColor(.white)
                                 .clipShape(Capsule())
 
@@ -84,7 +86,7 @@ public struct GameDetailDeckView: View {
                     HStack(spacing: 8) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(NXTheme.warning)
-                        Text("Play works. Rebuilding is disabled until the original base, update and DLC files are attached.")
+                        Text("Play works. Sources are detached; attach the original base, update and DLC files again to rebuild.")
                             .font(.system(size: 11))
                             .foregroundColor(NXTheme.textSecondary)
                         Spacer()
@@ -169,7 +171,7 @@ public struct GameDetailDeckView: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "hammer.fill")
                                 Text(game.sources.isEmpty
-                                     ? "Rebuild — sources missing"
+                                     ? "Rebuild — sources detached"
                                      : (game.status == .notBuilt ? "Build App" : "Rebuild App"))
                             }
                             .font(.system(size: 11, weight: .semibold, design: .rounded))
@@ -262,6 +264,27 @@ public struct GameDetailDeckView: View {
                             }
                             .buttonStyle(NXSecondaryButtonStyle())
                             .controlSize(.regular)
+                        }
+
+                        if !game.sources.isEmpty || game.workspacePath != nil {
+                            Button {
+                                SoundEffectService.shared.play(.click)
+                                removeSourcesMessage = viewModel.sourceRemovalSummary(for: game)
+                                showRemoveSourcesConfirm = true
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "externaldrive.badge.minus")
+                                    Text(game.sources.isEmpty
+                                         ? "Remove Build Cache..."
+                                         : "Remove Sources & Build Cache...")
+                                }
+                                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(NXDangerButtonStyle())
+                            .controlSize(.regular)
+                            .disabled(viewModel.isBuilding)
+                            .help("Delete the original source files and this game's build cache. The installed app, saves and logs stay.")
                         }
                         
                         // Storage Size Info Card
@@ -359,6 +382,19 @@ public struct GameDetailDeckView: View {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .strokeBorder(isDeckFocused ? NXTheme.primary.opacity(0.7) : Color.clear, lineWidth: 1.5)
         )
+        .confirmationDialog(
+            game.sources.isEmpty ? "Remove build cache?" : "Remove sources?",
+            isPresented: $showRemoveSourcesConfirm,
+            titleVisibility: .visible
+        ) {
+            Button(game.sources.isEmpty ? "Remove Build Cache" : "Remove Sources",
+                   role: .destructive) {
+                viewModel.removeSources(for: game)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(removeSourcesMessage)
+        }
     }
     
     private var headerBackdrop: some View {
@@ -368,12 +404,12 @@ public struct GameDetailDeckView: View {
                 .resizable()
                 .scaledToFill()
                 .blur(radius: 30)
-                .opacity(0.34)
+                .opacity(0.30)
             LinearGradient(
                 colors: [
-                    NXTheme.primary.opacity(0.08),
-                    NXTheme.secondary.opacity(0.05),
-                    NXTheme.canvasObsidian.opacity(0.58)
+                    Color.white.opacity(0.28),
+                    Color.white.opacity(0.55),
+                    NXTheme.glassSurface.opacity(0.88)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -388,7 +424,7 @@ public struct GameDetailDeckView: View {
             case .built:
                 pill("Built", color: NXTheme.success)
             case .builtSourcesMissing:
-                pill("Sources missing", color: NXTheme.warning)
+                pill("Sources detached", color: NXTheme.textMuted)
             case .appMissing:
                 pill("App missing", color: NXTheme.error)
             case .notBuilt:
@@ -456,8 +492,8 @@ public struct GameDetailDeckView: View {
             .font(.system(size: 9, weight: .bold, design: .monospaced))
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(active ? NXTheme.primary.opacity(0.35) : NXTheme.textMuted.opacity(0.3))
-            .foregroundColor(.white)
+            .background(active ? NXTheme.primary : NXTheme.textMuted.opacity(0.14))
+            .foregroundColor(active ? .white : NXTheme.textSecondary)
             .clipShape(Capsule())
     }
 }

@@ -48,7 +48,7 @@ public struct FileCard: View {
                         .font(.system(size: 9, weight: .bold, design: .rounded))
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(colorForType(item.type).opacity(0.28))
+                        .background(colorForType(item.type))
                         .foregroundColor(.white)
                         .clipShape(Capsule())
 
@@ -99,7 +99,7 @@ public struct FileCard: View {
         case .base: return NXTheme.primary
         case .update: return NXTheme.secondary
         case .dlc: return NXTheme.tertiary
-        case .unknown: return NXTheme.textMuted
+        case .unknown: return NXTheme.textSecondary
         }
     }
 }

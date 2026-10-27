@@ -1046,6 +1046,165 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         NSWorkspace.shared.activateFileViewerSelecting([url])
     }
 
+    /// A human-readable summary for the destructive source-removal confirmation.
+    public func sourceRemovalSummary(for game: PortedGame) -> String {
+        let fm = FileManager.default
+        let existingSources = game.sources.filter {
+            var isDir: ObjCBool = false
+            return fm.fileExists(atPath: $0.url.path, isDirectory: &isDir) && !isDir.boolValue
+        }
+        let sourceBytes = existingSources.reduce(Int64(0)) { $0 + $1.sizeBytes }
+        let workspaceRoot = core.appendingPathComponent("workspaces").standardizedFileURL.path
+        let workspaceBytes: Int64
+        if let path = game.workspacePath {
+            let workspace = URL(fileURLWithPath: path).standardizedFileURL
+            workspaceBytes = workspace.path.hasPrefix(workspaceRoot + "/")
+                ? directorySize(workspace) : 0
+        } else {
+            workspaceBytes = 0
+        }
+
+        var parts: [String] = []
+        if !existingSources.isEmpty {
+            parts.append("\(existingSources.count) original source file\(existingSources.count == 1 ? "" : "s") (\(Self.formatBytes(sourceBytes)))")
+        }
+        if workspaceBytes > 0 {
+            parts.append("the build cache (\(Self.formatBytes(workspaceBytes)))")
+        }
+        let target = parts.isEmpty ? "the remaining build data" : parts.joined(separator: " and ")
+        return "This permanently deletes \(target). The installed app, saves and logs stay. Rebuilds will be disabled until you attach the sources again. This cannot be undone."
+    }
+
+    public func removeSources(for game: PortedGame) {
+        guard !isBuilding else {
+            alertMessage = "Wait for the current build to finish before removing sources."
+            return
+        }
+        let fm = FileManager.default
+        guard var library = try? libraryStore.load(),
+              let index = library.games.firstIndex(where: { $0.id == game.id }) else {
+            alertMessage = "Could not load the library entry for \(game.name)."
+            return
+        }
+
+        let appPath = game.url.standardizedFileURL.path
+        let otherGames = library.games.filter { $0.id != game.id }
+        var removedCount = 0
+        var removedBytes: Int64 = 0
+        var failures: [String] = []
+
+        for source in game.sources {
+            let url = source.url.standardizedFileURL
+            var isDir: ObjCBool = false
+            guard fm.fileExists(atPath: url.path, isDirectory: &isDir) else { continue }
+            if isDir.boolValue {
+                failures.append("\(url.lastPathComponent) is a folder")
+                continue
+            }
+            if url.path.hasPrefix(appPath + "/") {
+                failures.append("\(url.lastPathComponent) is inside the app")
+                continue
+            }
+            let shared = otherGames.contains { other in
+                other.sources.contains { $0.url.standardizedFileURL == url }
+            }
+            if shared {
+                failures.append("\(url.lastPathComponent) is also used by another library entry")
+                continue
+            }
+            do {
+                let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize)
+                    .map(Int64.init) ?? source.sizeBytes
+                try fm.removeItem(at: url)
+                removedCount += 1
+                removedBytes += size
+            } catch {
+                failures.append("\(url.lastPathComponent): \(error.localizedDescription)")
+            }
+        }
+
+        var removedWorkspace = false
+        let workspaceRoot = core.appendingPathComponent("workspaces").standardizedFileURL.path
+        if let path = game.workspacePath {
+            let workspace = URL(fileURLWithPath: path).standardizedFileURL
+            if workspace.path.hasPrefix(workspaceRoot + "/"),
+               fm.fileExists(atPath: workspace.path) {
+                do {
+                    try fm.removeItem(at: workspace)
+                    removedWorkspace = true
+                } catch {
+                    failures.append("build cache: \(error.localizedDescription)")
+                }
+            }
+        }
+
+        var updated = library.games[index]
+        updated.sources = updated.sources.filter { source in
+            var isDir: ObjCBool = false
+            return fm.fileExists(atPath: source.url.path, isDirectory: &isDir)
+                && !isDir.boolValue
+        }
+        if removedWorkspace || updated.workspacePath.map({
+            !fm.fileExists(atPath: URL(fileURLWithPath: $0).path)
+        }) == true {
+            updated.workspacePath = nil
+            updated.buildCachePath = nil
+        }
+        if updated.sources.isEmpty {
+            updated.status = .builtSourcesMissing
+        }
+        library.games[index] = updated
+
+        do {
+            try libraryStore.save(library)
+        } catch {
+            alertMessage = "The sources were removed, but the library could not be saved: \(error.localizedDescription)"
+            logs.append(LogEntry(level: .error, message: alertMessage!))
+            return
+        }
+        libraryGames = library.games.sorted {
+            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        }
+
+        let removed = "Removed \(removedCount) source file\(removedCount == 1 ? "" : "s") (\(Self.formatBytes(removedBytes)))\(removedWorkspace ? " and the build cache" : "")."
+        if failures.isEmpty {
+            logs.append(LogEntry(level: .success,
+                                 message: "\(removed) The installed app and saves were kept."))
+            alertMessage = "\(removed) The installed app and saves were kept. Rebuilds stay disabled until you attach the sources again."
+        } else {
+            let detail = failures.joined(separator: "; ")
+            logs.append(LogEntry(level: .warning,
+                                 message: "\(removed) Some items were kept: \(detail)"))
+            alertMessage = "\(removed) Some items were kept: \(detail)"
+        }
+    }
+
+    private func directorySize(_ url: URL) -> Int64 {
+        let fm = FileManager.default
+        var isDir: ObjCBool = false
+        guard fm.fileExists(atPath: url.path, isDirectory: &isDir) else { return 0 }
+        if !isDir.boolValue {
+            return (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize)
+                .map(Int64.init) ?? 0
+        }
+        guard let enumerator = fm.enumerator(
+            at: url,
+            includingPropertiesForKeys: [.fileSizeKey],
+            options: [.skipsHiddenFiles]
+        ) else { return 0 }
+        var total: Int64 = 0
+        for case let fileURL as URL in enumerator {
+            if let size = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize {
+                total += Int64(size)
+            }
+        }
+        return total
+    }
+
+    private static func formatBytes(_ bytes: Int64) -> String {
+        ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
+    }
+
     public func deletePortedGame(_ game: PortedGame) {
         do {
             let deleteBundle = game.canDeleteAppBundle()

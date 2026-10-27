@@ -1,43 +1,43 @@
 import SwiftUI
 
 public enum NXTheme {
-    // MARK: - Coral / Midnight Palette
-    public static let primary = Color(red: 1.00, green: 0.36, blue: 0.41)   // coral
-    public static let secondary = Color(red: 0.36, green: 0.80, blue: 0.98) // cyan selection
-    public static let tertiary = Color(red: 0.23, green: 0.80, blue: 0.48)  // green
-    public static let canvasObsidian = Color(red: 0.035, green: 0.045, blue: 0.075)
-    public static let canvasLift = Color(red: 0.075, green: 0.095, blue: 0.145)
-    public static let ambientIndigo = Color(red: 0.38, green: 0.30, blue: 0.95)
-    public static let ambientTeal = Color(red: 0.12, green: 0.55, blue: 0.62)
+    // MARK: - Coral / Switch-inspired Light Palette
+    public static let primary = Color(red: 0.878, green: 0.204, blue: 0.259)   // #E03442
+    public static let secondary = Color(red: 0.055, green: 0.498, blue: 0.659) // #0E7FA8
+    public static let tertiary = Color(red: 0.122, green: 0.620, blue: 0.360)  // #1F9E5C
+    public static let canvasObsidian = Color(red: 0.949, green: 0.957, blue: 0.969)
+    public static let canvasLift = Color(red: 0.914, green: 0.929, blue: 0.949)
+    public static let ambientIndigo = Color(red: 0.45, green: 0.55, blue: 0.95)
+    public static let ambientTeal = Color(red: 0.20, green: 0.65, blue: 0.70)
 
-    // MARK: - Tinted Surfaces
-    public static let glassSurface = Color(red: 0.090, green: 0.112, blue: 0.165)
-    public static let glassSurfaceElevated = Color(red: 0.125, green: 0.152, blue: 0.215)
-    public static let glassSurfaceActive = Color(red: 0.175, green: 0.210, blue: 0.290)
-    public static let borderSubtle = Color(red: 0.230, green: 0.270, blue: 0.360)
-    public static let surfaceFill = Color(red: 0.090, green: 0.112, blue: 0.165).opacity(0.92)
+    // MARK: - Light Surfaces
+    public static let glassSurface = Color.white
+    public static let glassSurfaceElevated = Color(red: 0.980, green: 0.984, blue: 0.992)
+    public static let glassSurfaceActive = Color(red: 0.914, green: 0.929, blue: 0.953)
+    public static let borderSubtle = Color(red: 0.827, green: 0.851, blue: 0.886)
+    public static let surfaceFill = Color(red: 0.992, green: 0.994, blue: 0.998).opacity(0.96)
 
     // MARK: - Typography Colors
-    public static let textPrimary = Color(red: 0.965, green: 0.955, blue: 0.935)
-    public static let textSecondary = Color(red: 0.680, green: 0.730, blue: 0.810)
-    public static let textMuted = Color(red: 0.460, green: 0.510, blue: 0.610)
+    public static let textPrimary = Color(red: 0.118, green: 0.137, blue: 0.169)
+    public static let textSecondary = Color(red: 0.345, green: 0.384, blue: 0.443)
+    public static let textMuted = Color(red: 0.529, green: 0.565, blue: 0.624)
 
     // MARK: - Semantic Colors
-    public static let success = Color(red: 0.25, green: 0.82, blue: 0.52)
-    public static let warning = Color(red: 1.00, green: 0.70, blue: 0.20)
-    public static let error = Color(red: 1.00, green: 0.32, blue: 0.32)
+    public static let success = Color(red: 0.122, green: 0.620, blue: 0.360)
+    public static let warning = Color(red: 0.760, green: 0.435, blue: 0.000)
+    public static let error = Color(red: 0.851, green: 0.204, blue: 0.220)
 
     // MARK: - Gradients
     public static let primaryGradient = LinearGradient(
-        colors: [primary, Color(red: 0.86, green: 0.23, blue: 0.35)],
+        colors: [primary, Color(red: 0.78, green: 0.16, blue: 0.22)],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
     public static let surfaceGradient = LinearGradient(
         colors: [
-            Color(red: 0.160, green: 0.195, blue: 0.270),
-            Color(red: 0.075, green: 0.095, blue: 0.155)
+            Color.white,
+            Color(red: 0.965, green: 0.973, blue: 0.984)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -45,14 +45,14 @@ public enum NXTheme {
 
     public static let barGradient = LinearGradient(
         colors: [
-            Color(red: 0.082, green: 0.102, blue: 0.153).opacity(0.86),
-            Color(red: 0.043, green: 0.055, blue: 0.086).opacity(0.94)
+            Color(red: 0.992, green: 0.994, blue: 1.000).opacity(0.94),
+            Color(red: 0.949, green: 0.957, blue: 0.973).opacity(0.96)
         ],
         startPoint: .top,
         endPoint: .bottom
     )
 
-    public static let cardShadow = Color(red: 0.005, green: 0.010, blue: 0.030).opacity(0.55)
+    public static let cardShadow = Color(red: 0.12, green: 0.16, blue: 0.25).opacity(0.12)
 
     public static let logoGradient = LinearGradient(
         colors: [primary, warning],
@@ -62,25 +62,25 @@ public enum NXTheme {
 
     public static let specularRim = LinearGradient(
         colors: [
-            Color.white.opacity(0.18),
-            Color.white.opacity(0.06),
-            Color.white.opacity(0.02)
+            Color.white.opacity(0.95),
+            Color(red: 0.78, green: 0.81, blue: 0.86).opacity(0.80),
+            Color.black.opacity(0.03)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
     public static let selectedBorder = LinearGradient(
-        colors: [secondary, primary],
+        colors: [primary, secondary],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
     public static let specularRimHover = LinearGradient(
         colors: [
-            secondary.opacity(0.6),
-            primary.opacity(0.3),
-            Color.white.opacity(0.05)
+            secondary.opacity(0.50),
+            primary.opacity(0.25),
+            Color.white.opacity(0.40)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -176,6 +176,28 @@ public struct NXAccentButtonStyle: ButtonStyle {
                     .strokeBorder(Color.white.opacity(0.2), lineWidth: 0.8)
             )
             .shadow(color: NXTheme.tertiary.opacity(0.4), radius: 6, x: 0, y: 2)
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+            .nxNoFocusRing()
+    }
+}
+
+public struct NXDangerButtonStyle: ButtonStyle {
+    public init() {}
+    public func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 12, weight: .semibold, design: .rounded))
+            .foregroundColor(NXTheme.error)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(NXTheme.error.opacity(configuration.isPressed ? 0.16 : 0.08))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .strokeBorder(NXTheme.error.opacity(0.30), lineWidth: 0.8)
+            )
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
             .nxNoFocusRing()

@@ -63,7 +63,7 @@ public struct SelectedGameSummaryCard: View {
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 1)
-                                    .background(NXTheme.secondary.opacity(0.35))
+                                    .background(NXTheme.secondary)
                                     .clipShape(Capsule())
                             }
                             if selectedDLCCount > 0 {
@@ -72,7 +72,7 @@ public struct SelectedGameSummaryCard: View {
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 1)
-                                    .background(NXTheme.tertiary.opacity(0.35))
+                                    .background(NXTheme.tertiary)
                                     .clipShape(Capsule())
                             }
                         }

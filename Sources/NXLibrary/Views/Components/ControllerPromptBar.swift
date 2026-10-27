@@ -26,7 +26,7 @@ public struct ControllerPromptBar: View {
             )
             .overlay(
                 Capsule()
-                    .strokeBorder(controllerService.isGamepadConnected ? NXTheme.secondary.opacity(0.4) : Color.white.opacity(0.08), lineWidth: 0.8)
+                    .strokeBorder(controllerService.isGamepadConnected ? NXTheme.secondary.opacity(0.4) : NXTheme.borderSubtle.opacity(0.8), lineWidth: 0.8)
             )
             
             Spacer()
@@ -75,8 +75,8 @@ public struct ControllerPromptBar: View {
         .background(
             LinearGradient(
                 colors: [
-                    NXTheme.canvasObsidian.opacity(0.10),
-                    NXTheme.canvasObsidian.opacity(0.78)
+                    NXTheme.glassSurface.opacity(0.0),
+                    NXTheme.glassSurface.opacity(0.78)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
