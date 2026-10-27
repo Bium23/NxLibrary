@@ -61,6 +61,7 @@ public struct SystemView: View {
         case .engine:
             VStack(spacing: 12) {
                 SystemRepoCard(viewModel: viewModel)
+                UpstreamCard(viewModel: viewModel)
                 CompatibilityCard(viewModel: viewModel)
                 SystemToolsCard(viewModel: viewModel)
             }

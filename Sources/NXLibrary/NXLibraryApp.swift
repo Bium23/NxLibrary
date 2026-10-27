@@ -2,6 +2,7 @@ import SwiftUI
 
 extension Notification.Name {
     static let nxLibraryPlayFocused = Notification.Name("NXLibraryPlayFocused")
+    static let nxLibraryCheckUpstream = Notification.Name("NXLibraryCheckUpstream")
 }
 
 @main
@@ -20,6 +21,12 @@ struct NXLibraryApp: App {
                     NotificationCenter.default.post(name: .nxLibraryPlayFocused, object: nil)
                 }
                 .keyboardShortcut(.return, modifiers: [.command])
+            }
+            CommandMenu("Engine") {
+                Button("Check Upstream Changelog") {
+                    NotificationCenter.default.post(name: .nxLibraryCheckUpstream, object: nil)
+                }
+                .keyboardShortcut("u", modifiers: [.command])
             }
         }
     }

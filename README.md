@@ -15,6 +15,7 @@ A personal, native macOS front-end for [nxnative](https://github.com/seedds/nxna
 - Stores the library in `~/Library/Application Support/NXLibrary/library.json` with a backup copy.
 - Keeps runtime settings per game (FPS target, docked mode, render scale, MetalFX spatial upscale, Metal HUD, language, rumble, fullscreen) and writes nxnative's `env.txt` before launch.
 - Shows storage usage and can delete only caches and logs; apps and sources require explicit action.
+- Checks the upstream `seedds/nxnative` commit history on demand in **Settings → Engine**. The check is read-only: it contacts the GitHub API, shows new commits and a compare link, never fetches, merges, checks out or re-pins the engine. The engine gate keeps blocking builds until an update is manually re-pinned and re-tested.
 - Includes synthesized UI tones, controller prompts, and keyboard shortcuts. The theme and symbols are original; no Nintendo assets are included.
 
 ## Requirements
@@ -88,5 +89,5 @@ No games, keys, Nintendo logos, fonts, sounds, or other Nintendo assets are incl
 
 - The Breath of the Wild sources were removed from this Mac. Its imported app remains playable, but a BotW rebuild is blocked until the XCI base, update 1.9.0 and DLC are restored and attached.
 - The installed Metal compiler is older than the engine's certified version, so new builds require the explicit untested override.
-- No DMG, no iOS/IPA output, no online compatibility database and no automatic engine updates.
+- No DMG, no iOS/IPA output, no online compatibility database and no automatic engine updates. The upstream changelog check is manual and read-only; only the commit hash is sent to `api.github.com`.
 - The engine checkout is never modified; nxnative upgrades are manual and re-pin the engine commit in `AppViewModel.pinnedEngineCommit`.

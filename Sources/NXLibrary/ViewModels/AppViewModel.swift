@@ -204,6 +204,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     @Published public var compatibilityReport: CompatibilityReport? = nil
     @Published public var keySummary: KeySummary? = nil
     @Published public var currentEngineCommit: String? = nil
+    @Published public var upstreamState: UpstreamCheckState = .idle
     @Published public var storageUsage: StorageUsage? = nil
     @Published public var isCalculatingStorage: Bool = false
     @Published public var showSetupSheet: Bool = false
@@ -284,6 +285,8 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     private lazy var keyStore = KeyStore(directory: core.appendingPathComponent("keys"))
     private let importService = ImportService()
     private let launchService = LaunchService()
+    private lazy var upstreamChecker = UpstreamChecker()
+    private let upstreamCacheKey = "NXLibrary_UpstreamStatus"
     private lazy var storageManager = StorageManager()
     private let sourceCatalog = SourceCatalog()
     private lazy var workspaceManager = WorkspaceManager(root: core.appendingPathComponent("workspaces"))
@@ -336,6 +339,10 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         }
         
         loadLibrary()
+        if let data = UserDefaults.standard.data(forKey: upstreamCacheKey),
+           let cached = try? JSONDecoder().decode(UpstreamStatus.self, from: data) {
+            self.upstreamState = .loaded(cached)
+        }
         updateDockIcon()
         
         NotificationService.shared.requestAuthorization()
@@ -479,6 +486,40 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                 }
             }
         }
+    }
+
+    public func checkUpstreamChangelog() {
+        if case .checking = upstreamState { return }
+        let base = currentEngineCommit ?? pinnedEngineCommit
+        upstreamState = .checking
+        let checker = upstreamChecker
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                let status = try await checker.check(from: base)
+                self.upstreamState = .loaded(status)
+                if let data = try? JSONEncoder().encode(status) {
+                    UserDefaults.standard.set(data, forKey: self.upstreamCacheKey)
+                }
+            } catch {
+                self.upstreamState = .failed(Self.upstreamErrorMessage(error))
+            }
+        }
+    }
+
+    public func openUpstreamCompare() {
+        guard case .loaded(let status) = upstreamState else { return }
+        NSWorkspace.shared.open(status.compareURL)
+    }
+
+    private static func upstreamErrorMessage(_ error: Error) -> String {
+        if let checkerError = error as? UpstreamCheckerError {
+            return checkerError.localizedDescription
+        }
+        if let urlError = error as? URLError {
+            return "Network error: \(urlError.localizedDescription)"
+        }
+        return error.localizedDescription
     }
 
     private func resolvedDeveloperDir() -> URL {

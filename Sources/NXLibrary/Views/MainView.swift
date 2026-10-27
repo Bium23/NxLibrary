@@ -42,6 +42,9 @@ public struct MainView: View {
                   let game = viewModel.currentFocusedGame else { return }
             viewModel.launchGame(game)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .nxLibraryCheckUpstream)) { _ in
+            viewModel.checkUpstreamChangelog()
+        }
         .alert("NX Library", isPresented: Binding(
             get: { viewModel.alertMessage != nil },
             set: { if !$0 { viewModel.alertMessage = nil } }
