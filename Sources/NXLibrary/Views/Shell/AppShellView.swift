@@ -16,7 +16,6 @@ public struct AppShellView: View {
         ZStack {
             SeleneTheme.canvas.ignoresSafeArea()
             content
-                .padding(.top, 28)
             if router.isMenuPresented {
                 MenuOverlayView(router: router) { action in
                     handleMenu(action)
@@ -65,14 +64,26 @@ public struct AppShellView: View {
     @ViewBuilder
     private var content: some View {
         switch router.route {
-        case .library, .detail:
+        case .library:
+            LibraryRootView(
+                viewModel: viewModel,
+                router: router,
+                settings: settings,
+                playSessions: playSessions,
+                artwork: artwork
+            )
+        case .detail:
             LibraryView(viewModel: viewModel)
+                .padding(.top, 28)
         case .settings:
             SystemView(viewModel: viewModel)
+                .padding(.top, 28)
         case .addGame:
             BuildView(viewModel: viewModel)
+                .padding(.top, 28)
         case .console:
             LogsView(viewModel: viewModel)
+                .padding(.top, 28)
         }
     }
 
@@ -85,7 +96,42 @@ public struct AppShellView: View {
         let observer = GameProcessObserver(store: playSessions)
         observer.start()
         processObserver = observer
-        viewModel.setupControllerNavigation()
+        viewModel.router = router
+        GameControllerService.shared.onAction = { [weak viewModel, weak router] action in
+            guard let viewModel, let router else { return }
+            if router.isMenuPresented {
+                switch action {
+                case .navigateLeft:
+                    router.moveMenu(by: -1)
+                case .navigateRight:
+                    router.moveMenu(by: 1)
+                case .confirm:
+                    router.closeMenu()
+                    switch router.menuSelection.selected {
+                    case .library: router.showLibrary()
+                    case .addGame: router.openAddGame()
+                    case .settings: router.openSettings(.general)
+                    case .console: router.openConsole()
+                    case .quit: NSApplication.shared.terminate(nil)
+                    }
+                case .cancel:
+                    router.closeMenu()
+                default:
+                    break
+                }
+                return
+            }
+            switch router.route {
+            case .library:
+                viewModel.handleLibraryGamepadAction(action)
+            default:
+                if action == .menu {
+                    router.isMenuPresented = true
+                } else if action == .cancel {
+                    router.back()
+                }
+            }
+        }
     }
 
     private func handleMenu(_ action: MenuAction) {

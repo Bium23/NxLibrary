@@ -264,6 +264,8 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     // MARK: - Navigation
     @Published public var selectedTab: Int = 0 // 0: Library, 1: Add Game, 2: Controls, 3: Settings, 4: Console
     @Published public var focusedGameIndex: Int = 0
+    @Published public var librarySelection = LibrarySelectionState()
+    public var router: AppRouter?
     @Published public var isFocusOnDeck: Bool = false
     @Published public var launchingGameId: UUID? = nil
 

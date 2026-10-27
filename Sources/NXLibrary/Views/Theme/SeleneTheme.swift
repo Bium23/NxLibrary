@@ -23,11 +23,11 @@ public enum SeleneTheme {
     public static let standard = Animation.easeOut(duration: 0.24)
 
     public static let heroLeftScrim = LinearGradient(
-        colors: [.black.opacity(0.92), .black.opacity(0.70), .black.opacity(0.20), .clear],
+        colors: [.black.opacity(0.95), .black.opacity(0.80), .black.opacity(0.30), .clear],
         startPoint: .leading, endPoint: .trailing
     )
     public static let heroBottomScrim = LinearGradient(
-        colors: [.black.opacity(0.99), .black.opacity(0.82), .black.opacity(0.18), .clear],
+        colors: [.black.opacity(0.99), .black.opacity(0.88), .black.opacity(0.22), .clear],
         startPoint: .bottom, endPoint: .top
     )
 }
