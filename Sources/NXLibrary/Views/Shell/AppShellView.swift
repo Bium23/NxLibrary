@@ -72,9 +72,20 @@ public struct AppShellView: View {
                 playSessions: playSessions,
                 artwork: artwork
             )
-        case .detail:
-            LibraryView(viewModel: viewModel)
-                .padding(.top, 28)
+        case .detail(let id):
+            if let game = viewModel.libraryGames.first(where: { $0.id == id }) {
+                GameDetailView(
+                    viewModel: viewModel,
+                    router: router,
+                    settings: settings,
+                    playSessions: playSessions,
+                    artwork: artwork,
+                    game: game
+                )
+            } else {
+                Color.clear
+                    .onAppear { router.showLibrary() }
+            }
         case .settings:
             SystemView(viewModel: viewModel)
                 .padding(.top, 28)
