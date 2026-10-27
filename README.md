@@ -13,7 +13,7 @@ A personal, native macOS front-end for [nxnative](https://github.com/seedds/nxna
 - Builds a Mac `.app` in `~/Applications` through the pinned nxnative CLI with JSON progress, stages, ETA, a live log and cancellation.
 - Replaces the previous app atomically; a failed or cancelled build leaves it untouched.
 - Stores the library in `~/Library/Application Support/NXLibrary/library.json` with a backup copy.
-- Keeps runtime settings per game (FPS target, docked mode, render scale, MetalFX spatial upscale, Metal HUD, language, rumble, fullscreen) and writes nxnative's `env.txt` before launch.
+- Keeps runtime settings per game (FPS target, docked mode, render scale, MetalFX spatial upscale, Metal HUD, language, rumble, fullscreen). It reads the app's `launcher.json` to show only the settings the game supports, writes nxnative's `env.txt`, and passes the chosen values in the launch environment as well.
 - Shows storage usage and can delete only caches and logs; apps and sources require explicit action. **Remove Sources & Build Cache** deletes the original NSP/XCI files and the app-owned workspace for one game, keeping the installed app, saves and logs; sources can be attached again later.
 - Checks the upstream `seedds/nxnative` commit history on demand in **Settings → Engine**. The check is read-only: it contacts the GitHub API, shows new commits and a compare link, never fetches, merges, checks out or re-pins the engine. The engine gate keeps blocking builds until an update is manually re-pinned and re-tested.
 - Includes synthesized UI tones, controller prompts, and keyboard shortcuts. The theme and symbols are original; no Nintendo assets are included.
@@ -24,7 +24,7 @@ A personal, native macOS front-end for [nxnative](https://github.com/seedds/nxna
 - Xcode 27.1 or newer (with the matching Metal toolchain) on this machine.
 - .NET 10 runtime (`/usr/local/share/dotnet`).
 - Homebrew `xcodegen`, `zstd`, `spirv-cross`, `glslang`.
-- The nxnative checkout at `~/nxnative`, pinned to `4f24ce6489a28aa84575e38711f3a318d7ab2a4f`, with its Python venv containing `lz4`, `capstone`, `fontTools`, `backports.zstd` and the other engine dependencies.
+- The nxnative checkout at `~/nxnative`, pinned to `1963fab7eeafa46ab618868549b2dd0d5b8bae7d`, with its Python venv containing `lz4`, `capstone`, `fontTools`, `backports.zstd` and the other engine dependencies.
 
 ## Build and run
 
@@ -64,7 +64,7 @@ An explicit **Build anyway with an untested toolchain** override exists. It requ
 
 ## Updating the engine
 
-Engine upgrades are manual and never follow `main`. Before changing the pin, review the commits and decide what belongs in the UI and what stays backend-only. The checklist and dated notes are in [`docs/upstream-upgrades/`](docs/upstream-upgrades/); the current pin is `4f24ce6489a28aa84575e38711f3a318d7ab2a4f`.
+Engine upgrades are manual and never follow `main`. Before changing the pin, review the commits and decide what belongs in the UI and what stays backend-only. The checklist and dated notes are in [`docs/upstream-upgrades/`](docs/upstream-upgrades/); the current pin is `1963fab7eeafa46ab618868549b2dd0d5b8bae7d`.
 
 ## Tests
 
@@ -93,6 +93,7 @@ No games, keys, Nintendo logos, fonts, sounds, or other Nintendo assets are incl
 
 - The Breath of the Wild sources were removed from this Mac. Its imported app remains playable, but a BotW rebuild is blocked until the XCI base, update 1.9.0 and DLC are restored and attached.
 - Super Mario Odyssey 1.4.1 builds with engine `4f24ce6` (27,984 shaders and 32,864 pipeline pairs) and reaches the controller screen; gameplay beyond that is not yet verified.
+- Native 1440p/4K rendering is not supported. The window or fullscreen display sets output resolution; render scale is 50–100% and only changes the internal 3D resolution. MetalFX improves the upscale. BotW supports the render-scale stub; the current SMO build does not, so its render-scale card is hidden.
 - No DMG, no iOS/IPA output, no online compatibility database and no automatic engine updates. The upstream changelog check is manual and read-only; only the commit hash is sent to `api.github.com`.
 - The engine checkout is never modified; nxnative upgrades are manual and re-pin the engine commit in `AppViewModel.pinnedEngineCommit`.
 - A detached-sources game shows no source badge over its tile and keeps its artwork; the detail card shows **Sources detached** with an info tooltip and **Attach Sources…** next to Rebuild.

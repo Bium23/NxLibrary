@@ -47,6 +47,7 @@ This directory records the review that must happen before the pin changes, plus 
 ## Dated notes
 
 - [2026-10-27 — 06b7b3e → 4f24ce6](2026-10-27-06b7b3e-4f24ce6.md)
+- [2026-10-27 — 4f24ce6 → 1963fab](2026-10-27-4f24ce6-1963fab.md)
 
 ## Guardrails
 
