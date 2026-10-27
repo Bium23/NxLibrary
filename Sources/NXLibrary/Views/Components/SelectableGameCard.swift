@@ -95,7 +95,7 @@ public struct SelectableGameCard: View {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(isSelected ? NXTheme.primary.opacity(0.18) : NXTheme.glassSurfaceElevated.opacity(0.7))
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(.ultraThinMaterial)
+                        .fill(NXTheme.surfaceFill)
                 }
             )
             .overlay(

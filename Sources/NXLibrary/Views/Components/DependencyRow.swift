@@ -89,7 +89,7 @@ public struct DependencyRow: View {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(NXTheme.glassSurfaceElevated.opacity(0.65))
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(.ultraThinMaterial)
+                    .fill(NXTheme.surfaceFill)
             }
         )
         .overlay(

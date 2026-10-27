@@ -25,7 +25,7 @@ public struct BuildStageStepperView: View {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(NXTheme.glassSurfaceElevated.opacity(0.8))
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(.ultraThinMaterial)
+                    .fill(NXTheme.surfaceFill)
             }
         )
         .overlay(

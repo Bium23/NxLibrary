@@ -44,7 +44,7 @@ public struct ConsoleGameCarouselView: View {
     }
 
     private func gameTile(game: PortedGame, isFocused: Bool, isLaunching: Bool) -> some View {
-        let icon = NSWorkspace.shared.icon(forFile: game.url.path)
+        let icon = GameIconProvider.icon(for: game)
 
         return VStack(spacing: 9) {
             ZStack(alignment: .bottomTrailing) {
@@ -56,17 +56,25 @@ public struct ConsoleGameCarouselView: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 24, style: .continuous)
                             .strokeBorder(
-                                isFocused ? Color.white : Color.white.opacity(0.12),
-                                lineWidth: isFocused ? 3 : 1
+                                isFocused
+                                    ? AnyShapeStyle(NXTheme.selectedBorder)
+                                    : AnyShapeStyle(Color.white.opacity(0.10)),
+                                lineWidth: isFocused ? 2.5 : 1
                             )
                     )
                     .shadow(
                         color: isFocused
-                            ? NXTheme.secondary.opacity(0.55)
-                            : Color.black.opacity(0.38),
-                        radius: isFocused ? 20 : 8,
+                            ? NXTheme.secondary.opacity(0.42)
+                            : NXTheme.cardShadow,
+                        radius: isFocused ? 26 : 10,
                         x: 0,
-                        y: isFocused ? 10 : 4
+                        y: isFocused ? 12 : 4
+                    )
+                    .shadow(
+                        color: isFocused
+                            ? NXTheme.primary.opacity(0.22)
+                            : Color.clear,
+                        radius: isFocused ? 44 : 0
                     )
 
                 if isLaunching {

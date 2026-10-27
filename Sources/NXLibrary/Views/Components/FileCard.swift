@@ -79,7 +79,7 @@ public struct FileCard: View {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(NXTheme.glassSurfaceElevated.opacity(0.75))
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(.ultraThinMaterial)
+                    .fill(NXTheme.surfaceFill)
             }
         )
         .overlay(

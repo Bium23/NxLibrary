@@ -99,7 +99,7 @@ public struct DropZoneView: View {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(isTargeted ? NXTheme.primary.opacity(0.16) : NXTheme.glassSurfaceElevated.opacity(0.7))
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(.ultraThinMaterial)
+                    .fill(NXTheme.surfaceFill)
             }
         )
         .overlay(

@@ -1,41 +1,65 @@
 import SwiftUI
 
 public enum NXTheme {
-    // MARK: - Coral / Graphite Palette
-    public static let primary = Color(red: 1.00, green: 0.35, blue: 0.37)   // coral
-    public static let secondary = Color(red: 0.35, green: 0.78, blue: 0.98) // cyan selection
-    public static let tertiary = Color(red: 0.20, green: 0.78, blue: 0.35)  // green
-    public static let canvasObsidian = Color(red: 0.082, green: 0.082, blue: 0.090)
-    
-    // MARK: - Glass Surfaces
-    public static let glassSurface = Color(red: 0.118, green: 0.118, blue: 0.133)
-    public static let glassSurfaceElevated = Color(red: 0.165, green: 0.165, blue: 0.188)
-    public static let glassSurfaceActive = Color(red: 0.215, green: 0.215, blue: 0.245)
-    public static let borderSubtle = Color(red: 0.22, green: 0.22, blue: 0.25)
-    
+    // MARK: - Coral / Midnight Palette
+    public static let primary = Color(red: 1.00, green: 0.36, blue: 0.41)   // coral
+    public static let secondary = Color(red: 0.36, green: 0.80, blue: 0.98) // cyan selection
+    public static let tertiary = Color(red: 0.23, green: 0.80, blue: 0.48)  // green
+    public static let canvasObsidian = Color(red: 0.035, green: 0.045, blue: 0.075)
+    public static let canvasLift = Color(red: 0.075, green: 0.095, blue: 0.145)
+    public static let ambientIndigo = Color(red: 0.38, green: 0.30, blue: 0.95)
+    public static let ambientTeal = Color(red: 0.12, green: 0.55, blue: 0.62)
+
+    // MARK: - Tinted Surfaces
+    public static let glassSurface = Color(red: 0.090, green: 0.112, blue: 0.165)
+    public static let glassSurfaceElevated = Color(red: 0.125, green: 0.152, blue: 0.215)
+    public static let glassSurfaceActive = Color(red: 0.175, green: 0.210, blue: 0.290)
+    public static let borderSubtle = Color(red: 0.230, green: 0.270, blue: 0.360)
+    public static let surfaceFill = Color(red: 0.090, green: 0.112, blue: 0.165).opacity(0.92)
+
     // MARK: - Typography Colors
-    public static let textPrimary = Color.white
-    public static let textSecondary = Color(red: 0.63, green: 0.63, blue: 0.67)
-    public static let textMuted = Color(red: 0.38, green: 0.38, blue: 0.42)
-    
+    public static let textPrimary = Color(red: 0.965, green: 0.955, blue: 0.935)
+    public static let textSecondary = Color(red: 0.680, green: 0.730, blue: 0.810)
+    public static let textMuted = Color(red: 0.460, green: 0.510, blue: 0.610)
+
     // MARK: - Semantic Colors
-    public static let success = Color(red: 0.20, green: 0.78, blue: 0.35)
-    public static let warning = Color(red: 1.00, green: 0.62, blue: 0.04)
-    public static let error = Color(red: 1.00, green: 0.27, blue: 0.23)
-    
+    public static let success = Color(red: 0.25, green: 0.82, blue: 0.52)
+    public static let warning = Color(red: 1.00, green: 0.70, blue: 0.20)
+    public static let error = Color(red: 1.00, green: 0.32, blue: 0.32)
+
     // MARK: - Gradients
     public static let primaryGradient = LinearGradient(
-        colors: [primary, Color(red: 0.91, green: 0.22, blue: 0.25)],
+        colors: [primary, Color(red: 0.86, green: 0.23, blue: 0.35)],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
-    
+
+    public static let surfaceGradient = LinearGradient(
+        colors: [
+            Color(red: 0.160, green: 0.195, blue: 0.270),
+            Color(red: 0.075, green: 0.095, blue: 0.155)
+        ],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    public static let barGradient = LinearGradient(
+        colors: [
+            Color(red: 0.082, green: 0.102, blue: 0.153).opacity(0.86),
+            Color(red: 0.043, green: 0.055, blue: 0.086).opacity(0.94)
+        ],
+        startPoint: .top,
+        endPoint: .bottom
+    )
+
+    public static let cardShadow = Color(red: 0.005, green: 0.010, blue: 0.030).opacity(0.55)
+
     public static let logoGradient = LinearGradient(
         colors: [primary, warning],
         startPoint: .leading,
         endPoint: .trailing
     )
-    
+
     public static let specularRim = LinearGradient(
         colors: [
             Color.white.opacity(0.18),
@@ -45,13 +69,13 @@ public enum NXTheme {
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
-    
+
     public static let selectedBorder = LinearGradient(
         colors: [secondary, primary],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
-    
+
     public static let specularRimHover = LinearGradient(
         colors: [
             secondary.opacity(0.6),

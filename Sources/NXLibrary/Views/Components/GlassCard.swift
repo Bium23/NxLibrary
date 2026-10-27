@@ -21,16 +21,26 @@ public struct GlassCard<Content: View>: View {
             .background(
                 ZStack {
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(NXTheme.glassSurface.opacity(0.85))
+                        .fill(NXTheme.surfaceGradient)
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(.ultraThinMaterial)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    NXTheme.primary.opacity(0.045),
+                                    Color.clear,
+                                    NXTheme.secondary.opacity(0.035)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
                 }
             )
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .strokeBorder(NXTheme.specularRim, lineWidth: 1)
             )
-            .shadow(color: Color.black.opacity(0.35), radius: 10, x: 0, y: 4)
+            .shadow(color: NXTheme.cardShadow, radius: 16, x: 0, y: 8)
     }
 }
 
@@ -45,17 +55,13 @@ public struct GlassGroupBoxStyle: GroupBoxStyle {
         }
         .padding(14)
         .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(NXTheme.glassSurface.opacity(0.85))
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(.ultraThinMaterial)
-            }
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(NXTheme.surfaceGradient)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .strokeBorder(NXTheme.specularRim, lineWidth: 1)
         )
-        .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 3)
+        .shadow(color: NXTheme.cardShadow, radius: 14, x: 0, y: 6)
     }
 }

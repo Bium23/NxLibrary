@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct BottomDock: View {
     @ObservedObject public var viewModel: AppViewModel
+    @State private var hoveredTag: Int? = nil
 
     public init(viewModel: AppViewModel) {
         self.viewModel = viewModel
@@ -28,22 +29,34 @@ public struct BottomDock: View {
                     VStack(spacing: 3) {
                         Image(systemName: item.icon)
                             .font(.system(size: 16, weight: isSelected ? .bold : .medium))
+                            .shadow(color: isSelected ? NXTheme.primary.opacity(0.45) : .clear,
+                                    radius: 6)
                         Text(item.title)
                             .font(.system(size: 10, weight: isSelected ? .bold : .medium,
                                           design: .rounded))
                     }
-                    .foregroundColor(isSelected ? NXTheme.primary : NXTheme.textSecondary)
+                    .foregroundColor(isSelected
+                        ? NXTheme.primary
+                        : (hoveredTag == item.tag ? NXTheme.textPrimary : NXTheme.textSecondary))
                     .frame(width: 98, height: 44)
                     .background(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(isSelected ? NXTheme.primary.opacity(0.14) : Color.clear)
+                            .fill(isSelected
+                                ? NXTheme.primary.opacity(0.16)
+                                : (hoveredTag == item.tag ? NXTheme.glassSurfaceActive.opacity(0.55) : Color.clear))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .strokeBorder(isSelected ? NXTheme.primary.opacity(0.28) : Color.clear,
+                                          lineWidth: 0.8)
                     )
                     .overlay(alignment: .bottom) {
                         if isSelected {
                             Capsule()
                                 .fill(NXTheme.primary)
-                                .frame(width: 24, height: 3)
+                                .frame(width: 22, height: 3)
                                 .offset(y: 2)
+                                .shadow(color: NXTheme.primary.opacity(0.6), radius: 5)
                         }
                     }
                     .contentShape(Rectangle())
@@ -52,24 +65,32 @@ public struct BottomDock: View {
                 .nxNoFocusRing()
                 .accessibilityLabel(item.title)
                 .help(item.title)
+                .onHover { hovering in
+                    withAnimation(.easeOut(duration: 0.16)) {
+                        if hovering {
+                            hoveredTag = item.tag
+                        } else if hoveredTag == item.tag {
+                            hoveredTag = nil
+                        }
+                    }
+                }
                 .keyboardShortcut(KeyEquivalent(Character(String(item.tag + 1))),
                                   modifiers: [.command, .option])
             }
         }
-        .padding(.horizontal, 18)
+        .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .frame(maxWidth: .infinity)
         .background(
-            ZStack {
-                NXTheme.glassSurface.opacity(0.92)
-                Rectangle().fill(.ultraThinMaterial)
-            }
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(NXTheme.barGradient)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .strokeBorder(NXTheme.specularRim, lineWidth: 0.8)
+                )
+                .shadow(color: NXTheme.cardShadow, radius: 18, x: 0, y: 8)
         )
-        .overlay(
-            Rectangle()
-                .frame(height: 1)
-                .foregroundColor(NXTheme.borderSubtle),
-            alignment: .top
-        )
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 8)
     }
 }

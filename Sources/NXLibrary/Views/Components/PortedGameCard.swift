@@ -62,7 +62,7 @@ public struct PortedGameCard: View {
                 
                 // Centered Large Artwork / Icon
                 VStack(spacing: 8) {
-                    let icon = NSWorkspace.shared.icon(forFile: game.url.path)
+                    let icon = GameIconProvider.icon(for: game)
                     Image(nsImage: icon)
                         .resizable()
                         .aspectRatio(contentMode: .fit)

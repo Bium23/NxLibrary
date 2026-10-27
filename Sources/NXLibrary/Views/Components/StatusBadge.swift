@@ -32,7 +32,7 @@ public struct StatusBadge: View {
             .background(
                 ZStack {
                     Capsule().fill(badgeColor.opacity(0.12))
-                    Capsule().fill(.ultraThinMaterial)
+                    Capsule().fill(NXTheme.surfaceFill)
                 }
             )
             .overlay(

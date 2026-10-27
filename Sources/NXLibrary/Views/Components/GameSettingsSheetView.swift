@@ -23,7 +23,7 @@ public struct GameSettingsSheetView: View {
             VStack(spacing: 0) {
                 // MARK: - Header
                 HStack(spacing: 14) {
-                    let icon = NSWorkspace.shared.icon(forFile: game.url.path)
+                    let icon = GameIconProvider.icon(for: game)
                     Image(nsImage: icon)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
@@ -77,7 +77,7 @@ public struct GameSettingsSheetView: View {
                 .background(
                     ZStack {
                         NXTheme.glassSurfaceElevated.opacity(0.7)
-                        Rectangle().fill(.ultraThinMaterial)
+                        Rectangle().fill(NXTheme.barGradient)
                     }
                 )
                 .overlay(
@@ -255,7 +255,7 @@ public struct GameSettingsSheetView: View {
                 .background(
                     ZStack {
                         NXTheme.glassSurfaceElevated.opacity(0.8)
-                        Rectangle().fill(.ultraThinMaterial)
+                        Rectangle().fill(NXTheme.barGradient)
                     }
                 )
                 .overlay(
@@ -294,7 +294,7 @@ public struct GameSettingsSheetView: View {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(NXTheme.glassSurfaceElevated.opacity(0.7))
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(.ultraThinMaterial)
+                    .fill(NXTheme.surfaceFill)
             }
         )
         .overlay(

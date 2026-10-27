@@ -73,15 +73,19 @@ public struct ControllerPromptBar: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .background(
-            ZStack {
-                NXTheme.canvasObsidian.opacity(0.75)
-                Rectangle().fill(.ultraThinMaterial)
-            }
+            LinearGradient(
+                colors: [
+                    NXTheme.canvasObsidian.opacity(0.10),
+                    NXTheme.canvasObsidian.opacity(0.78)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
         )
         .overlay(
             Rectangle()
                 .frame(height: 1)
-                .foregroundColor(NXTheme.borderSubtle),
+                .foregroundColor(NXTheme.borderSubtle.opacity(0.45)),
             alignment: .top
         )
     }

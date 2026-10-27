@@ -122,7 +122,7 @@ public struct SystemView: View {
         .background(
             ZStack {
                 NXTheme.canvasObsidian.opacity(0.6)
-                Rectangle().fill(.ultraThinMaterial)
+                Rectangle().fill(NXTheme.barGradient)
             }
         )
         .overlay(

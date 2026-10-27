@@ -42,7 +42,7 @@ public struct LogsView: View {
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
                             .fill(NXTheme.glassSurfaceElevated.opacity(0.8))
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(.ultraThinMaterial)
+                            .fill(NXTheme.surfaceFill)
                     }
                 )
                 .overlay(
@@ -76,7 +76,7 @@ public struct LogsView: View {
             .background(
                 ZStack {
                     NXTheme.canvasObsidian.opacity(0.6)
-                    Rectangle().fill(.ultraThinMaterial)
+                    Rectangle().fill(NXTheme.barGradient)
                 }
             )
             .overlay(

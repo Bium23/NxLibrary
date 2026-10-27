@@ -70,7 +70,7 @@ public struct SetupView: View {
         .background(
             ZStack {
                 NXTheme.glassSurfaceElevated.opacity(0.7)
-                Rectangle().fill(.ultraThinMaterial)
+                Rectangle().fill(NXTheme.barGradient)
             }
         )
         .overlay(
@@ -258,7 +258,7 @@ public struct SetupView: View {
         .background(
             ZStack {
                 NXTheme.glassSurfaceElevated.opacity(0.7)
-                Rectangle().fill(.ultraThinMaterial)
+                Rectangle().fill(NXTheme.barGradient)
             }
         )
         .overlay(

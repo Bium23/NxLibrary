@@ -55,17 +55,14 @@ public struct HomeStatusStrip: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(NXTheme.glassSurface.opacity(0.65))
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(.ultraThinMaterial)
-            }
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(NXTheme.glassSurface.opacity(0.55))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(NXTheme.specularRim, lineWidth: 0.8)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(NXTheme.borderSubtle.opacity(0.55), lineWidth: 0.8)
         )
+        .shadow(color: NXTheme.cardShadow.opacity(0.45), radius: 10, x: 0, y: 3)
     }
 
     private var divider: some View {

@@ -24,6 +24,17 @@ public struct GameDetailDeckView: View {
             VStack(alignment: .leading, spacing: 16) {
                 // Top Header Row: Title, TitleID, Platform, Action Buttons
                 HStack(alignment: .center, spacing: 14) {
+                    Image(nsImage: GameIconProvider.icon(for: game))
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 58, height: 58)
+                        .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                .strokeBorder(NXTheme.specularRim, lineWidth: 1)
+                        )
+                        .shadow(color: NXTheme.cardShadow, radius: 10, x: 0, y: 4)
+
                     VStack(alignment: .leading, spacing: 3) {
                         HStack(spacing: 8) {
                             Text(game.name)
@@ -64,6 +75,10 @@ public struct GameDetailDeckView: View {
                         }
                     }
                 }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(headerBackdrop)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 
                 if game.status == .builtSourcesMissing {
                     HStack(spacing: 8) {
@@ -346,6 +361,27 @@ public struct GameDetailDeckView: View {
         )
     }
     
+    private var headerBackdrop: some View {
+        let icon = GameIconProvider.icon(for: game)
+        return ZStack {
+            Image(nsImage: icon)
+                .resizable()
+                .scaledToFill()
+                .blur(radius: 30)
+                .opacity(0.34)
+            LinearGradient(
+                colors: [
+                    NXTheme.primary.opacity(0.08),
+                    NXTheme.secondary.opacity(0.05),
+                    NXTheme.canvasObsidian.opacity(0.58)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+        .clipped()
+    }
+
     private var statusPill: some View {
         Group {
             switch game.status {

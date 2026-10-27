@@ -8,21 +8,39 @@ public struct MainView: View {
     public var body: some View {
         GeometryReader { geo in
             ZStack {
-                Color.nxCanvas.ignoresSafeArea()
+                LinearGradient(
+                    colors: [NXTheme.canvasObsidian, NXTheme.canvasLift, NXTheme.canvasObsidian],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
 
                 ZStack {
                     Circle()
-                        .fill(NXTheme.primary.opacity(0.13))
-                        .frame(width: 460, height: 460)
-                        .blur(radius: 100)
-                        .position(x: 90, y: 30)
+                        .fill(NXTheme.primary.opacity(0.20))
+                        .frame(width: 560, height: 560)
+                        .blur(radius: 130)
+                        .position(x: 60, y: -40)
 
                     Circle()
-                        .fill(NXTheme.secondary.opacity(0.06))
-                        .frame(width: 420, height: 420)
-                        .blur(radius: 110)
-                        .position(x: geo.size.width - 60, y: geo.size.height - 40)
+                        .fill(NXTheme.secondary.opacity(0.10))
+                        .frame(width: 520, height: 520)
+                        .blur(radius: 140)
+                        .position(x: geo.size.width - 40, y: geo.size.height * 0.12)
+
+                    Circle()
+                        .fill(NXTheme.ambientIndigo.opacity(0.12))
+                        .frame(width: 620, height: 620)
+                        .blur(radius: 160)
+                        .position(x: geo.size.width * 0.52, y: geo.size.height + 120)
                 }
+                .ignoresSafeArea()
+
+                LinearGradient(
+                    colors: [Color.clear, NXTheme.canvasObsidian.opacity(0.55)],
+                    startPoint: .center,
+                    endPoint: .bottom
+                )
                 .ignoresSafeArea()
 
                 VStack(spacing: 0) {
@@ -99,7 +117,8 @@ public struct MainView: View {
                     .foregroundColor(NXTheme.textPrimary)
                 Text("Native Switch games on Mac")
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(NXTheme.textSecondary)
+                    .tracking(0.2)
+                    .foregroundColor(NXTheme.textMuted)
             }
 
             Spacer()
@@ -139,16 +158,18 @@ public struct MainView: View {
         .padding(.horizontal, 18)
         .padding(.vertical, 10)
         .frame(height: 56)
-        .background(
-            ZStack {
-                NXTheme.canvasObsidian.opacity(0.86)
-                Rectangle().fill(.ultraThinMaterial)
-            }
-        )
+        .background(NXTheme.barGradient)
         .overlay(
-            Rectangle()
-                .frame(height: 1)
-                .foregroundColor(NXTheme.borderSubtle),
+            LinearGradient(
+                colors: [
+                    NXTheme.primary.opacity(0.35),
+                    NXTheme.secondary.opacity(0.18),
+                    NXTheme.borderSubtle.opacity(0.35)
+                ],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+            .frame(height: 1),
             alignment: .bottom
         )
     }

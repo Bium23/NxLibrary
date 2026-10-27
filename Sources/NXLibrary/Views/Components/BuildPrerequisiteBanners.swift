@@ -52,7 +52,7 @@ public struct BuildPrerequisiteBanners: View {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(NXTheme.tertiary.opacity(0.12))
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(.ultraThinMaterial)
+                    .fill(NXTheme.surfaceFill)
             }
         )
         .overlay(
@@ -90,7 +90,7 @@ public struct BuildPrerequisiteBanners: View {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(NXTheme.tertiary.opacity(0.12))
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(.ultraThinMaterial)
+                    .fill(NXTheme.surfaceFill)
             }
         )
         .overlay(
@@ -128,7 +128,7 @@ public struct BuildPrerequisiteBanners: View {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(NXTheme.tertiary.opacity(0.12))
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(.ultraThinMaterial)
+                    .fill(NXTheme.surfaceFill)
             }
         )
         .overlay(

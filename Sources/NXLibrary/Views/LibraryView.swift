@@ -111,16 +111,12 @@ public struct LibraryView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
             .background(
-                ZStack {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(NXTheme.glassSurfaceElevated.opacity(0.8))
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                }
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(NXTheme.glassSurfaceElevated.opacity(0.9))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(NXTheme.specularRim, lineWidth: 0.8)
+                    .strokeBorder(NXTheme.borderSubtle.opacity(0.75), lineWidth: 0.8)
             )
             .frame(maxWidth: 280)
             
@@ -161,16 +157,18 @@ public struct LibraryView: View {
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 10)
-        .background(
-            ZStack {
-                NXTheme.canvasObsidian.opacity(0.6)
-                Rectangle().fill(.ultraThinMaterial)
-            }
-        )
+        .background(NXTheme.barGradient)
         .overlay(
-            Rectangle()
-                .frame(height: 1)
-                .foregroundColor(NXTheme.borderSubtle),
+            LinearGradient(
+                colors: [
+                    NXTheme.secondary.opacity(0.20),
+                    NXTheme.borderSubtle.opacity(0.25),
+                    NXTheme.primary.opacity(0.18)
+                ],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+            .frame(height: 1),
             alignment: .bottom
         )
     }
