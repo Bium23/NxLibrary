@@ -14,7 +14,7 @@ A personal, native macOS front-end for [nxnative](https://github.com/seedds/nxna
 - Replaces the previous app atomically; a failed or cancelled build leaves it untouched.
 - Stores the library in `~/Library/Application Support/NXLibrary/library.json` with a backup copy.
 - Keeps runtime settings per game (FPS target, docked mode, render scale, MetalFX spatial upscale, Metal HUD, language, rumble, fullscreen) and writes nxnative's `env.txt` before launch.
-- Shows storage usage and can delete only caches and logs; apps and sources require explicit action.
+- Shows storage usage and can delete only caches and logs; apps and sources require explicit action. **Remove Sources & Build Cache** deletes the original NSP/XCI files and the app-owned workspace for one game, keeping the installed app, saves and logs; sources can be attached again later.
 - Checks the upstream `seedds/nxnative` commit history on demand in **Settings → Engine**. The check is read-only: it contacts the GitHub API, shows new commits and a compare link, never fetches, merges, checks out or re-pins the engine. The engine gate keeps blocking builds until an update is manually re-pinned and re-tested.
 - Includes synthesized UI tones, controller prompts, and keyboard shortcuts. The theme and symbols are original; no Nintendo assets are included.
 
@@ -95,3 +95,4 @@ No games, keys, Nintendo logos, fonts, sounds, or other Nintendo assets are incl
 - Super Mario Odyssey 1.4.1 builds with engine `4f24ce6` (27,984 shaders and 32,864 pipeline pairs) and reaches the controller screen; gameplay beyond that is not yet verified.
 - No DMG, no iOS/IPA output, no online compatibility database and no automatic engine updates. The upstream changelog check is manual and read-only; only the commit hash is sent to `api.github.com`.
 - The engine checkout is never modified; nxnative upgrades are manual and re-pin the engine commit in `AppViewModel.pinnedEngineCommit`.
+- A detached-sources game shows no source badge over its tile and keeps its artwork; the detail card offers **Locate Sources…** to attach the files again.
