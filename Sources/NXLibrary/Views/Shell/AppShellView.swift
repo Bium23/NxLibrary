@@ -21,14 +21,24 @@ public struct AppShellView: View {
                     handleMenu(action)
                 }
             }
+            if let game = viewModel.gameForSettingsSheet {
+                GameOptionsView(
+                    viewModel: viewModel,
+                    game: game,
+                    onClose: { viewModel.gameForSettingsSheet = nil },
+                    onShowBuild: {
+                        viewModel.gameForSettingsSheet = nil
+                        router.openAddGame()
+                    }
+                )
+                .transition(.opacity)
+                .zIndex(2)
+            }
         }
         .preferredColorScheme(.dark)
         .frame(minWidth: 1100, minHeight: 700)
         .sheet(isPresented: $viewModel.showSetupSheet) {
             SetupView(viewModel: viewModel)
-        }
-        .sheet(item: $viewModel.gameForSettingsSheet) { game in
-            GameSettingsSheetView(viewModel: viewModel, game: game)
         }
         .onAppear(perform: startRuntime)
         .onDisappear { processObserver?.stop() }
