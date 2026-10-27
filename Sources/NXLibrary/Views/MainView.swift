@@ -84,7 +84,7 @@ public struct MainView: View {
     private var readinessText: String {
         if readiness { return "Ready" }
         if viewModel.compatibilityReport != nil && !viewModel.canPassToolchainGate {
-            return "Toolchain blocked"
+            return "Builds blocked"
         }
         return "Setup needed"
     }

@@ -539,7 +539,8 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             .appendingPathComponent("dm/gfx/tools/dmsh_chain.lock")
         guard let text = try? String(contentsOf: lock, encoding: .utf8) else { return nil }
         for line in text.split(separator: "\n") where line.hasPrefix("metal_macosx\t") {
-            return line.split(separator: "\t").last.map(String.init)
+            guard let raw = line.split(separator: "\t").last.map(String.init) else { return nil }
+            return MetalVersion.parse(raw) ?? raw
         }
         return nil
     }

@@ -3,6 +3,7 @@ import NXLibraryCore
 
 public struct UpstreamCard: View {
     @ObservedObject public var viewModel: AppViewModel
+    @State private var showAllCommits = false
 
     public init(viewModel: AppViewModel) {
         self.viewModel = viewModel
@@ -104,16 +105,34 @@ public struct UpstreamCard: View {
             }
 
             if !status.commits.isEmpty {
+                let visible = showAllCommits
+                    ? Array(status.commits)
+                    : Array(status.commits.prefix(6))
                 VStack(spacing: 5) {
-                    ForEach(status.commits.prefix(12)) { commit in
+                    ForEach(visible) { commit in
                         commitRow(commit)
                     }
                 }
 
-                if status.totalCommits > min(status.commits.count, 12) {
-                    Text("Showing \(min(status.commits.count, 12)) of \(status.totalCommits) commits; open GitHub for the full list.")
-                        .font(.system(size: 10))
-                        .foregroundColor(NXTheme.textMuted)
+                HStack(spacing: 8) {
+                    if status.commits.count > 6 {
+                        Button(showAllCommits
+                               ? "Show fewer commits"
+                               : "Show all \(status.commits.count) commits") {
+                            withAnimation(.easeInOut(duration: 0.18)) {
+                                showAllCommits.toggle()
+                            }
+                        }
+                        .buttonStyle(NXSecondaryButtonStyle())
+                        .controlSize(.mini)
+                    }
+
+                    if status.totalCommits > status.commits.count {
+                        Text("Showing \(status.commits.count) of \(status.totalCommits); open GitHub for the rest.")
+                            .font(.system(size: 10))
+                            .foregroundColor(NXTheme.textMuted)
+                    }
+                    Spacer()
                 }
             }
 

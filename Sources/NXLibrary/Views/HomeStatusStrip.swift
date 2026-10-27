@@ -42,7 +42,7 @@ public struct HomeStatusStrip: View {
                 .font(.system(size: 11, weight: .medium))
                 .foregroundColor(NXTheme.textPrimary)
             } else {
-                Text(viewModel.canPassToolchainGate ? "Ready" : (viewModel.compatibilityReport == nil ? "Checking toolchain" : "Toolchain blocked"))
+                Text(viewModel.canPassToolchainGate ? "Ready" : (viewModel.compatibilityReport == nil ? "Checking toolchain" : "Builds blocked"))
                     .font(.system(size: 10, weight: .bold, design: .rounded))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)

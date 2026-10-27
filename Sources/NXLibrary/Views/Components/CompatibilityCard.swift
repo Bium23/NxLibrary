@@ -44,6 +44,23 @@ public struct CompatibilityCard: View {
                         .cornerRadius(8)
                 }
 
+                if viewModel.compatibilityReport?.checks.contains(where: {
+                    $0.id == "metal" && $0.status == .block
+                }) == true {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "info.circle.fill")
+                            .foregroundColor(NXTheme.warning)
+                        Text("Only the exact Metal compiler pinned by nxnative is accepted. Play remains available; new builds and rebuilds are blocked until the matching Xcode/Metal toolchain is installed, or until the override below is enabled.")
+                            .font(.system(size: 10))
+                            .foregroundColor(NXTheme.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer()
+                    }
+                    .padding(8)
+                    .background(NXTheme.warning.opacity(0.07))
+                    .cornerRadius(8)
+                }
+
                 if viewModel.compatibilityReport?.ok == false {
                     Divider().opacity(0.2)
                     overrideControls
@@ -151,12 +168,16 @@ public struct CompatibilityCard: View {
 
     private var statusText: String {
         guard let report = viewModel.compatibilityReport else { return "Checking" }
-        return report.ok ? "Certified" : "Blocked"
+        if report.ok { return "Certified" }
+        if viewModel.allowUntestedToolchain { return "Override enabled" }
+        return "Blocked"
     }
 
     private var statusColor: Color {
         guard let report = viewModel.compatibilityReport else { return NXTheme.textMuted }
-        return report.ok ? NXTheme.success : NXTheme.error
+        if report.ok { return NXTheme.success }
+        if viewModel.allowUntestedToolchain { return NXTheme.warning }
+        return NXTheme.error
     }
 
     private func detail(for check: CompatibilityCheck) -> String {
