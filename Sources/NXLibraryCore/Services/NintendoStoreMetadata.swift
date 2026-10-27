@@ -272,7 +272,7 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
             genres: page.genres,
             releaseDate: page.releaseDate,
             storeURL: storeURL,
-            imageURL: page.imageURL,
+            imageURL: nil,
             headerImageURL: page.imageURL,
             nsuid: newHit.nsuid,
             fetchedAt: Date()

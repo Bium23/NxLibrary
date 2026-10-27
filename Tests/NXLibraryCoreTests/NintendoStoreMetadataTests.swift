@@ -92,7 +92,8 @@ final class NintendoStoreMetadataTests: XCTestCase {
         XCTAssertEqual(metadata.releaseYear, "2023")
         XCTAssertEqual(metadata.storeURL.absoluteString,
                        "https://www.nintendo.com/us/store/products/super-mario-bros-wonder-switch/")
-        XCTAssertEqual(metadata.imageURL?.absoluteString, "https://assets.nintendo.com/wonder.jpg")
+        XCTAssertEqual(metadata.headerImageURL?.absoluteString, "https://assets.nintendo.com/wonder.jpg")
+        XCTAssertNil(metadata.imageURL)
     }
 
     func testCachesTheResult() async throws {
