@@ -3,6 +3,7 @@ import SwiftUI
 extension Notification.Name {
     static let nxLibraryPlayFocused = Notification.Name("NXLibraryPlayFocused")
     static let nxLibraryCheckUpstream = Notification.Name("NXLibraryCheckUpstream")
+    static let nxLibraryOpenMenu = Notification.Name("NXLibraryOpenMenu")
 }
 
 @main
@@ -13,9 +14,8 @@ struct NXLibraryApp: App {
         WindowGroup {
             MainView()
         }
-        .windowStyle(.titleBar)
-        .windowToolbarStyle(.unified)
-        .defaultSize(width: 1280, height: 800)
+        .windowStyle(.hiddenTitleBar)
+        .defaultSize(width: 1440, height: 900)
         .commands {
             SidebarCommands()
             CommandMenu("Game") {
@@ -29,6 +29,12 @@ struct NXLibraryApp: App {
                     NotificationCenter.default.post(name: .nxLibraryCheckUpstream, object: nil)
                 }
                 .keyboardShortcut("u", modifiers: [.command])
+            }
+            CommandMenu("View") {
+                Button("Menu") {
+                    NotificationCenter.default.post(name: .nxLibraryOpenMenu, object: nil)
+                }
+                .keyboardShortcut("k", modifiers: [.command])
             }
         }
     }

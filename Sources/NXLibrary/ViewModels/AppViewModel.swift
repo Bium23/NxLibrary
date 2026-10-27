@@ -266,6 +266,9 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     @Published public var focusedGameIndex: Int = 0
     @Published public var isFocusOnDeck: Bool = false
     @Published public var launchingGameId: UUID? = nil
+
+    public var playSessionStore: PlaySessionStore?
+    public var settingsStore: AppSettingsStore?
     
     public let availableLanguages: [(code: String, label: String)] = [
         ("auto", "Game Default"),
@@ -1025,6 +1028,12 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             return
         }
 
+        if let bundleId = game.bundleId,
+           let running = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == bundleId }) {
+            running.activate(options: [.activateAllWindows])
+            return
+        }
+
         launchingGameId = game.id
         SoundEffectService.shared.play(.launch)
 
@@ -1047,6 +1056,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                 guard let self else { return }
                 if success {
                     self.lastError = nil
+                    self.playSessionStore?.start(for: game)
                     self.logs.append(LogEntry(level: .success, message: "Launched game: \(game.name)"))
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                         if self.launchingGameId == game.id { self.launchingGameId = nil }
