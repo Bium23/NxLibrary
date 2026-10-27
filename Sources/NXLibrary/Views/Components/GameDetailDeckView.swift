@@ -18,6 +18,7 @@ public struct GameDetailDeckView: View {
         let config = viewModel.loadRuntimeConfig(for: game)
         let isLaunching = viewModel.launchingGameId == game.id
         let isDeckFocused = viewModel.isFocusOnDeck
+        let hasVerifiedProfile = viewModel.hasVerifiedEngineProfile(for: game)
         
         return GlassCard(padding: 20) {
             VStack(alignment: .leading, spacing: 16) {
@@ -39,6 +40,10 @@ public struct GameDetailDeckView: View {
 
                             statusPill
                             toolchainPill
+                            if !hasVerifiedProfile {
+                                pill("Provisional", color: NXTheme.warning)
+                                    .help("nxnative has no verified profile for this title. A build is an experiment and may fail.")
+                            }
                         }
                         
                         if let tid = game.titleId, !tid.isEmpty {
@@ -81,6 +86,30 @@ public struct GameDetailDeckView: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
                             .strokeBorder(NXTheme.warning.opacity(0.25), lineWidth: 0.8)
+                    )
+                }
+
+                if !hasVerifiedProfile {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "flask.fill")
+                            .foregroundColor(NXTheme.warning)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Provisional game profile")
+                                .font(.system(size: 11, weight: .bold, design: .rounded))
+                                .foregroundColor(NXTheme.warning)
+                            Text("nxnative has no verified profile for this title. A build is an experiment: the code rewrite or the game may fail. Existing apps and sources are not changed.")
+                                .font(.system(size: 11))
+                                .foregroundColor(NXTheme.textSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer()
+                    }
+                    .padding(9)
+                    .background(NXTheme.warning.opacity(0.07))
+                    .cornerRadius(8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .strokeBorder(NXTheme.warning.opacity(0.22), lineWidth: 0.8)
                     )
                 }
 
@@ -376,6 +405,9 @@ public struct GameDetailDeckView: View {
         }
         if viewModel.environmentStatus?.canBuild != true {
             return "The build environment is incomplete. Check Settings."
+        }
+        if !viewModel.hasVerifiedEngineProfile(for: game) {
+            return "No verified nxnative profile: this rebuild is provisional and may fail in the code rewrite."
         }
         if !viewModel.canPassToolchainGate {
             return "The installed toolchain is not certified. Enable the untested-toolchain override in Settings."

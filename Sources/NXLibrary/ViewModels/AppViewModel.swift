@@ -1273,6 +1273,29 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         compatibilityReport?.ok == true || allowUntestedToolchain
     }
 
+    /// A profile in `dm/games/<title ID>` is the engine's verified support for
+    /// a title. Without one the engine builds from a provisional profile and
+    /// may fail in the rewrite or at run time.
+    public func hasVerifiedEngineProfile(for game: PortedGame) -> Bool {
+        guard let titleId = game.titleId, !titleId.isEmpty else { return true }
+        guard !nxnativePath.isEmpty else { return true }
+        var isDirectory: ObjCBool = false
+        let path = URL(fileURLWithPath: nxnativePath)
+            .appendingPathComponent("dm/games/\(titleId)").path
+        return FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory)
+            && isDirectory.boolValue
+    }
+
+    private func buildLogTail(_ url: URL, maxBytes: Int = 64 * 1024) -> String {
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return "" }
+        defer { try? handle.close() }
+        let size = (try? handle.seekToEnd()) ?? 0
+        let start = size > UInt64(maxBytes) ? size - UInt64(maxBytes) : 0
+        try? handle.seek(toOffset: start)
+        guard let data = try? handle.readToEnd() else { return "" }
+        return String(data: data, encoding: .utf8) ?? ""
+    }
+
     public var buildProgress: Double { progressFraction }
     public var buildETA: Double? { etaSeconds }
     public var buildLog: [LogEntry] { logs }
@@ -1759,7 +1782,12 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                 lastError = "Build cancelled."
                 logs.append(LogEntry(level: .warning, message: "Build cancelled."))
             } else {
-                let message = result.error ?? "Build failed (exit code \(result.exitCode))."
+                let rawLog = buildLogTail(result.logURL)
+                let message = BuildFailureDiagnostics.message(
+                    log: rawLog,
+                    gameName: game.name,
+                    fallback: result.error ?? "Build failed (exit code \(result.exitCode))."
+                )
                 game.status = .failed
                 buildState = .failed
                 buildError = message
