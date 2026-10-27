@@ -7,6 +7,8 @@ extension Notification.Name {
 
 @main
 struct NXLibraryApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+
     var body: some Scene {
         WindowGroup {
             MainView()

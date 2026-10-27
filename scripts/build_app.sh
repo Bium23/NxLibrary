@@ -5,7 +5,13 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 APP="${1:-$HOME/Applications/NXLibrary.app}"
 CONFIG="${NX_BUILD_CONFIG:-release}"
-export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode-beta.app/Contents/Developer}"
+if [ -z "${DEVELOPER_DIR:-}" ]; then
+  if [ -d "/Applications/Xcode.app/Contents/Developer" ]; then
+    export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
+  elif [ -d "/Applications/Xcode-beta.app/Contents/Developer" ]; then
+    export DEVELOPER_DIR="/Applications/Xcode-beta.app/Contents/Developer"
+  fi
+fi
 
 cd "$ROOT"
 swift build -c "$CONFIG" --product NXLibrary
@@ -42,6 +48,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>CFBundleVersion</key><string>1</string>
   <key>LSApplicationCategoryType</key><string>public.app-category.games</string>
   <key>LSMinimumSystemVersion</key><string>13.0</string>
+  <key>LSMultipleInstancesProhibited</key><true/>
   <key>NSHighResolutionCapable</key><true/>
   <key>NSHumanReadableCopyright</key><string>Copyright © 2026 bium. MIT. Not affiliated with Nintendo.</string>
   <key>NSPrincipalClass</key><string>NSApplication</string>
