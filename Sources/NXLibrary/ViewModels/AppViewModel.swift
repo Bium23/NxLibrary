@@ -523,12 +523,29 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     }
 
     private func resolvedDeveloperDir() -> URL {
+        let fm = FileManager.default
+        // An explicit DEVELOPER_DIR always wins.
+        if let env = ProcessInfo.processInfo.environment["DEVELOPER_DIR"],
+           fm.fileExists(atPath: env) {
+            return URL(fileURLWithPath: env)
+        }
+        // Respect xcode-select when it points at a full Xcode, not the CLT.
+        if let selected = try? SystemCommandRunner().run(
+            URL(fileURLWithPath: "/usr/bin/xcode-select"), ["-p"],
+            environment: nil, currentDirectory: nil
+        ), selected.status == 0 {
+            let path = selected.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+            if path.contains(".app/Contents/Developer"), fm.fileExists(atPath: path) {
+                return URL(fileURLWithPath: path)
+            }
+        }
+        // Prefer a normal Xcode install over the beta when xcode-select is CLT.
         let candidates = [
-            "/Applications/Xcode-beta.app/Contents/Developer",
             "/Applications/Xcode.app/Contents/Developer",
+            "/Applications/Xcode-beta.app/Contents/Developer",
             "/Library/Developer/CommandLineTools",
         ]
-        for path in candidates where FileManager.default.fileExists(atPath: path) {
+        for path in candidates where fm.fileExists(atPath: path) {
             return URL(fileURLWithPath: path)
         }
         return URL(fileURLWithPath: "/Library/Developer/CommandLineTools")
