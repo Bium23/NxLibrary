@@ -106,6 +106,8 @@ public struct GameDetailDeckView: View {
                     )
                 }
 
+                GameAboutCard(viewModel: viewModel, game: game).id(game.id)
+
                 Divider().opacity(0.25)
                 
                 // Main Grid: Actions & Details

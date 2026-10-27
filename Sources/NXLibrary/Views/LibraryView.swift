@@ -68,6 +68,7 @@ public struct LibraryView: View {
                         }
                     }
                     .frame(maxHeight: .infinity)
+                    .id(currentSelectedGame?.id)
                 }
             }
             

@@ -205,6 +205,9 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     @Published public var keySummary: KeySummary? = nil
     @Published public var currentEngineCommit: String? = nil
     @Published public var upstreamState: UpstreamCheckState = .idle
+    @Published public var storeMetadata: [UUID: NintendoStoreMetadata] = [:]
+    @Published public var storeMetadataLoading: Set<UUID> = []
+    @Published public var storeMetadataErrors: [UUID: String] = [:]
     @Published public var storageUsage: StorageUsage? = nil
     @Published public var isCalculatingStorage: Bool = false
     @Published public var showSetupSheet: Bool = false
@@ -286,6 +289,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     private let importService = ImportService()
     private let launchService = LaunchService()
     private lazy var upstreamChecker = UpstreamChecker()
+    private lazy var storeMetadataService = NintendoStoreMetadataService()
     private let upstreamCacheKey = "NXLibrary_UpstreamStatus"
     private lazy var storageManager = StorageManager()
     private let sourceCatalog = SourceCatalog()
@@ -511,6 +515,41 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     public func openUpstreamCompare() {
         guard case .loaded(let status) = upstreamState else { return }
         NSWorkspace.shared.open(status.compareURL)
+    }
+
+    public func loadStoreMetadata(for game: PortedGame) {
+        guard let titleId = game.titleId, !titleId.isEmpty else { return }
+        if storeMetadata[game.id] != nil || storeMetadataLoading.contains(game.id) { return }
+
+        storeMetadataLoading.insert(game.id)
+        storeMetadataErrors[game.id] = nil
+        let service = storeMetadataService
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                let metadata = try await service.metadata(for: game)
+                self.storeMetadata[game.id] = metadata
+            } catch {
+                self.storeMetadataErrors[game.id] = error.localizedDescription
+            }
+            self.storeMetadataLoading.remove(game.id)
+        }
+    }
+
+    public func howLongToBeatURL(for game: PortedGame) -> URL? {
+        var components = URLComponents(string: "https://howlongtobeat.com/")
+        components?.queryItems = [URLQueryItem(name: "q", value: game.name)]
+        return components?.url
+    }
+
+    public func nintendoStoreSearchURL(for game: PortedGame) -> URL? {
+        var components = URLComponents(string: "https://www.nintendo.com/us/search/")
+        components?.fragment = "q=\(game.name)&p=1&cat=gme&sort=df"
+        return components?.url
+    }
+
+    public func openURL(_ url: URL) {
+        NSWorkspace.shared.open(url)
     }
 
     private static func upstreamErrorMessage(_ error: Error) -> String {
