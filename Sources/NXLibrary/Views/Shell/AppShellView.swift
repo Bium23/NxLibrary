@@ -83,6 +83,8 @@ public struct AppShellView: View {
                 // SettingsView handles its own Esc.
             } else if case .addGame = router.route {
                 // AddGameView handles its own Esc.
+            } else if case .console = router.route {
+                // ConsoleView handles its own Esc.
             } else {
                 router.back()
             }
@@ -133,8 +135,7 @@ public struct AppShellView: View {
                         router: router,
                         showsHints: settings.settings.showButtonHints)
         case .console:
-            LogsView(viewModel: viewModel)
-                .padding(.top, 28)
+            ConsoleView(viewModel: viewModel, router: router)
         }
     }
 
@@ -186,6 +187,12 @@ public struct AppShellView: View {
                     router.isMenuPresented = true
                 } else {
                     NotificationCenter.default.post(name: .nxAddGameGamepadAction, object: action)
+                }
+            case .console:
+                if action == .menu {
+                    router.isMenuPresented = true
+                } else {
+                    NotificationCenter.default.post(name: .nxConsoleGamepadAction, object: action)
                 }
             default:
                 if action == .menu {
