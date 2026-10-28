@@ -42,6 +42,11 @@ public struct AppShellView: View {
         }
         .onAppear(perform: startRuntime)
         .onDisappear { processObserver?.stop() }
+        .onChange(of: router.route) { route in
+            if case .addGame = route {
+                viewModel.pendingRuntimeConfig = settings.settings.gameDefaults
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryPlayFocused)) { _ in
             guard router.route == .library, let game = viewModel.currentFocusedGame else { return }
             viewModel.launchGame(game)
@@ -51,6 +56,10 @@ public struct AppShellView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenMenu)) { _ in
             router.isMenuPresented = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenSettings)) { _ in
+            router.closeMenu()
+            router.openSettings(.general)
         }
         .onExitCommand {
             if router.isMenuPresented {
@@ -96,9 +105,12 @@ public struct AppShellView: View {
                 Color.clear
                     .onAppear { router.showLibrary() }
             }
-        case .settings:
-            SystemView(viewModel: viewModel)
-                .padding(.top, 28)
+        case .settings(let section):
+            SettingsView(initialSection: section,
+                         viewModel: viewModel,
+                         settings: settings,
+                         router: router,
+                         artwork: artwork)
         case .addGame:
             BuildView(viewModel: viewModel)
                 .padding(.top, 28)
@@ -145,6 +157,12 @@ public struct AppShellView: View {
             switch router.route {
             case .library:
                 viewModel.handleLibraryGamepadAction(action)
+            case .settings:
+                if action == .menu {
+                    router.isMenuPresented = true
+                } else {
+                    NotificationCenter.default.post(name: .nxSettingsGamepadAction, object: action)
+                }
             default:
                 if action == .menu {
                     router.isMenuPresented = true

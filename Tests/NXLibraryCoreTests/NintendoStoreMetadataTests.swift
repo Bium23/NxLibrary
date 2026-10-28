@@ -115,6 +115,20 @@ final class NintendoStoreMetadataTests: XCTestCase {
         XCTAssertTrue(cached.description.contains("Mushroom Kingdom"))
     }
 
+    func testCacheSizeAndClear() throws {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("NXMeta-\(UUID().uuidString)")
+        addTeardownBlock { try? FileManager.default.removeItem(at: dir) }
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        try Data("{}".utf8).write(to: dir.appendingPathComponent("a.json"))
+        try Data("{}".utf8).write(to: dir.appendingPathComponent("b.json"))
+        let service = NintendoStoreMetadataService(client: URLSessionNintendoStoreClient(),
+                                                   cacheDirectory: dir)
+        XCTAssertGreaterThan(service.cacheSize(), 0)
+        service.clearCache()
+        XCTAssertEqual(service.cacheSize(), 0)
+    }
+
     func testNoResultThrows() async throws {
         let client = FakeClient()
         client.responses["ncom_game_en_us/query"] = Data(#"{"hits":[]}"#.utf8)

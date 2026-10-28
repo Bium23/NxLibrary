@@ -193,6 +193,7 @@ public struct SelenePanel<Content: View>: View {
             content()
         }
         .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(SeleneTheme.canvasRaised)
         .overlay(
             RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous)

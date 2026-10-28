@@ -4,6 +4,8 @@ extension Notification.Name {
     static let nxLibraryPlayFocused = Notification.Name("NXLibraryPlayFocused")
     static let nxLibraryCheckUpstream = Notification.Name("NXLibraryCheckUpstream")
     static let nxLibraryOpenMenu = Notification.Name("NXLibraryOpenMenu")
+    static let nxSettingsGamepadAction = Notification.Name("NXSettingsGamepadAction")
+    static let nxLibraryOpenSettings = Notification.Name("NXLibraryOpenSettings")
 }
 
 @main
@@ -18,6 +20,12 @@ struct NXLibraryApp: App {
         .defaultSize(width: 1440, height: 900)
         .commands {
             SidebarCommands()
+            CommandGroup(replacing: .appSettings) {
+                Button("Settings…") {
+                    NotificationCenter.default.post(name: .nxLibraryOpenSettings, object: nil)
+                }
+                .keyboardShortcut(",", modifiers: [.command])
+            }
             CommandMenu("Game") {
                 Button("Play Selected Game") {
                     NotificationCenter.default.post(name: .nxLibraryPlayFocused, object: nil)

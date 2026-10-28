@@ -309,6 +309,24 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
 
     // MARK: - Cache and text
 
+    public func cacheSize() -> Int64 {
+        guard let enumerator = fileManager.enumerator(
+            at: cacheDirectory,
+            includingPropertiesForKeys: [.fileSizeKey, .isDirectoryKey]
+        ) else { return 0 }
+        var total: Int64 = 0
+        for case let url as URL in enumerator {
+            let values = try? url.resourceValues(forKeys: [.fileSizeKey, .isDirectoryKey])
+            guard values?.isDirectory != true else { continue }
+            total += Int64(values?.fileSize ?? 0)
+        }
+        return total
+    }
+
+    public func clearCache() {
+        try? fileManager.removeItem(at: cacheDirectory)
+    }
+
     private func cacheURL(for titleId: String) -> URL {
         cacheDirectory.appendingPathComponent(Self.safeFileName(titleId) + ".json")
     }

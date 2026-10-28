@@ -15,9 +15,19 @@ public final class SoundEffectService: ObservableObject {
     public static let shared = SoundEffectService()
 
     private let soundKey = "NXNative_SoundEnabled"
+    private let volumeKey = "NXNative_SoundVolume"
+
     @Published public var isSoundEnabled: Bool {
         didSet {
             UserDefaults.standard.set(isSoundEnabled, forKey: soundKey)
+        }
+    }
+
+    @Published public var volume: Double {
+        didSet {
+            let clamped = min(max(volume, 0), 1)
+            UserDefaults.standard.set(clamped, forKey: volumeKey)
+            engine.mainMixerNode.outputVolume = Float(clamped)
         }
     }
 
@@ -32,6 +42,11 @@ public final class SoundEffectService: ObservableObject {
             self.isSoundEnabled = true
         } else {
             self.isSoundEnabled = UserDefaults.standard.bool(forKey: soundKey)
+        }
+        if UserDefaults.standard.object(forKey: volumeKey) == nil {
+            self.volume = 0.28
+        } else {
+            self.volume = min(max(UserDefaults.standard.double(forKey: volumeKey), 0), 1)
         }
         configure()
     }
@@ -56,7 +71,7 @@ public final class SoundEffectService: ObservableObject {
         let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1)!
         engine.attach(player)
         engine.connect(player, to: engine.mainMixerNode, format: format)
-        engine.mainMixerNode.outputVolume = 0.28
+        engine.mainMixerNode.outputVolume = Float(volume)
         for effect in SoundEffectType.allCases {
             buffers[effect] = makeBuffer(for: effect, format: format)
         }

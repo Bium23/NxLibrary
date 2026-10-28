@@ -10,12 +10,23 @@ public final class GameControllerService: ObservableObject {
     @Published public var activeBrand: GamepadBrand = .generic
     
     public var onAction: ((GamepadAction) -> Void)?
-    public var deadzone: Float = 0.35
+
+    private let deadzoneKey = "NXNative_ControllerDeadzone"
+    @Published public var deadzone: Float = 0.35 {
+        didSet {
+            let clamped = min(max(deadzone, 0.10), 0.80)
+            UserDefaults.standard.set(Double(clamped), forKey: deadzoneKey)
+        }
+    }
+
     public var navigationInterval: TimeInterval = 0.12
     private var isAppActive = true
     private var lastNavTime: TimeInterval = 0
     
     private init() {
+        if UserDefaults.standard.object(forKey: deadzoneKey) != nil {
+            deadzone = min(max(Float(UserDefaults.standard.double(forKey: deadzoneKey)), 0.10), 0.80)
+        }
         setupObservers()
         refreshControllers()
     }

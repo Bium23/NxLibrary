@@ -199,6 +199,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     }
     @Published public var isScanningLibrary: Bool = false
     @Published public var gameForSettingsSheet: PortedGame? = nil
+    @Published public var pendingRuntimeConfig = GameRuntimeConfig()
     @Published public var importedApps: [ImportedApp] = []
     @Published public var environmentStatus: EnvironmentStatus? = nil
     @Published public var compatibilityReport: CompatibilityReport? = nil
@@ -539,6 +540,15 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             }
             self.storeMetadataLoading.remove(game.id)
         }
+    }
+
+    public func metadataCacheSize() -> Int64 {
+        storeMetadataService.cacheSize()
+    }
+
+    public func clearMetadataCache() {
+        storeMetadataService.clearCache()
+        storeMetadata.removeAll()
     }
 
     public func howLongToBeatURL(for game: PortedGame) -> URL? {
@@ -1648,7 +1658,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         game.workspacePath = workspace.directory.path
         game.buildCachePath = workspace.buildCache.path
         game.status = .notBuilt
-        game.settings = GameRuntimeConfig()
+        game.settings = pendingRuntimeConfig
 
         let library = try libraryStore.merge(scanned: [game])
         libraryGames = library.games.sorted {
