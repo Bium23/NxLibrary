@@ -3,6 +3,7 @@ import NXLibraryCore
 
 struct BuildSourcesPanel: View {
     let presentation: GameDetailPresentation
+    var isRebuildFocused: Bool = false
     let onAttach: () -> Void
     let onRebuild: () -> Void
     let onRevealLog: () -> Void
@@ -41,7 +42,7 @@ struct BuildSourcesPanel: View {
                  ? "The installed app is playable. A rebuild needs the original XCI/NSP files; attach them again without touching saves."
                  : "The original sources are attached. Rebuild writes a new app and keeps the previous one if it fails.")
                 .font(.system(size: 11))
-                .foregroundColor(SeleneTheme.ink.opacity(0.52))
+                .foregroundColor(SeleneTheme.ink.opacity(0.68))
                 .fixedSize(horizontal: false, vertical: true)
 
             HStack(spacing: 8) {
@@ -68,6 +69,7 @@ struct BuildSourcesPanel: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(!presentation.canRebuild)
+                .seleneCapsuleFocus(isRebuildFocused)
 
                 Button(action: onRevealLog) {
                     Text("Open log")

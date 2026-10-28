@@ -30,6 +30,7 @@ public struct SettingsView: View {
     @State private var focusArea: SettingsFocusArea = .sidebar
     @State private var rowFocus = FocusIndex()
     @State private var rowActions: [SettingsRowAction] = []
+    @Environment(\.seleneReduceMotion) private var environmentReduceMotion
 
     public init(initialSection: SettingsSection,
                 viewModel: AppViewModel,
@@ -50,33 +51,45 @@ public struct SettingsView: View {
             VStack(spacing: 0) {
                 header(metrics)
                 HStack(alignment: .top, spacing: 42) {
-                    SettingsSidebar(selection: $section)
+                    SettingsSidebar(selection: $section, isFocused: focusArea == .sidebar)
                         .frame(width: metrics.sidebarWidth)
-                    ScrollView {
-                        SettingsSectionContent(
-                            section: section,
-                            viewModel: viewModel,
-                            settings: settings,
-                            artwork: artwork,
-                            focusedRowTitle: focusArea == .rows ? focusedRowTitle : nil,
-                            onViewControls: { showingControls = true },
-                            onOpenConsole: { router.openConsole() },
-                            onActions: updateActions
-                        )
-                        .padding(.bottom, 60)
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            SettingsSectionContent(
+                                section: section,
+                                viewModel: viewModel,
+                                settings: settings,
+                                artwork: artwork,
+                                onViewControls: { showingControls = true },
+                                onOpenConsole: { router.openConsole() },
+                                onActions: updateActions
+                            )
+                            .environment(\.seleneFocusedRowTitle,
+                                         focusArea == .rows ? focusedRowTitle : nil)
+                            .padding(.bottom, 60)
+                        }
+                        .scrollIndicators(.hidden)
+                        .onChange(of: rowFocus.index) { _ in
+                            guard focusArea == .rows,
+                                  rowActions.indices.contains(rowFocus.index) else { return }
+                            let id = "selene-row-\(rowActions[rowFocus.index].title)"
+                            withAnimation(reduceMotion ? nil : SeleneTheme.quick) {
+                                proxy.scrollTo(id, anchor: .center)
+                            }
+                        }
                     }
-                    .scrollIndicators(.hidden)
                 }
                 .padding(.horizontal, metrics.margin)
                 .padding(.top, 24)
                 if settings.settings.showButtonHints {
-                    CommandBar([.init("B", "Back"), .init("A", "Select"), .init("Y", "Setup")])
+                    CommandBar(commandHints)
                 }
             }
         }
         .background(SeleneTheme.canvas)
         .onMoveCommand(perform: handleMove)
         .onExitCommand(perform: handleBack)
+        .seleneActivationKeys { handleGamepad(.confirm) }
         .onChange(of: section) { value in
             if let index = SettingsSection.allCases.firstIndex(of: value) {
                 focus.index = index
@@ -97,17 +110,25 @@ public struct SettingsView: View {
             guard let action = note.object as? GamepadAction else { return }
             handleGamepad(action)
         }
-        .sheet(isPresented: $showingControls) { ControlsView() }
+        .sheet(isPresented: $showingControls) {
+            ControlsView()
+        }
+    }
+
+    private var reduceMotion: Bool {
+        settings.settings.reduceMotion || environmentReduceMotion
+    }
+
+    private var commandHints: [CommandHint] {
+        if focusArea == .sidebar {
+            return [.init("B", "Back"), .init("A", "Open")]
+        }
+        return [.init("B", "Back"), .init("A", "Select")]
     }
 
     private var focusedRowTitle: String? {
-        guard !rowActions.isEmpty else { return nil }
+        guard rowActions.indices.contains(rowFocus.index) else { return nil }
         return rowActions[rowFocus.index].title
-    }
-
-    private var focusNote: String {
-        if focusArea == .rows, let title = focusedRowTitle { return "Focused: \(title)" }
-        return "Sidebar"
     }
 
     private func header(_ metrics: SeleneLayoutMetrics) -> some View {
@@ -123,10 +144,6 @@ public struct SettingsView: View {
             }
             Spacer()
             HStack(spacing: 14) {
-                Text(focusNote)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(focusArea == .rows ? SeleneTheme.accent : SeleneTheme.inkMuted)
-                    .lineLimit(1)
                 if canResetSection {
                     Button("Reset section") { resetSection() }
                         .buttonStyle(.plain)
@@ -160,8 +177,11 @@ public struct SettingsView: View {
     }
 
     private func updateActions(_ actions: [SettingsRowAction]) {
-        rowActions = actions
-        rowFocus.move(by: 0, count: actions.count)
+        // One focus slot per visible row. Secondary buttons in a row stay
+        // pointer-reachable; the controller uses the row's primary action.
+        var seen = Set<String>()
+        rowActions = actions.filter { seen.insert($0.title).inserted }
+        rowFocus.move(by: 0, count: rowActions.count)
     }
 
     private var canResetSection: Bool {
@@ -218,9 +238,15 @@ public struct SettingsView: View {
         case .up: moveFocus(by: -1)
         case .down: moveFocus(by: 1)
         case .left:
-            if focusArea == .rows { focusArea = .sidebar }
+            if focusArea == .rows {
+                focusArea = .sidebar
+                SoundEffectService.shared.play(.focus)
+            }
         case .right:
-            if focusArea == .sidebar, !rowActions.isEmpty { focusArea = .rows }
+            if focusArea == .sidebar, !rowActions.isEmpty {
+                focusArea = .rows
+                SoundEffectService.shared.play(.focus)
+            }
         default:
             break
         }
@@ -231,9 +257,15 @@ public struct SettingsView: View {
         case .navigateUp: moveFocus(by: -1)
         case .navigateDown: moveFocus(by: 1)
         case .navigateLeft:
-            if focusArea == .rows { focusArea = .sidebar }
+            if focusArea == .rows {
+                focusArea = .sidebar
+                SoundEffectService.shared.play(.focus)
+            }
         case .navigateRight:
-            if focusArea == .sidebar, !rowActions.isEmpty { focusArea = .rows }
+            if focusArea == .sidebar, !rowActions.isEmpty {
+                focusArea = .rows
+                SoundEffectService.shared.play(.focus)
+            }
         case .confirm:
             SoundEffectService.shared.play(.click)
             if focusArea == .sidebar {

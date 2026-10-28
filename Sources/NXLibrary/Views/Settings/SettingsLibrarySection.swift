@@ -95,40 +95,27 @@ struct SettingsLibrarySection: View {
     }
 
     private func publishActions() {
-        var actions: [SettingsRowAction] = [
-            .init(id: "romChoose", title: "Choose game ROMs folder") {
+        onActions([
+            .init(id: "romChoose", title: "Game ROMs folder") {
                 viewModel.selectGameFolder()
-            }
-        ]
-        if viewModel.selectedGameFolder != nil {
-            actions.append(.init(id: "romClear", title: "Clear game ROMs folder") {
-                viewModel.selectedGameFolder = nil
-            })
-        }
-        actions.append(contentsOf: [
-            .init(id: "appsChange", title: "Change app library folder") {
+            },
+            .init(id: "appsChange", title: "App library folder") {
                 viewModel.selectLibraryFolder()
             },
-            .init(id: "appsReset", title: "Reset app library folder") {
-                viewModel.libraryFolder = URL(fileURLWithPath: viewModel.defaultInstallPath)
-                    .appendingPathComponent("Applications")
-                viewModel.loadLibrary()
-            },
-            .init(id: "import", title: "Import existing builds") {
+            .init(id: "import", title: "Existing builds") {
                 viewModel.importExistingBuilds()
             },
-            .init(id: "refresh", title: "Refresh library", isEnabled: !viewModel.isScanningLibrary) {
+            .init(id: "refresh", title: "Library refresh", isEnabled: !viewModel.isScanningLibrary) {
                 viewModel.refreshLibrary()
             },
-            .init(id: "metadataClear", title: "Clear metadata cache") {
+            .init(id: "metadataClear", title: "Metadata cache") {
                 viewModel.clearMetadataCache()
                 metadataBytes = viewModel.metadataCacheSize()
             },
-            .init(id: "artworkClear", title: "Clear artwork cache") {
+            .init(id: "artworkClear", title: "Artwork cache") {
                 artwork.clear()
                 artworkBytes = artwork.cacheSize()
             }
         ])
-        onActions(actions)
     }
 }

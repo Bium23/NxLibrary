@@ -6,24 +6,17 @@ struct SettingsSectionContent: View {
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var settings: AppSettingsStore
     @ObservedObject var artwork: ArtworkStore
-    let focusedRowTitle: String?
     let onViewControls: () -> Void
     let onOpenConsole: () -> Void
     let onActions: ([SettingsRowAction]) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(section.title)
-                    .font(.system(size: 24, weight: .semibold))
-                    .tracking(-0.6)
-                    .foregroundColor(SeleneTheme.ink)
-                Spacer()
-                Text(focusedRowTitle.map { "Focused: \($0)" } ?? "Changes apply immediately")
-                    .font(.system(size: 10))
-                    .foregroundColor(focusedRowTitle == nil ? SeleneTheme.inkMuted : SeleneTheme.accent)
-                    .lineLimit(1)
-            }
+            Text(section.title)
+                .font(.system(size: 24, weight: .semibold))
+                .tracking(-0.6)
+                .foregroundColor(SeleneTheme.ink)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             switch section {
             case .general:

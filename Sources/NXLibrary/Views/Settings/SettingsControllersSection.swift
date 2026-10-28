@@ -86,10 +86,10 @@ struct SettingsControllersSection: View {
 
     private func publishActions() {
         onActions([
-            .init(id: "detect", title: "Detect controller") {
+            .init(id: "detect", title: "Gamepad") {
                 controller.refreshControllers()
             },
-            .init(id: "layout", title: "View button layout") {
+            .init(id: "layout", title: "Button layout") {
                 onViewControls()
             },
             .init(id: "deadzone", title: "Stick navigation deadzone") {

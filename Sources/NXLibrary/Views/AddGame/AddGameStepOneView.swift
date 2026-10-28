@@ -4,6 +4,8 @@ import NXLibraryCore
 struct AddGameStepOneView: View {
     @ObservedObject var viewModel: AppViewModel
 
+    @Environment(\.seleneReduceMotion) private var reduceMotion
+
     let focusedAction: Int
     let onActions: ([AddGameAction]) -> Void
     let onClose: () -> Void
@@ -100,7 +102,7 @@ struct AddGameStepOneView: View {
                         }
                     }
 
-                    Text("The base game stays selected. One update can be active; DLC files can be selected individually.")
+                    Text("The base game stays selected. One update can be active; DLC files can be selected individually. Use the pointer or Tab for these checkboxes.")
                         .font(.system(size: 10))
                         .foregroundColor(SeleneTheme.inkMuted)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -378,20 +380,20 @@ struct AddGameStepOneView: View {
     private var actionRow: some View {
         HStack(spacing: 10) {
             SeleneActionButton(title: "Back", kind: .secondary,
-                               isFocused: focusedAction == 2,
+                               isFocused: focusedAction == 1,
                                action: onClose)
             Spacer()
             SeleneActionButton(title: "Continue", systemImage: "arrow.right",
                                kind: .primary,
                                isEnabled: viewModel.canAddSelectedGame,
-                               isFocused: focusedAction == 1,
+                               isFocused: focusedAction == 2,
                                action: goNext)
         }
     }
 
     private func goNext() {
         guard viewModel.canAddSelectedGame else { return }
-        withAnimation(SeleneTheme.standard) {
+        withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
             viewModel.goToWizardStep(2)
         }
     }
@@ -401,10 +403,10 @@ struct AddGameStepOneView: View {
             .init(id: "choose", title: "Choose folder") {
                 viewModel.selectGameFolder()
             },
+            .init(id: "back", title: "Back", perform: onClose),
             .init(id: "continue", title: "Continue",
                   isEnabled: viewModel.canAddSelectedGame,
-                  perform: goNext),
-            .init(id: "back", title: "Back", perform: onClose)
+                  perform: goNext)
         ])
     }
 }

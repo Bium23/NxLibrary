@@ -18,6 +18,22 @@ A personal, native macOS front-end for [nxnative](https://github.com/seedds/nxna
 - Checks the upstream `seedds/nxnative` commit history on demand in **Settings → Engine**. The check is read-only: it contacts the GitHub API, shows new commits and a compare link, never fetches, merges, checks out or re-pins the engine. The engine gate keeps blocking builds until an update is manually re-pinned and re-tested.
 - Includes synthesized UI tones, controller prompts, and keyboard shortcuts. The theme and symbols are original; no Nintendo assets are included.
 
+## Interface
+
+NX Library uses a dark, cinematic, controller-first interface inspired by the calm of console system software and by the Selene Playnite theme. It does not include Sony or Nintendo branding, fonts, sounds, wallpapers or artwork.
+
+- **Library:** full-bleed hero artwork, one white primary action, a filter row and a square key-art rail with a single white focus ring.
+- **Game detail:** artwork-led page with Play, Game options and Rebuild, plus build/source status, save, app and store panels. On wide windows the support panels move into a right-hand rail.
+- **Game options:** runtime settings in a focused overlay, with its own controller scope so input never leaks to the library behind it.
+- **Hidden menu:** `⌘K` or the controller Menu/Start button opens Library, Add Game, Settings, Console and Quit.
+- **Settings:** eight sections in a sidebar, all editable at runtime. Appearance includes background shade, readable text, reduce motion, button hints and the clock.
+- **Add Game and Setup:** the three-step import/build flow and the first-run checklist share the same visual language.
+- **Console:** filter, search, copy and clear the in-memory build and launch log; the log file on disk is kept.
+- **Controller and keyboard:** A/Return confirms or plays, B/Esc goes back, LB/RB switch filters or tabs, and Menu/Start opens the hidden menu. On the library X opens details and Y opens Game options; on the detail page X opens Game options and Y rebuilds. Arrow keys move focus, and `⌘D`/`⌘O` open details or Game options.
+- **Artwork:** Store descriptions and artwork are cached locally under Application Support. Nothing is written to the repository.
+
+The design specification and implementation plan live in [`docs/superpowers/`](docs/superpowers/). Visual acceptance is a manual pass on this Mac; the automated suite covers the data and build layers.
+
 ## Requirements
 
 - Apple-silicon Mac, macOS 13 or newer.

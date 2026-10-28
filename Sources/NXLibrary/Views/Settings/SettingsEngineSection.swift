@@ -5,6 +5,7 @@ struct SettingsEngineSection: View {
     @ObservedObject var viewModel: AppViewModel
     let onActions: ([SettingsRowAction]) -> Void
 
+    @Environment(\.seleneFocusedRowTitle) private var focusedRowTitle
     @State private var showOverrideConfirmation = false
 
     var body: some View {
@@ -86,6 +87,7 @@ struct SettingsEngineSection: View {
                     }
                 }
             }
+            .seleneFocus(focusedRowTitle == "Compatibility", radius: SeleneTheme.cardRadius)
 
             SeleneRow("Untested toolchain override",
                       subtitle: overrideSubtitle) {
@@ -154,6 +156,7 @@ struct SettingsEngineSection: View {
                     .foregroundColor(SeleneTheme.inkMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            .seleneFocus(focusedRowTitle == "prod.keys", radius: SeleneTheme.cardRadius)
         }
         .onAppear(perform: publishActions)
         .onChange(of: viewModel.allowUntestedToolchain) { _ in publishActions() }
@@ -292,13 +295,10 @@ struct SettingsEngineSection: View {
 
     private func publishActions() {
         var actions: [SettingsRowAction] = [
-            .init(id: "repo", title: "Change engine repository") {
+            .init(id: "repo", title: "Engine repository") {
                 viewModel.selectNxnativeFolder()
             },
-            .init(id: "reveal", title: "Reveal engine repository", isEnabled: viewModel.isNxnativeValid) {
-                viewModel.revealInFinder(url: URL(fileURLWithPath: viewModel.nxnativePath))
-            },
-            .init(id: "recheck", title: "Re-check compatibility") {
+            .init(id: "recheck", title: "Compatibility") {
                 viewModel.detectEnvironment()
             },
             .init(id: "override", title: "Untested toolchain override",
@@ -309,23 +309,18 @@ struct SettingsEngineSection: View {
                     showOverrideConfirmation = true
                 }
             },
-            .init(id: "upstream", title: "Check upstream") {
+            .init(id: "upstream", title: "Upstream") {
                 viewModel.checkUpstreamChangelog()
             }
         ]
         if case .loaded = viewModel.upstreamState {
-            actions.append(.init(id: "compare", title: "Compare on GitHub") {
+            actions.append(.init(id: "compare", title: "Compare") {
                 viewModel.openUpstreamCompare()
             })
         }
-        actions.append(contentsOf: [
-            .init(id: "keys", title: "Import or replace prod.keys") {
-                viewModel.selectProdKeysFile()
-            },
-            .init(id: "ryujinx", title: "Detect Ryujinx keys") {
-                viewModel.selectRyujinxFolder()
-            }
-        ])
+        actions.append(.init(id: "keys", title: "prod.keys") {
+            viewModel.selectProdKeysFile()
+        })
         onActions(actions)
     }
 }

@@ -6,6 +6,8 @@ struct AddGameStepTwoView: View {
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var router: AppRouter
 
+    @Environment(\.seleneReduceMotion) private var reduceMotion
+
     let focusedAction: Int
     let onActions: ([AddGameAction]) -> Void
 
@@ -122,7 +124,7 @@ struct AddGameStepTwoView: View {
                     .lineLimit(1)
                 Spacer()
                 Button("Change selection") {
-                    withAnimation(SeleneTheme.standard) {
+                    withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
                         viewModel.goToWizardStep(1)
                     }
                 }
@@ -187,7 +189,7 @@ struct AddGameStepTwoView: View {
                                 isOn: $viewModel.pendingRuntimeConfig.enableMetalHUD)
             }
 
-            Text("Saved with the new game. Each game can override these later in Game options.")
+            Text("Saved with the new game. Each game can override these later in Game options. Use the pointer for these toggles.")
                 .font(.system(size: 10))
                 .foregroundColor(SeleneTheme.inkMuted)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -248,7 +250,7 @@ struct AddGameStepTwoView: View {
                           text: $viewModel.bundleId)
                 }
                 SeleneRow("Game language") {
-                    Picker("", selection: $viewModel.selectedLanguage) {
+                    Picker("Game language", selection: $viewModel.selectedLanguage) {
                         ForEach(languageOptions, id: \.code) { option in
                             Text(option.label).tag(option.code)
                         }
@@ -256,6 +258,7 @@ struct AddGameStepTwoView: View {
                     .labelsHidden()
                     .pickerStyle(.menu)
                     .frame(width: 190)
+                    .accessibilityLabel("Game language")
                 }
             }
 
@@ -294,6 +297,17 @@ struct AddGameStepTwoView: View {
 
     @ViewBuilder
     private var warnings: some View {
+        if let error = viewModel.buildError {
+            warning("Build failed: \(error)", actionTitle: "Dismiss") {
+                viewModel.buildError = nil
+            }
+        }
+        if viewModel.environmentStatus != nil, !viewModel.prerequisites.xcode.isAvailable {
+            warning("Apple Command Line Tools are missing. A build needs them.",
+                    actionTitle: "Install…") {
+                viewModel.installAppleCommandLineTools()
+            }
+        }
         if !viewModel.isProdKeysValid {
             warning("prod.keys is missing. You can add the game now; import the key before building.",
                     actionTitle: "Import key…") {
@@ -347,6 +361,7 @@ struct AddGameStepTwoView: View {
     }
 
     private var footerHint: String {
+        if viewModel.isScanningGameFolder { return "Scanning sources…" }
         guard let selected = viewModel.selectedGame else { return "Select a game in step 1." }
         guard selected.hasBase else {
             return "Base required: add the base game NSP/XCI before adding it."
@@ -371,7 +386,7 @@ struct AddGameStepTwoView: View {
         HStack(spacing: 10) {
             SeleneActionButton(title: "Back", kind: .secondary,
                                isFocused: focusedAction == 2) {
-                withAnimation(SeleneTheme.standard) {
+                withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
                     viewModel.goToWizardStep(1)
                 }
             }
@@ -406,7 +421,7 @@ struct AddGameStepTwoView: View {
                   isEnabled: viewModel.canStartBuild,
                   perform: { addSelectedGame(buildNow: true) }),
             .init(id: "back", title: "Back") {
-                withAnimation(SeleneTheme.standard) {
+                withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
                     viewModel.goToWizardStep(1)
                 }
             }

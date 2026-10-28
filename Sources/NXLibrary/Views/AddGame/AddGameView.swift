@@ -5,9 +5,12 @@ public struct AddGameView: View {
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var router: AppRouter
 
+    @Environment(\.seleneReduceMotion) private var reduceMotion
+
     private let showsHints: Bool
 
     @State private var showDiscardConfirmation = false
+    @State private var showLeaveBuildConfirmation = false
     @State private var stepFocus = FocusIndex()
     @State private var actions: [AddGameAction] = []
     @State private var actionsStep: Int = 0
@@ -64,14 +67,15 @@ public struct AddGameView: View {
         .background(SeleneTheme.canvas)
         .onMoveCommand(perform: handleMove)
         .onExitCommand(perform: handleBack)
+        .seleneActivationKeys(confirmFocused)
         .onChange(of: viewModel.buildWizardStep) { step in
             stepFocus = FocusIndex(index: defaultFocus(for: step))
         }
         .onChange(of: viewModel.canAddSelectedGame) { canAdd in
             guard viewModel.buildWizardStep == 1 else { return }
             if canAdd, stepFocus.index == 0 {
-                stepFocus.index = 1
-            } else if !canAdd, stepFocus.index == 1 {
+                stepFocus.index = 2
+            } else if !canAdd, stepFocus.index == 2 {
                 stepFocus.index = 0
             }
         }
@@ -87,29 +91,41 @@ public struct AddGameView: View {
         } message: {
             Text("The files on disk are not changed.")
         }
+        .confirmationDialog("Leave the build?",
+                            isPresented: $showLeaveBuildConfirmation,
+                            titleVisibility: .visible) {
+            Button("Leave Add Game", role: .destructive, action: leaveActiveBuild)
+            Button("Keep Watching", role: .cancel) {}
+        } message: {
+            Text("The build keeps running in the background. Open Console to follow it.")
+        }
+        .alert("Apple Command Line Tools", isPresented: $viewModel.showCltInstallAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Apple's official installer dialog has opened on screen. Follow Apple's prompt, then re-check from Settings or Setup.")
+        }
     }
 
     private var commandHints: [CommandHint] {
-        switch viewModel.buildWizardStep {
-        case 1:
-            return [
-                .init("B", "Back"),
-                .init("A", viewModel.canAddSelectedGame ? "Continue" : "Choose folder")
-            ]
-        case 2:
-            return [.init("B", "Back"), .init("A", "Select")]
-        default:
-            if viewModel.isBuilding {
-                return [.init("A", "Select")]
-            }
-            return [.init("B", "Back"), .init("A", "Select")]
+        let backLabel: String
+        if viewModel.isBuilding {
+            backLabel = "Hide"
+        } else if viewModel.buildWizardStep > 1 {
+            backLabel = "Back"
+        } else {
+            backLabel = "Close"
         }
+        if actionsStep == viewModel.buildWizardStep,
+           actions.indices.contains(stepFocus.index) {
+            return [.init("B", backLabel), .init("A", actions[stepFocus.index].title)]
+        }
+        return [.init("B", backLabel), .init("A", "Select")]
     }
 
     private func defaultFocus(for step: Int) -> Int {
         switch step {
         case 1:
-            return viewModel.canAddSelectedGame ? 1 : 0
+            return viewModel.canAddSelectedGame ? 2 : 0
         case 2:
             return viewModel.canStartBuild ? 1 : 0
         default:
@@ -133,7 +149,8 @@ public struct AddGameView: View {
     }
 
     private func confirmFocused() {
-        guard actionsStep == viewModel.buildWizardStep,
+        guard !showDiscardConfirmation, !showLeaveBuildConfirmation,
+              actionsStep == viewModel.buildWizardStep,
               actions.indices.contains(stepFocus.index) else { return }
         let action = actions[stepFocus.index]
         guard action.isEnabled else {
@@ -153,6 +170,18 @@ public struct AddGameView: View {
     }
 
     private func handleGamepad(_ action: GamepadAction) {
+        if showLeaveBuildConfirmation {
+            switch action {
+            case .confirm:
+                showLeaveBuildConfirmation = false
+                leaveActiveBuild()
+            case .cancel:
+                showLeaveBuildConfirmation = false
+            default:
+                break
+            }
+            return
+        }
         if showDiscardConfirmation {
             switch action {
             case .confirm:
@@ -175,13 +204,20 @@ public struct AddGameView: View {
     }
 
     private func handleBack() {
+        if showLeaveBuildConfirmation {
+            showLeaveBuildConfirmation = false
+            return
+        }
         if showDiscardConfirmation {
             showDiscardConfirmation = false
             return
         }
-        guard !viewModel.isBuilding else { return }
+        if viewModel.isBuilding {
+            requestClose()
+            return
+        }
         if viewModel.buildWizardStep > 1 {
-            withAnimation(SeleneTheme.standard) {
+            withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
                 viewModel.goToWizardStep(viewModel.buildWizardStep - 1)
             }
         } else {
@@ -190,15 +226,21 @@ public struct AddGameView: View {
     }
 
     private func requestClose() {
-        guard !viewModel.isBuilding else {
-            router.back()
+        if viewModel.isBuilding {
+            showLeaveBuildConfirmation = true
             return
         }
         if viewModel.selectedGameFolder != nil || !viewModel.selectedSources.isEmpty {
             showDiscardConfirmation = true
         } else {
+            viewModel.addGameDidLeave()
             router.back()
         }
+    }
+
+    private func leaveActiveBuild() {
+        viewModel.addGameDidLeave()
+        router.back()
     }
 
     private func discardAndClose() {
@@ -206,6 +248,7 @@ public struct AddGameView: View {
         viewModel.appName = ""
         viewModel.bundleId = ""
         viewModel.resetWizard()
+        viewModel.addGameDidLeave()
         router.back()
     }
 

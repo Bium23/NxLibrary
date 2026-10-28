@@ -40,7 +40,9 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                 UserDefaults.standard.set(folder.path, forKey: StorageKeys.savedGameFolder)
                 scanGameFolder(folder)
             } else {
-                UserDefaults.standard.removeObject(forKey: StorageKeys.savedGameFolder)
+                if !keepsRememberedGameFolder {
+                    UserDefaults.standard.removeObject(forKey: StorageKeys.savedGameFolder)
+                }
                 scanGeneration = UUID()
                 detectedGames = []
                 selectedGame = nil
@@ -50,6 +52,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             }
         }
     }
+    private var keepsRememberedGameFolder = false
     @Published public var detectedGames: [SelectableGame] = []
     @Published public var selectedGame: SelectableGame? = nil {
         didSet {
@@ -104,12 +107,6 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         [availableDiskBytes, availableOutputDiskBytes].compactMap { $0 }.min()
     }
     
-    public var filteredLibraryGames: [PortedGame] {
-        let query = librarySearchText.trimmingCharacters(in: .whitespaces)
-        guard !query.isEmpty else { return libraryGames }
-        return libraryGames.filter { $0.name.localizedCaseInsensitiveContains(query) }
-    }
-
     public var selectedSources: [GameFileItem] {
         guard let game = selectedGame else { return [] }
         return game.files.filter { selectedSourceIDs.contains($0.id) }
@@ -149,7 +146,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     }
     
     public var canAddSelectedGame: Bool {
-        guard !isBuilding, let game = selectedGame else { return false }
+        guard !isBuilding, !isScanningGameFolder, let game = selectedGame else { return false }
         return game.hasBase
             && selectedSources.contains(where: { $0.type == .base })
             && selectedSourcesSizeBytes > 0
@@ -194,15 +191,11 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             }
         }
     }
-    @Published public var librarySearchText: String = "" {
-        didSet {
-            focusedGameIndex = 0
-            isFocusOnDeck = false
-        }
-    }
     @Published public var isScanningLibrary: Bool = false
     @Published public var gameForSettingsSheet: PortedGame? = nil
     @Published public var pendingRuntimeConfig = GameRuntimeConfig()
+    private var lastAddGameDefaults = GameRuntimeConfig()
+    private var addGameSessionActive = false
     @Published public var importedApps: [ImportedApp] = []
     @Published public var environmentStatus: EnvironmentStatus? = nil
     @Published public var compatibilityReport: CompatibilityReport? = nil
@@ -266,11 +259,8 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     }
     
     // MARK: - Navigation
-    @Published public var selectedTab: Int = 0 // 0: Library, 1: Add Game, 2: Controls, 3: Settings, 4: Console
-    @Published public var focusedGameIndex: Int = 0
     @Published public var librarySelection = LibrarySelectionState()
     public var router: AppRouter?
-    @Published public var isFocusOnDeck: Bool = false
     @Published public var launchingGameId: UUID? = nil
 
     public var playSessionStore: PlaySessionStore?
@@ -360,7 +350,6 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         updateDockIcon()
         
         NotificationService.shared.requestAuthorization()
-        setupControllerNavigation()
         DispatchQueue.global(qos: .utility).async { [weak self] in
             self?.sweepStaleBuildTemp()
         }
@@ -988,11 +977,8 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                         folder: nil,
                         bundleId: game.bundleId
                     )
-                    self.librarySearchText = ""
-                    if let index = self.libraryGames.firstIndex(where: { $0.id == updated.id }) {
-                        self.focusedGameIndex = index
-                    }
-                    self.selectedTab = 0
+                    self.librarySelection.selectedGameID = updated.id
+                    self.librarySelection.focusArea = .rail
                     self.logs.append(LogEntry(level: .success,
                         message: "Sources attached to \(game.name); rebuild is now available if the toolchain gate allows it."))
                 } catch {
@@ -1323,6 +1309,8 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     private func scanGameFolder(_ folder: URL) {
         scanError = nil
         isScanningGameFolder = true
+        selectedGame = nil
+        selectedSourceIDs = []
         let generation = UUID()
         scanGeneration = generation
         let catalog = sourceCatalog
@@ -1546,6 +1534,50 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         lastError = nil
     }
 
+    /// Called when the Add Game route becomes visible. A build in progress always
+    /// resumes on the live step; returning with Back keeps the draft; any other
+    /// entry starts clean so an old success or failure screen never comes back.
+    public func addGameDidBecomeVisible(defaults: GameRuntimeConfig, returningFromBack: Bool) {
+        if isBuilding {
+            buildWizardStep = 3
+            addGameSessionActive = true
+            return
+        }
+        if returningFromBack, addGameSessionActive { return }
+        startNewAddGame(defaults: defaults)
+    }
+
+    /// Ends the draft when the user leaves Add Game for a non-overlay route.
+    public func addGameDidLeave() {
+        guard !isBuilding else { return }
+        addGameSessionActive = false
+    }
+
+    /// Starts a clean wizard while remembering the folder preference for next launch.
+    public func startNewAddGame(defaults: GameRuntimeConfig? = nil) {
+        guard !isBuilding else {
+            buildWizardStep = 3
+            addGameSessionActive = true
+            return
+        }
+        if let defaults {
+            lastAddGameDefaults = defaults
+        }
+        keepsRememberedGameFolder = true
+        selectedGameFolder = nil
+        keepsRememberedGameFolder = false
+        detectedGames = []
+        selectedGame = nil
+        selectedSourceIDs = []
+        scanError = nil
+        appName = ""
+        bundleId = ""
+        pendingRuntimeConfig = lastAddGameDefaults
+        selectedLanguage = lastAddGameDefaults.language
+        resetWizard()
+        addGameSessionActive = true
+    }
+
     #if DEBUG
     /// Feeds sample events through the same reducer as a real build, for
     /// SwiftUI previews and UI work without running nxnative.
@@ -1553,7 +1585,6 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         isBuilding = true
         buildState = .running
         buildWizardStep = 3
-        selectedTab = 1
         currentBuildGameID = libraryGames.first?.id
         logs.removeAll()
         buildStages.removeAll()
@@ -1616,16 +1647,12 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             if isNewGame {
                 pendingRuntimeConfig.save(for: game)
             }
-            librarySearchText = ""
-            if let index = libraryGames.firstIndex(where: { $0.id == game.id }) {
-                focusedGameIndex = index
-            }
+            librarySelection.selectedGameID = game.id
+            librarySelection.focusArea = .rail
             logs.append(LogEntry(level: .success, message: "Added \(game.name) to the library."))
             if buildNow, canStartBuild {
-                selectedTab = 1
                 startBuild(for: game)
             } else {
-                selectedTab = 0
                 resetWizard()
             }
         } catch {

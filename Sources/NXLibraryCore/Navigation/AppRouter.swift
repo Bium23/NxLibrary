@@ -11,6 +11,7 @@ public enum AppRoute: Equatable {
 
 public final class AppRouter: ObservableObject {
     @Published public private(set) var route: AppRoute = .library
+    @Published public private(set) var isReturningFromBack = false
     @Published public var isMenuPresented = false
     @Published public var isSearchPresented = false
     @Published public var menuSelection = MenuSelectionModel()
@@ -25,6 +26,7 @@ public final class AppRouter: ObservableObject {
 
     public func navigate(to route: AppRoute) {
         guard route != self.route else { return }
+        isReturningFromBack = false
         history.append(self.route)
         self.route = route
     }
@@ -35,12 +37,17 @@ public final class AppRouter: ObservableObject {
     public func openConsole() { navigate(to: .console) }
 
     public func showLibrary() {
+        isReturningFromBack = false
         history.removeAll()
         route = .library
     }
 
     public func back() {
-        guard let previous = history.popLast() else { return }
+        guard let previous = history.popLast() else {
+            isReturningFromBack = false
+            return
+        }
+        isReturningFromBack = true
         route = previous
     }
 

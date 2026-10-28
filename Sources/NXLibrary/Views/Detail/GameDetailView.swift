@@ -13,6 +13,8 @@ struct GameDetailView: View {
     @State private var metadata: NintendoStoreMetadata?
     @State private var heroImage: NSImage?
     @State private var expanded = false
+    @State private var actionFocus = 0
+    @Environment(\.seleneReduceMotion) private var environmentReduceMotion
 
     private var presentation: GameDetailPresentation {
         GameDetailPresentation(
@@ -29,9 +31,9 @@ struct GameDetailView: View {
             ZStack(alignment: .topLeading) {
                 background(geo: geo)
                 ScrollView {
-                    content(metrics: metrics, width: min(760, geo.size.width * 0.58))
-                        .padding(.leading, metrics.margin)
-                        .padding(.top, 128)
+                    content(metrics: metrics, geo: geo)
+                        .padding(.horizontal, metrics.margin)
+                        .padding(.top, 120)
                         .padding(.bottom, 100)
                 }
                 .scrollIndicators(.hidden)
@@ -43,10 +45,10 @@ struct GameDetailView: View {
             .overlay(alignment: .bottom) {
                 if settings.settings.showButtonHints {
                     CommandBar([
-                        .init("B", "Back"),
-                        .init("Y", "Game options"),
                         .init("A", "Play"),
-                        .init("X", "Rebuild")
+                        .init("B", "Back"),
+                        .init("X", "Game options"),
+                        .init("Y", "Rebuild")
                     ])
                 }
             }
@@ -54,6 +56,12 @@ struct GameDetailView: View {
         .onAppear {
             viewModel.loadStoreMetadata(for: game)
             metadata = viewModel.storeMetadata[game.id]
+        }
+        .onMoveCommand(perform: handleMove)
+        .seleneActivationKeys(activateFocused)
+        .onReceive(NotificationCenter.default.publisher(for: .nxDetailGamepadAction)) { note in
+            guard let action = note.object as? GamepadAction else { return }
+            handleGamepad(action)
         }
         .onChange(of: viewModel.storeMetadata) { _ in
             metadata = viewModel.storeMetadata[game.id]
@@ -131,82 +139,107 @@ struct GameDetailView: View {
         .padding(.top, 34)
     }
 
-    private func content(metrics: SeleneLayoutMetrics, width: CGFloat) -> some View {
+    private func content(metrics: SeleneLayoutMetrics, geo: GeometryProxy) -> some View {
         let p = presentation
-        return VStack(alignment: .leading, spacing: 0) {
-            if !p.eyebrow.isEmpty {
-                Text(p.eyebrow)
-                    .font(.system(size: 10, weight: .bold))
-                    .tracking(2.4)
-                    .textCase(.uppercase)
-                    .foregroundColor(SeleneTheme.ink.opacity(0.60))
-                    .padding(.bottom, 8)
-            }
-
-            Text(p.title)
-                .font(.system(size: 54, weight: .bold))
-                .tracking(-1.4)
-                .foregroundColor(SeleneTheme.ink)
-                .lineLimit(2)
-                .frame(maxWidth: width, alignment: .leading)
-
-            chips(p)
-                .padding(.top, 14)
-
-            HStack(spacing: 10) {
-                Button {
-                    viewModel.launchGame(game)
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "play.fill")
-                            .font(.system(size: 11))
-                        Text("Play")
-                            .font(.system(size: 13, weight: .semibold))
-                    }
-                    .foregroundColor(SeleneTheme.canvas)
-                    .padding(.horizontal, 24)
-                    .frame(height: 42)
-                    .background(p.canPlay ? SeleneTheme.focus : SeleneTheme.ink.opacity(0.16))
-                    .clipShape(Capsule())
+        let wide = geo.size.width >= 1360
+        let width = wide
+            ? min(820, geo.size.width - metrics.margin * 2 - 396)
+            : min(820, geo.size.width * 0.64)
+        return HStack(alignment: .top, spacing: 36) {
+            VStack(alignment: .leading, spacing: 0) {
+                if !p.eyebrow.isEmpty {
+                    Text(p.eyebrow)
+                        .font(.system(size: 10, weight: .bold))
+                        .tracking(2.4)
+                        .textCase(.uppercase)
+                        .foregroundColor(SeleneTheme.ink.opacity(0.60))
+                        .padding(.bottom, 8)
                 }
-                .buttonStyle(.plain)
-                .disabled(!p.canPlay)
 
-                Button {
-                    viewModel.gameForSettingsSheet = game
-                } label: {
-                    Text("Game options")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(SeleneTheme.ink.opacity(0.9))
-                        .padding(.horizontal, 20)
+                Text(p.title)
+                    .font(.system(size: 54, weight: .bold))
+                    .tracking(-1.4)
+                    .foregroundColor(SeleneTheme.ink)
+                    .lineLimit(2)
+                    .frame(maxWidth: width, alignment: .leading)
+
+                chips(p)
+                    .padding(.top, 14)
+
+                HStack(spacing: 10) {
+                    Button {
+                        viewModel.launchGame(game)
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "play.fill")
+                                .font(.system(size: 11))
+                            Text("Play")
+                                .font(.system(size: 13, weight: .semibold))
+                        }
+                        .foregroundColor(p.canPlay ? SeleneTheme.canvas : SeleneTheme.ink.opacity(0.62))
+                        .padding(.horizontal, 24)
                         .frame(height: 42)
-                        .background(SeleneTheme.ink.opacity(0.10))
-                        .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.18), lineWidth: 1))
+                        .background(p.canPlay ? SeleneTheme.focus : SeleneTheme.ink.opacity(0.10))
                         .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!p.canPlay)
+                    .seleneCapsuleFocus(actionFocus == 0)
+
+                    Button {
+                        viewModel.gameForSettingsSheet = game
+                    } label: {
+                        Text("Game options")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(SeleneTheme.ink.opacity(0.9))
+                            .padding(.horizontal, 20)
+                            .frame(height: 42)
+                            .background(SeleneTheme.ink.opacity(0.10))
+                            .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.18), lineWidth: 1))
+                            .clipShape(Capsule())
+                            .seleneCapsuleFocus(actionFocus == 1)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
-            }
-            .padding(.top, 20)
-
-            metadataRow(p)
-                .padding(.top, 22)
-
-            description(p, width: width)
                 .padding(.top, 20)
 
-            BuildSourcesPanel(
-                presentation: p,
-                onAttach: { viewModel.locateSources(for: game) },
-                onRebuild: {
-                    viewModel.startBuild(for: game)
-                    router.openAddGame()
-                },
-                onRevealLog: { viewModel.revealLog(for: game) }
-            )
-            .padding(.top, 22)
+                metadataRow(p)
+                    .padding(.top, 22)
 
-            bottomCards(p)
-                .padding(.top, 14)
+                description(p, width: width)
+                    .padding(.top, 20)
+
+                if !wide {
+                    BuildSourcesPanel(
+                        presentation: p,
+                        isRebuildFocused: actionFocus == 2,
+                        onAttach: { viewModel.locateSources(for: game) },
+                        onRebuild: rebuild,
+                        onRevealLog: { viewModel.revealLog(for: game) }
+                    )
+                    .padding(.top, 22)
+
+                    bottomCards(p, vertical: false)
+                        .padding(.top, 14)
+                }
+            }
+            .frame(width: width, alignment: .leading)
+
+            if wide {
+                VStack(spacing: 12) {
+                    BuildSourcesPanel(
+                        presentation: p,
+                        isRebuildFocused: actionFocus == 2,
+                        onAttach: { viewModel.locateSources(for: game) },
+                        onRebuild: rebuild,
+                        onRevealLog: { viewModel.revealLog(for: game) }
+                    )
+                    bottomCards(p, vertical: true)
+                }
+                .frame(width: 360)
+            }
+
+            Spacer(minLength: 0)
         }
     }
 
@@ -215,13 +248,11 @@ struct GameDetailView: View {
             ForEach(Array(p.genres.prefix(4)), id: \.self) { genre in
                 Text(genre)
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(genre == p.genres.first ? SeleneTheme.accent : SeleneTheme.ink.opacity(0.72))
+                    .foregroundColor(SeleneTheme.ink.opacity(0.78))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
-                    .background((genre == p.genres.first ? SeleneTheme.accent : SeleneTheme.ink).opacity(0.08))
-                    .overlay(Capsule().strokeBorder(
-                        (genre == p.genres.first ? SeleneTheme.accent : SeleneTheme.ink).opacity(0.18),
-                        lineWidth: 1))
+                    .background(SeleneTheme.ink.opacity(0.07))
+                    .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.16), lineWidth: 1))
                     .clipShape(Capsule())
             }
             if let publisher = p.publisher {
@@ -257,10 +288,10 @@ struct GameDetailView: View {
     private func detailMeta(_ label: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label)
-                .font(.system(size: 9, weight: .bold))
+                .font(.system(size: 10, weight: .bold))
                 .tracking(1.4)
                 .textCase(.uppercase)
-                .foregroundColor(SeleneTheme.ink.opacity(0.40))
+                .foregroundColor(SeleneTheme.ink.opacity(0.58))
             Text(value)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(SeleneTheme.ink.opacity(0.94))
@@ -286,13 +317,14 @@ struct GameDetailView: View {
                 Text(p.description)
                     .font(.system(size: 12.5))
                     .lineSpacing(3)
-                    .foregroundColor(SeleneTheme.ink.opacity(0.64))
+                    .foregroundColor(SeleneTheme.ink.opacity(0.72))
                     .lineLimit(expanded ? nil : 4)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: width, alignment: .leading)
                 if p.description.count > 220 {
                     Button(expanded ? "Show less" : "Read more") {
-                        withAnimation(SeleneTheme.quick) { expanded.toggle() }
+                        withAnimation((settings.settings.reduceMotion || environmentReduceMotion)
+                                      ? nil : SeleneTheme.quick) { expanded.toggle() }
                     }
                     .buttonStyle(.plain)
                     .font(.system(size: 10.5, weight: .semibold))
@@ -302,48 +334,66 @@ struct GameDetailView: View {
         }
     }
 
-    private func bottomCards(_ p: GameDetailPresentation) -> some View {
-        HStack(spacing: 12) {
-            detailCard(title: "SAVE FILES",
-                       value: "Application Support",
-                       subtitle: "Saves stay outside the app bundle.") {
-                Button("Open folder") {
-                    viewModel.revealSaveFolder(URL(fileURLWithPath: p.savePath))
-                }
+    @ViewBuilder
+    private func bottomCards(_ p: GameDetailPresentation, vertical: Bool) -> some View {
+        if vertical {
+            VStack(spacing: 12) {
+                saveCard(p)
+                appCard(p)
+                storeCard(p)
+            }
+        } else {
+            HStack(spacing: 12) {
+                saveCard(p)
+                appCard(p)
+                storeCard(p)
+            }
+        }
+    }
+
+    private func saveCard(_ p: GameDetailPresentation) -> some View {
+        detailCard(title: "SAVE FILES",
+                   value: "Application Support",
+                   subtitle: "Saves stay outside the app bundle.") {
+            Button("Open folder") {
+                viewModel.revealSaveFolder(URL(fileURLWithPath: p.savePath))
+            }
+            .buttonStyle(.plain)
+            .font(.system(size: 10.5, weight: .semibold))
+            .foregroundColor(SeleneTheme.accent)
+        }
+    }
+
+    private func appCard(_ p: GameDetailPresentation) -> some View {
+        detailCard(title: "APP BUNDLE",
+                   value: game.url.lastPathComponent,
+                   subtitle: p.size) {
+            Button("Reveal") { viewModel.revealInFinder(url: game.url) }
                 .buttonStyle(.plain)
                 .font(.system(size: 10.5, weight: .semibold))
                 .foregroundColor(SeleneTheme.accent)
-            }
+        }
+    }
 
-            detailCard(title: "APP BUNDLE",
-                       value: game.url.lastPathComponent,
-                       subtitle: p.size) {
-                Button("Reveal") { viewModel.revealInFinder(url: game.url) }
-                    .buttonStyle(.plain)
-                    .font(.system(size: 10.5, weight: .semibold))
-                    .foregroundColor(SeleneTheme.accent)
-            }
-
-            detailCard(title: "STORE & LINKS",
-                       value: "Nintendo Store",
-                       subtitle: p.description.isEmpty ? "No cached description." : "Description cached locally.") {
-                HStack(spacing: 10) {
-                    if let store = p.storeURL {
-                        Button("Store") { viewModel.openURL(store) }
-                            .buttonStyle(.plain)
-                            .font(.system(size: 10.5, weight: .semibold))
-                            .foregroundColor(SeleneTheme.accent)
-                    }
-                    if let hltb = p.hltbURL {
-                        Button("HowLongToBeat") { viewModel.openURL(hltb) }
-                            .buttonStyle(.plain)
-                            .font(.system(size: 10.5, weight: .semibold))
-                            .foregroundColor(SeleneTheme.accent)
-                    }
+    private func storeCard(_ p: GameDetailPresentation) -> some View {
+        detailCard(title: "STORE & LINKS",
+                   value: "Nintendo Store",
+                   subtitle: p.description.isEmpty ? "No cached description." : "Description cached locally.") {
+            HStack(spacing: 10) {
+                if let store = p.storeURL {
+                    Button("Store") { viewModel.openURL(store) }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 10.5, weight: .semibold))
+                        .foregroundColor(SeleneTheme.accent)
+                }
+                if let hltb = p.hltbURL {
+                    Button("HowLongToBeat") { viewModel.openURL(hltb) }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 10.5, weight: .semibold))
+                        .foregroundColor(SeleneTheme.accent)
                 }
             }
         }
-        .frame(maxWidth: 760)
     }
 
     private func detailCard<Actions: View>(title: String, value: String,
@@ -351,7 +401,7 @@ struct GameDetailView: View {
                                            @ViewBuilder actions: () -> Actions) -> some View {
         VStack(alignment: .leading, spacing: 7) {
             Text(title)
-                .font(.system(size: 9, weight: .bold))
+                .font(.system(size: 10, weight: .bold))
                 .tracking(1.4)
                 .foregroundColor(SeleneTheme.inkMuted)
             Text(value)
@@ -360,8 +410,8 @@ struct GameDetailView: View {
                 .lineLimit(1)
                 .truncationMode(.middle)
             Text(subtitle)
-                .font(.system(size: 9.5))
-                .foregroundColor(SeleneTheme.ink.opacity(0.36))
+                .font(.system(size: 10))
+                .foregroundColor(SeleneTheme.ink.opacity(0.58))
                 .lineLimit(1)
             actions()
         }
@@ -369,9 +419,69 @@ struct GameDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(SeleneTheme.surface.opacity(0.78))
         .overlay(
-            RoundedRectangle(cornerRadius: 11, style: .continuous)
+            RoundedRectangle(cornerRadius: SeleneTheme.contentRadius, style: .continuous)
                 .strokeBorder(SeleneTheme.border, lineWidth: 1)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: SeleneTheme.contentRadius, style: .continuous))
+    }
+
+    private func moveFocus(by delta: Int) {
+        let previous = actionFocus
+        actionFocus = (actionFocus + delta + 3) % 3
+        if actionFocus != previous {
+            SoundEffectService.shared.play(.focus)
+        }
+    }
+
+    private func handleMove(_ direction: MoveCommandDirection) {
+        switch direction {
+        case .left, .up: moveFocus(by: -1)
+        case .right, .down: moveFocus(by: 1)
+        default: break
+        }
+    }
+
+    private func handleGamepad(_ action: GamepadAction) {
+        switch action {
+        case .navigateLeft, .navigateUp: moveFocus(by: -1)
+        case .navigateRight, .navigateDown: moveFocus(by: 1)
+        case .confirm: activateFocused()
+        case .cancel: router.back()
+        case .secondaryAction: viewModel.gameForSettingsSheet = game
+        case .contextAction: rebuild()
+        case .menu: router.isMenuPresented = true
+        default: break
+        }
+    }
+
+    private func activateFocused() {
+        switch actionFocus {
+        case 0:
+            guard presentation.canPlay else {
+                SoundEffectService.shared.play(.error)
+                return
+            }
+            SoundEffectService.shared.play(.click)
+            viewModel.launchGame(game)
+        case 1:
+            SoundEffectService.shared.play(.click)
+            viewModel.gameForSettingsSheet = game
+        case 2:
+            rebuild()
+        default:
+            break
+        }
+    }
+
+    private func rebuild() {
+        guard presentation.canRebuild else {
+            SoundEffectService.shared.play(.error)
+            return
+        }
+        SoundEffectService.shared.play(.click)
+        viewModel.startBuild(for: game)
+        if viewModel.isBuilding {
+            router.openAddGame()
+        }
     }
 }

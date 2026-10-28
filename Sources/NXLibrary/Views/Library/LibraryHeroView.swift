@@ -10,6 +10,11 @@ struct LibraryHeroView: View {
     let size: CGSize
     let showClock: Bool
     let readiness: Bool
+    let focusArea: LibraryFocusArea
+    let actionIndex: Int
+    let readableText: Bool
+    let backgroundShade: Double
+    let bottomInset: CGFloat
     let onPlay: () -> Void
     let onDetails: () -> Void
     let onOptions: () -> Void
@@ -17,9 +22,9 @@ struct LibraryHeroView: View {
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             heroBackground
-                .overlay(SeleneTheme.heroLeftScrim)
-                .overlay(SeleneTheme.heroBottomScrim)
-                .overlay(Color.black.opacity(0.14))
+                .brightness(artBrightness)
+                .overlay(Color.black.opacity(shadeWashOpacity))
+                .overlay { scrims.opacity(readableText ? 1 : 0.80) }
 
             VStack(alignment: .leading, spacing: 0) {
                 if !presentation.eyebrow.isEmpty {
@@ -36,6 +41,7 @@ struct LibraryHeroView: View {
                     .tracking(-1.6)
                     .foregroundColor(SeleneTheme.ink)
                     .lineLimit(2)
+                    .minimumScaleFactor(0.82)
                     .frame(maxWidth: 720, alignment: .leading)
                     .shadow(color: .black.opacity(0.35), radius: 18, x: 0, y: 4)
 
@@ -52,7 +58,7 @@ struct LibraryHeroView: View {
                     .padding(.top, 14)
             }
             .padding(.leading, metrics.margin)
-            .padding(.bottom, 248)
+            .padding(.bottom, bottomInset)
 
             VStack {
                 HStack {
@@ -88,6 +94,32 @@ struct LibraryHeroView: View {
         .clipped()
     }
 
+    private var scrims: some View {
+        ZStack {
+            SeleneTheme.heroLeftScrim
+            SeleneTheme.heroBottomScrim
+            Color.black.opacity(0.14)
+        }
+    }
+
+    private var shade: Double {
+        min(max(backgroundShade, 0), 1)
+    }
+
+    private var shadeDelta: Double {
+        shade - BackgroundShade.balanced.heroScrimOpacity
+    }
+
+    /// The balanced shade is the untouched baseline. Lighter settings lift the
+    /// art; deeper settings add a soft black wash on top of it.
+    private var artBrightness: Double {
+        shadeDelta < 0 ? min(0.08, -shadeDelta * 0.25) : 0
+    }
+
+    private var shadeWashOpacity: Double {
+        shadeDelta > 0 ? min(0.18, shadeDelta * 0.85) : 0
+    }
+
     @ViewBuilder
     private var heroBackground: some View {
         if let heroImage {
@@ -113,34 +145,25 @@ struct LibraryHeroView: View {
     private var chips: some View {
         HStack(spacing: 7) {
             ForEach(presentation.genres, id: \.self) { genre in
-                Text(genre)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(SeleneTheme.ink.opacity(0.72))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(SeleneTheme.ink.opacity(0.08))
-                    .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.12), lineWidth: 1))
-                    .clipShape(Capsule())
+                chip(genre)
             }
             if let publisher = presentation.publisher {
-                Text(publisher)
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(SeleneTheme.ink.opacity(0.64))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(SeleneTheme.ink.opacity(0.06))
-                    .clipShape(Capsule())
+                chip(publisher)
             }
             if let year = presentation.releaseYear {
-                Text(year)
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .foregroundColor(SeleneTheme.ink.opacity(0.64))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(SeleneTheme.ink.opacity(0.06))
-                    .clipShape(Capsule())
+                chip(year, monospaced: true)
             }
         }
+    }
+
+    private func chip(_ value: String, monospaced: Bool = false) -> some View {
+        Text(value)
+            .font(.system(size: 10, weight: .medium,
+                          design: monospaced ? .monospaced : .default))
+            .foregroundColor(SeleneTheme.ink.opacity(0.80))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.30), lineWidth: 1))
     }
 
     private var metadata: some View {
@@ -155,15 +178,19 @@ struct LibraryHeroView: View {
     private func metadataItem(_ label: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label)
-                .font(.system(size: 9, weight: .bold))
+                .font(.system(size: 10, weight: .bold))
                 .tracking(1.4)
                 .textCase(.uppercase)
-                .foregroundColor(SeleneTheme.ink.opacity(0.42))
+                .foregroundColor(SeleneTheme.ink.opacity(0.55))
             Text(value)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(SeleneTheme.ink.opacity(0.94))
         }
         .frame(minWidth: 68, alignment: .leading)
+    }
+
+    private var isPlayable: Bool {
+        game.isPlayableLocally
     }
 
     private var actions: some View {
@@ -175,43 +202,62 @@ struct LibraryHeroView: View {
                     Text("Play")
                         .font(.system(size: 13, weight: .semibold))
                 }
-                .foregroundColor(SeleneTheme.canvas)
+                .foregroundColor(isPlayable
+                                 ? SeleneTheme.canvas
+                                 : SeleneTheme.ink.opacity(0.62))
                 .padding(.horizontal, 24)
-                .frame(height: 42)
-                .background(SeleneTheme.focus)
+                .frame(height: 44)
+                .background(isPlayable
+                            ? SeleneTheme.focus
+                            : SeleneTheme.ink.opacity(0.10))
+                .overlay(Capsule().strokeBorder(
+                    SeleneTheme.ink.opacity(isPlayable ? 0 : 0.16),
+                    lineWidth: 1))
                 .clipShape(Capsule())
             }
             .buttonStyle(.plain)
+            .seleneFocus(focusArea == .actions && actionIndex == 0, radius: 22)
+            .accessibilityLabel("Play \(game.name)")
+            .accessibilityHint(isPlayable
+                               ? "Launch the game"
+                               : "Not built yet. Open Game options to build it.")
 
             Button(action: onDetails) {
                 Text("Details")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(SeleneTheme.ink.opacity(0.92))
+                    .foregroundColor(SeleneTheme.ink.opacity(0.90))
                     .padding(.horizontal, 22)
-                    .frame(height: 42)
-                    .background(SeleneTheme.ink.opacity(0.10))
-                    .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.18), lineWidth: 1))
+                    .frame(height: 44)
+                    .background(SeleneTheme.surface.opacity(0.55))
+                    .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.22), lineWidth: 1))
                     .clipShape(Capsule())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Details for \(game.name)")
 
             Button(action: onOptions) {
                 Image(systemName: "ellipsis")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(SeleneTheme.ink.opacity(0.88))
-                    .frame(width: 42, height: 42)
-                    .background(SeleneTheme.ink.opacity(0.10))
-                    .overlay(Circle().strokeBorder(SeleneTheme.ink.opacity(0.18), lineWidth: 1))
+                    .frame(width: 44, height: 44)
+                    .background(SeleneTheme.canvas.opacity(0.32))
+                    .overlay(Circle().strokeBorder(SeleneTheme.ink.opacity(0.20), lineWidth: 1))
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
+            .seleneFocus(focusArea == .actions && actionIndex == 1, radius: 22)
             .accessibilityLabel("Game options")
         }
     }
 
     private var warnings: some View {
         HStack(spacing: 14) {
-            if presentation.sourcesDetached {
+            if !isPlayable {
+                Label("Not built yet · open Game options to build",
+                      systemImage: "circle.fill")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(SeleneTheme.warning.opacity(0.86))
+            } else if presentation.sourcesDetached {
                 Label("Sources detached · playable", systemImage: "circle.fill")
                     .font(.system(size: 10, weight: .medium))
                     .foregroundColor(SeleneTheme.warning.opacity(0.86))

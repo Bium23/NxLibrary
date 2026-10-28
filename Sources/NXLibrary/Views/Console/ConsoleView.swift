@@ -31,7 +31,15 @@ public struct ConsoleView: View {
     @State private var confirmClear = false
     @State private var focus = FocusIndex()
 
-    private let hints = [CommandHint("B", "Back"), CommandHint("A", "Copy")]
+    private var hints: [CommandHint] {
+        let label: String
+        switch focus.index {
+        case 1: label = "Reveal Log"
+        case 2: label = "Clear View"
+        default: label = "Copy"
+        }
+        return [CommandHint("B", "Back"), CommandHint("A", label)]
+    }
 
     public init(viewModel: AppViewModel, router: AppRouter) {
         self.viewModel = viewModel
@@ -75,6 +83,7 @@ public struct ConsoleView: View {
         .background(SeleneTheme.canvas)
         .onMoveCommand(perform: handleMove)
         .onExitCommand { router.back() }
+        .seleneActivationKeys(activateFocused)
         .onReceive(NotificationCenter.default.publisher(for: .nxConsoleGamepadAction)) { note in
             guard let action = note.object as? GamepadAction else { return }
             handleGamepad(action)
@@ -185,13 +194,11 @@ public struct ConsoleView: View {
             .padding(.horizontal, 12)
             .frame(height: 30)
             .background(SeleneTheme.ink.opacity(0.06))
-            .overlay(Capsule().strokeBorder(
-                isFocused ? SeleneTheme.accent : SeleneTheme.ink.opacity(0.14),
-                lineWidth: isFocused ? 2 : 1
-            ))
+            .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.14), lineWidth: 1))
             .clipShape(Capsule())
         }
         .buttonStyle(.plain)
+        .seleneCapsuleFocus(isFocused)
         .accessibilityLabel(title)
     }
 

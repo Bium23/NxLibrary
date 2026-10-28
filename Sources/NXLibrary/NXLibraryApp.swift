@@ -7,10 +7,14 @@ extension Notification.Name {
     static let nxSettingsGamepadAction = Notification.Name("NXSettingsGamepadAction")
     static let nxAddGameGamepadAction = Notification.Name("NXAddGameGamepadAction")
     static let nxConsoleGamepadAction = Notification.Name("NXConsoleGamepadAction")
+    static let nxDetailGamepadAction = Notification.Name("NXDetailGamepadAction")
+    static let nxGameOptionsGamepadAction = Notification.Name("NXGameOptionsGamepadAction")
     static let nxLibraryOpenSettings = Notification.Name("NXLibraryOpenSettings")
     static let nxLibraryOpenConsole = Notification.Name("NXLibraryOpenConsole")
     static let nxLibraryOpenLibrary = Notification.Name("NXLibraryOpenLibrary")
     static let nxLibraryOpenAddGame = Notification.Name("NXLibraryOpenAddGame")
+    static let nxLibraryOpenDetails = Notification.Name("NXLibraryOpenDetails")
+    static let nxLibraryOpenGameOptions = Notification.Name("NXLibraryOpenGameOptions")
 }
 
 @main
@@ -41,6 +45,15 @@ struct NXLibraryApp: App {
                     NotificationCenter.default.post(name: .nxLibraryPlayFocused, object: nil)
                 }
                 .keyboardShortcut(.return, modifiers: [.command])
+                Divider()
+                Button("Game Details") {
+                    NotificationCenter.default.post(name: .nxLibraryOpenDetails, object: nil)
+                }
+                .keyboardShortcut("d", modifiers: [.command])
+                Button("Game Options…") {
+                    NotificationCenter.default.post(name: .nxLibraryOpenGameOptions, object: nil)
+                }
+                .keyboardShortcut("o", modifiers: [.command])
             }
             CommandMenu("Engine") {
                 Button("Check Upstream Changelog") {

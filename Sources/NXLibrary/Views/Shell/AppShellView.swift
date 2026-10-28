@@ -10,7 +10,13 @@ public struct AppShellView: View {
     @StateObject private var artwork = ArtworkStore()
     @State private var processObserver: GameProcessObserver?
 
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+
     public init() {}
+
+    private var reduceMotion: Bool {
+        settings.settings.reduceMotion || accessibilityReduceMotion
+    }
 
     public var body: some View {
         ZStack {
@@ -20,6 +26,8 @@ public struct AppShellView: View {
                 MenuOverlayView(router: router) { action in
                     handleMenu(action)
                 }
+                .transition(.opacity)
+                .zIndex(1)
             }
             if let game = viewModel.gameForSettingsSheet {
                 GameOptionsView(
@@ -31,10 +39,17 @@ public struct AppShellView: View {
                         router.openAddGame()
                     }
                 )
-                .transition(.opacity)
+                .transition(reduceMotion
+                            ? .opacity
+                            : .opacity.combined(with: .scale(scale: 0.985)))
                 .zIndex(2)
             }
         }
+        .animation(reduceMotion ? nil : SeleneTheme.screen,
+                   value: viewModel.gameForSettingsSheet?.id)
+        .animation(reduceMotion ? nil : SeleneTheme.quick,
+                   value: router.isMenuPresented)
+        .environment(\.seleneReduceMotion, reduceMotion)
         .preferredColorScheme(.dark)
         .frame(minWidth: 1100, minHeight: 700)
         .sheet(isPresented: $viewModel.showSetupSheet) {
@@ -43,19 +58,49 @@ public struct AppShellView: View {
         .onAppear(perform: startRuntime)
         .onDisappear { processObserver?.stop() }
         .onChange(of: router.route) { route in
-            if case .addGame = route {
-                viewModel.pendingRuntimeConfig = settings.settings.gameDefaults
-                viewModel.selectedLanguage = settings.settings.gameDefaults.language
+            switch route {
+            case .addGame:
+                viewModel.addGameDidBecomeVisible(
+                    defaults: settings.settings.gameDefaults,
+                    returningFromBack: router.isReturningFromBack
+                )
+            case .library, .detail:
+                viewModel.addGameDidLeave()
+            default:
+                break
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryPlayFocused)) { _ in
             guard router.route == .library, let game = viewModel.currentFocusedGame else { return }
             viewModel.launchGame(game)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenDetails)) { _ in
+            guard !router.isMenuPresented,
+                  viewModel.gameForSettingsSheet == nil,
+                  router.route == .library,
+                  let game = viewModel.currentFocusedGame else { return }
+            router.showDetail(game.id)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenGameOptions)) { _ in
+            guard !router.isMenuPresented else { return }
+            switch router.route {
+            case .library:
+                if let game = viewModel.currentFocusedGame {
+                    viewModel.gameForSettingsSheet = game
+                }
+            case .detail(let id):
+                if let game = viewModel.libraryGames.first(where: { $0.id == id }) {
+                    viewModel.gameForSettingsSheet = game
+                }
+            default:
+                break
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryCheckUpstream)) { _ in
             viewModel.checkUpstreamChangelog()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenMenu)) { _ in
+            guard viewModel.gameForSettingsSheet == nil else { return }
             router.isMenuPresented = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenSettings)) { _ in
@@ -72,10 +117,12 @@ public struct AppShellView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenAddGame)) { _ in
             router.closeMenu()
-            router.openAddGame()
+            openFreshAddGame()
         }
         .onExitCommand {
-            if router.isMenuPresented {
+            if viewModel.gameForSettingsSheet != nil {
+                viewModel.gameForSettingsSheet = nil
+            } else if router.isMenuPresented {
                 router.closeMenu()
             } else if router.route == .library {
                 router.isMenuPresented = true
@@ -173,9 +220,19 @@ public struct AppShellView: View {
                 }
                 return
             }
+            if viewModel.gameForSettingsSheet != nil {
+                NotificationCenter.default.post(name: .nxGameOptionsGamepadAction, object: action)
+                return
+            }
             switch router.route {
             case .library:
                 viewModel.handleLibraryGamepadAction(action)
+            case .detail:
+                if action == .menu {
+                    router.isMenuPresented = true
+                } else {
+                    NotificationCenter.default.post(name: .nxDetailGamepadAction, object: action)
+                }
             case .settings:
                 if action == .menu {
                     router.isMenuPresented = true
@@ -194,12 +251,6 @@ public struct AppShellView: View {
                 } else {
                     NotificationCenter.default.post(name: .nxConsoleGamepadAction, object: action)
                 }
-            default:
-                if action == .menu {
-                    router.isMenuPresented = true
-                } else if action == .cancel {
-                    router.back()
-                }
             }
         }
     }
@@ -210,13 +261,21 @@ public struct AppShellView: View {
         case .library:
             router.showLibrary()
         case .addGame:
-            router.openAddGame()
+            openFreshAddGame()
         case .settings:
             router.openSettings(.general)
         case .console:
             router.openConsole()
         case .quit:
             NSApplication.shared.terminate(nil)
+        }
+    }
+
+    private func openFreshAddGame() {
+        if router.route == .addGame, !viewModel.isBuilding {
+            viewModel.startNewAddGame(defaults: settings.settings.gameDefaults)
+        } else {
+            router.openAddGame()
         }
     }
 }

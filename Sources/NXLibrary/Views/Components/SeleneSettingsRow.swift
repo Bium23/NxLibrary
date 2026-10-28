@@ -5,12 +5,16 @@ public struct SeleneRow<Trailing: View>: View {
     public let subtitle: String?
     @ViewBuilder public var trailing: () -> Trailing
 
+    @Environment(\.seleneFocusedRowTitle) private var focusedRowTitle
+
     public init(_ title: String, subtitle: String? = nil,
                 @ViewBuilder trailing: @escaping () -> Trailing) {
         self.title = title
         self.subtitle = subtitle
         self.trailing = trailing
     }
+
+    private var isFocused: Bool { focusedRowTitle == title }
 
     public var body: some View {
         HStack(spacing: 20) {
@@ -30,12 +34,17 @@ public struct SeleneRow<Trailing: View>: View {
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 13)
-        .background(SeleneTheme.surface.opacity(0.92))
+        .background(isFocused
+                    ? SeleneTheme.surfaceActive
+                    : SeleneTheme.surface.opacity(0.92))
         .overlay(
             RoundedRectangle(cornerRadius: SeleneTheme.rowRadius, style: .continuous)
-                .strokeBorder(SeleneTheme.border.opacity(0.85), lineWidth: 1)
+                .strokeBorder(isFocused ? SeleneTheme.ink.opacity(0.18) : SeleneTheme.border.opacity(0.85),
+                              lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: SeleneTheme.rowRadius, style: .continuous))
+        .seleneFocus(isFocused)
+        .id("selene-row-\(title)")
     }
 }
 

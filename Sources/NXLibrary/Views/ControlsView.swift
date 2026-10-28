@@ -2,177 +2,461 @@ import SwiftUI
 
 public struct ControlsView: View {
     public init() {}
-    
+
+    private let mappingColumns = [
+        GridItem(.adaptive(minimum: 340, maximum: .infinity),
+                 spacing: 12,
+                 alignment: .top)
+    ]
+
     public var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                // MARK: - Header
-                HStack(alignment: .top, spacing: 14) {
-                    Image(systemName: "gamecontroller.fill")
-                        .symbolRenderingMode(.hierarchical)
-                        .font(.system(size: 36))
-                        .foregroundColor(NXTheme.secondary)
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Controls & Keyboard Mapping")
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
-                            .foregroundColor(NXTheme.textPrimary)
-                        Text("Games in NX Library simultaneously support your Mac keyboard and any USB or Bluetooth gamepad with instant plug-and-play recognition.")
-                            .font(.system(size: 12))
-                            .foregroundColor(NXTheme.textSecondary)
+            VStack(alignment: .leading, spacing: 18) {
+                header
+                ControllerStatusPanel()
+                mappingPanel
+                touchPanel
+                gamepadPanel
+            }
+            .padding(.horizontal, 32)
+            .padding(.top, 30)
+            .padding(.bottom, 36)
+            .frame(maxWidth: 1120, alignment: .leading)
+            .frame(maxWidth: .infinity)
+        }
+        .scrollIndicators(.hidden)
+        .background(SeleneTheme.canvas)
+    }
+
+    // MARK: - Header
+
+    private var header: some View {
+        HStack(alignment: .top, spacing: 20) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Controls & Keyboard Mapping")
+                    .font(.system(size: 38, weight: .bold))
+                    .tracking(-1.1)
+                    .foregroundColor(SeleneTheme.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("Games in NX Library simultaneously support your Mac keyboard and any USB or Bluetooth gamepad with instant plug-and-play recognition.")
+                    .font(.system(size: 13))
+                    .foregroundColor(SeleneTheme.inkMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: 660, alignment: .leading)
+            }
+
+            Spacer(minLength: 16)
+
+            ZStack {
+                Circle()
+                    .fill(SeleneTheme.ink.opacity(0.05))
+                Circle()
+                    .strokeBorder(SeleneTheme.ink.opacity(0.12), lineWidth: 1)
+                Image(systemName: "gamecontroller.fill")
+                    .font(.system(size: 22, weight: .medium))
+                    .foregroundColor(SeleneTheme.ink.opacity(0.72))
+            }
+            .frame(width: 54, height: 54)
+            .accessibilityHidden(true)
+        }
+    }
+
+    // MARK: - Keyboard mapping
+
+    private var mappingPanel: some View {
+        SelenePanel {
+            VStack(alignment: .leading, spacing: 12) {
+                panelHeader(icon: "keyboard.fill",
+                            title: "Default Keyboard Mapping (Player 1)",
+                            trailing: "Nintendo Switch Layout")
+
+                panelDivider
+
+                LazyVGrid(columns: mappingColumns, alignment: .leading, spacing: 10) {
+                    VStack(spacing: 8) {
+                        controlRow(badge: "LS",
+                                   switchButton: "Left Stick (Move)",
+                                   keyDesc: "W  A  S  D",
+                                   detail: "360° Omnidirectional Movement")
+                        controlRow(badge: "L3",
+                                   switchButton: "Left Stick Click (L3)",
+                                   keyDesc: "F",
+                                   detail: "Press Left Analog Stick")
+                        controlRow(badge: "R3",
+                                   switchButton: "Right Stick Click (R3)",
+                                   keyDesc: "G",
+                                   detail: "Press Right Analog Stick")
+                        controlRow(badge: "A",
+                                   switchButton: "A Button (Confirm)",
+                                   keyDesc: "J",
+                                   detail: "Right face button (Nintendo layout)")
+                        controlRow(badge: "B",
+                                   switchButton: "B Button (Cancel / Jump)",
+                                   keyDesc: "K",
+                                   detail: "Bottom face button (Nintendo layout)")
+                        controlRow(badge: "X",
+                                   switchButton: "X Button (Menu / Special)",
+                                   keyDesc: "U",
+                                   detail: "Top face button (Nintendo layout)")
+                        controlRow(badge: "Y",
+                                   switchButton: "Y Button (Secondary Action)",
+                                   keyDesc: "I",
+                                   detail: "Left face button (Nintendo layout)")
                     }
-                }
-                .padding(.bottom, 4)
-                
-                // MARK: - Live Gamepad Recognition Status
-                ControllerLiveStatusCard()
-                
-                // MARK: - Section 1: Visual Quick Reference Table
-                GlassCard {
-                    VStack(alignment: .leading, spacing: 14) {
-                        HStack {
-                            Label("Default Keyboard Mapping (Player 1)", systemImage: "keyboard.fill")
-                                .symbolRenderingMode(.hierarchical)
-                                .font(.system(size: 14, weight: .bold, design: .rounded))
-                                .foregroundColor(NXTheme.textPrimary)
-                            Spacer()
-                            Text("Nintendo Switch Layout")
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundColor(NXTheme.secondary)
-                        }
-                        
-                        Divider().opacity(0.2)
-                        
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 340, maximum: .infinity), spacing: 12)], spacing: 12) {
-                            // Left Column: Movement & Actions
-                            VStack(spacing: 10) {
-                                controlRow(switchButton: "Left Stick (Move)", keyDesc: "W  A  S  D", detail: "360° Omnidirectional Movement")
-                                controlRow(switchButton: "Left Stick Click (L3)", keyDesc: "F", detail: "Press Left Analog Stick")
-                                controlRow(switchButton: "Right Stick Click (R3)", keyDesc: "G", detail: "Press Right Analog Stick")
-                                controlRow(switchButton: "A Button (Confirm)", keyDesc: "J", detail: "Right face button (Nintendo layout)")
-                                controlRow(switchButton: "B Button (Cancel / Jump)", keyDesc: "K", detail: "Bottom face button (Nintendo layout)")
-                                controlRow(switchButton: "X Button (Menu / Special)", keyDesc: "U", detail: "Top face button (Nintendo layout)")
-                                controlRow(switchButton: "Y Button (Secondary Action)", keyDesc: "I", detail: "Left face button (Nintendo layout)")
-                            }
-                            
-                            // Right Column: Triggers, D-Pad & System
-                            VStack(spacing: 10) {
-                                controlRow(switchButton: "Left Bumper (L)", keyDesc: "Q", detail: "Top Left Shoulder")
-                                controlRow(switchButton: "Right Bumper (R)", keyDesc: "E", detail: "Top Right Shoulder")
-                                controlRow(switchButton: "Left Trigger (ZL)", keyDesc: "Z", detail: "Analog ZL Trigger")
-                                controlRow(switchButton: "Right Trigger (ZR)", keyDesc: "C", detail: "Analog ZR Trigger")
-                                controlRow(switchButton: "Directional Pad (D-Pad)", keyDesc: "↑  ↓  ←  →", detail: "Keyboard Arrow Keys")
-                                controlRow(switchButton: "+ Button (Plus / Start)", keyDesc: "Return (Enter)", detail: "Pause / Main Menu")
-                                controlRow(switchButton: "− Button (Minus / Select)", keyDesc: "Tab", detail: "Map / Inventory")
-                                controlRow(switchButton: "Shake Controller", keyDesc: "Spacebar", detail: "Motion Shake (Mario Galaxy / Odyssey)")
-                            }
-                        }
-                    }
-                }
-                
-                // MARK: - Section 2: Mouse Touchscreen & Gestures
-                GlassCard {
-                    HStack(alignment: .top, spacing: 14) {
-                        Image(systemName: "cursorarrow.rays")
-                            .font(.system(size: 28))
-                            .foregroundColor(NXTheme.primary)
-                            .frame(width: 36)
-                        
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text("Touchscreen Emulation (Mouse)")
-                                .font(.system(size: 13, weight: .bold, design: .rounded))
-                                .foregroundColor(NXTheme.textPrimary)
-                            Text("In games featuring touch controls or pointer navigation (e.g., Captain Toad, Super Mario Galaxy, and interactive menus):")
-                                .font(.system(size: 12))
-                                .foregroundColor(NXTheme.textSecondary)
-                            
-                            HStack(spacing: 8) {
-                                Text("Left-Click and Drag")
-                                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(NXTheme.primary.opacity(0.18))
-                                    .foregroundColor(NXTheme.secondary)
-                                    .cornerRadius(6)
-                                Text("→ Simulates capacitive touch gestures on the Switch screen")
-                                    .font(.system(size: 11))
-                                    .foregroundColor(NXTheme.textMuted)
-                            }
-                            .padding(.top, 2)
-                        }
-                    }
-                }
-                
-                // MARK: - Section 3: Physical Gamepads & Multiplayer Co-op
-                GlassCard {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Label("Physical Gamepads & Bluetooth Controllers", systemImage: "cable.connector")
-                                .symbolRenderingMode(.hierarchical)
-                                .font(.system(size: 13, weight: .bold, design: .rounded))
-                                .foregroundColor(NXTheme.textPrimary)
-                            Spacer()
-                            Text("Plug & Play")
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundColor(Color(red: 0.13, green: 0.77, blue: 0.37))
-                        }
-                        
-                        Text("Connect via Bluetooth or USB-C before or during gameplay. NX Library automatically maps standard inputs:")
-                            .font(.system(size: 12))
-                            .foregroundColor(NXTheme.textSecondary)
-                        
-                        VStack(alignment: .leading, spacing: 8) {
-                            bulletPoint("PlayStation DualSense / DualShock 4: Full native haptics and analog triggers.")
-                            bulletPoint("Xbox Wireless Controller: Immediate ABXY and trigger rumble support.")
-                            bulletPoint("Nintendo Switch Pro Controller: Exact 1:1 button layout matching original hardware.")
-                            bulletPoint("Nintendo Switch Joy-Cons: Supported as single horizontal pads or paired Joy-Con pair.")
-                        }
+
+                    VStack(spacing: 8) {
+                        controlRow(badge: "L",
+                                   switchButton: "Left Bumper (L)",
+                                   keyDesc: "Q",
+                                   detail: "Top Left Shoulder")
+                        controlRow(badge: "R",
+                                   switchButton: "Right Bumper (R)",
+                                   keyDesc: "E",
+                                   detail: "Top Right Shoulder")
+                        controlRow(badge: "ZL",
+                                   switchButton: "Left Trigger (ZL)",
+                                   keyDesc: "Z",
+                                   detail: "Analog ZL Trigger")
+                        controlRow(badge: "ZR",
+                                   switchButton: "Right Trigger (ZR)",
+                                   keyDesc: "C",
+                                   detail: "Analog ZR Trigger")
+                        controlRow(badge: "D-Pad",
+                                   switchButton: "Directional Pad (D-Pad)",
+                                   keyDesc: "↑  ↓  ←  →",
+                                   detail: "Keyboard Arrow Keys")
+                        controlRow(badge: "+",
+                                   switchButton: "+ Button (Plus / Start)",
+                                   keyDesc: "Return (Enter)",
+                                   detail: "Pause / Main Menu")
+                        controlRow(badge: "−",
+                                   switchButton: "− Button (Minus / Select)",
+                                   keyDesc: "Tab",
+                                   detail: "Map / Inventory")
+                        controlRow(badge: "Shake",
+                                   switchButton: "Shake Controller",
+                                   keyDesc: "Spacebar",
+                                   detail: "Motion Shake (Mario Galaxy / Odyssey)")
                     }
                 }
             }
-            .padding(20)
         }
     }
-    
-    private func controlRow(switchButton: String, keyDesc: String, detail: String) -> some View {
+
+    private func controlRow(badge: String,
+                            switchButton: String,
+                            keyDesc: String,
+                            detail: String) -> some View {
         HStack(spacing: 10) {
+            Text(badge)
+                .font(.system(size: 10.5, weight: .semibold))
+                .foregroundColor(SeleneTheme.ink.opacity(0.92))
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+                .frame(width: 38, height: 38)
+                .background(SeleneTheme.ink.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .strokeBorder(SeleneTheme.ink.opacity(0.14), lineWidth: 1)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(switchButton)
+                    .font(.system(size: 12.5, weight: .medium))
+                    .foregroundColor(SeleneTheme.ink.opacity(0.94))
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text(detail)
+                    .font(.system(size: 11.5))
+                    .foregroundColor(SeleneTheme.ink.opacity(0.62))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 8)
+
             Text(keyDesc)
-                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                .foregroundColor(NXTheme.textPrimary)
+                .font(.system(size: 10.5, weight: .semibold, design: .monospaced))
+                .foregroundColor(SeleneTheme.ink.opacity(0.84))
                 .padding(.horizontal, 8)
                 .padding(.vertical, 5)
-                .background(NXTheme.glassSurfaceElevated)
-                .cornerRadius(6)
+                .background(SeleneTheme.ink.opacity(0.045))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(NXTheme.specularRim, lineWidth: 0.8)
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .strokeBorder(SeleneTheme.ink.opacity(0.14), lineWidth: 1)
                 )
-                .shadow(color: Color.black.opacity(0.3), radius: 3, x: 0, y: 1)
-                .frame(minWidth: 100, alignment: .center)
-            
-            VStack(alignment: .leading, spacing: 1) {
-                Text(switchButton)
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundColor(NXTheme.textPrimary)
-                Text(detail)
-                    .font(.system(size: 10))
-                    .foregroundColor(NXTheme.textSecondary)
-            }
-            Spacer()
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .fixedSize()
         }
-        .padding(6)
-        .background(NXTheme.canvasObsidian.opacity(0.4))
-        .cornerRadius(8)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .frame(minHeight: 48, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(SeleneTheme.surface.opacity(0.92))
+        .overlay(
+            RoundedRectangle(cornerRadius: SeleneTheme.rowRadius, style: .continuous)
+                .strokeBorder(SeleneTheme.border.opacity(0.9), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: SeleneTheme.rowRadius, style: .continuous))
+        .accessibilityElement(children: .combine)
     }
-    
-    private func bulletPoint(_ text: String) -> some View {
-        HStack(alignment: .top, spacing: 6) {
-            Text("•")
-                .foregroundColor(NXTheme.secondary)
-                .font(.system(size: 12, weight: .bold))
-            Text(text)
-                .font(.system(size: 11))
-                .foregroundColor(NXTheme.textSecondary)
+
+    // MARK: - Touchscreen emulation
+
+    private var touchPanel: some View {
+        SelenePanel {
+            HStack(alignment: .top, spacing: 14) {
+                iconTile("cursorarrow.rays")
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Touchscreen Emulation (Mouse)")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(SeleneTheme.ink.opacity(0.95))
+
+                    Text("In games featuring touch controls or pointer navigation (e.g., Captain Toad, Super Mario Galaxy, and interactive menus):")
+                        .font(.system(size: 11.5))
+                        .foregroundColor(SeleneTheme.ink.opacity(0.64))
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    HStack(alignment: .firstTextBaseline, spacing: 9) {
+                        Text("Left-Click and Drag")
+                            .font(.system(size: 10.5, weight: .semibold, design: .monospaced))
+                            .foregroundColor(SeleneTheme.ink.opacity(0.88))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(SeleneTheme.ink.opacity(0.06))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .strokeBorder(SeleneTheme.ink.opacity(0.14), lineWidth: 1)
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                            .fixedSize()
+
+                        Text("→ Simulates capacitive touch gestures on the Switch screen")
+                            .font(.system(size: 11.5))
+                            .foregroundColor(SeleneTheme.ink.opacity(0.62))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.top, 2)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    // MARK: - Physical gamepads
+
+    private var gamepadPanel: some View {
+        SelenePanel {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "cable.connector")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(SeleneTheme.ink.opacity(0.7))
+                        .frame(width: 16)
+                        .accessibilityHidden(true)
+
+                    Text("Physical Gamepads & Bluetooth Controllers")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(SeleneTheme.ink.opacity(0.95))
+
+                    Spacer(minLength: 12)
+
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(SeleneTheme.success)
+                            .frame(width: 5, height: 5)
+                            .accessibilityHidden(true)
+                        Text("Plug & Play")
+                            .font(.system(size: 10.5, weight: .medium))
+                            .foregroundColor(SeleneTheme.ink.opacity(0.66))
+                    }
+                }
+
+                Text("Connect via Bluetooth or USB-C before or during gameplay. NX Library automatically maps standard inputs:")
+                    .font(.system(size: 11.5))
+                    .foregroundColor(SeleneTheme.ink.opacity(0.64))
+                    .fixedSize(horizontal: false, vertical: true)
+
+                VStack(alignment: .leading, spacing: 9) {
+                    deviceRow("PlayStation DualSense / DualShock 4",
+                              detail: "Full native haptics and analog triggers.")
+                    deviceRow("Xbox Wireless Controller",
+                              detail: "Immediate ABXY and trigger rumble support.")
+                    deviceRow("Nintendo Switch Pro Controller",
+                              detail: "Exact 1:1 button layout matching original hardware.")
+                    deviceRow("Nintendo Switch Joy-Cons",
+                              detail: "Supported as single horizontal pads or paired Joy-Con pair.")
+                }
+                .padding(.top, 2)
+            }
+        }
+    }
+
+    private func deviceRow(_ name: String, detail: String) -> some View {
+        HStack(alignment: .top, spacing: 9) {
+            Circle()
+                .fill(SeleneTheme.ink.opacity(0.45))
+                .frame(width: 4, height: 4)
+                .padding(.top, 6)
+                .accessibilityHidden(true)
+
+            (
+                Text(name)
+                    .font(.system(size: 11.5, weight: .medium))
+                    .foregroundColor(SeleneTheme.ink.opacity(0.88))
+                + Text(": " + detail)
+                    .font(.system(size: 11.5))
+                    .foregroundColor(SeleneTheme.ink.opacity(0.62))
+            )
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    // MARK: - Shared pieces
+
+    private func panelHeader(icon: String, title: String, trailing: String? = nil) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(SeleneTheme.ink.opacity(0.7))
+                .frame(width: 16)
+                .accessibilityHidden(true)
+
+            Text(title)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(SeleneTheme.ink.opacity(0.95))
+
+            Spacer(minLength: 12)
+
+            if let trailing {
+                Text(trailing)
+                    .font(.system(size: 10.5, weight: .medium))
+                    .foregroundColor(SeleneTheme.ink.opacity(0.6))
+                    .lineLimit(1)
+            }
+        }
+    }
+
+    private var panelDivider: some View {
+        Rectangle()
+            .fill(SeleneTheme.border.opacity(0.9))
+            .frame(height: 1)
+    }
+
+    private func iconTile(_ name: String) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(SeleneTheme.ink.opacity(0.05))
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(SeleneTheme.ink.opacity(0.12), lineWidth: 1)
+            Image(systemName: name)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(SeleneTheme.ink.opacity(0.7))
+        }
+        .frame(width: 40, height: 40)
+        .accessibilityHidden(true)
+    }
+}
+
+// MARK: - Live controller status
+
+private struct ControllerStatusPanel: View {
+    @ObservedObject private var controller = GameControllerService.shared
+
+    var body: some View {
+        SelenePanel {
+            HStack(spacing: 14) {
+                statusGlyph
+
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack(spacing: 8) {
+                        Text(controller.isGamepadConnected
+                             ? controller.activeControllerName
+                             : "No Gamepad Connected")
+                            .font(.system(size: 13.5, weight: .semibold))
+                            .foregroundColor(SeleneTheme.ink.opacity(0.95))
+                            .lineLimit(1)
+
+                        if controller.isGamepadConnected {
+                            Text(controller.activeBrand.rawValue)
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(SeleneTheme.ink.opacity(0.62))
+                                .lineLimit(1)
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 3)
+                                .background(SeleneTheme.ink.opacity(0.06))
+                                .overlay(
+                                    Capsule()
+                                        .strokeBorder(SeleneTheme.ink.opacity(0.14), lineWidth: 1)
+                                )
+                                .clipShape(Capsule())
+                        }
+                    }
+
+                    Text(controller.isGamepadConnected
+                         ? "Live controller navigation across the library, detail, settings and game options."
+                         : "Plug in or pair any Switch, Xbox, PlayStation or 8BitDo gamepad via Bluetooth or USB.")
+                        .font(.system(size: 11.5))
+                        .foregroundColor(SeleneTheme.ink.opacity(0.64))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 12)
+
+                Button {
+                    SoundEffectService.shared.play(.click)
+                    controller.refreshControllers()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 10.5, weight: .semibold))
+                        Text("Detect")
+                            .font(.system(size: 11, weight: .semibold))
+                    }
+                    .foregroundColor(SeleneTheme.ink.opacity(0.88))
+                    .padding(.horizontal, 11)
+                    .padding(.vertical, 7)
+                    .background(SeleneTheme.ink.opacity(0.06))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .strokeBorder(SeleneTheme.ink.opacity(0.14), lineWidth: 1)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Detect controller")
+                .help("Scan for connected USB and Bluetooth controllers.")
+            }
+            .padding(.vertical, 3)
+            .frame(minHeight: 48)
+        }
+    }
+
+    private var statusGlyph: some View {
+        ZStack(alignment: .bottomTrailing) {
+            ZStack {
+                Circle()
+                    .fill(SeleneTheme.ink.opacity(0.05))
+                Circle()
+                    .strokeBorder(SeleneTheme.ink.opacity(0.12), lineWidth: 1)
+                Image(systemName: "gamecontroller.fill")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(SeleneTheme.ink.opacity(0.78))
+            }
+            .frame(width: 44, height: 44)
+
+            Circle()
+                .fill(controller.isGamepadConnected ? SeleneTheme.success : SeleneTheme.inkFaint)
+                .frame(width: 9, height: 9)
+                .overlay(
+                    Circle().strokeBorder(SeleneTheme.canvasRaised, lineWidth: 2)
+                )
+                .offset(x: 2, y: 2)
+        }
+        .accessibilityHidden(true)
     }
 }

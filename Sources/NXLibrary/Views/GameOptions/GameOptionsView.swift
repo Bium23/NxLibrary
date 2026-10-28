@@ -11,6 +11,8 @@ struct GameOptionsView: View {
     @State private var config: GameRuntimeConfig
     @State private var showRemoveSources = false
     @State private var showDelete = false
+    @State private var focusIndex = 0
+    @Environment(\.seleneReduceMotion) private var environmentReduceMotion
 
     init(viewModel: AppViewModel, game: PortedGame,
          onClose: @escaping () -> Void, onShowBuild: @escaping () -> Void) {
@@ -27,6 +29,45 @@ struct GameOptionsView: View {
             isPlayable: game.isPlayableLocally,
             sourcesDetached: !game.sources.contains { $0.type == .base }
         )
+    }
+
+    private var showsHints: Bool {
+        viewModel.settingsStore?.settings.showButtonHints ?? true
+    }
+
+    private var reducesMotion: Bool {
+        (viewModel.settingsStore?.settings.reduceMotion ?? false) || environmentReduceMotion
+    }
+
+    private var focusTitles: [String] {
+        var titles = [
+            "Play",
+            "Fullscreen",
+            "60 FPS",
+            "MetalFX",
+            "Metal HUD",
+            "Console mode",
+            "Game language",
+            "Rumble",
+            "Rumble strength"
+        ]
+        if presentation.showRenderScale {
+            titles.append("3D render scale")
+        }
+        titles.append(contentsOf: [
+            "Save files",
+            "Build & sources",
+            "Rebuild",
+            "Restore defaults",
+            "Remove sources & build cache",
+            deleteTitle
+        ])
+        return titles
+    }
+
+    private var focusedTitle: String? {
+        guard focusTitles.indices.contains(focusIndex) else { return nil }
+        return focusTitles[focusIndex]
     }
 
     var body: some View {
@@ -57,24 +98,41 @@ struct GameOptionsView: View {
                             }
                             .padding(18)
                             .id("top")
+                            .environment(\.seleneFocusedRowTitle, focusedTitle)
                         }
                         .scrollIndicators(.hidden)
                         .onAppear {
                             proxy.scrollTo("top", anchor: .top)
                         }
+                        .onChange(of: focusIndex) { _ in
+                            guard let title = focusedTitle else { return }
+                            withAnimation(reducesMotion ? nil : SeleneTheme.quick) {
+                                proxy.scrollTo("selene-row-\(title)", anchor: .center)
+                            }
+                        }
+                    }
+                    if showsHints {
+                        CommandBar([.init("B", "Close"), .init("A", "Select")])
                     }
                 }
                 .frame(width: width, height: height)
                 .background(SeleneTheme.canvasRaised)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    RoundedRectangle(cornerRadius: SeleneTheme.modalRadius, style: .continuous)
                         .strokeBorder(SeleneTheme.ink.opacity(0.14), lineWidth: 1)
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: SeleneTheme.modalRadius, style: .continuous))
                 .shadow(color: .black.opacity(0.55), radius: 40, x: 0, y: 20)
             }
         }
         .onExitCommand { onClose() }
+        .onAppear { focusIndex = 0 }
+        .onMoveCommand(perform: handleMove)
+        .seleneActivationKeys(activateFocused)
+        .onReceive(NotificationCenter.default.publisher(for: .nxGameOptionsGamepadAction)) { note in
+            guard let action = note.object as? GamepadAction else { return }
+            handleGamepad(action)
+        }
         .onChange(of: config) { newValue in
             viewModel.saveRuntimeConfig(newValue, for: game)
         }
@@ -168,14 +226,9 @@ struct GameOptionsView: View {
     }
 
     private var displayRows: some View {
-        Group {
-            SeleneToggleRow("Fullscreen",
-                            subtitle: "Output follows the display resolution.",
-                            isOn: $config.fullscreen)
-            SeleneToggleRow("Docked mode",
-                            subtitle: "Use the maximum graphics profile; off is handheld.",
-                            isOn: $config.isDockedMode)
-        }
+        SeleneToggleRow("Fullscreen",
+                        subtitle: "Output follows the display resolution.",
+                        isOn: $config.fullscreen)
     }
 
     private var performanceRows: some View {
@@ -216,6 +269,7 @@ struct GameOptionsView: View {
             .labelsHidden()
             .pickerStyle(.menu)
             .frame(width: 160)
+            .accessibilityLabel("Game language")
         }
     }
 
@@ -325,6 +379,114 @@ struct GameOptionsView: View {
             }
         }
         .padding(.top, 4)
+    }
+
+    private func handleMove(_ direction: MoveCommandDirection) {
+        guard !focusTitles.isEmpty else { return }
+        switch direction {
+        case .up, .left: moveFocus(by: -1)
+        case .down, .right: moveFocus(by: 1)
+        default: break
+        }
+    }
+
+    private func moveFocus(by delta: Int) {
+        let previous = focusIndex
+        focusIndex = (focusIndex + delta + focusTitles.count) % focusTitles.count
+        if focusIndex != previous {
+            SoundEffectService.shared.play(.focus)
+        }
+    }
+
+    private func handleGamepad(_ action: GamepadAction) {
+        guard !showRemoveSources, !showDelete else { return }
+        switch action {
+        case .navigateUp, .navigateLeft: moveFocus(by: -1)
+        case .navigateDown, .navigateRight: moveFocus(by: 1)
+        case .confirm: activateFocused()
+        case .cancel, .secondaryAction, .menu: onClose()
+        default: break
+        }
+    }
+
+    private func activateFocused() {
+        guard let title = focusedTitle else { return }
+        switch title {
+        case "Play":
+            guard presentation.canPlay else {
+                SoundEffectService.shared.play(.error)
+                return
+            }
+            SoundEffectService.shared.play(.click)
+            onClose()
+            viewModel.launchGame(game)
+        case "Fullscreen":
+            SoundEffectService.shared.play(.click)
+            config.fullscreen.toggle()
+        case "60 FPS":
+            SoundEffectService.shared.play(.click)
+            config.enable60FPS.toggle()
+        case "MetalFX":
+            SoundEffectService.shared.play(.click)
+            config.enableMetalFXUpscale.toggle()
+        case "Metal HUD":
+            SoundEffectService.shared.play(.click)
+            config.enableMetalHUD.toggle()
+        case "Console mode":
+            SoundEffectService.shared.play(.click)
+            config.isDockedMode.toggle()
+        case "Game language":
+            cycleLanguage()
+        case "Rumble":
+            SoundEffectService.shared.play(.click)
+            config.rumble.toggle()
+        case "Rumble strength":
+            SoundEffectService.shared.play(.click)
+            config.rumbleGain = (config.rumbleGain + 1) % 4
+        case "3D render scale":
+            SoundEffectService.shared.play(.click)
+            let percent = Int((config.renderScale * 100).rounded())
+            config.renderScale = Double(percent >= 100 ? 50 : percent + 5) / 100
+        case "Save files":
+            SoundEffectService.shared.play(.click)
+            viewModel.revealSaveFolder(GameDetailsProfile.inspect(for: game).saveDirectory)
+        case "Build & sources":
+            SoundEffectService.shared.play(.click)
+            viewModel.locateSources(for: game)
+        case "Rebuild":
+            guard !presentation.sourcesDetached else {
+                SoundEffectService.shared.play(.error)
+                return
+            }
+            SoundEffectService.shared.play(.click)
+            viewModel.startBuild(for: game)
+            if viewModel.isBuilding {
+                onClose()
+                onShowBuild()
+            }
+        case "Restore defaults":
+            SoundEffectService.shared.play(.click)
+            config = GameRuntimeConfig()
+        case "Remove sources & build cache":
+            SoundEffectService.shared.play(.click)
+            showRemoveSources = true
+        default:
+            if title == deleteTitle {
+                SoundEffectService.shared.play(.click)
+                showDelete = true
+            }
+        }
+    }
+
+    private func cycleLanguage() {
+        let options = viewModel.availableLanguages
+        guard !options.isEmpty else { return }
+        SoundEffectService.shared.play(.click)
+        if let index = options.firstIndex(where: { $0.code == config.language }) {
+            config.language = options[(index + 1) % options.count].code
+        } else {
+            config.language = options[0].code
+        }
     }
 
     private var canDeleteBundle: Bool { game.canDeleteAppBundle() }

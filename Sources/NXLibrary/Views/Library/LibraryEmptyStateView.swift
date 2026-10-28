@@ -5,27 +5,23 @@ struct LibraryEmptyStateView: View {
     let onImport: () -> Void
 
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "gamecontroller")
-                .font(.system(size: 48, weight: .light))
-                .foregroundColor(SeleneTheme.accent.opacity(0.55))
+        VStack(spacing: 18) {
+            Text("Your library is empty")
+                .font(.system(size: 40, weight: .semibold))
+                .tracking(-1.1)
+                .foregroundColor(SeleneTheme.ink)
 
-            VStack(spacing: 5) {
-                Text("Your library is empty")
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundColor(SeleneTheme.ink)
-                Text("Add a game or import an existing nxnative build.")
-                    .font(.system(size: 12))
-                    .foregroundColor(SeleneTheme.inkMuted)
-            }
+            Text("Add a game to start your collection.")
+                .font(.system(size: 14))
+                .foregroundColor(SeleneTheme.inkMuted)
 
-            HStack(spacing: 10) {
+            HStack(spacing: 22) {
                 Button(action: onAdd) {
                     Text("Add a game")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(SeleneTheme.canvas)
-                        .padding(.horizontal, 22)
-                        .frame(height: 40)
+                        .padding(.horizontal, 26)
+                        .frame(height: 44)
                         .background(SeleneTheme.focus)
                         .clipShape(Capsule())
                 }
@@ -33,16 +29,12 @@ struct LibraryEmptyStateView: View {
 
                 Button(action: onImport) {
                     Text("Import existing builds")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(SeleneTheme.ink.opacity(0.8))
-                        .padding(.horizontal, 20)
-                        .frame(height: 40)
-                        .background(SeleneTheme.ink.opacity(0.08))
-                        .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.16), lineWidth: 1))
-                        .clipShape(Capsule())
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(SeleneTheme.ink.opacity(0.66))
                 }
                 .buttonStyle(.plain)
             }
+            .padding(.top, 4)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

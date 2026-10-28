@@ -167,30 +167,30 @@ struct SettingsStorageSection: View {
 
     private func publishActions() {
         onActions([
-            .init(id: "recalc", title: "Recalculate storage") {
+            .init(id: "recalc", title: "Storage usage") {
                 viewModel.refreshStorageUsage()
             },
-            .init(id: "deleteCaches", title: "Delete build caches", isEnabled: !viewModel.isBuilding) {
+            .init(id: "deleteCaches", title: "Build caches", isEnabled: !viewModel.isBuilding) {
                 cleanupToConfirm = .caches
             },
-            .init(id: "deleteLogs", title: "Delete logs", isEnabled: !viewModel.isBuilding) {
+            .init(id: "deleteLogs", title: "Logs", isEnabled: !viewModel.isBuilding) {
                 cleanupToConfirm = .logs
             },
-            .init(id: "metadataClear", title: "Clear metadata cache") {
+            .init(id: "metadataClear", title: "Metadata cache") {
                 viewModel.clearMetadataCache()
                 metadataBytes = viewModel.metadataCacheSize()
             },
-            .init(id: "artworkClear", title: "Clear artwork cache") {
+            .init(id: "artworkClear", title: "Artwork cache") {
                 artwork.clear()
                 artworkBytes = artwork.cacheSize()
             },
-            .init(id: "backup", title: "Back up save", isEnabled: backupGameID != nil) {
+            .init(id: "backup", title: "Save backup", isEnabled: backupGameID != nil) {
                 if let id = backupGameID,
                    let game = viewModel.libraryGames.first(where: { $0.id == id }) {
                     viewModel.backupSave(for: game)
                 }
             },
-            .init(id: "console", title: "Open console") {
+            .init(id: "console", title: "Console") {
                 onOpenConsole()
             }
         ])

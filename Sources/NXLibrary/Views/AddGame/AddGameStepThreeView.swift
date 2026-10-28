@@ -6,6 +6,8 @@ struct AddGameStepThreeView: View {
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var router: AppRouter
 
+    @Environment(\.seleneReduceMotion) private var reduceMotion
+
     let focusedAction: Int
     let onActions: ([AddGameAction]) -> Void
 
@@ -311,8 +313,8 @@ struct AddGameStepThreeView: View {
                 },
                 StepAction(id: "another", title: "Build Another Game",
                            systemImage: "plus", kind: .secondary, isEnabled: true) {
-                    withAnimation(SeleneTheme.standard) {
-                        viewModel.resetWizard()
+                    withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
+                        viewModel.startNewAddGame()
                     }
                 },
                 StepAction(id: "openLog", title: "Open Log",
@@ -337,7 +339,7 @@ struct AddGameStepThreeView: View {
                 StepAction(id: "options", title: "Back to Options",
                            systemImage: "slider.horizontal.3",
                            kind: .secondary, isEnabled: true) {
-                    withAnimation(SeleneTheme.standard) {
+                    withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
                         viewModel.goToWizardStep(2)
                     }
                 },
@@ -357,7 +359,7 @@ struct AddGameStepThreeView: View {
             StepAction(id: "review", title: "Back to Review",
                        systemImage: "arrow.left", kind: .secondary,
                        isEnabled: true) {
-                withAnimation(SeleneTheme.standard) {
+                withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
                     viewModel.goToWizardStep(viewModel.selectedGame == nil ? 1 : 2)
                 }
             }

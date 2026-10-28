@@ -77,7 +77,7 @@ struct SettingsGeneralSection: View {
 
     private func publishActions() {
         onActions([
-            .init(id: "opensOn", title: "Opens on Library") {},
+            .init(id: "opensOn", title: "Opens on") {},
             .init(id: "restore", title: "Restore last selected game") {
                 settings.settings.restoreLastGame.toggle()
             },
@@ -87,10 +87,10 @@ struct SettingsGeneralSection: View {
             .init(id: "refresh", title: "Refresh library at launch") {
                 settings.settings.refreshLibraryAtLaunch.toggle()
             },
-            .init(id: "setup", title: "Open Setup") {
+            .init(id: "setup", title: "Setup") {
                 viewModel.reopenSetup()
             },
-            .init(id: "recheck", title: "Re-check environment", isEnabled: !viewModel.isCheckingPrerequisites) {
+            .init(id: "recheck", title: "Environment", isEnabled: !viewModel.isCheckingPrerequisites) {
                 viewModel.detectEnvironment()
             }
         ])
