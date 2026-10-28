@@ -3,111 +3,122 @@ import UniformTypeIdentifiers
 
 public struct DropZoneView: View {
     @ObservedObject public var viewModel: AppViewModel
+    public var isFocused: Bool
     @State private var isTargeted: Bool = false
 
-    public init(viewModel: AppViewModel) {
+    public init(viewModel: AppViewModel, isFocused: Bool = false) {
         self.viewModel = viewModel
+        self.isFocused = isFocused
     }
 
     public var body: some View {
-        VStack(spacing: 12) {
-            VStack(spacing: 10) {
-                Image(systemName: isTargeted ? "arrow.down.doc.fill" : "square.and.arrow.down.on.square.fill")
+        VStack(spacing: 13) {
+            ZStack {
+                Circle()
+                    .fill(isTargeted ? SeleneTheme.accent.opacity(0.16)
+                          : SeleneTheme.ink.opacity(0.05))
+                    .frame(width: 56, height: 56)
+                Image(systemName: isTargeted ? "arrow.down.doc.fill"
+                      : "square.and.arrow.down.on.square.fill")
                     .symbolRenderingMode(.hierarchical)
-                    .font(.system(size: 34))
-                    .foregroundColor(isTargeted ? NXTheme.secondary : NXTheme.textSecondary)
-                    .scaleEffect(isTargeted ? 1.15 : 1.0)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isTargeted)
-
-                VStack(spacing: 4) {
-                    Text(isTargeted ? "Drop files here!" : "Drag & drop game folder or Switch files here")
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
-                        .foregroundColor(NXTheme.textPrimary)
-
-                    Text("Supports game folders, NSP, XCI, and NSZ")
-                        .font(.system(size: 11))
-                        .foregroundColor(NXTheme.textSecondary)
-                }
-
-                HStack(spacing: 8) {
-                    formatPill("NSP")
-                    formatPill("XCI")
-                    formatPill("NSZ")
-
-                    Text("or")
-                        .font(.system(size: 11))
-                        .foregroundColor(NXTheme.textMuted)
-
-                    Button("Choose Folder...") {
-                        viewModel.selectGameFolder()
-                    }
-                    .buttonStyle(NXSecondaryButtonStyle())
-                    .controlSize(.small)
-                }
-                .padding(.top, 4)
-
-                if let folder = viewModel.selectedGameFolder {
-                    HStack(spacing: 8) {
-                        Image(systemName: "folder.fill")
-                            .foregroundColor(NXTheme.secondary)
-                        Text("Active Folder: \(folder.path)")
-                            .font(.system(size: 11, weight: .medium, design: .monospaced))
-                            .foregroundColor(NXTheme.textPrimary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                        Spacer()
-                        Button("Change...") {
-                            viewModel.selectGameFolder()
-                        }
-                        .buttonStyle(NXSecondaryButtonStyle())
-                        .controlSize(.mini)
-
-                        Button("Clear") {
-                            viewModel.selectedGameFolder = nil
-                        }
-                        .buttonStyle(NXSecondaryButtonStyle())
-                        .controlSize(.mini)
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(NXTheme.primary.opacity(0.12))
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .strokeBorder(NXTheme.primary.opacity(0.35), lineWidth: 1)
-                    )
-                }
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundColor(isTargeted ? SeleneTheme.accent : SeleneTheme.inkMuted)
+                    .scaleEffect(isTargeted ? 1.08 : 1)
+                    .animation(SeleneTheme.quick, value: isTargeted)
             }
-            .frame(maxWidth: .infinity, minHeight: 120)
 
-            if let err = viewModel.dropErrorMessage {
-                HStack(spacing: 6) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundColor(NXTheme.tertiary)
-                    Text(err)
-                        .font(.system(size: 11))
-                        .foregroundColor(NXTheme.tertiary)
+            VStack(spacing: 4) {
+                Text(isTargeted ? "Drop to scan this folder" : "Drop your game files here")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(SeleneTheme.ink)
+                Text("The base game is required. Updates and DLC are optional.")
+                    .font(.system(size: 10.5))
+                    .foregroundColor(SeleneTheme.inkMuted)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button {
+                viewModel.selectGameFolder()
+            } label: {
+                HStack(spacing: 7) {
+                    Image(systemName: "folder.fill")
+                        .font(.system(size: 10, weight: .semibold))
+                    Text("Choose folder")
+                        .font(.system(size: 11.5, weight: .semibold))
                 }
-                .padding(6)
-                .background(NXTheme.tertiary.opacity(0.12))
-                .cornerRadius(6)
+                .foregroundColor(SeleneTheme.canvas)
+                .padding(.horizontal, 18)
+                .frame(height: 34)
+                .background(SeleneTheme.focus)
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Choose a game folder")
+
+            Text("NSP · XCI · NSZ · folders")
+                .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                .tracking(0.4)
+                .foregroundColor(SeleneTheme.inkMuted.opacity(0.8))
+
+            if let folder = viewModel.selectedGameFolder {
+                HStack(spacing: 8) {
+                    Image(systemName: "folder.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(SeleneTheme.accent)
+                    Text(folder.path)
+                        .font(.system(size: 9.5, design: .monospaced))
+                        .foregroundColor(SeleneTheme.inkSecondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Spacer(minLength: 8)
+                    Button("Change…") { viewModel.selectGameFolder() }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 9.5, weight: .semibold))
+                        .foregroundColor(SeleneTheme.accent)
+                    Button("Clear") { viewModel.selectedGameFolder = nil }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 9.5, weight: .semibold))
+                        .foregroundColor(SeleneTheme.inkMuted)
+                }
+                .padding(.horizontal, 11)
+                .padding(.vertical, 7)
+                .background(SeleneTheme.ink.opacity(0.04))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .strokeBorder(SeleneTheme.border, lineWidth: 1)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            }
+
+            if let error = viewModel.dropErrorMessage {
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(SeleneTheme.warning)
+                    Text(error)
+                        .font(.system(size: 10))
+                        .foregroundColor(SeleneTheme.warning)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                }
             }
         }
-        .padding(16)
+        .padding(22)
+        .frame(maxWidth: .infinity, minHeight: 214)
         .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(isTargeted ? NXTheme.primary.opacity(0.16) : NXTheme.glassSurfaceElevated.opacity(0.7))
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(NXTheme.surfaceFill)
-            }
+            RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous)
+                .fill(isTargeted ? SeleneTheme.accent.opacity(0.07)
+                      : SeleneTheme.surface.opacity(0.45))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(
-                    isTargeted ? NXTheme.secondary : NXTheme.borderSubtle,
-                    style: StrokeStyle(lineWidth: isTargeted ? 1.8 : 1, dash: isTargeted ? [6] : [])
-                )
+            RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous)
+                .strokeBorder(isTargeted ? SeleneTheme.accent : SeleneTheme.borderStrong,
+                              style: StrokeStyle(lineWidth: isTargeted ? 1.8 : 1,
+                                                 dash: [6, 4]))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous)
+                .strokeBorder(isFocused ? SeleneTheme.accent : Color.clear, lineWidth: 2)
         )
         .onDrop(of: [.fileURL], isTargeted: $isTargeted) { providers in
             var urls: [URL] = []
@@ -124,18 +135,5 @@ public struct DropZoneView: View {
             }
             return true
         }
-    }
-
-    private func formatPill(_ name: String) -> some View {
-        Text(name)
-            .font(.system(size: 9, weight: .bold, design: .monospaced))
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(NXTheme.secondary.opacity(0.16))
-            .foregroundColor(NXTheme.secondary)
-            .clipShape(Capsule())
-            .overlay(
-                Capsule().strokeBorder(NXTheme.secondary.opacity(0.3), lineWidth: 0.6)
-            )
     }
 }

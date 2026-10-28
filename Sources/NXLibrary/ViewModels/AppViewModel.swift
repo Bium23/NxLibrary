@@ -55,9 +55,12 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         didSet {
             if let game = selectedGame {
                 self.appName = game.name
+                self.bundleId = ""
                 resetSourceSelection(for: game)
             } else {
                 selectedSourceIDs = []
+                appName = ""
+                bundleId = ""
             }
         }
     }
@@ -1592,6 +1595,10 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         )
         let customName = appName.trimmingCharacters(in: .whitespacesAndNewlines)
         if !customName.isEmpty { detected.name = customName }
+        let titleId = String(format: "%016llX", baseTitleId)
+        let isNewGame = !libraryGames.contains {
+            $0.titleId?.caseInsensitiveCompare(titleId) == .orderedSame
+        }
         let useFolderMode = selectedGameFolder != nil
             && detectedGames.count == 1
             && files.count == selection.files.count
@@ -1603,6 +1610,12 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                 bundleId: bundleId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     ? nil : bundleId.trimmingCharacters(in: .whitespacesAndNewlines)
             )
+            // GameRuntimeConfig.load(for:) reads UserDefaults and the per-title
+            // env file, not the library record, so persist the review-screen
+            // defaults for a brand-new game. Existing games keep their config.
+            if isNewGame {
+                pendingRuntimeConfig.save(for: game)
+            }
             librarySearchText = ""
             if let index = libraryGames.firstIndex(where: { $0.id == game.id }) {
                 focusedGameIndex = index

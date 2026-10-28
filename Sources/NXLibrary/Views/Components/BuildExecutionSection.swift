@@ -221,7 +221,7 @@ public struct BuildExecutionSection: View {
                 Spacer()
 
                 Button("Open Console") {
-                    viewModel.selectedTab = 4
+                    NotificationCenter.default.post(name: .nxLibraryOpenConsole, object: nil)
                 }
                 .buttonStyle(.link)
                 .font(.system(size: 12))

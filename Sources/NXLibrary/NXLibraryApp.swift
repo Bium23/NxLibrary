@@ -5,7 +5,11 @@ extension Notification.Name {
     static let nxLibraryCheckUpstream = Notification.Name("NXLibraryCheckUpstream")
     static let nxLibraryOpenMenu = Notification.Name("NXLibraryOpenMenu")
     static let nxSettingsGamepadAction = Notification.Name("NXSettingsGamepadAction")
+    static let nxAddGameGamepadAction = Notification.Name("NXAddGameGamepadAction")
     static let nxLibraryOpenSettings = Notification.Name("NXLibraryOpenSettings")
+    static let nxLibraryOpenConsole = Notification.Name("NXLibraryOpenConsole")
+    static let nxLibraryOpenLibrary = Notification.Name("NXLibraryOpenLibrary")
+    static let nxLibraryOpenAddGame = Notification.Name("NXLibraryOpenAddGame")
 }
 
 @main
@@ -27,6 +31,11 @@ struct NXLibraryApp: App {
                 .keyboardShortcut(",", modifiers: [.command])
             }
             CommandMenu("Game") {
+                Button("Add Game…") {
+                    NotificationCenter.default.post(name: .nxLibraryOpenAddGame, object: nil)
+                }
+                .keyboardShortcut("n", modifiers: [.command])
+                Divider()
                 Button("Play Selected Game") {
                     NotificationCenter.default.post(name: .nxLibraryPlayFocused, object: nil)
                 }

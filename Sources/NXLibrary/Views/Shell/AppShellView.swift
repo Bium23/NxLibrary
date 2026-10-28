@@ -45,6 +45,7 @@ public struct AppShellView: View {
         .onChange(of: router.route) { route in
             if case .addGame = route {
                 viewModel.pendingRuntimeConfig = settings.settings.gameDefaults
+                viewModel.selectedLanguage = settings.settings.gameDefaults.language
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryPlayFocused)) { _ in
@@ -61,11 +62,27 @@ public struct AppShellView: View {
             router.closeMenu()
             router.openSettings(.general)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenConsole)) { _ in
+            router.closeMenu()
+            router.openConsole()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenLibrary)) { _ in
+            router.closeMenu()
+            router.showLibrary()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenAddGame)) { _ in
+            router.closeMenu()
+            router.openAddGame()
+        }
         .onExitCommand {
             if router.isMenuPresented {
                 router.closeMenu()
             } else if router.route == .library {
                 router.isMenuPresented = true
+            } else if case .settings = router.route {
+                // SettingsView handles its own Esc.
+            } else if case .addGame = router.route {
+                // AddGameView handles its own Esc.
             } else {
                 router.back()
             }
@@ -112,8 +129,9 @@ public struct AppShellView: View {
                          router: router,
                          artwork: artwork)
         case .addGame:
-            BuildView(viewModel: viewModel)
-                .padding(.top, 28)
+            AddGameView(viewModel: viewModel,
+                        router: router,
+                        showsHints: settings.settings.showButtonHints)
         case .console:
             LogsView(viewModel: viewModel)
                 .padding(.top, 28)
@@ -162,6 +180,12 @@ public struct AppShellView: View {
                     router.isMenuPresented = true
                 } else {
                     NotificationCenter.default.post(name: .nxSettingsGamepadAction, object: action)
+                }
+            case .addGame:
+                if action == .menu {
+                    router.isMenuPresented = true
+                } else {
+                    NotificationCenter.default.post(name: .nxAddGameGamepadAction, object: action)
                 }
             default:
                 if action == .menu {

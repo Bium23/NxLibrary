@@ -79,7 +79,7 @@ public struct BuildPrerequisiteBanners: View {
             Spacer()
             
             Button("Configure in Settings") {
-                viewModel.selectedTab = 3
+                NotificationCenter.default.post(name: .nxLibraryOpenSettings, object: nil)
             }
             .buttonStyle(NXAccentButtonStyle())
             .controlSize(.regular)

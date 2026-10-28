@@ -2,80 +2,81 @@ import SwiftUI
 
 public struct BuildStageStepperView: View {
     @ObservedObject public var viewModel: AppViewModel
-    
+
     public init(viewModel: AppViewModel) {
         self.viewModel = viewModel
     }
-    
+
     public var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Build Stages (\(viewModel.stageIndex)/\(max(viewModel.totalStages, viewModel.buildStages.count)))")
-                .font(.system(size: 11, weight: .bold))
-                .foregroundColor(NXTheme.textSecondary)
-            
-            VStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Build stages")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(SeleneTheme.inkSecondary)
+                Spacer()
+                Text("\(viewModel.stageIndex)/\(max(viewModel.totalStages, viewModel.buildStages.count))")
+                    .font(.system(size: 9.5, weight: .semibold, design: .monospaced))
+                    .foregroundColor(SeleneTheme.inkMuted)
+            }
+
+            VStack(spacing: 7) {
                 ForEach(viewModel.buildStages) { stage in
                     stageRow(stage)
                 }
             }
         }
-        .padding(10)
-        .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(NXTheme.glassSurfaceElevated.opacity(0.8))
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(NXTheme.surfaceFill)
-            }
-        )
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(SeleneTheme.canvasRaised)
         .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(NXTheme.specularRim, lineWidth: 0.8)
+            RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous)
+                .strokeBorder(SeleneTheme.border, lineWidth: 1)
         )
+        .clipShape(RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous))
     }
-    
+
     private func stageRow(_ stage: BuildStageItem) -> some View {
-        HStack(spacing: 8) {
-            if stage.isRunning {
-                ProgressView()
-                    .controlSize(.mini)
-                    .frame(width: 16)
-            } else if stage.isCompleted {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(NXTheme.success)
-                    .font(.system(size: 13))
-                    .frame(width: 16)
-            } else if stage.isFailed {
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundColor(NXTheme.error)
-                    .font(.system(size: 13))
-                    .frame(width: 16)
-            } else {
-                Circle()
-                    .stroke(NXTheme.textSecondary.opacity(0.4), lineWidth: 1.5)
-                    .frame(width: 10, height: 10)
-                    .padding(.horizontal, 3)
+        HStack(spacing: 9) {
+            Group {
+                if stage.isRunning {
+                    ProgressView()
+                        .controlSize(.mini)
+                } else if stage.isCompleted {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(SeleneTheme.success)
+                        .font(.system(size: 13))
+                } else if stage.isFailed {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(SeleneTheme.danger)
+                        .font(.system(size: 13))
+                } else {
+                    Circle()
+                        .strokeBorder(SeleneTheme.inkMuted.opacity(0.45), lineWidth: 1.5)
+                        .frame(width: 10, height: 10)
+                }
             }
-            
+            .frame(width: 16)
+
             Text("Stage \(stage.id): \(stage.name)")
-                .font(.system(size: 12, weight: stage.isRunning ? .bold : .medium, design: .rounded))
-                .foregroundColor(stage.isRunning ? NXTheme.textPrimary : (stage.isCompleted ? NXTheme.textSecondary : NXTheme.textMuted))
-            
-            if !stage.step.isEmpty && stage.isRunning {
-                Text("(\(stage.step))")
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundColor(NXTheme.secondary)
+                .font(.system(size: 11, weight: stage.isRunning ? .semibold : .regular))
+                .foregroundColor(stage.isRunning ? SeleneTheme.ink
+                                 : (stage.isCompleted ? SeleneTheme.inkSecondary : SeleneTheme.inkMuted))
+
+            if !stage.step.isEmpty, stage.isRunning {
+                Text(stage.step)
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundColor(SeleneTheme.accent)
                     .lineLimit(1)
             }
-            
-            Spacer()
-            
+
+            Spacer(minLength: 8)
+
             if let elapsed = stage.elapsedSeconds, elapsed > 0 {
                 Text(String(format: "%.1fs", elapsed))
-                    .font(.system(size: 10, design: .monospaced))
-                    .foregroundColor(NXTheme.textMuted)
+                    .font(.system(size: 9.5, design: .monospaced))
+                    .foregroundColor(SeleneTheme.inkMuted)
             }
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 1)
     }
 }

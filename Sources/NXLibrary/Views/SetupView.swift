@@ -215,7 +215,7 @@ public struct SetupView: View {
                         .font(.system(size: 10))
                         .foregroundColor(NXTheme.textSecondary)
                     Button("Review in Settings") {
-                        viewModel.selectedTab = 3
+                        NotificationCenter.default.post(name: .nxLibraryOpenSettings, object: nil)
                         viewModel.showSetupSheet = false
                         dismiss()
                     }

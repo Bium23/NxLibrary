@@ -45,7 +45,7 @@ public struct BuildBanners: View {
             Spacer()
             
             Button("View in Library") {
-                viewModel.selectedTab = 0
+                NotificationCenter.default.post(name: .nxLibraryOpenLibrary, object: nil)
             }
             .buttonStyle(NXSecondaryButtonStyle())
             
@@ -89,7 +89,7 @@ public struct BuildBanners: View {
             .buttonStyle(NXSecondaryButtonStyle())
 
             Button("Console") {
-                viewModel.selectedTab = 4
+                NotificationCenter.default.post(name: .nxLibraryOpenConsole, object: nil)
             }
             .buttonStyle(NXSecondaryButtonStyle())
         }
