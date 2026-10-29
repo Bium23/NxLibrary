@@ -95,7 +95,7 @@ struct SettingsGamesSection: View {
                            in: 0.5...1.0, step: 0.05)
                         .frame(width: 170)
                     Text("\(Int((settings.settings.gameDefaults.renderScale * 100).rounded()))%")
-                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .seleneFont(13, .semibold, design: .monospaced)
                         .foregroundColor(SeleneTheme.glyph)
                         .frame(width: 36, alignment: .trailing)
                 }
@@ -103,13 +103,13 @@ struct SettingsGamesSection: View {
 
             SelenePanel("Resolution") {
                 Text("Output follows the window or display. Render scale changes the internal 3D resolution only; native 1440p/4K is not available in this engine pin.")
-                    .font(.system(size: 11))
+                    .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink90)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             Text("Changing these defaults does not modify games already in the library.")
-                .font(.system(size: 10))
+                .seleneFont(13)
                 .foregroundColor(SeleneTheme.ink60)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.top, 2)

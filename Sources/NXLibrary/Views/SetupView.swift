@@ -2,6 +2,7 @@ import SwiftUI
 import NXLibraryCore
 
 public struct SetupView: View {
+    @Environment(\.seleneCanvas) private var canvas
     @ObservedObject public var viewModel: AppViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -12,11 +13,11 @@ public struct SetupView: View {
 
     public var body: some View {
         GeometryReader { geo in
-            let metrics = SeleneLayoutMetrics(width: geo.size.width)
+            let margin = canvas.u(120)
             VStack(spacing: 0) {
-                header(metrics)
+                header(margin)
                 ScrollViewReader { proxy in
-                    stepStrip(metrics) { id in
+                    stepStrip(margin) { id in
                         scroll(to: id, proxy: proxy)
                     }
                     ScrollView {
@@ -26,13 +27,13 @@ public struct SetupView: View {
                             rightColumn
                                 .frame(width: 380)
                         }
-                        .padding(.horizontal, metrics.margin)
+                        .padding(.horizontal, margin)
                         .padding(.top, 18)
                         .padding(.bottom, 40)
                     }
                     .scrollIndicators(.hidden)
                 }
-                footer(metrics)
+                footer(margin)
             }
         }
         .frame(minWidth: 980, idealWidth: 1120, minHeight: 760, idealHeight: 820)
@@ -48,15 +49,15 @@ public struct SetupView: View {
 
     // MARK: - Header and steps
 
-    private func header(_ metrics: SeleneLayoutMetrics) -> some View {
+    private func header(_ margin: CGFloat) -> some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Setup")
-                    .font(.system(size: 42, weight: .bold))
+                    .seleneFont(34, .bold)
                     .tracking(-1.2)
                     .foregroundColor(SeleneTheme.ink)
                 Text("Get the engine, keys and folders ready. Nothing is installed or changed automatically.")
-                    .font(.system(size: 13))
+                    .seleneFont(19)
                     .foregroundColor(SeleneTheme.ink60)
             }
             Spacer()
@@ -69,18 +70,18 @@ public struct SetupView: View {
                     dismiss()
                 }
                 .buttonStyle(.plain)
-                .font(.system(size: 10.5, weight: .semibold))
+                .seleneFont(14, .semibold)
                 .foregroundColor(SeleneTheme.ink60)
                 .keyboardShortcut(.cancelAction)
             }
             .padding(.top, 8)
         }
-        .padding(.horizontal, metrics.margin)
+        .padding(.horizontal, margin)
         .padding(.top, 34)
         .padding(.bottom, 20)
     }
 
-    private func stepStrip(_ metrics: SeleneLayoutMetrics,
+    private func stepStrip(_ margin: CGFloat,
                            onSelect: @escaping (String) -> Void) -> some View {
         HStack(spacing: 8) {
             ForEach(stepDefinitions) { step in
@@ -95,16 +96,16 @@ public struct SetupView: View {
                                 .frame(width: 18, height: 18)
                             if step.isComplete {
                                 Image(systemName: "checkmark")
-                                    .font(.system(size: 8, weight: .bold))
+                                    .seleneFont(11, .bold)
                                     .foregroundColor(SeleneTheme.success)
                             } else {
                                 Text("\(step.number)")
-                                    .font(.system(size: 8, weight: .bold))
+                                    .seleneFont(11, .bold)
                                     .foregroundColor(step.isCurrent ? SeleneTheme.scrim : SeleneTheme.ink.opacity(0.55))
                             }
                         }
                         Text(step.title)
-                            .font(.system(size: 10.5, weight: step.isCurrent ? .semibold : .medium))
+                            .seleneFont(14, step.isCurrent ? .semibold : .medium)
                             .foregroundColor(step.isCurrent ? SeleneTheme.scrim
                                              : (step.isComplete ? SeleneTheme.ink.opacity(0.82) : SeleneTheme.ink.opacity(0.48)))
                     }
@@ -122,7 +123,7 @@ public struct SetupView: View {
             }
             Spacer()
         }
-        .padding(.horizontal, metrics.margin)
+        .padding(.horizontal, margin)
         .padding(.bottom, 8)
     }
 
@@ -205,21 +206,21 @@ public struct SetupView: View {
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.small)
                     Text("Checking the nxnative toolchain…")
-                        .font(.system(size: 11))
+                        .seleneFont(15)
                         .foregroundColor(SeleneTheme.ink90)
                 }
             }
 
             HStack(spacing: 10) {
                 Text("Used in place at \(viewModel.nxnativePath)")
-                    .font(.system(size: 10, design: .monospaced))
+                    .seleneFont(13, .regular, design: .monospaced)
                     .foregroundColor(SeleneTheme.ink60)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 Spacer()
                 Button("Re-check") { viewModel.detectEnvironment() }
                     .buttonStyle(.plain)
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .seleneFont(14, .semibold)
                     .foregroundColor(SeleneTheme.glyph)
             }
         }
@@ -242,7 +243,7 @@ public struct SetupView: View {
                     Text(viewModel.isProdKeysValid && !viewModel.prodKeysPath.isEmpty
                          ? viewModel.prodKeysPath
                          : "Not imported")
-                        .font(.system(size: 9.5, design: .monospaced))
+                        .seleneFont(13, .regular, design: .monospaced)
                         .foregroundColor(SeleneTheme.ink60)
                         .lineLimit(1)
                         .truncationMode(.middle)
@@ -251,7 +252,7 @@ public struct SetupView: View {
                         viewModel.selectProdKeysFile()
                     }
                     .buttonStyle(.plain)
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .seleneFont(14, .semibold)
                     .foregroundColor(SeleneTheme.glyph)
                 }
             }
@@ -259,12 +260,12 @@ public struct SetupView: View {
             HStack(spacing: 10) {
                 Button("Detect from Ryujinx…") { viewModel.selectRyujinxFolder() }
                     .buttonStyle(.plain)
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .seleneFont(14, .semibold)
                     .foregroundColor(SeleneTheme.glyph)
                 Spacer()
                 if let summary = viewModel.keySummary {
                     Text("\(summary.applicationKeyGenerations.count) application key generations")
-                        .font(.system(size: 9.5, design: .monospaced))
+                        .seleneFont(13, .regular, design: .monospaced)
                         .foregroundColor(SeleneTheme.ink60)
                 }
             }
@@ -284,7 +285,7 @@ public struct SetupView: View {
                       subtitle: viewModel.libraryFolder?.path ?? "~/Applications") {
                 Button("Change…") { viewModel.selectLibraryFolder() }
                     .buttonStyle(.plain)
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .seleneFont(14, .semibold)
                     .foregroundColor(SeleneTheme.glyph)
             }
 
@@ -296,12 +297,12 @@ public struct SetupView: View {
                         viewModel.selectGameFolder()
                     }
                     .buttonStyle(.plain)
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .seleneFont(14, .semibold)
                     .foregroundColor(SeleneTheme.glyph)
                     if viewModel.selectedGameFolder != nil {
                         Button("Clear") { viewModel.selectedGameFolder = nil }
                             .buttonStyle(.plain)
-                            .font(.system(size: 10.5, weight: .semibold))
+                            .seleneFont(14, .semibold)
                             .foregroundColor(SeleneTheme.ink60)
                     }
                 }
@@ -314,7 +315,7 @@ public struct SetupView: View {
                 viewModel.loadLibrary()
             }
             .buttonStyle(.plain)
-            .font(.system(size: 10, weight: .semibold))
+            .seleneFont(13, .semibold)
             .foregroundColor(SeleneTheme.ink60)
         }
     }
@@ -335,15 +336,15 @@ public struct SetupView: View {
                     ForEach(report.checks, id: \.id) { check in
                         HStack(alignment: .top, spacing: 9) {
                             Image(systemName: symbol(for: check.status))
-                                .font(.system(size: 11, weight: .semibold))
+                                .seleneFont(15, .semibold)
                                 .foregroundColor(color(for: check.status))
                                 .frame(width: 14)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(check.title)
-                                    .font(.system(size: 11, weight: .medium))
+                                    .seleneFont(15, .medium)
                                     .foregroundColor(SeleneTheme.ink.opacity(0.9))
                                 Text(check.detail)
-                                    .font(.system(size: 9.5, design: .monospaced))
+                                    .seleneFont(13, .regular, design: .monospaced)
                                     .foregroundColor(SeleneTheme.ink60)
                                     .lineLimit(2)
                             }
@@ -355,7 +356,7 @@ public struct SetupView: View {
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.small)
                     Text("Running the compatibility check…")
-                        .font(.system(size: 11))
+                        .seleneFont(15)
                         .foregroundColor(SeleneTheme.ink90)
                 }
             }
@@ -363,7 +364,7 @@ public struct SetupView: View {
             HStack(spacing: 10) {
                 Button("Re-check") { viewModel.detectEnvironment() }
                     .buttonStyle(.plain)
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .seleneFont(14, .semibold)
                     .foregroundColor(SeleneTheme.glyph)
                 if viewModel.compatibilityReport?.ok == false {
                     Button("Review in Settings") {
@@ -372,7 +373,7 @@ public struct SetupView: View {
                         dismiss()
                     }
                     .buttonStyle(.plain)
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .seleneFont(14, .semibold)
                     .foregroundColor(SeleneTheme.untested)
                 }
                 Spacer()
@@ -393,12 +394,12 @@ public struct SetupView: View {
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.small)
                     Text("Scanning the app library…")
-                        .font(.system(size: 11))
+                        .seleneFont(15)
                         .foregroundColor(SeleneTheme.ink90)
                 }
             } else if viewModel.importedApps.isEmpty {
                 Text("No nxnative app found yet. You can add games later from Add Game.")
-                    .font(.system(size: 11))
+                    .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink60)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
@@ -406,15 +407,15 @@ public struct SetupView: View {
                     ForEach(viewModel.importedApps) { app in
                         HStack(spacing: 9) {
                             Image(systemName: "checkmark.seal.fill")
-                                .font(.system(size: 11))
+                                .seleneFont(15)
                                 .foregroundColor(SeleneTheme.success)
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(app.name)
-                                    .font(.system(size: 11, weight: .semibold))
+                                    .seleneFont(15, .semibold)
                                     .foregroundColor(SeleneTheme.ink.opacity(0.92))
                                     .lineLimit(1)
                                 Text("\(app.titleId ?? "no title ID") · v\(app.version ?? "?") · \(seleneBytes(app.sizeBytes))")
-                                    .font(.system(size: 9, design: .monospaced))
+                                    .seleneFont(12, .regular, design: .monospaced)
                                     .foregroundColor(SeleneTheme.ink60)
                                     .lineLimit(1)
                             }
@@ -428,7 +429,7 @@ public struct SetupView: View {
                 Spacer()
                 Button("Scan Again") { viewModel.importExistingBuilds() }
                     .buttonStyle(.plain)
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .seleneFont(14, .semibold)
                     .foregroundColor(SeleneTheme.glyph)
             }
         }
@@ -436,13 +437,13 @@ public struct SetupView: View {
 
     // MARK: - Footer
 
-    private func footer(_ metrics: SeleneLayoutMetrics) -> some View {
+    private func footer(_ margin: CGFloat) -> some View {
         HStack(spacing: 12) {
             Circle()
                 .fill(viewModel.canCompleteSetup ? SeleneTheme.success : SeleneTheme.untested)
                 .frame(width: 6, height: 6)
             Text(viewModel.canCompleteSetup ? "Setup checks passed." : setupHint)
-                .font(.system(size: 11))
+                .seleneFont(15)
                 .foregroundColor(viewModel.canCompleteSetup ? SeleneTheme.success : SeleneTheme.untested)
             Spacer()
             SeleneActionButton(title: "Finish Setup", kind: .primary,
@@ -451,7 +452,7 @@ public struct SetupView: View {
                 dismiss()
             }
         }
-        .padding(.horizontal, metrics.margin)
+        .padding(.horizontal, margin)
         .padding(.vertical, 16)
         .background(SeleneTheme.glassSolid)
         .overlay(alignment: .top) {
@@ -476,20 +477,20 @@ public struct SetupView: View {
                     .fill(SeleneTheme.ink.opacity(0.055))
                     .frame(width: 30, height: 30)
                 Image(systemName: icon)
-                    .font(.system(size: 13, weight: .semibold))
+                    .seleneFont(19, .semibold)
                     .foregroundColor(SeleneTheme.glyph)
             }
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 7) {
                     Text(title)
-                        .font(.system(size: 12.5, weight: .semibold))
+                        .seleneFont(19, .semibold)
                         .foregroundColor(SeleneTheme.ink.opacity(0.95))
                     Image(systemName: ok ? "checkmark.circle.fill" : "circle.dashed")
-                        .font(.system(size: 10, weight: .semibold))
+                        .seleneFont(13, .semibold)
                         .foregroundColor(ok ? SeleneTheme.success : SeleneTheme.untested)
                 }
                 Text(detail)
-                    .font(.system(size: 10.5))
+                    .seleneFont(14)
                     .foregroundColor(SeleneTheme.ink60)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -500,11 +501,11 @@ public struct SetupView: View {
     private func summaryCell(_ title: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(title.uppercased())
-                .font(.system(size: 8, weight: .bold))
+                .seleneFont(11, .bold)
                 .tracking(0.8)
                 .foregroundColor(SeleneTheme.ink60.opacity(0.7))
             Text(value)
-                .font(.system(size: 10, design: .monospaced))
+                .seleneFont(13, .regular, design: .monospaced)
                 .foregroundColor(SeleneTheme.ink.opacity(0.9))
                 .lineLimit(1)
                 .truncationMode(.middle)
@@ -522,10 +523,10 @@ public struct SetupView: View {
     private func warningLine(_ text: String) -> some View {
         HStack(alignment: .top, spacing: 7) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 10))
+                .seleneFont(13)
                 .foregroundColor(SeleneTheme.untested)
             Text(text)
-                .font(.system(size: 10))
+                .seleneFont(13)
                 .foregroundColor(SeleneTheme.untested)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
@@ -538,7 +539,7 @@ public struct SetupView: View {
                 .fill(ok ? SeleneTheme.success : SeleneTheme.untested)
                 .frame(width: 5, height: 5)
             Text(ok ? on : off)
-                .font(.system(size: 9.5, weight: .semibold))
+                .seleneFont(13, .semibold)
         }
         .foregroundColor(ok ? SeleneTheme.success : SeleneTheme.untested)
         .padding(.horizontal, 10)

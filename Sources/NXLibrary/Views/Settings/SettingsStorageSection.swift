@@ -29,7 +29,7 @@ struct SettingsStorageSection: View {
                     HStack(spacing: 8) {
                         ProgressView().controlSize(.small)
                         Text("Calculating storage...")
-                            .font(.system(size: 11))
+                            .seleneFont(15)
                             .foregroundColor(SeleneTheme.ink60)
                     }
                 }
@@ -92,7 +92,7 @@ struct SettingsStorageSection: View {
                         }
                     }
                     .buttonStyle(.plain)
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .seleneFont(14, .semibold)
                     .foregroundColor(SeleneTheme.glyph)
                     .disabled(backupGameID == nil)
                 }
@@ -154,11 +154,11 @@ struct SettingsStorageSection: View {
     private func usageRow(_ title: String, bytes: Int64, positive: Bool = false) -> some View {
         HStack {
             Text(title)
-                .font(.system(size: 11))
+                .seleneFont(15)
                 .foregroundColor(SeleneTheme.ink90)
             Spacer()
             Text(seleneBytes(bytes))
-                .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                .seleneFont(15, .semibold, design: .monospaced)
                 .foregroundColor(positive ? SeleneTheme.success : SeleneTheme.ink)
         }
         .padding(.horizontal, 8)

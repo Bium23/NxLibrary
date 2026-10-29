@@ -82,14 +82,14 @@ struct SeleneStatusLine: View {
     var body: some View {
         HStack(spacing: 9) {
             Image(systemName: ok ? "checkmark.circle.fill" : "xmark.octagon.fill")
-                .font(.system(size: 11, weight: .bold))
+                .seleneFont(15, .bold)
                 .foregroundColor(ok ? SeleneTheme.success : SeleneTheme.danger)
             Text(title)
-                .font(.system(size: 11, weight: .semibold))
+                .seleneFont(15, .semibold)
                 .foregroundColor(SeleneTheme.ink)
             if let detail {
                 Text(detail)
-                    .font(.system(size: 10, design: .monospaced))
+                    .seleneFont(13, .regular, design: .monospaced)
                     .foregroundColor(SeleneTheme.ink60)
                     .lineLimit(1)
                     .truncationMode(.middle)

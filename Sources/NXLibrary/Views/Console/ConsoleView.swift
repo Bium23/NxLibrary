@@ -21,6 +21,7 @@ enum ConsoleFilter: String, CaseIterable, Identifiable {
 }
 
 public struct ConsoleView: View {
+    @Environment(\.seleneCanvas) private var canvas
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var router: AppRouter
 
@@ -70,11 +71,11 @@ public struct ConsoleView: View {
 
     public var body: some View {
         GeometryReader { geo in
-            let metrics = SeleneLayoutMetrics(width: geo.size.width)
+            let margin = canvas.u(120)
             VStack(spacing: 0) {
-                header(metrics)
-                toolbar(metrics)
-                logList(metrics)
+                header(margin)
+                toolbar(margin)
+                logList(margin)
                 if viewModel.settingsStore?.settings.showButtonHints ?? true {
                     SeleneHintsBar(right: hints)
                 }
@@ -101,29 +102,29 @@ public struct ConsoleView: View {
         }
     }
 
-    private func header(_ metrics: SeleneLayoutMetrics) -> some View {
+    private func header(_ margin: CGFloat) -> some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Console")
-                    .font(.system(size: 42, weight: .bold))
+                    .seleneFont(34, .bold)
                     .tracking(-1.2)
                     .foregroundColor(SeleneTheme.ink)
                 Text("Build and launch output, in one place.")
-                    .font(.system(size: 13))
+                    .seleneFont(19)
                     .foregroundColor(SeleneTheme.ink60)
             }
             Spacer()
             Text("\(filteredLogs.count) of \(viewModel.logs.count) entries")
-                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                .seleneFont(13, .semibold, design: .monospaced)
                 .foregroundColor(SeleneTheme.ink60)
                 .padding(.top, 10)
         }
-        .padding(.horizontal, metrics.margin)
+        .padding(.horizontal, margin)
         .padding(.top, 34)
         .padding(.bottom, 18)
     }
 
-    private func toolbar(_ metrics: SeleneLayoutMetrics) -> some View {
+    private func toolbar(_ margin: CGFloat) -> some View {
         HStack(spacing: 14) {
             SeleneSegmented(selection: $filter, options: ConsoleFilter.allCases.map { ($0, $0.title) })
 
@@ -133,7 +134,7 @@ public struct ConsoleView: View {
 
             Toggle("Auto-scroll", isOn: $autoScroll)
                 .toggleStyle(.checkbox)
-                .font(.system(size: 10.5))
+                .seleneFont(14)
                 .foregroundColor(SeleneTheme.ink60)
 
             actionButton(didCopy ? "Copied" : "Copy log", systemImage: didCopy ? "checkmark" : "doc.on.doc",
@@ -144,25 +145,25 @@ public struct ConsoleView: View {
                          isFocused: focus.index == 2,
                          tint: SeleneTheme.danger) { confirmClear = true }
         }
-        .padding(.horizontal, metrics.margin)
+        .padding(.horizontal, margin)
         .padding(.bottom, 16)
     }
 
     private var searchField: some View {
         HStack(spacing: 7) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 10, weight: .semibold))
+                .seleneFont(13, .semibold)
                 .foregroundColor(SeleneTheme.ink60)
             TextField("Search log entries", text: $searchText)
                 .textFieldStyle(.plain)
-                .font(.system(size: 10.5))
+                .seleneFont(14)
                 .foregroundColor(SeleneTheme.ink.opacity(0.94))
             if !searchText.isEmpty {
                 Button {
                     searchText = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 10))
+                        .seleneFont(13)
                         .foregroundColor(SeleneTheme.ink60)
                 }
                 .buttonStyle(.plain)
@@ -186,9 +187,9 @@ public struct ConsoleView: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Image(systemName: systemImage)
-                    .font(.system(size: 9.5, weight: .semibold))
+                    .seleneFont(13, .semibold)
                 Text(title)
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .seleneFont(14, .semibold)
             }
             .foregroundColor(tint)
             .padding(.horizontal, 12)
@@ -202,7 +203,7 @@ public struct ConsoleView: View {
         .accessibilityLabel(title)
     }
 
-    private func logList(_ metrics: SeleneLayoutMetrics) -> some View {
+    private func logList(_ margin: CGFloat) -> some View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
@@ -227,7 +228,7 @@ public struct ConsoleView: View {
                     .strokeBorder(SeleneTheme.ink15, lineWidth: 1)
             )
             .clipShape(RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous))
-            .padding(.horizontal, metrics.margin)
+            .padding(.horizontal, margin)
             .padding(.bottom, 8)
             .onChange(of: viewModel.logs.count) { _ in
                 guard autoScroll, let last = filteredLogs.last else { return }
@@ -248,7 +249,7 @@ public struct ConsoleView: View {
     private func logRow(_ entry: LogEntry) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Text(entry.formattedTimestamp)
-                .font(.system(size: 9.5, design: .monospaced))
+                .seleneFont(13, .regular, design: .monospaced)
                 .foregroundColor(SeleneTheme.ink60.opacity(0.7))
                 .frame(width: 58, alignment: .leading)
 
@@ -258,7 +259,7 @@ public struct ConsoleView: View {
                 .padding(.top, 5)
 
             Text(entry.message)
-                .font(.system(size: 10.5, design: .monospaced))
+                .seleneFont(14, .regular, design: .monospaced)
                 .foregroundColor(color(for: entry.level))
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
@@ -274,15 +275,15 @@ public struct ConsoleView: View {
     private var emptyState: some View {
         VStack(spacing: 10) {
             Image(systemName: "terminal")
-                .font(.system(size: 30, weight: .light))
+                .seleneFont(34, .light)
                 .foregroundColor(SeleneTheme.glyph.opacity(0.5))
             Text(viewModel.logs.isEmpty ? "No log entries yet." : "No entries match this filter.")
-                .font(.system(size: 14, weight: .semibold))
+                .seleneFont(19, .semibold)
                 .foregroundColor(SeleneTheme.ink.opacity(0.9))
             Text(viewModel.logs.isEmpty
                  ? "Builds and launches will report their output here."
                  : "Try another filter or clear the search field.")
-                .font(.system(size: 11))
+                .seleneFont(15)
                 .foregroundColor(SeleneTheme.ink60)
         }
         .frame(maxWidth: .infinity, minHeight: 320)

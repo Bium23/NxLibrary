@@ -252,7 +252,7 @@ struct GameDetailView: View {
                     BuildSourcesPanel(
                         presentation: model.presentation,
                         appFileName: game.url.lastPathComponent,
-                        buildBlocked: model.buildBlocked,
+                        buildBlocked: model.buildBlocked && model.presentation.canRebuild,
                         rows: model.rows,
                         focusedRow: focus.zone == DetailsFocus.actionsZone ? focus.action : nil,
                         onHoverRow: { hoverRow($0) },

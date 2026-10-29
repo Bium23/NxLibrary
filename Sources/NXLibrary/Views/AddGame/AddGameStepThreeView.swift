@@ -57,13 +57,13 @@ struct AddGameStepThreeView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(viewModel.currentStageName.isEmpty
                              ? "Building…" : viewModel.currentStageName)
-                            .font(.system(size: 18, weight: .semibold))
+                            .seleneFont(19, .semibold)
                             .foregroundColor(SeleneTheme.ink)
                             .lineLimit(1)
 
                         Text(viewModel.currentStepName.isEmpty
                              ? "Preparing the build" : viewModel.currentStepName)
-                            .font(.system(size: 10.5, design: .monospaced))
+                            .seleneFont(14, .regular, design: .monospaced)
                             .foregroundColor(SeleneTheme.glyph)
                             .lineLimit(1)
 
@@ -74,11 +74,11 @@ struct AddGameStepThreeView: View {
 
                         HStack(spacing: 14) {
                             Text("Stage \(viewModel.stageIndex) of \(max(viewModel.totalStages, viewModel.buildStages.count))")
-                                .font(.system(size: 10, design: .monospaced))
+                                .seleneFont(13, .regular, design: .monospaced)
                                 .foregroundColor(SeleneTheme.ink60)
                             if let eta = viewModel.buildETA, eta > 0 {
                                 Text("ETA \(formatted(eta))")
-                                    .font(.system(size: 10, design: .monospaced))
+                                    .seleneFont(13, .regular, design: .monospaced)
                                     .foregroundColor(SeleneTheme.ink60)
                             }
                         }
@@ -87,7 +87,7 @@ struct AddGameStepThreeView: View {
                     Spacer(minLength: 12)
 
                     Text("\(Int((viewModel.buildProgress * 100).rounded()))%")
-                        .font(.system(size: 56, weight: .bold, design: .rounded))
+                        .seleneFont(34, .bold, design: .rounded)
                         .monospacedDigit()
                         .foregroundColor(SeleneTheme.ink)
                         .frame(minWidth: 150, alignment: .trailing)
@@ -115,14 +115,14 @@ struct AddGameStepThreeView: View {
         SelenePanel {
             HStack(spacing: 14) {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 30))
+                    .seleneFont(34)
                     .foregroundColor(SeleneTheme.success)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Ready to play")
-                        .font(.system(size: 20, weight: .semibold))
+                        .seleneFont(34, .semibold)
                         .foregroundColor(SeleneTheme.ink)
                     Text(path)
-                        .font(.system(size: 10.5, design: .monospaced))
+                        .seleneFont(14, .regular, design: .monospaced)
                         .foregroundColor(SeleneTheme.ink60)
                         .lineLimit(2)
                         .truncationMode(.middle)
@@ -131,7 +131,7 @@ struct AddGameStepThreeView: View {
             }
 
             Text("The app was installed atomically. Your library now points at the new build.")
-                .font(.system(size: 10.5))
+                .seleneFont(14)
                 .foregroundColor(SeleneTheme.ink90)
         }
     }
@@ -143,14 +143,14 @@ struct AddGameStepThreeView: View {
             SelenePanel {
                 HStack(alignment: .top, spacing: 14) {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 30))
+                        .seleneFont(34)
                         .foregroundColor(SeleneTheme.danger)
                     VStack(alignment: .leading, spacing: 5) {
                         Text("Build failed")
-                            .font(.system(size: 20, weight: .semibold))
+                            .seleneFont(34, .semibold)
                             .foregroundColor(SeleneTheme.ink)
                         Text(error)
-                            .font(.system(size: 11))
+                            .seleneFont(15)
                             .foregroundColor(SeleneTheme.ink90)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -158,7 +158,7 @@ struct AddGameStepThreeView: View {
                 }
 
                 Text("The previous app was left untouched. The full build log has the failing command and output.")
-                    .font(.system(size: 10.5))
+                    .seleneFont(14)
                     .foregroundColor(SeleneTheme.ink60)
             }
 
@@ -173,14 +173,14 @@ struct AddGameStepThreeView: View {
             SelenePanel {
                 HStack(alignment: .top, spacing: 14) {
                     Image(systemName: "stop.circle.fill")
-                        .font(.system(size: 30))
+                        .seleneFont(34)
                         .foregroundColor(SeleneTheme.untested)
                     VStack(alignment: .leading, spacing: 5) {
                         Text("Build cancelled")
-                            .font(.system(size: 20, weight: .semibold))
+                            .seleneFont(34, .semibold)
                             .foregroundColor(SeleneTheme.ink)
                         Text("The previous app was left untouched. You can retry or go back to the review step.")
-                            .font(.system(size: 11))
+                            .seleneFont(15)
                             .foregroundColor(SeleneTheme.ink90)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -198,12 +198,12 @@ struct AddGameStepThreeView: View {
                 let recent = viewModel.logs.suffix(8)
                 if recent.isEmpty {
                     Text("No build output is available yet.")
-                        .font(.system(size: 10, design: .monospaced))
+                        .seleneFont(13, .regular, design: .monospaced)
                         .foregroundColor(SeleneTheme.ink60)
                 } else {
                     ForEach(Array(recent.enumerated()), id: \.offset) { _, entry in
                         Text(entry.message)
-                            .font(.system(size: 10, design: .monospaced))
+                            .seleneFont(13, .regular, design: .monospaced)
                             .foregroundColor(logColor(entry.level))
                             .lineLimit(2)
                             .textSelection(.enabled)
@@ -238,14 +238,14 @@ struct AddGameStepThreeView: View {
         SelenePanel {
             HStack(spacing: 14) {
                 Image(systemName: "hammer.fill")
-                    .font(.system(size: 24))
+                    .seleneFont(34)
                     .foregroundColor(SeleneTheme.ink60)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("No build is active")
-                        .font(.system(size: 18, weight: .semibold))
+                        .seleneFont(19, .semibold)
                         .foregroundColor(SeleneTheme.ink)
                     Text("Go back to the review step and choose Add & Build to start a build.")
-                        .font(.system(size: 11))
+                        .seleneFont(15)
                         .foregroundColor(SeleneTheme.ink90)
                 }
                 Spacer()

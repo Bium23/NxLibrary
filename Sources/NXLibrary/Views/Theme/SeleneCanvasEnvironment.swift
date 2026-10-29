@@ -16,9 +16,10 @@ private struct SeleneFontModifier: ViewModifier {
     @Environment(\.seleneCanvas) private var canvas
     let size: CGFloat
     let weight: Font.Weight
+    var design: Font.Design = .default
 
     func body(content: Content) -> some View {
-        content.font(.system(size: canvas.u(size), weight: weight))
+        content.font(.system(size: canvas.u(size), weight: weight, design: design))
     }
 }
 
@@ -34,8 +35,9 @@ private struct SeleneCanvasRoot: ViewModifier {
 
 public extension View {
     /// System font sized in Selene canvas units.
-    func seleneFont(_ size: CGFloat, _ weight: Font.Weight = .regular) -> some View {
-        modifier(SeleneFontModifier(size: size, weight: weight))
+    func seleneFont(_ size: CGFloat, _ weight: Font.Weight = .regular,
+                    design: Font.Design = .default) -> some View {
+        modifier(SeleneFontModifier(size: size, weight: weight, design: design))
     }
 
     /// Measures the available space and publishes it as `seleneCanvas`.

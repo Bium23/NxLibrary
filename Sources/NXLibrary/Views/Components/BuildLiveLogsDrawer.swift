@@ -11,11 +11,11 @@ public struct BuildLiveLogsDrawer: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Label("Live output", systemImage: "terminal")
-                    .font(.system(size: 11, weight: .semibold))
+                    .seleneFont(15, .semibold)
                     .foregroundColor(SeleneTheme.ink90)
                 Spacer()
                 Text("\(viewModel.logs.count) lines")
-                    .font(.system(size: 9.5, design: .monospaced))
+                    .seleneFont(13, .regular, design: .monospaced)
                     .foregroundColor(SeleneTheme.ink60)
             }
 
@@ -24,14 +24,14 @@ public struct BuildLiveLogsDrawer: View {
                     LazyVStack(alignment: .leading, spacing: 3) {
                         if viewModel.logs.isEmpty {
                             Text("Waiting for build output…")
-                                .font(.system(size: 10, design: .monospaced))
+                                .seleneFont(13, .regular, design: .monospaced)
                                 .foregroundColor(SeleneTheme.ink60)
                         }
                         let recentLogs = viewModel.logs.suffix(80)
                         ForEach(Array(recentLogs.enumerated()), id: \.offset) { index, log in
                             HStack(alignment: .top, spacing: 6) {
                                 Text(log.message)
-                                    .font(.system(size: 10, design: .monospaced))
+                                    .seleneFont(13, .regular, design: .monospaced)
                                     .foregroundColor(logColor(log.level))
                                     .lineLimit(3)
                                     .textSelection(.enabled)

@@ -14,20 +14,20 @@ struct SettingsEngineSection: View {
                       subtitle: "The upstream nxnative checkout used for builds. Updates stay manual.") {
                 HStack(spacing: 10) {
                     Text(viewModel.nxnativePath.isEmpty ? "Not selected" : viewModel.nxnativePath)
-                        .font(.system(size: 11, weight: .medium))
+                        .seleneFont(15, .medium)
                         .foregroundColor(SeleneTheme.ink.opacity(0.62))
                         .lineLimit(1)
                         .truncationMode(.middle)
                         .frame(maxWidth: 300, alignment: .trailing)
                     Button("Change") { viewModel.selectNxnativeFolder() }
                         .buttonStyle(.plain)
-                        .font(.system(size: 10.5, weight: .semibold))
+                        .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
                     Button("Reveal") {
                         viewModel.revealInFinder(url: URL(fileURLWithPath: viewModel.nxnativePath))
                     }
                     .buttonStyle(.plain)
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .seleneFont(14, .semibold)
                     .foregroundColor(SeleneTheme.ink60)
                     .disabled(!viewModel.isNxnativeValid)
                 }
@@ -43,12 +43,12 @@ struct SettingsEngineSection: View {
                         .fill(statusColor)
                         .frame(width: 8, height: 8)
                     Text(statusText)
-                        .font(.system(size: 11, weight: .semibold))
+                        .seleneFont(15, .semibold)
                         .foregroundColor(statusColor)
                     Spacer()
                     Button("Re-check") { viewModel.detectEnvironment() }
                         .buttonStyle(.plain)
-                        .font(.system(size: 10.5, weight: .semibold))
+                        .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
                 }
 
@@ -60,7 +60,7 @@ struct SettingsEngineSection: View {
                     HStack(spacing: 8) {
                         ProgressView().controlSize(.small)
                         Text("Running the compatibility check...")
-                            .font(.system(size: 11))
+                            .seleneFont(15)
                             .foregroundColor(SeleneTheme.ink60)
                     }
                 }
@@ -82,7 +82,7 @@ struct SettingsEngineSection: View {
 
                     if !environment.issues.isEmpty {
                         Text(environment.issues.joined(separator: " · "))
-                            .font(.system(size: 10, design: .monospaced))
+                            .seleneFont(13, .regular, design: .monospaced)
                             .foregroundColor(SeleneTheme.untested)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -122,15 +122,15 @@ struct SettingsEngineSection: View {
                         info: "Nintendo Switch cryptographic keys required to decrypt game packages (NSP/XCI). NX Library stores a private copy with mode 0600 permissions; key values are never displayed or logged.") {
                 HStack(spacing: 8) {
                     Image(systemName: viewModel.isProdKeysValid ? "checkmark.circle.fill" : "xmark.octagon.fill")
-                        .font(.system(size: 11, weight: .bold))
+                        .seleneFont(15, .bold)
                         .foregroundColor(viewModel.isProdKeysValid ? SeleneTheme.success : SeleneTheme.danger)
                     Text(viewModel.isProdKeysValid ? "Keys imported" : "No prod.keys imported")
-                        .font(.system(size: 11, weight: .semibold))
+                        .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink)
                     Spacer()
                     Text(viewModel.isProdKeysValid && !viewModel.prodKeysPath.isEmpty
                          ? viewModel.prodKeysPath : "Choose your file once")
-                        .font(.system(size: 10, design: .monospaced))
+                        .seleneFont(13, .regular, design: .monospaced)
                         .foregroundColor(SeleneTheme.ink60)
                         .lineLimit(1)
                         .truncationMode(.middle)
@@ -138,7 +138,7 @@ struct SettingsEngineSection: View {
 
                 if let summary = viewModel.keySummary {
                     Text("header_key present · \(summary.applicationKeyGenerations.count) application key generations")
-                        .font(.system(size: 10, design: .monospaced))
+                        .seleneFont(13, .regular, design: .monospaced)
                         .foregroundColor(SeleneTheme.success)
                 }
 
@@ -147,17 +147,17 @@ struct SettingsEngineSection: View {
                         viewModel.selectProdKeysFile()
                     }
                     .buttonStyle(.plain)
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .seleneFont(14, .semibold)
                     .foregroundColor(SeleneTheme.glyph)
                     Button("Detect Ryujinx...") { viewModel.selectRyujinxFolder() }
                         .buttonStyle(.plain)
-                        .font(.system(size: 10.5, weight: .semibold))
+                        .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
                     Spacer()
                 }
 
                 Text("The original file is untouched. The stored copy is mode 0600 and key values are never shown or logged.")
-                    .font(.system(size: 10))
+                    .seleneFont(13)
                     .foregroundColor(SeleneTheme.ink60)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -242,7 +242,7 @@ struct SettingsEngineSection: View {
                     ForEach(status.commits.prefix(10)) { commit in
                         HStack(alignment: .top, spacing: 10) {
                             Text(commit.shortSha)
-                                .font(.system(size: 10.5, weight: .bold, design: .monospaced))
+                                .seleneFont(14, .bold, design: .monospaced)
                                 .foregroundColor(SeleneTheme.glyph)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
@@ -251,21 +251,21 @@ struct SettingsEngineSection: View {
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(commit.subject)
-                                    .font(.system(size: 11, weight: .medium))
+                                    .seleneFont(15, .medium)
                                     .foregroundColor(SeleneTheme.ink)
                                     .lineLimit(2)
                                     .fixedSize(horizontal: false, vertical: true)
 
                                 HStack(spacing: 6) {
                                     Text(commit.author)
-                                        .font(.system(size: 10))
+                                        .seleneFont(13)
                                         .foregroundColor(SeleneTheme.ink60)
                                     if !commit.date.isEmpty {
                                         Text("·")
-                                            .font(.system(size: 10))
+                                            .seleneFont(13)
                                             .foregroundColor(SeleneTheme.ink60.opacity(0.5))
                                         Text(formattedCommitDate(commit.date))
-                                            .font(.system(size: 10))
+                                            .seleneFont(13)
                                             .foregroundColor(SeleneTheme.ink60)
                                     }
                                 }
@@ -281,14 +281,14 @@ struct SettingsEngineSection: View {
                     if status.commits.count > 10 {
                         HStack {
                             Text("+ \(status.commits.count - 10) more commits upstream")
-                                .font(.system(size: 10.5, weight: .medium))
+                                .seleneFont(14, .medium)
                                 .foregroundColor(SeleneTheme.ink60)
                             Spacer()
                             Button("View all on GitHub") {
                                 viewModel.openUpstreamCompare()
                             }
                             .buttonStyle(.plain)
-                            .font(.system(size: 10.5, weight: .semibold))
+                            .seleneFont(14, .semibold)
                             .foregroundColor(SeleneTheme.glyph)
                         }
                         .padding(.top, 4)
@@ -319,21 +319,21 @@ struct SettingsEngineSection: View {
     private func checkRow(title: String, status: CheckStatus, detail: String) -> some View {
         HStack(alignment: .top, spacing: 8) {
             Image(systemName: icon(for: status))
-                .font(.system(size: 11, weight: .bold))
+                .seleneFont(15, .bold)
                 .foregroundColor(color(for: status))
                 .frame(width: 14)
             Text(title)
-                .font(.system(size: 11, weight: .semibold))
+                .seleneFont(15, .semibold)
                 .foregroundColor(SeleneTheme.ink)
                 .frame(width: 96, alignment: .leading)
             Text(detail)
-                .font(.system(size: 10, design: .monospaced))
+                .seleneFont(13, .regular, design: .monospaced)
                 .foregroundColor(SeleneTheme.ink60)
                 .lineLimit(2)
                 .textSelection(.enabled)
             Spacer(minLength: 0)
             Text(status.rawValue.uppercased())
-                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                .seleneFont(11, .bold, design: .monospaced)
                 .foregroundColor(color(for: status))
         }
     }
@@ -341,15 +341,15 @@ struct SettingsEngineSection: View {
     private func buildRow(_ title: String, ok: Bool, detail: String) -> some View {
         HStack(spacing: 8) {
             Image(systemName: ok ? "checkmark.circle.fill" : "xmark.octagon.fill")
-                .font(.system(size: 10, weight: .bold))
+                .seleneFont(13, .bold)
                 .foregroundColor(ok ? SeleneTheme.success : SeleneTheme.danger)
                 .frame(width: 13)
             Text(title)
-                .font(.system(size: 10.5, weight: .semibold))
+                .seleneFont(14, .semibold)
                 .foregroundColor(SeleneTheme.ink.opacity(0.9))
                 .frame(width: 116, alignment: .leading)
             Text(detail)
-                .font(.system(size: 9.5, design: .monospaced))
+                .seleneFont(13, .regular, design: .monospaced)
                 .foregroundColor(SeleneTheme.ink60)
                 .lineLimit(1)
                 .truncationMode(.middle)

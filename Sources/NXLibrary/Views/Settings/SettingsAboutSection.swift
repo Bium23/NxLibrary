@@ -18,14 +18,14 @@ struct SettingsAboutSection: View {
         VStack(spacing: 12) {
             SelenePanel("NX Library") {
                 Text("A personal macOS front-end for building and launching your own Switch games with nxnative.")
-                    .font(.system(size: 12))
+                    .seleneFont(16)
                     .foregroundColor(SeleneTheme.ink90)
                     .fixedSize(horizontal: false, vertical: true)
                 Text("Version \(version) · Build \(buildDate) · Engine \(seleneShort(viewModel.pinnedEngineCommit))")
-                    .font(.system(size: 10, design: .monospaced))
+                    .seleneFont(13, .regular, design: .monospaced)
                     .foregroundColor(SeleneTheme.ink60)
                 Text("Play time is tracked only for launches from NX Library. Not affiliated with Nintendo.")
-                    .font(.system(size: 10))
+                    .seleneFont(13)
                     .foregroundColor(SeleneTheme.ink60)
             }
 
@@ -38,14 +38,14 @@ struct SettingsAboutSection: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 HStack(spacing: 4) {
                                     Text(credit.name)
-                                        .font(.system(size: 11, weight: .semibold))
+                                        .seleneFont(15, .semibold)
                                         .foregroundColor(SeleneTheme.ink)
                                     Image(systemName: "arrow.up.right")
-                                        .font(.system(size: 8))
+                                        .seleneFont(11)
                                         .foregroundColor(SeleneTheme.ink60)
                                 }
                                 Text(credit.role)
-                                    .font(.system(size: 9))
+                                    .seleneFont(12)
                                     .foregroundColor(SeleneTheme.ink60)
                                     .lineLimit(2)
                             }
@@ -62,7 +62,7 @@ struct SettingsAboutSection: View {
 
             SelenePanel("Visual direction") {
                 Text("Inspired by Selene (MIT) by Matthew Silva.")
-                    .font(.system(size: 12, weight: .semibold))
+                    .seleneFont(16, .semibold)
                     .foregroundColor(SeleneTheme.ink)
                 Button {
                     if let url = URL(string: "https://github.com/mattxslv/Selene") {
@@ -73,29 +73,29 @@ struct SettingsAboutSection: View {
                         Text("https://github.com/mattxslv/Selene")
                         Image(systemName: "arrow.up.right")
                     }
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .seleneFont(14, .semibold)
                     .foregroundColor(SeleneTheme.glyph)
                 }
                 .buttonStyle(.plain)
                 Text("Selene is a Playnite theme for Windows. No Selene name, logo, wallpaper, avatar or sound is used as NX Library branding; this is a visual adaptation in SwiftUI.")
-                    .font(.system(size: 10))
+                    .seleneFont(13)
                     .foregroundColor(SeleneTheme.ink60)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             SelenePanel("Nintendo Store data") {
                 Text("Descriptions, genres and artwork are fetched from the public Nintendo Store catalog for personal use, cached locally for seven days, and never committed or redistributed.")
-                    .font(.system(size: 11))
+                    .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink90)
                     .fixedSize(horizontal: false, vertical: true)
                 Text("The app ships no keys, ROMs, game art or Nintendo UI assets.")
-                    .font(.system(size: 10))
+                    .seleneFont(13)
                     .foregroundColor(SeleneTheme.ink60)
             }
 
             SelenePanel("Licenses") {
                 Text("NX Library is personal software released under the MIT license. nxnative, Ryujinx, SPIR-V Cross, LibHac and the other dependencies retain their own licenses through the engine.")
-                    .font(.system(size: 11))
+                    .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink90)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -106,13 +106,13 @@ struct SettingsAboutSection: View {
                         Text("Open project docs")
                         Image(systemName: "folder")
                     }
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .seleneFont(14, .semibold)
                     .foregroundColor(SeleneTheme.glyph)
                 }
                 .buttonStyle(.plain)
 
                 Text("This app is not affiliated with Nintendo.")
-                    .font(.system(size: 10, weight: .semibold))
+                    .seleneFont(13, .semibold)
                     .foregroundColor(SeleneTheme.ink60)
             }
         }

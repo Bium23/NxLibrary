@@ -112,6 +112,10 @@ public struct AppShellView: View {
         layers
         .overlay { launchLayer }
         .modifier(SoundCueHooks(router: router, viewModel: viewModel))
+        // Inside the canvas root so the sheet inherits the window's canvas units.
+        .sheet(isPresented: $viewModel.showSetupSheet) {
+            SetupView(viewModel: viewModel)
+        }
         .seleneCanvasRoot()
         .animation(reduceMotion ? nil : SeleneTheme.screen,
                    value: viewModel.gameForSettingsSheet?.id)
@@ -126,9 +130,6 @@ public struct AppShellView: View {
         .environment(\.seleneButtonNames, settings.settings.buttonNames)
         .preferredColorScheme(.dark)
         .frame(minWidth: 1100, minHeight: 700)
-        .sheet(isPresented: $viewModel.showSetupSheet) {
-            SetupView(viewModel: viewModel)
-        }
         .onAppear(perform: startRuntime)
         .onDisappear {
             runningGames.stop()
@@ -436,6 +437,11 @@ public struct AppShellView: View {
             if router.isScreenshotViewerOpen { return event }
             // The intro's own monitor takes any key as "skip".
             if router.isIntroShowing { return event }
+            // An alert or another window's sheet owns Return and Esc.
+            if viewModel.alertMessage != nil || NSApp.modalWindow != nil
+                || event.window?.attachedSheet != nil || event.window?.isSheet == true {
+                return event
+            }
             let mods = event.modifierFlags.intersection([.command, .control, .option, .shift])
             // The Close Game confirmation takes the keyboard: arrows, Return, Space and Esc go to it.
             if viewModel.gameToClose != nil, mods.isEmpty {

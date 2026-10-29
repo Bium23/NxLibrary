@@ -34,13 +34,13 @@ public struct ControlsView: View {
         HStack(alignment: .top, spacing: 20) {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Controls & Keyboard Mapping")
-                    .font(.system(size: 38, weight: .bold))
+                    .seleneFont(34, .bold)
                     .tracking(-1.1)
                     .foregroundColor(SeleneTheme.ink)
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text("Games in NX Library simultaneously support your Mac keyboard and any USB or Bluetooth gamepad with instant plug-and-play recognition.")
-                    .font(.system(size: 13))
+                    .seleneFont(19)
                     .foregroundColor(SeleneTheme.ink60)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: 660, alignment: .leading)
@@ -54,7 +54,7 @@ public struct ControlsView: View {
                 Circle()
                     .strokeBorder(SeleneTheme.ink.opacity(0.12), lineWidth: 1)
                 Image(systemName: "gamecontroller.fill")
-                    .font(.system(size: 22, weight: .medium))
+                    .seleneFont(34, .medium)
                     .foregroundColor(SeleneTheme.ink.opacity(0.72))
             }
             .frame(width: 54, height: 54)
@@ -150,7 +150,7 @@ public struct ControlsView: View {
                             detail: String) -> some View {
         HStack(spacing: 10) {
             Text(badge)
-                .font(.system(size: 10.5, weight: .semibold))
+                .seleneFont(14, .semibold)
                 .foregroundColor(SeleneTheme.ink.opacity(0.92))
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
@@ -165,12 +165,12 @@ public struct ControlsView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(switchButton)
-                    .font(.system(size: 12.5, weight: .medium))
+                    .seleneFont(19, .medium)
                     .foregroundColor(SeleneTheme.ink.opacity(0.94))
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text(detail)
-                    .font(.system(size: 11.5))
+                    .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink.opacity(0.62))
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -178,7 +178,7 @@ public struct ControlsView: View {
             Spacer(minLength: 8)
 
             Text(keyDesc)
-                .font(.system(size: 10.5, weight: .semibold, design: .monospaced))
+                .seleneFont(14, .semibold, design: .monospaced)
                 .foregroundColor(SeleneTheme.ink.opacity(0.84))
                 .padding(.horizontal, 8)
                 .padding(.vertical, 5)
@@ -212,17 +212,17 @@ public struct ControlsView: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Touchscreen Emulation (Mouse)")
-                        .font(.system(size: 13, weight: .semibold))
+                        .seleneFont(19, .semibold)
                         .foregroundColor(SeleneTheme.ink.opacity(0.95))
 
                     Text("In games featuring touch controls or pointer navigation (e.g., Captain Toad, Super Mario Galaxy, and interactive menus):")
-                        .font(.system(size: 11.5))
+                        .seleneFont(15)
                         .foregroundColor(SeleneTheme.ink.opacity(0.64))
                         .fixedSize(horizontal: false, vertical: true)
 
                     HStack(alignment: .firstTextBaseline, spacing: 9) {
                         Text("Left-Click and Drag")
-                            .font(.system(size: 10.5, weight: .semibold, design: .monospaced))
+                            .seleneFont(14, .semibold, design: .monospaced)
                             .foregroundColor(SeleneTheme.ink.opacity(0.88))
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
@@ -235,7 +235,7 @@ public struct ControlsView: View {
                             .fixedSize()
 
                         Text("→ Simulates capacitive touch gestures on the Switch screen")
-                            .font(.system(size: 11.5))
+                            .seleneFont(15)
                             .foregroundColor(SeleneTheme.ink.opacity(0.62))
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -253,13 +253,13 @@ public struct ControlsView: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
                     Image(systemName: "cable.connector")
-                        .font(.system(size: 11, weight: .semibold))
+                        .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink.opacity(0.7))
                         .frame(width: 16)
                         .accessibilityHidden(true)
 
                     Text("Physical Gamepads & Bluetooth Controllers")
-                        .font(.system(size: 13, weight: .semibold))
+                        .seleneFont(19, .semibold)
                         .foregroundColor(SeleneTheme.ink.opacity(0.95))
 
                     Spacer(minLength: 12)
@@ -270,13 +270,13 @@ public struct ControlsView: View {
                             .frame(width: 5, height: 5)
                             .accessibilityHidden(true)
                         Text("Plug & Play")
-                            .font(.system(size: 10.5, weight: .medium))
+                            .seleneFont(14, .medium)
                             .foregroundColor(SeleneTheme.ink.opacity(0.66))
                     }
                 }
 
                 Text("Connect via Bluetooth or USB-C before or during gameplay. NX Library automatically maps standard inputs:")
-                    .font(.system(size: 11.5))
+                    .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink.opacity(0.64))
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -305,12 +305,12 @@ public struct ControlsView: View {
 
             (
                 Text(name)
-                    .font(.system(size: 11.5, weight: .medium))
+                    .fontWeight(.medium)
                     .foregroundColor(SeleneTheme.ink.opacity(0.88))
                 + Text(": " + detail)
-                    .font(.system(size: 11.5))
                     .foregroundColor(SeleneTheme.ink.opacity(0.62))
             )
+            .seleneFont(15)
             .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .combine)
@@ -321,20 +321,20 @@ public struct ControlsView: View {
     private func panelHeader(icon: String, title: String, trailing: String? = nil) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
-                .font(.system(size: 11, weight: .semibold))
+                .seleneFont(15, .semibold)
                 .foregroundColor(SeleneTheme.ink.opacity(0.7))
                 .frame(width: 16)
                 .accessibilityHidden(true)
 
             Text(title)
-                .font(.system(size: 13, weight: .semibold))
+                .seleneFont(19, .semibold)
                 .foregroundColor(SeleneTheme.ink.opacity(0.95))
 
             Spacer(minLength: 12)
 
             if let trailing {
                 Text(trailing)
-                    .font(.system(size: 10.5, weight: .medium))
+                    .seleneFont(14, .medium)
                     .foregroundColor(SeleneTheme.ink.opacity(0.6))
                     .lineLimit(1)
             }
@@ -354,7 +354,7 @@ public struct ControlsView: View {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .strokeBorder(SeleneTheme.ink.opacity(0.12), lineWidth: 1)
             Image(systemName: name)
-                .font(.system(size: 15, weight: .medium))
+                .seleneFont(19, .medium)
                 .foregroundColor(SeleneTheme.ink.opacity(0.7))
         }
         .frame(width: 40, height: 40)
@@ -377,13 +377,13 @@ private struct ControllerStatusPanel: View {
                         Text(controller.isGamepadConnected
                              ? controller.activeControllerName
                              : "No Gamepad Connected")
-                            .font(.system(size: 13.5, weight: .semibold))
+                            .seleneFont(19, .semibold)
                             .foregroundColor(SeleneTheme.ink.opacity(0.95))
                             .lineLimit(1)
 
                         if controller.isGamepadConnected {
                             Text(controller.activeBrand.rawValue)
-                                .font(.system(size: 10, weight: .semibold))
+                                .seleneFont(13, .semibold)
                                 .foregroundColor(SeleneTheme.ink.opacity(0.62))
                                 .lineLimit(1)
                                 .padding(.horizontal, 7)
@@ -400,7 +400,7 @@ private struct ControllerStatusPanel: View {
                     Text(controller.isGamepadConnected
                          ? "Live controller navigation across the library, detail, settings and game options."
                          : "Plug in or pair any Switch, Xbox, PlayStation or 8BitDo gamepad via Bluetooth or USB.")
-                        .font(.system(size: 11.5))
+                        .seleneFont(15)
                         .foregroundColor(SeleneTheme.ink.opacity(0.64))
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -413,9 +413,9 @@ private struct ControllerStatusPanel: View {
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "arrow.clockwise")
-                            .font(.system(size: 10.5, weight: .semibold))
+                            .seleneFont(14, .semibold)
                         Text("Detect")
-                            .font(.system(size: 11, weight: .semibold))
+                            .seleneFont(15, .semibold)
                     }
                     .foregroundColor(SeleneTheme.ink.opacity(0.88))
                     .padding(.horizontal, 11)
@@ -444,7 +444,7 @@ private struct ControllerStatusPanel: View {
                 Circle()
                     .strokeBorder(SeleneTheme.ink.opacity(0.12), lineWidth: 1)
                 Image(systemName: "gamecontroller.fill")
-                    .font(.system(size: 18, weight: .medium))
+                    .seleneFont(19, .medium)
                     .foregroundColor(SeleneTheme.ink.opacity(0.78))
             }
             .frame(width: 44, height: 44)

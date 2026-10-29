@@ -12,7 +12,7 @@ struct AddGameStepBar: View {
                 let number = index + 1
                 HStack(spacing: 8) {
                     Text("\(number)")
-                        .font(.system(size: 9, weight: .bold))
+                        .seleneFont(12, .bold)
                         .frame(width: 17, height: 17)
                         .background(number == step ? SeleneTheme.scrim
                                     : (number < step ? SeleneTheme.success.opacity(0.16) : SeleneTheme.ink.opacity(0.10)))
@@ -20,7 +20,7 @@ struct AddGameStepBar: View {
                                          : (number < step ? SeleneTheme.success : SeleneTheme.ink.opacity(0.6)))
                         .clipShape(Circle())
                     Text(title)
-                        .font(.system(size: 11, weight: number == step ? .semibold : .medium))
+                        .seleneFont(15, number == step ? .semibold : .medium)
                 }
                 .foregroundColor(number == step ? SeleneTheme.scrim : SeleneTheme.ink.opacity(0.5))
                 .padding(.horizontal, 13)
@@ -73,10 +73,10 @@ struct SeleneActionButton: View {
             HStack(spacing: 7) {
                 if let systemImage {
                     Image(systemName: systemImage)
-                        .font(.system(size: 10, weight: .semibold))
+                        .seleneFont(13, .semibold)
                 }
                 Text(title)
-                    .font(.system(size: 12, weight: .semibold))
+                    .seleneFont(16, .semibold)
             }
             .foregroundColor(foreground)
             .padding(.horizontal, 18)

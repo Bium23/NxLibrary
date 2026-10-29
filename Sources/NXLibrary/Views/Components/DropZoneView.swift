@@ -21,7 +21,7 @@ public struct DropZoneView: View {
                 Image(systemName: isTargeted ? "arrow.down.doc.fill"
                       : "square.and.arrow.down.on.square.fill")
                     .symbolRenderingMode(.hierarchical)
-                    .font(.system(size: 24, weight: .medium))
+                    .seleneFont(34, .medium)
                     .foregroundColor(isTargeted ? SeleneTheme.glyph : SeleneTheme.ink60)
                     .scaleEffect(isTargeted ? 1.08 : 1)
                     .animation(SeleneTheme.quick, value: isTargeted)
@@ -29,10 +29,10 @@ public struct DropZoneView: View {
 
             VStack(spacing: 4) {
                 Text(isTargeted ? "Drop to scan this folder" : "Drop your game files here")
-                    .font(.system(size: 13, weight: .semibold))
+                    .seleneFont(19, .semibold)
                     .foregroundColor(SeleneTheme.ink)
                 Text("The base game is required. Updates and DLC are optional.")
-                    .font(.system(size: 10.5))
+                    .seleneFont(14)
                     .foregroundColor(SeleneTheme.ink60)
                     .multilineTextAlignment(.center)
             }
@@ -42,9 +42,9 @@ public struct DropZoneView: View {
             } label: {
                 HStack(spacing: 7) {
                     Image(systemName: "folder.fill")
-                        .font(.system(size: 10, weight: .semibold))
+                        .seleneFont(13, .semibold)
                     Text("Choose folder")
-                        .font(.system(size: 11.5, weight: .semibold))
+                        .seleneFont(15, .semibold)
                 }
                 .foregroundColor(SeleneTheme.scrim)
                 .padding(.horizontal, 18)
@@ -56,28 +56,28 @@ public struct DropZoneView: View {
             .accessibilityLabel("Choose a game folder")
 
             Text("NSP · XCI · NSZ · folders")
-                .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                .seleneFont(12, .semibold, design: .monospaced)
                 .tracking(0.4)
                 .foregroundColor(SeleneTheme.ink60.opacity(0.8))
 
             if let folder = viewModel.selectedGameFolder {
                 HStack(spacing: 8) {
                     Image(systemName: "folder.fill")
-                        .font(.system(size: 10))
+                        .seleneFont(13)
                         .foregroundColor(SeleneTheme.glyph)
                     Text(folder.path)
-                        .font(.system(size: 9.5, design: .monospaced))
+                        .seleneFont(13, .regular, design: .monospaced)
                         .foregroundColor(SeleneTheme.ink90)
                         .lineLimit(1)
                         .truncationMode(.middle)
                     Spacer(minLength: 8)
                     Button("Change…") { viewModel.selectGameFolder() }
                         .buttonStyle(.plain)
-                        .font(.system(size: 9.5, weight: .semibold))
+                        .seleneFont(13, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
                     Button("Clear") { viewModel.selectedGameFolder = nil }
                         .buttonStyle(.plain)
-                        .font(.system(size: 9.5, weight: .semibold))
+                        .seleneFont(13, .semibold)
                         .foregroundColor(SeleneTheme.ink60)
                 }
                 .padding(.horizontal, 11)
@@ -93,10 +93,10 @@ public struct DropZoneView: View {
             if let error = viewModel.dropErrorMessage {
                 HStack(alignment: .top, spacing: 6) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 10))
+                        .seleneFont(13)
                         .foregroundColor(SeleneTheme.untested)
                     Text(error)
-                        .font(.system(size: 10))
+                        .seleneFont(13)
                         .foregroundColor(SeleneTheme.untested)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 0)

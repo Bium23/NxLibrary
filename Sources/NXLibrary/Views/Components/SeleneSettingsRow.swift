@@ -14,7 +14,7 @@ public struct SeleneInfoTip: View {
             isShowing.toggle()
         } label: {
             Image(systemName: "info.circle")
-                .font(.system(size: 11.5, weight: .semibold))
+                .seleneFont(15, .semibold)
                 .foregroundColor(isShowing ? SeleneTheme.glyph : SeleneTheme.ink60.opacity(0.85))
                 .padding(2)
                 .contentShape(Rectangle())
@@ -23,7 +23,7 @@ public struct SeleneInfoTip: View {
         .popover(isPresented: $isShowing, arrowEdge: .trailing) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(text)
-                    .font(.system(size: 11.5))
+                    .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink.opacity(0.96))
                     .lineSpacing(2.5)
                     .fixedSize(horizontal: false, vertical: true)
@@ -123,7 +123,7 @@ public struct SeleneValueRow: View {
                 if let actionTitle, let action {
                     Button(actionTitle, action: action)
                         .buttonStyle(.plain)
-                        .font(.system(size: 10.5, weight: .semibold))
+                        .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
                 }
             }
@@ -151,7 +151,7 @@ public struct SeleneButtonRow: View {
         SeleneRow(title, subtitle: subtitle, info: info) {
             Button(buttonTitle, action: action)
                 .buttonStyle(.plain)
-                .font(.system(size: 11, weight: .semibold))
+                .seleneFont(15, .semibold)
                 .foregroundColor(SeleneTheme.glyph)
         }
     }
@@ -174,7 +174,7 @@ public struct SeleneSegmented<Value: Hashable>: View {
                     selection = option.0
                 } label: {
                     Text(option.1)
-                        .font(.system(size: 10.5, weight: .semibold))
+                        .seleneFont(14, .semibold)
                         .foregroundColor(selection == option.0 ? SeleneTheme.scrim : SeleneTheme.ink.opacity(0.5))
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
@@ -207,7 +207,7 @@ public struct SelenePanel<Content: View>: View {
             if let title {
                 HStack(spacing: 6) {
                     Text(title)
-                        .font(.system(size: 9, weight: .bold))
+                        .seleneFont(12, .bold)
                         .tracking(1.4)
                         .textCase(.uppercase)
                         .foregroundColor(SeleneTheme.ink60)

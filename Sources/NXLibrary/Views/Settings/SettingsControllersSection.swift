@@ -16,11 +16,11 @@ struct SettingsControllersSection: View {
                         : "Connect a controller and press Detect.") {
                 HStack(spacing: 10) {
                     Text(controller.isGamepadConnected ? "Connected" : "Not connected")
-                        .font(.system(size: 10, weight: .semibold))
+                        .seleneFont(13, .semibold)
                         .foregroundColor(controller.isGamepadConnected ? SeleneTheme.success : SeleneTheme.ink60)
                     Button("Detect") { controller.refreshControllers() }
                         .buttonStyle(.plain)
-                        .font(.system(size: 10.5, weight: .semibold))
+                        .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
                 }
             }
@@ -41,7 +41,7 @@ struct SettingsControllersSection: View {
                     ), in: 0.10...0.80, step: 0.01)
                     .frame(width: 170)
                     Text(String(format: "%.2f", controller.deadzone))
-                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .seleneFont(13, .semibold, design: .monospaced)
                         .foregroundColor(SeleneTheme.glyph)
                         .frame(width: 38, alignment: .trailing)
                 }
@@ -56,7 +56,7 @@ struct SettingsControllersSection: View {
                       info: "Default haptic feedback multiplier (0: muted, 1: subtle, 2: standard, 3: intense) passed to game builds supporting macOS controller haptics.") {
                 Stepper(value: $settings.settings.gameDefaults.rumbleGain, in: 0...3) {
                     Text("\(settings.settings.gameDefaults.rumbleGain)")
-                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                        .seleneFont(15, .semibold, design: .monospaced)
                         .foregroundColor(SeleneTheme.glyph)
                         .frame(width: 20, alignment: .trailing)
                 }

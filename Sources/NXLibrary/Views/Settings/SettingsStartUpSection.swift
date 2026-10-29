@@ -71,13 +71,13 @@ struct SettingsStartUpSection: View {
                         .frame(width: 8, height: 8)
                     Text(readiness ? "Ready to build and play"
                                    : "Setup needed or builds blocked")
-                        .font(.system(size: 12, weight: .semibold))
+                        .seleneFont(16, .semibold)
                         .foregroundColor(SeleneTheme.ink)
                     Spacer()
                 }
 
                 Text(readinessLine)
-                    .font(.system(size: 10, design: .monospaced))
+                    .seleneFont(13, .regular, design: .monospaced)
                     .foregroundColor(SeleneTheme.ink60)
                     .fixedSize(horizontal: false, vertical: true)
             }

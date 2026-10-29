@@ -16,19 +16,19 @@ struct SettingsLibrarySection: View {
                       subtitle: "Where NX Library looks for NSP, XCI and NSZ files.") {
                 HStack(spacing: 10) {
                     Text(viewModel.selectedGameFolder?.path ?? "Not selected")
-                        .font(.system(size: 11, weight: .medium))
+                        .seleneFont(15, .medium)
                         .foregroundColor(SeleneTheme.ink.opacity(0.62))
                         .lineLimit(1)
                         .truncationMode(.middle)
                         .frame(maxWidth: 320, alignment: .trailing)
                     Button("Choose") { viewModel.selectGameFolder() }
                         .buttonStyle(.plain)
-                        .font(.system(size: 10.5, weight: .semibold))
+                        .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
                     if viewModel.selectedGameFolder != nil {
                         Button("Clear") { viewModel.selectedGameFolder = nil }
                             .buttonStyle(.plain)
-                            .font(.system(size: 10.5, weight: .semibold))
+                            .seleneFont(14, .semibold)
                             .foregroundColor(SeleneTheme.danger)
                     }
                 }
@@ -38,14 +38,14 @@ struct SettingsLibrarySection: View {
                       subtitle: "Where built Mac apps are installed and discovered.") {
                 HStack(spacing: 10) {
                     Text(viewModel.libraryFolder?.path ?? "Default")
-                        .font(.system(size: 11, weight: .medium))
+                        .seleneFont(15, .medium)
                         .foregroundColor(SeleneTheme.ink.opacity(0.62))
                         .lineLimit(1)
                         .truncationMode(.middle)
                         .frame(maxWidth: 320, alignment: .trailing)
                     Button("Change") { viewModel.selectLibraryFolder() }
                         .buttonStyle(.plain)
-                        .font(.system(size: 10.5, weight: .semibold))
+                        .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
                     Button("Reset") {
                         viewModel.libraryFolder = URL(fileURLWithPath: viewModel.defaultInstallPath)
@@ -53,7 +53,7 @@ struct SettingsLibrarySection: View {
                         viewModel.loadLibrary()
                     }
                     .buttonStyle(.plain)
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .seleneFont(14, .semibold)
                     .foregroundColor(SeleneTheme.ink60)
                 }
             }

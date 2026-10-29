@@ -47,15 +47,15 @@ struct AddGameStepTwoView: View {
                 gameIcon
                 VStack(alignment: .leading, spacing: 5) {
                     Text(viewModel.selectedGame?.name ?? "No game selected")
-                        .font(.system(size: 20, weight: .semibold))
+                        .seleneFont(34, .semibold)
                         .foregroundColor(SeleneTheme.ink)
                         .lineLimit(1)
                     Text(versionText)
-                        .font(.system(size: 10.5, design: .monospaced))
+                        .seleneFont(14, .regular, design: .monospaced)
                         .foregroundColor(SeleneTheme.ink60)
                         .lineLimit(1)
                     Text("Ready to add to your library.")
-                        .font(.system(size: 10.5))
+                        .seleneFont(14)
                         .foregroundColor(SeleneTheme.ink90)
                 }
                 Spacer()
@@ -77,7 +77,7 @@ struct AddGameStepTwoView: View {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(SeleneTheme.ink.opacity(0.06))
                 Image(systemName: "gamecontroller.fill")
-                    .font(.system(size: 26, weight: .medium))
+                    .seleneFont(34, .medium)
                     .foregroundColor(SeleneTheme.glyph.opacity(0.75))
             }
             .frame(width: 64, height: 64)
@@ -119,7 +119,7 @@ struct AddGameStepTwoView: View {
         SelenePanel("Sources") {
             HStack {
                 Text(viewModel.selectedGame?.name ?? "No game selected")
-                    .font(.system(size: 12.5, weight: .semibold))
+                    .seleneFont(19, .semibold)
                     .foregroundColor(SeleneTheme.ink.opacity(0.94))
                     .lineLimit(1)
                 Spacer()
@@ -129,7 +129,7 @@ struct AddGameStepTwoView: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .font(.system(size: 10, weight: .semibold))
+                .seleneFont(13, .semibold)
                 .foregroundColor(SeleneTheme.glyph)
             }
 
@@ -139,7 +139,7 @@ struct AddGameStepTwoView: View {
                 sourcePill("DLC", count: selectedCount(.dlc))
                 Spacer()
                 Text(viewModel.formattedSelectedSourcesSize)
-                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .seleneFont(13, .semibold, design: .monospaced)
                     .foregroundColor(SeleneTheme.ink60)
             }
 
@@ -150,7 +150,7 @@ struct AddGameStepTwoView: View {
             }
 
             Text("The base game, newest update and all non-empty DLC are selected by default.")
-                .font(.system(size: 10))
+                .seleneFont(13)
                 .foregroundColor(SeleneTheme.ink60)
         }
     }
@@ -161,7 +161,7 @@ struct AddGameStepTwoView: View {
 
     private func sourcePill(_ title: String, count: Int) -> some View {
         Text("\(title) \(count)")
-            .font(.system(size: 9, weight: .bold, design: .monospaced))
+            .seleneFont(12, .bold, design: .monospaced)
             .foregroundColor(count > 0 ? SeleneTheme.ink : SeleneTheme.ink60)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
@@ -195,7 +195,7 @@ struct AddGameStepTwoView: View {
             }
 
             Text("Saved with the new game. Each game can override these later in Game options. Use the pointer for these toggles.")
-                .font(.system(size: 10))
+                .seleneFont(13)
                 .foregroundColor(SeleneTheme.ink60)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -212,22 +212,22 @@ struct AddGameStepTwoView: View {
                         .fill(SeleneTheme.ink.opacity(0.06))
                         .frame(width: 38, height: 38)
                     Image(systemName: "macbook.gen2")
-                        .font(.system(size: 17, weight: .semibold))
+                        .seleneFont(19, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
                 }
                 VStack(alignment: .leading, spacing: 3) {
                     Text("macOS app · Apple Silicon")
-                        .font(.system(size: 12, weight: .semibold))
+                        .seleneFont(16, .semibold)
                         .foregroundColor(SeleneTheme.ink.opacity(0.94))
                     Text(destinationPath)
-                        .font(.system(size: 10, design: .monospaced))
+                        .seleneFont(13, .regular, design: .monospaced)
                         .foregroundColor(SeleneTheme.ink60)
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
                 Spacer()
                 Text("No DMG")
-                    .font(.system(size: 8, weight: .bold))
+                    .seleneFont(11, .bold)
                     .tracking(0.6)
                     .foregroundColor(SeleneTheme.ink60)
                     .padding(.horizontal, 8)
@@ -270,7 +270,7 @@ struct AddGameStepTwoView: View {
             }
 
             Text("Extracted files are always kept for fast rebuilds on macOS.")
-                .font(.system(size: 10))
+                .seleneFont(13)
                 .foregroundColor(SeleneTheme.ink60)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -279,7 +279,7 @@ struct AddGameStepTwoView: View {
     private func field(_ placeholder: String, text: Binding<String>) -> some View {
         TextField(placeholder, text: text)
             .textFieldStyle(.plain)
-            .font(.system(size: 10.5, design: .monospaced))
+            .seleneFont(14, .regular, design: .monospaced)
             .foregroundColor(SeleneTheme.ink.opacity(0.94))
             .padding(.horizontal, 9)
             .frame(width: 190, height: 28)
@@ -331,17 +331,17 @@ struct AddGameStepTwoView: View {
                          action: (() -> Void)? = nil) -> some View {
         HStack(alignment: .top, spacing: 8) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 11))
+                .seleneFont(15)
                 .foregroundColor(SeleneTheme.untested)
             VStack(alignment: .leading, spacing: 3) {
                 Text(text)
-                    .font(.system(size: 10))
+                    .seleneFont(13)
                     .foregroundColor(SeleneTheme.ink90)
                     .fixedSize(horizontal: false, vertical: true)
                 if let actionTitle, let action {
                     Button(actionTitle, action: action)
                         .buttonStyle(.plain)
-                        .font(.system(size: 10, weight: .semibold))
+                        .seleneFont(13, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
                 }
             }
@@ -360,7 +360,7 @@ struct AddGameStepTwoView: View {
     private var footer: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(footerHint)
-                .font(.system(size: 10))
+                .seleneFont(13)
                 .foregroundColor(viewModel.canAddSelectedGame ? SeleneTheme.ink60 : SeleneTheme.untested)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)

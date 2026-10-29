@@ -2,6 +2,7 @@ import SwiftUI
 import NXLibraryCore
 
 public struct AddGameView: View {
+    @Environment(\.seleneCanvas) private var canvas
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var router: AppRouter
 
@@ -23,11 +24,11 @@ public struct AddGameView: View {
 
     public var body: some View {
         GeometryReader { geo in
-            let metrics = SeleneLayoutMetrics(width: geo.size.width)
+            let margin = canvas.u(120)
             VStack(spacing: 0) {
-                header(metrics)
+                header(margin)
                 AddGameStepBar(step: viewModel.buildWizardStep)
-                    .padding(.horizontal, metrics.margin)
+                    .padding(.horizontal, margin)
                 ScrollView {
                     Group {
                         switch viewModel.buildWizardStep {
@@ -54,7 +55,7 @@ public struct AddGameView: View {
                             )
                         }
                     }
-                    .padding(.horizontal, metrics.margin)
+                    .padding(.horizontal, margin)
                     .padding(.top, 18)
                     .padding(.bottom, 70)
                 }
@@ -252,21 +253,21 @@ public struct AddGameView: View {
         router.back()
     }
 
-    private func header(_ metrics: SeleneLayoutMetrics) -> some View {
+    private func header(_ margin: CGFloat) -> some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Add a game")
-                    .font(.system(size: 42, weight: .bold))
+                    .seleneFont(34, .bold)
                     .tracking(-1.2)
                     .foregroundColor(SeleneTheme.ink)
                 Text("Build a native Mac app from your own NSP, XCI or NSZ files.")
-                    .font(.system(size: 13))
+                    .seleneFont(19)
                     .foregroundColor(SeleneTheme.ink60)
             }
             Spacer()
             Button(action: requestClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .bold))
+                    .seleneFont(16, .bold)
                     .foregroundColor(SeleneTheme.ink.opacity(0.7))
                     .frame(width: 28, height: 28)
                     .background(SeleneTheme.ink.opacity(0.06))
@@ -275,7 +276,7 @@ public struct AddGameView: View {
             .buttonStyle(.plain)
             .accessibilityLabel("Close Add Game")
         }
-        .padding(.horizontal, metrics.margin)
+        .padding(.horizontal, margin)
         .padding(.top, 34)
         .padding(.bottom, 20)
     }

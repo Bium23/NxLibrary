@@ -45,30 +45,30 @@ struct AddGameStepOneView: View {
         SelenePanel {
             HStack(alignment: .firstTextBaseline) {
                 Text("Selected sources")
-                    .font(.system(size: 13, weight: .semibold))
+                    .seleneFont(19, .semibold)
                     .foregroundColor(SeleneTheme.ink)
                 Spacer()
                 Text("\(viewModel.selectedSources.count) · \(viewModel.formattedSelectedSourcesSize)")
-                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .seleneFont(13, .semibold, design: .monospaced)
                     .foregroundColor(SeleneTheme.ink60)
             }
 
             if viewModel.selectedGameFolder == nil {
                 Text("Choose a folder or drop game files above to begin.")
-                    .font(.system(size: 11))
+                    .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink60)
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else if viewModel.isScanningGameFolder {
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.small)
                     Text("Scanning sources with nxnative rules…")
-                        .font(.system(size: 11))
+                        .seleneFont(15)
                         .foregroundColor(SeleneTheme.ink90)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             } else if viewModel.detectedGames.isEmpty {
                 Text("No games were detected in this folder.")
-                    .font(.system(size: 11))
+                    .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink60)
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
@@ -83,11 +83,11 @@ struct AddGameStepOneView: View {
 
                     HStack {
                         Text("Sources to include")
-                            .font(.system(size: 11, weight: .semibold))
+                            .seleneFont(15, .semibold)
                             .foregroundColor(SeleneTheme.ink90)
                         Spacer()
                         Text("\(viewModel.selectedSources.count) of \(game.files.count)")
-                            .font(.system(size: 10, design: .monospaced))
+                            .seleneFont(13, .regular, design: .monospaced)
                             .foregroundColor(SeleneTheme.ink60)
                     }
 
@@ -103,7 +103,7 @@ struct AddGameStepOneView: View {
                     }
 
                     Text("The base game stays selected. One update can be active; DLC files can be selected individually. Use the pointer or Tab for these checkboxes.")
-                        .font(.system(size: 10))
+                        .seleneFont(13)
                         .foregroundColor(SeleneTheme.ink60)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -121,10 +121,10 @@ struct AddGameStepOneView: View {
             SeleneRow(game.name, subtitle: gameSubtitle(game)) {
                 HStack(spacing: 10) {
                     Text(game.formattedSize)
-                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .seleneFont(13, .semibold, design: .monospaced)
                         .foregroundColor(SeleneTheme.ink60)
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                        .font(.system(size: 15, weight: .semibold))
+                        .seleneFont(19, .semibold)
                         .foregroundColor(isSelected ? SeleneTheme.glyph : SeleneTheme.ink.opacity(0.25))
                 }
             }
@@ -196,7 +196,7 @@ struct AddGameStepOneView: View {
         case .unknown: color = SeleneTheme.ink60
         }
         return Text(type.title.uppercased())
-            .font(.system(size: 8, weight: .bold))
+            .seleneFont(11, .bold)
             .tracking(0.8)
             .foregroundColor(color)
             .padding(.horizontal, 7)
@@ -216,22 +216,22 @@ struct AddGameStepOneView: View {
                         .fill(SeleneTheme.ink.opacity(0.06))
                         .frame(width: 38, height: 38)
                     Image(systemName: "macbook.gen2")
-                        .font(.system(size: 17, weight: .semibold))
+                        .seleneFont(19, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
                 }
                 VStack(alignment: .leading, spacing: 3) {
                     Text("macOS app · Apple Silicon")
-                        .font(.system(size: 12, weight: .semibold))
+                        .seleneFont(16, .semibold)
                         .foregroundColor(SeleneTheme.ink.opacity(0.94))
                     Text(destinationPath)
-                        .font(.system(size: 10, design: .monospaced))
+                        .seleneFont(13, .regular, design: .monospaced)
                         .foregroundColor(SeleneTheme.ink60)
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
                 Spacer()
                 Text("No DMG")
-                    .font(.system(size: 8, weight: .bold))
+                    .seleneFont(11, .bold)
                     .tracking(0.6)
                     .foregroundColor(SeleneTheme.ink60)
                     .padding(.horizontal, 8)
@@ -242,7 +242,7 @@ struct AddGameStepOneView: View {
             }
 
             Text("The app is written to a temporary folder and moved into place atomically. The previous app stays untouched on failure or cancel.")
-                .font(.system(size: 10.5))
+                .seleneFont(14)
                 .foregroundColor(SeleneTheme.ink60)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -252,7 +252,7 @@ struct AddGameStepOneView: View {
         SelenePanel("Selected") {
             if let game = viewModel.selectedGame {
                 Text(game.name)
-                    .font(.system(size: 12.5, weight: .semibold))
+                    .seleneFont(19, .semibold)
                     .foregroundColor(SeleneTheme.ink.opacity(0.94))
                     .lineLimit(1)
 
@@ -264,21 +264,21 @@ struct AddGameStepOneView: View {
 
                 HStack {
                     Text("Total size")
-                        .font(.system(size: 11))
+                        .seleneFont(15)
                         .foregroundColor(SeleneTheme.ink90)
                     Spacer()
                     Text(viewModel.formattedSelectedSourcesSize)
-                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                        .seleneFont(15, .semibold, design: .monospaced)
                         .foregroundColor(SeleneTheme.ink)
                 }
             } else {
                 Text("No game selected yet.")
-                    .font(.system(size: 11))
+                    .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink60)
             }
 
             Text("The base game, newest update and all non-empty DLC are selected by default.")
-                .font(.system(size: 10))
+                .seleneFont(13)
                 .foregroundColor(SeleneTheme.ink60)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -291,11 +291,11 @@ struct AddGameStepOneView: View {
     private func sourceCountRow(_ title: String, count: Int) -> some View {
         HStack {
             Text(title)
-                .font(.system(size: 11))
+                .seleneFont(15)
                 .foregroundColor(SeleneTheme.ink90)
             Spacer()
             Text("\(count)")
-                .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                .seleneFont(15, .semibold, design: .monospaced)
                 .foregroundColor(count > 0 ? SeleneTheme.ink : SeleneTheme.ink60)
         }
     }
@@ -312,22 +312,22 @@ struct AddGameStepOneView: View {
         if viewModel.isProdKeysValid {
             HStack(spacing: 9) {
                 Image(systemName: "key.fill")
-                    .font(.system(size: 13))
+                    .seleneFont(19)
                     .foregroundColor(SeleneTheme.success)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Keys ready")
-                        .font(.system(size: 11, weight: .semibold))
+                        .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink.opacity(0.94))
                     if let summary = viewModel.keySummary {
                         Text("\(summary.applicationKeyGenerations.count) application key generations")
-                            .font(.system(size: 9.5, design: .monospaced))
+                            .seleneFont(13, .regular, design: .monospaced)
                             .foregroundColor(SeleneTheme.ink60)
                     }
                 }
                 Spacer()
                 Button("Replace key…") { viewModel.selectProdKeysFile() }
                     .buttonStyle(.plain)
-                    .font(.system(size: 10, weight: .semibold))
+                    .seleneFont(13, .semibold)
                     .foregroundColor(SeleneTheme.glyph)
             }
             .padding(.horizontal, 2)
@@ -345,20 +345,20 @@ struct AddGameStepOneView: View {
                               action: (() -> Void)? = nil) -> some View {
         HStack(alignment: .top, spacing: 9) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 12))
+                .seleneFont(16)
                 .foregroundColor(SeleneTheme.untested)
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.system(size: 11, weight: .semibold))
+                    .seleneFont(15, .semibold)
                     .foregroundColor(SeleneTheme.untested)
                 Text(message)
-                    .font(.system(size: 10))
+                    .seleneFont(13)
                     .foregroundColor(SeleneTheme.ink90)
                     .fixedSize(horizontal: false, vertical: true)
                 if let actionTitle, let action {
                     Button(actionTitle, action: action)
                         .buttonStyle(.plain)
-                        .font(.system(size: 10, weight: .semibold))
+                        .seleneFont(13, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
                         .padding(.top, 1)
                 }

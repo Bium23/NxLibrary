@@ -41,8 +41,8 @@ struct SeleneHintsBar: View {
 
     var left: [HintItem] = []
     var right: [HintItem] = []
-    /// Distance from the bottom edge in Selene units (Spotlight uses Selene's home 40).
-    var bottom: CGFloat = 24
+    /// Distance from the bottom edge in Selene units: 48 (Ui.cs:267); the home screens use Selene's 40.
+    var bottom: CGFloat = 48
     /// Extra inset before the left group (Spotlight's prompts carry Selene's 18 margin).
     var leftInset: CGFloat = 0
 
