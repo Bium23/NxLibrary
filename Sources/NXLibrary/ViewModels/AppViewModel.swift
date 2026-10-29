@@ -272,7 +272,12 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     public let steamGridDB = SteamGridDBService()
     @Published public var launchingGameId: UUID? = nil
     /// The launch screen: shown on Play, `isReady` once the game's window is up (or the probe gave up).
-    @Published public var launchOverlay: LaunchOverlayState? = nil
+    @Published public var launchOverlay: LaunchOverlayState? = nil {
+        didSet {
+            SoundEffectService.shared.isQuieted =
+                launchOverlay != nil && (settingsStore?.settings.quietLaunch ?? true)
+        }
+    }
     private var launchProbeTask: Task<Void, Never>?
 
     public var playSessionStore: PlaySessionStore?
@@ -1116,7 +1121,9 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 guard let self, self.launchOverlay?.game.id == game.id else { return }
-                if !visible {
+                if visible {
+                    SoundEffectService.shared.play(.gameReady)
+                } else {
                     self.logs.append(LogEntry(level: .warning,
                                               message: "\(game.name) showed no window within 60 s; launch screen closed."))
                 }

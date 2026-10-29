@@ -5,7 +5,10 @@ struct SeleneSwitch: View {
     @Binding var isOn: Bool
 
     var body: some View {
-        Button { isOn.toggle() } label: {
+        Button {
+            isOn.toggle()
+            SoundEffectService.shared.play(.key)
+        } label: {
             Capsule()
                 .fill(isOn ? SeleneTheme.focus : SeleneTheme.ink.opacity(0.13))
                 .frame(width: canvas.u(56), height: canvas.u(30))

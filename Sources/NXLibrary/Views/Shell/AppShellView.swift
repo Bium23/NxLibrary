@@ -47,7 +47,8 @@ public struct AppShellView: View {
         }
     }
 
-    public var body: some View {
+    /// The screen plus the overlays that sit on it; split from `body` for the type checker.
+    private var layers: some View {
         ZStack {
             SeleneTheme.scrim.ignoresSafeArea()
             content
@@ -86,7 +87,13 @@ public struct AppShellView: View {
                 .zIndex(2)
             }
         }
+    }
+
+    /// Layers with environment, sheets and lifecycle; split from `body` for the type checker.
+    private var styled: some View {
+        layers
         .overlay { launchLayer }
+        .modifier(SoundCueHooks(router: router, viewModel: viewModel))
         .seleneCanvasRoot()
         .animation(reduceMotion ? nil : SeleneTheme.screen,
                    value: viewModel.gameForSettingsSheet?.id)
@@ -124,6 +131,10 @@ public struct AppShellView: View {
                 break
             }
         }
+    }
+
+    public var body: some View {
+        styled
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryPlayFocused)) { _ in
             guard !router.isMenuPresented,
                   isHomeRoute,
@@ -273,6 +284,7 @@ public struct AppShellView: View {
     private func startRuntime() {
         viewModel.playSessionStore = playSessions
         viewModel.settingsStore = settings
+        SoundEffectService.shared.bind(to: settings)
         artwork.trimCache()
         runningGames.start(sessions: playSessions)
         runningGames.setGames(viewModel.libraryGames)
@@ -570,5 +582,31 @@ public struct AppShellView: View {
         } else {
             router.openAddGame()
         }
+    }
+}
+
+/// Selene's panel and back cues for the shell's overlays and routes.
+private struct SoundCueHooks: ViewModifier {
+    @ObservedObject var router: AppRouter
+    @ObservedObject var viewModel: AppViewModel
+
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: router.isMenuPresented) { open in
+                SoundEffectService.shared.play(open ? .openPanel : .back)
+            }
+            .onChange(of: viewModel.gameForSettingsSheet?.id) { id in
+                SoundEffectService.shared.play(id == nil ? .back : .openPanel)
+            }
+            .onChange(of: viewModel.gameToClose?.id) { id in
+                if id != nil { SoundEffectService.shared.play(.alert) }
+            }
+            .onChange(of: router.route) { route in
+                if router.isReturningFromBack {
+                    SoundEffectService.shared.play(.back)
+                } else if case .settings = route {
+                    SoundEffectService.shared.play(.openPanel)
+                }
+            }
     }
 }

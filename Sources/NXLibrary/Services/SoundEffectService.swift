@@ -1,122 +1,108 @@
 import Foundation
 import AVFoundation
+import Combine
+import NXLibraryCore
 
+/// The older call-site names, each played as a Selene cue.
 public enum SoundEffectType: String, CaseIterable {
     case click
     case tabSwitch
     case focus
     case launch
     case error
+
+    var cue: SoundCue {
+        switch self {
+        case .click: return .select
+        case .tabSwitch, .focus: return .move
+        case .launch: return .gameStarting
+        case .error: return .alert
+        }
+    }
 }
 
-/// Small synthesized tones, generated in memory. No sampled or Nintendo
-/// assets are used, and the same toggle gates every call.
+/// Interface sounds: imported Selene cues first, then the bundled MIT cues
+/// (`SoundCueResolver`). On/off and volume live in `AppSettings`.
 public final class SoundEffectService: ObservableObject {
     public static let shared = SoundEffectService()
 
-    private let soundKey = "NXNative_SoundEnabled"
-    private let volumeKey = "NXNative_SoundVolume"
-
-    @Published public var isSoundEnabled: Bool {
+    @Published public var isSoundEnabled = true {
         didSet {
-            UserDefaults.standard.set(isSoundEnabled, forKey: soundKey)
+            if let store, store.settings.interfaceSounds != isSoundEnabled {
+                store.settings.interfaceSounds = isSoundEnabled
+            }
         }
     }
 
-    @Published public var volume: Double {
+    @Published public var volume: Double = 0.6 {
         didSet {
             let clamped = min(max(volume, 0), 1)
-            UserDefaults.standard.set(clamped, forKey: volumeKey)
-            engine.mainMixerNode.outputVolume = Float(clamped)
+            if clamped != volume { volume = clamped; return }
+            if let store, store.settings.soundVolume != volume {
+                store.settings.soundVolume = volume
+            }
         }
     }
 
-    private let engine = AVAudioEngine()
-    private let player = AVAudioPlayerNode()
-    private var buffers: [SoundEffectType: AVAudioPCMBuffer] = [:]
-    private let sampleRate = 44_100.0
-    private var isConfigured = false
+    /// While the launch screen is up with Quiet launch on, only the game cues play.
+    public var isQuieted = false
 
-    private init() {
-        if UserDefaults.standard.object(forKey: soundKey) == nil {
-            self.isSoundEnabled = true
-        } else {
-            self.isSoundEnabled = UserDefaults.standard.bool(forKey: soundKey)
-        }
-        if UserDefaults.standard.object(forKey: volumeKey) == nil {
-            self.volume = 0.28
-        } else {
-            self.volume = min(max(UserDefaults.standard.double(forKey: volumeKey), 0), 1)
-        }
-        configure()
+    private weak var store: AppSettingsStore?
+    private var cancellable: AnyCancellable?
+    private var players: [SoundCue: AVAudioPlayer] = [:]
+    private var lastMove = Date.distantPast
+    private let resolver = SoundCueResolver(
+        importedSounds: SeleneImporter.defaultDestination.appendingPathComponent("Sounds"),
+        bundledSounds: Bundle.main.resourceURL?.appendingPathComponent("Selene/Sounds"))
+
+    private init() {}
+
+    /// Follows the settings store from now on.
+    public func bind(to store: AppSettingsStore) {
+        self.store = store
+        cancellable = store.$settings
+            .map { ($0.interfaceSounds, $0.soundVolume) }
+            .removeDuplicates { $0 == $1 }
+            .sink { [weak self] enabled, volume in
+                guard let self else { return }
+                if self.isSoundEnabled != enabled { self.isSoundEnabled = enabled }
+                if self.volume != volume { self.volume = volume }
+            }
+    }
+
+    /// Drops loaded players so freshly imported sounds are picked up.
+    public func reloadSounds() {
+        DispatchQueue.main.async { self.players = [:] }
     }
 
     public func play(_ effect: SoundEffectType) {
+        play(effect.cue)
+    }
+
+    public func play(_ cue: SoundCue) {
         guard isSoundEnabled else { return }
+        if isQuieted, cue != .gameStarting, cue != .gameReady { return }
         DispatchQueue.main.async { [weak self] in
-            guard let self, let buffer = self.buffers[effect] else { return }
-            do {
-                if !self.engine.isRunning { try self.engine.start() }
-                self.player.scheduleBuffer(buffer, at: nil, options: .interrupts)
-                if !self.player.isPlaying { self.player.play() }
-            } catch {
-                // Audio output can be unavailable (for example during a device
-                // change); UI actions must still work.
+            guard let self else { return }
+            if cue == .move {
+                // A held stick repeats faster than the cue is worth hearing.
+                let now = Date()
+                guard now.timeIntervalSince(self.lastMove) >= 0.06 else { return }
+                self.lastMove = now
             }
+            guard let player = self.player(for: cue) else { return }
+            player.volume = Float(self.volume)
+            player.currentTime = 0
+            player.play()
         }
     }
 
-    private func configure() {
-        guard !isConfigured else { return }
-        let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1)!
-        engine.attach(player)
-        engine.connect(player, to: engine.mainMixerNode, format: format)
-        engine.mainMixerNode.outputVolume = Float(volume)
-        for effect in SoundEffectType.allCases {
-            buffers[effect] = makeBuffer(for: effect, format: format)
-        }
-        engine.prepare()
-        isConfigured = true
-    }
-
-    private func makeBuffer(for effect: SoundEffectType,
-                            format: AVAudioFormat) -> AVAudioPCMBuffer? {
-        let notes = notes(for: effect)
-        let totalDuration = notes.reduce(0) { $0 + $1.duration }
-        let frames = AVAudioFrameCount(totalDuration * sampleRate)
-        guard frames > 0,
-              let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frames),
-              let data = buffer.floatChannelData?[0] else { return nil }
-        buffer.frameLength = frames
-
-        var index = 0
-        for note in notes {
-            let count = max(Int(note.duration * sampleRate), 1)
-            for sample in 0..<count where index < Int(frames) {
-                let t = Double(sample) / sampleRate
-                let phase = 2 * Double.pi * note.frequency * t
-                let envelope = sin(Double.pi * Double(sample) / Double(count))
-                let harmonic = 0.16 * sin(phase * 2)
-                data[index] = Float((sin(phase) + harmonic) * envelope * note.gain)
-                index += 1
-            }
-        }
-        return buffer
-    }
-
-    private func notes(for effect: SoundEffectType)
-        -> [(frequency: Double, duration: Double, gain: Double)] {
-        switch effect {
-        case .click:
-            return [(880, 0.045, 0.42)]
-        case .tabSwitch:
-            return [(660, 0.045, 0.34), (990, 0.05, 0.30)]
-        case .focus:
-            return [(520, 0.03, 0.24)]
-        case .launch:
-            return [(440, 0.08, 0.32), (660, 0.08, 0.32), (880, 0.12, 0.30)]
-        case .error:
-            return [(220, 0.12, 0.36), (165, 0.14, 0.34)]
-        }
+    private func player(for cue: SoundCue) -> AVAudioPlayer? {
+        if let player = players[cue] { return player }
+        guard let url = resolver.url(for: cue),
+              let player = try? AVAudioPlayer(contentsOf: url) else { return nil }
+        player.prepareToPlay()
+        players[cue] = player
+        return player
     }
 }
