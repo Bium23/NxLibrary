@@ -278,7 +278,9 @@ extension SpotlightView {
                 case 123: handle(.navigateLeft)
                 case 124: handle(.navigateRight)
                 case 53: handle(.cancel)
-                case 36, 49, 125, 126, 7, 16, 12, 14, 48: break
+                case 12: handle(.tabPrevious)
+                case 14: handle(.tabNext)
+                case 36, 49, 125, 126, 7, 16, 48: break
                 default: return event
                 }
                 return nil

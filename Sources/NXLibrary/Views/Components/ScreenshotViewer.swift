@@ -16,6 +16,9 @@ struct ScreenshotViewer: View {
     let onClose: () -> Void
 
     @State private var images: [Int: NSImage] = [:]
+    /// The index on screen: stays on the last ready image until the new one lands.
+    @State private var shown: Int?
+    @State private var failed: Set<Int> = []
 
     enum Outcome { case ignored, moved, close }
 
@@ -35,16 +38,16 @@ struct ScreenshotViewer: View {
                 .contentShape(Rectangle())
                 .onTapGesture(perform: onClose)
 
-            if let image = images[state.index] {
+            if let shown, let image = images[shown] {
                 Image(nsImage: image)
                     .resizable()
                     .interpolation(.high)
                     .aspectRatio(contentMode: .fit)
-                    .padding(.horizontal, canvas.u(64))
-                    .padding(.vertical, canvas.u(96))
                     .contentShape(Rectangle())
                     .onTapGesture {} // A click on the image keeps it open.
-                    .id(state.index)
+                    .padding(.horizontal, canvas.u(64))
+                    .padding(.vertical, canvas.u(96))
+                    .id(shown)
                     .transition(.opacity)
             }
 
@@ -65,19 +68,28 @@ struct ScreenshotViewer: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // Opacity animations always run, reduce motion or not.
-        .animation(.easeOut(duration: 0.2), value: state.index)
-        .animation(.easeOut(duration: 0.2), value: images.keys.sorted())
-        .task(id: state.index) { await load(state.index) }
+        .animation(.easeOut(duration: 0.2), value: shown)
+        .task(id: state.index) {
+            let current = state.index
+            await load(current)
+            if images[current] != nil { shown = current } else if failed.contains(current) { shown = nil }
+            for neighbour in [current + 1, current - 1] { await load(neighbour) }
+        }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Screenshot \(state.label)")
     }
 
     @MainActor
     private func load(_ index: Int) async {
-        guard images[index] == nil, urls.indices.contains(index) else { return }
+        guard images[index] == nil, !failed.contains(index), urls.indices.contains(index) else { return }
         guard let file = await artwork.screenshot(titleID: titleID, index: index, remoteURL: urls[index]),
-              let decoded = await GameArtLoader.decode(at: file, maxPixelSize: 2560),
-              !Task.isCancelled else { return }
+              let decoded = await GameArtLoader.decode(at: file, maxPixelSize: 2560) else {
+            if !Task.isCancelled { failed.insert(index) }
+            return
+        }
+        guard !Task.isCancelled else { return }
         images[index] = decoded
+        // Keep only the current image and its neighbours.
+        for key in images.keys where abs(key - state.index) > 1 && key != shown { images[key] = nil }
     }
 }

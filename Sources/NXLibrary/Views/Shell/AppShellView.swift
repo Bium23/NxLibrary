@@ -110,6 +110,7 @@ public struct AppShellView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryCheckUpstream)) { _ in
+            guard !router.isScreenshotViewerOpen else { return }
             viewModel.checkUpstreamChangelog()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenMenu)) { _ in
@@ -122,14 +123,17 @@ public struct AppShellView: View {
             router.openSettings(.general)
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenConsole)) { _ in
+            guard !router.isScreenshotViewerOpen else { return }
             router.closeMenu()
             router.openConsole()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenLibrary)) { _ in
+            guard !router.isScreenshotViewerOpen else { return }
             router.closeMenu()
             router.showLibrary()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenAddGame)) { _ in
+            guard !router.isScreenshotViewerOpen else { return }
             router.closeMenu()
             openFreshAddGame()
         }
