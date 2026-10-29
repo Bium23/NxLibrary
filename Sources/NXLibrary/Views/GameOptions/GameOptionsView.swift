@@ -116,7 +116,7 @@ struct GameOptionsView: View {
                     }
                 }
                 .frame(width: width, height: height)
-                .background(SeleneTheme.canvasRaised)
+                .background(SeleneTheme.glassSolid)
                 .overlay(
                     RoundedRectangle(cornerRadius: SeleneTheme.modalRadius, style: .continuous)
                         .strokeBorder(SeleneTheme.ink.opacity(0.14), lineWidth: 1)
@@ -186,7 +186,7 @@ struct GameOptionsView: View {
                     Text("Game options")
                 }
                 .font(.system(size: 9.5, design: .monospaced))
-                .foregroundColor(SeleneTheme.inkMuted)
+                .foregroundColor(SeleneTheme.ink60)
             }
 
             Spacer()
@@ -214,7 +214,7 @@ struct GameOptionsView: View {
             } label: {
                 Text("Play")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(presentation.canPlay ? SeleneTheme.canvas : SeleneTheme.inkMuted)
+                    .foregroundColor(presentation.canPlay ? SeleneTheme.scrim : SeleneTheme.ink60)
                     .padding(.horizontal, 20)
                     .frame(height: 30)
                     .background(presentation.canPlay ? SeleneTheme.focus : SeleneTheme.ink.opacity(0.08))
@@ -287,7 +287,7 @@ struct GameOptionsView: View {
                 Stepper(value: $config.rumbleGain, in: 0...3) {
                     Text("\(config.rumbleGain)")
                         .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                        .foregroundColor(SeleneTheme.accent)
+                        .foregroundColor(SeleneTheme.glyph)
                 }
                 .frame(width: 90)
             }
@@ -305,7 +305,7 @@ struct GameOptionsView: View {
                         .frame(width: 170)
                     Text("\(Int(config.renderScale * 100))%")
                         .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                        .foregroundColor(SeleneTheme.accent)
+                        .foregroundColor(SeleneTheme.glyph)
                         .frame(width: 40, alignment: .trailing)
                 }
             }
@@ -313,7 +313,7 @@ struct GameOptionsView: View {
             SelenePanel("Internal resolution") {
                 Text(presentation.resolutionNote)
                     .font(.system(size: 10.5))
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -341,7 +341,7 @@ struct GameOptionsView: View {
                     Button("Open log") { viewModel.revealLog(for: game) }
                         .buttonStyle(.plain)
                         .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundColor(SeleneTheme.accent)
+                        .foregroundColor(SeleneTheme.glyph)
                     Button {
                         onClose()
                         viewModel.startBuild(for: game)
@@ -349,7 +349,7 @@ struct GameOptionsView: View {
                     } label: {
                         Text("Rebuild")
                             .font(.system(size: 10.5, weight: .semibold))
-                            .foregroundColor(presentation.sourcesDetached ? SeleneTheme.inkMuted : SeleneTheme.canvas)
+                            .foregroundColor(presentation.sourcesDetached ? SeleneTheme.ink60 : SeleneTheme.scrim)
                             .padding(.horizontal, 14)
                             .frame(height: 30)
                             .background(presentation.sourcesDetached ? SeleneTheme.ink.opacity(0.08) : SeleneTheme.focus)

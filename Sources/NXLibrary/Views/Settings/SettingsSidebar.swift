@@ -11,7 +11,7 @@ struct SettingsSidebar: View {
                 .font(.system(size: 9, weight: .bold))
                 .tracking(1.5)
                 .textCase(.uppercase)
-                .foregroundColor(SeleneTheme.inkMuted)
+                .foregroundColor(SeleneTheme.ink60)
                 .padding(.leading, 14)
                 .padding(.bottom, 9)
 

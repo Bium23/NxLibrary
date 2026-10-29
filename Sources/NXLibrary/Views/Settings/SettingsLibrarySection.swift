@@ -24,7 +24,7 @@ struct SettingsLibrarySection: View {
                     Button("Choose") { viewModel.selectGameFolder() }
                         .buttonStyle(.plain)
                         .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundColor(SeleneTheme.accent)
+                        .foregroundColor(SeleneTheme.glyph)
                     if viewModel.selectedGameFolder != nil {
                         Button("Clear") { viewModel.selectedGameFolder = nil }
                             .buttonStyle(.plain)
@@ -46,7 +46,7 @@ struct SettingsLibrarySection: View {
                     Button("Change") { viewModel.selectLibraryFolder() }
                         .buttonStyle(.plain)
                         .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundColor(SeleneTheme.accent)
+                        .foregroundColor(SeleneTheme.glyph)
                     Button("Reset") {
                         viewModel.libraryFolder = URL(fileURLWithPath: viewModel.defaultInstallPath)
                             .appendingPathComponent("Applications")
@@ -54,7 +54,7 @@ struct SettingsLibrarySection: View {
                     }
                     .buttonStyle(.plain)
                     .font(.system(size: 10.5, weight: .semibold))
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
                 }
             }
 

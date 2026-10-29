@@ -25,7 +25,7 @@ public struct ControlsView: View {
             .frame(maxWidth: .infinity)
         }
         .scrollIndicators(.hidden)
-        .background(SeleneTheme.canvas)
+        .background(SeleneTheme.scrim)
     }
 
     // MARK: - Header
@@ -41,7 +41,7 @@ public struct ControlsView: View {
 
                 Text("Games in NX Library simultaneously support your Mac keyboard and any USB or Bluetooth gamepad with instant plug-and-play recognition.")
                     .font(.system(size: 13))
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: 660, alignment: .leading)
             }
@@ -194,10 +194,10 @@ public struct ControlsView: View {
         .padding(.vertical, 5)
         .frame(minHeight: 48, alignment: .leading)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SeleneTheme.surface.opacity(0.92))
+        .background(SeleneTheme.glass.opacity(0.92))
         .overlay(
             RoundedRectangle(cornerRadius: SeleneTheme.rowRadius, style: .continuous)
-                .strokeBorder(SeleneTheme.border.opacity(0.9), lineWidth: 1)
+                .strokeBorder(SeleneTheme.ink15.opacity(0.9), lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: SeleneTheme.rowRadius, style: .continuous))
         .accessibilityElement(children: .combine)
@@ -343,7 +343,7 @@ public struct ControlsView: View {
 
     private var panelDivider: some View {
         Rectangle()
-            .fill(SeleneTheme.border.opacity(0.9))
+            .fill(SeleneTheme.ink15.opacity(0.9))
             .frame(height: 1)
     }
 
@@ -450,10 +450,10 @@ private struct ControllerStatusPanel: View {
             .frame(width: 44, height: 44)
 
             Circle()
-                .fill(controller.isGamepadConnected ? SeleneTheme.success : SeleneTheme.inkFaint)
+                .fill(controller.isGamepadConnected ? SeleneTheme.success : SeleneTheme.ink60)
                 .frame(width: 9, height: 9)
                 .overlay(
-                    Circle().strokeBorder(SeleneTheme.canvasRaised, lineWidth: 2)
+                    Circle().strokeBorder(SeleneTheme.glassSolid, lineWidth: 2)
                 )
                 .offset(x: 2, y: 2)
         }

@@ -86,7 +86,7 @@ public struct SettingsView: View {
                 }
             }
         }
-        .background(SeleneTheme.canvas)
+        .background(SeleneTheme.scrim)
         .onMoveCommand(perform: handleMove)
         .onExitCommand(perform: handleBack)
         .seleneActivationKeys { handleGamepad(.confirm) }
@@ -140,7 +140,7 @@ public struct SettingsView: View {
                     .foregroundColor(SeleneTheme.ink)
                 Text("Everything NX Library needs, in one calm place.")
                     .font(.system(size: 13))
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
             }
             Spacer()
             HStack(spacing: 14) {
@@ -148,7 +148,7 @@ public struct SettingsView: View {
                     Button("Reset section") { resetSection() }
                         .buttonStyle(.plain)
                         .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundColor(SeleneTheme.inkMuted)
+                        .foregroundColor(SeleneTheme.ink60)
                         .help("Restore the defaults for \(section.title) only.")
                         .accessibilityLabel("Reset \(section.title) section")
                 }

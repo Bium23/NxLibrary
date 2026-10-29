@@ -1,0 +1,6 @@
+## Theme palettes
+The color themes in `theme/Palettes` are generated from the palettes of [Omarchy](https://github.com/basecamp/omarchy)'s
+themes (MIT License, Copyright (c) David Heinemeier Hansson), copied into `tools/palettes`. Many are based on open
+color schemes by their own authors: Catppuccin, Everforest, Flexoki, Gruvbox, Kanagawa, Nord, Rose Pine and Tokyo Night.
+
+Omarchy - MIT License, Copyright (c) David Heinemeier Hansson

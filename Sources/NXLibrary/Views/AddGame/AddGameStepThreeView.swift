@@ -64,22 +64,22 @@ struct AddGameStepThreeView: View {
                         Text(viewModel.currentStepName.isEmpty
                              ? "Preparing the build" : viewModel.currentStepName)
                             .font(.system(size: 10.5, design: .monospaced))
-                            .foregroundColor(SeleneTheme.accent)
+                            .foregroundColor(SeleneTheme.glyph)
                             .lineLimit(1)
 
                         ProgressView(value: viewModel.buildProgress)
                             .progressViewStyle(.linear)
-                            .tint(SeleneTheme.accent)
+                            .tint(SeleneTheme.glyph)
                             .frame(maxWidth: 520)
 
                         HStack(spacing: 14) {
                             Text("Stage \(viewModel.stageIndex) of \(max(viewModel.totalStages, viewModel.buildStages.count))")
                                 .font(.system(size: 10, design: .monospaced))
-                                .foregroundColor(SeleneTheme.inkMuted)
+                                .foregroundColor(SeleneTheme.ink60)
                             if let eta = viewModel.buildETA, eta > 0 {
                                 Text("ETA \(formatted(eta))")
                                     .font(.system(size: 10, design: .monospaced))
-                                    .foregroundColor(SeleneTheme.inkMuted)
+                                    .foregroundColor(SeleneTheme.ink60)
                             }
                         }
                     }
@@ -123,7 +123,7 @@ struct AddGameStepThreeView: View {
                         .foregroundColor(SeleneTheme.ink)
                     Text(path)
                         .font(.system(size: 10.5, design: .monospaced))
-                        .foregroundColor(SeleneTheme.inkMuted)
+                        .foregroundColor(SeleneTheme.ink60)
                         .lineLimit(2)
                         .truncationMode(.middle)
                 }
@@ -132,7 +132,7 @@ struct AddGameStepThreeView: View {
 
             Text("The app was installed atomically. Your library now points at the new build.")
                 .font(.system(size: 10.5))
-                .foregroundColor(SeleneTheme.inkSecondary)
+                .foregroundColor(SeleneTheme.ink90)
         }
     }
 
@@ -151,7 +151,7 @@ struct AddGameStepThreeView: View {
                             .foregroundColor(SeleneTheme.ink)
                         Text(error)
                             .font(.system(size: 11))
-                            .foregroundColor(SeleneTheme.inkSecondary)
+                            .foregroundColor(SeleneTheme.ink90)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer()
@@ -159,7 +159,7 @@ struct AddGameStepThreeView: View {
 
                 Text("The previous app was left untouched. The full build log has the failing command and output.")
                     .font(.system(size: 10.5))
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
             }
 
             logTailPanel
@@ -174,14 +174,14 @@ struct AddGameStepThreeView: View {
                 HStack(alignment: .top, spacing: 14) {
                     Image(systemName: "stop.circle.fill")
                         .font(.system(size: 30))
-                        .foregroundColor(SeleneTheme.warning)
+                        .foregroundColor(SeleneTheme.untested)
                     VStack(alignment: .leading, spacing: 5) {
                         Text("Build cancelled")
                             .font(.system(size: 20, weight: .semibold))
                             .foregroundColor(SeleneTheme.ink)
                         Text("The previous app was left untouched. You can retry or go back to the review step.")
                             .font(.system(size: 11))
-                            .foregroundColor(SeleneTheme.inkSecondary)
+                            .foregroundColor(SeleneTheme.ink90)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer()
@@ -199,7 +199,7 @@ struct AddGameStepThreeView: View {
                 if recent.isEmpty {
                     Text("No build output is available yet.")
                         .font(.system(size: 10, design: .monospaced))
-                        .foregroundColor(SeleneTheme.inkMuted)
+                        .foregroundColor(SeleneTheme.ink60)
                 } else {
                     ForEach(Array(recent.enumerated()), id: \.offset) { _, entry in
                         Text(entry.message)
@@ -213,10 +213,10 @@ struct AddGameStepThreeView: View {
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(SeleneTheme.canvas)
+            .background(SeleneTheme.scrim)
             .overlay(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(SeleneTheme.border, lineWidth: 1)
+                    .strokeBorder(SeleneTheme.ink15, lineWidth: 1)
             )
             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
@@ -224,10 +224,10 @@ struct AddGameStepThreeView: View {
 
     private func logColor(_ level: LogLevel) -> Color {
         switch level {
-        case .info: return SeleneTheme.inkSecondary
-        case .step: return SeleneTheme.accent
+        case .info: return SeleneTheme.ink90
+        case .step: return SeleneTheme.glyph
         case .success: return SeleneTheme.success
-        case .warning: return SeleneTheme.warning
+        case .warning: return SeleneTheme.untested
         case .error: return SeleneTheme.danger
         }
     }
@@ -239,14 +239,14 @@ struct AddGameStepThreeView: View {
             HStack(spacing: 14) {
                 Image(systemName: "hammer.fill")
                     .font(.system(size: 24))
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("No build is active")
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(SeleneTheme.ink)
                     Text("Go back to the review step and choose Add & Build to start a build.")
                         .font(.system(size: 11))
-                        .foregroundColor(SeleneTheme.inkSecondary)
+                        .foregroundColor(SeleneTheme.ink90)
                 }
                 Spacer()
             }

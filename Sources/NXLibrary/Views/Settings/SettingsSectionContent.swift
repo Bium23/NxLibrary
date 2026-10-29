@@ -69,7 +69,7 @@ struct SeleneStatusLine: View {
             if let detail {
                 Text(detail)
                     .font(.system(size: 10, design: .monospaced))
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
                     .lineLimit(1)
                     .truncationMode(.middle)
             }

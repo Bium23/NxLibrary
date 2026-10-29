@@ -64,7 +64,7 @@ public struct AddGameView: View {
                 }
             }
         }
-        .background(SeleneTheme.canvas)
+        .background(SeleneTheme.scrim)
         .onMoveCommand(perform: handleMove)
         .onExitCommand(perform: handleBack)
         .seleneActivationKeys(confirmFocused)
@@ -261,7 +261,7 @@ public struct AddGameView: View {
                     .foregroundColor(SeleneTheme.ink)
                 Text("Build a native Mac app from your own NSP, XCI or NSZ files.")
                     .font(.system(size: 13))
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
             }
             Spacer()
             Button(action: requestClose) {

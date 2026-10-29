@@ -52,7 +52,7 @@ struct SettingsAppearanceSection: View {
                     .font(.system(size: 11, design: .monospaced))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(SeleneTheme.surface)
+                    .background(SeleneTheme.glass)
                     .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(SeleneTheme.ink.opacity(0.18), lineWidth: 1))
                     .cornerRadius(6)
                     .frame(width: 220)

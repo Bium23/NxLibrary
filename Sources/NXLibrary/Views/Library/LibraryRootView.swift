@@ -62,7 +62,7 @@ public struct LibraryRootView: View {
                 expanded: showsDetails
             )
             ZStack(alignment: .top) {
-                SeleneTheme.canvas.ignoresSafeArea()
+                SeleneTheme.scrim.ignoresSafeArea()
 
                 if let game = selectedGame, let presentation {
                     LibraryHeroView(

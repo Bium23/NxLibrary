@@ -22,13 +22,13 @@ struct SettingsEngineSection: View {
                     Button("Change") { viewModel.selectNxnativeFolder() }
                         .buttonStyle(.plain)
                         .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundColor(SeleneTheme.accent)
+                        .foregroundColor(SeleneTheme.glyph)
                     Button("Reveal") {
                         viewModel.revealInFinder(url: URL(fileURLWithPath: viewModel.nxnativePath))
                     }
                     .buttonStyle(.plain)
                     .font(.system(size: 10.5, weight: .semibold))
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
                     .disabled(!viewModel.isNxnativeValid)
                 }
             }
@@ -49,7 +49,7 @@ struct SettingsEngineSection: View {
                     Button("Re-check") { viewModel.detectEnvironment() }
                         .buttonStyle(.plain)
                         .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundColor(SeleneTheme.accent)
+                        .foregroundColor(SeleneTheme.glyph)
                 }
 
                 if let report = viewModel.compatibilityReport {
@@ -61,12 +61,12 @@ struct SettingsEngineSection: View {
                         ProgressView().controlSize(.small)
                         Text("Running the compatibility check...")
                             .font(.system(size: 11))
-                            .foregroundColor(SeleneTheme.inkMuted)
+                            .foregroundColor(SeleneTheme.ink60)
                     }
                 }
 
                 if let environment = viewModel.environmentStatus {
-                    Divider().overlay(SeleneTheme.border)
+                    Divider().overlay(SeleneTheme.ink15)
                     buildRow("Xcode", ok: environment.xcodeVersion != nil,
                              detail: environment.xcodeVersion ?? "not found")
                     buildRow("Metal compiler", ok: environment.metalVersion != nil,
@@ -83,7 +83,7 @@ struct SettingsEngineSection: View {
                     if !environment.issues.isEmpty {
                         Text(environment.issues.joined(separator: " · "))
                             .font(.system(size: 10, design: .monospaced))
-                            .foregroundColor(SeleneTheme.warning)
+                            .foregroundColor(SeleneTheme.untested)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -131,7 +131,7 @@ struct SettingsEngineSection: View {
                     Text(viewModel.isProdKeysValid && !viewModel.prodKeysPath.isEmpty
                          ? viewModel.prodKeysPath : "Choose your file once")
                         .font(.system(size: 10, design: .monospaced))
-                        .foregroundColor(SeleneTheme.inkMuted)
+                        .foregroundColor(SeleneTheme.ink60)
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
@@ -148,17 +148,17 @@ struct SettingsEngineSection: View {
                     }
                     .buttonStyle(.plain)
                     .font(.system(size: 10.5, weight: .semibold))
-                    .foregroundColor(SeleneTheme.accent)
+                    .foregroundColor(SeleneTheme.glyph)
                     Button("Detect Ryujinx...") { viewModel.selectRyujinxFolder() }
                         .buttonStyle(.plain)
                         .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundColor(SeleneTheme.accent)
+                        .foregroundColor(SeleneTheme.glyph)
                     Spacer()
                 }
 
                 Text("The original file is untouched. The stored copy is mode 0600 and key values are never shown or logged.")
                     .font(.system(size: 10))
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .seleneFocus(focusedRowTitle == "prod.keys", radius: SeleneTheme.cardRadius)
@@ -206,9 +206,9 @@ struct SettingsEngineSection: View {
     }
 
     private var statusColor: Color {
-        guard let report = viewModel.compatibilityReport else { return SeleneTheme.inkMuted }
+        guard let report = viewModel.compatibilityReport else { return SeleneTheme.ink60 }
         if report.ok { return SeleneTheme.success }
-        if viewModel.allowUntestedToolchain { return SeleneTheme.warning }
+        if viewModel.allowUntestedToolchain { return SeleneTheme.untested }
         return SeleneTheme.danger
     }
 
@@ -243,10 +243,10 @@ struct SettingsEngineSection: View {
                         HStack(alignment: .top, spacing: 10) {
                             Text(commit.shortSha)
                                 .font(.system(size: 10.5, weight: .bold, design: .monospaced))
-                                .foregroundColor(SeleneTheme.accent)
+                                .foregroundColor(SeleneTheme.glyph)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(SeleneTheme.accent.opacity(0.12))
+                                .background(SeleneTheme.glyph.opacity(0.12))
                                 .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
 
                             VStack(alignment: .leading, spacing: 2) {
@@ -259,14 +259,14 @@ struct SettingsEngineSection: View {
                                 HStack(spacing: 6) {
                                     Text(commit.author)
                                         .font(.system(size: 10))
-                                        .foregroundColor(SeleneTheme.inkMuted)
+                                        .foregroundColor(SeleneTheme.ink60)
                                     if !commit.date.isEmpty {
                                         Text("·")
                                             .font(.system(size: 10))
-                                            .foregroundColor(SeleneTheme.inkMuted.opacity(0.5))
+                                            .foregroundColor(SeleneTheme.ink60.opacity(0.5))
                                         Text(formattedCommitDate(commit.date))
                                             .font(.system(size: 10))
-                                            .foregroundColor(SeleneTheme.inkMuted)
+                                            .foregroundColor(SeleneTheme.ink60)
                                     }
                                 }
                             }
@@ -274,7 +274,7 @@ struct SettingsEngineSection: View {
                         }
                         if commit.id != status.commits.prefix(10).last?.id {
                             Divider()
-                                .background(SeleneTheme.border)
+                                .background(SeleneTheme.ink15)
                         }
                     }
 
@@ -282,14 +282,14 @@ struct SettingsEngineSection: View {
                         HStack {
                             Text("+ \(status.commits.count - 10) more commits upstream")
                                 .font(.system(size: 10.5, weight: .medium))
-                                .foregroundColor(SeleneTheme.inkMuted)
+                                .foregroundColor(SeleneTheme.ink60)
                             Spacer()
                             Button("View all on GitHub") {
                                 viewModel.openUpstreamCompare()
                             }
                             .buttonStyle(.plain)
                             .font(.system(size: 10.5, weight: .semibold))
-                            .foregroundColor(SeleneTheme.accent)
+                            .foregroundColor(SeleneTheme.glyph)
                         }
                         .padding(.top, 4)
                     }
@@ -328,7 +328,7 @@ struct SettingsEngineSection: View {
                 .frame(width: 96, alignment: .leading)
             Text(detail)
                 .font(.system(size: 10, design: .monospaced))
-                .foregroundColor(SeleneTheme.inkMuted)
+                .foregroundColor(SeleneTheme.ink60)
                 .lineLimit(2)
                 .textSelection(.enabled)
             Spacer(minLength: 0)
@@ -350,7 +350,7 @@ struct SettingsEngineSection: View {
                 .frame(width: 116, alignment: .leading)
             Text(detail)
                 .font(.system(size: 9.5, design: .monospaced))
-                .foregroundColor(SeleneTheme.inkMuted)
+                .foregroundColor(SeleneTheme.ink60)
                 .lineLimit(1)
                 .truncationMode(.middle)
             Spacer(minLength: 0)
@@ -368,7 +368,7 @@ struct SettingsEngineSection: View {
     private func color(for status: CheckStatus) -> Color {
         switch status {
         case .pass: return SeleneTheme.success
-        case .warn: return SeleneTheme.warning
+        case .warn: return SeleneTheme.untested
         case .block: return SeleneTheme.danger
         }
     }

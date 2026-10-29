@@ -1,22 +1,42 @@
 import SwiftUI
+import NXLibraryCore
 
 public enum SeleneTheme {
-    public static let canvas = Color(hex: 0x05070A)
-    public static let canvasRaised = Color(hex: 0x0B0E13)
-    public static let surface = Color(hex: 0x12161D)
-    public static let surfaceHover = Color(hex: 0x1A1F27)
-    public static let surfaceActive = Color(hex: 0x232A35)
-    public static let border = Color(hex: 0x262C36)
-    public static let borderStrong = Color(hex: 0x3A424F)
-    public static let ink = Color(hex: 0xF2F5F9)
-    public static let inkSecondary = Color(hex: 0xC3CAD4)
-    public static let inkMuted = Color(hex: 0x8B95A3)
-    public static let inkFaint = Color(hex: 0x5C6673)
-    public static let accent = Color(hex: 0x9CCBFF)
-    public static let focus = Color.white
-    public static let success = Color(hex: 0x3DDC84)
-    public static let warning = Color(hex: 0xE8B65C)
+    private static var palette: SelenePalette { ThemeStore.shared.palette }
+
+    public static var focus: Color { Color(hex: palette.focus) }
+    public static var onFocus: Color { Color(hex: palette.onFocus) }
+    public static var ink: Color { Color(hex: palette.ink) }
+    public static var ink90: Color { ink.opacity(0.90) }
+    public static var ink60: Color { ink.opacity(0.60) }
+    public static var ink25: Color { ink.opacity(0.25) }
+    public static var ink15: Color { ink.opacity(0.15) }
+    public static var scrim: Color { Color(hex: palette.scrim) }
+    public static var scrim65: Color { scrim.opacity(0.65) }
+    public static var scrim45: Color { scrim.opacity(0.45) }
+    public static var glass: Color { Color(hex: palette.glass, opacity: 0.75) }
+    public static var glassSolid: Color { Color(hex: palette.glass, opacity: 0.88) }
+    public static var glassLight: Color { Color(hex: palette.glass, opacity: 0.45) }
+    public static var glyph: Color { Color(hex: palette.glyph) }
+    public static var success: Color { Color(hex: palette.success) }
     public static let danger = Color(hex: 0xFF6B6B)
+    public static let untested = Color(hex: 0xE8B65C)
+    public static var focusGlow: Color { focus.opacity(0.35) }
+    public static var focusGlowStrong: Color { focus.opacity(0.55) }
+
+    public static var baseGradient: AnyShapeStyle {
+        let stops = palette.base.stops.map {
+            Gradient.Stop(color: Color(hex: $0.color), location: $0.location)
+        }
+        switch palette.base.kind {
+        case .linear:
+            return AnyShapeStyle(LinearGradient(stops: stops, startPoint: .top, endPoint: .bottom))
+        case .radial:
+            return AnyShapeStyle(RadialGradient(
+                gradient: Gradient(stops: stops), center: UnitPoint(x: 0.5, y: 0.2),
+                startRadius: 0, endRadius: 900))
+        }
+    }
 
     public static let rowRadius: CGFloat = 10
     public static let contentRadius: CGFloat = 12

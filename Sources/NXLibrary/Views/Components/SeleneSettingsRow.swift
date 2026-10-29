@@ -14,7 +14,7 @@ public struct SeleneInfoTip: View {
         } label: {
             Image(systemName: "info.circle")
                 .font(.system(size: 11.5, weight: .semibold))
-                .foregroundColor(isShowing ? SeleneTheme.accent : SeleneTheme.inkMuted.opacity(0.85))
+                .foregroundColor(isShowing ? SeleneTheme.glyph : SeleneTheme.ink60.opacity(0.85))
                 .padding(2)
                 .contentShape(Rectangle())
         }
@@ -29,7 +29,7 @@ public struct SeleneInfoTip: View {
             }
             .padding(14)
             .frame(width: 290, alignment: .leading)
-            .background(SeleneTheme.canvasRaised)
+            .background(SeleneTheme.glassSolid)
         }
         .help(text)
         .accessibilityLabel("Information")
@@ -69,7 +69,7 @@ public struct SeleneRow<Trailing: View>: View {
                 if let subtitle {
                     Text(subtitle)
                         .font(.system(size: 10.5))
-                        .foregroundColor(SeleneTheme.inkMuted)
+                        .foregroundColor(SeleneTheme.ink60)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -79,11 +79,11 @@ public struct SeleneRow<Trailing: View>: View {
         .padding(.horizontal, 18)
         .padding(.vertical, 13)
         .background(isFocused
-                    ? SeleneTheme.surfaceActive
-                    : SeleneTheme.surface.opacity(0.92))
+                    ? SeleneTheme.ink15
+                    : SeleneTheme.glass.opacity(0.92))
         .overlay(
             RoundedRectangle(cornerRadius: SeleneTheme.rowRadius, style: .continuous)
-                .strokeBorder(isFocused ? SeleneTheme.ink.opacity(0.18) : SeleneTheme.border.opacity(0.85),
+                .strokeBorder(isFocused ? SeleneTheme.ink.opacity(0.18) : SeleneTheme.ink15.opacity(0.85),
                               lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: SeleneTheme.rowRadius, style: .continuous))
@@ -101,7 +101,7 @@ public struct SeleneToggleStyle: ToggleStyle {
                 .frame(width: 38, height: 22)
                 .overlay(alignment: configuration.isOn ? .trailing : .leading) {
                     Circle()
-                        .fill(configuration.isOn ? SeleneTheme.canvas : Color.white)
+                        .fill(configuration.isOn ? SeleneTheme.scrim : Color.white)
                         .frame(width: 16, height: 16)
                         .padding(3)
                 }
@@ -164,7 +164,7 @@ public struct SeleneValueRow: View {
                     Button(actionTitle, action: action)
                         .buttonStyle(.plain)
                         .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundColor(SeleneTheme.accent)
+                        .foregroundColor(SeleneTheme.glyph)
                 }
             }
         }
@@ -192,7 +192,7 @@ public struct SeleneButtonRow: View {
             Button(buttonTitle, action: action)
                 .buttonStyle(.plain)
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(SeleneTheme.accent)
+                .foregroundColor(SeleneTheme.glyph)
         }
     }
 }
@@ -215,7 +215,7 @@ public struct SeleneSegmented<Value: Hashable>: View {
                 } label: {
                     Text(option.1)
                         .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundColor(selection == option.0 ? SeleneTheme.canvas : SeleneTheme.ink.opacity(0.5))
+                        .foregroundColor(selection == option.0 ? SeleneTheme.scrim : SeleneTheme.ink.opacity(0.5))
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
                         .background(selection == option.0 ? SeleneTheme.focus : Color.clear)
@@ -226,7 +226,7 @@ public struct SeleneSegmented<Value: Hashable>: View {
         }
         .padding(3)
         .background(SeleneTheme.ink.opacity(0.055))
-        .overlay(Capsule().strokeBorder(SeleneTheme.border, lineWidth: 1))
+        .overlay(Capsule().strokeBorder(SeleneTheme.ink15, lineWidth: 1))
         .clipShape(Capsule())
     }
 }
@@ -250,7 +250,7 @@ public struct SelenePanel<Content: View>: View {
                         .font(.system(size: 9, weight: .bold))
                         .tracking(1.4)
                         .textCase(.uppercase)
-                        .foregroundColor(SeleneTheme.inkMuted)
+                        .foregroundColor(SeleneTheme.ink60)
                     if let info {
                         SeleneInfoTip(info)
                     }
@@ -260,10 +260,10 @@ public struct SelenePanel<Content: View>: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SeleneTheme.canvasRaised)
+        .background(SeleneTheme.glassSolid)
         .overlay(
             RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous)
-                .strokeBorder(SeleneTheme.border, lineWidth: 1)
+                .strokeBorder(SeleneTheme.ink15, lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous))
     }

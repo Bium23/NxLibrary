@@ -56,7 +56,7 @@ struct LibraryFilterBar: View {
                     Text(filter.rawValue)
                         .font(.system(size: 13, weight: selected ? .semibold : .regular))
                         .foregroundColor(selected
-                                         ? SeleneTheme.canvas
+                                         ? SeleneTheme.scrim
                                          : SeleneTheme.ink.opacity(0.62))
                         .padding(.horizontal, 13)
                         .padding(.vertical, 6)
@@ -115,7 +115,7 @@ struct LibraryFilterBar: View {
         }
         .padding(.horizontal, 11)
         .frame(width: 250, height: 32)
-        .background(SeleneTheme.surface.opacity(0.88))
+        .background(SeleneTheme.glass.opacity(0.88))
         .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.16), lineWidth: 1))
         .clipShape(Capsule())
     }

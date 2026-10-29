@@ -19,14 +19,14 @@ struct SettingsAboutSection: View {
             SelenePanel("NX Library") {
                 Text("A personal macOS front-end for building and launching your own Switch games with nxnative.")
                     .font(.system(size: 12))
-                    .foregroundColor(SeleneTheme.inkSecondary)
+                    .foregroundColor(SeleneTheme.ink90)
                     .fixedSize(horizontal: false, vertical: true)
                 Text("Version \(version) · Build \(buildDate) · Engine \(seleneShort(viewModel.pinnedEngineCommit))")
                     .font(.system(size: 10, design: .monospaced))
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
                 Text("Play time is tracked only for launches from NX Library. Not affiliated with Nintendo.")
                     .font(.system(size: 10))
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
             }
 
             SelenePanel("Credits") {
@@ -42,16 +42,16 @@ struct SettingsAboutSection: View {
                                         .foregroundColor(SeleneTheme.ink)
                                     Image(systemName: "arrow.up.right")
                                         .font(.system(size: 8))
-                                        .foregroundColor(SeleneTheme.inkMuted)
+                                        .foregroundColor(SeleneTheme.ink60)
                                 }
                                 Text(credit.role)
                                     .font(.system(size: 9))
-                                    .foregroundColor(SeleneTheme.inkMuted)
+                                    .foregroundColor(SeleneTheme.ink60)
                                     .lineLimit(2)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(8)
-                            .background(SeleneTheme.surface.opacity(0.75))
+                            .background(SeleneTheme.glass.opacity(0.75))
                             .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                         }
                         .buttonStyle(.plain)
@@ -74,29 +74,29 @@ struct SettingsAboutSection: View {
                         Image(systemName: "arrow.up.right")
                     }
                     .font(.system(size: 10.5, weight: .semibold))
-                    .foregroundColor(SeleneTheme.accent)
+                    .foregroundColor(SeleneTheme.glyph)
                 }
                 .buttonStyle(.plain)
                 Text("Selene is a Playnite theme for Windows. No Selene name, logo, wallpaper, avatar or sound is used as NX Library branding; this is a visual adaptation in SwiftUI.")
                     .font(.system(size: 10))
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             SelenePanel("Nintendo Store data") {
                 Text("Descriptions, genres and artwork are fetched from the public Nintendo Store catalog for personal use, cached locally for seven days, and never committed or redistributed.")
                     .font(.system(size: 11))
-                    .foregroundColor(SeleneTheme.inkSecondary)
+                    .foregroundColor(SeleneTheme.ink90)
                     .fixedSize(horizontal: false, vertical: true)
                 Text("The app ships no keys, ROMs, game art or Nintendo UI assets.")
                     .font(.system(size: 10))
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
             }
 
             SelenePanel("Licenses") {
                 Text("NX Library is personal software released under the MIT license. nxnative, Ryujinx, SPIR-V Cross, LibHac and the other dependencies retain their own licenses through the engine.")
                     .font(.system(size: 11))
-                    .foregroundColor(SeleneTheme.inkSecondary)
+                    .foregroundColor(SeleneTheme.ink90)
                     .fixedSize(horizontal: false, vertical: true)
 
                 Button {
@@ -107,13 +107,13 @@ struct SettingsAboutSection: View {
                         Image(systemName: "folder")
                     }
                     .font(.system(size: 10.5, weight: .semibold))
-                    .foregroundColor(SeleneTheme.accent)
+                    .foregroundColor(SeleneTheme.glyph)
                 }
                 .buttonStyle(.plain)
 
                 Text("This app is not affiliated with Nintendo.")
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
             }
         }
     }

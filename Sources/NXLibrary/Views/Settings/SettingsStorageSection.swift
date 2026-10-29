@@ -30,7 +30,7 @@ struct SettingsStorageSection: View {
                         ProgressView().controlSize(.small)
                         Text("Calculating storage...")
                             .font(.system(size: 11))
-                            .foregroundColor(SeleneTheme.inkMuted)
+                            .foregroundColor(SeleneTheme.ink60)
                     }
                 }
             }
@@ -93,7 +93,7 @@ struct SettingsStorageSection: View {
                     }
                     .buttonStyle(.plain)
                     .font(.system(size: 10.5, weight: .semibold))
-                    .foregroundColor(SeleneTheme.accent)
+                    .foregroundColor(SeleneTheme.glyph)
                     .disabled(backupGameID == nil)
                 }
             }
@@ -155,7 +155,7 @@ struct SettingsStorageSection: View {
         HStack {
             Text(title)
                 .font(.system(size: 11))
-                .foregroundColor(SeleneTheme.inkSecondary)
+                .foregroundColor(SeleneTheme.ink90)
             Spacer()
             Text(seleneBytes(bytes))
                 .font(.system(size: 11, weight: .semibold, design: .monospaced))
@@ -163,7 +163,7 @@ struct SettingsStorageSection: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(SeleneTheme.surface.opacity(0.75))
+        .background(SeleneTheme.glass.opacity(0.75))
         .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
     }
 

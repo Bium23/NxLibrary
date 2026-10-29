@@ -21,7 +21,7 @@ public struct CommandBar: View {
                 HStack(spacing: 6) {
                     Text(hint.key)
                         .font(.system(size: 9, weight: .bold))
-                        .foregroundColor(SeleneTheme.canvas)
+                        .foregroundColor(SeleneTheme.scrim)
                         .frame(width: 18, height: 18)
                         .background(SeleneTheme.focus.opacity(0.92))
                         .clipShape(Circle())

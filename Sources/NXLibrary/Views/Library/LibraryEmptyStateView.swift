@@ -13,13 +13,13 @@ struct LibraryEmptyStateView: View {
 
             Text("Add a game to start your collection.")
                 .font(.system(size: 14))
-                .foregroundColor(SeleneTheme.inkMuted)
+                .foregroundColor(SeleneTheme.ink60)
 
             HStack(spacing: 22) {
                 Button(action: onAdd) {
                     Text("Add a game")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(SeleneTheme.canvas)
+                        .foregroundColor(SeleneTheme.scrim)
                         .padding(.horizontal, 26)
                         .frame(height: 44)
                         .background(SeleneTheme.focus)

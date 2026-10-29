@@ -80,7 +80,7 @@ public struct ConsoleView: View {
                 }
             }
         }
-        .background(SeleneTheme.canvas)
+        .background(SeleneTheme.scrim)
         .onMoveCommand(perform: handleMove)
         .onExitCommand { router.back() }
         .seleneActivationKeys(activateFocused)
@@ -110,12 +110,12 @@ public struct ConsoleView: View {
                     .foregroundColor(SeleneTheme.ink)
                 Text("Build and launch output, in one place.")
                     .font(.system(size: 13))
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
             }
             Spacer()
             Text("\(filteredLogs.count) of \(viewModel.logs.count) entries")
                 .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                .foregroundColor(SeleneTheme.inkMuted)
+                .foregroundColor(SeleneTheme.ink60)
                 .padding(.top, 10)
         }
         .padding(.horizontal, metrics.margin)
@@ -134,7 +134,7 @@ public struct ConsoleView: View {
             Toggle("Auto-scroll", isOn: $autoScroll)
                 .toggleStyle(.checkbox)
                 .font(.system(size: 10.5))
-                .foregroundColor(SeleneTheme.inkMuted)
+                .foregroundColor(SeleneTheme.ink60)
 
             actionButton("Copy", systemImage: didCopy ? "checkmark" : "doc.on.doc",
                          isFocused: focus.index == 0, action: copyVisibleLogs)
@@ -152,7 +152,7 @@ public struct ConsoleView: View {
         HStack(spacing: 7) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 10, weight: .semibold))
-                .foregroundColor(SeleneTheme.inkMuted)
+                .foregroundColor(SeleneTheme.ink60)
             TextField("Search log entries", text: $searchText)
                 .textFieldStyle(.plain)
                 .font(.system(size: 10.5))
@@ -163,7 +163,7 @@ public struct ConsoleView: View {
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 10))
-                        .foregroundColor(SeleneTheme.inkMuted)
+                        .foregroundColor(SeleneTheme.ink60)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Clear search")
@@ -171,10 +171,10 @@ public struct ConsoleView: View {
         }
         .padding(.horizontal, 10)
         .frame(width: 250, height: 30)
-        .background(SeleneTheme.surface)
+        .background(SeleneTheme.glass)
         .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .strokeBorder(SeleneTheme.border, lineWidth: 1)
+                .strokeBorder(SeleneTheme.ink15, lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
@@ -221,10 +221,10 @@ public struct ConsoleView: View {
                 .padding(.vertical, 4)
             }
             .scrollIndicators(.hidden)
-            .background(SeleneTheme.canvasRaised)
+            .background(SeleneTheme.glassSolid)
             .overlay(
                 RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous)
-                    .strokeBorder(SeleneTheme.border, lineWidth: 1)
+                    .strokeBorder(SeleneTheme.ink15, lineWidth: 1)
             )
             .clipShape(RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous))
             .padding(.horizontal, metrics.margin)
@@ -249,7 +249,7 @@ public struct ConsoleView: View {
         HStack(alignment: .top, spacing: 12) {
             Text(entry.formattedTimestamp)
                 .font(.system(size: 9.5, design: .monospaced))
-                .foregroundColor(SeleneTheme.inkMuted.opacity(0.7))
+                .foregroundColor(SeleneTheme.ink60.opacity(0.7))
                 .frame(width: 58, alignment: .leading)
 
             Circle()
@@ -275,7 +275,7 @@ public struct ConsoleView: View {
         VStack(spacing: 10) {
             Image(systemName: "terminal")
                 .font(.system(size: 30, weight: .light))
-                .foregroundColor(SeleneTheme.accent.opacity(0.5))
+                .foregroundColor(SeleneTheme.glyph.opacity(0.5))
             Text(viewModel.logs.isEmpty ? "No log entries yet." : "No entries match this filter.")
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(SeleneTheme.ink.opacity(0.9))
@@ -283,7 +283,7 @@ public struct ConsoleView: View {
                  ? "Builds and launches will report their output here."
                  : "Try another filter or clear the search field.")
                 .font(.system(size: 11))
-                .foregroundColor(SeleneTheme.inkMuted)
+                .foregroundColor(SeleneTheme.ink60)
         }
         .frame(maxWidth: .infinity, minHeight: 320)
     }
@@ -300,10 +300,10 @@ public struct ConsoleView: View {
 
     private func color(for level: LogLevel) -> Color {
         switch level {
-        case .info: return SeleneTheme.inkSecondary
-        case .step: return SeleneTheme.accent
+        case .info: return SeleneTheme.ink90
+        case .step: return SeleneTheme.glyph
         case .success: return SeleneTheme.success
-        case .warning: return SeleneTheme.warning
+        case .warning: return SeleneTheme.untested
         case .error: return SeleneTheme.danger
         }
     }

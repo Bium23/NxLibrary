@@ -27,6 +27,7 @@ public struct AppSettings: Codable, Equatable {
     public var lastSelectedGameID: UUID?
     public var steamGridDbApiKey: String
     public var gameDefaults: GameRuntimeConfig
+    public var colorThemeID: String
 
     public init(backgroundShade: BackgroundShade = .balanced,
                 readableText: Bool = true,
@@ -38,7 +39,8 @@ public struct AppSettings: Codable, Equatable {
                 refreshLibraryAtLaunch: Bool = true,
                 lastSelectedGameID: UUID? = nil,
                 steamGridDbApiKey: String = "",
-                gameDefaults: GameRuntimeConfig = GameRuntimeConfig()) {
+                gameDefaults: GameRuntimeConfig = GameRuntimeConfig(),
+                colorThemeID: String = "selene") {
         self.backgroundShade = backgroundShade
         self.readableText = readableText
         self.reduceMotion = reduceMotion
@@ -50,12 +52,13 @@ public struct AppSettings: Codable, Equatable {
         self.lastSelectedGameID = lastSelectedGameID
         self.steamGridDbApiKey = steamGridDbApiKey
         self.gameDefaults = gameDefaults
+        self.colorThemeID = colorThemeID
     }
 
     enum CodingKeys: String, CodingKey {
         case backgroundShade, readableText, reduceMotion, showButtonHints, showClock
         case restoreLastGame, checkEngineAtLaunch, refreshLibraryAtLaunch, lastSelectedGameID
-        case steamGridDbApiKey, gameDefaults
+        case steamGridDbApiKey, gameDefaults, colorThemeID
     }
 
     public init(from decoder: Decoder) throws {
@@ -71,5 +74,6 @@ public struct AppSettings: Codable, Equatable {
         self.lastSelectedGameID = try container.decodeIfPresent(UUID.self, forKey: .lastSelectedGameID)
         self.steamGridDbApiKey = try container.decodeIfPresent(String.self, forKey: .steamGridDbApiKey) ?? ""
         self.gameDefaults = try container.decodeIfPresent(GameRuntimeConfig.self, forKey: .gameDefaults) ?? GameRuntimeConfig()
+        self.colorThemeID = try container.decodeIfPresent(String.self, forKey: .colorThemeID) ?? "selene"
     }
 }

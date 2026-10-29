@@ -14,7 +14,7 @@ struct AddGameStepBar: View {
                     Text("\(number)")
                         .font(.system(size: 9, weight: .bold))
                         .frame(width: 17, height: 17)
-                        .background(number == step ? SeleneTheme.canvas
+                        .background(number == step ? SeleneTheme.scrim
                                     : (number < step ? SeleneTheme.success.opacity(0.16) : SeleneTheme.ink.opacity(0.10)))
                         .foregroundColor(number == step ? SeleneTheme.focus
                                          : (number < step ? SeleneTheme.success : SeleneTheme.ink.opacity(0.6)))
@@ -22,15 +22,15 @@ struct AddGameStepBar: View {
                     Text(title)
                         .font(.system(size: 11, weight: number == step ? .semibold : .medium))
                 }
-                .foregroundColor(number == step ? SeleneTheme.canvas : SeleneTheme.ink.opacity(0.5))
+                .foregroundColor(number == step ? SeleneTheme.scrim : SeleneTheme.ink.opacity(0.5))
                 .padding(.horizontal, 13)
                 .padding(.vertical, 7)
                 .background(number == step ? SeleneTheme.focus : SeleneTheme.ink.opacity(0.04))
-                .overlay(Capsule().strokeBorder(SeleneTheme.border, lineWidth: 1))
+                .overlay(Capsule().strokeBorder(SeleneTheme.ink15, lineWidth: 1))
                 .clipShape(Capsule())
                 if index < titles.count - 1 {
                     Rectangle()
-                        .fill(SeleneTheme.border)
+                        .fill(SeleneTheme.ink15)
                         .frame(width: 34, height: 1)
                 }
             }
@@ -85,10 +85,10 @@ struct SeleneActionButton: View {
             .overlay(Capsule().strokeBorder(border, lineWidth: 1))
             .clipShape(Capsule())
             .overlay(
-                Capsule().strokeBorder(isFocused ? SeleneTheme.accent : Color.clear,
+                Capsule().strokeBorder(isFocused ? SeleneTheme.glyph : Color.clear,
                                        lineWidth: 2)
             )
-            .shadow(color: isFocused ? SeleneTheme.accent.opacity(0.22) : .clear,
+            .shadow(color: isFocused ? SeleneTheme.glyph.opacity(0.22) : .clear,
                     radius: 8)
             .opacity(isEnabled ? 1 : 0.38)
         }
@@ -99,10 +99,10 @@ struct SeleneActionButton: View {
 
     private var foreground: Color {
         switch kind {
-        case .primary: return SeleneTheme.canvas
+        case .primary: return SeleneTheme.scrim
         case .secondary: return SeleneTheme.ink.opacity(0.9)
         case .destructive: return SeleneTheme.danger
-        case .quiet: return SeleneTheme.accent
+        case .quiet: return SeleneTheme.glyph
         }
     }
 

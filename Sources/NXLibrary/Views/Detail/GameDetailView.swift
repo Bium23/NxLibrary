@@ -116,7 +116,7 @@ struct GameDetailView: View {
                 .foregroundColor(SeleneTheme.ink.opacity(0.78))
                 .padding(.horizontal, 13)
                 .frame(height: 32)
-                .background(SeleneTheme.canvas.opacity(0.45))
+                .background(SeleneTheme.scrim.opacity(0.45))
                 .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.16), lineWidth: 1))
                 .clipShape(Capsule())
             }
@@ -176,7 +176,7 @@ struct GameDetailView: View {
                             Text("Play")
                                 .font(.system(size: 13, weight: .semibold))
                         }
-                        .foregroundColor(p.canPlay ? SeleneTheme.canvas : SeleneTheme.ink.opacity(0.62))
+                        .foregroundColor(p.canPlay ? SeleneTheme.scrim : SeleneTheme.ink.opacity(0.62))
                         .padding(.horizontal, 24)
                         .frame(height: 42)
                         .background(p.canPlay ? SeleneTheme.focus : SeleneTheme.ink.opacity(0.10))
@@ -305,12 +305,12 @@ struct GameDetailView: View {
                 HStack(spacing: 10) {
                     Text("Store details unavailable.")
                         .font(.system(size: 12))
-                        .foregroundColor(SeleneTheme.inkMuted)
+                        .foregroundColor(SeleneTheme.ink60)
                     if let search = viewModel.nintendoStoreSearchURL(for: game) {
                         Button("Search Nintendo Store") { viewModel.openURL(search) }
                             .buttonStyle(.plain)
                             .font(.system(size: 10.5, weight: .semibold))
-                            .foregroundColor(SeleneTheme.accent)
+                            .foregroundColor(SeleneTheme.glyph)
                     }
                 }
             } else {
@@ -328,7 +328,7 @@ struct GameDetailView: View {
                     }
                     .buttonStyle(.plain)
                     .font(.system(size: 10.5, weight: .semibold))
-                    .foregroundColor(SeleneTheme.accent)
+                    .foregroundColor(SeleneTheme.glyph)
                 }
             }
         }
@@ -360,7 +360,7 @@ struct GameDetailView: View {
             }
             .buttonStyle(.plain)
             .font(.system(size: 10.5, weight: .semibold))
-            .foregroundColor(SeleneTheme.accent)
+            .foregroundColor(SeleneTheme.glyph)
         }
     }
 
@@ -371,7 +371,7 @@ struct GameDetailView: View {
             Button("Reveal") { viewModel.revealInFinder(url: game.url) }
                 .buttonStyle(.plain)
                 .font(.system(size: 10.5, weight: .semibold))
-                .foregroundColor(SeleneTheme.accent)
+                .foregroundColor(SeleneTheme.glyph)
         }
     }
 
@@ -384,13 +384,13 @@ struct GameDetailView: View {
                     Button("Store") { viewModel.openURL(store) }
                         .buttonStyle(.plain)
                         .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundColor(SeleneTheme.accent)
+                        .foregroundColor(SeleneTheme.glyph)
                 }
                 if let hltb = p.hltbURL {
                     Button("HowLongToBeat") { viewModel.openURL(hltb) }
                         .buttonStyle(.plain)
                         .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundColor(SeleneTheme.accent)
+                        .foregroundColor(SeleneTheme.glyph)
                 }
             }
         }
@@ -403,7 +403,7 @@ struct GameDetailView: View {
             Text(title)
                 .font(.system(size: 10, weight: .bold))
                 .tracking(1.4)
-                .foregroundColor(SeleneTheme.inkMuted)
+                .foregroundColor(SeleneTheme.ink60)
             Text(value)
                 .font(.system(size: 11.5, weight: .semibold))
                 .foregroundColor(SeleneTheme.ink.opacity(0.88))
@@ -417,10 +417,10 @@ struct GameDetailView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SeleneTheme.surface.opacity(0.78))
+        .background(SeleneTheme.glass.opacity(0.78))
         .overlay(
             RoundedRectangle(cornerRadius: SeleneTheme.contentRadius, style: .continuous)
-                .strokeBorder(SeleneTheme.border, lineWidth: 1)
+                .strokeBorder(SeleneTheme.ink15, lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: SeleneTheme.contentRadius, style: .continuous))
     }

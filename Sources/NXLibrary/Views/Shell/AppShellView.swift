@@ -20,7 +20,7 @@ public struct AppShellView: View {
 
     public var body: some View {
         ZStack {
-            SeleneTheme.canvas.ignoresSafeArea()
+            SeleneTheme.scrim.ignoresSafeArea()
             content
             if router.isMenuPresented {
                 MenuOverlayView(router: router) { action in

@@ -42,7 +42,7 @@ public struct MenuOverlayView: View {
         Group {
             if reduceTransparency {
                 // Opaque fallback when the system asks for reduced transparency.
-                SeleneTheme.canvasRaised.opacity(0.98)
+                SeleneTheme.glassSolid.opacity(0.98)
             } else {
                 ZStack {
                     // Real backdrop blur (~20–24 pt equivalent) so the library stays recognizable.
@@ -95,7 +95,7 @@ public struct MenuOverlayView: View {
                                       lineWidth: 1)
                     Image(systemName: action.icon)
                         .font(.system(size: isFocused ? 24 : 20, weight: .medium))
-                        .foregroundColor(isFocused ? SeleneTheme.canvas
+                        .foregroundColor(isFocused ? SeleneTheme.scrim
                                          : SeleneTheme.ink.opacity(0.6))
                 }
                 .frame(width: isFocused ? 64 : 56, height: isFocused ? 64 : 56)

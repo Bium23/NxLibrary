@@ -18,11 +18,11 @@ struct SettingsControllersSection: View {
                 HStack(spacing: 10) {
                     Text(controller.isGamepadConnected ? "Connected" : "Not connected")
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundColor(controller.isGamepadConnected ? SeleneTheme.success : SeleneTheme.inkMuted)
+                        .foregroundColor(controller.isGamepadConnected ? SeleneTheme.success : SeleneTheme.ink60)
                     Button("Detect") { controller.refreshControllers() }
                         .buttonStyle(.plain)
                         .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundColor(SeleneTheme.accent)
+                        .foregroundColor(SeleneTheme.glyph)
                 }
             }
 
@@ -43,7 +43,7 @@ struct SettingsControllersSection: View {
                     .frame(width: 170)
                     Text(String(format: "%.2f", controller.deadzone))
                         .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                        .foregroundColor(SeleneTheme.accent)
+                        .foregroundColor(SeleneTheme.glyph)
                         .frame(width: 38, alignment: .trailing)
                 }
             }
@@ -58,7 +58,7 @@ struct SettingsControllersSection: View {
                 Stepper(value: $settings.settings.gameDefaults.rumbleGain, in: 0...3) {
                     Text("\(settings.settings.gameDefaults.rumbleGain)")
                         .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                        .foregroundColor(SeleneTheme.accent)
+                        .foregroundColor(SeleneTheme.glyph)
                         .frame(width: 20, alignment: .trailing)
                 }
                 .fixedSize()
@@ -74,7 +74,7 @@ struct SettingsControllersSection: View {
                         .frame(width: 170)
                     Text("\(Int((sound.volume * 100).rounded()))%")
                         .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                        .foregroundColor(SeleneTheme.accent)
+                        .foregroundColor(SeleneTheme.glyph)
                         .frame(width: 38, alignment: .trailing)
                 }
             }

@@ -1,0 +1,600 @@
+[
+  {
+    "id": "catppuccin-latte",
+    "name": "Catppuccin Latte",
+    "mode": "light",
+    "focus": 1992437,
+    "onFocus": 15725045,
+    "ink": 15725045,
+    "scrim": 2105644,
+    "glass": 2763578,
+    "glyph": 1992437,
+    "success": 4235307,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 14475496,
+          "location": 0.0
+        },
+        {
+          "color": 14145756,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/catppuccin-latte/1-color-fade.png"
+  },
+  {
+    "id": "catppuccin",
+    "name": "Catppuccin",
+    "mode": "dark",
+    "focus": 9024762,
+    "onFocus": 1973806,
+    "ink": 13489908,
+    "scrim": 1052697,
+    "glass": 1447458,
+    "glyph": 9024762,
+    "success": 10937249,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 3224132,
+          "location": 0.0
+        },
+        {
+          "color": 1052697,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/catppuccin/1-totoro.png"
+  },
+  {
+    "id": "ethereal",
+    "name": "Ethereal",
+    "mode": "dark",
+    "focus": 8225497,
+    "onFocus": 396062,
+    "ink": 16764589,
+    "scrim": 198160,
+    "glass": 264214,
+    "glyph": 8225497,
+    "success": 9610643,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 1251898,
+          "location": 0.0
+        },
+        {
+          "color": 198160,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/ethereal/1-cosmic.jpg"
+  },
+  {
+    "id": "everforest",
+    "name": "Everforest",
+    "mode": "dark",
+    "focus": 8371123,
+    "onFocus": 2962747,
+    "ink": 13878954,
+    "scrim": 1580320,
+    "glass": 2172716,
+    "glyph": 8371123,
+    "success": 10993792,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 3424068,
+          "location": 0.0
+        },
+        {
+          "color": 1580320,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/everforest/1-tree-tops.jpg"
+  },
+  {
+    "id": "flexoki-light",
+    "name": "Flexoki Light",
+    "mode": "light",
+    "focus": 2121382,
+    "onFocus": 16776432,
+    "ink": 16776432,
+    "scrim": 460294,
+    "glass": 591880,
+    "glyph": 2121382,
+    "success": 8886841,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 15131865,
+          "location": 0.0
+        },
+        {
+          "color": 15065816,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/flexoki-light/1-orb.png"
+  },
+  {
+    "id": "gruvbox",
+    "name": "Gruvbox",
+    "mode": "dark",
+    "focus": 8236707,
+    "onFocus": 2631720,
+    "ink": 13942424,
+    "scrim": 1447446,
+    "glass": 1973790,
+    "glyph": 8236707,
+    "success": 11122277,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 3946550,
+          "location": 0.0
+        },
+        {
+          "color": 1447446,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/gruvbox/1-the-backwater.jpg"
+  },
+  {
+    "id": "hackerman",
+    "name": "Hackerman",
+    "mode": "dark",
+    "focus": 8584092,
+    "onFocus": 723990,
+    "ink": 14546943,
+    "scrim": 394764,
+    "glass": 526608,
+    "glyph": 8584092,
+    "success": 5236879,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 1382440,
+          "location": 0.0
+        },
+        {
+          "color": 394764,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/hackerman/1-synth-scape.jpg"
+  },
+  {
+    "id": "kanagawa",
+    "name": "Kanagawa",
+    "mode": "dark",
+    "focus": 14473146,
+    "onFocus": 2039592,
+    "ink": 14473146,
+    "scrim": 1118486,
+    "glass": 1513246,
+    "glyph": 14473146,
+    "success": 7771242,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 2241097,
+          "location": 0.0
+        },
+        {
+          "color": 1118486,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/kanagawa/1-kanagawa.jpg"
+  },
+  {
+    "id": "last-horizon",
+    "name": "Last Horizon",
+    "mode": "dark",
+    "focus": 11900816,
+    "onFocus": 789260,
+    "ink": 14867932,
+    "scrim": 394758,
+    "glass": 591881,
+    "glyph": 11900816,
+    "success": 8890800,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 789260,
+          "location": 0.0
+        },
+        {
+          "color": 394758,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/last-horizon/1-eyes-wide.jpg"
+  },
+  {
+    "id": "lumon",
+    "name": "Frost",
+    "mode": "dark",
+    "focus": 9161195,
+    "onFocus": 1451053,
+    "ink": 15924479,
+    "scrim": 725526,
+    "glass": 1055521,
+    "glyph": 9161195,
+    "success": 6198716,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 1781056,
+          "location": 0.0
+        },
+        {
+          "color": 725526,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/lumon/01-united-in-severance.jpg"
+  },
+  {
+    "id": "lupine",
+    "name": "Lupine",
+    "mode": "light",
+    "focus": 3302635,
+    "onFocus": 16448250,
+    "ink": 16448250,
+    "scrim": 921102,
+    "glass": 1184274,
+    "glyph": 3302635,
+    "success": 4861904,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 16119285,
+          "location": 0.0
+        },
+        {
+          "color": 14606046,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/lupine/01-cherry-blossom-bokeh.jpg"
+  },
+  {
+    "id": "matte-black",
+    "name": "Matte Black",
+    "mode": "dark",
+    "focus": 15109645,
+    "onFocus": 1184274,
+    "ink": 12500670,
+    "scrim": 592137,
+    "glass": 855309,
+    "glyph": 15109645,
+    "success": 16761095,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 1973790,
+          "location": 0.0
+        },
+        {
+          "color": 592137,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/matte-black/0-ship-at-sea.jpg"
+  },
+  {
+    "id": "miasma",
+    "name": "Miasma",
+    "mode": "dark",
+    "focus": 7897675,
+    "onFocus": 2236962,
+    "ink": 12763824,
+    "scrim": 1184274,
+    "glass": 1644825,
+    "glyph": 7897675,
+    "success": 6260575,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 2894892,
+          "location": 0.0
+        },
+        {
+          "color": 1184274,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/miasma/01-nature-of-fear.jpg"
+  },
+  {
+    "id": "nord",
+    "name": "Nord",
+    "mode": "dark",
+    "focus": 8495553,
+    "onFocus": 3028032,
+    "ink": 14212841,
+    "scrim": 1645603,
+    "glass": 2238256,
+    "glyph": 8495553,
+    "success": 10731148,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 3883602,
+          "location": 0.0
+        },
+        {
+          "color": 1645603,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/nord/0-black-moon.jpg"
+  },
+  {
+    "id": "osaka-jade",
+    "name": "Osaka Jade",
+    "mode": "dark",
+    "focus": 5280885,
+    "onFocus": 1121304,
+    "ink": 16246962,
+    "scrim": 593677,
+    "glass": 791826,
+    "glyph": 5280885,
+    "success": 5545578,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 2307883,
+          "location": 0.0
+        },
+        {
+          "color": 593677,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/osaka-jade/1-glowing-city.jpg"
+  },
+  {
+    "id": "retro-82",
+    "name": "Retro 82",
+    "mode": "dark",
+    "focus": 16427368,
+    "onFocus": 333870,
+    "ink": 16178348,
+    "scrim": 134167,
+    "glass": 201250,
+    "glyph": 16427368,
+    "success": 164753,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 664896,
+          "location": 0.0
+        },
+        {
+          "color": 134167,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/retro-82/1-in-the-groove.jpg"
+  },
+  {
+    "id": "ristretto",
+    "name": "Ristretto",
+    "mode": "dark",
+    "focus": 15961456,
+    "onFocus": 2893093,
+    "ink": 15129051,
+    "scrim": 1578004,
+    "glass": 2169627,
+    "glyph": 15961456,
+    "success": 11393656,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 4009770,
+          "location": 0.0
+        },
+        {
+          "color": 1578004,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/ristretto/0-launch.png"
+  },
+  {
+    "id": "rose-pine",
+    "name": "Ros\u00e9 Pine",
+    "mode": "light",
+    "focus": 5674143,
+    "onFocus": 16446701,
+    "ink": 16446701,
+    "scrim": 2433587,
+    "glass": 3157315,
+    "glyph": 5674143,
+    "success": 2648451,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 15919585,
+          "location": 0.0
+        },
+        {
+          "color": 14801877,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/rose-pine/1-funky-shapes.jpg"
+  },
+  {
+    "id": "selene",
+    "name": "Selene",
+    "mode": "dark",
+    "focus": 16777215,
+    "onFocus": 1118481,
+    "ink": 16777215,
+    "scrim": 0,
+    "glass": 1316895,
+    "glyph": 10275839,
+    "success": 4054148,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 1059420,
+          "location": 0.0
+        },
+        {
+          "color": 198682,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": null
+  },
+  {
+    "id": "solitude",
+    "name": "Solitude",
+    "mode": "dark",
+    "focus": 10858164,
+    "onFocus": 1053461,
+    "ink": 10858164,
+    "scrim": 526859,
+    "glass": 790032,
+    "glyph": 7963014,
+    "success": 10462633,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 1053461,
+          "location": 0.0
+        },
+        {
+          "color": 526859,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/solitude/1-on-pole.jpg"
+  },
+  {
+    "id": "tokyo-night",
+    "name": "Tokyo Night",
+    "mode": "dark",
+    "focus": 8037111,
+    "onFocus": 1710886,
+    "ink": 12634869,
+    "scrim": 921108,
+    "glass": 1250332,
+    "glyph": 8037111,
+    "success": 10407530,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 2369595,
+          "location": 0.0
+        },
+        {
+          "color": 921108,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/tokyo-night/0-winding-road.jpg"
+  },
+  {
+    "id": "vantablack",
+    "name": "Vantablack",
+    "mode": "dark",
+    "focus": 16777215,
+    "onFocus": 0,
+    "ink": 16777215,
+    "scrim": 460551,
+    "glass": 592137,
+    "glyph": 9276813,
+    "success": 11974326,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 1710618,
+          "location": 0.0
+        },
+        {
+          "color": 460551,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/vantablack/0-dot-hands.jpg"
+  },
+  {
+    "id": "white",
+    "name": "White",
+    "mode": "light",
+    "focus": 16777215,
+    "onFocus": 0,
+    "ink": 16777215,
+    "scrim": 0,
+    "glass": 0,
+    "glyph": 7237230,
+    "success": 3815994,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 12632256,
+          "location": 0.0
+        },
+        {
+          "color": 15263976,
+          "location": 1.0
+        }
+      ]
+    },
+    "defaultWallpaper": "Wallpapers/white/1-white.jpg"
+  }
+]

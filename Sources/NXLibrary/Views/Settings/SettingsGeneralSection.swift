@@ -50,7 +50,7 @@ struct SettingsGeneralSection: View {
                         info: "Summarizes the 4 essential gates: valid prod.keys, cloned nxnative repository, Python build environment, and certified Metal compiler version.") {
                 HStack(spacing: 9) {
                     Circle()
-                        .fill(readiness ? SeleneTheme.success : SeleneTheme.warning)
+                        .fill(readiness ? SeleneTheme.success : SeleneTheme.untested)
                         .frame(width: 8, height: 8)
                     Text(readiness ? "Ready to build and play"
                                    : "Setup needed or builds blocked")
@@ -61,7 +61,7 @@ struct SettingsGeneralSection: View {
 
                 Text(readinessLine)
                     .font(.system(size: 10, design: .monospaced))
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }

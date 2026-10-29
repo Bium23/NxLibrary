@@ -141,9 +141,9 @@ struct LibraryHeroView: View {
                     HStack(spacing: 14) {
                         HStack(spacing: 6) {
                             Circle()
-                                .fill(readiness ? SeleneTheme.success : SeleneTheme.warning)
+                                .fill(readiness ? SeleneTheme.success : SeleneTheme.untested)
                                 .frame(width: 6, height: 6)
-                                .shadow(color: (readiness ? SeleneTheme.success : SeleneTheme.warning).opacity(0.7),
+                                .shadow(color: (readiness ? SeleneTheme.success : SeleneTheme.untested).opacity(0.7),
                                         radius: 6)
                             Text(readiness ? "Ready" : "Setup needed")
                                 .font(.system(size: 10, weight: .semibold))
@@ -225,7 +225,7 @@ struct LibraryHeroView: View {
                 .blur(radius: 42)
                 .scaleEffect(1.18)
                 .opacity(0.86)
-            SeleneTheme.canvas.opacity(0.40)
+            SeleneTheme.scrim.opacity(0.40)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()
@@ -297,7 +297,7 @@ struct LibraryHeroView: View {
                         .font(.system(size: 13, weight: .semibold))
                 }
                 .foregroundColor(isPlayable
-                                 ? SeleneTheme.canvas
+                                 ? SeleneTheme.scrim
                                  : SeleneTheme.ink.opacity(0.62))
                 .padding(.horizontal, 24)
                 .frame(height: 44)
@@ -322,7 +322,7 @@ struct LibraryHeroView: View {
                     .foregroundColor(SeleneTheme.ink.opacity(0.90))
                     .padding(.horizontal, 22)
                     .frame(height: 44)
-                    .background(SeleneTheme.surface.opacity(0.55))
+                    .background(SeleneTheme.glass.opacity(0.55))
                     .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.22), lineWidth: 1))
                     .clipShape(Capsule())
             }
@@ -335,7 +335,7 @@ struct LibraryHeroView: View {
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(SeleneTheme.ink.opacity(0.88))
                     .frame(width: 44, height: 44)
-                    .background(SeleneTheme.canvas.opacity(0.32))
+                    .background(SeleneTheme.scrim.opacity(0.32))
                     .overlay(Circle().strokeBorder(SeleneTheme.ink.opacity(0.20), lineWidth: 1))
                     .clipShape(Circle())
             }
@@ -352,14 +352,14 @@ struct LibraryHeroView: View {
                     Label("Not built yet · open Game options to build",
                           systemImage: "circle.fill")
                         .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(SeleneTheme.warning.opacity(0.86))
+                        .foregroundColor(SeleneTheme.untested.opacity(0.86))
                     SeleneInfoTip("This game has been added to your library catalog, but its native macOS app has not been compiled yet. Click the ellipsis (...) button to open Game options and build it.")
                 }
             } else if presentation.sourcesDetached {
                 HStack(spacing: 6) {
                     Label("Sources detached · playable", systemImage: "circle.fill")
                         .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(SeleneTheme.warning.opacity(0.86))
+                        .foregroundColor(SeleneTheme.untested.opacity(0.86))
                     SeleneInfoTip("The original ROM files (NSP/XCI) were moved or detached. The compiled macOS app in ~/Applications and all your save files remain fully playable.")
                 }
             }
@@ -369,11 +369,11 @@ struct LibraryHeroView: View {
                         .font(.system(size: 9, weight: .bold))
                         .textCase(.uppercase)
                         .tracking(1)
-                        .foregroundColor(SeleneTheme.warning.opacity(0.9))
+                        .foregroundColor(SeleneTheme.untested.opacity(0.9))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .background(SeleneTheme.warning.opacity(0.10))
-                        .overlay(Capsule().strokeBorder(SeleneTheme.warning.opacity(0.22), lineWidth: 1))
+                        .background(SeleneTheme.untested.opacity(0.10))
+                        .overlay(Capsule().strokeBorder(SeleneTheme.untested.opacity(0.22), lineWidth: 1))
                         .clipShape(Capsule())
                     SeleneInfoTip("This build was compiled with the untested-toolchain override. Gameplay works, but graphical artifacts could occur on non-certified Metal compiler versions.")
                 }

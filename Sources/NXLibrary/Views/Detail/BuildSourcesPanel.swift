@@ -15,17 +15,17 @@ struct BuildSourcesPanel: View {
                     .font(.system(size: 9, weight: .bold))
                     .tracking(1.5)
                     .textCase(.uppercase)
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
                 SeleneInfoTip("NX Library uses symlinks to your game ROM files to build the macOS native binary. Rebuilding uses your current engine pin and settings, and preserves your game saves.")
                 Spacer()
                 if presentation.sourcesDetached {
                     HStack(spacing: 6) {
                         Circle()
-                            .fill(SeleneTheme.warning)
+                            .fill(SeleneTheme.untested)
                             .frame(width: 5, height: 5)
                         Text("Sources detached")
                             .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(SeleneTheme.warning.opacity(0.86))
+                            .foregroundColor(SeleneTheme.untested.opacity(0.86))
                     }
                 } else {
                     HStack(spacing: 6) {
@@ -62,7 +62,7 @@ struct BuildSourcesPanel: View {
                 Button(action: onRebuild) {
                     Text("Rebuild")
                         .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundColor(presentation.canRebuild ? SeleneTheme.canvas : SeleneTheme.inkMuted)
+                        .foregroundColor(presentation.canRebuild ? SeleneTheme.scrim : SeleneTheme.ink60)
                         .padding(.horizontal, 15)
                         .frame(height: 32)
                         .background(presentation.canRebuild ? SeleneTheme.focus : SeleneTheme.ink.opacity(0.07))
@@ -75,7 +75,7 @@ struct BuildSourcesPanel: View {
                 Button(action: onRevealLog) {
                     Text("Open log")
                         .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundColor(SeleneTheme.accent)
+                        .foregroundColor(SeleneTheme.glyph)
                 }
                 .buttonStyle(.plain)
 
@@ -89,15 +89,15 @@ struct BuildSourcesPanel: View {
                         .font(.system(size: 9, weight: .medium))
                         .foregroundColor(presentation.toolchainVerified
                                          ? SeleneTheme.success.opacity(0.8)
-                                         : SeleneTheme.warning.opacity(0.8))
+                                         : SeleneTheme.untested.opacity(0.8))
                 }
             }
         }
         .padding(16)
-        .background(SeleneTheme.surface.opacity(0.78))
+        .background(SeleneTheme.glass.opacity(0.78))
         .overlay(
             RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous)
-                .strokeBorder(SeleneTheme.border, lineWidth: 1)
+                .strokeBorder(SeleneTheme.ink15, lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous))
     }

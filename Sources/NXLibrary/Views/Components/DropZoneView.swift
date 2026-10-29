@@ -15,14 +15,14 @@ public struct DropZoneView: View {
         VStack(spacing: 13) {
             ZStack {
                 Circle()
-                    .fill(isTargeted ? SeleneTheme.accent.opacity(0.16)
+                    .fill(isTargeted ? SeleneTheme.glyph.opacity(0.16)
                           : SeleneTheme.ink.opacity(0.05))
                     .frame(width: 56, height: 56)
                 Image(systemName: isTargeted ? "arrow.down.doc.fill"
                       : "square.and.arrow.down.on.square.fill")
                     .symbolRenderingMode(.hierarchical)
                     .font(.system(size: 24, weight: .medium))
-                    .foregroundColor(isTargeted ? SeleneTheme.accent : SeleneTheme.inkMuted)
+                    .foregroundColor(isTargeted ? SeleneTheme.glyph : SeleneTheme.ink60)
                     .scaleEffect(isTargeted ? 1.08 : 1)
                     .animation(SeleneTheme.quick, value: isTargeted)
             }
@@ -33,7 +33,7 @@ public struct DropZoneView: View {
                     .foregroundColor(SeleneTheme.ink)
                 Text("The base game is required. Updates and DLC are optional.")
                     .font(.system(size: 10.5))
-                    .foregroundColor(SeleneTheme.inkMuted)
+                    .foregroundColor(SeleneTheme.ink60)
                     .multilineTextAlignment(.center)
             }
 
@@ -46,7 +46,7 @@ public struct DropZoneView: View {
                     Text("Choose folder")
                         .font(.system(size: 11.5, weight: .semibold))
                 }
-                .foregroundColor(SeleneTheme.canvas)
+                .foregroundColor(SeleneTheme.scrim)
                 .padding(.horizontal, 18)
                 .frame(height: 34)
                 .background(SeleneTheme.focus)
@@ -58,34 +58,34 @@ public struct DropZoneView: View {
             Text("NSP · XCI · NSZ · folders")
                 .font(.system(size: 9, weight: .semibold, design: .monospaced))
                 .tracking(0.4)
-                .foregroundColor(SeleneTheme.inkMuted.opacity(0.8))
+                .foregroundColor(SeleneTheme.ink60.opacity(0.8))
 
             if let folder = viewModel.selectedGameFolder {
                 HStack(spacing: 8) {
                     Image(systemName: "folder.fill")
                         .font(.system(size: 10))
-                        .foregroundColor(SeleneTheme.accent)
+                        .foregroundColor(SeleneTheme.glyph)
                     Text(folder.path)
                         .font(.system(size: 9.5, design: .monospaced))
-                        .foregroundColor(SeleneTheme.inkSecondary)
+                        .foregroundColor(SeleneTheme.ink90)
                         .lineLimit(1)
                         .truncationMode(.middle)
                     Spacer(minLength: 8)
                     Button("Change…") { viewModel.selectGameFolder() }
                         .buttonStyle(.plain)
                         .font(.system(size: 9.5, weight: .semibold))
-                        .foregroundColor(SeleneTheme.accent)
+                        .foregroundColor(SeleneTheme.glyph)
                     Button("Clear") { viewModel.selectedGameFolder = nil }
                         .buttonStyle(.plain)
                         .font(.system(size: 9.5, weight: .semibold))
-                        .foregroundColor(SeleneTheme.inkMuted)
+                        .foregroundColor(SeleneTheme.ink60)
                 }
                 .padding(.horizontal, 11)
                 .padding(.vertical, 7)
                 .background(SeleneTheme.ink.opacity(0.04))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .strokeBorder(SeleneTheme.border, lineWidth: 1)
+                        .strokeBorder(SeleneTheme.ink15, lineWidth: 1)
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
@@ -94,10 +94,10 @@ public struct DropZoneView: View {
                 HStack(alignment: .top, spacing: 6) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: 10))
-                        .foregroundColor(SeleneTheme.warning)
+                        .foregroundColor(SeleneTheme.untested)
                     Text(error)
                         .font(.system(size: 10))
-                        .foregroundColor(SeleneTheme.warning)
+                        .foregroundColor(SeleneTheme.untested)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 0)
                 }
@@ -107,18 +107,18 @@ public struct DropZoneView: View {
         .frame(maxWidth: .infinity, minHeight: 214)
         .background(
             RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous)
-                .fill(isTargeted ? SeleneTheme.accent.opacity(0.07)
-                      : SeleneTheme.surface.opacity(0.45))
+                .fill(isTargeted ? SeleneTheme.glyph.opacity(0.07)
+                      : SeleneTheme.glass.opacity(0.45))
         )
         .overlay(
             RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous)
-                .strokeBorder(isTargeted ? SeleneTheme.accent : SeleneTheme.borderStrong,
+                .strokeBorder(isTargeted ? SeleneTheme.glyph : SeleneTheme.ink25,
                               style: StrokeStyle(lineWidth: isTargeted ? 1.8 : 1,
                                                  dash: [6, 4]))
         )
         .overlay(
             RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous)
-                .strokeBorder(isFocused ? SeleneTheme.accent : Color.clear, lineWidth: 2)
+                .strokeBorder(isFocused ? SeleneTheme.glyph : Color.clear, lineWidth: 2)
         )
         .onDrop(of: [.fileURL], isTargeted: $isTargeted) { providers in
             var urls: [URL] = []
