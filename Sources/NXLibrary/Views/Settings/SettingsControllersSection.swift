@@ -7,7 +7,6 @@ struct SettingsControllersSection: View {
     let onViewControls: () -> Void
 
     @ObservedObject private var controller = GameControllerService.shared
-    @ObservedObject private var sound = SoundEffectService.shared
 
     var body: some View {
         VStack(spacing: 9) {
@@ -63,26 +62,8 @@ struct SettingsControllersSection: View {
                 }
                 .fixedSize()
             }
-
-            SeleneToggleRow("Interface sounds",
-                            subtitle: "Short synthesized feedback tones. No sampled or Nintendo sounds.",
-                            isOn: $sound.isSoundEnabled)
-
-            SeleneRow("Sound volume") {
-                HStack(spacing: 10) {
-                    Slider(value: $sound.volume, in: 0...1, step: 0.01)
-                        .frame(width: 170)
-                    Text("\(Int((sound.volume * 100).rounded()))%")
-                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                        .foregroundColor(SeleneTheme.glyph)
-                        .frame(width: 38, alignment: .trailing)
-                }
-            }
         }
         .onAppear(perform: publishActions)
-        .onChange(of: sound.isSoundEnabled) { enabled in
-            if enabled { sound.play(.click) }
-        }
         .onChange(of: controller.deadzone) { _ in publishActions() }
     }
 
@@ -94,23 +75,15 @@ struct SettingsControllersSection: View {
             .init(id: "layout", title: "Button layout") {
                 onViewControls()
             },
-            .init(id: "deadzone", title: "Stick navigation deadzone") {
-                let next = min(0.80, max(0.10, controller.deadzone + 0.05))
-                controller.deadzone = next
+            .value("deadzone", "Stick navigation deadzone") { step in
+                controller.deadzone = min(0.80, max(0.10, controller.deadzone + 0.05 * Float(step)))
             },
             .init(id: "rumble", title: "Rumble") {
                 settings.settings.gameDefaults.rumble.toggle()
             },
-            .init(id: "gain", title: "Rumble strength") {
-                settings.settings.gameDefaults.rumbleGain =
-                    (settings.settings.gameDefaults.rumbleGain + 1) % 4
-            },
-            .init(id: "sound", title: "Interface sounds") {
-                sound.isSoundEnabled.toggle()
-            },
-            .init(id: "volume", title: "Sound volume") {
-                let next = min(1.0, sound.volume + 0.1)
-                sound.volume = next > 1.0 - 0.001 ? 0 : next
+            .value("gain", "Rumble strength") { step in
+                let gain = settings.settings.gameDefaults.rumbleGain + step
+                settings.settings.gameDefaults.rumbleGain = min(3, max(0, gain))
             }
         ])
     }

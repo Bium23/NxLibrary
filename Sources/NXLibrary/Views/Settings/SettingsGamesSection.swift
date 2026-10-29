@@ -1,10 +1,11 @@
 import SwiftUI
 import NXLibraryCore
 
-struct SettingsGameDefaultsSection: View {
+struct SettingsGamesSection: View {
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var settings: AppSettingsStore
     let onActions: ([SettingsRowAction]) -> Void
+    @Environment(\.seleneCanvas) private var canvas
 
     private var languageOptions: [(code: String, label: String)] {
         var options = viewModel.availableLanguages
@@ -15,8 +16,42 @@ struct SettingsGameDefaultsSection: View {
         return options
     }
 
+    private var surprisePoolTitle: String {
+        switch settings.settings.surprisePool {
+        case .installed: return "Installed"
+        case .notPlayed: return "Not played yet"
+        case .all: return "All games"
+        }
+    }
+
     var body: some View {
-        VStack(spacing: 9) {
+        VStack(spacing: canvas.u(8)) {
+            SettingsSubheading("Launch screen")
+
+            SeleneCycleRow("Launch screen style",
+                           subtitle: "What shows while a game starts.",
+                           value: settings.settings.launchStyle.title) { step in
+                settings.settings.launchStyle = settings.settings.launchStyle.stepped(step)
+            }
+
+            SeleneToggleRow("Launch screen motion",
+                            subtitle: "A slow drift of the art while the game starts.",
+                            isOn: $settings.settings.launchMotion)
+
+            SeleneCycleRow("Launch screen shade",
+                           subtitle: "How much the launch art is darkened.",
+                           value: settings.settings.launchShade.title) { step in
+                settings.settings.launchShade = settings.settings.launchShade.stepped(step)
+            }
+
+            SeleneCycleRow("Surprise me pool",
+                           subtitle: "Which games Surprise me picks from.",
+                           value: surprisePoolTitle) { step in
+                settings.settings.surprisePool = settings.settings.surprisePool.stepped(step)
+            }
+
+            SettingsSubheading("Game defaults")
+
             SeleneToggleRow("Fullscreen",
                             subtitle: "Start newly added games in fullscreen.",
                             isOn: $settings.settings.gameDefaults.fullscreen)
@@ -84,6 +119,18 @@ struct SettingsGameDefaultsSection: View {
 
     private func publishActions() {
         onActions([
+            .value("launchStyle", "Launch screen style") { step in
+                settings.settings.launchStyle = settings.settings.launchStyle.stepped(step)
+            },
+            .init(id: "launchMotion", title: "Launch screen motion") {
+                settings.settings.launchMotion.toggle()
+            },
+            .value("launchShade", "Launch screen shade") { step in
+                settings.settings.launchShade = settings.settings.launchShade.stepped(step)
+            },
+            .value("surprisePool", "Surprise me pool") { step in
+                settings.settings.surprisePool = settings.settings.surprisePool.stepped(step)
+            },
             .init(id: "fullscreen", title: "Fullscreen") {
                 settings.settings.gameDefaults.fullscreen.toggle()
             },
@@ -99,16 +146,17 @@ struct SettingsGameDefaultsSection: View {
             .init(id: "hud", title: "Metal HUD") {
                 settings.settings.gameDefaults.enableMetalHUD.toggle()
             },
-            .init(id: "language", title: "Default game language") {
-                let options = languageOptions
-                let index = options.firstIndex { $0.code == settings.settings.gameDefaults.language } ?? 0
-                settings.settings.gameDefaults.language = options[(index + 1) % options.count].code
+            .value("language", "Default game language") { step in
+                let codes = languageOptions.map(\.code)
+                if let next = codes.stepped(from: settings.settings.gameDefaults.language, step) {
+                    settings.settings.gameDefaults.language = next
+                }
             },
-            .init(id: "scale", title: "Render scale") {
+            .value("scale", "Render scale") { step in
                 let values = stride(from: 0.5, through: 1.0, by: 0.05).map { $0 }
                 let current = settings.settings.gameDefaults.renderScale
-                let index = values.firstIndex { abs($0 - current) < 0.001 } ?? 0
-                settings.settings.gameDefaults.renderScale = values[(index + 1) % values.count]
+                let index = values.firstIndex { abs($0 - current) < 0.001 } ?? values.count - 1
+                settings.settings.gameDefaults.renderScale = values[min(max(index + step, 0), values.count - 1)]
             }
         ])
     }

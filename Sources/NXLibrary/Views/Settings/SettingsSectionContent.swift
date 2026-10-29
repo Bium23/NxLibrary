@@ -8,41 +8,60 @@ struct SettingsSectionContent: View {
     @ObservedObject var artwork: ArtworkStore
     let onViewControls: () -> Void
     let onOpenConsole: () -> Void
+    let onOpenGroup: (SettingsSection) -> Void
+    let onSearchSubmit: () -> Void
     let onActions: ([SettingsRowAction]) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(section.title)
-                .font(.system(size: 24, weight: .semibold))
-                .tracking(-0.6)
-                .foregroundColor(SeleneTheme.ink)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            switch section {
-            case .startUp:
-                SettingsGeneralSection(viewModel: viewModel, settings: settings, onActions: onActions)
-            case .look:
-                SettingsAppearanceSection(viewModel: viewModel, settings: settings, onActions: onActions)
-            case .library:
-                SettingsLibrarySection(viewModel: viewModel, settings: settings,
-                                       artwork: artwork, onActions: onActions)
-            case .games:
-                SettingsGameDefaultsSection(viewModel: viewModel, settings: settings, onActions: onActions)
-            case .controllers:
-                SettingsControllersSection(settings: settings, onActions: onActions,
-                                           onViewControls: onViewControls)
-            case .engine:
-                SettingsEngineSection(viewModel: viewModel, onActions: onActions)
-            case .storage:
-                SettingsStorageSection(viewModel: viewModel, artwork: artwork,
-                                       onActions: onActions, onOpenConsole: onOpenConsole)
-            case .about:
-                SettingsAboutSection(viewModel: viewModel)
-            case .search, .changed, .navigation, .spotlight, .soundMusic:
-                EmptyView()
-            }
+        switch section {
+        case .search:
+            SettingsSearchSection(settings: settings, onOpenGroup: onOpenGroup,
+                                  onSubmit: onSearchSubmit, onActions: onActions)
+        case .changed:
+            SettingsChangedSection(settings: settings, onOpenGroup: onOpenGroup, onActions: onActions)
+        case .startUp:
+            SettingsStartUpSection(viewModel: viewModel, settings: settings, onActions: onActions)
+        case .navigation:
+            SettingsNavigationSection(settings: settings, onActions: onActions)
+        case .spotlight:
+            SettingsSpotlightSection(settings: settings, onActions: onActions)
+        case .soundMusic:
+            SettingsSoundSection(settings: settings, onActions: onActions)
+        case .look:
+            SettingsLookSection(viewModel: viewModel, settings: settings, onActions: onActions)
+        case .games:
+            SettingsGamesSection(viewModel: viewModel, settings: settings, onActions: onActions)
+        case .controllers:
+            SettingsControllersSection(settings: settings, onActions: onActions,
+                                       onViewControls: onViewControls)
+        case .library:
+            SettingsLibrarySection(viewModel: viewModel, settings: settings,
+                                   artwork: artwork, onActions: onActions)
+        case .storage:
+            SettingsStorageSection(viewModel: viewModel, artwork: artwork,
+                                   onActions: onActions, onOpenConsole: onOpenConsole)
+        case .engine:
+            SettingsEngineSection(viewModel: viewModel, onActions: onActions)
+        case .about:
+            SettingsAboutSection(viewModel: viewModel)
         }
-        .padding(.top, 1)
+    }
+}
+
+/// Selene's in-group heading: 17 SemiBold in the accent colour.
+struct SettingsSubheading: View {
+    @Environment(\.seleneCanvas) private var canvas
+    let title: String
+
+    init(_ title: String) { self.title = title }
+
+    var body: some View {
+        Text(title)
+            .seleneFont(17, .semibold)
+            .foregroundColor(SeleneTheme.glyph)
+            .padding(.top, canvas.u(18))
+            .padding(.bottom, canvas.u(4))
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

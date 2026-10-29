@@ -1,10 +1,19 @@
 import SwiftUI
 import NXLibraryCore
 
-struct SettingsGeneralSection: View {
+struct SettingsStartUpSection: View {
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var settings: AppSettingsStore
     let onActions: ([SettingsRowAction]) -> Void
+    @Environment(\.seleneCanvas) private var canvas
+
+    private var startOnTitle: String {
+        switch settings.settings.startOn {
+        case .spotlight: return "Spotlight"
+        case .collection: return "Collection"
+        case .last: return "Where I left"
+        }
+    }
 
     private var readiness: Bool {
         viewModel.isProdKeysValid
@@ -14,10 +23,12 @@ struct SettingsGeneralSection: View {
     }
 
     var body: some View {
-        VStack(spacing: 9) {
-            SeleneValueRow("Opens on",
-                           subtitle: "NX Library always opens on the library.",
-                           value: "Library")
+        VStack(spacing: canvas.u(8)) {
+            SeleneCycleRow("Start on",
+                           subtitle: "The screen NX Library opens on.",
+                           value: startOnTitle) { step in
+                settings.settings.startOn = settings.settings.startOn.stepped(step)
+            }
 
             SeleneToggleRow("Restore last selected game",
                             subtitle: "Reopen the game that was selected when you quit.",
@@ -31,6 +42,12 @@ struct SettingsGeneralSection: View {
             SeleneToggleRow("Refresh library at launch",
                             subtitle: "Rescan the app library for new or removed builds.",
                             isOn: $settings.settings.refreshLibraryAtLaunch)
+
+            SeleneToggleRow("Intro animation",
+                            subtitle: "Plays the app mark when NX Library opens.",
+                            isOn: $settings.settings.introAnimation)
+
+            SettingsSubheading("Setup")
 
             SeleneButtonRow("Setup",
                             subtitle: "Folders, keys and prerequisites in one guided flow.",
@@ -79,7 +96,9 @@ struct SettingsGeneralSection: View {
 
     private func publishActions() {
         onActions([
-            .init(id: "opensOn", title: "Opens on") {},
+            .value("startOn", "Start on") { step in
+                settings.settings.startOn = settings.settings.startOn.stepped(step)
+            },
             .init(id: "restore", title: "Restore last selected game") {
                 settings.settings.restoreLastGame.toggle()
             },
@@ -88,6 +107,9 @@ struct SettingsGeneralSection: View {
             },
             .init(id: "refresh", title: "Refresh library at launch") {
                 settings.settings.refreshLibraryAtLaunch.toggle()
+            },
+            .init(id: "intro", title: "Intro animation") {
+                settings.settings.introAnimation.toggle()
             },
             .init(id: "setup", title: "Setup") {
                 viewModel.reopenSetup()

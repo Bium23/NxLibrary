@@ -1,4 +1,5 @@
 import SwiftUI
+import NXLibraryCore
 
 public struct SeleneInfoTip: View {
     public let text: String
@@ -225,5 +226,62 @@ public struct SelenePanel<Content: View>: View {
                 .strokeBorder(SeleneTheme.ink15, lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous))
+    }
+}
+
+/// A value row that steps through its choices: Left/Right on a controller, the arrows with a pointer.
+public struct SeleneCycleRow: View {
+    public let title: String
+    public let subtitle: String?
+    public let info: String?
+    public let value: String
+    public let cycle: (Int) -> Void
+
+    public init(_ title: String, subtitle: String? = nil, info: String? = nil, value: String,
+                cycle: @escaping (Int) -> Void) {
+        self.title = title
+        self.subtitle = subtitle
+        self.info = info
+        self.value = value
+        self.cycle = cycle
+    }
+
+    public var body: some View {
+        SeleneRow(title, subtitle: subtitle, info: info) {
+            HStack(spacing: 6) {
+                arrow(.chevronLeft, -1)
+                SeleneValueChip(text: value)
+                arrow(.chevron, 1)
+            }
+        }
+    }
+
+    private func arrow(_ icon: MaterialIcon, _ delta: Int) -> some View {
+        Button { cycle(delta) } label: {
+            MaterialIconView(icon, size: 20)
+                .foregroundColor(SeleneTheme.ink60)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(delta < 0 ? "Previous \(title)" : "Next \(title)")
+    }
+}
+
+extension CaseIterable where Self: Equatable {
+    /// The case `delta` steps away, wrapping at both ends.
+    func stepped(_ delta: Int) -> Self {
+        let all = Array(Self.allCases)
+        let index = all.firstIndex(of: self) ?? 0
+        let count = all.count
+        return all[((index + delta) % count + count) % count]
+    }
+}
+
+extension Array where Element: Equatable {
+    /// The element `delta` steps from `current`, wrapping; the first element when `current` is absent.
+    func stepped(from current: Element, _ delta: Int) -> Element? {
+        guard !isEmpty else { return nil }
+        guard let index = firstIndex(of: current) else { return first }
+        return self[((index + delta) % count + count) % count]
     }
 }

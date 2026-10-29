@@ -1,56 +1,89 @@
 import SwiftUI
+import AppKit
 import NXLibraryCore
 
+/// Left column of Settings: app mark, name and version, then the groups (Selene `SettingsScreen.cs`).
 struct SettingsSidebar: View {
     @Binding var selection: SettingsSection
     var isFocused: Bool = false
+    @Environment(\.seleneCanvas) private var canvas
+
+    private var version: String {
+        let info = Bundle.main.infoDictionary
+        let short = info?["CFBundleShortVersionString"] as? String ?? "dev"
+        return "Version \(short)"
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text("Categories")
-                .font(.system(size: 9, weight: .bold))
-                .tracking(1.5)
-                .textCase(.uppercase)
-                .foregroundColor(SeleneTheme.ink60)
-                .padding(.leading, 14)
-                .padding(.bottom, 9)
-
-            ForEach(SettingsSection.allCases) { section in
-                Button {
-                    selection = section
-                } label: {
-                    HStack(spacing: 10) {
-                        MaterialIconView(section.icon, size: 15)
-                            .frame(width: 17)
-                        Text(section.title)
-                            .font(.system(size: 13, weight: selection == section ? .semibold : .regular))
-                        Spacer()
-                    }
-                    .foregroundColor(selection == section
-                                     ? SeleneTheme.ink
-                                     : SeleneTheme.ink.opacity(0.52))
-                    .padding(.horizontal, 14)
-                    .frame(height: 40)
-                    .background(selection == section
-                                ? SeleneTheme.ink.opacity(0.06)
-                                : Color.clear)
-                    .overlay(alignment: .leading) {
-                        if selection == section {
-                            Capsule()
-                                .fill(SeleneTheme.focus)
-                                .frame(width: 2, height: 16)
-                                .padding(.leading, 5)
-                        }
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-                    .seleneRowFocus(isFocused && selection == section, radius: 9)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(section.title)
-                .accessibilityAddTraits(selection == section ? .isSelected : [])
+        VStack(alignment: .leading, spacing: 0) {
+            header
+                .padding(.bottom, canvas.u(26))
+            ScrollView {
+                groups
             }
-            Spacer()
+            .scrollIndicators(.hidden)
         }
-        .padding(.top, 4)
+    }
+
+    private var groups: some View {
+        VStack(alignment: .leading, spacing: canvas.u(6)) {
+            ForEach(SettingsSection.allCases) { section in
+                groupRow(section)
+                if section == .changed {
+                    Rectangle()
+                        .fill(SeleneTheme.ink.opacity(0.16))
+                        .frame(height: max(1, canvas.u(1)))
+                        .padding(.leading, canvas.u(20))
+                        .padding(.top, canvas.u(8))
+                        .padding(.trailing, canvas.u(44))
+                        .padding(.bottom, canvas.u(14))
+                }
+            }
+        }
+    }
+
+    private var header: some View {
+        HStack(spacing: canvas.u(16)) {
+            Image(nsImage: NSApplication.shared.applicationIconImage)
+                .resizable()
+                .interpolation(.high)
+                .frame(width: canvas.u(48), height: canvas.u(48))
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: canvas.u(2)) {
+                Text("NX Library")
+                    .seleneFont(28, .semibold)
+                    .foregroundColor(SeleneTheme.ink)
+                Text(version)
+                    .seleneFont(16)
+                    .foregroundColor(SeleneTheme.ink.opacity(0.55))
+            }
+        }
+    }
+
+    private func groupRow(_ section: SettingsSection) -> some View {
+        let selected = selection == section
+        let lit = selected && isFocused
+        return Button {
+            selection = section
+        } label: {
+            HStack(spacing: canvas.u(16)) {
+                MaterialIconView(section.icon, size: 24)
+                    .foregroundColor(lit ? SeleneTheme.onFocus : SeleneTheme.glyph)
+                Text(section.title)
+                    .seleneFont(21, .medium)
+                    .foregroundColor(lit ? SeleneTheme.onFocus : SeleneTheme.ink)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, canvas.u(20))
+            .padding(.vertical, canvas.u(14))
+            .background(
+                RoundedRectangle(cornerRadius: canvas.u(14), style: .continuous)
+                    .fill(lit ? SeleneTheme.focus : (selected ? SeleneTheme.glass : Color.clear))
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(section.title)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
