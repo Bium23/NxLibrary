@@ -60,11 +60,10 @@ final class GameDetailPresentationTests: XCTestCase {
     func testReleasedFormatsStoreDate() {
         let g = game("A")
         let m = meta(releaseDate: "2017-03-03")
-        let utc = TimeZone(identifier: "UTC")!
         let it = GameDetailPresentation(game: g, metadata: m, totalPlaytime: 0, lastPlayed: nil,
-                                        locale: Locale(identifier: "it_IT"), timeZone: utc)
+                                        locale: Locale(identifier: "it_IT"))
         let gb = GameDetailPresentation(game: g, metadata: m, totalPlaytime: 0, lastPlayed: nil,
-                                        locale: Locale(identifier: "en_GB"), timeZone: utc)
+                                        locale: Locale(identifier: "en_GB"))
         XCTAssertEqual(it.released, "03/03/17")
         XCTAssertEqual(gb.released, "03/03/2017")
         let bad = GameDetailPresentation(game: g, metadata: meta(releaseDate: "soon"),
@@ -127,5 +126,29 @@ final class GameDetailPresentationTests: XCTestCase {
         let none = GameDetailPresentation(game: a, metadata: nil, totalPlaytime: 0, lastPlayed: nil, now: now,
                                           sessions: [], calendar: cal)
         XCTAssertEqual(none.thisWeek, "—")
+    }
+
+    func testSameNameEqualPlaytimeGetDistinctRanks() {
+        let a = game("Twin"), b = game("Twin")
+        let times: [UUID: TimeInterval] = [a.id: 60, b.id: 60]
+        func rank(_ g: PortedGame) -> String? {
+            GameDetailPresentation(game: g, metadata: nil, totalPlaytime: 60, lastPlayed: nil,
+                                   libraryGames: [a, b], playtimeByGame: times).rank
+        }
+        XCTAssertEqual(Set([rank(a), rank(b)]), ["#1 of 2", "#2 of 2"])
+    }
+
+    func testThisWeekCountsOnlyMondayPartOfSpanningSession() {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "UTC")!
+        let monday = cal.date(from: DateComponents(year: 2026, month: 10, day: 26))!
+        let now = monday.addingTimeInterval(3 * 3_600)
+        let a = game("A")
+        let s = PlaySession(gameID: a.id, titleID: "t", bundleID: nil,
+                            startedAt: monday.addingTimeInterval(-3_600), endedAt: monday.addingTimeInterval(3_600),
+                            lastHeartbeatAt: now)
+        let p = GameDetailPresentation(game: a, metadata: nil, totalPlaytime: 7_200, lastPlayed: nil, now: now,
+                                       sessions: [s], calendar: cal)
+        XCTAssertEqual(p.thisWeek, "1h 0m")
     }
 }

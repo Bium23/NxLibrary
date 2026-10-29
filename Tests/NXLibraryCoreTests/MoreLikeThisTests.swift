@@ -44,4 +44,10 @@ final class MoreLikeThisTests: XCTestCase {
         let data = [other.id: meta(developers: ["Dev"])]
         XCTAssertEqual(MoreLikeThis.pick(for: me, in: [me, other], metadata: { data[$0] }), [])
     }
+
+    func testSharedOtherGenreDoesNotScore() {
+        let me = game("Me"), other = game("Other")
+        let data = [me.id: meta(genres: ["Other"]), other.id: meta(genres: ["other"])]
+        XCTAssertEqual(MoreLikeThis.pick(for: me, in: [me, other], metadata: { data[$0] }), [])
+    }
 }

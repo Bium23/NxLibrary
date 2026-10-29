@@ -31,8 +31,7 @@ public struct GameDetailPresentation: Equatable {
                 totalPlaytime: TimeInterval, lastPlayed: Date?, now: Date = Date(),
                 sessions: [PlaySession] = [], libraryGames: [PortedGame] = [],
                 playtimeByGame: [UUID: TimeInterval] = [:],
-                calendar: Calendar = .current, locale: Locale = .current,
-                timeZone: TimeZone = .current) {
+                calendar: Calendar = .current, locale: Locale = .current) {
         title = game.name
         eyebrow = Self.eyebrow(from: metadata?.name ?? "")
         description = metadata?.description ?? ""
@@ -41,7 +40,7 @@ public struct GameDetailPresentation: Equatable {
             let g = $0.trimmingCharacters(in: .whitespacesAndNewlines)
             return !g.isEmpty && g.caseInsensitiveCompare("Other") != .orderedSame && seenGenres.insert(g).inserted
         }
-        released = Self.released(metadata?.releaseDate, locale: locale, timeZone: timeZone)
+        released = Self.released(metadata?.releaseDate, locale: locale)
         developerLine = Self.credit(metadata)
         let week = Activity.summary(sessions: sessions.filter { $0.gameID == game.id }, now: now, calendar: calendar)
         thisWeek = LibraryPresentation.duration(week.thisWeek)
@@ -76,7 +75,8 @@ public struct GameDetailPresentation: Equatable {
         }
     }
 
-    private static func released(_ raw: String?, locale: Locale, timeZone: TimeZone) -> String? {
+    private static func released(_ raw: String?, locale: Locale) -> String? {
+        // Release dates are timezone-neutral: parse and format in UTC.
         guard let raw else { return nil }
         let parser = DateFormatter()
         parser.locale = Locale(identifier: "en_US_POSIX")
@@ -103,15 +103,16 @@ public struct GameDetailPresentation: Equatable {
     private static func rank(game: PortedGame, total: TimeInterval, library: [PortedGame],
                              playtimes: [UUID: TimeInterval]) -> String? {
         guard total > 0 else { return nil }
-        var entries: [(name: String, time: TimeInterval)] = [(game.name, total)]
+        var entries: [(id: UUID, name: String, time: TimeInterval)] = [(game.id, game.name, total)]
         for other in library where other.id != game.id && !other.isHidden {
-            if let t = playtimes[other.id], t > 0 { entries.append((other.name, t)) }
+            if let t = playtimes[other.id], t > 0 { entries.append((other.id, other.name, t)) }
         }
         entries.sort { a, b in
-            a.time != b.time ? a.time > b.time
-                : a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
+            if a.time != b.time { return a.time > b.time }
+            let c = a.name.localizedCaseInsensitiveCompare(b.name)
+            return c != .orderedSame ? c == .orderedAscending : a.id.uuidString < b.id.uuidString
         }
-        let position = (entries.firstIndex { $0.name == game.name && $0.time == total } ?? 0) + 1
+        let position = (entries.firstIndex { $0.id == game.id } ?? 0) + 1
         return "#\(position) of \(entries.count)"
     }
 

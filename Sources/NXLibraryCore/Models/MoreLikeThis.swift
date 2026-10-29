@@ -7,7 +7,7 @@ public enum MoreLikeThis {
                             metadata: (UUID) -> NintendoStoreMetadata?, limit: Int = 6) -> [UUID] {
         guard limit > 0, let mine = metadata(game.id) else { return [] }
         let makers = Set((mine.developers + mine.publishers).map(normalized).filter { !$0.isEmpty })
-        let genres = Set(mine.genres.map(normalized).filter { !$0.isEmpty })
+        let genres = Set(mine.genres.map(normalized).filter { !$0.isEmpty && $0 != "other" })
         var scored: [(game: PortedGame, score: Int)] = []
         for other in games where other.id != game.id && !other.isHidden {
             guard let theirs = metadata(other.id) else { continue }
