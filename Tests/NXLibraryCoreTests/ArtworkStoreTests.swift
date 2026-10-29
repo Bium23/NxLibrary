@@ -166,4 +166,20 @@ final class ArtworkStoreTests: XCTestCase {
         XCTAssertTrue(rep.hasAlpha)
         XCTAssertEqual(rep.colorAt(x: 60, y: 30)?.alphaComponent ?? 1, 0, accuracy: 0.01)
     }
+
+    func testSquareGridMemoRule() {
+        let url = URL(string: "https://example.com/a.png")!
+        XCTAssertTrue(SquareGridMemo.shouldRemember(.noGrid, cancelled: false))
+        XCTAssertFalse(SquareGridMemo.shouldRemember(.noGrid, cancelled: true))
+        XCTAssertFalse(SquareGridMemo.shouldRemember(.failed, cancelled: false))
+        XCTAssertFalse(SquareGridMemo.shouldRemember(.found(url), cancelled: false))
+
+        let memo = SquareGridMemo()
+        let id = UUID()
+        memo.record(.failed, cancelled: false, id: id, apiKey: "k1")
+        XCTAssertFalse(memo.contains(id, apiKey: "k1"))
+        memo.record(.noGrid, cancelled: false, id: id, apiKey: "k1")
+        XCTAssertTrue(memo.contains(id, apiKey: "k1"))
+        XCTAssertFalse(memo.contains(id, apiKey: "k2"))
+    }
 }

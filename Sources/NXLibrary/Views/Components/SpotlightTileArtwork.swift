@@ -60,12 +60,12 @@ struct SpotlightTileArtwork: View {
     private static func fetchSquare(store: ArtworkStore, titleID: String,
                                     game: PortedGame, apiKey: String) async -> URL? {
         guard !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
-        guard !NoGridMemo.contains(game.id) else { return nil }
-        guard let remote = await SteamGridDBService()
-            .fetchSquareGridURL(gameName: game.name, apiKey: apiKey) else {
-            NoGridMemo.insert(game.id)
-            return nil
-        }
+        guard !SquareGridMemo.shared.contains(game.id, apiKey: apiKey) else { return nil }
+        let result = await SteamGridDBService()
+            .lookupSquareGrid(gameName: game.name, apiKey: apiKey)
+        SquareGridMemo.shared.record(result, cancelled: Task.isCancelled,
+                                     id: game.id, apiKey: apiKey)
+        guard case .found(let remote) = result else { return nil }
         return await store.fetch(titleID: titleID, remoteURL: remote, kind: .square)
     }
 
@@ -74,10 +74,3 @@ struct SpotlightTileArtwork: View {
     }
 }
 
-/// Per-session memo of games whose SteamGridDB lookup found no grid.
-private enum NoGridMemo {
-    private static let lock = NSLock()
-    private static var ids = Set<UUID>()
-    static func contains(_ id: UUID) -> Bool { lock.lock(); defer { lock.unlock() }; return ids.contains(id) }
-    static func insert(_ id: UUID) { lock.lock(); defer { lock.unlock() }; ids.insert(id) }
-}
