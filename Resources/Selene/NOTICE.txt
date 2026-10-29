@@ -1,0 +1,42 @@
+Bundled media notices
+=====================
+
+Material Icons (Fonts/MaterialIcons-Regular.ttf)
+  Google's Material Icons, Apache License 2.0. See Fonts/MaterialIcons-LICENSE.txt.
+  https://github.com/google/material-design-icons
+
+Sounds (Sounds/navigation.wav, Boot.wav, Success.wav, Key.wav)
+  Synthesized by Selene (no samples), MIT License, Copyright (c) 2026 Matthew Silva.
+  https://github.com/mattxslv/Selene
+
+  MIT License
+  
+  Copyright (c) 2026 Matthew Silva
+  
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+  
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+Wallpapers (Wallpapers/)
+  Taken from the theme collection of Omarchy (https://github.com/basecamp/omarchy)
+  via Selene. Each image remains the property of its artist.
+  - "The Great Wave off Kanagawa" by Katsushika Hokusai (public domain) - kanagawa/1-kanagawa.jpg
+  - "The Backwater" by Charles William Wyllie (public domain) - gruvbox/1-the-backwater.jpg
+  - "A Basket of Flowers" by Jan Brueghel the Younger, The Metropolitan Museum of Art
+    (public domain) - gruvbox/2-flower-basket.jpg
+  - 17th-century Dutch and Flemish landscapes (public domain) - gruvbox/3-village-square.jpg,
+    gruvbox/4-idyllic-procession.jpg
