@@ -368,6 +368,7 @@ public struct SpotlightView: View {
         pillFilter = filter
         pillVisible = filter != .all
         consumePendingMove()
+        consumePendingSelect()
     }
 
     /// Shows the pill for any filter but All; switching to All flashes it for 1.2 s.

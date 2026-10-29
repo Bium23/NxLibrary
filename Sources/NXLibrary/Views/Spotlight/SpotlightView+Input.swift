@@ -242,6 +242,13 @@ extension SpotlightView {
         SoundEffectService.shared.play(.click)
     }
 
+    /// Details asked Spotlight to select a game (More like this): the same path as Surprise.
+    func consumePendingSelect() {
+        guard let id = router.pendingSpotlightSelect else { return }
+        router.pendingSpotlightSelect = nil
+        selectGame(id)
+    }
+
     /// Selects a game in the row, switching to All games when the current
     /// filter hides it.
     func selectGame(_ id: UUID) {

@@ -23,6 +23,13 @@ final class AppRouterTests: XCTestCase {
         XCTAssertEqual(router.route, .library)
     }
 
+    func testRequestSpotlightSelectIsPending() {
+        let router = AppRouter()
+        let id = UUID()
+        router.requestSpotlightSelect(id)
+        XCTAssertEqual(router.pendingSpotlightSelect, id)
+    }
+
     func testShowLibraryClearsHistory() {
         let router = AppRouter()
         router.openAddGame()

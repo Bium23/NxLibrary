@@ -22,6 +22,8 @@ public final class AppRouter: ObservableObject {
     @Published public var menuSelection = MenuSelectionModel()
     /// A Spotlight item key waiting to be lifted for moving (see `requestSpotlightMove`).
     @Published public var pendingSpotlightMove: String?
+    /// A game id waiting for Spotlight to select it (Details' More like this).
+    @Published public var pendingSpotlightSelect: UUID?
 
     private var history: [AppRoute] = []
 
@@ -57,6 +59,10 @@ public final class AppRouter: ObservableObject {
     /// Asks Spotlight to select the item with this key and lift it for moving.
     /// Callers: a card's Y menu, and Game options' Move row.
     public func requestSpotlightMove(_ key: String) { pendingSpotlightMove = key }
+
+    /// Asks Spotlight to select this game, switching to All games when the
+    /// current filter hides it (the same path as Surprise me).
+    public func requestSpotlightSelect(_ id: UUID) { pendingSpotlightSelect = id }
 
     public func showDetail(_ id: UUID) { navigate(to: .detail(id)) }
     public func openSettings(_ section: SettingsSection = .general) { navigate(to: .settings(section)) }

@@ -2,6 +2,11 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
+/// The Details page (spec §5.4, Selene GameDetails + DetailsStage). The top
+/// block sits on the stage; Down glides the page up into the bands, which
+/// are Screenshots (720), Build & Sources with Your activity (950) and More
+/// like this (1180). A band below the one in focus peeks in, blurred, until
+/// it is focused. Input lives in GameDetailView+Input.swift.
 struct GameDetailView: View {
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var router: AppRouter
@@ -10,478 +15,292 @@ struct GameDetailView: View {
     @ObservedObject var artwork: ArtworkStore
     let game: PortedGame
 
-    @State private var metadata: NintendoStoreMetadata?
-    @State private var heroImage: NSImage?
-    @State private var expanded = false
-    @State private var actionFocus = 0
-    @Environment(\.seleneReduceMotion) private var environmentReduceMotion
+    @Environment(\.seleneCanvas) var canvas
+    @Environment(\.seleneReduceMotion) var reduceMotion
 
-    private var presentation: GameDetailPresentation {
-        GameDetailPresentation(
+    @StateObject var art = SeleneHeroArt()
+    @State var focus = DetailsFocus()
+    /// The open screenshot viewer (the game's titleID, its urls and the paging state).
+    @State var viewer: ViewerContext?
+    /// "Read more" is open: the description scrolls, and the wheel scrolls it rather than the bands.
+    @State var expanded = false
+    @State var keyMonitor: Any?
+    @State var wheel = DetailsWheel()
+
+    struct ViewerContext: Equatable {
+        var titleID: String
+        var urls: [URL]
+        var state: ScreenshotViewerState
+    }
+
+    // MARK: - Model
+
+    /// Everything one render needs, computed once per body.
+    struct Model {
+        let presentation: GameDetailPresentation
+        let rows: [BuildSourcesRow]
+        let screenshots: [URL]
+        let screenshotsKnown: Bool
+        let more: [PortedGame]
+        let bands: DetailsFocus.Bands
+    }
+
+    var model: Model {
+        let p = presentation
+        let urls = Array((metadata?.screenshotURLs ?? []).prefix(SpotlightScreenshotStrip.maxCount))
+        let more = moreGames
+        let rows = actionRows(p)
+        return Model(presentation: p, rows: rows, screenshots: urls,
+                     screenshotsKnown: screenshotsKnown,
+                     more: more,
+                     bands: DetailsFocus.Bands(screenshots: urls.count, actions: rows.count, more: more.count))
+    }
+
+    var metadata: NintendoStoreMetadata? { viewModel.storeMetadata[game.id] }
+
+    var presentation: GameDetailPresentation {
+        let library = viewModel.libraryGames
+        let playtimes = Dictionary(library.map { ($0.id, playSessions.totalDuration(for: $0.id)) },
+                                   uniquingKeysWith: { first, _ in first })
+        return GameDetailPresentation(
             game: game,
             metadata: metadata,
             totalPlaytime: playSessions.totalDuration(for: game.id),
-            lastPlayed: playSessions.lastPlayed(for: game.id)
+            lastPlayed: playSessions.lastPlayed(for: game.id),
+            sessions: playSessions.sessions,
+            libraryGames: library,
+            playtimeByGame: playtimes
         )
     }
+
+    /// Other games from the library, most alike first (`MoreLikeThis`); nothing without metadata.
+    var moreGames: [PortedGame] {
+        let ids = MoreLikeThis.pick(for: game, in: viewModel.libraryGames,
+                                    metadata: { viewModel.storeMetadata[$0] }, limit: 6)
+        let byID = Dictionary(viewModel.libraryGames.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        return ids.compactMap { byID[$0] }
+    }
+
+    /// "No screenshots" only once the answer is final: not before the first request
+    /// starts, nor while a stale empty cache entry is being refetched.
+    var screenshotsKnown: Bool {
+        if viewModel.storeMetadataLoading.contains(game.id) { return false }
+        guard let titleId = game.titleId, !titleId.isEmpty else { return true }
+        return metadata != nil || viewModel.storeMetadataErrors[game.id] != nil
+    }
+
+    /// Build & Sources' actions, in grid order. Store links and the Nintendo search appear only when they have a target.
+    func actionRows(_ p: GameDetailPresentation) -> [BuildSourcesRow] {
+        var rows: [BuildSourcesRow] = [
+            BuildSourcesRow(id: "attach", title: "Attach sources…") {
+                viewModel.locateSources(for: game)
+            },
+            BuildSourcesRow(id: "rebuild", title: "Rebuild", enabled: p.canRebuild) {
+                rebuild()
+            },
+            BuildSourcesRow(id: "log", title: "Open log") {
+                viewModel.revealLog(for: game)
+            },
+            BuildSourcesRow(id: "save", title: "Open save folder") {
+                viewModel.revealSaveFolder(URL(fileURLWithPath: p.savePath))
+            },
+            BuildSourcesRow(id: "app", title: "Reveal app in Finder") {
+                viewModel.revealInFinder(url: game.url)
+            }
+        ]
+        if let store = p.storeURL {
+            rows.append(BuildSourcesRow(id: "store", title: "Store page") { viewModel.openURL(store) })
+        }
+        if let hltb = p.hltbURL {
+            rows.append(BuildSourcesRow(id: "hltb", title: "HowLongToBeat") { viewModel.openURL(hltb) })
+        }
+        if p.description.isEmpty, let search = viewModel.nintendoStoreSearchURL(for: game) {
+            rows.append(BuildSourcesRow(id: "search", title: "Search Nintendo Store") {
+                viewModel.openURL(search)
+            })
+        }
+        return rows
+    }
+
+    // MARK: - Body
 
     var body: some View {
-        GeometryReader { geo in
-            let metrics = SeleneLayoutMetrics(width: geo.size.width)
-            ZStack(alignment: .topLeading) {
-                background(geo: geo)
-                ScrollView {
-                    content(metrics: metrics, geo: geo)
-                        .padding(.horizontal, metrics.margin)
-                        .padding(.top, 120)
-                        .padding(.bottom, 100)
-                }
-                .scrollIndicators(.hidden)
-
-                topBar(metrics: metrics)
-            }
-            .frame(width: geo.size.width, height: geo.size.height)
-            .clipped()
-            .overlay(alignment: .bottom) {
-                if settings.settings.showButtonHints {
-                    SeleneHintsBar(right: [
-                        HintItem(.a, "Play"),
-                        HintItem(.b, "Back"),
-                        HintItem(.x, "Game options"),
-                        HintItem(.y, "Rebuild")
-                    ])
-                }
-            }
+        let model = self.model
+        ZStack(alignment: .topLeading) {
+            DetailsBackground(image: art.image, imageKey: art.key,
+                              fallback: GameIconProvider.icon(for: game),
+                              shade: settings.settings.backgroundShade)
+            stage(model)
+                .frame(width: canvas.stageSize.width, height: canvas.stageSize.height, alignment: .topLeading)
+                .clipped()
+                .offset(x: canvas.stageOrigin.x, y: canvas.stageOrigin.y)
         }
-        .onAppear {
-            viewModel.loadStoreMetadata(for: game)
-            metadata = viewModel.storeMetadata[game.id]
+        .overlay(viewerOverlay)
+        .animation(.easeOut(duration: 0.2), value: viewer != nil)
+        .frame(width: canvas.size.width, height: canvas.size.height, alignment: .topLeading)
+        .clipped()
+        .onAppear(perform: appear)
+        .onDisappear {
+            removeKeyMonitor()
+            router.isScreenshotViewerOpen = false
         }
-        .onMoveCommand(perform: handleMove)
-        .seleneActivationKeys(activateFocused)
+        .onChange(of: viewer != nil) { router.isScreenshotViewerOpen = $0 }
+        .onChange(of: model.bands) { _ in settleFocus(model.bands) }
         .onReceive(NotificationCenter.default.publisher(for: .nxDetailGamepadAction)) { note in
-            guard let action = note.object as? GamepadAction else { return }
-            handleGamepad(action)
+            guard viewModel.alertMessage == nil else { return }
+            if let action = note.object as? GamepadAction { handle(action) }
         }
-        .onChange(of: viewModel.storeMetadata) { _ in
-            metadata = viewModel.storeMetadata[game.id]
+        .task(id: art.heroTaskKey(game, metadata: metadata, apiKey: settings.settings.steamGridDbApiKey)) {
+            await art.loadHero(game: game, current: { game.id }, metadata: metadata, artwork: artwork,
+                               steamGridDB: viewModel.steamGridDB,
+                               apiKey: settings.settings.steamGridDbApiKey)
         }
-        .task(id: game.id) {
-            let meta = viewModel.storeMetadata[game.id]
-            let remote = meta?.headerImageURL ?? meta?.imageURL
-            let titleKey = game.titleId ?? game.uniqueKey
-            let url = await artwork.fetch(titleID: titleKey, remoteURL: remote, kind: .hero)
-            guard !Task.isCancelled else { return }
-            heroImage = url.flatMap(NSImage.init(contentsOf:))
-        }
-    }
-
-    private func background(geo: GeometryProxy) -> some View {
-        ZStack {
-            Group {
-                if let heroImage {
-                    Image(nsImage: heroImage)
-                        .resizable()
-                        .scaledToFill()
-                } else {
-                    Image(nsImage: GameIconProvider.icon(for: game))
-                        .resizable()
-                        .scaledToFill()
-                        .blur(radius: 34)
-                        .scaleEffect(1.2)
-                }
-            }
-            .frame(width: geo.size.width, height: geo.size.height)
-            .clipped()
-            .overlay(SeleneTheme.heroLeftScrim)
-            .overlay(
-                LinearGradient(colors: [.clear, .black.opacity(0.92)],
-                               startPoint: .center, endPoint: .bottom)
-            )
-            .overlay(Color.black.opacity(0.10))
+        .task(id: art.logoTaskKey(game, metadata: metadata, apiKey: settings.settings.steamGridDbApiKey)) {
+            await art.loadLogo(game: game, metadata: metadata, artwork: artwork,
+                               steamGridDB: viewModel.steamGridDB,
+                               apiKey: settings.settings.steamGridDbApiKey)
         }
     }
 
-    private func topBar(metrics: SeleneLayoutMetrics) -> some View {
-        HStack {
-            Button {
-                router.back()
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 12, weight: .bold))
-                    Text("Library")
-                        .font(.system(size: 12, weight: .medium))
-                }
-                .foregroundColor(SeleneTheme.ink.opacity(0.78))
-                .padding(.horizontal, 13)
-                .frame(height: 32)
-                .background(SeleneTheme.scrim.opacity(0.45))
-                .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.16), lineWidth: 1))
-                .clipShape(Capsule())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Back to library")
+    // MARK: - Stage
 
-            Spacer()
+    private func stage(_ model: Model) -> some View {
+        ZStack(alignment: .topLeading) {
+            page(model)
+                .offset(y: canvas.u(pageShift))
+                // The glide is movement: reduce motion makes it instant.
+                .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.32), value: focus.zone)
 
-            HStack(spacing: 14) {
-                if settings.settings.showClock {
-                    TimelineView(.periodic(from: .now, by: 30)) { context in
-                        Text(context.date.formatted(date: .omitted, time: .shortened))
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(SeleneTheme.ink.opacity(0.8))
-                    }
-                }
+            VStack(spacing: 0) {
+                Spacer(minLength: 0)
+                SeleneHintsBar(left: [HintItem(.b, "Back", action: { router.back() })],
+                               right: [HintItem(.y, "Game options"), HintItem(.a, "Select")],
+                               bottom: 40, leftInset: 18)
             }
         }
-        .padding(.horizontal, metrics.margin)
-        .padding(.top, 34)
     }
 
-    private func content(metrics: SeleneLayoutMetrics, geo: GeometryProxy) -> some View {
-        let p = presentation
-        let wide = geo.size.width >= 1360
-        let width = wide
-            ? min(820, geo.size.width - metrics.margin * 2 - 396)
-            : min(820, geo.size.width * 0.64)
-        return HStack(alignment: .top, spacing: 36) {
-            VStack(alignment: .leading, spacing: 0) {
-                if !p.eyebrow.isEmpty {
-                    Text(p.eyebrow)
-                        .font(.system(size: 10, weight: .bold))
-                        .tracking(2.4)
-                        .textCase(.uppercase)
-                        .foregroundColor(SeleneTheme.ink.opacity(0.60))
-                        .padding(.bottom, 8)
-                }
+    /// Selene's band pitch (230), and 100 more for the tall last band so its covers clear the hints.
+    var pageShift: CGFloat {
+        switch focus.zone {
+        case DetailsFocus.actionsZone: return -230
+        case DetailsFocus.moreZone: return -560
+        default: return 0
+        }
+    }
 
-                Text(p.title)
-                    .font(.system(size: 54, weight: .bold))
-                    .tracking(-1.4)
-                    .foregroundColor(SeleneTheme.ink)
-                    .lineLimit(2)
-                    .frame(maxWidth: width, alignment: .leading)
+    private func page(_ model: Model) -> some View {
+        ZStack(alignment: .topLeading) {
+            DetailsTopBlock(game: game, logo: art.logo(for: game),
+                            presentation: model.presentation,
+                            focusedPill: focus.zone == DetailsFocus.topZone ? focus.pill : nil,
+                            primaryEnabled: model.presentation.canPlay || model.presentation.canRebuild,
+                            expanded: $expanded,
+                            onPrimary: primaryAction,
+                            onOptions: openOptions,
+                            onHoverPill: { hoverTop($0) })
+                .offset(x: canvas.u(110), y: canvas.u(96))
 
-                chips(p)
-                    .padding(.top, 14)
+            band(zone: DetailsFocus.screenshotsZone) {
+                DetailsScreenshotsBand(
+                    titleID: game.titleId ?? game.uniqueKey,
+                    urls: model.screenshots,
+                    known: model.screenshotsKnown,
+                    focusedIndex: focus.zone == DetailsFocus.screenshotsZone ? focus.shot : nil,
+                    artwork: artwork,
+                    onFocus: { focusPointer(zone: DetailsFocus.screenshotsZone, index: $0, bands: model.bands) },
+                    onOpen: { openViewer(at: $0) })
+            }
+            .offset(x: canvas.u(110), y: canvas.u(720))
 
-                HStack(spacing: 10) {
-                    Button {
-                        viewModel.launchGame(game)
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "play.fill")
-                                .font(.system(size: 11))
-                            Text("Play")
-                                .font(.system(size: 13, weight: .semibold))
-                        }
-                        .foregroundColor(p.canPlay ? SeleneTheme.scrim : SeleneTheme.ink.opacity(0.62))
-                        .padding(.horizontal, 24)
-                        .frame(height: 42)
-                        .background(p.canPlay ? SeleneTheme.focus : SeleneTheme.ink.opacity(0.10))
-                        .clipShape(Capsule())
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(!p.canPlay)
-                    .seleneRowFocus(actionFocus == 0, radius: 100)
-
-                    Button {
-                        viewModel.gameForSettingsSheet = game
-                    } label: {
-                        Text("Game options")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(SeleneTheme.ink.opacity(0.9))
-                            .padding(.horizontal, 20)
-                            .frame(height: 42)
-                            .background(SeleneTheme.ink.opacity(0.10))
-                            .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.18), lineWidth: 1))
-                            .clipShape(Capsule())
-                            .seleneRowFocus(actionFocus == 1, radius: 100)
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.top, 20)
-
-                metadataRow(p)
-                    .padding(.top, 22)
-
-                description(p, width: width)
-                    .padding(.top, 20)
-
-                if !wide {
+            band(zone: DetailsFocus.actionsZone) {
+                HStack(alignment: .top, spacing: 0) {
                     BuildSourcesPanel(
-                        presentation: p,
-                        isRebuildFocused: actionFocus == 2,
-                        onAttach: { viewModel.locateSources(for: game) },
-                        onRebuild: rebuild,
-                        onRevealLog: { viewModel.revealLog(for: game) }
-                    )
-                    .padding(.top, 22)
-
-                    bottomCards(p, vertical: false)
-                        .padding(.top, 14)
+                        presentation: model.presentation,
+                        rows: model.rows,
+                        focusedRow: focus.zone == DetailsFocus.actionsZone ? focus.action : nil,
+                        onHoverRow: { focusPointer(zone: DetailsFocus.actionsZone, index: $0, bands: model.bands) })
+                    Spacer(minLength: 0)
+                    DetailsActivityColumn(presentation: model.presentation)
                 }
+                .frame(width: canvas.u(1700), alignment: .topLeading)
             }
-            .frame(width: width, alignment: .leading)
+            .offset(x: canvas.u(110), y: canvas.u(950))
 
-            if wide {
-                VStack(spacing: 12) {
-                    BuildSourcesPanel(
-                        presentation: p,
-                        isRebuildFocused: actionFocus == 2,
-                        onAttach: { viewModel.locateSources(for: game) },
-                        onRebuild: rebuild,
-                        onRevealLog: { viewModel.revealLog(for: game) }
-                    )
-                    bottomCards(p, vertical: true)
+            if !model.more.isEmpty {
+                band(zone: DetailsFocus.moreZone) {
+                    DetailsMoreBand(
+                        games: model.more,
+                        focusedIndex: focus.zone == DetailsFocus.moreZone ? focus.more : nil,
+                        steamGridDbApiKey: settings.settings.steamGridDbApiKey,
+                        artwork: artwork,
+                        steamGridDB: viewModel.steamGridDB,
+                        coverURL: { viewModel.storeMetadata[$0.id]?.imageURL },
+                        onFocus: { focusPointer(zone: DetailsFocus.moreZone, index: $0, bands: model.bands) },
+                        onOpen: { index in
+                            focusPointer(zone: DetailsFocus.moreZone, index: index, bands: model.bands)
+                            selectOnSpotlight(model.more[index])
+                        })
                 }
-                .frame(width: 360)
-            }
-
-            Spacer(minLength: 0)
-        }
-    }
-
-    private func chips(_ p: GameDetailPresentation) -> some View {
-        HStack(spacing: 7) {
-            ForEach(Array(p.genres.prefix(4)), id: \.self) { genre in
-                Text(genre)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(SeleneTheme.ink.opacity(0.78))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(SeleneTheme.ink.opacity(0.07))
-                    .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.16), lineWidth: 1))
-                    .clipShape(Capsule())
-            }
-            if let publisher = p.publisher {
-                Text(publisher)
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(SeleneTheme.ink.opacity(0.62))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(SeleneTheme.ink.opacity(0.06))
-                    .clipShape(Capsule())
-            }
-            if let year = p.releaseYear {
-                Text(year)
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .foregroundColor(SeleneTheme.ink.opacity(0.62))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(SeleneTheme.ink.opacity(0.06))
-                    .clipShape(Capsule())
+                .offset(x: canvas.u(110), y: canvas.u(1180))
             }
         }
     }
 
-    private func metadataRow(_ p: GameDetailPresentation) -> some View {
-        HStack(alignment: .top, spacing: 30) {
-            detailMeta("Play time", p.playtime)
-            detailMeta("Last played", p.lastPlayed)
-            detailMeta("Version", p.version)
-            detailMeta("Size", p.size)
-        }
+    /// A band's styling by its place relative to the focus: the band in focus is
+    /// sharp; the next band below peeks, blurred and faded; bands above it have
+    /// scrolled under the top block and are hidden.
+    private func band<Content: View>(zone: Int, @ViewBuilder _ content: () -> Content) -> some View {
+        let current = focus.zone
+        return content()
+            .blur(radius: zone > current ? canvas.u(12) : 0)
+            .opacity(zone < current ? 0 : (zone > current ? 0.55 : 1))
+            .animation(SeleneTheme.cubicOut(0.32), value: current)
     }
 
-    private func detailMeta(_ label: String, _ value: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(label)
-                .font(.system(size: 10, weight: .bold))
-                .tracking(1.4)
-                .textCase(.uppercase)
-                .foregroundColor(SeleneTheme.ink.opacity(0.58))
-            Text(value)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(SeleneTheme.ink.opacity(0.94))
-        }
-        .frame(minWidth: 64, alignment: .leading)
-    }
-
-    private func description(_ p: GameDetailPresentation, width: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: 7) {
-            if p.description.isEmpty {
-                HStack(spacing: 10) {
-                    Text("Store details unavailable.")
-                        .font(.system(size: 12))
-                        .foregroundColor(SeleneTheme.ink60)
-                    if let search = viewModel.nintendoStoreSearchURL(for: game) {
-                        Button("Search Nintendo Store") { viewModel.openURL(search) }
-                            .buttonStyle(.plain)
-                            .font(.system(size: 10.5, weight: .semibold))
-                            .foregroundColor(SeleneTheme.glyph)
-                    }
-                }
-            } else {
-                Text(p.description)
-                    .font(.system(size: 12.5))
-                    .lineSpacing(3)
-                    .foregroundColor(SeleneTheme.ink.opacity(0.72))
-                    .lineLimit(expanded ? nil : 4)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: width, alignment: .leading)
-                if p.description.count > 220 {
-                    Button(expanded ? "Show less" : "Read more") {
-                        withAnimation((settings.settings.reduceMotion || environmentReduceMotion)
-                                      ? nil : SeleneTheme.quick) { expanded.toggle() }
-                    }
-                    .buttonStyle(.plain)
-                    .font(.system(size: 10.5, weight: .semibold))
-                    .foregroundColor(SeleneTheme.glyph)
-                }
-            }
-        }
-    }
+    // MARK: - Viewer
 
     @ViewBuilder
-    private func bottomCards(_ p: GameDetailPresentation, vertical: Bool) -> some View {
-        if vertical {
-            VStack(spacing: 12) {
-                saveCard(p)
-                appCard(p)
-                storeCard(p)
-            }
-        } else {
-            HStack(spacing: 12) {
-                saveCard(p)
-                appCard(p)
-                storeCard(p)
-            }
+    private var viewerOverlay: some View {
+        if let viewer {
+            ScreenshotViewer(titleID: viewer.titleID, urls: viewer.urls, state: viewer.state,
+                             artwork: artwork, onClose: closeViewer)
+                .transition(.opacity)
         }
     }
 
-    private func saveCard(_ p: GameDetailPresentation) -> some View {
-        detailCard(title: "SAVE FILES",
-                   value: "Application Support",
-                   subtitle: "Saves stay outside the app bundle.") {
-            Button("Open folder") {
-                viewModel.revealSaveFolder(URL(fileURLWithPath: p.savePath))
-            }
-            .buttonStyle(.plain)
-            .font(.system(size: 10.5, weight: .semibold))
-            .foregroundColor(SeleneTheme.glyph)
-        }
+    // MARK: - Lifecycle
+
+    private func appear() {
+        installKeyMonitor()
+        router.isSearchPresented = false
+        viewModel.loadStoreMetadata(for: game)
+        focus = DetailsFocus()
+        settleFocus(model.bands)
     }
 
-    private func appCard(_ p: GameDetailPresentation) -> some View {
-        detailCard(title: "APP BUNDLE",
-                   value: game.url.lastPathComponent,
-                   subtitle: p.size) {
-            Button("Reveal") { viewModel.revealInFinder(url: game.url) }
-                .buttonStyle(.plain)
-                .font(.system(size: 10.5, weight: .semibold))
-                .foregroundColor(SeleneTheme.glyph)
-        }
+    func settleFocus(_ bands: DetailsFocus.Bands) {
+        var next = focus
+        next.settle(in: bands)
+        if next != focus { focus = next }
     }
+}
 
-    private func storeCard(_ p: GameDetailPresentation) -> some View {
-        detailCard(title: "STORE & LINKS",
-                   value: "Nintendo Store",
-                   subtitle: p.description.isEmpty ? "No cached description." : "Description cached locally.") {
-            HStack(spacing: 10) {
-                if let store = p.storeURL {
-                    Button("Store") { viewModel.openURL(store) }
-                        .buttonStyle(.plain)
-                        .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundColor(SeleneTheme.glyph)
-                }
-                if let hltb = p.hltbURL {
-                    Button("HowLongToBeat") { viewModel.openURL(hltb) }
-                        .buttonStyle(.plain)
-                        .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundColor(SeleneTheme.glyph)
-                }
-            }
-        }
-    }
+/// Wheel steps for the bands: one step per 0.4 s of scrolling, so a flick moves a band, not three.
+struct DetailsWheel: Equatable {
+    private var accumulated: CGFloat = 0
+    private var lastEvent: TimeInterval = 0
+    private var lastStep: TimeInterval = 0
 
-    private func detailCard<Actions: View>(title: String, value: String,
-                                           subtitle: String,
-                                           @ViewBuilder actions: () -> Actions) -> some View {
-        VStack(alignment: .leading, spacing: 7) {
-            Text(title)
-                .font(.system(size: 10, weight: .bold))
-                .tracking(1.4)
-                .foregroundColor(SeleneTheme.ink60)
-            Text(value)
-                .font(.system(size: 11.5, weight: .semibold))
-                .foregroundColor(SeleneTheme.ink.opacity(0.88))
-                .lineLimit(1)
-                .truncationMode(.middle)
-            Text(subtitle)
-                .font(.system(size: 10))
-                .foregroundColor(SeleneTheme.ink.opacity(0.58))
-                .lineLimit(1)
-            actions()
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SeleneTheme.glass.opacity(0.78))
-        .overlay(
-            RoundedRectangle(cornerRadius: SeleneTheme.contentRadius, style: .continuous)
-                .strokeBorder(SeleneTheme.ink15, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: SeleneTheme.contentRadius, style: .continuous))
-    }
-
-    private func moveFocus(by delta: Int) {
-        let previous = actionFocus
-        actionFocus = (actionFocus + delta + 3) % 3
-        if actionFocus != previous {
-            SoundEffectService.shared.play(.focus)
-        }
-    }
-
-    private func handleMove(_ direction: MoveCommandDirection) {
-        switch direction {
-        case .left, .up: moveFocus(by: -1)
-        case .right, .down: moveFocus(by: 1)
-        default: break
-        }
-    }
-
-    private func handleGamepad(_ action: GamepadAction) {
-        switch action {
-        case .navigateLeft, .navigateUp: moveFocus(by: -1)
-        case .navigateRight, .navigateDown: moveFocus(by: 1)
-        case .confirm: activateFocused()
-        case .cancel: router.back()
-        case .secondaryAction: viewModel.gameForSettingsSheet = game
-        case .contextAction: rebuild()
-        case .menu: router.isMenuPresented = true
-        default: break
-        }
-    }
-
-    private func activateFocused() {
-        switch actionFocus {
-        case 0:
-            guard presentation.canPlay else {
-                SoundEffectService.shared.play(.error)
-                return
-            }
-            SoundEffectService.shared.play(.click)
-            viewModel.launchGame(game)
-        case 1:
-            SoundEffectService.shared.play(.click)
-            viewModel.gameForSettingsSheet = game
-        case 2:
-            rebuild()
-        default:
-            break
-        }
-    }
-
-    private func rebuild() {
-        guard presentation.canRebuild else {
-            SoundEffectService.shared.play(.error)
-            return
-        }
-        SoundEffectService.shared.play(.click)
-        viewModel.startBuild(for: game)
-        if viewModel.isBuilding {
-            router.openAddGame()
-        }
+    /// Scroll down (content up) is Down. A gap of 0.25 s starts a new gesture.
+    /// `threshold` is how far a gesture must travel: small for line-based mouse wheels, large for trackpads.
+    mutating func feed(_ delta: CGFloat, at time: TimeInterval, threshold: CGFloat) -> GamepadAction? {
+        if time - lastEvent > 0.25 { accumulated = 0 }
+        lastEvent = time
+        accumulated += delta
+        guard abs(accumulated) >= threshold, time - lastStep >= 0.4 else { return nil }
+        accumulated = 0
+        lastStep = time
+        return delta < 0 ? .navigateDown : .navigateUp
     }
 }

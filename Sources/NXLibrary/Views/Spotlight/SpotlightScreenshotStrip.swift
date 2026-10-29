@@ -19,6 +19,8 @@ struct SpotlightScreenshotStrip: View {
     let focusedIndex: Int?
     let artwork: ArtworkStore
     let onSelect: (Int) -> Void
+    /// When set, a single click only focuses (`onSelect`) and a double click opens (`onActivate`).
+    var onActivate: ((Int) -> Void)? = nil
 
     private var shown: [URL] { Array(urls.prefix(Self.maxCount)) }
 
@@ -33,9 +35,16 @@ struct SpotlightScreenshotStrip: View {
         } else {
             HStack(spacing: canvas.u(22)) {
                 ForEach(Array(shown.enumerated()), id: \.offset) { index, url in
-                    ScreenshotTile(titleID: titleID, index: index, url: url,
-                                   focused: focusedIndex == index, artwork: artwork)
-                        .onTapGesture { onSelect(index) }
+                    let tile = ScreenshotTile(titleID: titleID, index: index, url: url,
+                                              focused: focusedIndex == index, artwork: artwork)
+                    if let onActivate {
+                        tile
+                            .contentShape(Rectangle())
+                            .onTapGesture(count: 2) { onActivate(index) }
+                            .simultaneousGesture(TapGesture().onEnded { onSelect(index) })
+                    } else {
+                        tile.onTapGesture { onSelect(index) }
+                    }
                 }
             }
             .padding(canvas.u(14))

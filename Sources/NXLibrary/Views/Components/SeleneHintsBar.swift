@@ -8,12 +8,16 @@ struct HintItem: Identifiable {
     var glyph: MaterialIcon?
     var label: String
     var hold: String?
+    /// A mouse click on the hint, when the screen has one for it.
+    var action: (() -> Void)?
 
-    init(_ button: PromptButton?, _ label: String, glyph: MaterialIcon? = nil, hold: String? = nil) {
+    init(_ button: PromptButton?, _ label: String, glyph: MaterialIcon? = nil, hold: String? = nil,
+         action: (() -> Void)? = nil) {
         self.button = button
         self.glyph = glyph
         self.label = label
         self.hold = hold
+        self.action = action
     }
 }
 
@@ -60,7 +64,16 @@ struct SeleneHintsBar: View {
         ConnectedPad(connected: controller.isGamepadConnected, brand: controller.activeBrand)
     }
 
+    @ViewBuilder
     private func item(_ item: HintItem) -> some View {
+        if let action = item.action {
+            content(item).contentShape(Rectangle()).onTapGesture(perform: action)
+        } else {
+            content(item)
+        }
+    }
+
+    private func content(_ item: HintItem) -> some View {
         HStack(spacing: canvas.u(8)) {
             if let button = item.button {
                 badge { Text(ButtonPrompts.label(button, style: style, connected: pad))
