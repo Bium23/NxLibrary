@@ -15,6 +15,11 @@ public struct AppShellView: View {
 
     public init() {}
 
+    /// Spotlight or Collection: the screens that pick a game.
+    private var isHomeRoute: Bool {
+        router.route == .library || router.route == .collection
+    }
+
     private var reduceMotion: Bool {
         settings.settings.reduceMotion || accessibilityReduceMotion
     }
@@ -71,27 +76,28 @@ public struct AppShellView: View {
                     defaults: settings.settings.gameDefaults,
                     returningFromBack: router.isReturningFromBack
                 )
-            case .library, .detail:
+            case .library, .collection, .detail:
                 viewModel.addGameDidLeave()
             default:
                 break
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryPlayFocused)) { _ in
-            guard router.route == .library, let game = viewModel.currentFocusedGame else { return }
+            guard isHomeRoute,
+                  let game = viewModel.currentFocusedGame else { return }
             viewModel.launchGame(game)
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenDetails)) { _ in
             guard !router.isMenuPresented,
                   viewModel.gameForSettingsSheet == nil,
-                  router.route == .library,
+                  isHomeRoute,
                   let game = viewModel.currentFocusedGame else { return }
             router.showDetail(game.id)
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenGameOptions)) { _ in
             guard !router.isMenuPresented else { return }
             switch router.route {
-            case .library:
+            case .library, .collection:
                 if let game = viewModel.currentFocusedGame {
                     viewModel.gameForSettingsSheet = game
                 }
@@ -131,7 +137,7 @@ public struct AppShellView: View {
                 viewModel.gameForSettingsSheet = nil
             } else if router.isMenuPresented {
                 router.closeMenu()
-            } else if router.route == .library {
+            } else if isHomeRoute {
                 router.isMenuPresented = true
             } else if case .settings = router.route {
                 // SettingsView handles its own Esc.
@@ -157,6 +163,15 @@ public struct AppShellView: View {
     private var content: some View {
         switch router.route {
         case .library:
+            SpotlightView(
+                viewModel: viewModel,
+                router: router,
+                settings: settings,
+                playSessions: playSessions,
+                artwork: artwork
+            )
+        case .collection:
+            // Until Collection is rebuilt (Task 13) it is the previous library screen.
             LibraryRootView(
                 viewModel: viewModel,
                 router: router,
@@ -234,7 +249,13 @@ public struct AppShellView: View {
             }
             switch router.route {
             case .library:
-                viewModel.handleLibraryGamepadAction(action)
+                NotificationCenter.default.post(name: .nxSpotlightGamepadAction, object: action)
+            case .collection:
+                if action == .view {
+                    router.showLibrary()
+                } else {
+                    viewModel.handleLibraryGamepadAction(action)
+                }
             case .detail:
                 if action == .menu {
                     router.isMenuPresented = true
@@ -278,8 +299,8 @@ public struct AppShellView: View {
                 if typing { return event }
                 action = .view
             case (_, "f", [.command]):              // Cmd+F
-                // Library still binds Cmd+F to its search button; Find a game replaces it later.
-                if typing || router.route == .library { return event }
+                // Collection (the old library) still binds Cmd+F to its search button; Find a game replaces it later.
+                if typing || router.route == .collection { return event }
                 action = .viewHold
             case (_, ",", [.command]):              // Cmd+,
                 // Keep the Settings menu shortcut working: dispatch but do not consume.

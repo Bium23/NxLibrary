@@ -59,6 +59,12 @@ final class AppSettingsStoreTests: XCTestCase {
         XCTAssertLessThan(BackgroundShade.balanced.heroScrimOpacity,
                           BackgroundShade.deep.heroScrimOpacity)
     }
+
+    func testSpotlightScrimMultipliers() {
+        XCTAssertEqual(BackgroundShade.light.scrimMultiplier, 0.7)
+        XCTAssertEqual(BackgroundShade.balanced.scrimMultiplier, 1)
+        XCTAssertEqual(BackgroundShade.deep.scrimMultiplier, 1.6)
+    }
 }
 
 final class SettingsSectionTests: XCTestCase {

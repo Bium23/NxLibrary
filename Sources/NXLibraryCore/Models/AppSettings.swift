@@ -13,6 +13,15 @@ public enum BackgroundShade: String, Codable, CaseIterable, Identifiable, Equata
         case .deep: return 0.55
         }
     }
+
+    /// Multiplies Selene's 0.3 left / bottom / top shades over the art.
+    public var scrimMultiplier: Double {
+        switch self {
+        case .light: return 0.7
+        case .balanced: return 1
+        case .deep: return 1.6
+        }
+    }
 }
 
 public struct AppSettings: Codable, Equatable {

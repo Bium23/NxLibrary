@@ -2,7 +2,8 @@ import SwiftUI
 import NXLibraryCore
 
 struct HintItem: Identifiable {
-    let id = UUID()
+    /// Stable across renders: the button (or glyph) and the label.
+    var id: String { "\(button?.rawValue ?? glyph?.rawValue ?? "-")|\(label)" }
     var button: PromptButton?
     var glyph: MaterialIcon?
     var label: String
@@ -36,16 +37,21 @@ struct SeleneHintsBar: View {
 
     var left: [HintItem] = []
     var right: [HintItem] = []
+    /// Distance from the bottom edge in Selene units (Spotlight uses Selene's home 40).
+    var bottom: CGFloat = 24
+    /// Extra inset before the left group (Spotlight's prompts carry Selene's 18 margin).
+    var leftInset: CGFloat = 0
 
     var body: some View {
         if showHints {
-            HStack(spacing: canvas.u(22)) {
-                ForEach(left) { item($0) }
+            HStack(alignment: .bottom, spacing: canvas.u(22)) {
+                HStack(spacing: canvas.u(22)) { ForEach(left) { item($0) } }
+                    .padding(.leading, canvas.u(leftInset))
                 Spacer(minLength: canvas.u(22))
-                ForEach(right) { item($0) }
+                HStack(spacing: canvas.u(22)) { ForEach(right) { item($0) } }
             }
             .padding(.horizontal, canvas.u(64))
-            .padding(.bottom, canvas.u(24))
+            .padding(.bottom, canvas.u(bottom))
             .frame(maxWidth: .infinity)
         }
     }
@@ -62,11 +68,13 @@ struct SeleneHintsBar: View {
             } else if let glyph = item.glyph {
                 badge { MaterialIconView(glyph, size: 18) }
             }
-            Text(item.label)
-                .seleneFont(19)
-                .foregroundColor(SeleneTheme.ink90)
-            if let hold = item.hold {
-                Text(hold).seleneFont(13).foregroundColor(SeleneTheme.ink60)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(item.label)
+                    .seleneFont(19)
+                    .foregroundColor(SeleneTheme.ink90)
+                if let hold = item.hold {
+                    Text(hold).seleneFont(13).foregroundColor(SeleneTheme.ink60)
+                }
             }
         }
         .shadow(color: .black.opacity(0.55), radius: canvas.u(4), y: canvas.u(1))

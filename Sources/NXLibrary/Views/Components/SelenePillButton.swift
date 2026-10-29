@@ -8,8 +8,11 @@ struct SelenePillButton: View {
 
     let title: String?
     var icon: MaterialIcon? = nil
+    var iconSize: CGFloat = 26
     var minWidth: CGFloat = 180
     var height: CGFloat = 60
+    /// Selene's Padding="36,0"; the round Favorite pill uses 0.
+    var horizontalPadding: CGFloat = 36
     let focused: Bool
     let action: () -> Void
 
@@ -17,14 +20,14 @@ struct SelenePillButton: View {
         Button(action: action) {
             HStack(spacing: canvas.u(10)) {
                 if let icon {
-                    MaterialIconView(icon, size: 26)
+                    MaterialIconView(icon, size: iconSize)
                 }
                 if let title {
-                    Text(title).seleneFont(21, .semibold)
+                    Text(title).seleneFont(21)
                 }
             }
             .foregroundColor(focused ? SeleneTheme.onFocus : SeleneTheme.ink)
-            .padding(.horizontal, canvas.u(36))
+            .padding(.horizontal, canvas.u(horizontalPadding))
             .frame(minWidth: canvas.u(minWidth), minHeight: canvas.u(height), maxHeight: canvas.u(height))
             .background(Capsule().fill(focused ? SeleneTheme.focus : SeleneTheme.glass))
             .overlay(Capsule().strokeBorder(SeleneTheme.ink15, lineWidth: focused ? 0 : max(1, canvas.u(1))))

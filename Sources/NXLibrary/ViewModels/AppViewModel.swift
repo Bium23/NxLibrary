@@ -260,7 +260,11 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     
     // MARK: - Navigation
     @Published public var librarySelection = LibrarySelectionState()
+    /// Spotlight's row selection and focus; lives here so it survives Details and back.
+    @Published public var spotlight = SpotlightState()
     public var router: AppRouter?
+    /// One SteamGridDB client for every screen (tile art, heroes, logos).
+    public let steamGridDB = SteamGridDBService()
     @Published public var launchingGameId: UUID? = nil
 
     public var playSessionStore: PlaySessionStore?
@@ -518,8 +522,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     public func loadStoreMetadata(for game: PortedGame) {
         guard let titleId = game.titleId, !titleId.isEmpty else { return }
         if storeMetadataLoading.contains(game.id) { return }
-        if let existing = storeMetadata[game.id],
-           Date().timeIntervalSince(existing.fetchedAt) < Self.storeMetadataTTL {
+        if let existing = storeMetadata[game.id], storeMetadataService.isFresh(existing) {
             return
         }
 
@@ -550,8 +553,6 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             storeMetadata[game.id] = metadata
         }
     }
-
-    private static let storeMetadataTTL: TimeInterval = 7 * 24 * 60 * 60
 
     public func metadataCacheSize() -> Int64 {
         storeMetadataService.cacheSize()
@@ -1091,6 +1092,30 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                 }
             }
         }
+    }
+
+    /// Flips the favorite heart and saves the library.
+    public func toggleFavorite(_ game: PortedGame) {
+        guard var library = try? libraryStore.load(),
+              let index = library.games.firstIndex(where: { $0.id == game.id }) else { return }
+        library.games[index].isFavorite.toggle()
+        do {
+            try libraryStore.save(library)
+        } catch {
+            alertMessage = error.localizedDescription
+            return
+        }
+        libraryGames = library.games.sorted {
+            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        }
+    }
+
+    /// Asks the running game to quit (Spotlight's "Close Game").
+    public func closeGame(_ game: PortedGame) {
+        guard let bundleId = game.bundleId else { return }
+        NSWorkspace.shared.runningApplications
+            .filter { $0.bundleIdentifier == bundleId }
+            .forEach { $0.terminate() }
     }
 
     private func updateStoredStatus(_ status: GameStatus, for game: PortedGame) {

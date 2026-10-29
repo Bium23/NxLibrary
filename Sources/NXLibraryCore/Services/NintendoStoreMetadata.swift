@@ -116,6 +116,8 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
     private let client: NintendoStoreHTTPClient
     private let cacheDirectory: URL
     private let fileManager: FileManager
+    private let refreshLock = NSLock()
+    private var screenshotRefreshTried: Set<String> = []
 
     public init(
         client: NintendoStoreHTTPClient = URLSessionNintendoStoreClient(),
@@ -133,11 +135,32 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         return try? JSONDecoder().decode(NintendoStoreMetadata.self, from: data)
     }
 
+    /// Whether `metadata` can be used without asking the network again: younger
+    /// than the TTL, and not an entry cached before titledb screenshots existed.
+    /// A titledb-style title (16 characters, "0100" prefix) with no screenshots
+    /// is re-fetched once per app session (per service instance); offline, that
+    /// one attempt fails and the cached entry is used for the rest of the session.
+    public func isFresh(_ metadata: NintendoStoreMetadata, now: Date = Date()) -> Bool {
+        guard now.timeIntervalSince(metadata.fetchedAt) < Self.ttl else { return false }
+        guard metadata.screenshotURLs.isEmpty, Self.looksLikeTitleDBID(metadata.titleId) else { return true }
+        refreshLock.lock()
+        defer { refreshLock.unlock() }
+        return screenshotRefreshTried.contains(metadata.titleId)
+    }
+
+    private static func looksLikeTitleDBID(_ id: String) -> Bool {
+        id.count == 16 && id.hasPrefix("0100")
+    }
+
     public func metadata(for game: PortedGame) async throws -> NintendoStoreMetadata {
         let key = game.titleId ?? game.uniqueKey
-        if let cached = cached(for: key),
-           Date().timeIntervalSince(cached.fetchedAt) < Self.ttl {
-            return cached
+        if let cached = cached(for: key) {
+            if isFresh(cached) { return cached }
+            if cached.screenshotURLs.isEmpty, Self.looksLikeTitleDBID(cached.titleId) {
+                refreshLock.lock()
+                screenshotRefreshTried.insert(cached.titleId)
+                refreshLock.unlock()
+            }
         }
 
         do {

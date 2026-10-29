@@ -1,0 +1,89 @@
+import SwiftUI
+import NXLibraryCore
+
+/// Selene's top bar (Main.xaml HubTopBarBackground + HomeNav.RenderFilterTabs):
+/// 110 high, 64 side margins, LB · filter tabs · RB centered, clock on the right.
+/// Shared by Spotlight and Collection.
+struct SpotlightTopBar: View {
+    @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.seleneReduceMotion) private var reduceMotion
+    @Environment(\.seleneButtonNames) private var buttonNames
+    @ObservedObject private var controller = GameControllerService.shared
+
+    let filter: LibraryFilter
+    var showClock: Bool = true
+    var onSelect: (LibraryFilter) -> Void = { _ in }
+
+    @State private var popScale: CGFloat = 1
+    @State private var popOpacity: Double = 1
+
+    var body: some View {
+        ZStack {
+            HStack(spacing: 0) {
+                badge(.lb)
+                ForEach(LibraryFilter.allCases) { tab($0) }
+                badge(.rb)
+            }
+            HStack {
+                Spacer()
+                if showClock {
+                    TimelineView(.everyMinute) { context in
+                        Text(context.date, format: .dateTime.hour().minute())
+                            .seleneFont(30)
+                            .foregroundColor(SeleneTheme.ink)
+                            .monospacedDigit()
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, canvas.u(64))
+        .frame(height: canvas.u(110))
+        .onChange(of: filter) { _ in pop() }
+    }
+
+    private func tab(_ item: LibraryFilter) -> some View {
+        let on = item == filter
+        return Text(item.rawValue)
+            .seleneFont(19, on ? .semibold : .regular)
+            .foregroundColor(on ? SeleneTheme.onFocus : SeleneTheme.ink.opacity(0.7))
+            .padding(EdgeInsets(top: canvas.u(5), leading: canvas.u(18),
+                                bottom: canvas.u(7), trailing: canvas.u(20)))
+            .background(
+                RoundedRectangle(cornerRadius: canvas.u(18), style: .continuous)
+                    .fill(on ? SeleneTheme.focus.opacity(0.95) : .clear)
+            )
+            .scaleEffect(on ? popScale : 1)
+            .opacity(on ? popOpacity : 1)
+            .padding(.horizontal, canvas.u(2))
+            .contentShape(Rectangle())
+            .onTapGesture { onSelect(item) }
+            .accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
+    }
+
+    private func badge(_ button: PromptButton) -> some View {
+        let pad = ConnectedPad(connected: controller.isGamepadConnected, brand: controller.activeBrand)
+        let label = ButtonPrompts.label(button, style: buttonNames, connected: pad)
+        return Text(label)
+            .seleneFont(12, .bold)
+            .foregroundColor(SeleneTheme.scrim)
+            .frame(width: canvas.u(max(36, CGFloat(label.count) * 8 + 12)), height: canvas.u(24))
+            .background(RoundedRectangle(cornerRadius: canvas.u(8), style: .continuous).fill(SeleneTheme.ink))
+            .padding(.horizontal, canvas.u(8))
+            .accessibilityHidden(true)
+    }
+
+    /// The new tab pops 0.86 → 1 over 200 ms (cubic out) and fades 0.4 → 1 over 160 ms.
+    private func pop() {
+        guard !reduceMotion else { return }
+        var reset = Transaction()
+        reset.disablesAnimations = true
+        withTransaction(reset) {
+            popScale = 0.86
+            popOpacity = 0.4
+        }
+        DispatchQueue.main.async {
+            withAnimation(SeleneTheme.cubicOut(0.2)) { popScale = 1 }
+            withAnimation(.linear(duration: 0.16)) { popOpacity = 1 }
+        }
+    }
+}

@@ -6,11 +6,18 @@ import NXLibraryCore
 /// Nintendo store cover, then the app icon. Shows the icon immediately and
 /// crossfades when better art arrives. The caller applies the corner radius.
 struct SpotlightTileArtwork: View {
+    @Environment(\.seleneReduceMotion) private var reduceMotion
+
     let game: PortedGame
     /// Side length in points, already scaled by the caller.
     let side: CGFloat
     /// SteamGridDB key; empty means no SteamGridDB request is made.
     var steamGridDbApiKey: String = ""
+    /// The app's shared artwork cache and SteamGridDB client.
+    let artwork: ArtworkStore
+    let steamGridDB: SteamGridDBService
+    /// The store's cover (`NintendoStoreMetadata.imageURL`), when known.
+    var coverURL: URL? = nil
 
     @State private var better: NSImage?
 
@@ -30,47 +37,58 @@ struct SpotlightTileArtwork: View {
         }
         .frame(width: side, height: side)
         .clipped()
-        .task(id: game.id) {
-            better = nil
-            let loaded = await Self.loadBest(for: game, apiKey: steamGridDbApiKey)
+        .task(id: memoKey) {
+            let key = memoKey as NSString
+            if let memo = TileArtMemo.shared.object(forKey: key) {
+                better = memo
+                return
+            }
+            let loaded = await loadBest()
             guard !Task.isCancelled, let loaded else { return }
-            withAnimation(.easeInOut(duration: 0.2)) { better = loaded }
+            TileArtMemo.shared.setObject(loaded, forKey: key)
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { better = loaded }
         }
     }
 
-    private static func loadBest(for game: PortedGame, apiKey: String) async -> NSImage? {
-        let titleID = game.titleId ?? game.uniqueKey
-        let store = ArtworkStore()
+    private var memoKey: String {
+        "\(game.id)|\(coverURL?.absoluteString ?? "")|\(steamGridDbApiKey)"
+    }
 
-        var squareURL = store.cachedURL(titleID: titleID, kind: .square)
+    private func loadBest() async -> NSImage? {
+        let titleID = game.titleId ?? game.uniqueKey
+        var squareURL = artwork.cachedURL(titleID: titleID, kind: .square)
         if squareURL == nil {
-            squareURL = await fetchSquare(store: store, titleID: titleID, game: game, apiKey: apiKey)
+            squareURL = await fetchSquare(titleID: titleID)
         }
-        if let squareURL, let image = await decode(squareURL) { return image }
-        if let url = store.cachedURL(titleID: titleID, kind: .cover) {
-            return await decode(url)
+        if let squareURL, let image = await GameArtLoader.decode(at: squareURL, maxPixelSize: 512) {
+            return image
         }
-        if let remote = NintendoStoreMetadataService().cached(for: titleID)?.imageURL,
-           let url = await store.fetch(titleID: titleID, remoteURL: remote, kind: .cover) {
-            return await decode(url)
+        if let url = artwork.cachedURL(titleID: titleID, kind: .cover) {
+            return await GameArtLoader.decode(at: url, maxPixelSize: 512)
+        }
+        if let coverURL, let url = await artwork.fetch(titleID: titleID, remoteURL: coverURL, kind: .cover) {
+            return await GameArtLoader.decode(at: url, maxPixelSize: 512)
         }
         return nil
     }
 
-    private static func fetchSquare(store: ArtworkStore, titleID: String,
-                                    game: PortedGame, apiKey: String) async -> URL? {
+    private func fetchSquare(titleID: String) async -> URL? {
+        let apiKey = steamGridDbApiKey
         guard !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
         guard !SquareGridMemo.shared.contains(game.id, apiKey: apiKey) else { return nil }
-        let result = await SteamGridDBService()
-            .lookupSquareGrid(gameName: game.name, apiKey: apiKey)
+        let result = await steamGridDB.lookupSquareGrid(gameName: game.name, apiKey: apiKey)
         SquareGridMemo.shared.record(result, cancelled: Task.isCancelled,
                                      id: game.id, apiKey: apiKey)
         guard case .found(let remote) = result else { return nil }
-        return await store.fetch(titleID: titleID, remoteURL: remote, kind: .square)
-    }
-
-    private static func decode(_ url: URL) async -> NSImage? {
-        await Task.detached(priority: .utility) { NSImage(contentsOf: url) }.value
+        return await artwork.fetch(titleID: titleID, remoteURL: remote, kind: .square)
     }
 }
 
+/// Decoded tile art, so a tile that scrolls back into the row paints at once.
+private enum TileArtMemo {
+    static let shared: NSCache<NSString, NSImage> = {
+        let cache = NSCache<NSString, NSImage>()
+        cache.countLimit = 200
+        return cache
+    }()
+}

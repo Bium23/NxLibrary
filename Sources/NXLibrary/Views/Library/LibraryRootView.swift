@@ -1,6 +1,5 @@
 import SwiftUI
 import AppKit
-import ImageIO
 import NXLibraryCore
 
 public struct LibraryRootView: View {
@@ -20,7 +19,6 @@ public struct LibraryRootView: View {
     @FocusState private var searchFocused: Bool
     @State private var keyMonitor: Any?
     @Environment(\.seleneReduceMotion) private var environmentReduceMotion
-    private let steamGridDB = SteamGridDBService()
 
     public init(viewModel: AppViewModel,
                 router: AppRouter,
@@ -248,7 +246,7 @@ public struct LibraryRootView: View {
             for name in candidates {
                 let localURL = folder.appendingPathComponent(name)
                 if FileManager.default.fileExists(atPath: localURL.path),
-                   let image = await Self.decodeHero(at: localURL) {
+                   let image = await GameArtLoader.decodeHero(at: localURL) {
                     guard !Task.isCancelled, selectedGame?.id == game.id else { return }
                     heroCache[game.id] = image
                     setHeroImage(image)
@@ -260,7 +258,7 @@ public struct LibraryRootView: View {
         for name in candidates {
             let localURL = bundleResources.appendingPathComponent(name)
             if FileManager.default.fileExists(atPath: localURL.path),
-               let image = await Self.decodeHero(at: localURL) {
+               let image = await GameArtLoader.decodeHero(at: localURL) {
                 guard !Task.isCancelled, selectedGame?.id == game.id else { return }
                 heroCache[game.id] = image
                 setHeroImage(image)
@@ -270,7 +268,7 @@ public struct LibraryRootView: View {
 
         let titleKey = game.titleId ?? game.uniqueKey
         if let cachedURL = artwork.cachedURL(titleID: titleKey, kind: .hero),
-           let image = await Self.decodeHero(at: cachedURL) {
+           let image = await GameArtLoader.decodeHero(at: cachedURL) {
             guard !Task.isCancelled, selectedGame?.id == game.id else { return }
             heroCache[game.id] = image
             setHeroImage(image)
@@ -280,10 +278,10 @@ public struct LibraryRootView: View {
         // 2. If SteamGridDB API key is provided, search clean hero wallpaper (without logo/text)
         let apiKey = settings.settings.steamGridDbApiKey
         if !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            if let remoteHeroURL = await steamGridDB.fetchHeroURL(gameName: game.name, apiKey: apiKey) {
+            if let remoteHeroURL = await viewModel.steamGridDB.fetchHeroURL(gameName: game.name, apiKey: apiKey) {
                 guard !Task.isCancelled, selectedGame?.id == game.id else { return }
                 if let url = await artwork.fetch(titleID: titleKey, remoteURL: remoteHeroURL, kind: .hero),
-                   let image = await Self.decodeHero(at: url) {
+                   let image = await GameArtLoader.decodeHero(at: url) {
                     guard !Task.isCancelled, selectedGame?.id == game.id else { return }
                     heroCache[game.id] = image
                     setHeroImage(image)
@@ -293,10 +291,10 @@ public struct LibraryRootView: View {
         }
 
         // 3. Fallback to clean community wallpaper
-        if let fallbackWallpaperURL = Self.findCommunityWallpaperURL(gameName: game.name, titleId: game.titleId) {
+        if let fallbackWallpaperURL = GameArtLoader.communityWallpaperURL(gameName: game.name, titleId: game.titleId) {
             guard !Task.isCancelled, selectedGame?.id == game.id else { return }
             if let url = await artwork.fetch(titleID: titleKey, remoteURL: fallbackWallpaperURL, kind: .hero),
-               let image = await Self.decodeHero(at: url) {
+               let image = await GameArtLoader.decodeHero(at: url) {
                 guard !Task.isCancelled, selectedGame?.id == game.id else { return }
                 heroCache[game.id] = image
                 setHeroImage(image)
@@ -311,7 +309,7 @@ public struct LibraryRootView: View {
                                             remoteURL: remote,
                                             kind: .hero) else { return }
         guard !Task.isCancelled, selectedGame?.id == game.id else { return }
-        guard let image = await Self.decodeHero(at: url) else { return }
+        guard let image = await GameArtLoader.decodeHero(at: url) else { return }
         guard !Task.isCancelled, selectedGame?.id == game.id else { return }
         heroCache[game.id] = image
         setHeroImage(image)
@@ -360,7 +358,7 @@ public struct LibraryRootView: View {
 
         let apiKey = settings.settings.steamGridDbApiKey
         if !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            if let remoteLogoURL = await steamGridDB.fetchLogoURL(gameName: game.name, apiKey: apiKey) {
+            if let remoteLogoURL = await viewModel.steamGridDB.fetchLogoURL(gameName: game.name, apiKey: apiKey) {
                 guard !Task.isCancelled, selectedGame?.id == game.id else { return }
                 if let url = await artwork.fetch(titleID: titleKey, remoteURL: remoteLogoURL, kind: .logo),
                    let image = NSImage(contentsOf: url) {
@@ -383,7 +381,7 @@ public struct LibraryRootView: View {
         }
 
         // Automatic fallback for official transparent logos
-        if let fallbackLogoURL = Self.findCommunityLogoURL(gameName: game.name, titleId: game.titleId) {
+        if let fallbackLogoURL = GameArtLoader.communityLogoURL(gameName: game.name, titleId: game.titleId) {
             guard !Task.isCancelled, selectedGame?.id == game.id else { return }
             if let url = await artwork.fetch(titleID: titleKey, remoteURL: fallbackLogoURL, kind: .logo),
                let image = NSImage(contentsOf: url) {
@@ -395,40 +393,6 @@ public struct LibraryRootView: View {
         }
     }
 
-    private static func findCommunityLogoURL(gameName: String, titleId: String?) -> URL? {
-        let name = gameName.lowercased()
-        if name.contains("wonder") || titleId == "010015100B514000" {
-            return URL(string: "https://upload.wikimedia.org/wikipedia/commons/3/36/Super_Mario_Bros._Wonder_Logo.png")
-        }
-        if name.contains("odyssey") || titleId == "0100000000010000" {
-            return URL(string: "https://upload.wikimedia.org/wikipedia/it/2/27/Super_Mario_Odyssey_logo.png")
-        }
-        if name.contains("breath of the wild") || titleId == "01007EF00011E000" {
-            return URL(string: "https://cdn.wikimg.net/en/zeldawiki/images/0/06/BotW_English_Logo.png")
-        }
-        if name.contains("tears of the kingdom") || name.contains("totk") || titleId == "0100F2C0115B6000" {
-            return URL(string: "https://cdn.wikimg.net/en/zeldawiki/images/4/4c/TotK_English_Logo.png")
-        }
-        return nil
-    }
-
-    private static func findCommunityWallpaperURL(gameName: String, titleId: String?) -> URL? {
-        let name = gameName.lowercased()
-        if name.contains("wonder") || titleId == "010015100B514000" {
-            return URL(string: "https://catwithmonocle.com/wp-content/uploads/2023/11/smb-wonder-artwork-01-3840x2160-1.jpg")
-        }
-        if name.contains("odyssey") || titleId == "0100000000010000" {
-            return URL(string: "https://catwithmonocle.com/wp-content/uploads/2017/12/smo-wallpaper-pc.jpg")
-        }
-        if name.contains("breath of the wild") || titleId == "01007EF00011E000" {
-            return URL(string: "https://wallpapercat.com/w/full/a/e/e/904567-3840x2160-desktop-4k-legend-of-zelda-breath-of-the-wild-wallpaper.jpg")
-        }
-        if name.contains("tears of the kingdom") || name.contains("totk") || titleId == "0100F2C0115B6000" {
-            return URL(string: "https://catwithmonocle.com/wp-content/uploads/2023/12/zelda-tearskingdom-artwork-02-3840x2160-1.jpg")
-        }
-        return nil
-    }
-
     @MainActor
     private func preloadCachedHeroes() async {
         for game in games {
@@ -436,7 +400,7 @@ public struct LibraryRootView: View {
             if heroCache[game.id] != nil { continue }
             let titleKey = game.titleId ?? game.uniqueKey
             guard let url = artwork.cachedURL(titleID: titleKey, kind: .hero),
-                  let image = await Self.decodeHero(at: url) else { continue }
+                  let image = await GameArtLoader.decodeHero(at: url) else { continue }
             guard !Task.isCancelled else { return }
             heroCache[game.id] = image
             if selectedGame?.id == game.id, heroImage == nil {
@@ -472,26 +436,6 @@ public struct LibraryRootView: View {
         logoImage = image
     }
 
-    private static func decodeHero(at url: URL) async -> NSImage? {
-        let box = await Task.detached(priority: .utility) { () -> HeroImageBox? in
-            guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else {
-                return nil
-            }
-            let options: [CFString: Any] = [
-                kCGImageSourceCreateThumbnailFromImageAlways: true,
-                kCGImageSourceCreateThumbnailWithTransform: true,
-                kCGImageSourceThumbnailMaxPixelSize: 2560
-            ]
-            guard let image = CGImageSourceCreateThumbnailAtIndex(
-                source, 0, options as CFDictionary
-            ) else { return nil }
-            return HeroImageBox(image: NSImage(cgImage: image,
-                                               size: NSSize(width: CGFloat(image.width),
-                                                            height: CGFloat(image.height))))
-        }.value
-        return box?.image
-    }
-
     private var presentation: LibraryPresentation? {
         guard let game = selectedGame else { return nil }
         return LibraryPresentation(
@@ -513,7 +457,7 @@ public struct LibraryRootView: View {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             if searchFocused { return event }
             guard !router.isMenuPresented,
-                  router.route == .library,
+                  router.route == .collection,
                   viewModel.gameForSettingsSheet == nil,
                   !viewModel.showSetupSheet,
                   !viewModel.showInstallerSheet else { return event }
@@ -556,8 +500,4 @@ public struct LibraryRootView: View {
         NSEvent.removeMonitor(keyMonitor)
         self.keyMonitor = nil
     }
-}
-
-private struct HeroImageBox: @unchecked Sendable {
-    let image: NSImage
 }

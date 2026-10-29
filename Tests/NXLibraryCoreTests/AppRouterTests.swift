@@ -32,6 +32,14 @@ final class AppRouterTests: XCTestCase {
         XCTAssertEqual(router.route, .library)
     }
 
+    func testCollectionAndBackToSpotlight() {
+        let router = AppRouter()
+        router.openCollection()
+        XCTAssertEqual(router.route, .collection)
+        router.back()
+        XCTAssertEqual(router.route, .library)
+    }
+
     func testMenuOpenClose() {
         let router = AppRouter()
         router.isMenuPresented = true

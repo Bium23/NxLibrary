@@ -2,7 +2,10 @@ import Foundation
 import Combine
 
 public enum AppRoute: Equatable {
+    /// Spotlight, the home screen.
     case library
+    /// The whole library as one grid (Selene's Collection).
+    case collection
     case detail(UUID)
     case settings(SettingsSection)
     case addGame
@@ -35,6 +38,7 @@ public final class AppRouter: ObservableObject {
     public func openSettings(_ section: SettingsSection = .general) { navigate(to: .settings(section)) }
     public func openAddGame() { navigate(to: .addGame) }
     public func openConsole() { navigate(to: .console) }
+    public func openCollection() { navigate(to: .collection) }
 
     public func showLibrary() {
         isReturningFromBack = false

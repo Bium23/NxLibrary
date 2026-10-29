@@ -200,6 +200,35 @@ final class NintendoStoreMetadataTests: XCTestCase {
         XCTAssertEqual(meta.releaseDate, "2017-03-03")
     }
 
+    func testYoungCacheWithoutScreenshotsRefetchesOncePerSession() async throws {
+        let cache = cacheDirectory()
+        let noScreens = Data(#"{"id":"01007EF00011E000","name":"Zelda","releaseDate":20170303}"#.utf8)
+        let first = NintendoStoreMetadataService(client: titleDBOnlyClient(noScreens), cacheDirectory: cache)
+        let old = try await first.metadata(for: game(name: "Zelda", titleId: tid))
+        XCTAssertEqual(old.screenshotURLs, [])
+
+        // A new session: the young entry without screenshots is re-fetched once.
+        let client = titleDBOnlyClient(titleDBJSON)
+        let second = NintendoStoreMetadataService(client: client, cacheDirectory: cache)
+        XCTAssertFalse(second.isFresh(old))
+        let refreshed = try await second.metadata(for: game(name: "Zelda", titleId: tid))
+        XCTAssertEqual(refreshed.screenshotURLs.count, 6)
+
+        // Offline in another session: one failed attempt, then the cache is used without asking again.
+        let offlineCache = cacheDirectory()
+        _ = try await NintendoStoreMetadataService(client: titleDBOnlyClient(noScreens),
+                                                   cacheDirectory: offlineCache)
+            .metadata(for: game(name: "Zelda", titleId: tid))
+        let offline = FakeClient()
+        let third = NintendoStoreMetadataService(client: offline, cacheDirectory: offlineCache)
+        _ = try await third.metadata(for: game(name: "Zelda", titleId: tid))
+        let afterFirst = offline.requested.count
+        XCTAssertGreaterThan(afterFirst, 0)
+        let cached = try await third.metadata(for: game(name: "Zelda", titleId: tid))
+        XCTAssertEqual(offline.requested.count, afterFirst)
+        XCTAssertTrue(third.isFresh(cached))
+    }
+
     func testOldCacheWithoutScreenshotsDecodes() throws {
         let json = Data("""
         {"titleId":"A","name":"N","description":"D","developers":[],"publishers":[],"genres":[],
