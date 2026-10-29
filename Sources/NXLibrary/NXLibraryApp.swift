@@ -9,6 +9,7 @@ extension Notification.Name {
     static let nxConsoleGamepadAction = Notification.Name("NXConsoleGamepadAction")
     static let nxDetailGamepadAction = Notification.Name("NXDetailGamepadAction")
     static let nxSpotlightGamepadAction = Notification.Name("NXSpotlightGamepadAction")
+    static let nxCollectionGamepadAction = Notification.Name("NXCollectionGamepadAction")
     static let nxGameOptionsGamepadAction = Notification.Name("NXGameOptionsGamepadAction")
     static let nxLibraryOpenSettings = Notification.Name("NXLibraryOpenSettings")
     static let nxLibraryOpenConsole = Notification.Name("NXLibraryOpenConsole")

@@ -24,6 +24,11 @@ public enum BackgroundShade: String, Codable, CaseIterable, Identifiable, Equata
     }
 }
 
+/// Which home screen the app opens on (and which one was last used).
+public enum StartScreen: String, Codable, CaseIterable {
+    case spotlight, collection, last
+}
+
 public struct AppSettings: Codable, Equatable {
     public var backgroundShade: BackgroundShade
     public var readableText: Bool
@@ -42,6 +47,9 @@ public struct AppSettings: Codable, Equatable {
     public var spotlightOrder: [String]
     public var startingTab: LibraryFilter.RawValue
     public var surprisePool: SurprisePool
+    public var startOn: StartScreen
+    /// The home screen last shown: `.spotlight` or `.collection`.
+    public var lastHome: StartScreen
 
     public init(backgroundShade: BackgroundShade = .balanced,
                 readableText: Bool = true,
@@ -59,7 +67,9 @@ public struct AppSettings: Codable, Equatable {
                 spotlightCards: [SpotlightCard] = [.surprise, .activity, .addGame],
                 spotlightOrder: [String] = [],
                 startingTab: LibraryFilter.RawValue = "All games",
-                surprisePool: SurprisePool = .installed) {
+                surprisePool: SurprisePool = .installed,
+                startOn: StartScreen = .spotlight,
+                lastHome: StartScreen = .spotlight) {
         self.backgroundShade = backgroundShade
         self.readableText = readableText
         self.reduceMotion = reduceMotion
@@ -77,6 +87,8 @@ public struct AppSettings: Codable, Equatable {
         self.spotlightOrder = spotlightOrder
         self.startingTab = startingTab
         self.surprisePool = surprisePool
+        self.startOn = startOn
+        self.lastHome = lastHome
     }
 
     enum CodingKeys: String, CodingKey {
@@ -84,6 +96,7 @@ public struct AppSettings: Codable, Equatable {
         case restoreLastGame, checkEngineAtLaunch, refreshLibraryAtLaunch, lastSelectedGameID
         case steamGridDbApiKey, gameDefaults, colorThemeID, buttonNames
         case spotlightCards, spotlightOrder, startingTab, surprisePool
+        case startOn, lastHome
     }
 
     public init(from decoder: Decoder) throws {
@@ -105,5 +118,7 @@ public struct AppSettings: Codable, Equatable {
         self.spotlightOrder = try container.decodeIfPresent([String].self, forKey: .spotlightOrder) ?? []
         self.startingTab = try container.decodeIfPresent(String.self, forKey: .startingTab) ?? "All games"
         self.surprisePool = try container.decodeIfPresent(SurprisePool.self, forKey: .surprisePool) ?? .installed
+        self.startOn = try container.decodeIfPresent(StartScreen.self, forKey: .startOn) ?? .spotlight
+        self.lastHome = try container.decodeIfPresent(StartScreen.self, forKey: .lastHome) ?? .spotlight
     }
 }

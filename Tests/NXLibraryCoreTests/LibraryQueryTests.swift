@@ -121,4 +121,14 @@ final class LibraryQueryTests: XCTestCase {
         XCTAssertEqual(state.move(by: 10, in: games, history: NoPlayHistory()), games[2].id)
         XCTAssertEqual(state.move(by: -10, in: games, history: NoPlayHistory()), games[0].id)
     }
+
+    func testSelectionJumpsToEnds() {
+        let games = [game("A"), game("B"), game("C")]
+        var state = LibrarySelectionState()
+        state.selectedGameID = games[1].id
+        XCTAssertEqual(state.jump(toEnd: true, in: games, history: NoPlayHistory()), games[2].id)
+        XCTAssertEqual(state.jump(toEnd: false, in: games, history: NoPlayHistory()), games[0].id)
+        var empty = LibrarySelectionState()
+        XCTAssertNil(empty.jump(toEnd: true, in: [], history: NoPlayHistory()))
+    }
 }

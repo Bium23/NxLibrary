@@ -227,3 +227,12 @@ public extension LibraryFilter {
         self = LibraryFilter(rawValue: raw) ?? .all
     }
 }
+
+public extension LibraryFilter {
+    /// The next filter, wrapping from the last back to the first (RS on Collection).
+    func cycled() -> LibraryFilter {
+        let all = LibraryFilter.allCases
+        let index = all.firstIndex(of: self) ?? 0
+        return all[(index + 1) % all.count]
+    }
+}

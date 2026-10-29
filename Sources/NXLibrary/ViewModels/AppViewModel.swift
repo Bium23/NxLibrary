@@ -998,7 +998,6 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                         bundleId: game.bundleId
                     )
                     self.librarySelection.selectedGameID = updated.id
-                    self.librarySelection.focusArea = .rail
                     self.logs.append(LogEntry(level: .success,
                         message: "Sources attached to \(game.name); rebuild is now available if the toolchain gate allows it."))
                 } catch {
@@ -1692,7 +1691,6 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                 pendingRuntimeConfig.save(for: game)
             }
             librarySelection.selectedGameID = game.id
-            librarySelection.focusArea = .rail
             logs.append(LogEntry(level: .success, message: "Added \(game.name) to the library."))
             if buildNow, canStartBuild {
                 startBuild(for: game)

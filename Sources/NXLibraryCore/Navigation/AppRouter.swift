@@ -27,6 +27,22 @@ public final class AppRouter: ObservableObject {
 
     public init() {}
 
+    /// The route the app opens on for the Start on setting.
+    public static func initialRoute(for startOn: StartScreen, last: StartScreen) -> AppRoute {
+        switch startOn {
+        case .spotlight: return .library
+        case .collection: return .collection
+        case .last: return last == .collection ? .collection : .library
+        }
+    }
+
+    /// Opens on `route` with nothing to go back to.
+    public func setInitialRoute(_ route: AppRoute) {
+        isReturningFromBack = false
+        history.removeAll()
+        self.route = route
+    }
+
     public func moveMenu(by delta: Int) {
         menuSelection.move(by: delta)
     }

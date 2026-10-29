@@ -190,4 +190,16 @@ final class SpotlightLiftTests: XCTestCase {
         XCTAssertTrue(s.moveUp())
         XCTAssertEqual(s.focus, .row)
     }
+
+    func testFilterCyclesForwardAndWraps() {
+        XCTAssertEqual(LibraryFilter.all.cycled(), .installed)
+        XCTAssertEqual(LibraryFilter.favorites.cycled(), .notPlayed)
+        XCTAssertEqual(LibraryFilter.notPlayed.cycled(), .all)
+    }
+
+    func testCollectionRowScrollsPastAnchor() {
+        XCTAssertEqual(CollectionRow.scrollOffset(selectedIndex: 0), 0)
+        XCTAssertEqual(CollectionRow.scrollOffset(selectedIndex: CollectionRow.anchorSlot), 0)
+        XCTAssertEqual(CollectionRow.scrollOffset(selectedIndex: CollectionRow.anchorSlot + 3), 3)
+    }
 }

@@ -1,26 +1,15 @@
 import Foundation
 
-public enum LibraryFocusArea: String, Equatable {
-    case filters, actions, rail
-}
-
+/// The library filter and the game selected on the Collection screen. The
+/// filter is shared with Spotlight (both read `query.filter`).
 public struct LibrarySelectionState: Equatable {
     public var query: LibraryQuery
     public var selectedGameID: UUID?
-    public var focusArea: LibraryFocusArea
-    public var actionIndex: Int
-    public var filterIndex: Int
 
     public init(query: LibraryQuery = LibraryQuery(),
-                selectedGameID: UUID? = nil,
-                focusArea: LibraryFocusArea = .rail,
-                actionIndex: Int = 0,
-                filterIndex: Int = 0) {
+                selectedGameID: UUID? = nil) {
         self.query = query
         self.selectedGameID = selectedGameID
-        self.focusArea = focusArea
-        self.actionIndex = actionIndex
-        self.filterIndex = filterIndex
     }
 
     @discardableResult
@@ -31,7 +20,6 @@ public struct LibrarySelectionState: Equatable {
             return filtered
         }
         selectedGameID = filtered.first?.id
-        actionIndex = 0
         return filtered
     }
 
@@ -45,6 +33,14 @@ public struct LibrarySelectionState: Equatable {
         let current = filtered.firstIndex { $0.id == selectedGameID } ?? 0
         let next = min(max(current + delta, 0), filtered.count - 1)
         selectedGameID = filtered[next].id
+        return selectedGameID
+    }
+
+    /// Selects the first or last game of the filtered list (LT / RT).
+    @discardableResult
+    public mutating func jump(toEnd: Bool, in games: [PortedGame], history: PlayHistory) -> UUID? {
+        let filtered = query.apply(to: games, history: history)
+        selectedGameID = (toEnd ? filtered.last : filtered.first)?.id
         return selectedGameID
     }
 }

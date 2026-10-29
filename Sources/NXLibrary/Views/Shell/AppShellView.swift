@@ -4,7 +4,7 @@ import NXLibraryCore
 
 public struct AppShellView: View {
     @StateObject private var viewModel = AppViewModel()
-    @StateObject private var router = AppRouter()
+    @StateObject private var router = AppShellView.startingRouter()
     @StateObject private var settings = AppSettingsStore()
     @StateObject private var playSessions = PlaySessionStore()
     @StateObject private var artwork = ArtworkStore()
@@ -14,6 +14,14 @@ public struct AppShellView: View {
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
 
     public init() {}
+
+    /// The router, already on the screen the Start on setting names.
+    private static func startingRouter() -> AppRouter {
+        let saved = AppSettingsStore().settings
+        let router = AppRouter()
+        router.setInitialRoute(AppRouter.initialRoute(for: saved.startOn, last: saved.lastHome))
+        return router
+    }
 
     /// Spotlight or Collection: the screens that pick a game.
     private var isHomeRoute: Bool {
@@ -70,6 +78,7 @@ public struct AppShellView: View {
             removeGestureKeyMonitor()
         }
         .onChange(of: router.route) { route in
+            recordLastHome(route)
             switch route {
             case .addGame:
                 viewModel.addGameDidBecomeVisible(
@@ -178,8 +187,7 @@ public struct AppShellView: View {
                 artwork: artwork
             )
         case .collection:
-            // Until Collection is rebuilt (Task 13) it is the previous library screen.
-            LibraryRootView(
+            CollectionView(
                 viewModel: viewModel,
                 router: router,
                 settings: settings,
@@ -258,11 +266,7 @@ public struct AppShellView: View {
             case .library:
                 NotificationCenter.default.post(name: .nxSpotlightGamepadAction, object: action)
             case .collection:
-                if action == .view {
-                    router.showLibrary()
-                } else {
-                    viewModel.handleLibraryGamepadAction(action)
-                }
+                NotificationCenter.default.post(name: .nxCollectionGamepadAction, object: action)
             case .detail:
                 if action == .menu {
                     router.isMenuPresented = true
@@ -308,8 +312,7 @@ public struct AppShellView: View {
                 if typing { return event }
                 action = .view
             case (_, "f", [.command]):              // Cmd+F
-                // Collection (the old library) still binds Cmd+F to its search button; Find a game replaces it later.
-                if typing || router.route == .collection { return event }
+                if typing { return event }
                 action = .viewHold
             case (_, ",", [.command]):              // Cmd+,
                 // Keep the Settings menu shortcut working: dispatch but do not consume.
@@ -348,6 +351,17 @@ public struct AppShellView: View {
         case .quit:
             NSApplication.shared.terminate(nil)
         }
+    }
+
+    /// Remembers which home screen was used last, for Start on → Last used.
+    private func recordLastHome(_ route: AppRoute) {
+        let home: StartScreen
+        switch route {
+        case .library: home = .spotlight
+        case .collection: home = .collection
+        default: return
+        }
+        if settings.settings.lastHome != home { settings.settings.lastHome = home }
     }
 
     private func openFreshAddGame() {

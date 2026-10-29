@@ -70,4 +70,21 @@ final class AppRouterSpotlightMoveTests: XCTestCase {
         router.requestSpotlightMove("card:activity")
         XCTAssertEqual(router.pendingSpotlightMove, "card:activity")
     }
+
+    func testInitialRouteHonorsStartOn() {
+        XCTAssertEqual(AppRouter.initialRoute(for: .spotlight, last: .collection), .library)
+        XCTAssertEqual(AppRouter.initialRoute(for: .collection, last: .spotlight), .collection)
+        XCTAssertEqual(AppRouter.initialRoute(for: .last, last: .collection), .collection)
+        XCTAssertEqual(AppRouter.initialRoute(for: .last, last: .spotlight), .library)
+        // `last` is never a place; a stray one falls back to Spotlight.
+        XCTAssertEqual(AppRouter.initialRoute(for: .last, last: .last), .library)
+    }
+
+    func testSetInitialRouteLeavesNoHistory() {
+        let router = AppRouter()
+        router.setInitialRoute(.collection)
+        XCTAssertEqual(router.route, .collection)
+        router.back()
+        XCTAssertEqual(router.route, .collection)
+    }
 }

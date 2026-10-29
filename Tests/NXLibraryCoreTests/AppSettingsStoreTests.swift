@@ -76,4 +76,21 @@ final class SettingsSectionTests: XCTestCase {
         ])
         XCTAssertTrue(SettingsSection.allCases.allSatisfy { !$0.icon.isEmpty })
     }
+
+    func testStartScreenDefaultsAndDecode() throws {
+        let settings = AppSettings()
+        XCTAssertEqual(settings.startOn, .spotlight)
+        XCTAssertEqual(settings.lastHome, .spotlight)
+
+        // Files written before the setting existed decode to the defaults.
+        let old = try JSONDecoder().decode(AppSettings.self, from: Data("{}".utf8))
+        XCTAssertEqual(old.startOn, .spotlight)
+        XCTAssertEqual(old.lastHome, .spotlight)
+
+        let json = Data(#"{"startOn":"last","lastHome":"collection"}"#.utf8)
+        let decoded = try JSONDecoder().decode(AppSettings.self, from: json)
+        XCTAssertEqual(decoded.startOn, .last)
+        XCTAssertEqual(decoded.lastHome, .collection)
+        XCTAssertEqual(StartScreen.allCases, [.spotlight, .collection, .last])
+    }
 }
