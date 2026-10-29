@@ -2,9 +2,10 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
-/// The selected game under the row (Main.xaml SeleneInfoIntro): logo area 170
-/// high (logo up to 620 × 215, bottom-left, may rise 45 above), the "now
-/// playing" chip, the Play / Details / Favorite pills and the stats line.
+/// The selected game under the row (Main.xaml SeleneInfoIntro): logo area 195
+/// high (logo up to 700 × 240, bottom-left, may rise 45 above; a touch larger
+/// than Selene's 620 × 215), the "now playing" chip, the Play / Options /
+/// Favorite pills and the stats line.
 /// Starts 30 below the row; the caller places it.
 struct SpotlightGameInfoView: View {
     @Environment(\.seleneCanvas) private var canvas
@@ -14,19 +15,23 @@ struct SpotlightGameInfoView: View {
     let logo: NSImage?
     let presentation: LibraryPresentation
     let isRunning: Bool
-    /// Focused pill (0 Play, 1 Details, 2 Favorite), nil when the pills are not focused.
+    /// Focused pill (0 Play, 1 Options, 2 Favorite), nil when the pills are not focused.
     let focusedPill: Int?
     let onPill: (Int) -> Void
     let onHoverPill: (Int) -> Void
 
-    /// Selene's change motion: hold at 0 for 0.3 s, fade in by 0.7 s, slide x −30 → 0 (0.4 s cubic out from 0.3 s).
+    /// Change motion, after the row has glided: the logo holds 0.3 s, then fades
+    /// in over 0.45 s while sliding x −30 → 0 (0.55 s cubic out); the pills and
+    /// stats follow 0.12 s later.
     @State private var shown = true
+    @State private var restShown = true
     @State private var slid = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             logoArea
                 .offset(x: slid ? 0 : canvas.u(-30))
+                .opacity(shown ? 1 : 0)
             Group {
                 if isRunning {
                     nowPlaying
@@ -40,8 +45,8 @@ struct SpotlightGameInfoView: View {
                     .padding(.leading, canvas.u(4))
                     .padding(.top, canvas.u(26))
             }
+            .opacity(restShown ? 1 : 0)
         }
-        .opacity(shown ? 1 : 0)
         .frame(width: canvas.u(900), alignment: .leading)
         .onAppear { reveal() }
         .onChange(of: game.id) { _ in reveal() }
@@ -54,8 +59,8 @@ struct SpotlightGameInfoView: View {
                     .resizable()
                     .interpolation(.high)
                     .aspectRatio(contentMode: .fit)
-                    // Selene's logo box: 620 × 215 (170 plus its −45 top margin), bottom-left.
-                    .frame(width: canvas.u(620), height: canvas.u(215), alignment: .bottomLeading)
+                    // The logo box: 700 × 240 (195 plus a −45 top margin), bottom-left.
+                    .frame(width: canvas.u(700), height: canvas.u(240), alignment: .bottomLeading)
                     .shadow(color: .black.opacity(0.35), radius: canvas.u(8))
                     .transition(.opacity)
             } else {
@@ -67,7 +72,7 @@ struct SpotlightGameInfoView: View {
                     .shadow(color: .black.opacity(0.45), radius: canvas.u(6))
             }
         }
-        .frame(width: canvas.u(900), height: canvas.u(170), alignment: .bottomLeading)
+        .frame(width: canvas.u(900), height: canvas.u(195), alignment: .bottomLeading)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(game.name)
         .accessibilityAddTraits(.isHeader)
@@ -77,7 +82,7 @@ struct SpotlightGameInfoView: View {
         HStack(spacing: canvas.u(14)) {
             pill(0, SelenePillButton(title: isRunning ? "Resume" : "Play", height: 52,
                                      focused: focusedPill == 0) { onPill(0) })
-            pill(1, SelenePillButton(title: isRunning ? "Close Game" : "Details", height: 52,
+            pill(1, SelenePillButton(title: isRunning ? "Close Game" : "Options", height: 52,
                                      focused: focusedPill == 1) { onPill(1) })
             pill(2, SelenePillButton(title: nil, icon: game.isFavorite ? .favorite : .favoriteBorder,
                                      iconSize: 20, minWidth: 52, height: 52, horizontalPadding: 0,
@@ -110,19 +115,20 @@ struct SpotlightGameInfoView: View {
             .strokeBorder(SeleneTheme.ink25, lineWidth: max(1, canvas.u(1))))
     }
 
-    /// Hold 0.3 s, then fade in linearly to 0.7 s while the logo slides in.
-    /// Reduce motion keeps the fade and drops the slide.
+    /// Reduce motion keeps the fades and drops the slide.
     private func reveal() {
         var reset = Transaction()
         reset.disablesAnimations = true
         withTransaction(reset) {
             shown = false
+            restShown = false
             slid = reduceMotion
         }
         DispatchQueue.main.async {
-            withAnimation(.linear(duration: 0.4).delay(0.3)) { shown = true }
+            withAnimation(.easeOut(duration: 0.45).delay(0.3)) { shown = true }
+            withAnimation(.easeOut(duration: 0.4).delay(0.42)) { restShown = true }
             if !reduceMotion {
-                withAnimation(SeleneTheme.cubicOut(0.4).delay(0.3)) { slid = true }
+                withAnimation(SeleneTheme.cubicOut(0.55).delay(0.3)) { slid = true }
             }
         }
     }

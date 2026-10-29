@@ -6,6 +6,11 @@ import NXLibraryCore
 /// square tiles under the filter tabs, the selected game's logo, pills and
 /// stats, its screenshots, over its art. All lengths are Selene units on the
 /// centred 1920 × 1080 stage; the backdrop and the row reach the window edges.
+///
+/// Below the stats the screen is one page: genres, screenshots, the
+/// description, Build & Sources with Your activity, More like this. Down
+/// from the row shifts everything up (the row and the bar fade away, the logo
+/// rises to the top) and keeps going section by section; Up comes back.
 public struct SpotlightView: View {
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var router: AppRouter
@@ -15,6 +20,7 @@ public struct SpotlightView: View {
     @ObservedObject var artwork: ArtworkStore
 
     @Environment(\.seleneCanvas) var canvas
+    @Environment(\.seleneReduceMotion) var reduceMotion
 
     @StateObject var art = SeleneHeroArt()
     @State var keyMonitor: Any?
@@ -27,6 +33,25 @@ public struct SpotlightView: View {
     @State var pillFilter: LibraryFilter = .all
     @State var pillVisible = false
     @State var pillTask: Task<Void, Never>?
+    /// The game column's block heights (`SpotlightPageBlock`), which place the page's scroll.
+    @State var blocks: [SpotlightPageBlock: CGFloat] = [:]
+    /// The page's scroll and fades, moved in their own transactions (`syncPage`) so
+    /// nothing inside (a pill's focus, say) rides a faster curve than the page.
+    @State var scroll: CGFloat = 0
+    @State var rowShown = true
+    @State var belowShown = false
+    @State var dimmed = false
+    /// The screenshots' bottom fade has lifted (off the row).
+    @State var stripFull = false
+    /// A wheel gesture already moved between the row and the page: its remaining
+    /// events (momentum included) are ignored until a new gesture starts.
+    @State var wheelLocked = false
+    /// Until when the page is gliding; pointer hovers are ignored meanwhile.
+    @State var glideEnds = Date.distantPast
+    /// The next focus change came from a wheel scroll: keep the page where it is.
+    @State var holdScroll = false
+    @State var wheelSettle: Task<Void, Never>?
+    var isGliding: Bool { Date() < glideEnds }
 
     struct ViewerContext: Equatable {
         var titleID: String
@@ -102,10 +127,22 @@ public struct SpotlightView: View {
         let state = viewModel.spotlight
         ZStack(alignment: .topLeading) {
             SeleneArtBackground(image: art.image, imageKey: art.key,
-                                shade: settings.settings.backgroundShade)
+                                shade: settings.settings.backgroundShade, crossfade: 0.8)
+            // Deeper in the page the art dims so the text reads.
+            Color.black.opacity(dimmed ? 0.4 : 0)
+                .allowsHitTesting(false)
+            SeleneBottomScrim()
             stage(model, state: state)
                 .frame(width: canvas.stageSize.width, height: canvas.stageSize.height, alignment: .topLeading)
                 .offset(x: canvas.stageOrigin.x, y: canvas.stageOrigin.y)
+            // The hints sit on the window's bottom edge, not the stage's.
+            VStack(spacing: 0) {
+                Spacer(minLength: 0)
+                SeleneHintsBar(left: state.isLifted || cardMenu != nil || state.focus != .row ? [] : globalHints,
+                               right: contextHints(model, state),
+                               bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
+            }
+            .frame(width: canvas.size.width, height: canvas.size.height)
         }
         .overlay(viewerOverlay)
         .animation(.easeOut(duration: 0.2), value: viewer != nil)
@@ -126,6 +163,8 @@ public struct SpotlightView: View {
         .onChange(of: settings.settings.spotlightCards) { _ in reconcile() }
         .onChange(of: settings.settings.spotlightOrder) { _ in reconcile() }
         .onChange(of: viewModel.spotlight.selectedKey) { _ in selectionChanged() }
+        .onChange(of: viewModel.spotlight.focus) { _ in syncPage() }
+        .onChange(of: blocks) { _ in syncPage() }
         .onChange(of: viewer != nil) { router.isScreenshotViewerOpen = $0 }
         .onChange(of: router.pendingSpotlightMove) { _ in consumePendingMove() }
         .onReceive(NotificationCenter.default.publisher(for: .nxFindGameSelect)) { note in
@@ -163,44 +202,50 @@ public struct SpotlightView: View {
         return ZStack(alignment: .topLeading) {
             SpotlightTopBar(filter: filter, showClock: settings.settings.showClock,
                             onSelect: { if !state.isLifted { setFilter($0) } })
+                .opacity(rowShown ? 1 : 0)
+                .allowsHitTesting(rowShown)
 
-            SpotlightRowView(
-                items: items,
-                gamesByID: model.gamesByID,
-                selectedKey: state.selectedKey,
-                liftedKey: state.lift?.key,
-                isEmptyFilter: items.contains { if case .game = $0 { return true } else { return false } }
-                    ? nil : filter,
-                steamGridDbApiKey: settings.settings.steamGridDbApiKey,
-                artwork: artwork,
-                steamGridDB: viewModel.steamGridDB,
-                coverURL: { viewModel.storeMetadata[$0.id]?.imageURL },
-                onSelect: { item in
-                    guard !state.isLifted else { return }
-                    mutate { $0.select(item) }
-                },
-                onActivate: { item in
-                    guard !state.isLifted else { return }
-                    mutate { $0.select(item) }
-                    activate(item)
-                }
-            )
-            .offset(y: canvas.u(130))
+            ZStack(alignment: .topLeading) {
+                SpotlightRowView(
+                    items: items,
+                    gamesByID: model.gamesByID,
+                    selectedKey: state.selectedKey,
+                    liftedKey: state.lift?.key,
+                    isEmptyFilter: items.contains { if case .game = $0 { return true } else { return false } }
+                        ? nil : filter,
+                    steamGridDbApiKey: settings.settings.steamGridDbApiKey,
+                    artwork: artwork,
+                    steamGridDB: viewModel.steamGridDB,
+                    coverURL: { viewModel.storeMetadata[$0.id]?.imageURL },
+                    onSelect: { item in
+                        guard !state.isLifted else { return }
+                        mutate { $0.select(item) }
+                    },
+                    onActivate: { item in
+                        guard !state.isLifted else { return }
+                        mutate { $0.select(item) }
+                        activate(item)
+                    }
+                )
+                .offset(y: canvas.u(130))
+                // The icons give way as the page rises (and stop taking the pointer).
+                .opacity(rowShown ? 1 : 0)
+                .allowsHitTesting(rowShown)
 
-            SpotlightFilterPill(filter: pillFilter, count: games.count)
-                .offset(x: canvas.u(80), y: canvas.u(88))
-                // Opacity fades always run, reduce motion or not.
-                .opacity(pillVisible ? 1 : 0)
-                .animation(.easeOut(duration: 0.2), value: pillVisible)
+                SpotlightFilterPill(filter: pillFilter, count: games.count)
+                    .offset(x: canvas.u(80), y: canvas.u(88))
+                    // Opacity fades always run, reduce motion or not.
+                    .opacity(pillVisible ? 1 : 0)
+                    .animation(.easeOut(duration: 0.2), value: pillVisible)
 
-            info(model, state: state)
-                .offset(x: canvas.u(80), y: canvas.u(420))
-
-            VStack(spacing: 0) {
-                Spacer(minLength: 0)
-                SeleneHintsBar(left: state.isLifted || cardMenu != nil ? [] : globalHints,
-                               right: contextHints(model, state), bottom: 40, leftInset: 18)
+                info(model, state: state)
+                    .offset(x: canvas.u(80), y: canvas.u(420))
             }
+            .onPreferenceChange(SpotlightBlockKey.self) { heights in
+                if !Self.sameLayout(heights, blocks) { blocks = heights }
+            }
+            // One page: the focus scrolls it; the glide is movement, so reduce motion jumps.
+            .offset(y: scroll)
 
             if let menu = cardMenu {
                 ZStack {
@@ -222,6 +267,7 @@ public struct SpotlightView: View {
     private func info(_ model: Snapshot, state: SpotlightState) -> some View {
         if let game = model.selectedGame {
             let metadata = viewModel.storeMetadata[game.id]
+            let page = page(for: game)
             VStack(alignment: .leading, spacing: 0) {
                 SpotlightGameInfoView(
                     game: game,
@@ -238,11 +284,20 @@ public struct SpotlightView: View {
                         pressPill(index, game: game)
                     },
                     onHoverPill: { index in
-                        guard !state.isLifted else { return }
-                        mutate { $0.focus = .pills; $0.pillIndex = index }
+                        // Hover moves along the pills only once they have focus, and never
+                        // mid-glide: the page moving under a still pointer is not a hover.
+                        guard !state.isLifted, state.focus == .pills, !isGliding else { return }
+                        mutate { $0.pillIndex = index }
                     }
                 )
                 .id(game.id)
+                .spotlightBlock(.head)
+
+                if !page.presentation.genres.isEmpty {
+                    SpotlightGenreChips(genres: page.presentation.genres)
+                        .padding(.top, canvas.u(20))
+                        .spotlightBlock(.genres)
+                }
 
                 SpotlightScreenshotStrip(
                     titleID: game.titleId ?? game.uniqueKey,
@@ -256,7 +311,30 @@ public struct SpotlightView: View {
                         openViewer(at: index)
                     }
                 )
-                .padding(.top, canvas.u(34))
+                // On the row the screenshots dissolve downwards (Selene's home): the
+                // hints sit on the dark below them, and the fade says there is more below.
+                // Gradient stops do not animate, so the fade lifts by a solid layer
+                // fading in over it, along with the glide. The mask reaches past the
+                // strip's edges so the focus ring outside a tile shows.
+                .mask(ZStack {
+                    LinearGradient(stops: [
+                        .init(color: .black, location: 0),
+                        .init(color: .black, location: 0.3),
+                        .init(color: .black.opacity(0.35), location: 0.62),
+                        .init(color: .black.opacity(0), location: 0.86)
+                    ], startPoint: .top, endPoint: .bottom)
+                    Color.black.opacity(stripFull ? 1 : 0)
+                }
+                .padding(-canvas.u(16)))
+                // They arrive after the logo, not before it.
+                .seleneReveal(delay: 0.6)
+                .id(game.id)
+                .padding(.top, canvas.u(30))
+                .spotlightBlock(.strip)
+
+                pageBelow(game, page: page, state: state)
+                    // Hidden while the row has focus: it rises in with the page.
+                    .opacity(belowShown ? 1 : 0)
             }
         } else if case .card(let card) = model.selectedItem {
             let summary = card == .activity ? activitySummary : ActivitySummary()
@@ -337,9 +415,13 @@ public struct SpotlightView: View {
         }
         switch state.focus {
         case .pills:
-            return [HintItem(.a, "Select")]
+            return [HintItem(.b, "Back"), HintItem(.a, "Select")]
         case .strip:
-            return []
+            return [HintItem(.b, "Back"), HintItem(.a, "View")]
+        case .actions:
+            return [HintItem(.b, "Back"), HintItem(.a, "Select")]
+        case .more:
+            return [HintItem(.b, "Back"), HintItem(.a, "Show")]
         case .topGames:
             return [HintItem(.a, "Show")]
         case .row:
@@ -350,9 +432,9 @@ public struct SpotlightView: View {
             case .game:
                 guard let game = model.selectedGame else { return [] }
                 if game.isPlayableLocally {
-                    return [HintItem(.x, "Details"), HintItem(.y, "Game options"), HintItem(.a, "Play")]
+                    return [HintItem(.y, "Options"), HintItem(.a, "Play")]
                 }
-                return [HintItem(.y, "Game options"), HintItem(.a, "Details")]
+                return [HintItem(.y, "Options"), HintItem(.a, "Details")]
             case nil:
                 return []
             }
@@ -460,7 +542,177 @@ public struct SpotlightView: View {
     private func loadHero(_ game: PortedGame?) async {
         await art.loadHero(game: game, current: { selectedGame?.id },
                            metadata: game.flatMap { viewModel.storeMetadata[$0.id] }, artwork: artwork,
-                           steamGridDB: viewModel.steamGridDB, apiKey: settings.settings.steamGridDbApiKey)
+                           steamGridDB: viewModel.steamGridDB, apiKey: settings.settings.steamGridDbApiKey,
+                           // The logo leads (0.3 s); the art turns after it.
+                           settle: 420_000_000)
+    }
+
+    // MARK: - Page
+
+    /// How far the page rises once the focus leaves the row: the logo goes from 420 to 96.
+    static let pageTravel: CGFloat = 324
+
+    /// The page's scroll for the focus, in points. The pills and the strip
+    /// share the first shift (the strip only moves further if it would sit
+    /// under the hints); Build & Sources and More like this come up to 150.
+    /// Positions add up the blocks' heights from the column's top at 420.
+    func pageOffset(_ state: SpotlightState) -> CGFloat {
+        offset(for: state.focus)
+    }
+
+    func offset(for area: SpotlightFocusArea) -> CGFloat {
+        let first = -canvas.u(Self.pageTravel)
+        let h = { (block: SpotlightPageBlock) in blocks[block] ?? 0 }
+        let stripBottom = canvas.u(420) + h(.head) + h(.genres) + h(.strip)
+        let gap = canvas.u(48)
+        let actionsTop = stripBottom + h(.description) + gap
+        let moreTop = stripBottom + h(.description) + h(.actions) + gap
+        switch area {
+        case .row, .topGames:
+            return 0
+        case .pills:
+            return first
+        case .strip:
+            return min(first, canvas.u(950) - stripBottom)
+        case .actions:
+            return min(first, canvas.u(150) - actionsTop)
+        case .more:
+            return min(first, canvas.u(150) - moreTop)
+        }
+    }
+
+    /// The page's glide: one slow, soft curve (1 s, long ease out) for the whole screen.
+    static let glide = Animation.timingCurve(0.4, 0, 0.1, 1, duration: 1.0)
+
+    /// Moves the page to the focus, after the focus change has rendered, in
+    /// transactions of its own. Leaving the row, the icons and the bar fade out
+    /// first and the sections below fade in behind the glide; coming back, the
+    /// sections go first and the icons return as the page settles. Under reduce
+    /// motion the page jumps and only the fades run.
+    func syncPage() {
+        let state = viewModel.spotlight
+        let target = pageOffset(state)
+        let onRow = state.focus == .row || state.focus == .topGames
+        if holdScroll {
+            // The focus followed a wheel scroll: the page stays where the user left it.
+            holdScroll = false
+        } else if reduceMotion {
+            scroll = target
+        } else if abs(scroll - target) > 0.5 {
+            glideEnds = Date().addingTimeInterval(1.05)
+            withAnimation(Self.glide) { scroll = target }
+        }
+        setPageFades(onRow: onRow, deep: isDeep(state))
+    }
+
+    /// Leaving the row, the icons and the bar fade out first and the sections
+    /// below fade in behind; coming back, the sections go first.
+    func setPageFades(onRow: Bool, deep: Bool) {
+        if onRow == stripFull {
+            withAnimation(.easeInOut(duration: onRow ? 0.7 : 0.9)) { stripFull = !onRow }
+        }
+        if onRow == !rowShown {
+            if onRow {
+                withAnimation(.easeInOut(duration: 0.45)) { belowShown = false }
+                withAnimation(.easeInOut(duration: 0.7).delay(0.3)) { rowShown = true }
+            } else {
+                withAnimation(.easeInOut(duration: 0.55)) { rowShown = false }
+                withAnimation(.easeInOut(duration: 0.8).delay(0.25)) { belowShown = true }
+            }
+        }
+        if deep != dimmed {
+            withAnimation(.easeInOut(duration: 0.8)) { dimmed = deep }
+        }
+    }
+
+    /// Measured heights that differ by under a point are the same layout.
+    static func sameLayout(_ a: [SpotlightPageBlock: CGFloat], _ b: [SpotlightPageBlock: CGFloat]) -> Bool {
+        guard a.keys == b.keys else { return false }
+        return a.allSatisfy { key, height in abs(height - (b[key] ?? .infinity)) < 1 }
+    }
+
+    /// Past the screenshots the art dims behind the text.
+    func isDeep(_ state: SpotlightState) -> Bool {
+        state.focus == .actions || state.focus == .more
+    }
+
+    var currentPage: SpotlightPageModel? { selectedGame.map(page(for:)) }
+
+    func page(for game: PortedGame) -> SpotlightPageModel {
+        let library = viewModel.libraryGames
+        let playtimes = Dictionary(library.map { ($0.id, playSessions.totalDuration(for: $0.id)) },
+                                   uniquingKeysWith: { first, _ in first })
+        let presentation = GameDetailPresentation(
+            game: game, metadata: viewModel.storeMetadata[game.id],
+            totalPlaytime: playSessions.totalDuration(for: game.id),
+            lastPlayed: playSessions.lastPlayed(for: game.id),
+            sessions: playSessions.sessions, libraryGames: library, playtimeByGame: playtimes)
+        let blocked = viewModel.compatibilityReport != nil && !viewModel.canPassToolchainGate
+        let rows = BuildSourcesRow.rows(for: game, presentation: presentation, buildBlocked: blocked,
+                                        viewModel: viewModel, rebuild: { rebuild(game, canRebuild: presentation.canRebuild) })
+        let ids = MoreLikeThis.pick(for: game, in: library,
+                                    metadata: { viewModel.storeMetadata[$0] }, limit: 6)
+        let byID = Dictionary(library.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        return SpotlightPageModel(presentation: presentation, rows: rows,
+                                  more: ids.compactMap { byID[$0] }, buildBlocked: blocked)
+    }
+
+    private func rebuild(_ game: PortedGame, canRebuild: Bool) {
+        guard canRebuild else {
+            SoundEffectService.shared.play(.error)
+            return
+        }
+        SoundEffectService.shared.play(.click)
+        viewModel.startBuild(for: game)
+        if viewModel.isBuilding { router.openAddGame() }
+    }
+
+    /// Below the screenshots: the description, Build & Sources with Your activity, More like this.
+    private func pageBelow(_ game: PortedGame, page: SpotlightPageModel, state: SpotlightState) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            SpotlightDescription(text: page.presentation.description)
+                .padding(.top, canvas.u(44))
+                .spotlightBlock(.description)
+
+            HStack(alignment: .top, spacing: 0) {
+                BuildSourcesPanel(
+                    presentation: page.presentation,
+                    appFileName: game.url.lastPathComponent,
+                    buildBlocked: page.buildBlocked && page.presentation.canRebuild,
+                    rows: page.rows,
+                    focusedRow: state.focus == .actions ? state.actionIndex : nil,
+                    onHoverRow: { index in
+                        guard state.focus == .actions, !isGliding else { return }
+                        mutate { $0.actionIndex = index }
+                    },
+                    onPressRow: { index in
+                        mutate { $0.focus = .actions; $0.actionIndex = index }
+                        if index < page.rows.count { page.rows[index].action() }
+                    })
+                Spacer(minLength: 0)
+                DetailsActivityColumn(presentation: page.presentation)
+            }
+            .frame(width: canvas.u(1700), alignment: .topLeading)
+            .padding(.top, canvas.u(48))
+            .spotlightBlock(.actions)
+
+            if !page.more.isEmpty {
+                DetailsMoreBand(
+                    games: page.more,
+                    focusedIndex: state.focus == .more ? state.moreIndex : nil,
+                    steamGridDbApiKey: settings.settings.steamGridDbApiKey,
+                    artwork: artwork,
+                    steamGridDB: viewModel.steamGridDB,
+                    coverURL: { viewModel.storeMetadata[$0.id]?.imageURL },
+                    onFocus: { index in mutate { $0.focus = .more; $0.moreIndex = index } },
+                    onOpen: { index in
+                        SoundEffectService.shared.play(.click)
+                        selectGame(page.more[index].id)
+                    })
+                .padding(.top, canvas.u(48))
+                .spotlightBlock(.more)
+            }
+        }
     }
 
     private func loadLogo(_ game: PortedGame?) async {

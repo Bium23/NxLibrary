@@ -30,6 +30,8 @@ private struct SeleneCanvasRoot: ViewModifier {
                 .frame(width: proxy.size.width, height: proxy.size.height)
                 .environment(\.seleneCanvas, SeleneCanvas(size: proxy.size))
         }
+        // Full bleed under the hidden title bar: windowed looks like full screen.
+        .ignoresSafeArea()
     }
 }
 

@@ -202,4 +202,33 @@ final class SpotlightLiftTests: XCTestCase {
         XCTAssertEqual(CollectionRow.scrollOffset(selectedIndex: CollectionRow.anchorSlot), 0)
         XCTAssertEqual(CollectionRow.scrollOffset(selectedIndex: CollectionRow.anchorSlot + 3), 3)
     }
+
+    func testPageScrollsThroughActionsAndMore() {
+        var s = SpotlightState(selectedKey: "game:x", focus: .strip)
+        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 5, moreCount: 2))
+        XCTAssertEqual(s.focus, .actions)
+        XCTAssertTrue(s.moveSideways(by: 1, screenshotCount: 3, actionCount: 5))
+        XCTAssertEqual(s.actionIndex, 1)
+        XCTAssertFalse(s.moveSideways(by: 1, screenshotCount: 3, actionCount: 5))
+        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 5, moreCount: 2))
+        XCTAssertEqual(s.actionIndex, 3)
+        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 5, moreCount: 2))
+        XCTAssertEqual(s.focus, .more)
+        XCTAssertFalse(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 5, moreCount: 2))
+        XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 5))
+        XCTAssertEqual(s.focus, .actions)
+        XCTAssertEqual(s.actionIndex, 4)
+        XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 5))
+        XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 5))
+        XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 5))
+        XCTAssertEqual(s.focus, .strip)
+    }
+
+    func testPillsSkipEmptyStripToActions() {
+        var s = SpotlightState(selectedKey: "game:x", focus: .pills)
+        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 0, actionCount: 4))
+        XCTAssertEqual(s.focus, .actions)
+        XCTAssertTrue(s.moveUp(screenshotCount: 0, actionCount: 4))
+        XCTAssertEqual(s.focus, .pills)
+    }
 }

@@ -57,6 +57,8 @@ struct SeleneHintsBar: View {
             .padding(.horizontal, canvas.u(64))
             .padding(.bottom, canvas.u(bottom))
             .frame(maxWidth: .infinity)
+            // A soft shadow lifts the prompts off whatever art is behind them.
+            .shadow(color: .black.opacity(0.5), radius: canvas.u(6), y: canvas.u(1))
         }
     }
 

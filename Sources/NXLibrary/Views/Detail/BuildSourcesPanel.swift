@@ -136,3 +136,41 @@ struct BuildSourcesPanel: View {
         .accessibilityLabel(row.title)
     }
 }
+
+extension BuildSourcesRow {
+    /// Build & Sources' actions for a game, in grid order. Store links and the
+    /// Nintendo search appear only when they have a target. Shared by Details and Spotlight.
+    @MainActor
+    static func rows(for game: PortedGame, presentation p: GameDetailPresentation, buildBlocked: Bool,
+                     viewModel: AppViewModel, rebuild: @escaping () -> Void) -> [BuildSourcesRow] {
+        var rows: [BuildSourcesRow] = [
+            BuildSourcesRow(id: "attach", title: "Attach sources…") {
+                viewModel.locateSources(for: game)
+            },
+            BuildSourcesRow(id: "rebuild", title: "Rebuild", enabled: p.canRebuild && !buildBlocked) {
+                rebuild()
+            },
+            BuildSourcesRow(id: "log", title: "Open log") {
+                viewModel.revealLog(for: game)
+            },
+            BuildSourcesRow(id: "save", title: "Open save folder") {
+                viewModel.revealSaveFolder(URL(fileURLWithPath: p.savePath))
+            },
+            BuildSourcesRow(id: "app", title: "Reveal app in Finder") {
+                viewModel.revealInFinder(url: game.url)
+            }
+        ]
+        if let store = p.storeURL {
+            rows.append(BuildSourcesRow(id: "store", title: "Store page") { viewModel.openURL(store) })
+        }
+        if let hltb = p.hltbURL {
+            rows.append(BuildSourcesRow(id: "hltb", title: "HowLongToBeat") { viewModel.openURL(hltb) })
+        }
+        if p.description.isEmpty, let search = viewModel.nintendoStoreSearchURL(for: game) {
+            rows.append(BuildSourcesRow(id: "search", title: "Search Nintendo Store") {
+                viewModel.openURL(search)
+            })
+        }
+        return rows
+    }
+}

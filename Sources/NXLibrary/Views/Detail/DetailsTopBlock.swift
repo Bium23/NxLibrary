@@ -3,7 +3,7 @@ import AppKit
 import NXLibraryCore
 
 /// The Details top block (Selene GameDetails `SeleneDetailsTop`): the logo (or
-/// the name), the developer line, the Play or Build and Game options pills,
+/// the name), the developer line, the Play or Build, Options and Favorite pills,
 /// the stats row, the genre chips and the description. A 1060-wide column
 /// placed at (110, 96) on the stage; every length is in Selene units.
 struct DetailsTopBlock: View {
@@ -14,7 +14,7 @@ struct DetailsTopBlock: View {
     let presentation: GameDetailPresentation
     /// The game is running: the primary pill reads Resume and the second reads Close Game.
     let isRunning: Bool
-    /// The focused pill: 0 Play, Resume or Build; 1 Game options or Close Game; nil when the block has no focus.
+    /// The focused pill: 0 Play, Resume or Build; 1 Options or Close Game; 2 Favorite; nil when the block has no focus.
     let focusedPill: Int?
     /// Build is dim (no sources to build from) but still takes focus.
     let primaryEnabled: Bool
@@ -22,6 +22,7 @@ struct DetailsTopBlock: View {
     @Binding var expanded: Bool
     let onPrimary: () -> Void
     let onSecondary: () -> Void
+    let onFavorite: () -> Void
     let onHoverPill: (Int) -> Void
 
     /// Longer than this, the description gets a "Read more" (five lines hold about 520 characters at this width).
@@ -61,7 +62,7 @@ struct DetailsTopBlock: View {
                     .resizable()
                     .interpolation(.high)
                     .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: canvas.u(680), maxHeight: canvas.u(180), alignment: .bottomLeading)
+                    .frame(maxWidth: canvas.u(760), maxHeight: canvas.u(200), alignment: .bottomLeading)
                     .shadow(color: .black.opacity(0.35), radius: canvas.u(8))
             } else {
                 Text(game.name)
@@ -72,7 +73,7 @@ struct DetailsTopBlock: View {
                     .frame(maxWidth: canvas.u(1060), alignment: .leading)
             }
         }
-        .frame(width: canvas.u(1060), height: canvas.u(180), alignment: .bottomLeading)
+        .frame(width: canvas.u(1060), height: canvas.u(200), alignment: .bottomLeading)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(game.name)
         .accessibilityAddTraits(.isHeader)
@@ -86,10 +87,15 @@ struct DetailsTopBlock: View {
                              horizontalPadding: 36, focused: focusedPill == 0,
                              enabled: primaryEnabled, action: onPrimary)
                 .onHover { if $0 { onHoverPill(0) } }
-            SelenePillButton(title: isRunning ? "Close Game" : "Game options", minWidth: 200, height: 52,
+            SelenePillButton(title: isRunning ? "Close Game" : "Options", minWidth: 200, height: 52,
                              horizontalPadding: 36, focused: focusedPill == 1,
                              action: onSecondary)
                 .onHover { if $0 { onHoverPill(1) } }
+            SelenePillButton(title: nil, icon: game.isFavorite ? .favorite : .favoriteBorder,
+                             iconSize: 20, minWidth: 52, height: 52, horizontalPadding: 0,
+                             focused: focusedPill == 2, action: onFavorite)
+                .onHover { if $0 { onHoverPill(2) } }
+                .accessibilityLabel(game.isFavorite ? "Remove from favorites" : "Add to favorites")
         }
     }
 

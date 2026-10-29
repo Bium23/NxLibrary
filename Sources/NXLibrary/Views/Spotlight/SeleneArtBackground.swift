@@ -11,6 +11,8 @@ struct SeleneArtBackground: View {
     /// Changes whenever `image` does; drives the crossfade.
     let imageKey: String
     var shade: BackgroundShade = .balanced
+    /// Crossfade length; Collection takes a slower one so the art turns after the logo.
+    var crossfade: Double = 0.4
 
     var body: some View {
         ZStack {
@@ -30,7 +32,7 @@ struct SeleneArtBackground: View {
                 }
             }
             // A crossfade is not movement: it stays under reduce motion (spec §8).
-            .animation(.easeInOut(duration: 0.4), value: imageKey)
+            .animation(.easeInOut(duration: crossfade), value: imageKey)
             shades
         }
         .allowsHitTesting(false)

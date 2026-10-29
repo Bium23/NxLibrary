@@ -71,9 +71,11 @@ struct SpotlightRowView: View {
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .frame(height: canvas.u(260), alignment: .topLeading)
-        .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.18), value: selectedKey)
-        .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.18), value: items.map(\.key))
-        .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.18), value: liftedKey)
+        // A glide, not a jump: the row and the growing tile ease over 0.32 s
+        // (under reduce motion the ring and size still fade, without the slide).
+        .animation(reduceMotion ? .easeOut(duration: 0.2) : SeleneTheme.cubicOut(0.32), value: selectedKey)
+        .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.32), value: items.map(\.key))
+        .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.32), value: liftedKey)
         .onAppear { scheduleTitle(delay: 0) }
         .onChange(of: selectedKey) { _ in scheduleTitle(delay: 0.23) }
         .onDisappear { titleTask?.cancel() }
@@ -131,7 +133,7 @@ struct SpotlightRowView: View {
                     SpotlightTileArtwork(game: game, side: side,
                                          steamGridDbApiKey: steamGridDbApiKey,
                                          artwork: artwork, steamGridDB: steamGridDB,
-                                         coverURL: coverURL(game))
+                                         coverURL: coverURL(game), ownIconFirst: true)
                         .clipShape(face)
                 }
             case .card(let card):

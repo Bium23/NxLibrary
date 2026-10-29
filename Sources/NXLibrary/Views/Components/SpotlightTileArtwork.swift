@@ -2,11 +2,12 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
-/// Tile art: SteamGridDB square grid, then the Nintendo store cover, then the
-/// app icon (Spotlight's row); with `coverFirst` the store cover, then the
-/// square art, then the app icon (Collection's covers). Shows the icon
-/// immediately and crossfades when better art arrives. The caller applies the
-/// corner radius.
+/// Tile art: with `ownIconFirst` the game's own icon art (the built app's
+/// icon, as on the Mac), so every tile is the same full-bleed square.
+/// Otherwise (or without one): SteamGridDB square grid, then the Nintendo
+/// store cover, then the generic icon; with `coverFirst` the store cover
+/// first. Crossfades when fetched art arrives.
+/// The caller applies the corner radius.
 struct SpotlightTileArtwork: View {
     let game: PortedGame
     /// Side length (height) in points, already scaled by the caller.
@@ -22,13 +23,20 @@ struct SpotlightTileArtwork: View {
     let steamGridDB: SteamGridDBService
     /// The store's cover (`NintendoStoreMetadata.imageURL`), when known.
     var coverURL: URL? = nil
+    /// Show the game's own icon art (as on the Mac) whenever it exists (Collection's tiles).
+    var ownIconFirst = false
 
     @State private var better: NSImage?
 
     var body: some View {
         ZStack {
             SeleneTheme.glassSolid
-            if let better {
+            if ownIconFirst, let own = GameIconProvider.squareArt(for: game) {
+                Image(nsImage: own)
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fill)
+            } else if let better {
                 Image(nsImage: better)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -42,6 +50,7 @@ struct SpotlightTileArtwork: View {
         .frame(width: width ?? side, height: side)
         .clipped()
         .task(id: memoKey) {
+            guard !ownIconFirst || GameIconProvider.squareArt(for: game) == nil else { return }
             let key = memoKey as NSString
             if let memo = TileArtMemo.shared.object(forKey: key) {
                 better = memo

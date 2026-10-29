@@ -9,17 +9,21 @@ struct SeleneTileRing: View {
     let active: Bool
 
     var body: some View {
-        if active {
-            if reduceMotion {
-                ring(angle: 0, glow: 0.35)
-            } else {
-                TimelineView(.animation) { context in
-                    let t = context.date.timeIntervalSinceReferenceDate
-                    ring(angle: (t.truncatingRemainder(dividingBy: 5)) / 5 * 360,
-                         glow: Self.glowOpacity(at: t))
+        // The ring fades between tiles instead of jumping (the row animates the selection).
+        Group {
+            if active {
+                if reduceMotion {
+                    ring(angle: 0, glow: 0.35)
+                } else {
+                    TimelineView(.animation) { context in
+                        let t = context.date.timeIntervalSinceReferenceDate
+                        ring(angle: (t.truncatingRemainder(dividingBy: 5)) / 5 * 360,
+                             glow: Self.glowOpacity(at: t))
+                    }
                 }
             }
         }
+        .transition(.opacity)
     }
 
     /// 0.2 <-> 0.55 over 1.8s, sine in-out, autoreverse.
@@ -29,19 +33,34 @@ struct SeleneTileRing: View {
         return 0.2 + 0.35 * (0.5 - 0.5 * cos(.pi * tri))
     }
 
+    /// Selene's ring: a solid focus border whose opacity mask (1 · 0.9 · 0.6 · 0.9 · 1)
+    /// turns once every 5 s, over a blurred glow. Every stop is the focus colour,
+    /// so no part of the ring ever reads dark.
     private func ring(angle: Double, glow: Double) -> some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        let radians = angle * .pi / 180
+        let dx = cos(radians) * 0.5, dy = sin(radians) * 0.5
+        let focus = SeleneTheme.focus
         return ZStack {
-            shape.strokeBorder(SeleneTheme.focus, lineWidth: canvas.u(3))
+            shape.strokeBorder(focus, lineWidth: canvas.u(4))
                 .blur(radius: canvas.u(16))
                 .opacity(glow)
-            shape.strokeBorder(SeleneTheme.focus.opacity(0.55), lineWidth: canvas.u(3))
             shape.strokeBorder(
-                AngularGradient(
-                    gradient: Gradient(colors: [.clear, .white.opacity(0.9), .clear, .clear]),
-                    center: .center, angle: .degrees(angle)),
+                LinearGradient(
+                    stops: [
+                        .init(color: focus, location: 0),
+                        .init(color: focus.opacity(0.9), location: 0.25),
+                        .init(color: focus.opacity(0.6), location: 0.5),
+                        .init(color: focus.opacity(0.9), location: 0.75),
+                        .init(color: focus, location: 1)
+                    ],
+                    startPoint: UnitPoint(x: 0.5 - dx, y: 0.5 - dy),
+                    endPoint: UnitPoint(x: 0.5 + dx, y: 0.5 + dy)),
                 lineWidth: canvas.u(3))
+            shape.strokeBorder(Color.white.opacity(0.18), lineWidth: max(0.5, canvas.u(1)))
+                .padding(canvas.u(1))
         }
+        .compositingGroup()
         .allowsHitTesting(false)
     }
 }
@@ -63,9 +82,9 @@ struct SeleneShine: View {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(LinearGradient(
                         stops: [
-                            .init(color: .clear, location: 0),
+                            .init(color: .white.opacity(0), location: 0),
                             .init(color: .white.opacity(0.22), location: 0.5),
-                            .init(color: .clear, location: 1)
+                            .init(color: .white.opacity(0), location: 1)
                         ],
                         startPoint: UnitPoint(x: x - 0.25, y: 0),
                         endPoint: UnitPoint(x: x + 0.05, y: 0.4)))

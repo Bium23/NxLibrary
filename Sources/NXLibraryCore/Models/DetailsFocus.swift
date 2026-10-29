@@ -33,8 +33,8 @@ public struct DetailsFocus: Equatable {
     public static let screenshotsZone = 1
     public static let actionsZone = 2
     public static let moreZone = 3
-    /// Play or Build, then Game options.
-    public static let pillCount = 2
+    /// Play or Build, then Options, then the Favorite heart.
+    public static let pillCount = 3
     /// Build & Sources lays its actions out in two columns.
     public static let actionColumns = 2
 

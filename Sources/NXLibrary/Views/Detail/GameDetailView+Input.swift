@@ -57,7 +57,20 @@ extension GameDetailView {
         var next = focus
         next.focus(zone: DetailsFocus.topZone, index: index, in: currentModel.bands)
         if next != focus { focus = next }
-        if index == 0 { primaryAction() } else { secondaryAction() }
+        runPill(index)
+    }
+
+    func runPill(_ index: Int) {
+        switch index {
+        case 0: primaryAction()
+        case 1: secondaryAction()
+        default: toggleFavorite()
+        }
+    }
+
+    func toggleFavorite() {
+        SoundEffectService.shared.play(.click)
+        viewModel.toggleFavorite(game)
     }
 
     /// Hover moves the action focus only while Build & Sources is in focus.
@@ -86,7 +99,7 @@ extension GameDetailView {
         let model = currentModel
         switch focus.zone {
         case DetailsFocus.topZone:
-            if focus.pill == 0 { primaryAction() } else { secondaryAction() }
+            runPill(focus.pill)
         case DetailsFocus.screenshotsZone:
             openViewer(at: focus.shot)
         case DetailsFocus.actionsZone:

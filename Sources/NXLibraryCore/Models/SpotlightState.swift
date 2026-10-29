@@ -1,8 +1,13 @@
 import Foundation
 
-/// Where controller focus sits on Spotlight.
-public enum SpotlightFocusArea: Equatable {
+/// Where controller focus sits on Spotlight. Below the pills the screen is one
+/// page that scrolls up: screenshots, Build & Sources, More like this.
+public enum SpotlightFocusArea: Hashable {
     case row, pills, strip
+    /// Build & Sources' actions, two columns.
+    case actions
+    /// More like this.
+    case more
     /// The Activity card's top-game tiles.
     case topGames
 }
@@ -20,14 +25,18 @@ public struct SpotlightLift: Equatable {
 public struct SpotlightState: Equatable {
     /// Selene keeps the selection in the third slot once the row scrolls.
     public static let anchorSlot = 2
-    /// Play, Details, Favorite.
+    /// Play, Options, Favorite.
     public static let pillCount = 3
+    /// Build & Sources lays its actions out in two columns.
+    public static let actionColumns = 2
 
     public var selectedKey: String?
     public var focus: SpotlightFocusArea
     public var pillIndex: Int
     public var stripIndex: Int
     public var topGameIndex: Int
+    public var actionIndex = 0
+    public var moreIndex = 0
     /// Non-nil while a tile is lifted for moving.
     public var lift: SpotlightLift?
     /// The starting tab is applied once per app session, on the first visit.
@@ -81,6 +90,8 @@ public struct SpotlightState: Equatable {
         pillIndex = 0
         stripIndex = 0
         topGameIndex = 0
+        actionIndex = 0
+        moreIndex = 0
     }
 
     /// Moves the row selection, clamped to the ends. Returns whether it moved.
@@ -110,12 +121,16 @@ public struct SpotlightState: Equatable {
         pillIndex = 0
         stripIndex = 0
         topGameIndex = 0
+        actionIndex = 0
+        moreIndex = 0
     }
 
-    /// Down: row → pills (games only), pills → strip (when it has screenshots).
+    /// Down: row → pills (games only) → strip → Build & Sources (row by row) →
+    /// More like this, skipping whatever is empty.
     @discardableResult
     public mutating func moveDown(selectedIsGame: Bool, screenshotCount: Int,
-                                  selectedIsActivity: Bool = false, topGameCount: Int = 0) -> Bool {
+                                  selectedIsActivity: Bool = false, topGameCount: Int = 0,
+                                  actionCount: Int = 0, moreCount: Int = 0) -> Bool {
         switch focus {
         case .row:
             if selectedIsActivity {
@@ -129,29 +144,80 @@ public struct SpotlightState: Equatable {
             pillIndex = 0
             return true
         case .pills:
-            guard screenshotCount > 0 else { return false }
-            focus = .strip
-            stripIndex = 0
+            if screenshotCount > 0 {
+                focus = .strip
+                stripIndex = 0
+                return true
+            }
+            return enterActions(actionCount: actionCount, moreCount: moreCount)
+        case .strip:
+            return enterActions(actionCount: actionCount, moreCount: moreCount)
+        case .actions:
+            if actionIndex + Self.actionColumns < actionCount {
+                actionIndex += Self.actionColumns
+                return true
+            }
+            guard moreCount > 0 else { return false }
+            focus = .more
+            moreIndex = 0
             return true
-        case .strip, .topGames:
+        case .more, .topGames:
             return false
         }
     }
 
-    /// Up: strip → pills → row.
-    @discardableResult
-    public mutating func moveUp() -> Bool {
-        switch focus {
-        case .row: return false
-        case .pills, .topGames: focus = .row; return true
-        case .strip: focus = .pills; return true
+    private mutating func enterActions(actionCount: Int, moreCount: Int) -> Bool {
+        if actionCount > 0 {
+            focus = .actions
+            actionIndex = 0
+            return true
         }
+        guard moreCount > 0 else { return false }
+        focus = .more
+        moreIndex = 0
+        return true
     }
 
-    /// Left/Right inside the pills or the strip.
+    /// Up: More like this → Build & Sources (row by row) → strip → pills → row.
     @discardableResult
-    public mutating func moveSideways(by delta: Int, screenshotCount: Int, topGameCount: Int = 0) -> Bool {
+    public mutating func moveUp(screenshotCount: Int = 1, actionCount: Int = 0) -> Bool {
         switch focus {
+        case .row: return false
+        case .pills, .topGames: focus = .row
+        case .strip: focus = .pills
+        case .actions:
+            if actionIndex >= Self.actionColumns {
+                actionIndex -= Self.actionColumns
+            } else {
+                focus = screenshotCount > 0 ? .strip : .pills
+            }
+        case .more:
+            if actionCount > 0 {
+                focus = .actions
+                actionIndex = ((actionCount - 1) / Self.actionColumns) * Self.actionColumns
+            } else {
+                focus = screenshotCount > 0 ? .strip : .pills
+            }
+        }
+        return true
+    }
+
+    /// Left/Right inside the pills, the strip, Build & Sources or More like this.
+    @discardableResult
+    public mutating func moveSideways(by delta: Int, screenshotCount: Int, topGameCount: Int = 0,
+                                      actionCount: Int = 0, moreCount: Int = 0) -> Bool {
+        switch focus {
+        case .actions:
+            let column = actionIndex % Self.actionColumns
+            let next = actionIndex + (delta < 0 ? -1 : 1)
+            guard delta < 0 ? column > 0 : (column < Self.actionColumns - 1 && next < actionCount) else { return false }
+            actionIndex = next
+            return true
+        case .more:
+            guard moreCount > 0 else { return false }
+            let next = min(max(moreIndex + delta, 0), moreCount - 1)
+            defer { moreIndex = next }
+            return next != moreIndex
         case .row:
             return false
         case .pills:

@@ -32,15 +32,17 @@ final class SeleneHeroArt: ObservableObject {
     }
 
     /// `current` re-reads the screen's selected game after each await.
+    /// `settle` is the pause before loading; Collection waits longer so its logo leads.
     func loadHero(game: PortedGame?, current: () -> UUID?, metadata: NintendoStoreMetadata?,
-                  artwork: ArtworkStore, steamGridDB: SteamGridDBService, apiKey: String) async {
+                  artwork: ArtworkStore, steamGridDB: SteamGridDBService, apiKey: String,
+                  settle: UInt64 = 150_000_000) async {
         guard let game else {
             image = nil
             key = "none"
             return
         }
         if key.hasPrefix(game.id.uuidString) { return }
-        try? await Task.sleep(nanoseconds: 150_000_000)
+        try? await Task.sleep(nanoseconds: settle)
         guard !Task.isCancelled else { return }
         let loaded = await GameArtLoader.shared.hero(
             for: game, metadata: metadata, artwork: artwork, steamGridDB: steamGridDB, apiKey: apiKey)

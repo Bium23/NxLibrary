@@ -11,6 +11,9 @@ extension SpotlightView {
         let items = self.items
         let shots = screenshotCount
         let tops = topGameCount
+        let page = currentPage
+        let actions = page?.rows.count ?? 0
+        let more = page?.more.count ?? 0
         var moved = false
         switch action {
         case .navigateLeft, .navigateRight:
@@ -18,17 +21,19 @@ extension SpotlightView {
             mutate { state in
                 moved = state.focus == .row
                     ? state.move(by: delta, in: items)
-                    : state.moveSideways(by: delta, screenshotCount: shots, topGameCount: tops)
+                    : state.moveSideways(by: delta, screenshotCount: shots, topGameCount: tops,
+                                         actionCount: actions, moreCount: more)
             }
         case .navigateDown:
             let isGame = selectedGame != nil
             let isActivity = selectedItem == .card(.activity)
             mutate {
                 moved = $0.moveDown(selectedIsGame: isGame, screenshotCount: shots,
-                                    selectedIsActivity: isActivity, topGameCount: tops)
+                                    selectedIsActivity: isActivity, topGameCount: tops,
+                                    actionCount: actions, moreCount: more)
             }
         case .navigateUp:
-            mutate { moved = $0.moveUp() }
+            mutate { moved = $0.moveUp(screenshotCount: shots, actionCount: actions) }
         case .tabPrevious:
             setFilter(filter.shifted(by: -1))
         case .tabNext:
@@ -41,7 +46,10 @@ extension SpotlightView {
             if router.isSearchPresented { router.isSearchPresented = false }
             mutate { if $0.focus != .row { $0.focus = .row; moved = true } }
         case .secondaryAction:
-            if let game = selectedGame { router.showDetail(game.id) }
+            // X scrolls to the game's page (the pills), like Down from the row.
+            if selectedGame != nil {
+                mutate { if $0.focus == .row { $0.focus = .pills; $0.pillIndex = 0; moved = true } }
+            }
         case .contextAction:
             if let game = selectedGame {
                 viewModel.openGameOptions(game, from: .spotlight)
@@ -72,6 +80,15 @@ extension SpotlightView {
             if let game = selectedGame { pressPill(state.pillIndex, game: game) }
         case .strip:
             openViewer(at: state.stripIndex)
+        case .actions:
+            let rows = currentPage?.rows ?? []
+            guard state.actionIndex < rows.count else { return }
+            rows[state.actionIndex].action()
+        case .more:
+            let more = currentPage?.more ?? []
+            guard state.moreIndex < more.count else { return }
+            SoundEffectService.shared.play(.click)
+            selectGame(more[state.moreIndex].id)
         case .topGames:
             let ids = visibleTopGameIDs
             if state.topGameIndex < ids.count { selectGame(ids[state.topGameIndex]) }
@@ -214,11 +231,11 @@ extension SpotlightView {
                 play(game)
             }
         case 1:
-            // Close Game while the game runs (asks first); otherwise Details.
+            // Close Game while the game runs (asks first); otherwise Options.
             if runningGames.isRunning(game) {
                 viewModel.askCloseGame(game)
             } else {
-                router.showDetail(game.id)
+                viewModel.openGameOptions(game, from: .spotlight)
             }
         default:
             viewModel.toggleFavorite(game)
@@ -229,7 +246,8 @@ extension SpotlightView {
         if game.isPlayableLocally {
             viewModel.launchGame(game)
         } else {
-            router.showDetail(game.id)
+            // Not built yet: scroll down to Build & Sources.
+            mutate { $0.focus = .actions; $0.actionIndex = 0 }
         }
     }
 
@@ -269,7 +287,7 @@ extension SpotlightView {
 
     func installKeyMonitor() {
         guard keyMonitor == nil else { return }
-        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .scrollWheel]) { event in
             // An alert or sheet owns Return and Esc; consuming them here would
             // replay the action that raised the alert.
             guard !router.isMenuPresented,
@@ -286,6 +304,7 @@ extension SpotlightView {
                   window.attachedSheet == nil,
                   NSApp.modalWindow == nil,
                   !(window.firstResponder is NSText) else { return event }
+            if event.type == .scrollWheel { return scrollPage(with: event) }
             let modifiers = event.modifierFlags.intersection([.command, .control, .option])
             guard modifiers.isEmpty else { return event }
             if viewer != nil {
@@ -322,6 +341,93 @@ extension SpotlightView {
             handle(action)
             return nil
         }
+    }
+
+    // MARK: - Wheel and trackpad
+
+    /// The wheel or trackpad. Between the row and the page it never stops
+    /// halfway: the first scroll down from the row runs the same glide as Down,
+    /// and scrolling above the pills runs the glide back to the row; the rest of
+    /// that gesture is ignored. Inside the page it moves freely, following the
+    /// fingers (with the trackpad's momentum) down to the bottom. When it stops,
+    /// the focus moves to the nearest section without moving the page.
+    func scrollPage(with event: NSEvent) -> NSEvent? {
+        guard selectedGame != nil, viewer == nil, cardMenu == nil,
+              !viewModel.spotlight.isLifted else { return event }
+        let dy = event.scrollingDeltaY
+        guard abs(dy) >= abs(event.scrollingDeltaX) else { return event }
+        if wheelLocked {
+            // A new touch, or a mouse wheel click once the glide is over, starts afresh.
+            let fresh = event.phase == .began || (!event.hasPreciseScrollingDeltas && !isGliding)
+            guard fresh else { return nil }
+            wheelLocked = false
+        }
+        guard !isGliding else { return nil }
+        let focus = viewModel.spotlight.focus
+        let onRow = focus == .row || focus == .topGames
+        let first = offset(for: .pills)
+        let step = event.hasPreciseScrollingDeltas ? dy : dy * canvas.u(48)
+
+        if onRow {
+            // Content moving up (scrolling down) leaves the row with the full glide.
+            guard focus == .row, step < -2 else { return nil }
+            wheelLocked = true
+            wheelSettle?.cancel()
+            mutate { $0.focus = .pills; $0.pillIndex = 0 }
+            SoundEffectService.shared.play(.focus)
+            return nil
+        }
+
+        let next = scroll + step
+        if next > first + 2 {
+            // Above the pills: glide back to the row.
+            wheelLocked = true
+            wheelSettle?.cancel()
+            mutate { $0.focus = .row }
+            SoundEffectService.shared.play(.focus)
+            return nil
+        }
+        let page = currentPage
+        let bottom = offset(for: page.map { $0.more.isEmpty ? .actions : .more } ?? .pills)
+        let clamped = min(first, max(bottom, next))
+        if event.hasPreciseScrollingDeltas || reduceMotion {
+            var still = Transaction()
+            still.disablesAnimations = true
+            withTransaction(still) { scroll = clamped }
+        } else {
+            withAnimation(.easeOut(duration: 0.25)) { scroll = clamped }
+        }
+        setPageFades(onRow: false,
+                     deep: clamped < (offset(for: .strip) + offset(for: .actions)) / 2)
+        wheelSettle?.cancel()
+        wheelSettle = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard !Task.isCancelled else { return }
+            settleFocusOnScroll()
+        }
+        return nil
+    }
+
+    /// Focuses the section whose resting place is nearest the current scroll.
+    private func settleFocusOnScroll() {
+        guard let page = currentPage else { return }
+        // The row is reached only by the glide, never by settling.
+        var areas: [SpotlightFocusArea] = [.pills]
+        if screenshotCount > 0 { areas.append(.strip) }
+        if !page.rows.isEmpty { areas.append(.actions) }
+        if !page.more.isEmpty { areas.append(.more) }
+        let current = scroll
+        guard let nearest = areas.min(by: { abs(offset(for: $0) - current) < abs(offset(for: $1) - current) }),
+              nearest != viewModel.spotlight.focus else { return }
+        holdScroll = true
+        mutate { state in
+            state.focus = nearest
+            state.pillIndex = 0
+            state.stripIndex = 0
+            state.actionIndex = 0
+            state.moreIndex = 0
+        }
+        SoundEffectService.shared.play(.focus)
     }
 
     func removeKeyMonitor() {

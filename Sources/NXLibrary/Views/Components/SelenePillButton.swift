@@ -36,8 +36,9 @@ struct SelenePillButton: View {
             .overlay(Capsule().strokeBorder(focused && !solid ? SeleneTheme.focus : SeleneTheme.ink15,
                                             lineWidth: solid ? 0 : max(1, canvas.u(focused && !solid ? 2 : 1))))
             .shadow(color: solid ? SeleneTheme.focus.opacity(0.4) : .clear, radius: canvas.u(22))
-            .scaleEffect(focused ? 1.06 : 1)
-            .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: focused)
+            .scaleEffect(focused && !reduceMotion ? 1.06 : 1)
+            // Focus eases across pills; the colour change is a fade, so it stays under reduce motion.
+            .animation(SeleneTheme.cubicOut(0.26), value: focused)
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)

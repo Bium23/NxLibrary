@@ -113,37 +113,10 @@ struct GameDetailView: View {
         return metadata != nil || viewModel.storeMetadataErrors[game.id] != nil
     }
 
-    /// Build & Sources' actions, in grid order. Store links and the Nintendo search appear only when they have a target.
+    /// Build & Sources' actions, in grid order.
     func actionRows(_ p: GameDetailPresentation, buildBlocked: Bool) -> [BuildSourcesRow] {
-        var rows: [BuildSourcesRow] = [
-            BuildSourcesRow(id: "attach", title: "Attach sources…") {
-                viewModel.locateSources(for: game)
-            },
-            BuildSourcesRow(id: "rebuild", title: "Rebuild", enabled: p.canRebuild && !buildBlocked) {
-                rebuild()
-            },
-            BuildSourcesRow(id: "log", title: "Open log") {
-                viewModel.revealLog(for: game)
-            },
-            BuildSourcesRow(id: "save", title: "Open save folder") {
-                viewModel.revealSaveFolder(URL(fileURLWithPath: p.savePath))
-            },
-            BuildSourcesRow(id: "app", title: "Reveal app in Finder") {
-                viewModel.revealInFinder(url: game.url)
-            }
-        ]
-        if let store = p.storeURL {
-            rows.append(BuildSourcesRow(id: "store", title: "Store page") { viewModel.openURL(store) })
-        }
-        if let hltb = p.hltbURL {
-            rows.append(BuildSourcesRow(id: "hltb", title: "HowLongToBeat") { viewModel.openURL(hltb) })
-        }
-        if p.description.isEmpty, let search = viewModel.nintendoStoreSearchURL(for: game) {
-            rows.append(BuildSourcesRow(id: "search", title: "Search Nintendo Store") {
-                viewModel.openURL(search)
-            })
-        }
-        return rows
+        BuildSourcesRow.rows(for: game, presentation: p, buildBlocked: buildBlocked,
+                             viewModel: viewModel, rebuild: { rebuild() })
     }
 
     // MARK: - Body
@@ -155,6 +128,7 @@ struct GameDetailView: View {
             DetailsBackground(image: art.image, imageKey: art.key,
                               fallback: GameIconProvider.icon(for: game),
                               shade: settings.settings.backgroundShade)
+            SeleneBottomScrim()
             stage(model)
                 .frame(width: canvas.stageSize.width, height: canvas.stageSize.height, alignment: .topLeading)
                 .clipped()
@@ -204,8 +178,8 @@ struct GameDetailView: View {
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
                 SeleneHintsBar(left: [HintItem(.b, "Back", action: { router.back() })],
-                               right: [HintItem(.y, "Game options"), HintItem(.a, "Select")],
-                               bottom: 40, leftInset: 18)
+                               right: [HintItem(.y, "Options"), HintItem(.a, "Select")],
+                               bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
         }
     }
@@ -229,6 +203,7 @@ struct GameDetailView: View {
                             expanded: $expanded,
                             onPrimary: { pressPill(0) },
                             onSecondary: { pressPill(1) },
+                            onFavorite: { pressPill(2) },
                             onHoverPill: { hoverPill($0) })
                 .offset(x: canvas.u(110), y: canvas.u(96))
 
@@ -245,7 +220,7 @@ struct GameDetailView: View {
                         openViewer(at: index)
                     })
             }
-            .offset(x: canvas.u(110), y: canvas.u(720))
+            .offset(x: canvas.u(110), y: canvas.u(740))
 
             band(zone: DetailsFocus.actionsZone) {
                 HStack(alignment: .top, spacing: 0) {
@@ -262,7 +237,7 @@ struct GameDetailView: View {
                 }
                 .frame(width: canvas.u(1700), alignment: .topLeading)
             }
-            .offset(x: canvas.u(110), y: canvas.u(950))
+            .offset(x: canvas.u(110), y: canvas.u(970))
 
             if !model.more.isEmpty {
                 band(zone: DetailsFocus.moreZone) {
@@ -279,7 +254,7 @@ struct GameDetailView: View {
                             selectOnSpotlight(model.more[index])
                         })
                 }
-                .offset(x: canvas.u(110), y: canvas.u(1180))
+                .offset(x: canvas.u(110), y: canvas.u(1200))
             }
         }
     }
