@@ -39,7 +39,6 @@ public struct AppShellView: View {
             if router.isMenuPresented {
                 MenuOverlayView(
                     router: router,
-                    onInput: { menuInput($0) },
                     onSelect: { runMenuAction($0) },
                     onSelectPower: { runPower($0) }
                 )
@@ -100,7 +99,8 @@ public struct AppShellView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryPlayFocused)) { _ in
-            guard isHomeRoute,
+            guard !router.isMenuPresented,
+                  isHomeRoute,
                   viewModel.gameForSettingsSheet == nil,
                   let game = viewModel.currentFocusedGame else { return }
             viewModel.launchGame(game)
@@ -132,7 +132,7 @@ public struct AppShellView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryCheckUpstream)) { _ in
-            guard !router.isScreenshotViewerOpen else { return }
+            guard !router.isMenuPresented, !router.isScreenshotViewerOpen else { return }
             viewModel.checkUpstreamChangelog()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenMenu)) { _ in
@@ -155,7 +155,8 @@ public struct AppShellView: View {
             router.showLibrary()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenAddGame)) { _ in
-            guard !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
+            guard !router.isMenuPresented, !router.isScreenshotViewerOpen,
+                  viewModel.gameForSettingsSheet == nil else { return }
             router.closeMenu()
             openFreshAddGame()
         }
@@ -306,6 +307,24 @@ public struct AppShellView: View {
             // The screenshot viewer owns the keyboard (its own monitor handles it); no navigating underneath.
             if router.isScreenshotViewerOpen { return event }
             let mods = event.modifierFlags.intersection([.command, .control, .option, .shift])
+            // The open control center takes the keyboard: arrows, Return, Space and Esc go to the menu,
+            // and no screen underneath sees them.
+            if router.isMenuPresented, mods.isEmpty {
+                let menuAction: GamepadAction?
+                switch event.keyCode {
+                case 123: menuAction = .navigateLeft     // Left arrow
+                case 124: menuAction = .navigateRight    // Right arrow
+                case 125: menuAction = .navigateDown     // Down arrow
+                case 126: menuAction = .navigateUp       // Up arrow
+                case 36, 76, 49: menuAction = .confirm   // Return, keypad Enter, Space
+                case 53: menuAction = .cancel            // Esc
+                default: menuAction = nil
+                }
+                if let menuAction {
+                    GameControllerService.shared.onAction?(menuAction)
+                    return nil
+                }
+            }
             let key = event.charactersIgnoringModifiers?.lowercased() ?? ""
             let typing = event.window?.firstResponder is NSText
             var action: GamepadAction?
@@ -347,9 +366,9 @@ public struct AppShellView: View {
         case .navigateRight:
             router.moveMenu(by: 1)
         case .navigateUp:
-            if router.menuSelection.isPowerOpen { router.moveMenu(by: -1) }
+            router.movePowerMenu(by: -1)
         case .navigateDown:
-            if router.menuSelection.isPowerOpen { router.moveMenu(by: 1) }
+            router.movePowerMenu(by: 1)
         case .confirm:
             if router.menuSelection.isPowerOpen {
                 runPower(router.menuSelection.power)

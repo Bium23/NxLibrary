@@ -45,13 +45,16 @@ public final class AppRouter: ObservableObject {
         self.route = route
     }
 
-    /// Left and Right move along the row; while the Power pills are open they move the pills instead.
+    /// Left and Right move along the row. They do nothing while the Power pills are open.
     public func moveMenu(by delta: Int) {
-        if menuSelection.isPowerOpen {
-            menuSelection.movePower(by: delta)
-        } else {
-            menuSelection.move(by: delta)
-        }
+        guard !menuSelection.isPowerOpen else { return }
+        menuSelection.move(by: delta)
+    }
+
+    /// Up and Down move the Power pills. They do nothing while the pills are closed.
+    public func movePowerMenu(by delta: Int) {
+        guard menuSelection.isPowerOpen else { return }
+        menuSelection.movePower(by: delta)
     }
 
     public func openPowerMenu() { menuSelection.openPower() }

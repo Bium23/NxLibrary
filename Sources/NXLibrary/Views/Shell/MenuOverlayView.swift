@@ -1,18 +1,15 @@
 import SwiftUI
 import NXLibraryCore
 
-/// Selene's control center: the screen dimmed at 0.55, one row of icon buttons
-/// along the bottom (centre 68u above the bottom edge of the 1080u stage), the
-/// focused item's name above a 3u white ring. Power opens its pills stacked above
-/// its button.
+/// Selene's control center (MenuScreen.cs): the screen dimmed at 0.55, one row of
+/// icon buttons along the bottom, the focused item's name above a white ring.
+/// Power opens its pills stacked above its button.
 ///
-/// Keyboard arrows, Return and Space go to the shell as `GamepadAction`s, so the
-/// keyboard and the controller share one path. Mouse: hover focuses, click
-/// activates, a click on the scrim closes. Esc reaches the shell's exit command.
+/// Keyboard input (arrows, Return, Space, Esc) is taken by the shell's key monitor
+/// while the menu is open and sent through `menuInput`, the same path as the
+/// controller. Mouse: hover focuses, click activates, a click on the scrim closes.
 struct MenuOverlayView: View {
     @ObservedObject var router: AppRouter
-    /// Keyboard input: arrows, Return and Space.
-    let onInput: (GamepadAction) -> Void
     /// A click on a row button; the shell runs it.
     let onSelect: (MenuAction) -> Void
     /// A click on a Power pill; the shell runs it.
@@ -31,15 +28,20 @@ struct MenuOverlayView: View {
 
     private var powerOpen: Bool { router.menuSelection.isPowerOpen }
 
-    // Selene units. The row's centre sits at y = 1012u of 1080u.
-    private let buttonSize: CGFloat = 64
-    private let focusRingSize: CGFloat = 76
-    private let focusRingWidth: CGFloat = 3
-    private let rowGap: CGFloat = 16
+    // Selene units (MenuScreen.cs): 96u cells with no gap, a 70u dot with a 3u
+    // ring, the bar 70u above the bottom edge, so the dot's centre is 105u up
+    // (y = 975u of 1080u).
+    private let cellWidth: CGFloat = 96
+    private let dotSize: CGFloat = 70
+    private let ringWidth: CGFloat = 3
+    private let iconSize: CGFloat = 34
     private let labelBand: CGFloat = 26
-    private let labelGap: CGFloat = 18
-    private let rowBottom: CGFloat = 36
-    private let iconSize: CGFloat = 28
+    /// Between the name and the top of the ring (Selene: the pill sits Ring + 12 above the cell's bottom).
+    private let labelGap: CGFloat = 12
+    private let rowBottom: CGFloat = 70
+    private let focusedScale: CGFloat = 1.1
+    /// Above the Power pills' bottom edge, the gap to the name.
+    private let pillsGap: CGFloat = 14
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -51,17 +53,15 @@ struct MenuOverlayView: View {
             row
                 .padding(.bottom, canvas.u(rowBottom))
 
-            SeleneHintsBar(left: [HintItem(.b, "Close")], right: [HintItem(.a, "Select")], bottom: 40)
+            SeleneHintsBar(left: [HintItem(.b, "Close")], right: [HintItem(.a, "Select")], bottom: 48)
         }
-        .onMoveCommand(perform: handleMove)
-        .seleneActivationKeys { onInput(.confirm) }
         .onAppear { presented = true }
     }
 
     // MARK: - Row
 
     private var row: some View {
-        HStack(alignment: .bottom, spacing: canvas.u(rowGap)) {
+        HStack(alignment: .bottom, spacing: 0) {
             ForEach(Array(MenuAction.allCases.enumerated()), id: \.element) { index, action in
                 button(action, index: index)
             }
@@ -77,33 +77,34 @@ struct MenuOverlayView: View {
         } label: {
             VStack(spacing: 0) {
                 Text(action.title)
-                    .seleneFont(19, .semibold)
+                    .seleneFont(18, .semibold)
                     .foregroundColor(SeleneTheme.ink)
                     .lineLimit(1)
                     .fixedSize()
                     .frame(height: canvas.u(labelBand), alignment: .bottom)
                     .opacity(isFocused ? 1 : 0)
-                    .animation(SeleneTheme.focusIn, value: isFocused)
                     .offset(y: isFocused || reduceMotion ? 0 : canvas.u(6))
+                    .animation(SeleneTheme.focusIn, value: isFocused)
                     .padding(.bottom, canvas.u(labelGap))
 
                 ZStack {
                     Circle()
-                        .fill(isFocused ? SeleneTheme.glass : Color.clear)
-                        .frame(width: canvas.u(buttonSize), height: canvas.u(buttonSize))
+                        .fill(SeleneTheme.ink.opacity(isFocused ? 0.12 : 0))
+                        .frame(width: canvas.u(dotSize), height: canvas.u(dotSize))
+                        .animation(SeleneTheme.focusIn, value: isFocused)
                     Circle()
-                        .strokeBorder(SeleneTheme.focus, lineWidth: canvas.u(focusRingWidth))
-                        .frame(width: canvas.u(focusRingSize), height: canvas.u(focusRingSize))
+                        .strokeBorder(SeleneTheme.ink, lineWidth: canvas.u(ringWidth))
+                        .frame(width: canvas.u(dotSize), height: canvas.u(dotSize))
                         .opacity(isFocused ? 1 : 0)
                         .animation(SeleneTheme.focusIn, value: isFocused)
                     MaterialIconView(action.icon, size: iconSize)
                         .foregroundColor(SeleneTheme.ink)
                 }
-                .frame(width: canvas.u(buttonSize), height: canvas.u(buttonSize))
-                .scaleEffect(isFocused && !reduceMotion ? 1.06 : 1)
+                .frame(width: canvas.u(dotSize), height: canvas.u(dotSize))
+                .scaleEffect(isFocused && !reduceMotion ? focusedScale : 1)
                 .animation(reduceMotion ? nil : SeleneTheme.quick, value: isFocused)
             }
-            .frame(width: canvas.u(buttonSize))
+            .frame(width: canvas.u(cellWidth))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -114,7 +115,7 @@ struct MenuOverlayView: View {
             if action == .power, powerOpen {
                 powerPills
                     .transition(.opacity)
-                    .offset(y: -canvas.u(labelBand + labelGap + buttonSize + 14))
+                    .offset(y: -canvas.u(labelBand + labelGap + dotSize + pillsGap))
             }
         }
         .accessibilityLabel(action.title)
@@ -148,18 +149,6 @@ struct MenuOverlayView: View {
                 }
                 .accessibilityLabel(action.title)
             }
-        }
-    }
-
-    // MARK: - Keyboard
-
-    private func handleMove(_ direction: MoveCommandDirection) {
-        switch direction {
-        case .left: onInput(.navigateLeft)
-        case .right: onInput(.navigateRight)
-        case .up: onInput(.navigateUp)
-        case .down: onInput(.navigateDown)
-        default: break
         }
     }
 }
