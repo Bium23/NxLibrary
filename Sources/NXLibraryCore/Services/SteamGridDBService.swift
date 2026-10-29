@@ -77,6 +77,33 @@ public final class SteamGridDBService: Sendable {
         }
     }
 
+    public func fetchSquareGridURL(gameName: String, apiKey: String) async -> URL? {
+        let key = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !key.isEmpty else { return nil }
+        guard let gameId = await findGameId(gameName: gameName, apiKey: apiKey) else { return nil }
+
+        let endpoint = "https://www.steamgriddb.com/api/v2/grids/game/\(gameId)?dimensions=512x512,1024x1024"
+        guard let url = URL(string: endpoint) else { return nil }
+
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 10
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { return nil }
+            let result = try JSONDecoder().decode(MediaResponse.self, from: data)
+            guard let items = result.data, !items.isEmpty else { return nil }
+            let pngs = items.filter { $0.mime?.contains("png") == true }
+            let pool = pngs.isEmpty ? items : pngs
+            let best = pool.max { ($0.width ?? 0) < ($1.width ?? 0) }
+            guard let bestUrl = best?.url else { return nil }
+            return URL(string: bestUrl)
+        } catch {
+            return nil
+        }
+    }
+
     private func findGameId(gameName: String, apiKey: String) async -> Int? {
         let clean = cleanGameName(gameName)
         guard let encoded = clean.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),

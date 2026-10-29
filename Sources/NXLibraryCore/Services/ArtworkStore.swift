@@ -4,13 +4,14 @@ import ImageIO
 import Combine
 
 public enum ArtworkKind: String, Codable {
-    case hero, cover, logo
+    case hero, cover, logo, square
 
     public var maxPixelSize: CGFloat {
         switch self {
         case .hero: return 2560
         case .cover: return 1000
         case .logo: return 1200
+        case .square: return 512
         }
     }
 }

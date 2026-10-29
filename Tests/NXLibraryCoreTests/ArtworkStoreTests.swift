@@ -122,4 +122,28 @@ final class ArtworkStoreTests: XCTestCase {
         XCTAssertEqual(logo.pathExtension, "png")
         XCTAssertTrue(FileManager.default.fileExists(atPath: logo.path))
     }
+
+    func testSquareKindFileURL() async {
+        let client = FakeClient()
+        client.data = imageData(width: 1024, height: 1024)
+        let dir = tempDir()
+        let store = ArtworkStore(cacheDirectory: dir, client: client)
+        let url = await store.fetch(titleID: "0100ABC",
+                                    remoteURL: URL(string: "https://example.com/s.png"),
+                                    kind: .square)
+        XCTAssertEqual(url, dir.appendingPathComponent("0100ABC").appendingPathComponent("square.jpg"))
+        XCTAssertEqual(store.cachedURL(titleID: "0100ABC", kind: .square), url)
+    }
+
+    func testSquareMaxPixelSize512() async {
+        XCTAssertEqual(ArtworkKind.square.maxPixelSize, 512)
+        let client = FakeClient()
+        client.data = imageData(width: 1024, height: 1024)
+        let store = ArtworkStore(cacheDirectory: tempDir(), client: client)
+        let url = await store.fetch(titleID: "0100",
+                                    remoteURL: URL(string: "https://example.com/s.png"),
+                                    kind: .square)!
+        let image = NSImage(contentsOf: url)!
+        XCTAssertLessThanOrEqual(max(image.size.width, image.size.height), 512)
+    }
 }
