@@ -36,9 +36,10 @@ public enum SeleneTheme {
         case .linear:
             return AnyShapeStyle(LinearGradient(stops: stops, startPoint: .top, endPoint: .bottom))
         case .radial:
-            return AnyShapeStyle(RadialGradient(
+            // Selene's RadiusX 0.5 / RadiusY 0.7 of the bounds, as an ellipse fraction.
+            return AnyShapeStyle(EllipticalGradient(
                 gradient: Gradient(stops: stops), center: UnitPoint(x: 0.5, y: 0.2),
-                startRadius: 0, endRadius: 900))
+                startRadiusFraction: 0, endRadiusFraction: 1.2))
         }
     }
 

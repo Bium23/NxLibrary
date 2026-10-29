@@ -10,6 +10,7 @@ public struct AppShellView: View {
     @StateObject private var playSessions = PlaySessionStore()
     @StateObject private var artwork = ArtworkStore()
     @StateObject private var runningGames = RunningGameMonitor()
+    @ObservedObject private var theme = ThemeStore.shared
     @State private var gestureKeyMonitor: Any?
     /// Dismisses the Close Game confirmation when its game quits by itself.
     @State private var closeGameWatch: AnyCancellable?
@@ -21,9 +22,17 @@ public struct AppShellView: View {
     /// The router, already on the screen the Start on setting names.
     private static func startingRouter() -> AppRouter {
         let saved = AppSettingsStore().settings
+        // The palette is in place before the first frame.
+        ThemeStore.shared.apply(id: saved.colorThemeID)
         let router = AppRouter()
         router.setInitialRoute(AppRouter.initialRoute(for: saved.startOn, last: saved.lastHome))
         return router
+    }
+
+    private var backdropStyle: SeleneBackdropStyle {
+        SeleneBackdropStyle(wallpaperURL: theme.wallpaper(for: settings.settings.wallpaperID)?.url,
+                            sizing: settings.settings.backgroundSizing,
+                            animated: settings.settings.animatedBackground)
     }
 
     /// Spotlight or Collection: the screens that pick a game.
@@ -102,6 +111,7 @@ public struct AppShellView: View {
         .animation(reduceMotion ? nil : SeleneTheme.quick,
                    value: viewModel.gameToClose?.id)
         .environment(\.seleneReduceMotion, reduceMotion)
+        .environment(\.seleneBackdropStyle, backdropStyle)
         .environment(\.seleneShowButtonHints, settings.settings.showButtonHints)
         .environment(\.seleneButtonNames, settings.settings.buttonNames)
         .preferredColorScheme(.dark)
@@ -592,6 +602,9 @@ private struct SoundCueHooks: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            .onReceive(NotificationCenter.default.publisher(for: .nxSeleneImportFinished)) { _ in
+                ThemeStore.shared.reloadWallpapers()
+            }
             .onChange(of: router.isMenuPresented) { open in
                 SoundEffectService.shared.play(open ? .openPanel : .back)
             }

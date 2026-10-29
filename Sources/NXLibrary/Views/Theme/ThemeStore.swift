@@ -14,9 +14,29 @@ public final class ThemeStore: ObservableObject {
         let loaded = palettesURL.flatMap { try? SelenePaletteCatalog.load(from: $0) } ?? []
         palettes = loaded
         palette = SelenePaletteCatalog.resolve(activeID, in: loaded)
+        reloadWallpapers()
     }
 
+    /// Bundled wallpapers plus any imported from a Selene folder.
+    @Published public private(set) var wallpapers: [Wallpaper] = []
+
+    /// Call on the main thread: `palette` drives every view.
     public func apply(id: String) {
+        guard id != palette.id else { return }
         palette = SelenePaletteCatalog.resolve(id, in: palettes)
+    }
+
+    public func reloadWallpapers() {
+        var roots: [URL] = []
+        if let bundled = Bundle.main.resourceURL?.appendingPathComponent("Selene/Wallpapers") {
+            roots.append(bundled)
+        }
+        roots.append(SeleneImporter.defaultDestination.appendingPathComponent("Wallpapers"))
+        wallpapers = WallpaperCatalog.scan(roots: roots)
+    }
+
+    /// The wallpaper to draw for the setting under the active palette.
+    public func wallpaper(for wallpaperID: String?) -> Wallpaper? {
+        WallpaperCatalog.resolve(wallpaperID, themeID: palette.id, in: wallpapers)
     }
 }

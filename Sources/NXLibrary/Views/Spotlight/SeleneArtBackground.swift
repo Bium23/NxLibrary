@@ -2,8 +2,8 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
-/// Selene's full-bleed backdrop (Main.xaml SeleneHubGameBackground): the base
-/// gradient (wallpapers arrive in a later task), the selected game's art
+/// Selene's full-bleed backdrop (Main.xaml SeleneHubGameBackground): the backdrop
+/// (base gradient, wallpaper, ambient motion), the selected game's art
 /// crossfading on change, and the left, bottom and top shades at 0.3 scaled by
 /// the Background shade setting. Shared by Spotlight and Collection.
 struct SeleneArtBackground: View {
@@ -14,8 +14,7 @@ struct SeleneArtBackground: View {
 
     var body: some View {
         ZStack {
-            SeleneTheme.scrim
-            Rectangle().fill(SeleneTheme.baseGradient).opacity(0.6)
+            SeleneBackdrop()
             ZStack {
                 if let image {
                     Color.clear

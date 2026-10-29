@@ -24,8 +24,7 @@ struct DetailsBackground: View {
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .topLeading) {
-                SeleneTheme.scrim
-                Rectangle().fill(SeleneTheme.baseGradient).opacity(0.6)
+                SeleneBackdrop()
                 art(size: geo.size)
                 // GameDetails.xaml's three Borders, in order.
                 Rectangle().fill(SeleneTheme.scrim).mask(sideMask)

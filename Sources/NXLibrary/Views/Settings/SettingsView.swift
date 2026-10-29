@@ -41,6 +41,8 @@ public struct SettingsView: View {
     @State private var rowActions: [SettingsRowAction] = []
     @Environment(\.seleneReduceMotion) private var environmentReduceMotion
     @Environment(\.seleneCanvas) private var canvas
+    /// A palette change redraws the whole screen; selection and focus live here and survive it.
+    @ObservedObject private var theme = ThemeStore.shared
 
     public init(initialSection: SettingsSection,
                 viewModel: AppViewModel,
@@ -67,7 +69,8 @@ public struct SettingsView: View {
             .frame(maxHeight: .infinity, alignment: .top)
             SeleneHintsBar(right: commandHints)
         }
-        .background(SeleneTheme.scrim)
+        .id(theme.palette.id)
+        .background(SeleneBackdrop())
         .onMoveCommand(perform: handleMove)
         .onExitCommand(perform: handleBack)
         .seleneActivationKeys { handleGamepad(.confirm) }
