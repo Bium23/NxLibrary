@@ -78,6 +78,8 @@ extension AppViewModel {
             }
         case .menu:
             NotificationCenter.default.post(name: .nxLibraryOpenMenu, object: nil)
+        case .menuHold, .view, .viewHold, .jumpToStart, .jumpToEnd, .rightStickPress:
+            break // Not used by the library screen yet.
         case .tabPrevious:
             librarySelection.filterIndex = max(0, librarySelection.filterIndex - 1)
             librarySelection.query.filter = LibraryFilter.allCases[librarySelection.filterIndex]

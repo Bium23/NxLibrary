@@ -1,6 +1,7 @@
 import Foundation
 import AppKit
 import GameController
+import NXLibraryCore
 
 public final class GameControllerService: ObservableObject {
     public static let shared = GameControllerService()
@@ -155,10 +156,74 @@ public final class GameControllerService: ObservableObject {
         
         // Menu / Options
         gamepad.buttonMenu.pressedChangedHandler = { [weak self] _, _, pressed in
-            if pressed { self?.triggerAction(.menu) }
+            self?.handleHoldButton(.menu, pressed: pressed, tap: .menu, hold: .menuHold)
+        }
+        // View (Minus / Select / Share); not every controller has one.
+        gamepad.buttonOptions?.pressedChangedHandler = { [weak self] _, _, pressed in
+            self?.handleHoldButton(.view, pressed: pressed, tap: .view, hold: .viewHold)
+        }
+
+        // Triggers jump to the start / end of the list; R3 is a plain press.
+        gamepad.leftTrigger.pressedChangedHandler = { [weak self] _, _, pressed in
+            if pressed { self?.triggerAction(.jumpToStart) }
+        }
+        gamepad.rightTrigger.pressedChangedHandler = { [weak self] _, _, pressed in
+            if pressed { self?.triggerAction(.jumpToEnd) }
+        }
+        gamepad.rightThumbstickButton?.pressedChangedHandler = { [weak self] _, _, pressed in
+            if pressed { self?.triggerAction(.rightStickPress) }
         }
     }
     
+    private enum HoldButton: Hashable { case menu, view }
+    private var holdDetectors: [HoldButton: HoldDetector] = [:]
+    private var holdActions: [HoldButton: GamepadAction] = [:]
+    private var holdTimer: Timer?
+
+    /// Routes a button through a `HoldDetector`: release before the threshold is a
+    /// tap; a 50 ms timer fires the hold while the button is still down.
+    private func handleHoldButton(_ button: HoldButton, pressed: Bool,
+                                  tap: GamepadAction, hold: GamepadAction) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            let now = ProcessInfo.processInfo.systemUptime
+            var detector = self.holdDetectors[button] ?? HoldDetector()
+            if pressed {
+                detector.press(at: now)
+                self.holdActions[button] = hold
+                self.holdDetectors[button] = detector
+                self.startHoldTimer()
+            } else {
+                let result = detector.release(at: now)
+                self.holdDetectors[button] = detector
+                self.stopHoldTimerIfIdle()
+                if result == .tap { self.triggerAction(tap) }
+                else if result == .hold { self.triggerAction(hold) }
+            }
+        }
+    }
+
+    private func startHoldTimer() {
+        guard holdTimer == nil else { return }
+        holdTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            let now = ProcessInfo.processInfo.systemUptime
+            for (button, var detector) in self.holdDetectors where detector.isPressed {
+                if detector.tick(at: now) == .hold, let action = self.holdActions[button] {
+                    self.triggerAction(action)
+                }
+                self.holdDetectors[button] = detector
+            }
+            self.stopHoldTimerIfIdle()
+        }
+    }
+
+    private func stopHoldTimerIfIdle() {
+        guard !holdDetectors.values.contains(where: { $0.isPressed }) else { return }
+        holdTimer?.invalidate()
+        holdTimer = nil
+    }
+
     private func triggerAction(_ action: GamepadAction) {
         DispatchQueue.main.async { [weak self] in
             guard let self, self.isAppActive else { return }

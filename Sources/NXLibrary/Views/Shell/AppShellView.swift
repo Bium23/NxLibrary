@@ -9,6 +9,7 @@ public struct AppShellView: View {
     @StateObject private var playSessions = PlaySessionStore()
     @StateObject private var artwork = ArtworkStore()
     @State private var processObserver: GameProcessObserver?
+    @State private var gestureKeyMonitor: Any?
 
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
 
@@ -59,7 +60,10 @@ public struct AppShellView: View {
             SetupView(viewModel: viewModel)
         }
         .onAppear(perform: startRuntime)
-        .onDisappear { processObserver?.stop() }
+        .onDisappear {
+            processObserver?.stop()
+            removeGestureKeyMonitor()
+        }
         .onChange(of: router.route) { route in
             switch route {
             case .addGame:
@@ -199,6 +203,7 @@ public struct AppShellView: View {
         observer.start()
         processObserver = observer
         viewModel.router = router
+        installGestureKeyMonitor()
         GameControllerService.shared.onAction = { [weak viewModel, weak router] action in
             guard let viewModel, let router else { return }
             if router.isMenuPresented {
@@ -256,6 +261,47 @@ public struct AppShellView: View {
                 }
             }
         }
+    }
+
+    /// App-level monitor for the keyboard equivalents of the controller gestures.
+    /// Handles only Tab, Cmd+F, Cmd+, , Home and End; every other event passes through.
+    private func installGestureKeyMonitor() {
+        guard gestureKeyMonitor == nil else { return }
+        gestureKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [router] event in
+            let mods = event.modifierFlags.intersection([.command, .control, .option, .shift])
+            let key = event.charactersIgnoringModifiers?.lowercased() ?? ""
+            let typing = event.window?.firstResponder is NSText
+            var action: GamepadAction?
+            var consume = true
+            switch (event.keyCode, key, mods) {
+            case (48, _, []):                       // Tab
+                if typing { return event }
+                action = .view
+            case (_, "f", [.command]):              // Cmd+F
+                // Library still binds Cmd+F to its search button; Find a game replaces it later.
+                if typing || router.route == .library { return event }
+                action = .viewHold
+            case (_, ",", [.command]):              // Cmd+,
+                // Keep the Settings menu shortcut working: dispatch but do not consume.
+                action = .menuHold
+                consume = false
+            case (115, _, []):                      // Home
+                if typing { return event }
+                action = .jumpToStart
+            case (119, _, []):                      // End
+                if typing { return event }
+                action = .jumpToEnd
+            default:
+                return event
+            }
+            if let action { GameControllerService.shared.onAction?(action) }
+            return consume ? nil : event
+        }
+    }
+
+    private func removeGestureKeyMonitor() {
+        if let monitor = gestureKeyMonitor { NSEvent.removeMonitor(monitor) }
+        gestureKeyMonitor = nil
     }
 
     private func handleMenu(_ action: MenuAction) {

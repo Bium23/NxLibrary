@@ -73,5 +73,11 @@ public enum GamepadAction: Hashable {
     case contextAction     // Y or Triangle (Save files)
     case tabPrevious       // Left Shoulder (L / LB)
     case tabNext           // Right Shoulder (R / RB)
-    case menu              // Plus / Start
+    case menu              // Plus / Start (tap)
+    case menuHold          // Plus / Start (hold)
+    case view              // Minus / Select / Share (tap)
+    case viewHold          // Minus / Select / Share (hold)
+    case jumpToStart       // Left trigger
+    case jumpToEnd         // Right trigger
+    case rightStickPress   // R3
 }
