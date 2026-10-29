@@ -131,7 +131,7 @@ final class ArtworkStoreTests: XCTestCase {
         let url = await store.fetch(titleID: "0100ABC",
                                     remoteURL: URL(string: "https://example.com/s.png"),
                                     kind: .square)
-        XCTAssertEqual(url, dir.appendingPathComponent("0100ABC").appendingPathComponent("square.jpg"))
+        XCTAssertEqual(url, dir.appendingPathComponent("0100ABC").appendingPathComponent("square.png"))
         XCTAssertEqual(store.cachedURL(titleID: "0100ABC", kind: .square), url)
     }
 
@@ -145,5 +145,25 @@ final class ArtworkStoreTests: XCTestCase {
                                     kind: .square)!
         let image = NSImage(contentsOf: url)!
         XCTAssertLessThanOrEqual(max(image.size.width, image.size.height), 512)
+    }
+
+    func testSquareKeepsAlpha() async {
+        let ctx = CGContext(data: nil, width: 64, height: 64, bitsPerComponent: 8, bytesPerRow: 0,
+                            space: CGColorSpaceCreateDeviceRGB(),
+                            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        ctx.clear(CGRect(x: 0, y: 0, width: 64, height: 64))
+        ctx.setFillColor(NSColor.red.cgColor)
+        ctx.fill(CGRect(x: 0, y: 0, width: 32, height: 64))
+        let png = NSBitmapImageRep(cgImage: ctx.makeImage()!).representation(using: .png, properties: [:])!
+        let client = FakeClient()
+        client.data = png
+        let store = ArtworkStore(cacheDirectory: tempDir(), client: client)
+        let url = await store.fetch(titleID: "0100",
+                                    remoteURL: URL(string: "https://example.com/s.png"),
+                                    kind: .square)!
+        XCTAssertEqual(url.pathExtension, "png")
+        let rep = NSBitmapImageRep(data: try! Data(contentsOf: url))!
+        XCTAssertTrue(rep.hasAlpha)
+        XCTAssertEqual(rep.colorAt(x: 60, y: 30)?.alphaComponent ?? 1, 0, accuracy: 0.01)
     }
 }

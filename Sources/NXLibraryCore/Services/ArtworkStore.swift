@@ -6,6 +6,9 @@ import Combine
 public enum ArtworkKind: String, Codable {
     case hero, cover, logo, square
 
+    /// Kinds cached as PNG so transparency survives.
+    var isPNG: Bool { self == .logo || self == .square }
+
     public var maxPixelSize: CGFloat {
         switch self {
         case .hero: return 2560
@@ -56,8 +59,8 @@ public final class ArtworkStore: ObservableObject {
             $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" ? $0 : "_"
         }.reduce(into: "") { $0.append($1) }
         let dir = cacheDirectory.appendingPathComponent(safe.isEmpty ? "unknown" : safe)
-        let primaryExt = kind == .logo ? "png" : "jpg"
-        let fallbackExt = kind == .logo ? "jpg" : "png"
+        let primaryExt = kind.isPNG ? "png" : "jpg"
+        let fallbackExt = kind.isPNG ? "jpg" : "png"
         let primary = dir.appendingPathComponent("\(kind.rawValue).\(primaryExt)")
         if fileManager.fileExists(atPath: primary.path) { return primary }
         let fallback = dir.appendingPathComponent("\(kind.rawValue).\(fallbackExt)")
@@ -97,6 +100,13 @@ public final class ArtworkStore: ObservableObject {
 
             if kind == .logo {
                 try data.write(to: url, options: .atomic)
+                return url
+            } else if kind == .square {
+                let png = await Task.detached(priority: .utility) {
+                    Self.downsample(data, maxPixelSize: ArtworkKind.square.maxPixelSize, png: true)
+                }.value
+                guard let png else { return cachedURL(titleID: titleID, kind: kind) }
+                try png.write(to: url, options: .atomic)
                 return url
             } else {
                 let maxPixelSize = kind.maxPixelSize
@@ -162,13 +172,13 @@ public final class ArtworkStore: ObservableObject {
         let safe = titleID.map {
             $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" ? $0 : "_"
         }.reduce(into: "") { $0.append($1) }
-        let ext = kind == .logo ? "png" : "jpg"
+        let ext = kind.isPNG ? "png" : "jpg"
         return cacheDirectory
             .appendingPathComponent(safe.isEmpty ? "unknown" : safe)
             .appendingPathComponent("\(kind.rawValue).\(ext)")
     }
 
-    static func downsample(_ data: Data, maxPixelSize: CGFloat) -> Data? {
+    static func downsample(_ data: Data, maxPixelSize: CGFloat, png: Bool = false) -> Data? {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
@@ -179,6 +189,7 @@ public final class ArtworkStore: ObservableObject {
             return nil
         }
         let rep = NSBitmapImageRep(cgImage: image)
+        if png { return rep.representation(using: .png, properties: [:]) }
         return rep.representation(using: .jpeg, properties: [.compressionFactor: 0.94])
     }
 }
