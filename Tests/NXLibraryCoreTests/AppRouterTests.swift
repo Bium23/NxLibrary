@@ -53,20 +53,64 @@ final class AppRouterTests: XCTestCase {
         router.closeMenu()
         XCTAssertFalse(router.isMenuPresented)
     }
+
+    func testMoveMenuMovesPillsWhileOpen() {
+        let router = AppRouter()
+        router.menuSelection.selected = .power
+        router.openPowerMenu()
+        router.moveMenu(by: 1)
+        XCTAssertEqual(router.menuSelection.power, .hide)
+        XCTAssertEqual(router.menuSelection.selected, .power)
+        router.closePowerMenu()
+        router.moveMenu(by: -1)
+        XCTAssertEqual(router.menuSelection.selected, .setupCheck)
+    }
+
+    func testCloseMenuClosesPowerPills() {
+        let router = AppRouter()
+        router.isMenuPresented = true
+        router.openPowerMenu()
+        router.closeMenu()
+        XCTAssertFalse(router.isMenuPresented)
+        XCTAssertFalse(router.menuSelection.isPowerOpen)
+    }
 }
 
 final class MenuSelectionModelTests: XCTestCase {
-    func testMoveWraps() {
-        var model = MenuSelectionModel()
-        XCTAssertEqual(model.selected, .settings)
-        model.move(by: 1)
-        XCTAssertEqual(model.selected, .console)
-        model.move(by: 1)
-        XCTAssertEqual(model.selected, .quit)
-        model.move(by: 1)
-        XCTAssertEqual(model.selected, .library)
+    func testMenuOrder() {
+        XCTAssertEqual(MenuAction.allCases,
+                       [.addGame, .refreshLibrary, .settings, .console, .setupCheck, .power])
+        XCTAssertEqual(MenuAction.allCases.map(\.title),
+                       ["Add Game", "Library refresh", "Settings", "Console", "Setup check", "Power"])
+        XCTAssertEqual(PowerAction.allCases, [.quit, .hide, .relaunch])
+        XCTAssertEqual(PowerAction.allCases.map(\.title), ["Quit", "Hide", "Restart app"])
+    }
+
+    func testMoveClampsAtBothEnds() {
+        var model = MenuSelectionModel(selected: .addGame)
         model.move(by: -1)
-        XCTAssertEqual(model.selected, .quit)
+        XCTAssertEqual(model.selected, .addGame)
+        model.move(by: 10)
+        XCTAssertEqual(model.selected, .power)
+        model.move(by: 1)
+        XCTAssertEqual(model.selected, .power)
+    }
+
+    func testPowerSubmenuOpensAndCloses() {
+        var model = MenuSelectionModel(selected: .power)
+        XCTAssertFalse(model.isPowerOpen)
+        model.openPower()
+        XCTAssertTrue(model.isPowerOpen)
+        XCTAssertEqual(model.power, .quit)
+        model.movePower(by: 1)
+        XCTAssertEqual(model.power, .hide)
+        model.movePower(by: 5)
+        XCTAssertEqual(model.power, .relaunch)
+        model.movePower(by: -9)
+        XCTAssertEqual(model.power, .quit)
+        model.closePower()
+        XCTAssertFalse(model.isPowerOpen)
+        XCTAssertEqual(model.selected, .power)
     }
 }
 

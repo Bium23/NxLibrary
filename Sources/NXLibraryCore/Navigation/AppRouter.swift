@@ -45,9 +45,19 @@ public final class AppRouter: ObservableObject {
         self.route = route
     }
 
+    /// Left and Right move along the row; while the Power pills are open they move the pills instead.
     public func moveMenu(by delta: Int) {
-        menuSelection.move(by: delta)
+        if menuSelection.isPowerOpen {
+            menuSelection.movePower(by: delta)
+        } else {
+            menuSelection.move(by: delta)
+        }
     }
+
+    public func openPowerMenu() { menuSelection.openPower() }
+
+    /// B on the Power pills: closes them and leaves the menu open.
+    public func closePowerMenu() { menuSelection.closePower() }
 
     public func navigate(to route: AppRoute) {
         guard route != self.route else { return }
@@ -85,7 +95,9 @@ public final class AppRouter: ObservableObject {
         route = previous
     }
 
+    /// Closes the menu and, with it, the Power pills.
     public func closeMenu() {
         isMenuPresented = false
+        menuSelection.closePower()
     }
 }

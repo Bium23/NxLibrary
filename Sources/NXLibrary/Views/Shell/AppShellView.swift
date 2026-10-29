@@ -37,9 +37,12 @@ public struct AppShellView: View {
             SeleneTheme.scrim.ignoresSafeArea()
             content
             if router.isMenuPresented {
-                MenuOverlayView(router: router) { action in
-                    handleMenu(action)
-                }
+                MenuOverlayView(
+                    router: router,
+                    onInput: { menuInput($0) },
+                    onSelect: { runMenuAction($0) },
+                    onSelectPower: { runPower($0) }
+                )
                 .transition(.opacity)
                 .zIndex(1)
             }
@@ -163,7 +166,7 @@ public struct AppShellView: View {
                 // Game options steps back (dialog, then Edit details) or closes.
                 NotificationCenter.default.post(name: .nxGameOptionsGamepadAction, object: GamepadAction.cancel)
             } else if router.isMenuPresented {
-                router.closeMenu()
+                menuInput(.cancel)
             } else if isHomeRoute {
                 router.isMenuPresented = true
             } else if case .settings = router.route {
@@ -248,29 +251,18 @@ public struct AppShellView: View {
         GameControllerService.shared.onAction = { [weak viewModel, weak router] action in
             guard let viewModel, let router else { return }
             if router.isMenuPresented {
-                switch action {
-                case .navigateLeft:
-                    router.moveMenu(by: -1)
-                case .navigateRight:
-                    router.moveMenu(by: 1)
-                case .confirm:
-                    router.closeMenu()
-                    switch router.menuSelection.selected {
-                    case .library: router.showLibrary()
-                    case .addGame: router.openAddGame()
-                    case .settings: router.openSettings(.general)
-                    case .console: router.openConsole()
-                    case .quit: NSApplication.shared.terminate(nil)
-                    }
-                case .cancel:
-                    router.closeMenu()
-                default:
-                    break
-                }
+                menuInput(action)
                 return
             }
             if viewModel.gameForSettingsSheet != nil {
                 NotificationCenter.default.post(name: .nxGameOptionsGamepadAction, object: action)
+                return
+            }
+            if action == .menuHold {
+                // Hold Menu (and Cmd+,) opens Settings from any screen.
+                guard !router.isScreenshotViewerOpen else { return }
+                if case .settings = router.route { return }
+                router.openSettings(.general)
                 return
             }
             switch router.route {
@@ -317,7 +309,6 @@ public struct AppShellView: View {
             let key = event.charactersIgnoringModifiers?.lowercased() ?? ""
             let typing = event.window?.firstResponder is NSText
             var action: GamepadAction?
-            var consume = true
             switch (event.keyCode, key, mods) {
             case (48, _, []):                       // Tab
                 if typing { return event }
@@ -326,9 +317,8 @@ public struct AppShellView: View {
                 if typing { return event }
                 action = .viewHold
             case (_, ",", [.command]):              // Cmd+,
-                // Keep the Settings menu shortcut working: dispatch but do not consume.
+                // Same as holding Menu. Consumed, so the menu-bar Settings command does not open Settings a second time.
                 action = .menuHold
-                consume = false
             case (115, _, []):                      // Home
                 if typing { return event }
                 action = .jumpToStart
@@ -339,7 +329,7 @@ public struct AppShellView: View {
                 return event
             }
             if let action { GameControllerService.shared.onAction?(action) }
-            return consume ? nil : event
+            return nil
         }
     }
 
@@ -348,20 +338,101 @@ public struct AppShellView: View {
         gestureKeyMonitor = nil
     }
 
-    private func handleMenu(_ action: MenuAction) {
-        router.closeMenu()
+    /// Input while the control center is open: arrows move, A selects, B (or Esc) closes the Power pills
+    /// first and then the menu, Menu closes it, and hold Menu closes it and opens Settings.
+    private func menuInput(_ action: GamepadAction) {
         switch action {
-        case .library:
-            router.showLibrary()
+        case .navigateLeft:
+            router.moveMenu(by: -1)
+        case .navigateRight:
+            router.moveMenu(by: 1)
+        case .navigateUp:
+            if router.menuSelection.isPowerOpen { router.moveMenu(by: -1) }
+        case .navigateDown:
+            if router.menuSelection.isPowerOpen { router.moveMenu(by: 1) }
+        case .confirm:
+            if router.menuSelection.isPowerOpen {
+                runPower(router.menuSelection.power)
+            } else {
+                runMenuAction(router.menuSelection.selected)
+            }
+        case .cancel:
+            if router.menuSelection.isPowerOpen {
+                router.closePowerMenu()
+            } else {
+                router.closeMenu()
+            }
+        case .menu:
+            router.closeMenu()
+        case .menuHold:
+            router.closeMenu()
+            router.openSettings(.general)
+        default:
+            break
+        }
+    }
+
+    /// A row button. The menu closes before it navigates; Power only opens or closes its pills.
+    private func runMenuAction(_ action: MenuAction) {
+        switch action {
+        case .power:
+            if router.menuSelection.isPowerOpen {
+                router.closePowerMenu()
+            } else {
+                router.openPowerMenu()
+            }
         case .addGame:
+            router.closeMenu()
             openFreshAddGame()
+        case .refreshLibrary:
+            router.closeMenu()
+            viewModel.refreshLibrary()
         case .settings:
+            router.closeMenu()
             router.openSettings(.general)
         case .console:
+            router.closeMenu()
             router.openConsole()
-        case .quit:
-            NSApplication.shared.terminate(nil)
+        case .setupCheck:
+            router.closeMenu()
+            viewModel.reopenSetup()
         }
+    }
+
+    private func runPower(_ action: PowerAction) {
+        switch action {
+        case .quit:
+            router.closeMenu()
+            NSApplication.shared.terminate(nil)
+        case .hide:
+            router.closeMenu()
+            NSApplication.shared.hide(nil)
+        case .relaunch:
+            relaunchApp()
+        }
+    }
+
+    /// Starts a helper that waits for this process to exit and then opens the bundle again, then quits.
+    /// A second instance cannot be opened while this one runs (LSMultipleInstancesProhibited), so
+    /// the new one must start after this one has gone.
+    private func relaunchApp() {
+        router.closeMenu()
+        let helper = Process()
+        helper.executableURL = URL(fileURLWithPath: "/bin/sh")
+        helper.arguments = [
+            "-c",
+            "i=0; while kill -0 \"$1\" 2>/dev/null && [ $i -lt 150 ]; do sleep 0.2; i=$((i+1)); done; exec /usr/bin/open \"$2\"",
+            "relaunch",
+            String(ProcessInfo.processInfo.processIdentifier),
+            Bundle.main.bundleURL.path
+        ]
+        do {
+            try helper.run()
+        } catch {
+            viewModel.alertMessage = "NX Library could not restart: \(error.localizedDescription)"
+            return
+        }
+        NSApplication.shared.terminate(nil)
     }
 
     /// Remembers which home screen was used last, for Start on → Last used.
