@@ -85,6 +85,7 @@ private struct ScreenshotTile: View {
                 .strokeBorder(SeleneTheme.focus, lineWidth: canvas.u(3))
                 .padding(canvas.u(-4))
                 .opacity(focused ? 1 : 0)
+                .animation(.easeOut(duration: 0.15), value: focused)
         )
         .scaleEffect(focused ? 1.03 : 1)
         .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: focused)
@@ -95,7 +96,7 @@ private struct ScreenshotTile: View {
             guard let file = await artwork.screenshot(titleID: titleID, index: index, remoteURL: url),
                   let decoded = await GameArtLoader.decode(at: file, maxPixelSize: 1000),
                   !Task.isCancelled else { return }
-            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.25)) { image = decoded }
+            withAnimation(.easeOut(duration: 0.25)) { image = decoded }
         }
     }
 }

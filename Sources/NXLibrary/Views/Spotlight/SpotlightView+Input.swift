@@ -30,6 +30,7 @@ extension SpotlightView {
         case .confirm:
             confirm()
         case .cancel:
+            if router.isSearchPresented { router.isSearchPresented = false }
             mutate { if $0.focus != .row { $0.focus = .row; moved = true } }
         case .secondaryAction:
             if let game = selectedGame { router.showDetail(game.id) }
@@ -120,6 +121,7 @@ extension SpotlightView {
             viewModel.librarySelection.query.filter = .all
         }
         mutate { $0.select(.game(id)) }
+        reconcile() // In case the pick is hidden from the row after all.
         SoundEffectService.shared.play(.click)
     }
 
@@ -128,12 +130,19 @@ extension SpotlightView {
     func installKeyMonitor() {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            // An alert or sheet owns Return and Esc; consuming them here would
+            // replay the action that raised the alert.
             guard !router.isMenuPresented,
                   router.route == .library,
+                  viewModel.alertMessage == nil,
                   viewModel.gameForSettingsSheet == nil,
                   !viewModel.showSetupSheet,
                   !viewModel.showInstallerSheet,
-                  !(event.window?.firstResponder is NSText) else { return event }
+                  let window = event.window,
+                  !window.isSheet,
+                  window.attachedSheet == nil,
+                  NSApp.modalWindow == nil,
+                  !(window.firstResponder is NSText) else { return event }
             let modifiers = event.modifierFlags.intersection([.command, .control, .option])
             guard modifiers.isEmpty else { return event }
             let action: GamepadAction

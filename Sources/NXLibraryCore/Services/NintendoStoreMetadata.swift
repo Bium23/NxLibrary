@@ -148,6 +148,13 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         return screenshotRefreshTried.contains(metadata.titleId)
     }
 
+    /// Synchronous so the lock is never held across a suspension point.
+    private func markScreenshotRefreshTried(_ titleId: String) {
+        refreshLock.lock()
+        defer { refreshLock.unlock() }
+        screenshotRefreshTried.insert(titleId)
+    }
+
     private static func looksLikeTitleDBID(_ id: String) -> Bool {
         id.count == 16 && id.hasPrefix("0100")
     }
@@ -157,9 +164,7 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         if let cached = cached(for: key) {
             if isFresh(cached) { return cached }
             if cached.screenshotURLs.isEmpty, Self.looksLikeTitleDBID(cached.titleId) {
-                refreshLock.lock()
-                screenshotRefreshTried.insert(cached.titleId)
-                refreshLock.unlock()
+                markScreenshotRefreshTried(cached.titleId)
             }
         }
 

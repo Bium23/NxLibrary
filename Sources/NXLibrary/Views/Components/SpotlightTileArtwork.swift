@@ -6,8 +6,6 @@ import NXLibraryCore
 /// Nintendo store cover, then the app icon. Shows the icon immediately and
 /// crossfades when better art arrives. The caller applies the corner radius.
 struct SpotlightTileArtwork: View {
-    @Environment(\.seleneReduceMotion) private var reduceMotion
-
     let game: PortedGame
     /// Side length in points, already scaled by the caller.
     let side: CGFloat
@@ -46,7 +44,7 @@ struct SpotlightTileArtwork: View {
             let loaded = await loadBest()
             guard !Task.isCancelled, let loaded else { return }
             TileArtMemo.shared.setObject(loaded, forKey: key)
-            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { better = loaded }
+            withAnimation(.easeInOut(duration: 0.2)) { better = loaded }
         }
     }
 

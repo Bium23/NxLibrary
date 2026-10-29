@@ -74,8 +74,10 @@ final class GameArtLoader {
         let titleKey = game.titleId ?? game.uniqueKey
         var image: NSImage?
 
+        // Every read and decode runs off the main thread (`decodeLogo`); a
+        // missing local file simply decodes to nil.
         if let url = artwork.cachedURL(titleID: titleKey, kind: .logo) {
-            image = NSImage(contentsOf: url)
+            image = await Self.decodeLogo(at: url)
         }
         if image == nil {
             var candidates: [URL] = []
@@ -83,24 +85,23 @@ final class GameArtLoader {
                 candidates.append(source.url.deletingLastPathComponent().appendingPathComponent("logo.png"))
             }
             candidates.append(game.url.appendingPathComponent("Contents/Resources/logo.png"))
-            image = candidates.lazy
-                .filter { FileManager.default.fileExists(atPath: $0.path) }
-                .compactMap { NSImage(contentsOf: $0) }
-                .first
+            for url in candidates where image == nil && !Task.isCancelled {
+                image = await Self.decodeLogo(at: url)
+            }
         }
         if image == nil, !Task.isCancelled, !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
            let remote = await steamGridDB.fetchLogoURL(gameName: game.name, apiKey: apiKey),
            let url = await artwork.fetch(titleID: titleKey, remoteURL: remote, kind: .logo) {
-            image = NSImage(contentsOf: url)
+            image = await Self.decodeLogo(at: url)
         }
         if image == nil, !Task.isCancelled, let remote = metadata?.logoURL,
            let url = await artwork.fetch(titleID: titleKey, remoteURL: remote, kind: .logo) {
-            image = NSImage(contentsOf: url)
+            image = await Self.decodeLogo(at: url)
         }
         if image == nil, !Task.isCancelled,
            let remote = Self.communityLogoURL(gameName: game.name, titleId: game.titleId),
            let url = await artwork.fetch(titleID: titleKey, remoteURL: remote, kind: .logo) {
-            image = NSImage(contentsOf: url)
+            image = await Self.decodeLogo(at: url)
         }
         if let image { logos.setObject(image, forKey: game.id as NSUUID) }
         return image
@@ -143,6 +144,11 @@ final class GameArtLoader {
     /// Decodes off the main thread, capped at 2560 px.
     nonisolated static func decodeHero(at url: URL) async -> NSImage? {
         await decode(at: url, maxPixelSize: 2560)
+    }
+
+    /// Logos fit 620 × 215; 1600 px keeps them sharp at 2× on a large window.
+    nonisolated static func decodeLogo(at url: URL) async -> NSImage? {
+        await decode(at: url, maxPixelSize: 1600)
     }
 
     nonisolated static func decode(at url: URL, maxPixelSize: Int) async -> NSImage? {

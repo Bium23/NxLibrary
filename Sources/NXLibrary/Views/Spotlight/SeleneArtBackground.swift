@@ -7,8 +7,6 @@ import NXLibraryCore
 /// crossfading on change, and the left, bottom and top shades at 0.3 scaled by
 /// the Background shade setting. Shared by Spotlight and Collection.
 struct SeleneArtBackground: View {
-    @Environment(\.seleneReduceMotion) private var reduceMotion
-
     let image: NSImage?
     /// Changes whenever `image` does; drives the crossfade.
     let imageKey: String
@@ -32,7 +30,8 @@ struct SeleneArtBackground: View {
                         .transition(.opacity)
                 }
             }
-            .animation(reduceMotion ? nil : .easeInOut(duration: 0.4), value: imageKey)
+            // A crossfade is not movement: it stays under reduce motion (spec §8).
+            .animation(.easeInOut(duration: 0.4), value: imageKey)
             shades
         }
         .allowsHitTesting(false)

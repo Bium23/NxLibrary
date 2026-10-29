@@ -34,19 +34,21 @@ struct SpotlightRowView: View {
     static let rowStart: CGFloat = 72        // 80 start padding − 8 (row margin −88 + side margin 80)
 
     var body: some View {
-        let selected = items.firstIndex { $0.key == selectedKey } ?? 0
-        let offset = SpotlightState.scrollOffset(selectedIndex: selected)
+        // A key that is not in the row (yet) means no selection, not the first item.
+        let selected = selectedKey.flatMap { key in items.firstIndex { $0.key == key } }
+        let offset = selected.map(SpotlightState.scrollOffset(selectedIndex:)) ?? 0
         let window = visibleRange(offset: offset)
         ZStack(alignment: .topLeading) {
             ForEach(window.map { (index: $0, item: items[$0]) }, id: \.item.key) { entry in
                 let index = entry.index, item = entry.item
-                let isSelected = index == selected && selectedKey != nil
+                let isSelected = index == selected
                 tile(item, selected: isSelected)
                     .offset(x: canvas.u(x(of: index, selected: selected, offset: offset)), y: canvas.u(3))
                     .zIndex(isSelected ? 10 : 0)
                     .transition(.identity)
             }
-            if let item = items.indices.contains(selected) ? items[selected] : nil, selectedKey != nil {
+            if let selected {
+                let item = items[selected]
                 Text(title(of: item))
                     .seleneFont(22)
                     .foregroundColor(SeleneTheme.ink)
@@ -73,9 +75,10 @@ struct SpotlightRowView: View {
     }
 
     /// Left edge of item `index` (its 1u margin included), stage units.
-    private func x(of index: Int, selected: Int, offset: Int) -> CGFloat {
+    private func x(of index: Int, selected: Int?, offset: Int) -> CGFloat {
         let base = Self.rowStart + CGFloat(index - offset) * Self.pitch
-        return index > selected ? base + Self.host * (Self.grow - 1) : base
+        guard let selected, index > selected else { return base }
+        return base + Self.host * (Self.grow - 1)
     }
 
     /// Items from just left of the screen to just past its right edge; tiles
@@ -103,8 +106,9 @@ struct SpotlightRowView: View {
         .frame(width: canvas.u(Self.host * scale), height: canvas.u(Self.host * scale), alignment: .topLeading)
         .padding(.leading, canvas.u(1))
         .contentShape(Rectangle())
+        // The single click selects at once; it does not wait for a possible double click.
         .onTapGesture(count: 2) { onActivate(item) }
-        .onTapGesture { onSelect(item) }
+        .simultaneousGesture(TapGesture().onEnded { onSelect(item) })
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(title(of: item))
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
@@ -152,7 +156,7 @@ struct SpotlightRowView: View {
         titleTask = Task { @MainActor in
             if delay > 0 { try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000)) }
             guard !Task.isCancelled else { return }
-            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { titleVisible = true }
+            withAnimation(.easeOut(duration: 0.2)) { titleVisible = true }
         }
     }
 

@@ -72,17 +72,17 @@ struct SpotlightTopBar: View {
             .accessibilityHidden(true)
     }
 
-    /// The new tab pops 0.86 → 1 over 200 ms (cubic out) and fades 0.4 → 1 over 160 ms.
+    /// The new tab pops 0.86 → 1 over 200 ms (cubic out) and fades 0.4 → 1 over
+    /// 160 ms. Reduce motion drops the pop and keeps the fade.
     private func pop() {
-        guard !reduceMotion else { return }
         var reset = Transaction()
         reset.disablesAnimations = true
         withTransaction(reset) {
-            popScale = 0.86
+            popScale = reduceMotion ? 1 : 0.86
             popOpacity = 0.4
         }
         DispatchQueue.main.async {
-            withAnimation(SeleneTheme.cubicOut(0.2)) { popScale = 1 }
+            if !reduceMotion { withAnimation(SeleneTheme.cubicOut(0.2)) { popScale = 1 } }
             withAnimation(.linear(duration: 0.16)) { popOpacity = 1 }
         }
     }

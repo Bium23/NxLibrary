@@ -32,6 +32,12 @@ public struct SpotlightState: Equatable {
         self.startingTabApplied = startingTabApplied
     }
 
+    /// The selected game's id; nil when a card (or nothing) is selected.
+    public var selectedGameID: UUID? {
+        guard let selectedKey, selectedKey.hasPrefix("game:") else { return nil }
+        return UUID(uuidString: String(selectedKey.dropFirst("game:".count)))
+    }
+
     public func selectedIndex(in items: [SpotlightItem]) -> Int? {
         guard let selectedKey else { return nil }
         return items.firstIndex { $0.key == selectedKey }
@@ -65,9 +71,11 @@ public struct SpotlightState: Equatable {
     @discardableResult
     public mutating func move(by delta: Int, in items: [SpotlightItem]) -> Bool {
         guard !items.isEmpty else { return false }
-        let current = selectedIndex(in: items) ?? 0
+        // A missing or stale selection counts as the first item, and any move selects.
+        let found = selectedIndex(in: items)
+        let current = found ?? 0
         let next = min(max(current + delta, 0), items.count - 1)
-        guard next != current || selectedKey == nil else { return false }
+        guard next != current || found == nil else { return false }
         select(items[next])
         return true
     }

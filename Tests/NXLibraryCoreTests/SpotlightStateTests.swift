@@ -79,4 +79,59 @@ final class SpotlightStateTests: XCTestCase {
         XCTAssertEqual(LibraryFilter(startingTab: "Favorites"), .favorites)
         XCTAssertEqual(LibraryFilter(startingTab: "nonsense"), .all)
     }
+
+    func testReconcileResetsFocusAndIndicesWhenTheSelectionVanishes() {
+        var state = SpotlightState(selectedKey: SpotlightItem.game(UUID()).key,
+                                   focus: .strip, pillIndex: 2, stripIndex: 4)
+        state.reconcile(with: items, preferredGameID: b)
+        XCTAssertEqual(state.selectedKey, SpotlightItem.game(b).key)
+        XCTAssertEqual(state.focus, .row)
+        XCTAssertEqual(state.pillIndex, 0)
+        XCTAssertEqual(state.stripIndex, 0)
+
+        var emptied = SpotlightState(selectedKey: SpotlightItem.game(a).key, focus: .pills, pillIndex: 1)
+        emptied.reconcile(with: [])
+        XCTAssertNil(emptied.selectedKey)
+        XCTAssertEqual(emptied.focus, .row)
+        XCTAssertEqual(emptied.pillIndex, 0)
+    }
+
+    func testSelectResetsFocusAndIndices() {
+        var state = SpotlightState(selectedKey: SpotlightItem.game(a).key,
+                                   focus: .strip, pillIndex: 2, stripIndex: 3)
+        state.select(.game(c))
+        XCTAssertEqual(state.selectedKey, SpotlightItem.game(c).key)
+        XCTAssertEqual(state.focus, .row)
+        XCTAssertEqual(state.pillIndex, 0)
+        XCTAssertEqual(state.stripIndex, 0)
+    }
+
+    func testJumpReturnsFalseWhenAlreadyAtThatEnd() {
+        var state = SpotlightState(selectedKey: SpotlightItem.game(c).key)
+        XCTAssertFalse(state.jump(toEnd: true, in: items))
+        XCTAssertEqual(state.selectedKey, SpotlightItem.game(c).key)
+        var start = SpotlightState(selectedKey: SpotlightItem.card(.surprise).key)
+        XCTAssertFalse(start.jump(toEnd: false, in: items))
+        XCTAssertFalse(start.jump(toEnd: true, in: []))
+    }
+
+    func testMoveWithAStaleSelectionSelectsFromTheStart() {
+        var left = SpotlightState(selectedKey: SpotlightItem.game(UUID()).key, focus: .pills)
+        XCTAssertTrue(left.move(by: -1, in: items))
+        XCTAssertEqual(left.selectedKey, SpotlightItem.card(.surprise).key)
+        XCTAssertEqual(left.focus, .row)
+
+        var right = SpotlightState(selectedKey: SpotlightItem.game(UUID()).key)
+        XCTAssertTrue(right.move(by: 1, in: items))
+        XCTAssertEqual(right.selectedKey, SpotlightItem.card(.addGame).key)
+
+        var empty = SpotlightState(selectedKey: "game:stale")
+        XCTAssertFalse(empty.move(by: 1, in: []))
+    }
+
+    func testSelectedGameIDOnlyForGames() {
+        XCTAssertEqual(SpotlightState(selectedKey: SpotlightItem.game(a).key).selectedGameID, a)
+        XCTAssertNil(SpotlightState(selectedKey: SpotlightItem.card(.collection).key).selectedGameID)
+        XCTAssertNil(SpotlightState().selectedGameID)
+    }
 }

@@ -159,21 +159,20 @@ struct SpotlightGameInfoView: View {
             .strokeBorder(SeleneTheme.ink25, lineWidth: max(1, canvas.u(1))))
     }
 
+    /// Hold 0.3 s, then fade in linearly to 0.7 s while the logo slides in.
+    /// Reduce motion keeps the fade and drops the slide.
     private func reveal() {
-        guard !reduceMotion else {
-            shown = true
-            slid = true
-            return
-        }
         var reset = Transaction()
         reset.disablesAnimations = true
         withTransaction(reset) {
             shown = false
-            slid = false
+            slid = reduceMotion
         }
         DispatchQueue.main.async {
             withAnimation(.linear(duration: 0.4).delay(0.3)) { shown = true }
-            withAnimation(SeleneTheme.cubicOut(0.4).delay(0.3)) { slid = true }
+            if !reduceMotion {
+                withAnimation(SeleneTheme.cubicOut(0.4).delay(0.3)) { slid = true }
+            }
         }
     }
 }
