@@ -39,7 +39,7 @@ extension CollectionView {
         case .cancel:
             router.showLibrary() // B goes home, like Selene's library.
         case .view:
-            router.showLibrary()
+            if settings.settings.viewButtonSwitches { router.showLibrary() }
         case .viewHold:
             router.isSearchPresented = true
         case .menu:
@@ -68,6 +68,7 @@ extension CollectionView {
             // An alert or sheet owns Return and Esc; consuming them here would
             // replay the action that raised the alert.
             guard !router.isMenuPresented,
+                  !router.isSearchPresented,
                   router.route == .collection,
                   viewModel.alertMessage == nil,
                   viewModel.gameForSettingsSheet == nil,

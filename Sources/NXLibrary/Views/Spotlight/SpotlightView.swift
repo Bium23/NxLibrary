@@ -128,6 +128,16 @@ public struct SpotlightView: View {
         .onChange(of: viewModel.spotlight.selectedKey) { _ in selectionChanged() }
         .onChange(of: viewer != nil) { router.isScreenshotViewerOpen = $0 }
         .onChange(of: router.pendingSpotlightMove) { _ in consumePendingMove() }
+        .onReceive(NotificationCenter.default.publisher(for: .nxFindGameSelect)) { note in
+            guard let id = note.object as? UUID else { return }
+            // Find a game lands on Spotlight; a tab without the game gives way to All games.
+            let key = SpotlightItem.game(id).key
+            if !items.contains(where: { $0.key == key }) { setFilter(.all) }
+            mutate {
+                $0.selectedKey = key
+                $0.focus = .row
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .nxSpotlightGamepadAction)) { note in
             guard viewModel.alertMessage == nil else { return }
             if let action = note.object as? GamepadAction { handle(action) }

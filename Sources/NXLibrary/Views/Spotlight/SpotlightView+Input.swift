@@ -50,7 +50,7 @@ extension SpotlightView {
                 SoundEffectService.shared.play(.click)
             }
         case .view:
-            router.openCollection()
+            if settings.settings.viewButtonSwitches { router.openCollection() }
         case .viewHold:
             router.isSearchPresented = true
         case .menu:
@@ -273,6 +273,7 @@ extension SpotlightView {
             // An alert or sheet owns Return and Esc; consuming them here would
             // replay the action that raised the alert.
             guard !router.isMenuPresented,
+                  !router.isSearchPresented,
                   router.route == .library,
                   viewModel.alertMessage == nil,
                   viewModel.gameForSettingsSheet == nil,

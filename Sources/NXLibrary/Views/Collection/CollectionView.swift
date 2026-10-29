@@ -72,6 +72,12 @@ public struct CollectionView: View {
             guard viewModel.alertMessage == nil else { return }
             if let action = note.object as? GamepadAction { handle(action) }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .nxFindGameSelect)) { note in
+            guard let id = note.object as? UUID else { return }
+            // Find a game lands on Collection; a tab without the game gives way to All games.
+            if !games.contains(where: { $0.id == id }) { setFilter(.all) }
+            select(id)
+        }
         .onChange(of: playSessions.sessions.count) { _ in reconcile() }
         .onChange(of: viewModel.isScanningLibrary) { _ in reconcile() }
         .task(id: art.heroTaskKey(game, metadata: game.flatMap { viewModel.storeMetadata[$0.id] },

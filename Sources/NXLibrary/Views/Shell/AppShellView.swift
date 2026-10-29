@@ -61,6 +61,12 @@ public struct AppShellView: View {
         ZStack {
             SeleneTheme.scrim.ignoresSafeArea()
             content
+            if router.isSearchPresented && isHomeRoute {
+                FindGameView(router: router, viewModel: viewModel, playSessions: playSessions,
+                             artwork: artwork, steamGridDbApiKey: settings.settings.steamGridDbApiKey)
+                    .transition(.opacity)
+                    .zIndex(0.5)
+            }
             if let game = viewModel.gameToClose {
                 closeGameOverlay(game)
                     .transition(.opacity)
@@ -108,6 +114,7 @@ public struct AppShellView: View {
                    value: viewModel.gameForSettingsSheet?.id)
         .animation(reduceMotion ? nil : SeleneTheme.quick,
                    value: router.isMenuPresented)
+        .animation(SeleneTheme.quick, value: router.isSearchPresented)
         .animation(reduceMotion ? nil : SeleneTheme.quick,
                    value: viewModel.gameToClose?.id)
         .environment(\.seleneReduceMotion, reduceMotion)
@@ -219,6 +226,8 @@ public struct AppShellView: View {
                 NotificationCenter.default.post(name: .nxGameOptionsGamepadAction, object: GamepadAction.cancel)
             } else if router.isMenuPresented {
                 menuInput(.cancel)
+            } else if router.isSearchPresented {
+                // FindGameView's key monitor closes it.
             } else if isHomeRoute {
                 router.isMenuPresented = true
             } else if case .settings = router.route {
@@ -317,6 +326,11 @@ public struct AppShellView: View {
             }
             if viewModel.gameForSettingsSheet != nil {
                 NotificationCenter.default.post(name: .nxGameOptionsGamepadAction, object: action)
+                return
+            }
+            if router.isSearchPresented, router.route == .library || router.route == .collection,
+               action != .menu, action != .menuHold {
+                NotificationCenter.default.post(name: .nxFindGameGamepadAction, object: action)
                 return
             }
             if action == .menuHold {
