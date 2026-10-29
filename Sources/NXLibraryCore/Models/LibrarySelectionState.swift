@@ -13,13 +13,18 @@ public struct LibrarySelectionState: Equatable {
     }
 
     @discardableResult
-    public mutating func reconcile(with games: [PortedGame], history: PlayHistory) -> [PortedGame] {
+    public mutating func reconcile(with games: [PortedGame], history: PlayHistory,
+                                   preferredGameID: UUID? = nil) -> [PortedGame] {
         let filtered = query.apply(to: games, history: history)
         if let selectedGameID,
            filtered.contains(where: { $0.id == selectedGameID }) {
             return filtered
         }
-        selectedGameID = filtered.first?.id
+        if let preferredGameID, filtered.contains(where: { $0.id == preferredGameID }) {
+            selectedGameID = preferredGameID
+        } else {
+            selectedGameID = filtered.first?.id
+        }
         return filtered
     }
 

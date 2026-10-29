@@ -28,7 +28,7 @@ extension CollectionView {
         case .confirm:
             if let game = selectedGame {
                 play(game)
-            } else if !hasAnyGame {
+            } else if !hasAnyGame, !viewModel.isScanningLibrary {
                 SoundEffectService.shared.play(.click)
                 router.openAddGame()
             }

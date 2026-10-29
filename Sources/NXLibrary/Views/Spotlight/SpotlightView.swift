@@ -15,10 +15,7 @@ public struct SpotlightView: View {
 
     @Environment(\.seleneCanvas) var canvas
 
-    @State var heroImage: NSImage?
-    @State var heroKey = "none"
-    /// Bumped when a logo lands in `GameArtLoader`'s cache, to redraw.
-    @State var logoTick = 0
+    @StateObject var art = SeleneHeroArt()
     @State var keyMonitor: Any?
     @State var hadGames = false
     /// The card Y menu: which card and the focused row.
@@ -101,7 +98,7 @@ public struct SpotlightView: View {
         let model = snapshot()
         let state = viewModel.spotlight
         ZStack(alignment: .topLeading) {
-            SeleneArtBackground(image: heroImage, imageKey: heroKey,
+            SeleneArtBackground(image: art.image, imageKey: art.key,
                                 shade: settings.settings.backgroundShade)
             stage(model, state: state)
                 .frame(width: canvas.stageSize.width, height: canvas.stageSize.height, alignment: .topLeading)
@@ -132,8 +129,11 @@ public struct SpotlightView: View {
             guard viewModel.alertMessage == nil else { return }
             if let action = note.object as? GamepadAction { handle(action) }
         }
-        .task(id: artTaskKey(model.selectedGame, remote: heroRemote)) { await loadHero() }
-        .task(id: artTaskKey(model.selectedGame, remote: logoRemote)) { await loadLogo() }
+        .onChange(of: playSessions.sessions.count) { _ in reconcile() }
+        .task(id: art.heroTaskKey(model.selectedGame, metadata: model.selectedGame.flatMap { viewModel.storeMetadata[$0.id] },
+                                  apiKey: settings.settings.steamGridDbApiKey)) { await loadHero(model.selectedGame) }
+        .task(id: art.logoTaskKey(model.selectedGame, metadata: model.selectedGame.flatMap { viewModel.storeMetadata[$0.id] },
+                                  apiKey: settings.settings.steamGridDbApiKey)) { await loadLogo(model.selectedGame) }
     }
 
     @ViewBuilder
@@ -305,8 +305,7 @@ public struct SpotlightView: View {
     }
 
     private func logo(for game: PortedGame) -> NSImage? {
-        _ = logoTick
-        return GameArtLoader.shared.cachedLogo(for: game)
+        art.logo(for: game)
     }
 
     // MARK: - Hints
@@ -436,9 +435,6 @@ public struct SpotlightView: View {
 
     private func selectionChanged() {
         guard let game = selectedGame else { return }
-        if viewModel.librarySelection.selectedGameID != game.id {
-            viewModel.librarySelection.selectedGameID = game.id
-        }
         if settings.settings.lastSelectedGameID != game.id {
             settings.settings.lastSelectedGameID = game.id
         }
@@ -447,50 +443,15 @@ public struct SpotlightView: View {
 
     // MARK: - Art
 
-    private func heroRemote(_ game: PortedGame) -> URL? {
-        let meta = viewModel.storeMetadata[game.id]
-        return meta?.headerImageURL ?? meta?.imageURL
+    private func loadHero(_ game: PortedGame?) async {
+        await art.loadHero(game: game, current: { selectedGame?.id },
+                           metadata: game.flatMap { viewModel.storeMetadata[$0.id] }, artwork: artwork,
+                           steamGridDB: viewModel.steamGridDB, apiKey: settings.settings.steamGridDbApiKey)
     }
 
-    private func logoRemote(_ game: PortedGame) -> URL? {
-        viewModel.storeMetadata[game.id]?.logoURL
-    }
-
-    private func artTaskKey(_ game: PortedGame?, remote: (PortedGame) -> URL?) -> String {
-        guard let game else { return "none" }
-        return "\(game.id)|\(remote(game)?.absoluteString ?? "")|\(settings.settings.steamGridDbApiKey)"
-    }
-
-    /// The art changes after a 150 ms settle (a held stick does not load every
-    /// game it passes), then crossfades.
-    @MainActor
-    private func loadHero() async {
-        guard let game = selectedGame else {
-            heroImage = nil
-            heroKey = "none"
-            return
-        }
-        if heroKey.hasPrefix(game.id.uuidString) { return }
-        try? await Task.sleep(nanoseconds: 150_000_000)
-        guard !Task.isCancelled else { return }
-        let image = await GameArtLoader.shared.hero(
-            for: game, metadata: viewModel.storeMetadata[game.id], artwork: artwork,
-            steamGridDB: viewModel.steamGridDB, apiKey: settings.settings.steamGridDbApiKey)
-        guard !Task.isCancelled, selectedGame?.id == game.id else { return }
-        heroImage = image
-        heroKey = image.map { "\(game.id.uuidString)|\(ObjectIdentifier($0).hashValue)" } ?? "none"
-    }
-
-    @MainActor
-    private func loadLogo() async {
-        guard let game = selectedGame, GameArtLoader.shared.cachedLogo(for: game) == nil else { return }
-        // Same settle as the art: a held stick does not load every logo it passes.
-        try? await Task.sleep(nanoseconds: 150_000_000)
-        guard !Task.isCancelled else { return }
-        let image = await GameArtLoader.shared.logo(
-            for: game, metadata: viewModel.storeMetadata[game.id], artwork: artwork,
-            steamGridDB: viewModel.steamGridDB, apiKey: settings.settings.steamGridDbApiKey)
-        guard image != nil, !Task.isCancelled else { return }
-        withAnimation(.easeOut(duration: 0.3)) { logoTick += 1 }
+    private func loadLogo(_ game: PortedGame?) async {
+        await art.loadLogo(game: game, metadata: game.flatMap { viewModel.storeMetadata[$0.id]},
+                           artwork: artwork, steamGridDB: viewModel.steamGridDB,
+                           apiKey: settings.settings.steamGridDbApiKey)
     }
 }

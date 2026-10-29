@@ -16,10 +16,7 @@ public struct CollectionView: View {
 
     @Environment(\.seleneCanvas) var canvas
 
-    @State var heroImage: NSImage?
-    @State var heroKey = "none"
-    /// Bumped when a logo lands in `GameArtLoader`'s cache, to redraw.
-    @State var logoTick = 0
+    @StateObject var art = SeleneHeroArt()
     @State var keyMonitor: Any?
 
     public init(viewModel: AppViewModel, router: AppRouter, settings: AppSettingsStore,
@@ -37,7 +34,7 @@ public struct CollectionView: View {
     var filter: LibraryFilter { viewModel.librarySelection.query.filter }
 
     var games: [PortedGame] {
-        LibraryQuery(filter: filter).apply(to: viewModel.libraryGames, history: playSessions)
+        viewModel.librarySelection.query.apply(to: viewModel.libraryGames, history: playSessions)
     }
 
     var hasAnyGame: Bool { viewModel.libraryGames.contains { !$0.isHidden } }
@@ -55,7 +52,7 @@ public struct CollectionView: View {
         let games = self.games
         let game = selectedGame(in: games)
         ZStack(alignment: .topLeading) {
-            SeleneArtBackground(image: heroImage, imageKey: heroKey,
+            SeleneArtBackground(image: art.image, imageKey: art.key,
                                 shade: settings.settings.backgroundShade)
             stage(games: games, game: game)
                 .frame(width: canvas.stageSize.width, height: canvas.stageSize.height, alignment: .topLeading)
@@ -75,8 +72,12 @@ public struct CollectionView: View {
             guard viewModel.alertMessage == nil else { return }
             if let action = note.object as? GamepadAction { handle(action) }
         }
-        .task(id: artTaskKey(game, remote: heroRemote)) { await loadHero() }
-        .task(id: artTaskKey(game, remote: logoRemote)) { await loadLogo() }
+        .onChange(of: playSessions.sessions.count) { _ in reconcile() }
+        .onChange(of: viewModel.isScanningLibrary) { _ in reconcile() }
+        .task(id: art.heroTaskKey(game, metadata: game.flatMap { viewModel.storeMetadata[$0.id] },
+                                  apiKey: settings.settings.steamGridDbApiKey)) { await loadHero(game) }
+        .task(id: art.logoTaskKey(game, metadata: game.flatMap { viewModel.storeMetadata[$0.id] },
+                                  apiKey: settings.settings.steamGridDbApiKey)) { await loadLogo(game) }
     }
 
     private func stage(games: [PortedGame], game: PortedGame?) -> some View {
@@ -85,7 +86,7 @@ public struct CollectionView: View {
                             onSelect: { setFilter($0) })
 
             if let game {
-                CollectionInfoView(game: game, logo: logo(for: game),
+                CollectionInfoView(game: game, logo: art.logo(for: game),
                                    presentation: LibraryPresentation(
                                        game: game, metadata: viewModel.storeMetadata[game.id],
                                        totalPlaytime: playSessions.totalDuration(for: game.id),
@@ -124,7 +125,9 @@ public struct CollectionView: View {
     /// No games at all: the Add game prompt. A filter with no games: its name.
     @ViewBuilder
     private var emptyState: some View {
-        if hasAnyGame {
+        if viewModel.isScanningLibrary {
+            EmptyView()
+        } else if hasAnyGame {
             Text("No games in \(filter.rawValue)")
                 .seleneFont(34)
                 .foregroundColor(SeleneTheme.ink)
@@ -156,6 +159,7 @@ public struct CollectionView: View {
 
     private func contextHints(_ game: PortedGame?) -> [HintItem] {
         guard let game else {
+            if viewModel.isScanningLibrary { return [] }
             return hasAnyGame ? [HintItem(.rs, "Filter")] : [HintItem(.a, "Add game")]
         }
         let filterHint = HintItem(.rs, "Filter")
@@ -176,12 +180,6 @@ public struct CollectionView: View {
             viewModel.spotlight.startingTabApplied = true
             viewModel.librarySelection.query.filter = LibraryFilter(startingTab: settings.settings.startingTab)
         }
-        if viewModel.librarySelection.selectedGameID == nil,
-           settings.settings.restoreLastGame,
-           let id = settings.settings.lastSelectedGameID,
-           viewModel.libraryGames.contains(where: { $0.id == id }) {
-            viewModel.librarySelection.selectedGameID = id
-        }
         reconcile()
         selectionChanged()
     }
@@ -189,7 +187,8 @@ public struct CollectionView: View {
     /// Keeps the selection inside the filtered list, in the same frame as any change to it.
     func reconcile() {
         var state = viewModel.librarySelection
-        state.reconcile(with: viewModel.libraryGames, history: playSessions)
+        state.reconcile(with: viewModel.libraryGames, history: playSessions,
+                        preferredGameID: settings.settings.restoreLastGame ? settings.settings.lastSelectedGameID : nil)
         if state != viewModel.librarySelection { viewModel.librarySelection = state }
     }
 
@@ -212,55 +211,16 @@ public struct CollectionView: View {
 
     // MARK: - Art
 
-    /// Reading `logoTick` redraws the view when a logo lands in the loader's cache.
-    private func logo(for game: PortedGame) -> NSImage? {
-        _ = logoTick
-        return GameArtLoader.shared.cachedLogo(for: game)
+    private func loadHero(_ game: PortedGame?) async {
+        await art.loadHero(game: game, current: { selectedGame?.id },
+                           metadata: game.flatMap { viewModel.storeMetadata[$0.id] }, artwork: artwork,
+                           steamGridDB: viewModel.steamGridDB, apiKey: settings.settings.steamGridDbApiKey)
     }
 
-    private func heroRemote(_ game: PortedGame) -> URL? {
-        let meta = viewModel.storeMetadata[game.id]
-        return meta?.headerImageURL ?? meta?.imageURL
-    }
-
-    private func logoRemote(_ game: PortedGame) -> URL? {
-        viewModel.storeMetadata[game.id]?.logoURL
-    }
-
-    private func artTaskKey(_ game: PortedGame?, remote: (PortedGame) -> URL?) -> String {
-        guard let game else { return "none" }
-        return "\(game.id)|\(remote(game)?.absoluteString ?? "")|\(settings.settings.steamGridDbApiKey)"
-    }
-
-    /// The art changes after a 150 ms settle, then crossfades (`SeleneArtBackground`).
-    @MainActor
-    private func loadHero() async {
-        guard let game = selectedGame else {
-            heroImage = nil
-            heroKey = "none"
-            return
-        }
-        if heroKey.hasPrefix(game.id.uuidString) { return }
-        try? await Task.sleep(nanoseconds: 150_000_000)
-        guard !Task.isCancelled else { return }
-        let image = await GameArtLoader.shared.hero(
-            for: game, metadata: viewModel.storeMetadata[game.id], artwork: artwork,
-            steamGridDB: viewModel.steamGridDB, apiKey: settings.settings.steamGridDbApiKey)
-        guard !Task.isCancelled, selectedGame?.id == game.id else { return }
-        heroImage = image
-        heroKey = image.map { "\(game.id.uuidString)|\(ObjectIdentifier($0).hashValue)" } ?? "none"
-    }
-
-    @MainActor
-    private func loadLogo() async {
-        guard let game = selectedGame, GameArtLoader.shared.cachedLogo(for: game) == nil else { return }
-        try? await Task.sleep(nanoseconds: 150_000_000)
-        guard !Task.isCancelled else { return }
-        let image = await GameArtLoader.shared.logo(
-            for: game, metadata: viewModel.storeMetadata[game.id], artwork: artwork,
-            steamGridDB: viewModel.steamGridDB, apiKey: settings.settings.steamGridDbApiKey)
-        guard image != nil, !Task.isCancelled else { return }
-        logoTick += 1
+    private func loadLogo(_ game: PortedGame?) async {
+        await art.loadLogo(game: game, metadata: game.flatMap { viewModel.storeMetadata[$0.id] },
+                           artwork: artwork, steamGridDB: viewModel.steamGridDB,
+                           apiKey: settings.settings.steamGridDbApiKey)
     }
 }
 

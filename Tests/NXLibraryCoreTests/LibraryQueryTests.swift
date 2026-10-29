@@ -131,4 +131,21 @@ final class LibraryQueryTests: XCTestCase {
         var empty = LibrarySelectionState()
         XCTAssertNil(empty.jump(toEnd: true, in: [], history: NoPlayHistory()))
     }
+
+    func testReconcilePrefersRestoredGameWhenSelectionMissing() {
+        let games = [game("A"), game("B"), game("C")]
+        var state = LibrarySelectionState()
+        _ = state.reconcile(with: games, history: NoPlayHistory(), preferredGameID: games[2].id)
+        XCTAssertEqual(state.selectedGameID, games[2].id)
+
+        // A kept selection wins over the preference.
+        state.selectedGameID = games[1].id
+        _ = state.reconcile(with: games, history: NoPlayHistory(), preferredGameID: games[2].id)
+        XCTAssertEqual(state.selectedGameID, games[1].id)
+
+        // A preference outside the filtered list falls back to the first game.
+        var hidden = LibrarySelectionState()
+        _ = hidden.reconcile(with: games, history: NoPlayHistory(), preferredGameID: UUID())
+        XCTAssertEqual(hidden.selectedGameID, games[0].id)
+    }
 }
