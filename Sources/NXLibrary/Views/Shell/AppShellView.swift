@@ -45,6 +45,7 @@ public struct AppShellView: View {
                 .zIndex(2)
             }
         }
+        .seleneCanvasRoot()
         .animation(reduceMotion ? nil : SeleneTheme.screen,
                    value: viewModel.gameForSettingsSheet?.id)
         .animation(reduceMotion ? nil : SeleneTheme.quick,
