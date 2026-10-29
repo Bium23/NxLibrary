@@ -20,16 +20,21 @@ A personal, native macOS front-end for [nxnative](https://github.com/seedds/nxna
 
 ## Interface
 
-NX Library uses a dark, cinematic, controller-first interface inspired by the calm of console system software and by the Selene Playnite theme. It does not include Sony or Nintendo branding, fonts, sounds, wallpapers or artwork.
+NX Library follows the [Selene](https://github.com/mattxslv/Selene) Playnite theme (MIT) as closely as a SwiftUI app can: the same 1920×1080 canvas units, palettes, Material Icons glyphs, hint rows and motion. Only the button prompts differ: they show Switch, Xbox or PlayStation names to match the connected controller. It does not include Sony or Nintendo branding, fonts, sounds or artwork.
 
-- **Library:** full-bleed hero artwork, one white primary action, a filter row and a square key-art rail with a single white focus ring.
-- **Game detail:** artwork-led page with Play, Game options and Rebuild, plus build/source status, save, app and store panels. On wide windows the support panels move into a right-hand rail.
-- **Game options:** runtime settings in a focused overlay, with its own controller scope so input never leaks to the library behind it.
-- **Hidden menu:** `⌘K` or the controller Menu/Start button opens Library, Add Game, Settings, Console and Quit.
-- **Settings:** eight sections in a sidebar, all editable at runtime. Appearance includes background shade, readable text, reduce motion, button hints and the clock.
-- **Add Game and Setup:** the three-step import/build flow and the first-run checklist share the same visual language.
-- **Console:** filter, search, copy and clear the in-memory build and launch log; the log file on disk is kept.
-- **Controller and keyboard:** A/Return confirms or plays, B/Esc goes back, LB/RB switch filters or tabs, and Menu/Start opens the hidden menu. On the library X opens details and Y opens Game options; on the detail page X opens Game options and Y rebuilds. Arrow keys move focus, and `⌘D`/`⌘O` open details or Game options.
+- **Spotlight:** Selene's home row of square tiles with cards (Collection, Surprise me, Activity, Add game), filter pill, info block, screenshot strip and a full-screen screenshot viewer. Hold A to lift and move a tile.
+- **Collection:** a single row of covers over the selected game's art.
+- **Details:** banded page (play row, Build & Sources, screenshots, More like this) with Selene's scrim masks.
+- **Game options:** Selene's 1040u panel with runtime settings, favorite, hide and move, and confirm dialogs.
+- **Control center:** Menu/Start or `⌘K` opens Selene's menu with Resume and Close Game for a running game, and Power (quit, relaunch).
+- **Launch screen:** on Play, the game's art and logo (per Settings → Games) stay up until the game's window appears.
+- **Find a game:** hold View or press `⌘F` for a search over the whole library.
+- **Settings:** Selene's two-column layout with Search and Changed, then Start-up, Navigation, Spotlight, Sound & music, Look, Games, Controllers, Library, Storage, Engine and About. Value rows step with Left/Right; X resets a group.
+- **Look:** 23 palettes, wallpaper per theme or none (Fill/Fit/Stretch) and an optional animated backdrop.
+- **Sounds:** Selene's cues. Four MIT cues ship with the app; **Settings → Sound & music → Import sounds and wallpapers from Selene** copies the rest from a Selene folder you own into Application Support.
+- **Intro:** the app mark with the boot cue on a cold launch (Settings → Start-up). Any input skips it.
+- **Add Game, Setup, Console:** the import/build flow, first-run checklist and log share the canvas units. Console's **Copy log** copies the last 200 log lines and the latest build log's tail.
+- **Controller and keyboard:** A/Return confirms or plays, B/Esc goes back, LB/RB switch filters, View/Tab flips Spotlight and Collection, Menu/Start opens the control center, holding Menu or `⌘,` opens Settings.
 - **Artwork:** Store descriptions and artwork are cached locally under Application Support. Nothing is written to the repository.
 
 The design specification and implementation plan live in [`docs/superpowers/`](docs/superpowers/). Visual acceptance is a manual pass on this Mac; the automated suite covers the data and build layers.
@@ -101,7 +106,9 @@ The suite covers models and persistence, source parsing (including a regression 
 
 ## Licenses and attribution
 
-NX Library is MIT licensed. `NOTICE` retains the MIT copyrights for nxnative and the [rennan101/nxnative_Launcher](https://github.com/rennan101/nxnative_Launcher) GUI baseline; NX2Apple was a reference only and no code from it was copied. The app icon and tones are original.
+NX Library is MIT licensed. `NOTICE` retains the MIT copyrights for nxnative and the [rennan101/nxnative_Launcher](https://github.com/rennan101/nxnative_Launcher) GUI baseline; NX2Apple was a reference only and no code from it was copied. The app icon is original.
+
+Bundled media and their licenses are listed in `Resources/Selene/NOTICE.txt` and `NOTICE-palettes.txt`: Material Icons (Apache 2.0), Selene's four synthesized sounds (MIT), the Selene palettes (MIT) and five public-domain wallpapers. Other Selene sounds and wallpapers are never bundled; the import action copies them from the user's own checkout.
 
 No games, keys, Nintendo logos, fonts, sounds, or other Nintendo assets are included. NX Library is not affiliated with, endorsed by, or sponsored by Nintendo.
 
