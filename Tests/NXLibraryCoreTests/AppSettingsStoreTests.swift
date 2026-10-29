@@ -53,6 +53,44 @@ final class AppSettingsStoreTests: XCTestCase {
         XCTAssertEqual(s.surprisePool, .installed)
     }
 
+    func testOldSettingsFileDecodesWithDefaults() throws {
+        // Only keys written before the Selene fidelity pass.
+        let old = Data(#"{"backgroundShade":"deep","readableText":false,"startOn":"collection"}"#.utf8)
+        let s = try JSONDecoder().decode(AppSettings.self, from: old)
+        XCTAssertEqual(s.backgroundShade, .deep)
+        XCTAssertFalse(s.readableText)
+        XCTAssertEqual(s.startOn, .collection)
+        XCTAssertTrue(s.introAnimation)
+        XCTAssertEqual(s.buttonNames, .automatic)
+        XCTAssertTrue(s.viewButtonSwitches)
+        XCTAssertTrue(s.interfaceSounds)
+        XCTAssertEqual(s.soundVolume, 0.6)
+        XCTAssertTrue(s.quietLaunch)
+        XCTAssertNil(s.wallpaperID)
+        XCTAssertEqual(s.backgroundSizing, .fill)
+        XCTAssertTrue(s.animatedBackground)
+        XCTAssertEqual(s.launchStyle, .artAndLogo)
+        XCTAssertTrue(s.launchMotion)
+        XCTAssertEqual(s.launchShade, .soft)
+    }
+
+    func testNewSettingsRoundTrip() throws {
+        var settings = AppSettings()
+        settings.introAnimation = false
+        settings.viewButtonSwitches = false
+        settings.interfaceSounds = false
+        settings.soundVolume = 0.25
+        settings.quietLaunch = false
+        settings.wallpaperID = "gruvbox/2-flower-basket"
+        settings.backgroundSizing = .stretch
+        settings.animatedBackground = false
+        settings.launchStyle = .logoOnBlack
+        settings.launchMotion = false
+        settings.launchShade = .dark
+        let data = try JSONEncoder().encode(settings)
+        XCTAssertEqual(try JSONDecoder().decode(AppSettings.self, from: data), settings)
+    }
+
     func testBackgroundShadeScrimsIncrease() {
         XCTAssertLessThan(BackgroundShade.light.heroScrimOpacity,
                           BackgroundShade.balanced.heroScrimOpacity)
@@ -69,12 +107,11 @@ final class AppSettingsStoreTests: XCTestCase {
 
 final class SettingsSectionTests: XCTestCase {
     func testAllSectionsArePresent() {
-        XCTAssertEqual(SettingsSection.allCases.count, 8)
         XCTAssertEqual(SettingsSection.allCases.map(\.title), [
-            "General", "Appearance", "Library", "Game defaults",
-            "Controllers", "Engine & keys", "Storage & logs", "About"
+            "Search", "Changed", "Start-up", "Navigation", "Spotlight", "Sound & music",
+            "Look", "Games", "Controllers", "Library", "Storage", "Engine", "About"
         ])
-        XCTAssertTrue(SettingsSection.allCases.allSatisfy { !$0.icon.isEmpty })
+        XCTAssertTrue(SettingsSection.allCases.allSatisfy { !$0.icon.rawValue.isEmpty })
     }
 
     func testStartScreenDefaultsAndDecode() throws {

@@ -20,8 +20,7 @@ struct SettingsSidebar: View {
                     selection = section
                 } label: {
                     HStack(spacing: 10) {
-                        Image(systemName: section.icon)
-                            .font(.system(size: 13, weight: .medium))
+                        MaterialIconView(section.icon, size: 15)
                             .frame(width: 17)
                         Text(section.title)
                             .font(.system(size: 13, weight: selection == section ? .semibold : .regular))

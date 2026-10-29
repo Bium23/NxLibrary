@@ -56,7 +56,7 @@ extension SpotlightView {
         case .menu:
             router.isMenuPresented = true
         case .menuHold:
-            router.openSettings(.general)
+            router.openSettings(.startUp)
         case .rightStickPress:
             break
         }

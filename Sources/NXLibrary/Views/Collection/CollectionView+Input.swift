@@ -45,7 +45,7 @@ extension CollectionView {
         case .menu:
             router.isMenuPresented = true
         case .menuHold:
-            router.openSettings(.general)
+            router.openSettings(.startUp)
         }
         if moved { SoundEffectService.shared.play(.focus) }
     }

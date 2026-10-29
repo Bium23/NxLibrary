@@ -78,7 +78,7 @@ public final class AppRouter: ObservableObject {
     public func requestSpotlightSelect(_ id: UUID) { pendingSpotlightSelect = id }
 
     public func showDetail(_ id: UUID) { navigate(to: .detail(id)) }
-    public func openSettings(_ section: SettingsSection = .general) { navigate(to: .settings(section)) }
+    public func openSettings(_ section: SettingsSection = .startUp) { navigate(to: .settings(section)) }
     public func openAddGame() { navigate(to: .addGame) }
     public func openConsole() { navigate(to: .console) }
     public func openCollection() { navigate(to: .collection) }

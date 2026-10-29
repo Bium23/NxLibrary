@@ -29,6 +29,49 @@ public enum StartScreen: String, Codable, CaseIterable {
     case spotlight, collection, last
 }
 
+/// How the background artwork is fitted to the window.
+public enum BackgroundSizing: String, Codable, CaseIterable, Identifiable, Equatable {
+    case fill, fit, stretch
+
+    public var id: String { rawValue }
+    public var title: String {
+        switch self {
+        case .fill: return "Fill"
+        case .fit: return "Fit"
+        case .stretch: return "Stretch"
+        }
+    }
+}
+
+/// What a game's launch screen shows while its window starts.
+public enum LaunchStyle: String, Codable, CaseIterable, Identifiable, Equatable {
+    case artAndLogo, artOnly, logoOnBlack, minimal
+
+    public var id: String { rawValue }
+    public var title: String {
+        switch self {
+        case .artAndLogo: return "Art and logo"
+        case .artOnly: return "Art only"
+        case .logoOnBlack: return "Logo on black"
+        case .minimal: return "Minimal"
+        }
+    }
+}
+
+/// Shading laid over the launch screen art.
+public enum LaunchShade: String, Codable, CaseIterable, Identifiable, Equatable {
+    case none, soft, dark
+
+    public var id: String { rawValue }
+    public var title: String {
+        switch self {
+        case .none: return "None"
+        case .soft: return "Soft"
+        case .dark: return "Dark"
+        }
+    }
+}
+
 public struct AppSettings: Codable, Equatable {
     public var backgroundShade: BackgroundShade
     public var readableText: Bool
@@ -50,6 +93,18 @@ public struct AppSettings: Codable, Equatable {
     public var startOn: StartScreen
     /// The home screen last shown: `.spotlight` or `.collection`.
     public var lastHome: StartScreen
+    public var introAnimation: Bool
+    public var viewButtonSwitches: Bool
+    public var interfaceSounds: Bool
+    public var soundVolume: Double
+    public var quietLaunch: Bool
+    /// Nil means the palette's default wallpaper.
+    public var wallpaperID: String?
+    public var backgroundSizing: BackgroundSizing
+    public var animatedBackground: Bool
+    public var launchStyle: LaunchStyle
+    public var launchMotion: Bool
+    public var launchShade: LaunchShade
 
     public init(backgroundShade: BackgroundShade = .balanced,
                 readableText: Bool = true,
@@ -69,7 +124,18 @@ public struct AppSettings: Codable, Equatable {
                 startingTab: LibraryFilter.RawValue = "All games",
                 surprisePool: SurprisePool = .installed,
                 startOn: StartScreen = .spotlight,
-                lastHome: StartScreen = .spotlight) {
+                lastHome: StartScreen = .spotlight,
+                introAnimation: Bool = true,
+                viewButtonSwitches: Bool = true,
+                interfaceSounds: Bool = true,
+                soundVolume: Double = 0.6,
+                quietLaunch: Bool = true,
+                wallpaperID: String? = nil,
+                backgroundSizing: BackgroundSizing = .fill,
+                animatedBackground: Bool = true,
+                launchStyle: LaunchStyle = .artAndLogo,
+                launchMotion: Bool = true,
+                launchShade: LaunchShade = .soft) {
         self.backgroundShade = backgroundShade
         self.readableText = readableText
         self.reduceMotion = reduceMotion
@@ -89,6 +155,17 @@ public struct AppSettings: Codable, Equatable {
         self.surprisePool = surprisePool
         self.startOn = startOn
         self.lastHome = lastHome
+        self.introAnimation = introAnimation
+        self.viewButtonSwitches = viewButtonSwitches
+        self.interfaceSounds = interfaceSounds
+        self.soundVolume = soundVolume
+        self.quietLaunch = quietLaunch
+        self.wallpaperID = wallpaperID
+        self.backgroundSizing = backgroundSizing
+        self.animatedBackground = animatedBackground
+        self.launchStyle = launchStyle
+        self.launchMotion = launchMotion
+        self.launchShade = launchShade
     }
 
     enum CodingKeys: String, CodingKey {
@@ -97,6 +174,8 @@ public struct AppSettings: Codable, Equatable {
         case steamGridDbApiKey, gameDefaults, colorThemeID, buttonNames
         case spotlightCards, spotlightOrder, startingTab, surprisePool
         case startOn, lastHome
+        case introAnimation, viewButtonSwitches, interfaceSounds, soundVolume, quietLaunch
+        case wallpaperID, backgroundSizing, animatedBackground, launchStyle, launchMotion, launchShade
     }
 
     public init(from decoder: Decoder) throws {
@@ -120,5 +199,16 @@ public struct AppSettings: Codable, Equatable {
         self.surprisePool = try container.decodeIfPresent(SurprisePool.self, forKey: .surprisePool) ?? .installed
         self.startOn = try container.decodeIfPresent(StartScreen.self, forKey: .startOn) ?? .spotlight
         self.lastHome = try container.decodeIfPresent(StartScreen.self, forKey: .lastHome) ?? .spotlight
+        self.introAnimation = try container.decodeIfPresent(Bool.self, forKey: .introAnimation) ?? true
+        self.viewButtonSwitches = try container.decodeIfPresent(Bool.self, forKey: .viewButtonSwitches) ?? true
+        self.interfaceSounds = try container.decodeIfPresent(Bool.self, forKey: .interfaceSounds) ?? true
+        self.soundVolume = try container.decodeIfPresent(Double.self, forKey: .soundVolume) ?? 0.6
+        self.quietLaunch = try container.decodeIfPresent(Bool.self, forKey: .quietLaunch) ?? true
+        self.wallpaperID = try container.decodeIfPresent(String.self, forKey: .wallpaperID)
+        self.backgroundSizing = try container.decodeIfPresent(BackgroundSizing.self, forKey: .backgroundSizing) ?? .fill
+        self.animatedBackground = try container.decodeIfPresent(Bool.self, forKey: .animatedBackground) ?? true
+        self.launchStyle = try container.decodeIfPresent(LaunchStyle.self, forKey: .launchStyle) ?? .artAndLogo
+        self.launchMotion = try container.decodeIfPresent(Bool.self, forKey: .launchMotion) ?? true
+        self.launchShade = try container.decodeIfPresent(LaunchShade.self, forKey: .launchShade) ?? .soft
     }
 }

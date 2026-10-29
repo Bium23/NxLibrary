@@ -160,7 +160,7 @@ public struct AppShellView: View {
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenSettings)) { _ in
             guard !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
             router.closeMenu()
-            router.openSettings(.general)
+            router.openSettings(.startUp)
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenConsole)) { _ in
             guard !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
@@ -291,7 +291,7 @@ public struct AppShellView: View {
                 // Hold Menu (and Cmd+,) opens Settings from any screen.
                 guard !router.isScreenshotViewerOpen else { return }
                 if case .settings = router.route { return }
-                router.openSettings(.general)
+                router.openSettings(.startUp)
                 return
             }
             switch router.route {
@@ -474,7 +474,7 @@ public struct AppShellView: View {
             router.closeMenu()
         case .menuHold:
             router.closeMenu()
-            router.openSettings(.general)
+            router.openSettings(.startUp)
         default:
             break
         }
@@ -497,7 +497,7 @@ public struct AppShellView: View {
             viewModel.refreshLibrary()
         case .settings:
             router.closeMenu()
-            router.openSettings(.general)
+            router.openSettings(.startUp)
         case .console:
             router.closeMenu()
             router.openConsole()

@@ -186,19 +186,19 @@ public struct SettingsView: View {
 
     private var canResetSection: Bool {
         switch section {
-        case .general, .appearance, .library, .gameDefaults, .controllers: return true
-        case .engineKeys, .storageLogs, .about: return false
+        case .startUp, .look, .library, .games, .controllers: return true
+        case .search, .changed, .navigation, .spotlight, .soundMusic, .engine, .storage, .about: return false
         }
     }
 
     private func resetSection() {
         let defaults = AppSettings()
         switch section {
-        case .general:
+        case .startUp:
             settings.settings.restoreLastGame = defaults.restoreLastGame
             settings.settings.checkEngineAtLaunch = defaults.checkEngineAtLaunch
             settings.settings.refreshLibraryAtLaunch = defaults.refreshLibraryAtLaunch
-        case .appearance:
+        case .look:
             settings.settings.backgroundShade = defaults.backgroundShade
             settings.settings.readableText = defaults.readableText
             settings.settings.reduceMotion = defaults.reduceMotion
@@ -209,7 +209,7 @@ public struct SettingsView: View {
             viewModel.libraryFolder = URL(fileURLWithPath: viewModel.defaultInstallPath)
                 .appendingPathComponent("Applications")
             viewModel.loadLibrary()
-        case .gameDefaults:
+        case .games:
             settings.settings.gameDefaults = defaults.gameDefaults
         case .controllers:
             GameControllerService.shared.deadzone = 0.35
@@ -217,7 +217,7 @@ public struct SettingsView: View {
             SoundEffectService.shared.isSoundEnabled = true
             settings.settings.gameDefaults.rumble = defaults.gameDefaults.rumble
             settings.settings.gameDefaults.rumbleGain = defaults.gameDefaults.rumbleGain
-        case .engineKeys, .storageLogs, .about:
+        case .search, .changed, .navigation, .spotlight, .soundMusic, .engine, .storage, .about:
             break
         }
         SoundEffectService.shared.play(.focus)

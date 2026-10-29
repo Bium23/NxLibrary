@@ -19,25 +19,27 @@ struct SettingsSectionContent: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             switch section {
-            case .general:
+            case .startUp:
                 SettingsGeneralSection(viewModel: viewModel, settings: settings, onActions: onActions)
-            case .appearance:
+            case .look:
                 SettingsAppearanceSection(viewModel: viewModel, settings: settings, onActions: onActions)
             case .library:
                 SettingsLibrarySection(viewModel: viewModel, settings: settings,
                                        artwork: artwork, onActions: onActions)
-            case .gameDefaults:
+            case .games:
                 SettingsGameDefaultsSection(viewModel: viewModel, settings: settings, onActions: onActions)
             case .controllers:
                 SettingsControllersSection(settings: settings, onActions: onActions,
                                            onViewControls: onViewControls)
-            case .engineKeys:
+            case .engine:
                 SettingsEngineSection(viewModel: viewModel, onActions: onActions)
-            case .storageLogs:
+            case .storage:
                 SettingsStorageSection(viewModel: viewModel, artwork: artwork,
                                        onActions: onActions, onOpenConsole: onOpenConsole)
             case .about:
                 SettingsAboutSection(viewModel: viewModel)
+            case .search, .changed, .navigation, .spotlight, .soundMusic:
+                EmptyView()
             }
         }
         .padding(.top, 1)
