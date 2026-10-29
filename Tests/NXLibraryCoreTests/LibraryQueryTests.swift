@@ -26,35 +26,66 @@ final class LibraryQueryTests: XCTestCase {
                      name: "base.xci", sizeBytes: 1, type: .base)
     }
 
-    func testAllSortsByName() {
-        let games = [game("Zelda"), game("Mario"), game("Animal")]
-        let result = LibraryQuery().apply(to: games)
-        XCTAssertEqual(result.map(\.name), ["Animal", "Mario", "Zelda"])
+    private struct StubHistory: PlayHistory {
+        var dates: [UUID: Date] = [:]
+        func lastPlayed(for gameID: UUID) -> Date? { dates[gameID] }
     }
 
-    func testReadyOnlyIncludesPlayable() {
-        let games = [
-            game("Ready", status: .built),
-            game("Missing", status: .appMissing),
-            game("Not built", status: .notBuilt)
-        ]
-        let result = LibraryQuery(filter: .ready).apply(to: games)
-        XCTAssertEqual(result.map(\.name), ["Ready"])
+    private func fixtures() -> (games: [PortedGame], history: StubHistory) {
+        var zelda = game("Zelda")
+        var mario = game("Mario")
+        let animal = game("Animal")
+        var hidden = game("Hidden", status: .appMissing)
+        zelda.isFavorite = true
+        hidden.isHidden = true
+        hidden.isFavorite = true
+        mario.status = .appMissing
+        var h = StubHistory()
+        h.dates[zelda.id] = Date(timeIntervalSince1970: 100)
+        h.dates[mario.id] = Date(timeIntervalSince1970: 200)
+        h.dates[hidden.id] = Date(timeIntervalSince1970: 300)
+        return ([zelda, mario, animal, hidden], h)
     }
 
-    func testNeedsSourcesUsesBasePresence() {
-        let games = [
-            game("Detached"),
-            game("Attached", sources: [baseSource()])
-        ]
-        let result = LibraryQuery(filter: .needsSources).apply(to: games)
-        XCTAssertEqual(result.map(\.name), ["Detached"])
+    func testAllSortsByLastPlayedThenName() {
+        let (games, h) = fixtures()
+        let extra = game("Banana")
+        let result = LibraryQuery().apply(to: games + [extra], history: h)
+        XCTAssertEqual(result.map(\.name), ["Mario", "Zelda", "Animal", "Banana"])
     }
 
-    func testRecentlyAddedSortsNewestFirst() {
-        let games = [game("Old", modified: 1), game("New", modified: 3), game("Mid", modified: 2)]
-        let result = LibraryQuery(filter: .recentlyAdded).apply(to: games)
-        XCTAssertEqual(result.map(\.name), ["New", "Mid", "Old"])
+    func testInstalledOnlyPlayable() {
+        let (games, h) = fixtures()
+        let result = LibraryQuery(filter: .installed).apply(to: games, history: h)
+        XCTAssertEqual(result.map(\.name), ["Zelda", "Animal"])
+    }
+
+    func testRecentlyPlayedNewestFirstAndOnlyPlayed() {
+        let (games, h) = fixtures()
+        let result = LibraryQuery(filter: .recentlyPlayed).apply(to: games, history: h)
+        XCTAssertEqual(result.map(\.name), ["Mario", "Zelda"])
+    }
+
+    func testFavoritesFilter() {
+        let (games, h) = fixtures()
+        let result = LibraryQuery(filter: .favorites).apply(to: games, history: h)
+        XCTAssertEqual(result.map(\.name), ["Zelda"])
+    }
+
+    func testNotPlayedFilter() {
+        let (games, h) = fixtures()
+        let result = LibraryQuery(filter: .notPlayed).apply(to: games, history: h)
+        XCTAssertEqual(result.map(\.name), ["Animal"])
+    }
+
+    func testHiddenExcludedEverywhere() {
+        let (games, h) = fixtures()
+        for filter in LibraryFilter.allCases {
+            let result = LibraryQuery(filter: filter).apply(to: games, history: h)
+            XCTAssertFalse(result.contains { $0.name == "Hidden" }, "\(filter)")
+        }
+        let searched = LibraryQuery(searchText: "Hidden").apply(to: games, history: h)
+        XCTAssertTrue(searched.isEmpty)
     }
 
     func testSearchMatchesNameTitleAndBundleCaseInsensitively() {
@@ -62,11 +93,11 @@ final class LibraryQueryTests: XCTestCase {
             game("Super Mario Odyssey", titleId: "0100000000010000", bundleId: "org.nxnative.0100000000010000"),
             game("The Legend of Zelda", titleId: "01007EF00011E000")
         ]
-        XCTAssertEqual(LibraryQuery(searchText: "mario").apply(to: games).map(\.name),
+        XCTAssertEqual(LibraryQuery(searchText: "mario").apply(to: games, history: NoPlayHistory()).map(\.name),
                        ["Super Mario Odyssey"])
-        XCTAssertEqual(LibraryQuery(searchText: "01007ef").apply(to: games).map(\.name),
+        XCTAssertEqual(LibraryQuery(searchText: "01007ef").apply(to: games, history: NoPlayHistory()).map(\.name),
                        ["The Legend of Zelda"])
-        XCTAssertEqual(LibraryQuery(searchText: "ORG.NXNATIVE").apply(to: games).map(\.name),
+        XCTAssertEqual(LibraryQuery(searchText: "ORG.NXNATIVE").apply(to: games, history: NoPlayHistory()).map(\.name),
                        ["Super Mario Odyssey"])
     }
 
@@ -74,11 +105,11 @@ final class LibraryQueryTests: XCTestCase {
         let games = [game("A"), game("B")]
         var state = LibrarySelectionState()
         state.selectedGameID = games[1].id
-        XCTAssertEqual(state.reconcile(with: games).map(\.name), ["A", "B"])
+        XCTAssertEqual(state.reconcile(with: games, history: NoPlayHistory()).map(\.name), ["A", "B"])
         XCTAssertEqual(state.selectedGameID, games[1].id)
 
         state.query.searchText = "A"
-        _ = state.reconcile(with: games)
+        _ = state.reconcile(with: games, history: NoPlayHistory())
         XCTAssertEqual(state.selectedGameID, games[0].id)
     }
 
@@ -86,8 +117,8 @@ final class LibraryQueryTests: XCTestCase {
         let games = [game("A"), game("B"), game("C")]
         var state = LibrarySelectionState()
         state.selectedGameID = games[0].id
-        XCTAssertEqual(state.move(by: 1, in: games), games[1].id)
-        XCTAssertEqual(state.move(by: 10, in: games), games[2].id)
-        XCTAssertEqual(state.move(by: -10, in: games), games[0].id)
+        XCTAssertEqual(state.move(by: 1, in: games, history: NoPlayHistory()), games[1].id)
+        XCTAssertEqual(state.move(by: 10, in: games, history: NoPlayHistory()), games[2].id)
+        XCTAssertEqual(state.move(by: -10, in: games, history: NoPlayHistory()), games[0].id)
     }
 }

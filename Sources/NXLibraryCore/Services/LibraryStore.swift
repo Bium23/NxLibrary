@@ -75,6 +75,8 @@ public final class LibraryStore {
                 var merged = game
                 merged.id = old.id
                 merged.settings = old.settings
+                merged.isFavorite = old.isFavorite
+                merged.isHidden = old.isHidden
                 if old.sources.isEmpty {
                     merged.sources = game.sources
                 } else {

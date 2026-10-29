@@ -24,8 +24,8 @@ public struct LibrarySelectionState: Equatable {
     }
 
     @discardableResult
-    public mutating func reconcile(with games: [PortedGame]) -> [PortedGame] {
-        let filtered = query.apply(to: games)
+    public mutating func reconcile(with games: [PortedGame], history: PlayHistory) -> [PortedGame] {
+        let filtered = query.apply(to: games, history: history)
         if let selectedGameID,
            filtered.contains(where: { $0.id == selectedGameID }) {
             return filtered
@@ -36,8 +36,8 @@ public struct LibrarySelectionState: Equatable {
     }
 
     @discardableResult
-    public mutating func move(by delta: Int, in games: [PortedGame]) -> UUID? {
-        let filtered = query.apply(to: games)
+    public mutating func move(by delta: Int, in games: [PortedGame], history: PlayHistory) -> UUID? {
+        let filtered = query.apply(to: games, history: history)
         guard !filtered.isEmpty else {
             selectedGameID = nil
             return nil

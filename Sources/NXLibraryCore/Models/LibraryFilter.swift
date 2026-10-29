@@ -1,10 +1,20 @@
 import Foundation
 
+public protocol PlayHistory {
+    func lastPlayed(for gameID: UUID) -> Date?
+}
+
+public struct NoPlayHistory: PlayHistory {
+    public init() {}
+    public func lastPlayed(for gameID: UUID) -> Date? { nil }
+}
+
 public enum LibraryFilter: String, CaseIterable, Identifiable, Equatable {
     case all = "All games"
-    case ready = "Ready"
-    case needsSources = "Needs sources"
-    case recentlyAdded = "Recently added"
+    case installed = "Installed"
+    case recentlyPlayed = "Recently played"
+    case favorites = "Favorites"
+    case notPlayed = "Not played yet"
 
     public var id: String { rawValue }
 }
@@ -18,24 +28,18 @@ public struct LibraryQuery: Equatable {
         self.searchText = searchText
     }
 
-    public func apply(to games: [PortedGame]) -> [PortedGame] {
+    public func apply(to games: [PortedGame], history: PlayHistory) -> [PortedGame] {
+        let visible = games.filter { !$0.isHidden }
+        let dates = Dictionary(uniqueKeysWithValues: visible.map { ($0.id, history.lastPlayed(for: $0.id)) })
+        func played(_ game: PortedGame) -> Date? { dates[game.id] ?? nil }
+
         let filtered: [PortedGame]
         switch filter {
-        case .all:
-            filtered = games
-        case .ready:
-            filtered = games.filter(\.isPlayableLocally)
-        case .needsSources:
-            filtered = games.filter { game in
-                !game.sources.contains { $0.type == .base }
-            }
-        case .recentlyAdded:
-            filtered = games.sorted {
-                if $0.modificationDate != $1.modificationDate {
-                    return $0.modificationDate > $1.modificationDate
-                }
-                return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-            }
+        case .all: filtered = visible
+        case .installed: filtered = visible.filter(\.isPlayableLocally)
+        case .recentlyPlayed: filtered = visible.filter { played($0) != nil }
+        case .favorites: filtered = visible.filter(\.isFavorite)
+        case .notPlayed: filtered = visible.filter { played($0) == nil }
         }
 
         let query = normalized(searchText)
@@ -45,9 +49,14 @@ public struct LibraryQuery: Equatable {
                 || normalized(game.bundleId ?? "").contains(query)
         }
 
-        if filter == .recentlyAdded { return searched }
-        return searched.sorted {
-            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        return searched.sorted { lhs, rhs in
+            switch (played(lhs), played(rhs)) {
+            case let (l?, r?) where l != r: return l > r
+            case (.some, .none): return true
+            case (.none, .some): return false
+            default:
+                return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
+            }
         }
     }
 

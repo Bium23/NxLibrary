@@ -35,7 +35,7 @@ public struct LibraryRootView: View {
     }
 
     private var games: [PortedGame] {
-        viewModel.librarySelection.query.apply(to: viewModel.libraryGames)
+        viewModel.librarySelection.query.apply(to: viewModel.libraryGames, history: playSessions)
     }
 
     private var selectedGame: PortedGame? {
@@ -504,7 +504,7 @@ public struct LibraryRootView: View {
 
     private func reconcile() {
         var state = viewModel.librarySelection
-        _ = state.reconcile(with: viewModel.libraryGames)
+        _ = state.reconcile(with: viewModel.libraryGames, history: playSessions)
         viewModel.librarySelection = state
     }
 

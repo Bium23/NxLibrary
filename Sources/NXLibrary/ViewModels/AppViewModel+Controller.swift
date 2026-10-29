@@ -4,12 +4,12 @@ import NXLibraryCore
 
 extension AppViewModel {
     public func handleLibraryGamepadAction(_ action: GamepadAction) {
-        let games = librarySelection.query.apply(to: libraryGames)
+        let games = librarySelection.query.apply(to: libraryGames, history: playSessionStore ?? NoPlayHistory())
         switch action {
         case .navigateLeft:
             switch librarySelection.focusArea {
             case .rail:
-                librarySelection.move(by: -1, in: libraryGames)
+                librarySelection.move(by: -1, in: libraryGames, history: playSessionStore ?? NoPlayHistory())
                 librarySelection.actionIndex = 0
                 SoundEffectService.shared.play(.focus)
             case .filters:
@@ -21,7 +21,7 @@ extension AppViewModel {
         case .navigateRight:
             switch librarySelection.focusArea {
             case .rail:
-                librarySelection.move(by: 1, in: libraryGames)
+                librarySelection.move(by: 1, in: libraryGames, history: playSessionStore ?? NoPlayHistory())
                 librarySelection.actionIndex = 0
                 SoundEffectService.shared.play(.focus)
             case .filters:
@@ -91,7 +91,7 @@ extension AppViewModel {
     }
 
     public var currentFocusedGame: PortedGame? {
-        let games = librarySelection.query.apply(to: libraryGames)
+        let games = librarySelection.query.apply(to: libraryGames, history: playSessionStore ?? NoPlayHistory())
         guard !games.isEmpty else { return nil }
         return games.first { $0.id == librarySelection.selectedGameID } ?? games.first
     }

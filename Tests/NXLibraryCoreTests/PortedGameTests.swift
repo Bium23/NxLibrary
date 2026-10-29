@@ -47,4 +47,28 @@ final class PortedGameTests: XCTestCase {
                                      kind: .base, titleId: "0100000000010000", sizeBytes: 1)]
         XCTAssertFalse(game.canDeleteAppBundle())
     }
+
+    func testDecodesGameWithoutFlags() throws {
+        let game = PortedGame(name: "G", url: URL(fileURLWithPath: "/tmp/G.app"),
+                              platform: .macApp, sizeBytes: 1, modificationDate: Date())
+        let data = try JSONEncoder().encode(game)
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        json.removeValue(forKey: "isFavorite")
+        json.removeValue(forKey: "isHidden")
+        let old = try JSONSerialization.data(withJSONObject: json)
+        let decoded = try JSONDecoder().decode(PortedGame.self, from: old)
+        XCTAssertFalse(decoded.isFavorite)
+        XCTAssertFalse(decoded.isHidden)
+        XCTAssertEqual(decoded.name, "G")
+    }
+
+    func testFlagsRoundTrip() throws {
+        var game = PortedGame(name: "G", url: URL(fileURLWithPath: "/tmp/G.app"),
+                              platform: .macApp, sizeBytes: 1, modificationDate: Date())
+        game.isFavorite = true
+        game.isHidden = true
+        let decoded = try JSONDecoder().decode(PortedGame.self, from: JSONEncoder().encode(game))
+        XCTAssertTrue(decoded.isFavorite)
+        XCTAssertTrue(decoded.isHidden)
+    }
 }

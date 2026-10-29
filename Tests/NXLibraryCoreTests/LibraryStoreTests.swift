@@ -42,6 +42,23 @@ final class LibraryStoreTests: XCTestCase {
         XCTAssertEqual(merged.games.count, 1)
     }
 
+    func testMergeKeepsFavoriteAndHidden() throws {
+        let store = LibraryStore(directory: dir)
+        var game = PortedGame(name: "G", url: URL(fileURLWithPath: "/tmp/g.app"),
+                              platform: .macApp, sizeBytes: 1,
+                              modificationDate: Date(timeIntervalSince1970: 1),
+                              titleId: "0100000000000001")
+        game.isFavorite = true
+        game.isHidden = true
+        try store.save(LibraryFile(schemaVersion: 1, games: [game]))
+        var scanned = game
+        scanned.isFavorite = false
+        scanned.isHidden = false
+        let merged = try store.merge(scanned: [scanned])
+        XCTAssertEqual(merged.games.first?.isFavorite, true)
+        XCTAssertEqual(merged.games.first?.isHidden, true)
+    }
+
     func testCorruptFileRestoresBackup() throws {
         let store = LibraryStore(directory: dir)
         var game = PortedGame(name: "G", url: URL(fileURLWithPath: "/tmp/g.app"),

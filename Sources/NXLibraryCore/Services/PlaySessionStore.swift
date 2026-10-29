@@ -1,7 +1,7 @@
 import Foundation
 import Combine
 
-public final class PlaySessionStore: ObservableObject {
+public final class PlaySessionStore: ObservableObject, PlayHistory {
     @Published public private(set) var sessions: [PlaySession] = []
     public private(set) var loadError: String?
 

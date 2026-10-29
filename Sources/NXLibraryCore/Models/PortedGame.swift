@@ -17,6 +17,8 @@ public struct PortedGame: Identifiable, Codable, Equatable {
     public var toolchain: ToolchainInfo
     public var settings: GameRuntimeConfig
     public var lastBuild: BuildRecord?
+    public var isFavorite: Bool = false
+    public var isHidden: Bool = false
 
     public init(id: UUID = UUID(), name: String, url: URL,
                 platform: TargetPlatform, sizeBytes: Int64,
@@ -38,6 +40,28 @@ public struct PortedGame: Identifiable, Codable, Equatable {
         self.toolchain = ToolchainInfo()
         self.settings = GameRuntimeConfig()
         self.lastBuild = nil
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        url = try c.decode(URL.self, forKey: .url)
+        platform = try c.decode(TargetPlatform.self, forKey: .platform)
+        sizeBytes = try c.decode(Int64.self, forKey: .sizeBytes)
+        modificationDate = try c.decode(Date.self, forKey: .modificationDate)
+        bundleId = try c.decodeIfPresent(String.self, forKey: .bundleId)
+        titleId = try c.decodeIfPresent(String.self, forKey: .titleId)
+        versionString = try c.decodeIfPresent(String.self, forKey: .versionString)
+        sources = try c.decode([GameFileItem].self, forKey: .sources)
+        workspacePath = try c.decodeIfPresent(String.self, forKey: .workspacePath)
+        buildCachePath = try c.decodeIfPresent(String.self, forKey: .buildCachePath)
+        status = try c.decode(GameStatus.self, forKey: .status)
+        toolchain = try c.decode(ToolchainInfo.self, forKey: .toolchain)
+        settings = try c.decode(GameRuntimeConfig.self, forKey: .settings)
+        lastBuild = try c.decodeIfPresent(BuildRecord.self, forKey: .lastBuild)
+        isFavorite = try c.decodeIfPresent(Bool.self, forKey: .isFavorite) ?? false
+        isHidden = try c.decodeIfPresent(Bool.self, forKey: .isHidden) ?? false
     }
 
     public var uniqueKey: String {
