@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
-/// Selene's Game options: the current screen dimmed, then a centred column (864u)
+/// Selene's Game options: the current screen dimmed, then a centred column (1040u)
 /// with the game's name and glass rows. Edit details opens its own list and a
 /// removal asks in a Selene dialog. Rows, order and copy come from
 /// `GameOptionsPresentation`; this view only draws them and runs the actions.
@@ -22,8 +22,8 @@ struct GameOptionsView: View {
 
     @State private var config: GameRuntimeConfig
     @State private var level: GameOptionsLevel = .main
-    @State private var mainFocus = GameOptionsFocus()
-    @State private var detailsFocus = GameOptionsFocus()
+    /// The focused row by identity; nil means the top row of the level.
+    @State private var pickedRow: GameOptionsRow?
     @State private var confirm: ConfirmTarget?
     @State private var confirmFocus: SeleneConfirmButton = .cancel
 
@@ -74,8 +74,11 @@ struct GameOptionsView: View {
         presentation.focusableRows(level: level, origin: origin)
     }
 
+    /// The focused row, re-resolved against the rows of this draw so that rows
+    /// appearing above it (a Store page arriving late) do not move the focus.
     private var focusedRow: GameOptionsRow? {
-        (level == .main ? mainFocus : detailsFocus).row(in: rows)
+        let rows = self.rows
+        return GameOptionsFocus(row: pickedRow, in: rows).row(in: rows)
     }
 
     // MARK: - Body
@@ -86,7 +89,7 @@ struct GameOptionsView: View {
             SeleneTheme.scrim65
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
-                .onTapGesture { onClose() }
+                .onTapGesture { back() }
 
             VStack(spacing: 0) {
                 column(p)
@@ -138,6 +141,7 @@ struct GameOptionsView: View {
                     .padding(.bottom, canvas.u(24))
                 }
                 .scrollIndicators(.hidden)
+                .frame(maxHeight: canvas.u(680))
                 .onChange(of: focusedRow) { row in
                     guard let row else { return }
                     withAnimation(reduceMotion ? nil : SeleneTheme.quick) {
@@ -147,9 +151,12 @@ struct GameOptionsView: View {
             }
             .id(level)
         }
-        .frame(width: canvas.u(864), alignment: .leading)
+        .frame(width: canvas.u(1040), alignment: .leading)
         .frame(maxHeight: .infinity, alignment: .top)
-        .padding(.top, canvas.u(84))
+        .padding(.top, canvas.u(90))
+        .padding(.bottom, canvas.u(110))
+        // Clicks inside the column are not clicks on the scrim; only the dimmed area outside closes.
+        .contentShape(Rectangle())
     }
 
     @ViewBuilder
@@ -183,8 +190,8 @@ struct GameOptionsView: View {
             .background(RoundedRectangle(cornerRadius: canvas.u(16), style: .continuous)
                 .fill(SeleneTheme.glass))
         case .gap:
-            // Eight units of stack spacing make the 24u gap before a danger zone.
-            Color.clear.frame(height: canvas.u(16))
+            // Stack spacing is 8u on each side, so 8u here makes the 24u gap before a danger zone.
+            Color.clear.frame(height: canvas.u(8))
         }
     }
 
@@ -205,6 +212,19 @@ struct GameOptionsView: View {
             if hovering { setFocus(row) }
         }
         .id(row.rawValue)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(row.title)
+        .accessibilityHint(p.about(row) ?? "")
+        .accessibilityValue(accessibilityValue(row) ?? "")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { activate(row) }
+    }
+
+    /// The state a VoiceOver user hears for a switch or a value chip.
+    private func accessibilityValue(_ row: GameOptionsRow) -> String? {
+        if row.isToggle { return toggleValue(row) ? "On" : "Off" }
+        if row.isChoice { return choiceText(row) }
+        return nil
     }
 
     @ViewBuilder
@@ -310,34 +330,32 @@ struct GameOptionsView: View {
     // MARK: - Focus
 
     private func setFocus(_ row: GameOptionsRow) {
-        if level == .main {
-            mainFocus.focus(row, in: rows)
-        } else {
-            detailsFocus.focus(row, in: rows)
-        }
+        pickedRow = row
     }
 
     private func moveFocus(by delta: Int) {
+        let rows = self.rows
         let previous = focusedRow
-        if level == .main {
-            mainFocus.move(by: delta, count: rows.count)
-        } else {
-            detailsFocus.move(by: delta, count: rows.count)
-        }
+        var focus = GameOptionsFocus(row: pickedRow, in: rows)
+        focus.move(by: delta, count: rows.count)
+        pickedRow = focus.row(in: rows)
         if focusedRow != previous {
             SoundEffectService.shared.play(.focus)
         }
     }
 
     private func enterEditDetails() {
+        // Pin the focus to the first row now; a Store page that arrives later goes above it without moving it.
+        pickedRow = presentation.focusableRows(level: .editDetails, origin: origin).first
         level = .editDetails
-        detailsFocus = GameOptionsFocus()
         // The store link needs the store metadata; Details asks for it the same way.
         viewModel.loadStoreMetadata(for: current)
     }
 
     private func leaveEditDetails() {
         level = .main
+        // Back on the main list, the focus returns to Edit details, where it was left.
+        pickedRow = .editDetails
         SoundEffectService.shared.play(.focus)
     }
 
@@ -459,8 +477,9 @@ struct GameOptionsView: View {
             SoundEffectService.shared.play(.click)
             let hiding = !current.isHidden
             viewModel.toggleHidden(current)
-            // Hidden games leave the lists; the options go with them.
-            if hiding { onClose() }
+            // Close only once the hidden flag is saved: a failed save leaves the game listed.
+            let nowHidden = viewModel.libraryGames.first { $0.id == game.id }?.isHidden ?? false
+            if hiding && nowHidden { onClose() }
         case .fullscreen:
             SoundEffectService.shared.play(.click)
             config.fullscreen.toggle()

@@ -146,10 +146,11 @@ public struct GameOptionsPresentation: Equatable {
     /// Dim rows still take focus; the action explains the refusal itself.
     public var rebuildDimmed: Bool { sourcesDetached || toolchainBlocked }
 
+    /// Says where to fix a dimmed Rebuild: the sources or the Metal gate.
     public var rebuildAbout: String {
-        sourcesDetached
-            ? "A base source is required."
-            : "Build a new app; the old app stays if the build fails."
+        if sourcesDetached { return "A base source is required. Attach sources in Edit details." }
+        if toolchainBlocked { return "Blocked by the Metal gate. See Settings → Engine." }
+        return "Build a new app; the old app stays if the build fails."
     }
 
     public var attachAbout: String {
@@ -264,6 +265,8 @@ public struct GameOptionsPresentation: Equatable {
 }
 
 /// Focus within one level. Movement clamps at the ends; it does not wrap.
+/// Focus is found by row identity (`init(row:in:)`), so a row that appears above
+/// the focused one (a Store page arriving late) does not move the focus.
 public struct GameOptionsFocus: Equatable, Sendable {
     public private(set) var index: Int
 
@@ -271,13 +274,13 @@ public struct GameOptionsFocus: Equatable, Sendable {
         self.index = max(0, index)
     }
 
-    public mutating func move(by delta: Int, count: Int) {
-        index = Self.clamped(index + delta, count: count)
+    /// Focus on `row`'s place in `rows`. A row that is not listed, or none, starts at the top.
+    public init(row: GameOptionsRow?, in rows: [GameOptionsRow]) {
+        self.index = row.flatMap { rows.firstIndex(of: $0) } ?? 0
     }
 
-    /// Keeps focus on a row that still exists after the list changed.
-    public mutating func reconcile(count: Int) {
-        index = Self.clamped(index, count: count)
+    public mutating func move(by delta: Int, count: Int) {
+        index = Self.clamped(index + delta, count: count)
     }
 
     public mutating func focus(_ row: GameOptionsRow, in rows: [GameOptionsRow]) {

@@ -126,7 +126,10 @@ final class GameOptionsPresentationTests: XCTestCase {
     func testRebuildAboutFollowsSources() {
         XCTAssertEqual(presentation().rebuildAbout,
                        "Build a new app; the old app stays if the build fails.")
-        XCTAssertEqual(presentation(detached: true).rebuildAbout, "A base source is required.")
+        XCTAssertEqual(presentation(detached: true).rebuildAbout,
+                       "A base source is required. Attach sources in Edit details.")
+        XCTAssertEqual(presentation(blocked: true).rebuildAbout,
+                       "Blocked by the Metal gate. See Settings → Engine.")
         XCTAssertEqual(presentation(detached: true).attachAbout,
                        "Sources are detached. Attach them to rebuild.")
         XCTAssertEqual(presentation().attachAbout,
@@ -175,12 +178,17 @@ final class GameOptionsPresentationTests: XCTestCase {
         XCTAssertEqual(focus.index, 2)
     }
 
-    func testFocusReconcilesWhenTheListShrinks() {
-        var focus = GameOptionsFocus(index: 5)
-        focus.reconcile(count: 3)
-        XCTAssertEqual(focus.index, 2)
-        focus.reconcile(count: 0)
+    func testFocusKeepsItsRowWhenRowsChange() {
+        let after: [GameOptionsRow] = [.storePage, .attachSources, .openLog, .removeSources]
+        // The view keeps the row, and re-resolves its place against the rows of each draw.
+        let focus = GameOptionsFocus(row: .attachSources, in: after)
+        XCTAssertEqual(focus.row(in: after), .attachSources)
+    }
+
+    func testFocusFallsBackToTopWhenItsRowIsGone() {
+        let focus = GameOptionsFocus(row: .storePage, in: [.attachSources, .openLog])
         XCTAssertEqual(focus.index, 0)
+        XCTAssertEqual(GameOptionsFocus(row: nil, in: [.play, .move]).index, 0)
     }
 
     func testFocusFindsARowAndReportsIt() {
