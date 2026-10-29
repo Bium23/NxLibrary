@@ -310,7 +310,7 @@ struct LibraryHeroView: View {
                 .clipShape(Capsule())
             }
             .buttonStyle(.plain)
-            .seleneFocus(focusArea == .actions && actionIndex == 0, radius: 22)
+            .seleneRowFocus(focusArea == .actions && actionIndex == 0, radius: 22)
             .accessibilityLabel("Play \(game.name)")
             .accessibilityHint(isPlayable
                                ? "Launch the game"
@@ -327,7 +327,7 @@ struct LibraryHeroView: View {
                     .clipShape(Capsule())
             }
             .buttonStyle(.plain)
-            .seleneFocus(focusArea == .actions && actionIndex == 1, radius: 22)
+            .seleneRowFocus(focusArea == .actions && actionIndex == 1, radius: 22)
             .accessibilityLabel("Details for \(game.name)")
 
             Button(action: onOptions) {
@@ -340,7 +340,7 @@ struct LibraryHeroView: View {
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
-            .seleneFocus(focusArea == .actions && actionIndex == 2, radius: 22)
+            .seleneRowFocus(focusArea == .actions && actionIndex == 2, radius: 22)
             .accessibilityLabel("Game options")
         }
     }

@@ -88,7 +88,7 @@ struct SettingsEngineSection: View {
                     }
                 }
             }
-            .seleneFocus(focusedRowTitle == "Compatibility", radius: SeleneTheme.cardRadius)
+            .seleneRowFocus(focusedRowTitle == "Compatibility", radius: SeleneTheme.cardRadius)
 
             SeleneRow("Untested toolchain override",
                       subtitle: overrideSubtitle,
@@ -161,7 +161,7 @@ struct SettingsEngineSection: View {
                     .foregroundColor(SeleneTheme.ink60)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .seleneFocus(focusedRowTitle == "prod.keys", radius: SeleneTheme.cardRadius)
+            .seleneRowFocus(focusedRowTitle == "prod.keys", radius: SeleneTheme.cardRadius)
         }
         .onAppear(perform: publishActions)
         .onChange(of: viewModel.allowUntestedToolchain) { _ in publishActions() }
@@ -295,7 +295,7 @@ struct SettingsEngineSection: View {
                     }
                 }
             }
-            .seleneFocus(focusedRowTitle == "Upstream Commits", radius: SeleneTheme.cardRadius)
+            .seleneRowFocus(focusedRowTitle == "Upstream Commits", radius: SeleneTheme.cardRadius)
         }
     }
 

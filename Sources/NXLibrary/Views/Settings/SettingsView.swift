@@ -82,7 +82,7 @@ public struct SettingsView: View {
                 .padding(.horizontal, metrics.margin)
                 .padding(.top, 24)
                 if settings.settings.showButtonHints {
-                    CommandBar(commandHints)
+                    SeleneHintsBar(right: commandHints)
                 }
             }
         }
@@ -119,11 +119,11 @@ public struct SettingsView: View {
         settings.settings.reduceMotion || environmentReduceMotion
     }
 
-    private var commandHints: [CommandHint] {
+    private var commandHints: [HintItem] {
         if focusArea == .sidebar {
-            return [.init("B", "Back"), .init("A", "Open")]
+            return [HintItem(.b, "Back"), HintItem(.a, "Open")]
         }
-        return [.init("B", "Back"), .init("A", "Select")]
+        return [HintItem(.b, "Back"), HintItem(.a, "Select")]
     }
 
     private var focusedRowTitle: String? {

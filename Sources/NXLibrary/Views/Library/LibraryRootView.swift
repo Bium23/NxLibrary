@@ -125,7 +125,7 @@ public struct LibraryRootView: View {
                 VStack(spacing: 0) {
                     Spacer(minLength: 0)
                     if settings.settings.showButtonHints {
-                        CommandBar(commandHints)
+                        SeleneHintsBar(left: menuHints, right: commandHints)
                     }
                 }
             }
@@ -194,10 +194,12 @@ public struct LibraryRootView: View {
         return "\(game.id.uuidString)|\(remote?.absoluteString ?? "")|\(apiKey)"
     }
 
-    private var commandHints: [CommandHint] {
-        guard selectedGame != nil else { return [CommandHint("≡", "Open menu")] }
+    private var menuHints: [HintItem] { [HintItem(.menu, "Open menu")] }
+
+    private var commandHints: [HintItem] {
+        guard selectedGame != nil else { return [] }
         let state = viewModel.librarySelection
-        var hints: [CommandHint] = []
+        var hints: [HintItem] = []
 
         if state.focusArea != .filters {
             let label: String
@@ -210,21 +212,20 @@ public struct LibraryRootView: View {
             } else {
                 label = "Play"
             }
-            hints.append(CommandHint("A", label))
+            hints.append(HintItem(.a, label))
         }
         if state.focusArea == .rail {
-            hints.append(CommandHint("↓", "Details"))
+            hints.append(HintItem(nil, "↓ Details"))
         }
         if state.focusArea != .rail {
-            hints.append(CommandHint("B", "Back"))
+            hints.append(HintItem(.b, "Back"))
         }
         if !(state.focusArea == .actions && state.actionIndex == 1) {
-            hints.append(CommandHint("X", "Game page"))
+            hints.append(HintItem(.x, "Game page"))
         }
         if !(state.focusArea == .actions && state.actionIndex == 2) {
-            hints.append(CommandHint("Y", "Options"))
+            hints.append(HintItem(.y, "Options"))
         }
-        hints.append(CommandHint("≡", "Open menu"))
         return hints
     }
 

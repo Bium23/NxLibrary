@@ -112,7 +112,7 @@ struct GameOptionsView: View {
                         }
                     }
                     if showsHints {
-                        CommandBar([.init("B", "Close"), .init("A", "Select")])
+                        SeleneHintsBar(right: [HintItem(.b, "Close"), HintItem(.a, "Select")])
                     }
                 }
                 .frame(width: width, height: height)

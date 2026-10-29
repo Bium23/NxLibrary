@@ -65,7 +65,7 @@ struct LibraryFilterBar: View {
                         .contentShape(Capsule())
                 }
                 .buttonStyle(.plain)
-                .seleneFocus(focused, radius: 16)
+                .seleneRowFocus(focused, radius: 16)
                 .accessibilityLabel(filter.rawValue)
                 .accessibilityAddTraits(selected ? [.isSelected] : [])
             }

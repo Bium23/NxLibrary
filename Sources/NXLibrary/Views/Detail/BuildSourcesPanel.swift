@@ -70,7 +70,7 @@ struct BuildSourcesPanel: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(!presentation.canRebuild)
-                .seleneCapsuleFocus(isRebuildFocused)
+                .seleneRowFocus(isRebuildFocused, radius: 100)
 
                 Button(action: onRevealLog) {
                     Text("Open log")

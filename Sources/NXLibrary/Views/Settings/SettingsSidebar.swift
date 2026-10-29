@@ -44,7 +44,7 @@ struct SettingsSidebar: View {
                         }
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-                    .seleneFocus(isFocused && selection == section, radius: 9)
+                    .seleneRowFocus(isFocused && selection == section, radius: 9)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(section.title)

@@ -44,11 +44,11 @@ struct GameDetailView: View {
             .clipped()
             .overlay(alignment: .bottom) {
                 if settings.settings.showButtonHints {
-                    CommandBar([
-                        .init("A", "Play"),
-                        .init("B", "Back"),
-                        .init("X", "Game options"),
-                        .init("Y", "Rebuild")
+                    SeleneHintsBar(right: [
+                        HintItem(.a, "Play"),
+                        HintItem(.b, "Back"),
+                        HintItem(.x, "Game options"),
+                        HintItem(.y, "Rebuild")
                     ])
                 }
             }
@@ -184,7 +184,7 @@ struct GameDetailView: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(!p.canPlay)
-                    .seleneCapsuleFocus(actionFocus == 0)
+                    .seleneRowFocus(actionFocus == 0, radius: 100)
 
                     Button {
                         viewModel.gameForSettingsSheet = game
@@ -197,7 +197,7 @@ struct GameDetailView: View {
                             .background(SeleneTheme.ink.opacity(0.10))
                             .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.18), lineWidth: 1))
                             .clipShape(Capsule())
-                            .seleneCapsuleFocus(actionFocus == 1)
+                            .seleneRowFocus(actionFocus == 1, radius: 100)
                     }
                     .buttonStyle(.plain)
                 }

@@ -56,38 +56,14 @@ public struct SeleneRow<Trailing: View>: View {
     private var isFocused: Bool { focusedRowTitle == title }
 
     public var body: some View {
-        HStack(spacing: 20) {
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(title)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(SeleneTheme.ink.opacity(0.94))
-                    if let info {
-                        SeleneInfoTip(info)
-                    }
+        SeleneOptionRow(icon: nil, title: title, about: subtitle, focused: isFocused) {
+            HStack(spacing: 10) {
+                if let info {
+                    SeleneInfoTip(info)
                 }
-                if let subtitle {
-                    Text(subtitle)
-                        .font(.system(size: 10.5))
-                        .foregroundColor(SeleneTheme.ink60)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                trailing()
             }
-            Spacer(minLength: 16)
-            trailing()
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 13)
-        .background(isFocused
-                    ? SeleneTheme.ink15
-                    : SeleneTheme.glass.opacity(0.92))
-        .overlay(
-            RoundedRectangle(cornerRadius: SeleneTheme.rowRadius, style: .continuous)
-                .strokeBorder(isFocused ? SeleneTheme.ink.opacity(0.18) : SeleneTheme.ink15.opacity(0.85),
-                              lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: SeleneTheme.rowRadius, style: .continuous))
-        .seleneFocus(isFocused)
         .id("selene-row-\(title)")
     }
 }
@@ -95,20 +71,7 @@ public struct SeleneRow<Trailing: View>: View {
 public struct SeleneToggleStyle: ToggleStyle {
     public init() {}
     public func makeBody(configuration: Configuration) -> some View {
-        Button { configuration.isOn.toggle() } label: {
-            Capsule()
-                .fill(configuration.isOn ? SeleneTheme.focus : SeleneTheme.ink.opacity(0.13))
-                .frame(width: 38, height: 22)
-                .overlay(alignment: configuration.isOn ? .trailing : .leading) {
-                    Circle()
-                        .fill(configuration.isOn ? SeleneTheme.scrim : Color.white)
-                        .frame(width: 16, height: 16)
-                        .padding(3)
-                }
-        }
-        .buttonStyle(.plain)
-        .animation(SeleneTheme.quick, value: configuration.isOn)
-        .accessibilityValue(configuration.isOn ? "On" : "Off")
+        SeleneSwitch(isOn: configuration.$isOn)
     }
 }
 
@@ -155,11 +118,7 @@ public struct SeleneValueRow: View {
     public var body: some View {
         SeleneRow(title, subtitle: subtitle, info: info) {
             HStack(spacing: 10) {
-                Text(value)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(SeleneTheme.ink.opacity(0.62))
-                    .lineLimit(1)
-                    .truncationMode(.middle)
+                SeleneValueChip(text: value)
                 if let actionTitle, let action {
                     Button(actionTitle, action: action)
                         .buttonStyle(.plain)

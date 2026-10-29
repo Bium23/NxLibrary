@@ -60,7 +60,7 @@ public struct AddGameView: View {
                 }
                 .scrollIndicators(.hidden)
                 if showsHints {
-                    CommandBar(commandHints)
+                    SeleneHintsBar(right: commandHints)
                 }
             }
         }
@@ -106,7 +106,7 @@ public struct AddGameView: View {
         }
     }
 
-    private var commandHints: [CommandHint] {
+    private var commandHints: [HintItem] {
         let backLabel: String
         if viewModel.isBuilding {
             backLabel = "Hide"
@@ -117,9 +117,9 @@ public struct AddGameView: View {
         }
         if actionsStep == viewModel.buildWizardStep,
            actions.indices.contains(stepFocus.index) {
-            return [.init("B", backLabel), .init("A", actions[stepFocus.index].title)]
+            return [HintItem(.b, backLabel), HintItem(.a, actions[stepFocus.index].title)]
         }
-        return [.init("B", backLabel), .init("A", "Select")]
+        return [HintItem(.b, backLabel), HintItem(.a, "Select")]
     }
 
     private func defaultFocus(for step: Int) -> Int {

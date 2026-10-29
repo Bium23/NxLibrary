@@ -51,6 +51,8 @@ public struct AppShellView: View {
         .animation(reduceMotion ? nil : SeleneTheme.quick,
                    value: router.isMenuPresented)
         .environment(\.seleneReduceMotion, reduceMotion)
+        .environment(\.seleneShowButtonHints, settings.settings.showButtonHints)
+        .environment(\.seleneButtonNames, settings.settings.buttonNames)
         .preferredColorScheme(.dark)
         .frame(minWidth: 1100, minHeight: 700)
         .sheet(isPresented: $viewModel.showSetupSheet) {

@@ -31,14 +31,14 @@ public struct ConsoleView: View {
     @State private var confirmClear = false
     @State private var focus = FocusIndex()
 
-    private var hints: [CommandHint] {
+    private var hints: [HintItem] {
         let label: String
         switch focus.index {
         case 1: label = "Reveal Log"
         case 2: label = "Clear View"
         default: label = "Copy"
         }
-        return [CommandHint("B", "Back"), CommandHint("A", label)]
+        return [HintItem(.b, "Back"), HintItem(.a, label)]
     }
 
     public init(viewModel: AppViewModel, router: AppRouter) {
@@ -76,7 +76,7 @@ public struct ConsoleView: View {
                 toolbar(metrics)
                 logList(metrics)
                 if viewModel.settingsStore?.settings.showButtonHints ?? true {
-                    CommandBar(hints)
+                    SeleneHintsBar(right: hints)
                 }
             }
         }
@@ -198,7 +198,7 @@ public struct ConsoleView: View {
             .clipShape(Capsule())
         }
         .buttonStyle(.plain)
-        .seleneCapsuleFocus(isFocused)
+        .seleneRowFocus(isFocused, radius: 100)
         .accessibilityLabel(title)
     }
 

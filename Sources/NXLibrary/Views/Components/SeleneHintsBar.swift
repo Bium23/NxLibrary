@@ -1,0 +1,82 @@
+import SwiftUI
+import NXLibraryCore
+
+struct HintItem: Identifiable {
+    let id = UUID()
+    var button: PromptButton?
+    var glyph: MaterialIcon?
+    var label: String
+    var hold: String?
+
+    init(_ button: PromptButton?, _ label: String, glyph: MaterialIcon? = nil, hold: String? = nil) {
+        self.button = button
+        self.glyph = glyph
+        self.label = label
+        self.hold = hold
+    }
+}
+
+extension ConnectedPad {
+    init(connected: Bool, brand: GamepadBrand) {
+        guard connected else { self = .none; return }
+        switch brand {
+        case .nintendoSwitch: self = .nintendo
+        case .xbox: self = .xbox
+        case .playstation: self = .playstation
+        case .generic: self = .other
+        }
+    }
+}
+
+struct SeleneHintsBar: View {
+    @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.seleneButtonNames) private var style
+    @Environment(\.seleneShowButtonHints) private var showHints
+    @ObservedObject private var controller = GameControllerService.shared
+
+    var left: [HintItem] = []
+    var right: [HintItem] = []
+
+    var body: some View {
+        if showHints {
+            HStack(spacing: canvas.u(22)) {
+                ForEach(left) { item($0) }
+                Spacer(minLength: canvas.u(22))
+                ForEach(right) { item($0) }
+            }
+            .padding(.horizontal, canvas.u(64))
+            .padding(.bottom, canvas.u(24))
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    private var pad: ConnectedPad {
+        ConnectedPad(connected: controller.isGamepadConnected, brand: controller.activeBrand)
+    }
+
+    private func item(_ item: HintItem) -> some View {
+        HStack(spacing: canvas.u(8)) {
+            if let button = item.button {
+                badge { Text(ButtonPrompts.label(button, style: style, connected: pad))
+                    .seleneFont(13, .bold) }
+            } else if let glyph = item.glyph {
+                badge { MaterialIconView(glyph, size: 18) }
+            }
+            Text(item.label)
+                .seleneFont(19)
+                .foregroundColor(SeleneTheme.ink90)
+            if let hold = item.hold {
+                Text(hold).seleneFont(13).foregroundColor(SeleneTheme.ink60)
+            }
+        }
+        .shadow(color: .black.opacity(0.55), radius: canvas.u(4), y: canvas.u(1))
+    }
+
+    private func badge<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        content()
+            .foregroundColor(SeleneTheme.scrim)
+            .padding(.horizontal, canvas.u(8))
+            .frame(minWidth: canvas.u(30), minHeight: canvas.u(30))
+            .background(RoundedRectangle(cornerRadius: canvas.u(15), style: .continuous).fill(SeleneTheme.ink))
+    }
+}

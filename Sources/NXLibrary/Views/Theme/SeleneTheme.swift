@@ -48,6 +48,12 @@ public enum SeleneTheme {
     public static let focusIn = Animation.timingCurve(0.22, 1, 0.36, 1, duration: 0.18)
     public static let focusOut = Animation.timingCurve(0.22, 1, 0.36, 1, duration: 0.20)
     public static let screen = Animation.timingCurve(0.32, 0.72, 0, 1, duration: 0.32)
+    public static func cubicOut(_ duration: Double) -> Animation {
+        .timingCurve(0.215, 0.61, 0.355, 1, duration: duration)
+    }
+    public static func sineInOut(_ duration: Double) -> Animation {
+        .timingCurve(0.445, 0.05, 0.55, 0.95, duration: duration)
+    }
     public static let art = Animation.easeOut(duration: 0.42)
     public static let menu = Animation.spring(response: 0.26, dampingFraction: 0.88)
     public static let expand = Animation.spring(response: 0.42, dampingFraction: 0.86)
@@ -91,33 +97,27 @@ public enum SeleneTheme {
     )
 }
 
-public extension View {
-    /// The single focus language for the app: a white ring with a black halo,
-    /// visible over both dark chrome and bright artwork.
-    func seleneFocus(_ focused: Bool, radius: CGFloat = SeleneTheme.rowRadius) -> some View {
-        overlay {
-            ZStack {
-                RoundedRectangle(cornerRadius: radius + 2, style: .continuous)
-                    .strokeBorder(.black.opacity(focused ? 0.55 : 0), lineWidth: 4)
-                RoundedRectangle(cornerRadius: radius + 2, style: .continuous)
-                    .strokeBorder(SeleneTheme.focus.opacity(focused ? 0.96 : 0), lineWidth: 2)
-            }
-        }
-        .animation(SeleneTheme.focusIn, value: focused)
-    }
+private struct SeleneRowFocusModifier: ViewModifier {
+    @Environment(\.seleneCanvas) private var canvas
+    let focused: Bool
+    let radius: CGFloat
 
-    /// Capsule variant of the single focus language, for pills and chips.
-    func seleneCapsuleFocus(_ focused: Bool, offset: CGFloat = 0) -> some View {
-        overlay {
-            ZStack {
-                Capsule()
-                    .strokeBorder(.black.opacity(focused ? 0.55 : 0), lineWidth: 4)
-                Capsule()
-                    .strokeBorder(SeleneTheme.focus.opacity(focused ? 0.96 : 0), lineWidth: 2)
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .strokeBorder(SeleneTheme.focus, lineWidth: canvas.u(2))
+                    .opacity(focused ? 1 : 0)
             }
-            .padding(-offset)
-        }
-        .animation(SeleneTheme.focusIn, value: focused)
+            .animation(SeleneTheme.focusIn, value: focused)
+    }
+}
+
+public extension View {
+    /// Selene focus language for rows and cards: a 2u focus border at the
+    /// element's own corner radius (in points, already scaled by the caller).
+    func seleneRowFocus(_ focused: Bool, radius: CGFloat = SeleneTheme.rowRadius) -> some View {
+        modifier(SeleneRowFocusModifier(focused: focused, radius: radius))
     }
 }
 
@@ -129,6 +129,25 @@ public extension EnvironmentValues {
     var seleneFocusedRowTitle: String? {
         get { self[SeleneFocusedRowKey.self] }
         set { self[SeleneFocusedRowKey.self] = newValue }
+    }
+}
+
+private struct SeleneShowButtonHintsKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
+private struct SeleneButtonNamesKey: EnvironmentKey {
+    static let defaultValue = ButtonNameStyle.automatic
+}
+
+public extension EnvironmentValues {
+    var seleneShowButtonHints: Bool {
+        get { self[SeleneShowButtonHintsKey.self] }
+        set { self[SeleneShowButtonHintsKey.self] = newValue }
+    }
+    var seleneButtonNames: ButtonNameStyle {
+        get { self[SeleneButtonNamesKey.self] }
+        set { self[SeleneButtonNamesKey.self] = newValue }
     }
 }
 

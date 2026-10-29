@@ -28,6 +28,7 @@ public struct AppSettings: Codable, Equatable {
     public var steamGridDbApiKey: String
     public var gameDefaults: GameRuntimeConfig
     public var colorThemeID: String
+    public var buttonNames: ButtonNameStyle
 
     public init(backgroundShade: BackgroundShade = .balanced,
                 readableText: Bool = true,
@@ -40,7 +41,8 @@ public struct AppSettings: Codable, Equatable {
                 lastSelectedGameID: UUID? = nil,
                 steamGridDbApiKey: String = "",
                 gameDefaults: GameRuntimeConfig = GameRuntimeConfig(),
-                colorThemeID: String = "selene") {
+                colorThemeID: String = "selene",
+                buttonNames: ButtonNameStyle = .automatic) {
         self.backgroundShade = backgroundShade
         self.readableText = readableText
         self.reduceMotion = reduceMotion
@@ -53,12 +55,13 @@ public struct AppSettings: Codable, Equatable {
         self.steamGridDbApiKey = steamGridDbApiKey
         self.gameDefaults = gameDefaults
         self.colorThemeID = colorThemeID
+        self.buttonNames = buttonNames
     }
 
     enum CodingKeys: String, CodingKey {
         case backgroundShade, readableText, reduceMotion, showButtonHints, showClock
         case restoreLastGame, checkEngineAtLaunch, refreshLibraryAtLaunch, lastSelectedGameID
-        case steamGridDbApiKey, gameDefaults, colorThemeID
+        case steamGridDbApiKey, gameDefaults, colorThemeID, buttonNames
     }
 
     public init(from decoder: Decoder) throws {
@@ -75,5 +78,6 @@ public struct AppSettings: Codable, Equatable {
         self.steamGridDbApiKey = try container.decodeIfPresent(String.self, forKey: .steamGridDbApiKey) ?? ""
         self.gameDefaults = try container.decodeIfPresent(GameRuntimeConfig.self, forKey: .gameDefaults) ?? GameRuntimeConfig()
         self.colorThemeID = try container.decodeIfPresent(String.self, forKey: .colorThemeID) ?? "selene"
+        self.buttonNames = try container.decodeIfPresent(ButtonNameStyle.self, forKey: .buttonNames) ?? .automatic
     }
 }
