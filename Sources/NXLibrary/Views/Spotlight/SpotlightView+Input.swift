@@ -5,6 +5,7 @@ import NXLibraryCore
 /// Spotlight's controller, keyboard and pointer input.
 extension SpotlightView {
     func handle(_ action: GamepadAction) {
+        if viewer != nil { return handleViewer(action) }
         if viewModel.spotlight.isLifted { return handleLifted(action) }
         if cardMenu != nil { return handleCardMenu(action) }
         let items = self.items
@@ -70,10 +71,44 @@ extension SpotlightView {
         case .pills:
             if let game = selectedGame { pressPill(state.pillIndex, game: game) }
         case .strip:
-            break // The screenshot viewer (spec §6.4) comes with a later task.
+            openViewer(at: state.stripIndex)
         case .topGames:
             let ids = visibleTopGameIDs
             if state.topGameIndex < ids.count { selectGame(ids[state.topGameIndex]) }
+        }
+    }
+
+    // MARK: - Screenshot viewer
+
+    func openViewer(at index: Int) {
+        guard let game = selectedGame else { return }
+        let urls = Array((viewModel.storeMetadata[game.id]?.screenshotURLs ?? [])
+            .prefix(SpotlightScreenshotStrip.maxCount))
+        guard !urls.isEmpty else { return }
+        viewer = ViewerContext(titleID: game.titleId ?? game.uniqueKey, urls: urls,
+                               state: ScreenshotViewerState(count: urls.count, start: index))
+        SoundEffectService.shared.play(.click)
+    }
+
+    /// Closing returns Spotlight's focus to the strip tile last viewed.
+    func closeViewer() {
+        guard let context = viewer else { return }
+        viewer = nil
+        let last = context.state.index
+        mutate { $0.focus = .strip; $0.stripIndex = last }
+        SoundEffectService.shared.play(.focus)
+    }
+
+    private func handleViewer(_ action: GamepadAction) {
+        guard var context = viewer else { return }
+        switch ScreenshotViewer.handle(action, state: &context.state) {
+        case .moved:
+            viewer = context
+            SoundEffectService.shared.play(.focus)
+        case .close:
+            closeViewer()
+        case .ignored:
+            break
         }
     }
 
@@ -237,6 +272,17 @@ extension SpotlightView {
                   !(window.firstResponder is NSText) else { return event }
             let modifiers = event.modifierFlags.intersection([.command, .control, .option])
             guard modifiers.isEmpty else { return event }
+            if viewer != nil {
+                // The viewer owns the keyboard: arrows page, Esc closes, the rest is swallowed.
+                switch event.keyCode {
+                case 123: handle(.navigateLeft)
+                case 124: handle(.navigateRight)
+                case 53: handle(.cancel)
+                case 36, 49, 125, 126, 7, 16, 12, 14, 48: break
+                default: return event
+                }
+                return nil
+            }
             let action: GamepadAction
             switch event.keyCode {
             case 123: action = .navigateLeft

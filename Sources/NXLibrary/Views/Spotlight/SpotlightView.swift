@@ -23,10 +23,18 @@ public struct SpotlightView: View {
     @State var hadGames = false
     /// The card Y menu: which card and the focused row.
     @State var cardMenu: CardMenuState?
+    /// The open screenshot viewer (the game's titleID, its urls and the paging state).
+    @State var viewer: ViewerContext?
     /// The filter pill: shown while the filter is not All, and for 1.2 s after switching to All.
     @State var pillFilter: LibraryFilter = .all
     @State var pillVisible = false
     @State var pillTask: Task<Void, Never>?
+
+    struct ViewerContext: Equatable {
+        var titleID: String
+        var urls: [URL]
+        var state: ScreenshotViewerState
+    }
 
     struct CardMenuState: Equatable {
         var card: SpotlightCard
@@ -99,11 +107,14 @@ public struct SpotlightView: View {
                 .frame(width: canvas.stageSize.width, height: canvas.stageSize.height, alignment: .topLeading)
                 .offset(x: canvas.stageOrigin.x, y: canvas.stageOrigin.y)
         }
+        .overlay(viewerOverlay)
+        .animation(.easeOut(duration: 0.2), value: viewer != nil)
         .frame(width: canvas.size.width, height: canvas.size.height, alignment: .topLeading)
         .clipped()
         .onAppear(perform: appear)
         .onDisappear {
             removeKeyMonitor()
+            router.isScreenshotViewerOpen = false
             pillTask?.cancel()
             mutate { $0.cancelLift() }
         }
@@ -115,6 +126,7 @@ public struct SpotlightView: View {
         .onChange(of: settings.settings.spotlightCards) { _ in reconcile() }
         .onChange(of: settings.settings.spotlightOrder) { _ in reconcile() }
         .onChange(of: viewModel.spotlight.selectedKey) { _ in selectionChanged() }
+        .onChange(of: viewer != nil) { router.isScreenshotViewerOpen = $0 }
         .onChange(of: router.pendingSpotlightMove) { _ in consumePendingMove() }
         .onReceive(NotificationCenter.default.publisher(for: .nxSpotlightGamepadAction)) { note in
             guard viewModel.alertMessage == nil else { return }
@@ -122,6 +134,15 @@ public struct SpotlightView: View {
         }
         .task(id: artTaskKey(model.selectedGame, remote: heroRemote)) { await loadHero() }
         .task(id: artTaskKey(model.selectedGame, remote: logoRemote)) { await loadLogo() }
+    }
+
+    @ViewBuilder
+    private var viewerOverlay: some View {
+        if let viewer {
+            ScreenshotViewer(titleID: viewer.titleID, urls: viewer.urls, state: viewer.state,
+                             artwork: artwork, onClose: closeViewer)
+                .transition(.opacity)
+        }
     }
 
     private func stage(_ model: Snapshot, state: SpotlightState) -> some View {
@@ -219,6 +240,7 @@ public struct SpotlightView: View {
                     onSelect: { index in
                         guard !state.isLifted else { return }
                         mutate { $0.focus = .strip; $0.stripIndex = index }
+                        openViewer(at: index)
                     }
                 )
                 .padding(.top, canvas.u(34))

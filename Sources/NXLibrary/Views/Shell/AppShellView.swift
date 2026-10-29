@@ -113,10 +113,11 @@ public struct AppShellView: View {
             viewModel.checkUpstreamChangelog()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenMenu)) { _ in
-            guard viewModel.gameForSettingsSheet == nil else { return }
+            guard viewModel.gameForSettingsSheet == nil, !router.isScreenshotViewerOpen else { return }
             router.isMenuPresented = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenSettings)) { _ in
+            guard !router.isScreenshotViewerOpen else { return }
             router.closeMenu()
             router.openSettings(.general)
         }
@@ -133,7 +134,9 @@ public struct AppShellView: View {
             openFreshAddGame()
         }
         .onExitCommand {
-            if viewModel.gameForSettingsSheet != nil {
+            if router.isScreenshotViewerOpen {
+                // The viewer's key monitor closes it.
+            } else if viewModel.gameForSettingsSheet != nil {
                 viewModel.gameForSettingsSheet = nil
             } else if router.isMenuPresented {
                 router.closeMenu()
@@ -289,6 +292,8 @@ public struct AppShellView: View {
     private func installGestureKeyMonitor() {
         guard gestureKeyMonitor == nil else { return }
         gestureKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [router] event in
+            // The screenshot viewer owns the keyboard (its own monitor handles it); no navigating underneath.
+            if router.isScreenshotViewerOpen { return event }
             let mods = event.modifierFlags.intersection([.command, .control, .option, .shift])
             let key = event.charactersIgnoringModifiers?.lowercased() ?? ""
             let typing = event.window?.firstResponder is NSText

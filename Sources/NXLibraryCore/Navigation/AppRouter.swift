@@ -17,6 +17,8 @@ public final class AppRouter: ObservableObject {
     @Published public private(set) var isReturningFromBack = false
     @Published public var isMenuPresented = false
     @Published public var isSearchPresented = false
+    /// True while the full-screen screenshot viewer is open; the shell ignores its global shortcuts.
+    @Published public var isScreenshotViewerOpen = false
     @Published public var menuSelection = MenuSelectionModel()
     /// A Spotlight item key waiting to be lifted for moving (see `requestSpotlightMove`).
     @Published public var pendingSpotlightMove: String?
