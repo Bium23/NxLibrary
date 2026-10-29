@@ -5,6 +5,10 @@ public struct GameDetailPresentation: Equatable {
     public let eyebrow: String
     public let description: String
     public let genres: [String]
+    public let released: String?
+    public let developerLine: String?
+    public let thisWeek: String
+    public let rank: String?
     public let publisher: String?
     public let releaseYear: String?
     public let playtime: String
@@ -24,11 +28,24 @@ public struct GameDetailPresentation: Equatable {
     public let savePath: String
 
     public init(game: PortedGame, metadata: NintendoStoreMetadata?,
-                totalPlaytime: TimeInterval, lastPlayed: Date?, now: Date = Date()) {
+                totalPlaytime: TimeInterval, lastPlayed: Date?, now: Date = Date(),
+                sessions: [PlaySession] = [], libraryGames: [PortedGame] = [],
+                playtimeByGame: [UUID: TimeInterval] = [:],
+                calendar: Calendar = .current, locale: Locale = .current,
+                timeZone: TimeZone = .current) {
         title = game.name
         eyebrow = Self.eyebrow(from: metadata?.name ?? "")
         description = metadata?.description ?? ""
-        genres = metadata?.genres ?? []
+        var seenGenres = Set<String>()
+        genres = (metadata?.genres ?? []).filter {
+            let g = $0.trimmingCharacters(in: .whitespacesAndNewlines)
+            return !g.isEmpty && g.caseInsensitiveCompare("Other") != .orderedSame && seenGenres.insert(g).inserted
+        }
+        released = Self.released(metadata?.releaseDate, locale: locale, timeZone: timeZone)
+        developerLine = Self.credit(metadata)
+        let week = Activity.summary(sessions: sessions.filter { $0.gameID == game.id }, now: now, calendar: calendar)
+        thisWeek = LibraryPresentation.duration(week.thisWeek)
+        rank = Self.rank(game: game, total: totalPlaytime, library: libraryGames, playtimes: playtimeByGame)
         publisher = metadata?.publishers.first
         releaseYear = metadata?.releaseYear
         playtime = LibraryPresentation.duration(totalPlaytime)
@@ -57,6 +74,45 @@ public struct GameDetailPresentation: Equatable {
             )
             savePath = NSHomeDirectory() + "/Library/Application Support/nxnative/\(safe)/save"
         }
+    }
+
+    private static func released(_ raw: String?, locale: Locale, timeZone: TimeZone) -> String? {
+        guard let raw else { return nil }
+        let parser = DateFormatter()
+        parser.locale = Locale(identifier: "en_US_POSIX")
+        parser.timeZone = TimeZone(identifier: "UTC")
+        parser.dateFormat = "yyyy-MM-dd"
+        guard let date = parser.date(from: String(raw.prefix(10))) else { return nil }
+        let out = DateFormatter()
+        out.locale = locale
+        out.timeZone = TimeZone(identifier: "UTC")
+        out.dateStyle = .short
+        out.timeStyle = .none
+        return out.string(from: date)
+    }
+
+    private static func credit(_ metadata: NintendoStoreMetadata?) -> String? {
+        guard let metadata else { return nil }
+        for list in [metadata.developers, metadata.publishers] {
+            let names = list.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+            if !names.isEmpty { return names.joined(separator: ", ") }
+        }
+        return nil
+    }
+
+    private static func rank(game: PortedGame, total: TimeInterval, library: [PortedGame],
+                             playtimes: [UUID: TimeInterval]) -> String? {
+        guard total > 0 else { return nil }
+        var entries: [(name: String, time: TimeInterval)] = [(game.name, total)]
+        for other in library where other.id != game.id && !other.isHidden {
+            if let t = playtimes[other.id], t > 0 { entries.append((other.name, t)) }
+        }
+        entries.sort { a, b in
+            a.time != b.time ? a.time > b.time
+                : a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
+        }
+        let position = (entries.firstIndex { $0.name == game.name && $0.time == total } ?? 0) + 1
+        return "#\(position) of \(entries.count)"
     }
 
     private static func eyebrow(from name: String) -> String {
