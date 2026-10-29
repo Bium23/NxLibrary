@@ -79,6 +79,22 @@ public enum SpotlightRow {
         return result
     }
 
+    /// Folds a reordered *visible* subsequence (a filtered row) back into the
+    /// full saved order. `fullOrder` is the unfiltered row's keys; the slots the
+    /// visible keys occupy are refilled, in sequence, with `visibleOrder`, so
+    /// everything not visible keeps its slot. Keys of `visibleOrder` that are
+    /// not in `fullOrder` are ignored.
+    public static func merging(visibleOrder: [String], into fullOrder: [String]) -> [String] {
+        let present = Set(fullOrder)
+        let visible = visibleOrder.filter(present.contains)
+        let visibleSet = Set(visible)
+        var queue = visible[...]
+        return fullOrder.map { key in
+            guard visibleSet.contains(key), let next = queue.popFirst() else { return key }
+            return next
+        }
+    }
+
     /// Moves `item` by `delta` positions, clamped to the row's ends.
     /// Returns `items` unchanged if the item is absent.
     public static func moving(_ item: SpotlightItem, by delta: Int,

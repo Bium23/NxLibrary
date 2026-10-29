@@ -72,8 +72,7 @@ extension SpotlightView {
         case .strip:
             break // The screenshot viewer (spec §6.4) comes with a later task.
         case .topGames:
-            let known = Set(viewModel.libraryGames.map(\.id))
-            let ids = activitySummary.topGames.filter(known.contains)
+            let ids = visibleTopGameIDs
             if state.topGameIndex < ids.count { selectGame(ids[state.topGameIndex]) }
         }
     }
@@ -92,7 +91,14 @@ extension SpotlightView {
         case .confirm:
             var order: [String]?
             mutate { order = $0.drop() }
-            if let order { settings.settings.spotlightOrder = order } // Saved by the store.
+            if let order {
+                // Under a filter, fold the visible order into the full one.
+                let full = SpotlightRow.build(
+                    games: LibraryQuery(filter: .all).apply(to: viewModel.libraryGames, history: playSessions),
+                    enabledCards: settings.settings.spotlightCards,
+                    order: settings.settings.spotlightOrder).map(\.key)
+                settings.settings.spotlightOrder = SpotlightRow.merging(visibleOrder: order, into: full)
+            }
             SoundEffectService.shared.play(.click)
         case .cancel:
             mutate { $0.cancelLift() }

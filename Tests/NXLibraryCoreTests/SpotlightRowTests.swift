@@ -118,3 +118,24 @@ final class SpotlightRowTests: XCTestCase {
                                    history: NoPlayHistory(), excluding: nil, random: &rng))
     }
 }
+
+final class SpotlightRowMergeTests: XCTestCase {
+    func testFilteredMoveKeepsHiddenSlots() {
+        // Saved A…E as D,A,B,C,E; Installed shows A,C,E; C moved first.
+        let merged = SpotlightRow.merging(visibleOrder: ["C", "A", "E"],
+                                          into: ["D", "A", "B", "C", "E"])
+        XCTAssertEqual(merged, ["D", "C", "B", "A", "E"])
+    }
+
+    func testAllFilterEqualsPlainOrder() {
+        let full = ["A", "B", "C", "D"]
+        XCTAssertEqual(SpotlightRow.merging(visibleOrder: ["B", "A", "C", "D"], into: full),
+                       ["B", "A", "C", "D"])
+    }
+
+    func testUnknownKeysIgnored() {
+        XCTAssertEqual(SpotlightRow.merging(visibleOrder: ["Z", "B", "A"], into: ["A", "X", "B"]),
+                       ["B", "X", "A"])
+    }
+}
+

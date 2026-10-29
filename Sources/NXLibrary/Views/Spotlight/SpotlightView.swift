@@ -105,6 +105,7 @@ public struct SpotlightView: View {
         .onDisappear {
             removeKeyMonitor()
             pillTask?.cancel()
+            mutate { $0.cancelLift() }
         }
         .onChange(of: viewModel.libraryGames) { _ in gamesChanged() }
         .onChange(of: filter) { newFilter in
@@ -127,7 +128,7 @@ public struct SpotlightView: View {
         let items = model.items
         return ZStack(alignment: .topLeading) {
             SpotlightTopBar(filter: filter, showClock: settings.settings.showClock,
-                            onSelect: { setFilter($0) })
+                            onSelect: { if !state.isLifted { setFilter($0) } })
 
             SpotlightRowView(
                 items: items,
@@ -141,9 +142,11 @@ public struct SpotlightView: View {
                 steamGridDB: viewModel.steamGridDB,
                 coverURL: { viewModel.storeMetadata[$0.id]?.imageURL },
                 onSelect: { item in
+                    guard !state.isLifted else { return }
                     mutate { $0.select(item) }
                 },
                 onActivate: { item in
+                    guard !state.isLifted else { return }
                     mutate { $0.select(item) }
                     activate(item)
                 }
@@ -196,10 +199,12 @@ public struct SpotlightView: View {
                     isRunning: playSessions.isRunning(gameID: game.id),
                     focusedPill: state.focus == .pills ? state.pillIndex : nil,
                     onPill: { index in
+                        guard !state.isLifted else { return }
                         mutate { $0.focus = .pills; $0.pillIndex = index }
                         pressPill(index, game: game)
                     },
                     onHoverPill: { index in
+                        guard !state.isLifted else { return }
                         mutate { $0.focus = .pills; $0.pillIndex = index }
                     }
                 )
@@ -211,13 +216,16 @@ public struct SpotlightView: View {
                     known: screenshotsKnown(game, metadata: metadata),
                     focusedIndex: state.focus == .strip ? state.stripIndex : nil,
                     artwork: artwork,
-                    onSelect: { index in mutate { $0.focus = .strip; $0.stripIndex = index } }
+                    onSelect: { index in
+                        guard !state.isLifted else { return }
+                        mutate { $0.focus = .strip; $0.stripIndex = index }
+                    }
                 )
                 .padding(.top, canvas.u(34))
             }
         } else if case .card(let card) = model.selectedItem {
             let summary = card == .activity ? activitySummary : ActivitySummary()
-            let top = summary.topGames.compactMap { model.gamesByID[$0] }
+            let top = summary.topGames.compactMap { model.gamesByID[$0] }.filter { !$0.isHidden }
             let visible = viewModel.libraryGames.filter { !$0.isHidden }
             // Selene's card panels sit 40 under the row, 10 lower than a game's.
             SpotlightCardInfoView(
@@ -233,7 +241,7 @@ public struct SpotlightView: View {
                 steamGridDB: viewModel.steamGridDB,
                 coverURL: { viewModel.storeMetadata[$0.id]?.imageURL },
                 onTopGame: { index in
-                    guard index < top.count else { return }
+                    guard !state.isLifted, index < top.count else { return }
                     selectGame(top[index].id)
                 }
             )
@@ -257,8 +265,13 @@ public struct SpotlightView: View {
     /// Top-game ids that still exist as visible games, in order.
     var topGameCount: Int {
         guard selectedItem == .card(.activity) else { return 0 }
-        let known = Set(viewModel.libraryGames.map(\.id))
-        return activitySummary.topGames.filter(known.contains).count
+        return visibleTopGameIDs.count
+    }
+
+    /// Top-game ids that exist and are not hidden, in order.
+    var visibleTopGameIDs: [UUID] {
+        let known = Set(viewModel.libraryGames.filter { !$0.isHidden }.map(\.id))
+        return activitySummary.topGames.filter(known.contains)
     }
 
     /// "No screenshots" only once the answer is final: not before the first
@@ -353,6 +366,9 @@ public struct SpotlightView: View {
     func consumePendingMove() {
         guard let key = router.pendingSpotlightMove else { return }
         router.pendingSpotlightMove = nil
+        if !items.contains(where: { $0.key == key }), filter != .all {
+            viewModel.librarySelection.query.filter = .all
+        }
         let items = self.items
         guard let item = items.first(where: { $0.key == key }) else { return }
         cardMenu = nil
@@ -379,6 +395,10 @@ public struct SpotlightView: View {
     }
 
     func reconcile() {
+        // The lifted tile vanished (library reload, settings change): put it back.
+        if let lifted = viewModel.spotlight.lift?.key, !items.contains(where: { $0.key == lifted }) {
+            mutate { $0.cancelLift() }
+        }
         let preferred = settings.settings.restoreLastGame ? settings.settings.lastSelectedGameID : nil
         let items = self.items
         mutate { $0.reconcile(with: items, preferredGameID: preferred) }
