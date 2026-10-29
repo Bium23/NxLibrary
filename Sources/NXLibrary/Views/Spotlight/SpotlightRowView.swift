@@ -17,6 +17,8 @@ struct SpotlightRowView: View {
     let items: [SpotlightItem]
     let gamesByID: [UUID: PortedGame]
     let selectedKey: String?
+    /// The tile lifted for moving: raised 12u, its ring stays.
+    var liftedKey: String? = nil
     let isEmptyFilter: LibraryFilter?
     let steamGridDbApiKey: String
     let artwork: ArtworkStore
@@ -43,7 +45,8 @@ struct SpotlightRowView: View {
                 let index = entry.index, item = entry.item
                 let isSelected = index == selected
                 tile(item, selected: isSelected)
-                    .offset(x: canvas.u(x(of: index, selected: selected, offset: offset)), y: canvas.u(3))
+                    .offset(x: canvas.u(x(of: index, selected: selected, offset: offset)),
+                            y: canvas.u(item.key == liftedKey ? 3 - 12 : 3))
                     .zIndex(isSelected ? 10 : 0)
                     .transition(.identity)
             }
@@ -69,6 +72,8 @@ struct SpotlightRowView: View {
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .frame(height: canvas.u(260), alignment: .topLeading)
         .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.18), value: selectedKey)
+        .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.18), value: items.map(\.key))
+        .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.18), value: liftedKey)
         .onAppear { scheduleTitle(delay: 0) }
         .onChange(of: selectedKey) { _ in scheduleTitle(delay: 0.23) }
         .onDisappear { titleTask?.cancel() }

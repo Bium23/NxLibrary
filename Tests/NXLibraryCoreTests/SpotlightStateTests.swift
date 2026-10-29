@@ -135,3 +135,59 @@ final class SpotlightStateTests: XCTestCase {
         XCTAssertNil(SpotlightState().selectedGameID)
     }
 }
+
+final class SpotlightLiftTests: XCTestCase {
+    private let a = UUID(), b = UUID(), c = UUID()
+    private var items: [SpotlightItem] { [.card(.surprise), .game(a), .game(b), .game(c)] }
+
+    private func lifted(_ key: SpotlightItem) -> SpotlightState {
+        var s = SpotlightState(selectedKey: key.key)
+        XCTAssertTrue(s.beginLift(in: items))
+        return s
+    }
+
+    func testBeginLiftNeedsSelection() {
+        var s = SpotlightState(selectedKey: nil)
+        XCTAssertFalse(s.beginLift(in: items))
+        XCTAssertFalse(s.isLifted)
+    }
+
+    func testMoveLiftedSwapsAndClamps() {
+        var s = lifted(.game(b))
+        XCTAssertTrue(s.moveLifted(by: -1, in: items))
+        XCTAssertEqual(s.lift?.order, [items[0].key, items[2].key, items[1].key, items[3].key])
+        // The view feeds the working order back in.
+        func working() -> [SpotlightItem] { s.lift!.order.compactMap { k in items.first { $0.key == k } } }
+        XCTAssertTrue(s.moveLifted(by: -1, in: working()))
+        XCTAssertEqual(s.lift?.order.first, items[2].key)
+        XCTAssertFalse(s.moveLifted(by: -1, in: working()), "clamped at the start")
+    }
+
+    func testDropReturnsWorkingOrder() {
+        var s = lifted(.game(a))
+        XCTAssertTrue(s.moveLifted(by: 1, in: items))
+        let order = s.drop()
+        XCTAssertEqual(order, [items[0].key, items[2].key, items[1].key, items[3].key])
+        XCTAssertFalse(s.isLifted)
+        XCTAssertNil(s.drop())
+    }
+
+    func testCancelRestoresBefore() {
+        var s = lifted(.game(c))
+        XCTAssertTrue(s.moveLifted(by: -2, in: items))
+        XCTAssertEqual(s.cancelLift(), items.map(\.key))
+        XCTAssertFalse(s.isLifted)
+        XCTAssertEqual(s.selectedKey, SpotlightItem.game(c).key)
+    }
+
+    func testActivityDownEntersTopGames() {
+        var s = SpotlightState(selectedKey: SpotlightItem.card(.activity).key)
+        XCTAssertFalse(s.moveDown(selectedIsGame: false, screenshotCount: 0, selectedIsActivity: true, topGameCount: 0))
+        XCTAssertTrue(s.moveDown(selectedIsGame: false, screenshotCount: 0, selectedIsActivity: true, topGameCount: 3))
+        XCTAssertEqual(s.focus, .topGames)
+        XCTAssertTrue(s.moveSideways(by: 5, screenshotCount: 0, topGameCount: 3))
+        XCTAssertEqual(s.topGameIndex, 2)
+        XCTAssertTrue(s.moveUp())
+        XCTAssertEqual(s.focus, .row)
+    }
+}

@@ -21,6 +21,17 @@ public struct SpotlightView: View {
     @State var logoTick = 0
     @State var keyMonitor: Any?
     @State var hadGames = false
+    /// The card Y menu: which card and the focused row.
+    @State var cardMenu: CardMenuState?
+    /// The filter pill: shown while the filter is not All, and for 1.2 s after switching to All.
+    @State var pillFilter: LibraryFilter = .all
+    @State var pillVisible = false
+    @State var pillTask: Task<Void, Never>?
+
+    struct CardMenuState: Equatable {
+        var card: SpotlightCard
+        var index = 0
+    }
 
     public init(viewModel: AppViewModel, router: AppRouter, settings: AppSettingsStore,
                 playSessions: PlaySessionStore, artwork: ArtworkStore) {
@@ -43,7 +54,7 @@ public struct SpotlightView: View {
     var items: [SpotlightItem] {
         SpotlightRow.build(games: games,
                            enabledCards: settings.settings.spotlightCards,
-                           order: settings.settings.spotlightOrder)
+                           order: viewModel.spotlight.lift?.order ?? settings.settings.spotlightOrder)
     }
 
     var selectedItem: SpotlightItem? { viewModel.spotlight.selectedItem(in: items) }
@@ -91,12 +102,19 @@ public struct SpotlightView: View {
         .frame(width: canvas.size.width, height: canvas.size.height, alignment: .topLeading)
         .clipped()
         .onAppear(perform: appear)
-        .onDisappear(perform: removeKeyMonitor)
+        .onDisappear {
+            removeKeyMonitor()
+            pillTask?.cancel()
+        }
         .onChange(of: viewModel.libraryGames) { _ in gamesChanged() }
-        .onChange(of: filter) { _ in reconcile() }
+        .onChange(of: filter) { newFilter in
+            reconcile()
+            filterChanged(to: newFilter)
+        }
         .onChange(of: settings.settings.spotlightCards) { _ in reconcile() }
         .onChange(of: settings.settings.spotlightOrder) { _ in reconcile() }
         .onChange(of: viewModel.spotlight.selectedKey) { _ in selectionChanged() }
+        .onChange(of: router.pendingSpotlightMove) { _ in consumePendingMove() }
         .onReceive(NotificationCenter.default.publisher(for: .nxSpotlightGamepadAction)) { note in
             guard viewModel.alertMessage == nil else { return }
             if let action = note.object as? GamepadAction { handle(action) }
@@ -115,6 +133,7 @@ public struct SpotlightView: View {
                 items: items,
                 gamesByID: model.gamesByID,
                 selectedKey: state.selectedKey,
+                liftedKey: state.lift?.key,
                 isEmptyFilter: items.contains { if case .game = $0 { return true } else { return false } }
                     ? nil : filter,
                 steamGridDbApiKey: settings.settings.steamGridDbApiKey,
@@ -131,12 +150,33 @@ public struct SpotlightView: View {
             )
             .offset(y: canvas.u(130))
 
+            SpotlightFilterPill(filter: pillFilter, count: games.count)
+                .offset(x: canvas.u(80), y: canvas.u(88))
+                // Opacity fades always run, reduce motion or not.
+                .opacity(pillVisible ? 1 : 0)
+                .animation(.easeOut(duration: 0.2), value: pillVisible)
+
             info(model, state: state)
                 .offset(x: canvas.u(80), y: canvas.u(420))
 
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
-                SeleneHintsBar(left: globalHints, right: contextHints(model, state), bottom: 40, leftInset: 18)
+                SeleneHintsBar(left: state.isLifted || cardMenu != nil ? [] : globalHints,
+                               right: contextHints(model, state), bottom: 40, leftInset: 18)
+            }
+
+            if let menu = cardMenu {
+                ZStack {
+                    Color.black.opacity(0.45)
+                        .contentShape(Rectangle())
+                        .onTapGesture { cardMenu = nil }
+                    SpotlightCardMenu(card: menu.card, focusedIndex: menu.index,
+                                      onFocus: { cardMenu?.index = $0 },
+                                      onChoose: { chooseCardMenu($0) })
+                }
+                .frame(width: canvas.stageSize.width, height: canvas.stageSize.height)
+                .transition(.opacity)
+                .zIndex(5)
             }
         }
     }
@@ -176,10 +216,49 @@ public struct SpotlightView: View {
                 .padding(.top, canvas.u(34))
             }
         } else if case .card(let card) = model.selectedItem {
+            let summary = card == .activity ? activitySummary : ActivitySummary()
+            let top = summary.topGames.compactMap { model.gamesByID[$0] }
+            let visible = viewModel.libraryGames.filter { !$0.isHidden }
             // Selene's card panels sit 40 under the row, 10 lower than a game's.
-            SpotlightCardInfoView(card: card)
-                .padding(.top, canvas.u(10))
+            SpotlightCardInfoView(
+                card: card,
+                gameCount: visible.count,
+                installedCount: visible.filter(\.isPlayableLocally).count,
+                poolLabel: Self.poolLabel(settings.settings.surprisePool),
+                activity: summary,
+                topGames: top,
+                focusedTop: state.focus == .topGames ? state.topGameIndex : nil,
+                steamGridDbApiKey: settings.settings.steamGridDbApiKey,
+                artwork: artwork,
+                steamGridDB: viewModel.steamGridDB,
+                coverURL: { viewModel.storeMetadata[$0.id]?.imageURL },
+                onTopGame: { index in
+                    guard index < top.count else { return }
+                    selectGame(top[index].id)
+                }
+            )
+            .padding(.top, canvas.u(10))
         }
+    }
+
+    static func poolLabel(_ pool: SurprisePool) -> String {
+        switch pool {
+        case .installed: return "Installed games"
+        case .notPlayed: return "Games not played yet"
+        case .all: return "All games"
+        }
+    }
+
+    /// This week's play time. The week is Monday-first (see `Activity.summary`).
+    var activitySummary: ActivitySummary {
+        Activity.summary(sessions: playSessions.sessions, now: Date(), calendar: Calendar.current)
+    }
+
+    /// Top-game ids that still exist as visible games, in order.
+    var topGameCount: Int {
+        guard selectedItem == .card(.activity) else { return 0 }
+        let known = Set(viewModel.libraryGames.map(\.id))
+        return activitySummary.topGames.filter(known.contains).count
     }
 
     /// "No screenshots" only once the answer is final: not before the first
@@ -203,15 +282,24 @@ public struct SpotlightView: View {
     }
 
     private func contextHints(_ model: Snapshot, _ state: SpotlightState) -> [HintItem] {
+        if state.isLifted {
+            return [HintItem(nil, "◂ ▸  Move"), HintItem(.a, "Drop"), HintItem(.b, "Cancel")]
+        }
+        if cardMenu != nil {
+            return [HintItem(.a, "Select"), HintItem(.b, "Back")]
+        }
         switch state.focus {
         case .pills:
             return [HintItem(.a, "Select")]
         case .strip:
             return []
+        case .topGames:
+            return [HintItem(.a, "Show")]
         case .row:
             switch model.selectedItem {
             case .card(let card):
-                return card == .activity ? [] : [HintItem(.a, "Open")]
+                let more = [HintItem(.y, "Card options")]
+                return card == .activity ? more : more + [HintItem(.a, card == .surprise ? "Pick" : "Open")]
             case .game:
                 guard let game = model.selectedGame else { return [] }
                 if game.isPlayableLocally {
@@ -243,6 +331,37 @@ public struct SpotlightView: View {
         hadGames = !viewModel.libraryGames.isEmpty
         reconcile()
         selectionChanged()
+        pillFilter = filter
+        pillVisible = filter != .all
+        consumePendingMove()
+    }
+
+    /// Shows the pill for any filter but All; switching to All flashes it for 1.2 s.
+    private func filterChanged(to next: LibraryFilter) {
+        pillTask?.cancel()
+        pillFilter = next
+        pillVisible = true
+        guard next == .all else { return }
+        pillTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            guard !Task.isCancelled else { return }
+            pillVisible = false
+        }
+    }
+
+    /// Selects the item whose Move was requested and lifts it.
+    func consumePendingMove() {
+        guard let key = router.pendingSpotlightMove else { return }
+        router.pendingSpotlightMove = nil
+        let items = self.items
+        guard let item = items.first(where: { $0.key == key }) else { return }
+        cardMenu = nil
+        mutate { state in
+            state.cancelLift()
+            state.select(item)
+            state.beginLift(in: items)
+        }
+        SoundEffectService.shared.play(.click)
     }
 
     private func gamesChanged() {

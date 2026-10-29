@@ -3,6 +3,16 @@ import Foundation
 /// Where controller focus sits on Spotlight.
 public enum SpotlightFocusArea: Equatable {
     case row, pills, strip
+    /// The Activity card's top-game tiles.
+    case topGames
+}
+
+/// A tile lifted off the row to be moved. `order` is the working order (item
+/// keys) shown while lifted; `before` is what B restores.
+public struct SpotlightLift: Equatable {
+    public var key: String
+    public var order: [String]
+    public var before: [String]
 }
 
 /// Selection and focus on the Spotlight screen. Pure state: the view feeds it
@@ -17,6 +27,9 @@ public struct SpotlightState: Equatable {
     public var focus: SpotlightFocusArea
     public var pillIndex: Int
     public var stripIndex: Int
+    public var topGameIndex: Int
+    /// Non-nil while a tile is lifted for moving.
+    public var lift: SpotlightLift?
     /// The starting tab is applied once per app session, on the first visit.
     public var startingTabApplied: Bool
 
@@ -24,11 +37,13 @@ public struct SpotlightState: Equatable {
                 focus: SpotlightFocusArea = .row,
                 pillIndex: Int = 0,
                 stripIndex: Int = 0,
+                topGameIndex: Int = 0,
                 startingTabApplied: Bool = false) {
         self.selectedKey = selectedKey
         self.focus = focus
         self.pillIndex = pillIndex
         self.stripIndex = stripIndex
+        self.topGameIndex = topGameIndex
         self.startingTabApplied = startingTabApplied
     }
 
@@ -65,6 +80,7 @@ public struct SpotlightState: Equatable {
         focus = .row
         pillIndex = 0
         stripIndex = 0
+        topGameIndex = 0
     }
 
     /// Moves the row selection, clamped to the ends. Returns whether it moved.
@@ -93,13 +109,21 @@ public struct SpotlightState: Equatable {
         focus = .row
         pillIndex = 0
         stripIndex = 0
+        topGameIndex = 0
     }
 
     /// Down: row → pills (games only), pills → strip (when it has screenshots).
     @discardableResult
-    public mutating func moveDown(selectedIsGame: Bool, screenshotCount: Int) -> Bool {
+    public mutating func moveDown(selectedIsGame: Bool, screenshotCount: Int,
+                                  selectedIsActivity: Bool = false, topGameCount: Int = 0) -> Bool {
         switch focus {
         case .row:
+            if selectedIsActivity {
+                guard topGameCount > 0 else { return false }
+                focus = .topGames
+                topGameIndex = 0
+                return true
+            }
             guard selectedIsGame else { return false }
             focus = .pills
             pillIndex = 0
@@ -109,7 +133,7 @@ public struct SpotlightState: Equatable {
             focus = .strip
             stripIndex = 0
             return true
-        case .strip:
+        case .strip, .topGames:
             return false
         }
     }
@@ -119,14 +143,14 @@ public struct SpotlightState: Equatable {
     public mutating func moveUp() -> Bool {
         switch focus {
         case .row: return false
-        case .pills: focus = .row; return true
+        case .pills, .topGames: focus = .row; return true
         case .strip: focus = .pills; return true
         }
     }
 
     /// Left/Right inside the pills or the strip.
     @discardableResult
-    public mutating func moveSideways(by delta: Int, screenshotCount: Int) -> Bool {
+    public mutating func moveSideways(by delta: Int, screenshotCount: Int, topGameCount: Int = 0) -> Bool {
         switch focus {
         case .row:
             return false
@@ -139,7 +163,54 @@ public struct SpotlightState: Equatable {
             let next = min(max(stripIndex + delta, 0), screenshotCount - 1)
             defer { stripIndex = next }
             return next != stripIndex
+        case .topGames:
+            guard topGameCount > 0 else { return false }
+            let next = min(max(topGameIndex + delta, 0), topGameCount - 1)
+            defer { topGameIndex = next }
+            return next != topGameIndex
         }
+    }
+
+    // MARK: - Moving a tile
+
+    public var isLifted: Bool { lift != nil }
+
+    /// Lifts the selected item. `items` is the row as shown.
+    @discardableResult
+    public mutating func beginLift(in items: [SpotlightItem]) -> Bool {
+        guard lift == nil, let item = selectedItem(in: items) else { return false }
+        focus = .row
+        let keys = items.map(\.key)
+        lift = SpotlightLift(key: item.key, order: keys, before: keys)
+        return true
+    }
+
+    /// Moves the lifted item by `delta`. `items` is the row as shown (already
+    /// in the working order). Returns whether it moved.
+    @discardableResult
+    public mutating func moveLifted(by delta: Int, in items: [SpotlightItem]) -> Bool {
+        guard var lift, let item = items.first(where: { $0.key == lift.key }) else { return false }
+        let moved = SpotlightRow.moving(item, by: delta, in: items)
+        let keys = moved.map(\.key)
+        guard keys != items.map(\.key) else { return false }
+        lift.order = keys
+        self.lift = lift
+        return true
+    }
+
+    /// Drops the lifted item; returns the order to save.
+    public mutating func drop() -> [String]? {
+        guard let lift else { return nil }
+        self.lift = nil
+        return lift.order
+    }
+
+    /// Puts the item back where it was; returns the order that was before.
+    @discardableResult
+    public mutating func cancelLift() -> [String]? {
+        guard let lift else { return nil }
+        self.lift = nil
+        return lift.before
     }
 }
 

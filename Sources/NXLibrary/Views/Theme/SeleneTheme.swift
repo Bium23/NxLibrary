@@ -8,6 +8,7 @@ public enum SeleneTheme {
     public static var onFocus: Color { Color(hex: palette.onFocus) }
     public static var ink: Color { Color(hex: palette.ink) }
     public static var ink90: Color { ink.opacity(0.90) }
+    public static var ink82: Color { ink.opacity(0.82) }
     public static var ink60: Color { ink.opacity(0.60) }
     public static var ink25: Color { ink.opacity(0.25) }
     public static var ink15: Color { ink.opacity(0.15) }

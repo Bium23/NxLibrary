@@ -198,34 +198,3 @@ private struct NowPlayingDot: View {
         }
     }
 }
-
-/// A section card selected in the row: its name where the logo goes and one line about it.
-struct SpotlightCardInfoView: View {
-    @Environment(\.seleneCanvas) private var canvas
-
-    let card: SpotlightCard
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: canvas.u(10)) {
-            Text(card.title)
-                .seleneFont(56)
-                .foregroundColor(SeleneTheme.ink)
-                .frame(height: canvas.u(170), alignment: .bottomLeading)
-            Text(about)
-                .seleneFont(19)
-                .foregroundColor(SeleneTheme.ink90)
-                .padding(.leading, canvas.u(2))
-        }
-        .frame(width: canvas.u(900), alignment: .leading)
-        .shadow(color: .black.opacity(0.45), radius: canvas.u(6))
-    }
-
-    private var about: String {
-        switch card {
-        case .collection: return "Every game in your library, in one grid."
-        case .surprise: return "Can't decide? Let NX Library pick one of your games."
-        case .activity: return "What you played and for how long."
-        case .addGame: return "Build a game from your own dumps."
-        }
-    }
-}

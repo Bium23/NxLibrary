@@ -18,6 +18,8 @@ public final class AppRouter: ObservableObject {
     @Published public var isMenuPresented = false
     @Published public var isSearchPresented = false
     @Published public var menuSelection = MenuSelectionModel()
+    /// A Spotlight item key waiting to be lifted for moving (see `requestSpotlightMove`).
+    @Published public var pendingSpotlightMove: String?
 
     private var history: [AppRoute] = []
 
@@ -33,6 +35,10 @@ public final class AppRouter: ObservableObject {
         history.append(self.route)
         self.route = route
     }
+
+    /// Asks Spotlight to select the item with this key and lift it for moving.
+    /// Callers: a card's Y menu, and Game options' Move row.
+    public func requestSpotlightMove(_ key: String) { pendingSpotlightMove = key }
 
     public func showDetail(_ id: UUID) { navigate(to: .detail(id)) }
     public func openSettings(_ section: SettingsSection = .general) { navigate(to: .settings(section)) }

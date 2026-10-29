@@ -5,8 +5,11 @@ import NXLibraryCore
 /// Spotlight's controller, keyboard and pointer input.
 extension SpotlightView {
     func handle(_ action: GamepadAction) {
+        if viewModel.spotlight.isLifted { return handleLifted(action) }
+        if cardMenu != nil { return handleCardMenu(action) }
         let items = self.items
         let shots = screenshotCount
+        let tops = topGameCount
         var moved = false
         switch action {
         case .navigateLeft, .navigateRight:
@@ -14,11 +17,15 @@ extension SpotlightView {
             mutate { state in
                 moved = state.focus == .row
                     ? state.move(by: delta, in: items)
-                    : state.moveSideways(by: delta, screenshotCount: shots)
+                    : state.moveSideways(by: delta, screenshotCount: shots, topGameCount: tops)
             }
         case .navigateDown:
             let isGame = selectedGame != nil
-            mutate { moved = $0.moveDown(selectedIsGame: isGame, screenshotCount: shots) }
+            let isActivity = selectedItem == .card(.activity)
+            mutate {
+                moved = $0.moveDown(selectedIsGame: isGame, screenshotCount: shots,
+                                    selectedIsActivity: isActivity, topGameCount: tops)
+            }
         case .navigateUp:
             mutate { moved = $0.moveUp() }
         case .tabPrevious:
@@ -35,7 +42,12 @@ extension SpotlightView {
         case .secondaryAction:
             if let game = selectedGame { router.showDetail(game.id) }
         case .contextAction:
-            if let game = selectedGame { viewModel.gameForSettingsSheet = game }
+            if let game = selectedGame {
+                viewModel.gameForSettingsSheet = game
+            } else if case .card(let card) = selectedItem {
+                cardMenu = CardMenuState(card: card)
+                SoundEffectService.shared.play(.click)
+            }
         case .view:
             router.openCollection()
         case .viewHold:
@@ -59,7 +71,75 @@ extension SpotlightView {
             if let game = selectedGame { pressPill(state.pillIndex, game: game) }
         case .strip:
             break // The screenshot viewer (spec §6.4) comes with a later task.
+        case .topGames:
+            let known = Set(viewModel.libraryGames.map(\.id))
+            let ids = activitySummary.topGames.filter(known.contains)
+            if state.topGameIndex < ids.count { selectGame(ids[state.topGameIndex]) }
         }
+    }
+
+    // MARK: - Moving a tile
+
+    /// While a tile is lifted only Left/Right, A and B do anything.
+    private func handleLifted(_ action: GamepadAction) {
+        switch action {
+        case .navigateLeft, .navigateRight:
+            let delta = action == .navigateLeft ? -1 : 1
+            let items = self.items
+            var moved = false
+            mutate { moved = $0.moveLifted(by: delta, in: items) }
+            if moved { SoundEffectService.shared.play(.focus) }
+        case .confirm:
+            var order: [String]?
+            mutate { order = $0.drop() }
+            if let order { settings.settings.spotlightOrder = order } // Saved by the store.
+            SoundEffectService.shared.play(.click)
+        case .cancel:
+            mutate { $0.cancelLift() }
+            SoundEffectService.shared.play(.focus)
+        default:
+            break
+        }
+    }
+
+    // MARK: - Card menu
+
+    private func handleCardMenu(_ action: GamepadAction) {
+        guard let menu = cardMenu else { return }
+        let last = SpotlightCardMenu.rows.count - 1
+        switch action {
+        case .navigateUp: cardMenu?.index = max(0, menu.index - 1)
+        case .navigateDown: cardMenu?.index = min(last, menu.index + 1)
+        case .confirm: chooseCardMenu(menu.index)
+        case .cancel, .contextAction:
+            cardMenu = nil
+            SoundEffectService.shared.play(.focus)
+        default: break
+        }
+    }
+
+    func chooseCardMenu(_ index: Int) {
+        guard let menu = cardMenu else { return }
+        cardMenu = nil
+        SoundEffectService.shared.play(.click)
+        switch index {
+        case 0:
+            router.requestSpotlightMove(SpotlightItem.card(menu.card).key)
+        default:
+            hideCard(menu.card)
+        }
+    }
+
+    /// Removes the card from the row; the selection moves to its neighbour.
+    private func hideCard(_ card: SpotlightCard) {
+        let before = items
+        let key = SpotlightItem.card(card).key
+        let neighbour: SpotlightItem? = before.firstIndex { $0.key == key }.flatMap { index in
+            index + 1 < before.count ? before[index + 1] : (index > 0 ? before[index - 1] : nil)
+        }
+        settings.settings.spotlightCards.removeAll { $0 == card }
+        if let neighbour, viewModel.spotlight.selectedKey == key { mutate { $0.select(neighbour) } }
+        reconcile()
     }
 
     /// A on a row item: a game plays (or opens Details when it is not built);
@@ -75,7 +155,7 @@ extension SpotlightView {
         case .card(.surprise):
             surprise()
         case .card(.activity):
-            break // Activity arrives with its own screen.
+            break // Down enters its top games; the full screen comes later.
         case .card(.addGame):
             SoundEffectService.shared.play(.click)
             NotificationCenter.default.post(name: .nxLibraryOpenAddGame, object: nil)
@@ -117,12 +197,18 @@ extension SpotlightView {
             SoundEffectService.shared.play(.error)
             return
         }
+        selectGame(id)
+        SoundEffectService.shared.play(.click)
+    }
+
+    /// Selects a game in the row, switching to All games when the current
+    /// filter hides it.
+    func selectGame(_ id: UUID) {
         if !items.contains(.game(id)) {
             viewModel.librarySelection.query.filter = .all
         }
         mutate { $0.select(.game(id)) }
         reconcile() // In case the pick is hidden from the row after all.
-        SoundEffectService.shared.play(.click)
     }
 
     // MARK: - Keyboard
@@ -154,7 +240,8 @@ extension SpotlightView {
             case 36, 49: action = .confirm
             case 53:
                 // On the row Esc falls through to the shell, which opens the Menu.
-                guard viewModel.spotlight.focus != .row else { return event }
+                guard viewModel.spotlight.focus != .row || viewModel.spotlight.isLifted
+                        || cardMenu != nil else { return event }
                 action = .cancel
             case 7: action = .secondaryAction   // X
             case 16: action = .contextAction    // Y

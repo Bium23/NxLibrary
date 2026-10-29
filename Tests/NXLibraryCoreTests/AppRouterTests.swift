@@ -62,3 +62,12 @@ final class MenuSelectionModelTests: XCTestCase {
         XCTAssertEqual(model.selected, .quit)
     }
 }
+
+final class AppRouterSpotlightMoveTests: XCTestCase {
+    func testRequestSpotlightMoveSetsPendingKey() {
+        let router = AppRouter()
+        XCTAssertNil(router.pendingSpotlightMove)
+        router.requestSpotlightMove("card:activity")
+        XCTAssertEqual(router.pendingSpotlightMove, "card:activity")
+    }
+}
