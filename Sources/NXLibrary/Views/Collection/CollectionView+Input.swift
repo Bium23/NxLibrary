@@ -35,7 +35,7 @@ extension CollectionView {
         case .secondaryAction:
             if let game = selectedGame { router.showDetail(game.id) }
         case .contextAction:
-            if let game = selectedGame { viewModel.gameForSettingsSheet = game }
+            if let game = selectedGame { viewModel.openGameOptions(game, from: .collection) }
         case .cancel:
             router.showLibrary() // B goes home, like Selene's library.
         case .view:

@@ -9,6 +9,7 @@ public enum SeleneTheme {
     public static var ink: Color { Color(hex: palette.ink) }
     public static var ink90: Color { ink.opacity(0.90) }
     public static var ink82: Color { ink.opacity(0.82) }
+    public static var ink75: Color { ink.opacity(0.75) }
     public static var ink60: Color { ink.opacity(0.60) }
     public static var ink25: Color { ink.opacity(0.25) }
     public static var ink15: Color { ink.opacity(0.15) }
@@ -18,6 +19,8 @@ public enum SeleneTheme {
     public static var glass: Color { Color(hex: palette.glass, opacity: 0.75) }
     public static var glassSolid: Color { Color(hex: palette.glass, opacity: 0.88) }
     public static var glassLight: Color { Color(hex: palette.glass, opacity: 0.45) }
+    /// Selene's confirmation card (dialogs are a touch more solid than rows).
+    public static var glassCard: Color { Color(hex: palette.glass, opacity: 0.96) }
     public static var glyph: Color { Color(hex: palette.glyph) }
     public static var success: Color { Color(hex: palette.success) }
     public static let danger = Color(hex: 0xFF6B6B)

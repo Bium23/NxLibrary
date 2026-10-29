@@ -193,6 +193,8 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     }
     @Published public var isScanningLibrary: Bool = false
     @Published public var gameForSettingsSheet: PortedGame? = nil
+    /// Where the open Game options came from; decides its rows (Move is Spotlight-only).
+    @Published public var gameOptionsOrigin: GameOptionsOrigin = .collection
     @Published public var pendingRuntimeConfig = GameRuntimeConfig()
     private var lastAddGameDefaults = GameRuntimeConfig()
     private var addGameSessionActive = false
@@ -1093,11 +1095,28 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         }
     }
 
+    /// Opens Game options for a game, remembering the screen it was opened from.
+    public func openGameOptions(_ game: PortedGame, from origin: GameOptionsOrigin) {
+        gameOptionsOrigin = origin
+        gameForSettingsSheet = game
+    }
+
     /// Flips the favorite heart and saves the library.
     public func toggleFavorite(_ game: PortedGame) {
+        updateStoredGame(game) { $0.isFavorite.toggle() }
+    }
+
+    /// Flips the hidden flag and saves the library. Hidden games leave Spotlight,
+    /// Collection and Surprise me; the screens reconcile their selection on the change.
+    public func toggleHidden(_ game: PortedGame) {
+        updateStoredGame(game) { $0.isHidden.toggle() }
+    }
+
+    /// Applies one change to the stored game and saves the library, the same way for every flag.
+    private func updateStoredGame(_ game: PortedGame, _ change: (inout PortedGame) -> Void) {
         guard var library = try? libraryStore.load(),
               let index = library.games.firstIndex(where: { $0.id == game.id }) else { return }
-        library.games[index].isFavorite.toggle()
+        change(&library.games[index])
         do {
             try libraryStore.save(library)
         } catch {

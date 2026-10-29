@@ -44,7 +44,7 @@ extension SpotlightView {
             if let game = selectedGame { router.showDetail(game.id) }
         case .contextAction:
             if let game = selectedGame {
-                viewModel.gameForSettingsSheet = game
+                viewModel.openGameOptions(game, from: .spotlight)
             } else if case .card(let card) = selectedItem {
                 cardMenu = CardMenuState(card: card)
                 SoundEffectService.shared.play(.click)

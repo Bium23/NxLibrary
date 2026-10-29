@@ -47,10 +47,15 @@ public struct AppShellView: View {
                 GameOptionsView(
                     viewModel: viewModel,
                     game: game,
+                    origin: viewModel.gameOptionsOrigin,
                     onClose: { viewModel.gameForSettingsSheet = nil },
                     onShowBuild: {
                         viewModel.gameForSettingsSheet = nil
                         router.openAddGame()
+                    },
+                    onMove: {
+                        viewModel.gameForSettingsSheet = nil
+                        router.requestSpotlightMove(SpotlightItem.game(game.id).key)
                     }
                 )
                 .transition(reduceMotion
@@ -93,6 +98,7 @@ public struct AppShellView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryPlayFocused)) { _ in
             guard isHomeRoute,
+                  viewModel.gameForSettingsSheet == nil,
                   let game = viewModel.currentFocusedGame else { return }
             viewModel.launchGame(game)
         }
@@ -106,13 +112,17 @@ public struct AppShellView: View {
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenGameOptions)) { _ in
             guard !router.isMenuPresented else { return }
             switch router.route {
-            case .library, .collection:
+            case .library:
                 if let game = viewModel.currentFocusedGame {
-                    viewModel.gameForSettingsSheet = game
+                    viewModel.openGameOptions(game, from: .spotlight)
+                }
+            case .collection:
+                if let game = viewModel.currentFocusedGame {
+                    viewModel.openGameOptions(game, from: .collection)
                 }
             case .detail(let id):
                 if let game = viewModel.libraryGames.first(where: { $0.id == id }) {
-                    viewModel.gameForSettingsSheet = game
+                    viewModel.openGameOptions(game, from: .details)
                 }
             default:
                 break
@@ -127,22 +137,22 @@ public struct AppShellView: View {
             router.isMenuPresented = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenSettings)) { _ in
-            guard !router.isScreenshotViewerOpen else { return }
+            guard !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
             router.closeMenu()
             router.openSettings(.general)
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenConsole)) { _ in
-            guard !router.isScreenshotViewerOpen else { return }
+            guard !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
             router.closeMenu()
             router.openConsole()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenLibrary)) { _ in
-            guard !router.isScreenshotViewerOpen else { return }
+            guard !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
             router.closeMenu()
             router.showLibrary()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenAddGame)) { _ in
-            guard !router.isScreenshotViewerOpen else { return }
+            guard !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
             router.closeMenu()
             openFreshAddGame()
         }
@@ -150,7 +160,8 @@ public struct AppShellView: View {
             if router.isScreenshotViewerOpen {
                 // The viewer's key monitor closes it.
             } else if viewModel.gameForSettingsSheet != nil {
-                viewModel.gameForSettingsSheet = nil
+                // Game options steps back (dialog, then Edit details) or closes.
+                NotificationCenter.default.post(name: .nxGameOptionsGamepadAction, object: GamepadAction.cancel)
             } else if router.isMenuPresented {
                 router.closeMenu()
             } else if isHomeRoute {
