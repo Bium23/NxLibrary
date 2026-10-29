@@ -29,6 +29,10 @@ public struct AppSettings: Codable, Equatable {
     public var gameDefaults: GameRuntimeConfig
     public var colorThemeID: String
     public var buttonNames: ButtonNameStyle
+    public var spotlightCards: [SpotlightCard]
+    public var spotlightOrder: [String]
+    public var startingTab: LibraryFilter.RawValue
+    public var surprisePool: SurprisePool
 
     public init(backgroundShade: BackgroundShade = .balanced,
                 readableText: Bool = true,
@@ -42,7 +46,11 @@ public struct AppSettings: Codable, Equatable {
                 steamGridDbApiKey: String = "",
                 gameDefaults: GameRuntimeConfig = GameRuntimeConfig(),
                 colorThemeID: String = "selene",
-                buttonNames: ButtonNameStyle = .automatic) {
+                buttonNames: ButtonNameStyle = .automatic,
+                spotlightCards: [SpotlightCard] = [.surprise, .activity, .addGame],
+                spotlightOrder: [String] = [],
+                startingTab: LibraryFilter.RawValue = "All games",
+                surprisePool: SurprisePool = .installed) {
         self.backgroundShade = backgroundShade
         self.readableText = readableText
         self.reduceMotion = reduceMotion
@@ -56,12 +64,17 @@ public struct AppSettings: Codable, Equatable {
         self.gameDefaults = gameDefaults
         self.colorThemeID = colorThemeID
         self.buttonNames = buttonNames
+        self.spotlightCards = spotlightCards
+        self.spotlightOrder = spotlightOrder
+        self.startingTab = startingTab
+        self.surprisePool = surprisePool
     }
 
     enum CodingKeys: String, CodingKey {
         case backgroundShade, readableText, reduceMotion, showButtonHints, showClock
         case restoreLastGame, checkEngineAtLaunch, refreshLibraryAtLaunch, lastSelectedGameID
         case steamGridDbApiKey, gameDefaults, colorThemeID, buttonNames
+        case spotlightCards, spotlightOrder, startingTab, surprisePool
     }
 
     public init(from decoder: Decoder) throws {
@@ -79,5 +92,9 @@ public struct AppSettings: Codable, Equatable {
         self.gameDefaults = try container.decodeIfPresent(GameRuntimeConfig.self, forKey: .gameDefaults) ?? GameRuntimeConfig()
         self.colorThemeID = try container.decodeIfPresent(String.self, forKey: .colorThemeID) ?? "selene"
         self.buttonNames = try container.decodeIfPresent(ButtonNameStyle.self, forKey: .buttonNames) ?? .automatic
+        self.spotlightCards = try container.decodeIfPresent([SpotlightCard].self, forKey: .spotlightCards) ?? [.surprise, .activity, .addGame]
+        self.spotlightOrder = try container.decodeIfPresent([String].self, forKey: .spotlightOrder) ?? []
+        self.startingTab = try container.decodeIfPresent(String.self, forKey: .startingTab) ?? "All games"
+        self.surprisePool = try container.decodeIfPresent(SurprisePool.self, forKey: .surprisePool) ?? .installed
     }
 }

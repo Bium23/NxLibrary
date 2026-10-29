@@ -43,6 +43,16 @@ final class AppSettingsStoreTests: XCTestCase {
         XCTAssertNotNil(store.loadError)
     }
 
+    func testOldJSONWithoutSpotlightFieldsDecodesDefaults() throws {
+        let old = Data(#"{"backgroundShade":"deep","colorThemeID":"selene"}"#.utf8)
+        let s = try JSONDecoder().decode(AppSettings.self, from: old)
+        XCTAssertEqual(s.backgroundShade, .deep)
+        XCTAssertEqual(s.spotlightCards, [.surprise, .activity, .addGame])
+        XCTAssertEqual(s.spotlightOrder, [])
+        XCTAssertEqual(s.startingTab, "All games")
+        XCTAssertEqual(s.surprisePool, .installed)
+    }
+
     func testBackgroundShadeScrimsIncrease() {
         XCTAssertLessThan(BackgroundShade.light.heroScrimOpacity,
                           BackgroundShade.balanced.heroScrimOpacity)
