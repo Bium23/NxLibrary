@@ -95,50 +95,16 @@ struct DetailsTopBlock: View {
 
     /// PLAYTIME · LAST PLAYED · RELEASED · PLATFORM, 28 either side of each rule.
     private var stats: some View {
-        HStack(alignment: .top, spacing: 0) {
-            stat("PLAYTIME") { value(presentation.playtime) }
-            divider
-            stat("LAST PLAYED") { value(presentation.lastPlayed) }
-            if let released = presentation.released {
-                divider
-                stat("RELEASED") { value(released) }
-            }
-            divider
-            stat("PLATFORM") {
-                HStack(spacing: canvas.u(9)) {
-                    MaterialIconView(.platform, size: 21)
-                        .foregroundColor(SeleneTheme.ink)
-                        .frame(width: canvas.u(22), height: canvas.u(22))
-                    value("Nintendo Switch")
-                }
-            }
+        var items = [
+            SeleneStat.text("PLAYTIME", presentation.playtime),
+            SeleneStat.text("LAST PLAYED", presentation.lastPlayed)
+        ]
+        if let released = presentation.released {
+            items.append(SeleneStat.text("RELEASED", released))
         }
-        .fixedSize()
-        .padding(.leading, canvas.u(4))
-    }
-
-    private func stat<V: View>(_ label: String, @ViewBuilder _ content: () -> V) -> some View {
-        VStack(alignment: .leading, spacing: canvas.u(2)) {
-            Text(label)
-                .seleneFont(12, .semibold)
-                .foregroundColor(SeleneTheme.ink60)
-                .frame(height: canvas.u(16), alignment: .leading)
-            content()
-                .frame(minHeight: canvas.u(28))
-        }
-        .accessibilityElement(children: .combine)
-    }
-
-    private func value<T: StringProtocol>(_ text: T) -> some View {
-        Text(text).seleneFont(21, .semibold).foregroundColor(SeleneTheme.ink)
-    }
-
-    private var divider: some View {
-        Rectangle()
-            .fill(SeleneTheme.ink25)
-            .frame(width: max(1, canvas.u(1)))
-            .padding(.vertical, canvas.u(4))
-            .padding(.horizontal, canvas.u(28))
+        items.append(SeleneStat.platform)
+        return SeleneStatsRow(items: items, gap: 28)
+            .padding(.leading, canvas.u(4))
     }
 
     // MARK: - Genres

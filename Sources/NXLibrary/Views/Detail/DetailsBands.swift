@@ -2,8 +2,23 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
-/// Band 1: the game's screenshots, Spotlight's strip (448 × 252 tiles). Its
-/// title shows once the screenshots are known, or while there are some; a
+/// A band's title (Selene's SeleneBandLabel): 21 SemiBold, 2 above, 14 below.
+struct DetailsBandTitle: View {
+    @Environment(\.seleneCanvas) private var canvas
+
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .seleneFont(21, .semibold)
+            .foregroundColor(SeleneTheme.ink)
+            .padding(.top, canvas.u(2))
+            .padding(.bottom, canvas.u(14))
+    }
+}
+
+/// Band 1: the game's screenshots, in Selene DetailsStage's tiles (272 × 153).
+/// The title shows once the screenshots are known or while there are some; a
 /// click focuses a tile and a double click opens it.
 struct DetailsScreenshotsBand: View {
     @Environment(\.seleneCanvas) private var canvas
@@ -19,15 +34,12 @@ struct DetailsScreenshotsBand: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if !urls.isEmpty || known {
-                Text("Screenshots")
-                    .seleneFont(22, .semibold)
-                    .foregroundColor(SeleneTheme.ink)
-                    .padding(.leading, canvas.u(2))
-                    .padding(.bottom, canvas.u(14))
+                DetailsBandTitle(text: "Screenshots")
             }
             SpotlightScreenshotStrip(titleID: titleID, urls: urls, known: known,
                                      focusedIndex: focusedIndex, artwork: artwork,
-                                     onSelect: onFocus, onActivate: onOpen)
+                                     onSelect: onFocus, onActivate: onOpen,
+                                     style: .details)
         }
     }
 }
@@ -43,11 +55,8 @@ struct DetailsActivityColumn: View {
     static let width: CGFloat = 510
 
     var body: some View {
-        VStack(alignment: .leading, spacing: canvas.u(12)) {
-            Text("Your activity")
-                .seleneFont(22, .semibold)
-                .foregroundColor(SeleneTheme.ink)
-                .padding(.leading, canvas.u(2))
+        VStack(alignment: .leading, spacing: 0) {
+            DetailsBandTitle(text: "Your activity")
             VStack(alignment: .leading, spacing: canvas.u(14)) {
                 HStack(alignment: .top, spacing: canvas.u(24)) {
                     cell("PLAY TIME", presentation.playtime)
@@ -60,7 +69,6 @@ struct DetailsActivityColumn: View {
                     }
                 }
             }
-            .padding(.leading, canvas.u(2))
         }
         .frame(width: canvas.u(Self.width), alignment: .topLeading)
     }
@@ -80,8 +88,9 @@ struct DetailsActivityColumn: View {
     }
 }
 
-/// Band 3: more games from your own library (`MoreLikeThis`), square tiles of
-/// 160 with a 14 radius. A click focuses, a double click (or A) opens the game on Spotlight.
+/// Band 3: more games from your own library (`MoreLikeThis`), Selene cover
+/// tiles of 200 × 280 with the store cover first. A click focuses, a double
+/// click opens the game on Spotlight.
 struct DetailsMoreBand: View {
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
@@ -95,16 +104,13 @@ struct DetailsMoreBand: View {
     let onFocus: (Int) -> Void
     let onOpen: (Int) -> Void
 
-    static let side: CGFloat = 160
+    static let width: CGFloat = 200
+    static let height: CGFloat = 280
     static let gap: CGFloat = 22
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("More like this")
-                .seleneFont(22, .semibold)
-                .foregroundColor(SeleneTheme.ink)
-                .padding(.leading, canvas.u(2))
-                .padding(.bottom, canvas.u(14))
+            DetailsBandTitle(text: "More like this")
             HStack(alignment: .top, spacing: canvas.u(Self.gap)) {
                 ForEach(Array(games.enumerated()), id: \.element.id) { index, game in
                     tile(game, index: index, focused: focusedIndex == index)
@@ -114,16 +120,17 @@ struct DetailsMoreBand: View {
     }
 
     private func tile(_ game: PortedGame, index: Int, focused: Bool) -> some View {
-        let side = canvas.u(Self.side)
+        let w = canvas.u(Self.width), h = canvas.u(Self.height)
         let face = RoundedRectangle(cornerRadius: canvas.u(14), style: .continuous)
         return ZStack {
-            SpotlightTileArtwork(game: game, side: side, steamGridDbApiKey: steamGridDbApiKey,
+            SpotlightTileArtwork(game: game, side: h, width: w, coverFirst: true,
+                                 steamGridDbApiKey: steamGridDbApiKey,
                                  artwork: artwork, steamGridDB: steamGridDB, coverURL: coverURL(game))
                 .clipShape(face)
             SeleneTileRing(cornerRadius: canvas.u(21), active: focused)
-                .frame(width: side + canvas.u(14), height: side + canvas.u(14))
+                .frame(width: w + canvas.u(14), height: h + canvas.u(14))
         }
-        .frame(width: side, height: side)
+        .frame(width: w, height: h)
         .shadow(color: .black.opacity(0.55), radius: canvas.u(9))
         .scaleEffect(focused ? 1.05 : 1)
         .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: focused)

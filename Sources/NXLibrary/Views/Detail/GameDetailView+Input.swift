@@ -28,7 +28,7 @@ extension GameDetailView {
     @discardableResult
     func moveFocus(_ move: (inout DetailsFocus, DetailsFocus.Bands) -> Bool) -> Bool {
         var next = focus
-        let moved = move(&next, model.bands)
+        let moved = move(&next, currentModel.bands)
         if next != focus { focus = next }
         return moved
     }
@@ -43,14 +43,47 @@ extension GameDetailView {
         }
     }
 
-    func hoverTop(_ index: Int) {
-        guard focus.zone != DetailsFocus.topZone || focus.pill != index else { return }
-        focus.zone = DetailsFocus.topZone
-        focus.pill = index
+    /// Hover moves focus only inside the band already in focus; a peeking band
+    /// changes zone on press, not on hover.
+    func hoverPill(_ index: Int) {
+        guard focus.zone == DetailsFocus.topZone, focus.pill != index else { return }
+        var next = focus
+        next.focus(zone: DetailsFocus.topZone, index: index, in: currentModel.bands)
+        if next != focus { focus = next }
+    }
+
+    /// Press on a top-block pill: focus it and run it (Play or Build, Game options).
+    func pressPill(_ index: Int) {
+        var next = focus
+        next.focus(zone: DetailsFocus.topZone, index: index, in: currentModel.bands)
+        if next != focus { focus = next }
+        if index == 0 { primaryAction() } else { openOptions() }
+    }
+
+    /// Hover moves the action focus only while Build & Sources is in focus.
+    func hoverRow(_ index: Int) {
+        guard focus.zone == DetailsFocus.actionsZone, focus.action != index else { return }
+        var next = focus
+        next.focus(zone: DetailsFocus.actionsZone, index: index, in: currentModel.bands)
+        if next != focus { focus = next }
+    }
+
+    /// Press on a row: when Build & Sources is in focus it runs the row (the
+    /// row's own path explains a refusal, e.g. the Metal gate); otherwise the
+    /// press first brings that band into focus.
+    func pressRow(_ index: Int) {
+        guard focus.zone == DetailsFocus.actionsZone else {
+            focusPointer(zone: DetailsFocus.actionsZone, index: index, bands: currentModel.bands)
+            return
+        }
+        hoverRow(index)
+        let rows = currentModel.rows
+        guard index < rows.count else { return }
+        rows[index].action()
     }
 
     func activateFocused() {
-        let model = self.model
+        let model = currentModel
         switch focus.zone {
         case DetailsFocus.topZone:
             if focus.pill == 0 { primaryAction() } else { openOptions() }
@@ -69,7 +102,7 @@ extension GameDetailView {
 
     /// Play when the game is built; otherwise Build (which refuses with a sound when it cannot run).
     func primaryAction() {
-        if presentation.canPlay {
+        if currentModel.presentation.canPlay {
             SoundEffectService.shared.play(.click)
             viewModel.launchGame(game)
         } else {
@@ -78,7 +111,7 @@ extension GameDetailView {
     }
 
     func rebuild() {
-        guard presentation.canRebuild else {
+        guard currentModel.presentation.canRebuild else {
             SoundEffectService.shared.play(.error)
             return
         }
@@ -104,7 +137,7 @@ extension GameDetailView {
     // MARK: - Screenshot viewer
 
     func openViewer(at index: Int) {
-        let urls = model.screenshots
+        let urls = currentModel.screenshots
         guard !urls.isEmpty else { return }
         viewer = ViewerContext(titleID: game.titleId ?? game.uniqueKey, urls: urls,
                                state: ScreenshotViewerState(count: urls.count, start: index))
@@ -116,7 +149,7 @@ extension GameDetailView {
         guard let context = viewer else { return }
         viewer = nil
         var next = focus
-        next.focus(zone: DetailsFocus.screenshotsZone, index: context.state.index, in: model.bands)
+        next.focus(zone: DetailsFocus.screenshotsZone, index: context.state.index, in: currentModel.bands)
         focus = next
         SoundEffectService.shared.play(.focus)
     }

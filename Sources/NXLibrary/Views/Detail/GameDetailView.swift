@@ -2,6 +2,12 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
+/// The latest render's model. The key monitor and the input handlers run
+/// outside `body`, so they read it from here instead of recomputing it per key.
+final class DetailsModelCache {
+    var model: GameDetailView.Model?
+}
+
 /// The Details page (spec §5.4, Selene GameDetails + DetailsStage). The top
 /// block sits on the stage; Down glides the page up into the bands, which
 /// are Screenshots (720), Build & Sources with Your activity (950) and More
@@ -26,6 +32,7 @@ struct GameDetailView: View {
     @State var expanded = false
     @State var keyMonitor: Any?
     @State var wheel = DetailsWheel()
+    @State var cache = DetailsModelCache()
 
     struct ViewerContext: Equatable {
         var titleID: String
@@ -43,20 +50,36 @@ struct GameDetailView: View {
         let screenshotsKnown: Bool
         let more: [PortedGame]
         let bands: DetailsFocus.Bands
+        /// The Metal gate refuses new builds (a known report that does not pass, without the override).
+        let buildBlocked: Bool
+        /// Play, or Build when it can run; otherwise the pill looks dim.
+        let primaryEnabled: Bool
     }
+
+    /// The last render's model (falls back to a fresh one before the first render).
+    var currentModel: Model { cache.model ?? model }
 
     var model: Model {
         let p = presentation
         let urls = Array((metadata?.screenshotURLs ?? []).prefix(SpotlightScreenshotStrip.maxCount))
         let more = moreGames
-        let rows = actionRows(p)
+        let blocked = toolchainBlocked
+        let rows = actionRows(p, buildBlocked: blocked)
         return Model(presentation: p, rows: rows, screenshots: urls,
                      screenshotsKnown: screenshotsKnown,
                      more: more,
-                     bands: DetailsFocus.Bands(screenshots: urls.count, actions: rows.count, more: more.count))
+                     bands: DetailsFocus.Bands(screenshots: urls.count, actions: rows.count, more: more.count),
+                     buildBlocked: blocked,
+                     primaryEnabled: p.canPlay || (p.canRebuild && !blocked))
     }
 
     var metadata: NintendoStoreMetadata? { viewModel.storeMetadata[game.id] }
+
+    /// Blocked only once the compatibility report is known and does not pass;
+    /// before it loads the build is not dimmed (the build path still explains a refusal).
+    var toolchainBlocked: Bool {
+        viewModel.compatibilityReport != nil && !viewModel.canPassToolchainGate
+    }
 
     var presentation: GameDetailPresentation {
         let library = viewModel.libraryGames
@@ -90,12 +113,12 @@ struct GameDetailView: View {
     }
 
     /// Build & Sources' actions, in grid order. Store links and the Nintendo search appear only when they have a target.
-    func actionRows(_ p: GameDetailPresentation) -> [BuildSourcesRow] {
+    func actionRows(_ p: GameDetailPresentation, buildBlocked: Bool) -> [BuildSourcesRow] {
         var rows: [BuildSourcesRow] = [
             BuildSourcesRow(id: "attach", title: "Attach sources…") {
                 viewModel.locateSources(for: game)
             },
-            BuildSourcesRow(id: "rebuild", title: "Rebuild", enabled: p.canRebuild) {
+            BuildSourcesRow(id: "rebuild", title: "Rebuild", enabled: p.canRebuild && !buildBlocked) {
                 rebuild()
             },
             BuildSourcesRow(id: "log", title: "Open log") {
@@ -126,7 +149,8 @@ struct GameDetailView: View {
 
     var body: some View {
         let model = self.model
-        ZStack(alignment: .topLeading) {
+        cache.model = model
+        return ZStack(alignment: .topLeading) {
             DetailsBackground(image: art.image, imageKey: art.key,
                               fallback: GameIconProvider.icon(for: game),
                               shade: settings.settings.backgroundShade)
@@ -146,6 +170,11 @@ struct GameDetailView: View {
         }
         .onChange(of: viewer != nil) { router.isScreenshotViewerOpen = $0 }
         .onChange(of: model.bands) { _ in settleFocus(model.bands) }
+        // The key monitor captures this view's value: reinstall it when the game changes.
+        .onChange(of: game) { _ in
+            removeKeyMonitor()
+            installKeyMonitor()
+        }
         .onReceive(NotificationCenter.default.publisher(for: .nxDetailGamepadAction)) { note in
             guard viewModel.alertMessage == nil else { return }
             if let action = note.object as? GamepadAction { handle(action) }
@@ -194,11 +223,11 @@ struct GameDetailView: View {
             DetailsTopBlock(game: game, logo: art.logo(for: game),
                             presentation: model.presentation,
                             focusedPill: focus.zone == DetailsFocus.topZone ? focus.pill : nil,
-                            primaryEnabled: model.presentation.canPlay || model.presentation.canRebuild,
+                            primaryEnabled: model.primaryEnabled,
                             expanded: $expanded,
-                            onPrimary: primaryAction,
-                            onOptions: openOptions,
-                            onHoverPill: { hoverTop($0) })
+                            onPrimary: { pressPill(0) },
+                            onOptions: { pressPill(1) },
+                            onHoverPill: { hoverPill($0) })
                 .offset(x: canvas.u(110), y: canvas.u(96))
 
             band(zone: DetailsFocus.screenshotsZone) {
@@ -209,7 +238,10 @@ struct GameDetailView: View {
                     focusedIndex: focus.zone == DetailsFocus.screenshotsZone ? focus.shot : nil,
                     artwork: artwork,
                     onFocus: { focusPointer(zone: DetailsFocus.screenshotsZone, index: $0, bands: model.bands) },
-                    onOpen: { openViewer(at: $0) })
+                    onOpen: { index in
+                        focusPointer(zone: DetailsFocus.screenshotsZone, index: index, bands: model.bands)
+                        openViewer(at: index)
+                    })
             }
             .offset(x: canvas.u(110), y: canvas.u(720))
 
@@ -217,9 +249,12 @@ struct GameDetailView: View {
                 HStack(alignment: .top, spacing: 0) {
                     BuildSourcesPanel(
                         presentation: model.presentation,
+                        appFileName: game.url.lastPathComponent,
+                        buildBlocked: model.buildBlocked,
                         rows: model.rows,
                         focusedRow: focus.zone == DetailsFocus.actionsZone ? focus.action : nil,
-                        onHoverRow: { focusPointer(zone: DetailsFocus.actionsZone, index: $0, bands: model.bands) })
+                        onHoverRow: { hoverRow($0) },
+                        onPressRow: { pressRow($0) })
                     Spacer(minLength: 0)
                     DetailsActivityColumn(presentation: model.presentation)
                 }
@@ -247,15 +282,16 @@ struct GameDetailView: View {
         }
     }
 
-    /// A band's styling by its place relative to the focus: the band in focus is
-    /// sharp; the next band below peeks, blurred and faded; bands above it have
-    /// scrolled under the top block and are hidden.
+    /// A band's look (Selene's DetailsStage.Blur): the band in focus, and the
+    /// first band while the top block has focus, are sharp; every band below
+    /// that one peeks, blurred and faded. Bands above keep full opacity.
     private func band<Content: View>(zone: Int, @ViewBuilder _ content: () -> Content) -> some View {
-        let current = focus.zone
+        let shown = max(focus.zone, DetailsFocus.screenshotsZone)
+        let below = zone > shown
         return content()
-            .blur(radius: zone > current ? canvas.u(12) : 0)
-            .opacity(zone < current ? 0 : (zone > current ? 0.55 : 1))
-            .animation(SeleneTheme.cubicOut(0.32), value: current)
+            .blur(radius: below ? canvas.u(12) : 0)
+            .opacity(below ? 0.55 : 1)
+            .animation(SeleneTheme.cubicOut(0.32), value: shown)
     }
 
     // MARK: - Viewer

@@ -1,8 +1,8 @@
 import SwiftUI
 import NXLibraryCore
 
-/// One action in Build & Sources: a Selene row. `enabled` dims the title and
-/// the row still takes focus and a click (the action decides what that does).
+/// One action in Build & Sources: a Selene row. `enabled` dims the title; the
+/// row still takes focus and a click (the page decides what a press does).
 struct BuildSourcesRow: Identifiable {
     let id: String
     let title: String
@@ -11,17 +11,22 @@ struct BuildSourcesRow: Identifiable {
 }
 
 /// Band 2's left column (Selene's "Your captures" slot, spec §5.4): the sources
-/// status with the engine and toolchain, the app's version and size, and the
-/// page's actions as a two-column grid of rows. Rows are laid out in pairs, so
-/// Left and Right move within a row and Up and Down between rows (see `DetailsFocus`).
+/// status with the engine and toolchain, the app's version, size and file, and
+/// the page's actions as a two-column grid of rows. Rows are laid out in pairs,
+/// so Left and Right move within a row and Up and Down between rows (see `DetailsFocus`).
 struct BuildSourcesPanel: View {
     @Environment(\.seleneCanvas) private var canvas
 
     let presentation: GameDetailPresentation
+    /// The app's file name, shown with the version and size.
+    let appFileName: String
+    /// The Metal gate refuses new builds: the status line says where to fix it.
+    let buildBlocked: Bool
     let rows: [BuildSourcesRow]
     /// The focused row, nil when the band has no focus.
     let focusedRow: Int?
     let onHoverRow: (Int) -> Void
+    let onPressRow: (Int) -> Void
 
     static let width: CGFloat = 1100
     static let columns = 2
@@ -30,16 +35,19 @@ struct BuildSourcesPanel: View {
         VStack(alignment: .leading, spacing: 0) {
             header
             status
-                .padding(.top, canvas.u(8))
-            Text("Version \(presentation.version)  ·  \(presentation.size)")
+            Text("Version \(presentation.version)  ·  \(presentation.size)  ·  \(appFileName)")
                 .seleneFont(15)
                 .foregroundColor(SeleneTheme.ink60)
+                .lineLimit(1)
+                .truncationMode(.middle)
                 .padding(.top, canvas.u(4))
+                .padding(.leading, canvas.u(2))
             if presentation.sourcesDetached {
                 Text("The installed app is playable. A rebuild needs the original XCI/NSP files; attach them again without touching saves.")
                     .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink60)
                     .padding(.top, canvas.u(4))
+                    .padding(.leading, canvas.u(2))
             }
             grid
                 .padding(.top, canvas.u(14))
@@ -50,13 +58,15 @@ struct BuildSourcesPanel: View {
     private var header: some View {
         HStack(spacing: canvas.u(8)) {
             Text("Build & Sources")
-                .seleneFont(22, .semibold)
+                .seleneFont(21, .semibold)
                 .foregroundColor(SeleneTheme.ink)
             SeleneInfoTip("NX Library uses symlinks to your game ROM files to build the macOS native binary. Rebuilding uses your current engine pin and settings, and preserves your game saves. "
                           + (presentation.sourcesDetached
                              ? "The sources are detached: attach them again to rebuild."
                              : "The original sources are attached. Rebuild writes a new app and keeps the previous one if it fails."))
         }
+        .padding(.top, canvas.u(2))
+        .padding(.bottom, canvas.u(14))
         .padding(.leading, canvas.u(2))
     }
 
@@ -81,6 +91,11 @@ struct BuildSourcesPanel: View {
                 .foregroundColor(presentation.toolchainVerified
                                  ? SeleneTheme.success.opacity(0.85)
                                  : SeleneTheme.untested.opacity(0.9))
+            if buildBlocked {
+                Text("Build blocked — Settings → Engine")
+                    .seleneFont(15, .semibold)
+                    .foregroundColor(SeleneTheme.untested)
+            }
         }
         .padding(.leading, canvas.u(2))
     }
@@ -102,7 +117,7 @@ struct BuildSourcesPanel: View {
 
     private func cell(_ row: BuildSourcesRow, index: Int) -> some View {
         let shape = RoundedRectangle(cornerRadius: canvas.u(12), style: .continuous)
-        return Button(action: row.action) {
+        return Button { onPressRow(index) } label: {
             Text(row.title)
                 .seleneFont(19)
                 .foregroundColor(row.enabled ? SeleneTheme.ink90 : SeleneTheme.ink60)

@@ -2,21 +2,21 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
-/// The Details page backdrop (Selene GameDetails: the hero art, the words'
-/// side dark, a soft fade at the bottom). The hero sits on the right, faded
-/// into the scrim on its left; the bottom gradient runs from clear at the top
-/// to 0.93 of the scrim colour at 80 % of the height. Light palettes use the
-/// palette's scrim; dark ones the Details navy (#0B1027). The Background
-/// shade multiplies the gradient like Spotlight's shades.
+/// The Details page backdrop (Selene GameDetails.xaml): the hero art on the
+/// right, then three scrims in the palette's scrim colour, each an opacity
+/// mask: the words' side (0.95 at the left edge, 0.70 at the middle, 0.15 at
+/// the right), the bottom (clear to 40 % of the height, 0.90 at the foot) and
+/// a radial vignette (clear to 60 % of the radius, 0.55 at the edge). The
+/// Background shade multiplies each mask like Spotlight's shades.
 struct DetailsBackground: View {
-    @Environment(\.seleneCanvas) private var canvas
-
     let image: NSImage?
     /// Changes whenever `image` does; drives the crossfade.
     let imageKey: String
     /// Shown, blurred, while no hero is loaded (the app icon, as before).
     let fallback: NSImage
     var shade: BackgroundShade = .balanced
+
+    @Environment(\.seleneCanvas) private var canvas
 
     /// The hero's share of the window width, on the right.
     private static let artWidth: CGFloat = 0.72
@@ -27,18 +27,16 @@ struct DetailsBackground: View {
                 SeleneTheme.scrim
                 Rectangle().fill(SeleneTheme.baseGradient).opacity(0.6)
                 art(size: geo.size)
-                leftFade
-                bottomGradient
+                // GameDetails.xaml's three Borders, in order.
+                Rectangle().fill(SeleneTheme.scrim).mask(sideMask)
+                Rectangle().fill(SeleneTheme.scrim).mask(bottomMask)
+                Rectangle().fill(SeleneTheme.scrim).mask(vignetteMask(size: geo.size))
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .clipped()
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
-    }
-
-    private var gradientColor: Color {
-        ThemeStore.shared.palette.mode == .light ? SeleneTheme.scrim : Color(hex: 0x0B1027)
     }
 
     private func art(size: CGSize) -> some View {
@@ -67,22 +65,37 @@ struct DetailsBackground: View {
         }
     }
 
-    /// The words' side: dark behind the left column, clear by the middle.
-    private var leftFade: some View {
+    /// The Background shade's multiplier on an alpha, capped at 1.
+    private func alpha(_ value: Double) -> Double {
+        min(1, value * shade.scrimMultiplier)
+    }
+
+    private var sideMask: LinearGradient {
         LinearGradient(stops: [
-            .init(color: gradientColor.opacity(0.9), location: 0),
-            .init(color: gradientColor.opacity(0.75), location: 0.3),
-            .init(color: gradientColor.opacity(0), location: 0.6)
+            .init(color: .black.opacity(alpha(0.95)), location: 0),
+            .init(color: .black.opacity(alpha(0.70)), location: 0.5),
+            .init(color: .black.opacity(alpha(0.15)), location: 1)
         ], startPoint: .leading, endPoint: .trailing)
     }
 
-    /// Clear at the top, 0.93 of the colour at 80 % of the height and below (Selene's GameDetailsBackgroundBrush).
-    private var bottomGradient: some View {
-        let peak = min(1, 0.93 * shade.scrimMultiplier)
-        return LinearGradient(stops: [
-            .init(color: gradientColor.opacity(0), location: 0),
-            .init(color: gradientColor.opacity(peak), location: 0.8),
-            .init(color: gradientColor.opacity(peak), location: 1)
+    private var bottomMask: LinearGradient {
+        LinearGradient(stops: [
+            .init(color: .black.opacity(0), location: 0.4),
+            .init(color: .black.opacity(alpha(0.90)), location: 1)
         ], startPoint: .top, endPoint: .bottom)
+    }
+
+    /// An ellipse with radii 0.8 × width and 0.9 × height (Selene's RadiusX / RadiusY),
+    /// built as a circle scaled vertically so the stops land on the ellipse.
+    private func vignetteMask(size: CGSize) -> some View {
+        let rx = size.width * 0.8
+        let ry = size.height * 0.9
+        return RadialGradient(stops: [
+            .init(color: .black.opacity(0), location: 0.6),
+            .init(color: .black.opacity(alpha(0.55)), location: 1)
+        ], center: .center, startRadius: 0, endRadius: max(rx, 1))
+            .frame(width: rx * 2, height: rx * 2)
+            .scaleEffect(x: 1, y: rx > 0 ? ry / rx : 1, anchor: .center)
+            .frame(width: size.width, height: size.height)
     }
 }
