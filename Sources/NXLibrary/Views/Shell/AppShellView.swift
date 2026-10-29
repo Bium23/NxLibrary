@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import Combine
 import NXLibraryCore
 
 public struct AppShellView: View {
@@ -10,6 +11,8 @@ public struct AppShellView: View {
     @StateObject private var artwork = ArtworkStore()
     @StateObject private var runningGames = RunningGameMonitor()
     @State private var gestureKeyMonitor: Any?
+    /// Dismisses the Close Game confirmation when its game quits by itself.
+    @State private var closeGameWatch: AnyCancellable?
 
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
 
@@ -27,6 +30,9 @@ public struct AppShellView: View {
     private var isHomeRoute: Bool {
         router.route == .library || router.route == .collection
     }
+
+    /// The Close Game confirmation is open; menu commands and the dialog's input wait for it.
+    private var isCloseGameOpen: Bool { viewModel.gameToClose != nil }
 
     private var reduceMotion: Bool {
         settings.settings.reduceMotion || accessibilityReduceMotion
@@ -112,12 +118,14 @@ public struct AppShellView: View {
             guard !router.isMenuPresented,
                   isHomeRoute,
                   viewModel.gameForSettingsSheet == nil,
+                  !isCloseGameOpen,
                   let game = viewModel.currentFocusedGame else { return }
             viewModel.launchGame(game)
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenDetails)) { _ in
             guard !router.isMenuPresented,
                   viewModel.gameForSettingsSheet == nil,
+                  !isCloseGameOpen,
                   isHomeRoute,
                   let game = viewModel.currentFocusedGame else { return }
             router.showDetail(game.id)
@@ -258,6 +266,11 @@ public struct AppShellView: View {
         artwork.trimCache()
         runningGames.start(sessions: playSessions)
         runningGames.setGames(viewModel.libraryGames)
+        closeGameWatch = runningGames.$runningGameIDs.sink { [weak viewModel] ids in
+            // The game under Close Game quit by itself: its confirmation has nothing left to close.
+            guard let viewModel, let game = viewModel.gameToClose, !ids.contains(game.id) else { return }
+            viewModel.dismissCloseGame()
+        }
         viewModel.router = router
         installGestureKeyMonitor()
         GameControllerService.shared.onAction = { [weak viewModel, weak router] action in

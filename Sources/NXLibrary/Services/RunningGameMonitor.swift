@@ -7,7 +7,7 @@ import NXLibraryCore
 /// game also ends its play session.
 @MainActor
 final class RunningGameMonitor: ObservableObject {
-    /// Seconds a game gets to quit after Close Game before it is force-quit.
+    /// Time a game gets to quit after Close Game, in nanoseconds (5 s) before it is force-quit.
     static let forceQuitDelay: UInt64 = 5_000_000_000
 
     @Published private(set) var runningGameIDs: Set<UUID> = []
@@ -74,12 +74,11 @@ final class RunningGameMonitor: ObservableObject {
               let app = Self.runningApplication(for: game) else { return }
         app.terminate()
         closeTasks[bundleID]?.cancel()
+        // The instance we asked to quit, not a fresh lookup: a relaunch within the delay must not be force-quit.
         closeTasks[bundleID] = Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: Self.forceQuitDelay)
             guard !Task.isCancelled else { return }
-            if let stuck = Self.runningApplication(bundleID: bundleID) {
-                stuck.forceTerminate()
-            }
+            if !app.isTerminated { app.forceTerminate() }
             self?.closeTasks[bundleID] = nil
         }
     }
