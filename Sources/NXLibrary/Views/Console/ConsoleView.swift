@@ -36,7 +36,7 @@ public struct ConsoleView: View {
         switch focus.index {
         case 1: label = "Reveal Log"
         case 2: label = "Clear View"
-        default: label = "Copy"
+        default: label = "Copy log"
         }
         return [HintItem(.b, "Back"), HintItem(.a, label)]
     }
@@ -136,8 +136,8 @@ public struct ConsoleView: View {
                 .font(.system(size: 10.5))
                 .foregroundColor(SeleneTheme.ink60)
 
-            actionButton("Copy", systemImage: didCopy ? "checkmark" : "doc.on.doc",
-                         isFocused: focus.index == 0, action: copyVisibleLogs)
+            actionButton(didCopy ? "Copied" : "Copy log", systemImage: didCopy ? "checkmark" : "doc.on.doc",
+                         isFocused: focus.index == 0, action: copyLog)
             actionButton("Reveal Log", systemImage: "doc.text.magnifyingglass",
                          isFocused: focus.index == 1, action: viewModel.openBuildLog)
             actionButton("Clear View", systemImage: "trash",
@@ -308,12 +308,21 @@ public struct ConsoleView: View {
         }
     }
 
-    private func copyVisibleLogs() {
-        let lines = filteredLogs.map { "[\($0.formattedTimestamp)] \($0.message)" }
-        guard !lines.isEmpty else { return }
+    /// The last 200 app log lines plus the tail of the latest build log, for a bug report.
+    private func copyLog() {
+        var text = viewModel.logs.suffix(200)
+            .map { "[\($0.formattedTimestamp)] \($0.message)" }
+            .joined(separator: "\n")
+        if let url = viewModel.buildLogURL,
+           let build = try? String(contentsOf: url, encoding: .utf8) {
+            let tail = build.split(separator: "\n", omittingEmptySubsequences: false).suffix(400)
+            text += "\n\n--- Build log: \(url.lastPathComponent) ---\n" + tail.joined(separator: "\n")
+        }
+        guard !text.isEmpty else { return }
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        pasteboard.setString(lines.joined(separator: "\n"), forType: .string)
+        pasteboard.setString(text, forType: .string)
+        SoundEffectService.shared.play(.success)
         didCopy = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
             didCopy = false
@@ -356,7 +365,7 @@ public struct ConsoleView: View {
 
     private func activateFocused() {
         switch focus.index {
-        case 0: copyVisibleLogs()
+        case 0: copyLog()
         case 1: viewModel.openBuildLog()
         case 2: confirmClear = true
         default: break

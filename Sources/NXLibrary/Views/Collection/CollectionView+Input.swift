@@ -69,6 +69,7 @@ extension CollectionView {
             // replay the action that raised the alert.
             guard !router.isMenuPresented,
                   !router.isSearchPresented,
+                  !router.isIntroShowing,
                   router.route == .collection,
                   viewModel.alertMessage == nil,
                   viewModel.gameForSettingsSheet == nil,

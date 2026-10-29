@@ -26,6 +26,7 @@ public struct AppShellView: View {
         ThemeStore.shared.apply(id: saved.colorThemeID)
         let router = AppRouter()
         router.setInitialRoute(AppRouter.initialRoute(for: saved.startOn, last: saved.lastHome))
+        router.isIntroShowing = saved.introAnimation
         return router
     }
 
@@ -49,7 +50,9 @@ public struct AppShellView: View {
 
     /// The launch screen sits over everything, menu included, until the game's window shows.
     @ViewBuilder private var launchLayer: some View {
-        if let state = viewModel.launchOverlay {
+        if router.isIntroShowing {
+            IntroView(reduceMotion: reduceMotion) { router.isIntroShowing = false }
+        } else if let state = viewModel.launchOverlay {
             LaunchScreenView(state: state, viewModel: viewModel, artwork: artwork,
                              settings: settings.settings, reduceMotion: reduceMotion)
                 .id(state.game.id)
@@ -316,6 +319,11 @@ public struct AppShellView: View {
         installGestureKeyMonitor()
         GameControllerService.shared.onAction = { [weak viewModel, weak router] action in
             guard let viewModel, let router else { return }
+            if router.isIntroShowing {
+                // Any controller input skips the intro.
+                withAnimation(.easeIn(duration: 0.3)) { router.isIntroShowing = false }
+                return
+            }
             if viewModel.gameToClose != nil {
                 closeGameInput(action)
                 return
@@ -426,6 +434,8 @@ public struct AppShellView: View {
         gestureKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [router, viewModel] event in
             // The screenshot viewer owns the keyboard (its own monitor handles it); no navigating underneath.
             if router.isScreenshotViewerOpen { return event }
+            // The intro's own monitor takes any key as "skip".
+            if router.isIntroShowing { return event }
             let mods = event.modifierFlags.intersection([.command, .control, .option, .shift])
             // The Close Game confirmation takes the keyboard: arrows, Return, Space and Esc go to it.
             if viewModel.gameToClose != nil, mods.isEmpty {

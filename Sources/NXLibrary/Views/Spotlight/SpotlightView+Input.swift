@@ -274,6 +274,7 @@ extension SpotlightView {
             // replay the action that raised the alert.
             guard !router.isMenuPresented,
                   !router.isSearchPresented,
+                  !router.isIntroShowing,
                   router.route == .library,
                   viewModel.alertMessage == nil,
                   viewModel.gameForSettingsSheet == nil,
