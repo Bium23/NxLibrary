@@ -14,11 +14,12 @@ public struct NintendoStoreMetadata: Codable, Equatable {
     public var logoURL: URL?
     public var nsuid: String?
     public var fetchedAt: Date
+    public var screenshotURLs: [URL] = []
 
     public init(titleId: String, name: String, description: String, developers: [String],
                 publishers: [String], genres: [String], releaseDate: String?, storeURL: URL,
                 imageURL: URL?, headerImageURL: URL?, logoURL: URL? = nil,
-                nsuid: String?, fetchedAt: Date) {
+                nsuid: String?, fetchedAt: Date, screenshotURLs: [URL] = []) {
         self.titleId = titleId
         self.name = name
         self.description = description
@@ -32,6 +33,30 @@ public struct NintendoStoreMetadata: Codable, Equatable {
         self.logoURL = logoURL
         self.nsuid = nsuid
         self.fetchedAt = fetchedAt
+        self.screenshotURLs = screenshotURLs
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case titleId, name, description, developers, publishers, genres, releaseDate
+        case storeURL, imageURL, headerImageURL, logoURL, nsuid, fetchedAt, screenshotURLs
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        titleId = try c.decode(String.self, forKey: .titleId)
+        name = try c.decode(String.self, forKey: .name)
+        description = try c.decode(String.self, forKey: .description)
+        developers = try c.decode([String].self, forKey: .developers)
+        publishers = try c.decode([String].self, forKey: .publishers)
+        genres = try c.decode([String].self, forKey: .genres)
+        releaseDate = try c.decodeIfPresent(String.self, forKey: .releaseDate)
+        storeURL = try c.decode(URL.self, forKey: .storeURL)
+        imageURL = try c.decodeIfPresent(URL.self, forKey: .imageURL)
+        headerImageURL = try c.decodeIfPresent(URL.self, forKey: .headerImageURL)
+        logoURL = try c.decodeIfPresent(URL.self, forKey: .logoURL)
+        nsuid = try c.decodeIfPresent(String.self, forKey: .nsuid)
+        fetchedAt = try c.decode(Date.self, forKey: .fetchedAt)
+        screenshotURLs = try c.decodeIfPresent([URL].self, forKey: .screenshotURLs) ?? []
     }
 
     public var releaseYear: String? {
@@ -128,6 +153,26 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
     }
 
     private func fetch(game: PortedGame, cacheKey: String) async throws -> NintendoStoreMetadata {
+        var titleDBUsed = false
+        var meta = try await fetchStore(game: game, cacheKey: cacheKey, titleDBUsed: &titleDBUsed)
+        if !titleDBUsed, let item = await fetchTitleDBItem(titleId: cacheKey) {
+            Self.fill(&meta, from: item)
+        }
+        return meta
+    }
+
+    /// Fills only what the store path left empty; never overwrites store data.
+    private static func fill(_ meta: inout NintendoStoreMetadata, from item: TitleDBItem) {
+        if meta.screenshotURLs.isEmpty { meta.screenshotURLs = item.screenshotURLs }
+        if meta.genres.isEmpty { meta.genres = item.genres }
+        if meta.developers.isEmpty, let dev = item.developer, !dev.isEmpty {
+            meta.developers = [dev]
+        }
+        if meta.releaseDate == nil { meta.releaseDate = item.releaseDateString }
+    }
+
+    private func fetchStore(game: PortedGame, cacheKey: String,
+                            titleDBUsed: inout Bool) async throws -> NintendoStoreMetadata {
         // Older games are fully described in the legacy catalog. Try it first:
         // one request and no product-page download.
         if let old = try? await searchOld(name: game.name),
@@ -144,6 +189,7 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
               let urlPath = hit.url,
               let storeURL = URL(string: urlPath.hasPrefix("http") ? urlPath
                                  : "https://www.nintendo.com\(urlPath)") else {
+            titleDBUsed = true
             if let fromTitleDB = await fetchTitleDB(titleId: cacheKey) {
                 return fromTitleDB
             }
@@ -169,17 +215,78 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
     }
 
     private struct TitleDBItem: Decodable {
+        struct Screens: Decodable {
+            let count: Int?
+            let screenshots: [String]?
+        }
         let id: String?
         let name: String?
         let publisher: String?
         let description: String?
         let banner: String?
         let icon: String?
+        let screens: Screens?
+        let releaseDate: String?
+        let developer: String?
+        let category: [String]?
+
+        private enum CodingKeys: String, CodingKey {
+            case id, name, publisher, description, banner, icon, screens, releaseDate, developer, category
+        }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try? c.decodeIfPresent(String.self, forKey: .id)
+            name = try? c.decodeIfPresent(String.self, forKey: .name)
+            publisher = try? c.decodeIfPresent(String.self, forKey: .publisher)
+            description = try? c.decodeIfPresent(String.self, forKey: .description)
+            banner = try? c.decodeIfPresent(String.self, forKey: .banner)
+            icon = try? c.decodeIfPresent(String.self, forKey: .icon)
+            screens = try? c.decodeIfPresent(Screens.self, forKey: .screens)
+            developer = try? c.decodeIfPresent(String.self, forKey: .developer)
+            category = try? c.decodeIfPresent([String].self, forKey: .category)
+            // titledb sends either "2017-03-03" or an integer like 20170303.
+            if let text = try? c.decodeIfPresent(String.self, forKey: .releaseDate) {
+                releaseDate = text
+            } else if let number = try? c.decodeIfPresent(Int.self, forKey: .releaseDate) {
+                releaseDate = String(number)
+            } else {
+                releaseDate = nil
+            }
+        }
+
+        var screenshotURLs: [URL] {
+            (screens?.screenshots ?? []).compactMap { raw in
+                var text = raw
+                if text.hasPrefix("http://api.nlib.cc") {
+                    text = "https://" + text.dropFirst("http://".count)
+                }
+                return URL(string: text)
+            }
+        }
+
+        var genres: [String] { (category ?? []).filter { $0 != "Other" } }
+
+        /// "yyyy-MM-dd" as stored; compact 8-digit integers are reformatted.
+        var releaseDateString: String? {
+            guard let raw = releaseDate?.trimmingCharacters(in: .whitespaces), !raw.isEmpty else {
+                return nil
+            }
+            let parse = DateFormatter()
+            parse.locale = Locale(identifier: "en_US_POSIX")
+            parse.timeZone = TimeZone(identifier: "UTC")
+            parse.dateFormat = raw.count == 8 && Int(raw) != nil ? "yyyyMMdd" : "yyyy-MM-dd"
+            guard let date = parse.date(from: String(raw.prefix(raw.count == 8 ? 8 : 10))) else {
+                return nil
+            }
+            parse.dateFormat = "yyyy-MM-dd"
+            return parse.string(from: date)
+        }
     }
 
-    private func fetchTitleDB(titleId: String) async -> NintendoStoreMetadata? {
+    private func fetchTitleDBItem(titleId: String) async -> TitleDBItem? {
         guard titleId.count == 16, titleId.hasPrefix("0100"),
-              let url = URL(string: "https://api.nlib.cc/nx/\(titleId)?fields=name,publisher,description,banner,icon") else {
+              let url = URL(string: "https://api.nlib.cc/nx/\(titleId)?fields=name,publisher,description,banner,icon,screens,releaseDate,developer,category") else {
             return nil
         }
         var request = URLRequest(url: url)
@@ -187,26 +294,31 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         do {
             let (data, response) = try await client.data(for: request)
             guard (200..<300).contains(response.statusCode) else { return nil }
-            let item = try JSONDecoder().decode(TitleDBItem.self, from: data)
-            guard let name = item.name, !name.isEmpty else { return nil }
-            return NintendoStoreMetadata(
-                titleId: titleId,
-                name: name,
-                description: item.description ?? "",
-                developers: [],
-                publishers: item.publisher.map { [$0] } ?? [],
-                genres: [],
-                releaseDate: nil,
-                storeURL: URL(string: "https://www.nintendo.com")!,
-                imageURL: item.icon.flatMap(URL.init(string:)),
-                headerImageURL: item.banner.flatMap(URL.init(string:)) ?? URL(string: "https://api.nlib.cc/nx/\(titleId)/banner"),
-                logoURL: nil,
-                nsuid: nil,
-                fetchedAt: Date()
-            )
+            return try JSONDecoder().decode(TitleDBItem.self, from: data)
         } catch {
             return nil
         }
+    }
+
+    private func fetchTitleDB(titleId: String) async -> NintendoStoreMetadata? {
+        guard let item = await fetchTitleDBItem(titleId: titleId),
+              let name = item.name, !name.isEmpty else { return nil }
+        return NintendoStoreMetadata(
+            titleId: titleId,
+            name: name,
+            description: item.description ?? "",
+            developers: item.developer.flatMap { $0.isEmpty ? nil : [$0] } ?? [],
+            publishers: item.publisher.map { [$0] } ?? [],
+            genres: item.genres,
+            releaseDate: item.releaseDateString,
+            storeURL: URL(string: "https://www.nintendo.com")!,
+            imageURL: item.icon.flatMap(URL.init(string:)),
+            headerImageURL: item.banner.flatMap(URL.init(string:)) ?? URL(string: "https://api.nlib.cc/nx/\(titleId)/banner"),
+            logoURL: nil,
+            nsuid: nil,
+            fetchedAt: Date(),
+            screenshotURLs: item.screenshotURLs
+        )
     }
 
     // MARK: - Nintendo Store searches

@@ -141,4 +141,92 @@ final class NintendoStoreMetadataTests: XCTestCase {
             XCTAssertEqual(error, .notFound)
         }
     }
+
+    // MARK: - titledb details
+
+    private let tid = "01007EF00011E000"
+
+    private var titleDBJSON: Data {
+        let shots = (1...6).map { "\"http://api.nlib.cc/nx/01007EF00011E000/screen/\($0)\"" }.joined(separator: ",")
+        return Data("""
+        {"id":"01007EF00011E000","name":"Zelda","screens":{"count":6,"screenshots":[\(shots)]},"releaseDate":"2017-03-03","developer":null,"category":["Adventure","Action","RPG","Other"]}
+        """.utf8)
+    }
+
+    private func titleDBOnlyClient(_ json: Data) -> FakeClient {
+        let client = FakeClient()
+        client.responses["ncom_game_en_us/query"] = Data(#"{"hits":[]}"#.utf8)
+        client.responses["store_all_products_en_us/query"] = Data(#"{"hits":[]}"#.utf8)
+        client.responses["api.nlib.cc/nx/\(tid)"] = json
+        return client
+    }
+
+    func testParsesSixScreenshotsAsHTTPS() async throws {
+        let service = NintendoStoreMetadataService(client: titleDBOnlyClient(titleDBJSON), cacheDirectory: cacheDirectory())
+        let meta = try await service.metadata(for: game(name: "Zelda", titleId: tid))
+        XCTAssertEqual(meta.screenshotURLs.count, 6)
+        XCTAssertTrue(meta.screenshotURLs.allSatisfy { $0.scheme == "https" && $0.host == "api.nlib.cc" })
+        XCTAssertEqual(meta.releaseDate, "2017-03-03")
+    }
+
+    func testCategoryBecomesGenresWithoutOther() async throws {
+        let service = NintendoStoreMetadataService(client: titleDBOnlyClient(titleDBJSON), cacheDirectory: cacheDirectory())
+        let meta = try await service.metadata(for: game(name: "Zelda", titleId: tid))
+        XCTAssertEqual(meta.genres, ["Adventure", "Action", "RPG"])
+        XCTAssertEqual(meta.developers, [])
+    }
+
+    func testStorePathWinsAndTitleDBOnlyFillsScreenshots() async throws {
+        let client = FakeClient()
+        client.responses["ncom_game_en_us/query"] = Data("""
+        {"hits":[{"title":"Zelda","description":"A long enough description.","developers":["Nintendo"],
+          "genres":["Adventure"],"releaseDateDisplay":"2017-03-03T08:00:00.000Z",
+          "url":"/games/detail/z/","platform":"Nintendo Switch"}]}
+        """.utf8)
+        client.responses["api.nlib.cc/nx/\(tid)"] = titleDBJSON
+        let service = NintendoStoreMetadataService(client: client, cacheDirectory: cacheDirectory())
+        let meta = try await service.metadata(for: game(name: "Zelda", titleId: tid))
+        XCTAssertEqual(meta.genres, ["Adventure"])
+        XCTAssertEqual(meta.developers, ["Nintendo"])
+        XCTAssertEqual(meta.screenshotURLs.count, 6)
+        XCTAssertEqual(client.requested.filter { $0.contains("api.nlib.cc") }.count, 1)
+    }
+
+    func testMissingScreensGivesEmptyArray() async throws {
+        let json = Data(#"{"id":"01007EF00011E000","name":"Zelda","releaseDate":20170303}"#.utf8)
+        let service = NintendoStoreMetadataService(client: titleDBOnlyClient(json), cacheDirectory: cacheDirectory())
+        let meta = try await service.metadata(for: game(name: "Zelda", titleId: tid))
+        XCTAssertEqual(meta.screenshotURLs, [])
+        XCTAssertEqual(meta.releaseDate, "2017-03-03")
+    }
+
+    func testOldCacheWithoutScreenshotsDecodes() throws {
+        let json = Data("""
+        {"titleId":"A","name":"N","description":"D","developers":[],"publishers":[],"genres":[],
+         "storeURL":"https://www.nintendo.com","fetchedAt":0}
+        """.utf8)
+        let meta = try JSONDecoder().decode(NintendoStoreMetadata.self, from: json)
+        XCTAssertEqual(meta.screenshotURLs, [])
+    }
+
+    func testOfflineWithoutCacheThrowsAndNoTitleIdSkipsTitledb() async throws {
+        let client = FakeClient() // every request throws
+        let service = NintendoStoreMetadataService(client: client, cacheDirectory: cacheDirectory())
+        do {
+            _ = try await service.metadata(for: game(name: "Zelda", titleId: tid))
+            XCTFail("expected throw")
+        } catch {}
+
+        let client2 = FakeClient()
+        client2.responses["ncom_game_en_us/query"] = Data(#"{"hits":[]}"#.utf8)
+        client2.responses["store_all_products_en_us/query"] = Data(#"{"hits":[]}"#.utf8)
+        let service2 = NintendoStoreMetadataService(client: client2, cacheDirectory: cacheDirectory())
+        let noID = PortedGame(name: "Zelda", url: URL(fileURLWithPath: "/tmp/z.app"), platform: .macApp,
+                              sizeBytes: 1, modificationDate: Date(), titleId: nil)
+        do {
+            _ = try await service2.metadata(for: noID)
+            XCTFail("expected throw")
+        } catch {}
+        XCTAssertFalse(client2.requested.contains { $0.contains("api.nlib.cc") })
+    }
 }

@@ -182,4 +182,20 @@ final class ArtworkStoreTests: XCTestCase {
         XCTAssertTrue(memo.contains(id, apiKey: "k1"))
         XCTAssertFalse(memo.contains(id, apiKey: "k2"))
     }
+
+    func testScreenshotCachePath() async throws {
+        let client = FakeClient()
+        client.data = imageData(width: 3200, height: 1800)
+        let dir = tempDir()
+        let store = ArtworkStore(cacheDirectory: dir, client: client)
+        let url = URL(string: "https://api.nlib.cc/nx/0100/screen/1")!
+        let first = await store.screenshot(titleID: "0100", index: 1, remoteURL: url)
+        XCTAssertEqual(first?.lastPathComponent, "screen-1.jpg")
+        XCTAssertEqual(first?.deletingLastPathComponent().lastPathComponent, "0100")
+        let image = NSImage(contentsOf: first!)!.representations[0]
+        XCTAssertEqual(max(image.pixelsWide, image.pixelsHigh), 1600)
+        let second = await store.screenshot(titleID: "0100", index: 1, remoteURL: url)
+        XCTAssertEqual(first, second)
+        XCTAssertEqual(client.calls, 1)
+    }
 }

@@ -128,6 +128,33 @@ public final class ArtworkStore: ObservableObject {
         }
     }
 
+    /// Cached title screenshot (`screen-<index>.jpg`, max 1600 px). Cache hit needs no network.
+    public func screenshot(titleID: String, index: Int, remoteURL: URL) async -> URL? {
+        let safe = titleID.map {
+            $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" ? $0 : "_"
+        }.reduce(into: "") { $0.append($1) }
+        let dir = cacheDirectory.appendingPathComponent(safe.isEmpty ? "unknown" : safe)
+        let target = dir.appendingPathComponent("screen-\(index).jpg")
+        if fileManager.fileExists(atPath: target.path) { return target }
+
+        var request = URLRequest(url: remoteURL)
+        request.timeoutInterval = 15
+        request.setValue("NXLibrary/0.1 (macOS; personal app)", forHTTPHeaderField: "User-Agent")
+        do {
+            let (data, http) = try await client.data(for: request)
+            guard (200..<300).contains(http.statusCode), !data.isEmpty else { return nil }
+            let jpeg = await Task.detached(priority: .utility) {
+                Self.downsample(data, maxPixelSize: 1600)
+            }.value
+            guard let jpeg else { return nil }
+            try fileManager.createDirectory(at: dir, withIntermediateDirectories: true)
+            try jpeg.write(to: target, options: .atomic)
+            return target
+        } catch {
+            return nil
+        }
+    }
+
     public func cacheSize() -> Int64 {
         guard let enumerator = fileManager.enumerator(
             at: cacheDirectory,
