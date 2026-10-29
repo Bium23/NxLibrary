@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import NXLibraryCore
 
 enum SettingsFocusArea { case sidebar, rows }
@@ -39,6 +40,7 @@ public struct SettingsView: View {
     @State private var focusArea: SettingsFocusArea = .sidebar
     @State private var rowFocus = FocusIndex()
     @State private var rowActions: [SettingsRowAction] = []
+    @State private var keyMonitor: Any?
     @Environment(\.seleneReduceMotion) private var environmentReduceMotion
     @Environment(\.seleneCanvas) private var canvas
     /// A palette change redraws the whole screen; selection and focus live here and survive it.
@@ -71,9 +73,8 @@ public struct SettingsView: View {
         }
         .id(theme.palette.id)
         .background(SeleneBackdrop())
-        .onMoveCommand(perform: handleMove)
-        .onExitCommand(perform: handleBack)
-        .seleneActivationKeys { handleGamepad(.confirm) }
+        .onAppear(perform: installKeyMonitor)
+        .onDisappear(perform: removeKeyMonitor)
         .onChange(of: section) { _ in
             rowActions = []
             rowFocus = FocusIndex()
@@ -270,14 +271,61 @@ public struct SettingsView: View {
         }
     }
 
-    private func handleMove(_ direction: MoveCommandDirection) {
-        switch direction {
-        case .up: moveFocus(by: -1)
-        case .down: moveFocus(by: 1)
-        case .left: moveSideways(-1)
-        case .right: moveSideways(1)
-        default: break
+    /// Arrows, Return/Space, Esc and X, like the other screens' monitors. Typing in a field keeps its keys.
+    private func installKeyMonitor() {
+        guard keyMonitor == nil else { return }
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            guard case .settings = router.route,
+                  !router.isMenuPresented,
+                  !showingControls,
+                  viewModel.alertMessage == nil,
+                  let window = event.window,
+                  !window.isSheet,
+                  window.attachedSheet == nil,
+                  NSApp.modalWindow == nil else { return event }
+            let modifiers = event.modifierFlags.intersection([.command, .control, .option])
+            guard modifiers.isEmpty else { return event }
+            let typing = window.firstResponder is NSText
+            let action: GamepadAction
+            switch event.keyCode {
+            case 126: action = .navigateUp
+            case 125:
+                if typing {
+                    // Down from the Search field goes to its results.
+                    window.makeFirstResponder(nil)
+                    enterRows()
+                    return nil
+                }
+                action = .navigateDown
+            case 123:
+                if typing { return event }
+                action = .navigateLeft
+            case 124:
+                if typing { return event }
+                action = .navigateRight
+            case 36, 76:
+                if typing { return event }
+                action = .confirm
+            case 49:
+                if typing { return event }
+                action = .confirm
+            case 53:
+                if typing { window.makeFirstResponder(nil) }
+                action = .cancel
+            case 7:                                     // X
+                if typing { return event }
+                action = .secondaryAction
+            default:
+                return event
+            }
+            handleGamepad(action)
+            return nil
         }
+    }
+
+    private func removeKeyMonitor() {
+        if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
+        keyMonitor = nil
     }
 
     private func handleGamepad(_ action: GamepadAction) {
