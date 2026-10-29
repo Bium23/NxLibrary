@@ -45,6 +45,7 @@ struct SettingsStorageSection: View {
                             subtitle: viewModel.isBuilding
                                 ? "Available after the active build finishes or is cancelled."
                                 : "Extracted build caches for every library game. Apps, sources and saves are untouched.",
+                            info: "Intermediate files created during shader translation and staging in the app-owned workspace. Deleting them frees disk space; your built games and saves will not be touched.",
                             buttonTitle: "Delete") {
                 cleanupToConfirm = .caches
             }
@@ -65,6 +66,7 @@ struct SettingsStorageSection: View {
 
             SeleneValueRow("Artwork cache",
                            subtitle: "Hero and cover art downloaded for this library.",
+                           info: "High-resolution game box art and hero wallpapers cached locally from the Nintendo Store catalog.",
                            value: seleneBytes(artworkBytes),
                            actionTitle: "Clear") {
                 artwork.clear()

@@ -110,4 +110,16 @@ final class ArtworkStoreTests: XCTestCase {
         XCTAssertLessThanOrEqual(max(heroImage.size.width, heroImage.size.height), 2560)
         XCTAssertLessThanOrEqual(max(coverImage.size.width, coverImage.size.height), 1000)
     }
+
+    func testLogoPreservesPNG() async {
+        let client = FakeClient()
+        client.data = imageData(width: 800, height: 400)
+        let dir = tempDir()
+        let store = ArtworkStore(cacheDirectory: dir, client: client)
+        let logo = await store.fetch(titleID: "0100",
+                                     remoteURL: URL(string: "https://example.com/logo.png"),
+                                     kind: .logo)!
+        XCTAssertEqual(logo.pathExtension, "png")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: logo.path))
+    }
 }

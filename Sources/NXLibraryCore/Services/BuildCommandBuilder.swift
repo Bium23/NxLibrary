@@ -13,6 +13,8 @@ public enum BuildCommandBuilder {
         language: String? = nil,
         gpu: String? = nil,
         envFile: URL? = nil,
+        motion: Bool? = nil,
+        romfsMode: String? = nil,
         allowUntestedToolchain: Bool = false,
         extraArguments: [String] = []
     ) -> BuildCommand {
@@ -30,6 +32,8 @@ public enum BuildCommandBuilder {
         if let language, !language.isEmpty { args += ["-l", language] }
         if let gpu, !gpu.isEmpty { args += ["--gpu", gpu] }
         if let envFile { args += ["--env-file", envFile.path] }
+        if let motion { args.append(motion ? "--motion" : "--no-motion") }
+        if let romfsMode, !romfsMode.isEmpty { args += ["--romfs", romfsMode] }
         // Since nxnative 4f24ce6 the engine itself refuses a non-certified
         // Metal compiler unless this flag is present. Keep it tied to the
         // app's explicit, persisted override.

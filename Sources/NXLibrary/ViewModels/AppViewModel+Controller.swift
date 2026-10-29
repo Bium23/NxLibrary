@@ -10,6 +10,7 @@ extension AppViewModel {
             switch librarySelection.focusArea {
             case .rail:
                 librarySelection.move(by: -1, in: libraryGames)
+                librarySelection.actionIndex = 0
                 SoundEffectService.shared.play(.focus)
             case .filters:
                 librarySelection.filterIndex = max(0, librarySelection.filterIndex - 1)
@@ -21,26 +22,31 @@ extension AppViewModel {
             switch librarySelection.focusArea {
             case .rail:
                 librarySelection.move(by: 1, in: libraryGames)
+                librarySelection.actionIndex = 0
                 SoundEffectService.shared.play(.focus)
             case .filters:
                 librarySelection.filterIndex = min(LibraryFilter.allCases.count - 1,
                                                    librarySelection.filterIndex + 1)
                 librarySelection.query.filter = LibraryFilter.allCases[librarySelection.filterIndex]
             case .actions:
-                librarySelection.actionIndex = min(1, librarySelection.actionIndex + 1)
+                librarySelection.actionIndex = min(2, librarySelection.actionIndex + 1)
             }
         case .navigateUp:
             switch librarySelection.focusArea {
-            case .rail: librarySelection.focusArea = .actions
-            case .actions: librarySelection.focusArea = .filters
+            case .actions: librarySelection.focusArea = .rail
+            case .rail: librarySelection.focusArea = .filters
             case .filters: break
             }
             SoundEffectService.shared.play(.focus)
         case .navigateDown:
             switch librarySelection.focusArea {
-            case .filters: librarySelection.focusArea = .actions
-            case .actions: librarySelection.focusArea = .rail
-            case .rail: break
+            case .filters:
+                librarySelection.focusArea = .rail
+            case .rail:
+                librarySelection.focusArea = .actions
+                librarySelection.actionIndex = 0
+            case .actions:
+                break
             }
             SoundEffectService.shared.play(.focus)
         case .confirm:
@@ -49,10 +55,10 @@ extension AppViewModel {
             case .rail:
                 launchGame(game)
             case .actions:
-                if librarySelection.actionIndex == 0 {
-                    launchGame(game)
-                } else {
-                    gameForSettingsSheet = game
+                switch librarySelection.actionIndex {
+                case 0: launchGame(game)
+                case 1: router?.showDetail(game.id)
+                default: gameForSettingsSheet = game
                 }
             case .filters:
                 break

@@ -23,18 +23,22 @@ struct SettingsGameDefaultsSection: View {
 
             SeleneToggleRow("60 FPS",
                             subtitle: "Target 60 frames per second instead of 30.",
+                            info: "Some games tie their physics, animation speeds, or game loops to 30 FPS. If gameplay runs twice as fast or audio desyncs, keep this at 30.",
                             isOn: $settings.settings.gameDefaults.enable60FPS)
 
             SeleneToggleRow("Docked mode",
                             subtitle: "Use the docked performance profile for new games.",
+                            info: "Simulates the Nintendo Switch docked TV profile (1080p target, higher clocks and memory limits). Disabling uses handheld profile (720p target, lower GPU load).",
                             isOn: $settings.settings.gameDefaults.isDockedMode)
 
             SeleneToggleRow("MetalFX spatial upscaling",
                             subtitle: "Enable the engine's MetalFX present upscale.",
+                            info: "Uses Apple MetalFX Spatial Upscaling to upscale lower internal render targets to display resolution with edge sharpening, without raising GPU raster load.",
                             isOn: $settings.settings.gameDefaults.enableMetalFXUpscale)
 
             SeleneToggleRow("Metal HUD",
                             subtitle: "Show the Metal performance overlay in new games.",
+                            info: "Displays Apple's official Metal Performance HUD overlay during gameplay showing real-time frame rates, frame time graphs, and GPU utilization.",
                             isOn: $settings.settings.gameDefaults.enableMetalHUD)
 
             SeleneRow("Default game language",
@@ -49,7 +53,8 @@ struct SettingsGameDefaultsSection: View {
                 .frame(width: 180)
             }
 
-            SeleneRow("Render scale") {
+            SeleneRow("Render scale",
+                      info: "Scales the internal 3D rendering buffer relative to native target (50% to 100%). Lowering this reduces GPU heat on battery; UI remains full resolution.") {
                 HStack(spacing: 10) {
                     Slider(value: $settings.settings.gameDefaults.renderScale,
                            in: 0.5...1.0, step: 0.05)

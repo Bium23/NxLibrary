@@ -28,11 +28,7 @@ struct LibraryFilterBar: View {
                 badge("RB")
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(SeleneTheme.canvas.opacity(0.52))
-        .clipShape(Capsule())
-        .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.06), lineWidth: 1))
+        .shadow(color: .black.opacity(0.55), radius: 8, y: 2)
     }
 
     private func badge(_ value: String) -> some View {
@@ -60,20 +56,16 @@ struct LibraryFilterBar: View {
                     Text(filter.rawValue)
                         .font(.system(size: 13, weight: selected ? .semibold : .regular))
                         .foregroundColor(selected
-                                         ? SeleneTheme.ink
-                                         : SeleneTheme.ink.opacity(0.50))
-                        .padding(.bottom, 6)
-                        .overlay(alignment: .bottom) {
-                            Rectangle()
-                                .fill(selected ? SeleneTheme.focus : Color.clear)
-                                .frame(height: 2)
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 5)
-                        .contentShape(Rectangle())
+                                         ? SeleneTheme.canvas
+                                         : SeleneTheme.ink.opacity(0.62))
+                        .padding(.horizontal, 13)
+                        .padding(.vertical, 6)
+                        .background(selected ? SeleneTheme.focus : Color.clear)
+                        .clipShape(Capsule())
+                        .contentShape(Capsule())
                 }
                 .buttonStyle(.plain)
-                .seleneFocus(focused, radius: 4)
+                .seleneFocus(focused, radius: 16)
                 .accessibilityLabel(filter.rawValue)
                 .accessibilityAddTraits(selected ? [.isSelected] : [])
             }

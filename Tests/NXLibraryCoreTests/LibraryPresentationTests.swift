@@ -47,6 +47,7 @@ final class LibraryPresentationTests: XCTestCase {
         XCTAssertEqual(presentation.lastPlayed, "1h ago")
         XCTAssertTrue(presentation.sourcesDetached)
         XCTAssertEqual(presentation.platform, "nxnative")
+        XCTAssertEqual(presentation.summary, "A world of discovery.")
     }
 
     func testPresentationWithoutMetadataOrHistory() {
@@ -60,5 +61,6 @@ final class LibraryPresentationTests: XCTestCase {
         XCTAssertNil(presentation.releaseYear)
         XCTAssertEqual(presentation.playtime, "—")
         XCTAssertEqual(presentation.lastPlayed, "Never")
+        XCTAssertTrue(presentation.summary.isEmpty)
     }
 }

@@ -30,6 +30,7 @@ public struct UpstreamStatus: Codable, Equatable {
     public var checkedAt: Date
 
     public var isUpToDate: Bool { aheadBy == 0 && behindBy == 0 }
+    public var newCommitsCount: Int { max(aheadBy, totalCommits) }
 
     public init(repository: String, status: String, baseCommit: String,
                 upstreamCommit: String, aheadBy: Int, behindBy: Int,

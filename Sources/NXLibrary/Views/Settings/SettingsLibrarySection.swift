@@ -60,6 +60,7 @@ struct SettingsLibrarySection: View {
 
             SeleneButtonRow("Existing builds",
                             subtitle: "Scan the app library for nxnative builds made outside NX Library.",
+                            info: "Searches your Applications folder for standalone game .app bundles that were compiled with nxnative CLI or previous workflows, and registers them into NX Library.",
                             buttonTitle: "Import") {
                 viewModel.importExistingBuilds()
             }
@@ -73,6 +74,7 @@ struct SettingsLibrarySection: View {
 
             SeleneValueRow("Metadata cache",
                            subtitle: "Nintendo Store descriptions, genres and links.",
+                           info: "Locally cached game metadata such as title IDs, publisher names, release dates, and category tags fetched during library scans.",
                            value: seleneBytes(metadataBytes),
                            actionTitle: "Clear") {
                 viewModel.clearMetadataCache()
@@ -81,6 +83,7 @@ struct SettingsLibrarySection: View {
 
             SeleneValueRow("Artwork cache",
                            subtitle: "Hero and cover art downloaded for this library.",
+                           info: "High-resolution game box art and hero wallpapers cached locally from the Nintendo Store catalog.",
                            value: seleneBytes(artworkBytes),
                            actionTitle: "Clear") {
                 artwork.clear()

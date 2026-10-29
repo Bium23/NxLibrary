@@ -235,19 +235,23 @@ struct GameOptionsView: View {
         Group {
             SeleneToggleRow("60 FPS",
                             subtitle: "Unlock the frame limiter when the game supports it.",
+                            info: "Overrides the default frame pacing target (DM_PRESENT_HZ=60). Recommended for games that support 60 fps; titles with physics tied to 30 fps ticks may run in fast-forward.",
                             isOn: $config.enable60FPS)
             SeleneToggleRow("MetalFX",
                             subtitle: "Spatial upscaling; it does not raise the internal resolution.",
+                            info: "Applies Apple MetalFX spatial upscaling (DM_PRESENT_UPSCALE=metalfx). It sharpens the 3D viewport to match your Mac display without increasing internal render workload.",
                             isOn: $config.enableMetalFXUpscale)
             SeleneToggleRow("Metal HUD",
                             subtitle: "Apple's real-time performance overlay.",
+                            info: "Displays Apple's real-time Metal developer HUD (DM_METAL_HUD=1). Shows frame rate, frame pacing graphs, GPU time per frame in milliseconds, and memory allocation.",
                             isOn: $config.enableMetalHUD)
         }
     }
 
     private var consoleRow: some View {
         SeleneRow("Console mode",
-                  subtitle: "Docked uses the TV profile; handheld uses the portable profile.") {
+                  subtitle: "Docked uses the TV profile; handheld uses the portable profile.",
+                  info: "Switches the Switch operational profile (DM_OPERATION_MODE). Docked targets higher clock profiles, higher LODs, and up to 1080p, while Handheld mimics the 720p portable mode with lower power draw.") {
             SeleneSegmented(
                 selection: Binding(
                     get: { config.isDockedMode },
@@ -294,7 +298,8 @@ struct GameOptionsView: View {
     private var renderScaleRows: some View {
         if presentation.showRenderScale {
             SeleneRow("3D render scale",
-                      subtitle: "100% keeps the game's own resolution.") {
+                      subtitle: "100% keeps the game's own resolution.",
+                      info: "Scales internal 3D scene resolution from 50% to 100% (DM_RENDER_SCALE). Decreasing internal resolution boosts framerates on demanding titles while UI overlays remain crisp.") {
                 HStack(spacing: 10) {
                     Slider(value: $config.renderScale, in: 0.5...1.0, step: 0.05)
                         .frame(width: 170)
@@ -369,6 +374,7 @@ struct GameOptionsView: View {
         VStack(spacing: 9) {
             SeleneButtonRow("Remove sources & build cache",
                             subtitle: "Deletes only the source files named in this game and its app-owned workspace. The app and saves stay.",
+                            info: "Frees disk space by deleting original NSP/XCI dump files and the compilation cache workspace. The installed game in ~/Applications and all your save files are completely safe.",
                             buttonTitle: "Remove…") {
                 showRemoveSources = true
             }

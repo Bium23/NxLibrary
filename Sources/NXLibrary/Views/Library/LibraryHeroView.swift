@@ -6,6 +6,7 @@ struct LibraryHeroView: View {
     let game: PortedGame
     let presentation: LibraryPresentation
     let heroImage: NSImage?
+    let logoImage: NSImage?
     let metrics: SeleneLayoutMetrics
     let size: CGSize
     let showClock: Bool
@@ -14,51 +15,125 @@ struct LibraryHeroView: View {
     let actionIndex: Int
     let readableText: Bool
     let backgroundShade: Double
-    let bottomInset: CGFloat
+    let contentTopInset: CGFloat
+    let showsDetails: Bool
+    let reduceMotion: Bool
+    let heroKey: String
     let onPlay: () -> Void
     let onDetails: () -> Void
     let onOptions: () -> Void
 
+    init(game: PortedGame,
+         presentation: LibraryPresentation,
+         heroImage: NSImage?,
+         logoImage: NSImage? = nil,
+         metrics: SeleneLayoutMetrics,
+         size: CGSize,
+         showClock: Bool,
+         readiness: Bool,
+         focusArea: LibraryFocusArea,
+         actionIndex: Int,
+         readableText: Bool,
+         backgroundShade: Double,
+         contentTopInset: CGFloat,
+         showsDetails: Bool,
+         reduceMotion: Bool,
+         heroKey: String,
+         onPlay: @escaping () -> Void,
+         onDetails: @escaping () -> Void,
+         onOptions: @escaping () -> Void) {
+        self.game = game
+        self.presentation = presentation
+        self.heroImage = heroImage
+        self.logoImage = logoImage
+        self.metrics = metrics
+        self.size = size
+        self.showClock = showClock
+        self.readiness = readiness
+        self.focusArea = focusArea
+        self.actionIndex = actionIndex
+        self.readableText = readableText
+        self.backgroundShade = backgroundShade
+        self.contentTopInset = contentTopInset
+        self.showsDetails = showsDetails
+        self.reduceMotion = reduceMotion
+        self.heroKey = heroKey
+        self.onPlay = onPlay
+        self.onDetails = onDetails
+        self.onOptions = onOptions
+    }
+
     var body: some View {
-        ZStack(alignment: .bottomLeading) {
+        ZStack(alignment: .topLeading) {
             heroBackground
                 .brightness(artBrightness)
                 .overlay(Color.black.opacity(shadeWashOpacity))
                 .overlay { scrims.opacity(readableText ? 1 : 0.80) }
 
+            SeleneTheme.topScrim
+                .allowsHitTesting(false)
+
             VStack(alignment: .leading, spacing: 0) {
-                if !presentation.eyebrow.isEmpty {
+                if logoImage == nil, !presentation.eyebrow.isEmpty && !presentation.title.lowercased().hasPrefix(presentation.eyebrow.lowercased()) {
                     Text(presentation.eyebrow)
                         .font(.system(size: 11, weight: .bold))
                         .tracking(2.4)
                         .textCase(.uppercase)
-                        .foregroundColor(SeleneTheme.ink.opacity(0.68))
+                        .foregroundColor(SeleneTheme.ink.opacity(0.78))
+                        .shadow(color: .black.opacity(0.85), radius: 6, y: 1)
                         .padding(.bottom, 9)
                 }
 
-                Text(presentation.title)
-                    .font(.system(size: metrics.heroTitleSize, weight: .bold))
-                    .tracking(-1.6)
-                    .foregroundColor(SeleneTheme.ink)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.82)
-                    .frame(maxWidth: 720, alignment: .leading)
-                    .shadow(color: .black.opacity(0.35), radius: 18, x: 0, y: 4)
+                if let logoImage {
+                    Image(nsImage: logoImage)
+                        .resizable()
+                        .interpolation(.high)
+                        .scaledToFit()
+                        .frame(maxWidth: 440, maxHeight: 135, alignment: .leading)
+                        .shadow(color: .black.opacity(0.85), radius: 10, x: 0, y: 3)
+                        .padding(.bottom, 6)
+                } else {
+                    Text(displayTitle)
+                        .font(.system(size: metrics.heroTitleSize, weight: .bold))
+                        .tracking(-1.6)
+                        .foregroundColor(SeleneTheme.ink)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.82)
+                        .frame(maxWidth: 720, alignment: .leading)
+                        .shadow(color: .black.opacity(0.85), radius: 10, x: 0, y: 3)
+                        .shadow(color: .black.opacity(0.50), radius: 24, x: 0, y: 6)
+                }
 
                 chips
-                    .padding(.top, 15)
-
-                metadata
-                    .padding(.top, 22)
+                    .padding(.top, logoImage != nil ? 10 : 15)
 
                 actions
-                    .padding(.top, 21)
+                    .padding(.top, 22)
+
+                if showsDetails {
+                    metadata
+                        .padding(.top, 24)
+
+                    if !presentation.summary.isEmpty {
+                        Text(presentation.summary)
+                            .font(.system(size: 12.5))
+                            .foregroundColor(SeleneTheme.ink.opacity(0.88))
+                            .lineSpacing(2)
+                            .lineLimit(3)
+                            .frame(maxWidth: 580, alignment: .leading)
+                            .padding(.top, 16)
+                            .shadow(color: .black.opacity(0.85), radius: 6, x: 0, y: 2)
+                    }
+                }
 
                 warnings
-                    .padding(.top, 14)
+                    .padding(.top, 12)
             }
             .padding(.leading, metrics.margin)
-            .padding(.bottom, bottomInset)
+            .padding(.top, contentTopInset)
+            .opacity(1)
+            .offset(y: showsDetails ? 0 : 8)
+            .allowsHitTesting(true)
 
             VStack {
                 HStack {
@@ -74,31 +149,32 @@ struct LibraryHeroView: View {
                                 .font(.system(size: 10, weight: .semibold))
                                 .tracking(1.3)
                                 .textCase(.uppercase)
-                                .foregroundColor(SeleneTheme.ink.opacity(0.56))
+                                .foregroundColor(SeleneTheme.ink.opacity(0.66))
                         }
                         if showClock {
                             TimelineView(.periodic(from: .now, by: 30)) { context in
                                 Text(context.date.formatted(date: .omitted, time: .shortened))
                                     .font(.system(size: 13, weight: .semibold))
-                                    .foregroundColor(SeleneTheme.ink.opacity(0.82))
+                                    .foregroundColor(SeleneTheme.ink.opacity(0.86))
                             }
                         }
                     }
                     .padding(.trailing, metrics.margin)
-                    .padding(.top, 26)
+                    .padding(.top, 22)
+                    .shadow(color: .black.opacity(0.65), radius: 6, y: 1)
                 }
                 Spacer()
             }
         }
-        .frame(width: size.width, height: size.height, alignment: .bottomLeading)
+        .frame(width: size.width, height: size.height, alignment: .topLeading)
         .clipped()
     }
 
     private var scrims: some View {
         ZStack {
+            SeleneTheme.heroAmbientVignette
             SeleneTheme.heroLeftScrim
             SeleneTheme.heroBottomScrim
-            Color.black.opacity(0.14)
         }
     }
 
@@ -122,24 +198,37 @@ struct LibraryHeroView: View {
 
     @ViewBuilder
     private var heroBackground: some View {
-        if let heroImage {
-            Image(nsImage: heroImage)
-                .resizable()
-                .scaledToFill()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipped()
-        } else {
-            ZStack {
-                Image(nsImage: GameIconProvider.icon(for: game))
+        ZStack {
+            if let heroImage {
+                Image(nsImage: heroImage)
                     .resizable()
                     .scaledToFill()
-                    .blur(radius: 34)
-                    .scaleEffect(1.25)
-                SeleneTheme.canvas.opacity(0.35)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
+                    .id(heroKey)
+                    .transition(.opacity)
+            } else {
+                fallbackBackground
+                    .id("fallback-\(game.id.uuidString)")
+                    .transition(.opacity)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .clipped()
         }
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.30), value: heroKey)
+    }
+
+    private var fallbackBackground: some View {
+        ZStack {
+            Image(nsImage: GameIconProvider.icon(for: game))
+                .resizable()
+                .interpolation(.high)
+                .scaledToFill()
+                .blur(radius: 42)
+                .scaleEffect(1.18)
+                .opacity(0.86)
+            SeleneTheme.canvas.opacity(0.40)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipped()
     }
 
     private var chips: some View {
@@ -160,10 +249,13 @@ struct LibraryHeroView: View {
         Text(value)
             .font(.system(size: 10, weight: .medium,
                           design: monospaced ? .monospaced : .default))
-            .foregroundColor(SeleneTheme.ink.opacity(0.80))
+            .foregroundColor(SeleneTheme.ink.opacity(0.85))
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
-            .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.30), lineWidth: 1))
+            .background(Color.black.opacity(0.35))
+            .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.24), lineWidth: 1))
+            .clipShape(Capsule())
+            .shadow(color: .black.opacity(0.50), radius: 4, y: 1)
     }
 
     private var metadata: some View {
@@ -181,10 +273,12 @@ struct LibraryHeroView: View {
                 .font(.system(size: 10, weight: .bold))
                 .tracking(1.4)
                 .textCase(.uppercase)
-                .foregroundColor(SeleneTheme.ink.opacity(0.55))
+                .foregroundColor(SeleneTheme.ink.opacity(0.65))
+                .shadow(color: .black.opacity(0.85), radius: 4, y: 1)
             Text(value)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(SeleneTheme.ink.opacity(0.94))
+                .foregroundColor(SeleneTheme.ink.opacity(0.96))
+                .shadow(color: .black.opacity(0.85), radius: 6, y: 1)
         }
         .frame(minWidth: 68, alignment: .leading)
     }
@@ -233,6 +327,7 @@ struct LibraryHeroView: View {
                     .clipShape(Capsule())
             }
             .buttonStyle(.plain)
+            .seleneFocus(focusArea == .actions && actionIndex == 1, radius: 22)
             .accessibilityLabel("Details for \(game.name)")
 
             Button(action: onOptions) {
@@ -245,35 +340,58 @@ struct LibraryHeroView: View {
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
-            .seleneFocus(focusArea == .actions && actionIndex == 1, radius: 22)
+            .seleneFocus(focusArea == .actions && actionIndex == 2, radius: 22)
             .accessibilityLabel("Game options")
         }
     }
 
     private var warnings: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 12) {
             if !isPlayable {
-                Label("Not built yet · open Game options to build",
-                      systemImage: "circle.fill")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(SeleneTheme.warning.opacity(0.86))
+                HStack(spacing: 6) {
+                    Label("Not built yet · open Game options to build",
+                          systemImage: "circle.fill")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(SeleneTheme.warning.opacity(0.86))
+                    SeleneInfoTip("This game has been added to your library catalog, but its native macOS app has not been compiled yet. Click the ellipsis (...) button to open Game options and build it.")
+                }
             } else if presentation.sourcesDetached {
-                Label("Sources detached · playable", systemImage: "circle.fill")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(SeleneTheme.warning.opacity(0.86))
+                HStack(spacing: 6) {
+                    Label("Sources detached · playable", systemImage: "circle.fill")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(SeleneTheme.warning.opacity(0.86))
+                    SeleneInfoTip("The original ROM files (NSP/XCI) were moved or detached. The compiled macOS app in ~/Applications and all your save files remain fully playable.")
+                }
             }
             if !game.toolchain.verified {
-                Text("Untested toolchain")
-                    .font(.system(size: 9, weight: .bold))
-                    .textCase(.uppercase)
-                    .tracking(1)
-                    .foregroundColor(SeleneTheme.warning.opacity(0.9))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(SeleneTheme.warning.opacity(0.10))
-                    .overlay(Capsule().strokeBorder(SeleneTheme.warning.opacity(0.22), lineWidth: 1))
-                    .clipShape(Capsule())
+                HStack(spacing: 5) {
+                    Text("Untested toolchain")
+                        .font(.system(size: 9, weight: .bold))
+                        .textCase(.uppercase)
+                        .tracking(1)
+                        .foregroundColor(SeleneTheme.warning.opacity(0.9))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(SeleneTheme.warning.opacity(0.10))
+                        .overlay(Capsule().strokeBorder(SeleneTheme.warning.opacity(0.22), lineWidth: 1))
+                        .clipShape(Capsule())
+                    SeleneInfoTip("This build was compiled with the untested-toolchain override. Gameplay works, but graphical artifacts could occur on non-certified Metal compiler versions.")
+                }
             }
         }
+    }
+
+    private var displayTitle: String {
+        if !presentation.eyebrow.isEmpty {
+            let prefixColon = presentation.eyebrow + ": "
+            if presentation.title.hasPrefix(prefixColon) {
+                return String(presentation.title.dropFirst(prefixColon.count))
+            }
+            let prefixDash = presentation.eyebrow + " – "
+            if presentation.title.hasPrefix(prefixDash) {
+                return String(presentation.title.dropFirst(prefixDash.count))
+            }
+        }
+        return presentation.title
     }
 }

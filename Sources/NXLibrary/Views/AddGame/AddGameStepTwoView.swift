@@ -173,19 +173,24 @@ struct AddGameStepTwoView: View {
     // MARK: - Runtime defaults
 
     private var runtimePanel: some View {
-        SelenePanel("Runtime defaults") {
+        SelenePanel("Runtime defaults",
+                    info: "Default runtime flags passed to this game. You can customize them at any time from Game options.") {
             VStack(spacing: 9) {
                 SeleneToggleRow("60 FPS",
                                 subtitle: "Target 60 frames per second instead of 30.",
+                                info: "Sets frame pacing target to 60 FPS (DM_PRESENT_HZ=60). Titles with physics tied to 30 FPS may run twice as fast.",
                                 isOn: $viewModel.pendingRuntimeConfig.enable60FPS)
                 SeleneToggleRow("Docked mode",
                                 subtitle: "Use the docked performance profile for this build.",
+                                info: "Emulates Nintendo Switch docked profile (1080p target with higher clock rates). Disabling uses handheld profile (720p target).",
                                 isOn: $viewModel.pendingRuntimeConfig.isDockedMode)
                 SeleneToggleRow("MetalFX spatial upscaling",
                                 subtitle: "Enable the engine's MetalFX present upscale.",
+                                info: "Uses Apple MetalFX spatial upscaling to sharpen the viewport to your display resolution without increasing internal render workload.",
                                 isOn: $viewModel.pendingRuntimeConfig.enableMetalFXUpscale)
                 SeleneToggleRow("Metal HUD",
                                 subtitle: "Show the Metal performance overlay while playing.",
+                                info: "Displays Apple's real-time Metal developer HUD overlay showing FPS, frame pacing graphs, and GPU render time.",
                                 isOn: $viewModel.pendingRuntimeConfig.enableMetalHUD)
             }
 
@@ -199,7 +204,8 @@ struct AddGameStepTwoView: View {
     // MARK: - Destination and advanced
 
     private var destinationPanel: some View {
-        SelenePanel("Destination") {
+        SelenePanel("Destination",
+                    info: "Compiles a standalone native Apple Silicon .app bundle installed atomically into ~/Applications. No emulator wrapper is used.") {
             HStack(spacing: 12) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 9, style: .continuous)
@@ -245,7 +251,8 @@ struct AddGameStepTwoView: View {
                     field("Name shown in macOS",
                           text: $viewModel.appName)
                 }
-                SeleneRow("Bundle identifier") {
+                SeleneRow("Bundle identifier",
+                          info: "Unique reverse-domain identifier (e.g. org.nxnative.game) used by macOS to store app preferences, game saves, and window states.") {
                     field("org.nxnative.game",
                           text: $viewModel.bundleId)
                 }

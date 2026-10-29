@@ -36,7 +36,8 @@ struct SettingsEngineSection: View {
             SeleneValueRow("Pinned commit", value: seleneShort(viewModel.pinnedEngineCommit))
             SeleneValueRow("Current commit", value: seleneShort(viewModel.currentEngineCommit))
 
-            SelenePanel("Compatibility") {
+            SelenePanel("Compatibility",
+                        info: "Audits the local engine commit, working tree cleanliness, installed Metal compiler, and required CLI flags against the certified toolchain lock.") {
                 HStack(spacing: 8) {
                     Circle()
                         .fill(statusColor)
@@ -90,7 +91,8 @@ struct SettingsEngineSection: View {
             .seleneFocus(focusedRowTitle == "Compatibility", radius: SeleneTheme.cardRadius)
 
             SeleneRow("Untested toolchain override",
-                      subtitle: overrideSubtitle) {
+                      subtitle: overrideSubtitle,
+                      info: "Permits building games when your installed Metal compiler or Xcode differs from the certified version (Xcode 27.1, Metal 32023.921). Passes --allow-other-metal to nxnative. Builds are recorded as unverified.") {
                 Toggle("", isOn: overrideBinding)
                     .labelsHidden()
                     .toggleStyle(SeleneToggleStyle())
@@ -105,6 +107,8 @@ struct SettingsEngineSection: View {
             }
 
             if case .loaded(let status) = viewModel.upstreamState {
+                upstreamCommitsPanel(status)
+
                 SeleneButtonRow("Compare",
                                 subtitle: status.isUpToDate
                                     ? "The pinned commit matches upstream main."
@@ -114,7 +118,8 @@ struct SettingsEngineSection: View {
                 }
             }
 
-            SelenePanel("prod.keys") {
+            SelenePanel("prod.keys",
+                        info: "Nintendo Switch cryptographic keys required to decrypt game packages (NSP/XCI). NX Library stores a private copy with mode 0600 permissions; key values are never displayed or logged.") {
                 HStack(spacing: 8) {
                     Image(systemName: viewModel.isProdKeysValid ? "checkmark.circle.fill" : "xmark.octagon.fill")
                         .font(.system(size: 11, weight: .bold))
@@ -214,9 +219,11 @@ struct SettingsEngineSection: View {
         case .checking:
             return "Asking GitHub for the latest commits..."
         case .loaded(let status):
-            return status.isUpToDate
-                ? "Pinned commit is up to date."
-                : "\(status.behindBy) commit(s) behind upstream."
+            if status.isUpToDate {
+                return "Pinned commit is up to date."
+            }
+            let count = status.newCommitsCount
+            return "\(count) new commit\(count == 1 ? "" : "s") available upstream."
         case .failed(let message):
             return message
         }
@@ -225,6 +232,79 @@ struct SettingsEngineSection: View {
     private var upstreamButtonTitle: String {
         if case .checking = viewModel.upstreamState { return "Checking..." }
         return "Check"
+    }
+
+    @ViewBuilder
+    private func upstreamCommitsPanel(_ status: UpstreamStatus) -> some View {
+        if !status.commits.isEmpty {
+            SelenePanel("Upstream Commits (\(status.newCommitsCount) newer)") {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(status.commits.prefix(10)) { commit in
+                        HStack(alignment: .top, spacing: 10) {
+                            Text(commit.shortSha)
+                                .font(.system(size: 10.5, weight: .bold, design: .monospaced))
+                                .foregroundColor(SeleneTheme.accent)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(SeleneTheme.accent.opacity(0.12))
+                                .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(commit.subject)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundColor(SeleneTheme.ink)
+                                    .lineLimit(2)
+                                    .fixedSize(horizontal: false, vertical: true)
+
+                                HStack(spacing: 6) {
+                                    Text(commit.author)
+                                        .font(.system(size: 10))
+                                        .foregroundColor(SeleneTheme.inkMuted)
+                                    if !commit.date.isEmpty {
+                                        Text("·")
+                                            .font(.system(size: 10))
+                                            .foregroundColor(SeleneTheme.inkMuted.opacity(0.5))
+                                        Text(formattedCommitDate(commit.date))
+                                            .font(.system(size: 10))
+                                            .foregroundColor(SeleneTheme.inkMuted)
+                                    }
+                                }
+                            }
+                            Spacer(minLength: 0)
+                        }
+                        if commit.id != status.commits.prefix(10).last?.id {
+                            Divider()
+                                .background(SeleneTheme.border)
+                        }
+                    }
+
+                    if status.commits.count > 10 {
+                        HStack {
+                            Text("+ \(status.commits.count - 10) more commits upstream")
+                                .font(.system(size: 10.5, weight: .medium))
+                                .foregroundColor(SeleneTheme.inkMuted)
+                            Spacer()
+                            Button("View all on GitHub") {
+                                viewModel.openUpstreamCompare()
+                            }
+                            .buttonStyle(.plain)
+                            .font(.system(size: 10.5, weight: .semibold))
+                            .foregroundColor(SeleneTheme.accent)
+                        }
+                        .padding(.top, 4)
+                    }
+                }
+            }
+            .seleneFocus(focusedRowTitle == "Upstream Commits", radius: SeleneTheme.cardRadius)
+        }
+    }
+
+    private func formattedCommitDate(_ raw: String) -> String {
+        let isoFormatter = ISO8601DateFormatter()
+        guard let date = isoFormatter.date(from: raw) else { return raw }
+        let relative = RelativeDateTimeFormatter()
+        relative.unitsStyle = .abbreviated
+        return relative.localizedString(for: date, relativeTo: Date())
     }
 
     private func detail(for check: CompatibilityCheck) -> String {

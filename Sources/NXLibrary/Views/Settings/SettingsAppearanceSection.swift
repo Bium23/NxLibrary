@@ -9,13 +9,15 @@ struct SettingsAppearanceSection: View {
     var body: some View {
         VStack(spacing: 9) {
             SeleneRow("Background shade",
-                      subtitle: "Controls how strongly the hero artwork is dimmed behind the library.") {
+                      subtitle: "Controls how strongly the hero artwork is dimmed behind the library.",
+                      info: "Adjusts the opacity level of the background dimming scrim over the hero artwork (Subtle 30%, Balanced 55%, Deep 80%).") {
                 SeleneSegmented(selection: $settings.settings.backgroundShade,
                                 options: BackgroundShade.allCases.map { ($0, $0.label) })
             }
 
             SeleneToggleRow("Readable text",
                             subtitle: "Adds a soft halo behind hero text over bright artwork.",
+                            info: "Applies subtle ambient text drop shadows so titles and tags remain crisp and legible even against high-contrast or white game hero artwork.",
                             isOn: $settings.settings.readableText)
 
             SeleneToggleRow("Reduce motion",
@@ -40,6 +42,20 @@ struct SettingsAppearanceSection: View {
                 .labelsHidden()
                 .pickerStyle(.menu)
                 .frame(width: 160)
+            }
+
+            SeleneRow("SteamGridDB API key",
+                      subtitle: "Downloads transparent game logos (clear logos) on the hero stage.",
+                      info: "SteamGridDB is a free community database of transparent logos and fan artwork. Create a free account at steamgriddb.com and generate an API key in Preferences → API to automatically download transparent game title logos.") {
+                TextField("Optional API key", text: $settings.settings.steamGridDbApiKey)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 11, design: .monospaced))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(SeleneTheme.surface)
+                    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(SeleneTheme.ink.opacity(0.18), lineWidth: 1))
+                    .cornerRadius(6)
+                    .frame(width: 220)
             }
         }
         .onAppear(perform: publishActions)

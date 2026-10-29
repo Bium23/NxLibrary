@@ -30,24 +30,44 @@ public enum SeleneTheme {
     public static let screen = Animation.timingCurve(0.32, 0.72, 0, 1, duration: 0.32)
     public static let art = Animation.easeOut(duration: 0.42)
     public static let menu = Animation.spring(response: 0.26, dampingFraction: 0.88)
+    public static let expand = Animation.spring(response: 0.42, dampingFraction: 0.86)
 
     public static let heroLeftScrim = LinearGradient(
         stops: [
-            .init(color: .black.opacity(0.94), location: 0.00),
-            .init(color: .black.opacity(0.70), location: 0.32),
-            .init(color: .black.opacity(0.24), location: 0.62),
-            .init(color: .clear, location: 0.88)
+            .init(color: .black.opacity(0.48), location: 0.00),
+            .init(color: .black.opacity(0.38), location: 0.22),
+            .init(color: .black.opacity(0.22), location: 0.44),
+            .init(color: .black.opacity(0.08), location: 0.62),
+            .init(color: .clear, location: 0.78)
         ],
         startPoint: .leading, endPoint: .trailing
     )
     public static let heroBottomScrim = LinearGradient(
         stops: [
-            .init(color: .black.opacity(0.97), location: 0.00),
-            .init(color: .black.opacity(0.78), location: 0.28),
-            .init(color: .black.opacity(0.30), location: 0.55),
-            .init(color: .clear, location: 0.82)
+            .init(color: .black.opacity(0.86), location: 0.00),
+            .init(color: .black.opacity(0.60), location: 0.14),
+            .init(color: .black.opacity(0.24), location: 0.28),
+            .init(color: .clear, location: 0.45)
         ],
         startPoint: .bottom, endPoint: .top
+    )
+    public static let topScrim = LinearGradient(
+        stops: [
+            .init(color: .black.opacity(0.45), location: 0.00),
+            .init(color: .black.opacity(0.20), location: 0.08),
+            .init(color: .clear, location: 0.16)
+        ],
+        startPoint: .top, endPoint: .bottom
+    )
+    public static let heroAmbientVignette = RadialGradient(
+        colors: [
+            .black.opacity(0.42),
+            .black.opacity(0.20),
+            .clear
+        ],
+        center: .topLeading,
+        startRadius: 50,
+        endRadius: 750
     )
 }
 

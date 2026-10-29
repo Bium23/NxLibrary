@@ -25,9 +25,11 @@ public struct CommandBar: View {
                         .frame(width: 18, height: 18)
                         .background(SeleneTheme.focus.opacity(0.92))
                         .clipShape(Circle())
+                        .shadow(color: .black.opacity(0.55), radius: 3, y: 1)
                     Text(hint.label)
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(SeleneTheme.ink.opacity(0.78))
+                        .foregroundColor(SeleneTheme.ink.opacity(0.86))
+                        .shadow(color: .black.opacity(0.65), radius: 4, y: 1)
                 }
             }
         }

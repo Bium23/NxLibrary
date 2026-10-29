@@ -1,16 +1,55 @@
 import SwiftUI
 
+public struct SeleneInfoTip: View {
+    public let text: String
+    @State private var isShowing = false
+
+    public init(_ text: String) {
+        self.text = text
+    }
+
+    public var body: some View {
+        Button {
+            isShowing.toggle()
+        } label: {
+            Image(systemName: "info.circle")
+                .font(.system(size: 11.5, weight: .semibold))
+                .foregroundColor(isShowing ? SeleneTheme.accent : SeleneTheme.inkMuted.opacity(0.85))
+                .padding(2)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .popover(isPresented: $isShowing, arrowEdge: .trailing) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(text)
+                    .font(.system(size: 11.5))
+                    .foregroundColor(SeleneTheme.ink.opacity(0.96))
+                    .lineSpacing(2.5)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(14)
+            .frame(width: 290, alignment: .leading)
+            .background(SeleneTheme.canvasRaised)
+        }
+        .help(text)
+        .accessibilityLabel("Information")
+        .accessibilityHint(text)
+    }
+}
+
 public struct SeleneRow<Trailing: View>: View {
     public let title: String
     public let subtitle: String?
+    public let info: String?
     @ViewBuilder public var trailing: () -> Trailing
 
     @Environment(\.seleneFocusedRowTitle) private var focusedRowTitle
 
-    public init(_ title: String, subtitle: String? = nil,
+    public init(_ title: String, subtitle: String? = nil, info: String? = nil,
                 @ViewBuilder trailing: @escaping () -> Trailing) {
         self.title = title
         self.subtitle = subtitle
+        self.info = info
         self.trailing = trailing
     }
 
@@ -19,9 +58,14 @@ public struct SeleneRow<Trailing: View>: View {
     public var body: some View {
         HStack(spacing: 20) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(SeleneTheme.ink.opacity(0.94))
+                HStack(spacing: 6) {
+                    Text(title)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(SeleneTheme.ink.opacity(0.94))
+                    if let info {
+                        SeleneInfoTip(info)
+                    }
+                }
                 if let subtitle {
                     Text(subtitle)
                         .font(.system(size: 10.5))
@@ -71,16 +115,18 @@ public struct SeleneToggleStyle: ToggleStyle {
 public struct SeleneToggleRow: View {
     public let title: String
     public let subtitle: String?
+    public let info: String?
     @Binding public var isOn: Bool
 
-    public init(_ title: String, subtitle: String? = nil, isOn: Binding<Bool>) {
+    public init(_ title: String, subtitle: String? = nil, info: String? = nil, isOn: Binding<Bool>) {
         self.title = title
         self.subtitle = subtitle
+        self.info = info
         self._isOn = isOn
     }
 
     public var body: some View {
-        SeleneRow(title, subtitle: subtitle) {
+        SeleneRow(title, subtitle: subtitle, info: info) {
             Toggle("", isOn: $isOn)
                 .labelsHidden()
                 .toggleStyle(SeleneToggleStyle())
@@ -91,21 +137,23 @@ public struct SeleneToggleRow: View {
 public struct SeleneValueRow: View {
     public let title: String
     public let subtitle: String?
+    public let info: String?
     public let value: String
     public let actionTitle: String?
     public let action: (() -> Void)?
 
-    public init(_ title: String, subtitle: String? = nil, value: String,
+    public init(_ title: String, subtitle: String? = nil, info: String? = nil, value: String,
                 actionTitle: String? = nil, action: (() -> Void)? = nil) {
         self.title = title
         self.subtitle = subtitle
+        self.info = info
         self.value = value
         self.actionTitle = actionTitle
         self.action = action
     }
 
     public var body: some View {
-        SeleneRow(title, subtitle: subtitle) {
+        SeleneRow(title, subtitle: subtitle, info: info) {
             HStack(spacing: 10) {
                 Text(value)
                     .font(.system(size: 11, weight: .medium))
@@ -126,19 +174,21 @@ public struct SeleneValueRow: View {
 public struct SeleneButtonRow: View {
     public let title: String
     public let subtitle: String?
+    public let info: String?
     public let buttonTitle: String
     public let action: () -> Void
 
-    public init(_ title: String, subtitle: String? = nil,
+    public init(_ title: String, subtitle: String? = nil, info: String? = nil,
                 buttonTitle: String, action: @escaping () -> Void) {
         self.title = title
         self.subtitle = subtitle
+        self.info = info
         self.buttonTitle = buttonTitle
         self.action = action
     }
 
     public var body: some View {
-        SeleneRow(title, subtitle: subtitle) {
+        SeleneRow(title, subtitle: subtitle, info: info) {
             Button(buttonTitle, action: action)
                 .buttonStyle(.plain)
                 .font(.system(size: 11, weight: .semibold))
@@ -183,21 +233,28 @@ public struct SeleneSegmented<Value: Hashable>: View {
 
 public struct SelenePanel<Content: View>: View {
     public let title: String?
+    public let info: String?
     @ViewBuilder public var content: () -> Content
 
-    public init(_ title: String? = nil, @ViewBuilder content: @escaping () -> Content) {
+    public init(_ title: String? = nil, info: String? = nil, @ViewBuilder content: @escaping () -> Content) {
         self.title = title
+        self.info = info
         self.content = content
     }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             if let title {
-                Text(title)
-                    .font(.system(size: 9, weight: .bold))
-                    .tracking(1.4)
-                    .textCase(.uppercase)
-                    .foregroundColor(SeleneTheme.inkMuted)
+                HStack(spacing: 6) {
+                    Text(title)
+                        .font(.system(size: 9, weight: .bold))
+                        .tracking(1.4)
+                        .textCase(.uppercase)
+                        .foregroundColor(SeleneTheme.inkMuted)
+                    if let info {
+                        SeleneInfoTip(info)
+                    }
+                }
             }
             content()
         }

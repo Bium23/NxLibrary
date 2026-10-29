@@ -33,7 +33,8 @@ struct SettingsControllersSection: View {
             }
 
             SeleneRow("Stick navigation deadzone",
-                      subtitle: "How far the left stick must move before focus changes.") {
+                      subtitle: "How far the left stick must move before focus changes.",
+                      info: "Adjusts minimum thumbstick deflection needed to trigger menu navigation. Increase if your analog stick has slight drift causing unintended scrolling.") {
                 HStack(spacing: 10) {
                     Slider(value: Binding(
                         get: { Double(controller.deadzone) },
@@ -52,7 +53,8 @@ struct SettingsControllersSection: View {
                             isOn: $settings.settings.gameDefaults.rumble)
 
             SeleneRow("Rumble strength",
-                      subtitle: "Default gain for newly added games.") {
+                      subtitle: "Default gain for newly added games.",
+                      info: "Default haptic feedback multiplier (0: muted, 1: subtle, 2: standard, 3: intense) passed to game builds supporting macOS controller haptics.") {
                 Stepper(value: $settings.settings.gameDefaults.rumbleGain, in: 0...3) {
                     Text("\(settings.settings.gameDefaults.rumbleGain)")
                         .font(.system(size: 11, weight: .semibold, design: .monospaced))

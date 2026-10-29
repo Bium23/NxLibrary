@@ -280,7 +280,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         ("ko", "Korean")
     ]
     
-    public let pinnedEngineCommit = "1963fab7eeafa46ab618868549b2dd0d5b8bae7d"
+    public let pinnedEngineCommit = "ee369f09984f23adbe003f55e94be5d81cd8c0e6"
     private let core = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/NXLibrary")
     private lazy var libraryStore = LibraryStore(directory: core)
@@ -517,7 +517,11 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
 
     public func loadStoreMetadata(for game: PortedGame) {
         guard let titleId = game.titleId, !titleId.isEmpty else { return }
-        if storeMetadata[game.id] != nil || storeMetadataLoading.contains(game.id) { return }
+        if storeMetadataLoading.contains(game.id) { return }
+        if let existing = storeMetadata[game.id],
+           Date().timeIntervalSince(existing.fetchedAt) < Self.storeMetadataTTL {
+            return
+        }
 
         storeMetadataLoading.insert(game.id)
         storeMetadataErrors[game.id] = nil
@@ -533,6 +537,21 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             self.storeMetadataLoading.remove(game.id)
         }
     }
+
+    /// Fills metadata from the seven-day disk cache without starting a network
+    /// request. The library uses this so a previously viewed game paints its
+    /// title, description and hero immediately when selected.
+    public func preloadCachedStoreMetadata() {
+        for game in libraryGames {
+            guard storeMetadata[game.id] == nil,
+                  let titleId = game.titleId,
+                  !titleId.isEmpty,
+                  let metadata = storeMetadataService.cached(for: titleId) else { continue }
+            storeMetadata[game.id] = metadata
+        }
+    }
+
+    private static let storeMetadataTTL: TimeInterval = 7 * 24 * 60 * 60
 
     public func metadataCacheSize() -> Int64 {
         storeMetadataService.cacheSize()

@@ -8,9 +8,9 @@ public enum BackgroundShade: String, Codable, CaseIterable, Identifiable, Equata
 
     public var heroScrimOpacity: Double {
         switch self {
-        case .light: return 0.55
-        case .balanced: return 0.72
-        case .deep: return 0.86
+        case .light: return 0.20
+        case .balanced: return 0.35
+        case .deep: return 0.55
         }
     }
 }
@@ -25,6 +25,7 @@ public struct AppSettings: Codable, Equatable {
     public var checkEngineAtLaunch: Bool
     public var refreshLibraryAtLaunch: Bool
     public var lastSelectedGameID: UUID?
+    public var steamGridDbApiKey: String
     public var gameDefaults: GameRuntimeConfig
 
     public init(backgroundShade: BackgroundShade = .balanced,
@@ -36,6 +37,7 @@ public struct AppSettings: Codable, Equatable {
                 checkEngineAtLaunch: Bool = true,
                 refreshLibraryAtLaunch: Bool = true,
                 lastSelectedGameID: UUID? = nil,
+                steamGridDbApiKey: String = "",
                 gameDefaults: GameRuntimeConfig = GameRuntimeConfig()) {
         self.backgroundShade = backgroundShade
         self.readableText = readableText
@@ -46,6 +48,28 @@ public struct AppSettings: Codable, Equatable {
         self.checkEngineAtLaunch = checkEngineAtLaunch
         self.refreshLibraryAtLaunch = refreshLibraryAtLaunch
         self.lastSelectedGameID = lastSelectedGameID
+        self.steamGridDbApiKey = steamGridDbApiKey
         self.gameDefaults = gameDefaults
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case backgroundShade, readableText, reduceMotion, showButtonHints, showClock
+        case restoreLastGame, checkEngineAtLaunch, refreshLibraryAtLaunch, lastSelectedGameID
+        case steamGridDbApiKey, gameDefaults
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.backgroundShade = try container.decodeIfPresent(BackgroundShade.self, forKey: .backgroundShade) ?? .balanced
+        self.readableText = try container.decodeIfPresent(Bool.self, forKey: .readableText) ?? true
+        self.reduceMotion = try container.decodeIfPresent(Bool.self, forKey: .reduceMotion) ?? false
+        self.showButtonHints = try container.decodeIfPresent(Bool.self, forKey: .showButtonHints) ?? true
+        self.showClock = try container.decodeIfPresent(Bool.self, forKey: .showClock) ?? true
+        self.restoreLastGame = try container.decodeIfPresent(Bool.self, forKey: .restoreLastGame) ?? true
+        self.checkEngineAtLaunch = try container.decodeIfPresent(Bool.self, forKey: .checkEngineAtLaunch) ?? true
+        self.refreshLibraryAtLaunch = try container.decodeIfPresent(Bool.self, forKey: .refreshLibraryAtLaunch) ?? true
+        self.lastSelectedGameID = try container.decodeIfPresent(UUID.self, forKey: .lastSelectedGameID)
+        self.steamGridDbApiKey = try container.decodeIfPresent(String.self, forKey: .steamGridDbApiKey) ?? ""
+        self.gameDefaults = try container.decodeIfPresent(GameRuntimeConfig.self, forKey: .gameDefaults) ?? GameRuntimeConfig()
     }
 }

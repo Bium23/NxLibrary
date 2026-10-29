@@ -40,7 +40,7 @@ The design specification and implementation plan live in [`docs/superpowers/`](d
 - Xcode 27.1 or newer (with the matching Metal toolchain) on this machine.
 - .NET 10 runtime (`/usr/local/share/dotnet`).
 - Homebrew `xcodegen`, `zstd`, `spirv-cross`, `glslang`.
-- The nxnative checkout at `~/nxnative`, pinned to `1963fab7eeafa46ab618868549b2dd0d5b8bae7d`, with a Python 3.14 venv (3.12 or newer is required) containing `lz4`, `capstone` and `fontTools`; Python 3.14 uses the standard-library zstd.
+- The nxnative checkout at `~/nxnative`, pinned to `ee369f09984f23adbe003f55e94be5d81cd8c0e6`, with a Python 3.14 venv (3.12 or newer is required) containing `lz4`, `capstone` and `fontTools`; Python 3.14 uses the standard-library zstd.
 
 ## Build and run
 
@@ -80,7 +80,7 @@ An explicit **Build anyway with an untested toolchain** override exists. It requ
 
 ## Updating the engine
 
-Engine upgrades are manual and never follow `main`. Before changing the pin, review the commits and decide what belongs in the UI and what stays backend-only. The checklist and dated notes are in [`docs/upstream-upgrades/`](docs/upstream-upgrades/); the current pin is `1963fab7eeafa46ab618868549b2dd0d5b8bae7d`.
+Engine upgrades are manual and never follow `main`. Before changing the pin, review the commits and decide what belongs in the UI and what stays backend-only. The checklist and dated notes are in [`docs/upstream-upgrades/`](docs/upstream-upgrades/); the current pin is `ee369f09984f23adbe003f55e94be5d81cd8c0e6`.
 
 ## Tests
 

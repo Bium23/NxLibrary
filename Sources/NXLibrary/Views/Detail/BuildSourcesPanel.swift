@@ -10,12 +10,13 @@ struct BuildSourcesPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
+            HStack(spacing: 6) {
                 Text("Build & sources")
                     .font(.system(size: 9, weight: .bold))
                     .tracking(1.5)
                     .textCase(.uppercase)
                     .foregroundColor(SeleneTheme.inkMuted)
+                SeleneInfoTip("NX Library uses symlinks to your game ROM files to build the macOS native binary. Rebuilding uses your current engine pin and settings, and preserves your game saves.")
                 Spacer()
                 if presentation.sourcesDetached {
                     HStack(spacing: 6) {

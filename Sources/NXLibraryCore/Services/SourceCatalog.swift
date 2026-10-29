@@ -101,7 +101,6 @@ public final class SourceCatalog {
         }
 
         return groups.map { appId, group in
-            let all = [group.base].compactMap { $0 } + group.updates + group.dlcs
             let named = group.base ?? group.updates.first ?? group.dlcs.first
             let name = named.map { Self.cleanName($0.url) } ?? String(format: "%016llX", appId)
             return DetectedGame(

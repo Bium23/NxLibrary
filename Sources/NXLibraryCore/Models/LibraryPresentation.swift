@@ -10,6 +10,7 @@ public struct LibraryPresentation: Equatable {
     public let lastPlayed: String
     public let platform: String
     public let sourcesDetached: Bool
+    public let summary: String
 
     public init(game: PortedGame, metadata: NintendoStoreMetadata?,
                 totalPlaytime: TimeInterval, lastPlayed: Date?, now: Date = Date()) {
@@ -22,10 +23,13 @@ public struct LibraryPresentation: Equatable {
         self.lastPlayed = Self.relative(lastPlayed, now: now)
         platform = "nxnative"
         sourcesDetached = !game.sources.contains { $0.type == .base }
+        summary = (metadata?.description ?? "")
+            .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private static func eyebrow(from name: String) -> String {
-        let separators = [":", "™", " – "]
+        let separators = [":", " – "]
         for separator in separators {
             if let range = name.range(of: separator) {
                 let prefix = name[..<range.lowerBound]

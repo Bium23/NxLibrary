@@ -75,7 +75,7 @@ public final class NXNativeEnvironment {
             let version = run(pythonURL.path, ["-c", "import sys; print(f'{sys.version_info[0]}.{sys.version_info[1]}')"])
                 .stdout.trimmingCharacters(in: .whitespacesAndNewlines)
             if !version.isEmpty, !Self.pythonAtLeast312(version) {
-                issues.append("venv Python \(version) is too old; nxnative 1963fab needs Python 3.12+ for RomFS image builds (3.14 recommended)")
+                issues.append("venv Python \(version) is too old; nxnative needs Python 3.12+ for RomFS image builds (3.14 recommended)")
             }
             let probe = run(pythonURL.path, ["-c", "import lz4.block, capstone, fontTools\nimport sys\ntry:\n import compression.zstd\nexcept ImportError:\n import backports.zstd"])
             if probe.status != 0 { issues.append("venv is missing lz4/capstone/fontTools or zstd (stdlib on Python 3.14, backports.zstd before)") }

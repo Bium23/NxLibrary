@@ -4,12 +4,13 @@ import ImageIO
 import Combine
 
 public enum ArtworkKind: String, Codable {
-    case hero, cover
+    case hero, cover, logo
 
-    var maxPixelSize: CGFloat {
+    public var maxPixelSize: CGFloat {
         switch self {
         case .hero: return 2560
         case .cover: return 1000
+        case .logo: return 1200
         }
     }
 }
@@ -50,35 +51,68 @@ public final class ArtworkStore: ObservableObject {
     }
 
     public func cachedURL(titleID: String, kind: ArtworkKind) -> URL? {
-        let url = fileURL(titleID: titleID, kind: kind)
-        guard fileManager.fileExists(atPath: url.path) else { return nil }
-        return url
+        let safe = titleID.map {
+            $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" ? $0 : "_"
+        }.reduce(into: "") { $0.append($1) }
+        let dir = cacheDirectory.appendingPathComponent(safe.isEmpty ? "unknown" : safe)
+        let primaryExt = kind == .logo ? "png" : "jpg"
+        let fallbackExt = kind == .logo ? "jpg" : "png"
+        let primary = dir.appendingPathComponent("\(kind.rawValue).\(primaryExt)")
+        if fileManager.fileExists(atPath: primary.path) { return primary }
+        let fallback = dir.appendingPathComponent("\(kind.rawValue).\(fallbackExt)")
+        if fileManager.fileExists(atPath: fallback.path) { return fallback }
+        return nil
     }
 
     public func fetch(titleID: String, remoteURL: URL?, kind: ArtworkKind) async -> URL? {
         if let cached = cachedURL(titleID: titleID, kind: kind) { return cached }
-        guard let remoteURL else { return nil }
 
-        var request = URLRequest(url: remoteURL)
+        var targetURL = remoteURL
+        if targetURL == nil && kind == .hero && titleID.count == 16 && titleID.hasPrefix("0100") {
+            targetURL = URL(string: "https://api.nlib.cc/nx/\(titleID)/banner")
+        }
+        guard let fetchURL = targetURL else { return nil }
+
+        var request = URLRequest(url: fetchURL)
         request.timeoutInterval = 15
         request.setValue("NXLibrary/0.1 (macOS; personal app)",
                          forHTTPHeaderField: "User-Agent")
 
         do {
             let (data, http) = try await client.data(for: request)
-            let maxPixelSize = kind.maxPixelSize
-            let jpeg = await Task.detached(priority: .utility) {
-                Self.downsample(data, maxPixelSize: maxPixelSize)
-            }.value
-            guard (200..<300).contains(http.statusCode), let jpeg else {
+            guard (200..<300).contains(http.statusCode), !data.isEmpty else {
+                if kind == .hero, fetchURL.absoluteString != "https://api.nlib.cc/nx/\(titleID)/banner",
+                   titleID.count == 16, titleID.hasPrefix("0100") {
+                    return await fetch(titleID: titleID,
+                                       remoteURL: URL(string: "https://api.nlib.cc/nx/\(titleID)/banner"),
+                                       kind: kind)
+                }
                 return cachedURL(titleID: titleID, kind: kind)
             }
+
             let url = fileURL(titleID: titleID, kind: kind)
             try fileManager.createDirectory(at: url.deletingLastPathComponent(),
                                             withIntermediateDirectories: true)
-            try jpeg.write(to: url, options: .atomic)
-            return url
+
+            if kind == .logo {
+                try data.write(to: url, options: .atomic)
+                return url
+            } else {
+                let maxPixelSize = kind.maxPixelSize
+                let jpeg = await Task.detached(priority: .utility) {
+                    Self.downsample(data, maxPixelSize: maxPixelSize)
+                }.value
+                guard let jpeg else { return cachedURL(titleID: titleID, kind: kind) }
+                try jpeg.write(to: url, options: .atomic)
+                return url
+            }
         } catch {
+            if kind == .hero, fetchURL.absoluteString != "https://api.nlib.cc/nx/\(titleID)/banner",
+               titleID.count == 16, titleID.hasPrefix("0100") {
+                return await fetch(titleID: titleID,
+                                   remoteURL: URL(string: "https://api.nlib.cc/nx/\(titleID)/banner"),
+                                   kind: kind)
+            }
             return cachedURL(titleID: titleID, kind: kind)
         }
     }
@@ -127,9 +161,10 @@ public final class ArtworkStore: ObservableObject {
         let safe = titleID.map {
             $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" ? $0 : "_"
         }.reduce(into: "") { $0.append($1) }
+        let ext = kind == .logo ? "png" : "jpg"
         return cacheDirectory
             .appendingPathComponent(safe.isEmpty ? "unknown" : safe)
-            .appendingPathComponent("\(kind.rawValue).jpg")
+            .appendingPathComponent("\(kind.rawValue).\(ext)")
     }
 
     static func downsample(_ data: Data, maxPixelSize: CGFloat) -> Data? {
@@ -143,6 +178,6 @@ public final class ArtworkStore: ObservableObject {
             return nil
         }
         let rep = NSBitmapImageRep(cgImage: image)
-        return rep.representation(using: .jpeg, properties: [.compressionFactor: 0.85])
+        return rep.representation(using: .jpeg, properties: [.compressionFactor: 0.94])
     }
 }

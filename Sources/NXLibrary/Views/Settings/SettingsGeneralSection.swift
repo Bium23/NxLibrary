@@ -25,6 +25,7 @@ struct SettingsGeneralSection: View {
 
             SeleneToggleRow("Check engine at launch",
                             subtitle: "Verify the pinned engine commit and toolchain when the app starts.",
+                            info: "Checks ~/nxnative against the certified engine commit and confirms your installed Metal compiler matches the lock file before builds are attempted.",
                             isOn: $settings.settings.checkEngineAtLaunch)
 
             SeleneToggleRow("Refresh library at launch",
@@ -45,7 +46,8 @@ struct SettingsGeneralSection: View {
                 viewModel.detectEnvironment()
             }
 
-            SelenePanel("Readiness") {
+            SelenePanel("Readiness",
+                        info: "Summarizes the 4 essential gates: valid prod.keys, cloned nxnative repository, Python build environment, and certified Metal compiler version.") {
                 HStack(spacing: 9) {
                     Circle()
                         .fill(readiness ? SeleneTheme.success : SeleneTheme.warning)

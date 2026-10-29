@@ -11,8 +11,28 @@ public struct NintendoStoreMetadata: Codable, Equatable {
     public var storeURL: URL
     public var imageURL: URL?
     public var headerImageURL: URL?
+    public var logoURL: URL?
     public var nsuid: String?
     public var fetchedAt: Date
+
+    public init(titleId: String, name: String, description: String, developers: [String],
+                publishers: [String], genres: [String], releaseDate: String?, storeURL: URL,
+                imageURL: URL?, headerImageURL: URL?, logoURL: URL? = nil,
+                nsuid: String?, fetchedAt: Date) {
+        self.titleId = titleId
+        self.name = name
+        self.description = description
+        self.developers = developers
+        self.publishers = publishers
+        self.genres = genres
+        self.releaseDate = releaseDate
+        self.storeURL = storeURL
+        self.imageURL = imageURL
+        self.headerImageURL = headerImageURL
+        self.logoURL = logoURL
+        self.nsuid = nsuid
+        self.fetchedAt = fetchedAt
+    }
 
     public var releaseYear: String? {
         guard let releaseDate, releaseDate.count >= 4 else { return nil }
@@ -112,25 +132,81 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         // one request and no product-page download.
         if let old = try? await searchOld(name: game.name),
            let hit = chooseOld(old, name: game.name) {
-            return metadata(from: hit, titleId: cacheKey)
+            var meta = metadata(from: hit, titleId: cacheKey)
+            if meta.headerImageURL == nil && cacheKey.count == 16 && cacheKey.hasPrefix("0100") {
+                meta.headerImageURL = URL(string: "https://api.nlib.cc/nx/\(cacheKey)/banner")
+            }
+            return meta
         }
 
-        let newHits = try await searchNew(name: game.name)
+        let newHits = (try? await searchNew(name: game.name)) ?? []
         guard let hit = chooseNew(newHits, name: game.name),
               let urlPath = hit.url,
               let storeURL = URL(string: urlPath.hasPrefix("http") ? urlPath
                                  : "https://www.nintendo.com\(urlPath)") else {
+            if let fromTitleDB = await fetchTitleDB(titleId: cacheKey) {
+                return fromTitleDB
+            }
             throw NintendoStoreError.notFound
         }
 
         if let old = try? await searchOld(name: game.name),
            let oldHit = chooseOld(old, name: game.name) {
-            return metadata(from: oldHit, titleId: cacheKey, storeURL: storeURL)
+            var meta = metadata(from: oldHit, titleId: cacheKey, storeURL: storeURL)
+            if meta.headerImageURL == nil && cacheKey.count == 16 && cacheKey.hasPrefix("0100") {
+                meta.headerImageURL = URL(string: "https://api.nlib.cc/nx/\(cacheKey)/banner")
+            }
+            return meta
         }
 
         let page = try await fetchProductPage(storeURL)
-        return metadata(from: page, titleId: cacheKey, storeURL: storeURL,
-                        newHit: hit)
+        var meta = metadata(from: page, titleId: cacheKey, storeURL: storeURL,
+                            newHit: hit)
+        if meta.headerImageURL == nil && cacheKey.count == 16 && cacheKey.hasPrefix("0100") {
+            meta.headerImageURL = URL(string: "https://api.nlib.cc/nx/\(cacheKey)/banner")
+        }
+        return meta
+    }
+
+    private struct TitleDBItem: Decodable {
+        let id: String?
+        let name: String?
+        let publisher: String?
+        let description: String?
+        let banner: String?
+        let icon: String?
+    }
+
+    private func fetchTitleDB(titleId: String) async -> NintendoStoreMetadata? {
+        guard titleId.count == 16, titleId.hasPrefix("0100"),
+              let url = URL(string: "https://api.nlib.cc/nx/\(titleId)?fields=name,publisher,description,banner,icon") else {
+            return nil
+        }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 8
+        do {
+            let (data, response) = try await client.data(for: request)
+            guard (200..<300).contains(response.statusCode) else { return nil }
+            let item = try JSONDecoder().decode(TitleDBItem.self, from: data)
+            guard let name = item.name, !name.isEmpty else { return nil }
+            return NintendoStoreMetadata(
+                titleId: titleId,
+                name: name,
+                description: item.description ?? "",
+                developers: [],
+                publishers: item.publisher.map { [$0] } ?? [],
+                genres: [],
+                releaseDate: nil,
+                storeURL: URL(string: "https://www.nintendo.com")!,
+                imageURL: item.icon.flatMap(URL.init(string:)),
+                headerImageURL: item.banner.flatMap(URL.init(string:)) ?? URL(string: "https://api.nlib.cc/nx/\(titleId)/banner"),
+                logoURL: nil,
+                nsuid: nil,
+                fetchedAt: Date()
+            )
+        } catch {
+            return nil
+        }
     }
 
     // MARK: - Nintendo Store searches
