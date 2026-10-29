@@ -195,6 +195,9 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     @Published public var gameForSettingsSheet: PortedGame? = nil
     /// Where the open Game options came from; decides its rows (Move is Spotlight-only).
     @Published public var gameOptionsOrigin: GameOptionsOrigin = .collection
+    /// The running game whose Close Game confirmation is open. The shell draws the dialog.
+    @Published public var gameToClose: PortedGame? = nil
+    @Published var closeGameFocus: SeleneConfirmButton = .cancel
     @Published public var pendingRuntimeConfig = GameRuntimeConfig()
     private var lastAddGameDefaults = GameRuntimeConfig()
     private var addGameSessionActive = false
@@ -1026,6 +1029,11 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
 
     public func launchGame(_ game: PortedGame) {
         guard launchingGameId == nil else { return }
+        // A running game is brought forward, never started a second time.
+        if let running = RunningGameMonitor.runningApplication(for: game) {
+            RunningGameMonitor.activate(running)
+            return
+        }
         guard game.isPlayableLocally else {
             let message = "This game is not built yet. Add sources and build it first."
             lastError = message
@@ -1047,12 +1055,6 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             alertMessage = lastError
             SoundEffectService.shared.play(.error)
             logs.append(LogEntry(level: .error, message: lastError!))
-            return
-        }
-
-        if let bundleId = game.bundleId,
-           let running = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == bundleId }) {
-            running.activate(options: [.activateAllWindows])
             return
         }
 
@@ -1128,12 +1130,15 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         }
     }
 
-    /// Asks the running game to quit (Spotlight's "Close Game").
-    public func closeGame(_ game: PortedGame) {
-        guard let bundleId = game.bundleId else { return }
-        NSWorkspace.shared.runningApplications
-            .filter { $0.bundleIdentifier == bundleId }
-            .forEach { $0.terminate() }
+    /// Opens the Close Game confirmation for a running game (Spotlight and Details).
+    public func askCloseGame(_ game: PortedGame) {
+        closeGameFocus = .cancel
+        gameToClose = game
+    }
+
+    public func dismissCloseGame() {
+        gameToClose = nil
+        closeGameFocus = .cancel
     }
 
     private func updateStoredStatus(_ status: GameStatus, for game: PortedGame) {

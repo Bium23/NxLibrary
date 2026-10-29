@@ -11,6 +11,7 @@ public struct SpotlightView: View {
     @ObservedObject var router: AppRouter
     @ObservedObject var settings: AppSettingsStore
     @ObservedObject var playSessions: PlaySessionStore
+    @ObservedObject var runningGames: RunningGameMonitor
     @ObservedObject var artwork: ArtworkStore
 
     @Environment(\.seleneCanvas) var canvas
@@ -38,12 +39,14 @@ public struct SpotlightView: View {
         var index = 0
     }
 
-    public init(viewModel: AppViewModel, router: AppRouter, settings: AppSettingsStore,
-                playSessions: PlaySessionStore, artwork: ArtworkStore) {
+    init(viewModel: AppViewModel, router: AppRouter, settings: AppSettingsStore,
+         playSessions: PlaySessionStore, runningGames: RunningGameMonitor,
+         artwork: ArtworkStore) {
         self.viewModel = viewModel
         self.router = router
         self.settings = settings
         self.playSessions = playSessions
+        self.runningGames = runningGames
         self.artwork = artwork
     }
 
@@ -217,7 +220,7 @@ public struct SpotlightView: View {
                         game: game, metadata: metadata,
                         totalPlaytime: playSessions.totalDuration(for: game.id),
                         lastPlayed: playSessions.lastPlayed(for: game.id)),
-                    isRunning: playSessions.isRunning(gameID: game.id),
+                    isRunning: runningGames.isRunning(game),
                     focusedPill: state.focus == .pills ? state.pillIndex : nil,
                     onPill: { index in
                         guard !state.isLifted else { return }

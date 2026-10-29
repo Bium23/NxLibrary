@@ -8,7 +8,7 @@ public struct AppShellView: View {
     @StateObject private var settings = AppSettingsStore()
     @StateObject private var playSessions = PlaySessionStore()
     @StateObject private var artwork = ArtworkStore()
-    @State private var processObserver: GameProcessObserver?
+    @StateObject private var runningGames = RunningGameMonitor()
     @State private var gestureKeyMonitor: Any?
 
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
@@ -36,6 +36,11 @@ public struct AppShellView: View {
         ZStack {
             SeleneTheme.scrim.ignoresSafeArea()
             content
+            if let game = viewModel.gameToClose {
+                closeGameOverlay(game)
+                    .transition(.opacity)
+                    .zIndex(3)
+            }
             if router.isMenuPresented {
                 MenuOverlayView(
                     router: router,
@@ -71,6 +76,8 @@ public struct AppShellView: View {
                    value: viewModel.gameForSettingsSheet?.id)
         .animation(reduceMotion ? nil : SeleneTheme.quick,
                    value: router.isMenuPresented)
+        .animation(reduceMotion ? nil : SeleneTheme.quick,
+                   value: viewModel.gameToClose?.id)
         .environment(\.seleneReduceMotion, reduceMotion)
         .environment(\.seleneShowButtonHints, settings.settings.showButtonHints)
         .environment(\.seleneButtonNames, settings.settings.buttonNames)
@@ -81,8 +88,11 @@ public struct AppShellView: View {
         }
         .onAppear(perform: startRuntime)
         .onDisappear {
-            processObserver?.stop()
+            runningGames.stop()
             removeGestureKeyMonitor()
+        }
+        .onChange(of: viewModel.libraryGames) { games in
+            runningGames.setGames(games)
         }
         .onChange(of: router.route) { route in
             recordLastHome(route)
@@ -163,6 +173,8 @@ public struct AppShellView: View {
         .onExitCommand {
             if router.isScreenshotViewerOpen {
                 // The viewer's key monitor closes it.
+            } else if viewModel.gameToClose != nil {
+                viewModel.dismissCloseGame()
             } else if viewModel.gameForSettingsSheet != nil {
                 // Game options steps back (dialog, then Edit details) or closes.
                 NotificationCenter.default.post(name: .nxGameOptionsGamepadAction, object: GamepadAction.cancel)
@@ -199,6 +211,7 @@ public struct AppShellView: View {
                 router: router,
                 settings: settings,
                 playSessions: playSessions,
+                runningGames: runningGames,
                 artwork: artwork
             )
         case .collection:
@@ -216,6 +229,7 @@ public struct AppShellView: View {
                     router: router,
                     settings: settings,
                     playSessions: playSessions,
+                    runningGames: runningGames,
                     artwork: artwork,
                     game: game
                 )
@@ -241,16 +255,17 @@ public struct AppShellView: View {
     private func startRuntime() {
         viewModel.playSessionStore = playSessions
         viewModel.settingsStore = settings
-        let running = Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier))
-        playSessions.reconcile(runningBundleIDs: running)
         artwork.trimCache()
-        let observer = GameProcessObserver(store: playSessions)
-        observer.start()
-        processObserver = observer
+        runningGames.start(sessions: playSessions)
+        runningGames.setGames(viewModel.libraryGames)
         viewModel.router = router
         installGestureKeyMonitor()
         GameControllerService.shared.onAction = { [weak viewModel, weak router] action in
             guard let viewModel, let router else { return }
+            if viewModel.gameToClose != nil {
+                closeGameInput(action)
+                return
+            }
             if router.isMenuPresented {
                 menuInput(action)
                 return
@@ -299,14 +314,75 @@ public struct AppShellView: View {
         }
     }
 
+    // MARK: - Close Game confirmation
+
+    private func closeGameOverlay(_ game: PortedGame) -> some View {
+        ZStack {
+            SeleneTheme.scrim45
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture { viewModel.dismissCloseGame() }
+            SeleneConfirmDialog(title: "Close \(game.name)?",
+                                message: "Unsaved progress in the game will be lost.",
+                                confirmTitle: "Close",
+                                focus: $viewModel.closeGameFocus,
+                                onCancel: { viewModel.dismissCloseGame() },
+                                onConfirm: confirmCloseGame)
+        }
+    }
+
+    /// Input while the Close Game confirmation is open: Left and Right pick a pill, A runs it, B cancels.
+    private func closeGameInput(_ action: GamepadAction) {
+        switch action {
+        case .navigateLeft, .navigateRight:
+            let next: SeleneConfirmButton = action == .navigateLeft ? .cancel : .confirm
+            if viewModel.closeGameFocus != next {
+                viewModel.closeGameFocus = next
+                SoundEffectService.shared.play(.focus)
+            }
+        case .confirm:
+            if viewModel.closeGameFocus == .confirm {
+                confirmCloseGame()
+            } else {
+                viewModel.dismissCloseGame()
+            }
+        case .cancel:
+            viewModel.dismissCloseGame()
+        default:
+            break
+        }
+    }
+
+    private func confirmCloseGame() {
+        guard let game = viewModel.gameToClose else { return }
+        viewModel.dismissCloseGame()
+        SoundEffectService.shared.play(.click)
+        runningGames.close(game)
+    }
+
     /// App-level monitor for the keyboard equivalents of the controller gestures.
     /// Handles only Tab, Cmd+F, Cmd+, , Home and End; every other event passes through.
     private func installGestureKeyMonitor() {
         guard gestureKeyMonitor == nil else { return }
-        gestureKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [router] event in
+        gestureKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [router, viewModel] event in
             // The screenshot viewer owns the keyboard (its own monitor handles it); no navigating underneath.
             if router.isScreenshotViewerOpen { return event }
             let mods = event.modifierFlags.intersection([.command, .control, .option, .shift])
+            // The Close Game confirmation takes the keyboard: arrows, Return, Space and Esc go to it.
+            if viewModel.gameToClose != nil, mods.isEmpty {
+                let closeAction: GamepadAction?
+                switch event.keyCode {
+                case 123: closeAction = .navigateLeft
+                case 124: closeAction = .navigateRight
+                case 36, 76, 49: closeAction = .confirm
+                case 53: closeAction = .cancel
+                default: closeAction = nil
+                }
+                if let closeAction {
+                    GameControllerService.shared.onAction?(closeAction)
+                    return nil
+                }
+            }
             // The open control center takes the keyboard: arrows, Return, Space and Esc go to the menu,
             // and no screen underneath sees them.
             if router.isMenuPresented, mods.isEmpty {

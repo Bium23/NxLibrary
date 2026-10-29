@@ -30,7 +30,7 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
         let session = PlaySession(
             gameID: game.id,
             titleID: game.titleId ?? game.uniqueKey,
-            bundleID: game.bundleId,
+            bundleID: game.effectiveBundleId,
             startedAt: date,
             lastHeartbeatAt: date
         )

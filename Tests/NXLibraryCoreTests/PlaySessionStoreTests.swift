@@ -71,6 +71,20 @@ final class PlaySessionStoreTests: XCTestCase {
         XCTAssertEqual(store.totalDuration(for: game.id), 90, accuracy: 0.001)
     }
 
+    func testSessionUsesEffectiveBundleIdWhenStoredIdIsMissing() {
+        let store = store()
+        var game = game()
+        game.bundleId = nil
+        XCTAssertTrue(store.start(for: game))
+        now = now.addingTimeInterval(60)
+        store.reconcile(runningBundleIDs: ["org.nxnative.0100000000010000"])
+        XCTAssertTrue(store.isRunning(gameID: game.id))
+        now = now.addingTimeInterval(30)
+        store.end(bundleID: "org.nxnative.0100000000010000")
+        XCTAssertFalse(store.isRunning(gameID: game.id))
+        XCTAssertEqual(store.totalDuration(for: game.id), 90, accuracy: 0.001)
+    }
+
     func testPersistsAcrossInstances() {
         let game = game()
         let first = store()

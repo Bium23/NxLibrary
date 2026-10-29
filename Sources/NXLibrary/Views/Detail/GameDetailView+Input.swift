@@ -52,12 +52,12 @@ extension GameDetailView {
         if next != focus { focus = next }
     }
 
-    /// Press on a top-block pill: focus it and run it (Play or Build, Game options).
+    /// Press on a top-block pill: focus it and run it (Play, Build or Resume; Game options or Close Game).
     func pressPill(_ index: Int) {
         var next = focus
         next.focus(zone: DetailsFocus.topZone, index: index, in: currentModel.bands)
         if next != focus { focus = next }
-        if index == 0 { primaryAction() } else { openOptions() }
+        if index == 0 { primaryAction() } else { secondaryAction() }
     }
 
     /// Hover moves the action focus only while Build & Sources is in focus.
@@ -86,7 +86,7 @@ extension GameDetailView {
         let model = currentModel
         switch focus.zone {
         case DetailsFocus.topZone:
-            if focus.pill == 0 { primaryAction() } else { openOptions() }
+            if focus.pill == 0 { primaryAction() } else { secondaryAction() }
         case DetailsFocus.screenshotsZone:
             openViewer(at: focus.shot)
         case DetailsFocus.actionsZone:
@@ -100,9 +100,12 @@ extension GameDetailView {
         }
     }
 
-    /// Play when the game is built; otherwise Build (which refuses with a sound when it cannot run).
+    /// Resume while the game runs; otherwise Play when the game is built, or Build (which refuses with a sound when it cannot run).
     func primaryAction() {
-        if currentModel.presentation.canPlay {
+        if runningGames.isRunning(game) {
+            SoundEffectService.shared.play(.click)
+            runningGames.resume(game)
+        } else if currentModel.presentation.canPlay {
             SoundEffectService.shared.play(.click)
             viewModel.launchGame(game)
         } else {
@@ -119,6 +122,16 @@ extension GameDetailView {
         viewModel.startBuild(for: game)
         if viewModel.isBuilding {
             router.openAddGame()
+        }
+    }
+
+    /// The second top pill: Close Game while the game runs (after the confirmation), else Game options.
+    func secondaryAction() {
+        if runningGames.isRunning(game) {
+            SoundEffectService.shared.play(.click)
+            viewModel.askCloseGame(game)
+        } else {
+            openOptions()
         }
     }
 
@@ -176,6 +189,7 @@ extension GameDetailView {
                   case .detail(let id) = router.route, id == game.id,
                   viewModel.alertMessage == nil,
                   viewModel.gameForSettingsSheet == nil,
+                  viewModel.gameToClose == nil,
                   !viewModel.showSetupSheet,
                   !viewModel.showInstallerSheet,
                   let window = event.window,

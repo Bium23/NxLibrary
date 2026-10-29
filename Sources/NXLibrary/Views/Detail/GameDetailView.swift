@@ -18,6 +18,7 @@ struct GameDetailView: View {
     @ObservedObject var router: AppRouter
     @ObservedObject var settings: AppSettingsStore
     @ObservedObject var playSessions: PlaySessionStore
+    @ObservedObject var runningGames: RunningGameMonitor
     @ObservedObject var artwork: ArtworkStore
     let game: PortedGame
 
@@ -222,11 +223,12 @@ struct GameDetailView: View {
         ZStack(alignment: .topLeading) {
             DetailsTopBlock(game: game, logo: art.logo(for: game),
                             presentation: model.presentation,
+                            isRunning: runningGames.isRunning(game),
                             focusedPill: focus.zone == DetailsFocus.topZone ? focus.pill : nil,
                             primaryEnabled: model.primaryEnabled,
                             expanded: $expanded,
                             onPrimary: { pressPill(0) },
-                            onOptions: { pressPill(1) },
+                            onSecondary: { pressPill(1) },
                             onHoverPill: { hoverPill($0) })
                 .offset(x: canvas.u(110), y: canvas.u(96))
 

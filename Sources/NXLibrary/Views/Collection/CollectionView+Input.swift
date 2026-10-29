@@ -71,6 +71,7 @@ extension CollectionView {
                   router.route == .collection,
                   viewModel.alertMessage == nil,
                   viewModel.gameForSettingsSheet == nil,
+                  viewModel.gameToClose == nil,
                   !viewModel.showSetupSheet,
                   !viewModel.showInstallerSheet,
                   !router.isScreenshotViewerOpen,

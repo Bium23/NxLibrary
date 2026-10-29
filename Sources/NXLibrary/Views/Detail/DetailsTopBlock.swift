@@ -12,14 +12,16 @@ struct DetailsTopBlock: View {
     let game: PortedGame
     let logo: NSImage?
     let presentation: GameDetailPresentation
-    /// The focused pill: 0 Play or Build, 1 Game options; nil when the block has no focus.
+    /// The game is running: the primary pill reads Resume and the second reads Close Game.
+    let isRunning: Bool
+    /// The focused pill: 0 Play, Resume or Build; 1 Game options or Close Game; nil when the block has no focus.
     let focusedPill: Int?
     /// Build is dim (no sources to build from) but still takes focus.
     let primaryEnabled: Bool
     /// Description expanded by "Read more" (the page passes wheel scrolling through meanwhile).
     @Binding var expanded: Bool
     let onPrimary: () -> Void
-    let onOptions: () -> Void
+    let onSecondary: () -> Void
     let onHoverPill: (Int) -> Void
 
     /// Longer than this, the description gets a "Read more" (five lines hold about 520 characters at this width).
@@ -80,15 +82,20 @@ struct DetailsTopBlock: View {
 
     private var pills: some View {
         HStack(spacing: canvas.u(14)) {
-            SelenePillButton(title: presentation.canPlay ? "Play" : "Build", minWidth: 200, height: 52,
+            SelenePillButton(title: primaryTitle, minWidth: 200, height: 52,
                              horizontalPadding: 36, focused: focusedPill == 0,
                              enabled: primaryEnabled, action: onPrimary)
                 .onHover { if $0 { onHoverPill(0) } }
-            SelenePillButton(title: "Game options", minWidth: 200, height: 52,
+            SelenePillButton(title: isRunning ? "Close Game" : "Game options", minWidth: 200, height: 52,
                              horizontalPadding: 36, focused: focusedPill == 1,
-                             action: onOptions)
+                             action: onSecondary)
                 .onHover { if $0 { onHoverPill(1) } }
         }
+    }
+
+    private var primaryTitle: String {
+        if isRunning { return "Resume" }
+        return presentation.canPlay ? "Play" : "Build"
     }
 
     // MARK: - Stats

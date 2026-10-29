@@ -64,6 +64,14 @@ public struct PortedGame: Identifiable, Codable, Equatable {
         isHidden = try c.decodeIfPresent(Bool.self, forKey: .isHidden) ?? false
     }
 
+    /// The bundle id the built app runs as: the stored one, else nxnative's default
+    /// `org.nxnative.<title id in lowercase>`. Nil when neither is known; an empty id never matches.
+    public var effectiveBundleId: String? {
+        if let bundleId, !bundleId.isEmpty { return bundleId }
+        if let titleId, !titleId.isEmpty { return "org.nxnative.\(titleId.lowercased())" }
+        return nil
+    }
+
     public var uniqueKey: String {
         if let titleId, !titleId.isEmpty { return titleId }
         if let bundleId, !bundleId.isEmpty { return bundleId }

@@ -207,10 +207,16 @@ extension SpotlightView {
         SoundEffectService.shared.play(.click)
         switch index {
         case 0:
-            play(game)
+            // Resume while the game runs; otherwise Play.
+            if runningGames.isRunning(game) {
+                runningGames.resume(game)
+            } else {
+                play(game)
+            }
         case 1:
-            if playSessions.isRunning(gameID: game.id) {
-                viewModel.closeGame(game)
+            // Close Game while the game runs (asks first); otherwise Details.
+            if runningGames.isRunning(game) {
+                viewModel.askCloseGame(game)
             } else {
                 router.showDetail(game.id)
             }
@@ -270,6 +276,7 @@ extension SpotlightView {
                   router.route == .library,
                   viewModel.alertMessage == nil,
                   viewModel.gameForSettingsSheet == nil,
+                  viewModel.gameToClose == nil,
                   !viewModel.showSetupSheet,
                   !viewModel.showInstallerSheet,
                   let window = event.window,
