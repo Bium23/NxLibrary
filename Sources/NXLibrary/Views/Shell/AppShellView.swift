@@ -38,6 +38,15 @@ public struct AppShellView: View {
         settings.settings.reduceMotion || accessibilityReduceMotion
     }
 
+    /// The launch screen sits over everything, menu included, until the game's window shows.
+    @ViewBuilder private var launchLayer: some View {
+        if let state = viewModel.launchOverlay {
+            LaunchScreenView(state: state, viewModel: viewModel, artwork: artwork,
+                             settings: settings.settings, reduceMotion: reduceMotion)
+                .id(state.game.id)
+        }
+    }
+
     public var body: some View {
         ZStack {
             SeleneTheme.scrim.ignoresSafeArea()
@@ -77,6 +86,7 @@ public struct AppShellView: View {
                 .zIndex(2)
             }
         }
+        .overlay { launchLayer }
         .seleneCanvasRoot()
         .animation(reduceMotion ? nil : SeleneTheme.screen,
                    value: viewModel.gameForSettingsSheet?.id)

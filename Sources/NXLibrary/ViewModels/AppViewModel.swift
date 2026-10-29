@@ -271,6 +271,9 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     /// One SteamGridDB client for every screen (tile art, heroes, logos).
     public let steamGridDB = SteamGridDBService()
     @Published public var launchingGameId: UUID? = nil
+    /// The launch screen: shown on Play, `isReady` once the game's window is up (or the probe gave up).
+    @Published public var launchOverlay: LaunchOverlayState? = nil
+    private var launchProbeTask: Task<Void, Never>?
 
     public var playSessionStore: PlaySessionStore?
     public var settingsStore: AppSettingsStore?
@@ -1059,6 +1062,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         }
 
         launchingGameId = game.id
+        launchOverlay = LaunchOverlayState(game: game)
         SoundEffectService.shared.play(.launch)
 
         let config = GameRuntimeConfig.load(for: game)
@@ -1066,6 +1070,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             try launchService.writeEnvironment(settings: config, titleId: titleId)
         } catch {
             launchingGameId = nil
+            launchOverlay = nil
             lastError = error.localizedDescription
             alertMessage = lastError
             SoundEffectService.shared.play(.error)
@@ -1082,12 +1087,14 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                     self.lastError = nil
                     self.playSessionStore?.start(for: game)
                     self.logs.append(LogEntry(level: .success, message: "Launched game: \(game.name)"))
+                    self.watchLaunch(of: game)
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                         if self.launchingGameId == game.id { self.launchingGameId = nil }
                     }
                 } else {
                     let message = error ?? NXLibraryError.launchFailed(game.name).localizedDescription
                     self.launchingGameId = nil
+                    self.launchOverlay = nil
                     self.lastError = message
                     self.alertMessage = message
                     SoundEffectService.shared.play(.error)
@@ -1095,6 +1102,34 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                 }
             }
         }
+    }
+
+    /// Marks the launch screen ready once the game shows a window, or after the probe times out.
+    private func watchLaunch(of game: PortedGame) {
+        launchProbeTask?.cancel()
+        guard let bundleID = game.effectiveBundleId else {
+            launchOverlay?.isReady = true
+            return
+        }
+        launchProbeTask = Task { [weak self] in
+            let visible = await LaunchReadinessProbe().waitUntilVisible(bundleID: bundleID)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                guard let self, self.launchOverlay?.game.id == game.id else { return }
+                if !visible {
+                    self.logs.append(LogEntry(level: .warning,
+                                              message: "\(game.name) showed no window within 60 s; launch screen closed."))
+                }
+                self.launchOverlay?.isReady = true
+            }
+        }
+    }
+
+    /// Called by the launch screen after its fade out.
+    public func dismissLaunchOverlay() {
+        launchProbeTask?.cancel()
+        launchProbeTask = nil
+        launchOverlay = nil
     }
 
     /// Opens Game options for a game, remembering the screen it was opened from.
