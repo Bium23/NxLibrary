@@ -3,7 +3,8 @@ import AppKit
 import NXLibraryCore
 
 /// A portrait cover in Switch case proportions (Collection, More like this):
-/// the game's real box cover from GameTDB, never a cropped background. Until one
+/// the player's pick, else the game's real box cover from GameTDB, never a
+/// cropped background. Until one
 /// is found, or when GameTDB has none, a composed cover: the blurred Title DB
 /// banner, the game's icon and its name. The caller applies the corner radius.
 struct SwitchBoxArtCover: View {
@@ -17,6 +18,7 @@ struct SwitchBoxArtCover: View {
     /// Bumps when GameTDB's index arrives, so covers that missed look again.
     var indexVersion = 0
 
+    @ObservedObject private var picks = ArtworkPicks.shared
     @State private var cover: NSImage?
     @State private var banner: NSImage?
     @State private var icon: NSImage?
@@ -81,24 +83,29 @@ struct SwitchBoxArtCover: View {
 
     private var titleID: String { game.titleId ?? game.uniqueKey }
 
-    private var coverKey: String { "\(game.id)|\(officialName ?? "")|\(indexVersion)" }
+    private var coverKey: String { "\(game.id)|\(officialName ?? "")|\(indexVersion)|\(picks.revision)" }
 
     private func loadCover() async {
-        let key = "box|\(game.id)" as NSString
+        let key = "box|\(game.id)|\(picks.revision)" as NSString
         if let memo = CoverArtMemo.shared.object(forKey: key) {
             cover = memo
             return
         }
-        guard let url = await boxArt.boxArt(titleID: titleID, names: names),
-              let image = await GameArtLoader.decode(at: url, maxPixelSize: 900),
-              !Task.isCancelled else { return }
+        var url = picks.url(titleID: titleID, slot: .cover)
+        if url == nil { url = await boxArt.boxArt(titleID: titleID, names: names) }
+        guard !Task.isCancelled else { return }
+        // No cover (a pick taken back, GameTDB without one): the composed cover shows.
+        guard let url, let image = await GameArtLoader.decode(at: url, maxPixelSize: 900) else {
+            cover = nil
+            return
+        }
+        guard !Task.isCancelled else { return }
         CoverArtMemo.shared.setObject(image, forKey: key)
         withAnimation(.easeInOut(duration: 0.2)) { cover = image }
     }
 
-    /// The banner and Title DB icon for the composed cover; skipped once a real cover shows.
+    /// The banner and Title DB icon for the composed cover (both cached on disk).
     private func loadComposedArt() async {
-        guard cover == nil, CoverArtMemo.shared.object(forKey: "box|\(game.id)" as NSString) == nil else { return }
         if let own = GameIconProvider.squareArt(for: game) {
             icon = own
         } else if let titleId = game.titleId,

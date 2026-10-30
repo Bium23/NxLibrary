@@ -19,7 +19,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
     case fullscreen, fps60, metalFX, metalHUD, consoleMode, language, rumble, rumbleStrength
     case renderScale, restoreDefaults
     case rebuild, showInFinder, openSaves, editDetails, removeGame
-    case storePage, attachSources, openLog, removeSources
+    case changeArtwork, storePage, attachSources, openLog, removeSources
 
     public var title: String {
         switch self {
@@ -42,6 +42,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
         case .openSaves: return "Open saves"
         case .editDetails: return "Edit details"
         case .removeGame: return "Remove game"
+        case .changeArtwork: return "Change artwork"
         case .storePage: return "Store page"
         case .attachSources: return "Attach sources…"
         case .openLog: return "Open log"
@@ -69,6 +70,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
         case .openSaves: return .save
         case .editDetails: return .edit
         case .removeGame, .removeSources: return .delete
+        case .changeArtwork: return .image
         case .storePage: return .store
         case .attachSources: return .link
         case .openLog: return .terminal
@@ -92,7 +94,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
     }
 
     /// Opens a sub-list (chevron).
-    public var opensSubmenu: Bool { self == .editDetails }
+    public var opensSubmenu: Bool { self == .editDetails || self == .changeArtwork }
 
     /// Red title, confirmed in a dialog.
     public var isDestructive: Bool { self == .removeGame || self == .removeSources }
@@ -201,8 +203,9 @@ public struct GameOptionsPresentation: Equatable {
         case .rebuild: return rebuildAbout
         case .showInFinder: return "Reveal the app in Finder."
         case .openSaves: return "Open the game's save folder."
-        case .editDetails: return "Store page, sources and the build log."
+        case .editDetails: return "Artwork, store page, sources and the build log."
         case .removeGame: return removal.message
+        case .changeArtwork: return "Cover, background, icon and logo, from GameTDB, Title DB or a file."
         case .storePage: return "Open the game's Nintendo store page."
         case .attachSources: return attachAbout
         case .openLog: return "Reveal the latest build log."
@@ -248,7 +251,7 @@ public struct GameOptionsPresentation: Equatable {
                         .row(.editDetails), .gap, .row(.removeGame)]
             return entries
         case .editDetails:
-            var entries: [GameOptionsEntry] = [.heading("Edit details")]
+            var entries: [GameOptionsEntry] = [.heading("Edit details"), .row(.changeArtwork)]
             if hasStorePage { entries.append(.row(.storePage)) }
             entries += [.row(.attachSources), .row(.openLog), .gap, .row(.removeSources)]
             return entries

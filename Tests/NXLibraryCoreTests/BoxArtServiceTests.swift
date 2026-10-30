@@ -94,6 +94,21 @@ final class BoxArtServiceTests: XCTestCase {
         XCTAssertNotNil(found)
     }
 
+    func testPickerEntriesPutExactTitlesFirst() async throws {
+        let client = RoutedClient()
+        let (boxArt, _, index) = try service(client)
+        let totkJP = GameTDBEntry(id: "AAAAC", title: "The Legend of Zelda: Tears of the Kingdom", region: "NTSC-J")
+        let echoes = GameTDBEntry(id: "AAAAD", title: "The Legend of Zelda: Echoes of Wisdom", region: "ALL")
+        try index.save([zelda, echoes, totkJP, totk])
+
+        let entries = await boxArt.pickerEntries(names: ["TOTK", "The Legend of Zelda: Tears of the Kingdom"])
+        XCTAssertEqual(Array(entries.prefix(2).map(\.id)), ["AAAAB", "AAAAC"], "every region of the exact title, widest first")
+        XCTAssertLessThanOrEqual(entries.count, BoxArtService.pickerLimit)
+        XCTAssertEqual(Set(entries.map(\.id)).count, entries.count)
+        let none = await boxArt.pickerEntries(names: ["Metroid Dread"])
+        XCTAssertEqual(none, [])
+    }
+
     func testNoIndexYetIsNotAMiss() async throws {
         let client = RoutedClient()
         let (boxArt, _, index) = try service(client)

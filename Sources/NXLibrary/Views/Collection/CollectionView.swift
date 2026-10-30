@@ -18,6 +18,8 @@ public struct CollectionView: View {
     @Environment(\.seleneCanvas) var canvas
 
     @StateObject var art = SeleneHeroArt()
+    /// Art the player picks redraws the hero and logo (their task keys carry its revision).
+    @ObservedObject var picks = ArtworkPicks.shared
     @State var keyMonitor: Any?
 
     public init(viewModel: AppViewModel, router: AppRouter, settings: AppSettingsStore,

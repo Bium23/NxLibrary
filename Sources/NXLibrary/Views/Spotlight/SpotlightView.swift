@@ -25,6 +25,8 @@ public struct SpotlightView: View {
     @Environment(\.seleneReduceMotion) var reduceMotion
 
     @StateObject var art = SeleneHeroArt()
+    /// Art the player picks redraws the hero and logo (their task keys carry its revision).
+    @ObservedObject var picks = ArtworkPicks.shared
     @State var keyMonitor: Any?
     @State var hadGames = false
     /// The card Y menu: which card and the focused row.

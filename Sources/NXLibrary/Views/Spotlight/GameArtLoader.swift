@@ -20,18 +20,28 @@ final class GameArtLoader {
     func cachedHero(for game: PortedGame) -> NSImage? { heroes.object(forKey: game.id as NSUUID) }
     func cachedLogo(for game: PortedGame) -> NSImage? { logos.object(forKey: game.id as NSUUID) }
 
-    /// Local hero files, the disk cache, a known community
+    /// Drops a game's decoded art, so the next load reads a new pick.
+    func forget(_ game: PortedGame) {
+        heroes.removeObject(forKey: game.id as NSUUID)
+        logos.removeObject(forKey: game.id as NSUUID)
+    }
+
+    /// The player's pick, local hero files, the disk cache, a known community
     /// wallpaper, then the store / titledb banner.
     func hero(for game: PortedGame, metadata: NintendoStoreMetadata?, artwork: ArtworkStore) async -> NSImage? {
         if let cached = cachedHero(for: game) { return cached }
         let titleKey = game.titleId ?? game.uniqueKey
         var image: NSImage?
 
+        if let picked = ArtworkPicks.shared.url(titleID: titleKey, slot: .background) {
+            image = await Self.decodeHero(at: picked)
+        }
+
         let names = ["hero.jpg", "hero.png", "background.jpg", "background.png", "wallpaper.jpg"]
         var folders: [URL] = []
         if let source = game.sources.first { folders.append(source.url.deletingLastPathComponent()) }
         folders.append(game.url.appendingPathComponent("Contents/Resources"))
-        search: for folder in folders {
+        search: for folder in folders where image == nil {
             for name in names {
                 let url = folder.appendingPathComponent(name)
                 if FileManager.default.fileExists(atPath: url.path),
@@ -61,7 +71,7 @@ final class GameArtLoader {
         return image
     }
 
-    /// The disk cache, a local logo.png, the store logo, then a known community logo.
+    /// The player's pick, the disk cache, a local logo.png, the store logo, then a known community logo.
     func logo(for game: PortedGame, metadata: NintendoStoreMetadata?, artwork: ArtworkStore) async -> NSImage? {
         if let cached = cachedLogo(for: game) { return cached }
         let titleKey = game.titleId ?? game.uniqueKey
@@ -69,7 +79,10 @@ final class GameArtLoader {
 
         // Every read and decode runs off the main thread (`decodeLogo`); a
         // missing local file simply decodes to nil.
-        if let url = artwork.cachedURL(titleID: titleKey, kind: .logo) {
+        if let picked = ArtworkPicks.shared.url(titleID: titleKey, slot: .logo) {
+            image = await Self.decodeLogo(at: picked)
+        }
+        if image == nil, let url = artwork.cachedURL(titleID: titleKey, kind: .logo) {
             image = await Self.decodeLogo(at: url)
         }
         if image == nil {

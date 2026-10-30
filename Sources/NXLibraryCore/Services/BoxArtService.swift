@@ -6,6 +6,8 @@ import Foundation
 /// unless a name it did not try comes along.
 public actor BoxArtService {
     public static let missRetry: TimeInterval = 7 * 24 * 3600
+    /// GameTDB entries the picker shows covers for.
+    public static let pickerLimit = 6
 
     private let artwork: ArtworkStore
     private let index: GameTDBStore
@@ -39,6 +41,19 @@ public actor BoxArtService {
         }
         recordMiss(missKey)
         return nil
+    }
+
+    /// GameTDB entries for the artwork picker: every region of an exact title,
+    /// then titles that look alike, without repeats.
+    public func pickerEntries(names: [String]) -> [GameTDBEntry] {
+        guard let entries = loadEntries() else { return [] }
+        var picked: [GameTDBEntry] = []
+        let exact = names.flatMap { GameTDB.exactMatches(for: $0, in: entries) }
+        let similar = names.flatMap { GameTDB.candidates(for: $0, in: entries, limit: Self.pickerLimit) }
+        for entry in exact + similar where !picked.contains(where: { $0.id == entry.id }) {
+            picked.append(entry)
+        }
+        return Array(picked.prefix(Self.pickerLimit))
     }
 
     /// Downloads GameTDB's database when the local index is missing or 30 days old;

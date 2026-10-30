@@ -27,6 +27,8 @@ struct GameOptionsView: View {
     /// The focused row by identity; nil means the top row of the level.
     @State private var pickedRow: GameOptionsRow?
     @State private var confirm: ConfirmTarget?
+    /// Change artwork is open over the list; it takes the input until B closes it.
+    @State private var artworkOpen = false
     @State private var confirmFocus: SeleneConfirmButton = .cancel
     @State private var keyMonitor: Any?
     /// Row frames in the list's viewport, written while scrolling without redrawing.
@@ -104,6 +106,12 @@ struct GameOptionsView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
+            if artworkOpen {
+                ChangeArtworkView(viewModel: viewModel, game: current) { artworkOpen = false }
+                    .transition(.opacity)
+                    .zIndex(2)
+            }
+
             if let target = confirm {
                 confirmOverlay(target)
                     .transition(reduceMotion
@@ -113,6 +121,7 @@ struct GameOptionsView: View {
             }
         }
         .animation(reduceMotion ? nil : SeleneTheme.quick, value: confirm)
+        .animation(reduceMotion ? nil : SeleneTheme.quick, value: artworkOpen)
         .onAppear(perform: installKeyMonitor)
         .onDisappear(perform: removeKeyMonitor)
         .onReceive(NotificationCenter.default.publisher(for: .nxGameOptionsGamepadAction)) { note in
@@ -383,6 +392,7 @@ struct GameOptionsView: View {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .scrollWheel]) { event in
             guard viewModel.gameForSettingsSheet?.id == game.id,
+                  !artworkOpen,
                   viewModel.gameToClose == nil,
                   viewModel.alertMessage == nil,
                   let window = event.window,
@@ -449,6 +459,8 @@ struct GameOptionsView: View {
     }
 
     private func handleGamepad(_ action: GamepadAction) {
+        // Change artwork reads the same notifications while it is open.
+        guard !artworkOpen else { return }
         switch action {
         case .navigateUp: navigate(by: -1)
         case .navigateDown: navigate(by: 1)
@@ -591,6 +603,11 @@ struct GameOptionsView: View {
         case .removeGame:
             SoundEffectService.shared.play(.click)
             askConfirm(.removeGame)
+        case .changeArtwork:
+            SoundEffectService.shared.play(.click)
+            // The official name helps the cover search, as on the Collection.
+            viewModel.loadStoreMetadata(for: current)
+            artworkOpen = true
         case .storePage:
             guard let url = viewModel.storeMetadata[game.id]?.storeURL else { return }
             SoundEffectService.shared.play(.click)

@@ -46,6 +46,7 @@ public enum MaterialIcon: String, CaseIterable, Sendable {
     case store = "\u{E8D1}"
     case link = "\u{E157}"
     case language = "\u{E894}"
+    case image = "\u{E3F4}"
 
     public static let fontName = "Material Icons"
 }

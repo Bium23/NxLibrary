@@ -208,6 +208,14 @@ public final class ArtworkStore: ObservableObject {
             .appendingPathComponent("\(kind.rawValue).\(ext)")
     }
 
+    /// A title ID as a safe folder name.
+    static func folderName(for titleID: String) -> String {
+        let safe = titleID.map {
+            $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" ? $0 : "_"
+        }.reduce(into: "") { $0.append($1) }
+        return safe.isEmpty ? "unknown" : safe
+    }
+
     static func downsample(_ data: Data, maxPixelSize: CGFloat, png: Bool = false) -> Data? {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
         let options: [CFString: Any] = [

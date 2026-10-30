@@ -74,13 +74,15 @@ final class GameOptionsPresentationTests: XCTestCase {
     func testEditDetailsStorePageOnlyWhenKnown() {
         XCTAssertFalse(presentation(store: false).focusableRows(level: .editDetails, origin: .details)
             .contains(.storePage))
-        XCTAssertEqual(presentation(store: true).focusableRows(level: .editDetails, origin: .details).first,
+        XCTAssertEqual(presentation(store: true).focusableRows(level: .editDetails, origin: .details).dropFirst().first,
                        .storePage)
     }
 
     func testEditDetailsEndsWithRemoveSources() {
         let rows = presentation().focusableRows(level: .editDetails, origin: .details)
-        XCTAssertEqual(rows, [.attachSources, .openLog, .removeSources])
+        XCTAssertEqual(rows, [.changeArtwork, .attachSources, .openLog, .removeSources])
+        XCTAssertEqual(GameOptionsRow.changeArtwork.title, "Change artwork")
+        XCTAssertTrue(GameOptionsRow.changeArtwork.opensSubmenu)
     }
 
     func testEveryRowAppearsInSomeLevel() {

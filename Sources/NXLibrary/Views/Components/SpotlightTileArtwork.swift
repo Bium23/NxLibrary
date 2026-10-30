@@ -2,8 +2,9 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
-/// Square tile art: with `ownIconFirst` the game's own icon art (the built
-/// app's icon, as on the Mac), so every tile is the same full-bleed square.
+/// Square tile art: the player's pick first. Then, with `ownIconFirst`, the
+/// game's own icon art (the built app's icon, as on the Mac), so every tile is
+/// the same full-bleed square.
 /// Otherwise (or without one): Title DB's 1024 icon by title ID, then the
 /// generic icon. Crossfades when fetched art arrives.
 /// The caller applies the corner radius.
@@ -16,12 +17,19 @@ struct SpotlightTileArtwork: View {
     /// Show the game's own icon art (as on the Mac) whenever it exists (Spotlight's row).
     var ownIconFirst = false
 
+    @ObservedObject private var picks = ArtworkPicks.shared
     @State private var better: NSImage?
+    @State private var picked: NSImage?
 
     var body: some View {
         ZStack {
             SeleneTheme.glassSolid
-            if ownIconFirst, let own = GameIconProvider.squareArt(for: game) {
+            if let picked {
+                Image(nsImage: picked)
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fill)
+            } else if ownIconFirst, let own = GameIconProvider.squareArt(for: game) {
                 Image(nsImage: own)
                     .resizable()
                     .interpolation(.high)
@@ -39,7 +47,12 @@ struct SpotlightTileArtwork: View {
         }
         .frame(width: side, height: side)
         .clipped()
-        .task(id: game.id) {
+        .task(id: "\(game.id)|\(picks.revision)") {
+            if let url = picks.url(titleID: game.titleId ?? game.uniqueKey, slot: .icon) {
+                picked = await GameArtLoader.decode(at: url, maxPixelSize: 512)
+                return
+            }
+            picked = nil
             guard !ownIconFirst || GameIconProvider.squareArt(for: game) == nil else { return }
             let key = game.id.uuidString as NSString
             if let memo = TileArtMemo.shared.object(forKey: key) {

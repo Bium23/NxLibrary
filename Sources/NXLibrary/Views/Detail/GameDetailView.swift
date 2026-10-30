@@ -26,6 +26,8 @@ struct GameDetailView: View {
     @Environment(\.seleneReduceMotion) var reduceMotion
 
     @StateObject var art = SeleneHeroArt()
+    /// Art the player picks redraws the hero and logo (their task keys carry its revision).
+    @ObservedObject var picks = ArtworkPicks.shared
     @State var focus = DetailsFocus()
     /// The open screenshot viewer (the game's titleID, its urls and the paging state).
     @State var viewer: ViewerContext?

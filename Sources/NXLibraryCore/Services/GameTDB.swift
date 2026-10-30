@@ -61,9 +61,14 @@ public enum GameTDB {
 
     /// The one entry whose normalised title equals `name`'s; the widest region wins a tie.
     public static func exactMatch(for name: String, in entries: [GameTDBEntry]) -> GameTDBEntry? {
+        exactMatches(for: name, in: entries).first
+    }
+
+    /// Every entry whose normalised title equals `name`'s, widest region first.
+    public static func exactMatches(for name: String, in entries: [GameTDBEntry]) -> [GameTDBEntry] {
         let key = normalize(name)
-        guard !key.isEmpty else { return nil }
-        return entries.filter { normalize($0.title) == key }.min { regionRank($0) < regionRank($1) }
+        guard !key.isEmpty else { return [] }
+        return entries.filter { normalize($0.title) == key }.sorted { regionRank($0) < regionRank($1) }
     }
 
     /// Entries worth showing for `name`: exact titles first, then titles that
