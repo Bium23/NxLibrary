@@ -309,10 +309,10 @@ struct AddGameStepTwoView: View {
                 viewModel.buildError = nil
             }
         }
-        if viewModel.environmentStatus != nil, !viewModel.prerequisites.xcode.isAvailable {
-            warning("Apple Command Line Tools are missing. A build needs them.",
-                    actionTitle: "Install…") {
-                viewModel.installAppleCommandLineTools()
+        if let environment = viewModel.environmentStatus, environment.xcodeVersion == nil {
+            warning("Xcode is not ready. A build needs it.",
+                    actionTitle: "Open Setup") {
+                viewModel.reopenSetup()
             }
         }
         if !viewModel.isProdKeysValid {

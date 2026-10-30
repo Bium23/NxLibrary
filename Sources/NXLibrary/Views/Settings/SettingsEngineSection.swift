@@ -71,8 +71,8 @@ struct SettingsEngineSection: View {
                              detail: environment.xcodeVersion ?? "not found")
                     buildRow("Metal compiler", ok: environment.metalVersion != nil,
                              detail: environment.metalVersion ?? "not found")
-                    buildRow("nxnative venv", ok: environment.pythonURL != nil,
-                             detail: environment.pythonURL?.path ?? "missing")
+                    buildRow("Python and build tools", ok: environment.pythonURL != nil,
+                             detail: runtimeDetail(environment))
                     buildRow(".NET 10 runtime", ok: !environment.issues.contains {
                         $0.lowercased().contains(".net")
                     }, detail: "checked by the build command")
@@ -336,6 +336,14 @@ struct SettingsEngineSection: View {
                 .seleneFont(11, .bold, design: .monospaced)
                 .foregroundColor(color(for: status))
         }
+    }
+
+    private func runtimeDetail(_ environment: EnvironmentStatus) -> String {
+        guard let python = environment.pythonURL else { return "missing" }
+        if viewModel.engineToolchain.isBundled {
+            return BundledRuntime.locate()?.versionSummary() ?? "Included in NX Library"
+        }
+        return "Developer build: \(python.path)"
     }
 
     private func buildRow(_ title: String, ok: Bool, detail: String) -> some View {

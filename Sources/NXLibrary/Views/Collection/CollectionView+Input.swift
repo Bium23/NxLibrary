@@ -75,7 +75,6 @@ extension CollectionView {
                   viewModel.gameForSettingsSheet == nil,
                   viewModel.gameToClose == nil,
                   !viewModel.showSetupCheck,
-                  !viewModel.showInstallerSheet,
                   !router.isScreenshotViewerOpen,
                   let window = event.window,
                   !window.isSheet,

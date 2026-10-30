@@ -100,11 +100,6 @@ public struct AddGameView: View {
         } message: {
             Text("The build keeps running in the background. Open Console to follow it.")
         }
-        .alert("Apple Command Line Tools", isPresented: $viewModel.showCltInstallAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Apple's official installer dialog has opened on screen. Follow Apple's prompt, then re-check from Settings or Setup.")
-        }
     }
 
     private var commandHints: [HintItem] {

@@ -14,6 +14,15 @@ public struct BundledRuntime: Equatable {
     public var binDirectory: URL { root.appendingPathComponent("bin") }
     public var versionsURL: URL { root.appendingPathComponent("versions.json") }
 
+    /// What `bundle_runtime.sh` pinned, for Settings; nil when versions.json is missing.
+    public func versionSummary() -> String? {
+        guard let data = try? Data(contentsOf: versionsURL),
+              let versions = try? JSONDecoder().decode([String: String].self, from: data) else { return nil }
+        let order = [("python", "Python"), ("capstone", "capstone"), ("lz4", "lz4"),
+                     ("fonttools", "fonttools"), ("zstd", "zstd"), ("glslang", "glslang")]
+        return order.compactMap { key, name in versions[key].map { "\(name) \($0)" } }.joined(separator: " · ")
+    }
+
     /// The running app's runtime; nil in a developer build without one.
     public static func locate(resourceURL: URL? = Bundle.main.resourceURL,
                               fileManager: FileManager = .default) -> BundledRuntime? {

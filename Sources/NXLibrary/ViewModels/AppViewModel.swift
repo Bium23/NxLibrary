@@ -3,7 +3,7 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
-public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
+public final class AppViewModel: ObservableObject {
     // MARK: - Storage Keys for Persistence
     private enum StorageKeys {
         static let savedGameFolder = "NXNative_SavedGameFolder"
@@ -20,7 +20,6 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     @Published public var isNxnativeValid: Bool = false
     @Published public var isCloningRepository: Bool = false
     @Published public var cloneErrorMessage: String? = nil
-    @Published public var showCltInstallAlert: Bool = false
     
     // MARK: - Keys
     @Published public var prodKeysPath: String = "" {
@@ -227,16 +226,6 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         }
     }
     
-    // MARK: - System Prerequisites & Installer
-    @Published public var prerequisites: SystemPrerequisites = SystemPrerequisites()
-    @Published public var isCheckingPrerequisites: Bool = false
-    @Published public var isInstallingDependency: Bool = false
-    @Published public var installerCurrentItem: String? = nil
-    @Published public var installerLogs: [String] = []
-    @Published public var showInstallerSheet: Bool = false
-    @Published public var dependencyToUninstall: DependencyStatus? = nil
-    @Published public var showUninstallConfirm: Bool = false
-    
     // MARK: - Advanced Options
     @Published public var appName: String = ""
     @Published public var bundleId: String = ""
@@ -321,10 +310,8 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     private var activeBuildToolchainVerified = false
     private var buildStartedAt: Date?
     private var buildTempDirectory: URL?
-    private let installer = InstallerService.shared
     
     public init() {
-        installer.delegate = self
         let didCompleteSetup = UserDefaults.standard.bool(forKey: StorageKeys.setupCompleted)
         self.setupCompleted = didCompleteSetup
         self.showSetupCheck = !didCompleteSetup
@@ -421,7 +408,6 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         self.nxnativePath = nxResult.path
         self.isNxnativeValid = nxResult.isValid
         ensureKeysImported(customRyujinxDir: customRyujinxDir)
-        refreshPrerequisites()
         refreshCompatibility()
     }
 
@@ -754,117 +740,6 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
                 lastError = error.localizedDescription
                 logs.append(LogEntry(level: .error,
                                      message: "Save backup failed: \(error.localizedDescription)"))
-            }
-        }
-    }
-    
-    public func installAppleCommandLineTools() {
-        showCltInstallAlert = true
-        installer.install(dependency: prerequisites.xcode) { [weak self] _ in
-            self?.refreshPrerequisites()
-        }
-    }
-    
-    public func refreshPrerequisites() {
-        isCheckingPrerequisites = true
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let res = SystemDetector.shared.checkPrerequisites()
-            DispatchQueue.main.async {
-                self?.prerequisites = res
-                self?.isCheckingPrerequisites = false
-            }
-        }
-    }
-    
-    // MARK: - Tool Installer / Repair / Uninstall
-    public func installAllMissingDependencies() {
-        let missing = prerequisites.missingList
-        guard !missing.isEmpty else { return }
-        showInstallerSheet = true
-        isInstallingDependency = true
-        installerLogs.removeAll()
-        installerLogs.append("Installing \(missing.count) missing dependencies...")
-        
-        installer.installAll(dependencies: missing) { [weak self] success in
-            self?.isInstallingDependency = false
-            self?.refreshPrerequisites()
-            if success {
-                self?.logs.append(LogEntry(level: .success, message: "All missing dependencies installed successfully."))
-            } else {
-                self?.logs.append(LogEntry(level: .warning, message: "Some dependencies could not be installed."))
-            }
-        }
-    }
-    
-    public func installDependency(_ dep: DependencyStatus) {
-        showInstallerSheet = true
-        isInstallingDependency = true
-        installerLogs.removeAll()
-        installerLogs.append("Installing \(dep.name)...")
-        
-        installer.install(dependency: dep) { [weak self] success in
-            self?.isInstallingDependency = false
-            self?.refreshPrerequisites()
-            if success {
-                self?.logs.append(LogEntry(level: .success, message: "\(dep.name) installed successfully."))
-            } else {
-                self?.logs.append(LogEntry(level: .error, message: "Failed to install \(dep.name)."))
-            }
-        }
-    }
-    
-    public func repairDependency(_ dep: DependencyStatus) {
-        showInstallerSheet = true
-        isInstallingDependency = true
-        installerLogs.removeAll()
-        installerLogs.append("Repairing \(dep.name)...")
-        
-        installer.repair(dependency: dep) { [weak self] success in
-            self?.isInstallingDependency = false
-            self?.refreshPrerequisites()
-            if success {
-                self?.logs.append(LogEntry(level: .success, message: "\(dep.name) repaired successfully."))
-            } else {
-                self?.logs.append(LogEntry(level: .error, message: "Failed to repair \(dep.name)."))
-            }
-        }
-    }
-    
-    public func confirmUninstall(_ dep: DependencyStatus) {
-        self.dependencyToUninstall = dep
-        self.showUninstallConfirm = true
-    }
-    
-    public func executeUninstall() {
-        guard let dep = dependencyToUninstall else { return }
-        showUninstallConfirm = false
-        showInstallerSheet = true
-        isInstallingDependency = true
-        installerLogs.removeAll()
-        installerLogs.append("Uninstalling \(dep.name)...")
-        
-        installer.uninstall(dependency: dep) { [weak self] success in
-            self?.isInstallingDependency = false
-            self?.refreshPrerequisites()
-            if success {
-                self?.logs.append(LogEntry(level: .warning, message: "\(dep.name) was uninstalled."))
-            } else {
-                self?.logs.append(LogEntry(level: .error, message: "Failed to uninstall \(dep.name)."))
-            }
-        }
-    }
-    
-    public func repairAllDependencies() {
-        showInstallerSheet = true
-        isInstallingDependency = true
-        installerLogs.removeAll()
-        installerLogs.append("Repairing all environment tools...")
-        
-        installer.repairAll(dependencies: prerequisites.list) { [weak self] success in
-            self?.isInstallingDependency = false
-            self?.refreshPrerequisites()
-            if success {
-                self?.logs.append(LogEntry(level: .success, message: "All environment tools repaired."))
             }
         }
     }
@@ -1565,8 +1440,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             self.nxnativePath = res.path
             self.isNxnativeValid = res.isValid
             if res.isValid {
-                refreshPrerequisites()
-                refreshCompatibility()
+                        refreshCompatibility()
             }
         }
     }
@@ -2368,18 +2242,5 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         return object["CFBundleShortVersionString"] as? String
     }
 
-    public func installerDidProduceOutput(_ line: String) {
-        installerLogs.append(line)
-    }
-    
-    public func installerDidStartItem(_ name: String) {
-        installerCurrentItem = name
-    }
-    
-    public func installerDidFinishItem(_ name: String, success: Bool) {}
-    
-    public func installerDidCompleteAll(allSuccess: Bool) {
-        installerCurrentItem = nil
-    }
-    
+
 }

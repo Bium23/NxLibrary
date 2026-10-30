@@ -204,7 +204,6 @@ extension GameDetailView {
                   viewModel.gameForSettingsSheet == nil,
                   viewModel.gameToClose == nil,
                   !viewModel.showSetupCheck,
-                  !viewModel.showInstallerSheet,
                   let window = event.window,
                   !window.isSheet,
                   window.attachedSheet == nil,

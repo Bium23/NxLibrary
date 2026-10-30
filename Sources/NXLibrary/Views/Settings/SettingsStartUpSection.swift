@@ -50,15 +50,13 @@ struct SettingsStartUpSection: View {
             SettingsSubheading("Setup")
 
             SeleneButtonRow("Setup",
-                            subtitle: "Folders, keys and prerequisites in one guided flow.",
+                            subtitle: "Open the Setup check: what NX Library needs and what is ready.",
                             buttonTitle: "Open Setup") {
                 viewModel.reopenSetup()
             }
 
             SeleneButtonRow("Environment",
-                            subtitle: viewModel.isCheckingPrerequisites
-                                ? "Checking Xcode, Metal, Python and the engine..."
-                                : "Re-run the environment and compatibility checks.",
+                            subtitle: "Re-run the environment and compatibility checks.",
                             buttonTitle: "Re-check") {
                 viewModel.detectEnvironment()
             }
@@ -83,14 +81,14 @@ struct SettingsStartUpSection: View {
             }
         }
         .onAppear(perform: publishActions)
-        .onChange(of: viewModel.isCheckingPrerequisites) { _ in publishActions() }
     }
 
     private var readinessLine: String {
         let engine = seleneShort(viewModel.pinnedEngineCommit)
         let metal = viewModel.installedMetalVersion ?? "Metal unknown"
         let xcode = viewModel.environmentStatus?.xcodeVersion ?? "Xcode unknown"
-        let python = viewModel.environmentStatus?.pythonURL == nil ? "Python missing" : "Python venv ready"
+        let python = viewModel.environmentStatus?.pythonURL == nil ? "Python missing"
+            : viewModel.engineToolchain.isBundled ? "Python included" : "Python venv ready"
         return "Engine \(engine) · \(metal) · \(xcode) · \(python)"
     }
 
@@ -114,7 +112,7 @@ struct SettingsStartUpSection: View {
             .init(id: "setup", title: "Setup") {
                 viewModel.reopenSetup()
             },
-            .init(id: "recheck", title: "Environment", isEnabled: !viewModel.isCheckingPrerequisites) {
+            .init(id: "recheck", title: "Environment") {
                 viewModel.detectEnvironment()
             }
         ])
