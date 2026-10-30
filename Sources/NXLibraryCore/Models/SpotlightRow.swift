@@ -44,9 +44,12 @@ public enum SpotlightRow {
     /// their default relative position: each is placed immediately after the
     /// ordered item that preceded it in the default sequence, or at the start
     /// when no ordered item preceded it.
+    ///
+    /// `front` (the game being ported) is moved to the very start, before the cards.
     public static func build(games: [PortedGame],
                              enabledCards: [SpotlightCard],
-                             order: [String]) -> [SpotlightItem] {
+                             order: [String],
+                             front: UUID? = nil) -> [SpotlightItem] {
         let enabled = Set(enabledCards)
         let defaults: [SpotlightItem] =
             SpotlightCard.allCases.filter(enabled.contains).map { .card($0) }
@@ -75,6 +78,9 @@ public enum SpotlightRow {
         for item in ordered {
             result.append(item)
             result.append(contentsOf: trailing[item.key] ?? [])
+        }
+        if let front, let index = result.firstIndex(of: .game(front)) {
+            result.insert(result.remove(at: index), at: 0)
         }
         return result
     }

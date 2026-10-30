@@ -19,6 +19,7 @@ public enum MaterialIcon: String, CaseIterable, Sendable {
     case power = "\u{E8AC}"
     case restartAlt = "\u{F053}"
     case key = "\u{E0DA}"
+    case lock = "\u{E897}"
     case settings = "\u{E8B8}"
     case tune = "\u{E429}"
     case sync = "\u{E627}"

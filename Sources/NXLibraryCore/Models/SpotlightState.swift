@@ -38,6 +38,8 @@ public struct SpotlightState: Equatable {
     public var stripIndex: Int
     public var topGameIndex: Int
     public var actionIndex = 0
+    /// Pills on screen now: one while a game ports, otherwise `pillCount`.
+    public private(set) var pillLimit = SpotlightState.pillCount
     public var moreIndex = 0
     /// Non-nil while a tile is lifted for moving.
     public var lift: SpotlightLift?
@@ -115,6 +117,12 @@ public struct SpotlightState: Equatable {
         let moved = target.key != selectedKey
         select(target)
         return moved
+    }
+
+    /// The pills changed (a porting started or ended): keep the focus on one that exists.
+    public mutating func setPillLimit(_ limit: Int) {
+        pillLimit = max(1, limit)
+        pillIndex = min(pillIndex, pillLimit - 1)
     }
 
     public mutating func select(_ item: SpotlightItem) {
@@ -249,7 +257,7 @@ public struct SpotlightState: Equatable {
         case .row:
             return false
         case .pills:
-            let next = min(max(pillIndex + delta, 0), Self.pillCount - 1)
+            let next = min(max(pillIndex + delta, 0), pillLimit - 1)
             defer { pillIndex = next }
             return next != pillIndex
         case .strip:

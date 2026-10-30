@@ -40,11 +40,19 @@ public struct DetailsFocus: Equatable {
 
     public var zone = DetailsFocus.topZone
     public var pill = 0
+    /// Pills on screen now: one while the game ports, otherwise `pillCount`.
+    public private(set) var pillLimit = DetailsFocus.pillCount
     public var shot = 0
     public var action = 0
     public var more = 0
 
     public init() {}
+
+    /// The pills changed (a porting started or ended): keep the focus on one that exists.
+    public mutating func setPillLimit(_ limit: Int) {
+        pillLimit = max(1, limit)
+        pill = min(pill, pillLimit - 1)
+    }
 
     /// Down: inside the action grid, the next row; otherwise the next band with items.
     @discardableResult
@@ -70,7 +78,7 @@ public struct DetailsFocus: Equatable {
     public mutating func left(in bands: Bands) -> Bool {
         switch zone {
         case Self.topZone:
-            guard let next = Self.moved(pill, by: -1, count: Self.pillCount) else { return false }
+            guard let next = Self.moved(pill, by: -1, count: pillLimit) else { return false }
             pill = next
             return true
         case Self.screenshotsZone:
@@ -92,7 +100,7 @@ public struct DetailsFocus: Equatable {
     public mutating func right(in bands: Bands) -> Bool {
         switch zone {
         case Self.topZone:
-            guard let next = Self.moved(pill, by: 1, count: Self.pillCount) else { return false }
+            guard let next = Self.moved(pill, by: 1, count: pillLimit) else { return false }
             pill = next
             return true
         case Self.screenshotsZone:
