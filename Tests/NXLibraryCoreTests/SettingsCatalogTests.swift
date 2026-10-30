@@ -17,6 +17,13 @@ final class SettingsCatalogTests: XCTestCase {
         XCTAssertTrue(titles.contains("Background sizing"))
     }
 
+    func testWallpaperBrightnessIsFoundAndCountsAsChanged() {
+        XCTAssertEqual(SettingsCatalog.search("dark").first { $0.id == "wallpaperBrightness" }?.group, .look)
+        var settings = AppSettings()
+        settings.wallpaperBrightness = .dim
+        XCTAssertEqual(SettingsCatalog.changed(in: settings).map(\.id), ["wallpaperBrightness"])
+    }
+
     func testSearchFindsHiddenGames() {
         let hits = SettingsCatalog.search("hidden")
         XCTAssertEqual(hits.first { $0.id == "hiddenGames" }?.group, .games)

@@ -7,6 +7,15 @@ struct SeleneBackdropStyle: Equatable {
     var wallpaperURL: URL?
     var sizing: BackgroundSizing = .fill
     var animated = true
+    var brightness: WallpaperBrightness = .balanced
+}
+
+extension WallpaperBrightness {
+    /// A left-to-right mask carrying the setting's opacity, for a wallpaper or a video.
+    var mask: LinearGradient {
+        LinearGradient(stops: stops.map { .init(color: .black.opacity($0.opacity), location: $0.location) },
+                       startPoint: .leading, endPoint: .trailing)
+    }
 }
 
 private struct SeleneBackdropStyleKey: EnvironmentKey {
@@ -41,9 +50,8 @@ struct SeleneBackdrop: View {
     @Environment(\.seleneBackdropStyle) private var style
     @Environment(\.seleneReduceMotion) private var reduceMotion
 
-    /// The base gradient's and the wallpaper's opacity.
+    /// The base gradient's opacity; the wallpaper's follows Wallpaper brightness.
     var baseOpacity = 0.6
-    var wallpaperOpacity = 0.6
     /// Covered (a game's art over it): the moonlight or the video holds still and costs nothing.
     var still = false
 
@@ -59,10 +67,10 @@ struct SeleneBackdrop: View {
             Rectangle().fill(SeleneTheme.baseGradient).opacity(baseOpacity)
             if let url = style.wallpaperURL, WallpaperCatalog.kind(of: url) == .video {
                 LiveBackdrop(url: url, playing: style.animated && !reduceMotion && !still, sizing: style.sizing)
-                    .opacity(wallpaperOpacity)
+                    .mask(style.brightness.mask)
             } else if let url = style.wallpaperURL, let image = WallpaperImageCache.shared.image(at: url) {
                 wallpaper(image)
-                    .opacity(wallpaperOpacity)
+                    .mask(style.brightness.mask)
             } else {
                 MoonlightBackdrop(accent: SeleneTheme.glyph, ink: SeleneTheme.ink,
                                   moving: style.animated && !reduceMotion && !still)

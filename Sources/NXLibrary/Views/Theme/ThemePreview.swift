@@ -15,6 +15,7 @@ struct ThemePreview: View {
     /// A live background to play over the wallpaper's still (a download's file, or an online item's small loop).
     var videoURL: URL? = nil
 
+    @Environment(\.seleneBackdropStyle) private var style
     @State private var art: [NSImage] = []
     @State private var videoReady = false
 
@@ -30,12 +31,13 @@ struct ThemePreview: View {
             ZStack(alignment: .topLeading) {
                 Rectangle().fill(SeleneTheme.baseGradient(for: palette))
                 if let wallpaperURL {
-                    WallpaperThumb(url: wallpaperURL).opacity(0.6)
+                    WallpaperThumb(url: wallpaperURL).mask(style.brightness.mask)
                     if let videoURL {
                         // Fades in over the still once its first frame shows.
                         LiveBackdrop(url: videoURL, playing: true, onReady: { videoReady = $0 })
                             .id(videoURL)
-                            .opacity(videoReady ? 0.6 : 0)
+                            .mask(style.brightness.mask)
+                            .opacity(videoReady ? 1 : 0)
                             .animation(.easeOut(duration: 0.3), value: videoReady)
                             .onDisappear { videoReady = false }
                     }

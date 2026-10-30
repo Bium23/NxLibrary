@@ -32,6 +32,10 @@ struct SettingsLookSection: View {
         settings.settings.backgroundSizing = settings.settings.backgroundSizing.stepped(step)
     }
 
+    private func stepBrightness(_ step: Int) {
+        settings.settings.wallpaperBrightness = settings.settings.wallpaperBrightness.stepped(step)
+    }
+
     private func stepShade(_ step: Int) {
         settings.settings.backgroundShade = settings.settings.backgroundShade.stepped(step)
     }
@@ -55,6 +59,10 @@ struct SettingsLookSection: View {
             SeleneCycleRow("Background sizing",
                            subtitle: "Fill crops to cover, Fit shows all of it, Stretch distorts it to fit.",
                            value: settings.settings.backgroundSizing.title) { stepSizing($0) }
+
+            SeleneCycleRow("Wallpaper brightness",
+                           subtitle: "Like Selene dims it evenly; Bright on the right keeps the left dim for text.",
+                           value: settings.settings.wallpaperBrightness.title) { stepBrightness($0) }
 
             SeleneToggleRow("Animated background",
                             subtitle: "The moonlight's beam and motes move and a live background plays; off, they hold still.",
@@ -98,6 +106,7 @@ struct SettingsLookSection: View {
             .value("theme", "Color theme") { stepTheme($0) },
             .value("wallpaper", "Wallpaper") { stepWallpaper($0) },
             .value("sizing", "Background sizing") { stepSizing($0) },
+            .value("brightness", "Wallpaper brightness") { stepBrightness($0) },
             .init(id: "animated", title: "Animated background") {
                 settings.settings.animatedBackground.toggle()
             },

@@ -43,6 +43,41 @@ public enum BackgroundSizing: String, Codable, CaseIterable, Identifiable, Equat
     }
 }
 
+/// How much light a wallpaper or live background keeps, left to right. Selene
+/// draws it at an even 0.6; the default keeps that under the text on the left
+/// and shows the picture at full light on the right.
+public enum WallpaperBrightness: String, Codable, CaseIterable, Identifiable, Equatable {
+    case dim, balanced, bright
+
+    public var id: String { rawValue }
+    public var title: String {
+        switch self {
+        case .dim: return "Like Selene"
+        case .balanced: return "Bright on the right"
+        case .bright: return "Bright"
+        }
+    }
+
+    /// The opacity stops across the window (location 0 = left edge, 1 = right).
+    public var stops: [(location: Double, opacity: Double)] {
+        switch self {
+        case .dim: return [(0, 0.6), (1, 0.6)]
+        case .balanced: return [(0, 0.6), (0.3, 0.6), (0.75, 1), (1, 1)]
+        case .bright: return [(0, 0.85), (0.35, 1), (1, 1)]
+        }
+    }
+
+    /// The opacity at a point across the window, between its stops.
+    public func opacity(at x: Double) -> Double {
+        let stops = self.stops
+        guard let after = stops.firstIndex(where: { $0.location >= x }) else { return stops.last!.opacity }
+        guard after > 0 else { return stops[0].opacity }
+        let (a, b) = (stops[after - 1], stops[after])
+        let t = (x - a.location) / (b.location - a.location)
+        return a.opacity + (b.opacity - a.opacity) * t
+    }
+}
+
 /// What a game's launch screen shows while its window starts.
 public enum LaunchStyle: String, Codable, CaseIterable, Identifiable, Equatable {
     case artAndLogo, artOnly, logoOnBlack, minimal
@@ -105,6 +140,7 @@ public struct AppSettings: Codable, Equatable {
     public var wallpaperID: String?
     public var backgroundSizing: BackgroundSizing
     public var animatedBackground: Bool
+    public var wallpaperBrightness: WallpaperBrightness
     public var launchStyle: LaunchStyle
     public var launchMotion: Bool
     public var launchShade: LaunchShade
@@ -137,6 +173,7 @@ public struct AppSettings: Codable, Equatable {
                 wallpaperID: String? = nil,
                 backgroundSizing: BackgroundSizing = .fill,
                 animatedBackground: Bool = true,
+                wallpaperBrightness: WallpaperBrightness = .balanced,
                 launchStyle: LaunchStyle = .artAndLogo,
                 launchMotion: Bool = true,
                 launchShade: LaunchShade = .soft) {
@@ -168,6 +205,7 @@ public struct AppSettings: Codable, Equatable {
         self.wallpaperID = wallpaperID
         self.backgroundSizing = backgroundSizing
         self.animatedBackground = animatedBackground
+        self.wallpaperBrightness = wallpaperBrightness
         self.launchStyle = launchStyle
         self.launchMotion = launchMotion
         self.launchShade = launchShade
@@ -180,7 +218,7 @@ public struct AppSettings: Codable, Equatable {
         case spotlightCards, spotlightOrder, startingTab, surprisePool, cloudSaves, cloudSavesPickedFolder
         case startOn, lastHome
         case introAnimation, viewButtonSwitches, interfaceSounds, soundVolume, quietLaunch
-        case wallpaperID, backgroundSizing, animatedBackground, launchStyle, launchMotion, launchShade
+        case wallpaperID, backgroundSizing, animatedBackground, wallpaperBrightness, launchStyle, launchMotion, launchShade
     }
 
     public init(from decoder: Decoder) throws {
@@ -212,6 +250,8 @@ public struct AppSettings: Codable, Equatable {
         self.quietLaunch = try container.decodeIfPresent(Bool.self, forKey: .quietLaunch) ?? true
         self.wallpaperID = try container.decodeIfPresent(String.self, forKey: .wallpaperID)
         self.backgroundSizing = try container.decodeIfPresent(BackgroundSizing.self, forKey: .backgroundSizing) ?? .fill
+        self.wallpaperBrightness = try container.decodeIfPresent(WallpaperBrightness.self,
+                                                                 forKey: .wallpaperBrightness) ?? .balanced
         self.animatedBackground = try container.decodeIfPresent(Bool.self, forKey: .animatedBackground) ?? true
         self.launchStyle = try container.decodeIfPresent(LaunchStyle.self, forKey: .launchStyle) ?? .artAndLogo
         self.launchMotion = try container.decodeIfPresent(Bool.self, forKey: .launchMotion) ?? true
