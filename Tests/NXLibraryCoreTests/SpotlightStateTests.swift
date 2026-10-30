@@ -203,6 +203,13 @@ final class SpotlightLiftTests: XCTestCase {
         XCTAssertEqual(CollectionRow.scrollOffset(selectedIndex: CollectionRow.anchorSlot + 3), 3)
     }
 
+    func testCollectionCoversAreSwitchCaseShaped() {
+        XCTAssertEqual(CollectionRow.coverWidth / CollectionRow.coverHeight, BoxArt.aspectRatio, accuracy: 0.003)
+        XCTAssertEqual(BoxArt.aspectRatio, 1166.0 / 1888.0, accuracy: 0.0001)
+        // The row still fits its band with the selected cover grown.
+        XCTAssertLessThan(CollectionRow.coverHeight * CollectionRow.selectedScale, CollectionRow.bandHeight)
+    }
+
     func testPageScrollsThroughActionsAndMore() {
         var s = SpotlightState(selectedKey: "game:x", focus: .strip)
         XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 5, moreCount: 2))

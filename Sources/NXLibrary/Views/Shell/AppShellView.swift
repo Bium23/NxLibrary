@@ -66,7 +66,7 @@ public struct AppShellView: View {
             content
             if router.isSearchPresented && isHomeRoute {
                 FindGameView(router: router, viewModel: viewModel, playSessions: playSessions,
-                             artwork: artwork, steamGridDbApiKey: settings.settings.steamGridDbApiKey)
+                             artwork: artwork)
                     .transition(.opacity)
                     .zIndex(0.5)
             }
@@ -312,6 +312,7 @@ public struct AppShellView: View {
         viewModel.settingsStore = settings
         SoundEffectService.shared.bind(to: settings)
         artwork.trimCache()
+        viewModel.refreshBoxArtIndex()
         SetupCheckModel.checkAtLaunch(viewModel: viewModel)
         runningGames.start(sessions: playSessions)
         runningGames.setGames(viewModel.libraryGames)

@@ -2,7 +2,7 @@ import SwiftUI
 import NXLibraryCore
 
 /// Collection's single row of portrait covers (Main.xaml PART_ListGameItems,
-/// 400 high). Selene units on the stage: covers 188 × 265, 14 apart, radius 12.
+/// 400 high). Selene units on the stage: Switch box covers 172 × 278, 14 apart, radius 12.
 /// The selected cover grows with the focus ring and sits on top; the selection
 /// walks to the anchor slot and then the row slides (`CollectionRow`).
 struct CollectionCoverRow: View {
@@ -11,10 +11,13 @@ struct CollectionCoverRow: View {
 
     let games: [PortedGame]
     let selectedID: UUID?
-    let steamGridDbApiKey: String
     let artwork: ArtworkStore
-    let steamGridDB: SteamGridDBService
-    let coverURL: (PortedGame) -> URL?
+    let boxArt: BoxArtService
+    let boxArtIndexVersion: Int
+    /// The official name, once store metadata has it.
+    let officialName: (PortedGame) -> String?
+    /// Asks for a game's store metadata (its official name) when its cover shows.
+    let needsMetadata: (PortedGame) -> Void
     let onSelect: (PortedGame) -> Void
     let onActivate: (PortedGame) -> Void
 
@@ -55,10 +58,8 @@ struct CollectionCoverRow: View {
         let w = canvas.u(CollectionRow.coverWidth), h = canvas.u(CollectionRow.coverHeight)
         let face = RoundedRectangle(cornerRadius: canvas.u(12), style: .continuous)
         return ZStack {
-            SpotlightTileArtwork(game: game, side: h, width: w, coverFirst: true,
-                                 steamGridDbApiKey: steamGridDbApiKey,
-                                 artwork: artwork, steamGridDB: steamGridDB,
-                                 coverURL: coverURL(game))
+            SwitchBoxArtCover(game: game, width: w, height: h, officialName: officialName(game),
+                              boxArt: boxArt, artwork: artwork, indexVersion: boxArtIndexVersion)
                 .clipShape(face)
                 .shadow(color: .black.opacity(0.55), radius: canvas.u(9))
             SeleneShine(cornerRadius: canvas.u(12), active: selected)
@@ -75,5 +76,6 @@ struct CollectionCoverRow: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(game.name)
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
+        .task(id: game.id) { needsMetadata(game) }
     }
 }

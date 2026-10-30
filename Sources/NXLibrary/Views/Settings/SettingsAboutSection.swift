@@ -11,7 +11,9 @@ struct SettingsAboutSection: View {
         ("Ryujinx Team", "Maxwell shader translator and SPIR-V generator", "https://github.com/Ryujinx/Ryujinx"),
         ("Atmosphère NX", "Mesosphère kernel synchronization semantics", "https://github.com/Atmosphere-NX/Atmosphere"),
         ("LibHac", "NSP reading and PFS/HFS layered filesystem", "https://github.com/Thealexbarney/LibHac"),
-        ("Khronos Group", "SPIRV-Cross Metal Shading Language compiler", "https://github.com/KhronosGroup/SPIRV-Cross")
+        ("Khronos Group", "SPIRV-Cross Metal Shading Language compiler", "https://github.com/KhronosGroup/SPIRV-Cross"),
+        ("GameTDB", "Switch box covers", "https://www.gametdb.com"),
+        ("Title DB", "Game names, icons and banners", "https://github.com/blawar/titledb")
     ]
 
     var body: some View {

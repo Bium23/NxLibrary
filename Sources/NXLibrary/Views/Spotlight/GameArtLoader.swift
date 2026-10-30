@@ -4,7 +4,7 @@ import NXLibraryCore
 
 /// Loads and caches a game's hero art and logo for Spotlight (and, until it is
 /// replaced, the legacy library). Every lookup goes through the shared
-/// `ArtworkStore` disk cache and the shared `SteamGridDBService`.
+/// `ArtworkStore` disk cache.
 @MainActor
 final class GameArtLoader {
     static let shared = GameArtLoader()
@@ -20,10 +20,9 @@ final class GameArtLoader {
     func cachedHero(for game: PortedGame) -> NSImage? { heroes.object(forKey: game.id as NSUUID) }
     func cachedLogo(for game: PortedGame) -> NSImage? { logos.object(forKey: game.id as NSUUID) }
 
-    /// Local hero files, the disk cache, SteamGridDB, a known community
+    /// Local hero files, the disk cache, a known community
     /// wallpaper, then the store / titledb banner.
-    func hero(for game: PortedGame, metadata: NintendoStoreMetadata?, artwork: ArtworkStore,
-              steamGridDB: SteamGridDBService, apiKey: String) async -> NSImage? {
+    func hero(for game: PortedGame, metadata: NintendoStoreMetadata?, artwork: ArtworkStore) async -> NSImage? {
         if let cached = cachedHero(for: game) { return cached }
         let titleKey = game.titleId ?? game.uniqueKey
         var image: NSImage?
@@ -46,11 +45,6 @@ final class GameArtLoader {
         if image == nil, let url = artwork.cachedURL(titleID: titleKey, kind: .hero) {
             image = await Self.decodeHero(at: url)
         }
-        if image == nil, !Task.isCancelled, !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-           let remote = await steamGridDB.fetchHeroURL(gameName: game.name, apiKey: apiKey),
-           let url = await artwork.fetch(titleID: titleKey, remoteURL: remote, kind: .hero) {
-            image = await Self.decodeHero(at: url)
-        }
         if image == nil, !Task.isCancelled,
            let remote = Self.communityWallpaperURL(gameName: game.name, titleId: game.titleId),
            let url = await artwork.fetch(titleID: titleKey, remoteURL: remote, kind: .hero) {
@@ -67,9 +61,8 @@ final class GameArtLoader {
         return image
     }
 
-    /// The disk cache, a local logo.png, SteamGridDB, the store logo, then a known community logo.
-    func logo(for game: PortedGame, metadata: NintendoStoreMetadata?, artwork: ArtworkStore,
-              steamGridDB: SteamGridDBService, apiKey: String) async -> NSImage? {
+    /// The disk cache, a local logo.png, the store logo, then a known community logo.
+    func logo(for game: PortedGame, metadata: NintendoStoreMetadata?, artwork: ArtworkStore) async -> NSImage? {
         if let cached = cachedLogo(for: game) { return cached }
         let titleKey = game.titleId ?? game.uniqueKey
         var image: NSImage?
@@ -88,11 +81,6 @@ final class GameArtLoader {
             for url in candidates where image == nil && !Task.isCancelled {
                 image = await Self.decodeLogo(at: url)
             }
-        }
-        if image == nil, !Task.isCancelled, !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-           let remote = await steamGridDB.fetchLogoURL(gameName: game.name, apiKey: apiKey),
-           let url = await artwork.fetch(titleID: titleKey, remoteURL: remote, kind: .logo) {
-            image = await Self.decodeLogo(at: url)
         }
         if image == nil, !Task.isCancelled, let remote = metadata?.logoURL,
            let url = await artwork.fetch(titleID: titleKey, remoteURL: remote, kind: .logo) {

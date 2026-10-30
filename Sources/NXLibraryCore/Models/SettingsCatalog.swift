@@ -90,8 +90,6 @@ public enum SettingsCatalog {
             "Shows the time in the top bar.") { $0.showClock },
         row("reduceMotion", .look, "Reduce motion",
             "Replaces slides and zooms with fades.") { $0.reduceMotion },
-        row("steamGridDbApiKey", .look, "SteamGridDB key",
-            "Lets NX Library fetch square tiles, logos and hero art for your games.") { $0.steamGridDbApiKey },
 
         // Games
         row("launchStyle", .games, "Launch screen style",

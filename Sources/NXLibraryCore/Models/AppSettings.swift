@@ -82,7 +82,6 @@ public struct AppSettings: Codable, Equatable {
     public var checkEngineAtLaunch: Bool
     public var refreshLibraryAtLaunch: Bool
     public var lastSelectedGameID: UUID?
-    public var steamGridDbApiKey: String
     public var gameDefaults: GameRuntimeConfig
     public var colorThemeID: String
     public var buttonNames: ButtonNameStyle
@@ -119,7 +118,6 @@ public struct AppSettings: Codable, Equatable {
                 checkEngineAtLaunch: Bool = true,
                 refreshLibraryAtLaunch: Bool = true,
                 lastSelectedGameID: UUID? = nil,
-                steamGridDbApiKey: String = "",
                 gameDefaults: GameRuntimeConfig = GameRuntimeConfig(),
                 colorThemeID: String = "selene",
                 buttonNames: ButtonNameStyle = .automatic,
@@ -151,7 +149,6 @@ public struct AppSettings: Codable, Equatable {
         self.checkEngineAtLaunch = checkEngineAtLaunch
         self.refreshLibraryAtLaunch = refreshLibraryAtLaunch
         self.lastSelectedGameID = lastSelectedGameID
-        self.steamGridDbApiKey = steamGridDbApiKey
         self.gameDefaults = gameDefaults
         self.colorThemeID = colorThemeID
         self.buttonNames = buttonNames
@@ -179,7 +176,7 @@ public struct AppSettings: Codable, Equatable {
     enum CodingKeys: String, CodingKey {
         case backgroundShade, readableText, reduceMotion, showButtonHints, showClock
         case restoreLastGame, checkEngineAtLaunch, refreshLibraryAtLaunch, lastSelectedGameID
-        case steamGridDbApiKey, gameDefaults, colorThemeID, buttonNames
+        case gameDefaults, colorThemeID, buttonNames
         case spotlightCards, spotlightOrder, startingTab, surprisePool, cloudSaves, cloudSavesPickedFolder
         case startOn, lastHome
         case introAnimation, viewButtonSwitches, interfaceSounds, soundVolume, quietLaunch
@@ -197,7 +194,6 @@ public struct AppSettings: Codable, Equatable {
         self.checkEngineAtLaunch = try container.decodeIfPresent(Bool.self, forKey: .checkEngineAtLaunch) ?? true
         self.refreshLibraryAtLaunch = try container.decodeIfPresent(Bool.self, forKey: .refreshLibraryAtLaunch) ?? true
         self.lastSelectedGameID = try container.decodeIfPresent(UUID.self, forKey: .lastSelectedGameID)
-        self.steamGridDbApiKey = try container.decodeIfPresent(String.self, forKey: .steamGridDbApiKey) ?? ""
         self.gameDefaults = try container.decodeIfPresent(GameRuntimeConfig.self, forKey: .gameDefaults) ?? GameRuntimeConfig()
         self.colorThemeID = try container.decodeIfPresent(String.self, forKey: .colorThemeID) ?? "selene"
         self.buttonNames = try container.decodeIfPresent(ButtonNameStyle.self, forKey: .buttonNames) ?? .automatic

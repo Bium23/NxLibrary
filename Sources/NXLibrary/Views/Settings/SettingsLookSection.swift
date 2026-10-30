@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import NXLibraryCore
 
 struct SettingsLookSection: View {
@@ -97,17 +98,10 @@ struct SettingsLookSection: View {
 
             SettingsSubheading("Artwork")
 
-            SeleneRow("SteamGridDB key",
-                      subtitle: "Lets NX Library fetch square tiles, logos and hero art for your games.",
-                      info: "SteamGridDB is a free community database of game artwork. Create a free account at steamgriddb.com and generate an API key in Preferences → API.") {
-                TextField("Optional API key", text: $settings.settings.steamGridDbApiKey)
-                    .textFieldStyle(.plain)
-                    .seleneFont(15)
-                    .foregroundColor(SeleneTheme.ink)
-                    .padding(.horizontal, canvas.u(16))
-                    .padding(.vertical, canvas.u(6))
-                    .background(Capsule().fill(SeleneTheme.ink.opacity(0.13)))
-                    .frame(width: canvas.u(320))
+            SeleneButtonRow("Box covers",
+                            subtitle: "From GameTDB, a community database. A missing cover can be added there.",
+                            buttonTitle: "Open GameTDB") {
+                NSWorkspace.shared.open(GameTDB.siteURL)
             }
         }
         .onAppear(perform: publishActions)
@@ -131,7 +125,10 @@ struct SettingsLookSection: View {
             .init(id: "motion", title: "Reduce motion") {
                 settings.settings.reduceMotion.toggle()
             },
-            .value("icon", "App icon") { stepIcon($0) }
+            .value("icon", "App icon") { stepIcon($0) },
+            .init(id: "covers", title: "Box covers") {
+                NSWorkspace.shared.open(GameTDB.siteURL)
+            }
         ])
     }
 }

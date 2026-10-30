@@ -63,9 +63,9 @@ final class ArtworkStoreTests: XCTestCase {
         let dir = tempDir()
         let store = ArtworkStore(cacheDirectory: dir, client: client)
         let url = URL(string: "https://example.com/cover.jpg")!
-        let cached = await store.fetch(titleID: "0100", remoteURL: url, kind: .cover)
+        let cached = await store.fetch(titleID: "0100", remoteURL: url, kind: .boxart)
         XCTAssertNotNil(cached)
-        let offline = await store.fetch(titleID: "0100", remoteURL: nil, kind: .cover)
+        let offline = await store.fetch(titleID: "0100", remoteURL: nil, kind: .boxart)
         XCTAssertEqual(cached, offline)
     }
 
@@ -76,7 +76,7 @@ final class ArtworkStoreTests: XCTestCase {
         let store = ArtworkStore(cacheDirectory: dir, client: client)
         _ = await store.fetch(titleID: "0100",
                               remoteURL: URL(string: "https://example.com/cover.jpg"),
-                              kind: .cover)
+                              kind: .boxart)
         XCTAssertGreaterThan(store.cacheSize(), 0)
         store.clear()
         XCTAssertEqual(store.cacheSize(), 0)
@@ -88,7 +88,7 @@ final class ArtworkStoreTests: XCTestCase {
         let store = ArtworkStore(cacheDirectory: tempDir(), client: client)
         _ = await store.fetch(titleID: "0100",
                               remoteURL: URL(string: "https://example.com/cover.jpg"),
-                              kind: .cover)
+                              kind: .boxart)
         XCTAssertGreaterThan(store.cacheSize(), 0)
         store.trimCache(maxBytes: 1)
         XCTAssertEqual(store.cacheSize(), 0)
@@ -104,11 +104,11 @@ final class ArtworkStoreTests: XCTestCase {
                                      kind: .hero)!
         let cover = await store.fetch(titleID: "0100",
                                       remoteURL: URL(string: "https://example.com/c.jpg"),
-                                      kind: .cover)!
+                                      kind: .boxart)!
         let heroImage = NSImage(contentsOf: hero)!
         let coverImage = NSImage(contentsOf: cover)!
         XCTAssertLessThanOrEqual(max(heroImage.size.width, heroImage.size.height), 2560)
-        XCTAssertLessThanOrEqual(max(coverImage.size.width, coverImage.size.height), 1000)
+        XCTAssertLessThanOrEqual(max(coverImage.size.width, coverImage.size.height), 1400)
     }
 
     func testLogoPreservesPNG() async {
@@ -165,22 +165,6 @@ final class ArtworkStoreTests: XCTestCase {
         let rep = NSBitmapImageRep(data: try! Data(contentsOf: url))!
         XCTAssertTrue(rep.hasAlpha)
         XCTAssertEqual(rep.colorAt(x: 60, y: 30)?.alphaComponent ?? 1, 0, accuracy: 0.01)
-    }
-
-    func testSquareGridMemoRule() {
-        let url = URL(string: "https://example.com/a.png")!
-        XCTAssertTrue(SquareGridMemo.shouldRemember(.noGrid, cancelled: false))
-        XCTAssertFalse(SquareGridMemo.shouldRemember(.noGrid, cancelled: true))
-        XCTAssertFalse(SquareGridMemo.shouldRemember(.failed, cancelled: false))
-        XCTAssertFalse(SquareGridMemo.shouldRemember(.found(url), cancelled: false))
-
-        let memo = SquareGridMemo()
-        let id = UUID()
-        memo.record(.failed, cancelled: false, id: id, apiKey: "k1")
-        XCTAssertFalse(memo.contains(id, apiKey: "k1"))
-        memo.record(.noGrid, cancelled: false, id: id, apiKey: "k1")
-        XCTAssertTrue(memo.contains(id, apiKey: "k1"))
-        XCTAssertFalse(memo.contains(id, apiKey: "k2"))
     }
 
     func testScreenshotCachePath() async throws {

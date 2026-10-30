@@ -88,8 +88,8 @@ struct DetailsActivityColumn: View {
     }
 }
 
-/// Band 3: more games from your own library (`MoreLikeThis`), Selene cover
-/// tiles of 200 × 280 with the store cover first. A click focuses, a double
+/// Band 3: more games from your own library (`MoreLikeThis`), Switch box
+/// covers of 173 × 280 (`SwitchBoxArtCover`). A click focuses, a double
 /// click opens the game on Spotlight.
 struct DetailsMoreBand: View {
     @Environment(\.seleneCanvas) private var canvas
@@ -97,14 +97,15 @@ struct DetailsMoreBand: View {
 
     let games: [PortedGame]
     let focusedIndex: Int?
-    let steamGridDbApiKey: String
     let artwork: ArtworkStore
-    let steamGridDB: SteamGridDBService
-    let coverURL: (PortedGame) -> URL?
+    let boxArt: BoxArtService
+    let boxArtIndexVersion: Int
+    let officialName: (PortedGame) -> String?
     let onFocus: (Int) -> Void
     let onOpen: (Int) -> Void
 
-    static let width: CGFloat = 200
+    /// Switch case proportions (`BoxArt`).
+    static let width: CGFloat = 173
     static let height: CGFloat = 280
     static let gap: CGFloat = 22
 
@@ -123,9 +124,8 @@ struct DetailsMoreBand: View {
         let w = canvas.u(Self.width), h = canvas.u(Self.height)
         let face = RoundedRectangle(cornerRadius: canvas.u(14), style: .continuous)
         return ZStack {
-            SpotlightTileArtwork(game: game, side: h, width: w, coverFirst: true,
-                                 steamGridDbApiKey: steamGridDbApiKey,
-                                 artwork: artwork, steamGridDB: steamGridDB, coverURL: coverURL(game))
+            SwitchBoxArtCover(game: game, width: w, height: h, officialName: officialName(game),
+                              boxArt: boxArt, artwork: artwork, indexVersion: boxArtIndexVersion)
                 .clipShape(face)
             SeleneTileRing(cornerRadius: canvas.u(21), active: focused)
                 .frame(width: w + canvas.u(14), height: h + canvas.u(14))

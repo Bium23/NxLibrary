@@ -20,10 +20,7 @@ struct SpotlightRowView: View {
     /// The tile lifted for moving: raised 12u, its ring stays.
     var liftedKey: String? = nil
     let isEmptyFilter: LibraryFilter?
-    let steamGridDbApiKey: String
     let artwork: ArtworkStore
-    let steamGridDB: SteamGridDBService
-    let coverURL: (PortedGame) -> URL?
     let onSelect: (SpotlightItem) -> Void
     let onActivate: (SpotlightItem) -> Void
 
@@ -131,9 +128,7 @@ struct SpotlightRowView: View {
             case .game(let id):
                 if let game = gamesByID[id] {
                     SpotlightTileArtwork(game: game, side: side,
-                                         steamGridDbApiKey: steamGridDbApiKey,
-                                         artwork: artwork, steamGridDB: steamGridDB,
-                                         coverURL: coverURL(game), ownIconFirst: true)
+                                         artwork: artwork, ownIconFirst: true)
                         .clipShape(face)
                 }
             case .card(let card):

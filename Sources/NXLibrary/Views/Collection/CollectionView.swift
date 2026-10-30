@@ -81,10 +81,8 @@ public struct CollectionView: View {
         }
         .onChange(of: playSessions.sessions.count) { _ in reconcile() }
         .onChange(of: viewModel.isScanningLibrary) { _ in reconcile() }
-        .task(id: art.heroTaskKey(game, metadata: game.flatMap { viewModel.storeMetadata[$0.id] },
-                                  apiKey: settings.settings.steamGridDbApiKey)) { await loadHero(game) }
-        .task(id: art.logoTaskKey(game, metadata: game.flatMap { viewModel.storeMetadata[$0.id] },
-                                  apiKey: settings.settings.steamGridDbApiKey)) { await loadLogo(game) }
+        .task(id: art.heroTaskKey(game, metadata: game.flatMap { viewModel.storeMetadata[$0.id] })) { await loadHero(game) }
+        .task(id: art.logoTaskKey(game, metadata: game.flatMap { viewModel.storeMetadata[$0.id] })) { await loadLogo(game) }
     }
 
     private func stage(games: [PortedGame], game: PortedGame?) -> some View {
@@ -111,10 +109,11 @@ public struct CollectionView: View {
                 CollectionCoverRow(
                     games: games,
                     selectedID: viewModel.librarySelection.selectedGameID,
-                    steamGridDbApiKey: settings.settings.steamGridDbApiKey,
                     artwork: artwork,
-                    steamGridDB: viewModel.steamGridDB,
-                    coverURL: { viewModel.storeMetadata[$0.id]?.imageURL },
+                    boxArt: viewModel.boxArt,
+                    boxArtIndexVersion: viewModel.boxArtIndexVersion,
+                    officialName: { viewModel.storeMetadata[$0.id]?.name },
+                    needsMetadata: { viewModel.loadStoreMetadata(for: $0) },
                     onSelect: { select($0.id) },
                     onActivate: { select($0.id); play($0) })
                     .offset(y: canvas.u(576))
@@ -210,14 +209,12 @@ public struct CollectionView: View {
 
     private func loadHero(_ game: PortedGame?) async {
         await art.loadHero(game: game, current: { selectedGame?.id },
-                           metadata: game.flatMap { viewModel.storeMetadata[$0.id] }, artwork: artwork,
-                           steamGridDB: viewModel.steamGridDB, apiKey: settings.settings.steamGridDbApiKey)
+                           metadata: game.flatMap { viewModel.storeMetadata[$0.id] }, artwork: artwork)
     }
 
     private func loadLogo(_ game: PortedGame?) async {
         await art.loadLogo(game: game, metadata: game.flatMap { viewModel.storeMetadata[$0.id] },
-                           artwork: artwork, steamGridDB: viewModel.steamGridDB,
-                           apiKey: settings.settings.steamGridDbApiKey)
+                           artwork: artwork)
     }
 }
 

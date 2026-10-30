@@ -259,8 +259,11 @@ public final class AppViewModel: ObservableObject {
     /// Spotlight's row selection and focus; lives here so it survives Details and back.
     @Published public var spotlight = SpotlightState()
     public var router: AppRouter?
-    /// One SteamGridDB client for every screen (tile art, heroes, logos).
-    public let steamGridDB = SteamGridDBService()
+    /// GameTDB box covers for Collection and More like this.
+    public lazy var boxArt = BoxArtService(artwork: ArtworkStore(),
+                                           index: GameTDBStore(directory: core.appendingPathComponent("metadata")))
+    /// Bumps when a new GameTDB index arrives, so covers that found nothing look again.
+    @Published public private(set) var boxArtIndexVersion = 0
     @Published public var launchingGameId: UUID? = nil
     /// The launch screen: shown on Play, `isReady` once the game's window is up (or the probe gave up).
     @Published public var launchOverlay: LaunchOverlayState? = nil {
@@ -557,6 +560,14 @@ public final class AppViewModel: ObservableObject {
                   !titleId.isEmpty,
                   let metadata = storeMetadataService.cached(for: titleId) else { continue }
             storeMetadata[game.id] = metadata
+        }
+    }
+
+    /// Fetches GameTDB's index at launch when it is missing or 30 days old.
+    public func refreshBoxArtIndex() {
+        let service = boxArt
+        Task { @MainActor [weak self] in
+            if await service.refreshIndexIfNeeded() { self?.boxArtIndexVersion += 1 }
         }
     }
 

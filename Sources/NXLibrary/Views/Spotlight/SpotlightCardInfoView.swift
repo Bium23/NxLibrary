@@ -15,10 +15,7 @@ struct SpotlightCardInfoView: View {
     let activity: ActivitySummary
     let topGames: [PortedGame]
     let focusedTop: Int?
-    let steamGridDbApiKey: String
     let artwork: ArtworkStore
-    let steamGridDB: SteamGridDBService
-    let coverURL: (PortedGame) -> URL?
     let onTopGame: (Int) -> Void
 
     /// Monday first, whatever the locale (matches `Activity.summary`).
@@ -131,9 +128,7 @@ struct SpotlightCardInfoView: View {
         let side = canvas.u(64)
         let shape = RoundedRectangle(cornerRadius: canvas.u(10), style: .continuous)
         return SpotlightTileArtwork(game: game, side: side,
-                                    steamGridDbApiKey: steamGridDbApiKey,
-                                    artwork: artwork, steamGridDB: steamGridDB,
-                                    coverURL: coverURL(game))
+                                    artwork: artwork)
             .clipShape(shape)
             .overlay(shape.strokeBorder(SeleneTheme.ink15, lineWidth: max(1, canvas.u(1))))
             .overlay(shape.inset(by: canvas.u(-4))

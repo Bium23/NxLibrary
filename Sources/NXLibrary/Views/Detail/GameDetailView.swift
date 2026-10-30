@@ -154,15 +154,11 @@ struct GameDetailView: View {
             guard viewModel.alertMessage == nil else { return }
             if let action = note.object as? GamepadAction { handle(action) }
         }
-        .task(id: art.heroTaskKey(game, metadata: metadata, apiKey: settings.settings.steamGridDbApiKey)) {
-            await art.loadHero(game: game, current: { game.id }, metadata: metadata, artwork: artwork,
-                               steamGridDB: viewModel.steamGridDB,
-                               apiKey: settings.settings.steamGridDbApiKey)
+        .task(id: art.heroTaskKey(game, metadata: metadata)) {
+            await art.loadHero(game: game, current: { game.id }, metadata: metadata, artwork: artwork)
         }
-        .task(id: art.logoTaskKey(game, metadata: metadata, apiKey: settings.settings.steamGridDbApiKey)) {
-            await art.loadLogo(game: game, metadata: metadata, artwork: artwork,
-                               steamGridDB: viewModel.steamGridDB,
-                               apiKey: settings.settings.steamGridDbApiKey)
+        .task(id: art.logoTaskKey(game, metadata: metadata)) {
+            await art.loadLogo(game: game, metadata: metadata, artwork: artwork)
         }
     }
 
@@ -245,10 +241,10 @@ struct GameDetailView: View {
                     DetailsMoreBand(
                         games: model.more,
                         focusedIndex: focus.zone == DetailsFocus.moreZone ? focus.more : nil,
-                        steamGridDbApiKey: settings.settings.steamGridDbApiKey,
                         artwork: artwork,
-                        steamGridDB: viewModel.steamGridDB,
-                        coverURL: { viewModel.storeMetadata[$0.id]?.imageURL },
+                        boxArt: viewModel.boxArt,
+                        boxArtIndexVersion: viewModel.boxArtIndexVersion,
+                        officialName: { viewModel.storeMetadata[$0.id]?.name },
                         onFocus: { focusPointer(zone: DetailsFocus.moreZone, index: $0, bands: model.bands) },
                         onOpen: { index in
                             focusPointer(zone: DetailsFocus.moreZone, index: index, bands: model.bands)

@@ -177,10 +177,8 @@ public struct SpotlightView: View {
             if let action = note.object as? GamepadAction { handle(action) }
         }
         .onChange(of: playSessions.sessions.count) { _ in reconcile() }
-        .task(id: art.heroTaskKey(model.selectedGame, metadata: model.selectedGame.flatMap { viewModel.storeMetadata[$0.id] },
-                                  apiKey: settings.settings.steamGridDbApiKey)) { await loadHero(model.selectedGame) }
-        .task(id: art.logoTaskKey(model.selectedGame, metadata: model.selectedGame.flatMap { viewModel.storeMetadata[$0.id] },
-                                  apiKey: settings.settings.steamGridDbApiKey)) { await loadLogo(model.selectedGame) }
+        .task(id: art.heroTaskKey(model.selectedGame, metadata: model.selectedGame.flatMap { viewModel.storeMetadata[$0.id] })) { await loadHero(model.selectedGame) }
+        .task(id: art.logoTaskKey(model.selectedGame, metadata: model.selectedGame.flatMap { viewModel.storeMetadata[$0.id] })) { await loadLogo(model.selectedGame) }
     }
 
     @ViewBuilder
@@ -208,10 +206,7 @@ public struct SpotlightView: View {
                     liftedKey: state.lift?.key,
                     isEmptyFilter: items.contains { if case .game = $0 { return true } else { return false } }
                         ? nil : filter,
-                    steamGridDbApiKey: settings.settings.steamGridDbApiKey,
                     artwork: artwork,
-                    steamGridDB: viewModel.steamGridDB,
-                    coverURL: { viewModel.storeMetadata[$0.id]?.imageURL },
                     onSelect: { item in
                         guard !state.isLifted else { return }
                         mutate { $0.select(item) }
@@ -344,10 +339,7 @@ public struct SpotlightView: View {
                 activity: summary,
                 topGames: top,
                 focusedTop: state.focus == .topGames ? state.topGameIndex : nil,
-                steamGridDbApiKey: settings.settings.steamGridDbApiKey,
                 artwork: artwork,
-                steamGridDB: viewModel.steamGridDB,
-                coverURL: { viewModel.storeMetadata[$0.id]?.imageURL },
                 onTopGame: { index in
                     guard !state.isLifted, index < top.count else { return }
                     selectGame(top[index].id)
@@ -543,7 +535,6 @@ public struct SpotlightView: View {
     private func loadHero(_ game: PortedGame?) async {
         await art.loadHero(game: game, current: { selectedGame?.id },
                            metadata: game.flatMap { viewModel.storeMetadata[$0.id] }, artwork: artwork,
-                           steamGridDB: viewModel.steamGridDB, apiKey: settings.settings.steamGridDbApiKey,
                            // The logo leads (0.3 s); the art turns after it.
                            settle: 420_000_000)
     }
@@ -705,10 +696,10 @@ public struct SpotlightView: View {
                 DetailsMoreBand(
                     games: page.more,
                     focusedIndex: state.focus == .more ? state.moreIndex : nil,
-                    steamGridDbApiKey: settings.settings.steamGridDbApiKey,
                     artwork: artwork,
-                    steamGridDB: viewModel.steamGridDB,
-                    coverURL: { viewModel.storeMetadata[$0.id]?.imageURL },
+                    boxArt: viewModel.boxArt,
+                    boxArtIndexVersion: viewModel.boxArtIndexVersion,
+                    officialName: { viewModel.storeMetadata[$0.id]?.name },
                     onFocus: { index in mutate { $0.focus = .more; $0.moreIndex = index } },
                     onOpen: { index in
                         SoundEffectService.shared.play(.click)
@@ -722,7 +713,6 @@ public struct SpotlightView: View {
 
     private func loadLogo(_ game: PortedGame?) async {
         await art.loadLogo(game: game, metadata: game.flatMap { viewModel.storeMetadata[$0.id]},
-                           artwork: artwork, steamGridDB: viewModel.steamGridDB,
-                           apiKey: settings.settings.steamGridDbApiKey)
+                           artwork: artwork)
     }
 }

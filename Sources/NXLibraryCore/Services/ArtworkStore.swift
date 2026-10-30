@@ -4,7 +4,10 @@ import ImageIO
 import Combine
 
 public enum ArtworkKind: String, Codable {
-    case hero, cover, logo, square
+    case hero, logo, square
+    /// A real Switch box cover (GameTDB), never a crop. Replaces the old `cover`
+    /// kind (store images cropped to portrait), whose files are no longer read.
+    case boxart
 
     /// Kinds cached as PNG so transparency survives.
     var isPNG: Bool { self == .logo || self == .square }
@@ -12,9 +15,9 @@ public enum ArtworkKind: String, Codable {
     public var maxPixelSize: CGFloat {
         switch self {
         case .hero: return 2560
-        case .cover: return 1000
         case .logo: return 1200
         case .square: return 512
+        case .boxart: return 1400
         }
     }
 }

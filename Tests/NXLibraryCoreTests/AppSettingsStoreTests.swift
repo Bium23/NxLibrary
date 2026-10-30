@@ -53,6 +53,13 @@ final class AppSettingsStoreTests: XCTestCase {
         XCTAssertEqual(s.surprisePool, .installed)
     }
 
+    func testSettingsWithRetiredSteamGridDBKeyStillDecode() throws {
+        let old = Data(#"{"backgroundShade":"deep","steamGridDbApiKey":"abc"}"#.utf8)
+        let s = try JSONDecoder().decode(AppSettings.self, from: old)
+        XCTAssertEqual(s.backgroundShade, .deep)
+        XCTAssertFalse(String(decoding: try JSONEncoder().encode(s), as: UTF8.self).contains("steamGridDbApiKey"))
+    }
+
     func testOldSettingsFileDecodesWithDefaults() throws {
         // Only keys written before the Selene fidelity pass.
         let old = Data(#"{"backgroundShade":"deep","readableText":false,"startOn":"collection"}"#.utf8)

@@ -14,15 +14,15 @@ final class SeleneHeroArt: ObservableObject {
     @Published private(set) var key = "none"
     @Published private(set) var logoTick = 0
 
-    func heroTaskKey(_ game: PortedGame?, metadata: NintendoStoreMetadata?, apiKey: String) -> String {
+    func heroTaskKey(_ game: PortedGame?, metadata: NintendoStoreMetadata?) -> String {
         guard let game else { return "none" }
         let remote = metadata?.headerImageURL ?? metadata?.imageURL
-        return "hero|\(game.id)|\(remote?.absoluteString ?? "")|\(apiKey)"
+        return "hero|\(game.id)|\(remote?.absoluteString ?? "")"
     }
 
-    func logoTaskKey(_ game: PortedGame?, metadata: NintendoStoreMetadata?, apiKey: String) -> String {
+    func logoTaskKey(_ game: PortedGame?, metadata: NintendoStoreMetadata?) -> String {
         guard let game else { return "none" }
-        return "logo|\(game.id)|\(metadata?.logoURL?.absoluteString ?? "")|\(apiKey)"
+        return "logo|\(game.id)|\(metadata?.logoURL?.absoluteString ?? "")"
     }
 
     /// The cached logo; reading `logoTick` makes the caller's body depend on it.
@@ -34,7 +34,7 @@ final class SeleneHeroArt: ObservableObject {
     /// `current` re-reads the screen's selected game after each await.
     /// `settle` is the pause before loading; Collection waits longer so its logo leads.
     func loadHero(game: PortedGame?, current: () -> UUID?, metadata: NintendoStoreMetadata?,
-                  artwork: ArtworkStore, steamGridDB: SteamGridDBService, apiKey: String,
+                  artwork: ArtworkStore,
                   settle: UInt64 = 150_000_000) async {
         guard let game else {
             image = nil
@@ -45,19 +45,19 @@ final class SeleneHeroArt: ObservableObject {
         try? await Task.sleep(nanoseconds: settle)
         guard !Task.isCancelled else { return }
         let loaded = await GameArtLoader.shared.hero(
-            for: game, metadata: metadata, artwork: artwork, steamGridDB: steamGridDB, apiKey: apiKey)
+            for: game, metadata: metadata, artwork: artwork)
         guard !Task.isCancelled, current() == game.id else { return }
         image = loaded
         key = loaded.map { "\(game.id.uuidString)|\(ObjectIdentifier($0).hashValue)" } ?? "none"
     }
 
     func loadLogo(game: PortedGame?, metadata: NintendoStoreMetadata?,
-                  artwork: ArtworkStore, steamGridDB: SteamGridDBService, apiKey: String) async {
+                  artwork: ArtworkStore) async {
         guard let game, GameArtLoader.shared.cachedLogo(for: game) == nil else { return }
         try? await Task.sleep(nanoseconds: 150_000_000)
         guard !Task.isCancelled else { return }
         let loaded = await GameArtLoader.shared.logo(
-            for: game, metadata: metadata, artwork: artwork, steamGridDB: steamGridDB, apiKey: apiKey)
+            for: game, metadata: metadata, artwork: artwork)
         guard loaded != nil, !Task.isCancelled else { return }
         withAnimation(.easeOut(duration: 0.3)) { logoTick += 1 }
     }

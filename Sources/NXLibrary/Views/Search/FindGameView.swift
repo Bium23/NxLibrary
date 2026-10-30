@@ -14,7 +14,6 @@ struct FindGameView: View {
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var playSessions: PlaySessionStore
     let artwork: ArtworkStore
-    let steamGridDbApiKey: String
 
     @Environment(\.seleneCanvas) private var canvas
     @State private var query = ""
@@ -107,9 +106,7 @@ struct FindGameView: View {
 
     private func tile(_ game: PortedGame, selected: Bool) -> some View {
         VStack(spacing: canvas.u(10)) {
-            SpotlightTileArtwork(game: game, side: canvas.u(160), steamGridDbApiKey: steamGridDbApiKey,
-                                 artwork: artwork, steamGridDB: viewModel.steamGridDB,
-                                 coverURL: viewModel.storeMetadata[game.id]?.imageURL)
+            SpotlightTileArtwork(game: game, side: canvas.u(160), artwork: artwork)
                 .frame(width: canvas.u(160), height: canvas.u(160))
                 .clipShape(RoundedRectangle(cornerRadius: canvas.u(12), style: .continuous))
                 .overlay(SeleneTileRing(cornerRadius: canvas.u(12), active: selected))
