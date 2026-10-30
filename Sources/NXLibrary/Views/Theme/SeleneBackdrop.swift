@@ -36,7 +36,6 @@ final class WallpaperImageCache {
 /// Selene's base layer (Main.xaml): scrim, the palette's base gradient and the
 /// wallpaper. Without a wallpaper the theme's own backdrop shows (Selene's
 /// moonlight, `MoonlightBackdrop`): moving when on and motion is allowed, still otherwise.
-/// The home draws the gradient and wallpaper whole (`.home`); other screens at 0.6, darker.
 struct SeleneBackdrop: View {
     @Environment(\.seleneBackdropStyle) private var style
     @Environment(\.seleneReduceMotion) private var reduceMotion
@@ -53,11 +52,6 @@ struct SeleneBackdrop: View {
         copy.still = on
         return copy
     }
-
-    /// Spotlight (Selene's SeleneHubGameBackground): both whole.
-    static let home = SeleneBackdrop(baseOpacity: 1, wallpaperOpacity: 1)
-    /// Collection (Selene's library): the gradient whole, the wallpaper at 0.6.
-    static let library = SeleneBackdrop(baseOpacity: 1, wallpaperOpacity: 0.6)
 
     var body: some View {
         ZStack {

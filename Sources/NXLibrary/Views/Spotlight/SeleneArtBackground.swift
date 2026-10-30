@@ -13,8 +13,7 @@ struct SeleneArtBackground: View {
     var shade: BackgroundShade = .balanced
     /// Crossfade length; Collection takes a slower one so the art turns after the logo.
     var crossfade: Double = 0.4
-    /// Spotlight's backdrop by default; Collection passes `.library`.
-    var backdrop = SeleneBackdrop.home
+    var backdrop = SeleneBackdrop()
 
     var body: some View {
         ZStack {
