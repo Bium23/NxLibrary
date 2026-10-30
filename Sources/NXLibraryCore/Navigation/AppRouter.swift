@@ -81,6 +81,11 @@ public final class AppRouter: ObservableObject {
     /// current filter hides it (the same path as Surprise me).
     public func requestSpotlightSelect(_ id: UUID) { pendingSpotlightSelect = id }
 
+    /// The screen under Add game's panel: the one it was opened from (Spotlight when unknown).
+    public var underlyingRoute: AppRoute {
+        history.last { $0 != .addGame } ?? .library
+    }
+
     public func showDetail(_ id: UUID) { navigate(to: .detail(id)) }
     public func openSettings(_ section: SettingsSection = .startUp) { navigate(to: .settings(section)) }
     public func openAddGame() { navigate(to: .addGame) }

@@ -111,6 +111,7 @@ struct SpotlightRowView: View {
         .scaleEffect(scale, anchor: .topLeading)
         .frame(width: canvas.u(Self.host * scale), height: canvas.u(Self.host * scale), alignment: .topLeading)
         .padding(.leading, canvas.u(1))
+        .homeAnchor(anchorKey(item))
         .contentShape(Rectangle())
         // The single click selects at once; it does not wait for a possible double click.
         .onTapGesture(count: 2) { onActivate(item) }
@@ -144,6 +145,17 @@ struct SpotlightRowView: View {
         }
         .frame(width: side, height: side)
         .shadow(color: .black.opacity(0.55), radius: canvas.u(9))
+    }
+
+    /// The Add game card and a porting tile record where they are, for Add game's grow and shrink.
+    private func anchorKey(_ item: SpotlightItem) -> String? {
+        switch item {
+        case .card(.addGame): return HomeAnchors.addCard
+        case .game(let id):
+            guard let game = gamesByID[id], tileLook(game) != .normal else { return nil }
+            return item.key
+        case .card: return nil
+        }
     }
 
     private func title(of item: SpotlightItem) -> String {

@@ -1,41 +1,40 @@
 import SwiftUI
+import NXLibraryCore
 
 // MARK: - Step bar
 
+/// Three small pills: the current step solid, the finished ones with a check.
 struct AddGameStepBar: View {
+    @Environment(\.seleneCanvas) private var canvas
+
     let step: Int
-    private let titles = ["Sources", "Review", "Build"]
+    private let titles = ["Choose", "Review", "Porting"]
 
     var body: some View {
-        HStack(spacing: 9) {
+        HStack(spacing: canvas.u(10)) {
             ForEach(Array(titles.enumerated()), id: \.offset) { index, title in
                 let number = index + 1
-                HStack(spacing: 8) {
-                    Text("\(number)")
-                        .seleneFont(12, .bold)
-                        .frame(width: 17, height: 17)
-                        .background(number == step ? SeleneTheme.scrim
-                                    : (number < step ? SeleneTheme.success.opacity(0.16) : SeleneTheme.ink.opacity(0.10)))
-                        .foregroundColor(number == step ? SeleneTheme.focus
-                                         : (number < step ? SeleneTheme.success : SeleneTheme.ink.opacity(0.6)))
-                        .clipShape(Circle())
+                let current = number == step
+                HStack(spacing: canvas.u(6)) {
+                    if number < step {
+                        MaterialIconView(.check, size: 15)
+                    }
                     Text(title)
-                        .seleneFont(15, number == step ? .semibold : .medium)
+                        .seleneFont(15, current ? .semibold : .regular)
                 }
-                .foregroundColor(number == step ? SeleneTheme.scrim : SeleneTheme.ink.opacity(0.5))
-                .padding(.horizontal, 13)
-                .padding(.vertical, 7)
-                .background(number == step ? SeleneTheme.focus : SeleneTheme.ink.opacity(0.04))
-                .overlay(Capsule().strokeBorder(SeleneTheme.ink15, lineWidth: 1))
-                .clipShape(Capsule())
-                if index < titles.count - 1 {
-                    Rectangle()
-                        .fill(SeleneTheme.ink15)
-                        .frame(width: 34, height: 1)
-                }
+                .foregroundColor(current ? SeleneTheme.onFocus : (number < step ? SeleneTheme.ink : SeleneTheme.ink60))
+                .padding(.horizontal, canvas.u(16))
+                .frame(height: canvas.u(32))
+                .background(Capsule().fill(current ? SeleneTheme.focus : SeleneTheme.glassLight))
+                .overlay(Capsule().strokeBorder(current ? Color.clear : SeleneTheme.ink15,
+                                                lineWidth: max(1, canvas.u(1))))
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Step \(number), \(title)")
+                .accessibilityAddTraits(current ? .isSelected : [])
             }
             Spacer()
         }
+        .animation(SeleneTheme.cubicOut(0.26), value: step)
     }
 }
 
@@ -60,7 +59,12 @@ enum SeleneActionKind {
     case primary, secondary, destructive, quiet
 }
 
+/// Add game's action pill, in Selene's pill look: glass at rest, the solid focus
+/// colour when focused. Primary keeps a focus-coloured edge at rest so the next
+/// step stays easy to find; destructive reads in soft red.
 struct SeleneActionButton: View {
+    @Environment(\.seleneReduceMotion) private var reduceMotion
+
     let title: String
     var systemImage: String? = nil
     var kind: SeleneActionKind = .secondary
@@ -69,6 +73,7 @@ struct SeleneActionButton: View {
     let action: () -> Void
 
     var body: some View {
+        let solid = isFocused && isEnabled
         Button(action: action) {
             HStack(spacing: 7) {
                 if let systemImage {
@@ -78,19 +83,17 @@ struct SeleneActionButton: View {
                 Text(title)
                     .seleneFont(16, .semibold)
             }
-            .foregroundColor(foreground)
-            .padding(.horizontal, 18)
-            .frame(height: 37)
-            .background(background)
-            .overlay(Capsule().strokeBorder(border, lineWidth: 1))
-            .clipShape(Capsule())
-            .overlay(
-                Capsule().strokeBorder(isFocused ? SeleneTheme.glyph : Color.clear,
-                                       lineWidth: 2)
-            )
-            .shadow(color: isFocused ? SeleneTheme.glyph.opacity(0.22) : .clear,
-                    radius: 8)
+            .foregroundColor(solid ? SeleneTheme.onFocus : foreground)
+            .padding(.horizontal, 20)
+            .frame(height: 38)
+            .background(Capsule().fill(solid ? SeleneTheme.focus : background))
+            .overlay(Capsule().strokeBorder(solid ? Color.clear : border,
+                                            lineWidth: isFocused && !solid ? 2 : 1))
+            .shadow(color: solid ? SeleneTheme.focus.opacity(0.35) : .clear, radius: 12)
+            .scaleEffect(isFocused && !reduceMotion ? 1.04 : 1)
+            .animation(SeleneTheme.cubicOut(0.26), value: isFocused)
             .opacity(isEnabled ? 1 : 0.38)
+            .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
@@ -99,27 +102,22 @@ struct SeleneActionButton: View {
 
     private var foreground: Color {
         switch kind {
-        case .primary: return SeleneTheme.scrim
-        case .secondary: return SeleneTheme.ink.opacity(0.9)
-        case .destructive: return SeleneTheme.danger
-        case .quiet: return SeleneTheme.glyph
+        case .primary, .secondary: return SeleneTheme.ink
+        case .destructive: return PortingPillCopy.softRed
+        case .quiet: return SeleneTheme.ink75
         }
     }
 
     private var background: Color {
-        switch kind {
-        case .primary: return SeleneTheme.focus
-        case .secondary: return SeleneTheme.ink.opacity(0.08)
-        case .destructive: return SeleneTheme.danger.opacity(0.12)
-        case .quiet: return .clear
-        }
+        kind == .quiet ? .clear : SeleneTheme.glass
     }
 
     private var border: Color {
+        if isFocused { return SeleneTheme.focus }
         switch kind {
-        case .primary: return .clear
-        case .secondary: return SeleneTheme.ink.opacity(0.16)
-        case .destructive: return SeleneTheme.danger.opacity(0.32)
+        case .primary: return SeleneTheme.focus.opacity(0.7)
+        case .destructive: return PortingPillCopy.softRed.opacity(0.4)
+        case .secondary: return SeleneTheme.ink15
         case .quiet: return .clear
         }
     }

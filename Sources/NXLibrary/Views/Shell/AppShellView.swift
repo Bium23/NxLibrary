@@ -65,8 +65,16 @@ public struct AppShellView: View {
         ZStack {
             SeleneTheme.scrim.ignoresSafeArea()
             content
-                // Game options blur the screen behind instead of darkening it.
-                .blur(radius: viewModel.gameForSettingsSheet == nil ? 0 : 10)
+                // Game options and Add game blur the screen behind instead of darkening it.
+                .blur(radius: viewModel.gameForSettingsSheet == nil && router.route != .addGame ? 0 : 10)
+                .allowsHitTesting(router.route != .addGame)
+            if router.route == .addGame {
+                AddGameView(viewModel: viewModel,
+                            router: router,
+                            artwork: artwork,
+                            showsHints: settings.settings.showButtonHints)
+                    .zIndex(0.8)
+            }
             if router.isSearchPresented && isHomeRoute {
                 FindGameView(router: router, viewModel: viewModel, playSessions: playSessions,
                              artwork: artwork)
@@ -140,6 +148,7 @@ public struct AppShellView: View {
         .animation(reduceMotion ? nil : SeleneTheme.screen, value: router.isThemePickerOpen)
         .animation(SeleneTheme.quick, value: router.isSearchPresented)
         .animation(reduceMotion ? nil : SeleneTheme.screen, value: viewModel.showSetupCheck)
+        .animation(reduceMotion ? nil : SeleneTheme.screen, value: router.route == .addGame)
         .animation(reduceMotion ? nil : SeleneTheme.quick,
                    value: viewModel.gameToClose?.id)
         .animation(reduceMotion ? nil : SeleneTheme.quick,
@@ -276,9 +285,10 @@ public struct AppShellView: View {
         }
     }
 
+    /// The current screen; under Add game, the screen it was opened from.
     @ViewBuilder
     private var content: some View {
-        switch router.route {
+        switch router.route == .addGame ? router.underlyingRoute : router.route {
         case .library:
             SpotlightView(
                 viewModel: viewModel,
@@ -318,9 +328,8 @@ public struct AppShellView: View {
                          router: router,
                          artwork: artwork)
         case .addGame:
-            AddGameView(viewModel: viewModel,
-                        router: router,
-                        showsHints: settings.settings.showButtonHints)
+            // Never the underlying route; Add game is drawn over `content`.
+            Color.clear
         case .console:
             ConsoleView(viewModel: viewModel, router: router)
         }
