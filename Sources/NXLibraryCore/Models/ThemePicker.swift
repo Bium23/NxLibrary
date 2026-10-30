@@ -86,29 +86,28 @@ public enum ThemeBackgroundChoice: Equatable, Hashable {
 }
 
 public enum ThemeBackgrounds {
-    /// Wallpapers: theme's own, none, add, the player's own, the downloaded ones,
-    /// the online sources, the theme's other wallpapers, then every other one. Live: the theme's own (the moonlight),
-    /// add, the player's videos, the downloaded ones, the online sources, then every other video.
+    /// Both tabs open on a row of the online sources and + Add. Wallpapers: then the
+    /// downloads, your own, the theme's own (only when it has one: otherwise it would be
+    /// the moonlight twice) and none, the theme's other wallpapers, every other one.
+    /// Live: then the moonlight, the downloads, your videos, every other video.
     public static func list(_ tab: BackgroundTab = .wallpapers, themeID: String,
                             wallpapers: [Wallpaper]) -> [ThemeBackgroundChoice] {
+        let kind: BackgroundKind = tab == .live ? .video : .image
+        let items = wallpapers.filter { $0.kind == kind }
+        let sources = BackgroundSourceID.allCases.filter { $0.kind == kind }.map(ThemeBackgroundChoice.online)
+        let downloaded = items.filter { $0.theme == WallpaperCatalog.online || $0.theme == WallpaperCatalog.live }
+        let custom = items.filter { $0.theme == WallpaperCatalog.custom }
+        let mine = Set((downloaded + custom).map(\.id))
         switch tab {
         case .wallpapers:
-            let stills = wallpapers.filter { $0.kind == .image }
-            let own = WallpaperCatalog.resolve(nil, themeID: themeID, in: stills)?.id
-            let custom = stills.filter { $0.theme == WallpaperCatalog.custom }
-            let downloaded = stills.filter { $0.theme == WallpaperCatalog.online }
-            let theme = stills.filter { $0.theme == themeID && $0.id != own }
-            let rest = stills.filter { ![WallpaperCatalog.custom, WallpaperCatalog.online, themeID].contains($0.theme) }
-            let sources = BackgroundSourceID.allCases.filter { $0.kind == .image }.map(ThemeBackgroundChoice.online)
-            return [.theme, .none, .add] + (custom + downloaded).map { .wallpaper($0.id) } + sources
-                + (theme + rest).map { .wallpaper($0.id) }
+            let own = WallpaperCatalog.resolve(nil, themeID: themeID, in: items)?.id
+            let theme = items.filter { $0.theme == themeID && $0.id != own }
+            let rest = items.filter { !mine.contains($0.id) && $0.theme != themeID }
+            return sources + [.add] + (downloaded + custom).map { .wallpaper($0.id) }
+                + (own == nil ? [.none] : [.theme, .none]) + (theme + rest).map { .wallpaper($0.id) }
         case .live:
-            let videos = wallpapers.filter { $0.kind == .video }
-            let custom = videos.filter { $0.theme == WallpaperCatalog.custom }
-            let downloaded = videos.filter { $0.theme == WallpaperCatalog.live }
-            let rest = videos.filter { $0.theme != WallpaperCatalog.custom && $0.theme != WallpaperCatalog.live }
-            let sources = BackgroundSourceID.allCases.filter { $0.kind == .video }.map(ThemeBackgroundChoice.online)
-            return [.none, .add] + (custom + downloaded).map { .wallpaper($0.id) } + sources + rest.map { .wallpaper($0.id) }
+            let rest = items.filter { !mine.contains($0.id) }
+            return sources + [.add, .none] + (downloaded + custom + rest).map { .wallpaper($0.id) }
         }
     }
 
@@ -120,12 +119,14 @@ public enum ThemeBackgrounds {
         return wallpaper.kind == .video ? .live : .wallpapers
     }
 
-    /// The tile for the wallpaper setting; Theme's own when it is not listed.
+    /// The tile for the wallpaper setting. Following the theme, or a file no longer
+    /// listed, is Theme's own, or none when the theme has no wallpaper of its own.
     public static func index(of wallpaperID: String?, in list: [ThemeBackgroundChoice]) -> Int {
+        let theme = list.firstIndex(of: .theme) ?? list.firstIndex(of: .none) ?? 0
         switch wallpaperID {
-        case nil: return 0
-        case WallpaperCatalog.none?: return list.firstIndex(of: .none) ?? 0
-        case let id?: return list.firstIndex(of: .wallpaper(id)) ?? 0
+        case nil: return theme
+        case WallpaperCatalog.none?: return list.firstIndex(of: .none) ?? theme
+        case let id?: return list.firstIndex(of: .wallpaper(id)) ?? theme
         }
     }
 

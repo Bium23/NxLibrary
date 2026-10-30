@@ -25,6 +25,9 @@ struct ThemePickerView: View {
     @StateObject private var browser = OnlineBrowser()
     @StateObject private var transfer = OnlineTransfer()
     @State private var searchText = ""
+    /// The wallpaper waiting on "Remove?", and the dialog's focused pill.
+    @State private var removal: String?
+    @State private var removalFocus: SeleneConfirmButton = .cancel
     /// The focused live item's video, once the focus has rested on it.
     @State private var previewVideo: URL?
     @FocusState private var searchFocused: Bool
@@ -61,7 +64,14 @@ struct ThemePickerView: View {
             SeleneHintsBar(left: [HintItem(.b, transfer.itemID != nil ? "Cancel" : "Back", action: back)], right: rightHints,
                            bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
                 .frame(maxHeight: .infinity, alignment: .bottom)
+
+            if let removal {
+                removalDialog(removal)
+                    .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.96)))
+                    .zIndex(1)
+            }
         }
+        .animation(reduceMotion ? nil : SeleneTheme.quick, value: removal)
         .onAppear(perform: open)
         .onReceive(NotificationCenter.default.publisher(for: .nxThemePickerGamepadAction)) { note in
             guard let action = note.object as? GamepadAction else { return }
@@ -184,6 +194,18 @@ struct ThemePickerView: View {
                         .frame(width: canvas.u(20), height: canvas.u(20))
                 }
                 .padding(.horizontal, canvas.u(12))
+                if palette.id == SelenePaletteCatalog.defaultID {
+                    Text("DEFAULT")
+                        .seleneFont(10, .semibold)
+                        .tracking(canvas.u(1))
+                        .foregroundColor(Color(hex: palette.ink))
+                        .padding(.horizontal, canvas.u(7))
+                        .padding(.vertical, canvas.u(3))
+                        .background(Capsule().fill(Color(hex: palette.glyph).opacity(0.28)))
+                        .overlay(Capsule().strokeBorder(Color(hex: palette.glyph).opacity(0.7), lineWidth: 1))
+                        .padding(canvas.u(7))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                }
             }
             .frame(width: canvas.u(132), height: canvas.u(76))
             .clipShape(shape)
@@ -498,6 +520,7 @@ struct ThemePickerView: View {
     }
 
     private func handle(_ action: GamepadAction) {
+        if removal != nil { return handleRemoval(action) }
         if state.step == .background, browser.state != nil { return handleBrowse(action) }
         switch action {
         case .navigateUp: move(.up)
@@ -690,9 +713,37 @@ struct ThemePickerView: View {
         }
     }
 
+    /// Y on your own wallpaper or a download: asks first.
     private func removeFocused() {
         guard state.step == .background, browser.state == nil, case .wallpaper(let id) = focusedBackground,
               ThemeStore.isRemovable(id) else { return }
+        removalFocus = .cancel
+        removal = id
+        SoundEffectService.shared.play(.focus)
+    }
+
+    private func handleRemoval(_ action: GamepadAction) {
+        switch action {
+        case .navigateLeft:
+            if removalFocus != .cancel { removalFocus = .cancel; SoundEffectService.shared.play(.focus) }
+        case .navigateRight:
+            if removalFocus != .confirm { removalFocus = .confirm; SoundEffectService.shared.play(.focus) }
+        case .confirm:
+            removalFocus == .confirm ? confirmRemoval() : keepIt()
+        case .cancel:
+            keepIt()
+        default: break
+        }
+    }
+
+    private func keepIt() {
+        removal = nil
+        SoundEffectService.shared.play(.focus)
+    }
+
+    private func confirmRemoval() {
+        guard let id = removal else { return }
+        removal = nil
         do {
             try theme.removeWallpaper(id: id)
             if settings.settings.wallpaperID == id { settings.settings.wallpaperID = nil }
@@ -701,6 +752,27 @@ struct ThemePickerView: View {
         } catch {
             errorTitle = "Couldn't remove it"
             importError = error.localizedDescription
+        }
+    }
+
+    /// A calm question: what goes, where it goes, and that it can come back.
+    private func removalDialog(_ id: String) -> some View {
+        let video = theme.wallpaper(for: id)?.kind == .video
+        let thing = video ? "video" : "picture"
+        let downloaded = !id.hasPrefix(WallpaperCatalog.custom + "/")
+        let name = theme.credits[id]?.title ?? theme.wallpaperTitle(for: id)
+        var message = downloaded
+            ? "\(name) goes to the Trash, so you can bring it back from there, or download it again whenever you like."
+            : "NX Library's copy of \(name) goes to the Trash, so you can bring it back from there. Your original file stays where it is."
+        if settings.settings.wallpaperID == id { message += " Your theme's own background takes its place." }
+        return ZStack {
+            SeleneTheme.scrim45
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture { keepIt() }
+            SeleneConfirmDialog(title: "Remove this \(thing)?", message: message, confirmTitle: "Remove",
+                                cancelTitle: "Keep it", focus: $removalFocus,
+                                onCancel: keepIt, onConfirm: confirmRemoval)
         }
     }
 }

@@ -12,7 +12,7 @@ public final class ThemeStore: ObservableObject {
     public init(palettesURL: URL? = Bundle.main.resourceURL?.appendingPathComponent("Selene/palettes.json"),
                 activeID: String = "selene") {
         let loaded = palettesURL.flatMap { try? SelenePaletteCatalog.load(from: $0) } ?? []
-        palettes = loaded
+        palettes = SelenePaletteCatalog.pickerOrder(loaded)
         palette = SelenePaletteCatalog.resolve(activeID, in: loaded)
         reloadWallpapers()
     }

@@ -50,13 +50,23 @@ public struct SelenePalette: Codable, Equatable, Identifiable {
 }
 
 public enum SelenePaletteCatalog {
+    /// The theme NX Library starts in, first in the picker.
+    public static let defaultID = "selene"
+
+    /// The picker's order: the default first, then the rest by name.
+    public static func pickerOrder(_ palettes: [SelenePalette]) -> [SelenePalette] {
+        palettes.filter { $0.id == defaultID }
+            + palettes.filter { $0.id != defaultID }
+                .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
     public static func load(from url: URL) throws -> [SelenePalette] {
         try JSONDecoder().decode([SelenePalette].self, from: Data(contentsOf: url))
     }
 
     public static func resolve(_ id: String, in palettes: [SelenePalette]) -> SelenePalette {
         palettes.first { $0.id == id }
-            ?? palettes.first { $0.id == "selene" }
+            ?? palettes.first { $0.id == defaultID }
             ?? .fallback
     }
 }

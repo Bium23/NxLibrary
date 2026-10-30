@@ -15,6 +15,17 @@ final class SelenePaletteTests: XCTestCase {
         XCTAssertTrue(ids.isSuperset(of: ["selene", "white", "catppuccin-latte"]))
     }
 
+    /// The picker: Selene, the default, first; then the rest by name.
+    func testPickerOrderPutsTheDefaultFirstThenAlphabetical() throws {
+        let ordered = SelenePaletteCatalog.pickerOrder(try SelenePaletteCatalog.load(from: paletteURL))
+        XCTAssertEqual(ordered.first?.id, SelenePaletteCatalog.defaultID)
+        XCTAssertEqual(SelenePaletteCatalog.defaultID, "selene")
+        let rest = ordered.dropFirst().map(\.name)
+        XCTAssertEqual(rest, rest.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending })
+        XCTAssertEqual(Array(rest.prefix(3)), ["Catppuccin", "Catppuccin Latte", "Ethereal"])
+        XCTAssertEqual(ordered.count, 23)
+    }
+
     func testSelenePaletteValues() throws {
         let all = try SelenePaletteCatalog.load(from: paletteURL)
         let p = SelenePaletteCatalog.resolve("selene", in: all)
