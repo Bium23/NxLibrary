@@ -42,18 +42,31 @@ The design specification and implementation plan live in [`docs/superpowers/`](d
 ## Requirements
 
 - Apple-silicon Mac, macOS 13 or newer.
-- Xcode 27.1 or newer (with the matching Metal toolchain) on this machine.
-- .NET 10 runtime (`/usr/local/share/dotnet`).
-- Homebrew `xcodegen`, `zstd`, `spirv-cross`, `glslang`.
-- The nxnative checkout at `~/nxnative`, pinned to `ee369f09984f23adbe003f55e94be5d81cd8c0e6`, with a Python 3.14 venv (3.12 or newer is required) containing `lz4`, `capstone` and `fontTools`; Python 3.14 uses the standard-library zstd.
+- Xcode 27.1 or newer, with the matching Metal toolchain.
+- The .NET 10 SDK (the engine builds its extractor with `dotnet build`).
+- The nxnative checkout at `~/nxnative`, pinned to `ee369f09984f23adbe003f55e94be5d81cd8c0e6`.
 
-## Build and run
+Python 3.14 (with `capstone` 5, `lz4` and `fontTools`), `zstd` and `glslangValidator` ship inside the app. No Homebrew or pip is needed to use it. The Setup check installs the Metal toolchain, downloads Microsoft's .NET 10 SDK installer and clones the engine; Xcode itself comes from the App Store.
+
+## Install
+
+1. Open `NXLibrary.dmg` and drag **NX Library** to Applications.
+2. The app is ad-hoc signed, not notarized. On first open, macOS blocks it: open **System Settings → Privacy & Security** and choose **Open Anyway**.
+3. The **Setup check** opens. It shows what is ready and what is missing: Xcode, the Metal compiler, the .NET 10 SDK, the engine, the bundled Python and tools, your `prod.keys` and the library folder. **Install all** does what it can by itself; the rest each card explains. When every card is ready, **Continue** opens the library.
+
+NX Library never runs `sudo`, never accepts the Xcode licence and never changes `xcode-select`. The .NET installer asks for your password in Apple's own Installer.
+
+## Building from source
 
 ```bash
 cd ~/Developer/NXLibrary
+bash scripts/bundle_runtime.sh   # once, and after runtime.lock changes
 bash scripts/build_app.sh
+bash scripts/build_dmg.sh        # optional: dist/NXLibrary.dmg
 open "$HOME/Applications/NXLibrary.app"
 ```
+
+`bundle_runtime.sh` is for the maintainer: it downloads the Python build and wheels pinned in `runtime.lock`, checks their hashes, copies Homebrew's `zstd` and `glslang` (the locked versions must be installed) with their libraries, relinks them to `@loader_path`, signs them ad hoc and audits the result into `work/Runtime`. Without `work/Runtime`, `build_app.sh` makes a developer build that uses `~/nxnative/.venv` and the tools on `PATH`.
 
 The app is ad-hoc signed and installed as `NXLibrary.app` (bundle ID `local.nxlibrary`). Set `NX_BUILD_CONFIG=debug` to package the debug binary:
 
@@ -62,11 +75,11 @@ NX_BUILD_CONFIG=debug bash scripts/build_app.sh /tmp/NXLibrary-Debug.app
 /tmp/NXLibrary-Debug.app/Contents/MacOS/NXLibrary --preview-build   # DEBUG only
 ```
 
-`--show-setup` (DEBUG only) reopens the first-run sheet.
+`--show-setup` (DEBUG only) reopens the Setup check.
 
 ## First run
 
-Setup checks the nxnative checkout, build tools, `prod.keys`, the app library folder (`~/Applications`) and existing builds. Imported apps are playable immediately; their rebuilds stay disabled until sources are located.
+The Setup check opens on the first start, and later only when something that was ready breaks; **Settings → Start-up → Open Setup** opens it at any time. It rechecks every few seconds, so a card turns ready as soon as an installer finishes. Imported apps are playable immediately; their rebuilds stay disabled until sources are located.
 
 ## Adding a game
 
@@ -117,6 +130,6 @@ No games, keys, Nintendo logos, fonts, sounds, or other Nintendo assets are incl
 - The Breath of the Wild sources were removed from this Mac. Its imported app remains playable, but a BotW rebuild is blocked until the XCI base, update 1.9.0 and DLC are restored and attached.
 - Super Mario Odyssey 1.4.1 builds with engine `4f24ce6` (27,984 shaders and 32,864 pipeline pairs) and reaches the controller screen; gameplay beyond that is not yet verified.
 - Native 1440p/4K rendering is not supported. The window or fullscreen display sets output resolution; render scale is 50–100% and only changes the internal 3D resolution. MetalFX improves the upscale. BotW supports the render-scale stub; the current SMO build does not, so its render-scale card is hidden.
-- No DMG, no iOS/IPA output, no online compatibility database and no automatic engine updates. The upstream changelog check is manual and read-only; only the commit hash is sent to `api.github.com`.
+- No notarization, no iOS/IPA output, no online compatibility database and no automatic engine updates. The upstream changelog check is manual and read-only; only the commit hash is sent to `api.github.com`.
 - The engine checkout is never modified; nxnative upgrades are manual and re-pin the engine commit in `AppViewModel.pinnedEngineCommit`.
 - A detached-sources game shows no source badge over its tile and keeps its artwork; the detail card shows **Sources detached** with an info tooltip and **Attach Sources…** next to Rebuild.

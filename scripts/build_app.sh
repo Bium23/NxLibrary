@@ -31,6 +31,13 @@ done
 [ -f "$ROOT/LICENSE" ] && cp "$ROOT/LICENSE" "$APP/Contents/Resources/LICENSE"
 [ -f "$ROOT/NOTICE" ] && cp "$ROOT/NOTICE" "$APP/Contents/Resources/NOTICE"
 [ -d "$ROOT/Resources/Selene" ] && cp -R "$ROOT/Resources/Selene" "$APP/Contents/Resources/Selene"
+# Python and build tools from scripts/bundle_runtime.sh. Without it, a developer
+# build falls back to ~/nxnative/.venv and the PATH tools.
+if [ -d "$ROOT/work/Runtime" ]; then
+  cp -R "$ROOT/work/Runtime" "$APP/Contents/Resources/Runtime"
+else
+  echo "note: no work/Runtime; this build uses ~/nxnative/.venv (run scripts/bundle_runtime.sh)"
+fi
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>

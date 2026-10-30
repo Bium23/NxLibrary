@@ -1,0 +1,35 @@
+{
+  "python": {
+    "version": "3.14.6",
+    "release": "20260610",
+    "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260610/cpython-3.14.6%2B20260610-aarch64-apple-darwin-install_only_stripped.tar.gz",
+    "sha256": "875516e13be36296f8f7dd0972b22ba3bed069ed08d27d5f0069caf227522921"
+  },
+  "wheels": [
+    {
+      "name": "capstone",
+      "version": "5.0.9",
+      "file": "capstone-5.0.9-py3-none-macosx_11_0_arm64.whl",
+      "url": "https://files.pythonhosted.org/packages/42/9a/4eecfbc94961cda70301fd13de69042be1943bee456e37bc1369840601b1/capstone-5.0.9-py3-none-macosx_11_0_arm64.whl",
+      "sha256": "fc269c5082e17d7f9f265cd6980e2fdc6ab572df913951d76db0357e06b8001d"
+    },
+    {
+      "name": "lz4",
+      "version": "4.4.5",
+      "file": "lz4-4.4.5-cp314-cp314-macosx_11_0_arm64.whl",
+      "url": "https://files.pythonhosted.org/packages/b6/cb/bfead8f437741ce51e14b3c7d404e3a1f6b409c440bad9b8f3945d4c40a7/lz4-4.4.5-cp314-cp314-macosx_11_0_arm64.whl",
+      "sha256": "c8e71b14938082ebaf78144f3b3917ac715f72d14c076f384a4c062df96f9df6"
+    },
+    {
+      "name": "fonttools",
+      "version": "4.67.0",
+      "file": "fonttools-4.67.0-cp314-cp314-macosx_10_15_universal2.whl",
+      "url": "https://files.pythonhosted.org/packages/25/5b/c418f48918e40ef8c3f0f555567fe013c0c8058a8afa8040d6baeec80683/fonttools-4.67.0-cp314-cp314-macosx_10_15_universal2.whl",
+      "sha256": "846982e89b1861d6c9d7fcd6567aec3fa5a10ad313e7f2076045fcd339cfbd8e"
+    }
+  ],
+  "brew": [
+    { "formula": "zstd", "version": "1.5.7", "binary": "zstd" },
+    { "formula": "glslang", "version": "16.6.0", "binary": "glslangValidator" }
+  ]
+}

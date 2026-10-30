@@ -71,3 +71,21 @@ or sponsored by Nintendo.
 Bundled media (Material Icons, Selene sounds and palettes, public-domain
 wallpapers): see Resources/Selene/NOTICE.txt and
 Resources/Selene/NOTICE-palettes.txt, which ship inside the app bundle.
+
+--------------------------------------------------------------------------------
+Bundled runtime (Contents/Resources/Runtime, from scripts/bundle_runtime.sh)
+
+- CPython 3.14.6 (python-build-standalone 20260610): Python Software
+  Foundation License; python-build-standalone is MPL-2.0 build tooling only.
+- capstone 5.0.9: BSD 3-Clause.
+- lz4 4.4.5 (python-lz4): BSD 3-Clause; LZ4 library 1.10.0: BSD 2-Clause.
+- fontTools 4.67.0: MIT.
+- Zstandard 1.5.7: BSD 3-Clause (dual GPLv2).
+- xz / liblzma 5.8.4: 0BSD.
+- glslang 16.6.0: BSD 3-Clause and others listed in its LICENSE.txt.
+- SPIRV-Tools: Apache 2.0.
+
+The full licence texts ship in Runtime/licenses/.
+
+The relinking approach in scripts/bundle_runtime.sh and scripts/relink_macho.py
+follows LumaNX's scripts/bundle_runtime.py (https://github.com/Xc1Ym/LumaNX, MIT).
