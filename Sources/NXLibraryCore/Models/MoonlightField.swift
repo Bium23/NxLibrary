@@ -18,6 +18,7 @@ public struct MoonlightParticle: Equatable {
     /// Offset across its path, in standard deviations (gaussian, clamped to `laneLimit`).
     public var lane: Float
     /// Distance from the camera, `MoonlightField.focus` sharp; nearer blurs into bokeh.
+    /// On the road the road sets the distance and this only nudges a mote off it.
     public var depth: Float
     /// Share of its path travelled per second.
     public var speed: Float

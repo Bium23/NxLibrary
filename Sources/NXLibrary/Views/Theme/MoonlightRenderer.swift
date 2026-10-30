@@ -142,7 +142,7 @@ final class MoonlightEngine {
     }
 }
 
-/// The moonlight live: 30 fps while `moving`, one frame redrawn only on resize otherwise.
+/// The moonlight live: 30 fps while `moving`, otherwise its last frame, redrawn only on resize.
 struct MoonlightMetalView: NSViewRepresentable {
     let engine: MoonlightEngine
     let colors: MoonlightColors
@@ -175,8 +175,11 @@ struct MoonlightMetalView: NSViewRepresentable {
         let engine: MoonlightEngine
         var colors = MoonlightColors(accent: .white, ink: .white)
         var moving = true
-        /// Started part way in, so the motes are already spread along the band.
-        private let start = CACurrentMediaTime() - 40
+        /// Seconds of motion so far: it stops while still and carries on from the
+        /// same frame, so a game's art fading over or away never shows a jump.
+        /// Starts part way in, so the motes are already spread along the band.
+        private var clock: Double = 40
+        private var lastTick: CFTimeInterval?
 
         init(engine: MoonlightEngine) { self.engine = engine }
 
@@ -185,13 +188,19 @@ struct MoonlightMetalView: NSViewRepresentable {
         }
 
         func draw(in view: MTKView) {
-            let t = CACurrentMediaTime() - start
-            let breath = moving ? Float(0.5 + 0.5 * sin(2 * .pi * t / MoonlightEngine.breathPeriod))
-                                : MoonlightEngine.stillBreath
+            let now = CACurrentMediaTime()
+            if moving {
+                // A late frame (the view was hidden or paused) never skips ahead.
+                if let lastTick { clock += min(now - lastTick, 0.1) }
+                lastTick = now
+            } else {
+                lastTick = nil
+            }
+            let breath = Float(0.5 + 0.5 * sin(2 * .pi * clock / MoonlightEngine.breathPeriod))
             let size = view.drawableSize
             engine.draw(in: view, uniforms: MoonlightEngine.uniforms(
                 width: Int(size.width), height: Int(size.height),
-                time: moving ? Float(t) : MoonlightEngine.stillTime, breath: breath, colors: colors))
+                time: Float(clock), breath: breath, colors: colors))
         }
     }
 }
