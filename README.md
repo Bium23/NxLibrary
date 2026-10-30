@@ -22,9 +22,9 @@ A personal, native macOS front-end for [nxnative](https://github.com/seedds/nxna
 
 NX Library follows the [Selene](https://github.com/mattxslv/Selene) Playnite theme (MIT) as closely as a SwiftUI app can: the same 1920×1080 canvas units, palettes, Material Icons glyphs, hint rows and motion. Only the button prompts differ: they show Switch, Xbox or PlayStation names to match the connected controller. It does not include Sony or Nintendo branding, fonts, sounds or artwork.
 
-- **Spotlight:** Selene's home row of square tiles with cards (Collection, Surprise me, Activity, Add game), filter pill, info block, screenshot strip and a full-screen screenshot viewer. Hold A to lift and move a tile.
+- **Spotlight:** Selene's home row of square tiles (each game's own app icon) with cards (Collection, Surprise me, Activity, Add game), filter pill, info block with Play / Options / Favorite, screenshot strip and a full-screen screenshot viewer. Below the stats it is one page: genres, screenshots, description, Build & Sources with Your activity, More like this. Down glides the whole screen up as the row fades; the trackpad scrolls the page freely. Hold A to lift and move a tile.
 - **Collection:** a single row of covers over the selected game's art.
-- **Details:** banded page (play row, Build & Sources, screenshots, More like this) with Selene's scrim masks.
+- **Details:** banded page (Play / Options / Favorite, Build & Sources, screenshots, More like this) with Selene's scrim masks.
 - **Game options:** Selene's 1040u panel with runtime settings, favorite, hide and move, and confirm dialogs.
 - **Control center:** Menu/Start or `⌘K` opens Selene's menu with Resume and Close Game for a running game, and Power (quit, relaunch).
 - **Launch screen:** on Play, the game's art and logo (per Settings → Games) stay up until the game's window appears.
