@@ -13,10 +13,13 @@ struct SeleneArtBackground: View {
     var shade: BackgroundShade = .balanced
     /// Crossfade length; Collection takes a slower one so the art turns after the logo.
     var crossfade: Double = 0.4
+    /// Spotlight's backdrop by default; Collection passes `.library`.
+    var backdrop = SeleneBackdrop.home
 
     var body: some View {
         ZStack {
-            SeleneBackdrop()
+            // Under a game's art the moonlight is hidden: it holds still (Selene fades it out there).
+            backdrop.still(image != nil)
             ZStack {
                 if let image {
                     Color.clear
