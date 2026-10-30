@@ -549,7 +549,8 @@ public struct SpotlightView: View {
     /// The page's scroll for the focus, in points. The pills and the strip
     /// share the first shift (the strip only moves further if it would sit
     /// under the hints); Build & Sources brings About this game up to 150 by
-    /// its title (or itself, with no description); More like this comes up to 150.
+    /// its title (or itself, with no description); More like this rises until
+    /// the page's end sits above the hints, never further (`SpotlightPageScroll`).
     /// Positions add up the blocks' heights from the column's top at 420.
     func pageOffset(_ state: SpotlightState) -> CGFloat {
         offset(for: state.focus)
@@ -572,10 +573,14 @@ public struct SpotlightView: View {
         case .strip:
             // Keep the strip clear of the hints on the window's bottom edge.
             return min(first, canvas.size.height - canvas.u(130) - stripBottom)
-        case .actions:
-            return min(first, canvas.u(150) - aboutTop)
-        case .more:
-            return min(first, canvas.u(150) - moreTop)
+        case .actions, .more:
+            // The band reports a height only when it has games.
+            let more = h(.more) > 0
+            let rest = SpotlightPageScroll.resting(
+                first: first, aboutTop: aboutTop, moreTop: more ? moreTop : nil,
+                pageBottom: stripBottom + h(.description) + h(.actions) + (more ? h(.more) : 0),
+                top: canvas.u(150), viewport: canvas.size.height, bottomInset: canvas.u(130))
+            return area == .actions ? rest.actions : rest.more
         }
     }
 
@@ -669,6 +674,8 @@ public struct SpotlightView: View {
     private func pageBelow(_ game: PortedGame, page: SpotlightPageModel, state: SpotlightState) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             SpotlightDescription(text: page.presentation.description)
+                // Read more closes when the game changes.
+                .id(game.id)
                 .padding(.top, canvas.u(44))
                 .spotlightBlock(.description)
 

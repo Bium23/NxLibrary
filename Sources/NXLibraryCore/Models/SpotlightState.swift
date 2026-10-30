@@ -27,8 +27,8 @@ public struct SpotlightState: Equatable {
     public static let anchorSlot = 2
     /// Play, Options, Favorite.
     public static let pillCount = 3
-    /// Build & Sources lays its actions out in two columns.
-    public static let actionColumns = 2
+    /// Build & Sources lays its actions out as compact pills, four to a row.
+    public static let actionColumns = 4
 
     public var selectedKey: String?
     public var focus: SpotlightFocusArea
@@ -153,8 +153,8 @@ public struct SpotlightState: Equatable {
         case .strip:
             return enterActions(actionCount: actionCount, moreCount: moreCount)
         case .actions:
-            if actionIndex + Self.actionColumns < actionCount {
-                actionIndex += Self.actionColumns
+            if let below = Self.actionBelow(actionIndex, count: actionCount) {
+                actionIndex = below
                 return true
             }
             guard moreCount > 0 else { return false }
@@ -164,6 +164,13 @@ public struct SpotlightState: Equatable {
         case .more, .topGames:
             return false
         }
+    }
+
+    /// The action under `index` in the next row; above a short last row's gap, its last action.
+    public static func actionBelow(_ index: Int, count: Int) -> Int? {
+        if index + actionColumns < count { return index + actionColumns }
+        let lastRowStart = max(count - 1, 0) / actionColumns * actionColumns
+        return index < lastRowStart ? count - 1 : nil
     }
 
     private mutating func enterActions(actionCount: Int, moreCount: Int) -> Bool {

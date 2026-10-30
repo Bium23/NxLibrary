@@ -211,23 +211,26 @@ final class SpotlightLiftTests: XCTestCase {
     }
 
     func testPageScrollsThroughActionsAndMore() {
+        // Seven actions in rows of four: 0 1 2 3 / 4 5 6.
+        XCTAssertEqual(SpotlightState.actionColumns, 4)
         var s = SpotlightState(selectedKey: "game:x", focus: .strip)
-        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 5, moreCount: 2))
+        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 7, moreCount: 2))
         XCTAssertEqual(s.focus, .actions)
-        XCTAssertTrue(s.moveSideways(by: 1, screenshotCount: 3, actionCount: 5))
-        XCTAssertEqual(s.actionIndex, 1)
-        XCTAssertFalse(s.moveSideways(by: 1, screenshotCount: 3, actionCount: 5))
-        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 5, moreCount: 2))
+        for _ in 0..<3 { XCTAssertTrue(s.moveSideways(by: 1, screenshotCount: 3, actionCount: 7)) }
         XCTAssertEqual(s.actionIndex, 3)
-        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 5, moreCount: 2))
+        XCTAssertFalse(s.moveSideways(by: 1, screenshotCount: 3, actionCount: 7))
+        // Above the short last row's gap, Down lands on its last action.
+        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 7, moreCount: 2))
+        XCTAssertEqual(s.actionIndex, 6)
+        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 7, moreCount: 2))
         XCTAssertEqual(s.focus, .more)
-        XCTAssertFalse(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 5, moreCount: 2))
-        XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 5))
+        XCTAssertFalse(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 7, moreCount: 2))
+        XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 7))
         XCTAssertEqual(s.focus, .actions)
         XCTAssertEqual(s.actionIndex, 4)
-        XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 5))
-        XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 5))
-        XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 5))
+        XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 7))
+        XCTAssertEqual(s.actionIndex, 0)
+        XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 7))
         XCTAssertEqual(s.focus, .strip)
     }
 

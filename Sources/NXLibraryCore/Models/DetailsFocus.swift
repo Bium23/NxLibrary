@@ -35,8 +35,8 @@ public struct DetailsFocus: Equatable {
     public static let moreZone = 3
     /// Play or Build, then Options, then the Favorite heart.
     public static let pillCount = 3
-    /// Build & Sources lays its actions out in two columns.
-    public static let actionColumns = 2
+    /// Build & Sources lays its actions out in rows, as on Spotlight.
+    public static let actionColumns = SpotlightState.actionColumns
 
     public var zone = DetailsFocus.topZone
     public var pill = 0
@@ -49,8 +49,8 @@ public struct DetailsFocus: Equatable {
     /// Down: inside the action grid, the next row; otherwise the next band with items.
     @discardableResult
     public mutating func down(in bands: Bands) -> Bool {
-        if zone == Self.actionsZone, action + Self.actionColumns < bands.actions {
-            action += Self.actionColumns
+        if zone == Self.actionsZone, let below = SpotlightState.actionBelow(action, count: bands.actions) {
+            action = below
             return true
         }
         return moveZone(to: neighbour(of: zone, by: 1, in: bands))
@@ -78,7 +78,7 @@ public struct DetailsFocus: Equatable {
             shot = next
             return true
         case Self.actionsZone:
-            guard action % Self.actionColumns == 1 else { return false }
+            guard action % Self.actionColumns > 0 else { return false }
             action -= 1
             return true
         default:
@@ -100,7 +100,7 @@ public struct DetailsFocus: Equatable {
             shot = next
             return true
         case Self.actionsZone:
-            guard action % Self.actionColumns == 0, action + 1 < bands.actions else { return false }
+            guard action % Self.actionColumns < Self.actionColumns - 1, action + 1 < bands.actions else { return false }
             action += 1
             return true
         default:

@@ -2,7 +2,7 @@ import XCTest
 @testable import NXLibraryCore
 
 final class DetailsFocusTests: XCTestCase {
-    private let all = DetailsFocus.Bands(screenshots: 3, actions: 4, more: 2)
+    private let all = DetailsFocus.Bands(screenshots: 3, actions: 6, more: 2)
 
     func testDownWalksTopThenBandsInOrder() {
         var focus = DetailsFocus()
@@ -10,9 +10,10 @@ final class DetailsFocusTests: XCTestCase {
         XCTAssertEqual(focus.zone, DetailsFocus.screenshotsZone)
         XCTAssertTrue(focus.down(in: all))
         XCTAssertEqual(focus.zone, DetailsFocus.actionsZone)
-        // Inside the grid Down goes to the next row first (4 actions: rows 0-1, 2-3).
+        // Inside the grid Down goes to the next row first (6 actions: rows 0-3, 4-5).
+        XCTAssertEqual(DetailsFocus.actionColumns, SpotlightState.actionColumns)
         XCTAssertTrue(focus.down(in: all))
-        XCTAssertEqual(focus.action, 2)
+        XCTAssertEqual(focus.action, 4)
         XCTAssertEqual(focus.zone, DetailsFocus.actionsZone)
         XCTAssertTrue(focus.down(in: all))
         XCTAssertEqual(focus.zone, DetailsFocus.moreZone)
@@ -22,11 +23,11 @@ final class DetailsFocusTests: XCTestCase {
 
     func testEmptyScreenshotsBandIsSkipped() {
         var focus = DetailsFocus()
-        let bands = DetailsFocus.Bands(screenshots: 0, actions: 4, more: 0)
+        let bands = DetailsFocus.Bands(screenshots: 0, actions: 6, more: 0)
         XCTAssertTrue(focus.down(in: bands))
         XCTAssertEqual(focus.zone, DetailsFocus.actionsZone)
         XCTAssertTrue(focus.down(in: bands))
-        XCTAssertEqual(focus.action, 2)
+        XCTAssertEqual(focus.action, 4)
         XCTAssertFalse(focus.down(in: bands))
     }
 
@@ -52,24 +53,25 @@ final class DetailsFocusTests: XCTestCase {
     func testActionGridMovesAcrossColumnsAndRows() {
         var focus = DetailsFocus()
         focus.zone = DetailsFocus.actionsZone
-        XCTAssertTrue(focus.right(in: all))
-        XCTAssertEqual(focus.action, 1)
+        for _ in 0..<3 { XCTAssertTrue(focus.right(in: all)) }
+        XCTAssertEqual(focus.action, 3)
         XCTAssertFalse(focus.right(in: all))
         XCTAssertTrue(focus.left(in: all))
-        XCTAssertEqual(focus.action, 0)
-        XCTAssertTrue(focus.down(in: all))
         XCTAssertEqual(focus.action, 2)
+        // Above the short last row's gap, Down lands on its last action.
+        XCTAssertTrue(focus.down(in: all))
+        XCTAssertEqual(focus.action, 5)
         XCTAssertTrue(focus.up(in: all))
-        XCTAssertEqual(focus.action, 0)
+        XCTAssertEqual(focus.action, 1)
     }
 
     func testActionGridLeavesBandFromLastRow() {
         var focus = DetailsFocus()
         focus.zone = DetailsFocus.actionsZone
-        focus.action = 3
+        focus.action = 4
         XCTAssertTrue(focus.down(in: all))
         XCTAssertEqual(focus.zone, DetailsFocus.moreZone)
-        XCTAssertEqual(focus.action, 3)
+        XCTAssertEqual(focus.action, 4)
     }
 
     func testRightStopsAtLastActionInOddGrid() {

@@ -29,7 +29,8 @@ struct BuildSourcesPanel: View {
     let onPressRow: (Int) -> Void
 
     static let width: CGFloat = 1100
-    static let columns = 2
+    static let columns = SpotlightState.actionColumns
+    static let cellWidth: CGFloat = 260
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -100,15 +101,13 @@ struct BuildSourcesPanel: View {
         .padding(.leading, canvas.u(2))
     }
 
+    /// Compact pills, four to a row (`SpotlightState.actionColumns`), like the pills above.
     private var grid: some View {
-        VStack(alignment: .leading, spacing: canvas.u(8)) {
+        VStack(alignment: .leading, spacing: canvas.u(10)) {
             ForEach(Array(stride(from: 0, to: rows.count, by: Self.columns)), id: \.self) { first in
-                HStack(spacing: canvas.u(14)) {
+                HStack(spacing: canvas.u(12)) {
                     ForEach(first..<min(first + Self.columns, rows.count), id: \.self) { index in
                         cell(rows[index], index: index)
-                    }
-                    if rows.count - first < Self.columns {
-                        Color.clear.frame(maxWidth: .infinity, maxHeight: canvas.u(44))
                     }
                 }
             }
@@ -116,22 +115,21 @@ struct BuildSourcesPanel: View {
     }
 
     private func cell(_ row: BuildSourcesRow, index: Int) -> some View {
-        let shape = RoundedRectangle(cornerRadius: canvas.u(12), style: .continuous)
+        let shape = Capsule()
         return Button { onPressRow(index) } label: {
             Text(row.title)
-                .seleneFont(19)
+                .seleneFont(17, .medium)
                 .foregroundColor(row.enabled ? SeleneTheme.ink90 : SeleneTheme.ink60)
                 .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, canvas.u(20))
-                .frame(height: canvas.u(44))
+                .minimumScaleFactor(0.85)
+                .padding(.horizontal, canvas.u(18))
+                .frame(width: canvas.u(Self.cellWidth), height: canvas.u(46))
                 .background(shape.fill(SeleneTheme.glass))
                 .overlay(shape.strokeBorder(SeleneTheme.ink15, lineWidth: max(1, canvas.u(1))))
                 .contentShape(shape)
-                .seleneRowFocus(focusedRow == index, radius: canvas.u(12))
+                .seleneRowFocus(focusedRow == index, radius: canvas.u(23))
         }
         .buttonStyle(.plain)
-        .frame(maxWidth: .infinity)
         .onHover { if $0 { onHoverRow(index) } }
         .accessibilityLabel(row.title)
     }
