@@ -26,7 +26,8 @@ public enum BackgroundSourceID: String, CaseIterable, Codable, Sendable {
         switch self {
         case .wallhaven: return WallhavenAPI.categories
         case .danbooru: return DanbooruAPI.categories
-        case .motionbgs, .steam: return []
+        case .motionbgs: return MotionBGsAPI.categories
+        case .steam: return SteamAPI.categories
         }
     }
 }
@@ -271,6 +272,182 @@ public enum DanbooruAPI {
                                     fileURL: file)
         }
         return OnlinePage(items: items, hasMore: posts.count >= pageSize)
+    }
+}
+
+// MARK: - MotionBGs
+
+/// motionbgs.com's pages (no API). Listings only when the player browses;
+/// the file comes straight from a tile: /dl/4k/<n>/ or /dl/hd/<n>/.
+public enum MotionBGsAPI {
+    public static let categories = [
+        BackgroundCategory(id: "latest", title: "Latest"),
+        BackgroundCategory(id: "4k", title: "4K"),
+        BackgroundCategory(id: "anime", title: "Anime"),
+        BackgroundCategory(id: "games", title: "Games"),
+        BackgroundCategory(id: BackgroundCategory.searchID, title: "Search"),
+    ]
+    static let site = "https://motionbgs.com"
+
+    /// nil for Search without words. Listings page as /<path>/<n>/, search as ?page=<n>.
+    public static func listingURL(_ category: BackgroundCategory, query: String?, page: Int) -> URL? {
+        let paged = page > 1 ? "\(page)/" : ""
+        switch category.id {
+        case "latest": return URL(string: "\(site)/\(paged)")
+        case "4k": return URL(string: "\(site)/4k/\(paged)")
+        case "anime", "games": return URL(string: "\(site)/tag:\(category.id)/\(paged)")
+        default:
+            let words = (query ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !words.isEmpty else { return nil }
+            var components = URLComponents(string: "\(site)/search")!
+            components.queryItems = [.init(name: "q", value: words)] + (page > 1 ? [.init(name: "page", value: String(page))] : [])
+            return components.url
+        }
+    }
+
+    /// The tiles of a listing page. A tile it cannot read is skipped; a page with none is empty.
+    public static func parseListing(_ html: String) -> OnlinePage {
+        var items: [OnlineBackground] = []
+        for tile in html.components(separatedBy: "<a title=").dropFirst() {
+            guard let body = tile.components(separatedBy: "</a>").first,
+                  let slug = capture(#"href=/([^ >"]+)>"#, in: body),
+                  let thumb = capture(#"src=/i/c/364x205/media/(\d+/[^ >"]+)"#, in: body),
+                  let number = thumb.split(separator: "/").first,
+                  let name = capture(#"<span class=ttl>([^<]*)</span>"#, in: body),
+                  let format = capture(#"<span class=frm>\s*([^<]*?)\s*</span>"#, in: body) else { continue }
+            let size: (width: Int, height: Int, folder: String)
+            switch format.uppercased() {
+            case "4K": size = (3840, 2160, "4k")
+            case "HD": size = (1920, 1080, "hd")
+            default: continue
+            }
+            guard let page = URL(string: "\(site)/\(slug)"),
+                  let thumbnail = URL(string: "\(site)/i/c/546x308/media/\(thumb)"),
+                  let file = URL(string: "\(site)/dl/\(size.folder)/\(number)/") else { continue }
+            let item = OnlineBackground(source: .motionbgs, sourceID: String(number), kind: .video,
+                                        title: unescape(name), author: nil, width: size.width, height: size.height,
+                                        thumbnailURL: thumbnail, pageURL: page, fileURL: file)
+            if !items.contains(where: { $0.id == item.id }) { items.append(item) }
+        }
+        let hasMore = html.contains("rel=next") || items.count >= 24
+        return OnlinePage(items: items, hasMore: !items.isEmpty && hasMore)
+    }
+
+    private static func capture(_ pattern: String, in text: String) -> String? {
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+              let range = Range(match.range(at: 1), in: text) else { return nil }
+        return String(text[range])
+    }
+
+    private static func unescape(_ text: String) -> String {
+        [("&#39;", "'"), ("&quot;", "\""), ("&lt;", "<"), ("&gt;", ">"), ("&amp;", "&")]
+            .reduce(text) { $0.replacingOccurrences(of: $1.0, with: $1.1) }
+            .trimmingCharacters(in: .whitespaces)
+    }
+}
+
+// MARK: - Steam
+
+/// Steam's Points Shop animated profile backgrounds (QueryRewardItems), official
+/// loops from the games' studios. Pages go by cursor.
+public enum SteamAPI {
+    public static let pageSize = 30
+    public static let categories = [
+        BackgroundCategory(id: "popular", title: "Popular"),
+        BackgroundCategory(id: "newest", title: "Newest"),
+        BackgroundCategory(id: BackgroundCategory.searchID, title: "Search"),
+    ]
+    static let media = "https://shared.akamai.steamstatic.com/community_assets/images/items"
+
+    /// nil for Search without words. Search matches item and game names.
+    public static func queryURL(_ category: BackgroundCategory, query: String?, cursor: String?) -> URL? {
+        var items: [URLQueryItem] = [.init(name: "community_item_classes[0]", value: "3"),
+                                     .init(name: "filters[0]", value: "1"),
+                                     .init(name: "count", value: String(pageSize)),
+                                     .init(name: "language", value: "english")]
+        switch category.id {
+        case "popular": items += [.init(name: "sort", value: "2"), .init(name: "sort_descending", value: "false")]
+        case "newest": break
+        default:
+            let words = (query ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !words.isEmpty else { return nil }
+            items.append(.init(name: "search_term", value: words))
+        }
+        if let cursor { items.append(.init(name: "cursor", value: cursor)) }
+        var components = URLComponents(string: "https://api.steampowered.com/ILoyaltyRewardsService/QueryRewardItems/v1/")!
+        components.queryItems = items
+        // "+" and "=" in a cursor must survive the query string.
+        components.percentEncodedQuery = components.percentEncodedQuery?
+            .replacingOccurrences(of: "+", with: "%2B")
+        return components.url
+    }
+
+    private struct Query: Decodable {
+        struct Response: Decodable {
+            struct Definition: Decodable {
+                struct Item: Decodable {
+                    let item_title: String?
+                    let item_image_large: String?
+                    let item_movie_mp4: String?
+                    let animated: Bool?
+                }
+                let appid: Int
+                let defid: Int
+                let community_item_data: Item?
+            }
+            let definitions: [Definition]?
+            let next_cursor: String?
+        }
+        let response: Response
+    }
+
+    public static func parseQuery(_ data: Data) throws -> (page: OnlinePage, nextCursor: String?) {
+        let response = try JSONDecoder().decode(Query.self, from: data).response
+        let definitions = response.definitions ?? []
+        let items = definitions.compactMap { definition -> OnlineBackground? in
+            guard let item = definition.community_item_data, item.animated == true,
+                  let movie = item.item_movie_mp4, let image = item.item_image_large,
+                  let file = URL(string: "\(media)/\(definition.appid)/\(movie)"),
+                  let thumbnail = URL(string: "\(media)/\(definition.appid)/\(image)") else { return nil }
+            return OnlineBackground(source: .steam, sourceID: String(definition.defid), kind: .video,
+                                    title: item.item_title ?? "Steam", author: nil, width: 1920, height: 1080,
+                                    thumbnailURL: thumbnail,
+                                    pageURL: URL(string: "https://store.steampowered.com/points/shop/app/\(definition.appid)")!,
+                                    fileURL: file)
+        }
+        let cursor = response.next_cursor.flatMap { $0.isEmpty ? nil : $0 }
+        return (OnlinePage(items: items, hasMore: cursor != nil && !definitions.isEmpty), cursor)
+    }
+
+    /// The game a Steam item belongs to, from its page.
+    public static func appID(of item: OnlineBackground) -> Int? {
+        Int(item.pageURL.lastPathComponent)
+    }
+
+    /// IStoreBrowseService/GetItems for the games' names.
+    public static func gameNamesURL(appIDs: [Int]) -> URL {
+        let ids = appIDs.map { "{\"appid\":\($0)}" }.joined(separator: ",")
+        var components = URLComponents(string: "https://api.steampowered.com/IStoreBrowseService/GetItems/v1/")!
+        components.queryItems = [.init(name: "input_json", value:
+            "{\"ids\":[\(ids)],\"context\":{\"language\":\"english\",\"country_code\":\"US\"}}")]
+        return components.url!
+    }
+
+    private struct Names: Decodable {
+        struct Response: Decodable {
+            struct Item: Decodable { let appid: Int?; let name: String? }
+            let store_items: [Item]?
+        }
+        let response: Response
+    }
+
+    public static func parseGameNames(_ data: Data) throws -> [Int: String] {
+        var names: [Int: String] = [:]
+        for item in try JSONDecoder().decode(Names.self, from: data).response.store_items ?? [] {
+            if let appid = item.appid, appid != 0, let name = item.name, !name.isEmpty { names[appid] = name }
+        }
+        return names
     }
 }
 

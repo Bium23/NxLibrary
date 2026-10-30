@@ -88,7 +88,7 @@ public enum ThemeBackgroundChoice: Equatable, Hashable {
 public enum ThemeBackgrounds {
     /// Wallpapers: theme's own, none, add, the player's own, the downloaded ones,
     /// the online sources, the theme's other wallpapers, then every other one. Live: the theme's own (the moonlight),
-    /// add, the player's videos, then every other video.
+    /// add, the player's videos, the downloaded ones, the online sources, then every other video.
     public static func list(_ tab: BackgroundTab = .wallpapers, themeID: String,
                             wallpapers: [Wallpaper]) -> [ThemeBackgroundChoice] {
         switch tab {
@@ -105,8 +105,10 @@ public enum ThemeBackgrounds {
         case .live:
             let videos = wallpapers.filter { $0.kind == .video }
             let custom = videos.filter { $0.theme == WallpaperCatalog.custom }
-            let rest = videos.filter { $0.theme != WallpaperCatalog.custom }
-            return [.none, .add] + (custom + rest).map { .wallpaper($0.id) }
+            let downloaded = videos.filter { $0.theme == WallpaperCatalog.live }
+            let rest = videos.filter { $0.theme != WallpaperCatalog.custom && $0.theme != WallpaperCatalog.live }
+            let sources = BackgroundSourceID.allCases.filter { $0.kind == .video }.map(ThemeBackgroundChoice.online)
+            return [.none, .add] + (custom + downloaded).map { .wallpaper($0.id) } + sources + rest.map { .wallpaper($0.id) }
         }
     }
 

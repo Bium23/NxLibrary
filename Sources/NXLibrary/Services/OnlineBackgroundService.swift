@@ -15,6 +15,8 @@ actor OnlineBackgroundService {
     private let session: URLSession
     private var pages: [URL: OnlinePage] = [:]
     private var nextSlot: [BackgroundSourceID: Date] = [:]
+    /// Steam pages by cursor: "<category>|<query>" → page number → the cursor that fetches it.
+    private var steamCursors: [String: [Int: String]] = [:]
 
     init() {
         let configuration = URLSessionConfiguration.default
@@ -33,17 +35,49 @@ actor OnlineBackgroundService {
     func page(_ source: BackgroundSourceID, category: BackgroundCategory, query: String,
               page number: Int) async throws -> OnlinePage {
         let url: URL?
+        let steamKey = "\(category.id)|\(query)"
         switch source {
         case .wallhaven: url = WallhavenAPI.searchURL(category, query: query, page: number)
         case .danbooru: url = DanbooruAPI.postsURL(category, query: query, page: number)
-        case .motionbgs, .steam: url = nil
+        case .motionbgs: url = MotionBGsAPI.listingURL(category, query: query, page: number)
+        case .steam:
+            let cursor = number > 1 ? steamCursors[steamKey]?[number] : nil
+            url = number > 1 && cursor == nil ? nil : SteamAPI.queryURL(category, query: query, cursor: cursor)
         }
         guard let url else { return OnlinePage(items: [], hasMore: false) }
         if let cached = pages[url] { return cached }
-        let data = try await fetch(url, pacedFor: source)
-        let page = source == .wallhaven ? try WallhavenAPI.parseSearch(data) : try DanbooruAPI.parsePosts(data)
+        let page: OnlinePage
+        switch source {
+        case .wallhaven: page = try WallhavenAPI.parseSearch(try await fetch(url, pacedFor: source))
+        case .danbooru: page = try DanbooruAPI.parsePosts(try await fetch(url, pacedFor: source))
+        case .motionbgs: page = MotionBGsAPI.parseListing(String(decoding: try await motionPage(url), as: UTF8.self))
+        case .steam:
+            let result = try SteamAPI.parseQuery(try await fetch(url, pacedFor: source))
+            if let cursor = result.nextCursor { steamCursors[steamKey, default: [:]][number + 1] = cursor }
+            page = result.page
+        }
         pages[url] = page
         return page
+    }
+
+    private static let motionPageLife: TimeInterval = 24 * 3600
+
+    /// A MotionBGs page, kept on disk for a day so browsing again costs the site nothing.
+    private func motionPage(_ url: URL) async throws -> Data {
+        let folder = ArtworkStore.defaultDirectory().appendingPathComponent("online-pages", isDirectory: true)
+        let file = folder.appendingPathComponent(Self.hashName(url) + ".html")
+        if let modified = (try? FileManager.default.attributesOfItem(atPath: file.path))?[.modificationDate] as? Date,
+           Date().timeIntervalSince(modified) < Self.motionPageLife, let data = try? Data(contentsOf: file) {
+            return data
+        }
+        let data = try await fetch(url, pacedFor: .motionbgs)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try? data.write(to: file, options: .atomic)
+        return data
+    }
+
+    private static func hashName(_ url: URL) -> String {
+        SHA256.hash(data: Data(url.absoluteString.utf8)).map { String(format: "%02x", $0) }.joined()
     }
 
     /// Waits for the source's next free slot, then fetches.
@@ -72,6 +106,11 @@ actor OnlineBackgroundService {
            let detail = try? WallhavenAPI.parseDetail(data) {
             title = detail.title ?? title
             author = detail.author ?? author
+        }
+        if item.source == .steam, let app = SteamAPI.appID(of: item),
+           let data = try? await fetch(SteamAPI.gameNamesURL(appIDs: [app]), pacedFor: .steam),
+           let name = try? SteamAPI.parseGameNames(data)[app] {
+            author = name
         }
         let delegate = DownloadProgress(progress)
         let (temporary, response) = try await session.download(from: remote, delegate: delegate)
@@ -120,8 +159,7 @@ actor OnlineBackgroundService {
             pruned = true
             pruneThumbnails(in: folder)
         }
-        let name = SHA256.hash(data: Data(url.absoluteString.utf8)).map { String(format: "%02x", $0) }.joined()
-        let file = folder.appendingPathComponent(name + "." + (url.pathExtension.isEmpty ? "jpg" : url.pathExtension))
+        let file = folder.appendingPathComponent(Self.hashName(url) + "." + (url.pathExtension.isEmpty ? "jpg" : url.pathExtension))
         if let modified = (try? fileManager.attributesOfItem(atPath: file.path))?[.modificationDate] as? Date,
            Date().timeIntervalSince(modified) < Self.thumbnailLife {
             return file

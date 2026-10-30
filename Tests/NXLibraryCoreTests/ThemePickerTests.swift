@@ -102,7 +102,10 @@ final class ThemePickerTests: XCTestCase {
 
     func testLiveTabListsTheMoonlightThenYourVideosThenTheRest() {
         XCTAssertEqual(ThemeBackgrounds.list(.live, themeID: "gruvbox", wallpapers: withVideos),
-                       [.none, .add, .wallpaper("custom/rain"), .wallpaper("live/steam-123")])
+                       [.none, .add, .wallpaper("custom/rain"), .wallpaper("live/steam-123"),
+                        .online(.motionbgs), .online(.steam)])
+        XCTAssertEqual(ThemeBackgrounds.group(.online(.motionbgs), tab: .live), "ONLINE · MOTIONBGS")
+        XCTAssertEqual(ThemeBackgrounds.group(.online(.steam), tab: .live), "ONLINE · STEAM")
     }
 
     func testLiveGroupLabels() {

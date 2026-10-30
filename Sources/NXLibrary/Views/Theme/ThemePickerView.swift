@@ -237,7 +237,7 @@ struct ThemePickerView: View {
         let focused = focusedBackground
         return ZStack(alignment: .top) {
             if let browse = browser.state {
-                header(browse.source.title, "Safe for work, 2K and up. Every picture belongs to its owner.")
+                header(browse.source.title, Self.about(browse.source))
             } else {
                 header("Choose your background", "Behind the menus and the home when no game is selected.")
             }
@@ -312,6 +312,16 @@ struct ThemePickerView: View {
             SelenePromptBadge(button: .rb, height: 26).accessibilityHidden(true)
         }
         .padding(.leading, canvas.u(6))
+    }
+
+    /// The line under a source's name while browsing it.
+    static func about(_ source: BackgroundSourceID) -> String {
+        switch source {
+        case .wallhaven: return "Safe for work, 2K and up. Every picture belongs to its owner."
+        case .danbooru: return "General rating only, 2K and up. Every picture belongs to its artist."
+        case .motionbgs: return "Looping live wallpapers in 4K and HD. Every video belongs to its owner."
+        case .steam: return "Animated profile backgrounds, made by the games' studios for Steam."
+        }
     }
 
     /// The focused online item's thumbnail while browsing, else the focused tile's wallpaper.
