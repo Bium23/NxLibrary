@@ -40,26 +40,40 @@ final class ThemePickerTests: XCTestCase {
     /// First row: the online sources and + Add; then downloads, yours, the theme's own and none, the rest.
     func testBackgroundsOpenOnTheSourcesAndAdd() {
         XCTAssertEqual(ThemeBackgrounds.list(themeID: "gruvbox", wallpapers: wallpapers),
-                       [.online(.wallhaven), .online(.danbooru), .add, .wallpaper("custom/mine"), .theme, .none,
+                       [.online(.wallhaven), .online(.danbooru), .add, .theme, .wallpaper("custom/mine"), .none,
                         .wallpaper("gruvbox/2-b"), .wallpaper("kanagawa/1-a")],
                        "the theme's own wallpaper is Theme's own, not listed again")
+    }
+
+    /// The background in use is always the first tile under the top row.
+    func testTheBackgroundInUseLeadsTheSecondRow() {
+        XCTAssertEqual(ThemeBackgrounds.list(themeID: "gruvbox", wallpapers: wallpapers, current: "kanagawa/1-a"),
+                       [.online(.wallhaven), .online(.danbooru), .add, .wallpaper("kanagawa/1-a"),
+                        .wallpaper("custom/mine"), .theme, .none, .wallpaper("gruvbox/2-b")])
+        XCTAssertEqual(ThemeBackgrounds.list(themeID: "gruvbox", wallpapers: wallpapers, current: WallpaperCatalog.none),
+                       [.online(.wallhaven), .online(.danbooru), .add, .none,
+                        .wallpaper("custom/mine"), .theme, .wallpaper("gruvbox/2-b"), .wallpaper("kanagawa/1-a")])
+        XCTAssertEqual(ThemeBackgrounds.list(themeID: "gruvbox", wallpapers: wallpapers, current: "gone/x")[3], .theme,
+                       "a missing file is the theme's own")
+        let list = ThemeBackgrounds.list(themeID: "gruvbox", wallpapers: wallpapers, current: "kanagawa/1-a")
+        XCTAssertEqual(ThemeBackgrounds.index(of: "kanagawa/1-a", in: list), 3)
     }
 
     /// Selene has no wallpaper of its own: Theme's own would be the moonlight twice.
     func testAThemeWithoutAWallpaperOffersNoneOnly() {
         XCTAssertEqual(ThemeBackgrounds.list(themeID: "selene", wallpapers: wallpapers),
-                       [.online(.wallhaven), .online(.danbooru), .add, .wallpaper("custom/mine"), .none,
+                       [.online(.wallhaven), .online(.danbooru), .add, .none, .wallpaper("custom/mine"),
                         .wallpaper("gruvbox/1-a"), .wallpaper("gruvbox/2-b"), .wallpaper("kanagawa/1-a")])
         let list = ThemeBackgrounds.list(themeID: "selene", wallpapers: wallpapers)
-        XCTAssertEqual(ThemeBackgrounds.index(of: nil, in: list), 4, "following the theme is the moonlight")
+        XCTAssertEqual(ThemeBackgrounds.index(of: nil, in: list), 3, "following the theme is the moonlight")
     }
 
     func testDownloadsComeRightUnderTheFirstRow() {
         let all = (wallpapers + [wallpaper("online/wallhaven-abc"), wallpaper("online/danbooru-1")]).sorted { $0.id < $1.id }
         XCTAssertEqual(ThemeBackgrounds.list(themeID: "gruvbox", wallpapers: all),
-                       [.online(.wallhaven), .online(.danbooru), .add,
+                       [.online(.wallhaven), .online(.danbooru), .add, .theme,
                         .wallpaper("online/danbooru-1"), .wallpaper("online/wallhaven-abc"),
-                        .wallpaper("custom/mine"), .theme, .none,
+                        .wallpaper("custom/mine"), .none,
                         .wallpaper("gruvbox/2-b"), .wallpaper("kanagawa/1-a")])
         XCTAssertEqual(ThemeBackgrounds.group(.wallpaper("online/wallhaven-abc")), "DOWNLOADED")
         XCTAssertEqual(ThemeBackgrounds.group(.online(.wallhaven)), "ONLINE · WALLHAVEN")
@@ -68,11 +82,11 @@ final class ThemePickerTests: XCTestCase {
 
     func testTheSettingFindsItsTile() {
         let list = ThemeBackgrounds.list(themeID: "gruvbox", wallpapers: wallpapers)
-        XCTAssertEqual(ThemeBackgrounds.index(of: nil, in: list), 4)
+        XCTAssertEqual(ThemeBackgrounds.index(of: nil, in: list), 3)
         XCTAssertEqual(ThemeBackgrounds.index(of: WallpaperCatalog.none, in: list), 5)
         XCTAssertEqual(ThemeBackgrounds.index(of: "kanagawa/1-a", in: list), 7)
-        XCTAssertEqual(ThemeBackgrounds.index(of: "gruvbox/1-a", in: list), 4, "the theme's own is Theme's own")
-        XCTAssertEqual(ThemeBackgrounds.index(of: "gone/x", in: list), 4, "a missing file falls back to the theme")
+        XCTAssertEqual(ThemeBackgrounds.index(of: "gruvbox/1-a", in: list), 3, "the theme's own is Theme's own")
+        XCTAssertEqual(ThemeBackgrounds.index(of: "gone/x", in: list), 3, "a missing file falls back to the theme")
     }
 
     func testGroupLabels() {
@@ -103,7 +117,7 @@ final class ThemePickerTests: XCTestCase {
 
     func testWallpapersTabListsStillsOnly() {
         XCTAssertEqual(ThemeBackgrounds.list(.wallpapers, themeID: "gruvbox", wallpapers: withVideos),
-                       [.online(.wallhaven), .online(.danbooru), .add, .wallpaper("custom/mine"), .theme, .none,
+                       [.online(.wallhaven), .online(.danbooru), .add, .theme, .wallpaper("custom/mine"), .none,
                         .wallpaper("gruvbox/2-b"), .wallpaper("kanagawa/1-a")])
     }
 
@@ -113,6 +127,9 @@ final class ThemePickerTests: XCTestCase {
                         .wallpaper("live/steam-123"), .wallpaper("custom/rain")])
         let list = ThemeBackgrounds.list(.live, themeID: "gruvbox", wallpapers: withVideos)
         XCTAssertEqual(ThemeBackgrounds.index(of: WallpaperCatalog.none, in: list), 3)
+        XCTAssertEqual(ThemeBackgrounds.list(.live, themeID: "gruvbox", wallpapers: withVideos, current: "custom/rain"),
+                       [.online(.motionbgs), .online(.steam), .add, .wallpaper("custom/rain"), .none,
+                        .wallpaper("live/steam-123")], "the video in use leads the second row too")
         XCTAssertEqual(ThemeBackgrounds.group(.online(.motionbgs), tab: .live), "ONLINE · MOTIONBGS")
         XCTAssertEqual(ThemeBackgrounds.group(.online(.steam), tab: .live), "ONLINE · STEAM")
     }

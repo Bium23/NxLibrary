@@ -37,7 +37,8 @@ struct ThemePickerView: View {
 
     private var palettes: [SelenePalette] { theme.palettes.isEmpty ? [theme.palette] : theme.palettes }
     private var backgrounds: [ThemeBackgroundChoice] {
-        ThemeBackgrounds.list(state.tab, themeID: theme.palette.id, wallpapers: theme.wallpapers)
+        ThemeBackgrounds.list(state.tab, themeID: theme.palette.id, wallpapers: theme.wallpapers,
+                              current: settings.settings.wallpaperID)
     }
     private var focusedBackground: ThemeBackgroundChoice {
         let list = backgrounds
@@ -194,18 +195,6 @@ struct ThemePickerView: View {
                         .frame(width: canvas.u(20), height: canvas.u(20))
                 }
                 .padding(.horizontal, canvas.u(12))
-                if palette.id == SelenePaletteCatalog.defaultID {
-                    Text("DEFAULT")
-                        .seleneFont(10, .semibold)
-                        .tracking(canvas.u(1))
-                        .foregroundColor(Color(hex: palette.ink))
-                        .padding(.horizontal, canvas.u(7))
-                        .padding(.vertical, canvas.u(3))
-                        .background(Capsule().fill(Color(hex: palette.glyph).opacity(0.28)))
-                        .overlay(Capsule().strokeBorder(Color(hex: palette.glyph).opacity(0.7), lineWidth: 1))
-                        .padding(canvas.u(7))
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                }
             }
             .frame(width: canvas.u(132), height: canvas.u(76))
             .clipShape(shape)
@@ -504,7 +493,7 @@ struct ThemePickerView: View {
         let id = settings.settings.wallpaperID
         state.tab = ThemeBackgrounds.tab(for: id, wallpapers: theme.wallpapers)
         state.backgroundIndex = ThemeBackgrounds.index(
-            of: id, in: ThemeBackgrounds.list(state.tab, themeID: themeID, wallpapers: theme.wallpapers))
+            of: id, in: ThemeBackgrounds.list(state.tab, themeID: themeID, wallpapers: theme.wallpapers, current: id))
     }
 
     private func switchTab(to tab: BackgroundTab) {

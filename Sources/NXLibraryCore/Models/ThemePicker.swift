@@ -90,8 +90,32 @@ public enum ThemeBackgrounds {
     /// downloads, your own, the theme's own (only when it has one: otherwise it would be
     /// the moonlight twice) and none, the theme's other wallpapers, every other one.
     /// Live: then the moonlight, the downloads, your videos, every other video.
-    public static func list(_ tab: BackgroundTab = .wallpapers, themeID: String,
-                            wallpapers: [Wallpaper]) -> [ThemeBackgroundChoice] {
+    /// The background in use (`current`, the setting) leads the second row.
+    public static func list(_ tab: BackgroundTab = .wallpapers, themeID: String, wallpapers: [Wallpaper],
+                            current: String? = nil) -> [ThemeBackgroundChoice] {
+        let ordered = baseList(tab, themeID: themeID, wallpapers: wallpapers)
+        let top = ordered.prefix { if case .online = $0 { return true } else { return $0 == .add } }.count
+        let index = self.index(of: current, in: ordered)
+        // On Live, a still in use (or the theme's own picture) is not this tab's: nothing moves.
+        guard index >= top, index < ordered.count, tabHolds(current, tab, themeID: themeID, wallpapers: wallpapers) else {
+            return ordered
+        }
+        var list = ordered
+        list.insert(list.remove(at: index), at: top)
+        return list
+    }
+
+    private static func tabHolds(_ current: String?, _ tab: BackgroundTab, themeID: String, wallpapers: [Wallpaper]) -> Bool {
+        guard tab == .live else { return true }
+        switch current {
+        case WallpaperCatalog.none?: return true
+        case nil: return WallpaperCatalog.resolve(nil, themeID: themeID, in: wallpapers) == nil
+        case let id?: return wallpapers.first { $0.id == id }?.kind == .video
+        }
+    }
+
+    private static func baseList(_ tab: BackgroundTab, themeID: String,
+                                 wallpapers: [Wallpaper]) -> [ThemeBackgroundChoice] {
         let kind: BackgroundKind = tab == .live ? .video : .image
         let items = wallpapers.filter { $0.kind == kind }
         let sources = BackgroundSourceID.allCases.filter { $0.kind == kind }.map(ThemeBackgroundChoice.online)
