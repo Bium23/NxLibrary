@@ -61,6 +61,25 @@ extension GameDetailView {
     }
 
     func runPill(_ index: Int) {
+        switch viewModel.portingPills(game) {
+        case .porting:
+            SoundEffectService.shared.play(.click)
+            router.openAddGame()
+            return
+        case .failed:
+            SoundEffectService.shared.play(.click)
+            switch index {
+            case 0:
+                viewModel.startBuild(for: game)
+            case 1:
+                viewModel.revealLog(for: game)
+            default:
+                viewModel.askRemoveGame(game)
+            }
+            return
+        case .normal, .normalAfterFailure:
+            break
+        }
         switch index {
         case 0: primaryAction()
         case 1: secondaryAction()
@@ -203,6 +222,7 @@ extension GameDetailView {
                   viewModel.alertMessage == nil,
                   viewModel.gameForSettingsSheet == nil,
                   viewModel.gameToClose == nil,
+                  viewModel.gameToRemove == nil,
                   !viewModel.showSetupCheck,
                   let window = event.window,
                   !window.isSheet,

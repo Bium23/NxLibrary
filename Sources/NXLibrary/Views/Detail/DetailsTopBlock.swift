@@ -24,6 +24,11 @@ struct DetailsTopBlock: View {
     let onSecondary: () -> Void
     let onFavorite: () -> Void
     let onHoverPill: (Int) -> Void
+    /// The pills follow the porting (`PortingPills`); any pill press goes to `onPill`.
+    var pillSet: PortingPills = .normal
+    var etaText: String? = nil
+    var onPill: (Int) -> Void = { _ in }
+    var onOpenLog: () -> Void = {}
 
     /// Longer than this, the description gets a "Read more" (five lines hold about 520 characters at this width).
     static let readMoreThreshold = 520
@@ -38,8 +43,18 @@ struct DetailsTopBlock: View {
                     .padding(.leading, canvas.u(2))
                     .padding(.top, canvas.u(16))
             }
+            if case .failed(let failure) = pillSet {
+                Text(failure == .cancelled ? "Porting cancelled" : "Porting failed")
+                    .seleneFont(19, .semibold)
+                    .foregroundColor(PortingPillCopy.softRed)
+                    .padding(.leading, canvas.u(4))
+                    .padding(.top, canvas.u(22))
+            }
             pills
-                .padding(.top, canvas.u(26))
+                .padding(.top, canvas.u(pillSet.isFailed ? 10 : 26))
+            note
+                .padding(.leading, canvas.u(4))
+                .padding(.top, canvas.u(12))
             stats
                 .padding(.top, canvas.u(28))
             if !presentation.genres.isEmpty {
@@ -81,7 +96,43 @@ struct DetailsTopBlock: View {
 
     // MARK: - Pills
 
-    private var pills: some View {
+    @ViewBuilder private var note: some View {
+        switch pillSet {
+        case .porting:
+            if let etaText {
+                Text(etaText).seleneFont(16).foregroundColor(SeleneTheme.ink75)
+            }
+        case .normalAfterFailure(let failure):
+            Button(action: onOpenLog) {
+                Text(PortingPillCopy.lastFailure(failure)).seleneFont(15).foregroundColor(SeleneTheme.ink60)
+            }
+            .buttonStyle(.plain)
+        case .normal, .failed:
+            EmptyView()
+        }
+    }
+
+    @ViewBuilder private var pills: some View {
+        switch pillSet {
+        case .porting:
+            SelenePillButton(title: "Porting", minWidth: 200, height: 52, horizontalPadding: 36,
+                             focused: focusedPill == 0, waveDots: true) { onPill(0) }
+                .onHover { if $0 { onHoverPill(0) } }
+                .accessibilityLabel("Porting, show progress")
+        case .failed:
+            HStack(spacing: canvas.u(14)) {
+                ForEach(Array(PortingPillCopy.failedTitles.enumerated()), id: \.offset) { index, title in
+                    SelenePillButton(title: title, minWidth: 200, height: 52, horizontalPadding: 36,
+                                     focused: focusedPill == index) { onPill(index) }
+                        .onHover { if $0 { onHoverPill(index) } }
+                }
+            }
+        case .normal, .normalAfterFailure:
+            normalPills
+        }
+    }
+
+    private var normalPills: some View {
         HStack(spacing: canvas.u(14)) {
             SelenePillButton(title: primaryTitle, minWidth: 200, height: 52,
                              horizontalPadding: 36, focused: focusedPill == 0,

@@ -121,6 +121,11 @@ public struct SpotlightView: View {
         return Snapshot(items: items, gamesByID: gamesByID, selectedItem: item, selectedGame: game)
     }
 
+    /// One pill while the selected game ports, three otherwise.
+    var selectedPillCount: Int {
+        selectedGame.map { viewModel.portingPills($0).count } ?? SpotlightState.pillCount
+    }
+
     var screenshotCount: Int {
         guard let game = selectedGame else { return 0 }
         let urls = viewModel.storeMetadata[game.id]?.screenshotURLs ?? []
@@ -149,6 +154,8 @@ public struct SpotlightView: View {
         .overlay(viewerOverlay)
         .animation(.easeOut(duration: 0.2), value: viewer != nil)
         .onAppear(perform: appear)
+        .onAppear { mutate { $0.setPillLimit(selectedPillCount) } }
+        .onChange(of: selectedPillCount) { count in mutate { $0.setPillLimit(count) } }
         .onDisappear {
             removeKeyMonitor()
             router.isScreenshotViewerOpen = false
@@ -298,7 +305,10 @@ public struct SpotlightView: View {
                         // mid-glide: the page moving under a still pointer is not a hover.
                         guard !state.isLifted, state.focus == .pills, !isGliding else { return }
                         mutate { $0.pillIndex = index }
-                    }
+                    },
+                    pillSet: viewModel.portingPills(game),
+                    etaText: viewModel.portingETAText,
+                    onOpenLog: { viewModel.revealLog(for: game) }
                 )
                 .id(game.id)
                 .spotlightBlock(.head)
@@ -445,6 +455,9 @@ public struct SpotlightView: View {
                 return card == .activity ? more : more + [HintItem(.a, card == .surprise ? "Pick" : "Open")]
             case .game:
                 guard let game = model.selectedGame else { return [] }
+                if viewModel.portingPills(game) == .porting {
+                    return [HintItem(.y, "Options"), HintItem(.a, "Porting")]
+                }
                 if game.isPlayableLocally {
                     return [HintItem(.y, "Options"), HintItem(.a, "Play")]
                 }

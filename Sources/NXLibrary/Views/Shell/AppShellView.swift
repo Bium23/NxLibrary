@@ -43,7 +43,7 @@ public struct AppShellView: View {
     }
 
     /// The Close Game confirmation is open; menu commands and the dialog's input wait for it.
-    private var isCloseGameOpen: Bool { viewModel.gameToClose != nil }
+    private var isCloseGameOpen: Bool { viewModel.gameToClose != nil || viewModel.gameToRemove != nil }
 
     private var reduceMotion: Bool {
         settings.settings.reduceMotion || accessibilityReduceMotion
@@ -80,6 +80,11 @@ public struct AppShellView: View {
             }
             if let game = viewModel.gameToClose {
                 closeGameOverlay(game)
+                    .transition(.opacity)
+                    .zIndex(3)
+            }
+            if let game = viewModel.gameToRemove {
+                removeGameOverlay(game)
                     .transition(.opacity)
                     .zIndex(3)
             }
@@ -137,6 +142,8 @@ public struct AppShellView: View {
         .animation(reduceMotion ? nil : SeleneTheme.screen, value: viewModel.showSetupCheck)
         .animation(reduceMotion ? nil : SeleneTheme.quick,
                    value: viewModel.gameToClose?.id)
+        .animation(reduceMotion ? nil : SeleneTheme.quick,
+                   value: viewModel.gameToRemove?.id)
         .environment(\.seleneReduceMotion, reduceMotion)
         .environment(\.seleneBackdropStyle, backdropStyle)
         .environment(\.seleneShowButtonHints, settings.settings.showButtonHints)
@@ -238,6 +245,8 @@ public struct AppShellView: View {
                 // The viewer's key monitor closes it.
             } else if viewModel.gameToClose != nil {
                 viewModel.dismissCloseGame()
+            } else if viewModel.gameToRemove != nil {
+                viewModel.dismissRemoveGame()
             } else if viewModel.gameForSettingsSheet != nil {
                 // Game options steps back (dialog, then Edit details) or closes.
                 NotificationCenter.default.post(name: .nxGameOptionsGamepadAction, object: GamepadAction.cancel)
@@ -349,6 +358,10 @@ public struct AppShellView: View {
                 closeGameInput(action)
                 return
             }
+            if viewModel.gameToRemove != nil {
+                removeGameInput(action)
+                return
+            }
             if router.isMenuPresented {
                 menuInput(action)
                 return
@@ -441,6 +454,45 @@ public struct AppShellView: View {
         }
     }
 
+    // MARK: - Delete after a failed porting
+
+    private func removeGameOverlay(_ game: PortedGame) -> some View {
+        ZStack {
+            SeleneTheme.scrim45
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture { viewModel.dismissRemoveGame() }
+            SeleneConfirmDialog(title: "Delete \(game.name)?",
+                                message: "It leaves the library. Your game files and the build cache stay on disk.",
+                                confirmTitle: "Delete",
+                                focus: $viewModel.removeGameFocus,
+                                onCancel: { viewModel.dismissRemoveGame() },
+                                onConfirm: { viewModel.confirmRemoveGame() })
+        }
+    }
+
+    private func removeGameInput(_ action: GamepadAction) {
+        switch action {
+        case .navigateLeft, .navigateRight:
+            let next: SeleneConfirmButton = action == .navigateLeft ? .cancel : .confirm
+            if viewModel.removeGameFocus != next {
+                viewModel.removeGameFocus = next
+                SoundEffectService.shared.play(.focus)
+            }
+        case .confirm:
+            SoundEffectService.shared.play(.click)
+            if viewModel.removeGameFocus == .confirm {
+                viewModel.confirmRemoveGame()
+            } else {
+                viewModel.dismissRemoveGame()
+            }
+        case .cancel:
+            viewModel.dismissRemoveGame()
+        default:
+            break
+        }
+    }
+
     private func confirmCloseGame() {
         guard let game = viewModel.gameToClose else { return }
         viewModel.dismissCloseGame()
@@ -480,8 +532,8 @@ public struct AppShellView: View {
                 GameControllerService.shared.onAction?(setupAction)
                 return nil
             }
-            // The Close Game confirmation takes the keyboard: arrows, Return, Space and Esc go to it.
-            if viewModel.gameToClose != nil, mods.isEmpty {
+            // The Close Game and Delete confirmations take the keyboard: arrows, Return, Space and Esc go to them.
+            if viewModel.gameToClose != nil || viewModel.gameToRemove != nil, mods.isEmpty {
                 let closeAction: GamepadAction?
                 switch event.keyCode {
                 case 123: closeAction = .navigateLeft
@@ -697,6 +749,9 @@ private struct SoundCueHooks: ViewModifier {
                 SoundEffectService.shared.play(id == nil ? .back : .openPanel)
             }
             .onChange(of: viewModel.gameToClose?.id) { id in
+                if id != nil { SoundEffectService.shared.play(.alert) }
+            }
+            .onChange(of: viewModel.gameToRemove?.id) { id in
                 if id != nil { SoundEffectService.shared.play(.alert) }
             }
             .onChange(of: router.route) { route in

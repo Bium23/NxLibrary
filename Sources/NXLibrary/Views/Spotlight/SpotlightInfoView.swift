@@ -19,6 +19,12 @@ struct SpotlightGameInfoView: View {
     let focusedPill: Int?
     let onPill: (Int) -> Void
     let onHoverPill: (Int) -> Void
+    /// The pills follow the porting (`PortingPills`).
+    var pillSet: PortingPills = .normal
+    /// "About 8 min left" under the Porting pill.
+    var etaText: String? = nil
+    /// "Last porting failed · Open log".
+    var onOpenLog: () -> Void = {}
 
     /// Change motion, after the row has glided: the logo holds 0.3 s, then fades
     /// in over 0.45 s while sliding x −30 → 0 (0.55 s cubic out); the pills and
@@ -38,9 +44,19 @@ struct SpotlightGameInfoView: View {
                         .padding(.leading, canvas.u(2))
                         .padding(.top, canvas.u(24))
                 }
+                if case .failed(let failure) = pillSet {
+                    Text(failure == .cancelled ? "Porting cancelled" : "Porting failed")
+                        .seleneFont(19, .semibold)
+                        .foregroundColor(PortingPillCopy.softRed)
+                        .padding(.leading, canvas.u(4))
+                        .padding(.top, canvas.u(20))
+                }
                 pills
                     .padding(.leading, canvas.u(2))
-                    .padding(.top, canvas.u(18))
+                    .padding(.top, canvas.u(pillSet.isFailed ? 10 : 18))
+                note
+                    .padding(.leading, canvas.u(4))
+                    .padding(.top, canvas.u(12))
                 SeleneStatsRow(presentation: presentation)
                     .padding(.leading, canvas.u(4))
                     .padding(.top, canvas.u(26))
@@ -78,7 +94,47 @@ struct SpotlightGameInfoView: View {
         .accessibilityAddTraits(.isHeader)
     }
 
-    private var pills: some View {
+    /// The time left while porting, or the last failure over a working app.
+    @ViewBuilder private var note: some View {
+        switch pillSet {
+        case .porting:
+            if let etaText {
+                Text(etaText)
+                    .seleneFont(16)
+                    .foregroundColor(SeleneTheme.ink75)
+                    .transition(.opacity)
+            }
+        case .normalAfterFailure(let failure):
+            Button(action: onOpenLog) {
+                Text(PortingPillCopy.lastFailure(failure))
+                    .seleneFont(15)
+                    .foregroundColor(SeleneTheme.ink60)
+            }
+            .buttonStyle(.plain)
+        case .normal, .failed:
+            EmptyView()
+        }
+    }
+
+    @ViewBuilder private var pills: some View {
+        switch pillSet {
+        case .porting:
+            pill(0, SelenePillButton(title: "Porting", height: 52, focused: focusedPill == 0,
+                                     waveDots: true) { onPill(0) })
+                .accessibilityLabel("Porting, show progress")
+        case .failed:
+            HStack(spacing: canvas.u(14)) {
+                ForEach(Array(PortingPillCopy.failedTitles.enumerated()), id: \.offset) { index, title in
+                    pill(index, SelenePillButton(title: title, height: 52,
+                                                 focused: focusedPill == index) { onPill(index) })
+                }
+            }
+        case .normal, .normalAfterFailure:
+            normalPills
+        }
+    }
+
+    private var normalPills: some View {
         HStack(spacing: canvas.u(14)) {
             pill(0, SelenePillButton(title: isRunning ? "Resume" : "Play", height: 52,
                                      focused: focusedPill == 0) { onPill(0) })
@@ -153,5 +209,23 @@ private struct NowPlayingDot: View {
             Circle().fill(SeleneTheme.success)
                 .frame(width: canvas.u(9), height: canvas.u(9))
         }
+    }
+}
+
+/// Copy shared by Spotlight's and Details' porting pills.
+enum PortingPillCopy {
+    static let failedTitles = ["Try again", "Open log", "Delete"]
+    /// Soft, never alarm red.
+    static let softRed = Color(hex: 0xF2A0A0)
+
+    static func lastFailure(_ failure: PortingFailure) -> String {
+        failure == .cancelled ? "Last porting cancelled · Open log" : "Last porting failed · Open log"
+    }
+}
+
+extension PortingPills {
+    var isFailed: Bool {
+        if case .failed = self { return true }
+        return false
     }
 }

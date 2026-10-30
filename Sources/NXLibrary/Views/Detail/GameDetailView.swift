@@ -141,6 +141,8 @@ struct GameDetailView: View {
         .frame(width: canvas.size.width, height: canvas.size.height, alignment: .topLeading)
         .clipped()
         .onAppear(perform: appear)
+        .onAppear { focus.setPillLimit(viewModel.portingPills(game).count) }
+        .onChange(of: viewModel.portingPills(game).count) { focus.setPillLimit($0) }
         .onDisappear {
             removeKeyMonitor()
             router.isScreenshotViewerOpen = false
@@ -203,7 +205,11 @@ struct GameDetailView: View {
                             onPrimary: { pressPill(0) },
                             onSecondary: { pressPill(1) },
                             onFavorite: { pressPill(2) },
-                            onHoverPill: { hoverPill($0) })
+                            onHoverPill: { hoverPill($0) },
+                            pillSet: viewModel.portingPills(game),
+                            etaText: viewModel.portingETAText,
+                            onPill: { pressPill($0) },
+                            onOpenLog: { viewModel.revealLog(for: game) })
                 .offset(x: canvas.u(110), y: canvas.u(96))
 
             band(zone: DetailsFocus.screenshotsZone) {

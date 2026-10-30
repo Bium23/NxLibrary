@@ -16,6 +16,8 @@ struct SelenePillButton: View {
     let focused: Bool
     /// False draws the pill dim: it still takes focus (a ring), but never the solid focus fill.
     var enabled: Bool = true
+    /// Three dots after the title rising and falling like a wave ("Porting…").
+    var waveDots = false
     let action: () -> Void
 
     var body: some View {
@@ -27,6 +29,10 @@ struct SelenePillButton: View {
                 }
                 if let title {
                     Text(title).seleneFont(21)
+                }
+                if waveDots {
+                    WaveDots()
+                        .padding(.leading, canvas.u(-4))
                 }
             }
             .foregroundColor(solid ? SeleneTheme.onFocus : (enabled ? SeleneTheme.ink : SeleneTheme.ink60))
@@ -42,5 +48,30 @@ struct SelenePillButton: View {
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// Three small dots, each rising and falling a little after the one before, like
+/// the crest of a wave. Still with Reduce motion.
+struct WaveDots: View {
+    @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.seleneReduceMotion) private var reduceMotion
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion)) { context in
+            let time = context.date.timeIntervalSinceReferenceDate
+            HStack(alignment: .bottom, spacing: canvas.u(4)) {
+                ForEach(0..<3, id: \.self) { index in
+                    let wave = reduceMotion ? 0 : max(0, sin((time / 1.1) * 2 * .pi - Double(index) * 0.9))
+                    Circle()
+                        .frame(width: canvas.u(5), height: canvas.u(5))
+                        .offset(y: canvas.u(-5) * wave)
+                        .opacity(0.55 + 0.45 * wave)
+                }
+            }
+            .frame(height: canvas.u(14), alignment: .bottom)
+            .padding(.top, canvas.u(6))
+        }
+        .accessibilityHidden(true)
     }
 }

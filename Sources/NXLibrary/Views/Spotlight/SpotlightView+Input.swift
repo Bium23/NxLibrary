@@ -210,6 +210,11 @@ extension SpotlightView {
         switch item {
         case .game(let id):
             guard let game = viewModel.libraryGames.first(where: { $0.id == id }) else { return }
+            if viewModel.portingPills(game) == .porting {
+                SoundEffectService.shared.play(.click)
+                router.openAddGame()
+                return
+            }
             play(game)
         case .card(.collection):
             SoundEffectService.shared.play(.click)
@@ -226,6 +231,21 @@ extension SpotlightView {
 
     func pressPill(_ index: Int, game: PortedGame) {
         SoundEffectService.shared.play(.click)
+        switch viewModel.portingPills(game) {
+        case .porting:
+            // The porting pill shows the porting.
+            router.openAddGame()
+            return
+        case .failed:
+            switch index {
+            case 0: viewModel.startBuild(for: game)
+            case 1: viewModel.revealLog(for: game)
+            default: viewModel.askRemoveGame(game)
+            }
+            return
+        case .normal, .normalAfterFailure:
+            break
+        }
         switch index {
         case 0:
             // Resume while the game runs; otherwise Play.
@@ -301,6 +321,7 @@ extension SpotlightView {
                   viewModel.alertMessage == nil,
                   viewModel.gameForSettingsSheet == nil,
                   viewModel.gameToClose == nil,
+                  viewModel.gameToRemove == nil,
                   !viewModel.showSetupCheck,
                   let window = event.window,
                   !window.isSheet,
