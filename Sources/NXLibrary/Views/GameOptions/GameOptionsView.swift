@@ -29,6 +29,10 @@ struct GameOptionsView: View {
     @State private var confirm: ConfirmTarget?
     /// Change artwork is open over the list; it takes the input until B closes it.
     @State private var artworkOpen = false
+    /// Change metadata, likewise.
+    @State private var metadataOpen = false
+    /// A panel over the list has the input.
+    private var panelOpen: Bool { artworkOpen || metadataOpen }
     @State private var confirmFocus: SeleneConfirmButton = .cancel
     @State private var keyMonitor: Any?
     /// Row frames in the list's viewport, written while scrolling without redrawing.
@@ -112,6 +116,12 @@ struct GameOptionsView: View {
                     .zIndex(2)
             }
 
+            if metadataOpen {
+                ChangeMetadataView(viewModel: viewModel, game: current) { metadataOpen = false }
+                    .transition(.opacity)
+                    .zIndex(2)
+            }
+
             if let target = confirm {
                 confirmOverlay(target)
                     .transition(reduceMotion
@@ -121,7 +131,7 @@ struct GameOptionsView: View {
             }
         }
         .animation(reduceMotion ? nil : SeleneTheme.quick, value: confirm)
-        .animation(reduceMotion ? nil : SeleneTheme.quick, value: artworkOpen)
+        .animation(reduceMotion ? nil : SeleneTheme.quick, value: panelOpen)
         .onAppear(perform: installKeyMonitor)
         .onDisappear(perform: removeKeyMonitor)
         .onReceive(NotificationCenter.default.publisher(for: .nxGameOptionsGamepadAction)) { note in
@@ -392,7 +402,7 @@ struct GameOptionsView: View {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .scrollWheel]) { event in
             guard viewModel.gameForSettingsSheet?.id == game.id,
-                  !artworkOpen,
+                  !panelOpen,
                   viewModel.gameToClose == nil,
                   viewModel.alertMessage == nil,
                   let window = event.window,
@@ -459,8 +469,8 @@ struct GameOptionsView: View {
     }
 
     private func handleGamepad(_ action: GamepadAction) {
-        // Change artwork reads the same notifications while it is open.
-        guard !artworkOpen else { return }
+        // Change artwork and Change metadata read the same notifications while open.
+        guard !panelOpen else { return }
         switch action {
         case .navigateUp: navigate(by: -1)
         case .navigateDown: navigate(by: 1)
@@ -608,6 +618,11 @@ struct GameOptionsView: View {
             // The official name helps the cover search, as on the Collection.
             viewModel.loadStoreMetadata(for: current)
             artworkOpen = true
+        case .changeMetadata:
+            SoundEffectService.shared.play(.click)
+            // Automatic is the store's metadata; ask for it if it is not here yet.
+            viewModel.loadStoreMetadata(for: current)
+            metadataOpen = true
         case .storePage:
             guard let url = viewModel.storeMetadata[game.id]?.storeURL else { return }
             SoundEffectService.shared.play(.click)

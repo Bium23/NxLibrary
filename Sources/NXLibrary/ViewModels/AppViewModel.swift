@@ -542,7 +542,7 @@ public final class AppViewModel: ObservableObject {
             guard let self else { return }
             do {
                 let metadata = try await service.metadata(for: game)
-                self.storeMetadata[game.id] = metadata
+                self.setStoreMetadata(metadata, for: game)
             } catch {
                 self.storeMetadataErrors[game.id] = error.localizedDescription
             }
@@ -559,8 +559,30 @@ public final class AppViewModel: ObservableObject {
                   let titleId = game.titleId,
                   !titleId.isEmpty,
                   let metadata = storeMetadataService.cached(for: titleId) else { continue }
-            storeMetadata[game.id] = metadata
+            setStoreMetadata(metadata, for: game)
         }
+    }
+
+    /// The store's metadata as fetched, before the player's choices are laid over it.
+    private var storeMetadataOriginals: [UUID: NintendoStoreMetadata] = [:]
+
+    /// Keeps the fetched metadata and shows it with the player's choices (`MetadataPicks`) over it.
+    private func setStoreMetadata(_ metadata: NintendoStoreMetadata, for game: PortedGame) {
+        storeMetadataOriginals[game.id] = metadata
+        storeMetadata[game.id] = MetadataPicks.shared.applied(to: metadata, titleID: game.titleId ?? game.uniqueKey)
+    }
+
+    /// The metadata as the store gave it: what Automatic means in Change metadata.
+    public func storeMetadataAsFetched(for game: PortedGame) -> NintendoStoreMetadata? {
+        storeMetadataOriginals[game.id]
+    }
+
+    /// Keeps the player's value for a field, or (nil) goes back to the store's.
+    public func pickMetadata(_ value: String?, field: MetadataField, for game: PortedGame) {
+        let key = game.titleId ?? game.uniqueKey
+        if let value { MetadataPicks.shared.set(value, titleID: key, field: field) }
+        else { MetadataPicks.shared.remove(titleID: key, field: field) }
+        if let original = storeMetadataOriginals[game.id] { setStoreMetadata(original, for: game) }
     }
 
     /// Fetches GameTDB's index at launch when it is missing or 30 days old.
@@ -578,6 +600,7 @@ public final class AppViewModel: ObservableObject {
     public func clearMetadataCache() {
         storeMetadataService.clearCache()
         storeMetadata.removeAll()
+        storeMetadataOriginals.removeAll()
     }
 
     public func howLongToBeatURL(for game: PortedGame) -> URL? {

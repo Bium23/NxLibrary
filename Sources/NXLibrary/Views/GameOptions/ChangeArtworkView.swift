@@ -313,7 +313,7 @@ struct ChangeArtworkView: View {
         pickPreview = await GameArtLoader.decode(at: url, maxPixelSize: 600)
     }
 
-    private static func thumbnail(_ data: Data) -> NSImage? {
+    nonisolated private static func thumbnail(_ data: Data) -> NSImage? {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,

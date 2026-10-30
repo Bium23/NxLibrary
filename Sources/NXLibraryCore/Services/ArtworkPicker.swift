@@ -31,27 +31,61 @@ public struct TitleDBInfo: Equatable, Sendable {
     public var icon: URL?
     public var banner: URL?
     public var screenshots: [URL]
+    public var description: String?
+    public var developer: String?
+    public var publisher: String?
+    /// "2023-05-12".
+    public var releaseDate: String?
+    public var categories: [String]
 
-    public init(name: String?, icon: URL?, banner: URL?, screenshots: [URL]) {
+    public init(name: String?, icon: URL?, banner: URL?, screenshots: [URL], description: String? = nil,
+                developer: String? = nil, publisher: String? = nil, releaseDate: String? = nil,
+                categories: [String] = []) {
         self.name = name
         self.icon = icon
         self.banner = banner
         self.screenshots = screenshots
+        self.description = description
+        self.developer = developer
+        self.publisher = publisher
+        self.releaseDate = releaseDate
+        self.categories = categories
     }
 
     private struct Wire: Decodable {
         struct Screens: Decodable { var screenshots: [String]? }
+        /// Title DB writes dates as 20230512 or "2023-05-12".
+        struct Day: Decodable {
+            var text: String?
+            init(from decoder: Decoder) throws {
+                let container = try decoder.singleValueContainer()
+                if let number = try? container.decode(Int.self) {
+                    let digits = String(number)
+                    guard digits.count == 8 else { text = nil; return }
+                    text = "\(digits.prefix(4))-\(digits.dropFirst(4).prefix(2))-\(digits.suffix(2))"
+                } else {
+                    text = try? container.decode(String.self)
+                }
+            }
+        }
         var name: String?
         var icon: String?
         var banner: String?
         var screens: Screens?
+        var description: String?
+        var developer: String?
+        var publisher: String?
+        var releaseDate: Day?
+        var category: [String]?
     }
 
     /// The API answers with http:// links; the same paths serve over https.
     public static func decode(_ data: Data) throws -> TitleDBInfo {
         let wire = try JSONDecoder().decode(Wire.self, from: data)
         return TitleDBInfo(name: wire.name, icon: wire.icon.flatMap(secure), banner: wire.banner.flatMap(secure),
-                           screenshots: (wire.screens?.screenshots ?? []).compactMap(secure))
+                           screenshots: (wire.screens?.screenshots ?? []).compactMap(secure),
+                           description: wire.description, developer: wire.developer, publisher: wire.publisher,
+                           releaseDate: wire.releaseDate?.text, categories: wire.category ?? [])
     }
 
     public static func fetch(titleID: String, client: ArtworkHTTPClient = URLSessionArtworkClient()) async -> TitleDBInfo? {
