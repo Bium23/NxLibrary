@@ -7,8 +7,6 @@ import NXLibraryCore
 struct SpotlightTopBar: View {
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
-    @Environment(\.seleneButtonNames) private var buttonNames
-    @ObservedObject private var controller = GameControllerService.shared
 
     let filter: LibraryFilter
     var showClock: Bool = true
@@ -61,13 +59,7 @@ struct SpotlightTopBar: View {
     }
 
     private func badge(_ button: PromptButton) -> some View {
-        let pad = ConnectedPad(connected: controller.isGamepadConnected, brand: controller.activeBrand)
-        let label = ButtonPrompts.label(button, style: buttonNames, connected: pad)
-        return Text(label)
-            .seleneFont(12, .bold)
-            .foregroundColor(SeleneTheme.scrim)
-            .frame(width: canvas.u(max(36, CGFloat(label.count) * 8 + 12)), height: canvas.u(24))
-            .background(RoundedRectangle(cornerRadius: canvas.u(8), style: .continuous).fill(SeleneTheme.ink))
+        SelenePromptBadge(button: button, height: 26)
             .padding(.horizontal, canvas.u(8))
             .accessibilityHidden(true)
     }

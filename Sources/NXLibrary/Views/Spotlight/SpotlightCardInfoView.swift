@@ -7,8 +7,6 @@ import NXLibraryCore
 struct SpotlightCardInfoView: View {
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
-    @Environment(\.seleneButtonNames) private var style
-    @ObservedObject private var controller = GameControllerService.shared
 
     let card: SpotlightCard
     let gameCount: Int
@@ -157,14 +155,8 @@ struct SpotlightCardInfoView: View {
     }
 
     private func actionChip(_ label: String) -> some View {
-        let pad = ConnectedPad(connected: controller.isGamepadConnected, brand: controller.activeBrand)
-        return HStack(spacing: canvas.u(10)) {
-            Text(ButtonPrompts.label(.a, style: style, connected: pad))
-                .seleneFont(13, .bold)
-                .foregroundColor(SeleneTheme.scrim)
-                .padding(.horizontal, canvas.u(8))
-                .frame(minWidth: canvas.u(30), minHeight: canvas.u(30))
-                .background(RoundedRectangle(cornerRadius: canvas.u(15), style: .continuous).fill(SeleneTheme.ink))
+        HStack(spacing: canvas.u(10)) {
+            SelenePromptBadge(button: .a)
             Text(label).seleneFont(19).foregroundColor(SeleneTheme.ink90)
         }
     }
@@ -230,22 +222,19 @@ struct SpotlightCardMenu: View {
 /// "Filter · count" with the LT ◂ ▸ RT hint (spec §5.1).
 struct SpotlightFilterPill: View {
     @Environment(\.seleneCanvas) private var canvas
-    @Environment(\.seleneButtonNames) private var style
-    @ObservedObject private var controller = GameControllerService.shared
 
     let filter: LibraryFilter
     let count: Int
 
     var body: some View {
-        let pad = ConnectedPad(connected: controller.isGamepadConnected, brand: controller.activeBrand)
         HStack(spacing: canvas.u(12)) {
             Text("\(filter.rawValue) · \(count)")
                 .seleneFont(17, .semibold)
                 .foregroundColor(SeleneTheme.ink)
             HStack(spacing: canvas.u(6)) {
-                badge(ButtonPrompts.label(.lt, style: style, connected: pad))
+                SelenePromptBadge(button: .lt, height: 22)
                 Text("◂ ▸").seleneFont(15).foregroundColor(SeleneTheme.ink60)
-                badge(ButtonPrompts.label(.rt, style: style, connected: pad))
+                SelenePromptBadge(button: .rt, height: 22)
             }
         }
         .padding(EdgeInsets(top: canvas.u(5), leading: canvas.u(16), bottom: canvas.u(6), trailing: canvas.u(16)))
@@ -253,13 +242,5 @@ struct SpotlightFilterPill: View {
         .overlay(RoundedRectangle(cornerRadius: canvas.u(17), style: .continuous)
             .strokeBorder(SeleneTheme.ink25, lineWidth: max(1, canvas.u(1))))
         .allowsHitTesting(false)
-    }
-
-    private func badge(_ text: String) -> some View {
-        Text(text).seleneFont(12, .bold)
-            .foregroundColor(SeleneTheme.scrim)
-            .padding(.horizontal, canvas.u(7))
-            .frame(minWidth: canvas.u(26), minHeight: canvas.u(22))
-            .background(RoundedRectangle(cornerRadius: canvas.u(8), style: .continuous).fill(SeleneTheme.ink))
     }
 }

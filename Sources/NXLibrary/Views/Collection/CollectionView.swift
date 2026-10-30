@@ -4,8 +4,9 @@ import NXLibraryCore
 
 /// Collection (spec §5.3, Selene Main.xaml SeleneLibrary, `library.png`): the
 /// whole library as one row of portrait covers over the selected game's art.
-/// Rows on the 1920 × 1080 stage: top bar 0–100, the centered logo / stats /
-/// genres column over 100–576, the cover band 576–976 (400 high), hints below.
+/// It shares Spotlight's frame (`SeleneHomeChrome`): the top bar, the 80 margin
+/// and the hints sit where Spotlight has them. On the stage: top bar 0–100, the
+/// logo / stats / genres at x 80 from y 110, the cover band 576–976 (400 high).
 /// The art and the row reach the window edges.
 public struct CollectionView: View {
     @ObservedObject var viewModel: AppViewModel
@@ -51,15 +52,15 @@ public struct CollectionView: View {
     public var body: some View {
         let games = self.games
         let game = selectedGame(in: games)
-        ZStack(alignment: .topLeading) {
-            SeleneArtBackground(image: art.image, imageKey: art.key,
-                                shade: settings.settings.backgroundShade)
-            stage(games: games, game: game)
-                .frame(width: canvas.stageSize.width, height: canvas.stageSize.height, alignment: .topLeading)
-                .offset(x: canvas.stageOrigin.x, y: canvas.stageOrigin.y)
-        }
-        .frame(width: canvas.size.width, height: canvas.size.height, alignment: .topLeading)
-        .clipped()
+        SeleneHomeChrome(
+            leftHints: HintItem.homeGlobals(other: "Spotlight"),
+            rightHints: contextHints(game),
+            hintsHidden: viewModel.gameForSettingsSheet != nil,
+            backdrop: {
+                SeleneArtBackground(image: art.image, imageKey: art.key,
+                                    shade: settings.settings.backgroundShade)
+            },
+            stage: { stage(games: games, game: game) })
         .onAppear(perform: appear)
         .onDisappear(perform: removeKeyMonitor)
         .onChange(of: viewModel.libraryGames) { _ in
@@ -98,9 +99,9 @@ public struct CollectionView: View {
                                        totalPlaytime: playSessions.totalDuration(for: game.id),
                                        lastPlayed: playSessions.lastPlayed(for: game.id)))
                     .id(game.id)
-                    // Row 1 (100 … 576): the column sits at x 100, 840 wide, centered in the row.
-                    .frame(width: canvas.u(840), height: canvas.u(476))
-                    .offset(x: canvas.u(100), y: canvas.u(100))
+                    // Spotlight's left margin; the logo starts just under the top bar.
+                    .frame(width: canvas.u(1100), alignment: .topLeading)
+                    .offset(x: canvas.u(80), y: canvas.u(110))
             }
 
             if games.isEmpty {
@@ -118,13 +119,6 @@ public struct CollectionView: View {
                     onActivate: { select($0.id); play($0) })
                     .offset(y: canvas.u(576))
             }
-
-            VStack(spacing: 0) {
-                Spacer(minLength: 0)
-                SeleneHintsBar(left: globalHints, right: contextHints(game), bottom: 40, leftInset: 18)
-            }
-            // Game options draws its own hints over this screen.
-            .opacity(viewModel.gameForSettingsSheet == nil ? 1 : 0)
         }
     }
 
@@ -159,11 +153,6 @@ public struct CollectionView: View {
     }
 
     // MARK: - Hints
-
-    private var globalHints: [HintItem] {
-        [HintItem(nil, "Spotlight", glyph: .spotlight, hold: "Hold: Search"),
-         HintItem(nil, "Menu", glyph: .menu, hold: "Hold: Settings")]
-    }
 
     private func contextHints(_ game: PortedGame?) -> [HintItem] {
         guard let game else {
@@ -232,9 +221,9 @@ public struct CollectionView: View {
     }
 }
 
-/// The selected game's logo, stats and genres, centered in their column
-/// (Main.xaml SeleneLibrary row 1): a 250 high logo area (logo up to 600 × 240
-/// bottom aligned, else the name at 56), stats 28 below, genres 16 below that.
+/// The selected game's logo, stats and genres, left aligned like Spotlight's
+/// info: a 250 high logo area (logo up to 700 × 240, Spotlight's size, bottom
+/// left; else the name at 56), stats 28 below, Spotlight's genre chips 20 below.
 /// The column arrives together on each game change: hold 0.12 s, fade in to
 /// 0.42 s while sliding from x −24 (0.3 s cubic out).
 struct CollectionInfoView: View {
@@ -249,48 +238,42 @@ struct CollectionInfoView: View {
     @State private var slid = true
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
             logoArea
             SeleneStatsRow(presentation: presentation)
                 .padding(.top, canvas.u(28))
             if !presentation.genres.isEmpty {
-                HStack(spacing: 0) {
-                    ForEach(presentation.genres, id: \.self) { genre in
-                        Text(genre).seleneFont(16).foregroundColor(SeleneTheme.ink60)
-                            .padding(.horizontal, canvas.u(10))
-                    }
-                }
-                .shadow(color: .black.opacity(0.45), radius: canvas.u(4))
-                .padding(.top, canvas.u(16))
+                SpotlightGenreChips(genres: presentation.genres)
+                    .padding(.top, canvas.u(20))
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .opacity(shown ? 1 : 0)
         .offset(x: slid ? 0 : canvas.u(-24))
         .onAppear { reveal() }
     }
 
     private var logoArea: some View {
-        ZStack(alignment: .bottom) {
+        ZStack(alignment: .bottomLeading) {
             if let logo {
                 Image(nsImage: logo)
                     .resizable()
                     .interpolation(.high)
                     .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: canvas.u(600), maxHeight: canvas.u(240))
+                    .frame(maxWidth: canvas.u(700), maxHeight: canvas.u(240), alignment: .bottomLeading)
                     .shadow(color: .black.opacity(0.35), radius: canvas.u(8))
             } else {
                 Text(game.name)
                     .seleneFont(56)
                     .foregroundColor(SeleneTheme.ink)
-                    .multilineTextAlignment(.center)
+                    .multilineTextAlignment(.leading)
                     .lineLimit(3)
                     .frame(maxHeight: canvas.u(220))
                     .shadow(color: .black.opacity(0.45), radius: canvas.u(6))
             }
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: canvas.u(250), alignment: .bottom)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: canvas.u(250), alignment: .bottomLeading)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(game.name)
         .accessibilityAddTraits(.isHeader)

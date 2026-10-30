@@ -35,9 +35,7 @@ extension ConnectedPad {
 
 struct SeleneHintsBar: View {
     @Environment(\.seleneCanvas) private var canvas
-    @Environment(\.seleneButtonNames) private var style
     @Environment(\.seleneShowButtonHints) private var showHints
-    @ObservedObject private var controller = GameControllerService.shared
 
     var left: [HintItem] = []
     var right: [HintItem] = []
@@ -74,10 +72,6 @@ struct SeleneHintsBar: View {
         }
     }
 
-    private var pad: ConnectedPad {
-        ConnectedPad(connected: controller.isGamepadConnected, brand: controller.activeBrand)
-    }
-
     private var rightSlots: [HintItem?] {
         (0..<max(right.count, rightReserve.count)).map { $0 < right.count ? right[$0] : nil }
     }
@@ -98,8 +92,7 @@ struct SeleneHintsBar: View {
     private func content(_ item: HintItem, reserve: [String] = []) -> some View {
         HStack(spacing: canvas.u(8)) {
             if let button = item.button {
-                badge { Text(ButtonPrompts.label(button, style: style, connected: pad))
-                    .seleneFont(13, .bold) }
+                SelenePromptBadge(button: button)
             } else if let glyph = item.glyph {
                 badge { MaterialIconView(glyph, size: 18) }
             }

@@ -9,6 +9,9 @@ public final class GameControllerService: ObservableObject {
     @Published public var isGamepadConnected: Bool = false
     @Published public var activeControllerName: String = "No Gamepad Connected"
     @Published public var activeBrand: GamepadBrand = .generic
+    /// SF Symbols names of the buttons behind each prompt, as the connected
+    /// controller reports them (printed label, user remapping included).
+    @Published public var buttonSymbols: [PromptButton: String] = [:]
     
     public var onAction: ((GamepadAction) -> Void)?
 
@@ -72,18 +75,24 @@ public final class GameControllerService: ObservableObject {
             isGamepadConnected = false
             activeControllerName = "No Gamepad Connected"
             activeBrand = .generic
+            buttonSymbols = [:]
             return
         }
         
         isGamepadConnected = true
         activeControllerName = controller.vendorName ?? "Gamepad"
-        activeBrand = detectBrand(from: activeControllerName)
+        activeBrand = detectBrand(from: activeControllerName, category: controller.productCategory)
         
         bindController(controller)
     }
     
-    private func detectBrand(from vendor: String) -> GamepadBrand {
-        let lower = vendor.lowercased()
+    private func detectBrand(from vendor: String, category: String) -> GamepadBrand {
+        switch category {
+        case GCProductCategoryDualSense, GCProductCategoryDualShock4: return .playstation
+        case GCProductCategoryXboxOne: return .xbox
+        default: break
+        }
+        let lower = (vendor + " " + category).lowercased()
         if lower.contains("switch") || lower.contains("joy-con") || lower.contains("nintendo") {
             return .nintendoSwitch
         } else if lower.contains("xbox") || lower.contains("microsoft") {
@@ -132,19 +141,23 @@ public final class GameControllerService: ObservableObject {
             }
         }
         
-        // Face Buttons
-        gamepad.buttonA.pressedChangedHandler = { [weak self] _, _, pressed in
+        // Face Buttons. The framework maps them by position (A = bottom); a Nintendo
+        // controller prints B there, so confirm moves to the button printed A (right)
+        // and the rest follow its labels, as on the console.
+        let face = Self.faceButtons(gamepad, nintendo: activeBrand == .nintendoSwitch)
+        face.confirm.pressedChangedHandler = { [weak self] _, _, pressed in
             if pressed { self?.triggerAction(.confirm) }
         }
-        gamepad.buttonB.pressedChangedHandler = { [weak self] _, _, pressed in
+        face.cancel.pressedChangedHandler = { [weak self] _, _, pressed in
             if pressed { self?.triggerAction(.cancel) }
         }
-        gamepad.buttonX.pressedChangedHandler = { [weak self] _, _, pressed in
+        face.secondary.pressedChangedHandler = { [weak self] _, _, pressed in
             if pressed { self?.triggerAction(.secondaryAction) }
         }
-        gamepad.buttonY.pressedChangedHandler = { [weak self] _, _, pressed in
+        face.context.pressedChangedHandler = { [weak self] _, _, pressed in
             if pressed { self?.triggerAction(.contextAction) }
         }
+        buttonSymbols = Self.symbols(gamepad, face: face)
         
         // Shoulders: Tab Switching
         gamepad.leftShoulder.pressedChangedHandler = { [weak self] _, _, pressed in
@@ -175,6 +188,33 @@ public final class GameControllerService: ObservableObject {
         }
     }
     
+    private struct FaceButtons {
+        let confirm, cancel, secondary, context: GCControllerButtonInput
+    }
+
+    /// Which element runs each face action. Only a Nintendo controller whose bottom
+    /// button is printed B (position mapping) is swapped; one the system already
+    /// maps by label keeps the plain A/B/X/Y.
+    private static func faceButtons(_ pad: GCExtendedGamepad, nintendo: Bool) -> FaceButtons {
+        if nintendo, pad.buttonA.unmappedSfSymbolsName?.hasPrefix("b.") == true {
+            return FaceButtons(confirm: pad.buttonB, cancel: pad.buttonA,
+                               secondary: pad.buttonY, context: pad.buttonX)
+        }
+        return FaceButtons(confirm: pad.buttonA, cancel: pad.buttonB,
+                           secondary: pad.buttonX, context: pad.buttonY)
+    }
+
+    /// The glyph of the element behind each prompt; missing names fall back to the brand's table.
+    private static func symbols(_ pad: GCExtendedGamepad, face: FaceButtons) -> [PromptButton: String] {
+        let elements: [PromptButton: GCControllerElement?] = [
+            .a: face.confirm, .b: face.cancel, .x: face.secondary, .y: face.context,
+            .lb: pad.leftShoulder, .rb: pad.rightShoulder,
+            .lt: pad.leftTrigger, .rt: pad.rightTrigger,
+            .rs: pad.rightThumbstickButton, .view: pad.buttonOptions, .menu: pad.buttonMenu
+        ]
+        return elements.compactMapValues { $0?.sfSymbolsName }
+    }
+
     private enum HoldButton: Hashable { case menu, view }
     private var holdDetectors: [HoldButton: HoldDetector] = [:]
     private var holdActions: [HoldButton: GamepadAction] = [:]

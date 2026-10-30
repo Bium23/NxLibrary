@@ -5,9 +5,9 @@ import NXLibraryCore
 /// Spotlight, the home screen (spec §5.2, Selene Main.xaml HOME): one row of
 /// square tiles under the filter tabs, the selected game's logo, pills and
 /// stats, its screenshots, over its art. All lengths are Selene units on the
-/// 1920 × 1080 stage, centred across and pinned to the top: a taller window
-/// (16:10 full screen) gives the spare height to the page below, not to a gap
-/// above the tabs. The backdrop and the row reach the window edges.
+/// 1920 × 1080 stage that `SeleneHomeChrome` places (pinned to the top, hints on
+/// the window's bottom edge), shared with Collection. The backdrop and the row
+/// reach the window edges.
 ///
 /// Below the stats the screen is one page: genres, screenshots, the
 /// description, Build & Sources with Your activity, More like this. Down
@@ -127,32 +127,22 @@ public struct SpotlightView: View {
     public var body: some View {
         let model = snapshot()
         let state = viewModel.spotlight
-        ZStack(alignment: .topLeading) {
-            SeleneArtBackground(image: art.image, imageKey: art.key,
-                                shade: settings.settings.backgroundShade, crossfade: 0.8)
-            // Deeper in the page the art dims so the text reads.
-            Color.black.opacity(dimmed ? 0.4 : 0)
-                .allowsHitTesting(false)
-            SeleneBottomScrim()
-            stage(model, state: state)
-                .frame(width: canvas.stageSize.width, height: canvas.size.height, alignment: .topLeading)
-                .offset(x: canvas.stageOrigin.x)
-            // The hints sit on the window's bottom edge, not the stage's.
-            VStack(spacing: 0) {
-                Spacer(minLength: 0)
-                SeleneHintsBar(left: state.isLifted || cardMenu != nil || state.focus != .row ? [] : globalHints,
-                               right: contextHints(model, state),
-                               bottom: SeleneBottomScrim.hintsBottom, leftInset: 18,
-                               rightReserve: hintReserve(state))
-            }
-            // Game options draws its own hints over this screen.
-            .opacity(viewModel.gameForSettingsSheet == nil ? 1 : 0)
-            .frame(width: canvas.size.width, height: canvas.size.height)
-        }
+        SeleneHomeChrome(
+            leftHints: state.isLifted || cardMenu != nil || state.focus != .row
+                ? [] : HintItem.homeGlobals(other: "Collection"),
+            rightHints: contextHints(model, state),
+            rightReserve: hintReserve(state),
+            hintsHidden: viewModel.gameForSettingsSheet != nil,
+            backdrop: {
+                SeleneArtBackground(image: art.image, imageKey: art.key,
+                                    shade: settings.settings.backgroundShade, crossfade: 0.8)
+                // Deeper in the page the art dims so the text reads.
+                Color.black.opacity(dimmed ? 0.4 : 0)
+                    .allowsHitTesting(false)
+            },
+            stage: { stage(model, state: state) })
         .overlay(viewerOverlay)
         .animation(.easeOut(duration: 0.2), value: viewer != nil)
-        .frame(width: canvas.size.width, height: canvas.size.height, alignment: .topLeading)
-        .clipped()
         .onAppear(perform: appear)
         .onDisappear {
             removeKeyMonitor()
@@ -405,11 +395,6 @@ public struct SpotlightView: View {
     }
 
     // MARK: - Hints
-
-    private var globalHints: [HintItem] {
-        [HintItem(nil, "Collection", glyph: .spotlight, hold: "Hold: Search"),
-         HintItem(nil, "Menu", glyph: .menu, hold: "Hold: Settings")]
-    }
 
     /// The A slot keeps one width per place (row, page), so the prompts hold still
     /// as the focus moves. Y and B sit leftmost, where a longer label shifts nothing.

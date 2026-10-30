@@ -18,8 +18,8 @@ struct CollectionCoverRow: View {
     let onSelect: (PortedGame) -> Void
     let onActivate: (PortedGame) -> Void
 
-    /// Selene's list item margin (14 left).
-    private static let startInset: CGFloat = 14
+    /// The first cover lines up with Spotlight's 80 margin (Selene's list had 14).
+    private static let startInset: CGFloat = 80
 
     var body: some View {
         let selected = selectedID.flatMap { id in games.firstIndex { $0.id == id } }

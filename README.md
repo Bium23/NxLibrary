@@ -20,7 +20,7 @@ A personal, native macOS front-end for [nxnative](https://github.com/seedds/nxna
 
 ## Interface
 
-NX Library follows the [Selene](https://github.com/mattxslv/Selene) Playnite theme (MIT) as closely as a SwiftUI app can: the same 1920×1080 canvas units, palettes, Material Icons glyphs, hint rows and motion. Only the button prompts differ: they show Switch, Xbox or PlayStation names to match the connected controller. It does not include Sony or Nintendo branding, fonts, sounds or artwork.
+NX Library follows the [Selene](https://github.com/mattxslv/Selene) Playnite theme (MIT) as closely as a SwiftUI app can: the same 1920×1080 canvas units, palettes, Material Icons glyphs, hint rows and motion. Only the button prompts differ: they show Apple's SF Symbols glyphs for the connected Switch, Xbox or PlayStation controller, as the controller itself reports them (System Settings remapping included; a generic controller gets Xbox's); on a Switch controller, confirm is the button printed A. With no controller they show the Mac keys instead. It does not include Sony or Nintendo branding, fonts, sounds or artwork.
 
 - **Spotlight:** Selene's home row of square tiles (each game's own app icon) with cards (Collection, Surprise me, Activity, Add game), filter pill, info block with Play / Options / Favorite, screenshot strip and a full-screen screenshot viewer. Below the stats it is one page: genres, screenshots, description, Build & Sources with Your activity, More like this. Down glides the whole screen up as the row fades; the trackpad scrolls the page freely. Hold A to lift and move a tile.
 - **Collection:** a single row of covers over the selected game's art.
