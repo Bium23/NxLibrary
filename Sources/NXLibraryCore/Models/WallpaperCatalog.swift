@@ -10,7 +10,8 @@ public struct Wallpaper: Equatable, Identifiable {
     public var title: String {
         let name = url.deletingPathExtension().lastPathComponent
         let words = name.split(separator: "-").drop { $0.allSatisfy(\.isNumber) }.joined(separator: " ")
-        let themeName = theme.split(separator: "-").map { $0.capitalized }.joined(separator: " ")
+        let themeName = theme == WallpaperCatalog.custom
+            ? "Your own" : theme.split(separator: "-").map { $0.capitalized }.joined(separator: " ")
         return words.isEmpty ? themeName : "\(themeName) · \(words.prefix(1).uppercased())\(words.dropFirst())"
     }
 }
@@ -19,6 +20,8 @@ public struct Wallpaper: Equatable, Identifiable {
 /// nil follows the theme (its first wallpaper), "none" shows none, anything else names one.
 public enum WallpaperCatalog {
     public static let none = "none"
+    /// The folder (theme) the player's own wallpapers are copied into.
+    public static let custom = "custom"
     private static let imageExtensions: Set<String> = ["jpg", "jpeg", "png", "heic", "webp"]
 
     /// Later roots override earlier ones for the same id. Sorted by id.
@@ -38,6 +41,23 @@ public enum WallpaperCatalog {
             }
         }
         return byID.values.sorted { $0.id < $1.id }
+    }
+
+    /// A file name for a wallpaper the player adds: lower case, dashes for
+    /// anything else, numbered past `existing` (names without extension).
+    public static func customFileName(for original: String, existing: Set<String>) -> String {
+        let url = URL(fileURLWithPath: original)
+        let ext = url.pathExtension.lowercased()
+        let words = url.deletingPathExtension().lastPathComponent.lowercased()
+            .split { !($0.isLetter || $0.isNumber) }.joined(separator: "-")
+        let base = words.isEmpty ? "wallpaper" : words
+        var name = base
+        var number = 2
+        while existing.contains(name) {
+            name = "\(base)-\(number)"
+            number += 1
+        }
+        return ext.isEmpty ? name : "\(name).\(ext)"
     }
 
     /// The wallpaper to draw for a setting and palette, or nil for none.

@@ -10,8 +10,6 @@ import NXLibraryCore
 /// controller. Mouse: hover focuses, click activates, a click on the scrim closes.
 struct MenuOverlayView: View {
     @ObservedObject var router: AppRouter
-    /// The wallpaper now shown, named under Wallpaper.
-    let wallpaperTitle: String
     /// A click on a row button; the shell runs it.
     let onSelect: (MenuAction) -> Void
     /// A click on a Power pill; the shell runs it.
@@ -80,7 +78,7 @@ struct MenuOverlayView: View {
             onSelect(action)
         } label: {
             VStack(spacing: 0) {
-                Text(action == .wallpaper ? "Wallpaper · \(wallpaperTitle)" : action.title)
+                Text(action.title)
                     .seleneFont(18, .semibold)
                     .foregroundColor(SeleneTheme.ink)
                     .lineLimit(1)

@@ -22,6 +22,8 @@ public final class AppRouter: ObservableObject {
     /// True while the full-screen screenshot viewer is open; the shell ignores its global shortcuts.
     @Published public var isScreenshotViewerOpen = false
     @Published public var menuSelection = MenuSelectionModel()
+    /// The menu's Theme screen (colors, then background) is open in place of its row.
+    @Published public var isThemePickerOpen = false
     /// A Spotlight item key waiting to be lifted for moving (see `requestSpotlightMove`).
     @Published public var pendingSpotlightMove: String?
     /// A game id waiting for Spotlight to select it (Details' More like this).
@@ -100,9 +102,10 @@ public final class AppRouter: ObservableObject {
         route = previous
     }
 
-    /// Closes the menu and, with it, the Power pills.
+    /// Closes the menu and, with it, the Power pills and the Theme screen.
     public func closeMenu() {
         isMenuPresented = false
+        isThemePickerOpen = false
         menuSelection.closePower()
     }
 }

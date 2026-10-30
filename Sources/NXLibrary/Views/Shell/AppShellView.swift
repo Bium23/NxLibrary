@@ -81,14 +81,19 @@ public struct AppShellView: View {
                     .zIndex(3)
             }
             if router.isMenuPresented {
-                MenuOverlayView(
-                    router: router,
-                    wallpaperTitle: theme.wallpaperTitle(for: settings.settings.wallpaperID),
-                    onSelect: { runMenuAction($0) },
-                    onSelectPower: { runPower($0) }
-                )
-                .transition(.opacity)
-                .zIndex(1)
+                if router.isThemePickerOpen {
+                    ThemePickerView(router: router, settings: settings, games: viewModel.libraryGames)
+                        .transition(.opacity)
+                        .zIndex(1)
+                } else {
+                    MenuOverlayView(
+                        router: router,
+                        onSelect: { runMenuAction($0) },
+                        onSelectPower: { runPower($0) }
+                    )
+                    .transition(.opacity)
+                    .zIndex(1)
+                }
             }
             if let game = viewModel.gameForSettingsSheet {
                 GameOptionsView(
@@ -124,6 +129,7 @@ public struct AppShellView: View {
                    value: viewModel.gameForSettingsSheet?.id)
         .animation(reduceMotion ? nil : SeleneTheme.quick,
                    value: router.isMenuPresented)
+        .animation(reduceMotion ? nil : SeleneTheme.screen, value: router.isThemePickerOpen)
         .animation(SeleneTheme.quick, value: router.isSearchPresented)
         .animation(reduceMotion ? nil : SeleneTheme.screen, value: viewModel.showSetupCheck)
         .animation(reduceMotion ? nil : SeleneTheme.quick,
@@ -497,6 +503,7 @@ public struct AppShellView: View {
                 case 126: menuAction = .navigateUp       // Up arrow
                 case 36, 76, 49: menuAction = .confirm   // Return, keypad Enter, Space
                 case 53: menuAction = .cancel            // Esc
+                case 51: menuAction = router.isThemePickerOpen ? .contextAction : nil   // Delete: remove your own wallpaper
                 default: menuAction = nil
                 }
                 if let menuAction {
@@ -539,6 +546,11 @@ public struct AppShellView: View {
     /// Input while the control center is open: arrows move, A selects, B (or Esc) closes the Power pills
     /// first and then the menu, Menu closes it, and hold Menu closes it and opens Settings.
     private func menuInput(_ action: GamepadAction) {
+        // The Theme screen takes everything but Menu, which closes the whole menu.
+        if router.isThemePickerOpen, action != .menu, action != .menuHold {
+            NotificationCenter.default.post(name: .nxThemePickerGamepadAction, object: action)
+            return
+        }
         switch action {
         case .navigateLeft:
             router.moveMenu(by: -1)
@@ -571,7 +583,7 @@ public struct AppShellView: View {
     }
 
     /// A row button. The menu closes before it navigates; Power only opens or closes its
-    /// pills, and Wallpaper steps to the next one with the menu still open.
+    /// pills, and Theme opens its screen in place of the row.
     private func runMenuAction(_ action: MenuAction) {
         switch action {
         case .power:
@@ -589,11 +601,9 @@ public struct AppShellView: View {
         case .settings:
             router.closeMenu()
             router.openSettings(.startUp)
-        case .wallpaper:
-            // The menu stays open: each press shows the next wallpaper behind it.
-            if let next = theme.wallpaperChoices.stepped(from: settings.settings.wallpaperID, 1) {
-                settings.settings.wallpaperID = next
-            }
+        case .theme:
+            // The menu's own screen: the theme's colors, then the background.
+            router.isThemePickerOpen = true
         case .console:
             router.closeMenu()
             router.openConsole()

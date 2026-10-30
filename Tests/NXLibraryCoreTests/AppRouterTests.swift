@@ -54,6 +54,14 @@ final class AppRouterTests: XCTestCase {
         XCTAssertFalse(router.isMenuPresented)
     }
 
+    func testClosingTheMenuClosesTheThemePicker() {
+        let router = AppRouter()
+        router.isMenuPresented = true
+        router.isThemePickerOpen = true
+        router.closeMenu()
+        XCTAssertFalse(router.isThemePickerOpen)
+    }
+
     func testMoveMenuMovesPillsWhileOpen() {
         let router = AppRouter()
         router.menuSelection.selected = .power
@@ -86,9 +94,9 @@ final class AppRouterTests: XCTestCase {
 final class MenuSelectionModelTests: XCTestCase {
     func testMenuOrder() {
         XCTAssertEqual(MenuAction.allCases,
-                       [.addGame, .refreshLibrary, .settings, .wallpaper, .console, .setupCheck, .power])
+                       [.addGame, .refreshLibrary, .settings, .theme, .console, .setupCheck, .power])
         XCTAssertEqual(MenuAction.allCases.map(\.title),
-                       ["Add Game", "Library refresh", "Settings", "Wallpaper", "Console", "Setup check", "Power"])
+                       ["Add Game", "Library refresh", "Settings", "Theme", "Console", "Setup check", "Power"])
         XCTAssertEqual(PowerAction.allCases, [.quit, .hide, .relaunch])
         XCTAssertEqual(PowerAction.allCases.map(\.title), ["Quit", "Hide", "Restart app"])
     }

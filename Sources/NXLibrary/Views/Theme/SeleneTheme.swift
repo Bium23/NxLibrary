@@ -28,7 +28,10 @@ public enum SeleneTheme {
     public static var focusGlow: Color { focus.opacity(0.35) }
     public static var focusGlowStrong: Color { focus.opacity(0.55) }
 
-    public static var baseGradient: AnyShapeStyle {
+    public static var baseGradient: AnyShapeStyle { baseGradient(for: palette) }
+
+    /// A palette's base gradient, active or not (the Theme screen's previews).
+    public static func baseGradient(for palette: SelenePalette) -> AnyShapeStyle {
         let stops = palette.base.stops.map {
             Gradient.Stop(color: Color(hex: $0.color), location: $0.location)
         }
