@@ -49,7 +49,7 @@ public struct AddGameView: View {
                 SeleneTheme.scrim45
                     .ignoresSafeArea()
                     .contentShape(Rectangle())
-                    .onTapGesture { handleBack() }
+                    .onTapGesture { if !confirmDiscard { requestClose() } }
                     .opacity(shown ? 1 : 0)
                 panel(size: size)
                     .scaleEffect(restScale(panel: size), anchor: .center)
