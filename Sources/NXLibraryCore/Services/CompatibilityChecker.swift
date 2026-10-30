@@ -37,6 +37,17 @@ public final class CompatibilityChecker {
             ?? CommandResult(status: -1, stdout: "", stderr: "failed")
     }
 
+    /// `git status --porcelain` lines that make the engine tree dirty: build output,
+    /// logs, the venv and the generated shader chain header do not count.
+    public static func relevantChanges(_ porcelain: String) -> [String] {
+        porcelain.split(separator: "\n").map(String.init)
+            .filter { !$0.hasSuffix("dm/gfx/nvn/dmsh_chain.h") }
+            .filter { !$0.contains("_build/") }
+            .filter { !$0.contains(".venv/") }
+            .filter { !$0.contains("/logs/") }
+            .filter { !$0.hasSuffix(".DS_Store") }
+    }
+
     public func requiredMetalVersion() -> String? {
         let lock = repoURL.appendingPathComponent("dm/gfx/tools/dmsh_chain.lock")
         guard let text = try? String(contentsOf: lock, encoding: .utf8) else { return nil }
@@ -55,13 +66,7 @@ public final class CompatibilityChecker {
                             status: head == expectedEngineCommit ? .pass : .block,
                             detail: "current \(head), expected \(expectedEngineCommit)"))
 
-        let dirty = run("/usr/bin/git", ["status", "--porcelain"]).stdout
-            .split(separator: "\n").map(String.init)
-            .filter { !$0.hasSuffix("dm/gfx/nvn/dmsh_chain.h") }
-            .filter { !$0.contains("_build/") }
-            .filter { !$0.contains(".venv/") }
-            .filter { !$0.contains("/logs/") }
-            .filter { !$0.hasSuffix(".DS_Store") }
+        let dirty = Self.relevantChanges(run("/usr/bin/git", ["status", "--porcelain"]).stdout)
         checks.append(.init(id: "tree", title: "Working tree",
                             status: dirty.isEmpty ? .pass : .block,
                             detail: dirty.joined(separator: "\n")))
