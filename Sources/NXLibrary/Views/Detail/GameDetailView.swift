@@ -181,6 +181,8 @@ struct GameDetailView: View {
                                right: [HintItem(.y, "Options"), HintItem(.a, "Select")],
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
+            // Game options draws its own hints over this screen.
+            .opacity(viewModel.gameForSettingsSheet == nil ? 1 : 0)
         }
     }
 

@@ -123,6 +123,8 @@ public struct CollectionView: View {
                 Spacer(minLength: 0)
                 SeleneHintsBar(left: globalHints, right: contextHints(game), bottom: 40, leftInset: 18)
             }
+            // Game options draws its own hints over this screen.
+            .opacity(viewModel.gameForSettingsSheet == nil ? 1 : 0)
         }
     }
 

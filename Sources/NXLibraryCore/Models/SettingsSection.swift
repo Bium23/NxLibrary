@@ -35,7 +35,7 @@ public enum SettingsSection: String, CaseIterable, Identifiable, Equatable {
         case .spotlight: return "Which cards show on Spotlight and where it opens."
         case .soundMusic: return "Interface sounds, volume and the launch screen."
         case .look: return "How NX Library looks and moves."
-        case .games: return "Launch screen and defaults for new games."
+        case .games: return "Launch screen, hidden games and defaults for new games."
         case .controllers: return "Gamepad, rumble and stick feel."
         case .library: return "Folders, imports and artwork caches."
         case .storage: return "Caches, logs, saves and the console."

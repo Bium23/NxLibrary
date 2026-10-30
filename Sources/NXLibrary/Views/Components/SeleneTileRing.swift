@@ -66,6 +66,8 @@ struct SeleneTileRing: View {
 }
 
 /// A diagonal light sweep across the tile: hold 0.6s, sweep until 2.4s, idle until 5s.
+/// The band runs along the top-left → bottom-right diagonal, entering past one
+/// corner and leaving past the other, so it never pops in or out.
 struct SeleneShine: View {
     @Environment(\.seleneReduceMotion) private var reduceMotion
 
@@ -74,11 +76,30 @@ struct SeleneShine: View {
 
     var body: some View {
         if active && !reduceMotion {
+            Sweep(cornerRadius: cornerRadius)
+        }
+    }
+
+    /// Half the band's width, in diagonal units (0 = top-left corner, 1 = bottom-right).
+    static let halfWidth = 0.22
+
+    /// The band's centre along the diagonal `t` seconds after the tile was selected.
+    static func centre(at t: TimeInterval) -> Double {
+        let cycle = t.truncatingRemainder(dividingBy: 5)
+        let raw = min(max((cycle - 0.6) / 1.8, 0), 1)
+        let eased = 0.5 - 0.5 * cos(.pi * raw)
+        return -halfWidth + eased * (1 + 2 * halfWidth)
+    }
+
+    private struct Sweep: View {
+        let cornerRadius: CGFloat
+        /// Each selection starts its own cycle, so the light always comes in from the corner.
+        @State private var start = Date()
+
+        var body: some View {
             TimelineView(.animation) { context in
-                let t = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 5)
-                let raw = min(max((t - 0.6) / 1.8, 0), 1)
-                let p = 0.5 - 0.5 * cos(.pi * raw)
-                let x = p * 1.6 - 0.3
+                let c = SeleneShine.centre(at: context.date.timeIntervalSince(start))
+                let w = SeleneShine.halfWidth
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(LinearGradient(
                         stops: [
@@ -86,9 +107,8 @@ struct SeleneShine: View {
                             .init(color: .white.opacity(0.22), location: 0.5),
                             .init(color: .white.opacity(0), location: 1)
                         ],
-                        startPoint: UnitPoint(x: x - 0.25, y: 0),
-                        endPoint: UnitPoint(x: x + 0.05, y: 0.4)))
-                    .opacity(raw > 0 && raw < 1 ? 1 : 0)
+                        startPoint: UnitPoint(x: c - w, y: c - w),
+                        endPoint: UnitPoint(x: c + w, y: c + w)))
                     .allowsHitTesting(false)
             }
         }

@@ -16,6 +16,16 @@ struct SettingsGamesSection: View {
         return options
     }
 
+    /// Games hidden from Game options, by name (the library keeps them sorted).
+    private var hiddenGames: [PortedGame] {
+        viewModel.libraryGames.filter(\.isHidden)
+    }
+
+    private func unhide(_ game: PortedGame) {
+        SoundEffectService.shared.play(.click)
+        viewModel.toggleHidden(game)
+    }
+
     private var surprisePoolTitle: String {
         switch settings.settings.surprisePool {
         case .installed: return "Installed"
@@ -48,6 +58,22 @@ struct SettingsGamesSection: View {
                            subtitle: "Which games Surprise me picks from.",
                            value: surprisePoolTitle) { step in
                 settings.settings.surprisePool = settings.settings.surprisePool.stepped(step)
+            }
+
+            SettingsSubheading("Hidden games")
+
+            if hiddenGames.isEmpty {
+                Text("No hidden games. Hide one from its Game options; it comes back here.")
+                    .seleneFont(15)
+                    .foregroundColor(SeleneTheme.ink60)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.leading, canvas.u(26))
+            } else {
+                ForEach(hiddenGames) { game in
+                    SeleneButtonRow(game.name,
+                                    subtitle: "Out of Spotlight, Collection, Surprise me and search.",
+                                    buttonTitle: "Show") { unhide(game) }
+                }
             }
 
             SettingsSubheading("Game defaults")
@@ -115,10 +141,19 @@ struct SettingsGamesSection: View {
                 .padding(.top, 2)
         }
         .onAppear(perform: publishActions)
+        .onChange(of: hiddenGames.map(\.id)) { _ in publishActions() }
     }
 
     private func publishActions() {
-        onActions([
+        // Same order as the rows: the hidden games sit between Surprise me and the defaults.
+        let hidden = hiddenGames.map { game in
+            SettingsRowAction(id: "hidden-\(game.id)", title: game.name) { unhide(game) }
+        }
+        onActions(launchActions + hidden + defaultActions)
+    }
+
+    private var launchActions: [SettingsRowAction] {
+        [
             .value("launchStyle", "Launch screen style") { step in
                 settings.settings.launchStyle = settings.settings.launchStyle.stepped(step)
             },
@@ -130,7 +165,12 @@ struct SettingsGamesSection: View {
             },
             .value("surprisePool", "Surprise me pool") { step in
                 settings.settings.surprisePool = settings.settings.surprisePool.stepped(step)
-            },
+            }
+        ]
+    }
+
+    private var defaultActions: [SettingsRowAction] {
+        [
             .init(id: "fullscreen", title: "Fullscreen") {
                 settings.settings.gameDefaults.fullscreen.toggle()
             },
@@ -158,6 +198,6 @@ struct SettingsGamesSection: View {
                 let index = values.firstIndex { abs($0 - current) < 0.001 } ?? values.count - 1
                 settings.settings.gameDefaults.renderScale = values[min(max(index + step, 0), values.count - 1)]
             }
-        ])
+        ]
     }
 }

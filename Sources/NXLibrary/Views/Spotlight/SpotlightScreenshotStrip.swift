@@ -72,9 +72,13 @@ struct SpotlightScreenshotStrip: View {
             .frame(width: canvas.u(Self.clipWidth), alignment: .leading)
             .clipped()
             .padding(canvas.u(-14))
-            .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.25), value: focusedIndex)
+            .animation(reduceMotion ? nil : Self.motion, value: focusedIndex)
         }
     }
+
+    /// One curve for the slide, the grow and the ring, so a tile entering at the
+    /// edge does not grow on a faster clock than the strip moves (which shimmered).
+    static let motion = SeleneTheme.cubicOut(0.25)
 
     /// Keeps the focused tile (and its ring) inside the clip.
     private var scroll: CGFloat {
@@ -110,15 +114,17 @@ private struct ScreenshotTile: View {
             }
         }
         .frame(width: canvas.u(style.tileWidth), height: canvas.u(style.tileHeight))
+        // Rasterised once and moved as one layer: the detailed screenshot does not
+        // resample its edges every frame of the slide.
+        .drawingGroup()
         .overlay(
             RoundedRectangle(cornerRadius: canvas.u(style.radius + 3), style: .continuous)
                 .strokeBorder(SeleneTheme.focus, lineWidth: canvas.u(3))
                 .padding(canvas.u(-4))
                 .opacity(focused ? 1 : 0)
-                .animation(.easeOut(duration: 0.15), value: focused)
         )
         .scaleEffect(focused ? style.focusScale : 1)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: focused)
+        .animation(reduceMotion ? nil : SpotlightScreenshotStrip.motion, value: focused)
         .accessibilityElement()
         .accessibilityLabel("Screenshot \(index + 1)")
         .task(id: "\(titleID)|\(index)|\(url.absoluteString)") {

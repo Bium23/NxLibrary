@@ -102,6 +102,8 @@ public enum SettingsCatalog {
             "How much the launch art is darkened.") { $0.launchShade },
         row("surprisePool", .games, "Surprise me pool",
             "Which games Surprise me picks from.") { $0.surprisePool },
+        action("hiddenGames", .games, "Hidden games",
+               "Games you hid from Game options; Show puts one back in your lists."),
         row("gameDefaults", .games, "Game defaults",
             "Runtime options new games start with: frame rate, upscaling, console mode, language and rumble.") { $0.gameDefaults },
 

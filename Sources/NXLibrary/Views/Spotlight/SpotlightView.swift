@@ -5,7 +5,9 @@ import NXLibraryCore
 /// Spotlight, the home screen (spec §5.2, Selene Main.xaml HOME): one row of
 /// square tiles under the filter tabs, the selected game's logo, pills and
 /// stats, its screenshots, over its art. All lengths are Selene units on the
-/// centred 1920 × 1080 stage; the backdrop and the row reach the window edges.
+/// 1920 × 1080 stage, centred across and pinned to the top: a taller window
+/// (16:10 full screen) gives the spare height to the page below, not to a gap
+/// above the tabs. The backdrop and the row reach the window edges.
 ///
 /// Below the stats the screen is one page: genres, screenshots, the
 /// description, Build & Sources with Your activity, More like this. Down
@@ -133,15 +135,18 @@ public struct SpotlightView: View {
                 .allowsHitTesting(false)
             SeleneBottomScrim()
             stage(model, state: state)
-                .frame(width: canvas.stageSize.width, height: canvas.stageSize.height, alignment: .topLeading)
-                .offset(x: canvas.stageOrigin.x, y: canvas.stageOrigin.y)
+                .frame(width: canvas.stageSize.width, height: canvas.size.height, alignment: .topLeading)
+                .offset(x: canvas.stageOrigin.x)
             // The hints sit on the window's bottom edge, not the stage's.
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
                 SeleneHintsBar(left: state.isLifted || cardMenu != nil || state.focus != .row ? [] : globalHints,
                                right: contextHints(model, state),
-                               bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
+                               bottom: SeleneBottomScrim.hintsBottom, leftInset: 18,
+                               rightReserve: hintReserve(state))
             }
+            // Game options draws its own hints over this screen.
+            .opacity(viewModel.gameForSettingsSheet == nil ? 1 : 0)
             .frame(width: canvas.size.width, height: canvas.size.height)
         }
         .overlay(viewerOverlay)
@@ -256,7 +261,7 @@ public struct SpotlightView: View {
                                       onFocus: { cardMenu?.index = $0 },
                                       onChoose: { chooseCardMenu($0) })
                 }
-                .frame(width: canvas.stageSize.width, height: canvas.stageSize.height)
+                .frame(width: canvas.stageSize.width, height: canvas.size.height)
                 .transition(.opacity)
                 .zIndex(5)
             }
@@ -406,6 +411,17 @@ public struct SpotlightView: View {
          HintItem(nil, "Menu", glyph: .menu, hold: "Hold: Settings")]
     }
 
+    /// The A slot keeps one width per place (row, page), so the prompts hold still
+    /// as the focus moves. Y and B sit leftmost, where a longer label shifts nothing.
+    private func hintReserve(_ state: SpotlightState) -> [[String]] {
+        if state.isLifted || cardMenu != nil { return [] }
+        switch state.focus {
+        case .row: return [[], ["Play", "Build", "Pick", "Open"]]
+        case .pills, .strip, .actions, .more: return [[], ["Select", "View", "Show"]]
+        case .topGames: return []
+        }
+    }
+
     private func contextHints(_ model: Snapshot, _ state: SpotlightState) -> [HintItem] {
         if state.isLifted {
             return [HintItem(nil, "◂ ▸  Move"), HintItem(.a, "Drop"), HintItem(.b, "Cancel")]
@@ -434,7 +450,7 @@ public struct SpotlightView: View {
                 if game.isPlayableLocally {
                     return [HintItem(.y, "Options"), HintItem(.a, "Play")]
                 }
-                return [HintItem(.y, "Options"), HintItem(.a, "Details")]
+                return [HintItem(.y, "Options"), HintItem(.a, "Build")]
             case nil:
                 return []
             }
@@ -554,7 +570,8 @@ public struct SpotlightView: View {
 
     /// The page's scroll for the focus, in points. The pills and the strip
     /// share the first shift (the strip only moves further if it would sit
-    /// under the hints); Build & Sources and More like this come up to 150.
+    /// under the hints); Build & Sources brings About this game up to 150 by
+    /// its title (or itself, with no description); More like this comes up to 150.
     /// Positions add up the blocks' heights from the column's top at 420.
     func pageOffset(_ state: SpotlightState) -> CGFloat {
         offset(for: state.focus)
@@ -566,6 +583,8 @@ public struct SpotlightView: View {
         let stripBottom = canvas.u(420) + h(.head) + h(.genres) + h(.strip)
         let gap = canvas.u(48)
         let actionsTop = stripBottom + h(.description) + gap
+        // The description block includes its 44 top padding; more than that means there is text.
+        let aboutTop = h(.description) > canvas.u(60) ? stripBottom + canvas.u(44) : actionsTop
         let moreTop = stripBottom + h(.description) + h(.actions) + gap
         switch area {
         case .row, .topGames:
@@ -573,9 +592,10 @@ public struct SpotlightView: View {
         case .pills:
             return first
         case .strip:
-            return min(first, canvas.u(950) - stripBottom)
+            // Keep the strip clear of the hints on the window's bottom edge.
+            return min(first, canvas.size.height - canvas.u(130) - stripBottom)
         case .actions:
-            return min(first, canvas.u(150) - actionsTop)
+            return min(first, canvas.u(150) - aboutTop)
         case .more:
             return min(first, canvas.u(150) - moreTop)
         }

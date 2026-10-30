@@ -45,6 +45,10 @@ struct SeleneHintsBar: View {
     var bottom: CGFloat = 48
     /// Extra inset before the left group (Spotlight's prompts carry Selene's 18 margin).
     var leftInset: CGFloat = 0
+    /// Labels each right slot can show on this screen, left to right. A slot is
+    /// as wide as its longest label, and a missing item keeps its slot, so the
+    /// prompts never shift as the focus moves.
+    var rightReserve: [[String]] = []
 
     var body: some View {
         if showHints {
@@ -52,7 +56,15 @@ struct SeleneHintsBar: View {
                 HStack(spacing: canvas.u(22)) { ForEach(left) { item($0) } }
                     .padding(.leading, canvas.u(leftInset))
                 Spacer(minLength: canvas.u(22))
-                HStack(spacing: canvas.u(22)) { ForEach(right) { item($0) } }
+                HStack(spacing: canvas.u(22)) {
+                    ForEach(Array(rightSlots.enumerated()), id: \.offset) { slot in
+                        if let hint = slot.element {
+                            item(hint, reserve: reserve(slot.offset))
+                        } else {
+                            content(HintItem(.a, ""), reserve: reserve(slot.offset)).hidden()
+                        }
+                    }
+                }
             }
             .padding(.horizontal, canvas.u(64))
             .padding(.bottom, canvas.u(bottom))
@@ -66,16 +78,24 @@ struct SeleneHintsBar: View {
         ConnectedPad(connected: controller.isGamepadConnected, brand: controller.activeBrand)
     }
 
+    private var rightSlots: [HintItem?] {
+        (0..<max(right.count, rightReserve.count)).map { $0 < right.count ? right[$0] : nil }
+    }
+
+    private func reserve(_ slot: Int) -> [String] {
+        slot < rightReserve.count ? rightReserve[slot] : []
+    }
+
     @ViewBuilder
-    private func item(_ item: HintItem) -> some View {
+    private func item(_ item: HintItem, reserve: [String] = []) -> some View {
         if let action = item.action {
-            content(item).contentShape(Rectangle()).onTapGesture(perform: action)
+            content(item, reserve: reserve).contentShape(Rectangle()).onTapGesture(perform: action)
         } else {
-            content(item)
+            content(item, reserve: reserve)
         }
     }
 
-    private func content(_ item: HintItem) -> some View {
+    private func content(_ item: HintItem, reserve: [String] = []) -> some View {
         HStack(spacing: canvas.u(8)) {
             if let button = item.button {
                 badge { Text(ButtonPrompts.label(button, style: style, connected: pad))
@@ -84,9 +104,12 @@ struct SeleneHintsBar: View {
                 badge { MaterialIconView(glyph, size: 18) }
             }
             VStack(alignment: .leading, spacing: 0) {
-                Text(item.label)
-                    .seleneFont(19)
-                    .foregroundColor(SeleneTheme.ink90)
+                ZStack(alignment: .leading) {
+                    ForEach(reserve, id: \.self) { Text($0).seleneFont(19).hidden() }
+                    Text(item.label)
+                        .seleneFont(19)
+                        .foregroundColor(SeleneTheme.ink90)
+                }
                 if let hold = item.hold {
                     Text(hold).seleneFont(13).foregroundColor(SeleneTheme.ink60)
                 }

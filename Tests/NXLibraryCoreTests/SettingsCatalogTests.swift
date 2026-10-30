@@ -17,6 +17,11 @@ final class SettingsCatalogTests: XCTestCase {
         XCTAssertTrue(titles.contains("Background sizing"))
     }
 
+    func testSearchFindsHiddenGames() {
+        let hits = SettingsCatalog.search("hidden")
+        XCTAssertEqual(hits.first { $0.id == "hiddenGames" }?.group, .games)
+    }
+
     func testEmptySearchReturnsNothing() {
         XCTAssertEqual(SettingsCatalog.search("").count, 0)
         XCTAssertEqual(SettingsCatalog.search("   ").count, 0)
