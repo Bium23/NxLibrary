@@ -7,6 +7,7 @@ public final class AppViewModel: ObservableObject {
     // MARK: - Storage Keys for Persistence
     private enum StorageKeys {
         static let savedGameFolder = "NXNative_SavedGameFolder"
+        static let lastPortingFinishSeconds = "NXLibrary.lastPortingFinishSeconds"
         static let savedLibraryFolder = "NXNative_SavedLibraryFolder"
         static let savedProdKeysPath = "NXNative_SavedProdKeysPath"
         static let savedIconAppearanceMode = "NXNative_SavedIconAppearanceMode"
@@ -242,6 +243,13 @@ public final class AppViewModel: ObservableObject {
     @Published public var progressFraction: Double = 0.0
     @Published public var etaSeconds: Double? = nil
     @Published public var buildStages: [BuildStageItem] = []
+    /// The running (or just finished) porting folded into one overall fraction for the home.
+    @Published public var portingProgress: PortingProgress? = nil
+    /// The game ported last in this session leads Spotlight's row until quit.
+    @Published public var frontGameID: UUID? = nil
+    /// Spotlight's Delete on a failed porting asks first.
+    @Published public var gameToRemove: PortedGame? = nil
+    @Published var removeGameFocus: SeleneConfirmButton = .cancel
     @Published public var showLiveLogsInBuild: Bool = true
     @Published public var logs: [LogEntry] = []
     @Published public var buildError: String? = nil
@@ -1142,6 +1150,55 @@ public final class AppViewModel: ObservableObject {
         closeGameFocus = .cancel
     }
 
+    /// Spotlight's Delete on a failed porting: the same confirmation as Game options' removal.
+    public func askRemoveGame(_ game: PortedGame) {
+        removeGameFocus = .cancel
+        gameToRemove = game
+    }
+
+    public func dismissRemoveGame() {
+        gameToRemove = nil
+        removeGameFocus = .cancel
+    }
+
+    public func confirmRemoveGame() {
+        guard let game = gameToRemove else { return }
+        dismissRemoveGame()
+        deletePortedGame(game)
+    }
+
+    private var didSeedFinishSeconds = false
+
+    /// What the final stages took in the last successful porting on this Mac, for the ETA.
+    /// Seeded once from the newest porting log when nothing is stored yet.
+    public var lastPortingFinishSeconds: Double? {
+        get {
+            let stored = UserDefaults.standard.double(forKey: StorageKeys.lastPortingFinishSeconds)
+            if stored > 0 { return stored }
+            guard !didSeedFinishSeconds else { return nil }
+            didSeedFinishSeconds = true
+            guard let seeded = Self.finishSecondsFromNewestLog(in: core.appendingPathComponent("logs")) else {
+                return nil
+            }
+            UserDefaults.standard.set(seeded, forKey: StorageKeys.lastPortingFinishSeconds)
+            return seeded
+        }
+        set { UserDefaults.standard.set(newValue ?? 0, forKey: StorageKeys.lastPortingFinishSeconds) }
+    }
+
+    private static func finishSecondsFromNewestLog(in directory: URL) -> Double? {
+        let fm = FileManager.default
+        let logs = (try? fm.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.contentModificationDateKey]))?
+            .filter { $0.pathExtension == "log" } ?? []
+        let newest = logs.max {
+            let a = (try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+            let b = (try? $1.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+            return a < b
+        }
+        guard let newest, let text = try? String(contentsOf: newest, encoding: .utf8) else { return nil }
+        return PortingProgress.finishingSeconds(inLog: text)
+    }
+
     private func updateStoredStatus(_ status: GameStatus, for game: PortedGame) {
         guard var library = try? libraryStore.load(),
               let index = library.games.firstIndex(where: { $0.id == game.id }) else { return }
@@ -1924,6 +1981,8 @@ public final class AppViewModel: ObservableObject {
         totalStages = 0
         etaSeconds = nil
         buildStages.removeAll()
+        portingProgress = PortingProgress()
+        frontGameID = target.id
         logs.append(LogEntry(level: .info,
                              message: "Build started for \(target.name) (\(titleId))."))
         logs.append(LogEntry(level: .info,
@@ -1993,6 +2052,7 @@ public final class AppViewModel: ObservableObject {
     }
 
     private func handleBuildEvent(_ event: BuildEvent) {
+        portingProgress?.apply(event)
         switch event {
         case .stage(let k, let n, let name, let step):
             currentStageName = name
@@ -2063,6 +2123,7 @@ public final class AppViewModel: ObservableObject {
 
     private func finishBuild(_ result: BuildResult, gameID: UUID,
                              finalApp: URL, tempDir: URL) {
+        portingProgress?.finish(success: result.success)
         isBuilding = false
         isCancellingBuild = false
         buildService = nil
@@ -2100,6 +2161,10 @@ public final class AppViewModel: ObservableObject {
                                    : "Untested toolchain (explicit override)"
                 )
                 game.lastBuild = record
+                game.portingFailure = nil
+                if let seconds = portingProgress?.finishingElapsed, seconds > 0 {
+                    lastPortingFinishSeconds = seconds
+                }
                 progressFraction = 1
                 currentStageName = "Build completed"
                 buildState = .succeeded
@@ -2114,6 +2179,7 @@ public final class AppViewModel: ObservableObject {
             } else if result.cancelled {
                 game.status = buildPreviousStatus
                     ?? (game.sources.isEmpty ? .builtSourcesMissing : .notBuilt)
+                game.portingFailure = .cancelled
                 buildState = .cancelled
                 buildError = nil
                 lastError = "Build cancelled."
@@ -2126,6 +2192,7 @@ public final class AppViewModel: ObservableObject {
                     fallback: result.error ?? "Build failed (exit code \(result.exitCode))."
                 )
                 game.status = .failed
+                game.portingFailure = .failed
                 buildState = .failed
                 buildError = message
                 lastError = message
