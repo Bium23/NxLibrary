@@ -12,8 +12,8 @@ struct BuildSourcesRow: Identifiable {
 
 /// Band 2's left column (Selene's "Your captures" slot, spec §5.4): the sources
 /// status with the engine and toolchain, the app's version, size and file, and
-/// the page's actions as a two-column grid of rows. Rows are laid out in pairs,
-/// so Left and Right move within a row and Up and Down between rows (see `DetailsFocus`).
+/// the page's actions as a grid of small buttons, four to a row: Left and Right
+/// move within a row, Up and Down between rows (see `DetailsFocus`).
 struct BuildSourcesPanel: View {
     @Environment(\.seleneCanvas) private var canvas
 
@@ -30,7 +30,7 @@ struct BuildSourcesPanel: View {
 
     static let width: CGFloat = 1100
     static let columns = SpotlightState.actionColumns
-    static let cellWidth: CGFloat = 260
+    static let cellWidth: CGFloat = 200
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -101,11 +101,12 @@ struct BuildSourcesPanel: View {
         .padding(.leading, canvas.u(2))
     }
 
-    /// Compact pills, four to a row (`SpotlightState.actionColumns`), like the pills above.
+    /// Small tool buttons, four to a row (`SpotlightState.actionColumns`): squarer
+    /// and quieter than Play and Options above, so they read as secondary.
     private var grid: some View {
-        VStack(alignment: .leading, spacing: canvas.u(10)) {
+        VStack(alignment: .leading, spacing: canvas.u(8)) {
             ForEach(Array(stride(from: 0, to: rows.count, by: Self.columns)), id: \.self) { first in
-                HStack(spacing: canvas.u(12)) {
+                HStack(spacing: canvas.u(8)) {
                     ForEach(first..<min(first + Self.columns, rows.count), id: \.self) { index in
                         cell(rows[index], index: index)
                     }
@@ -115,19 +116,20 @@ struct BuildSourcesPanel: View {
     }
 
     private func cell(_ row: BuildSourcesRow, index: Int) -> some View {
-        let shape = Capsule()
+        let radius = canvas.u(8)
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         return Button { onPressRow(index) } label: {
             Text(row.title)
-                .seleneFont(17, .medium)
+                .seleneFont(15, .medium)
                 .foregroundColor(row.enabled ? SeleneTheme.ink90 : SeleneTheme.ink60)
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
-                .padding(.horizontal, canvas.u(18))
-                .frame(width: canvas.u(Self.cellWidth), height: canvas.u(46))
+                .padding(.horizontal, canvas.u(12))
+                .frame(width: canvas.u(Self.cellWidth), height: canvas.u(36))
                 .background(shape.fill(SeleneTheme.glass))
                 .overlay(shape.strokeBorder(SeleneTheme.ink15, lineWidth: max(1, canvas.u(1))))
                 .contentShape(shape)
-                .seleneRowFocus(focusedRow == index, radius: canvas.u(23))
+                .seleneRowFocus(focusedRow == index, radius: radius)
         }
         .buttonStyle(.plain)
         .onHover { if $0 { onHoverRow(index) } }
