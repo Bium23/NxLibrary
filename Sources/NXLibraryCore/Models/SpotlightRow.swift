@@ -45,7 +45,8 @@ public enum SpotlightRow {
     /// ordered item that preceded it in the default sequence, or at the start
     /// when no ordered item preceded it.
     ///
-    /// `front` (the game being ported) is moved to the very start, before the cards.
+    /// `front` (the game being ported) becomes the first game: right after the Add
+    /// game card wherever it is, or in the first game's place without it.
     public static func build(games: [PortedGame],
                              enabledCards: [SpotlightCard],
                              order: [String],
@@ -80,7 +81,11 @@ public enum SpotlightRow {
             result.append(contentsOf: trailing[item.key] ?? [])
         }
         if let front, let index = result.firstIndex(of: .game(front)) {
-            result.insert(result.remove(at: index), at: 0)
+            let item = result.remove(at: index)
+            let slot = result.firstIndex(of: .card(.addGame)).map { $0 + 1 }
+                ?? result.firstIndex { if case .game = $0 { return true } else { return false } }
+                ?? result.endIndex
+            result.insert(item, at: slot)
         }
         return result
     }
