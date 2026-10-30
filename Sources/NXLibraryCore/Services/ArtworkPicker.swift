@@ -142,7 +142,7 @@ public enum ArtworkCandidates {
     /// `entries` are GameTDB matches, best first.
     public static func list(for slot: ArtworkSlot, entries: [GameTDBEntry], titleDB: TitleDBInfo?,
                             storeHeader: URL?, storeImage: URL?, storeLogo: URL?,
-                            steamAppID: Int? = nil, commonsLogos: [URL] = []) -> [ArtworkCandidate] {
+                            online: [ArtworkCandidate] = []) -> [ArtworkCandidate] {
         var list: [ArtworkCandidate] = []
         func add(_ source: String, _ url: URL?) {
             guard let url, !list.contains(where: { $0.url == url }) else { return }
@@ -168,9 +168,10 @@ public enum ArtworkCandidates {
         case .logo:
             add("Nintendo store", storeLogo)
         }
-        // Steam after the Nintendo sources; Commons only has logos.
-        if let steamAppID { list += SteamStoreArt.candidates(appID: steamAppID, slot: slot) }
-        if slot == .logo { commonsLogos.forEach { add("Wikimedia Commons", $0) } }
+        // Everything found online (`OnlineArtwork`) after the Nintendo sources, in its order.
+        for candidate in online where candidate.slot == slot && !list.contains(where: { $0.url == candidate.url }) {
+            list.append(candidate)
+        }
         return list
     }
 

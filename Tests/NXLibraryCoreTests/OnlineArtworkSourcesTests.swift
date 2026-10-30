@@ -130,12 +130,13 @@ final class OnlineArtworkSourcesTests: XCTestCase {
 
     func testPickerListsSteamAndCommonsAfterTheStore() {
         let store = URL(string: "https://img.example/logo.png")!
-        let commons = URL(string: "https://upload.wikimedia.org/z.png")!
+        let commons = ArtworkCandidate(slot: .logo, source: "Wikimedia Commons", url: URL(string: "https://upload.wikimedia.org/z.png")!)
+        let online = ArtworkSlot.allCases.flatMap { SteamStoreArt.candidates(appID: 7, slot: $0) } + [commons]
         let logos = ArtworkCandidates.list(for: .logo, entries: [], titleDB: nil, storeHeader: nil, storeImage: nil,
-                                           storeLogo: store, steamAppID: 7, commonsLogos: [commons])
+                                           storeLogo: store, online: online)
         XCTAssertEqual(logos.map(\.source), ["Nintendo store", "Steam", "Wikimedia Commons"])
         let backgrounds = ArtworkCandidates.list(for: .background, entries: [], titleDB: nil, storeHeader: nil,
-                                                 storeImage: nil, storeLogo: nil, steamAppID: 7, commonsLogos: [commons])
+                                                 storeImage: nil, storeLogo: nil, online: online)
         XCTAssertEqual(backgrounds.map(\.source), ["Steam"], "Commons gives logos only")
     }
 

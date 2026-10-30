@@ -6,8 +6,9 @@ import NXLibraryCore
 
 /// Game options → Edit details → Change artwork, after Playnite's artwork picker.
 /// Tabs for Cover, Background, Icon and Logo; each shows Automatic, the player's
-/// pick, every image GameTDB, Title DB, the Nintendo store, Steam and Wikimedia
-/// Commons offer (with its size in pixels), and From file…. A choice is kept in `ArtworkPicks` and never
+/// pick, every image GameTDB, Title DB, the Nintendo store and the online sources
+/// (`OnlineArtwork`: stores, databases, wikis, Wallhaven) offer, with its size in
+/// pixels, and From file…. A choice is kept in `ArtworkPicks` and never
 /// overwritten by automatic art; Automatic takes it back.
 ///
 /// Input: arrows or the stick move in the grid, L/R (Q/E) change the tab, A chooses,
@@ -25,9 +26,8 @@ struct ChangeArtworkView: View {
     @State private var searching: Set<ArtworkSlot> = []
     @State private var titleDB: TitleDBInfo?
     @State private var titleDBLoaded = false
-    /// The same game on Steam, looked up once.
-    @State private var steamAppID: Int?
-    @State private var steamLoaded = false
+    /// Everything the online sources have for this game, every slot, looked up once.
+    @State private var online: [ArtworkCandidate]?
     @State private var pickPreview: NSImage?
     @State private var message: String?
     @State private var keyMonitor: Any?
@@ -135,7 +135,7 @@ struct ChangeArtworkView: View {
 
     @ViewBuilder
     private var status: some View {
-        let text = message ?? (searching.contains(slot) ? "Looking on GameTDB, Title DB, the Nintendo store, Steam and Wikimedia Commons…"
+        let text = message ?? (searching.contains(slot) ? "Looking on the Nintendo stores, Steam, Xbox, GOG, TheGamesDB, the wikis and Wallhaven…"
                                 : (found[slot]?.isEmpty ?? false) ? "Nothing found online. Choose a file instead." : nil)
         Text(text ?? " ")
             .seleneFont(14)
@@ -292,15 +292,10 @@ struct ChangeArtworkView: View {
         let metadata = viewModel.storeMetadata[game.id]
         let names = [game.name, metadata?.name, titleDB?.name].compactMap { $0 }
         let entries = slot == .cover ? await viewModel.boxArt.pickerEntries(names: names) : []
-        if !steamLoaded {
-            steamAppID = await SteamStoreArt.findAppID(names: names)
-            steamLoaded = true
-        }
-        let commons = slot == .logo ? await CommonsLogos.find(names: names) : []
+        if online == nil { online = await OnlineArtwork.find(names: names) }
         let candidates = ArtworkCandidates.list(for: slot, entries: entries, titleDB: titleDB,
                                                 storeHeader: metadata?.headerImageURL, storeImage: metadata?.imageURL,
-                                                storeLogo: metadata?.logoURL, steamAppID: steamAppID,
-                                                commonsLogos: commons)
+                                                storeLogo: metadata?.logoURL, online: online ?? [])
         found[slot] = []
         await withTaskGroup(of: Found?.self) { group in
             for (order, candidate) in candidates.enumerated() {

@@ -16,15 +16,14 @@ public enum SteamStoreArt {
         return components.url
     }
 
-    /// The app whose normalised name equals one of `names`'; a DLC or a soundtrack never does.
+    /// The app named like one of `names` (`ArtworkNames`); a DLC or a soundtrack never is.
     public static func appID(in data: Data, matching names: [String]) -> Int? {
         struct Wire: Decodable {
             struct Item: Decodable { var type: String?; var name: String; var id: Int }
             var items: [Item]?
         }
         guard let items = (try? JSONDecoder().decode(Wire.self, from: data))?.items else { return nil }
-        let keys = Set(names.map(GameTDB.normalize).filter { !$0.isEmpty })
-        return items.first { ($0.type ?? "app") == "app" && keys.contains(GameTDB.normalize($0.name)) }?.id
+        return items.first { ($0.type ?? "app") == "app" && ArtworkNames.matches($0.name, names) }?.id
     }
 
     /// Searches each distinct name in turn until one matches.
@@ -51,6 +50,21 @@ public enum SteamStoreArt {
         return [ArtworkCandidate(slot: slot, source: "Steam", url: url(appID, file.0), fallback: url(appID, file.1))]
     }
 
+    public static func screenshotsURL(appID: Int) -> URL? {
+        var components = URLComponents(string: "https://store.steampowered.com/api/appdetails")!
+        components.queryItems = [.init(name: "appids", value: String(appID)), .init(name: "filters", value: "screenshots")]
+        return components.url
+    }
+
+    /// The store page's first screenshots at full size, as backgrounds.
+    public static func screenshots(in data: Data, appID: Int) -> [ArtworkCandidate] {
+        struct Shot: Decodable { var path_full: String }
+        struct Body: Decodable { struct Inner: Decodable { var screenshots: [Shot]? }; var data: Inner? }
+        guard let body = (try? JSONDecoder().decode([String: Body].self, from: data))?[String(appID)],
+              let shots = body.data?.screenshots else { return [] }
+        return OnlineArtwork.screenshots(shots.map(\.path_full), source: "Steam screenshot", stripQuery: true)
+    }
+
     static func url(_ appID: Int, _ file: String) -> URL {
         URL(string: "\(assets)/\(appID)/\(file)")!
     }
@@ -62,23 +76,40 @@ public enum SteamStoreArt {
     }
 }
 
-/// Game logos on Wikimedia Commons: free files, often the official wordmark
-/// without a background. Kept only when the file is named after the game, then
-/// nothing or a logo word.
-public enum CommonsLogos {
-    /// Longest side asked of Commons' renderer; it rounds up to its own sizes.
+/// Game logos in a MediaWiki's files: Wikimedia Commons (free files, often the
+/// official wordmark) and Nintendo fan wikis. Kept only when the file is a PNG or
+/// SVG named after the game, then nothing or a logo word.
+public struct MediaWikiLogos: Sendable {
+    public let source: String
+    public let endpoint: URL
+
+    public static let commons = MediaWikiLogos(source: "Wikimedia Commons",
+                                               endpoint: URL(string: "https://commons.wikimedia.org/w/api.php")!)
+    /// Nintendo series wikis (NIWA) whose files are named after the games.
+    public static let fanWikis: [MediaWikiLogos] = [
+        ("Super Mario Wiki", "https://www.mariowiki.com/api.php"),
+        ("SmashWiki", "https://www.ssbwiki.com/api.php"),
+        ("Pikipedia", "https://www.pikminwiki.com/api.php"),
+        ("Xeno Series Wiki", "https://www.xenoserieswiki.org/w/api.php"),
+        ("WiKirby", "https://wikirby.com/w/api.php"),
+        ("Metroid Wiki", "https://www.metroidwiki.org/w/api.php"),
+        ("Fire Emblem Wiki", "https://fireemblemwiki.org/w/api.php"),
+        ("Nookipedia", "https://nookipedia.com/w/api.php"),
+    ].map { MediaWikiLogos(source: $0.0, endpoint: URL(string: $0.1)!) }
+
+    /// Longest side asked of the wiki's renderer; Commons rounds up to its own sizes.
     static let renderWidth = 1600
 
-    public static func searchURL(for name: String) -> URL? {
+    public func searchURL(for name: String) -> URL? {
         let term = SteamStoreArt.plain(name)
         guard !term.isEmpty else { return nil }
-        var components = URLComponents(string: "https://commons.wikimedia.org/w/api.php")!
+        var components = URLComponents(url: endpoint, resolvingAgainstBaseURL: false)!
         components.queryItems = [
             .init(name: "action", value: "query"), .init(name: "format", value: "json"),
             .init(name: "formatversion", value: "2"), .init(name: "generator", value: "search"),
             .init(name: "gsrnamespace", value: "6"), .init(name: "gsrsearch", value: "\(term) logo"),
             .init(name: "gsrlimit", value: "12"), .init(name: "prop", value: "imageinfo"),
-            .init(name: "iiprop", value: "url|size|mime"), .init(name: "iiurlwidth", value: String(renderWidth))
+            .init(name: "iiprop", value: "url|size|mime"), .init(name: "iiurlwidth", value: String(Self.renderWidth))
         ]
         return components.url
     }
@@ -106,15 +137,19 @@ public enum CommonsLogos {
         return urls
     }
 
-    public static func find(names: [String], client: ArtworkHTTPClient = URLSessionArtworkClient()) async -> [URL] {
+    public func find(names: [String], client: ArtworkHTTPClient = URLSessionArtworkClient()) async -> [URL] {
         guard let name = names.first, let url = searchURL(for: name),
               let data = await OnlineArtworkRequest.data(url, client: client) else { return [] }
-        return parse(data, gameNames: names)
+        return Self.parse(data, gameNames: names)
+    }
+
+    public func candidates(names: [String], client: ArtworkHTTPClient) async -> [ArtworkCandidate] {
+        await find(names: names, client: client).map { ArtworkCandidate(slot: .logo, source: source, url: $0) }
     }
 
     private static let logoWords: Set<String> = ["logo", "textlogo", "wordmark", "logotype"]
     /// Words that may follow the name before the logo word ("text-only logo", "video game logo");
-    /// anything else ("Silksong logo") is another game.
+    /// anything else ("Silksong logo", "Japanese logo") is another game or another language.
     private static let leadWords = logoWords.union(["text", "only", "video", "game", "official", "english"])
 
     private static func isLogo(title: String, keys: [String]) -> Bool {
@@ -129,6 +164,15 @@ public enum CommonsLogos {
             // Black lettering vanishes on the dark home.
             return leadWords.contains(first) && rest.contains(where: logoWords.contains) && !rest.contains("black")
         }
+    }
+}
+
+/// Wikimedia Commons' logos, the first of the MediaWikis.
+public enum CommonsLogos {
+    public static func searchURL(for name: String) -> URL? { MediaWikiLogos.commons.searchURL(for: name) }
+    public static func parse(_ data: Data, gameNames: [String]) -> [URL] { MediaWikiLogos.parse(data, gameNames: gameNames) }
+    public static func find(names: [String], client: ArtworkHTTPClient = URLSessionArtworkClient()) async -> [URL] {
+        await MediaWikiLogos.commons.find(names: names, client: client)
     }
 }
 

@@ -11,7 +11,7 @@ final class GameArtLoader {
 
     private let heroes = NSCache<NSUUID, NSImage>()
     private let logos = NSCache<NSUUID, NSImage>()
-    /// Games already looked up on Steam and Commons this launch, found or not.
+    /// Games already looked up online this launch, found or not.
     private var searchedOnline: Set<UUID> = []
 
     private init() {
@@ -73,8 +73,9 @@ final class GameArtLoader {
         return image
     }
 
-    /// The player's pick, the disk cache, a local logo.png, the store logo, Steam's logo,
-    /// a known community logo, then the first logo on Wikimedia Commons.
+    /// The player's pick, the disk cache, a local logo.png, the store logo, a known
+    /// community logo, then the online sources' logos in their order (Steam, GOG,
+    /// TheGamesDB, Wikidata, Commons, the fan wikis).
     func logo(for game: PortedGame, metadata: NintendoStoreMetadata?, artwork: ArtworkStore) async -> NSImage? {
         if let cached = cachedLogo(for: game) { return cached }
         let titleKey = game.titleId ?? game.uniqueKey
@@ -102,24 +103,19 @@ final class GameArtLoader {
            let url = await artwork.fetch(titleID: titleKey, remoteURL: remote, kind: .logo) {
             image = await Self.decodeLogo(at: url)
         }
-        let names = [game.name, metadata?.name].compactMap { $0 }
-        let online = image == nil && !Task.isCancelled && searchedOnline.insert(game.id).inserted
-        if online, let appID = await SteamStoreArt.findAppID(names: names),
-           let candidate = SteamStoreArt.candidates(appID: appID, slot: .logo).first {
-            for remote in [candidate.url, candidate.fallback] where image == nil && !Task.isCancelled {
-                if let url = await artwork.fetch(titleID: titleKey, remoteURL: remote, kind: .logo) {
-                    image = await Self.decodeLogo(at: url)
-                }
-            }
-        }
         if image == nil, !Task.isCancelled,
            let remote = Self.communityLogoURL(gameName: game.name, titleId: game.titleId),
            let url = await artwork.fetch(titleID: titleKey, remoteURL: remote, kind: .logo) {
             image = await Self.decodeLogo(at: url)
         }
-        if image == nil, online, !Task.isCancelled, let remote = await CommonsLogos.find(names: names).first,
-           let url = await artwork.fetch(titleID: titleKey, remoteURL: remote, kind: .logo) {
-            image = await Self.decodeLogo(at: url)
+        if image == nil, !Task.isCancelled, searchedOnline.insert(game.id).inserted {
+            let names = [game.name, metadata?.name].compactMap { $0 }
+            let found = await OnlineArtwork.find(names: names, slot: .logo)
+            for remote in found.flatMap({ [$0.url, $0.fallback] }) where image == nil && !Task.isCancelled {
+                if let url = await artwork.fetch(titleID: titleKey, remoteURL: remote, kind: .logo) {
+                    image = await Self.decodeLogo(at: url)
+                }
+            }
         }
         if let image { logos.setObject(image, forKey: game.id as NSUUID) }
         return image
