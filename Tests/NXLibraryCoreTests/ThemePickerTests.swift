@@ -142,6 +142,25 @@ final class ThemePickerTests: XCTestCase {
         XCTAssertEqual(ThemeBackgrounds.group(.none, tab: .wallpapers), "NO WALLPAPER")
     }
 
+    /// The tile marked as in use: only on the tab that holds the setting.
+    func testTheTileInUse() {
+        func inUse(_ current: String?, _ tab: BackgroundTab = .wallpapers, theme: String = "gruvbox") -> ThemeBackgroundChoice? {
+            ThemeBackgrounds.inUse(current, tab: tab, themeID: theme, wallpapers: withVideos)
+        }
+        XCTAssertEqual(inUse(nil), .theme)
+        XCTAssertEqual(inUse(nil, theme: "selene"), ThemeBackgroundChoice.none, "Selene's own is the moonlight")
+        XCTAssertEqual(inUse(WallpaperCatalog.none), ThemeBackgroundChoice.none)
+        XCTAssertEqual(inUse("kanagawa/1-a"), .wallpaper("kanagawa/1-a"))
+        XCTAssertEqual(inUse("gruvbox/1-a"), .theme, "the theme's own picture is Theme's own")
+        XCTAssertEqual(inUse("gone/x"), .theme, "a missing file shows the theme's own")
+        XCTAssertNil(inUse("custom/rain"), "a video is Live's")
+        XCTAssertEqual(inUse("custom/rain", .live), .wallpaper("custom/rain"))
+        XCTAssertEqual(inUse(WallpaperCatalog.none, .live), ThemeBackgroundChoice.none)
+        XCTAssertEqual(inUse(nil, .live, theme: "selene"), ThemeBackgroundChoice.none)
+        XCTAssertNil(inUse(nil, .live), "Gruvbox's own picture is a still")
+        XCTAssertNil(inUse("kanagawa/1-a", .live))
+    }
+
     func testTheSettingOpensItsTab() {
         XCTAssertEqual(ThemeBackgrounds.tab(for: "custom/rain", wallpapers: withVideos), .live)
         XCTAssertEqual(ThemeBackgrounds.tab(for: "custom/mine", wallpapers: withVideos), .wallpapers)

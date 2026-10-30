@@ -105,8 +105,16 @@ public enum ThemeBackgrounds {
         return list
     }
 
+    /// The tile marked as in use, or nil when the setting belongs to the other tab.
+    public static func inUse(_ current: String?, tab: BackgroundTab, themeID: String,
+                             wallpapers: [Wallpaper]) -> ThemeBackgroundChoice? {
+        guard tabHolds(current, tab, themeID: themeID, wallpapers: wallpapers) else { return nil }
+        let list = baseList(tab, themeID: themeID, wallpapers: wallpapers)
+        return list[index(of: current, in: list)]
+    }
+
     private static func tabHolds(_ current: String?, _ tab: BackgroundTab, themeID: String, wallpapers: [Wallpaper]) -> Bool {
-        guard tab == .live else { return true }
+        guard tab == .live else { return ThemeBackgrounds.tab(for: current, wallpapers: wallpapers) == .wallpapers }
         switch current {
         case WallpaperCatalog.none?: return true
         case nil: return WallpaperCatalog.resolve(nil, themeID: themeID, in: wallpapers) == nil

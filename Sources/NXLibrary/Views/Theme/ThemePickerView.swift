@@ -273,7 +273,8 @@ struct ThemePickerView: View {
                     ScrollViewReader { proxy in
                         ScrollView(.vertical) {
                             grid(count: list.count, columns: ThemePickerState.backgroundColumns) { index in
-                                backgroundTile(list[index], focused: index == state.backgroundIndex)
+                                backgroundTile(list[index], focused: index == state.backgroundIndex,
+                                               inUse: list[index] == inUse)
                                     .id(index)
                                     .onTapGesture { tap(index) }
                             }
@@ -386,7 +387,13 @@ struct ThemePickerView: View {
         }
     }
 
-    private func backgroundTile(_ choice: ThemeBackgroundChoice, focused: Bool) -> some View {
+    /// The tile of the background in use, marked even when focus is elsewhere.
+    private var inUse: ThemeBackgroundChoice? {
+        ThemeBackgrounds.inUse(settings.settings.wallpaperID, tab: state.tab,
+                               themeID: theme.palette.id, wallpapers: theme.wallpapers)
+    }
+
+    private func backgroundTile(_ choice: ThemeBackgroundChoice, focused: Bool, inUse: Bool) -> some View {
         let shape = RoundedRectangle(cornerRadius: canvas.u(12), style: .continuous)
         return ZStack(alignment: .bottomLeading) {
             Rectangle().fill(SeleneTheme.baseGradient)
@@ -418,10 +425,20 @@ struct ThemePickerView: View {
             case .online(let source):
                 sourceTile(source)
             }
+            if inUse {
+                // The theme's accent: a thin inner border and a check in the corner.
+                MaterialIconView(.check, size: 18)
+                    .foregroundColor(SeleneTheme.glyph)
+                    .padding(canvas.u(3))
+                    .background(Circle().fill(Color.black.opacity(0.55)))
+                    .padding(canvas.u(8))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            }
         }
         .frame(width: canvas.u(204), height: canvas.u(115))
         .clipShape(shape)
-        .overlay(shape.strokeBorder(SeleneTheme.ink15, lineWidth: 1))
+        .overlay(shape.strokeBorder(inUse ? SeleneTheme.glyph : SeleneTheme.ink15,
+                                    lineWidth: inUse ? canvas.u(2.5) : 1))
         .modifier(TileFocus(focused: focused, radius: 12, scale: 1.06))
         .padding(.horizontal, canvas.u(11))
         .padding(.top, canvas.u(13))
@@ -429,6 +446,7 @@ struct ThemePickerView: View {
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label(choice))
+        .accessibilityValue(inUse ? "In use" : "")
         .accessibilityAddTraits(focused ? [.isButton, .isSelected] : .isButton)
     }
 
