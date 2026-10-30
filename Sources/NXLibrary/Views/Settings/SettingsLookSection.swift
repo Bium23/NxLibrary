@@ -57,7 +57,7 @@ struct SettingsLookSection: View {
                            value: settings.settings.backgroundSizing.title) { stepSizing($0) }
 
             SeleneToggleRow("Animated background",
-                            subtitle: "A soft light beam and slow drifting particles over the base gradient.",
+                            subtitle: "Without a wallpaper: the theme's breathing light beam and drifting motes move; off, they hold still.",
                             isOn: $settings.settings.animatedBackground)
 
             SeleneCycleRow("Background shade",

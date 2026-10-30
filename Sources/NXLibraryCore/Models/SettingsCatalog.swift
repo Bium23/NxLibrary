@@ -85,7 +85,7 @@ public enum SettingsCatalog {
         row("readableText", .look, "Text shadow",
             "Adds a soft shadow under text so it reads over bright art.") { $0.readableText },
         row("animatedBackground", .look, "Animated background",
-            "A soft light beam and slow drifting particles over the base gradient.") { $0.animatedBackground },
+            "Without a wallpaper: the theme's breathing light beam and drifting motes move; off, they hold still.") { $0.animatedBackground },
         row("showClock", .look, "Clock",
             "Shows the time in the top bar.") { $0.showClock },
         row("reduceMotion", .look, "Reduce motion",
