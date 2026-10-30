@@ -35,13 +35,20 @@ struct SeleneArtBackground: View {
             }
             // A crossfade is not movement: it stays under reduce motion (spec §8).
             .animation(.easeInOut(duration: crossfade), value: imageKey)
-            shades
+            SeleneShades(shade: shade)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
+}
 
-    private var shades: some View {
+/// The home's left, bottom and top shades at 0.3 scaled by the Background shade
+/// setting, in the palette's scrim colour. The Theme screen's preview takes the same.
+struct SeleneShades: View {
+    var shade: BackgroundShade = .balanced
+    var scrim: Color = SeleneTheme.scrim
+
+    var body: some View {
         let k = 0.3 * shade.scrimMultiplier
         return ZStack {
             Rectangle().fill(LinearGradient(stops: [
@@ -58,6 +65,6 @@ struct SeleneArtBackground: View {
 
     /// A scrim stop: Selene's opacity-mask alpha times the shade's opacity.
     private func stop(_ mask: Double, _ opacity: Double, at location: CGFloat) -> Gradient.Stop {
-        .init(color: SeleneTheme.scrim.opacity(min(1, mask * opacity)), location: location)
+        .init(color: scrim.opacity(min(1, mask * opacity)), location: location)
     }
 }

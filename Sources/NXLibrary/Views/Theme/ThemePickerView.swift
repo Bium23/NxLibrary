@@ -157,7 +157,7 @@ struct ThemePickerView: View {
                 }
                 VStack(alignment: .leading, spacing: 0) {
                     ThemePreview(palette: palette, wallpaperURL: previewWallpaper(theme: palette),
-                                 games: games, width: 780)
+                                 games: games, width: 780, shade: settings.settings.backgroundShade)
                     chips(palette)
                         .padding(.top, canvas.u(18))
                         .padding(.leading, canvas.u(4))
@@ -296,7 +296,7 @@ struct ThemePickerView: View {
                 }
                 VStack(alignment: .leading, spacing: 0) {
                     ThemePreview(palette: theme.palette, wallpaperURL: previewURL(focused), games: games, width: 820,
-                                 videoURL: previewVideo)
+                                 videoURL: previewVideo, shade: settings.settings.backgroundShade)
                     Text(creditLine(focused) ?? " ")
                         .seleneFont(17)
                         .foregroundColor(SeleneTheme.ink75)

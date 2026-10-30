@@ -14,6 +14,8 @@ struct ThemePreview: View {
     let width: CGFloat
     /// A live background to play over the wallpaper's still (a download's file, or an online item's small loop).
     var videoURL: URL? = nil
+    /// The home's Background shade, so the preview is as dark as the home and no darker.
+    var shade: BackgroundShade = .balanced
 
     @Environment(\.seleneBackdropStyle) private var style
     @State private var art: [NSImage] = []
@@ -29,7 +31,9 @@ struct ThemePreview: View {
                 .foregroundColor(SeleneTheme.ink.opacity(0.55))
                 .padding(.leading, canvas.u(2))
             ZStack(alignment: .topLeading) {
-                Rectangle().fill(SeleneTheme.baseGradient(for: palette))
+                // The home's own layers (SeleneBackdrop): scrim, base gradient at 0.6, the wallpaper.
+                Color(hex: palette.scrim)
+                Rectangle().fill(SeleneTheme.baseGradient(for: palette)).opacity(0.6)
                 if let wallpaperURL {
                     WallpaperThumb(url: wallpaperURL).mask(style.brightness.mask)
                     if let videoURL {
@@ -45,7 +49,7 @@ struct ThemePreview: View {
                     MoonlightBackdrop(accent: Color(hex: palette.glyph), ink: Color(hex: palette.ink),
                                       moving: false, asImage: true)
                 }
-                scrims
+                SeleneShades(shade: shade, scrim: Color(hex: palette.scrim))
                 home(w: w, h: h)
             }
             .frame(width: w, height: h)
@@ -59,22 +63,6 @@ struct ThemePreview: View {
             art = games.prefix(6).map { GameIconProvider.squareArt(for: $0) ?? GameIconProvider.icon(for: $0) }
         }
         .accessibilityHidden(true)
-    }
-
-    private var scrims: some View {
-        let scrim = Color(hex: palette.scrim)
-        return ZStack {
-            LinearGradient(stops: [.init(color: scrim.opacity(0.8), location: 0),
-                                   .init(color: scrim.opacity(0.45), location: 0.5),
-                                   .init(color: scrim.opacity(0.1), location: 1)],
-                           startPoint: .leading, endPoint: .trailing)
-            LinearGradient(stops: [.init(color: scrim.opacity(0.75), location: 0),
-                                   .init(color: scrim.opacity(0), location: 0.26)],
-                           startPoint: .top, endPoint: .bottom)
-            LinearGradient(stops: [.init(color: scrim.opacity(0), location: 0.55),
-                                   .init(color: scrim.opacity(0.8), location: 1)],
-                           startPoint: .top, endPoint: .bottom)
-        }
     }
 
     private func home(w: CGFloat, h: CGFloat) -> some View {
