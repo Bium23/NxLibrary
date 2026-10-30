@@ -277,6 +277,7 @@ public struct SettingsView: View {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             guard case .settings = router.route,
                   !router.isMenuPresented,
+                  !viewModel.showSetupCheck,
                   !showingControls,
                   viewModel.alertMessage == nil,
                   let window = event.window,

@@ -70,6 +70,11 @@ public struct AppShellView: View {
                     .transition(.opacity)
                     .zIndex(0.5)
             }
+            if viewModel.showSetupCheck {
+                SetupCheckView(viewModel: viewModel, isFirstRun: !viewModel.setupCompleted)
+                    .transition(.opacity)
+                    .zIndex(2.5)
+            }
             if let game = viewModel.gameToClose {
                 closeGameOverlay(game)
                     .transition(.opacity)
@@ -113,15 +118,13 @@ public struct AppShellView: View {
         .overlay { launchLayer }
         .modifier(SoundCueHooks(router: router, viewModel: viewModel))
         // Inside the canvas root so the sheet inherits the window's canvas units.
-        .sheet(isPresented: $viewModel.showSetupCheck) {
-            SetupView(viewModel: viewModel)
-        }
         .seleneCanvasRoot()
         .animation(reduceMotion ? nil : SeleneTheme.screen,
                    value: viewModel.gameForSettingsSheet?.id)
         .animation(reduceMotion ? nil : SeleneTheme.quick,
                    value: router.isMenuPresented)
         .animation(SeleneTheme.quick, value: router.isSearchPresented)
+        .animation(reduceMotion ? nil : SeleneTheme.screen, value: viewModel.showSetupCheck)
         .animation(reduceMotion ? nil : SeleneTheme.quick,
                    value: viewModel.gameToClose?.id)
         .environment(\.seleneReduceMotion, reduceMotion)
@@ -326,6 +329,11 @@ public struct AppShellView: View {
                 withAnimation(.easeIn(duration: 0.3)) { router.isIntroShowing = false }
                 return
             }
+            if viewModel.showSetupCheck {
+                // The Setup check owns the controller; Menu does nothing there (as in Selene).
+                NotificationCenter.default.post(name: .nxSetupCheckGamepadAction, object: action)
+                return
+            }
             if viewModel.gameToClose != nil {
                 closeGameInput(action)
                 return
@@ -444,6 +452,23 @@ public struct AppShellView: View {
                 return event
             }
             let mods = event.modifierFlags.intersection([.command, .control, .option, .shift])
+            // The Setup check takes the keyboard: arrows, Return, Space and Esc go to it.
+            if viewModel.showSetupCheck {
+                guard mods.isEmpty, !(event.window?.firstResponder is NSText) else { return event }
+                let setupAction: GamepadAction?
+                switch event.keyCode {
+                case 123: setupAction = .navigateLeft
+                case 124: setupAction = .navigateRight
+                case 125: setupAction = .navigateDown
+                case 126: setupAction = .navigateUp
+                case 36, 76, 49: setupAction = .confirm
+                case 53: setupAction = .cancel
+                default: setupAction = nil
+                }
+                guard let setupAction else { return nil }
+                GameControllerService.shared.onAction?(setupAction)
+                return nil
+            }
             // The Close Game confirmation takes the keyboard: arrows, Return, Space and Esc go to it.
             if viewModel.gameToClose != nil, mods.isEmpty {
                 let closeAction: GamepadAction?
