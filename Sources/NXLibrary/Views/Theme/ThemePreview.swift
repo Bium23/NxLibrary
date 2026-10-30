@@ -12,8 +12,11 @@ struct ThemePreview: View {
     let games: [PortedGame]
     /// Width in Selene units; 16:9.
     let width: CGFloat
+    /// A live background to play over the wallpaper's still (a download's file, or an online item's small loop).
+    var videoURL: URL? = nil
 
     @State private var art: [NSImage] = []
+    @State private var videoReady = false
 
     var body: some View {
         let w = canvas.u(width)
@@ -28,6 +31,14 @@ struct ThemePreview: View {
                 Rectangle().fill(SeleneTheme.baseGradient(for: palette))
                 if let wallpaperURL {
                     WallpaperThumb(url: wallpaperURL).opacity(0.6)
+                    if let videoURL {
+                        // Fades in over the still once its first frame shows.
+                        LiveBackdrop(url: videoURL, playing: true, onReady: { videoReady = $0 })
+                            .id(videoURL)
+                            .opacity(videoReady ? 0.6 : 0)
+                            .animation(.easeOut(duration: 0.3), value: videoReady)
+                            .onDisappear { videoReady = false }
+                    }
                 } else {
                     MoonlightBackdrop(accent: Color(hex: palette.glyph), ink: Color(hex: palette.ink),
                                       moving: false, asImage: true)

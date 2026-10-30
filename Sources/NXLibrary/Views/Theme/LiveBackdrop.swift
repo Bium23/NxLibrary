@@ -4,15 +4,18 @@ import NXLibraryCore
 
 /// A live background: a video looping silently behind the home, decoded by the
 /// hardware. It plays only while `playing` and its window is visible; otherwise
-/// it holds its frame.
+/// it holds its frame. A web address streams (the Theme screen's preview of an
+/// online item); `onReady` hears when its first frame can show.
 struct LiveBackdrop: NSViewRepresentable {
     let url: URL
     let playing: Bool
     var sizing: BackgroundSizing = .fill
+    var onReady: ((Bool) -> Void)? = nil
 
     func makeNSView(context: Context) -> LiveVideoView { LiveVideoView() }
 
     func updateNSView(_ view: LiveVideoView, context: Context) {
+        view.onReady = onReady
         view.show(url, gravity: Self.gravity(sizing), playing: playing)
     }
 
@@ -34,12 +37,18 @@ final class LiveVideoView: NSView {
     private var url: URL?
     private var wantsToPlay = false
     private var occlusion: NSObjectProtocol?
+    private var readiness: NSKeyValueObservation?
+    var onReady: ((Bool) -> Void)?
 
     init() {
         super.init(frame: .zero)
         playerLayer.videoGravity = .resizeAspectFill
         layer = playerLayer
         wantsLayer = true
+        readiness = playerLayer.observe(\.isReadyForDisplay, options: [.new]) { [weak self] layer, _ in
+            let ready = layer.isReadyForDisplay
+            DispatchQueue.main.async { self?.onReady?(ready) }
+        }
     }
 
     required init?(coder: NSCoder) { nil }
@@ -56,7 +65,9 @@ final class LiveVideoView: NSView {
             let player = AVQueuePlayer()
             player.isMuted = true
             player.preventsDisplaySleepDuringVideoPlayback = false
-            looper = AVPlayerLooper(player: player, templateItem: AVPlayerItem(url: url))
+            let asset = url.isFileURL ? AVURLAsset(url: url)
+                : AVURLAsset(url: url, options: [AVURLAssetHTTPUserAgentKey: OnlineBackgroundService.userAgent])
+            looper = AVPlayerLooper(player: player, templateItem: AVPlayerItem(asset: asset))
             playerLayer.player = player
             self.player = player
         }

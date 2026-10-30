@@ -64,6 +64,9 @@ final class OnlineLiveSourcesTests: XCTestCase {
         XCTAssertEqual(sea.title, "Kokomi's Serene Sea & Sky")
         XCTAssertEqual(sea.width, 1920)
         XCTAssertEqual(sea.fileURL?.absoluteString, "https://motionbgs.com/dl/hd/1640/")
+        // The small loop the site plays on its own page, for the preview before a download.
+        XCTAssertEqual(galaxy.previewURL?.absoluteString, "https://motionbgs.com/media/10270/a-galaxy-within.960x540.mp4")
+        XCTAssertEqual(sea.previewURL?.absoluteString, "https://motionbgs.com/media/1640/kokomis-serene-sea.960x540.mp4")
         XCTAssertEqual(OnlineDownload.fileName(for: galaxy, fileURL: galaxy.fileURL!), "motionbgs-10270.mp4")
         XCTAssertEqual(OnlineDownload.wallpaperID(for: galaxy), "live/motionbgs-10270")
     }
@@ -118,6 +121,8 @@ final class OnlineLiveSourcesTests: XCTestCase {
                        "https://shared.akamai.steamstatic.com/community_assets/images/items/1263950/2489.mp4")
         XCTAssertEqual(hole.pageURL.absoluteString, "https://store.steampowered.com/points/shop/app/1263950")
         XCTAssertEqual(SteamAPI.appID(of: hole), 1263950)
+        // Steam's small movie is 300×188, too coarse for the preview; its full loop is only a few MB.
+        XCTAssertEqual(hole.previewURL, hole.fileURL)
         XCTAssertEqual(ResolutionBadge.label(width: hole.width, height: hole.height), "1080p")
     }
 

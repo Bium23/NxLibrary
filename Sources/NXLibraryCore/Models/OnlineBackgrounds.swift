@@ -59,12 +59,14 @@ public struct OnlineBackground: Equatable, Hashable, Identifiable, Sendable {
     public let pageURL: URL
     /// nil when the source resolves the file on choice.
     public let fileURL: URL?
+    /// A small loop of a live item, played in the preview before anything is downloaded.
+    public let previewURL: URL?
 
     /// "<source>-<source id>", also the downloaded file's name.
     public var id: String { "\(source.rawValue)-\(sourceID)" }
 
     public init(source: BackgroundSourceID, sourceID: String, kind: BackgroundKind, title: String, author: String?,
-                width: Int, height: Int, thumbnailURL: URL, pageURL: URL, fileURL: URL?) {
+                width: Int, height: Int, thumbnailURL: URL, pageURL: URL, fileURL: URL?, previewURL: URL? = nil) {
         self.source = source
         self.sourceID = sourceID
         self.kind = kind
@@ -75,6 +77,7 @@ public struct OnlineBackground: Equatable, Hashable, Identifiable, Sendable {
         self.thumbnailURL = thumbnailURL
         self.pageURL = pageURL
         self.fileURL = fileURL
+        self.previewURL = previewURL
     }
 }
 
@@ -324,9 +327,13 @@ public enum MotionBGsAPI {
             guard let page = URL(string: "\(site)/\(slug)"),
                   let thumbnail = URL(string: "\(site)/i/c/546x308/media/\(thumb)"),
                   let file = URL(string: "\(site)/dl/\(size.folder)/\(number)/") else { continue }
+            // "<n>/<slug>.3840x2160.jpg" or "<n>/<slug>.jpg" → the page's own "<n>/<slug>.960x540.mp4".
+            let base = thumb.replacingOccurrences(of: #"(\.\d+x\d+)?\.(jpg|jpeg|png|webp)$"#, with: "",
+                                                  options: .regularExpression)
             let item = OnlineBackground(source: .motionbgs, sourceID: String(number), kind: .video,
                                         title: unescape(name), author: nil, width: size.width, height: size.height,
-                                        thumbnailURL: thumbnail, pageURL: page, fileURL: file)
+                                        thumbnailURL: thumbnail, pageURL: page, fileURL: file,
+                                        previewURL: URL(string: "\(site)/media/\(base).960x540.mp4"))
             if !items.contains(where: { $0.id == item.id }) { items.append(item) }
         }
         let hasMore = html.contains("rel=next") || items.count >= 24
@@ -414,7 +421,9 @@ public enum SteamAPI {
                                     title: item.item_title ?? "Steam", author: nil, width: 1920, height: 1080,
                                     thumbnailURL: thumbnail,
                                     pageURL: URL(string: "https://store.steampowered.com/points/shop/app/\(definition.appid)")!,
-                                    fileURL: file)
+                                    fileURL: file,
+                                    // The small movie is 300×188; the full loop is only a few MB.
+                                    previewURL: file)
         }
         let cursor = response.next_cursor.flatMap { $0.isEmpty ? nil : $0 }
         return (OnlinePage(items: items, hasMore: cursor != nil && !definitions.isEmpty), cursor)

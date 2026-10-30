@@ -82,6 +82,7 @@ final class OnlineBackgroundsTests: XCTestCase {
         XCTAssertEqual(item.pageURL.absoluteString, "https://wallhaven.cc/w/qrppoq")
         XCTAssertEqual(item.fileURL?.absoluteString, "https://w.wallhaven.cc/full/qr/wallhaven-qrppoq.png")
         XCTAssertEqual(item.title, "Anime")
+        XCTAssertNil(item.previewURL, "a still has no moving preview")
     }
 
     func testWallhavenLastPageHasNoMore() throws {

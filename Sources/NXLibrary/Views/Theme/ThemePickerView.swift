@@ -25,6 +25,8 @@ struct ThemePickerView: View {
     @StateObject private var browser = OnlineBrowser()
     @StateObject private var transfer = OnlineTransfer()
     @State private var searchText = ""
+    /// The focused live item's video, once the focus has rested on it.
+    @State private var previewVideo: URL?
     @FocusState private var searchFocused: Bool
 
     @Environment(\.seleneCanvas) private var canvas
@@ -281,7 +283,8 @@ struct ThemePickerView: View {
                 }
                 }
                 VStack(alignment: .leading, spacing: 0) {
-                    ThemePreview(palette: theme.palette, wallpaperURL: previewURL(focused), games: games, width: 820)
+                    ThemePreview(palette: theme.palette, wallpaperURL: previewURL(focused), games: games, width: 820,
+                                 videoURL: previewVideo)
                     Text(creditLine(focused) ?? " ")
                         .seleneFont(17)
                         .foregroundColor(SeleneTheme.ink75)
@@ -292,6 +295,23 @@ struct ThemePickerView: View {
             }
             .padding(.top, canvas.u(250))
         }
+        .task(id: videoToPreview(focused)) {
+            previewVideo = nil
+            guard let url = videoToPreview(focused) else { return }
+            // Only once the focus rests: moving through the grid streams nothing.
+            try? await Task.sleep(nanoseconds: 600_000_000)
+            guard !Task.isCancelled else { return }
+            previewVideo = url
+        }
+    }
+
+    /// The video the preview plays for the focus: an online item's small loop, or a video of yours or a download.
+    private func videoToPreview(_ choice: ThemeBackgroundChoice) -> URL? {
+        guard !reduceMotion, settings.settings.animatedBackground else { return nil }
+        if let browse = browser.state { return browse.focusedItem?.previewURL }
+        guard case .wallpaper(let id) = choice, let wallpaper = theme.wallpaper(for: id),
+              wallpaper.kind == .video else { return nil }
+        return wallpaper.url
     }
 
     /// Wallpapers | Live, between the shoulder badges, as on the home.
