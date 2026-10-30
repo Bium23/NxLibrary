@@ -93,7 +93,8 @@ public struct SpotlightView: View {
     var items: [SpotlightItem] {
         SpotlightRow.build(games: games,
                            enabledCards: settings.settings.spotlightCards,
-                           order: viewModel.spotlight.lift?.order ?? settings.settings.spotlightOrder)
+                           order: viewModel.spotlight.lift?.order ?? settings.settings.spotlightOrder,
+                           front: viewModel.frontGameID)
     }
 
     var selectedItem: SpotlightItem? { viewModel.spotlight.selectedItem(in: items) }
@@ -214,6 +215,7 @@ public struct SpotlightView: View {
                     isEmptyFilter: items.contains { if case .game = $0 { return true } else { return false } }
                         ? nil : filter,
                     artwork: artwork,
+                    tileLook: viewModel.portingTileLook,
                     onSelect: { item in
                         guard !state.isLifted else { return }
                         mutate { $0.select(item) }

@@ -116,6 +116,7 @@ public struct CollectionView: View {
                     boxArtIndexVersion: viewModel.boxArtIndexVersion,
                     officialName: { viewModel.storeMetadata[$0.id]?.name },
                     needsMetadata: { viewModel.loadStoreMetadata(for: $0) },
+                    tileLook: viewModel.portingTileLook,
                     onSelect: { select($0.id) },
                     onActivate: { select($0.id); play($0) })
                     .offset(y: canvas.u(576))

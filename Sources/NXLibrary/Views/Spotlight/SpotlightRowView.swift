@@ -21,6 +21,8 @@ struct SpotlightRowView: View {
     var liftedKey: String? = nil
     let isEmptyFilter: LibraryFilter?
     let artwork: ArtworkStore
+    /// The porting look of a game's tile (`PortingTileLook`).
+    var tileLook: (PortedGame) -> PortingTileLook = { _ in .normal }
     let onSelect: (SpotlightItem) -> Void
     let onActivate: (SpotlightItem) -> Void
 
@@ -129,6 +131,8 @@ struct SpotlightRowView: View {
                 if let game = gamesByID[id] {
                     SpotlightTileArtwork(game: game, side: side,
                                          artwork: artwork, ownIconFirst: true)
+                        .portingLook(tileLook(game), cornerRadius: canvas.u(12))
+                        .frame(width: side, height: side)
                         .clipShape(face)
                 }
             case .card(let card):

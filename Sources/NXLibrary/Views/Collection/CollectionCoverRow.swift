@@ -18,6 +18,8 @@ struct CollectionCoverRow: View {
     let officialName: (PortedGame) -> String?
     /// Asks for a game's store metadata (its official name) when its cover shows.
     let needsMetadata: (PortedGame) -> Void
+    /// The porting look of a game's cover (`PortingTileLook`).
+    var tileLook: (PortedGame) -> PortingTileLook = { _ in .normal }
     let onSelect: (PortedGame) -> Void
     let onActivate: (PortedGame) -> Void
 
@@ -60,6 +62,8 @@ struct CollectionCoverRow: View {
         return ZStack {
             SwitchBoxArtCover(game: game, width: w, height: h, officialName: officialName(game),
                               boxArt: boxArt, artwork: artwork, indexVersion: boxArtIndexVersion)
+                .portingLook(tileLook(game), cornerRadius: canvas.u(12))
+                .frame(width: w, height: h)
                 .clipShape(face)
                 .shadow(color: .black.opacity(0.55), radius: canvas.u(9))
             SeleneShine(cornerRadius: canvas.u(12), active: selected)
