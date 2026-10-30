@@ -12,8 +12,10 @@ struct BuildSourcesRow: Identifiable {
 
 /// Band 2's left column (Selene's "Your captures" slot, spec §5.4): the sources
 /// status with the engine and toolchain, the app's version, size and file, and
-/// the page's actions as a grid of small buttons, four to a row: Left and Right
-/// move within a row, Up and Down between rows (see `DetailsFocus`).
+/// the page's actions as a grid of small buttons, three to a row: Left and Right
+/// move within a row, Up and Down between rows (see `DetailsFocus`). Narrower
+/// than `wide` (Spotlight's column beside About this game), the status and the
+/// app's file take two lines each.
 struct BuildSourcesPanel: View {
     @Environment(\.seleneCanvas) private var canvas
 
@@ -27,22 +29,37 @@ struct BuildSourcesPanel: View {
     let focusedRow: Int?
     let onHoverRow: (Int) -> Void
     let onPressRow: (Int) -> Void
+    /// The panel's width in canvas units.
+    var width: CGFloat = Self.width
 
     static let width: CGFloat = 1100
+    /// Spotlight's column: three buttons and their gaps.
+    static let narrowWidth: CGFloat = 520
     static let columns = SpotlightState.actionColumns
-    static let cellWidth: CGFloat = 200
+    static let cellWidth: CGFloat = 168
+
+    private var wide: Bool { width >= 800 }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
             status
-            Text("Version \(presentation.version)  ·  \(presentation.size)  ·  \(appFileName)")
+            Text(wide ? "Version \(presentation.version)  ·  \(presentation.size)  ·  \(appFileName)"
+                      : "Version \(presentation.version)  ·  \(presentation.size)")
                 .seleneFont(15)
                 .foregroundColor(SeleneTheme.ink60)
                 .lineLimit(1)
                 .truncationMode(.middle)
                 .padding(.top, canvas.u(4))
                 .padding(.leading, canvas.u(2))
+            if !wide {
+                Text(appFileName)
+                    .seleneFont(15)
+                    .foregroundColor(SeleneTheme.ink60)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .padding(.leading, canvas.u(2))
+            }
             if presentation.sourcesDetached {
                 Text("The installed app is playable. A rebuild needs the original XCI/NSP files; attach them again without touching saves.")
                     .seleneFont(15)
@@ -53,7 +70,7 @@ struct BuildSourcesPanel: View {
             grid
                 .padding(.top, canvas.u(14))
         }
-        .frame(width: canvas.u(Self.width), alignment: .topLeading)
+        .frame(width: canvas.u(width), alignment: .topLeading)
     }
 
     private var header: some View {
@@ -71,37 +88,59 @@ struct BuildSourcesPanel: View {
         .padding(.leading, canvas.u(2))
     }
 
-    private var status: some View {
-        HStack(spacing: canvas.u(14)) {
-            HStack(spacing: canvas.u(7)) {
-                Circle()
-                    .fill(presentation.sourcesDetached ? SeleneTheme.untested : SeleneTheme.success)
-                    .frame(width: canvas.u(9), height: canvas.u(9))
-                Text(presentation.sourcesDetached ? "Sources detached" : "Sources attached")
-                    .seleneFont(15, .medium)
-                    .foregroundColor(presentation.sourcesDetached
-                                     ? SeleneTheme.untested.opacity(0.9)
-                                     : SeleneTheme.success.opacity(0.9))
+    @ViewBuilder private var status: some View {
+        if wide {
+            HStack(spacing: canvas.u(14)) {
+                sourcesStatus
+                engineStatus
+                blockedStatus
             }
-            Text("Engine \(presentation.engineCommitShort)")
-                .seleneFont(15, .semibold)
-                .monospacedDigit()
-                .foregroundColor(SeleneTheme.ink82)
-            Text(presentation.toolchainVerified ? "Certified" : "Untested toolchain")
-                .seleneFont(15, .medium)
-                .foregroundColor(presentation.toolchainVerified
-                                 ? SeleneTheme.success.opacity(0.85)
-                                 : SeleneTheme.untested.opacity(0.9))
-            if buildBlocked {
-                Text("Build blocked — Settings → Engine")
-                    .seleneFont(15, .semibold)
-                    .foregroundColor(SeleneTheme.untested)
+            .padding(.leading, canvas.u(2))
+        } else {
+            VStack(alignment: .leading, spacing: canvas.u(4)) {
+                sourcesStatus
+                HStack(spacing: canvas.u(14)) { engineStatus }
+                blockedStatus
             }
+            .padding(.leading, canvas.u(2))
         }
-        .padding(.leading, canvas.u(2))
     }
 
-    /// Small tool buttons, four to a row (`SpotlightState.actionColumns`): squarer
+    private var sourcesStatus: some View {
+        HStack(spacing: canvas.u(7)) {
+            Circle()
+                .fill(presentation.sourcesDetached ? SeleneTheme.untested : SeleneTheme.success)
+                .frame(width: canvas.u(9), height: canvas.u(9))
+            Text(presentation.sourcesDetached ? "Sources detached" : "Sources attached")
+                .seleneFont(15, .medium)
+                .foregroundColor(presentation.sourcesDetached
+                                 ? SeleneTheme.untested.opacity(0.9)
+                                 : SeleneTheme.success.opacity(0.9))
+        }
+    }
+
+    /// The engine and the toolchain.
+    @ViewBuilder private var engineStatus: some View {
+        Text("Engine \(presentation.engineCommitShort)")
+            .seleneFont(15, .semibold)
+            .monospacedDigit()
+            .foregroundColor(SeleneTheme.ink82)
+        Text(presentation.toolchainVerified ? "Certified" : "Untested toolchain")
+            .seleneFont(15, .medium)
+            .foregroundColor(presentation.toolchainVerified
+                             ? SeleneTheme.success.opacity(0.85)
+                             : SeleneTheme.untested.opacity(0.9))
+    }
+
+    @ViewBuilder private var blockedStatus: some View {
+        if buildBlocked {
+            Text("Build blocked — Settings → Engine")
+                .seleneFont(15, .semibold)
+                .foregroundColor(SeleneTheme.untested)
+        }
+    }
+
+    /// Small tool buttons, three to a row (`SpotlightState.actionColumns`): squarer
     /// and quieter than Play and Options above, so they read as secondary.
     private var grid: some View {
         VStack(alignment: .leading, spacing: canvas.u(8)) {
@@ -116,16 +155,16 @@ struct BuildSourcesPanel: View {
     }
 
     private func cell(_ row: BuildSourcesRow, index: Int) -> some View {
-        let radius = canvas.u(8)
+        let radius = canvas.u(7)
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         return Button { onPressRow(index) } label: {
             Text(row.title)
-                .seleneFont(15, .medium)
+                .seleneFont(14, .medium)
                 .foregroundColor(row.enabled ? SeleneTheme.ink90 : SeleneTheme.ink60)
                 .lineLimit(1)
-                .minimumScaleFactor(0.85)
-                .padding(.horizontal, canvas.u(12))
-                .frame(width: canvas.u(Self.cellWidth), height: canvas.u(36))
+                .minimumScaleFactor(0.8)
+                .padding(.horizontal, canvas.u(10))
+                .frame(width: canvas.u(Self.cellWidth), height: canvas.u(32))
                 .background(shape.fill(SeleneTheme.glass))
                 .overlay(shape.strokeBorder(SeleneTheme.ink15, lineWidth: max(1, canvas.u(1))))
                 .contentShape(shape)

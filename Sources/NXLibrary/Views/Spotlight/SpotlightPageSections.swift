@@ -13,7 +13,8 @@ struct SpotlightPageModel {
 
 /// The blocks of Spotlight's game column, top to bottom.
 enum SpotlightPageBlock: Hashable {
-    case head, genres, strip, description, actions, more
+    /// `description` is About this game with the column beside it.
+    case head, genres, strip, description, more
 }
 
 /// Each block's height, top padding included. Heights, unlike positions, do

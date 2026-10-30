@@ -211,14 +211,16 @@ final class SpotlightLiftTests: XCTestCase {
     }
 
     func testPageScrollsThroughActionsAndMore() {
-        // Seven actions in rows of four: 0 1 2 3 / 4 5 6.
-        XCTAssertEqual(SpotlightState.actionColumns, 4)
+        // Seven actions in rows of three: 0 1 2 / 3 4 5 / 6.
+        XCTAssertEqual(SpotlightState.actionColumns, 3)
         var s = SpotlightState(selectedKey: "game:x", focus: .strip)
         XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 7, moreCount: 2))
         XCTAssertEqual(s.focus, .actions)
-        for _ in 0..<3 { XCTAssertTrue(s.moveSideways(by: 1, screenshotCount: 3, actionCount: 7)) }
-        XCTAssertEqual(s.actionIndex, 3)
+        for _ in 0..<2 { XCTAssertTrue(s.moveSideways(by: 1, screenshotCount: 3, actionCount: 7)) }
+        XCTAssertEqual(s.actionIndex, 2)
         XCTAssertFalse(s.moveSideways(by: 1, screenshotCount: 3, actionCount: 7))
+        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 7, moreCount: 2))
+        XCTAssertEqual(s.actionIndex, 5)
         // Above the short last row's gap, Down lands on its last action.
         XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 7, moreCount: 2))
         XCTAssertEqual(s.actionIndex, 6)
@@ -227,7 +229,9 @@ final class SpotlightLiftTests: XCTestCase {
         XCTAssertFalse(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 7, moreCount: 2))
         XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 7))
         XCTAssertEqual(s.focus, .actions)
-        XCTAssertEqual(s.actionIndex, 4)
+        XCTAssertEqual(s.actionIndex, 6)
+        XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 7))
+        XCTAssertEqual(s.actionIndex, 3)
         XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 7))
         XCTAssertEqual(s.actionIndex, 0)
         XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 7))

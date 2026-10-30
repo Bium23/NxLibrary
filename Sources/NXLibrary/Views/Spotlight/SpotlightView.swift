@@ -10,7 +10,7 @@ import NXLibraryCore
 /// reach the window edges.
 ///
 /// Below the stats the screen is one page: genres, screenshots, the
-/// description, Build & Sources with Your activity, More like this. Down
+/// description with Your activity and Build & Sources beside it, More like this. Down
 /// from the row shifts everything up (the row and the bar fade away, the logo
 /// rises to the top) and keeps going section by section; Up comes back.
 public struct SpotlightView: View {
@@ -548,9 +548,9 @@ public struct SpotlightView: View {
 
     /// The page's scroll for the focus, in points. The pills and the strip
     /// share the first shift (the strip only moves further if it would sit
-    /// under the hints); Build & Sources brings About this game up to 150 by
-    /// its title (or itself, with no description); More like this rises until
-    /// the page's end sits above the hints, never further (`SpotlightPageScroll`).
+    /// under the hints); Build & Sources brings About this game and the column
+    /// beside it up to 150 by their titles; More like this rises until the
+    /// page's end sits above the hints, never further (`SpotlightPageScroll`).
     /// Positions add up the blocks' heights from the column's top at 420.
     func pageOffset(_ state: SpotlightState) -> CGFloat {
         offset(for: state.focus)
@@ -560,11 +560,9 @@ public struct SpotlightView: View {
         let first = -canvas.u(Self.pageTravel)
         let h = { (block: SpotlightPageBlock) in blocks[block] ?? 0 }
         let stripBottom = canvas.u(420) + h(.head) + h(.genres) + h(.strip)
-        let gap = canvas.u(48)
-        let actionsTop = stripBottom + h(.description) + gap
-        // The description block includes its 44 top padding; more than that means there is text.
-        let aboutTop = h(.description) > canvas.u(60) ? stripBottom + canvas.u(44) : actionsTop
-        let moreTop = stripBottom + h(.description) + h(.actions) + gap
+        // The description block includes its 44 top padding.
+        let aboutTop = stripBottom + canvas.u(44)
+        let moreTop = stripBottom + h(.description) + canvas.u(48)
         switch area {
         case .row, .topGames:
             return 0
@@ -578,7 +576,7 @@ public struct SpotlightView: View {
             let more = h(.more) > 0
             let rest = SpotlightPageScroll.resting(
                 first: first, aboutTop: aboutTop, moreTop: more ? moreTop : nil,
-                pageBottom: stripBottom + h(.description) + h(.actions) + (more ? h(.more) : 0),
+                pageBottom: stripBottom + h(.description) + (more ? h(.more) : 0),
                 top: canvas.u(150), viewport: canvas.size.height, bottomInset: canvas.u(130))
             return area == .actions ? rest.actions : rest.more
         }
@@ -670,36 +668,37 @@ public struct SpotlightView: View {
         if viewModel.isBuilding { router.openAddGame() }
     }
 
-    /// Below the screenshots: the description, Build & Sources with Your activity, More like this.
+    /// Below the screenshots: About this game, with Your activity and Build &
+    /// Sources in a column on its right (beside it however long it is), then More like this.
     private func pageBelow(_ game: PortedGame, page: SpotlightPageModel, state: SpotlightState) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            SpotlightDescription(text: page.presentation.description)
-                // Read more closes when the game changes.
-                .id(game.id)
-                .padding(.top, canvas.u(44))
-                .spotlightBlock(.description)
-
             HStack(alignment: .top, spacing: 0) {
-                BuildSourcesPanel(
-                    presentation: page.presentation,
-                    appFileName: game.url.lastPathComponent,
-                    buildBlocked: page.buildBlocked && page.presentation.canRebuild,
-                    rows: page.rows,
-                    focusedRow: state.focus == .actions ? state.actionIndex : nil,
-                    onHoverRow: { index in
-                        guard state.focus == .actions, !isGliding else { return }
-                        mutate { $0.actionIndex = index }
-                    },
-                    onPressRow: { index in
-                        mutate { $0.focus = .actions; $0.actionIndex = index }
-                        if index < page.rows.count { page.rows[index].action() }
-                    })
+                SpotlightDescription(text: page.presentation.description)
+                    // Read more closes when the game changes.
+                    .id(game.id)
                 Spacer(minLength: 0)
-                DetailsActivityColumn(presentation: page.presentation)
+                VStack(alignment: .leading, spacing: canvas.u(40)) {
+                    DetailsActivityColumn(presentation: page.presentation)
+                    BuildSourcesPanel(
+                        presentation: page.presentation,
+                        appFileName: game.url.lastPathComponent,
+                        buildBlocked: page.buildBlocked && page.presentation.canRebuild,
+                        rows: page.rows,
+                        focusedRow: state.focus == .actions ? state.actionIndex : nil,
+                        onHoverRow: { index in
+                            guard state.focus == .actions, !isGliding else { return }
+                            mutate { $0.actionIndex = index }
+                        },
+                        onPressRow: { index in
+                            mutate { $0.focus = .actions; $0.actionIndex = index }
+                            if index < page.rows.count { page.rows[index].action() }
+                        },
+                        width: BuildSourcesPanel.narrowWidth)
+                }
             }
             .frame(width: canvas.u(1700), alignment: .topLeading)
-            .padding(.top, canvas.u(48))
-            .spotlightBlock(.actions)
+            .padding(.top, canvas.u(44))
+            .spotlightBlock(.description)
 
             if !page.more.isEmpty {
                 DetailsMoreBand(

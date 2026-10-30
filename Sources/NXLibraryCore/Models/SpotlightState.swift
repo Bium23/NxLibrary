@@ -27,8 +27,8 @@ public struct SpotlightState: Equatable {
     public static let anchorSlot = 2
     /// Play, Options, Favorite.
     public static let pillCount = 3
-    /// Build & Sources lays its actions out as compact pills, four to a row.
-    public static let actionColumns = 4
+    /// Build & Sources lays its actions out as small buttons, three to a row.
+    public static let actionColumns = 3
 
     public var selectedKey: String?
     public var focus: SpotlightFocusArea
