@@ -83,6 +83,7 @@ public struct AppShellView: View {
             if router.isMenuPresented {
                 MenuOverlayView(
                     router: router,
+                    wallpaperTitle: theme.wallpaperTitle(for: settings.settings.wallpaperID),
                     onSelect: { runMenuAction($0) },
                     onSelectPower: { runPower($0) }
                 )
@@ -569,7 +570,8 @@ public struct AppShellView: View {
         }
     }
 
-    /// A row button. The menu closes before it navigates; Power only opens or closes its pills.
+    /// A row button. The menu closes before it navigates; Power only opens or closes its
+    /// pills, and Wallpaper steps to the next one with the menu still open.
     private func runMenuAction(_ action: MenuAction) {
         switch action {
         case .power:
@@ -587,6 +589,11 @@ public struct AppShellView: View {
         case .settings:
             router.closeMenu()
             router.openSettings(.startUp)
+        case .wallpaper:
+            // The menu stays open: each press shows the next wallpaper behind it.
+            if let next = theme.wallpaperChoices.stepped(from: settings.settings.wallpaperID, 1) {
+                settings.settings.wallpaperID = next
+            }
         case .console:
             router.closeMenu()
             router.openConsole()

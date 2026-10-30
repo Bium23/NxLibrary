@@ -86,9 +86,9 @@ final class AppRouterTests: XCTestCase {
 final class MenuSelectionModelTests: XCTestCase {
     func testMenuOrder() {
         XCTAssertEqual(MenuAction.allCases,
-                       [.addGame, .refreshLibrary, .settings, .console, .setupCheck, .power])
+                       [.addGame, .refreshLibrary, .settings, .wallpaper, .console, .setupCheck, .power])
         XCTAssertEqual(MenuAction.allCases.map(\.title),
-                       ["Add Game", "Library refresh", "Settings", "Console", "Setup check", "Power"])
+                       ["Add Game", "Library refresh", "Settings", "Wallpaper", "Console", "Setup check", "Power"])
         XCTAssertEqual(PowerAction.allCases, [.quit, .hide, .relaunch])
         XCTAssertEqual(PowerAction.allCases.map(\.title), ["Quit", "Hide", "Restart app"])
     }

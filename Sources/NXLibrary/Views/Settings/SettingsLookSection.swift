@@ -20,24 +20,10 @@ struct SettingsLookSection: View {
         theme.apply(id: next)
     }
 
-    /// nil follows the theme, "none" hides it, then every wallpaper by id.
-    private var wallpaperChoices: [String?] {
-        [nil, WallpaperCatalog.none] + theme.wallpapers.map(\.id)
-    }
-
-    private var wallpaperTitle: String {
-        switch settings.settings.wallpaperID {
-        case nil:
-            return theme.wallpaper(for: nil).map { "Theme (\($0.title))" } ?? "Theme (none)"
-        case WallpaperCatalog.none?:
-            return "None"
-        case let id?:
-            return theme.wallpapers.first { $0.id == id }?.title ?? "Missing"
-        }
-    }
+    private var wallpaperTitle: String { theme.wallpaperTitle(for: settings.settings.wallpaperID) }
 
     private func stepWallpaper(_ step: Int) {
-        if let next = wallpaperChoices.stepped(from: settings.settings.wallpaperID, step) {
+        if let next = theme.wallpaperChoices.stepped(from: settings.settings.wallpaperID, step) {
             settings.settings.wallpaperID = next
         }
     }

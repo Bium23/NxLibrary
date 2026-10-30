@@ -39,4 +39,21 @@ public final class ThemeStore: ObservableObject {
     public func wallpaper(for wallpaperID: String?) -> Wallpaper? {
         WallpaperCatalog.resolve(wallpaperID, themeID: palette.id, in: wallpapers)
     }
+
+    /// nil follows the theme, "none" hides it, then every wallpaper by id.
+    var wallpaperChoices: [String?] {
+        [nil, WallpaperCatalog.none] + wallpapers.map(\.id)
+    }
+
+    /// The setting's name, as Settings → Look and the control center show it.
+    func wallpaperTitle(for wallpaperID: String?) -> String {
+        switch wallpaperID {
+        case nil:
+            return wallpaper(for: nil).map { "Theme (\($0.title))" } ?? "Theme (none)"
+        case WallpaperCatalog.none?:
+            return "None"
+        case let id?:
+            return wallpapers.first { $0.id == id }?.title ?? "Missing"
+        }
+    }
 }

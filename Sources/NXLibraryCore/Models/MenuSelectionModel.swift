@@ -2,7 +2,7 @@ import Foundation
 
 /// The control-center row, left to right (Selene's menu.png).
 public enum MenuAction: String, CaseIterable, Identifiable, Equatable {
-    case addGame, refreshLibrary, settings, console, setupCheck, power
+    case addGame, refreshLibrary, settings, wallpaper, console, setupCheck, power
     public var id: String { rawValue }
 
     public var title: String {
@@ -10,6 +10,7 @@ public enum MenuAction: String, CaseIterable, Identifiable, Equatable {
         case .addGame: return "Add Game"
         case .refreshLibrary: return "Library refresh"
         case .settings: return "Settings"
+        case .wallpaper: return "Wallpaper"
         case .console: return "Console"
         case .setupCheck: return "Setup check"
         case .power: return "Power"
@@ -21,6 +22,7 @@ public enum MenuAction: String, CaseIterable, Identifiable, Equatable {
         case .addGame: return .add
         case .refreshLibrary: return .sync
         case .settings: return .tune
+        case .wallpaper: return .image
         case .console: return .terminal
         case .setupCheck: return .checklist
         case .power: return .power
