@@ -203,7 +203,7 @@ extension GameDetailView {
                   viewModel.alertMessage == nil,
                   viewModel.gameForSettingsSheet == nil,
                   viewModel.gameToClose == nil,
-                  !viewModel.showSetupSheet,
+                  !viewModel.showSetupCheck,
                   !viewModel.showInstallerSheet,
                   let window = event.window,
                   !window.isSheet,

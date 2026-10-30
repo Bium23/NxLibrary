@@ -66,7 +66,7 @@ public struct SetupView: View {
                            on: "Ready to finish",
                            off: "\(completedStepCount) of 5 checks")
                 Button("Not Now") {
-                    viewModel.showSetupSheet = false
+                    viewModel.showSetupCheck = false
                     dismiss()
                 }
                 .buttonStyle(.plain)
@@ -369,7 +369,7 @@ public struct SetupView: View {
                 if viewModel.compatibilityReport?.ok == false {
                     Button("Review in Settings") {
                         NotificationCenter.default.post(name: .nxLibraryOpenSettings, object: nil)
-                        viewModel.showSetupSheet = false
+                        viewModel.showSetupCheck = false
                         dismiss()
                     }
                     .buttonStyle(.plain)

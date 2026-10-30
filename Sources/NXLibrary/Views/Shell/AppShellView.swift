@@ -113,7 +113,7 @@ public struct AppShellView: View {
         .overlay { launchLayer }
         .modifier(SoundCueHooks(router: router, viewModel: viewModel))
         // Inside the canvas root so the sheet inherits the window's canvas units.
-        .sheet(isPresented: $viewModel.showSetupSheet) {
+        .sheet(isPresented: $viewModel.showSetupCheck) {
             SetupView(viewModel: viewModel)
         }
         .seleneCanvasRoot()
@@ -309,6 +309,7 @@ public struct AppShellView: View {
         viewModel.settingsStore = settings
         SoundEffectService.shared.bind(to: settings)
         artwork.trimCache()
+        SetupCheckModel.checkAtLaunch(viewModel: viewModel)
         runningGames.start(sessions: playSessions)
         runningGames.setGames(viewModel.libraryGames)
         closeGameWatch = runningGames.$runningGameIDs.sink { [weak viewModel] ids in

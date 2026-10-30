@@ -212,7 +212,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     @Published public var storeMetadataErrors: [UUID: String] = [:]
     @Published public var storageUsage: StorageUsage? = nil
     @Published public var isCalculatingStorage: Bool = false
-    @Published public var showSetupSheet: Bool = false
+    @Published public var showSetupCheck: Bool = false
     @Published public var setupCompleted: Bool = false
     @Published public var buildState: BuildState = .idle
     @Published public var lastError: String? = nil
@@ -306,7 +306,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
     private let core = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/NXLibrary")
     private lazy var libraryStore = LibraryStore(directory: core)
-    private lazy var keyStore = KeyStore(directory: core.appendingPathComponent("keys"))
+    lazy var keyStore = KeyStore(directory: core.appendingPathComponent("keys"))
     private let importService = ImportService()
     private let launchService = LaunchService()
     private lazy var upstreamChecker = UpstreamChecker()
@@ -327,7 +327,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         installer.delegate = self
         let didCompleteSetup = UserDefaults.standard.bool(forKey: StorageKeys.setupCompleted)
         self.setupCompleted = didCompleteSetup
-        self.showSetupSheet = !didCompleteSetup
+        self.showSetupCheck = !didCompleteSetup
         
         // 1. Resolve safe root directory (anchored to SSD / Bundle, NEVER "/")
         let root = SystemDetector.shared.resolveRootDirectory()
@@ -388,7 +388,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
 
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--show-setup") {
-            self.showSetupSheet = true
+            self.showSetupCheck = true
         }
         if ProcessInfo.processInfo.arguments.contains("--preview-build") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
@@ -607,7 +607,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         return error.localizedDescription
     }
 
-    private func resolvedDeveloperDir() -> URL {
+    func resolvedDeveloperDir() -> URL {
         let fm = FileManager.default
         // An explicit DEVELOPER_DIR always wins.
         if let env = ProcessInfo.processInfo.environment["DEVELOPER_DIR"],
@@ -658,13 +658,13 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
 
     public func completeSetup() {
         setupCompleted = true
-        showSetupSheet = false
+        showSetupCheck = false
         UserDefaults.standard.set(true, forKey: StorageKeys.setupCompleted)
         logs.append(LogEntry(level: .success, message: "Setup completed."))
     }
 
     public func reopenSetup() {
-        showSetupSheet = true
+        showSetupCheck = true
     }
 
     private func sweepStaleBuildTemp() {
