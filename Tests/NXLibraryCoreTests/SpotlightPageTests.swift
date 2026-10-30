@@ -6,28 +6,40 @@ final class SpotlightPageTests: XCTestCase {
 
     func testShortDescriptionIsKept() {
         let short = "A short line."
-        XCTAssertEqual(DescriptionExcerpt.make(short, limit: 100), .init(text: short, truncated: false))
+        XCTAssertEqual(DescriptionExcerpt.make(short, minLines: 4, charsPerLine: 40), .init(text: short, truncated: false))
     }
 
-    func testLongDescriptionStopsAtAParagraph() {
-        let first = "Step into a world of adventure\nForget everything you know. Travel across vast fields."
-        let text = first + "\n\nFeatures:\nExplore the wilds of Hyrule any way you like. Climb towers."
-        let excerpt = DescriptionExcerpt.make(text, limit: 120)
-        XCTAssertEqual(excerpt.text, first)
-        XCTAssertTrue(excerpt.truncated)
-    }
-
-    func testOneLongParagraphStopsAtASentence() {
+    func testExcerptReachesTheLinesAtASentence() {
         let text = "First sentence is here. Second sentence follows it! Third one runs on and on past the limit for sure."
-        let excerpt = DescriptionExcerpt.make(text, limit: 60)
+        let excerpt = DescriptionExcerpt.make(text, minLines: 2, charsPerLine: 30)
         XCTAssertEqual(excerpt.text, "First sentence is here. Second sentence follows it!")
         XCTAssertTrue(excerpt.truncated)
     }
 
+    func testLineBreaksAndBlankLinesCount() {
+        let text = "Title\nIntro line.\n\nBody one. Body two. Body three. Body four is long enough."
+        let excerpt = DescriptionExcerpt.make(text, minLines: 3, charsPerLine: 40)
+        XCTAssertEqual(excerpt.text, "Title\nIntro line.\n\nBody one.")
+        XCTAssertTrue(excerpt.truncated)
+    }
+
+    func testAShortRestIsShownInFull() {
+        let text = "One two three. Four."
+        XCTAssertEqual(DescriptionExcerpt.make(text, minLines: 1, charsPerLine: 15), .init(text: text, truncated: false))
+    }
+
     func testNoSentenceEndCutsAtAWord() {
         let text = String(repeating: "word ", count: 40)
-        let excerpt = DescriptionExcerpt.make(text, limit: 23)
-        XCTAssertEqual(excerpt.text, "word word word word…")
+        let excerpt = DescriptionExcerpt.make(text, minLines: 2, charsPerLine: 20)
+        XCTAssertEqual(excerpt.text, "word word word word word word word word…")
+        XCTAssertTrue(excerpt.truncated)
+    }
+
+    func testARunOnSentenceCutsAtAWord() {
+        let text = "Short. " + String(repeating: "on ", count: 60) + "end."
+        let excerpt = DescriptionExcerpt.make(text, minLines: 2, charsPerLine: 20)
+        XCTAssertTrue(excerpt.text.hasSuffix("…"))
+        XCTAssertLessThanOrEqual(excerpt.text.count, 41)
         XCTAssertTrue(excerpt.truncated)
     }
 
@@ -60,5 +72,11 @@ final class SpotlightPageTests: XCTestCase {
                                                top: 150, viewport: 1000, bottomInset: 130)
         XCTAssertEqual(rest.actions, -324)
         XCTAssertEqual(rest.more, -324)
+    }
+
+    func testReadMoreIsBroughtAboveTheHints() {
+        XCTAssertEqual(SpotlightPageScroll.revealing(-750, bottom: 2000, viewport: 1000, bottomInset: 130), -1130)
+        XCTAssertEqual(SpotlightPageScroll.revealing(-750, bottom: 1500, viewport: 1000, bottomInset: 130), -750,
+                       "already visible: the page stays")
     }
 }

@@ -1,10 +1,12 @@
 import Foundation
 
 /// Where controller focus sits on Spotlight. Below the pills the screen is one
-/// page that scrolls up: screenshots, Build & Sources, More like this.
+/// page that scrolls up: screenshots, About this game beside Build & Sources, More like this.
 public enum SpotlightFocusArea: Hashable {
     case row, pills, strip
-    /// Build & Sources' actions, two columns.
+    /// About this game's Read more, left of Build & Sources.
+    case about
+    /// Build & Sources' actions, `SpotlightState.actionColumns` to a row.
     case actions
     /// More like this.
     case more
@@ -145,8 +147,9 @@ public struct SpotlightState: Equatable {
             return true
         case .pills:
             if screenshotCount > 0 {
+                // The strip keeps the tile it had, so it does not slide back.
                 focus = .strip
-                stripIndex = 0
+                stripIndex = min(stripIndex, screenshotCount - 1)
                 return true
             }
             return enterActions(actionCount: actionCount, moreCount: moreCount)
@@ -157,6 +160,11 @@ public struct SpotlightState: Equatable {
                 actionIndex = below
                 return true
             }
+            guard moreCount > 0 else { return false }
+            focus = .more
+            moreIndex = 0
+            return true
+        case .about:
             guard moreCount > 0 else { return false }
             focus = .more
             moreIndex = 0
@@ -192,6 +200,8 @@ public struct SpotlightState: Equatable {
         case .row: return false
         case .pills, .topGames: focus = .row
         case .strip: focus = .pills
+        case .about:
+            focus = screenshotCount > 0 ? .strip : .pills
         case .actions:
             if actionIndex >= Self.actionColumns {
                 actionIndex -= Self.actionColumns
@@ -210,12 +220,23 @@ public struct SpotlightState: Equatable {
     }
 
     /// Left/Right inside the pills, the strip, Build & Sources or More like this.
+    /// Left of Build & Sources' first column is Read more, when `readMore`.
     @discardableResult
     public mutating func moveSideways(by delta: Int, screenshotCount: Int, topGameCount: Int = 0,
-                                      actionCount: Int = 0, moreCount: Int = 0) -> Bool {
+                                      actionCount: Int = 0, moreCount: Int = 0, readMore: Bool = false) -> Bool {
         switch focus {
+        case .about:
+            guard delta > 0, actionCount > 0 else { return false }
+            focus = .actions
+            actionIndex -= actionIndex % Self.actionColumns
+            return true
         case .actions:
             let column = actionIndex % Self.actionColumns
+            if delta < 0, column == 0 {
+                guard readMore else { return false }
+                focus = .about
+                return true
+            }
             let next = actionIndex + (delta < 0 ? -1 : 1)
             guard delta < 0 ? column > 0 : (column < Self.actionColumns - 1 && next < actionCount) else { return false }
             actionIndex = next

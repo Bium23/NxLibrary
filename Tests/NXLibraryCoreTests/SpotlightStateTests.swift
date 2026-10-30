@@ -245,4 +245,43 @@ final class SpotlightLiftTests: XCTestCase {
         XCTAssertTrue(s.moveUp(screenshotCount: 0, actionCount: 4))
         XCTAssertEqual(s.focus, .pills)
     }
+
+    func testReadMoreSitsLeftOfTheActions() {
+        var s = SpotlightState(selectedKey: "game:x", focus: .actions)
+        s.actionIndex = 4
+        XCTAssertTrue(s.moveSideways(by: -1, screenshotCount: 3, actionCount: 7, readMore: true))
+        XCTAssertEqual(s.actionIndex, 3)
+        XCTAssertTrue(s.moveSideways(by: -1, screenshotCount: 3, actionCount: 7, readMore: true))
+        XCTAssertEqual(s.focus, .about)
+        XCTAssertFalse(s.moveSideways(by: -1, screenshotCount: 3, actionCount: 7, readMore: true))
+        XCTAssertTrue(s.moveSideways(by: 1, screenshotCount: 3, actionCount: 7, readMore: true))
+        XCTAssertEqual(s.focus, .actions)
+        XCTAssertEqual(s.actionIndex, 3)
+        // Without Read more the grid's left edge stops.
+        s.actionIndex = 0
+        XCTAssertFalse(s.moveSideways(by: -1, screenshotCount: 3, actionCount: 7))
+        XCTAssertEqual(s.focus, .actions)
+    }
+
+    func testReadMoreGoesUpToTheStripAndDownToMore() {
+        var s = SpotlightState(selectedKey: "game:x", focus: .about)
+        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 7, moreCount: 2))
+        XCTAssertEqual(s.focus, .more)
+        s.focus = .about
+        XCTAssertFalse(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 7, moreCount: 0))
+        XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 7))
+        XCTAssertEqual(s.focus, .strip)
+    }
+
+    func testStripKeepsItsTileAcrossTheBands() {
+        var s = SpotlightState(selectedKey: "game:x", focus: .strip, stripIndex: 4)
+        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 6, actionCount: 7))
+        XCTAssertTrue(s.moveUp(screenshotCount: 6, actionCount: 7))
+        XCTAssertEqual(s.focus, .strip)
+        XCTAssertEqual(s.stripIndex, 4)
+        XCTAssertTrue(s.moveUp(screenshotCount: 6, actionCount: 7))
+        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 6, actionCount: 7))
+        XCTAssertEqual(s.focus, .strip)
+        XCTAssertEqual(s.stripIndex, 4)
+    }
 }

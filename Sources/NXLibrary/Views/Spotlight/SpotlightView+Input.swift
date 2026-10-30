@@ -14,6 +14,7 @@ extension SpotlightView {
         let page = currentPage
         let actions = page?.rows.count ?? 0
         let more = page?.more.count ?? 0
+        let readMore = page.map { aboutExcerpt($0).truncated } ?? false
         var moved = false
         switch action {
         case .navigateLeft, .navigateRight:
@@ -22,7 +23,7 @@ extension SpotlightView {
                 moved = state.focus == .row
                     ? state.move(by: delta, in: items)
                     : state.moveSideways(by: delta, screenshotCount: shots, topGameCount: tops,
-                                         actionCount: actions, moreCount: more)
+                                         actionCount: actions, moreCount: more, readMore: readMore)
             }
         case .navigateDown:
             let isGame = selectedGame != nil
@@ -80,6 +81,9 @@ extension SpotlightView {
             if let game = selectedGame { pressPill(state.pillIndex, game: game) }
         case .strip:
             openViewer(at: state.stripIndex)
+        case .about:
+            aboutExpanded.toggle()
+            SoundEffectService.shared.play(.click)
         case .actions:
             let rows = currentPage?.rows ?? []
             guard state.actionIndex < rows.count else { return }
@@ -387,7 +391,9 @@ extension SpotlightView {
             return nil
         }
         let page = currentPage
-        let bottom = offset(for: page.map { $0.more.isEmpty ? .actions : .more } ?? .pills)
+        // An open description can run past More like this's resting place.
+        let bottom = page.map { min(offset(for: $0.more.isEmpty ? .actions : .more), offset(for: .about)) }
+            ?? offset(for: .pills)
         let clamped = min(first, max(bottom, next))
         if event.hasPreciseScrollingDeltas || reduceMotion {
             var still = Transaction()
@@ -422,7 +428,6 @@ extension SpotlightView {
         mutate { state in
             state.focus = nearest
             state.pillIndex = 0
-            state.stripIndex = 0
             state.actionIndex = 0
             state.moreIndex = 0
         }

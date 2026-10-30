@@ -35,6 +35,9 @@ struct SpotlightScreenshotStrip: View {
     /// False while the game's metadata is still loading (no "none" message yet).
     let known: Bool
     let focusedIndex: Int?
+    /// The tile the strip stays scrolled to without focus (the last one focused),
+    /// so leaving and returning does not slide it back.
+    var scrollIndex: Int? = nil
     let artwork: ArtworkStore
     let onSelect: (Int) -> Void
     /// When set, a single click only focuses (`onSelect`) and a double click opens (`onActivate`).
@@ -72,7 +75,7 @@ struct SpotlightScreenshotStrip: View {
             .frame(width: canvas.u(Self.clipWidth), alignment: .leading)
             .clipped()
             .padding(canvas.u(-14))
-            .animation(reduceMotion ? nil : Self.motion, value: focusedIndex)
+            .animation(reduceMotion ? nil : Self.motion, value: focusedIndex ?? scrollIndex)
         }
     }
 
@@ -82,8 +85,8 @@ struct SpotlightScreenshotStrip: View {
 
     /// Keeps the focused tile (and its ring) inside the clip.
     private var scroll: CGFloat {
-        guard let focusedIndex else { return 0 }
-        let right = CGFloat(focusedIndex) * (style.tileWidth + style.gap) + style.tileWidth + 14 + 14
+        guard let index = focusedIndex ?? scrollIndex else { return 0 }
+        let right = CGFloat(index) * (style.tileWidth + style.gap) + style.tileWidth + 14 + 14
         return max(0, right - Self.clipWidth)
     }
 }

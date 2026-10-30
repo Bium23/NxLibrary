@@ -55,6 +55,8 @@ public struct SpotlightView: View {
     /// The next focus change came from a wheel scroll: keep the page where it is.
     @State var holdScroll = false
     @State var wheelSettle: Task<Void, Never>?
+    /// About this game shows its whole text (Read more); closes with the game.
+    @State var aboutExpanded = false
     var isGliding: Bool { Date() < glideEnds }
 
     struct ViewerContext: Equatable {
@@ -159,7 +161,10 @@ public struct SpotlightView: View {
         }
         .onChange(of: settings.settings.spotlightCards) { _ in reconcile() }
         .onChange(of: settings.settings.spotlightOrder) { _ in reconcile() }
-        .onChange(of: viewModel.spotlight.selectedKey) { _ in selectionChanged() }
+        .onChange(of: viewModel.spotlight.selectedKey) { _ in
+            aboutExpanded = false
+            selectionChanged()
+        }
         .onChange(of: viewModel.spotlight.focus) { _ in syncPage() }
         .onChange(of: blocks) { _ in syncPage() }
         .onChange(of: viewer != nil) { router.isScreenshotViewerOpen = $0 }
@@ -239,6 +244,14 @@ public struct SpotlightView: View {
             // One page: the focus scrolls it; the glide is movement, so reduce motion jumps.
             .offset(y: scroll)
 
+            // Beside the description the logo and pills are out of sight: there is more above.
+            SpotlightUpHint()
+                .frame(width: canvas.stageSize.width)
+                .padding(.top, canvas.u(24))
+                .opacity(state.focus == .about || state.focus == .actions ? 1 : 0)
+                .animation(.easeInOut(duration: 0.4), value: state.focus)
+                .allowsHitTesting(false)
+
             if let menu = cardMenu {
                 ZStack {
                     Color.black.opacity(0.45)
@@ -296,6 +309,7 @@ public struct SpotlightView: View {
                     urls: metadata?.screenshotURLs ?? [],
                     known: screenshotsKnown(game, metadata: metadata),
                     focusedIndex: state.focus == .strip ? state.stripIndex : nil,
+                    scrollIndex: state.stripIndex,
                     artwork: artwork,
                     onSelect: { index in
                         guard !state.isLifted else { return }
@@ -396,7 +410,7 @@ public struct SpotlightView: View {
         if state.isLifted || cardMenu != nil { return [] }
         switch state.focus {
         case .row: return [[], ["Play", "Build", "Pick", "Open"]]
-        case .pills, .strip, .actions, .more: return [[], ["Select", "View", "Show"]]
+        case .pills, .strip, .about, .actions, .more: return [[], ["Select", "View", "Show"]]
         case .topGames: return []
         }
     }
@@ -413,7 +427,7 @@ public struct SpotlightView: View {
             return [HintItem(.b, "Back"), HintItem(.a, "Select")]
         case .strip:
             return [HintItem(.b, "Back"), HintItem(.a, "View")]
-        case .actions:
+        case .about, .actions:
             return [HintItem(.b, "Back"), HintItem(.a, "Select")]
         case .more:
             return [HintItem(.b, "Back"), HintItem(.a, "Show")]
@@ -562,7 +576,7 @@ public struct SpotlightView: View {
         let stripBottom = canvas.u(420) + h(.head) + h(.genres) + h(.strip)
         // The description block includes its 44 top padding.
         let aboutTop = stripBottom + canvas.u(44)
-        let moreTop = stripBottom + h(.description) + canvas.u(48)
+        let moreTop = stripBottom + h(.description) + canvas.u(Self.moreGap)
         switch area {
         case .row, .topGames:
             return 0
@@ -571,15 +585,30 @@ public struct SpotlightView: View {
         case .strip:
             // Keep the strip clear of the hints on the window's bottom edge.
             return min(first, canvas.size.height - canvas.u(130) - stripBottom)
-        case .actions, .more:
+        case .about, .actions, .more:
             // The band reports a height only when it has games.
             let more = h(.more) > 0
             let rest = SpotlightPageScroll.resting(
                 first: first, aboutTop: aboutTop, moreTop: more ? moreTop : nil,
                 pageBottom: stripBottom + h(.description) + (more ? h(.more) : 0),
                 top: canvas.u(150), viewport: canvas.size.height, bottomInset: canvas.u(130))
-            return area == .actions ? rest.actions : rest.more
+            switch area {
+            case .actions: return rest.actions
+            case .more: return rest.more
+            default:
+                // Read more (or Show less, under the whole text) comes into view.
+                return SpotlightPageScroll.revealing(rest.actions, bottom: aboutTop + h(.about),
+                                                     viewport: canvas.size.height, bottomInset: canvas.u(130))
+            }
         }
+    }
+
+    /// Between About this game (or the column beside it, whichever ends lower) and More like this.
+    static let moreGap: CGFloat = 72
+
+    /// About this game's cut for the page, as tall as the column beside it.
+    func aboutExcerpt(_ page: SpotlightPageModel) -> DescriptionExcerpt {
+        SpotlightDescription.excerpt(page.presentation.description, columnHeight: blocks[.column] ?? 0, canvas: canvas)
     }
 
     /// The page's glide: one slow, soft curve (1 s, long ease out) for the whole screen.
@@ -634,7 +663,7 @@ public struct SpotlightView: View {
 
     /// Past the screenshots the art dims behind the text.
     func isDeep(_ state: SpotlightState) -> Bool {
-        state.focus == .actions || state.focus == .more
+        state.focus == .about || state.focus == .actions || state.focus == .more
     }
 
     var currentPage: SpotlightPageModel? { selectedGame.map(page(for:)) }
@@ -673,9 +702,10 @@ public struct SpotlightView: View {
     private func pageBelow(_ game: PortedGame, page: SpotlightPageModel, state: SpotlightState) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top, spacing: 0) {
-                SpotlightDescription(text: page.presentation.description)
-                    // Read more closes when the game changes.
-                    .id(game.id)
+                SpotlightDescription(text: page.presentation.description, excerpt: aboutExcerpt(page),
+                                     expanded: aboutExpanded, focused: state.focus == .about,
+                                     onToggle: { aboutExpanded.toggle() })
+                    .spotlightBlock(.about)
                 Spacer(minLength: 0)
                 VStack(alignment: .leading, spacing: canvas.u(40)) {
                     DetailsActivityColumn(presentation: page.presentation)
@@ -695,6 +725,7 @@ public struct SpotlightView: View {
                         },
                         width: BuildSourcesPanel.narrowWidth)
                 }
+                .spotlightBlock(.column)
             }
             .frame(width: canvas.u(1700), alignment: .topLeading)
             .padding(.top, canvas.u(44))
@@ -713,7 +744,7 @@ public struct SpotlightView: View {
                         SoundEffectService.shared.play(.click)
                         selectGame(page.more[index].id)
                     })
-                .padding(.top, canvas.u(48))
+                .padding(.top, canvas.u(Self.moreGap))
                 .spotlightBlock(.more)
             }
         }
