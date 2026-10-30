@@ -31,6 +31,10 @@ constant float2 poolCentre = float2(0.205, 0.865);   // x: share of the width
 constant float2 poolRadius = float2(0.36, 0.072);
 constant float focusDepth = 2.0;
 constant float aperture = 0.010;
+// A lens's soft edge: motes toward the right blur a touch more, from `lensFrom`
+// (share of the width) to the edge, up to `lensBlur` window heights.
+constant float lensFrom = 0.55;
+constant float lensBlur = 0.0032;
 // The road the motes travel: an S from near the camera at the bottom left,
 // away into the distance on the right. Depth at its two ends, and its half
 // width in window heights at depth 1 (so it narrows as it recedes).
@@ -221,6 +225,8 @@ vertex DotOut moon_dot_vertex(uint vid [[vertex_id]], uint iid [[instance_id]],
     float blur = depth < focusDepth
         ? aperture * (focusDepth - depth) / depth * H
         : aperture * 0.18 * (depth - focusDepth) / depth * H;
+    float lens = lensBlur * smoothstep(lensFrom, 1.0, p.x / aspect) * H;
+    blur = sqrt(blur * blur + lens * lens);
     float radius = max(sqrt(sharp * sharp + blur * blur), 0.9);
     // The same light spread wider is fainter, but bokeh stays visible.
     float spread = clamp(pow(max(sharp, 0.9) / radius, 1.3), 0.11, 1.0);
