@@ -24,6 +24,9 @@ public struct PortingProgress: Equatable {
     /// The engine's "k of n"; n grows as the engine learns its stages.
     public private(set) var step = 0
     public private(set) var count = 0
+    /// The engine's current stage and its step ("Mac shaders", "translating").
+    public private(set) var stageName = ""
+    public private(set) var stepName = ""
     public private(set) var shaderETA: Double?
     /// Seconds the stages after the shaders took so far.
     public private(set) var finishingElapsed: Double = 0
@@ -36,18 +39,22 @@ public struct PortingProgress: Equatable {
     public mutating func apply(_ event: BuildEvent) {
         guard phase != .done, phase != .failed else { return }
         switch event {
-        case .stage(let k, let n, let name, _):
+        case .stage(let k, let n, let name, let stepTitle):
             step = k
             count = n
+            stageName = name
+            stepName = stepTitle ?? ""
             if name == Self.shaderStageName {
                 shaderStep = k
-                phase = .shaders
             } else if let shaderStep, k > shaderStep {
                 raise(to: Self.shaderShare)
                 phase = .finishing
             }
-        case .progress(let fraction, _, _, _, let eta):
-            guard phase == .shaders else { return }
+        case .step(let title):
+            stepName = title
+        case .progress(let fraction, let done, _, _, let eta):
+            guard countsAsShaders(hasCount: done != nil) else { return }
+            phase = .shaders
             raise(to: Self.shaderShare * min(max(fraction, 0), 1))
             shaderETA = eta
         case .stageEnd(let name, let ok, let elapsed, _):
@@ -60,7 +67,7 @@ public struct PortingProgress: Equatable {
                 let stages = max(Self.expectedFinishingStages, count - (shaderStep ?? count))
                 raise(to: Self.shaderShare + (1 - Self.shaderShare) * Double(finishingEnded) / Double(stages))
             }
-        case .step, .say, .log:
+        case .say, .log:
             break
         }
     }
@@ -82,6 +89,16 @@ public struct PortingProgress: Equatable {
         }
         guard progress.shaderStep != nil, progress.finishingEnded > 0 else { return nil }
         return progress.finishingElapsed
+    }
+
+    /// Inside the shader stage, only compiling (and its finishing tail) is the
+    /// percentage: cache check and translating take seconds and restart their own
+    /// fraction. An engine that names no step counts once it reports a count.
+    private func countsAsShaders(hasCount: Bool) -> Bool {
+        guard stageName == Self.shaderStageName, phase == .preparing || phase == .shaders else { return false }
+        let step = stepName.lowercased()
+        if step.isEmpty { return hasCount }
+        return step.contains("compil") || step.contains("finishing")
     }
 
     private mutating func raise(to value: Double) {

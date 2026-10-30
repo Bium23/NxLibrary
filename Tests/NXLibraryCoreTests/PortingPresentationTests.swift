@@ -9,7 +9,7 @@ final class PortingPresentationTests: XCTestCase {
     }
 
     private var inShaders: PortingProgress {
-        progress([.stage(k: 5, n: 7, name: "Mac shaders", step: nil),
+        progress([.stage(k: 5, n: 7, name: "Mac shaders", step: nil), .step("compiling"),
                   .progress(fraction: 0.5, done: nil, total: nil, unit: nil, eta: 420)])
     }
 
@@ -41,7 +41,7 @@ final class PortingPresentationTests: XCTestCase {
     }
 
     func testETANeverShowsLessThanAMinute() {
-        let almost = progress([.stage(k: 5, n: 7, name: "Mac shaders", step: nil),
+        let almost = progress([.stage(k: 5, n: 7, name: "Mac shaders", step: nil), .step("compiling"),
                                .progress(fraction: 0.99, done: nil, total: nil, unit: nil, eta: 20)])
         XCTAssertEqual(PortingETA.text(almost, lastFinishingSeconds: nil), "Shaders: about 1 min")
     }
@@ -60,9 +60,9 @@ final class PortingPresentationTests: XCTestCase {
 
     func testTileFollowsThePortingPhase() {
         let porting = game(app: false)
-        let preparing = progress([.stage(k: 3, n: 7, name: "rewrite", step: nil)])
+        let preparing = progress([.stage(k: 3, n: 7, name: "rewrite", step: "checking the inputs")])
         XCTAssertEqual(PortingTileLook.make(game: porting, portingGameID: porting.id, progress: preparing),
-                       .preparing(step: 3, count: 7))
+                       .preparing(step: 3, count: 7, title: "Rewrite", detail: "checking the inputs"))
         XCTAssertEqual(PortingTileLook.make(game: porting, portingGameID: porting.id, progress: inShaders),
                        .filling(0.45))
         XCTAssertEqual(PortingTileLook.make(game: porting, portingGameID: UUID(), progress: inShaders), .normal)

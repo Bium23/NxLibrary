@@ -17,8 +17,36 @@ final class PortingProgressTests: XCTestCase {
         .stageEnd(name: "rewrite", ok: true, elapsed: 48, summary: nil),
     ]
 
+    /// The shader stage up to its compiling step (the engine's own sub-steps first).
     private var shaders: [BuildEvent] {
-        beforeShaders + [.stage(k: 5, n: 7, name: "Mac shaders", step: nil)]
+        beforeShaders + [
+            .stage(k: 5, n: 7, name: "Mac shaders", step: nil),
+            .step("cache check"),
+            .progress(fraction: 0.89, done: 24381, total: 27480, unit: "shaders", eta: 0.4),
+            .step("translating"),
+            .progress(fraction: 0.95, done: 26111, total: 27480, unit: "shaders", eta: 0.3),
+            .step("compiling"),
+        ]
+    }
+
+    /// Cache check and translating take seconds and restart their own fraction;
+    /// only compiling is the percentage. Until then the tile tells what happens.
+    func testOnlyCompilingCountsAsTheShaders() {
+        var progress = run(Array(shaders.dropLast()))
+        XCTAssertEqual(progress.phase, .preparing)
+        XCTAssertEqual(progress.overall, 0)
+        XCTAssertEqual(progress.stageName, "Mac shaders")
+        XCTAssertEqual(progress.stepName, "translating")
+        progress.apply(.step("compiling"))
+        progress.apply(.progress(fraction: 0.0586, done: 1610, total: 27480, unit: "shaders", eta: 1080))
+        XCTAssertEqual(progress.phase, .shaders)
+        XCTAssertEqual(progress.overall, 0.9 * 0.0586, accuracy: 1e-9)
+    }
+
+    func testStageAndStepNamesFollowTheEngine() {
+        let progress = run(beforeShaders + [.stage(k: 4, n: 7, name: "shader split", step: "checking the inputs")])
+        XCTAssertEqual(progress.stageName, "shader split")
+        XCTAssertEqual(progress.stepName, "checking the inputs")
     }
 
     func testStagesBeforeShadersShowStepAndCountOnly() {

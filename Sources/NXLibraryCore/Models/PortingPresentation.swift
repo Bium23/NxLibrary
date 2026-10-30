@@ -34,8 +34,8 @@ public enum PortingETA {
 /// What a game's art tile shows.
 public enum PortingTileLook: Equatable {
     case normal
-    /// Black and white, blurred, a turning ring with "step/count".
-    case preparing(step: Int, count: Int)
+    /// Black and white, blurred, a thin "step/count" bar with the stage and its step in small type.
+    case preparing(step: Int, count: Int, title: String, detail: String)
     /// Colour risen to this fraction, the percentage in the middle.
     case filling(Double)
     /// The last porting failed and there is no app to play: black and white with a lock.
@@ -44,7 +44,9 @@ public enum PortingTileLook: Equatable {
     public static func make(game: PortedGame, portingGameID: UUID?, progress: PortingProgress?) -> PortingTileLook {
         if game.id == portingGameID, let progress {
             switch progress.phase {
-            case .preparing: return .preparing(step: progress.step, count: progress.count)
+            case .preparing:
+                let title = progress.stageName.prefix(1).uppercased() + progress.stageName.dropFirst()
+                return .preparing(step: progress.step, count: progress.count, title: title, detail: progress.stepName)
             case .shaders, .finishing: return .filling(progress.overall)
             case .done, .failed: break
             }
