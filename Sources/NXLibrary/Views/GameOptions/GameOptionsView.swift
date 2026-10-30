@@ -109,6 +109,9 @@ struct GameOptionsView: View {
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // A panel (Change artwork, Change metadata) takes the screen; the list never shows through.
+            .opacity(panelOpen ? 0 : 1)
+            .allowsHitTesting(!panelOpen)
 
             if artworkOpen {
                 ChangeArtworkView(viewModel: viewModel, game: current) { artworkOpen = false }

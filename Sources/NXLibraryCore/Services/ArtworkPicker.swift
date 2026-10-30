@@ -113,11 +113,14 @@ public struct ArtworkCandidate: Equatable, Hashable, Sendable {
     /// "GameTDB · US", "Title DB banner"…
     public let source: String
     public let url: URL
+    /// Tried when `url` is missing: the standard size of a file asked for at twice the size.
+    public let fallback: URL?
 
-    public init(slot: ArtworkSlot, source: String, url: URL) {
+    public init(slot: ArtworkSlot, source: String, url: URL, fallback: URL? = nil) {
         self.slot = slot
         self.source = source
         self.url = url
+        self.fallback = fallback
     }
 }
 
@@ -138,7 +141,8 @@ public enum ArtworkCandidates {
     /// Every image worth offering for `slot`, in the order the picker shows them.
     /// `entries` are GameTDB matches, best first.
     public static func list(for slot: ArtworkSlot, entries: [GameTDBEntry], titleDB: TitleDBInfo?,
-                            storeHeader: URL?, storeImage: URL?, storeLogo: URL?) -> [ArtworkCandidate] {
+                            storeHeader: URL?, storeImage: URL?, storeLogo: URL?,
+                            steamAppID: Int? = nil, commonsLogos: [URL] = []) -> [ArtworkCandidate] {
         var list: [ArtworkCandidate] = []
         func add(_ source: String, _ url: URL?) {
             guard let url, !list.contains(where: { $0.url == url }) else { return }
@@ -164,13 +168,23 @@ public enum ArtworkCandidates {
         case .logo:
             add("Nintendo store", storeLogo)
         }
+        // Steam after the Nintendo sources; Commons only has logos.
+        if let steamAppID { list += SteamStoreArt.candidates(appID: steamAppID, slot: slot) }
+        if slot == .logo { commonsLogos.forEach { add("Wikimedia Commons", $0) } }
         return list
     }
 
-    /// Downloads a candidate and reads its size; nil when it is missing or not an image.
+    /// Downloads a candidate (or its fallback) and reads its size; nil when both are missing or not images.
     public static func load(_ candidate: ArtworkCandidate,
                             client: ArtworkHTTPClient = URLSessionArtworkClient()) async -> LoadedArtwork? {
-        var request = URLRequest(url: candidate.url)
+        if let loaded = await load(candidate, from: candidate.url, client: client) { return loaded }
+        guard let fallback = candidate.fallback else { return nil }
+        return await load(candidate, from: fallback, client: client)
+    }
+
+    private static func load(_ candidate: ArtworkCandidate, from url: URL,
+                             client: ArtworkHTTPClient) async -> LoadedArtwork? {
+        var request = URLRequest(url: url)
         request.timeoutInterval = 20
         request.setValue("NXLibrary/0.1 (macOS; personal app)", forHTTPHeaderField: "User-Agent")
         guard let (data, http) = try? await client.data(for: request), (200..<300).contains(http.statusCode),

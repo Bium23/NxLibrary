@@ -6,8 +6,8 @@ import NXLibraryCore
 
 /// Game options → Edit details → Change artwork, after Playnite's artwork picker.
 /// Tabs for Cover, Background, Icon and Logo; each shows Automatic, the player's
-/// pick, every image GameTDB, Title DB and the store offer (with its size in
-/// pixels), and From file…. A choice is kept in `ArtworkPicks` and never
+/// pick, every image GameTDB, Title DB, the Nintendo store, Steam and Wikimedia
+/// Commons offer (with its size in pixels), and From file…. A choice is kept in `ArtworkPicks` and never
 /// overwritten by automatic art; Automatic takes it back.
 ///
 /// Input: arrows or the stick move in the grid, L/R (Q/E) change the tab, A chooses,
@@ -25,6 +25,9 @@ struct ChangeArtworkView: View {
     @State private var searching: Set<ArtworkSlot> = []
     @State private var titleDB: TitleDBInfo?
     @State private var titleDBLoaded = false
+    /// The same game on Steam, looked up once.
+    @State private var steamAppID: Int?
+    @State private var steamLoaded = false
     @State private var pickPreview: NSImage?
     @State private var message: String?
     @State private var keyMonitor: Any?
@@ -132,7 +135,7 @@ struct ChangeArtworkView: View {
 
     @ViewBuilder
     private var status: some View {
-        let text = message ?? (searching.contains(slot) ? "Looking on GameTDB, Title DB and the Nintendo store…"
+        let text = message ?? (searching.contains(slot) ? "Looking on GameTDB, Title DB, the Nintendo store, Steam and Wikimedia Commons…"
                                 : (found[slot]?.isEmpty ?? false) ? "Nothing found online. Choose a file instead." : nil)
         Text(text ?? " ")
             .seleneFont(14)
@@ -160,14 +163,23 @@ struct ChangeArtworkView: View {
                         }
                     }
                 }
-                .padding(canvas.u(12))
+                // Room inside the scroll's clip for the focused tile: it grows, its ring
+                // sits 6 outside it and the ring's glow spreads further.
+                .padding(.vertical, canvas.u(Self.ringRoom))
+                .padding(.horizontal, canvas.u(Self.ringRoom))
             }
             .scrollIndicators(.hidden)
+            // The room reaches past the column, so the tiles still line up with the title.
+            .padding(.horizontal, canvas.u(8 - Self.ringRoom))
+            .padding(.top, canvas.u(-Self.ringRoom / 2))
             .onChange(of: focus) { index in
                 withAnimation(reduceMotion ? nil : SeleneTheme.quick) { proxy.scrollTo(index, anchor: .center) }
             }
         }
     }
+
+    /// Space kept round the grid for the focus ring and its glow.
+    private static let ringRoom: CGFloat = 30
 
     // MARK: - Tiles
 
@@ -188,11 +200,10 @@ struct ChangeArtworkView: View {
                         .background(Circle().fill(SeleneTheme.glassSolid))
                         .padding(canvas.u(8))
                 }
-                SeleneTileRing(cornerRadius: canvas.u(18), active: focused)
-                    .frame(width: size.width + canvas.u(12), height: size.height + canvas.u(12))
-                    .offset(x: canvas.u(6), y: canvas.u(-6))
             }
             .frame(width: size.width, height: size.height)
+            // The ring sits 6 outside the tile, centred on it.
+            .overlay(SeleneTileRing(cornerRadius: canvas.u(18), active: focused).padding(canvas.u(-6)))
             VStack(alignment: .leading, spacing: canvas.u(2)) {
                 Text(caption(tile).title)
                     .seleneFont(14, .semibold)
@@ -248,7 +259,7 @@ struct ChangeArtworkView: View {
             case .cover: return ("Automatic", "GameTDB, or a composed cover")
             case .background: return ("Automatic", "The game's own art, then Title DB")
             case .icon: return ("Automatic", "The game's own icon")
-            case .logo: return ("Automatic", "The store logo")
+            case .logo: return ("Automatic", "The store logo, then Steam")
             }
         case .yourPick:
             return ("Your pick", "Saved on this Mac")
@@ -281,9 +292,15 @@ struct ChangeArtworkView: View {
         let metadata = viewModel.storeMetadata[game.id]
         let names = [game.name, metadata?.name, titleDB?.name].compactMap { $0 }
         let entries = slot == .cover ? await viewModel.boxArt.pickerEntries(names: names) : []
+        if !steamLoaded {
+            steamAppID = await SteamStoreArt.findAppID(names: names)
+            steamLoaded = true
+        }
+        let commons = slot == .logo ? await CommonsLogos.find(names: names) : []
         let candidates = ArtworkCandidates.list(for: slot, entries: entries, titleDB: titleDB,
                                                 storeHeader: metadata?.headerImageURL, storeImage: metadata?.imageURL,
-                                                storeLogo: metadata?.logoURL)
+                                                storeLogo: metadata?.logoURL, steamAppID: steamAppID,
+                                                commonsLogos: commons)
         found[slot] = []
         await withTaskGroup(of: Found?.self) { group in
             for (order, candidate) in candidates.enumerated() {
