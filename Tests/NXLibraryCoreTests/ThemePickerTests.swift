@@ -71,4 +71,49 @@ final class ThemePickerTests: XCTestCase {
         XCTAssertEqual(WallpaperCatalog.customFileName(for: "---.png", existing: []), "wallpaper.png")
         XCTAssertEqual(wallpaper("custom/my-photo").title, "Your own · My photo")
     }
+
+    // MARK: - Wallpapers and Live
+
+    private func video(_ id: String) -> Wallpaper {
+        let parts = id.split(separator: "/")
+        return Wallpaper(id: id, theme: String(parts[0]), url: URL(fileURLWithPath: "/w/\(id).mp4"))
+    }
+
+    private var withVideos: [Wallpaper] { wallpapers + [video("custom/rain"), video("live/steam-123")] }
+
+    func testWallpapersTabListsStillsOnly() {
+        XCTAssertEqual(ThemeBackgrounds.list(.wallpapers, themeID: "gruvbox", wallpapers: withVideos),
+                       [.theme, .none, .add, .wallpaper("custom/mine"), .wallpaper("gruvbox/2-b"), .wallpaper("kanagawa/1-a")])
+    }
+
+    func testLiveTabListsTheMoonlightThenYourVideosThenTheRest() {
+        XCTAssertEqual(ThemeBackgrounds.list(.live, themeID: "gruvbox", wallpapers: withVideos),
+                       [.none, .add, .wallpaper("custom/rain"), .wallpaper("live/steam-123")])
+    }
+
+    func testLiveGroupLabels() {
+        XCTAssertEqual(ThemeBackgrounds.group(.none, tab: .live), "THEME")
+        XCTAssertEqual(ThemeBackgrounds.group(.add, tab: .live), "YOUR OWN")
+        XCTAssertEqual(ThemeBackgrounds.group(.wallpaper("custom/rain"), tab: .live), "YOUR OWN")
+        XCTAssertEqual(ThemeBackgrounds.group(.wallpaper("live/steam-123"), tab: .live), "DOWNLOADED")
+        XCTAssertEqual(ThemeBackgrounds.group(.none, tab: .wallpapers), "NO WALLPAPER")
+    }
+
+    func testTheSettingOpensItsTab() {
+        XCTAssertEqual(ThemeBackgrounds.tab(for: "custom/rain", wallpapers: withVideos), .live)
+        XCTAssertEqual(ThemeBackgrounds.tab(for: "custom/mine", wallpapers: withVideos), .wallpapers)
+        XCTAssertEqual(ThemeBackgrounds.tab(for: nil, wallpapers: withVideos), .wallpapers)
+        XCTAssertEqual(ThemeBackgrounds.tab(for: WallpaperCatalog.none, wallpapers: withVideos), .wallpapers)
+    }
+
+    func testShouldersSwitchTabsAndTheFocusStartsOver() {
+        var state = ThemePickerState(themeIndex: 0, backgroundIndex: 4)
+        state.step = .background
+        XCTAssertTrue(state.switchTab(to: .live))
+        XCTAssertEqual(state.tab, .live)
+        XCTAssertEqual(state.backgroundIndex, 0)
+        XCTAssertFalse(state.switchTab(to: .live), "already there")
+        state.step = .theme
+        XCTAssertFalse(state.switchTab(to: .wallpapers), "the colors step has no tabs")
+    }
 }

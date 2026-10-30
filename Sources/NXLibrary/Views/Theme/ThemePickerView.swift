@@ -6,8 +6,9 @@ import NXLibraryCore
 /// The menu's Theme screen (Selene's ProfileSteps from Theme): first the theme's
 /// colors, then the background, each beside a preview of the home. A on a theme
 /// applies it and goes on; A on a background applies it and closes the menu. B
-/// steps back (from the colors: to the menu). The background step adds your own
-/// pictures (copied into NX Library) and removes them again with Y (Delete).
+/// steps back (from the colors: to the menu). The background step has two tabs,
+/// Wallpapers and Live, switched with LB/RB (Q/E); it adds your own pictures or
+/// videos (copied into NX Library) and removes them again with Y (Delete).
 struct ThemePickerView: View {
     @ObservedObject var router: AppRouter
     @ObservedObject var settings: AppSettingsStore
@@ -24,7 +25,7 @@ struct ThemePickerView: View {
 
     private var palettes: [SelenePalette] { theme.palettes.isEmpty ? [theme.palette] : theme.palettes }
     private var backgrounds: [ThemeBackgroundChoice] {
-        ThemeBackgrounds.list(themeID: theme.palette.id, wallpapers: theme.wallpapers)
+        ThemeBackgrounds.list(state.tab, themeID: theme.palette.id, wallpapers: theme.wallpapers)
     }
     private var focusedBackground: ThemeBackgroundChoice {
         let list = backgrounds
@@ -57,7 +58,7 @@ struct ThemePickerView: View {
             guard let action = note.object as? GamepadAction else { return }
             handle(action)
         }
-        .alert("Couldn't add the picture", isPresented: Binding(get: { importError != nil },
+        .alert(state.tab == .live ? "Couldn't add the video" : "Couldn't add the picture", isPresented: Binding(get: { importError != nil },
                                                                 set: { if !$0 { importError = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -213,7 +214,9 @@ struct ThemePickerView: View {
             header("Choose your background", "Behind the menus and the home when no game is selected.")
             HStack(alignment: .top, spacing: canvas.u(50)) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(ThemeBackgrounds.group(focused))
+                    tabs
+                        .padding(.bottom, canvas.u(18))
+                    Text(ThemeBackgrounds.group(focused, tab: state.tab))
                         .seleneFont(13, .semibold)
                         .foregroundColor(SeleneTheme.ink.opacity(0.55))
                         .padding(.leading, canvas.u(10))
@@ -228,9 +231,9 @@ struct ThemePickerView: View {
                             .padding(.vertical, canvas.u(10))
                         }
                         .scrollIndicators(.hidden)
-                        .frame(width: canvas.u(3 * 226), height: canvas.u(560))
+                        .frame(width: canvas.u(3 * 226), height: canvas.u(500))
                         .mask(LinearGradient(stops: [.init(color: .black, location: 0),
-                                                     .init(color: .black, location: 1 - 150 / 560),
+                                                     .init(color: .black, location: 1 - 150 / 500),
                                                      .init(color: .clear, location: 1)],
                                              startPoint: .top, endPoint: .bottom))
                         .onChange(of: state.backgroundIndex) { index in
@@ -242,8 +245,28 @@ struct ThemePickerView: View {
                 }
                 ThemePreview(palette: theme.palette, wallpaperURL: wallpaperURL(focused), games: games, width: 820)
             }
-            .padding(.top, canvas.u(290))
+            .padding(.top, canvas.u(250))
         }
+    }
+
+    /// Wallpapers | Live, between the shoulder badges, as on the home.
+    private var tabs: some View {
+        HStack(spacing: canvas.u(8)) {
+            SelenePromptBadge(button: .lb, height: 26).accessibilityHidden(true)
+            ForEach(BackgroundTab.allCases, id: \.self) { tab in
+                Text(tab == .wallpapers ? "Wallpapers" : "Live")
+                    .seleneFont(17, .semibold)
+                    .foregroundColor(tab == state.tab ? SeleneTheme.ink : SeleneTheme.ink60)
+                    .padding(.horizontal, canvas.u(20))
+                    .padding(.vertical, canvas.u(9))
+                    .background(Capsule().fill(tab == state.tab ? SeleneTheme.glassSolid : Color.clear))
+                    .contentShape(Capsule())
+                    .onTapGesture { switchTab(to: tab) }
+                    .accessibilityAddTraits(tab == state.tab ? [.isButton, .isSelected] : .isButton)
+            }
+            SelenePromptBadge(button: .rb, height: 26).accessibilityHidden(true)
+        }
+        .padding(.leading, canvas.u(6))
     }
 
     private func wallpaperURL(_ choice: ThemeBackgroundChoice) -> URL? {
@@ -264,16 +287,26 @@ struct ThemePickerView: View {
                 if let url = theme.wallpaper(for: nil)?.url { WallpaperThumb(url: url) }
                 tileLabel("Theme's own")
             case .none:
-                tileLabel("None")
+                if state.tab == .live {
+                    MoonlightBackdrop(accent: SeleneTheme.glyph, ink: SeleneTheme.ink, moving: false, asImage: true)
+                }
+                tileLabel(state.tab == .live ? "Moonlight" : "None")
             case .add:
                 SeleneTheme.glassSolid
                 VStack(spacing: canvas.u(6)) {
                     MaterialIconView(.add, size: 34).foregroundColor(SeleneTheme.ink)
-                    Text("Add your own…").seleneFont(15).foregroundColor(SeleneTheme.ink90)
+                    Text(state.tab == .live ? "Add your video…" : "Add your own…").seleneFont(15).foregroundColor(SeleneTheme.ink90)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .wallpaper(let id):
                 if let url = theme.wallpaper(for: id)?.url { WallpaperThumb(url: url) }
+                if state.tab == .live {
+                    MaterialIconView(.play, size: 22)
+                        .foregroundColor(.white)
+                        .padding(canvas.u(8))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                        .shadow(color: .black.opacity(0.6), radius: canvas.u(4))
+                }
             }
         }
         .frame(width: canvas.u(204), height: canvas.u(115))
@@ -303,8 +336,8 @@ struct ThemePickerView: View {
     private func label(_ choice: ThemeBackgroundChoice) -> String {
         switch choice {
         case .theme: return "Theme's own"
-        case .none: return "None"
-        case .add: return "Add your own"
+        case .none: return state.tab == .live ? "Moonlight" : "None"
+        case .add: return state.tab == .live ? "Add your video" : "Add your own"
         case .wallpaper(let id): return theme.wallpaperTitle(for: id)
         }
     }
@@ -329,8 +362,28 @@ struct ThemePickerView: View {
         guard !opened else { return }
         opened = true
         let themeIndex = palettes.firstIndex { $0.id == settings.settings.colorThemeID } ?? 0
-        state = ThemePickerState(themeIndex: themeIndex,
-                                 backgroundIndex: ThemeBackgrounds.index(of: settings.settings.wallpaperID, in: backgrounds))
+        state = ThemePickerState(themeIndex: themeIndex, backgroundIndex: 0)
+        focusSetting(themeID: theme.palette.id)
+    }
+
+    /// Opens the tab that holds the current setting, on its tile.
+    private func focusSetting(themeID: String) {
+        let id = settings.settings.wallpaperID
+        state.tab = ThemeBackgrounds.tab(for: id, wallpapers: theme.wallpapers)
+        state.backgroundIndex = ThemeBackgrounds.index(
+            of: id, in: ThemeBackgrounds.list(state.tab, themeID: themeID, wallpapers: theme.wallpapers))
+    }
+
+    private func switchTab(to tab: BackgroundTab) {
+        if state.switchTab(to: tab) { SoundEffectService.shared.play(.focus) }
+    }
+
+    private func stepTab(_ offset: Int) {
+        let tabs = BackgroundTab.allCases
+        guard let current = tabs.firstIndex(of: state.tab) else { return }
+        let next = current + offset
+        guard tabs.indices.contains(next) else { return }
+        switchTab(to: tabs[next])
     }
 
     private func handle(_ action: GamepadAction) {
@@ -342,6 +395,8 @@ struct ThemePickerView: View {
         case .confirm: accept()
         case .cancel: back()
         case .contextAction: removeFocused()
+        case .tabPrevious: stepTab(-1)
+        case .tabNext: stepTab(1)
         default: break
         }
     }
@@ -370,9 +425,7 @@ struct ThemePickerView: View {
             let palette = palettes[min(state.themeIndex, palettes.count - 1)]
             settings.settings.colorThemeID = palette.id
             theme.apply(id: palette.id)
-            state.backgroundIndex = ThemeBackgrounds.index(
-                of: settings.settings.wallpaperID,
-                in: ThemeBackgrounds.list(themeID: palette.id, wallpapers: theme.wallpapers))
+            focusSetting(themeID: palette.id)
             state.step = .background
             SoundEffectService.shared.play(.click)
         case .background:
@@ -399,9 +452,14 @@ struct ThemePickerView: View {
 
     /// A plain macOS open panel: picking a file needs the pointer anyway.
     private func addOwn() {
+        let live = state.tab == .live
         let panel = NSOpenPanel()
-        panel.message = "Choose a picture for your background. NX Library keeps its own copy."
-        panel.allowedContentTypes = [.image]
+        panel.message = live
+            ? "Choose a video for your live background (MP4, MOV or M4V). NX Library keeps its own copy and plays it muted."
+            : "Choose a picture for your background. NX Library keeps its own copy."
+        panel.allowedContentTypes = live
+            ? WallpaperCatalog.videoExtensions.compactMap { UTType(filenameExtension: $0) }
+            : [.image]
         panel.allowsMultipleSelection = false
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
@@ -447,7 +505,7 @@ private struct TileFocus: ViewModifier {
     }
 }
 
-/// A wallpaper decoded small for a tile, kept for the next time it shows.
+/// A wallpaper decoded small for a tile (a video's first frame), kept for the next time it shows.
 struct WallpaperThumb: View {
     let url: URL
     @State private var image: NSImage?
@@ -469,7 +527,10 @@ struct WallpaperThumb: View {
                     return
                 }
                 image = nil
-                guard let decoded = await GameArtLoader.decode(at: url, maxPixelSize: 480), !Task.isCancelled else { return }
+                let decoded = WallpaperCatalog.kind(of: url) == .video
+                    ? await LivePoster.image(for: url, maxPixelSize: 480)
+                    : await GameArtLoader.decode(at: url, maxPixelSize: 480)
+                guard let decoded, !Task.isCancelled else { return }
                 Self.cache.setObject(decoded, forKey: url as NSURL)
                 withAnimation(.easeOut(duration: 0.25)) { image = decoded }
             }

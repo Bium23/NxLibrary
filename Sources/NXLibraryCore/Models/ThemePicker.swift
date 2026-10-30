@@ -24,8 +24,13 @@ public enum GridNavigation {
     }
 }
 
+/// The background step's two tabs: still pictures, and live (moving) backgrounds.
+public enum BackgroundTab: Equatable, CaseIterable {
+    case wallpapers, live
+}
+
 /// The menu's Theme screen (Selene's ProfileSteps from Theme): the theme's
-/// colors first, then the background.
+/// colors first, then the background, as a wallpaper or a live background.
 public struct ThemePickerState: Equatable {
     public enum Step: Equatable { case theme, background }
 
@@ -33,12 +38,22 @@ public struct ThemePickerState: Equatable {
     public static let backgroundColumns = 3
 
     public var step: Step = .theme
+    public var tab: BackgroundTab = .wallpapers
     public var themeIndex: Int
     public var backgroundIndex: Int
 
     public init(themeIndex: Int, backgroundIndex: Int) {
         self.themeIndex = themeIndex
         self.backgroundIndex = backgroundIndex
+    }
+
+    /// The shoulders switch tabs on the background step; the focus starts at the tab's first tile.
+    @discardableResult
+    public mutating func switchTab(to tab: BackgroundTab) -> Bool {
+        guard step == .background, tab != self.tab else { return false }
+        self.tab = tab
+        backgroundIndex = 0
+        return true
     }
 
     /// Moves the focus on the current step's grid of `count` tiles.
@@ -61,21 +76,41 @@ public struct ThemePickerState: Equatable {
 public enum ThemeBackgroundChoice: Equatable, Hashable {
     /// The theme's own wallpaper (or its drawn backdrop).
     case theme
-    /// No wallpaper: the theme's gradient.
+    /// No wallpaper: the theme's gradient and its moonlight (on Live: the theme's own).
     case none
-    /// Add your own picture.
+    /// Add your own picture (on Live: your own video).
     case add
     case wallpaper(String)
 }
 
 public enum ThemeBackgrounds {
-    /// Theme's own, none, add, the player's own, the theme's other wallpapers, then every other one.
-    public static func list(themeID: String, wallpapers: [Wallpaper]) -> [ThemeBackgroundChoice] {
-        let own = WallpaperCatalog.resolve(nil, themeID: themeID, in: wallpapers)?.id
-        let custom = wallpapers.filter { $0.theme == WallpaperCatalog.custom }
-        let theme = wallpapers.filter { $0.theme == themeID && $0.id != own }
-        let rest = wallpapers.filter { $0.theme != WallpaperCatalog.custom && $0.theme != themeID }
-        return [.theme, .none, .add] + (custom + theme + rest).map { .wallpaper($0.id) }
+    /// Wallpapers: theme's own, none, add, the player's own, the theme's other
+    /// wallpapers, then every other one. Live: the theme's own (the moonlight),
+    /// add, the player's videos, then every other video.
+    public static func list(_ tab: BackgroundTab = .wallpapers, themeID: String,
+                            wallpapers: [Wallpaper]) -> [ThemeBackgroundChoice] {
+        switch tab {
+        case .wallpapers:
+            let stills = wallpapers.filter { $0.kind == .image }
+            let own = WallpaperCatalog.resolve(nil, themeID: themeID, in: stills)?.id
+            let custom = stills.filter { $0.theme == WallpaperCatalog.custom }
+            let theme = stills.filter { $0.theme == themeID && $0.id != own }
+            let rest = stills.filter { $0.theme != WallpaperCatalog.custom && $0.theme != themeID }
+            return [.theme, .none, .add] + (custom + theme + rest).map { .wallpaper($0.id) }
+        case .live:
+            let videos = wallpapers.filter { $0.kind == .video }
+            let custom = videos.filter { $0.theme == WallpaperCatalog.custom }
+            let rest = videos.filter { $0.theme != WallpaperCatalog.custom }
+            return [.none, .add] + (custom + rest).map { .wallpaper($0.id) }
+        }
+    }
+
+    /// The tab that holds the setting: Live for a video, Wallpapers otherwise.
+    public static func tab(for wallpaperID: String?, wallpapers: [Wallpaper]) -> BackgroundTab {
+        guard let wallpaperID, let wallpaper = wallpapers.first(where: { $0.id == wallpaperID }) else {
+            return .wallpapers
+        }
+        return wallpaper.kind == .video ? .live : .wallpapers
     }
 
     /// The tile for the wallpaper setting; Theme's own when it is not listed.
@@ -88,14 +123,15 @@ public enum ThemeBackgrounds {
     }
 
     /// The label over the grid for the focused tile.
-    public static func group(_ choice: ThemeBackgroundChoice) -> String {
+    public static func group(_ choice: ThemeBackgroundChoice, tab: BackgroundTab = .wallpapers) -> String {
         switch choice {
         case .theme: return "THEME"
-        case .none: return "NO WALLPAPER"
+        case .none: return tab == .live ? "THEME" : "NO WALLPAPER"
         case .add: return "YOUR OWN"
         case .wallpaper(let id):
             let theme = id.split(separator: "/").first.map(String.init) ?? ""
             if theme == WallpaperCatalog.custom { return "YOUR OWN" }
+            if theme == WallpaperCatalog.online || theme == WallpaperCatalog.live { return "DOWNLOADED" }
             return theme.split(separator: "-").joined(separator: " ").uppercased()
         }
     }

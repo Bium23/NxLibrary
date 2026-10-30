@@ -504,6 +504,8 @@ public struct AppShellView: View {
                 case 36, 76, 49: menuAction = .confirm   // Return, keypad Enter, Space
                 case 53: menuAction = .cancel            // Esc
                 case 51: menuAction = router.isThemePickerOpen ? .contextAction : nil   // Delete: remove your own wallpaper
+                case 12: menuAction = router.isThemePickerOpen ? .tabPrevious : nil     // Q: Wallpapers / Live, as LB
+                case 14: menuAction = router.isThemePickerOpen ? .tabNext : nil         // E: as RB
                 default: menuAction = nil
                 }
                 if let menuAction {

@@ -1,10 +1,17 @@
 import Foundation
 
+/// A still picture, or a looping video (a live background).
+public enum BackgroundKind: Equatable {
+    case image, video
+}
+
 /// One wallpaper file. `id` is "<theme>/<file name without extension>".
 public struct Wallpaper: Equatable, Identifiable {
     public let id: String
     public let theme: String
     public let url: URL
+
+    public var kind: BackgroundKind { WallpaperCatalog.kind(of: url) }
 
     /// "Gruvbox · Flower basket" from "gruvbox/2-flower-basket".
     public var title: String {
@@ -20,9 +27,14 @@ public struct Wallpaper: Equatable, Identifiable {
 /// nil follows the theme (its first wallpaper), "none" shows none, anything else names one.
 public enum WallpaperCatalog {
     public static let none = "none"
-    /// The folder (theme) the player's own wallpapers are copied into.
+    /// The folder (theme) the player's own wallpapers and videos are copied into.
     public static let custom = "custom"
-    private static let imageExtensions: Set<String> = ["jpg", "jpeg", "png", "heic", "webp"]
+    /// The folders online downloads go to: stills, and live backgrounds.
+    public static let online = "online"
+    public static let live = "live"
+    static let imageExtensions: Set<String> = ["jpg", "jpeg", "png", "heic", "webp"]
+    /// What AVFoundation plays (no webm).
+    public static let videoExtensions: Set<String> = ["mp4", "mov", "m4v"]
 
     /// Later roots override earlier ones for the same id. Sorted by id.
     public static func scan(roots: [URL], fileManager: FileManager = .default) -> [Wallpaper] {
@@ -33,7 +45,7 @@ public enum WallpaperCatalog {
             for folder in themes {
                 let files = (try? fileManager.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil,
                                                                   options: [.skipsHiddenFiles])) ?? []
-                for file in files where imageExtensions.contains(file.pathExtension.lowercased()) {
+                for file in files where imageExtensions.union(videoExtensions).contains(file.pathExtension.lowercased()) {
                     let theme = folder.lastPathComponent
                     let id = "\(theme)/\(file.deletingPathExtension().lastPathComponent)"
                     byID[id] = Wallpaper(id: id, theme: theme, url: file)
@@ -41,6 +53,11 @@ public enum WallpaperCatalog {
             }
         }
         return byID.values.sorted { $0.id < $1.id }
+    }
+
+    /// A video (a live background) or a still, by the file's extension.
+    public static func kind(of url: URL) -> BackgroundKind {
+        videoExtensions.contains(url.pathExtension.lowercased()) ? .video : .image
     }
 
     /// A file name for a wallpaper the player adds: lower case, dashes for
@@ -68,7 +85,7 @@ public enum WallpaperCatalog {
         case let id?:
             return wallpapers.first { $0.id == id }
         case nil:
-            return wallpapers.first { $0.theme == themeID }
+            return wallpapers.first { $0.theme == themeID && $0.kind == .image }
         }
     }
 }

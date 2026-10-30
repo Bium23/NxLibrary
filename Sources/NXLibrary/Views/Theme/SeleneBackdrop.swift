@@ -34,7 +34,8 @@ final class WallpaperImageCache {
 }
 
 /// Selene's base layer (Main.xaml): scrim, the palette's base gradient and the
-/// wallpaper. Without a wallpaper the theme's own backdrop shows (Selene's
+/// wallpaper, still or live (a looping video, `LiveBackdrop`, which follows the
+/// moonlight's rule for moving). Without a wallpaper the theme's own backdrop shows (Selene's
 /// moonlight, `MoonlightBackdrop`): moving when on and motion is allowed, still otherwise.
 struct SeleneBackdrop: View {
     @Environment(\.seleneBackdropStyle) private var style
@@ -43,7 +44,7 @@ struct SeleneBackdrop: View {
     /// The base gradient's and the wallpaper's opacity.
     var baseOpacity = 0.6
     var wallpaperOpacity = 0.6
-    /// Covered (a game's art over it): the moonlight holds still and costs nothing.
+    /// Covered (a game's art over it): the moonlight or the video holds still and costs nothing.
     var still = false
 
     func still(_ on: Bool) -> SeleneBackdrop {
@@ -56,7 +57,10 @@ struct SeleneBackdrop: View {
         ZStack {
             SeleneTheme.scrim
             Rectangle().fill(SeleneTheme.baseGradient).opacity(baseOpacity)
-            if let url = style.wallpaperURL, let image = WallpaperImageCache.shared.image(at: url) {
+            if let url = style.wallpaperURL, WallpaperCatalog.kind(of: url) == .video {
+                LiveBackdrop(url: url, playing: style.animated && !reduceMotion && !still, sizing: style.sizing)
+                    .opacity(wallpaperOpacity)
+            } else if let url = style.wallpaperURL, let image = WallpaperImageCache.shared.image(at: url) {
                 wallpaper(image)
                     .opacity(wallpaperOpacity)
             } else {

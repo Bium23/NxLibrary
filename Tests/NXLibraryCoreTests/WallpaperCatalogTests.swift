@@ -42,4 +42,28 @@ final class WallpaperCatalogTests: XCTestCase {
         XCTAssertEqual(WallpaperCatalog.resolve("nord/2-b", themeID: "selene", in: all), b)
         XCTAssertNil(WallpaperCatalog.resolve("gone/1", themeID: "nord", in: all))
     }
+
+    // MARK: - Live backgrounds
+
+    func testScanFindsVideosAndTellsThemApart() throws {
+        _ = try touch("w/custom/sunset.jpg")
+        _ = try touch("w/custom/rain.mp4")
+        _ = try touch("w/custom/city.MOV")
+        _ = try touch("w/custom/clip.m4v")
+        _ = try touch("w/custom/clip.webm")
+        let all = WallpaperCatalog.scan(roots: [root.appendingPathComponent("w")])
+        XCTAssertEqual(all.map(\.id), ["custom/city", "custom/clip", "custom/rain", "custom/sunset"],
+                       "webm is not played by AVFoundation, so it is not listed")
+        XCTAssertEqual(all.map(\.kind), [.video, .video, .video, .image])
+    }
+
+    func testTheThemesOwnWallpaperIsNeverAVideo() {
+        let clip = Wallpaper(id: "nord/0-clip", theme: "nord", url: URL(fileURLWithPath: "/clip.mp4"))
+        let still = Wallpaper(id: "nord/1-a", theme: "nord", url: URL(fileURLWithPath: "/a.jpg"))
+        XCTAssertEqual(WallpaperCatalog.resolve(nil, themeID: "nord", in: [clip, still]), still)
+    }
+
+    func testCustomFileNamesKeepAVideosExtension() {
+        XCTAssertEqual(WallpaperCatalog.customFileName(for: "Itachi Uchiha 4K.MP4", existing: []), "itachi-uchiha-4k.mp4")
+    }
 }
