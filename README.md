@@ -79,7 +79,9 @@ NX_BUILD_CONFIG=debug bash scripts/build_app.sh /tmp/NXLibrary-Debug.app
 
 ## First run
 
-The Setup check opens on the first start, and later only when something that was ready breaks; **Settings → Start-up → Open Setup** opens it at any time. It rechecks every few seconds, so a card turns ready as soon as an installer finishes. Imported apps are playable immediately; their rebuilds stay disabled until sources are located.
+The Setup check opens on the first start, and later when something that was ready breaks or falls out of step with the engine; **Settings → Start-up → Open Setup** opens it at any time. Each time it opens, NX Library fixes by itself what the engine requires: it clones or updates the engine to the pinned commit (never over local changes), downloads the certified Metal compiler by its Apple asset build, and downloads Microsoft's .NET 10 SDK installer. Every running card shows a progress bar. **Install all** also installs a newer .NET 10 patch when Microsoft has one. It rechecks every few seconds, so a card turns ready as soon as an installer finishes.
+
+What NX Library is tested with lives in one table, `ToolchainRequirements.current` (minimum Xcode, .NET major, certified Metal and its asset build); the engine commit stays in `AppViewModel.pinnedEngineCommit`. Imported apps are playable immediately; their rebuilds stay disabled until sources are located.
 
 ## Adding a game
 

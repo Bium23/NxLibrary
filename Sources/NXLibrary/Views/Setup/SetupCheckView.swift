@@ -9,13 +9,11 @@ struct SetupCheckView: View {
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
     @ObservedObject var viewModel: AppViewModel
-    @StateObject private var model: SetupCheckModel
+    @ObservedObject private var model: SetupCheckModel
     let isFirstRun: Bool
 
     @State var focus: SetupFocus = .carryOn
     @State var focusPlaced = false
-    @State var confirming = false
-    @State var confirmFocus: SeleneConfirmButton = .confirm
     @State var shakes = 0
     @State private var risen = false
     @State private var popping: Set<SetupItemID> = []
@@ -26,7 +24,7 @@ struct SetupCheckView: View {
     init(viewModel: AppViewModel, isFirstRun: Bool) {
         self.viewModel = viewModel
         self.isFirstRun = isFirstRun
-        _model = StateObject(wrappedValue: SetupCheckModel(viewModel: viewModel))
+        self.model = viewModel.setupModel
     }
 
     var items: [SetupItem] { model.items }
@@ -55,7 +53,6 @@ struct SetupCheckView: View {
                 SeleneHintsBar(right: isFirstRun ? [HintItem(.a, "Select")] : [HintItem(.a, "Select"), HintItem(.b, "Back")],
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
-            if confirming { confirmLayer }
         }
         .frame(width: canvas.size.width, height: canvas.size.height)
         .onAppear {
@@ -102,6 +99,12 @@ struct SetupCheckView: View {
                 .padding(.top, canvas.u(8))
             StatusChip(item: item, popping: popping.contains(item.id))
                 .padding(.top, canvas.u(10))
+            if item.state == .working {
+                SetupProgressBar(progress: item.progress)
+                    .frame(width: canvas.u(176), height: canvas.u(5))
+                    .padding(.top, canvas.u(12))
+                    .transition(.opacity)
+            }
             Spacer(minLength: 0)
         }
         .padding(.top, canvas.u(20))
@@ -243,21 +246,6 @@ struct SetupCheckView: View {
             .onHover { if $0 { move(to: .carryOn) } }
         }
     }
-
-    private var confirmLayer: some View {
-        ZStack {
-            SeleneTheme.scrim65.ignoresSafeArea()
-            SeleneConfirmDialog(
-                title: "Install \(missingNames.count == 1 ? "1 item" : "\(missingNames.count) items")?",
-                message: missingNames.joined(separator: " · ")
-                    + "\n\nNX Library installs them one after another. macOS asks for your password for .NET.",
-                confirmTitle: "Install all",
-                focus: $confirmFocus,
-                onCancel: { confirming = false },
-                onConfirm: { confirming = false; model.installAll() })
-        }
-        .transition(.opacity)
-    }
 }
 
 enum SetupFocus: Equatable {
@@ -306,6 +294,38 @@ private struct StatusChip: View {
     private func breathe() {
         guard item.state == .working, !reduceMotion else { dim = false; return }
         withAnimation(.easeInOut(duration: 0.65).repeatForever(autoreverses: true)) { dim = true }
+    }
+}
+
+/// A working card's bar: it fills with the progress the install reports, and
+/// sweeps when there is no number yet (or holds still with Reduce Motion).
+private struct SetupProgressBar: View {
+    @Environment(\.seleneReduceMotion) private var reduceMotion
+    let progress: Double?
+    @State private var sweep = false
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(SeleneTheme.ink15)
+                if let progress {
+                    Capsule()
+                        .fill(SeleneTheme.glyph)
+                        .frame(width: max(geo.size.height, geo.size.width * min(1, max(0, progress))))
+                        .animation(SeleneTheme.standard, value: progress)
+                } else {
+                    Capsule()
+                        .fill(SeleneTheme.glyph.opacity(reduceMotion ? 0.6 : 1))
+                        .frame(width: geo.size.width * 0.32)
+                        .offset(x: reduceMotion ? geo.size.width * 0.34 : (sweep ? geo.size.width * 0.68 : 0))
+                        .onAppear {
+                            guard !reduceMotion else { return }
+                            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { sweep = true }
+                        }
+                }
+            }
+            .clipShape(Capsule())
+        }
     }
 }
 

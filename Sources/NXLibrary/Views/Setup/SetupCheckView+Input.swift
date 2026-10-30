@@ -5,21 +5,6 @@ extension SetupCheckView {
     /// The shell sends every controller action (and the keys, mapped) here while
     /// the Setup check is up.
     func handle(_ action: GamepadAction) {
-        if confirming {
-            switch action {
-            case .navigateLeft, .navigateRight:
-                confirmFocus = confirmFocus == .confirm ? .cancel : .confirm
-                SoundEffectService.shared.play(.focus)
-            case .confirm:
-                confirming = false
-                SoundEffectService.shared.play(.click)
-                if confirmFocus == .confirm { setup.installAll() }
-            case .cancel:
-                confirming = false
-            default: break
-            }
-            return
-        }
         switch action {
         case .navigateLeft: navigate(.left)
         case .navigateRight: navigate(.right)
@@ -88,8 +73,7 @@ extension SetupCheckView {
                 return
             }
             SoundEffectService.shared.play(.click)
-            confirmFocus = .confirm
-            confirming = true
+            setup.installAll()
         case .carryOn:
             SoundEffectService.shared.play(.click)
             if isFirstRun { viewModel.completeSetup() } else { close() }

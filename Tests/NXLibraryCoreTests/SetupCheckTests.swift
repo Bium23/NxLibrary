@@ -33,6 +33,13 @@ final class SetupCheckTests: XCTestCase {
         XCTAssertEqual(item(.xcode) { $0.xcodeStatus = 69 }.state, .needsYou)
         XCTAssertEqual(item(.xcode) { $0.xcodeStatus = 69 }.chip, "OPEN XCODE ONCE")
         XCTAssertEqual(item(.xcode).chip, "✓ READY")
+
+        let old = item(.xcode) { $0.xcodeVersion = "26.4" }
+        XCTAssertEqual(old.state, .needsYou)
+        XCTAssertEqual(old.chip, "UPDATE XCODE")
+        XCTAssertEqual(old.actionTitle, "Open App Store")
+        XCTAssertTrue(old.detail.contains("27.1"))
+        XCTAssertEqual(item(.xcode) { $0.xcodeVersion = "27.2" }.state, .ready)
     }
 
     func testMetal() {
@@ -44,7 +51,13 @@ final class SetupCheckTests: XCTestCase {
         let other = item(.metal) { $0.metalVersion = "32023.917" }
         XCTAssertEqual(other.state, .warning)
         XCTAssertEqual(other.chip, "NOT CERTIFIED")
-        XCTAssertNil(other.actionTitle)
+        XCTAssertEqual(other.actionTitle, "Install 32023.921")
+
+        let unknown = item(.metal) { $0.metalVersion = "32023.921"; $0.certifiedMetal = "32024.5" }
+        XCTAssertEqual(unknown.state, .warning)
+        XCTAssertEqual(unknown.chip, "WAITING FOR ENGINE")
+        XCTAssertNil(unknown.actionTitle)
+        XCTAssertTrue(unknown.detail.contains("still play"))
 
         let overridden = item(.metal) { $0.metalVersion = "32023.917"; $0.allowUntested = true }
         XCTAssertEqual(overridden.state, .ready)
@@ -61,6 +74,12 @@ final class SetupCheckTests: XCTestCase {
             XCTAssertEqual(card.chip, "NOT INSTALLED")
             XCTAssertEqual(card.actionTitle, "Install")
         }
+        XCTAssertNil(item(.dotnet).actionTitle)
+        XCTAssertTrue(item(.dotnet).detail.contains("10.0.401"))
+        let update = item(.dotnet) { $0.dotnetLatest = "10.0.404" }
+        XCTAssertEqual(update.state, .ready)
+        XCTAssertEqual(update.actionTitle, "Update to 10.0.404")
+        XCTAssertNil(item(.dotnet) { $0.dotnetLatest = "10.0.401" }.actionTitle)
     }
 
     func testEngine() {
@@ -132,6 +151,41 @@ final class SetupCheckTests: XCTestCase {
         XCTAssertEqual(engine.chip, "CLONING…")
         XCTAssertNil(engine.actionTitle)
         XCTAssertEqual(items.first { $0.id == .xcode }!.state, .ready)
+        XCTAssertNil(engine.progress)
+
+        f.dotnetSDKs = []
+        let downloading = SetupCheck.applying([.dotnet: .working("DOWNLOADING…", progress: 0.25, detail: "50 of 200 MB")],
+                                              to: SetupCheck.items(from: f)).first { $0.id == .dotnet }!
+        XCTAssertEqual(downloading.chip, "DOWNLOADING… 25%")
+        XCTAssertEqual(downloading.progress, 0.25)
+        XCTAssertEqual(downloading.detail, "50 of 200 MB")
+    }
+
+    func testAutomaticActions() {
+        var f = facts()
+        XCTAssertEqual(SetupCheck.automatic(SetupCheck.items(from: f), includeUpdates: true), [])
+
+        f.dotnetLatest = "10.0.404"
+        XCTAssertEqual(SetupCheck.automatic(SetupCheck.items(from: f), includeUpdates: true), [.dotnet])
+        XCTAssertEqual(SetupCheck.automatic(SetupCheck.items(from: f), includeUpdates: false), [])
+
+        f.metalVersion = "32023.917"
+        f.engine = .missing
+        f.keys = nil
+        XCTAssertEqual(SetupCheck.automatic(SetupCheck.items(from: f), includeUpdates: false), [.metal, .engine])
+        // Metal comes through Xcode: nothing to try until Xcode is ready.
+        f.xcodeVersion = "26.4"
+        XCTAssertEqual(SetupCheck.automatic(SetupCheck.items(from: f), includeUpdates: false), [.engine])
+        f.xcodeVersion = nil
+        f.xcodeStatus = nil
+        XCTAssertEqual(SetupCheck.automatic(SetupCheck.items(from: f), includeUpdates: false), [.engine])
+        f.xcodeStatus = 0
+
+        f.certifiedMetal = "32024.5"
+        f.engine = .checkout(head: "ee369f0", dirty: true)
+        f.dotnetSDKs = []
+        let items = SetupCheck.applying([.dotnet: .working("DOWNLOADING…")], to: SetupCheck.items(from: f))
+        XCTAssertEqual(SetupCheck.automatic(items, includeUpdates: true), [])
     }
 
     func testShouldReopenOnlyOnRegression() {
@@ -181,6 +235,7 @@ final class SetupCheckTests: XCTestCase {
         let facts = probe(runner, engine: engine, home: home).facts()
         XCTAssertEqual(facts.engine, .checkout(head: pin, dirty: false))
         XCTAssertEqual(facts.xcodeStatus, 69)
+        XCTAssertNil(facts.xcodeVersion)
         XCTAssertEqual(facts.metalVersion, "32023.921")
         XCTAssertEqual(facts.dotnetSDKs, ["10.0.401 [/usr/local/share/dotnet/sdk]"])
         XCTAssertNil(facts.keys)
@@ -188,5 +243,8 @@ final class SetupCheckTests: XCTestCase {
 
         runner.responses["status --porcelain"] = CommandResult(status: 0, stdout: " M scripts/build_ipa_from_nsp.py\n", stderr: "")
         XCTAssertEqual(probe(runner, engine: engine, home: home).facts().engine, .checkout(head: pin, dirty: true))
+
+        runner.responses["xcodebuild -version"] = CommandResult(status: 0, stdout: "Xcode 27.1\nBuild version 27A9275\n", stderr: "")
+        XCTAssertEqual(probe(runner, engine: engine, home: home).facts().xcodeVersion, "27.1")
     }
 }

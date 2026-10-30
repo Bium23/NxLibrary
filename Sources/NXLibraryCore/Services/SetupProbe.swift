@@ -35,8 +35,9 @@ public struct SetupProbe {
         if fileManager.fileExists(atPath: keyStore.keyURL.path) {
             do { keys = try keyStore.validate(at: keyStore.keyURL) } catch { keysError = error.localizedDescription }
         }
+        let xcode = xcode()
         return SetupFacts(
-            xcodeStatus: xcodeStatus(),
+            xcodeStatus: xcode.status,
             metalVersion: MetalVersion.parse(run("/usr/bin/xcrun", ["metal", "--version"]).stdout),
             certifiedMetal: certifiedMetal, allowUntested: allowUntested,
             dotnetSDKs: run("/usr/bin/env", ["dotnet", "--list-sdks"]).stdout
@@ -44,7 +45,8 @@ public struct SetupProbe {
             engine: engine(), engineFolder: engineFolder, pinnedCommit: pinnedCommit,
             runtimeProblem: runtimeProblem(),
             keys: keys, keysError: keysError,
-            libraryWritable: libraryFolder.map { fileManager.isWritableFile(atPath: $0.path) })
+            libraryWritable: libraryFolder.map { fileManager.isWritableFile(atPath: $0.path) },
+            xcodeVersion: xcode.version)
     }
 
     private func run(_ executable: String, _ args: [String], in directory: URL? = nil) -> CommandResult {
@@ -53,11 +55,12 @@ public struct SetupProbe {
             ?? CommandResult(status: -1, stdout: "", stderr: "failed")
     }
 
-    private func xcodeStatus() -> Int32? {
-        if let developerDir, !fileManager.fileExists(atPath: developerDir.path) { return nil }
-        let status = run("/usr/bin/xcodebuild", ["-version"]).status
+    private func xcode() -> (status: Int32?, version: String?) {
+        if let developerDir, !fileManager.fileExists(atPath: developerDir.path) { return (nil, nil) }
+        let result = run("/usr/bin/xcodebuild", ["-version"])
         // 69 (EX_UNAVAILABLE) is xcodebuild's answer before the licence is accepted.
-        return status == 0 || status == 69 ? status : nil
+        guard result.status == 0 || result.status == 69 else { return (nil, nil) }
+        return (result.status, ToolchainRequirements.xcodeVersion(from: result.stdout))
     }
 
     private func engine() -> EngineFacts {

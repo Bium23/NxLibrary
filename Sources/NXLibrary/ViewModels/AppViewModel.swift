@@ -212,6 +212,8 @@ public final class AppViewModel: ObservableObject {
     @Published public var storageUsage: StorageUsage? = nil
     @Published public var isCalculatingStorage: Bool = false
     @Published public var showSetupCheck: Bool = false
+    /// The Setup check's state and installs; lives with the app so an install survives closing the screen.
+    lazy var setupModel = SetupCheckModel(viewModel: self)
     @Published public var setupCompleted: Bool = false
     @Published public var buildState: BuildState = .idle
     @Published public var lastError: String? = nil

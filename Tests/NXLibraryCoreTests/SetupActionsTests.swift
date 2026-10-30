@@ -15,7 +15,7 @@ final class SetupActionsTests: XCTestCase {
     func testCloneArgv() {
         let folder = URL(fileURLWithPath: "/Users/a b/nx native")
         XCTAssertEqual(SetupActions.gitCommands(for: .clone, folder: folder, pinned: pin), [
-            ["clone", SetupActions.engineRemote, "/Users/a b/nx native"],
+            ["clone", "--progress", SetupActions.engineRemote, "/Users/a b/nx native"],
             ["-C", "/Users/a b/nx native", "checkout", "--detach", pin],
         ])
         XCTAssertEqual(SetupActions.engineRemote, "https://github.com/seedds/nxnative")
@@ -24,10 +24,9 @@ final class SetupActionsTests: XCTestCase {
     func testCheckoutArgv() {
         let folder = URL(fileURLWithPath: "/Users/me/nxnative")
         XCTAssertEqual(SetupActions.gitCommands(for: .checkout, folder: folder, pinned: pin), [
-            ["-C", "/Users/me/nxnative", "fetch", "origin"],
+            ["-C", "/Users/me/nxnative", "fetch", "--progress", "origin"],
             ["-C", "/Users/me/nxnative", "checkout", "--detach", pin],
         ])
         XCTAssertEqual(SetupActions.gitCommands(for: .none, folder: folder, pinned: pin), [])
-        XCTAssertEqual(SetupActions.metalDownload, ["-downloadComponent", "MetalToolchain"])
     }
 }

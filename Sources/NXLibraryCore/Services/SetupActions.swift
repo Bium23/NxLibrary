@@ -8,8 +8,6 @@ public enum EngineAction: Equatable {
 /// path with spaces stays one argument.
 public enum SetupActions {
     public static let engineRemote = "https://github.com/seedds/nxnative"
-    /// For /usr/bin/xcodebuild: Apple's component download. Nothing ever deletes a toolchain.
-    public static let metalDownload = ["-downloadComponent", "MetalToolchain"]
 
     /// Only a missing engine or a clean checkout at another commit is changed;
     /// local changes are the player's and stay untouched.
@@ -26,9 +24,9 @@ public enum SetupActions {
         let path = folder.path
         switch action {
         case .clone:
-            return [["clone", engineRemote, path], ["-C", path, "checkout", "--detach", pinned]]
+            return [["clone", "--progress", engineRemote, path], ["-C", path, "checkout", "--detach", pinned]]
         case .checkout:
-            return [["-C", path, "fetch", "origin"], ["-C", path, "checkout", "--detach", pinned]]
+            return [["-C", path, "fetch", "--progress", "origin"], ["-C", path, "checkout", "--detach", pinned]]
         case .none:
             return []
         }

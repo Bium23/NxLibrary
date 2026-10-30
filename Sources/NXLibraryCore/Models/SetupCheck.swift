@@ -20,6 +20,8 @@ public struct SetupItem: Identifiable, Equatable {
     public var detail: String
     /// What A does on the card ("Install", "Clone"…); nil when A does nothing.
     public var actionTitle: String?
+    /// While working: how far it has got, for the card's bar; nil draws a moving bar.
+    public var progress: Double? = nil
 }
 
 public enum EngineFacts: Equatable {
@@ -44,10 +46,17 @@ public struct SetupFacts: Equatable {
     public var keysError: String?
     /// nil: no folder chosen.
     public var libraryWritable: Bool?
+    /// "27.1"; nil when xcodebuild did not say.
+    public var xcodeVersion: String?
+    /// The newest SDK of the required major Microsoft publishes; nil until known.
+    public var dotnetLatest: String?
+    public var requirements: ToolchainRequirements
 
     public init(xcodeStatus: Int32?, metalVersion: String?, certifiedMetal: String, allowUntested: Bool,
                 dotnetSDKs: [String], engine: EngineFacts, engineFolder: URL, pinnedCommit: String,
-                runtimeProblem: String?, keys: KeySummary?, keysError: String?, libraryWritable: Bool?) {
+                runtimeProblem: String?, keys: KeySummary?, keysError: String?, libraryWritable: Bool?,
+                xcodeVersion: String? = nil, dotnetLatest: String? = nil,
+                requirements: ToolchainRequirements = .current) {
         self.xcodeStatus = xcodeStatus
         self.metalVersion = metalVersion
         self.certifiedMetal = certifiedMetal
@@ -60,12 +69,16 @@ public struct SetupFacts: Equatable {
         self.keys = keys
         self.keysError = keysError
         self.libraryWritable = libraryWritable
+        self.xcodeVersion = xcodeVersion
+        self.dotnetLatest = dotnetLatest
+        self.requirements = requirements
     }
 }
 
 /// What a running action shows over the probed state until it finishes.
 public enum SetupOverride: Equatable {
-    case working(String), needsYou(String), failed(String)
+    case working(String, progress: Double? = nil, detail: String? = nil)
+    case needsYou(String), failed(String)
 }
 
 public enum SetupCheck {
@@ -78,9 +91,11 @@ public enum SetupCheck {
             guard let override = overrides[item.id] else { return item }
             var item = item
             switch override {
-            case .working(let chip):
+            case .working(let chip, let progress, let detail):
                 item.state = .working
-                item.chip = chip
+                item.chip = progress.map { "\(chip) \(Int(($0 * 100).rounded()))%" } ?? chip
+                item.progress = progress
+                if let detail { item.detail = detail }
                 item.actionTitle = nil
             case .needsYou(let chip):
                 item.state = .needsYou
@@ -91,6 +106,27 @@ public enum SetupCheck {
                 item.detail = message
             }
             return item
+        }
+    }
+
+    /// The cards NX Library fixes by itself, in card order: anything missing it can
+    /// install, the certified Metal compiler, the pinned engine commit, and (when
+    /// asked) a newer SDK of the .NET major the engine needs.
+    public static func automatic(_ items: [SetupItem], includeUpdates: Bool) -> [SetupItemID] {
+        let xcodeReady = items.first { $0.id == .xcode }?.state == .ready
+        return items.compactMap { item in
+            guard item.state != .working, item.actionTitle != nil else { return nil }
+            switch item.id {
+            case .metal:
+                // Metal comes through Xcode.
+                return xcodeReady && (item.state == .missing || item.state == .warning) ? item.id : nil
+            case .engine:
+                return item.state == .missing || item.state == .warning ? item.id : nil
+            case .dotnet:
+                return item.state == .missing || (includeUpdates && item.state == .ready) ? item.id : nil
+            default:
+                return nil
+            }
         }
     }
 
@@ -115,7 +151,13 @@ public enum SetupCheck {
                                  detail: "Open Xcode and accept its licence; it then installs its components.",
                                  actionTitle: "Open Xcode")
             default:
-                return ready(id, "Xcode", about, "Installed and set up.")
+                let minimum = f.requirements.minimumXcode
+                if let version = f.xcodeVersion, VersionNumber.isOlder(version, than: minimum) {
+                    return SetupItem(id: id, title: "Xcode", state: .needsYou, chip: "UPDATE XCODE", about: about,
+                                     detail: "Xcode \(version) is installed; the engine needs \(minimum) or newer. Update it from the App Store.",
+                                     actionTitle: "Open App Store")
+                }
+                return ready(id, "Xcode", about, f.xcodeVersion.map { "Xcode \($0), installed and set up." } ?? "Installed and set up.")
             }
         case .metal:
             let about = "Compiles each game's shaders for this Mac's GPU."
@@ -130,13 +172,24 @@ public enum SetupCheck {
                 return ready(id, "Metal compiler", about,
                              "Version \(version); the untested toolchain override is on, so builds may differ.")
             }
-            return SetupItem(id: id, title: "Metal compiler", state: .warning, chip: "NOT CERTIFIED", about: about,
-                             detail: "Version \(version); the engine is tested with \(f.certifiedMetal). New builds stay blocked unless you turn on the untested toolchain override in Settings › Engine.",
+            if f.requirements.metalDownload(for: f.certifiedMetal) != nil {
+                return SetupItem(id: id, title: "Metal compiler", state: .warning, chip: "NOT CERTIFIED", about: about,
+                                 detail: "Version \(version); the engine is tested with \(f.certifiedMetal). NX Library installs \(f.certifiedMetal) through Xcode.",
+                                 actionTitle: "Install \(f.certifiedMetal)")
+            }
+            return SetupItem(id: id, title: "Metal compiler", state: .warning, chip: "WAITING FOR ENGINE", about: about,
+                             detail: "Version \(version) came with this Xcode; the engine is tested with \(f.certifiedMetal). New builds wait for an NX Library update tested with it. Games you built still play.",
                              actionTitle: nil)
         case .dotnet:
             let about = "Builds the engine's tools that read each game's package."
-            if f.dotnetSDKs.contains(where: { $0.hasPrefix("10.") }) {
-                return ready(id, ".NET 10 SDK", about, "Installed.")
+            if let installed = ToolchainRequirements.newestSDK(major: f.requirements.dotnetMajor, in: f.dotnetSDKs) {
+                if let latest = f.dotnetLatest, VersionNumber.isOlder(installed, than: latest) {
+                    var card = ready(id, ".NET 10 SDK", about,
+                                     "\(installed) installed. Microsoft has \(latest); A installs it, and macOS asks for your password.")
+                    card.actionTitle = "Update to \(latest)"
+                    return card
+                }
+                return ready(id, ".NET 10 SDK", about, "\(installed) installed.")
             }
             return SetupItem(id: id, title: ".NET 10 SDK", state: .missing, chip: "NOT INSTALLED", about: about,
                              detail: "NX Library downloads Microsoft's installer; macOS asks for your password.",
