@@ -243,12 +243,15 @@ public struct SpotlightView: View {
             }
             // One page: the focus scrolls it; the glide is movement, so reduce motion jumps.
             .offset(y: scroll)
+            // The page fades out short of the window's edges, top and bottom.
+            .frame(width: canvas.stageSize.width, height: canvas.size.height, alignment: .topLeading)
+            .mask(pageMask)
 
-            // Beside the description the logo and pills are out of sight: there is more above.
+            // Off the row, the page has risen: there is more above (More like this is the end).
             SpotlightUpHint()
                 .frame(width: canvas.stageSize.width)
                 .padding(.top, canvas.u(24))
-                .opacity(state.focus == .about || state.focus == .actions ? 1 : 0)
+                .opacity([.pills, .strip, .about, .actions].contains(state.focus) ? 1 : 0)
                 .animation(.easeInOut(duration: 0.4), value: state.focus)
                 .allowsHitTesting(false)
 
@@ -601,6 +604,25 @@ public struct SpotlightView: View {
                                                      viewport: canvas.size.height, bottomInset: canvas.u(130))
             }
         }
+    }
+
+    /// The page's edges, in canvas units: clear up to `clear` from the window's
+    /// edge, solid from `solid` (the top bar's breathing room, top and bottom).
+    static let pageEdge = (top: (clear: CGFloat(28), solid: CGFloat(84)),
+                           bottom: (clear: CGFloat(36), solid: CGFloat(100)))
+
+    private var pageMask: some View {
+        let height = max(canvas.size.height, 1)
+        let at = { (units: CGFloat) in min(max(canvas.u(units) / height, 0), 1) }
+        let e = Self.pageEdge
+        return LinearGradient(stops: [
+            .init(color: .clear, location: 0),
+            .init(color: .clear, location: at(e.top.clear)),
+            .init(color: .black, location: at(e.top.solid)),
+            .init(color: .black, location: 1 - at(e.bottom.solid)),
+            .init(color: .clear, location: 1 - at(e.bottom.clear)),
+            .init(color: .clear, location: 1)
+        ], startPoint: .top, endPoint: .bottom)
     }
 
     /// Between About this game (or the column beside it, whichever ends lower) and More like this.

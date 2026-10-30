@@ -67,8 +67,9 @@ struct SettingsSidebar: View {
             selection = section
         } label: {
             HStack(spacing: canvas.u(16)) {
+                // Selene's section icons take the row's ink, like the title.
                 MaterialIconView(section.icon, size: 24)
-                    .foregroundColor(lit ? SeleneTheme.onFocus : SeleneTheme.glyph)
+                    .foregroundColor(lit ? SeleneTheme.onFocus : SeleneTheme.ink)
                 Text(section.title)
                     .seleneFont(21, .medium)
                     .foregroundColor(lit ? SeleneTheme.onFocus : SeleneTheme.ink)
