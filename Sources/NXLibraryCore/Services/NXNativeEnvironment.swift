@@ -78,7 +78,17 @@ public final class NXNativeEnvironment {
                 issues.append("venv Python \(version) is too old; nxnative needs Python 3.12+ for RomFS image builds (3.14 recommended)")
             }
             let probe = run(pythonURL.path, ["-c", "import lz4.block, capstone, fontTools\nimport sys\ntry:\n import compression.zstd\nexcept ImportError:\n import backports.zstd"])
-            if probe.status != 0 { issues.append("venv is missing lz4/capstone/fontTools or zstd (stdlib on Python 3.14, backports.zstd before)") }
+            if probe.status != 0 {
+                issues.append("venv is missing lz4/capstone/fontTools or zstd (stdlib on Python 3.14, backports.zstd before)")
+            } else {
+                // nxnative's rewriter needs Capstone 5.x; Capstone 6 renamed the ARM64 names it uses.
+                let capstone = run(pythonURL.path, ["-c", "import capstone; print(capstone.cs_version()[0], capstone.__version__)"])
+                    .stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+                if let major = capstone.split(separator: " ").first, major != "5" {
+                    let installed = capstone.split(separator: " ").dropFirst().joined()
+                    issues.append("venv has Capstone \(installed); nxnative needs 5.x (pip install 'capstone>=5,<6')")
+                }
+            }
         }
 
         let xcode = run("/usr/bin/xcodebuild", ["-version"])

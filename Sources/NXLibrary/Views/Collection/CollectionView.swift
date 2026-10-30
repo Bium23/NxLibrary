@@ -55,7 +55,7 @@ public struct CollectionView: View {
         SeleneHomeChrome(
             leftHints: HintItem.homeGlobals(other: "Spotlight"),
             rightHints: contextHints(game),
-            hintsHidden: viewModel.gameForSettingsSheet != nil,
+            hintsHidden: router.overlayHasHints(viewModel),
             backdrop: {
                 SeleneArtBackground(image: art.image, imageKey: art.key,
                                     shade: settings.settings.backgroundShade)

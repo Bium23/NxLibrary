@@ -102,6 +102,8 @@ public enum SettingsCatalog {
             "How much the launch art is darkened.") { $0.launchShade },
         row("surprisePool", .games, "Surprise me pool",
             "Which games Surprise me picks from.") { $0.surprisePool },
+        row("cloudSaves", .games, "Cloud saves",
+            "One folder every game syncs its save through, shared with the games' iPhone apps: off, iCloud Drive or a folder you choose.") { $0.cloudSaves },
         action("hiddenGames", .games, "Hidden games",
                "Games you hid from Game options; Show puts one back in your lists."),
         row("gameDefaults", .games, "Game defaults",

@@ -1084,6 +1084,15 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             return
         }
 
+        if let choice = settingsStore?.settings.cloudSaves, let domain = game.effectiveBundleId {
+            do {
+                try cloudSavesPreferences.applyBeforeLaunch(choice, domain: domain)
+            } catch {
+                // The game still starts; it keeps its save where it was.
+                logs.append(LogEntry(level: .warning, message: "Cloud saves: \(error.localizedDescription)"))
+            }
+        }
+
         launchService.launch(appURL: game.url,
                              environment: config.toEnvironmentDict()) { [weak self] success, error in
             DispatchQueue.main.async {
@@ -1152,6 +1161,40 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
 
     /// Flips the hidden flag and saves the library. Hidden games leave Spotlight,
     /// Collection and Surprise me; the screens reconcile their selection on the change.
+    public var cloudSavesPreferences = CloudSavesPreferences()
+
+    /// Gives the whole library one cloud saves folder (or none): written into every
+    /// game's preferences now, and again before each start (see `launchGame`).
+    public func setCloudSaves(_ choice: CloudSaves) {
+        guard let settingsStore else { return }
+        do {
+            try cloudSavesPreferences.apply(choice, to: libraryGames.compactMap(\.effectiveBundleId))
+        } catch {
+            alertMessage = error.localizedDescription
+            SoundEffectService.shared.play(.error)
+            logs.append(LogEntry(level: .error, message: error.localizedDescription))
+            return
+        }
+        settingsStore.settings.cloudSaves = choice
+        if case .folder(let path) = choice { settingsStore.settings.cloudSavesPickedFolder = path }
+        logs.append(LogEntry(level: .info, message: "Cloud saves: \(choice.folderURL()?.path ?? "off")"))
+    }
+
+    /// Picks a folder for cloud saves; Cancel keeps the current choice.
+    public func chooseCloudSavesFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.canCreateDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Use for Cloud Saves"
+        panel.message = "Choose the folder every game syncs its save through, for example one in iCloud Drive."
+        panel.directoryURL = CloudSaves.iCloudDriveRoot()
+        if panel.runModal() == .OK, let url = panel.url {
+            setCloudSaves(.folder(url.path))
+        }
+    }
+
     public func toggleHidden(_ game: PortedGame) {
         updateStoredGame(game) { $0.isHidden.toggle() }
     }

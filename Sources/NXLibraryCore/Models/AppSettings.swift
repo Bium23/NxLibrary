@@ -90,6 +90,10 @@ public struct AppSettings: Codable, Equatable {
     public var spotlightOrder: [String]
     public var startingTab: LibraryFilter.RawValue
     public var surprisePool: SurprisePool
+    /// The library's cloud saves folder, written into each game's preferences.
+    public var cloudSaves: CloudSaves
+    /// The last folder picked for cloud saves, so stepping back to Folder finds it.
+    public var cloudSavesPickedFolder: String
     public var startOn: StartScreen
     /// The home screen last shown: `.spotlight` or `.collection`.
     public var lastHome: StartScreen
@@ -123,6 +127,8 @@ public struct AppSettings: Codable, Equatable {
                 spotlightOrder: [String] = [],
                 startingTab: LibraryFilter.RawValue = "All games",
                 surprisePool: SurprisePool = .installed,
+                cloudSaves: CloudSaves = .off,
+                cloudSavesPickedFolder: String = "",
                 startOn: StartScreen = .spotlight,
                 lastHome: StartScreen = .spotlight,
                 introAnimation: Bool = true,
@@ -153,6 +159,8 @@ public struct AppSettings: Codable, Equatable {
         self.spotlightOrder = spotlightOrder
         self.startingTab = startingTab
         self.surprisePool = surprisePool
+        self.cloudSaves = cloudSaves
+        self.cloudSavesPickedFolder = cloudSavesPickedFolder
         self.startOn = startOn
         self.lastHome = lastHome
         self.introAnimation = introAnimation
@@ -172,7 +180,7 @@ public struct AppSettings: Codable, Equatable {
         case backgroundShade, readableText, reduceMotion, showButtonHints, showClock
         case restoreLastGame, checkEngineAtLaunch, refreshLibraryAtLaunch, lastSelectedGameID
         case steamGridDbApiKey, gameDefaults, colorThemeID, buttonNames
-        case spotlightCards, spotlightOrder, startingTab, surprisePool
+        case spotlightCards, spotlightOrder, startingTab, surprisePool, cloudSaves, cloudSavesPickedFolder
         case startOn, lastHome
         case introAnimation, viewButtonSwitches, interfaceSounds, soundVolume, quietLaunch
         case wallpaperID, backgroundSizing, animatedBackground, launchStyle, launchMotion, launchShade
@@ -197,6 +205,8 @@ public struct AppSettings: Codable, Equatable {
         self.spotlightOrder = try container.decodeIfPresent([String].self, forKey: .spotlightOrder) ?? []
         self.startingTab = try container.decodeIfPresent(String.self, forKey: .startingTab) ?? "All games"
         self.surprisePool = try container.decodeIfPresent(SurprisePool.self, forKey: .surprisePool) ?? .installed
+        self.cloudSaves = try container.decodeIfPresent(CloudSaves.self, forKey: .cloudSaves) ?? .off
+        self.cloudSavesPickedFolder = try container.decodeIfPresent(String.self, forKey: .cloudSavesPickedFolder) ?? ""
         self.startOn = try container.decodeIfPresent(StartScreen.self, forKey: .startOn) ?? .spotlight
         self.lastHome = try container.decodeIfPresent(StartScreen.self, forKey: .lastHome) ?? .spotlight
         self.introAnimation = try container.decodeIfPresent(Bool.self, forKey: .introAnimation) ?? true

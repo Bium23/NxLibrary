@@ -132,7 +132,7 @@ public struct SpotlightView: View {
                 ? [] : HintItem.homeGlobals(other: "Collection"),
             rightHints: contextHints(model, state),
             rightReserve: hintReserve(state),
-            hintsHidden: viewModel.gameForSettingsSheet != nil,
+            hintsHidden: router.overlayHasHints(viewModel),
             backdrop: {
                 SeleneArtBackground(image: art.image, imageKey: art.key,
                                     shade: settings.settings.backgroundShade, crossfade: 0.8)

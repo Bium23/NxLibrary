@@ -124,12 +124,12 @@ public struct SystemPrerequisites {
     
     public var pythonPackages: DependencyStatus = DependencyStatus(
         id: "python_packages",
-        name: "Python Modules (lz4, capstone, fonttools, nsz)",
+        name: "Python Modules (lz4, capstone 5, fonttools, nsz)",
         isAvailable: false,
         details: "Checking...",
         recommendation: nil,
-        installCommand: "python3 -m pip install --break-system-packages lz4 capstone fonttools nsz",
-        repairCommand: "python3 -m pip install --force-reinstall --break-system-packages lz4 capstone fonttools nsz",
+        installCommand: "python3 -m pip install --break-system-packages lz4 'capstone>=5,<6' fonttools nsz",
+        repairCommand: "python3 -m pip install --force-reinstall --break-system-packages lz4 'capstone>=5,<6' fonttools nsz",
         uninstallCommand: "python3 -m pip uninstall -y --break-system-packages lz4 capstone fonttools nsz",
         isProtected: false
     )

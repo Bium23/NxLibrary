@@ -53,7 +53,9 @@ struct MenuOverlayView: View {
             row
                 .padding(.bottom, canvas.u(rowBottom))
 
-            SeleneHintsBar(left: [HintItem(.b, "Close")], right: [HintItem(.a, "Select")], bottom: 48)
+            // Where the screen underneath had its hints, which step aside while this is open.
+            SeleneHintsBar(left: [HintItem(.b, "Close")], right: [HintItem(.a, "Select")],
+                           bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
         }
         .onAppear { presented = true }
     }

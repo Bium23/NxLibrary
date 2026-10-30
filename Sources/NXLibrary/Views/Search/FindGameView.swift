@@ -51,7 +51,7 @@ struct FindGameView: View {
                 SeleneHintsBar(right: [
                     HintItem(.b, "Close") { close() },
                     HintItem(.a, "Select")
-                ])
+                ], bottom: SeleneBottomScrim.hintsBottom)
             }
         }
         .onAppear {

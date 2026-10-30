@@ -34,6 +34,25 @@ struct SettingsGamesSection: View {
         }
     }
 
+    private var cloudSaves: CloudSaves { settings.settings.cloudSaves }
+
+    private var cloudSavesSubtitle: String {
+        switch cloudSaves {
+        case .off: return "Each game keeps its save on this Mac only."
+        case .iCloudDrive: return "iCloud Drive › nxnative Saves, shared with the games' iPhone apps."
+        case .folder(let path): return (path as NSString).abbreviatingWithTildeInPath
+        }
+    }
+
+    private var pickedFolderSubtitle: String {
+        let picked = settings.settings.cloudSavesPickedFolder
+        return picked.isEmpty ? "None chosen yet." : (picked as NSString).abbreviatingWithTildeInPath
+    }
+
+    private func stepCloudSaves(_ step: Int) {
+        viewModel.setCloudSaves(cloudSaves.stepped(step, picked: settings.settings.cloudSavesPickedFolder))
+    }
+
     var body: some View {
         VStack(spacing: canvas.u(8)) {
             SettingsSubheading("Launch screen")
@@ -59,6 +78,17 @@ struct SettingsGamesSection: View {
                            value: surprisePoolTitle) { step in
                 settings.settings.surprisePool = settings.settings.surprisePool.stepped(step)
             }
+
+            SettingsSubheading("Cloud saves")
+
+            SeleneCycleRow("Cloud saves",
+                           subtitle: cloudSavesSubtitle,
+                           info: "A game's Mac and iPhone apps share one save through this folder. Every game uses the same folder and keeps its own file in it. Only games built with nxnative af616f5 or later read it: rebuild older ones.",
+                           value: cloudSaves.title, cycle: stepCloudSaves)
+
+            SeleneButtonRow("Cloud saves folder",
+                            subtitle: pickedFolderSubtitle,
+                            buttonTitle: "Choose…") { viewModel.chooseCloudSavesFolder() }
 
             SettingsSubheading("Hidden games")
 
@@ -145,11 +175,16 @@ struct SettingsGamesSection: View {
     }
 
     private func publishActions() {
-        // Same order as the rows: the hidden games sit between Surprise me and the defaults.
+        // Same order as the rows: cloud saves and the hidden games sit between
+        // Surprise me and the defaults.
+        let cloud: [SettingsRowAction] = [
+            .value("cloudSaves", "Cloud saves", cycle: stepCloudSaves),
+            .init(id: "cloudSavesFolder", title: "Cloud saves folder") { viewModel.chooseCloudSavesFolder() }
+        ]
         let hidden = hiddenGames.map { game in
             SettingsRowAction(id: "hidden-\(game.id)", title: game.name) { unhide(game) }
         }
-        onActions(launchActions + hidden + defaultActions)
+        onActions(launchActions + cloud + hidden + defaultActions)
     }
 
     private var launchActions: [SettingsRowAction] {

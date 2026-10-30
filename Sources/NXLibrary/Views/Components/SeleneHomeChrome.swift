@@ -1,4 +1,5 @@
 import SwiftUI
+import NXLibraryCore
 
 /// The frame Spotlight and Collection share, so what stays put between them sits
 /// in the same place: the art (and any dimming) full bleed, the bottom fade, the
@@ -11,7 +12,7 @@ struct SeleneHomeChrome<Backdrop: View, Stage: View>: View {
     var leftHints: [HintItem]
     var rightHints: [HintItem]
     var rightReserve: [[String]] = []
-    /// Game options draws its own hints over the screen.
+    /// An overlay with its own hints is up (`AppRouter.overlayHasHints`).
     var hintsHidden = false
     @ViewBuilder var backdrop: () -> Backdrop
     @ViewBuilder var stage: () -> Stage
@@ -29,7 +30,7 @@ struct SeleneHomeChrome<Backdrop: View, Stage: View>: View {
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18,
                                rightReserve: rightReserve)
             }
-            .opacity(hintsHidden ? 0 : 1)
+            .seleneOverlaidHints(hintsHidden)
             .frame(width: canvas.size.width, height: canvas.size.height)
         }
         .frame(width: canvas.size.width, height: canvas.size.height, alignment: .topLeading)
@@ -42,5 +43,36 @@ extension HintItem {
     static func homeGlobals(other: String) -> [HintItem] {
         [HintItem(.view, other, glyph: .spotlight, hold: "Hold: Search"),
          HintItem(.menu, "Menu", glyph: .menu, hold: "Hold: Settings")]
+    }
+}
+
+extension AppRouter {
+    /// The control center, search or Game options is up: each draws its own hints,
+    /// so the screen's step aside instead of showing through.
+    @MainActor
+    func overlayHasHints(_ viewModel: AppViewModel) -> Bool {
+        isMenuPresented || isSearchPresented || viewModel.gameForSettingsSheet != nil
+    }
+}
+
+extension View {
+    /// A screen's hints under an overlay that has its own: they sink a little and
+    /// fade out as it opens, and come back the same way as it closes.
+    func seleneOverlaidHints(_ hidden: Bool) -> some View {
+        modifier(OverlaidHints(hidden: hidden))
+    }
+}
+
+private struct OverlaidHints: ViewModifier {
+    @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.seleneReduceMotion) private var reduceMotion
+    let hidden: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(hidden ? 0 : 1)
+            .offset(y: hidden && !reduceMotion ? canvas.u(12) : 0)
+            .animation(SeleneTheme.cubicOut(0.3), value: hidden)
+            .allowsHitTesting(!hidden)
     }
 }
