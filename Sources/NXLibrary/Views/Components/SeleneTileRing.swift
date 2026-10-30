@@ -26,6 +26,9 @@ struct SeleneTileRing: View {
         .transition(.opacity)
     }
 
+    /// Room round the tile for the glow's blur (16u) to fade out in.
+    static let glowMargin: CGFloat = 40
+
     /// 0.2 <-> 0.55 over 1.8s, sine in-out, autoreverse.
     static func glowOpacity(at t: TimeInterval) -> Double {
         let p = (t.truncatingRemainder(dividingBy: 3.6)) / 1.8
@@ -60,7 +63,11 @@ struct SeleneTileRing: View {
             shape.strokeBorder(Color.white.opacity(0.18), lineWidth: max(0.5, canvas.u(1)))
                 .padding(canvas.u(1))
         }
-        .compositingGroup()
+        // Redrawn every frame: flattened on the GPU (Metal), not on the CPU. The
+        // margin keeps the glow's blur inside the flattened layer.
+        .padding(canvas.u(Self.glowMargin))
+        .drawingGroup()
+        .padding(-canvas.u(Self.glowMargin))
         .allowsHitTesting(false)
     }
 }
@@ -112,6 +119,8 @@ struct SeleneShine: View {
                         ],
                         startPoint: UnitPoint(x: c - w, y: c - w),
                         endPoint: UnitPoint(x: c + w, y: c + w)))
+                    // Redrawn every frame: on the GPU, not the CPU.
+                    .drawingGroup()
                     .allowsHitTesting(false)
             }
         }

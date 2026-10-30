@@ -49,6 +49,10 @@ public final class SoundEffectService: ObservableObject {
 
     private weak var store: AppSettingsStore?
     private var cancellable: AnyCancellable?
+    /// Starting a player blocks for a few milliseconds (the audio server's
+    /// handshake), so the players live and play on a queue of their own: a move
+    /// never holds up the frame that draws it.
+    private let audio = DispatchQueue(label: "local.nxlibrary.sounds", qos: .userInteractive)
     private var players: [SoundCue: AVAudioPlayer] = [:]
     private var lastMove = Date.distantPast
     private let resolver = SoundCueResolver(
@@ -72,7 +76,7 @@ public final class SoundEffectService: ObservableObject {
 
     /// Drops loaded players so freshly imported sounds are picked up.
     public func reloadSounds() {
-        DispatchQueue.main.async { self.players = [:] }
+        audio.async { self.players = [:] }
     }
 
     public func play(_ effect: SoundEffectType) {
@@ -82,7 +86,8 @@ public final class SoundEffectService: ObservableObject {
     public func play(_ cue: SoundCue) {
         guard isSoundEnabled else { return }
         if isQuieted, cue != .gameStarting, cue != .gameReady { return }
-        DispatchQueue.main.async { [weak self] in
+        let volume = Float(volume)
+        audio.async { [weak self] in
             guard let self else { return }
             if cue == .move {
                 // A held stick repeats faster than the cue is worth hearing.
@@ -91,7 +96,7 @@ public final class SoundEffectService: ObservableObject {
                 self.lastMove = now
             }
             guard let player = self.player(for: cue) else { return }
-            player.volume = Float(self.volume)
+            player.volume = volume
             player.currentTime = 0
             player.play()
         }
