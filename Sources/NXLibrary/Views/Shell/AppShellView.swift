@@ -494,6 +494,10 @@ public struct AppShellView: View {
             }
             // The open control center takes the keyboard: arrows, Return, Space and Esc go to the menu,
             // and no screen underneath sees them.
+            // Typing in a menu's text field (the Theme screen's search): keys go to the field, Esc leaves it.
+            if router.isMenuPresented, event.window?.firstResponder is NSText, event.keyCode != 53 {
+                return event
+            }
             if router.isMenuPresented, mods.isEmpty {
                 let menuAction: GamepadAction?
                 switch event.keyCode {

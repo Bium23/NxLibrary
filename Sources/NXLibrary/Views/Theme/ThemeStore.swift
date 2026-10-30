@@ -19,6 +19,8 @@ public final class ThemeStore: ObservableObject {
 
     /// Bundled wallpapers plus any imported from a Selene folder.
     @Published public private(set) var wallpapers: [Wallpaper] = []
+    /// Who made each downloaded background (Wallpapers/credits.json).
+    @Published public private(set) var credits: [String: BackgroundCredit] = [:]
 
     /// Call on the main thread: `palette` drives every view.
     public func apply(id: String) {
@@ -33,6 +35,8 @@ public final class ThemeStore: ObservableObject {
         }
         roots.append(SeleneImporter.defaultDestination.appendingPathComponent("Wallpapers"))
         wallpapers = WallpaperCatalog.scan(roots: roots)
+        credits = BackgroundCredits.load(from: SeleneImporter.defaultDestination
+            .appendingPathComponent("Wallpapers").appendingPathComponent(BackgroundCredits.fileName))
     }
 
     /// The wallpaper to draw for the setting under the active palette.
@@ -59,11 +63,17 @@ public final class ThemeStore: ObservableObject {
         return "\(WallpaperCatalog.custom)/\((name as NSString).deletingPathExtension)"
     }
 
-    /// Moves one of the player's own wallpapers (NX Library's copy) to the Trash.
+    /// Whether the player can remove it: their own, or a download.
+    static func isRemovable(_ wallpaperID: String) -> Bool {
+        [WallpaperCatalog.custom, WallpaperCatalog.online, WallpaperCatalog.live]
+            .contains { wallpaperID.hasPrefix($0 + "/") }
+    }
+
+    /// Moves one of the player's own wallpapers or a download (NX Library's copy) to the Trash.
     func removeWallpaper(id: String) throws {
-        guard let wallpaper = wallpapers.first(where: { $0.id == id }),
-              wallpaper.theme == WallpaperCatalog.custom else { return }
+        guard Self.isRemovable(id), let wallpaper = wallpapers.first(where: { $0.id == id }) else { return }
         try FileManager.default.trashItem(at: wallpaper.url, resultingItemURL: nil)
+        OnlineBackgroundService.forgetCredit(for: id)
         reloadWallpapers()
     }
 
@@ -80,6 +90,7 @@ public final class ThemeStore: ObservableObject {
         case WallpaperCatalog.none?:
             return "None"
         case let id?:
+            if let credit = credits[id] { return "\(credit.title) · \(credit.source.title)" }
             return wallpapers.first { $0.id == id }?.title ?? "Missing"
         }
     }

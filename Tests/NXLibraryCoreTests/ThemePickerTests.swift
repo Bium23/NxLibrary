@@ -39,18 +39,31 @@ final class ThemePickerTests: XCTestCase {
 
     func testBackgroundsListTheThemeNoneAddThenYoursThenTheRest() {
         XCTAssertEqual(ThemeBackgrounds.list(themeID: "gruvbox", wallpapers: wallpapers),
-                       [.theme, .none, .add, .wallpaper("custom/mine"), .wallpaper("gruvbox/2-b"), .wallpaper("kanagawa/1-a")],
+                       [.theme, .none, .add, .wallpaper("custom/mine"), .online(.wallhaven), .online(.danbooru),
+                        .wallpaper("gruvbox/2-b"), .wallpaper("kanagawa/1-a")],
                        "the theme's own wallpaper is Theme's own, not listed again")
         XCTAssertEqual(ThemeBackgrounds.list(themeID: "selene", wallpapers: wallpapers),
-                       [.theme, .none, .add, .wallpaper("custom/mine"), .wallpaper("gruvbox/1-a"),
+                       [.theme, .none, .add, .wallpaper("custom/mine"), .online(.wallhaven), .online(.danbooru),
+                        .wallpaper("gruvbox/1-a"), .wallpaper("gruvbox/2-b"), .wallpaper("kanagawa/1-a")])
+    }
+
+    func testDownloadedStillsComeAfterYoursAndBeforeTheSources() {
+        let all = (wallpapers + [wallpaper("online/wallhaven-abc"), wallpaper("online/danbooru-1")]).sorted { $0.id < $1.id }
+        XCTAssertEqual(ThemeBackgrounds.list(themeID: "gruvbox", wallpapers: all),
+                       [.theme, .none, .add, .wallpaper("custom/mine"),
+                        .wallpaper("online/danbooru-1"), .wallpaper("online/wallhaven-abc"),
+                        .online(.wallhaven), .online(.danbooru),
                         .wallpaper("gruvbox/2-b"), .wallpaper("kanagawa/1-a")])
+        XCTAssertEqual(ThemeBackgrounds.group(.wallpaper("online/wallhaven-abc")), "DOWNLOADED")
+        XCTAssertEqual(ThemeBackgrounds.group(.online(.wallhaven)), "ONLINE · WALLHAVEN")
+        XCTAssertEqual(ThemeBackgrounds.group(.online(.danbooru)), "ONLINE · DANBOORU")
     }
 
     func testTheSettingFindsItsTile() {
         let list = ThemeBackgrounds.list(themeID: "gruvbox", wallpapers: wallpapers)
         XCTAssertEqual(ThemeBackgrounds.index(of: nil, in: list), 0)
         XCTAssertEqual(ThemeBackgrounds.index(of: WallpaperCatalog.none, in: list), 1)
-        XCTAssertEqual(ThemeBackgrounds.index(of: "kanagawa/1-a", in: list), 5)
+        XCTAssertEqual(ThemeBackgrounds.index(of: "kanagawa/1-a", in: list), 7)
         XCTAssertEqual(ThemeBackgrounds.index(of: "gruvbox/1-a", in: list), 0, "the theme's own is Theme's own")
         XCTAssertEqual(ThemeBackgrounds.index(of: "gone/x", in: list), 0)
     }
@@ -83,7 +96,8 @@ final class ThemePickerTests: XCTestCase {
 
     func testWallpapersTabListsStillsOnly() {
         XCTAssertEqual(ThemeBackgrounds.list(.wallpapers, themeID: "gruvbox", wallpapers: withVideos),
-                       [.theme, .none, .add, .wallpaper("custom/mine"), .wallpaper("gruvbox/2-b"), .wallpaper("kanagawa/1-a")])
+                       [.theme, .none, .add, .wallpaper("custom/mine"), .online(.wallhaven), .online(.danbooru),
+                        .wallpaper("gruvbox/2-b"), .wallpaper("kanagawa/1-a")])
     }
 
     func testLiveTabListsTheMoonlightThenYourVideosThenTheRest() {

@@ -81,11 +81,13 @@ public enum ThemeBackgroundChoice: Equatable, Hashable {
     /// Add your own picture (on Live: your own video).
     case add
     case wallpaper(String)
+    /// Browse a source's grid online.
+    case online(BackgroundSourceID)
 }
 
 public enum ThemeBackgrounds {
-    /// Wallpapers: theme's own, none, add, the player's own, the theme's other
-    /// wallpapers, then every other one. Live: the theme's own (the moonlight),
+    /// Wallpapers: theme's own, none, add, the player's own, the downloaded ones,
+    /// the online sources, the theme's other wallpapers, then every other one. Live: the theme's own (the moonlight),
     /// add, the player's videos, then every other video.
     public static func list(_ tab: BackgroundTab = .wallpapers, themeID: String,
                             wallpapers: [Wallpaper]) -> [ThemeBackgroundChoice] {
@@ -94,9 +96,12 @@ public enum ThemeBackgrounds {
             let stills = wallpapers.filter { $0.kind == .image }
             let own = WallpaperCatalog.resolve(nil, themeID: themeID, in: stills)?.id
             let custom = stills.filter { $0.theme == WallpaperCatalog.custom }
+            let downloaded = stills.filter { $0.theme == WallpaperCatalog.online }
             let theme = stills.filter { $0.theme == themeID && $0.id != own }
-            let rest = stills.filter { $0.theme != WallpaperCatalog.custom && $0.theme != themeID }
-            return [.theme, .none, .add] + (custom + theme + rest).map { .wallpaper($0.id) }
+            let rest = stills.filter { ![WallpaperCatalog.custom, WallpaperCatalog.online, themeID].contains($0.theme) }
+            let sources = BackgroundSourceID.allCases.filter { $0.kind == .image }.map(ThemeBackgroundChoice.online)
+            return [.theme, .none, .add] + (custom + downloaded).map { .wallpaper($0.id) } + sources
+                + (theme + rest).map { .wallpaper($0.id) }
         case .live:
             let videos = wallpapers.filter { $0.kind == .video }
             let custom = videos.filter { $0.theme == WallpaperCatalog.custom }
@@ -128,6 +133,7 @@ public enum ThemeBackgrounds {
         case .theme: return "THEME"
         case .none: return tab == .live ? "THEME" : "NO WALLPAPER"
         case .add: return "YOUR OWN"
+        case .online(let source): return "ONLINE · \(source.title.uppercased())"
         case .wallpaper(let id):
             let theme = id.split(separator: "/").first.map(String.init) ?? ""
             if theme == WallpaperCatalog.custom { return "YOUR OWN" }

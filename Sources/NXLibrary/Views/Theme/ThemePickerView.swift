@@ -8,7 +8,9 @@ import NXLibraryCore
 /// applies it and goes on; A on a background applies it and closes the menu. B
 /// steps back (from the colors: to the menu). The background step has two tabs,
 /// Wallpapers and Live, switched with LB/RB (Q/E); it adds your own pictures or
-/// videos (copied into NX Library) and removes them again with Y (Delete).
+/// videos (copied into NX Library) and removes them again with Y (Delete). An
+/// online source's tile opens its grid: chips of categories, a search, and A
+/// downloads the full picture (B cancels) before applying it.
 struct ThemePickerView: View {
     @ObservedObject var router: AppRouter
     @ObservedObject var settings: AppSettingsStore
@@ -19,6 +21,11 @@ struct ThemePickerView: View {
     @State private var state = ThemePickerState(themeIndex: 0, backgroundIndex: 0)
     @State private var opened = false
     @State private var importError: String?
+    @State private var errorTitle = "Couldn't add the picture"
+    @StateObject private var browser = OnlineBrowser()
+    @StateObject private var transfer = OnlineTransfer()
+    @State private var searchText = ""
+    @FocusState private var searchFocused: Bool
 
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
@@ -49,7 +56,7 @@ struct ThemePickerView: View {
                 .frame(maxHeight: .infinity, alignment: .bottom)
                 .padding(.bottom, canvas.u(124))
 
-            SeleneHintsBar(left: [HintItem(.b, "Back", action: back)], right: rightHints,
+            SeleneHintsBar(left: [HintItem(.b, transfer.itemID != nil ? "Cancel" : "Back", action: back)], right: rightHints,
                            bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
                 .frame(maxHeight: .infinity, alignment: .bottom)
         }
@@ -58,7 +65,7 @@ struct ThemePickerView: View {
             guard let action = note.object as? GamepadAction else { return }
             handle(action)
         }
-        .alert(state.tab == .live ? "Couldn't add the video" : "Couldn't add the picture", isPresented: Binding(get: { importError != nil },
+        .alert(errorTitle, isPresented: Binding(get: { importError != nil },
                                                                 set: { if !$0 { importError = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -78,11 +85,29 @@ struct ThemePickerView: View {
         case .theme:
             return [HintItem(.a, "Next", action: accept)]
         case .background:
+            if let browse = browser.state {
+                guard transfer.itemID == nil else { return [] }
+                if let item = browse.focusedItem {
+                    let have = theme.wallpapers.contains { $0.id == OnlineDownload.wallpaperID(for: item) }
+                    return [HintItem(.x, "Open page", action: { NSWorkspace.shared.open(item.pageURL) }),
+                            HintItem(.a, have ? "Done" : "Download", action: accept)]
+                }
+                return browse.category.isSearch ? [HintItem(.a, "Search", action: accept)] : []
+            }
             var hints: [HintItem] = []
-            if case .wallpaper(let id) = focusedBackground, id.hasPrefix(WallpaperCatalog.custom + "/") {
+            if case .wallpaper(let id) = focusedBackground, let credit = theme.credits[id] {
+                hints.append(HintItem(.x, "Open page", action: { NSWorkspace.shared.open(credit.pageURL) }))
+            }
+            if case .wallpaper(let id) = focusedBackground, ThemeStore.isRemovable(id) {
                 hints.append(HintItem(.y, "Remove", action: removeFocused))
             }
-            hints.append(HintItem(.a, focusedBackground == .add ? "Add" : "Done", action: accept))
+            let verb: String
+            switch focusedBackground {
+            case .add: verb = "Add"
+            case .online: verb = "Browse"
+            default: verb = "Done"
+            }
+            hints.append(HintItem(.a, verb, action: accept))
             return hints
         }
     }
@@ -211,8 +236,19 @@ struct ThemePickerView: View {
         let list = backgrounds
         let focused = focusedBackground
         return ZStack(alignment: .top) {
-            header("Choose your background", "Behind the menus and the home when no game is selected.")
+            if let browse = browser.state {
+                header(browse.source.title, "Safe for work, 2K and up. Every picture belongs to its owner.")
+            } else {
+                header("Choose your background", "Behind the menus and the home when no game is selected.")
+            }
             HStack(alignment: .top, spacing: canvas.u(50)) {
+                if let browse = browser.state {
+                    OnlineBrowsePanel(state: browse, loading: browser.loading, failed: browser.failed,
+                                      downloadingID: transfer.itemID, progress: transfer.progress,
+                                      downloaded: Set(theme.wallpapers.map(\.id)),
+                                      searchText: $searchText, searchFocused: $searchFocused,
+                                      onSubmit: submitSearch, onChip: tapChip, onTile: tapTile)
+                } else {
                 VStack(alignment: .leading, spacing: 0) {
                     tabs
                         .padding(.bottom, canvas.u(18))
@@ -243,7 +279,16 @@ struct ThemePickerView: View {
                         }
                     }
                 }
-                ThemePreview(palette: theme.palette, wallpaperURL: wallpaperURL(focused), games: games, width: 820)
+                }
+                VStack(alignment: .leading, spacing: 0) {
+                    ThemePreview(palette: theme.palette, wallpaperURL: previewURL(focused), games: games, width: 820)
+                    Text(creditLine(focused) ?? " ")
+                        .seleneFont(17)
+                        .foregroundColor(SeleneTheme.ink75)
+                        .lineLimit(1)
+                        .padding(.top, canvas.u(16))
+                        .padding(.leading, canvas.u(4))
+                }
             }
             .padding(.top, canvas.u(250))
         }
@@ -269,12 +314,34 @@ struct ThemePickerView: View {
         .padding(.leading, canvas.u(6))
     }
 
+    /// The focused online item's thumbnail while browsing, else the focused tile's wallpaper.
+    private func previewURL(_ choice: ThemeBackgroundChoice) -> URL? {
+        if let browse = browser.state {
+            return browse.focusedItem?.thumbnailURL ?? theme.wallpaper(for: settings.settings.wallpaperID)?.url
+        }
+        return wallpaperURL(choice)
+    }
+
+    /// Under the preview: the online item, or a download's credit.
+    private func creditLine(_ choice: ThemeBackgroundChoice) -> String? {
+        if let browse = browser.state {
+            guard let item = browse.focusedItem else { return nil }
+            var parts = [item.source.title, item.title]
+            if let author = item.author { parts.append("art by \(author)") }
+            parts.append("\(item.width) × \(item.height)")
+            return parts.joined(separator: " · ")
+        }
+        if case .wallpaper(let id) = choice, let credit = theme.credits[id] { return credit.line }
+        return nil
+    }
+
     private func wallpaperURL(_ choice: ThemeBackgroundChoice) -> URL? {
         switch choice {
         case .theme: return theme.wallpaper(for: nil)?.url
         case .none: return nil
         case .add: return theme.wallpaper(for: settings.settings.wallpaperID)?.url
         case .wallpaper(let id): return theme.wallpaper(for: id)?.url
+        case .online: return theme.wallpaper(for: settings.settings.wallpaperID)?.url
         }
     }
 
@@ -307,6 +374,8 @@ struct ThemePickerView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                         .shadow(color: .black.opacity(0.6), radius: canvas.u(4))
                 }
+            case .online(let source):
+                sourceTile(source)
             }
         }
         .frame(width: canvas.u(204), height: canvas.u(115))
@@ -320,6 +389,17 @@ struct ThemePickerView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label(choice))
         .accessibilityAddTraits(focused ? [.isButton, .isSelected] : .isButton)
+    }
+
+    private func sourceTile(_ source: BackgroundSourceID) -> some View {
+        ZStack {
+            SeleneTheme.glassSolid
+            VStack(spacing: canvas.u(6)) {
+                MaterialIconView(.language, size: 30).foregroundColor(SeleneTheme.ink)
+                Text(source.title).seleneFont(18, .semibold).foregroundColor(SeleneTheme.ink)
+                Text("Browse online").seleneFont(13).foregroundColor(SeleneTheme.ink60)
+            }
+        }
     }
 
     private func tileLabel(_ text: String) -> some View {
@@ -339,6 +419,7 @@ struct ThemePickerView: View {
         case .none: return state.tab == .live ? "Moonlight" : "None"
         case .add: return state.tab == .live ? "Add your video" : "Add your own"
         case .wallpaper(let id): return theme.wallpaperTitle(for: id)
+        case .online(let source): return "Browse \(source.title)"
         }
     }
 
@@ -387,6 +468,7 @@ struct ThemePickerView: View {
     }
 
     private func handle(_ action: GamepadAction) {
+        if state.step == .background, browser.state != nil { return handleBrowse(action) }
         switch action {
         case .navigateUp: move(.up)
         case .navigateDown: move(.down)
@@ -395,6 +477,10 @@ struct ThemePickerView: View {
         case .confirm: accept()
         case .cancel: back()
         case .contextAction: removeFocused()
+        case .secondaryAction:
+            if case .wallpaper(let id) = focusedBackground, let credit = theme.credits[id] {
+                NSWorkspace.shared.open(credit.pageURL)
+            }
         case .tabPrevious: stepTab(-1)
         case .tabNext: stepTab(1)
         default: break
@@ -429,6 +515,14 @@ struct ThemePickerView: View {
             state.step = .background
             SoundEffectService.shared.play(.click)
         case .background:
+            if let browse = browser.state {
+                if let item = browse.focusedItem {
+                    choose(item)
+                } else if browse.category.isSearch {
+                    searchFocused = true
+                }
+                return
+            }
             switch focusedBackground {
             case .add:
                 addOwn()
@@ -436,14 +530,108 @@ struct ThemePickerView: View {
             case .theme: settings.settings.wallpaperID = nil
             case .none: settings.settings.wallpaperID = WallpaperCatalog.none
             case .wallpaper(let id): settings.settings.wallpaperID = id
+            case .online(let source):
+                openSource(source)
+                return
             }
             SoundEffectService.shared.play(.click)
             router.closeMenu()
         }
     }
 
+    // MARK: - Online
+
+    private func openSource(_ source: BackgroundSourceID) {
+        searchText = ""
+        browser.open(source)
+        SoundEffectService.shared.play(.click)
+    }
+
+    private func handleBrowse(_ action: GamepadAction) {
+        if transfer.itemID != nil {
+            if action == .cancel { back() }
+            return
+        }
+        switch action {
+        case .navigateUp: browseMove(.up)
+        case .navigateDown: browseMove(.down)
+        case .navigateLeft: browseMove(.left)
+        case .navigateRight: browseMove(.right)
+        case .tabPrevious, .jumpToStart: stepCategory(-1)
+        case .tabNext, .jumpToEnd: stepCategory(1)
+        case .confirm: accept()
+        case .cancel: back()
+        case .secondaryAction:
+            if let item = browser.state?.focusedItem { NSWorkspace.shared.open(item.pageURL) }
+        default: break
+        }
+    }
+
+    private func browseMove(_ direction: GridDirection) {
+        if searchFocused { searchFocused = false }
+        if browser.update({ $0.move(direction) }) { SoundEffectService.shared.play(.focus) }
+    }
+
+    private func stepCategory(_ offset: Int) {
+        guard let browse = browser.state else { return }
+        tapChip(browse.categoryIndex + offset)
+    }
+
+    private func tapChip(_ index: Int) {
+        guard let browse = browser.state, browse.categories.indices.contains(index) else { return }
+        if index == browse.categoryIndex {
+            browser.update { $0.focus = .chips; return true }
+            if browse.category.isSearch { searchFocused = true }
+            return
+        }
+        browser.update { $0.categoryIndex = index; return true }
+        searchFocused = browser.state?.category.isSearch == true
+        SoundEffectService.shared.play(.focus)
+    }
+
+    private func tapTile(_ index: Int) {
+        if browser.state?.focus == .tile(index) { return accept() }
+        browser.update { $0.focus = .tile(index); return true }
+        SoundEffectService.shared.play(.focus)
+    }
+
+    private func submitSearch() {
+        let words = searchText
+        browser.update { $0.search(words); return true }
+        searchFocused = false
+    }
+
+    /// A on an online item: apply it if it is here already, else download it first.
+    private func choose(_ item: OnlineBackground) {
+        let id = OnlineDownload.wallpaperID(for: item)
+        if theme.wallpapers.contains(where: { $0.id == id }) { return use(id) }
+        SoundEffectService.shared.play(.click)
+        transfer.start(item) { result in
+            switch result {
+            case .success(let id):
+                theme.reloadWallpapers()
+                use(id)
+            case .failure(let error):
+                errorTitle = "Couldn't download the wallpaper"
+                importError = error.localizedDescription
+            }
+        }
+    }
+
+    private func use(_ id: String) {
+        settings.settings.wallpaperID = id
+        SoundEffectService.shared.play(.click)
+        browser.close()
+        state.tab = ThemeBackgrounds.tab(for: id, wallpapers: theme.wallpapers)
+        state.backgroundIndex = ThemeBackgrounds.index(of: id, in: backgrounds)
+        router.closeMenu()
+    }
+
     private func back() {
         SoundEffectService.shared.play(.focus)
+        if transfer.itemID != nil { return transfer.cancel() }
+        if searchFocused { searchFocused = false; return }
+        if state.step == .background, browser.state != nil { return browser.close() }
         switch state.step {
         case .theme: router.isThemePickerOpen = false
         case .background: state.step = .theme
@@ -461,6 +649,7 @@ struct ThemePickerView: View {
             ? WallpaperCatalog.videoExtensions.compactMap { UTType(filenameExtension: $0) }
             : [.image]
         panel.allowsMultipleSelection = false
+        errorTitle = live ? "Couldn't add the video" : "Couldn't add the picture"
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
             let id = try theme.importWallpaper(from: url)
@@ -472,14 +661,15 @@ struct ThemePickerView: View {
     }
 
     private func removeFocused() {
-        guard state.step == .background, case .wallpaper(let id) = focusedBackground,
-              id.hasPrefix(WallpaperCatalog.custom + "/") else { return }
+        guard state.step == .background, browser.state == nil, case .wallpaper(let id) = focusedBackground,
+              ThemeStore.isRemovable(id) else { return }
         do {
             try theme.removeWallpaper(id: id)
             if settings.settings.wallpaperID == id { settings.settings.wallpaperID = nil }
             state.backgroundIndex = min(state.backgroundIndex, backgrounds.count - 1)
             SoundEffectService.shared.play(.click)
         } catch {
+            errorTitle = "Couldn't remove it"
             importError = error.localizedDescription
         }
     }
@@ -505,9 +695,11 @@ private struct TileFocus: ViewModifier {
     }
 }
 
-/// A wallpaper decoded small for a tile (a video's first frame), kept for the next time it shows.
+/// A wallpaper decoded small for a tile (a video's first frame, an online
+/// item's thumbnail), kept for the next time it shows.
 struct WallpaperThumb: View {
     let url: URL
+    var maxPixelSize = 480
     @State private var image: NSImage?
 
     private static let cache = NSCache<NSURL, NSImage>()
@@ -527,9 +719,16 @@ struct WallpaperThumb: View {
                     return
                 }
                 image = nil
-                let decoded = WallpaperCatalog.kind(of: url) == .video
-                    ? await LivePoster.image(for: url, maxPixelSize: 480)
-                    : await GameArtLoader.decode(at: url, maxPixelSize: 480)
+                let decoded: NSImage?
+                if url.isFileURL {
+                    decoded = WallpaperCatalog.kind(of: url) == .video
+                        ? await LivePoster.image(for: url, maxPixelSize: CGFloat(maxPixelSize))
+                        : await GameArtLoader.decode(at: url, maxPixelSize: maxPixelSize)
+                } else if let file = await OnlineBackgroundService.shared.thumbnailFile(for: url) {
+                    decoded = await GameArtLoader.decode(at: file, maxPixelSize: maxPixelSize)
+                } else {
+                    decoded = nil
+                }
                 guard let decoded, !Task.isCancelled else { return }
                 Self.cache.setObject(decoded, forKey: url as NSURL)
                 withAnimation(.easeOut(duration: 0.25)) { image = decoded }

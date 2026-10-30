@@ -1,7 +1,7 @@
 import Foundation
 
 /// A still picture, or a looping video (a live background).
-public enum BackgroundKind: Equatable {
+public enum BackgroundKind: Equatable, Sendable {
     case image, video
 }
 

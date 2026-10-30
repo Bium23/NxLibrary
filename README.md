@@ -30,7 +30,7 @@ NX Library follows the [Selene](https://github.com/mattxslv/Selene) Playnite the
 - **Launch screen:** on Play, the game's art and logo (per Settings → Games) stay up until the game's window appears.
 - **Find a game:** hold View or press `⌘F` for a search over the whole library.
 - **Settings:** Selene's two-column layout with Search and Changed, then Start-up, Navigation, Spotlight, Sound & music, Look, Games, Controllers, Library, Storage, Engine and About. Value rows step with Left/Right; X resets a group.
-- **Look:** 23 palettes, wallpaper per theme or none (Fill/Fit/Stretch) and an optional animated backdrop.
+- **Look:** 23 palettes, wallpaper per theme or none (Fill/Fit/Stretch) and an optional animated backdrop. Menu → Theme → background has two tabs, **Wallpapers** and **Live** (LB/RB or Q/E): your own pictures and looping videos (mp4, mov, m4v, played muted), and online stills from **Wallhaven** (safe for work only) and **Danbooru** (general rating only), 16:9 and 2560 wide or more, browsed by category or search without leaving the app. A chosen online picture is downloaded into `Application Support/NXLibrary/SeleneImports/Wallpapers/online/` with its credit (uploader or artist and page) in `credits.json`; X opens its page, Y removes it.
 - **Sounds:** Selene's cues. Four MIT cues ship with the app; **Settings → Sound & music → Import sounds and wallpapers from Selene** copies the rest from a Selene folder you own into Application Support.
 - **Intro:** the app mark with the boot cue on a cold launch (Settings → Start-up). Any input skips it.
 - **Add Game, Setup, Console:** the import/build flow, first-run checklist and log share the canvas units. Console's **Copy log** copies the last 200 log lines and the latest build log's tail.
@@ -123,7 +123,7 @@ The suite covers models and persistence, source parsing (including a regression 
 
 NX Library is MIT licensed. `NOTICE` retains the MIT copyrights for nxnative and the [rennan101/nxnative_Launcher](https://github.com/rennan101/nxnative_Launcher) GUI baseline; NX2Apple was a reference only and no code from it was copied. The app icon is original.
 
-Bundled media and their licenses are listed in `Resources/Selene/NOTICE.txt` and `NOTICE-palettes.txt`: Material Icons (Apache 2.0), Selene's four synthesized sounds (MIT), the Selene palettes (MIT) and five public-domain wallpapers. Other Selene sounds and wallpapers are never bundled; the import action copies them from the user's own checkout.
+Bundled media and their licenses are listed in `Resources/Selene/NOTICE.txt` and `NOTICE-palettes.txt`: Material Icons (Apache 2.0), Selene's four synthesized sounds (MIT), the Selene palettes (MIT) and five public-domain wallpapers. Other Selene sounds and wallpapers are never bundled; the import action copies them from the user's own checkout. Online wallpapers are never bundled or committed: they are fetched from Wallhaven and Danbooru only when the player browses, belong to their owners, and are credited under the preview.
 
 No games, keys, Nintendo logos, fonts, sounds, or other Nintendo assets are included. NX Library is not affiliated with, endorsed by, or sponsored by Nintendo.
 
