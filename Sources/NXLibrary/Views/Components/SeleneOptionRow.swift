@@ -11,13 +11,15 @@ struct SeleneOptionRow<Trailing: View>: View {
     var destructive = false
     /// False draws the row dim (ink60 text and icon), as Selene's disabled pills do. It still takes focus.
     var enabled = true
+    /// The icon's own colour instead of the theme's accent.
+    var tint: Color? = nil
     @ViewBuilder var trailing: () -> Trailing
 
     var body: some View {
         HStack(spacing: canvas.u(18)) {
             if let icon {
                 MaterialIconView(icon, size: 24)
-                    .foregroundColor(destructive ? SeleneTheme.danger : (enabled ? SeleneTheme.glyph : SeleneTheme.ink60))
+                    .foregroundColor(destructive ? SeleneTheme.danger : (enabled ? (tint ?? SeleneTheme.glyph) : SeleneTheme.ink60))
             }
             VStack(alignment: .leading, spacing: canvas.u(3)) {
                 Text(title)

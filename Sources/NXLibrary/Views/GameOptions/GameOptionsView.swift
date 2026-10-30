@@ -97,7 +97,8 @@ struct GameOptionsView: View {
     var body: some View {
         let p = presentation
         return ZStack {
-            SeleneTheme.scrim65
+            // A light shade: the screen behind is blurred (AppShellView), so the options read without darkening it much.
+            SeleneTheme.scrim45
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
                 .onTapGesture { back() }
@@ -205,7 +206,7 @@ struct GameOptionsView: View {
         case .heading(let text):
             Text(text)
                 .seleneFont(17, .semibold)
-                .foregroundColor(SeleneTheme.glyph)
+                .foregroundColor(isSelene ? SeleneTheme.ink75 : SeleneTheme.glyph)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.leading, canvas.u(26))
                 .padding(.top, canvas.u(16))
@@ -232,6 +233,9 @@ struct GameOptionsView: View {
         }
     }
 
+    /// Selene's blue accent on every icon read poorly; on Selene each kind of row has its own colour.
+    private var isSelene: Bool { ThemeStore.shared.palette.id == SelenePaletteCatalog.defaultID }
+
     private func rowView(_ row: GameOptionsRow, _ p: GameOptionsPresentation,
                          focused: GameOptionsRow?) -> some View {
         SeleneOptionRow(icon: row.icon,
@@ -239,7 +243,8 @@ struct GameOptionsView: View {
                         about: p.about(row),
                         focused: focused == row,
                         destructive: row.isDestructive,
-                        enabled: !p.isDimmed(row)) {
+                        enabled: !p.isDimmed(row),
+                        tint: isSelene ? row.iconTint.flatMap { UInt32($0.dropFirst(), radix: 16) }.map { Color(hex: $0) } : nil) {
             trailing(row)
         }
         .help(p.info(row) ?? "")

@@ -65,6 +65,8 @@ public struct AppShellView: View {
         ZStack {
             SeleneTheme.scrim.ignoresSafeArea()
             content
+                // Game options blur the screen behind instead of darkening it.
+                .blur(radius: viewModel.gameForSettingsSheet == nil ? 0 : 18)
             if router.isSearchPresented && isHomeRoute {
                 FindGameView(router: router, viewModel: viewModel, playSessions: playSessions,
                              artwork: artwork)

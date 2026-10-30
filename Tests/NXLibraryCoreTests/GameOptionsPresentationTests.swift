@@ -41,9 +41,31 @@ final class GameOptionsPresentationTests: XCTestCase {
     func testMainRowsFollowTheSpecOrder() {
         let rows = presentation().focusableRows(level: .main, origin: .spotlight)
         XCTAssertEqual(rows.first, .play)
-        XCTAssertEqual(Array(rows.prefix(4)), [.play, .move, .favorite, .hidden])
-        XCTAssertEqual(Array(rows.suffix(5)), [.rebuild, .showInFinder, .openSaves, .editDetails, .removeGame])
+        XCTAssertEqual(Array(rows.prefix(5)), [.play, .editDetails, .move, .favorite, .hidden])
+        XCTAssertEqual(Array(rows.suffix(4)), [.rebuild, .showInFinder, .openSaves, .removeGame])
         XCTAssertEqual(rows.last, .removeGame)
+    }
+
+    /// Edit details sits under Play wherever the options open.
+    func testEditDetailsUnderPlayForEveryOrigin() {
+        for origin in [GameOptionsOrigin.spotlight, .collection, .details] {
+            let rows = presentation().focusableRows(level: .main, origin: origin)
+            XCTAssertEqual(Array(rows.prefix(2)), [.play, .editDetails], "\(origin)")
+            XCTAssertEqual(rows.filter { $0 == .editDetails }.count, 1)
+        }
+    }
+
+    /// On Selene each kind of row has its own icon colour; the dangerous ones keep the danger red.
+    func testRowsHaveIconColoursByKind() {
+        for row in GameOptionsRow.allCases {
+            if row.isDestructive {
+                XCTAssertNil(row.iconTint, "\(row)")
+            } else {
+                XCTAssertEqual(row.iconTint?.count, 7, "\(row) has a #RRGGBB colour")
+            }
+        }
+        XCTAssertGreaterThanOrEqual(Set(GameOptionsRow.allCases.compactMap(\.iconTint)).count, 6)
+        XCTAssertNotEqual(GameOptionsRow.play.iconTint, GameOptionsRow.favorite.iconTint)
     }
 
     func testRenderScaleRowOnlyWhenSupportedOtherwiseNote() {
