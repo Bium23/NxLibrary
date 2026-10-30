@@ -30,7 +30,7 @@ struct ThemePreview: View {
                     WallpaperThumb(url: wallpaperURL).opacity(0.6)
                 } else {
                     MoonlightBackdrop(accent: Color(hex: palette.glyph), ink: Color(hex: palette.ink),
-                                      unit: w / 1920, moving: false)
+                                      moving: false, asImage: true)
                 }
                 scrims
                 home(w: w, h: h)
