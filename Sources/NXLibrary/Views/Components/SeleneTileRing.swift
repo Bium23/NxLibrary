@@ -67,7 +67,8 @@ struct SeleneTileRing: View {
 
 /// A diagonal light sweep across the tile: hold 0.6s, sweep until 2.4s, idle until 5s.
 /// The band runs along the top-left → bottom-right diagonal, entering past one
-/// corner and leaving past the other, so it never pops in or out.
+/// corner and leaving past the other, so it never pops in or out. Selene's glint
+/// (Main.xaml Shine): a thin core at 0.18 white with faint 0.04 shoulders.
 struct SeleneShine: View {
     @Environment(\.seleneReduceMotion) private var reduceMotion
 
@@ -81,7 +82,7 @@ struct SeleneShine: View {
     }
 
     /// Half the band's width, in diagonal units (0 = top-left corner, 1 = bottom-right).
-    static let halfWidth = 0.22
+    static let halfWidth = 0.3
 
     /// The band's centre along the diagonal `t` seconds after the tile was selected.
     static func centre(at t: TimeInterval) -> Double {
@@ -104,7 +105,9 @@ struct SeleneShine: View {
                     .fill(LinearGradient(
                         stops: [
                             .init(color: .white.opacity(0), location: 0),
-                            .init(color: .white.opacity(0.22), location: 0.5),
+                            .init(color: .white.opacity(0.04), location: 0.3),
+                            .init(color: .white.opacity(0.18), location: 0.5),
+                            .init(color: .white.opacity(0.04), location: 0.7),
                             .init(color: .white.opacity(0), location: 1)
                         ],
                         startPoint: UnitPoint(x: c - w, y: c - w),
