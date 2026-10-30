@@ -34,7 +34,7 @@ constant float aperture = 0.010;
 // A lens's soft edge: motes toward the right blur a touch more, from `lensFrom`
 // (share of the width) to the edge, up to `lensBlur` window heights.
 constant float lensFrom = 0.55;
-constant float lensBlur = 0.0032;
+constant float lensBlur = 0.0016;
 // The road the motes travel: an S from near the camera at the bottom left,
 // away into the distance on the right. Depth at its two ends, and its half
 // width in window heights at depth 1 (so it narrows as it recedes).
