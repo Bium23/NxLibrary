@@ -16,21 +16,22 @@ public struct CompatibilityReport: Equatable {
 
 public final class CompatibilityChecker {
     private let repoURL: URL
-    private let pythonURL: URL
+    private let toolchain: EngineToolchain
     private let developerDir: URL?
     private let runner: CommandRunning
 
-    public init(repoURL: URL, pythonURL: URL,
+    private var pythonURL: URL { toolchain.python }
+
+    public init(repoURL: URL, toolchain: EngineToolchain,
                 developerDir: URL?, runner: CommandRunning = SystemCommandRunner()) {
         self.repoURL = repoURL
-        self.pythonURL = pythonURL
+        self.toolchain = toolchain
         self.developerDir = developerDir
         self.runner = runner
     }
 
     private func run(_ executable: String, _ args: [String]) -> CommandResult {
-        var env = ProcessInfo.processInfo.environment
-        if let developerDir { env["DEVELOPER_DIR"] = developerDir.path }
+        let env = toolchain.environment(base: ProcessInfo.processInfo.environment, developerDir: developerDir)
         return (try? runner.run(URL(fileURLWithPath: executable), args,
                                 environment: env, currentDirectory: repoURL))
             ?? CommandResult(status: -1, stdout: "", stderr: "failed")

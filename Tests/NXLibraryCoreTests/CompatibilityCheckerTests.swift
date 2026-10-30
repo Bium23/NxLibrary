@@ -36,7 +36,7 @@ final class CompatibilityCheckerTests: XCTestCase {
 
     private func checker(_ runner: FakeRunner) -> CompatibilityChecker {
         CompatibilityChecker(repoURL: repo,
-                             pythonURL: repo.appendingPathComponent(".venv/bin/python"),
+                             toolchain: EngineToolchain.resolve(runtime: nil, repo: repo),
                              developerDir: nil, runner: runner)
     }
 

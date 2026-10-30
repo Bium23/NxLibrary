@@ -9,7 +9,7 @@ public enum BuildFailureDiagnostics {
         }
 
         if log.contains("Direct RomFS image builds require Python 3.12") {
-            return "\(gameName) could not build because the nxnative venv is older than Python 3.12. The current engine needs Python 3.12+ for RomFS image builds (3.14 recommended). Recreate ~/nxnative/.venv with Python 3.14, then retry. Sources, saves and existing apps were not changed."
+            return "\(gameName) could not build because its Python is older than 3.12. The current engine needs Python 3.12+ for RomFS image builds. NX Library carries its own Python 3.14: reinstall the app, or in a developer build recreate ~/nxnative/.venv with Python 3.14, then retry. Sources, saves and existing apps were not changed."
         }
 
         let rewriteFailed = log.contains("patch_nso.py")

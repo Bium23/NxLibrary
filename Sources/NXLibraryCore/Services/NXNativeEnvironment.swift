@@ -29,27 +29,26 @@ public enum MetalVersion {
 
 public final class NXNativeEnvironment {
     public let repoURL: URL
-    public let pythonURL: URL
+    public let toolchain: EngineToolchain
     public let developerDir: URL?
     private let runner: CommandRunning
 
+    public var pythonURL: URL { toolchain.python }
+
     public init(
         repoURL: URL = URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("nxnative"),
-        pythonURL: URL? = nil,
+        toolchain: EngineToolchain,
         developerDir: URL? = nil,
         runner: CommandRunning = SystemCommandRunner()
     ) {
         self.repoURL = repoURL
-        self.pythonURL = pythonURL ?? repoURL.appendingPathComponent(".venv/bin/python")
+        self.toolchain = toolchain
         self.developerDir = developerDir
         self.runner = runner
     }
 
     private func run(_ executable: String, _ args: [String]) -> CommandResult {
-        var env = ProcessInfo.processInfo.environment
-        let base = "/opt/homebrew/bin:/usr/local/bin:/usr/local/share/dotnet:/usr/bin:/bin:/usr/sbin:/sbin"
-        env["PATH"] = base + ":" + (env["PATH"] ?? "")
-        if let developerDir { env["DEVELOPER_DIR"] = developerDir.path }
+        let env = toolchain.environment(base: ProcessInfo.processInfo.environment, developerDir: developerDir)
         return (try? runner.run(URL(fileURLWithPath: executable), args,
                                 environment: env, currentDirectory: repoURL))
             ?? CommandResult(status: -1, stdout: "", stderr: "failed")
@@ -98,15 +97,15 @@ public final class NXNativeEnvironment {
         let metal = MetalVersion.parse(run("/usr/bin/xcrun", ["metal", "--version"]).stdout)
         if metal == nil { issues.append("Metal compiler not found") }
 
-        let dotnet = run("/usr/bin/env", ["dotnet", "--list-runtimes"]).stdout
-        let dotnetOK = dotnet.contains("NETCore.App 10.")
-        if !dotnetOK { issues.append("the .NET 10 runtime is missing") }
+        // The engine's script runs `dotnet build` itself, so it needs the SDK, not only the runtime.
+        let sdks = run("/usr/bin/env", ["dotnet", "--list-sdks"]).stdout
+        let dotnetOK = sdks.split(separator: "\n").contains { $0.hasPrefix("10.") }
+        if !dotnetOK { issues.append("the .NET 10 SDK is missing") }
 
+        // A Mac build needs no xcodegen, and SPIRV-Cross is the engine's own in-repo build.
         var tools: [ToolStatus] = []
-        for tool in ["xcodegen", "zstd", "spirv-cross", "glslang"] {
-            // spirv-cross exits 1 for --version/-h but 0 for --help.
-            let flag = tool == "spirv-cross" ? "--help" : "--version"
-            let result = run("/usr/bin/env", [tool, flag])
+        for tool in ["zstd", "glslangValidator"] {
+            let result = run("/usr/bin/env", [tool, "--version"])
             let ok = result.status == 0
             tools.append(ToolStatus(id: tool, name: tool, ok: ok,
                                     detail: ok ? "available" : "missing"))

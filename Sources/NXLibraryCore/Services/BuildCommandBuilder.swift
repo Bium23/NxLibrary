@@ -3,7 +3,7 @@ import Foundation
 public enum BuildCommandBuilder {
     public static func make(
         repo: URL,
-        python: URL,
+        toolchain: EngineToolchain,
         workspace: URL,
         keys: URL,
         output: URL,
@@ -40,12 +40,9 @@ public enum BuildCommandBuilder {
         if allowUntestedToolchain { args.append("--allow-other-metal") }
         args += extraArguments
 
-        var env = ProcessInfo.processInfo.environment
-        let base = "/opt/homebrew/bin:/usr/local/bin:/usr/local/share/dotnet:/usr/bin:/bin:/usr/sbin:/sbin"
-        env["PATH"] = base + ":" + (env["PATH"] ?? "")
-        env["DEVELOPER_DIR"] = developerDir.path
+        var env = toolchain.environment(base: ProcessInfo.processInfo.environment, developerDir: developerDir)
         env["PYTHONUNBUFFERED"] = "1"
-        return BuildCommand(executable: python, arguments: args,
+        return BuildCommand(executable: toolchain.python, arguments: args,
                             environment: env, workingDirectory: repo)
     }
 }

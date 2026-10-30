@@ -4,9 +4,8 @@ import XCTest
 final class BuildCommandBuilderTests: XCTestCase {
     func testMacOnlyJSONCommand() {
         let repo = URL(fileURLWithPath: "/tmp/repo")
-        let python = repo.appendingPathComponent(".venv/bin/python")
         let cmd = BuildCommandBuilder.make(
-            repo: repo, python: python,
+            repo: repo, toolchain: EngineToolchain.resolve(runtime: nil, repo: repo),
             workspace: URL(fileURLWithPath: "/tmp/work"),
             keys: URL(fileURLWithPath: "/tmp/prod.keys"),
             output: URL(fileURLWithPath: "/tmp/Game.app"),
@@ -25,7 +24,7 @@ final class BuildCommandBuilderTests: XCTestCase {
         let repo = URL(fileURLWithPath: "/tmp/repo")
         let cmd = BuildCommandBuilder.make(
             repo: repo,
-            python: repo.appendingPathComponent(".venv/bin/python"),
+            toolchain: EngineToolchain.resolve(runtime: nil, repo: repo),
             workspace: URL(fileURLWithPath: "/tmp/work"),
             keys: URL(fileURLWithPath: "/tmp/prod.keys"),
             output: URL(fileURLWithPath: "/tmp/Game.app"),
@@ -39,7 +38,7 @@ final class BuildCommandBuilderTests: XCTestCase {
         let repo = URL(fileURLWithPath: "/tmp/repo")
         let cmd = BuildCommandBuilder.make(
             repo: repo,
-            python: repo.appendingPathComponent(".venv/bin/python"),
+            toolchain: EngineToolchain.resolve(runtime: nil, repo: repo),
             workspace: URL(fileURLWithPath: "/tmp/work"),
             keys: URL(fileURLWithPath: "/tmp/prod.keys"),
             output: URL(fileURLWithPath: "/tmp/Game.app"),
@@ -50,5 +49,22 @@ final class BuildCommandBuilderTests: XCTestCase {
         XCTAssertTrue(cmd.arguments.contains("--motion"))
         XCTAssertTrue(cmd.arguments.contains("--romfs"))
         XCTAssertTrue(cmd.arguments.contains("separate"))
+    }
+
+    func testBuildCommandUsesToolchain() {
+        let repo = URL(fileURLWithPath: "/tmp/repo")
+        let runtime = BundledRuntime(root: URL(fileURLWithPath: "/App/Contents/Resources/Runtime"))
+        let toolchain = EngineToolchain.resolve(runtime: runtime, repo: repo)
+        let cmd = BuildCommandBuilder.make(
+            repo: repo, toolchain: toolchain,
+            workspace: URL(fileURLWithPath: "/tmp/work"),
+            keys: URL(fileURLWithPath: "/tmp/prod.keys"),
+            output: URL(fileURLWithPath: "/tmp/Game.app"),
+            developerDir: URL(fileURLWithPath: "/Applications/Xcode.app/Contents/Developer")
+        )
+        XCTAssertEqual(cmd.executable, toolchain.python)
+        XCTAssertTrue(cmd.environment["PATH"]?.hasPrefix("/App/Contents/Resources/Runtime/bin:") == true)
+        XCTAssertEqual(cmd.environment["PYTHONNOUSERSITE"], "1")
+        XCTAssertEqual(cmd.environment["PYTHONUNBUFFERED"], "1")
     }
 }

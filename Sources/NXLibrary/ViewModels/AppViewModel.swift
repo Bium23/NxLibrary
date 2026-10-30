@@ -297,6 +297,11 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         ("ko", "Korean")
     ]
     
+    /// The Python and PATH every engine process runs with (bundled runtime, else the venv).
+    public var engineToolchain: EngineToolchain {
+        .resolve(runtime: .locate(), repo: URL(fileURLWithPath: nxnativePath))
+    }
+
     public let pinnedEngineCommit = "ee369f09984f23adbe003f55e94be5d81cd8c0e6"
     private let core = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/NXLibrary")
@@ -481,14 +486,14 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
             return
         }
         let repo = URL(fileURLWithPath: nxnativePath)
-        let python = repo.appendingPathComponent(".venv/bin/python")
+        let toolchain = engineToolchain
         let developerDir = resolvedDeveloperDir()
         let expected = pinnedEngineCommit
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let environment = NXNativeEnvironment(repoURL: repo, pythonURL: python,
+            let environment = NXNativeEnvironment(repoURL: repo, toolchain: toolchain,
                                                   developerDir: developerDir)
             let status = environment.inspect()
-            let checker = CompatibilityChecker(repoURL: repo, pythonURL: python,
+            let checker = CompatibilityChecker(repoURL: repo, toolchain: toolchain,
                                                developerDir: developerDir)
             let report = try? checker.check(expectedEngineCommit: expected)
             let currentCommit = report?.checks.first(where: { $0.id == "commit" })?.detail
@@ -1894,7 +1899,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         // have changed since the last Settings/launch check.
         let checker = CompatibilityChecker(
             repoURL: URL(fileURLWithPath: nxnativePath),
-            pythonURL: URL(fileURLWithPath: nxnativePath).appendingPathComponent(".venv/bin/python"),
+            toolchain: engineToolchain,
             developerDir: resolvedDeveloperDir()
         )
         let report = try? checker.check(expectedEngineCommit: pinnedEngineCommit)
@@ -1965,9 +1970,11 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
         }
 
         let repo = URL(fileURLWithPath: nxnativePath)
-        let python = repo.appendingPathComponent(".venv/bin/python")
-        guard FileManager.default.isExecutableFile(atPath: python.path) else {
-            throw NXLibraryError.environmentBlocked("the nxnative venv Python is missing")
+        let toolchain = engineToolchain
+        guard FileManager.default.isExecutableFile(atPath: toolchain.python.path) else {
+            throw NXLibraryError.environmentBlocked(toolchain.isBundled
+                ? "the bundled Python is missing; reinstall NX Library"
+                : "the nxnative venv Python is missing")
         }
 
         let tempRoot = core.appendingPathComponent("Temp").appendingPathComponent(UUID().uuidString)
@@ -1979,7 +1986,7 @@ public final class AppViewModel: ObservableObject, InstallerServiceDelegate {
 
         let command = BuildCommandBuilder.make(
             repo: repo,
-            python: python,
+            toolchain: toolchain,
             workspace: workspace.directory,
             keys: keyStore.keyURL,
             output: tempApp,
