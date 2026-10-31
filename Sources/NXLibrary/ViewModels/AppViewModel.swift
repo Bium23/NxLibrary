@@ -327,7 +327,8 @@ public final class AppViewModel: ObservableObject {
         .appendingPathComponent("Library/Application Support/NXLibrary")
     lazy var libraryStore = LibraryStore(directory: core)
     lazy var keyStore = KeyStore(directory: core.appendingPathComponent("keys"))
-    private let importService = ImportService()
+    /// Sizes of built apps are remembered between launches, so a scan walks only new or rebuilt apps.
+    private lazy var importService = ImportService(sizeCache: AppSizeCache(file: core.appendingPathComponent("app-sizes.json")))
     private let launchService = LaunchService()
     private lazy var upstreamChecker = UpstreamChecker()
     private lazy var storeMetadataService = NintendoStoreMetadataService()
@@ -836,6 +837,12 @@ public final class AppViewModel: ObservableObject {
     public func loadLibrary() {
         guard !isScanningLibrary else { return }
         isScanningLibrary = true
+        // At launch the saved library shows at once; the folder scan below then brings in new and changed apps.
+        if libraryGames.isEmpty, let stored = try? libraryStore.load(), !stored.games.isEmpty {
+            libraryGames = stored.games.sorted {
+                $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+            }
+        }
         let fm = FileManager.default
         let home = URL(fileURLWithPath: NSHomeDirectory())
         var directories = [home.appendingPathComponent("Applications")]

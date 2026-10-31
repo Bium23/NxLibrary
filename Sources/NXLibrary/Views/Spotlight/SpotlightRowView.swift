@@ -64,8 +64,11 @@ struct SpotlightRowView: View {
                     .zIndex(11)
             }
             if let isEmptyFilter {
+                // Beside the last card, whatever the card count and selection, never over them.
                 emptyMessage(isEmptyFilter)
-                    .offset(x: canvas.u(80 + 560), y: canvas.u(46 - 10))
+                    .offset(x: canvas.u(x(of: items.count, selected: selected, offset: offset) + 32),
+                            y: canvas.u(3 + Self.host / 2 - 26))
+                    .transition(.opacity)
             }
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -75,6 +78,7 @@ struct SpotlightRowView: View {
         .animation(reduceMotion ? .easeOut(duration: 0.2) : SeleneTheme.cubicOut(0.32), value: selectedKey)
         .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.32), value: items.map(\.key))
         .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.32), value: liftedKey)
+        .animation(.easeOut(duration: 0.3), value: isEmptyFilter)
         .onAppear { scheduleTitle(delay: 0) }
         .onChange(of: selectedKey) { _ in scheduleTitle(delay: 0.23) }
         .onDisappear { titleTask?.cancel() }
@@ -176,10 +180,10 @@ struct SpotlightRowView: View {
             case .all: return ("No games yet", "Add a game to start your collection.")
             }
         }()
-        return VStack(alignment: .leading, spacing: canvas.u(8)) {
-            Text(title).seleneFont(30, .semibold).foregroundColor(SeleneTheme.ink)
-            Text(hint).seleneFont(19).foregroundColor(SeleneTheme.ink60)
-                .frame(maxWidth: canvas.u(520), alignment: .leading)
+        return VStack(alignment: .leading, spacing: canvas.u(6)) {
+            Text(title).seleneFont(22, .medium).foregroundColor(SeleneTheme.ink90)
+            Text(hint).seleneFont(16).foregroundColor(SeleneTheme.ink60)
+                .frame(maxWidth: canvas.u(380), alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .allowsHitTesting(false)

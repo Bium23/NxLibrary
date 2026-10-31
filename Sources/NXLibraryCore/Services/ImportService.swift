@@ -25,11 +25,20 @@ public struct ImportedApp: Identifiable, Equatable {
 
 public final class ImportService {
     private let fm: FileManager
+    private let sizeCache: AppSizeCache
 
-    public init(fileManager: FileManager = .default) { self.fm = fileManager }
+    /// Without a cache, sizes are remembered for the life of this service only.
+    public init(fileManager: FileManager = .default, sizeCache: AppSizeCache? = nil) {
+        self.fm = fileManager
+        self.sizeCache = sizeCache ?? AppSizeCache(file: nil)
+    }
 
     public func scan(directories: [URL]) -> [ImportedApp] {
         var apps: [ImportedApp] = []
+        defer {
+            sizeCache.retain(apps.map(\.appURL))
+            sizeCache.save()
+        }
         for directory in directories {
             guard let items = try? fm.contentsOfDirectory(
                 at: directory,
@@ -56,7 +65,7 @@ public final class ImportService {
                 apps.append(ImportedApp(
                     name: name, version: version, titleId: titleId,
                     bundleId: bundleId, appURL: item,
-                    sizeBytes: directorySize(item), modificationDate: date
+                    sizeBytes: size(of: item, date: date), modificationDate: date
                 ))
             }
         }
@@ -94,6 +103,14 @@ public final class ImportService {
               let object = try? PropertyListSerialization.propertyList(
                 from: data, options: [], format: nil) as? [String: Any] else { return nil }
         return object
+    }
+
+    /// The remembered size while the app's date is unchanged, else measured.
+    private func size(of app: URL, date: Date) -> Int64 {
+        if let known = sizeCache.size(for: app, date: date) { return known }
+        let measured = directorySize(app)
+        sizeCache.set(measured, for: app, date: date)
+        return measured
     }
 
     private func directorySize(_ url: URL) -> Int64 {

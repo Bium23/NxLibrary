@@ -220,8 +220,9 @@ public struct SpotlightView: View {
                     gamesByID: model.gamesByID,
                     selectedKey: state.selectedKey,
                     liftedKey: state.lift?.key,
-                    isEmptyFilter: items.contains { if case .game = $0 { return true } else { return false } }
-                        ? nil : filter,
+                    isEmptyFilter: LibraryEmptyState.showsMessage(
+                        hasGames: items.contains { if case .game = $0 { return true } else { return false } },
+                        isReadingLibrary: viewModel.isScanningLibrary) ? filter : nil,
                     artwork: artwork,
                     tileLook: viewModel.portingTileLook,
                     onSelect: { item in
