@@ -49,6 +49,7 @@ This directory records the review that must happen before the pin changes, plus 
 - [2026-10-27 — 06b7b3e → 4f24ce6](2026-10-27-06b7b3e-4f24ce6.md)
 - [2026-10-27 — 4f24ce6 → 1963fab](2026-10-27-4f24ce6-1963fab.md)
 - [2026-10-29 — 1963fab → ee369f0](2026-10-29-1963fab-ee369f0.md)
+- [2026-10-31 — ee369f0 → 2716f78](2026-10-31-ee369f0-2716f78.md) (host cheats; verified with the untested Metal 32023.922 override)
 
 ## Guardrails
 

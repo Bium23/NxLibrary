@@ -25,7 +25,8 @@ NX Library follows the [Selene](https://github.com/mattxslv/Selene) Playnite the
 - **Spotlight:** Selene's home row of square tiles (each game's own app icon) with cards (Collection, Surprise me, Activity, Add game), filter pill, info block with Play / Options / Favorite, screenshot strip and a full-screen screenshot viewer. Below the stats it is one page: genres, screenshots, description, Build & Sources with Your activity, More like this. Down glides the whole screen up as the row fades; the trackpad scrolls the page freely. Hold A to lift and move a tile.
 - **Collection:** a single row of covers over the selected game's art.
 - **Details:** banded page (Play / Options / Favorite, Build & Sources, screenshots, More like this) with Selene's scrim masks.
-- **Game options:** Selene's 1040u panel with runtime settings, favorite, hide and move, and confirm dialogs. Arrows, the wheel and the trackpad drive it; the pointer alone never moves the focus. Hidden games come back from **Settings → Games → Hidden games**.
+- **Game options:** Selene's 1040u panel with runtime settings, favorite, hide and move, and confirm dialogs.
+- **Cheats:** Game Options → **Cheats** (the third row) installs a cheat file (drop it, or choose it) into the folder the game's engine reads, `~/Library/Application Support/nxnative/<title ID>/cheats/<build ID>.txt`, and switches each cheat and the master switch. A new file starts with every cheat off; changes apply at the next Play, and the in-game panel (⌘⇧C) shows the same files. Files are written only while the game is not running. An app built with an engine older than nxnative `ef9f9bb` shows **Rebuild**. The detail page shows CHEATS · On when at least one is on. Arrows, the wheel and the trackpad drive it; the pointer alone never moves the focus. Hidden games come back from **Settings → Games → Hidden games**.
 - **Control center:** Menu/Start or `⌘K` opens Selene's menu with Resume and Close Game for a running game, and Power (quit, relaunch).
 - **Launch screen:** on Play, the game's art and logo (per Settings → Games) stay up until the game's window appears.
 - **Find a game:** hold View or press `⌘F` for a search over the whole library.
@@ -51,7 +52,7 @@ The design specification and implementation plan live in [`docs/superpowers/`](d
 - Apple-silicon Mac, macOS 13 or newer.
 - Xcode 27.1 or newer, with the matching Metal toolchain.
 - The .NET 10 SDK (the engine builds its extractor with `dotnet build`).
-- The nxnative checkout at `~/nxnative`, pinned to `ee369f09984f23adbe003f55e94be5d81cd8c0e6`. A checkout elsewhere can be chosen in Settings → Engine; NX Library remembers it while the folder exists.
+- The nxnative checkout at `~/nxnative`, pinned to `2716f78f01e90a9f9bbf0d09e7a798903525962f`. A checkout elsewhere can be chosen in Settings → Engine; NX Library remembers it while the folder exists.
 
 Python 3.14 (with `capstone` 5, `lz4` and `fontTools`), `zstd` and `glslangValidator` ship inside the app. No Homebrew or pip is needed to use it. The Setup check installs the Metal toolchain, downloads Microsoft's .NET 10 SDK installer and clones the engine; Xcode itself comes from the App Store.
 
@@ -116,7 +117,7 @@ An explicit **Build anyway with an untested toolchain** override exists. It requ
 
 ## Updating the engine
 
-Engine upgrades are manual and never follow `main`. Before changing the pin, review the commits and decide what belongs in the UI and what stays backend-only. The checklist and dated notes are in [`docs/upstream-upgrades/`](docs/upstream-upgrades/); the current pin is `ee369f09984f23adbe003f55e94be5d81cd8c0e6`.
+Engine upgrades are manual and never follow `main`. Before changing the pin, review the commits and decide what belongs in the UI and what stays backend-only. The checklist and dated notes are in [`docs/upstream-upgrades/`](docs/upstream-upgrades/); the current pin is `2716f78f01e90a9f9bbf0d09e7a798903525962f`.
 
 ## Tests
 
