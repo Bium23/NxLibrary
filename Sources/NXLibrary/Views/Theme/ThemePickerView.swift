@@ -5,7 +5,8 @@ import NXLibraryCore
 
 /// The menu's Theme screen (Selene's ProfileSteps from Theme): first the theme's
 /// colors, then the background, each beside a preview of the home. A on a theme
-/// applies it and goes on; A on a background applies it and closes the menu. B
+/// applies it and goes on; A on a background asks where it goes (Everywhere, Settings only, Not now) and then
+/// closes the menu. B
 /// steps back (from the colors: to the menu). The background step has two tabs,
 /// Wallpapers and Live, switched with LB/RB (Q/E); it adds your own pictures or
 /// videos (copied into NX Library) and removes them again with Y (Delete). An
@@ -28,6 +29,10 @@ struct ThemePickerView: View {
     /// The wallpaper waiting on "Remove?", and the dialog's focused pill.
     @State private var removal: String?
     @State private var removalFocus: SeleneConfirmButton = .cancel
+    /// A chosen background waiting on "Where should this wallpaper go?" (nil inside: the theme's own), and the
+    /// dialog's focused pill (an index in `WallpaperPlacement.allCases`).
+    @State private var placing: PendingWallpaper?
+    @State private var placementFocus = WallpaperPlacement.allCases.count - 1
     /// The focused live item's video, once the focus has rested on it.
     @State private var previewVideo: URL?
     @FocusState private var searchFocused: Bool
@@ -71,8 +76,15 @@ struct ThemePickerView: View {
                     .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.96)))
                     .zIndex(1)
             }
+
+            if let placing {
+                placementDialog(placing)
+                    .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.96)))
+                    .zIndex(1)
+            }
         }
         .animation(reduceMotion ? nil : SeleneTheme.quick, value: removal)
+        .animation(reduceMotion ? nil : SeleneTheme.quick, value: placing)
         .onAppear(perform: open)
         .onReceive(NotificationCenter.default.publisher(for: .nxThemePickerGamepadAction)) { note in
             guard let action = note.object as? GamepadAction else { return }
@@ -528,6 +540,7 @@ struct ThemePickerView: View {
 
     private func handle(_ action: GamepadAction) {
         if removal != nil { return handleRemoval(action) }
+        if placing != nil { return handlePlacement(action) }
         if state.step == .background, browser.state != nil { return handleBrowse(action) }
         switch action {
         case .navigateUp: move(.up)
@@ -587,15 +600,12 @@ struct ThemePickerView: View {
             case .add:
                 addOwn()
                 return
-            case .theme: settings.settings.wallpaperID = nil
-            case .none: settings.settings.wallpaperID = WallpaperCatalog.none
-            case .wallpaper(let id): settings.settings.wallpaperID = id
+            case .theme: askPlacement(nil)
+            case .none: askPlacement(WallpaperCatalog.none)
+            case .wallpaper(let id): askPlacement(id)
             case .online(let source):
                 openSource(source)
-                return
             }
-            SoundEffectService.shared.play(.click)
-            router.closeMenu()
         }
     }
 
@@ -679,12 +689,67 @@ struct ThemePickerView: View {
     }
 
     private func use(_ id: String) {
-        settings.settings.wallpaperID = id
-        SoundEffectService.shared.play(.click)
         browser.close()
         state.tab = ThemeBackgrounds.tab(for: id, wallpapers: theme.wallpapers)
         state.backgroundIndex = ThemeBackgrounds.index(of: id, in: backgrounds)
+        askPlacement(id)
+    }
+
+    // MARK: - Placement
+
+    /// A chosen background; `id` nil is the theme's own.
+    struct PendingWallpaper: Equatable {
+        let id: String?
+    }
+
+    private func askPlacement(_ id: String?) {
+        placementFocus = WallpaperPlacement.allCases.count - 1
+        placing = PendingWallpaper(id: id)
+        SoundEffectService.shared.play(.click)
+    }
+
+    private func handlePlacement(_ action: GamepadAction) {
+        let last = WallpaperPlacement.allCases.count - 1
+        switch action {
+        case .navigateLeft:
+            if placementFocus > 0 { placementFocus -= 1; SoundEffectService.shared.play(.focus) }
+        case .navigateRight:
+            if placementFocus < last { placementFocus += 1; SoundEffectService.shared.play(.focus) }
+        case .confirm:
+            place(WallpaperPlacement.allCases[placementFocus])
+        case .cancel:
+            place(.notNow)
+        default: break
+        }
+    }
+
+    /// Everywhere and Settings only apply it and close the menu; Not now keeps the gallery open, nothing changed.
+    private func place(_ placement: WallpaperPlacement) {
+        guard let pending = placing else { return }
+        placing = nil
+        placement.apply(pending.id, to: &settings.settings)
+        if placement == .notNow {
+            SoundEffectService.shared.play(.focus)
+            return
+        }
+        SoundEffectService.shared.play(.click)
         router.closeMenu()
+    }
+
+    private func placementDialog(_ pending: PendingWallpaper) -> some View {
+        let name = pending.id == WallpaperCatalog.none ? "No wallpaper"
+            : pending.id.flatMap { theme.credits[$0]?.title } ?? theme.wallpaperTitle(for: pending.id)
+        return ZStack {
+            SeleneTheme.scrim45
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture { place(.notNow) }
+            SeleneChoiceDialog(title: WallpaperPlacement.dialogTitle,
+                               message: "\(name). You can change both wallpapers any time in Settings → Look.",
+                               choices: WallpaperPlacement.allCases.map(\.title), focus: $placementFocus) { index in
+                place(WallpaperPlacement.allCases[index])
+            }
+        }
     }
 
     private func back() {
@@ -754,6 +819,7 @@ struct ThemePickerView: View {
         do {
             try theme.removeWallpaper(id: id)
             if settings.settings.wallpaperID == id { settings.settings.wallpaperID = nil }
+            if settings.settings.settingsWallpaperID == id { settings.settings.settingsWallpaperID = nil }
             state.backgroundIndex = min(state.backgroundIndex, backgrounds.count - 1)
             SoundEffectService.shared.play(.click)
         } catch {

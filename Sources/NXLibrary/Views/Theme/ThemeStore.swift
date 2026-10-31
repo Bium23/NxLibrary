@@ -82,6 +82,19 @@ public final class ThemeStore: ObservableObject {
         [nil, WallpaperCatalog.none] + wallpapers.map(\.id)
     }
 
+    /// Same as the app, the theme's own, none, then every wallpaper by id.
+    var settingsWallpaperChoices: [String?] {
+        [nil, WallpaperCatalog.themeOwn, WallpaperCatalog.none] + wallpapers.map(\.id)
+    }
+
+    func settingsWallpaperTitle(for settingsID: String?) -> String {
+        switch settingsID {
+        case nil: return "Same as app"
+        case WallpaperCatalog.themeOwn?: return wallpaperTitle(for: nil)
+        case let id?: return wallpaperTitle(for: id)
+        }
+    }
+
     /// The setting's name, as Settings → Look and the control center show it.
     func wallpaperTitle(for wallpaperID: String?) -> String {
         switch wallpaperID {

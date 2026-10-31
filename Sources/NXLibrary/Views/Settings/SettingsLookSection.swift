@@ -28,6 +28,14 @@ struct SettingsLookSection: View {
         }
     }
 
+    private var settingsWallpaperTitle: String { theme.settingsWallpaperTitle(for: settings.settings.settingsWallpaperID) }
+
+    private func stepSettingsWallpaper(_ step: Int) {
+        if let next = theme.settingsWallpaperChoices.stepped(from: settings.settings.settingsWallpaperID, step) {
+            settings.settings.settingsWallpaperID = next
+        }
+    }
+
     private func stepSizing(_ step: Int) {
         settings.settings.backgroundSizing = settings.settings.backgroundSizing.stepped(step)
     }
@@ -55,6 +63,14 @@ struct SettingsLookSection: View {
             SeleneCycleRow("Wallpaper",
                            subtitle: "The picture behind the base gradient. Import more under Sound & music.",
                            value: wallpaperTitle) { stepWallpaper($0) }
+
+            SeleneCycleRow("Settings wallpaper",
+                           subtitle: "The picture behind Settings: the same as the app's, or one of its own.",
+                           value: settingsWallpaperTitle) { stepSettingsWallpaper($0) }
+
+            SeleneToggleRow("Keep wallpaper on games",
+                            subtitle: "Spotlight and Collection keep your wallpaper instead of the focused game's art. A game's page still shows its art.",
+                            isOn: $settings.settings.keepWallpaperOnGames)
 
             SeleneCycleRow("Background sizing",
                            subtitle: "Fill crops to cover, Fit shows all of it, Stretch distorts it to fit.",
@@ -105,6 +121,10 @@ struct SettingsLookSection: View {
         onActions([
             .value("theme", "Color theme") { stepTheme($0) },
             .value("wallpaper", "Wallpaper") { stepWallpaper($0) },
+            .value("settingsWallpaper", "Settings wallpaper") { stepSettingsWallpaper($0) },
+            .init(id: "keepWallpaper", title: "Keep wallpaper on games") {
+                settings.settings.keepWallpaperOnGames.toggle()
+            },
             .value("sizing", "Background sizing") { stepSizing($0) },
             .value("brightness", "Wallpaper brightness") { stepBrightness($0) },
             .init(id: "animated", title: "Animated background") {

@@ -63,21 +63,66 @@ struct SeleneConfirmDialog: View {
             }
             .padding(.top, canvas.u(34))
         }
-        .multilineTextAlignment(.center)
-        .padding(.leading, canvas.u(40))
-        .padding(.top, canvas.u(40))
-        .padding(.trailing, canvas.u(40))
-        .padding(.bottom, canvas.u(36))
-        .frame(width: canvas.u(640))
-        .background(
-            RoundedRectangle(cornerRadius: canvas.u(28), style: .continuous)
-                .fill(SeleneTheme.glassCard)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: canvas.u(28), style: .continuous)
-                .strokeBorder(SeleneTheme.ink.opacity(0.16), lineWidth: max(1, canvas.u(1)))
-        )
-        .clipShape(RoundedRectangle(cornerRadius: canvas.u(28), style: .continuous))
-        .shadow(color: .black.opacity(0.55), radius: canvas.u(30))
+        .modifier(SeleneDialogCard())
+    }
+}
+
+/// The dialog card both dialogs wear: 640u, glass, a hairline and a deep shadow.
+private struct SeleneDialogCard: ViewModifier {
+    @Environment(\.seleneCanvas) private var canvas
+
+    func body(content: Content) -> some View {
+        content
+            .multilineTextAlignment(.center)
+            .padding(.leading, canvas.u(40))
+            .padding(.top, canvas.u(40))
+            .padding(.trailing, canvas.u(40))
+            .padding(.bottom, canvas.u(36))
+            .frame(width: canvas.u(640))
+            .background(
+                RoundedRectangle(cornerRadius: canvas.u(28), style: .continuous)
+                    .fill(SeleneTheme.glassCard)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: canvas.u(28), style: .continuous)
+                    .strokeBorder(SeleneTheme.ink.opacity(0.16), lineWidth: max(1, canvas.u(1)))
+            )
+            .clipShape(RoundedRectangle(cornerRadius: canvas.u(28), style: .continuous))
+            .shadow(color: .black.opacity(0.55), radius: canvas.u(30))
+    }
+}
+
+/// The same card with one pill per choice, left to right. The caller owns input: it moves `focus` with Left/Right
+/// or hover and acts on `onChoose` (the choice's index); B and a click outside are the caller's cancel.
+struct SeleneChoiceDialog: View {
+    @Environment(\.seleneCanvas) private var canvas
+
+    let title: String
+    let message: String
+    let choices: [String]
+    @Binding var focus: Int
+    let onChoose: (Int) -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Text(title)
+                .seleneFont(34, .semibold)
+                .foregroundColor(SeleneTheme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(message)
+                .seleneFont(19)
+                .foregroundColor(SeleneTheme.ink75)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, canvas.u(14))
+            HStack(spacing: canvas.u(18)) {
+                ForEach(Array(choices.enumerated()), id: \.offset) { index, choice in
+                    SelenePillButton(title: choice, focused: focus == index) { onChoose(index) }
+                        .onHover { if $0 { focus = index } }
+                        .accessibilityLabel(choice)
+                }
+            }
+            .padding(.top, canvas.u(34))
+        }
+        .modifier(SeleneDialogCard())
     }
 }

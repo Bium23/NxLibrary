@@ -43,6 +43,16 @@ public struct SettingsView: View {
     @State private var keyMonitor: Any?
     @Environment(\.seleneReduceMotion) private var environmentReduceMotion
     @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.seleneBackdropStyle) private var appBackdropStyle
+
+    /// The app's backdrop with the Settings wallpaper (Settings → Look), which may be the app's own.
+    private var settingsBackdropStyle: SeleneBackdropStyle {
+        var style = appBackdropStyle
+        let id = WallpaperCatalog.settingsWallpaper(settingsID: settings.settings.settingsWallpaperID,
+                                                    appID: settings.settings.wallpaperID)
+        style.wallpaperURL = theme.wallpaper(for: id)?.url
+        return style
+    }
     /// A palette change redraws the whole screen; selection and focus live here and survive it.
     @ObservedObject private var theme = ThemeStore.shared
 
@@ -72,7 +82,7 @@ public struct SettingsView: View {
             SeleneHintsBar(right: commandHints)
         }
         .id(theme.palette.id)
-        .background(SeleneBackdrop())
+        .background(SeleneBackdrop().environment(\.seleneBackdropStyle, settingsBackdropStyle))
         .onAppear(perform: installKeyMonitor)
         .onDisappear(perform: removeKeyMonitor)
         .onChange(of: section) { _ in
@@ -215,6 +225,8 @@ public struct SettingsView: View {
             settings.settings.colorThemeID = defaults.colorThemeID
             ThemeStore.shared.apply(id: defaults.colorThemeID)
             settings.settings.wallpaperID = defaults.wallpaperID
+            settings.settings.settingsWallpaperID = defaults.settingsWallpaperID
+            settings.settings.keepWallpaperOnGames = defaults.keepWallpaperOnGames
             settings.settings.backgroundSizing = defaults.backgroundSizing
             settings.settings.backgroundShade = defaults.backgroundShade
             settings.settings.readableText = defaults.readableText

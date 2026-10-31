@@ -60,7 +60,8 @@ public struct CollectionView: View {
             hintsHidden: router.overlayHasHints(viewModel),
             backdrop: {
                 SeleneArtBackground(image: art.image, imageKey: art.key,
-                                    shade: settings.settings.backgroundShade)
+                                    shade: settings.settings.backgroundShade,
+                                    showsArt: !settings.settings.keepWallpaperOnGames)
             },
             stage: { stage(games: games, game: game) })
         .onAppear(perform: appear)

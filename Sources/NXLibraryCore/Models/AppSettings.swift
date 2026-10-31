@@ -148,6 +148,10 @@ public struct AppSettings: Codable, Equatable {
     public var notifyPortingEnds: Bool
     /// Look for a newer NX Library release at launch, at most once a day.
     public var checkAppUpdatesAtLaunch: Bool
+    /// The Settings screen's own wallpaper: nil is the same as the app's, `WallpaperCatalog.themeOwn` the theme's.
+    public var settingsWallpaperID: String? = nil
+    /// Spotlight and Collection keep the wallpaper instead of the focused game's art (the game page still shows it).
+    public var keepWallpaperOnGames = false
 
     public init(backgroundShade: BackgroundShade = .balanced,
                 readableText: Bool = true,
@@ -228,6 +232,7 @@ public struct AppSettings: Codable, Equatable {
         case introAnimation, viewButtonSwitches, interfaceSounds, soundVolume, quietLaunch
         case wallpaperID, backgroundSizing, animatedBackground, wallpaperBrightness, launchStyle, launchMotion, launchShade
         case notifyPortingEnds, checkAppUpdatesAtLaunch
+        case settingsWallpaperID, keepWallpaperOnGames
     }
 
     public init(from decoder: Decoder) throws {
@@ -267,5 +272,7 @@ public struct AppSettings: Codable, Equatable {
         self.launchShade = try container.decodeIfPresent(LaunchShade.self, forKey: .launchShade) ?? .soft
         self.notifyPortingEnds = try container.decodeIfPresent(Bool.self, forKey: .notifyPortingEnds) ?? true
         self.checkAppUpdatesAtLaunch = try container.decodeIfPresent(Bool.self, forKey: .checkAppUpdatesAtLaunch) ?? true
+        self.settingsWallpaperID = try container.decodeIfPresent(String.self, forKey: .settingsWallpaperID)
+        self.keepWallpaperOnGames = try container.decodeIfPresent(Bool.self, forKey: .keepWallpaperOnGames) ?? false
     }
 }

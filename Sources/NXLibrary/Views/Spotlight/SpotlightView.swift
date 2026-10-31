@@ -145,7 +145,8 @@ public struct SpotlightView: View {
             hintsHidden: router.overlayHasHints(viewModel),
             backdrop: {
                 SeleneArtBackground(image: art.image, imageKey: art.key,
-                                    shade: settings.settings.backgroundShade, crossfade: 0.8)
+                                    shade: settings.settings.backgroundShade, crossfade: 0.8,
+                                    showsArt: !settings.settings.keepWallpaperOnGames)
                 // Deeper in the page the art dims so the text reads.
                 Color.black.opacity(dimmed ? 0.4 : 0)
                     .allowsHitTesting(false)
@@ -750,6 +751,7 @@ public struct SpotlightView: View {
                         presentation: page.presentation,
                         appFileName: game.url.lastPathComponent,
                         buildBlocked: page.buildBlocked && page.presentation.canRebuild,
+                        blockedHint: viewModel.toolchainGateSummary,
                         rows: page.rows,
                         focusedRow: state.focus == .actions ? state.actionIndex : nil,
                         onHoverRow: { index in

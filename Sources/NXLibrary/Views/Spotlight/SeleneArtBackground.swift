@@ -14,13 +14,17 @@ struct SeleneArtBackground: View {
     /// Crossfade length; Collection takes a slower one so the art turns after the logo.
     var crossfade: Double = 0.4
     var backdrop = SeleneBackdrop()
+    /// False keeps the wallpaper in front instead of the game's art (Settings → Look → Keep wallpaper on games).
+    var showsArt = true
+
+    private var art: NSImage? { showsArt ? image : nil }
 
     var body: some View {
         ZStack {
             // Under a game's art the moonlight is hidden: it holds still (Selene fades it out there).
-            backdrop.still(image != nil)
+            backdrop.still(art != nil)
             ZStack {
-                if let image {
+                if let image = art {
                     Color.clear
                         .overlay(
                             Image(nsImage: image)
@@ -34,7 +38,7 @@ struct SeleneArtBackground: View {
                 }
             }
             // A crossfade is not movement: it stays under reduce motion (spec §8).
-            .animation(.easeInOut(duration: crossfade), value: imageKey)
+            .animation(.easeInOut(duration: crossfade), value: showsArt ? imageKey : "")
             SeleneShades(shade: shade)
         }
         .allowsHitTesting(false)

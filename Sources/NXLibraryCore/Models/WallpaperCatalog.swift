@@ -27,6 +27,8 @@ public struct Wallpaper: Equatable, Identifiable {
 /// nil follows the theme (its first wallpaper), "none" shows none, anything else names one.
 public enum WallpaperCatalog {
     public static let none = "none"
+    /// The Settings wallpaper's choice for the theme's own (nil there means "same as the app").
+    public static let themeOwn = "theme"
     /// The folder (theme) the player's own wallpapers and videos are copied into.
     public static let custom = "custom"
     /// The folders online downloads go to: stills, and live backgrounds.
@@ -75,6 +77,15 @@ public enum WallpaperCatalog {
             number += 1
         }
         return ext.isEmpty ? name : "\(name).\(ext)"
+    }
+
+    /// The app wallpaper setting the Settings screen draws: its own choice, else the app's.
+    public static func settingsWallpaper(settingsID: String?, appID: String?) -> String? {
+        switch settingsID {
+        case nil: return appID
+        case themeOwn?: return nil
+        case let id?: return id
+        }
     }
 
     /// The wallpaper to draw for a setting and palette, or nil for none.
