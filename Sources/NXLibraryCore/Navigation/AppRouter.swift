@@ -10,6 +10,9 @@ public enum AppRoute: Equatable {
     case settings(SettingsSection)
     case addGame
     case console
+
+    /// Drawn over the screen it was opened from, which stays behind, blurred.
+    public var isOverlay: Bool { self == .addGame || self == .console }
 }
 
 public final class AppRouter: ObservableObject {
@@ -81,9 +84,9 @@ public final class AppRouter: ObservableObject {
     /// current filter hides it (the same path as Surprise me).
     public func requestSpotlightSelect(_ id: UUID) { pendingSpotlightSelect = id }
 
-    /// The screen under Add game's panel: the one it was opened from (Spotlight when unknown).
+    /// The screen under Add game or the console: the one they were opened from (Spotlight when unknown).
     public var underlyingRoute: AppRoute {
-        history.last { $0 != .addGame } ?? .library
+        history.last { !$0.isOverlay } ?? .library
     }
 
     public func showDetail(_ id: UUID) { navigate(to: .detail(id)) }

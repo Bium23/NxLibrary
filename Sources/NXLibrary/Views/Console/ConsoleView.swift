@@ -20,31 +20,54 @@ enum ConsoleFilter: String, CaseIterable, Identifiable {
     }
 }
 
+/// The console's one row of controls, left to right.
+enum ConsoleControl: Hashable {
+    case filter(ConsoleFilter)
+    case search
+    case follow
+    case copy
+    case reveal
+    case clear
+
+    static let all: [ConsoleControl] = ConsoleFilter.allCases.map { .filter($0) } + [.search, .follow, .copy, .reveal, .clear]
+}
+
+/// The app's build and launch output, drawn like Add game over the screen it was
+/// opened from (blurred by the shell): a centred column with a small title, one
+/// row of quiet controls and the log in a glass panel.
+///
+/// Input: Left/Right move along the controls, A runs one, Up/Down scroll the
+/// log (scrolling up stops following new lines; reaching the end follows again),
+/// B or Esc leaves: out of the search field or the dialog first. Nothing here
+/// takes key focus until the search starts, so a local monitor maps the keys;
+/// the controller arrives through `.nxConsoleGamepadAction`.
 public struct ConsoleView: View {
     @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.seleneReduceMotion) private var reduceMotion
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var router: AppRouter
+    private let showsHints: Bool
 
     @State private var filter: ConsoleFilter = .all
     @State private var searchText = ""
-    @State private var autoScroll = true
+    @State private var follow = true
     @State private var didCopy = false
     @State private var confirmClear = false
-    @State private var focus = FocusIndex()
+    @State private var confirmFocus: SeleneConfirmButton = .cancel
+    @State private var focus: ConsoleControl = .filter(.all)
+    @State private var searching = false
+    @FocusState private var searchFocused: Bool
+    /// The line Up/Down last scrolled to; nil follows the end.
+    @State private var scrollIndex: Int?
+    @State private var scrollTarget: UUID?
+    @State private var scrollTick = 0
+    @State private var keyMonitor: Any?
+    @State private var shown = false
 
-    private var hints: [HintItem] {
-        let label: String
-        switch focus.index {
-        case 1: label = "Reveal Log"
-        case 2: label = "Clear View"
-        default: label = "Copy log"
-        }
-        return [HintItem(.b, "Back"), HintItem(.a, label)]
-    }
-
-    public init(viewModel: AppViewModel, router: AppRouter) {
+    public init(viewModel: AppViewModel, router: AppRouter, showsHints: Bool = true) {
         self.viewModel = viewModel
         self.router = router
+        self.showsHints = showsHints
     }
 
     private var filteredLogs: [LogEntry] {
@@ -70,223 +93,242 @@ public struct ConsoleView: View {
     }
 
     public var body: some View {
-        GeometryReader { geo in
-            let margin = canvas.u(120)
+        let logs = filteredLogs
+        return ZStack {
+            SeleneTheme.scrim45
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture { if !confirmClear { leave() } }
             VStack(spacing: 0) {
-                header(margin)
-                toolbar(margin)
-                logList(margin)
-                if viewModel.settingsStore?.settings.showButtonHints ?? true {
-                    SeleneHintsBar(right: hints)
+                column(logs)
+                if showsHints {
+                    SeleneHintsBar(left: [HintItem(.b, searching ? "Done" : "Back")],
+                                   right: [HintItem(.a, aLabel)],
+                                   bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
+                        .opacity(confirmClear ? 0 : 1)
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .scaleEffect(shown || reduceMotion ? 1 : 0.97)
+            .opacity(shown ? 1 : 0)
+            if confirmClear {
+                ZStack {
+                    SeleneTheme.scrim45.ignoresSafeArea()
+                    SeleneConfirmDialog(title: "Clear the console?",
+                                        message: "The log file on disk is kept; only the lines shown here go.",
+                                        confirmTitle: "Clear",
+                                        cancelTitle: "Keep",
+                                        focus: $confirmFocus,
+                                        onCancel: dismissClear,
+                                        onConfirm: clear)
+                }
+                .transition(.opacity)
+            }
         }
-        .background(SeleneTheme.scrim)
-        .onMoveCommand(perform: handleMove)
-        .onExitCommand { router.back() }
-        .seleneActivationKeys(activateFocused)
+        .animation(reduceMotion ? nil : SeleneTheme.quick, value: confirmClear)
+        .onAppear(perform: appear)
+        .onDisappear(perform: removeKeyMonitor)
         .onReceive(NotificationCenter.default.publisher(for: .nxConsoleGamepadAction)) { note in
             guard let action = note.object as? GamepadAction else { return }
             handleGamepad(action)
         }
-        .confirmationDialog("Clear the console view?",
-                            isPresented: $confirmClear,
-                            titleVisibility: .visible) {
-            Button("Clear View", role: .destructive) {
-                viewModel.logs.removeAll()
-                didCopy = false
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("The log file on disk is kept. This only clears the entries shown in the app.")
-        }
     }
 
-    private func header(_ margin: CGFloat) -> some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Console")
-                    .seleneFont(34, .bold)
-                    .tracking(-1.2)
+    // MARK: - Column
+
+    private func column(_ logs: [LogEntry]) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("CONSOLE")
+                .seleneFont(15, .semibold)
+                .tracking(1.2)
+                .foregroundColor(SeleneTheme.ink60)
+                .padding(.leading, canvas.u(8))
+            HStack(alignment: .firstTextBaseline) {
+                Text("Build and launch output")
+                    .seleneFont(40)
                     .foregroundColor(SeleneTheme.ink)
-                Text("Build and launch output, in one place.")
-                    .seleneFont(19)
+                    .lineLimit(1)
+                Spacer(minLength: canvas.u(20))
+                Text(countLine(logs))
+                    .seleneFont(15)
+                    .monospacedDigit()
                     .foregroundColor(SeleneTheme.ink60)
             }
-            Spacer()
-            Text("\(filteredLogs.count) of \(viewModel.logs.count) entries")
-                .seleneFont(13, .semibold, design: .monospaced)
-                .foregroundColor(SeleneTheme.ink60)
-                .padding(.top, 10)
+            .padding(.horizontal, canvas.u(6))
+            controls
+                .padding(.top, canvas.u(14))
+                .padding(.bottom, canvas.u(16))
+            logPanel(logs)
         }
-        .padding(.horizontal, margin)
-        .padding(.top, 34)
-        .padding(.bottom, 18)
+        .frame(width: canvas.u(1240), alignment: .leading)
+        .frame(maxHeight: .infinity, alignment: .top)
+        .padding(.top, canvas.u(90))
+        .padding(.bottom, canvas.u(28))
+        // Clicks inside the column are not clicks on the shade.
+        .contentShape(Rectangle())
+        .onTapGesture {}
     }
 
-    private func toolbar(_ margin: CGFloat) -> some View {
-        HStack(spacing: 14) {
-            SeleneSegmented(selection: $filter, options: ConsoleFilter.allCases.map { ($0, $0.title) })
-
-            searchField
-
-            Spacer(minLength: 8)
-
-            Toggle("Auto-scroll", isOn: $autoScroll)
-                .toggleStyle(.checkbox)
-                .seleneFont(14)
-                .foregroundColor(SeleneTheme.ink60)
-
-            actionButton(didCopy ? "Copied" : "Copy log", systemImage: didCopy ? "checkmark" : "doc.on.doc",
-                         isFocused: focus.index == 0, action: copyLog)
-            actionButton("Reveal Log", systemImage: "doc.text.magnifyingglass",
-                         isFocused: focus.index == 1, action: viewModel.openBuildLog)
-            actionButton("Clear View", systemImage: "trash",
-                         isFocused: focus.index == 2,
-                         tint: SeleneTheme.danger) { confirmClear = true }
-        }
-        .padding(.horizontal, margin)
-        .padding(.bottom, 16)
+    private func countLine(_ logs: [LogEntry]) -> String {
+        let errors = viewModel.logs.filter { $0.level == .error }.count
+        let lines = logs.count == viewModel.logs.count ? "\(logs.count) lines" : "\(logs.count) of \(viewModel.logs.count) lines"
+        return errors == 0 ? lines : "\(lines) · \(errors) \(errors == 1 ? "error" : "errors")"
     }
 
-    private var searchField: some View {
-        HStack(spacing: 7) {
-            Image(systemName: "magnifyingglass")
-                .seleneFont(13, .semibold)
-                .foregroundColor(SeleneTheme.ink60)
-            TextField("Search log entries", text: $searchText)
-                .textFieldStyle(.plain)
-                .seleneFont(14)
-                .foregroundColor(SeleneTheme.ink.opacity(0.94))
-            if !searchText.isEmpty {
-                Button {
-                    searchText = ""
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .seleneFont(13)
-                        .foregroundColor(SeleneTheme.ink60)
+    private var controls: some View {
+        HStack(spacing: canvas.u(6)) {
+            ForEach(ConsoleFilter.allCases) { item in
+                pill(.filter(item)) {
+                    Text(item.title)
+                        .seleneFont(15, filter == item ? .semibold : .regular)
+                        .foregroundColor(filter == item ? SeleneTheme.ink : SeleneTheme.ink60)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Clear search")
+                .background(Capsule().fill(filter == item ? SeleneTheme.glassLight : Color.clear))
+            }
+            Spacer(minLength: canvas.u(20))
+            pill(.search) {
+                HStack(spacing: canvas.u(8)) {
+                    MaterialIconView(.search, size: 16)
+                        .foregroundColor(SeleneTheme.ink60)
+                    if searching {
+                        TextField("Search", text: $searchText)
+                            .textFieldStyle(.plain)
+                            .seleneFont(15)
+                            .foregroundColor(SeleneTheme.ink)
+                            .focused($searchFocused)
+                            .onSubmit(endSearch)
+                    } else {
+                        Text(searchText.isEmpty ? "Search" : searchText)
+                            .seleneFont(15)
+                            .foregroundColor(searchText.isEmpty ? SeleneTheme.ink60 : SeleneTheme.ink)
+                            .lineLimit(1)
+                        Spacer(minLength: 0)
+                    }
+                }
+                .frame(width: canvas.u(200), alignment: .leading)
+            }
+            .background(Capsule().fill(SeleneTheme.glassLight))
+            pill(.follow) {
+                HStack(spacing: canvas.u(8)) {
+                    Circle()
+                        .fill(follow ? PortingLogBox.softGreen : SeleneTheme.ink25)
+                        .frame(width: canvas.u(7), height: canvas.u(7))
+                    Text("Follow")
+                        .seleneFont(15)
+                        .foregroundColor(follow ? SeleneTheme.ink : SeleneTheme.ink60)
+                }
+            }
+            pill(.copy) {
+                Text(didCopy ? "Copied" : "Copy log")
+                    .seleneFont(15)
+                    .foregroundColor(SeleneTheme.ink)
+            }
+            pill(.reveal) {
+                Text("Show in Finder")
+                    .seleneFont(15)
+                    .foregroundColor(SeleneTheme.ink)
+            }
+            pill(.clear) {
+                Text("Clear")
+                    .seleneFont(15)
+                    .foregroundColor(PortingPillCopy.softRed)
             }
         }
-        .padding(.horizontal, 10)
-        .frame(width: 250, height: 30)
-        .background(SeleneTheme.glass)
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .strokeBorder(SeleneTheme.ink15, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .padding(.horizontal, canvas.u(4))
     }
 
-    private func actionButton(_ title: String, systemImage: String,
-                              isFocused: Bool,
-                              tint: Color = SeleneTheme.ink.opacity(0.9),
-                              action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Image(systemName: systemImage)
-                    .seleneFont(13, .semibold)
-                Text(title)
-                    .seleneFont(14, .semibold)
+    /// A quiet capsule: no fill of its own, the Selene focus ring when focused.
+    private func pill<Label: View>(_ control: ConsoleControl, @ViewBuilder label: () -> Label) -> some View {
+        label()
+            .padding(.horizontal, canvas.u(16))
+            .frame(height: canvas.u(36))
+            .contentShape(Capsule())
+            .seleneRowFocus(focus == control && !confirmClear, radius: canvas.u(18))
+            .onTapGesture {
+                focus = control
+                activate(control)
             }
-            .foregroundColor(tint)
-            .padding(.horizontal, 12)
-            .frame(height: 30)
-            .background(SeleneTheme.ink.opacity(0.06))
-            .overlay(Capsule().strokeBorder(SeleneTheme.ink.opacity(0.14), lineWidth: 1))
-            .clipShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .seleneRowFocus(isFocused, radius: 100)
-        .accessibilityLabel(title)
+            .accessibilityAddTraits(.isButton)
     }
 
-    private func logList(_ margin: CGFloat) -> some View {
-        ScrollViewReader { proxy in
+    private func logPanel(_ logs: [LogEntry]) -> some View {
+        let radius = canvas.u(18)
+        return ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    if filteredLogs.isEmpty {
+                    if logs.isEmpty {
                         emptyState
                     } else {
-                        ForEach(Array(filteredLogs.enumerated()), id: \.element.id) { index, entry in
-                            logRow(entry)
-                                .id(entry.id)
-                                .background(index.isMultiple(of: 2)
-                                            ? SeleneTheme.ink.opacity(0.018)
-                                            : Color.clear)
+                        ForEach(logs) { entry in
+                            logRow(entry).id(entry.id)
                         }
                     }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, canvas.u(16))
             }
             .scrollIndicators(.hidden)
-            .background(SeleneTheme.glassSolid)
-            .overlay(
-                RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous)
-                    .strokeBorder(SeleneTheme.ink15, lineWidth: 1)
+            .mask(
+                VStack(spacing: 0) {
+                    LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom)
+                        .frame(height: canvas.u(14))
+                    Color.black
+                    LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom)
+                        .frame(height: canvas.u(14))
+                }
             )
-            .clipShape(RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous))
-            .padding(.horizontal, margin)
-            .padding(.bottom, 8)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(RoundedRectangle(cornerRadius: radius, style: .continuous).fill(SeleneTheme.glassLight))
+            .onAppear { scrollToEnd(proxy, animated: false) }
             .onChange(of: viewModel.logs.count) { _ in
-                guard autoScroll, let last = filteredLogs.last else { return }
-                proxy.scrollTo(last.id, anchor: .bottom)
+                if follow { scrollToEnd(proxy, animated: false) }
             }
-            .onChange(of: filter) { _ in scrollToEnd(proxy) }
-            .onChange(of: searchText) { _ in scrollToEnd(proxy) }
-        }
-    }
-
-    private func scrollToEnd(_ proxy: ScrollViewProxy) {
-        guard autoScroll, let last = filteredLogs.last else { return }
-        DispatchQueue.main.async {
-            proxy.scrollTo(last.id, anchor: .bottom)
+            .onChange(of: filter) { _ in resetScroll(proxy) }
+            .onChange(of: searchText) { _ in resetScroll(proxy) }
+            .onChange(of: scrollTick) { _ in
+                if let scrollTarget {
+                    withAnimation(reduceMotion ? nil : SeleneTheme.quick) {
+                        proxy.scrollTo(scrollTarget, anchor: .center)
+                    }
+                } else {
+                    scrollToEnd(proxy, animated: true)
+                }
+            }
         }
     }
 
     private func logRow(_ entry: LogEntry) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .firstTextBaseline, spacing: canvas.u(16)) {
             Text(entry.formattedTimestamp)
-                .seleneFont(13, .regular, design: .monospaced)
-                .foregroundColor(SeleneTheme.ink60.opacity(0.7))
-                .frame(width: 58, alignment: .leading)
-
-            Circle()
-                .fill(color(for: entry.level))
-                .frame(width: 5, height: 5)
-                .padding(.top, 5)
-
+                .seleneFont(12, .regular, design: .monospaced)
+                .foregroundColor(SeleneTheme.ink25)
+                .frame(width: canvas.u(64), alignment: .leading)
             Text(entry.message)
-                .seleneFont(14, .regular, design: .monospaced)
+                .seleneFont(13, entry.level == .step ? .medium : .regular, design: .monospaced)
                 .foregroundColor(color(for: entry.level))
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
-
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 6)
+        .padding(.horizontal, canvas.u(24))
+        .padding(.vertical, canvas.u(3))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(entry.formattedTimestamp), \(levelName(entry.level)): \(entry.message)")
     }
 
     private var emptyState: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "terminal")
-                .seleneFont(34, .light)
-                .foregroundColor(SeleneTheme.glyph.opacity(0.5))
-            Text(viewModel.logs.isEmpty ? "No log entries yet." : "No entries match this filter.")
-                .seleneFont(19, .semibold)
-                .foregroundColor(SeleneTheme.ink.opacity(0.9))
+        VStack(spacing: canvas.u(8)) {
+            MaterialIconView(.terminal, size: 30)
+                .foregroundColor(SeleneTheme.ink25)
+            Text(viewModel.logs.isEmpty ? "Nothing yet" : "No lines match")
+                .seleneFont(19, .medium)
+                .foregroundColor(SeleneTheme.ink82)
             Text(viewModel.logs.isEmpty
-                 ? "Builds and launches will report their output here."
-                 : "Try another filter or clear the search field.")
-                .seleneFont(15)
+                 ? "Portings and launches write here."
+                 : "Try another filter or search.")
+                .seleneFont(14)
                 .foregroundColor(SeleneTheme.ink60)
         }
-        .frame(maxWidth: .infinity, minHeight: 320)
+        .frame(maxWidth: .infinity, minHeight: canvas.u(360))
     }
 
     private func levelName(_ level: LogLevel) -> String {
@@ -299,14 +341,124 @@ public struct ConsoleView: View {
         }
     }
 
+    /// Soft, never vivid: the porting log's colours.
     private func color(for level: LogLevel) -> Color {
         switch level {
-        case .info: return SeleneTheme.ink90
-        case .step: return SeleneTheme.glyph
-        case .success: return SeleneTheme.success
-        case .warning: return SeleneTheme.untested
-        case .error: return SeleneTheme.danger
+        case .info: return SeleneTheme.ink75
+        case .step: return SeleneTheme.ink
+        case .success: return PortingLogBox.softGreen
+        case .warning: return Color(hex: 0xF0D29A)
+        case .error: return PortingPillCopy.softRed
         }
+    }
+
+    // MARK: - Scrolling
+
+    private func scrollToEnd(_ proxy: ScrollViewProxy, animated: Bool) {
+        guard let last = filteredLogs.last else { return }
+        DispatchQueue.main.async {
+            withAnimation(animated && !reduceMotion ? SeleneTheme.quick : nil) {
+                proxy.scrollTo(last.id, anchor: .bottom)
+            }
+        }
+    }
+
+    private func resetScroll(_ proxy: ScrollViewProxy) {
+        scrollIndex = nil
+        follow = true
+        scrollToEnd(proxy, animated: false)
+    }
+
+    /// Up/Down: eight lines at a time; the end follows again.
+    private func scroll(by delta: Int) {
+        let logs = filteredLogs
+        guard !logs.isEmpty else { return }
+        let current = scrollIndex ?? logs.count - 1
+        let next = min(max(current + delta * 8, 0), logs.count - 1)
+        if next >= logs.count - 1 {
+            scrollIndex = nil
+            scrollTarget = nil
+            follow = true
+        } else {
+            scrollIndex = next
+            scrollTarget = logs[next].id
+            follow = false
+        }
+        scrollTick += 1
+    }
+
+    // MARK: - Actions
+
+    private var aLabel: String {
+        switch focus {
+        case .filter(let item): return item.title
+        case .search: return searching ? "Done" : "Search"
+        case .follow: return follow ? "Stop following" : "Follow"
+        case .copy: return "Copy log"
+        case .reveal: return "Show in Finder"
+        case .clear: return "Clear"
+        }
+    }
+
+    private func move(by delta: Int) {
+        let all = ConsoleControl.all
+        let current = all.firstIndex(of: focus) ?? 0
+        let next = min(max(current + delta, 0), all.count - 1)
+        guard next != current else { return }
+        focus = all[next]
+        SoundEffectService.shared.play(.focus)
+    }
+
+    private func activate(_ control: ConsoleControl) {
+        switch control {
+        case .filter(let item):
+            guard filter != item else { return }
+            filter = item
+            SoundEffectService.shared.play(.key)
+        case .search:
+            searching ? endSearch() : startSearch()
+        case .follow:
+            follow.toggle()
+            if follow {
+                scrollIndex = nil
+                scrollTarget = nil
+                scrollTick += 1
+            }
+            SoundEffectService.shared.play(.key)
+        case .copy:
+            copyLog()
+        case .reveal:
+            SoundEffectService.shared.play(.click)
+            viewModel.openBuildLog()
+        case .clear:
+            confirmFocus = .cancel
+            confirmClear = true
+            SoundEffectService.shared.play(.alert)
+        }
+    }
+
+    private func startSearch() {
+        focus = .search
+        searching = true
+        SoundEffectService.shared.play(.click)
+        DispatchQueue.main.async { searchFocused = true }
+    }
+
+    private func endSearch() {
+        searchFocused = false
+        searching = false
+        NSApp.keyWindow?.makeFirstResponder(nil)
+    }
+
+    private func dismissClear() {
+        confirmClear = false
+        confirmFocus = .cancel
+    }
+
+    private func clear() {
+        dismissClear()
+        viewModel.logs.removeAll()
+        didCopy = false
     }
 
     /// The last 200 app log lines plus the tail of the latest build log, for a bug report.
@@ -319,7 +471,7 @@ public struct ConsoleView: View {
             let tail = build.split(separator: "\n", omittingEmptySubsequences: false).suffix(400)
             text += "\n\n--- Build log: \(url.lastPathComponent) ---\n" + tail.joined(separator: "\n")
         }
-        guard !text.isEmpty else { return }
+        guard !text.isEmpty else { return SoundEffectService.shared.play(.error) }
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
@@ -330,45 +482,101 @@ public struct ConsoleView: View {
         }
     }
 
-    private func handleMove(_ direction: MoveCommandDirection) {
-        switch direction {
-        case .left, .up:
-            moveFocus(by: -1)
-        case .right, .down:
-            moveFocus(by: 1)
-        default:
-            break
+    private func leave() {
+        endSearch()
+        removeKeyMonitor()
+        SoundEffectService.shared.play(.back)
+        router.back()
+    }
+
+    private func appear() {
+        installKeyMonitor()
+        DispatchQueue.main.async {
+            withAnimation(reduceMotion ? .easeOut(duration: 0.18) : .spring(response: 0.4, dampingFraction: 0.9)) {
+                shown = true
+            }
         }
     }
 
-    private func moveFocus(by delta: Int) {
-        let previous = focus.index
-        focus.move(by: delta, count: 3)
-        if focus.index != previous {
-            SoundEffectService.shared.play(.focus)
+    // MARK: - Input
+
+    private func installKeyMonitor() {
+        guard keyMonitor == nil else { return }
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            guard router.route == .console,
+                  !router.isMenuPresented,
+                  viewModel.gameToClose == nil,
+                  viewModel.gameToRemove == nil,
+                  viewModel.alertMessage == nil,
+                  !viewModel.showSetupCheck,
+                  let window = event.window,
+                  !window.isSheet,
+                  window.attachedSheet == nil,
+                  NSApp.modalWindow == nil else { return event }
+            // Typing in the search: Return, Tab and Esc end it; everything else types.
+            if window.firstResponder is NSText {
+                guard [36, 76, 48, 53].contains(event.keyCode) else { return event }
+                endSearch()
+                return nil
+            }
+            let modifiers = event.modifierFlags.intersection([.command, .control, .option])
+            if modifiers == .command, event.keyCode == 3 {
+                startSearch()
+                return nil
+            }
+            guard modifiers.isEmpty else { return event }
+            let action: GamepadAction
+            switch event.keyCode {
+            case 126: action = .navigateUp
+            case 125: action = .navigateDown
+            case 123: action = .navigateLeft
+            case 124: action = .navigateRight
+            case 36, 76, 49: action = .confirm
+            case 53: action = .cancel
+            default: return event
+            }
+            handleGamepad(action)
+            return nil
         }
+    }
+
+    private func removeKeyMonitor() {
+        if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
+        keyMonitor = nil
     }
 
     private func handleGamepad(_ action: GamepadAction) {
-        switch action {
-        case .navigateLeft, .navigateUp: moveFocus(by: -1)
-        case .navigateRight, .navigateDown: moveFocus(by: 1)
-        case .confirm:
-            activateFocused()
-        case .cancel:
-            router.back()
-        case .menu:
-            router.isMenuPresented = true
-        default:
-            break
+        if confirmClear {
+            switch action {
+            case .navigateLeft, .navigateRight:
+                let next: SeleneConfirmButton = action == .navigateLeft ? .cancel : .confirm
+                if confirmFocus != next {
+                    confirmFocus = next
+                    SoundEffectService.shared.play(.focus)
+                }
+            case .confirm:
+                SoundEffectService.shared.play(.click)
+                confirmFocus == .confirm ? clear() : dismissClear()
+            case .cancel:
+                dismissClear()
+            default:
+                break
+            }
+            return
         }
-    }
-
-    private func activateFocused() {
-        switch focus.index {
-        case 0: copyLog()
-        case 1: viewModel.openBuildLog()
-        case 2: confirmClear = true
+        // A controller while the search is typed in: A or B ends it.
+        if searching {
+            if action == .confirm || action == .cancel { endSearch() }
+            return
+        }
+        switch action {
+        case .navigateLeft: move(by: -1)
+        case .navigateRight: move(by: 1)
+        case .navigateUp: scroll(by: -1)
+        case .navigateDown: scroll(by: 1)
+        case .confirm: activate(focus)
+        case .cancel: leave()
+        case .menu: router.isMenuPresented = true
         default: break
         }
     }

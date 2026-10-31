@@ -65,14 +65,20 @@ public struct AppShellView: View {
         ZStack {
             SeleneTheme.scrim.ignoresSafeArea()
             content
-                // Game options and Add game blur the screen behind instead of darkening it.
-                .blur(radius: viewModel.gameForSettingsSheet == nil && router.route != .addGame ? 0 : 10)
-                .allowsHitTesting(router.route != .addGame)
+                // Game options, Add game and the console blur the screen behind instead of darkening it.
+                .blur(radius: viewModel.gameForSettingsSheet == nil && !router.route.isOverlay ? 0 : 10)
+                .allowsHitTesting(!router.route.isOverlay)
             if router.route == .addGame {
                 AddGameView(viewModel: viewModel,
                             router: router,
                             artwork: artwork,
                             showsHints: settings.settings.showButtonHints)
+                    .zIndex(0.8)
+            }
+            if router.route == .console {
+                ConsoleView(viewModel: viewModel, router: router,
+                            showsHints: settings.settings.showButtonHints)
+                    .transition(.opacity)
                     .zIndex(0.8)
             }
             if router.isSearchPresented && isHomeRoute {
@@ -149,6 +155,7 @@ public struct AppShellView: View {
         .animation(SeleneTheme.quick, value: router.isSearchPresented)
         .animation(reduceMotion ? nil : SeleneTheme.screen, value: viewModel.showSetupCheck)
         .animation(reduceMotion ? nil : SeleneTheme.screen, value: router.route == .addGame)
+        .animation(reduceMotion ? nil : SeleneTheme.quick, value: router.route == .console)
         .animation(reduceMotion ? nil : SeleneTheme.quick,
                    value: viewModel.gameToClose?.id)
         .animation(reduceMotion ? nil : SeleneTheme.quick,
@@ -285,10 +292,10 @@ public struct AppShellView: View {
         }
     }
 
-    /// The current screen; under Add game, the screen it was opened from.
+    /// The current screen; under Add game or the console, the screen they were opened from.
     @ViewBuilder
     private var content: some View {
-        switch router.route == .addGame ? router.underlyingRoute : router.route {
+        switch router.route.isOverlay ? router.underlyingRoute : router.route {
         case .library:
             SpotlightView(
                 viewModel: viewModel,
@@ -331,7 +338,8 @@ public struct AppShellView: View {
             // Never the underlying route; Add game is drawn over `content`.
             Color.clear
         case .console:
-            ConsoleView(viewModel: viewModel, router: router)
+            // Never the underlying route; the console is drawn over `content`.
+            Color.clear
         }
     }
 

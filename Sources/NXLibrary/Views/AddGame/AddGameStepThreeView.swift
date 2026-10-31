@@ -298,7 +298,7 @@ struct AddGameStepThreeView: View {
                            kind: .secondary, isEnabled: true) {
                     viewModel.openBuildLog()
                 },
-                StepAction(id: "console", title: "Open Console",
+                StepAction(id: "console", title: "Open console",
                            systemImage: nil, kind: .quiet, isEnabled: true) {
                     NotificationCenter.default.post(name: .nxLibraryOpenConsole, object: nil)
                 }
@@ -354,7 +354,7 @@ struct AddGameStepThreeView: View {
                            kind: .secondary, isEnabled: true) {
                     viewModel.openBuildLog()
                 },
-                StepAction(id: "console", title: "Open Console",
+                StepAction(id: "console", title: "Open console",
                            systemImage: nil, kind: .quiet, isEnabled: true) {
                     NotificationCenter.default.post(name: .nxLibraryOpenConsole, object: nil)
                 }

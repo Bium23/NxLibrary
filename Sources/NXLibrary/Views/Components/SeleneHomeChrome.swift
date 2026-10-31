@@ -47,11 +47,11 @@ extension HintItem {
 }
 
 extension AppRouter {
-    /// The control center, search or Game options is up: each draws its own hints,
+    /// The control center, search, Game options, Add game or the console is up: each draws its own hints,
     /// so the screen's step aside instead of showing through.
     @MainActor
     func overlayHasHints(_ viewModel: AppViewModel) -> Bool {
-        isMenuPresented || isSearchPresented || viewModel.gameForSettingsSheet != nil || route == .addGame
+        isMenuPresented || isSearchPresented || viewModel.gameForSettingsSheet != nil || route.isOverlay
     }
 }
 

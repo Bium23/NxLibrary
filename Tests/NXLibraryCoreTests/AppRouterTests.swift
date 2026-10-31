@@ -153,4 +153,24 @@ final class AppRouterSpotlightMoveTests: XCTestCase {
         router.back()
         XCTAssertEqual(router.route, .collection)
     }
+
+    func testUnderlyingRouteSkipsAddGameAndConsole() {
+        let router = AppRouter()
+        router.openCollection()
+        router.openAddGame()
+        router.openConsole()
+        XCTAssertEqual(router.route, .console)
+        // The console opened from Add game blurs the home, not Add game.
+        XCTAssertEqual(router.underlyingRoute, .collection)
+        router.back()
+        XCTAssertEqual(router.route, .addGame)
+        XCTAssertEqual(router.underlyingRoute, .collection)
+    }
+
+    func testOverlayRoutes() {
+        XCTAssertTrue(AppRoute.addGame.isOverlay)
+        XCTAssertTrue(AppRoute.console.isOverlay)
+        XCTAssertFalse(AppRoute.library.isOverlay)
+        XCTAssertFalse(AppRoute.collection.isOverlay)
+    }
 }
