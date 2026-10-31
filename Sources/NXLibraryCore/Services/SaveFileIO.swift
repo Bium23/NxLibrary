@@ -6,6 +6,11 @@ import Darwin
 internal struct SaveFileIO {
     var afterMutation: (String) throws -> Void = { _ in }
     var copy: (URL, URL) throws -> Void = { from, to in
+        // On APFS a directory clone preserves the original metadata, including quarantine attribution.
+        if clonefile(from.path, to.path, UInt32(CLONE_NOFOLLOW | CLONE_ACL)) == 0 { return }
+        guard errno == EXDEV || errno == ENOTSUP || errno == ENOSYS else {
+            throw SaveFailure.io("Could not copy the save: \(String(cString: strerror(errno))).")
+        }
         guard copyfile(from.path, to.path, nil, copyfile_flags_t(COPYFILE_ALL | COPYFILE_RECURSIVE | COPYFILE_EXCL | COPYFILE_NOFOLLOW)) == 0 else {
             throw SaveFailure.io("Could not copy the save: \(String(cString: strerror(errno))).")
         }
@@ -31,10 +36,22 @@ extension SaveFiles {
         if let capacity = try? existing.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage,
            capacity < bytes { throw SaveFailure.io("There is not enough free space for this save operation.") }
     }
-    // macOS assigns provenance to copied files. It describes this host's copy,
-    // not save data. Guest-name mappings and security attributes still compare exactly.
+    // Compare the portable metadata. macOS can assign provenance and rewrite the
+    // quarantine agent name on copy. Keep flags, timestamp and event ID exact.
+    // This transforms inventory records only; the system copies the xattrs on disk.
     static func portableAttributes(_ values: [String: Data]) -> [String: Data] {
-        values.filter { $0.key != "com.apple.provenance" }
+        var portable = values
+        portable.removeValue(forKey: "com.apple.provenance")
+        let key = "com.apple.quarantine"
+        if let value = portable[key], let record = String(data: value, encoding: .utf8) {
+            var fields = record.components(separatedBy: ";")
+            if fields.count == 4, fields[0].count == 4, UInt16(fields[0], radix: 16) != nil,
+               UInt64(fields[1], radix: 16) != nil {
+                fields[2] = ""
+                portable[key] = Data(fields.joined(separator: ";").utf8)
+            }
+        }
+        return portable
     }
     static func attributes(_ url: URL) throws -> [String: Data] {
         let size = listxattr(url.path, nil, 0, XATTR_NOFOLLOW)
@@ -116,5 +133,14 @@ extension SaveFiles {
     static func remove(_ url: URL) throws {
         try safePath(url)
         if exists(url) { try FileManager.default.removeItem(at: url) }
+    }
+}
+
+extension SaveInventoryEntry {
+    /// Also normalize inventories recorded in earlier manifests and recovery journals.
+    var portable: SaveInventoryEntry {
+        var entry = self
+        entry.attributes = SaveFiles.portableAttributes(attributes)
+        return entry
     }
 }

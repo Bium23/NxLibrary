@@ -4,10 +4,25 @@ import NXLibraryCore
 
 /// One panel's state; filesystem work runs on the library's serial save queue.
 final class SavePanelModel: ObservableObject {
-    enum Activity { case refresh, backup, importSave, restore }
+    enum Activity {
+        case refresh, backup, importSave, restore
+
+        var failureTitle: String {
+            switch self {
+            case .refresh: return "Refresh failed"
+            case .backup: return "Backup failed"
+            case .importSave: return "Import failed"
+            case .restore: return "Restore failed"
+            }
+        }
+    }
+    struct Issue {
+        let title: String
+        let message: String
+    }
     @Published private(set) var busy = false
     @Published private(set) var activity: Activity = .refresh
-    @Published private(set) var failed = false
+    @Published private(set) var issue: Issue?
     @Published private(set) var message: String?
     @Published private(set) var context: SaveContext?
     @Published private(set) var snapshots: [SaveSnapshot] = []
@@ -32,23 +47,19 @@ final class SavePanelModel: ObservableObject {
         SavePresentation.importAction(available: context != nil, busy: busy, running: running,
                                       recovery: recoveryRequired, cloud: context?.cloudReason != nil)
     }
-    var statusTitle: String? {
-        if failed {
-            switch activity {
-            case .backup: return "Backup failed"
-            case .refresh: return "Refresh failed"
-            case .importSave: return "Import failed"
-            case .restore: return "Restore failed"
-            }
-        }
-        return message
+    func dismissIssue() { issue = nil }
+
+    private func report(_ error: Error, during activity: Activity) {
+        message = nil
+        issue = Issue(title: activity.failureTitle, message: error.localizedDescription)
     }
     private func acquire(activity: Activity = .refresh, recovering: Bool = false) -> Bool {
         guard !busy, lease == nil, let tid = game.titleId,
               let token = viewModel.saveGate.begin(titleID: tid, recovering: recovering) else {
-            message = SaveFailure.busy.localizedDescription; failed = true; return false
+            report(SaveFailure.busy, during: activity)
+            return false
         }
-        lease = token; busy = true; message = nil; failed = false; self.activity = activity
+        lease = token; busy = true; message = nil; issue = nil; self.activity = activity
         return true
     }
     private func release() {
@@ -63,7 +74,7 @@ final class SavePanelModel: ObservableObject {
             })
     }
     func refresh(resultMessage: String? = nil) {
-        guard lease == nil, !busy else { return }
+        guard lease == nil, !busy, issue == nil else { return }
         guard acquire(recovering: true) else { return }
         viewModel.saveQueue.async {
             var context: SaveContext?; var list: [SaveSnapshot] = []; var bytes: Int64 = 0; var date: Date?; var error: Error?
@@ -85,7 +96,8 @@ final class SavePanelModel: ObservableObject {
             self.viewModel.saveGate.setRecoveryBlocked(recovery, titleID: self.game.titleId ?? "")
             DispatchQueue.main.async {
                 self.context = context; self.snapshots = list; self.currentBytes = bytes; self.currentDate = date
-                self.running = running; self.recoveryRequired = recovery; self.failed = error != nil; self.message = error?.localizedDescription ?? resultMessage
+                self.running = running; self.recoveryRequired = recovery
+                if let error { self.report(error, during: .refresh) } else { self.message = resultMessage }
                 self.release()
             }
         }
@@ -106,12 +118,12 @@ final class SavePanelModel: ObservableObject {
         }
     }
     func chooseImport(slot: SaveSlot) {
-        guard canMutate else { return }
+        guard canMutate, acquire(activity: .importSave) else { return }
         let panel = NSOpenPanel()
         panel.title = "Import a save for \(game.name)"
-        panel.message = "Choose the folder containing the actual save files for this game and user, not the emulator's whole save directory."
+        panel.message = "Choose a Ryujinx game folder or an exported save."
         panel.prompt = "Preview"; panel.canChooseFiles = false; panel.canChooseDirectories = true; panel.allowsMultipleSelection = false
-        guard panel.runModal() == .OK, let source = panel.url, acquire(activity: .importSave) else { return }
+        guard panel.runModal() == .OK, let source = panel.url else { release(); return }
         viewModel.saveQueue.async {
             do {
                 guard RunningGameMonitor.runningApplication(for: self.game) == nil else { throw SaveFailure.running }
@@ -193,8 +205,7 @@ final class SavePanelModel: ObservableObject {
         }
         viewModel.saveGate.setRecoveryBlocked(recovery, titleID: game.titleId ?? "")
         DispatchQueue.main.async {
-            self.failed = true
-            self.message = error.localizedDescription
+            self.report(error, during: self.activity)
             if clearPreview { self.preview = nil; self.restorePreview = nil }
             self.recoveryRequired = recovery; self.release()
         }

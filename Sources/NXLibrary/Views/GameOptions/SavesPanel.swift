@@ -12,7 +12,6 @@ struct SavesPanel: View {
     @State private var confirmFocus: SeleneConfirmButton = .cancel
     @State private var keyMonitor: Any?
     @State private var cloudPrompt = false
-    @State private var issueDetail: String?
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
 
@@ -36,7 +35,7 @@ struct SavesPanel: View {
         self.viewModel = viewModel; self.game = game; self.onClose = onClose
         _model = StateObject(wrappedValue: SavePanelModel(viewModel: viewModel, game: game))
     }
-    private var confirming: Bool { model.preview != nil || model.restorePreview != nil || cloudPrompt || issueDetail != nil }
+    private var confirming: Bool { model.preview != nil || model.restorePreview != nil || cloudPrompt || model.issue != nil }
     private var rows: [Row] {
         [.open, .backup, .target, .add, .refresh, .backups] + model.snapshots.flatMap { [.restore($0.id), .reveal($0.id)] }
     }
@@ -59,7 +58,16 @@ struct SavesPanel: View {
                 SeleneHintsBar(left: [HintItem(.b, "Back", action: close)], right: [HintItem(.a, "Select")],
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
-            if confirming { confirmation.zIndex(1) }
+            .allowsHitTesting(!confirming)
+            .accessibilityHidden(confirming)
+            if confirming {
+                ZStack {
+                    SeleneTheme.scrim45.ignoresSafeArea().contentShape(Rectangle()).onTapGesture { close() }
+                    confirmation
+                }
+                .transition(.opacity)
+                .zIndex(1)
+            }
         }
         .onAppear { model.refresh(); installKeyMonitor() }
         .onDisappear { if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }; keyMonitor = nil; model.close() }
@@ -107,19 +115,11 @@ struct SavesPanel: View {
         }
     }
     private var statusLine: some View {
-        HStack(spacing: canvas.u(12)) {
-            Text(model.statusTitle ?? " ")
-                .seleneFont(15).foregroundColor(model.failed ? SeleneTheme.danger : SeleneTheme.ink60)
-                .lineLimit(1)
-            if model.failed {
-                Button("Details") { issueDetail = model.message; confirmFocus = .cancel }
-                    .buttonStyle(.plain).seleneFont(15).foregroundColor(SeleneTheme.ink)
-            }
-            Spacer()
-        }
-        .frame(height: canvas.u(24), alignment: .leading)
-        .padding(.horizontal, canvas.u(8))
-        .accessibilityElement(children: .contain)
+        Text(model.message ?? " ")
+            .seleneFont(15).foregroundColor(SeleneTheme.ink60)
+            .lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+            .frame(height: canvas.u(24))
+            .padding(.horizontal, canvas.u(8))
     }
     private var importValue: String? {
         if model.running { return "Game running" }
@@ -176,7 +176,10 @@ struct SavesPanel: View {
     private func isRestore(_ row: Row) -> Bool { if case .restore = row { return true }; return false }
 
     @ViewBuilder private var confirmation: some View {
-        if let preview = model.preview, let context = model.context {
+        if let issue = model.issue {
+            SeleneChoiceDialog(title: issue.title, message: issue.message, choices: ["Back"],
+                               focus: .constant(0), onChoose: { _ in model.dismissIssue() })
+        } else if let preview = model.preview, let context = model.context {
             SeleneConfirmDialog(title: "Import this save?", message: "Your current save is backed up first.", confirmTitle: "Import",
                 detail: SavePresentation.importMessage(preview, destination: context.location.directory(preview.slot), version: game.versionString),
                 focus: $confirmFocus, onCancel: { if !model.busy { model.cancelPreview() } },
@@ -188,9 +191,7 @@ struct SavesPanel: View {
         } else if cloudPrompt {
             SeleneConfirmDialog(title: "Cloud saves on", message: cloudHelp.message, confirmTitle: cloudHelp.button,
                 focus: $confirmFocus, onCancel: { cloudPrompt = false }, onConfirm: resolveCloud)
-        } else if let issueDetail {
-            SeleneConfirmDialog(title: model.statusTitle ?? "Action failed", message: issueDetail,
-                confirmTitle: "OK", focus: $confirmFocus, onCancel: { self.issueDetail = nil }, onConfirm: { self.issueDetail = nil })
+
         }
     }
     private var cloudHelp: (message: String, button: String) {
@@ -233,9 +234,9 @@ struct SavesPanel: View {
     }
     private func close() {
         guard !model.busy else { return }
+        if model.issue != nil { model.dismissIssue(); return }
         if model.preview != nil || model.restorePreview != nil { model.cancelPreview(); return }
         if cloudPrompt { cloudPrompt = false; return }
-        if issueDetail != nil { issueDetail = nil; return }
         onClose()
     }
     private func handle(_ action: GamepadAction) {
@@ -246,11 +247,11 @@ struct SavesPanel: View {
             case .navigateRight: confirmFocus = .confirm
             case .cancel, .secondaryAction, .menu: close()
             case .confirm:
-                if confirmFocus == .cancel { close() }
+                if model.issue != nil { model.dismissIssue() }
+                else if confirmFocus == .cancel { close() }
                 else if model.preview != nil { model.confirmImport() }
                 else if model.restorePreview != nil { model.confirmRestore() }
                 else if cloudPrompt { resolveCloud() }
-                else { issueDetail = nil }
             default: break
             }
             return

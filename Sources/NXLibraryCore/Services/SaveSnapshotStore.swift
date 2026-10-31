@@ -64,9 +64,7 @@ public final class SaveSnapshotStore {
               snapshot.entries.allSatisfy({ ($0.path.isEmpty || SaveFiles.validRelative($0.path)) && $0.byteCount >= 0 && $0.byteCount < Int64.max / Int64(max(1, snapshot.entries.count)) }) else { throw SaveFailure.invalidSnapshot }
         // Read older schema-1 backups portably too: provenance is assigned by macOS to a copy.
         var portable = snapshot
-        for index in portable.entries.indices {
-            portable.entries[index].attributes = SaveFiles.portableAttributes(portable.entries[index].attributes)
-        }
+        portable.entries = snapshot.entries.map(\.portable)
         return portable
     }
     internal func verifyContents(_ snapshot: SaveSnapshot, directory: URL) throws {
@@ -80,7 +78,7 @@ public final class SaveSnapshotStore {
     public func stageImport(source: URL, slot: SaveSlot, location: SaveLocation) throws -> SaveImportPreview {
         try location.validate()
         try SaveFiles.safePath(source)
-        let source = source.standardizedFileURL
+        let source = try RyujinxSaveFolder.payload(for: source, titleID: location.titleID)
         let managed = [location.root, root]
         guard !managed.contains(where: { source.path == $0.path || source.path.hasPrefix($0.path + "/") || $0.path.hasPrefix(source.path + "/") }) else { throw SaveFailure.unsafePath }
         let entries = try SaveFiles.inventory(source, slot: slot)

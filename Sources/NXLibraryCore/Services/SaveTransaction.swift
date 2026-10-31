@@ -123,8 +123,9 @@ public final class SaveTransaction {
               journal.titleID == location.titleID,
               journal.after.allSatisfy({ $0.path.isEmpty || SaveFiles.validRelative($0.path) }) else { throw SaveFailure.recoveryRequired }
         let original = try store.verify(snapshotID: journal.before, titleID: location.titleID)
+        let expectedAfter = journal.after.map(\.portable)
         if journal.committed {
-            guard try SaveFiles.inventory(location) == journal.after else { throw SaveFailure.recoveryRequired }
+            guard try SaveFiles.inventory(location) == expectedAfter else { throw SaveFailure.recoveryRequired }
         } else {
             let backup = try store.directory(snapshotID: journal.before, titleID: location.titleID)
             let stage = staging(journal.id, location)
@@ -133,7 +134,7 @@ public final class SaveTransaction {
                 guard !isRunning() else { throw SaveFailure.running }
                 let current = try SaveFiles.inventory(location.directory(slot), slot: slot)
                 let before = original.entries.filter { $0.slot == slot }
-                let after = journal.after.filter { $0.slot == slot }
+                let after = expectedAfter.filter { $0.slot == slot }
                 if current == before { continue }
                 // Never destroy a save modified outside this transaction.
                 guard current == after else { throw SaveFailure.recoveryRequired }
