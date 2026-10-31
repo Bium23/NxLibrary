@@ -13,7 +13,8 @@ struct SettingsAboutSection: View {
         ("LibHac", "NSP reading and PFS/HFS layered filesystem", "https://github.com/Thealexbarney/LibHac"),
         ("Khronos Group", "SPIRV-Cross Metal Shading Language compiler", "https://github.com/KhronosGroup/SPIRV-Cross"),
         ("GameTDB", "Switch box covers", "https://www.gametdb.com"),
-        ("Title DB", "Game names, icons and banners", "https://github.com/blawar/titledb")
+        ("Title DB", "Game names, icons and banners", "https://github.com/blawar/titledb"),
+        ("NX2Apple", "Key check and failure explanations, adapted (MIT)", "https://github.com/LNPANDY/NX2Apple")
     ]
 
     var body: some View {
