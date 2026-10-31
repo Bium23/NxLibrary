@@ -72,6 +72,10 @@ struct SettingsLibrarySection: View {
                 viewModel.refreshLibrary()
             }
 
+            SeleneToggleRow("Notify when a porting ends",
+                            subtitle: "A notification when a porting finishes while NX Library is in the background.",
+                            isOn: $settings.settings.notifyPortingEnds)
+
             SeleneValueRow("Metadata cache",
                            subtitle: "Nintendo Store descriptions, genres and links.",
                            info: "Locally cached game metadata such as title IDs, publisher names, release dates, and category tags fetched during library scans.",
@@ -110,6 +114,9 @@ struct SettingsLibrarySection: View {
             },
             .init(id: "refresh", title: "Library refresh", isEnabled: !viewModel.isScanningLibrary) {
                 viewModel.refreshLibrary()
+            },
+            .init(id: "notify", title: "Notify when a porting ends") {
+                settings.settings.notifyPortingEnds.toggle()
             },
             .init(id: "metadataClear", title: "Metadata cache") {
                 viewModel.clearMetadataCache()

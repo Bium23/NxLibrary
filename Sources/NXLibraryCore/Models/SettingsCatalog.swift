@@ -118,6 +118,8 @@ public enum SettingsCatalog {
                "Where NX Library looks for ported games."),
         action("importBuilds", .library, "Import existing builds",
                "Adds games you already built to the library."),
+        row("notifyPortingEnds", .library, "Notify when a porting ends",
+            "A notification when a porting finishes while NX Library is in the background.") { $0.notifyPortingEnds },
 
         // Storage
         action("clearCaches", .storage, "Clear caches",

@@ -144,6 +144,8 @@ public struct AppSettings: Codable, Equatable {
     public var launchStyle: LaunchStyle
     public var launchMotion: Bool
     public var launchShade: LaunchShade
+    /// A notification when a porting ends while NX Library is in the background.
+    public var notifyPortingEnds: Bool
 
     public init(backgroundShade: BackgroundShade = .balanced,
                 readableText: Bool = true,
@@ -176,7 +178,8 @@ public struct AppSettings: Codable, Equatable {
                 wallpaperBrightness: WallpaperBrightness = .balanced,
                 launchStyle: LaunchStyle = .artAndLogo,
                 launchMotion: Bool = true,
-                launchShade: LaunchShade = .soft) {
+                launchShade: LaunchShade = .soft,
+                notifyPortingEnds: Bool = true) {
         self.backgroundShade = backgroundShade
         self.readableText = readableText
         self.reduceMotion = reduceMotion
@@ -209,6 +212,7 @@ public struct AppSettings: Codable, Equatable {
         self.launchStyle = launchStyle
         self.launchMotion = launchMotion
         self.launchShade = launchShade
+        self.notifyPortingEnds = notifyPortingEnds
     }
 
     enum CodingKeys: String, CodingKey {
@@ -219,6 +223,7 @@ public struct AppSettings: Codable, Equatable {
         case startOn, lastHome
         case introAnimation, viewButtonSwitches, interfaceSounds, soundVolume, quietLaunch
         case wallpaperID, backgroundSizing, animatedBackground, wallpaperBrightness, launchStyle, launchMotion, launchShade
+        case notifyPortingEnds
     }
 
     public init(from decoder: Decoder) throws {
@@ -256,5 +261,6 @@ public struct AppSettings: Codable, Equatable {
         self.launchStyle = try container.decodeIfPresent(LaunchStyle.self, forKey: .launchStyle) ?? .artAndLogo
         self.launchMotion = try container.decodeIfPresent(Bool.self, forKey: .launchMotion) ?? true
         self.launchShade = try container.decodeIfPresent(LaunchShade.self, forKey: .launchShade) ?? .soft
+        self.notifyPortingEnds = try container.decodeIfPresent(Bool.self, forKey: .notifyPortingEnds) ?? true
     }
 }

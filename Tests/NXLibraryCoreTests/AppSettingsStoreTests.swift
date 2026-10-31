@@ -18,6 +18,12 @@ final class AppSettingsStoreTests: XCTestCase {
         XCTAssertNil(store.loadError)
     }
 
+    func testNotifyPortingEndsDefaultsOnForOldFiles() throws {
+        let url = tempURL()
+        try Data("{}".utf8).write(to: url)
+        XCTAssertTrue(AppSettingsStore(fileURL: url).settings.notifyPortingEnds)
+    }
+
     func testRoundTrip() {
         let url = tempURL()
         let store = AppSettingsStore(fileURL: url)

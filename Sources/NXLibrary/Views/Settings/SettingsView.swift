@@ -237,6 +237,7 @@ public struct SettingsView: View {
             settings.settings.gameDefaults.rumble = defaults.gameDefaults.rumble
             settings.settings.gameDefaults.rumbleGain = defaults.gameDefaults.rumbleGain
         case .library:
+            settings.settings.notifyPortingEnds = defaults.notifyPortingEnds
             viewModel.libraryFolder = URL(fileURLWithPath: viewModel.defaultInstallPath)
                 .appendingPathComponent("Applications")
             viewModel.loadLibrary()

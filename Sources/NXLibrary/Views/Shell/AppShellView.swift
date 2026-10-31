@@ -249,6 +249,23 @@ public struct AppShellView: View {
             router.closeMenu()
             router.openConsole()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .nxLibraryPortingNoticeOpened)) { note in
+            guard !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil,
+                  let id = (note.userInfo?["gameID"] as? String).flatMap(UUID.init(uuidString:)) else { return }
+            router.closeMenu()
+            if note.userInfo?["outcome"] as? String == "failed" {
+                viewModel.lastBuildGameID = id
+                viewModel.reviewsFailureOnAddGame = true
+                if router.route == .addGame {
+                    viewModel.addGameDidBecomeVisible(defaults: settings.settings.gameDefaults, returningFromBack: false)
+                } else {
+                    router.openAddGame()
+                }
+            } else {
+                router.showLibrary()
+                router.requestSpotlightSelect(id)
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenLibrary)) { _ in
             guard !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
             router.closeMenu()

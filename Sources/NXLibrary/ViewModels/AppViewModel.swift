@@ -76,6 +76,8 @@ public final class AppViewModel: ObservableObject {
     var keyCheckToken: String? = nil
     /// The last porting's command line, for Copy diagnostics (its environment is never kept).
     var lastPortingCommand: [String] = []
+    /// Set by a failed porting's notification: the next Add game opens on that failure.
+    var reviewsFailureOnAddGame = false
     @Published public var isScanningGameFolder: Bool = false
     @Published public var scanError: String? = nil
     
@@ -208,7 +210,7 @@ public final class AppViewModel: ObservableObject {
     @Published var closeGameFocus: SeleneConfirmButton = .cancel
     @Published public var pendingRuntimeConfig = GameRuntimeConfig()
     private var lastAddGameDefaults = GameRuntimeConfig()
-    private var addGameSessionActive = false
+    var addGameSessionActive = false
     @Published public var importedApps: [ImportedApp] = []
     @Published public var environmentStatus: EnvironmentStatus? = nil
     @Published public var compatibilityReport: CompatibilityReport? = nil
@@ -1681,6 +1683,10 @@ public final class AppViewModel: ObservableObject {
             return
         }
         if returningFromBack, addGameSessionActive { return }
+        if reviewsFailureOnAddGame {
+            reviewsFailureOnAddGame = false
+            if buildError != nil || restoreLastFailure() { return }
+        }
         startNewAddGame(defaults: defaults)
     }
 
@@ -2197,8 +2203,7 @@ public final class AppViewModel: ObservableObject {
                 logs.append(LogEntry(level: .success,
                                      message: "Build succeeded: \(finalApp.path)"))
                 SoundEffectService.shared.play(.launch)
-                NotificationService.shared.sendPortSuccessNotification(
-                    gameName: game.name, outputPath: finalApp.path)
+                notifyPortingEnded(game, success: true)
             } else if result.cancelled {
                 game.status = buildPreviousStatus
                     ?? (game.sources.isEmpty ? .builtSourcesMissing : .notBuilt)
@@ -2227,8 +2232,7 @@ public final class AppViewModel: ObservableObject {
                                      message: result.error ?? "Build failed (exit code \(result.exitCode))."))
                 logs.append(LogEntry(level: .error, message: "\(reason.title). \(message) \(reason.next)"))
                 SoundEffectService.shared.play(.error)
-                NotificationService.shared.sendPortErrorNotification(
-                    gameName: game.name, error: reason.title)
+                notifyPortingEnded(game, success: false)
             }
 
             library.games[index] = game

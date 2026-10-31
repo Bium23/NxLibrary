@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 import NXLibraryCore
 
 /// What the home shows of the porting: the tile look, the pills and the time line.
@@ -27,6 +27,29 @@ extension AppViewModel {
               let id = lastBuildGameID,
               let game = libraryGames.first(where: { $0.id == id }) else { return }
         startBuild(for: game, extraArguments: PortingFailureClassifier.arguments([], adding: flag))
+    }
+
+    func notifyPortingEnded(_ game: PortedGame, success: Bool) {
+        let appActive = NSApp?.isActive ?? true
+        guard PortingNotice.shouldNotify(success: success, cancelled: false,
+                                         enabled: settingsStore?.settings.notifyPortingEnds ?? true,
+                                         appActive: appActive) else { return }
+        NotificationService.shared.sendPortingEnded(gameID: game.id, gameName: game.name, success: success,
+                                                    reason: game.portingFailureReason)
+    }
+
+    /// Puts the Porting step back on the last failed porting, from what the game saved.
+    func restoreLastFailure() -> Bool {
+        guard let id = lastBuildGameID, let game = libraryGames.first(where: { $0.id == id }),
+              game.portingFailure == .failed else { return false }
+        let reason = game.portingFailureReason ?? PortingFailureReason(kind: .unknown)
+        portingFailureReason = reason
+        buildError = reason.what(game: game.name)
+        buildSuccessPath = nil
+        buildState = .failed
+        buildWizardStep = 3
+        addGameSessionActive = true
+        return true
     }
 
     func performFailureAction(_ action: PortingFailureAction, router: AppRouter) {

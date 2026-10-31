@@ -1,61 +1,53 @@
 import Foundation
 import UserNotifications
 import AppKit
+import NXLibraryCore
 
-public final class NotificationService {
+extension Notification.Name {
+    /// A porting notification was clicked; userInfo carries "gameID" and "outcome" ("ready" or "failed").
+    static let nxLibraryPortingNoticeOpened = Notification.Name("NXLibraryPortingNoticeOpened")
+}
+
+/// Sends the end-of-porting notification (`PortingNotice` decides when) and routes its click.
+public final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     public static let shared = NotificationService()
-    
-    private init() {}
-    
+
+    private override init() {
+        super.init()
+        UNUserNotificationCenter.current().delegate = self
+    }
+
     public func requestAuthorization() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { _, error in
             if let error = error {
                 print("[NotificationService] Authorization error: \(error.localizedDescription)")
             }
         }
     }
-    
-    public func sendPortSuccessNotification(gameName: String, outputPath: String?) {
+
+    public func sendPortingEnded(gameID: UUID, gameName: String, success: Bool, reason: PortingFailureReason?) {
+        let text = PortingNotice.text(game: gameName, success: success, reason: reason)
         let content = UNMutableNotificationContent()
-        content.title = "Game Porting Complete!"
-        content.subtitle = gameName
-        if let path = outputPath {
-            content.body = "Successfully built and ready to play at: \(URL(fileURLWithPath: path).lastPathComponent)"
-        } else {
-            content.body = "Successfully built and ready to play in your Games library."
-        }
+        content.title = text.title
+        content.body = text.body
         content.sound = .default
-        
-        let request = UNNotificationRequest(
-            identifier: UUID().uuidString,
-            content: content,
-            trigger: nil // deliver immediately
-        )
-        
+        content.userInfo = ["gameID": gameID.uuidString, "outcome": success ? "ready" : "failed"]
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
                 print("[NotificationService] Failed to schedule notification: \(error)")
             }
         }
     }
-    
-    public func sendPortErrorNotification(gameName: String, error: String) {
-        let content = UNMutableNotificationContent()
-        content.title = "Game Porting Failed"
-        content.subtitle = gameName
-        content.body = error.count > 120 ? String(error.prefix(117)) + "..." : error
-        content.sound = .defaultCritical
-        
-        let request = UNNotificationRequest(
-            identifier: UUID().uuidString,
-            content: content,
-            trigger: nil
-        )
-        
-        UNUserNotificationCenter.current().add(request) { err in
-            if let err = err {
-                print("[NotificationService] Failed to schedule error notification: \(err)")
-            }
+
+    public func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                       didReceive response: UNNotificationResponse,
+                                       withCompletionHandler completionHandler: @escaping () -> Void) {
+        let info = response.notification.request.content.userInfo
+        DispatchQueue.main.async {
+            NSApp.activate(ignoringOtherApps: true)
+            NotificationCenter.default.post(name: .nxLibraryPortingNoticeOpened, object: nil, userInfo: info)
         }
+        completionHandler()
     }
 }
