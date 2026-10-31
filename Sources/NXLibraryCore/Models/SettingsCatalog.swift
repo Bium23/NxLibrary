@@ -44,6 +44,8 @@ public enum SettingsCatalog {
             "Checks the engine and toolchain each time NX Library starts.") { $0.checkEngineAtLaunch },
         row("refreshLibraryAtLaunch", .startUp, "Refresh library at launch",
             "Scans your library folders for new or removed games at start.") { $0.refreshLibraryAtLaunch },
+        row("checkAppUpdatesAtLaunch", .startUp, "Check for app updates",
+            "Looks for a newer NX Library release at launch, at most once a day.") { $0.checkAppUpdatesAtLaunch },
         row("introAnimation", .startUp, "Intro animation",
             "Plays the app mark when NX Library opens.") { $0.introAnimation },
 

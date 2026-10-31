@@ -146,6 +146,8 @@ public struct AppSettings: Codable, Equatable {
     public var launchShade: LaunchShade
     /// A notification when a porting ends while NX Library is in the background.
     public var notifyPortingEnds: Bool
+    /// Look for a newer NX Library release at launch, at most once a day.
+    public var checkAppUpdatesAtLaunch: Bool
 
     public init(backgroundShade: BackgroundShade = .balanced,
                 readableText: Bool = true,
@@ -179,7 +181,8 @@ public struct AppSettings: Codable, Equatable {
                 launchStyle: LaunchStyle = .artAndLogo,
                 launchMotion: Bool = true,
                 launchShade: LaunchShade = .soft,
-                notifyPortingEnds: Bool = true) {
+                notifyPortingEnds: Bool = true,
+                checkAppUpdatesAtLaunch: Bool = true) {
         self.backgroundShade = backgroundShade
         self.readableText = readableText
         self.reduceMotion = reduceMotion
@@ -213,6 +216,7 @@ public struct AppSettings: Codable, Equatable {
         self.launchMotion = launchMotion
         self.launchShade = launchShade
         self.notifyPortingEnds = notifyPortingEnds
+        self.checkAppUpdatesAtLaunch = checkAppUpdatesAtLaunch
     }
 
     enum CodingKeys: String, CodingKey {
@@ -223,7 +227,7 @@ public struct AppSettings: Codable, Equatable {
         case startOn, lastHome
         case introAnimation, viewButtonSwitches, interfaceSounds, soundVolume, quietLaunch
         case wallpaperID, backgroundSizing, animatedBackground, wallpaperBrightness, launchStyle, launchMotion, launchShade
-        case notifyPortingEnds
+        case notifyPortingEnds, checkAppUpdatesAtLaunch
     }
 
     public init(from decoder: Decoder) throws {
@@ -262,5 +266,6 @@ public struct AppSettings: Codable, Equatable {
         self.launchMotion = try container.decodeIfPresent(Bool.self, forKey: .launchMotion) ?? true
         self.launchShade = try container.decodeIfPresent(LaunchShade.self, forKey: .launchShade) ?? .soft
         self.notifyPortingEnds = try container.decodeIfPresent(Bool.self, forKey: .notifyPortingEnds) ?? true
+        self.checkAppUpdatesAtLaunch = try container.decodeIfPresent(Bool.self, forKey: .checkAppUpdatesAtLaunch) ?? true
     }
 }

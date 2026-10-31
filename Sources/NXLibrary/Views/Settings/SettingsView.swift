@@ -197,6 +197,7 @@ public struct SettingsView: View {
             settings.settings.restoreLastGame = defaults.restoreLastGame
             settings.settings.checkEngineAtLaunch = defaults.checkEngineAtLaunch
             settings.settings.refreshLibraryAtLaunch = defaults.refreshLibraryAtLaunch
+            settings.settings.checkAppUpdatesAtLaunch = defaults.checkAppUpdatesAtLaunch
             settings.settings.introAnimation = defaults.introAnimation
         case .navigation:
             settings.settings.showButtonHints = defaults.showButtonHints

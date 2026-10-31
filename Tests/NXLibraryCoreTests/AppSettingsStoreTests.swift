@@ -24,6 +24,12 @@ final class AppSettingsStoreTests: XCTestCase {
         XCTAssertTrue(AppSettingsStore(fileURL: url).settings.notifyPortingEnds)
     }
 
+    func testCheckAppUpdatesDefaultsOnForOldFiles() throws {
+        let url = tempURL()
+        try Data("{}".utf8).write(to: url)
+        XCTAssertTrue(AppSettingsStore(fileURL: url).settings.checkAppUpdatesAtLaunch)
+    }
+
     func testRoundTrip() {
         let url = tempURL()
         let store = AppSettingsStore(fileURL: url)

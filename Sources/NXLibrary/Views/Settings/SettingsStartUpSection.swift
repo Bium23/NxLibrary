@@ -43,6 +43,10 @@ struct SettingsStartUpSection: View {
                             subtitle: "Rescan the app library for new or removed builds.",
                             isOn: $settings.settings.refreshLibraryAtLaunch)
 
+            SeleneToggleRow("Check for app updates",
+                            subtitle: "Look for a newer NX Library release at launch, at most once a day.",
+                            isOn: $settings.settings.checkAppUpdatesAtLaunch)
+
             SeleneToggleRow("Intro animation",
                             subtitle: "Plays the app mark when NX Library opens.",
                             isOn: $settings.settings.introAnimation)
@@ -105,6 +109,9 @@ struct SettingsStartUpSection: View {
             },
             .init(id: "refresh", title: "Refresh library at launch") {
                 settings.settings.refreshLibraryAtLaunch.toggle()
+            },
+            .init(id: "appUpdates", title: "Check for app updates") {
+                settings.settings.checkAppUpdatesAtLaunch.toggle()
             },
             .init(id: "intro", title: "Intro animation") {
                 settings.settings.introAnimation.toggle()

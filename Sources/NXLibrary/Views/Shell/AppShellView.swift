@@ -10,6 +10,7 @@ public struct AppShellView: View {
     @StateObject private var playSessions = PlaySessionStore()
     @StateObject private var artwork = ArtworkStore()
     @StateObject private var runningGames = RunningGameMonitor()
+    @StateObject private var updater = AppUpdater()
     @ObservedObject private var theme = ThemeStore.shared
     @State private var gestureKeyMonitor: Any?
     /// Dismisses the Close Game confirmation when its game quits by itself.
@@ -168,6 +169,7 @@ public struct AppShellView: View {
         .environment(\.seleneBackdropStyle, backdropStyle)
         .environment(\.seleneShowButtonHints, settings.settings.showButtonHints)
         .environment(\.seleneButtonNames, settings.settings.buttonNames)
+        .environmentObject(updater)
         .preferredColorScheme(.dark)
         .frame(minWidth: 1100, minHeight: 700)
         .onAppear(perform: startRuntime)
@@ -379,6 +381,16 @@ public struct AppShellView: View {
             viewModel.dismissCloseGame()
         }
         viewModel.router = router
+        updater.blockedReason = { [weak viewModel, weak runningGames] in
+            guard let viewModel else { return nil }
+            if viewModel.isBuilding { return "After the porting" }
+            if let ids = runningGames?.runningGameIDs, let id = ids.first {
+                let name = viewModel.libraryGames.first { $0.id == id }?.name ?? "the game"
+                return "After you quit \(name)"
+            }
+            return nil
+        }
+        updater.checkAtLaunch(enabled: settings.settings.checkAppUpdatesAtLaunch)
         installGestureKeyMonitor()
         GameControllerService.shared.onAction = { [weak viewModel, weak router] action in
             guard let viewModel, let router else { return }

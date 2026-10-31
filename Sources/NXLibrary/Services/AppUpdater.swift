@@ -1,0 +1,213 @@
+import AppKit
+import Combine
+import NXLibraryCore
+
+/// NX Library's own updates: the check against GitHub, the download, the checks of `AppUpdate`,
+/// the swap and the relaunch. Hidden entirely while `AppUpdate.repository()` is nil.
+@MainActor
+final class AppUpdater: ObservableObject {
+    enum State: Equatable {
+        case hidden
+        /// Not a release copy: updates are off.
+        case developer
+        /// A release copy that cannot be replaced where it is.
+        case readOnly
+        case idle
+        case checking
+        case upToDate
+        case available(AppUpdate.Release)
+        case downloading(Double)
+        case installing
+        case failed(String)
+    }
+
+    @Published private(set) var state: State
+    /// The release the launch dialog offers; nil when no dialog is up.
+    @Published var offer: AppUpdate.Release?
+    @Published var offerFocus: SeleneConfirmButton = .confirm
+    /// Why an update must wait ("After the porting"); nil when it may run. Set by the shell.
+    var blockedReason: () -> String? = { nil }
+
+    private let repository: String?
+    private let runningVersion: String
+    private let defaults = UserDefaults.standard
+    private var progressWatch: NSKeyValueObservation?
+    private var lastRelease: AppUpdate.Release?
+
+    private enum Keys {
+        static let lastCheck = "NXLibrary_UpdateLastCheck"
+        static let laterVersion = "NXLibrary_UpdateLaterVersion"
+        static let laterAt = "NXLibrary_UpdateLaterAt"
+    }
+
+    init() {
+        repository = AppUpdate.repository()
+        runningVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0"
+        if repository == nil {
+            state = .hidden
+        } else {
+            switch AppUpdate.installability(Bundle.main.bundleURL) {
+            case .developer: state = .developer
+            case .readOnly: state = .readOnly
+            case .ok: state = .idle
+            }
+        }
+    }
+
+    var currentVersion: String { runningVersion }
+
+    /// The release the About row and the dialog act on.
+    var release: AppUpdate.Release? {
+        if case .available(let release) = state { return release }
+        return offer ?? lastRelease
+    }
+
+    func checkAtLaunch(enabled: Bool) {
+        guard enabled, state == .idle,
+              AppUpdate.shouldCheck(lastCheck: defaults.object(forKey: Keys.lastCheck) as? Date, now: Date())
+        else { return }
+        check(offering: true)
+    }
+
+    func checkNow() {
+        switch state {
+        case .idle, .upToDate, .available, .failed: check(offering: false)
+        default: break
+        }
+    }
+
+    private func check(offering: Bool) {
+        guard let repository,
+              let url = URL(string: "https://api.github.com/repos/\(repository)/releases/latest") else { return }
+        state = .checking
+        var request = URLRequest(url: url, timeoutInterval: 20)
+        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        Task {
+            do {
+                let (data, response) = try await URLSession.shared.data(for: request)
+                defaults.set(Date(), forKey: Keys.lastCheck)
+                let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+                if status == 404 { state = .upToDate; return }
+                guard status == 200 else { state = .failed("GitHub answered \(status); try again later."); return }
+                guard let release = AppUpdate.parseRelease(data) else {
+                    state = .failed("The latest release has no NX Library download.")
+                    return
+                }
+                guard AppUpdate.isNewer(release.version, than: runningVersion) else { state = .upToDate; return }
+                lastRelease = release
+                state = .available(release)
+                let laterVersion = defaults.string(forKey: Keys.laterVersion)
+                let laterAt = defaults.object(forKey: Keys.laterAt) as? Date
+                if offering, AppUpdate.shouldOffer(release.version, laterVersion: laterVersion, laterAt: laterAt, now: Date()) {
+                    offerFocus = .confirm
+                    offer = release
+                }
+            } catch {
+                state = .failed("Could not reach GitHub.")
+            }
+        }
+    }
+
+    /// Hides the dialog for this version for a day; About still offers it.
+    func later() {
+        if let offer {
+            defaults.set(offer.version, forKey: Keys.laterVersion)
+            defaults.set(Date(), forKey: Keys.laterAt)
+        }
+        offer = nil
+    }
+
+    func update() {
+        guard let release, blockedReason() == nil else { return }
+        offer = nil
+        switch state {
+        case .available, .failed: break
+        default: return
+        }
+        state = .downloading(0)
+        let folder = Self.workFolder()
+        try? FileManager.default.removeItem(at: folder)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let task = URLSession.shared.downloadTask(with: release.zipURL) { [weak self] location, response, error in
+            let zip = folder.appendingPathComponent("NXLibrary-\(release.version).zip")
+            let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+            var moved = false
+            if let location, error == nil, status == 200 {
+                moved = (try? FileManager.default.moveItem(at: location, to: zip)) != nil
+            }
+            Task { @MainActor in
+                guard let self else { return }
+                self.progressWatch = nil
+                guard moved else { return self.fail("The download did not finish; nothing was changed.") }
+                self.verifyAndInstall(zip: zip, release: release, folder: folder)
+            }
+        }
+        progressWatch = task.progress.observe(\.fractionCompleted) { [weak self] progress, _ in
+            let fraction = progress.fractionCompleted
+            Task { @MainActor in
+                guard let self, case .downloading = self.state else { return }
+                self.state = .downloading(fraction)
+            }
+        }
+        task.resume()
+    }
+
+    private func verifyAndInstall(zip: URL, release: AppUpdate.Release, folder: URL) {
+        guard AppUpdate.checkDigest(zip, expected: release.digest) == .match else {
+            return fail("The download did not match the release; nothing was changed.")
+        }
+        let unpacked = folder.appendingPathComponent("unpacked")
+        guard Self.run("/usr/bin/ditto", ["-x", "-k", zip.path, unpacked.path]) else {
+            return fail("The download could not be unpacked; nothing was changed.")
+        }
+        let staged = unpacked.appendingPathComponent("NXLibrary.app")
+        let expectedID = Bundle.main.bundleIdentifier ?? "local.nxlibrary"
+        if let problem = AppUpdate.bundleProblem(staged, expectedID: expectedID, version: release.version,
+                                                 runningOS: ProcessInfo.processInfo.operatingSystemVersion) {
+            if case .needsNewerMacOS(let minimum) = problem {
+                return fail("NX Library \(release.version) needs macOS \(minimum) or later; nothing was changed.")
+            }
+            return fail("The download is not a valid NX Library \(release.version); nothing was changed.")
+        }
+        if let reason = blockedReason() { return fail("\(reason); nothing was changed.") }
+        state = .installing
+        let current = Bundle.main.bundleURL
+        Task.detached(priority: .userInitiated) {
+            let result = Result { try AppUpdate.install(staged, over: current) }
+            await MainActor.run {
+                try? FileManager.default.removeItem(at: folder)
+                switch result {
+                case .success(let placed):
+                    if AppUpdate.relaunch(placed) {
+                        NSApp.terminate(nil)
+                    } else {
+                        self.state = .failed("NX Library \(release.version) is installed; open it again to finish.")
+                    }
+                case .failure:
+                    self.fail("NX Library could not be replaced; the current version is unchanged.")
+                }
+            }
+        }
+    }
+
+    private func fail(_ message: String) {
+        try? FileManager.default.removeItem(at: Self.workFolder())
+        state = .failed(message)
+    }
+
+    private static func workFolder() -> URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("NXLibrary/Temp/Update")
+    }
+
+    private static func run(_ tool: String, _ arguments: [String]) -> Bool {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: tool)
+        process.arguments = arguments
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        guard (try? process.run()) != nil else { return false }
+        process.waitUntilExit()
+        return process.terminationStatus == 0
+    }
+}
