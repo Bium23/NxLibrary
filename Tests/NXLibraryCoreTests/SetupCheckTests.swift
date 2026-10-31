@@ -202,8 +202,10 @@ final class SetupCheckTests: XCTestCase {
 
     private final class FakeRunner: CommandRunning {
         var responses: [String: CommandResult] = [:]
+        var calls: [(executable: URL, arguments: [String])] = []
         func run(_ executable: URL, _ arguments: [String],
                  environment: [String: String]?, currentDirectory: URL?) throws -> CommandResult {
+            calls.append((executable, arguments))
             let key = ([executable.lastPathComponent] + arguments).joined(separator: " ")
             return responses.first { key.hasSuffix($0.key) }?.value ?? CommandResult(status: 0, stdout: "", stderr: "")
         }
@@ -213,6 +215,22 @@ final class SetupCheckTests: XCTestCase {
         SetupProbe(runner: runner, toolchain: .resolve(runtime: nil, repo: engine), developerDir: nil,
                    engineFolder: engine, pinnedCommit: pin, certifiedMetal: "32023.921", allowUntested: false,
                    keyStore: KeyStore(directory: home.appendingPathComponent("keys")), libraryFolder: nil)
+    }
+
+    /// `-I` makes Python ignore PYTHONDONTWRITEBYTECODE, so each call passes `-B` itself: a bundled
+    /// runtime that writes __pycache__ into the app breaks its code signature.
+    func testProbeNeverWritesBytecodeIntoTheBundle() throws {
+        let home = FileManager.default.temporaryDirectory.appendingPathComponent("SetupProbe-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: home) }
+        let runner = FakeRunner()
+        let python = home.appendingPathComponent("Runtime/python/bin/python3")
+        let toolchain = EngineToolchain(python: python, extraPath: [], isBundled: true)
+        _ = SetupProbe(runner: runner, toolchain: toolchain, developerDir: nil, engineFolder: home,
+                       pinnedCommit: pin, certifiedMetal: "32023.921", allowUntested: false,
+                       keyStore: KeyStore(directory: home.appendingPathComponent("keys")), libraryFolder: nil).facts()
+        let pythonCalls = runner.calls.filter { $0.executable == python }
+        XCTAssertFalse(pythonCalls.isEmpty)
+        for call in pythonCalls { XCTAssertTrue(call.arguments.contains("-B"), call.arguments.joined(separator: " ")) }
     }
 
     func testProbeFacts() throws {
