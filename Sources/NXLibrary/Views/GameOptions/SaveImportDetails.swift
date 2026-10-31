@@ -5,6 +5,7 @@ struct SaveImportDetails: View {
     let source: URL
     let destination: URL
     @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.displayScale) private var displayScale
 
     var body: some View {
         ViewThatFits(in: .vertical) {
@@ -25,8 +26,8 @@ struct SaveImportDetails: View {
                     .accessibilityHidden(true)
                 endpoint("To", folder: destination)
             }
-            .padding(.horizontal, canvas.u(24))
-            .padding(.vertical, canvas.u(20))
+            .padding(.horizontal, canvas.u(12))
+            .padding(.vertical, canvas.u(10))
             .frame(maxWidth: .infinity)
             .background(RoundedRectangle(cornerRadius: canvas.u(14), style: .continuous)
                 .fill(SeleneTheme.glassLight))
@@ -60,7 +61,15 @@ struct SaveImportDetails: View {
                 .foregroundColor(SeleneTheme.ink)
                 .fixedSize(horizontal: false, vertical: true)
         }
+        .padding(.horizontal, canvas.u(12))
+        .padding(.vertical, canvas.u(10))
         .frame(maxWidth: .infinity)
+        .overlay {
+            RoundedRectangle(cornerRadius: canvas.u(10), style: .continuous)
+                .strokeBorder(SeleneTheme.ink15, lineWidth: 1 / displayScale)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
         .help(folder.path)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label)
