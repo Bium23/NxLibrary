@@ -22,6 +22,8 @@ struct SaveImportDetails: View {
                 endpoint("From", folder: source)
                 Image(systemName: "arrow.down")
                     .font(.system(size: canvas.u(22), weight: .light))
+                    .scaleEffect(x: 1, y: 1.22)
+                    .frame(height: canvas.u(28))
                     .foregroundColor(SeleneTheme.ink60)
                     .accessibilityHidden(true)
                 endpoint("To", folder: destination)
@@ -49,7 +51,7 @@ struct SaveImportDetails: View {
 
     private func endpoint(_ label: String, folder: URL) -> some View {
         let path = (folder.path as NSString).abbreviatingWithTildeInPath
-        return VStack(spacing: canvas.u(5)) {
+        return VStack(spacing: canvas.u(8)) {
             Text(verbatim: label.uppercased())
                 .seleneFont(13, .semibold)
                 .tracking(canvas.u(1.2))
@@ -60,15 +62,15 @@ struct SaveImportDetails: View {
                 .lineSpacing(canvas.u(2))
                 .foregroundColor(SeleneTheme.ink)
                 .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(.horizontal, canvas.u(12))
-        .padding(.vertical, canvas.u(10))
-        .frame(maxWidth: .infinity)
-        .overlay {
-            RoundedRectangle(cornerRadius: canvas.u(10), style: .continuous)
-                .strokeBorder(SeleneTheme.ink15, lineWidth: 1 / displayScale)
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
+                .padding(.horizontal, canvas.u(12))
+                .padding(.vertical, canvas.u(10))
+                .frame(maxWidth: .infinity)
+                .overlay {
+                    RoundedRectangle(cornerRadius: canvas.u(10), style: .continuous)
+                        .strokeBorder(SeleneTheme.ink15, lineWidth: 1 / displayScale)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                }
         }
         .help(folder.path)
         .accessibilityElement(children: .ignore)
