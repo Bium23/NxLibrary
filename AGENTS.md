@@ -41,3 +41,5 @@ codesign --verify --deep --strict "$HOME/Applications/NXLibrary.app"
 ```
 
 Then verify the gate in **Settings → Engine**, build one real game, and launch it to a visible screen. Do not claim a build or game is working from compilation alone.
+
+Releases go through `scripts/release.sh` only: it refuses a dirty tree, so commit or stash local changes first. Never publish (`--publish`) without the user asking.

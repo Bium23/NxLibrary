@@ -3,9 +3,10 @@
 #
 # Builds a release copy of NX Library (version in its plist, NXLibraryRelease marker, bundled
 # runtime), verifies its signature and zips it as work/release/NXLibrary-<version>.zip, the asset
-# the app's updater looks for. Nothing leaves this Mac unless --publish is given: then the tag
-# v<version> is pushed and a GitHub release is created with the zip (GitHub computes the digest
-# the app checks).
+# the app's updater looks for, plus work/release/NXLibrary-<version>.dmg for a first install (the
+# DMG must hold the release copy, or that install would never update itself). Nothing leaves
+# this Mac unless --publish is given: then the tag v<version> is pushed and a GitHub release is
+# created with both files (GitHub computes the zip's digest, which the app checks).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -55,11 +56,15 @@ codesign --verify --deep --strict "$APP"
 ditto -c -k --keepParent "$APP" "$ZIP"
 echo "Zip: $ZIP"
 echo "SHA-256: $(shasum -a 256 "$ZIP" | cut -d' ' -f1)"
+DMG="$OUT/NXLibrary-$VERSION.dmg"
+bash "$ROOT/scripts/build_dmg.sh" "$APP"
+mv "$ROOT/dist/NXLibrary.dmg" "$DMG"
+echo "DMG: $DMG"
 
 if [ "$PUBLISH" = "1" ]; then
   git tag "$TAG"
   git push origin "$TAG"
-  gh release create "$TAG" "$ZIP" --title "NX Library $VERSION" --notes-file "$NOTES"
+  gh release create "$TAG" "$ZIP" "$DMG" --title "NX Library $VERSION" --notes-file "$NOTES"
   echo "Published $TAG"
 else
   echo "Not published (add --publish --notes <file> to create the GitHub release)."

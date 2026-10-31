@@ -39,6 +39,7 @@ NX Library follows the [Selene](https://github.com/mattxslv/Selene) Playnite the
 - **Explained failures:** a failed porting is recognised from the engine's own messages (Intel Python, shader translator, Command Line Tools selected, uncertified Metal compiler, shader regressions, damaged files, 32-bit games, keys, several games in a folder, disk space, a disconnected drive, iCloud folders, no game profile). The Porting step titles it, says what stopped it and offers one next step: **Port anyway** (shader regressions and damaged files only, once), Engine settings, Setup, Import prod.keys or Storage. Spotlight and Details show the reason under the pills, after a relaunch too.
 - **Copy diagnostics:** a Markdown report for an issue (versions, engine pin and checkout, toolchain, setup, keys present, the last porting's command and log tail), from Settings → About, the Console and a failed Porting step. The home folder becomes `~`, key-like lines keep only the name, and no environment is included.
 - **Notifications:** "<Game> is ready" or "<Game> did not port" only when NX Library is in the background, never for a cancel; clicking lands on the game or on the failure. Settings → Library → **Notify when a porting ends**.
+- **Updates:** a release copy looks for a newer NX Library on GitHub at launch (at most once a day; Settings → Start-up → **Check for app updates**) and in Settings → About. Update downloads the release, checks its SHA-256 against GitHub's digest, its bundle ID, version and release marker, then swaps the app (the old one goes to the Trash) and relaunches. It waits for a porting or a running game. Builds from source never update themselves.
 - **Setup, Console:** the first-run checklist and log share the canvas units. Console's **Copy log** copies the last 200 log lines and the latest build log's tail; **Copy diagnostics** copies the scrubbed report.
 - **Controller and keyboard:** A/Return confirms or plays, B/Esc goes back, LB/RB switch filters, View/Tab flips Spotlight and Collection, Menu/Start opens the control center, holding Menu or `⌘,` opens Settings.
 - **Artwork:** Store descriptions and artwork are cached locally under Application Support. Nothing is written to the repository. Change artwork offers GameTDB, Title DB and the Nintendo store, then every online source for a game with the same name (or an edition of it): Steam (transparent logo, cover, background, screenshots), the Xbox Store (poster, hero, screenshots, square icon), GOG (logo, covers, screenshots), Nintendo Europe (banner, square), TheGamesDB (clear logo, box front, fan art, screenshots), Wikidata and Wikimedia Commons logos, Nintendo fan wiki logos and Wallhaven wallpapers. Wikidata also links a game to its Steam page when the names differ. The automatic logo falls back to these sources in the same order.
@@ -56,7 +57,7 @@ Python 3.14 (with `capstone` 5, `lz4` and `fontTools`), `zstd` and `glslangValid
 
 ## Install
 
-1. Open `NXLibrary.dmg` and drag **NX Library** to Applications.
+1. Download `NXLibrary-<version>.dmg` from the latest GitHub release, open it and drag **NX Library** to Applications. Later versions install from inside the app.
 2. The app is ad-hoc signed, not notarized. On first open, macOS blocks it: open **System Settings → Privacy & Security** and choose **Open Anyway**.
 3. The **Setup check** opens. It shows what is ready and what is missing: Xcode, the Metal compiler, the .NET 10 SDK, the engine, the bundled Python and tools, your `prod.keys` and the library folder. **Install all** does what it can by itself; the rest each card explains. When every card is ready, **Continue** opens the library.
 
@@ -82,6 +83,15 @@ NX_BUILD_CONFIG=debug bash scripts/build_app.sh /tmp/NXLibrary-Debug.app
 ```
 
 `--show-setup` (DEBUG only) reopens the Setup check.
+
+### Making a release
+
+```bash
+bash scripts/release.sh 0.2.0                                   # build, verify, zip and DMG in work/release/
+bash scripts/release.sh 0.2.0 --publish --notes notes-0.2.0.md  # also tag v0.2.0 and create the GitHub release
+```
+
+It refuses a dirty tree, a version that is not dotted numbers, an existing tag or a missing `work/Runtime`. The app it builds carries the version and the `NXLibraryRelease` marker, the only kind of copy that updates itself; `build_app.sh` alone takes `NX_VERSION` and `NX_RELEASE=1` but sets neither by default. Before the first release, set `AppUpdate.defaultRepository` to the GitHub `owner/name`; until then the update feature is hidden (`defaults write local.nxlibrary NXLibrary_UpdateRepository owner/name` turns it on for testing).
 
 ## First run
 
@@ -123,6 +133,7 @@ The suite covers models and persistence, source parsing (including a regression 
 - `Tests/NXLibraryCoreTests/` — core tests with synthetic PFS0 fixtures; no copyrighted game data.
 - `Resources/` — original app icon and appearance variants.
 - `scripts/build_app.sh` — release/debug app bundling and ad-hoc signing.
+- `scripts/release.sh` — a release copy, its zip and DMG, and optionally the GitHub release.
 - `docs/superpowers/` — design spec and implementation plan.
 
 ## Licenses and attribution
