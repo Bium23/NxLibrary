@@ -20,12 +20,7 @@ struct SaveImportDetails: View {
         VStack(spacing: canvas.u(18)) {
             VStack(spacing: canvas.u(13)) {
                 endpoint("From", folder: source)
-                Image(systemName: "arrow.down")
-                    .font(.system(size: canvas.u(22), weight: .light))
-                    .scaleEffect(x: 1, y: 1.22)
-                    .frame(height: canvas.u(28))
-                    .foregroundColor(SeleneTheme.ink60)
-                    .accessibilityHidden(true)
+                SaveTransferArrow()
                 endpoint("To", folder: destination)
             }
             .padding(.horizontal, canvas.u(12))
@@ -76,5 +71,43 @@ struct SaveImportDetails: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label)
         .accessibilityValue(folder.path)
+    }
+}
+
+private struct SaveTransferArrow: View {
+    @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.seleneReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.controlActiveState) private var windowState
+    @State private var start = Date()
+
+    var body: some View {
+        Group {
+            if reduceMotion || systemReduceMotion || windowState == .inactive {
+                glyph.foregroundStyle(SeleneTheme.ink60)
+            } else {
+                TimelineView(.animation(minimumInterval: 1.0 / 30)) { tick in
+                    litGlyph(at: tick.date.timeIntervalSince(start))
+                }
+            }
+        }
+        .accessibilityHidden(true)
+        .allowsHitTesting(false)
+    }
+
+    private var glyph: some View {
+        Image(systemName: "arrow.down")
+            .font(.system(size: canvas.u(22), weight: .light))
+            .scaleEffect(x: 1, y: 1.22)
+            .frame(height: canvas.u(28))
+    }
+
+    private func litGlyph(at elapsed: TimeInterval) -> some View {
+        let centre = SeleneShine.centre(at: elapsed)
+        let radius = SeleneShine.halfWidth
+        return glyph.foregroundStyle(LinearGradient(
+            colors: [SeleneTheme.ink60, SeleneTheme.ink.opacity(0.80), SeleneTheme.ink60],
+            startPoint: UnitPoint(x: 0.5, y: centre - radius),
+            endPoint: UnitPoint(x: 0.5, y: centre + radius)))
     }
 }
