@@ -87,7 +87,27 @@ struct SeleneDialogNotes: View {
     }
 }
 
-/// The dialog card both dialogs wear: 640u, glass, a hairline and a deep shadow.
+/// A brief completion message in the same glass card as Selene's dialogs.
+struct SeleneSuccessNotice: View {
+    @Environment(\.seleneCanvas) private var canvas
+    let title: String
+
+    var body: some View {
+        HStack(spacing: canvas.u(16)) {
+            Image(systemName: "checkmark.circle")
+                .font(.system(size: canvas.u(30), weight: .light))
+                .foregroundColor(SeleneTheme.ink75)
+                .accessibilityHidden(true)
+            Text(title)
+                .seleneFont(28, .semibold)
+                .foregroundColor(SeleneTheme.ink)
+        }
+        .modifier(SeleneDialogCard())
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Selene's dialog card: 640u, glass, a hairline and a deep shadow.
 private struct SeleneDialogCard: ViewModifier {
     @Environment(\.seleneCanvas) private var canvas
 

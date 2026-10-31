@@ -2,12 +2,13 @@ import XCTest
 @testable import NXLibraryCore
 
 final class RyujinxSaveImportTests: XCTestCase {
-    private func makeContainer(_ h: SaveTestHome) throws -> URL {
-        let container = h.base.appendingPathComponent("Ryujinx/bis/user/save/0000000000000008")
+    private func makeContainer(_ h: SaveTestHome, titleID: String? = nil,
+                               index: String = "0000000000000008") throws -> URL {
+        let container = h.base.appendingPathComponent("Ryujinx/bis/user/save/\(index)")
         try h.write("settings", container.appendingPathComponent("0/SaveSlot0/settings"))
         try h.write("progress", container.appendingPathComponent("0/SaveSlot1/progress"))
         try h.write("working", container.appendingPathComponent("1/SaveSlot1/progress"))
-        var title = try XCTUnwrap(UInt64(h.tid, radix: 16)).littleEndian
+        var title = try XCTUnwrap(UInt64(titleID ?? h.tid, radix: 16)).littleEndian
         var metadata = withUnsafeBytes(of: &title) { Data($0) }
         metadata.append(Data(count: 512 - metadata.count))
         try metadata.write(to: container.appendingPathComponent("ExtraData0"))
@@ -40,6 +41,35 @@ final class RyujinxSaveImportTests: XCTestCase {
         let store = SaveSnapshotStore(root: h.backups)
         for selected in [container.appendingPathComponent("0/SaveSlot0"), container.deletingLastPathComponent()] {
             XCTAssertThrowsError(try store.stageImport(source: selected, slot: .account, location: other))
+        }
+    }
+
+    func testUnrelatedTitlesKeepTheirOwnLayoutsAndSaveDestinations() throws {
+        let h = try SaveTestHome(); defer { h.remove() }
+        let store = SaveSnapshotStore(root: h.backups)
+        let games: [(String, String, String, SaveSlot)] = [
+            ("01000000000000A1", "0000000000000001", "Profile_A/Chapter_09/progress.bin", .account),
+            ("01000000000000B2", "00000000000000FE", "ユーザー/autosaves/checkpoint.dat", .device)
+        ]
+        for (titleID, index, path, slot) in games {
+            let location = try h.location(id: titleID)
+            let container = try makeContainer(h, titleID: titleID, index: index)
+            try h.write("progress-\(titleID)", container.appendingPathComponent("0/\(path)"))
+            let otherSlot: SaveSlot = slot == .account ? .device : .account
+            let untouched = location.directory(otherSlot).appendingPathComponent("existing")
+            try h.write("keep-\(titleID)", untouched)
+            let preview = try store.stageImport(source: container.appendingPathComponent("1/SaveSlot1"),
+                                                slot: slot, location: location)
+            let identity = SaveIdentity(titleID: titleID, gameName: "Synthetic \(titleID)", version: nil, buildID: nil)
+            let backup = try SaveTransaction(store: store, isRunning: { false })
+                .importSave(preview, location: location, identity: identity)
+            XCTAssertEqual(try String(contentsOf: location.directory(slot).appendingPathComponent(path)), "progress-\(titleID)")
+            XCTAssertEqual(try String(contentsOf: location.directory(slot).appendingPathComponent("SaveSlot1/progress")), "progress")
+            XCTAssertEqual(try String(contentsOf: untouched), "keep-\(titleID)")
+            XCTAssertEqual(backup.identity.titleID, titleID)
+            XCTAssertNoThrow(try store.verify(snapshotID: backup.id, titleID: titleID))
+            XCTAssertFalse(SaveTransaction.needsRecovery(location: location))
+            try store.discard(preview, location: location)
         }
     }
 

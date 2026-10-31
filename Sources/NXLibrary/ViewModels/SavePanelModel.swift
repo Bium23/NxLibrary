@@ -25,6 +25,7 @@ final class SavePanelModel: ObservableObject {
     @Published private(set) var activity: Activity = .refresh
     @Published private(set) var issue: Issue?
     @Published private(set) var message: String?
+    @Published private(set) var importSuccess: UUID?
     @Published private(set) var context: SaveContext?
     @Published private(set) var latestBackupDate: Date?
     @Published private(set) var preview: SaveImportPreview?
@@ -48,9 +49,11 @@ final class SavePanelModel: ObservableObject {
                                       recovery: recoveryRequired, cloud: context?.cloudReason != nil)
     }
     func dismissIssue() { issue = nil }
+    func dismissImportSuccess() { importSuccess = nil }
 
     private func report(_ error: Error, during activity: Activity) {
         message = nil
+        importSuccess = nil
         issue = Issue(title: activity.failureTitle, message: error.localizedDescription)
     }
     private func acquire(activity: Activity = .refresh, recovering: Bool = false) -> Bool {
@@ -59,6 +62,7 @@ final class SavePanelModel: ObservableObject {
             report(SaveFailure.busy, during: activity)
             return false
         }
+        if activity != .refresh { importSuccess = nil }
         lease = token; busy = true; message = nil; issue = nil; self.activity = activity
         return true
     }
@@ -164,6 +168,7 @@ final class SavePanelModel: ObservableObject {
                 try? self.store.discard(preview, location: context.location)
                 DispatchQueue.main.async {
                     self.preview = nil; self.latestBackupDate = backup.created; self.message = "Save imported"
+                    self.importSuccess = UUID()
                     self.release(); self.refreshAfterSuccess()
                 }
             } catch {

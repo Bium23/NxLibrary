@@ -33,6 +33,8 @@ Never follow `main` automatically. A commit that is newer is not automatically a
 
 ## Verification
 
+The user performs interactive app and game checks. Never use computer-use tools or other UI automation. Agents run automated tests and build/install the app, then report any manual checks that remain.
+
 ```bash
 cd ~/Developer/NXLibrary
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test

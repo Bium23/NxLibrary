@@ -64,11 +64,26 @@ struct SavesPanel: View {
                 .transition(.opacity)
                 .zIndex(1)
             }
+            ZStack {
+                if model.importSuccess != nil && !confirming {
+                    SeleneSuccessNotice(title: "Imported successfully")
+                        .transition(.opacity)
+                }
+            }
+            .allowsHitTesting(false)
+            .animation(reduceMotion ? nil : SeleneTheme.standard, value: model.importSuccess)
+            .zIndex(2)
         }
         .onAppear { model.refresh(); installKeyMonitor() }
         .onDisappear { if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }; keyMonitor = nil; model.close() }
         .onChange(of: model.preview) { _ in confirmFocus = .cancel }
         .onChange(of: model.restorePreview) { _ in confirmFocus = .cancel }
+        .task(id: model.importSuccess) {
+            guard model.importSuccess != nil else { return }
+            do { try await Task.sleep(nanoseconds: 3_000_000_000) }
+            catch { return }
+            model.dismissImportSuccess()
+        }
         .onReceive(NotificationCenter.default.publisher(for: .nxGameOptionsGamepadAction)) { note in
             if let action = note.object as? GamepadAction { handle(action) }
         }
