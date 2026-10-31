@@ -54,4 +54,14 @@ final class LaunchServiceTests: XCTestCase {
         XCTAssertFalse(launched)
         XCTAssertEqual(launchError, "sample launch error")
     }
+
+    /// NX Library's Game options are the game's settings window: a game it starts skips the engine's own
+    /// (dm/mac/launcher.c, DM_LAUNCHER=0), which would ask again and, on Quit, leave a process macOS never reports ended.
+    func testLaunchSkipsTheEnginesSettingsWindow() {
+        let launcher = FakeLauncher()
+        LaunchService(launcher: launcher).launch(appURL: URL(fileURLWithPath: "/tmp/G.app"),
+                                                 environment: ["DM_FPS_TARGET": "30"]) { _, _ in }
+        XCTAssertEqual(launcher.environment["DM_LAUNCHER"], "0")
+        XCTAssertEqual(launcher.environment["DM_FPS_TARGET"], "30")
+    }
 }

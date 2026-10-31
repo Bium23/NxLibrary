@@ -55,4 +55,20 @@ final class RunningGamesTests: XCTestCase {
                                            runningBundleIDs: ["", "nil", "org.nxnative."])
         XCTAssertTrue(ids.isEmpty)
     }
+
+    /// The running set comes from what is running, not from notifications: a game's launcher that quits from its
+    /// settings window turns into a background process first, and macOS posts no "terminated" for it.
+    func testTrackerEndsAnAppThatStoppedWithoutANotification() {
+        var running: Set<String> = ["org.nxnative.pop", "com.apple.finder"]
+        let tracker = RunningAppsTracker { running }
+        XCTAssertEqual(tracker.running, ["org.nxnative.pop", "com.apple.finder"])
+        running.remove("org.nxnative.pop")
+        let change = tracker.refresh()
+        XCTAssertEqual(change.ended, ["org.nxnative.pop"])
+        XCTAssertEqual(change.started, [])
+        XCTAssertEqual(tracker.running, ["com.apple.finder"])
+        running.insert("org.nxnative.mario")
+        XCTAssertEqual(tracker.refresh().started, ["org.nxnative.mario"])
+        XCTAssertEqual(tracker.refresh().ended, [], "nothing changed")
+    }
 }

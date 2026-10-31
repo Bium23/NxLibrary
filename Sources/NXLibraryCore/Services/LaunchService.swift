@@ -50,9 +50,14 @@ public final class LaunchService {
             to: envURL, atomically: true, encoding: .utf8)
     }
 
+    /// Set for every game NX Library starts: Game options are its settings window, so the engine's own
+    /// (dm/mac/launcher.c: DM_LAUNCHER=0) does not show; the game takes NX Library's settings and starts.
+    public static let launchEnvironment = ["DM_LAUNCHER": "0"]
+
     public func launch(appURL: URL, environment: [String: String] = [:],
                        completion: @escaping (Bool, String?) -> Void) {
-        launcher.open(appURL, environment: environment, completion: completion)
+        launcher.open(appURL, environment: environment.merging(Self.launchEnvironment) { _, fixed in fixed },
+                      completion: completion)
     }
 
     public func saveDirectory(for titleId: String) -> URL {
