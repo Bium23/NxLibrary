@@ -2,7 +2,7 @@
 
 A personal, native macOS front-end for [nxnative](https://github.com/seedds/nxnative). It builds your own Switch dumps into self-contained Mac apps and launches them from a console-style library. No emulator is involved.
 
-**Status:** v0.1.0, implemented and verified on this Apple-silicon Mac. The engine is used in place; the front-end never patches it. Design and plan are in [`docs/superpowers/`](docs/superpowers/).
+**Status:** v0.1.0, implemented and verified on this Apple-silicon Mac. Current architecture and file responsibilities are documented in the [technical guide](docs/architecture.md) and [file catalog](docs/file-map.md). Dated designs and plans are in [`docs/superpowers/`](docs/superpowers/).
 
 ## What it does
 
@@ -11,7 +11,7 @@ A personal, native macOS front-end for [nxnative](https://github.com/seedds/nxna
 - Detects NSP/XCI/NSZ/XCZ base, update and DLC files, including files reached through symlinks, and groups them by title ID.
 - Creates a symlinked workspace or uses a source folder in place; sources are never copied into the library.
 - Builds a Mac `.app` in `~/Applications` through the pinned nxnative CLI with JSON progress, stages, ETA, a live log and cancellation.
-- Replaces the previous app atomically; a failed or cancelled build leaves it untouched.
+- Installs validated game builds from a temporary app path, with rollback to the previous app if replacement fails.
 - Stores the library in `~/Library/Application Support/NXLibrary/library.json` with a backup copy.
 - Keeps runtime settings per game (FPS target, docked mode, render scale, MetalFX spatial upscale, Metal HUD, language, rumble, fullscreen). It reads the app's `launcher.json` to show only the settings the game supports, writes nxnative's `env.txt`, and passes the chosen values in the launch environment as well.
 - Shows storage usage and can delete only caches and logs; apps and sources require explicit action. **Remove Sources & Build Cache** deletes the original NSP/XCI files and the app-owned workspace for one game, keeping the installed app, saves and logs; sources can be attached again later.
@@ -27,7 +27,7 @@ NX Library follows the [Selene](https://github.com/mattxslv/Selene) Playnite the
 - **Details:** banded page (Play / Options / Favorite, Build & Sources, screenshots, More like this) with Selene's scrim masks.
 - **Game options:** Selene's 1040u panel with runtime settings, favorite, hide and move, and confirm dialogs.
 - **Cheats:** Game Options → **Cheats** (the third row) installs a cheat file (drop it, or choose it) into the folder the game's engine reads, `~/Library/Application Support/nxnative/<title ID>/cheats/<build ID>.txt`, and switches each cheat and the master switch. A new file starts with every cheat off; changes apply at the next Play, and the in-game panel (⌘⇧C) shows the same files. Files are written only while the game is not running. An app built with an engine older than nxnative `ef9f9bb` shows **Rebuild**. The detail page shows CHEATS · On when at least one is on. Arrows, the wheel and the trackpad drive it; the pointer alone never moves the focus. Hidden games come back from **Settings → Games → Hidden games**.
-- **Saves:** Game Options → **Saves** opens the local save folder, makes verified backups and imports an emulator/console export folder into the account or separate device save. For Ryujinx, choose the numbered game folder. The preview checks the title ID and includes all slots from its `0` folder. **Backup folder** opens this game’s copies in Finder and shows the date and time of the latest backup. To restore a copy, select its dated folder in **Import save…**. Import and restore stage a preview, keep a full backup of the current account/device saves, and replace files without merging. The game must stay closed; cloud sync must be off in the effective configuration (including the game's own preferences and env files). Custom save paths and symlinks are refused. Backups retain extended attributes and live in `Application Support/NXLibrary/SaveBackups/<title ID>/`, separately from the engine's pruned cloud backups; NX Library does not automatically delete them. An interrupted replacement is recovered before Play. Compatibility with a particular emulator export still needs a real-game check; saves from newer game versions may be incompatible, and turning cloud sync back on may replace the imported save.
+- **Saves:** Game Options → **Saves**, directly below Cheats, manages local saves, verified backups, folder imports and restores. Import uses a centered From → To preview and shows **Imported successfully** for three seconds after verified completion. The same import path handles each game's own file structure. [Save actions and workflow](#save-backups-and-imports).
 - **Control center:** Menu/Start or `⌘K` opens Selene's menu with Resume and Close Game for a running game, and Power (quit, relaunch).
 - **Launch screen:** on Play, the game's art and logo (per Settings → Games) stay up until the game's window appears.
 - **Find a game:** hold View or press `⌘F` for a search over the whole library.
@@ -46,7 +46,7 @@ NX Library follows the [Selene](https://github.com/mattxslv/Selene) Playnite the
 - **Controller and keyboard:** A/Return confirms or plays, B/Esc goes back, LB/RB switch filters, View/Tab flips Spotlight and Collection, Menu/Start opens the control center, holding Menu or `⌘,` opens Settings.
 - **Artwork:** Store descriptions and artwork are cached locally under Application Support. Nothing is written to the repository. Change artwork offers GameTDB, Title DB and the Nintendo store, then every online source for a game with the same name (or an edition of it): Steam (transparent logo, cover, background, screenshots), the Xbox Store (poster, hero, screenshots, square icon), GOG (logo, covers, screenshots), Nintendo Europe (banner, square), TheGamesDB (clear logo, box front, fan art, screenshots), Wikidata and Wikimedia Commons logos, Nintendo fan wiki logos and Wallhaven wallpapers. Wikidata also links a game to its Steam page when the names differ. The automatic logo falls back to these sources in the same order.
 
-The design specification and implementation plan live in [`docs/superpowers/`](docs/superpowers/). Visual acceptance is a manual pass on this Mac; the automated suite covers the data and build layers.
+The [technical guide](docs/architecture.md) describes the current implementation. Dated specifications and plans live in [`docs/superpowers/`](docs/superpowers/). The user performs interactive app and game checks. The automated suite covers the data, build and presentation-state layers.
 
 ## Requirements
 
@@ -110,9 +110,34 @@ What NX Library is tested with lives in one table, `ToolchainRequirements.curren
 
 Builds go to `~/Applications/<game>.app`. Sources stay where they are; a staged workspace uses symlinks.
 
+## Save backups and imports
+
+Open **Game Options → Saves** with the game closed. NX Library manages the committed local save under `~/Library/Application Support/nxnative/<title ID>/`.
+
+| Action | Purpose |
+|---|---|
+| **Open folder** | Open the current local save in Finder. |
+| **Back up now** | Create a dated, verified copy of the current account and device saves. |
+| **Save type** | Choose the destination for an import. **User save** is the usual choice. **Device save** selects a separate device save for games that use both. |
+| **Import save…** | Preview an emulator/console export folder or restore a dated NX Library backup. |
+| **Refresh** | Read the current save and backup information again. |
+| **Backup folder** | Open this game's backup directory. The row shows the date and time of the latest copy. |
+
+For Ryujinx, choose the numbered game folder under `bis/user/save/`. A selection inside it is recognized too. NX Library checks the title ID in Ryujinx's metadata and imports the complete committed `0` tree, including every slot. Other exports should be selected at the folder containing the complete game save. Files retain their relative paths through the common import flow for all titles.
+
+After confirmation, import and restore first create and verify a full backup of the current saves. Import replaces the selected destination. Restoring a dated backup restores both recorded destinations, including their presence or absence. The preview shows the paths, file count, size and installed version. Every completed import displays a Selene **Imported successfully** card that fades away after three seconds.
+
+Backups preserve file contents and guest-name extended attributes. They live under `~/Library/Application Support/NXLibrary/SaveBackups/<title ID>/<timestamp>-<UUID>/`. Manual copies and copies made before import or restore appear in the same directory. To restore one, select its dated folder in **Import save…**. Backup retention is managed by the user in Finder.
+
+Import and restore require cloud sync to be off in the effective configuration, including the game's own preferences and env files. Keep the game closed until completion. The panel accepts default save paths and refuses symlinks or redirected destinations. An interrupted replacement is recovered before Play. Save compatibility depends on the game and version, and turning cloud sync on later can replace the imported local save.
+
+Ryujinx imports have been exercised with Prince of Persia and Breath of the Wild. The user confirmed the imported Breath of the Wild progress works in-game. Automated tests also cover unrelated synthetic title IDs, different directory layouts and both destination types.
+
 ## Compatibility gate
 
-New builds are blocked unless the installed engine commit, working tree, Metal compiler and nxnative CLI match the certified combination. This Mac has Xcode 27.1 and Metal `32023.921`, matching the engine lock. The gate is visible under **Settings → Engine**.
+New builds are blocked unless the installed engine commit, working tree, Metal compiler and nxnative CLI match the certified combination. The current pin certifies Metal `32023.921` (`metalfe-32023.921.6`), available as Apple's `27A266a` asset. The gate is visible under **Settings → Engine**.
+
+The [2026-10-31 upgrade note](docs/upstream-upgrades/2026-10-31-ee369f0-2716f78.md) records the user's explicit choice to verify Prince of Persia with Xcode 27.2 and Metal `32023.922` through the untested-toolchain override. That build records `toolchainVerified=false`.
 
 An explicit **Build anyway with an untested toolchain** override exists. It requires confirmation, persists in `UserDefaults`, passes `--allow-other-metal` to the engine, and records every build made under it as **untested**. Corrupted graphics are a documented upstream risk; the existing BotW build is left untouched.
 
@@ -126,7 +151,7 @@ Engine upgrades are manual and never follow `main`. Before changing the pin, rev
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 ```
 
-The suite covers models and persistence, source parsing (including a regression for `*.cnmt.nca` vs `*.cnmt.xml`), symlink workspaces, key import/permissions, the compatibility gate, build-command construction, atomic install, process cancellation, launch environment writing, import, storage, and game playability.
+The suite covers models and persistence, source parsing (including a regression for `*.cnmt.nca` vs `*.cnmt.xml`), symlink workspaces, key import/permissions, the compatibility gate, build-command construction, installation and rollback, process cancellation, launch environment writing, import, storage, cheats, save snapshots and interrupted save recovery. The last code verification on 2026-11-01 passed **654 tests**. The [file catalog](docs/file-map.md#test-e-fixture) describes each test file's scope.
 
 ## Repository layout
 
@@ -137,6 +162,13 @@ The suite covers models and persistence, source parsing (including a regression 
 - `scripts/build_app.sh` — release/debug app bundling and ad-hoc signing.
 - `scripts/release.sh` — a release copy, its zip and DMG, and optionally the GitHub release.
 - `docs/superpowers/` — design spec and implementation plan.
+
+## Documentation
+
+- [Technical guide](docs/architecture.md) — current architecture, dependencies, feature flows, persistence and verification, written in Italian.
+- [File catalog](docs/file-map.md) — every versioned file and its responsibility, grouped by area, written in Italian.
+- [Dated designs and plans](docs/superpowers/) — original design, feature specifications and implementation records.
+- [Engine upgrade notes](docs/upstream-upgrades/README.md) — adoption checklist, pin changes and verification evidence.
 
 ## Licenses and attribution
 
