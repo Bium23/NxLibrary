@@ -3,8 +3,9 @@ import Darwin
 @testable import NXLibraryCore
 
 final class SaveSnapshotStoreTests: XCTestCase {
-    func testCopyIdentityIsExcludedButGuestNamesAndQuarantineRemainVerified() {
+    func testSystemCopyAndAccessLabelsAreExcludedButGuestNamesAndQuarantineRemainVerified() {
         let metadata = ["com.apple.provenance": Data([1]),
+                        "com.apple.macl": Data([2]),
                         "org.d2rmobile.guest-name": Data("Save".utf8),
                         "com.apple.quarantine": Data("quarantine".utf8)]
         XCTAssertEqual(SaveFiles.portableAttributes(metadata), [

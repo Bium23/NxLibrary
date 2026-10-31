@@ -82,6 +82,43 @@ final class SaveTransactionTests: XCTestCase {
         XCTAssertTrue(SaveTransaction.needsRecovery(location: location))
         XCTAssertEqual(try store.list(titleID: h.tid).count, 2)
     }
+    func testRecoveryReadsOlderBackupsAndJournalsWithSystemAccessLabels() throws {
+        for checkpoint in ["account", "committed"] {
+            let h = try SaveTestHome(); defer { h.remove() }
+            let location = try h.location(); let store = SaveSnapshotStore(root: h.backups)
+            let file = location.directory(.account).appendingPathComponent("data")
+            try h.write("original", file)
+            let source = h.base.appendingPathComponent("export")
+            try h.write("imported", source.appendingPathComponent("data"))
+            let preview = try store.stageImport(source: source, slot: .account, location: location)
+            var io = SaveFileIO()
+            io.afterMutation = { if $0 == checkpoint { throw SaveFailure.io("Interrupted") } }
+            XCTAssertThrowsError(try SaveTransaction(store: store, isRunning: { false }, io: io)
+                .importSave(preview, location: location, identity: h.identity))
+
+            // Earlier versions recorded macOS access labels, which may disappear on rename.
+            let backup = try XCTUnwrap(store.list(titleID: h.tid).first)
+            var recordedBackup = backup
+            recordedBackup.entries[0].attributes["com.apple.macl"] = Data([1, 2, 3])
+            let backupFolder = try store.directory(snapshotID: backup.id, titleID: h.tid)
+            try JSONEncoder().encode(recordedBackup).write(to: backupFolder.appendingPathComponent("manifest.json"))
+            let journalURL = location.root.appendingPathComponent(".nxlibrary-save-transaction.json")
+            var journal = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: journalURL)) as? [String: Any])
+            var after = try XCTUnwrap(journal["after"] as? [[String: Any]])
+            var attributes = try XCTUnwrap(after[0]["attributes"] as? [String: String])
+            attributes["com.apple.macl"] = Data([4, 5, 6]).base64EncodedString()
+            after[0]["attributes"] = attributes
+            journal["after"] = after
+            try JSONSerialization.data(withJSONObject: journal).write(to: journalURL)
+
+            let restarted = SaveTransaction(store: store, isRunning: { false })
+            try restarted.recover(location: location)
+            try restarted.recover(location: location)
+            XCTAssertEqual(try String(contentsOf: file), checkpoint == "committed" ? "imported" : "original")
+            XCTAssertFalse(SaveTransaction.needsRecovery(location: location))
+            XCTAssertNoThrow(try store.verify(snapshotID: backup.id, titleID: h.tid))
+        }
+    }
     func testRunningStaleAndWrongTitleRefused() throws {
         let h = try SaveTestHome(); defer { h.remove() }
         let location = try h.location(); let store = SaveSnapshotStore(root: h.backups)

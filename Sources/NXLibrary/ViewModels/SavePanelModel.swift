@@ -82,7 +82,8 @@ final class SavePanelModel: ObservableObject {
             do {
                 let location = try self.viewModel.defaultSaveLocation(for: self.game)
                 if SaveTransaction.needsRecovery(location: location) {
-                    try self.transaction().recover(location: location)
+                    do { try self.transaction().recover(location: location) }
+                    catch let caught { error = caught }
                 }
                 context = try self.viewModel.saveContext(for: self.game)
                 latestBackup = try self.store.list(titleID: location.titleID).first?.created

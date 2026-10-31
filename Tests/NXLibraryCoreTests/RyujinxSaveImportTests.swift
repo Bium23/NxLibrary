@@ -20,7 +20,8 @@ final class RyujinxSaveImportTests: XCTestCase {
         let location = try h.location()
         let store = SaveSnapshotStore(root: h.backups)
         try h.write("old", location.directory(.account).appendingPathComponent("old-progress"))
-        for selected in [container, container.appendingPathComponent("0"), container.appendingPathComponent("0/SaveSlot0")] {
+        for selected in [container, container.appendingPathComponent("0"), container.appendingPathComponent("0/SaveSlot0"),
+                         container.appendingPathComponent("1/SaveSlot1")] {
             let preview = try store.stageImport(source: selected, slot: .account, location: location)
             defer { try? store.discard(preview, location: location) }
             XCTAssertEqual(preview.source.path, container.appendingPathComponent("0").path)

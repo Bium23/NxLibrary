@@ -36,12 +36,13 @@ extension SaveFiles {
         if let capacity = try? existing.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage,
            capacity < bytes { throw SaveFailure.io("There is not enough free space for this save operation.") }
     }
-    // Compare the portable metadata. macOS can assign provenance and rewrite the
-    // quarantine agent name on copy. Keep flags, timestamp and event ID exact.
+    // macOS can assign provenance, change access labels on rename, and rewrite
+    // the quarantine agent on copy. Keep flags, timestamp and event ID exact.
     // This transforms inventory records only; the system copies the xattrs on disk.
     static func portableAttributes(_ values: [String: Data]) -> [String: Data] {
         var portable = values
         portable.removeValue(forKey: "com.apple.provenance")
+        portable.removeValue(forKey: "com.apple.macl")
         let key = "com.apple.quarantine"
         if let value = portable[key], let record = String(data: value, encoding: .utf8) {
             var fields = record.components(separatedBy: ";")
