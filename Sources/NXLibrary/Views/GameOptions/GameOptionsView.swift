@@ -79,6 +79,7 @@ struct GameOptionsView: View {
             sourcesDetached: !game.sources.contains { $0.type == .base },
             // Mirrors GameDetailView.toolchainBlocked: a known report that does not pass, without the override.
             toolchainBlocked: viewModel.compatibilityReport != nil && !viewModel.canPassToolchainGate,
+            toolchainHint: viewModel.toolchainGateSummary?.buildHint,
             hasStorePage: viewModel.storeMetadata[game.id]?.storeURL != nil,
             gameName: game.name,
             appPath: game.url.path,

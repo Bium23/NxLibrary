@@ -24,6 +24,8 @@ struct BuildSourcesPanel: View {
     let appFileName: String
     /// The Metal gate refuses new builds: the status line says where to fix it.
     let buildBlocked: Bool
+    /// The gate's line for the refusal (ToolchainGateCopy); a newer Metal compiler reads calm, not orange.
+    var blockedHint: ToolchainGateCopy.Summary? = nil
     let rows: [BuildSourcesRow]
     /// The focused row, nil when the band has no focus.
     let focusedRow: Int?
@@ -134,9 +136,9 @@ struct BuildSourcesPanel: View {
 
     @ViewBuilder private var blockedStatus: some View {
         if buildBlocked {
-            Text("Build blocked — Settings → Engine")
+            Text(blockedHint.flatMap { $0.buildHint.isEmpty ? nil : $0.buildHint } ?? "Build blocked — Settings → Engine")
                 .seleneFont(15, .semibold)
-                .foregroundColor(SeleneTheme.untested)
+                .foregroundColor(blockedHint?.tone == .info ? SeleneTheme.ink82 : SeleneTheme.untested)
         }
     }
 

@@ -98,4 +98,38 @@ final class CompatibilityCheckerTests: XCTestCase {
         XCTAssertFalse(report.ok)
         XCTAssertTrue(report.checks.contains { $0.id == "python" && $0.status == .block })
     }
+
+    private func report(metal: String) throws -> CompatibilityReport {
+        let r = FakeRunner()
+        r.outputs["git rev-parse HEAD"] = .init(status: 0, stdout: "06b7b3e\n", stderr: "")
+        r.outputs["git status --porcelain"] = .init(status: 0, stdout: "", stderr: "")
+        r.outputs["xcrun metal --version"] = .init(status: 0, stdout: metal, stderr: "")
+        r.outputs[cliKey] = .init(status: 0,
+            stdout: "--platform --progress -o -k --app-name --bundle-id\n", stderr: "")
+        return try checker(r).check(expectedEngineCommit: "06b7b3e")
+    }
+
+    func testMetalStandingComparesWithTheLock() throws {
+        let same = try report(metal: "Apple metal version 32023.921 (metalfe-32023.921.6)\n")
+        XCTAssertEqual(same.metal, .same)
+        XCTAssertTrue(same.ok)
+        let newer = try report(metal: "Apple metal version 32023.922 (metalfe-32023.922.4)\nTarget: air64\n")
+        XCTAssertEqual(newer.metal, .newer(installed: "32023.922", required: "32023.921"))
+        XCTAssertFalse(newer.ok, "a newer compiler still needs the override (AGENTS.md)")
+        XCTAssertEqual(newer.checks.first { $0.id == "metal" }?.detail, "installed 32023.922, tested 32023.921")
+        let older = try report(metal: "Apple metal version 32023.917\n")
+        XCTAssertEqual(older.metal, .older(installed: "32023.917", required: "32023.921"))
+        XCTAssertFalse(older.ok)
+        XCTAssertEqual(try report(metal: "").metal, .unknown)
+    }
+
+    func testMetalVersionNumbersCompareByComponent() {
+        XCTAssertEqual(CompatibilityChecker.metalStanding(installed: "Apple metal version 32023.1000",
+                                                          required: "Apple metal version 32023.921"),
+                       .newer(installed: "32023.1000", required: "32023.921"))
+        XCTAssertEqual(CompatibilityChecker.metalStanding(installed: "32100.1", required: "32023.921"),
+                       .newer(installed: "32100.1", required: "32023.921"))
+        XCTAssertEqual(CompatibilityChecker.metalStanding(installed: "32023.921", required: "32023.921.0"), .same)
+        XCTAssertEqual(CompatibilityChecker.metalStanding(installed: "xcrun: error", required: "32023.921"), .unknown)
+    }
 }

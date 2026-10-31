@@ -234,6 +234,7 @@ struct GameDetailView: View {
                         presentation: model.presentation,
                         appFileName: game.url.lastPathComponent,
                         buildBlocked: model.buildBlocked && model.presentation.canRebuild,
+                        blockedHint: viewModel.toolchainGateSummary,
                         rows: model.rows,
                         focusedRow: focus.zone == DetailsFocus.actionsZone ? focus.action : nil,
                         onHoverRow: { hoverRow($0) },

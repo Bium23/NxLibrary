@@ -12,6 +12,24 @@ public struct CompatibilityCheck: Equatable {
 public struct CompatibilityReport: Equatable {
     public var ok: Bool
     public var checks: [CompatibilityCheck]
+    /// The installed Metal compiler against the engine's lock.
+    public var metal: MetalStanding
+
+    public init(ok: Bool, checks: [CompatibilityCheck], metal: MetalStanding = .unknown) {
+        self.ok = ok
+        self.checks = checks
+        self.metal = metal
+    }
+}
+
+/// The installed Metal compiler against the one the engine's lock certifies. Only `.same` passes the gate; the others
+/// need the untested-toolchain override, but say different things (ToolchainGateCopy).
+public enum MetalStanding: Equatable, Sendable {
+    case same
+    case newer(installed: String, required: String)
+    case older(installed: String, required: String)
+    /// No compiler, or a version that cannot be read.
+    case unknown
 }
 
 public final class CompatibilityChecker {
@@ -74,10 +92,11 @@ public final class CompatibilityChecker {
         let metal = run("/usr/bin/xcrun", ["metal", "--version"]).stdout
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let required = requiredMetalVersion() ?? "unknown"
-        let metalOK = metal.contains("32023.921")
+        let standing = Self.metalStanding(installed: metal, required: required)
+        let installedNumber = Self.metalNumber(metal) ?? (metal.isEmpty ? "not found" : metal)
         checks.append(.init(id: "metal", title: "Metal compiler",
-                            status: metalOK ? .pass : .block,
-                            detail: "installed \(metal), required \(required)"))
+                            status: standing == .same ? .pass : .block,
+                            detail: "installed \(installedNumber), tested \(Self.metalNumber(required) ?? required)"))
 
         let pythonVersion = run(pythonURL.path, [
             "-c", "import sys; print(f'{sys.version_info[0]}.{sys.version_info[1]}')"
@@ -99,6 +118,25 @@ public final class CompatibilityChecker {
                             status: missing.isEmpty ? .pass : .block,
                             detail: missing.isEmpty ? "required options present" : "missing \(missing.joined(separator: ", "))"))
 
-        return CompatibilityReport(ok: checks.allSatisfy { $0.status != .block }, checks: checks)
+        return CompatibilityReport(ok: checks.allSatisfy { $0.status != .block }, checks: checks, metal: standing)
+    }
+
+    /// The first dotted version number in `xcrun metal --version` output or a lock line ("32023.921").
+    static func metalNumber(_ text: String) -> String? {
+        guard let range = text.range(of: #"\d+(\.\d+)+"#, options: .regularExpression) else { return nil }
+        return String(text[range])
+    }
+
+    /// Compares version numbers component by component (32023.1000 is newer than 32023.921; missing parts are 0).
+    public static func metalStanding(installed: String, required: String) -> MetalStanding {
+        guard let have = metalNumber(installed), let need = metalNumber(required) else { return .unknown }
+        let a = have.split(separator: ".").map { Int($0) ?? 0 }
+        let b = need.split(separator: ".").map { Int($0) ?? 0 }
+        for i in 0..<max(a.count, b.count) {
+            let x = i < a.count ? a[i] : 0, y = i < b.count ? b[i] : 0
+            if x > y { return .newer(installed: have, required: need) }
+            if x < y { return .older(installed: have, required: need) }
+        }
+        return .same
     }
 }

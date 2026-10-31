@@ -52,9 +52,17 @@ struct SettingsEngineSection: View {
                         .foregroundColor(SeleneTheme.glyph)
                 }
 
+                if let message = viewModel.toolchainGateSummary?.message {
+                    Text(message)
+                        .seleneFont(14)
+                        .foregroundColor(statusColor)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
                 if let report = viewModel.compatibilityReport {
                     ForEach(report.checks, id: \.id) { check in
-                        checkRow(title: check.title, status: check.status, detail: detail(for: check))
+                        checkRow(title: check.title, status: check.status, detail: detail(for: check),
+                                 metal: check.id == "metal" ? report.metal : nil)
                     }
                 } else {
                     HStack(spacing: 8) {
@@ -195,21 +203,24 @@ struct SettingsEngineSection: View {
         if report.ok {
             return "Not needed: the current toolchain is certified."
         }
+        if viewModel.toolchainGateSummary?.tone == .info {
+            return "Recommended for your newer Metal compiler: builds are recorded as untested."
+        }
         return "Build anyway, recorded as untested. Corrupted graphics are a known risk."
     }
 
     private var statusText: String {
-        guard let report = viewModel.compatibilityReport else { return "Checking" }
-        if report.ok { return "Certified" }
-        if viewModel.allowUntestedToolchain { return "Override enabled" }
-        return "Blocked"
+        viewModel.toolchainGateSummary?.label ?? "Checking"
     }
 
     private var statusColor: Color {
-        guard let report = viewModel.compatibilityReport else { return SeleneTheme.ink60 }
-        if report.ok { return SeleneTheme.success }
-        if viewModel.allowUntestedToolchain { return SeleneTheme.untested }
-        return SeleneTheme.danger
+        guard let summary = viewModel.toolchainGateSummary else { return SeleneTheme.ink60 }
+        switch summary.tone {
+        case .certified: return SeleneTheme.success
+        case .info: return SeleneTheme.glyph
+        case .warning, .override: return SeleneTheme.untested
+        case .blocked: return SeleneTheme.danger
+        }
     }
 
     private var upstreamSubtitle: String {
@@ -316,11 +327,13 @@ struct SettingsEngineSection: View {
         return check.detail
     }
 
-    private func checkRow(title: String, status: CheckStatus, detail: String) -> some View {
-        HStack(alignment: .top, spacing: 8) {
-            Image(systemName: icon(for: status))
+    /// `metal` (the Metal row only): a newer compiler reads as information, an older one as a warning, not as BLOCK.
+    private func checkRow(title: String, status: CheckStatus, detail: String, metal: MetalStanding? = nil) -> some View {
+        let look = rowLook(status: status, metal: metal)
+        return HStack(alignment: .top, spacing: 8) {
+            Image(systemName: look.icon)
                 .seleneFont(15, .bold)
-                .foregroundColor(color(for: status))
+                .foregroundColor(look.color)
                 .frame(width: 14)
             Text(title)
                 .seleneFont(15, .semibold)
@@ -332,9 +345,17 @@ struct SettingsEngineSection: View {
                 .lineLimit(2)
                 .textSelection(.enabled)
             Spacer(minLength: 0)
-            Text(status.rawValue.uppercased())
+            Text(look.badge)
                 .seleneFont(11, .bold, design: .monospaced)
-                .foregroundColor(color(for: status))
+                .foregroundColor(look.color)
+        }
+    }
+
+    private func rowLook(status: CheckStatus, metal: MetalStanding?) -> (icon: String, color: Color, badge: String) {
+        switch metal {
+        case .newer: return ("info.circle.fill", SeleneTheme.glyph, "NEWER")
+        case .older: return ("exclamationmark.triangle.fill", SeleneTheme.untested, "OLDER")
+        default: return (icon(for: status), color(for: status), status.rawValue.uppercased())
         }
     }
 

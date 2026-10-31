@@ -126,6 +126,8 @@ public struct GameOptionsPresentation: Equatable {
     public let sourcesDetached: Bool
     /// The Metal gate refuses new builds (a known report that does not pass, without the override).
     public let toolchainBlocked: Bool
+    /// What the gate says about the refusal (ToolchainGateCopy.Summary.buildHint); nil keeps the generic line.
+    public let toolchainHint: String?
     public let hasStorePage: Bool
     public let gameName: String
     public let appPath: String
@@ -135,7 +137,7 @@ public struct GameOptionsPresentation: Equatable {
     public let cheatsValue: String
 
     public init(supportsRenderScale: Bool, isPlayable: Bool, sourcesDetached: Bool,
-                toolchainBlocked: Bool = false, hasStorePage: Bool = false,
+                toolchainBlocked: Bool = false, toolchainHint: String? = nil, hasStorePage: Bool = false,
                 gameName: String = "", appPath: String = "", canDeleteBundle: Bool = false,
                 cheatsValue: String = "None") {
         self.cheatsValue = cheatsValue
@@ -143,6 +145,7 @@ public struct GameOptionsPresentation: Equatable {
         self.canPlay = isPlayable
         self.sourcesDetached = sourcesDetached
         self.toolchainBlocked = toolchainBlocked
+        self.toolchainHint = toolchainHint.flatMap { $0.isEmpty ? nil : $0 }
         self.hasStorePage = hasStorePage
         self.gameName = gameName
         self.appPath = appPath
@@ -159,7 +162,7 @@ public struct GameOptionsPresentation: Equatable {
     /// Says where to fix a dimmed Rebuild: the sources or the Metal gate.
     public var rebuildAbout: String {
         if sourcesDetached { return "A base source is required. Attach sources in Edit details." }
-        if toolchainBlocked { return "Blocked by the Metal gate. See Settings → Engine." }
+        if toolchainBlocked { return toolchainHint.map { $0 + "." } ?? "Blocked by the Metal gate. See Settings → Engine." }
         return "Build a new app; the old app stays if the build fails."
     }
 

@@ -158,6 +158,10 @@ final class GameOptionsPresentationTests: XCTestCase {
                        "A base source is required. Attach sources in Edit details.")
         XCTAssertEqual(presentation(blocked: true).rebuildAbout,
                        "Blocked by the Metal gate. See Settings → Engine.")
+        let newer = GameOptionsPresentation(supportsRenderScale: true, isPlayable: true, sourcesDetached: false,
+                                            toolchainBlocked: true,
+                                            toolchainHint: "Newer Metal: turn on the override in Settings → Engine")
+        XCTAssertEqual(newer.rebuildAbout, "Newer Metal: turn on the override in Settings → Engine.")
         XCTAssertEqual(presentation(detached: true).attachAbout,
                        "Sources are detached. Attach them to rebuild.")
         XCTAssertEqual(presentation().attachAbout,
