@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
 # scripts/build_app.sh [destination.app]
+# NX_VERSION sets the app version (default 0.1.0); NX_RELEASE=1 marks a release copy, the only kind
+# that updates itself. scripts/release.sh sets both; a plain build sets neither.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 APP="${1:-$HOME/Applications/NXLibrary.app}"
 CONFIG="${NX_BUILD_CONFIG:-release}"
+VERSION="${NX_VERSION:-0.1.0}"
+if ! [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,3}$ ]]; then
+  echo "error: NX_VERSION must be dotted numbers, got '$VERSION'" >&2
+  exit 1
+fi
+RELEASE_KEY=""
+[ "${NX_RELEASE:-0}" = "1" ] && RELEASE_KEY="  <key>NXLibraryRelease</key><true/>"
 if [ -z "${DEVELOPER_DIR:-}" ]; then
   if [ -d "/Applications/Xcode.app/Contents/Developer" ]; then
     export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
@@ -39,7 +48,7 @@ else
   echo "note: no work/Runtime; this build uses ~/nxnative/.venv (run scripts/bundle_runtime.sh)"
 fi
 
-cat > "$APP/Contents/Info.plist" <<'PLIST'
+cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -52,7 +61,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
   <key>CFBundleName</key><string>NX Library</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>0.1.0</string>
+  <key>CFBundleShortVersionString</key><string>$VERSION</string>
   <key>CFBundleVersion</key><string>1</string>
   <key>LSApplicationCategoryType</key><string>public.app-category.games</string>
   <key>LSMinimumSystemVersion</key><string>13.0</string>
@@ -60,6 +69,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>NSHighResolutionCapable</key><true/>
   <key>NSHumanReadableCopyright</key><string>Copyright © 2026 bium. MIT. Not affiliated with Nintendo.</string>
   <key>NSPrincipalClass</key><string>NSApplication</string>
+$RELEASE_KEY
 </dict>
 </plist>
 PLIST
