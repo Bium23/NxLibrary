@@ -36,7 +36,7 @@ This directory records the review that must happen before the pin changes, plus 
    - **Not adopted** when the feature is diagnostic, game-specific tooling, or conflicts with the app's scope.
 5. **Integrate new engine flags** in `BuildCommandBuilder` (or the relevant service) and add a unit test. Do not leave an engine gate or override without a caller.
 6. **Verify**:
-   - full unit tests;
+   - full unit tests, with `PortingFailureEngineTests` run against the new pin (every engine message the failure table reads is still printed);
    - app rebuilt, signed, installed;
    - compatibility gate green (or an explicit recorded override);
    - one real certified build, including the pipeline archive stage;
