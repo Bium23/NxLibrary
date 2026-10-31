@@ -36,7 +36,7 @@ struct SettingsStartUpSection: View {
 
             SeleneToggleRow("Check engine at launch",
                             subtitle: "Verify the pinned engine commit and toolchain when the app starts.",
-                            info: "Checks ~/nxnative against the certified engine commit and confirms your installed Metal compiler matches the lock file before builds are attempted.",
+                            info: "Checks the nxnative checkout against the certified engine commit and confirms your installed Metal compiler matches the lock file before builds are attempted.",
                             isOn: $settings.settings.checkEngineAtLaunch)
 
             SeleneToggleRow("Refresh library at launch",

@@ -1,4 +1,5 @@
 import Foundation
+import NXLibraryCore
 
 public struct ProdKeysDetectionResult {
     public let path: String
@@ -21,54 +22,20 @@ public final class SystemDetector {
         URL(fileURLWithPath: NSHomeDirectory())
     }
 
-    /// Locates the pinned nxnative checkout. It never clones or changes it.
-    public func detectNxnativeDirectory(customDir: String? = nil) -> NxNativeDetectionResult {
-        let path = (customDir?.isEmpty == false ? customDir! : NSString(string: "~/nxnative").expandingTildeInPath)
-        let scriptPath = URL(fileURLWithPath: path).appendingPathComponent("scripts/build_ipa_from_nsp.py").path
-        let dmPath = URL(fileURLWithPath: path).appendingPathComponent("dm").path
-        let valid = FileManager.default.fileExists(atPath: scriptPath)
-            && FileManager.default.fileExists(atPath: dmPath)
-        return NxNativeDetectionResult(path: path, isValid: valid)
+    /// Locates the nxnative checkout: `customDir` as it is, else the remembered folder while it exists, else
+    /// `~/nxnative`. It never clones or changes it.
+    public func detectNxnativeDirectory(customDir: String? = nil, saved: String? = nil) -> NxNativeDetectionResult {
+        let folder = customDir?.isEmpty == false
+            ? URL(fileURLWithPath: customDir!)
+            : EngineLocation.folder(saved: saved, home: resolveRootDirectory())
+        return NxNativeDetectionResult(path: folder.path, isValid: EngineLocation.isEngine(folder))
     }
 
-    /// Auto-detects prod.keys from Ryujinx and Switch homebrew locations
+    /// Auto-detects prod.keys from Ryujinx and Switch homebrew locations (`ProdKeysLocations`).
     public func detectProdKeys(additionalSearchDir: String? = nil) -> ProdKeysDetectionResult? {
-        var candidateLocations: [(path: String, name: String)] = [
-            (
-                NSString(string: "~/Library/Application Support/Ryujinx/system/prod.keys").expandingTildeInPath,
-                "Ryujinx (App Support)"
-            ),
-            (
-                NSString(string: "~/Library/Application Support/ryujinx/system/prod.keys").expandingTildeInPath,
-                "Ryujinx (App Support)"
-            )
-        ]
-        
-        let root = resolveRootDirectory()
-        let siblingCandidates = [
-            root.deletingLastPathComponent().appendingPathComponent("Riujinx/system/prod.keys").path,
-            root.deletingLastPathComponent().appendingPathComponent("Riujinx/ProdKeys.Net-21.2.0/prod.keys").path,
-            root.appendingPathComponent("Riujinx/system/prod.keys").path
-        ]
-        
-        for p in siblingCandidates {
-            candidateLocations.append((p, "Ryujinx Folder"))
-        }
-        
-        if let customDir = additionalSearchDir, !customDir.isEmpty {
-            let direct = URL(fileURLWithPath: customDir).appendingPathComponent("prod.keys").path
-            let systemSub = URL(fileURLWithPath: customDir).appendingPathComponent("system/prod.keys").path
-            candidateLocations.insert((direct, "Selected Directory"), at: 0)
-            candidateLocations.insert((systemSub, "Selected Directory/system"), at: 0)
-        }
-        
-        candidateLocations.append((
-            NSString(string: "~/.switch/prod.keys").expandingTildeInPath,
-            "Switch Homebrew"
-        ))
-        
+        let selected = additionalSearchDir.flatMap { $0.isEmpty ? nil : URL(fileURLWithPath: $0) }
         let fileManager = FileManager.default
-        for candidate in candidateLocations {
+        for candidate in ProdKeysLocations.candidates(home: resolveRootDirectory(), selected: selected) {
             var isDir: ObjCBool = false
             if fileManager.fileExists(atPath: candidate.path, isDirectory: &isDir) && !isDir.boolValue {
                 if let attrs = try? fileManager.attributesOfItem(atPath: candidate.path),

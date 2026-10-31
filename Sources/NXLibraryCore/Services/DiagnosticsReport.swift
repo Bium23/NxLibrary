@@ -11,7 +11,7 @@ public enum DiagnosticsReport {
         public var macOS = "?"
         public var chip = "?"
         public var pinnedCommit = "?"
-        /// `~/nxnative` HEAD as "<short hash> <subject>"; nil when there is no checkout.
+        /// The engine checkout's HEAD as "<short hash> <subject>"; nil when there is no checkout.
         public var engineHead: String? = nil
         public var xcodePath: String? = nil
         public var xcodeVersion: String? = nil
@@ -48,7 +48,7 @@ public enum DiagnosticsReport {
         let matches = headHash.map { !$0.isEmpty && i.pinnedCommit.hasPrefix($0) } ?? false
         lines += ["## Engine",
                   "- Pinned: \(i.pinnedCommit)",
-                  "- ~/nxnative HEAD: \(value(i.engineHead))" + (i.engineHead == nil ? "" : (matches ? " (matches)" : " (differs)")),
+                  "- nxnative HEAD: \(value(i.engineHead))" + (i.engineHead == nil ? "" : (matches ? " (matches)" : " (differs)")),
                   ""]
         lines += ["## Toolchain",
                   "- Xcode: \(value(i.xcodePath)) \(value(i.xcodeVersion))",

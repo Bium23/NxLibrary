@@ -51,7 +51,7 @@ The design specification and implementation plan live in [`docs/superpowers/`](d
 - Apple-silicon Mac, macOS 13 or newer.
 - Xcode 27.1 or newer, with the matching Metal toolchain.
 - The .NET 10 SDK (the engine builds its extractor with `dotnet build`).
-- The nxnative checkout at `~/nxnative`, pinned to `ee369f09984f23adbe003f55e94be5d81cd8c0e6`.
+- The nxnative checkout at `~/nxnative`, pinned to `ee369f09984f23adbe003f55e94be5d81cd8c0e6`. A checkout elsewhere can be chosen in Settings → Engine; NX Library remembers it while the folder exists.
 
 Python 3.14 (with `capstone` 5, `lz4` and `fontTools`), `zstd` and `glslangValidator` ship inside the app. No Homebrew or pip is needed to use it. The Setup check installs the Metal toolchain, downloads Microsoft's .NET 10 SDK installer and clones the engine; Xcode itself comes from the App Store.
 

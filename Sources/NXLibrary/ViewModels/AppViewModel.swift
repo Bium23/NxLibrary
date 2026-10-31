@@ -13,6 +13,8 @@ public final class AppViewModel: ObservableObject {
         static let savedIconAppearanceMode = "NXNative_SavedIconAppearanceMode"
         static let allowUntestedToolchain = "NXLibrary_AllowUntestedToolchain"
         static let setupCompleted = "NXLibrary_SetupCompleted"
+        /// A chosen engine folder other than ~/nxnative.
+        static let savedEngineFolder = "NXLibrary_EngineFolder"
     }
     
     // MARK: - Workspace & Paths
@@ -434,7 +436,8 @@ public final class AppViewModel: ObservableObject {
     
     // MARK: - Environment Detection
     public func detectEnvironment(customRyujinxDir: String? = nil) {
-        let nxResult = SystemDetector.shared.detectNxnativeDirectory()
+        let nxResult = SystemDetector.shared.detectNxnativeDirectory(
+            saved: UserDefaults.standard.string(forKey: StorageKeys.savedEngineFolder))
         self.nxnativePath = nxResult.path
         self.isNxnativeValid = nxResult.isValid
         ensureKeysImported(customRyujinxDir: customRyujinxDir)
@@ -1552,12 +1555,20 @@ public final class AppViewModel: ObservableObject {
         panel.message = "Choose the directory containing the nxnative scripts and tools."
         
         if panel.runModal() == .OK, let url = panel.url {
-            let res = SystemDetector.shared.detectNxnativeDirectory(customDir: url.path)
-            self.nxnativePath = res.path
-            self.isNxnativeValid = res.isValid
-            if res.isValid {
-                        refreshCompatibility()
+            guard EngineLocation.isEngine(url) else {
+                alertMessage = "\(url.path) is not an nxnative checkout: it has no scripts/build_ipa_from_nsp.py and dm folder."
+                SoundEffectService.shared.play(.error)
+                return
             }
+            // Remembered, so launch and every check use it; ~/nxnative itself needs nothing stored.
+            if let saved = EngineLocation.savedValue(for: url, home: SystemDetector.shared.resolveRootDirectory()) {
+                UserDefaults.standard.set(saved, forKey: StorageKeys.savedEngineFolder)
+            } else {
+                UserDefaults.standard.removeObject(forKey: StorageKeys.savedEngineFolder)
+            }
+            self.nxnativePath = url.path
+            self.isNxnativeValid = true
+            refreshCompatibility()
         }
     }
     
