@@ -606,6 +606,9 @@ struct GameOptionsView: View {
         case .restoreDefaults:
             SoundEffectService.shared.play(.click)
             config = GameRuntimeConfig()
+        case .cheats:
+            // Opens the Cheats panel (next commit).
+            SoundEffectService.shared.play(.error)
         case .rebuild:
             rebuild(current)
         case .showInFinder:

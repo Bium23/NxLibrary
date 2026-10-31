@@ -46,6 +46,20 @@ final class GameOptionsPresentationTests: XCTestCase {
         XCTAssertEqual(rows.last, .removeGame)
     }
 
+    func testCheatsRowSitsBeforeRebuild() {
+        let p = presentation()
+        let rows = p.focusableRows(level: .main, origin: .details)
+        let cheats = rows.firstIndex(of: .cheats)
+        XCTAssertNotNil(cheats)
+        XCTAssertEqual(cheats.map { rows[$0 + 1] }, .rebuild)
+        XCTAssertEqual(p.cheatsValue, "None")
+        XCTAssertEqual(GameOptionsRow.cheats.title, "Cheats")
+        XCTAssertEqual(GameOptionsRow.cheats.icon, .casino)
+        XCTAssertEqual(p.about(.cheats), "Install and switch this game's cheats.")
+        let set = GameOptionsPresentation(supportsRenderScale: true, isPlayable: true, sourcesDetached: false, cheatsValue: "3 on")
+        XCTAssertEqual(set.cheatsValue, "3 on")
+    }
+
     /// Edit details sits under Play wherever the options open.
     func testEditDetailsUnderPlayForEveryOrigin() {
         for origin in [GameOptionsOrigin.spotlight, .collection, .details] {

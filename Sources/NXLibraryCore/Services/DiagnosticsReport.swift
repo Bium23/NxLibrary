@@ -25,6 +25,8 @@ public enum DiagnosticsReport {
         public var hasHeaderKey = false
         public var keyGenerations = 0
         public var game: (name: String, titleID: String?, built: Bool, toolchainVerified: Bool?, failure: String?)? = nil
+        /// The selected game's cheats; nil when it has none NX Library can read. Never names or codes.
+        public var cheats: (buildID: String, filePresent: Bool, total: Int, on: Int, broken: Int, masterOn: Bool, safeMode: Bool)? = nil
         public var lastCommand: [String] = []
         public var log: [String] = []
         public var home = NSHomeDirectory()
@@ -64,7 +66,11 @@ public enum DiagnosticsReport {
                       "- \(g.name) (\(value(g.titleID)))",
                       "- Built: \(yes(g.built))",
                       "- Toolchain verified: \(g.toolchainVerified.map(yes) ?? "—")",
-                      "- Last porting: \(value(g.failure))", ""]
+                      "- Last porting: \(value(g.failure))",
+                      "- Cheats: " + (i.cheats.map { c in
+                          "build \(c.buildID), file \(yes(c.filePresent)), \(c.total) cheats, \(c.on) on, "
+                              + "\(c.broken) not supported, master \(c.masterOn ? "on" : "off"), safe mode \(yes(c.safeMode))"
+                      } ?? "—"), ""]
         }
         lines += ["## Last porting",
                   "```",

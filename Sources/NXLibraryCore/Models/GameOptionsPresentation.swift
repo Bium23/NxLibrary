@@ -18,7 +18,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
     case play, move, favorite, hidden
     case fullscreen, fps60, metalFX, metalHUD, consoleMode, language, rumble, rumbleStrength
     case renderScale, restoreDefaults
-    case rebuild, showInFinder, openSaves, editDetails, removeGame
+    case cheats, rebuild, showInFinder, openSaves, editDetails, removeGame
     case changeArtwork, changeMetadata, storePage, attachSources, openLog, removeSources
 
     public var title: String {
@@ -37,6 +37,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
         case .rumbleStrength: return "Rumble strength"
         case .renderScale: return "3D render scale"
         case .restoreDefaults: return "Restore defaults"
+        case .cheats: return "Cheats"
         case .rebuild: return "Rebuild"
         case .showInFinder: return "Show in Finder"
         case .openSaves: return "Open saves"
@@ -66,6 +67,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
         case .rumble, .rumbleStrength: return .volume
         case .renderScale: return .tune
         case .restoreDefaults: return .restore
+        case .cheats: return .casino
         case .rebuild: return .build
         case .showInFinder: return .folder
         case .openSaves: return .save
@@ -129,10 +131,14 @@ public struct GameOptionsPresentation: Equatable {
     public let appPath: String
     public let canDeleteBundle: Bool
     public let resolutionNote: String
+    /// The Cheats row's value (CheatStatus.rowValue).
+    public let cheatsValue: String
 
     public init(supportsRenderScale: Bool, isPlayable: Bool, sourcesDetached: Bool,
                 toolchainBlocked: Bool = false, hasStorePage: Bool = false,
-                gameName: String = "", appPath: String = "", canDeleteBundle: Bool = false) {
+                gameName: String = "", appPath: String = "", canDeleteBundle: Bool = false,
+                cheatsValue: String = "None") {
+        self.cheatsValue = cheatsValue
         self.showRenderScale = supportsRenderScale
         self.canPlay = isPlayable
         self.sourcesDetached = sourcesDetached
@@ -189,6 +195,7 @@ public struct GameOptionsPresentation: Equatable {
     public func about(_ row: GameOptionsRow) -> String? {
         switch row {
         case .play: return "Launch the installed Mac app."
+        case .cheats: return "Install and switch this game's cheats."
         case .move: return "Change its place on Spotlight."
         case .favorite: return "On your Favorites tab."
         case .hidden: return "Hidden games stay out of your lists."
@@ -250,7 +257,7 @@ public struct GameOptionsPresentation: Equatable {
             } else {
                 entries.append(.note(title: "Internal resolution", text: resolutionNote))
             }
-            entries += [.row(.restoreDefaults), .row(.rebuild), .row(.showInFinder), .row(.openSaves),
+            entries += [.row(.restoreDefaults), .row(.cheats), .row(.rebuild), .row(.showInFinder), .row(.openSaves),
                         .gap, .row(.removeGame)]
             return entries
         case .editDetails:

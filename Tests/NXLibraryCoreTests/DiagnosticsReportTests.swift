@@ -39,6 +39,17 @@ final class DiagnosticsReportTests: XCTestCase {
         XCTAssertFalse(DiagnosticsReport.markdown(i).contains(hex))
     }
 
+    func testDiagnosticsCheatsLineHasNoNames() {
+        var i = inputs()
+        i.game = (name: "Game", titleID: "0100000000010000", built: true, toolchainVerified: true, failure: nil)
+        i.cheats = (buildID: "B424BE150A8E7D78", filePresent: true, total: 12, on: 3, broken: 2, masterOn: true, safeMode: false)
+        let report = DiagnosticsReport.markdown(i)
+        XCTAssertTrue(report.contains("- Cheats: build B424BE150A8E7D78, file yes, 12 cheats, 3 on, 2 not supported, master on, safe mode no"), report)
+        XCTAssertFalse(report.contains("SECRET"))
+        i.cheats = nil
+        XCTAssertTrue(DiagnosticsReport.markdown(i).contains("- Cheats: —"))
+    }
+
     func testReportHasSections() {
         var i = inputs()
         i.game = ("A Game", "0100000000010000", false, nil, "noProfile")
