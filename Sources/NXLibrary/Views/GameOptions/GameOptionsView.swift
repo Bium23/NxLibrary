@@ -31,8 +31,12 @@ struct GameOptionsView: View {
     @State private var artworkOpen = false
     /// Change metadata, likewise.
     @State private var metadataOpen = false
+    /// The Cheats panel, likewise.
+    @State private var cheatsOpen = false
+    /// The Cheats row's value: read from disk when Game options opens and when the panel closes, not on every draw.
+    @State private var cheatsValue: String
     /// A panel over the list has the input.
-    private var panelOpen: Bool { artworkOpen || metadataOpen }
+    private var panelOpen: Bool { artworkOpen || metadataOpen || cheatsOpen }
     @State private var confirmFocus: SeleneConfirmButton = .cancel
     @State private var keyMonitor: Any?
     /// Row frames in the list's viewport, written while scrolling without redrawing.
@@ -57,6 +61,7 @@ struct GameOptionsView: View {
         self.onMove = onMove
         supportsRenderScale = viewModel.supportsSetting("DM_RENDER_SCALE", for: game)
         _config = State(initialValue: viewModel.loadRuntimeConfig(for: game))
+        _cheatsValue = State(initialValue: viewModel.cheatRowValue(for: game))
     }
 
     // MARK: - Model
@@ -77,7 +82,8 @@ struct GameOptionsView: View {
             hasStorePage: viewModel.storeMetadata[game.id]?.storeURL != nil,
             gameName: game.name,
             appPath: game.url.path,
-            canDeleteBundle: game.canDeleteAppBundle()
+            canDeleteBundle: game.canDeleteAppBundle(),
+            cheatsValue: cheatsValue
         )
     }
 
@@ -110,7 +116,7 @@ struct GameOptionsView: View {
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            // A panel (Change artwork, Change metadata) takes the screen; the list never shows through.
+            // A panel (Change artwork, Change metadata, Cheats) takes the screen; the list never shows through.
             .opacity(panelOpen ? 0 : 1)
             .allowsHitTesting(!panelOpen)
 
@@ -124,6 +130,18 @@ struct GameOptionsView: View {
                 ChangeMetadataView(viewModel: viewModel, game: current) { metadataOpen = false }
                     .transition(.opacity)
                     .zIndex(2)
+            }
+
+            if cheatsOpen {
+                CheatsPanel(viewModel: viewModel, game: current, onRebuild: {
+                    cheatsOpen = false
+                    rebuild(current)
+                }, onClose: {
+                    cheatsOpen = false
+                    cheatsValue = viewModel.cheatRowValue(for: current)
+                })
+                .transition(.opacity)
+                .zIndex(2)
             }
 
             if let target = confirm {
@@ -266,6 +284,7 @@ struct GameOptionsView: View {
     private func accessibilityValue(_ row: GameOptionsRow) -> String? {
         if row.isToggle { return toggleValue(row) ? "On" : "Off" }
         if row.isChoice { return choiceText(row) }
+        if row == .cheats { return presentation.cheatsValue }
         return nil
     }
 
@@ -276,6 +295,12 @@ struct GameOptionsView: View {
             SeleneSwitch(isOn: .constant(toggleValue(row))).allowsHitTesting(false)
         } else if row.isChoice {
             SeleneValueChip(text: choiceText(row))
+        } else if row == .cheats {
+            HStack(spacing: canvas.u(10)) {
+                SeleneValueChip(text: presentation.cheatsValue)
+                MaterialIconView(.chevron, size: 24)
+                    .foregroundColor(SeleneTheme.ink60)
+            }
         } else if row.opensSubmenu {
             MaterialIconView(.chevron, size: 24)
                 .foregroundColor(SeleneTheme.ink60)
@@ -607,8 +632,8 @@ struct GameOptionsView: View {
             SoundEffectService.shared.play(.click)
             config = GameRuntimeConfig()
         case .cheats:
-            // Opens the Cheats panel (next commit).
-            SoundEffectService.shared.play(.error)
+            SoundEffectService.shared.play(.click)
+            cheatsOpen = true
         case .rebuild:
             rebuild(current)
         case .showInFinder:

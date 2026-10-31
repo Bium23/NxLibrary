@@ -55,6 +55,7 @@ final class GameOptionsPresentationTests: XCTestCase {
         XCTAssertEqual(p.cheatsValue, "None")
         XCTAssertEqual(GameOptionsRow.cheats.title, "Cheats")
         XCTAssertEqual(GameOptionsRow.cheats.icon, .casino)
+        XCTAssertTrue(GameOptionsRow.cheats.opensSubmenu, "a panel, with the value beside the chevron")
         XCTAssertEqual(p.about(.cheats), "Install and switch this game's cheats.")
         let set = GameOptionsPresentation(supportsRenderScale: true, isPlayable: true, sourcesDetached: false, cheatsValue: "3 on")
         XCTAssertEqual(set.cheatsValue, "3 on")

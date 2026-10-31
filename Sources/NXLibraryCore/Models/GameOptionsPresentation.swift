@@ -98,7 +98,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
     }
 
     /// Opens a sub-list (chevron).
-    public var opensSubmenu: Bool { self == .editDetails || self == .changeArtwork || self == .changeMetadata }
+    public var opensSubmenu: Bool { self == .editDetails || self == .changeArtwork || self == .changeMetadata || self == .cheats }
 
     /// Red title, confirmed in a dialog.
     public var isDestructive: Bool { self == .removeGame || self == .removeSources }

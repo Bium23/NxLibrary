@@ -41,6 +41,7 @@ extension AppViewModel {
             }
             i.game = (game.name, game.titleId, game.isPlayableLocally, game.lastBuild?.toolchainVerified,
                       failure ?? (game.lastBuild != nil ? "succeeded" : nil))
+            i.cheats = cheatDiagnostics(for: game)
         }
         i.lastCommand = lastPortingCommand
         let logURL = buildLogURL ?? (lastBuildGameID.flatMap { id in libraryGames.first { $0.id == id } }

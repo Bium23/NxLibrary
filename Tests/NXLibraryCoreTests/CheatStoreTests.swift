@@ -157,4 +157,27 @@ final class CheatStoreTests: XCTestCase {
         XCTAssertEqual(trashed, ["\(build).meta.tsv"])
         XCTAssertNil(store().state().file?.entries.first?.section)
     }
+
+    /// The app caches state() behind this: every write the panel or the host makes must change it.
+    func testFingerprintChangesOnEveryWrite() throws {
+        let s = store()
+        var seen = [s.fingerprint()]
+        func changed(_ what: String) {
+            let now = s.fingerprint()
+            XCTAssertFalse(seen.contains(now), what)
+            seen.append(now)
+        }
+        try s.install(abc, replacing: false); changed("install")
+        try s.setEnabled(["A"]); changed("toggle")
+        try s.setMaster(on: false); changed("master off")
+        try s.setMaster(on: true); changed("master on")
+        // The host rewrites .enabled in place (fopen "w"): same folder, new contents.
+        Thread.sleep(forTimeInterval: 0.01)
+        try Data("B\n".utf8).write(to: folder.appendingPathComponent("\(build).enabled"), options: [])
+        changed("host toggle")
+        try FileManager.default.createDirectory(at: folder.appendingPathComponent("atmosphere/contents/\(tid)/cheats"),
+                                                withIntermediateDirectories: true)
+        changed("tree folder")
+        XCTAssertEqual(s.fingerprint(), s.fingerprint(), "stable while nothing changes")
+    }
 }

@@ -14,6 +14,8 @@ struct DetailsTopBlock: View {
     let presentation: GameDetailPresentation
     /// The game is running: the primary pill reads Resume and the second reads Close Game.
     let isRunning: Bool
+    /// The quiet "Cheats on" stat: cheats on and at least one switch on (AppViewModel.cheatsOn).
+    var cheatsOn = false
     /// The focused pill: 0 Play, Resume or Build; 1 Options or Close Game; 2 Favorite; nil when the block has no focus.
     let focusedPill: Int?
     /// Build is dim (no sources to build from) but still takes focus.
@@ -162,7 +164,7 @@ struct DetailsTopBlock: View {
 
     // MARK: - Stats
 
-    /// PLAYTIME · LAST PLAYED · RELEASED · PLATFORM, 28 either side of each rule.
+    /// PLAYTIME · LAST PLAYED · RELEASED · CHEATS · PLATFORM, 28 either side of each rule.
     private var stats: some View {
         var items = [
             SeleneStat.text("PLAYTIME", presentation.playtime),
@@ -170,6 +172,9 @@ struct DetailsTopBlock: View {
         ]
         if let released = presentation.released {
             items.append(SeleneStat.text("RELEASED", released))
+        }
+        if cheatsOn {
+            items.append(SeleneStat.text("CHEATS", "On"))
         }
         items.append(SeleneStat.platform)
         return SeleneStatsRow(items: items, gap: 28)

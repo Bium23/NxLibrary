@@ -137,6 +137,22 @@ public struct CheatStore {
         return best.flatMap { try? String(contentsOf: $0.1, encoding: .utf8) }
     }
 
+    /// Changes whenever the files state() reads may have changed: the three folders (a rename or a new file changes a
+    /// folder's date), this build's own files (the host rewrites `.enabled` in place) and the master switch. For a
+    /// cache in front of state().
+    public func fingerprint() -> [String] {
+        let dirs = [folder,
+                    folder.appendingPathComponent("atmosphere/contents/\(titleID)/cheats"),
+                    folder.appendingPathComponent("contents/\(titleID)/cheats")]
+        let files = dirs.flatMap { [$0, $0.appendingPathComponent("\(buildID).txt"), $0.appendingPathComponent("\(buildID).meta.tsv")] }
+            + [enabledURL, offFlag]
+        return files.map { url in
+            guard let a = try? fm.attributesOfItem(atPath: url.path) else { return "-" }
+            let date = (a[.modificationDate] as? Date)?.timeIntervalSinceReferenceDate ?? 0
+            return "\(date):\((a[.size] as? NSNumber)?.int64Value ?? 0):\((a[.systemFileNumber] as? NSNumber)?.int64Value ?? 0)"
+        }
+    }
+
     // MARK: - Writing
 
     private func allowed() throws { guard canWrite() else { throw CheatStoreError.notAllowed } }

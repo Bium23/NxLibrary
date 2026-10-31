@@ -199,6 +199,7 @@ struct GameDetailView: View {
             DetailsTopBlock(game: game, logo: art.logo(for: game),
                             presentation: model.presentation,
                             isRunning: runningGames.isRunning(game),
+                            cheatsOn: viewModel.cheatsOn(for: game),
                             focusedPill: focus.zone == DetailsFocus.topZone ? focus.pill : nil,
                             primaryEnabled: model.primaryEnabled,
                             expanded: $expanded,
