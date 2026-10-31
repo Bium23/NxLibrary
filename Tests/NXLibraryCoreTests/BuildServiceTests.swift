@@ -73,6 +73,34 @@ final class BuildServiceTests: XCTestCase {
         XCTAssertEqual(try String(contentsOf: tempApp.appendingPathComponent("Contents/Info.plist"), encoding: .utf8), "new")
     }
 
+    func testSaveLeaseHoldsBuildUntilExclusiveInstallationIsPossible() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("NXSaveHold-\(UUID())")
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let script = root.appendingPathComponent("fake.sh")
+        let temp = root.appendingPathComponent("Temp.app")
+        let final = root.appendingPathComponent("Final.app")
+        try "mkdir -p \"$1/Contents\"\nprintf new > \"$1/Contents/Info.plist\"\n".write(to: script, atomically: true, encoding: .utf8)
+        let gate = SaveOperationGate()
+        let token = try XCTUnwrap(gate.begin(titleID: "0100000000000001"))
+        let done = expectation(description: "held behind saves")
+        let service = BuildService()
+        service.start(command: BuildCommand(executable: URL(fileURLWithPath: "/bin/sh"),
+            arguments: [script.path, temp.path], environment: [:], workingDirectory: root),
+            logURL: root.appendingPathComponent("log"), tempApp: temp, finalApp: final,
+            acquireInstall: {
+                guard let lease = gate.begin(titleID: "0100000000000001") else { return nil }
+                return { gate.end(titleID: "0100000000000001", token: lease) }
+            }, eventHandler: { _ in }, completion: { result in
+                XCTAssertTrue(result.success)
+                XCTAssertEqual(result.heldApp, temp)
+                XCTAssertFalse(FileManager.default.fileExists(atPath: final.path))
+                done.fulfill()
+            })
+        wait(for: [done], timeout: 10)
+        gate.end(titleID: "0100000000000001", token: token)
+    }
+
     func testCancelKillsChild() throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("NXCancel-\(UUID().uuidString)")

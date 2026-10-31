@@ -4,6 +4,9 @@ import AppKit
 import NXLibraryCore
 
 public final class AppViewModel: ObservableObject {
+    let saveGate = SaveOperationGate()
+    let saveQueue = DispatchQueue(label: "local.nxlibrary.saves", qos: .userInitiated)
+
     // MARK: - Storage Keys for Persistence
     private enum StorageKeys {
         static let savedGameFolder = "NXNative_SavedGameFolder"
@@ -997,6 +1000,7 @@ public final class AppViewModel: ObservableObject {
             RunningGameMonitor.activate(running)
             return
         }
+        guard savesPermitPlay(game) else { return }
         // A build that waited for the game to quit goes in first.
         let game = installingPendingBuild(of: game)
         guard game.isPlayableLocally else {
@@ -1023,6 +1027,10 @@ public final class AppViewModel: ObservableObject {
             return
         }
 
+        guard let saveLaunchToken = saveGate.begin(titleID: titleId) else {
+            alertMessage = SaveFailure.busy.localizedDescription
+            return
+        }
         launchingGameId = game.id
         launchOverlay = LaunchOverlayState(game: game)
         SoundEffectService.shared.play(.launch)
@@ -1031,6 +1039,7 @@ public final class AppViewModel: ObservableObject {
         do {
             try launchService.writeEnvironment(settings: config, titleId: titleId)
         } catch {
+            saveGate.end(titleID: titleId, token: saveLaunchToken)
             launchingGameId = nil
             launchOverlay = nil
             lastError = error.localizedDescription
@@ -1054,6 +1063,7 @@ public final class AppViewModel: ObservableObject {
                              environment: config.toEnvironmentDict()) { [weak self] success, error in
             DispatchQueue.main.async {
                 guard let self else { return }
+                self.saveGate.end(titleID: titleId, token: saveLaunchToken)
                 if success {
                     self.lastError = nil
                     self.playSessionStore?.start(for: game)
@@ -2060,6 +2070,7 @@ public final class AppViewModel: ObservableObject {
             finalApp: finalApp,
             // Replacing the app under its running game can crash it: the new app waits for the game to quit.
             holdInstall: { RunningGameMonitor.runningApplication(for: target) != nil },
+            acquireInstall: { [weak self] in self?.acquireSaveInstallLease(for: target) },
             eventHandler: { [weak self] event in
                 DispatchQueue.main.async { self?.handleBuildEvent(event) }
             },

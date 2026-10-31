@@ -62,6 +62,7 @@ public final class BuildService {
         tempApp: URL,
         finalApp: URL,
         holdInstall: @escaping () -> Bool = { false },
+        acquireInstall: @escaping () -> (() -> Void)? = { {} },
         eventHandler: @escaping (BuildEvent) -> Void,
         completion: @escaping (BuildResult) -> Void
     ) {
@@ -112,7 +113,7 @@ public final class BuildService {
         }
         process.terminationHandler = { [weak self] proc in
             self?.finish(proc: proc, logURL: logURL,
-                         tempApp: tempApp, finalApp: finalApp, holdInstall: holdInstall)
+                         tempApp: tempApp, finalApp: finalApp, holdInstall: holdInstall, acquireInstall: acquireInstall)
         }
 
         do {
@@ -184,7 +185,7 @@ public final class BuildService {
 
     /// `holdInstall` is asked once the build succeeds: true keeps the new app at `tempApp` (its game is running and
     /// replacing the app under it can crash it).
-    private func finish(proc: Process, logURL: URL, tempApp: URL, finalApp: URL, holdInstall: @escaping () -> Bool) {
+    private func finish(proc: Process, logURL: URL, tempApp: URL, finalApp: URL, holdInstall: @escaping () -> Bool, acquireInstall: @escaping () -> (() -> Void)?) {
         ioQueue.async { [weak self] in
             guard let self else { return }
             self.drain(&self.stdoutBuffer, asError: false)
@@ -206,7 +207,9 @@ public final class BuildService {
             var error: String?
             if !wasCancelled && proc.terminationStatus == 0 {
                 do {
-                    if holdInstall() {
+                    let release = holdInstall() ? nil : acquireInstall()
+                    defer { release?() }
+                    if release == nil {
                         guard self.fm.fileExists(atPath: tempApp.appendingPathComponent("Contents/Info.plist").path) else {
                             throw BuildInstallError.invalidApp(tempApp.path)
                         }

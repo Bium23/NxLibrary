@@ -5,12 +5,15 @@ import NXLibraryCore
 /// running, when a game quits, at launch of NX Library and before the game is played again.
 extension AppViewModel {
     func installPendingBuilds() {
+        recoverSavesAtStartup()
         guard libraryGames.contains(where: { $0.pendingInstall != nil }) else { return }
         var library = (try? libraryStore.load()) ?? LibraryFile(games: libraryGames)
         var changed = false
         for index in library.games.indices where library.games[index].pendingInstall != nil {
             let name = library.games[index].name
             guard RunningGameMonitor.runningApplication(for: library.games[index]) == nil else { continue }
+            guard let release = acquireSaveInstallLease(for: library.games[index]) else { continue }
+            defer { release() }
             do {
                 switch try PendingInstaller.install(&library.games[index]) {
                 case .installed:
