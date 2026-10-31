@@ -214,7 +214,7 @@ public struct GameOptionsPresentation: Equatable {
         case .restoreDefaults: return "Reset this game's runtime settings."
         case .rebuild: return rebuildAbout
         case .showInFinder: return "Reveal the app in Finder."
-        case .openSaves: return nil
+        case .openSaves: return "Back up, import and restore progress."
         case .editDetails: return "Artwork, metadata, store page, sources and the build log."
         case .removeGame: return removal.message
         case .changeArtwork: return "Cover, background, icon and logo, from GameTDB, Title DB or a file."

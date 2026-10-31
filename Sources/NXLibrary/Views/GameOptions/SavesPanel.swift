@@ -141,9 +141,21 @@ struct SavesPanel: View {
         case .reveal: return ("Show in Finder", nil, !model.busy)
         }
     }
+    private func subtitle(_ row: Row) -> String {
+        switch row {
+        case .open: return "Open the current save in Finder."
+        case .backup: return "Keep a copy of your current progress."
+        case .target: return "Destination for imports only."
+        case .add: return "Choose a save folder to import."
+        case .refresh: return "Check saves and backups again."
+        case .backups: return "Open your backup copies in Finder."
+        case .restore: return "Restore this copy of your progress."
+        case .reveal: return "Open this backup in Finder."
+        }
+    }
     private func rowView(_ row: Row, focused: Bool) -> some View {
         let text = description(row)
-        return SeleneOptionRow(icon: row.icon, title: text.title, about: nil, focused: focused, enabled: text.enabled) {
+        return SeleneOptionRow(icon: row.icon, title: text.title, about: subtitle(row), focused: focused, enabled: text.enabled) {
             HStack(spacing: canvas.u(16)) {
                 if let value = text.value {
                     Text(value).seleneFont(17).foregroundColor(SeleneTheme.ink60).lineLimit(1)
@@ -157,7 +169,7 @@ struct SavesPanel: View {
             }.foregroundColor(SeleneTheme.ink60)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(text.title).accessibilityValue(text.value ?? "")
+        .accessibilityLabel(text.title + ". " + subtitle(row)).accessibilityValue(text.value ?? "")
         .accessibilityAddTraits(.isButton)
         .accessibilityAction { activate(row) }
     }
