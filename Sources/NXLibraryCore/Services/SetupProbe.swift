@@ -36,17 +36,29 @@ public struct SetupProbe {
             do { keys = try keyStore.validate(at: keyStore.keyURL) } catch { keysError = error.localizedDescription }
         }
         let xcode = xcode()
+        let engine = engine()
         return SetupFacts(
             xcodeStatus: xcode.status,
             metalVersion: MetalVersion.parse(run("/usr/bin/xcrun", ["metal", "--version"]).stdout),
             certifiedMetal: certifiedMetal, allowUntested: allowUntested,
             dotnetSDKs: run("/usr/bin/env", ["dotnet", "--list-sdks"]).stdout
                 .split(separator: "\n").map(String.init).filter { !$0.isEmpty },
-            engine: engine(), engineFolder: engineFolder, pinnedCommit: pinnedCommit,
+            engine: engine, engineFolder: engineFolder, pinnedCommit: pinnedCommit,
             runtimeProblem: runtimeProblem(),
             keys: keys, keysError: keysError,
             libraryWritable: libraryFolder.map { fileManager.isWritableFile(atPath: $0.path) },
-            xcodeVersion: xcode.version)
+            xcodeVersion: xcode.version, engineBehind: behind(engine))
+    }
+
+    /// Whether the checkout's HEAD is an ancestor of the pin (`git merge-base --is-ancestor`); nil when git cannot
+    /// tell, as when the pin is not fetched yet.
+    private func behind(_ engine: EngineFacts) -> Bool? {
+        guard case .checkout(let head, _) = engine, head != pinnedCommit else { return nil }
+        switch run("/usr/bin/git", ["-C", engineFolder.path, "merge-base", "--is-ancestor", head, pinnedCommit]).status {
+        case 0: return true
+        case 1: return false
+        default: return nil
+        }
     }
 
     private func run(_ executable: String, _ args: [String], in directory: URL? = nil) -> CommandResult {

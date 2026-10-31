@@ -51,12 +51,15 @@ public struct SetupFacts: Equatable {
     /// The newest SDK of the required major Microsoft publishes; nil until known.
     public var dotnetLatest: String?
     public var requirements: ToolchainRequirements
+    /// The checkout's HEAD is an ancestor of the pin (an NX Library update brought a newer engine); false when it
+    /// is ahead or elsewhere; nil when git cannot tell (the pin is not fetched yet, so it is newer).
+    public var engineBehind: Bool?
 
     public init(xcodeStatus: Int32?, metalVersion: String?, certifiedMetal: String, allowUntested: Bool,
                 dotnetSDKs: [String], engine: EngineFacts, engineFolder: URL, pinnedCommit: String,
                 runtimeProblem: String?, keys: KeySummary?, keysError: String?, libraryWritable: Bool?,
                 xcodeVersion: String? = nil, dotnetLatest: String? = nil,
-                requirements: ToolchainRequirements = .current) {
+                requirements: ToolchainRequirements = .current, engineBehind: Bool? = nil) {
         self.xcodeStatus = xcodeStatus
         self.metalVersion = metalVersion
         self.certifiedMetal = certifiedMetal
@@ -72,6 +75,7 @@ public struct SetupFacts: Equatable {
         self.xcodeVersion = xcodeVersion
         self.dotnetLatest = dotnetLatest
         self.requirements = requirements
+        self.engineBehind = engineBehind
     }
 }
 
@@ -210,9 +214,15 @@ public enum SetupCheck {
                                  detail: "\(f.engineFolder.path) has changed files. NX Library never touches them: put them aside, then check again.",
                                  actionTitle: nil)
             case .checkout(let head, false) where head != f.pinnedCommit:
-                return SetupItem(id: id, title: "nxnative engine", state: .warning, chip: "WRONG COMMIT", about: about,
-                                 detail: "At \(head.prefix(7)); this NX Library is tested with \(short).",
-                                 actionTitle: "Check out")
+                // Warning either way: Setup reopens for it and Install all runs it.
+                if f.engineBehind == false {
+                    return SetupItem(id: id, title: "nxnative engine", state: .warning, chip: "OTHER VERSION", about: about,
+                                     detail: "The engine here is at \(head.prefix(7)), not the \(short) this NX Library is tested with. Switch moves it to \(short). Games you built keep playing.",
+                                     actionTitle: "Switch")
+                }
+                return SetupItem(id: id, title: "nxnative engine", state: .warning, chip: "UPDATE READY", about: about,
+                                 detail: "This NX Library uses nxnative \(short); the engine here is at \(head.prefix(7)). Update downloads it and switches to it. Games you built keep playing.",
+                                 actionTitle: "Update")
             case .checkout:
                 return ready(id, "nxnative engine", about, "At \(short) in \(f.engineFolder.path).")
             }

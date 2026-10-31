@@ -90,10 +90,20 @@ final class SetupCheckTests: XCTestCase {
 
         XCTAssertEqual(item(.engine).state, .ready)
 
-        let other = item(.engine) { $0.engine = .checkout(head: "ee369f0", dirty: false) }
-        XCTAssertEqual(other.state, .warning)
-        XCTAssertEqual(other.chip, "WRONG COMMIT")
-        XCTAssertEqual(other.actionTitle, "Check out")
+        // After an NX Library update the engine here is older than the pin: an update, not an error.
+        for behind in [true, nil] as [Bool?] {
+            let update = item(.engine) { $0.engine = .checkout(head: "ee369f0", dirty: false); $0.engineBehind = behind }
+            XCTAssertEqual(update.state, .warning, "still reopens Setup and runs with Install all")
+            XCTAssertEqual(update.chip, "UPDATE READY")
+            XCTAssertEqual(update.actionTitle, "Update")
+            XCTAssertEqual(update.detail, "This NX Library uses nxnative af616f5; the engine here is at ee369f0. Update downloads it and switches to it. Games you built keep playing.")
+        }
+        // A checkout ahead of the pin (or on another branch) is moved back, said as such.
+        let ahead = item(.engine) { $0.engine = .checkout(head: "ee369f0", dirty: false); $0.engineBehind = false }
+        XCTAssertEqual(ahead.state, .warning)
+        XCTAssertEqual(ahead.chip, "OTHER VERSION")
+        XCTAssertEqual(ahead.actionTitle, "Switch")
+        XCTAssertEqual(ahead.detail, "The engine here is at ee369f0, not the af616f5 this NX Library is tested with. Switch moves it to af616f5. Games you built keep playing.")
 
         let dirty = item(.engine) { $0.engine = .checkout(head: "ee369f0", dirty: true) }
         XCTAssertEqual(dirty.state, .warning)

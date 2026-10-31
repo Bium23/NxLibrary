@@ -65,6 +65,55 @@ final class AppUpdateTests: XCTestCase {
         XCTAssertEqual(release.digest, "sha256:" + String(repeating: "a", count: 64))
     }
 
+    func testRequirementsAreReadFromTheNotesAndHidden() {
+        let notes = "Faster loading.\n\n<!-- nxlibrary-requires xcode=27.2 engine=2716f78f01e90a9f9bbf0d09e7a798903525962f -->\n"
+        let (requirements, shown) = AppUpdate.requirements(in: notes)
+        XCTAssertEqual(requirements, AppUpdate.Requirements(minimumXcode: "27.2",
+                                                            engineCommit: "2716f78f01e90a9f9bbf0d09e7a798903525962f"))
+        XCTAssertEqual(shown, "Faster loading.")
+        XCTAssertEqual(AppUpdate.requirements(in: "Just notes.").0, AppUpdate.Requirements())
+        XCTAssertEqual(AppUpdate.requirements(in: "Just notes.").1, "Just notes.")
+    }
+
+    func testRequirementsLineRoundTrips() {
+        let line = AppUpdate.requirementsLine(minimumXcode: "27.1", engineCommit: "abc")
+        XCTAssertEqual(line, "<!-- nxlibrary-requires xcode=27.1 engine=abc -->")
+        XCTAssertEqual(AppUpdate.requirements(in: line).0, AppUpdate.Requirements(minimumXcode: "27.1", engineCommit: "abc"))
+    }
+
+    func testParseReleaseSplitsRequirementsFromNotes() throws {
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(releaseJSON.utf8)) as? [String: Any])
+        object["body"] = "Notes.\n<!-- nxlibrary-requires xcode=27.2 engine=abc -->"
+        let release = try XCTUnwrap(AppUpdate.parseRelease(JSONSerialization.data(withJSONObject: object)))
+        XCTAssertEqual(release.notes, "Notes.")
+        XCTAssertEqual(release.requirements.minimumXcode, "27.2")
+    }
+
+    func testRequirementNotes() {
+        let r = AppUpdate.Requirements(minimumXcode: "27.2", engineCommit: "2716f78f01e90a9f9bbf0d09e7a798903525962f")
+        XCTAssertEqual(AppUpdate.requirementNotes(r, installedXcode: "27.1", currentEngine: "ee369f09984f"), [
+            "New portings need Xcode 27.2; this Mac has 27.1. Update Xcode from the App Store first. Your games keep playing.",
+            "It comes with nxnative 2716f78: after the restart, Setup downloads it in one step.",
+        ])
+        XCTAssertEqual(AppUpdate.requirementNotes(r, installedXcode: "27.2", currentEngine: "2716f78f01e90a9f9bbf0d09e7a798903525962f"), [])
+        XCTAssertEqual(AppUpdate.requirementNotes(AppUpdate.Requirements(), installedXcode: nil, currentEngine: "x"), [])
+        XCTAssertEqual(AppUpdate.requirementNotes(r, installedXcode: nil, currentEngine: "2716f78f01e90a9f9bbf0d09e7a798903525962f"), [],
+                       "no Xcode at all is the Setup check's job")
+        XCTAssertEqual(AppUpdate.neededXcode(r, installedXcode: "27.1"), "27.2")
+        XCTAssertNil(AppUpdate.neededXcode(r, installedXcode: "27.2.1"))
+    }
+
+    /// scripts/release.sh reads these two values from the sources with sed; a reformat must not break it.
+    func testReleaseScriptCanReadTheRequirements() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let requirements = try String(contentsOf: root.appendingPathComponent("Sources/NXLibraryCore/Models/ToolchainRequirements.swift"), encoding: .utf8)
+        XCTAssertNotNil(requirements.range(of: #"minimumXcode: "[0-9.]+""#, options: .regularExpression))
+        let viewModel = try String(contentsOf: root.appendingPathComponent("Sources/NXLibrary/ViewModels/AppViewModel.swift"), encoding: .utf8)
+        XCTAssertNotNil(viewModel.range(of: #"public let pinnedEngineCommit = "[0-9a-f]{40}""#, options: .regularExpression))
+        let script = try String(contentsOf: root.appendingPathComponent("scripts/release.sh"), encoding: .utf8)
+        XCTAssertTrue(script.contains("nxlibrary-requires"))
+    }
+
     func testParseReleaseWithoutAssetIsNil() {
         let json = #"{"tag_name": "v0.3.0", "body": "", "assets": [{"name": "Other.zip", "browser_download_url": "https://e.com/o.zip"}]}"#
         XCTAssertNil(AppUpdate.parseRelease(Data(json.utf8)))

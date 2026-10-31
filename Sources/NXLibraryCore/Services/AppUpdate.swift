@@ -36,10 +36,72 @@ public enum AppUpdate {
     public struct Release: Equatable, Sendable {
         public var tag: String
         public var version: String
+        /// The notes as shown, without the requirements line.
         public var notes: String
         public var zipURL: URL
         /// "sha256:<hex>"; nil when GitHub gave none.
         public var digest: String?
+        public var requirements = Requirements()
+    }
+
+    /// What a release needs on this Mac, from a hidden line scripts/release.sh adds to its notes.
+    public struct Requirements: Equatable, Sendable {
+        public var minimumXcode: String?
+        public var engineCommit: String?
+
+        public init(minimumXcode: String? = nil, engineCommit: String? = nil) {
+            self.minimumXcode = minimumXcode
+            self.engineCommit = engineCommit
+        }
+    }
+
+    static let requirementsMarker = "nxlibrary-requires"
+
+    /// "<!-- nxlibrary-requires xcode=27.1 engine=<commit> -->", the line scripts/release.sh writes.
+    public static func requirementsLine(minimumXcode: String, engineCommit: String) -> String {
+        "<!-- \(requirementsMarker) xcode=\(minimumXcode) engine=\(engineCommit) -->"
+    }
+
+    /// The requirements line's values, and the notes without it.
+    public static func requirements(in notes: String) -> (Requirements, String) {
+        guard let range = notes.range(of: #"<!--\s*nxlibrary-requires\s+([^>]*?)\s*-->"#, options: .regularExpression)
+        else { return (Requirements(), notes.trimmingCharacters(in: .whitespacesAndNewlines)) }
+        var requirements = Requirements()
+        let body = notes[range].dropFirst(4).dropLast(3)
+        for pair in body.split(whereSeparator: \.isWhitespace) {
+            let parts = pair.split(separator: "=", maxSplits: 1).map(String.init)
+            guard parts.count == 2 else { continue }
+            switch parts[0] {
+            case "xcode": requirements.minimumXcode = parts[1]
+            case "engine": requirements.engineCommit = parts[1]
+            default: break
+            }
+        }
+        var shown = notes
+        shown.removeSubrange(range)
+        return (requirements, shown.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    /// The Xcode version this Mac must update to for new portings with the release; nil when it has it (or has
+    /// none, the Setup check's job).
+    public static func neededXcode(_ requirements: Requirements, installedXcode: String?) -> String? {
+        guard let minimum = requirements.minimumXcode, let installed = installedXcode,
+              VersionNumber.isOlder(installed, than: minimum) else { return nil }
+        return minimum
+    }
+
+    /// What the update dialog says before installing: an Xcode this Mac must update first (new portings wait for
+    /// it), and a new engine that Setup brings after the restart.
+    public static func requirementNotes(_ requirements: Requirements, installedXcode: String?,
+                                        currentEngine: String) -> [String] {
+        var notes: [String] = []
+        if let minimum = neededXcode(requirements, installedXcode: installedXcode), let installed = installedXcode {
+            notes.append("New portings need Xcode \(minimum); this Mac has \(installed). Update Xcode from the App Store first. Your games keep playing.")
+        }
+        if let engine = requirements.engineCommit, !engine.isEmpty, engine != currentEngine {
+            notes.append("It comes with nxnative \(engine.prefix(7)): after the restart, Setup downloads it in one step.")
+        }
+        return notes
     }
 
     /// GitHub's `releases/latest` answer, with the asset named `NXLibrary-<version>.zip`.
@@ -50,8 +112,9 @@ public enum AppUpdate {
               let asset = assets.first(where: { $0["name"] as? String == "NXLibrary-\(version).zip" }),
               let link = asset["browser_download_url"] as? String, let url = URL(string: link)
         else { return nil }
-        return Release(tag: tag, version: version, notes: object["body"] as? String ?? "",
-                       zipURL: url, digest: asset["digest"] as? String)
+        let (requirements, notes) = requirements(in: object["body"] as? String ?? "")
+        return Release(tag: tag, version: version, notes: notes, zipURL: url, digest: asset["digest"] as? String,
+                       requirements: requirements)
     }
 
     /// "v1.2.3" or "1.2.3" → "1.2.3"; nil when it is not dotted numbers.

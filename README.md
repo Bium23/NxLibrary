@@ -91,7 +91,7 @@ bash scripts/release.sh 0.2.0                                   # build, verify,
 bash scripts/release.sh 0.2.0 --publish --notes notes-0.2.0.md  # also tag v0.2.0 and create the GitHub release
 ```
 
-It refuses a dirty tree, a version that is not dotted numbers, an existing tag or a missing `work/Runtime`. The app it builds carries the version and the `NXLibraryRelease` marker, the only kind of copy that updates itself; `build_app.sh` alone takes `NX_VERSION` and `NX_RELEASE=1` but sets neither by default. Before the first release, set `AppUpdate.defaultRepository` to the GitHub `owner/name`; until then the update feature is hidden (`defaults write local.nxlibrary NXLibrary_UpdateRepository owner/name` turns it on for testing).
+It refuses a dirty tree, a version that is not dotted numbers, an existing tag or a missing `work/Runtime`. The app it builds carries the version and the `NXLibraryRelease` marker, the only kind of copy that updates itself; `build_app.sh` alone takes `NX_VERSION` and `NX_RELEASE=1` but sets neither by default. It also appends a hidden `<!-- nxlibrary-requires xcode=… engine=… -->` line to the notes, read from `ToolchainRequirements.minimumXcode` and `pinnedEngineCommit`: the update dialog warns about an Xcode to update first and says Setup brings the new engine after the restart, in one step. Players never update the engine on its own; a new engine always comes with a tested NX Library release. Before the first release, set `AppUpdate.defaultRepository` to the GitHub `owner/name`; until then the update feature is hidden (`defaults write local.nxlibrary NXLibrary_UpdateRepository owner/name` turns it on for testing).
 
 ## First run
 

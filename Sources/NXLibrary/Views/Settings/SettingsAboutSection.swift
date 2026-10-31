@@ -175,7 +175,9 @@ struct SettingsAboutSection: View {
         case .checking: return "Checking for updates…"
         case .upToDate: return "NX Library is up to date"
         case .available(let release):
-            return updater.blockedReason().map { "\(release.version) is available · \($0)" } ?? "\(release.version) is available"
+            let xcode = AppUpdate.neededXcode(release.requirements, installedXcode: viewModel.environmentStatus?.xcodeVersion)
+                .map { " · new portings need Xcode \($0)" } ?? ""
+            return (updater.blockedReason().map { "\(release.version) is available · \($0)" } ?? "\(release.version) is available") + xcode
         case .downloading(let fraction): return "Downloading \(Int((fraction * 100).rounded()))%"
         case .installing: return "Installing…"
         case .failed(let message): return message

@@ -226,15 +226,11 @@ struct SettingsEngineSection: View {
     private var upstreamSubtitle: String {
         switch viewModel.upstreamState {
         case .idle:
-            return "Compare the pinned commit with seedds/nxnative main."
+            return "See how this NX Library's engine compares with seedds/nxnative main."
         case .checking:
             return "Asking GitHub for the latest commits..."
         case .loaded(let status):
-            if status.isUpToDate {
-                return "Pinned commit is up to date."
-            }
-            let count = status.newCommitsCount
-            return "\(count) new commit\(count == 1 ? "" : "s") available upstream."
+            return UpstreamCopy.subtitle(upToDate: status.isUpToDate, newCommits: status.newCommitsCount)
         case .failed(let message):
             return message
         }

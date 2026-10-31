@@ -552,8 +552,12 @@ public struct AppShellView: View {
                 .contentShape(Rectangle())
                 .onTapGesture { updater.later() }
             SeleneConfirmDialog(title: "NX Library \(release.version) is available",
-                                message: updater.blockedReason().map { "You have \(updater.currentVersion). It installs \($0.prefix(1).lowercased() + $0.dropFirst())." }
-                                    ?? "You have \(updater.currentVersion). NX Library restarts to finish.",
+                                message: ([updater.blockedReason().map { "You have \(updater.currentVersion). It installs \($0.prefix(1).lowercased() + $0.dropFirst())." }
+                                    ?? "You have \(updater.currentVersion). NX Library restarts to finish."]
+                                    + AppUpdate.requirementNotes(release.requirements,
+                                                                 installedXcode: viewModel.environmentStatus?.xcodeVersion,
+                                                                 currentEngine: viewModel.pinnedEngineCommit))
+                                    .joined(separator: "\n\n"),
                                 confirmTitle: "Update",
                                 cancelTitle: "Later",
                                 detail: release.notes.trimmingCharacters(in: .whitespacesAndNewlines),
