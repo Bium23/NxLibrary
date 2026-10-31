@@ -40,7 +40,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
         case .cheats: return "Cheats"
         case .rebuild: return "Rebuild"
         case .showInFinder: return "Show in Finder"
-        case .openSaves: return "Open saves"
+        case .openSaves: return "Saves"
         case .editDetails: return "Edit details"
         case .removeGame: return "Remove game"
         case .changeArtwork: return "Change artwork"
@@ -98,7 +98,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
     }
 
     /// Opens a sub-list (chevron).
-    public var opensSubmenu: Bool { self == .editDetails || self == .changeArtwork || self == .changeMetadata || self == .cheats }
+    public var opensSubmenu: Bool { self == .editDetails || self == .changeArtwork || self == .changeMetadata || self == .cheats || self == .openSaves }
 
     /// Red title, confirmed in a dialog.
     public var isDestructive: Bool { self == .removeGame || self == .removeSources }
@@ -214,7 +214,7 @@ public struct GameOptionsPresentation: Equatable {
         case .restoreDefaults: return "Reset this game's runtime settings."
         case .rebuild: return rebuildAbout
         case .showInFinder: return "Reveal the app in Finder."
-        case .openSaves: return "Open the game's save folder."
+        case .openSaves: return "Back up, import and restore this game's saves."
         case .editDetails: return "Artwork, metadata, store page, sources and the build log."
         case .removeGame: return removal.message
         case .changeArtwork: return "Cover, background, icon and logo, from GameTDB, Title DB or a file."

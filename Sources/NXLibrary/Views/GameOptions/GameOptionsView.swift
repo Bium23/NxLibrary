@@ -33,10 +33,11 @@ struct GameOptionsView: View {
     @State private var metadataOpen = false
     /// The Cheats panel, likewise.
     @State private var cheatsOpen = false
+    @State private var savesOpen = false
     /// The Cheats row's value: read from disk when Game options opens and when the panel closes, not on every draw.
     @State private var cheatsValue: String
     /// A panel over the list has the input.
-    private var panelOpen: Bool { artworkOpen || metadataOpen || cheatsOpen }
+    private var panelOpen: Bool { artworkOpen || metadataOpen || cheatsOpen || savesOpen }
     @State private var confirmFocus: SeleneConfirmButton = .cancel
     @State private var keyMonitor: Any?
     /// Row frames in the list's viewport, written while scrolling without redrawing.
@@ -143,6 +144,12 @@ struct GameOptionsView: View {
                 })
                 .transition(.opacity)
                 .zIndex(2)
+            }
+
+            if savesOpen {
+                SavesPanel(viewModel: viewModel, game: current) { savesOpen = false }
+                    .transition(.opacity)
+                    .zIndex(2)
             }
 
             if let target = confirm {
@@ -642,7 +649,7 @@ struct GameOptionsView: View {
             viewModel.revealInFinder(url: current.url)
         case .openSaves:
             SoundEffectService.shared.play(.click)
-            viewModel.revealSaveFolder(GameDetailsProfile.inspect(for: current).saveDirectory)
+            savesOpen = true
         case .editDetails:
             SoundEffectService.shared.play(.click)
             enterEditDetails()
