@@ -1685,7 +1685,7 @@ public final class AppViewModel: ObservableObject {
         if returningFromBack, addGameSessionActive { return }
         if reviewsFailureOnAddGame {
             reviewsFailureOnAddGame = false
-            if buildError != nil || restoreLastFailure() { return }
+            if restoreLastFailure() || buildError != nil { return }
         }
         startNewAddGame(defaults: defaults)
     }
