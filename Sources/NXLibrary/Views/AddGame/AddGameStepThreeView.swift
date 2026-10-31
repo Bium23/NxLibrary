@@ -29,6 +29,7 @@ struct AddGameStepThreeView: View {
         .onChange(of: viewModel.isCancellingBuild) { _ in publishActions() }
         .onChange(of: viewModel.buildSuccessPath) { _ in publishActions() }
         .onChange(of: viewModel.buildError) { _ in publishActions() }
+        .onChange(of: viewModel.portingFailureReason) { _ in publishActions() }
         .onChange(of: viewModel.buildState) { _ in publishActions() }
     }
 
@@ -52,15 +53,16 @@ struct AddGameStepThreeView: View {
     private var buildingView: some View {
         VStack(alignment: .leading, spacing: canvas.u(24)) {
             HStack(alignment: .top, spacing: canvas.u(36)) {
-                portingTile
+                gameTile(caption: viewModel.portingETAText
+                    ?? (viewModel.currentStageName.isEmpty ? "Preparing" : viewModel.currentStageName))
                 stageList
             }
             PortingLogBox(logs: viewModel.logs, expanded: $viewModel.showLiveLogsInBuild)
         }
     }
 
-    /// The game being ported, as its tile looks on the home, with the time left.
-    @ViewBuilder private var portingTile: some View {
+    /// The game being ported, as its tile looks on the home, with a caption (the time left).
+    @ViewBuilder private func gameTile(caption: String?) -> some View {
         let side = canvas.u(220)
         VStack(spacing: canvas.u(14)) {
             if let game = portingGame {
@@ -83,11 +85,13 @@ struct AddGameStepThreeView: View {
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
             }
-            Text(viewModel.portingETAText ?? (viewModel.currentStageName.isEmpty ? "Preparing" : viewModel.currentStageName))
-                .seleneFont(15)
-                .foregroundColor(SeleneTheme.ink60)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
+            if let caption {
+                Text(caption)
+                    .seleneFont(15)
+                    .foregroundColor(SeleneTheme.ink60)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+            }
         }
         .frame(width: canvas.u(240))
     }
@@ -195,30 +199,26 @@ struct AddGameStepThreeView: View {
 
     // MARK: - Failure
 
+    /// The tile as the porting left it, what stopped it and the one next step; the step title
+    /// carries the reason's title.
     private func failureView(error: String) -> some View {
-        VStack(spacing: 18) {
-            SelenePanel {
-                HStack(alignment: .top, spacing: 14) {
-                    Image(systemName: "xmark.circle.fill")
-                        .seleneFont(34)
-                        .foregroundColor(PortingPillCopy.softRed)
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text("Porting failed")
-                            .seleneFont(34, .semibold)
-                            .foregroundColor(SeleneTheme.ink)
-                        Text(error)
-                            .seleneFont(15)
-                            .foregroundColor(SeleneTheme.ink90)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    Spacer()
+        let reason = viewModel.portingFailureReason
+        return VStack(alignment: .leading, spacing: canvas.u(24)) {
+            HStack(alignment: .top, spacing: canvas.u(36)) {
+                gameTile(caption: nil)
+                VStack(alignment: .leading, spacing: canvas.u(12)) {
+                    Text(error)
+                        .seleneFont(19)
+                        .foregroundColor(SeleneTheme.ink90)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(reason?.next ?? "The previous app was left untouched. The log has the failing command and output.")
+                        .seleneFont(17)
+                        .foregroundColor(SeleneTheme.ink60)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-
-                Text("The previous app was left untouched. The full build log has the failing command and output.")
-                    .seleneFont(14)
-                    .foregroundColor(SeleneTheme.ink60)
+                .padding(.top, canvas.u(8))
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-
             logTailPanel
         }
     }
@@ -336,9 +336,19 @@ struct AddGameStepThreeView: View {
         }
 
         if viewModel.buildError != nil || viewModel.buildState == .cancelled {
-            return [
+            var specs: [StepAction] = []
+            if viewModel.buildError != nil, let action = viewModel.portingFailureReason?.action,
+               let spec = failureActionSpec(action) {
+                specs.append(spec)
+            }
+            specs += [
+                StepAction(id: "openLog", title: "Open log",
+                           systemImage: "doc.text.magnifyingglass",
+                           kind: .secondary, isEnabled: true) {
+                    viewModel.openBuildLog()
+                },
                 StepAction(id: "retry", title: "Try again",
-                           systemImage: "arrow.clockwise", kind: .primary,
+                           systemImage: "arrow.clockwise", kind: specs.isEmpty ? .primary : .secondary,
                            isEnabled: !viewModel.isBuilding) {
                     viewModel.retryLastBuild()
                 },
@@ -349,16 +359,12 @@ struct AddGameStepThreeView: View {
                         viewModel.goToWizardStep(2)
                     }
                 },
-                StepAction(id: "openLog", title: "Open log",
-                           systemImage: "doc.text.magnifyingglass",
-                           kind: .secondary, isEnabled: true) {
-                    viewModel.openBuildLog()
-                },
                 StepAction(id: "console", title: "Open console",
                            systemImage: nil, kind: .quiet, isEnabled: true) {
                     NotificationCenter.default.post(name: .nxLibraryOpenConsole, object: nil)
                 }
             ]
+            return specs
         }
 
         return [
@@ -370,6 +376,30 @@ struct AddGameStepThreeView: View {
                 }
             }
         ]
+    }
+
+    /// The failure's one next step as a row, first; nil when it has none.
+    private func failureActionSpec(_ action: PortingFailureAction) -> StepAction? {
+        let perform = { viewModel.performFailureAction(action, router: router) }
+        switch action {
+        case .portAnyway:
+            return StepAction(id: "portAnyway", title: "Port anyway", systemImage: nil, kind: .primary,
+                              isEnabled: !viewModel.isBuilding, perform: perform)
+        case .openEngineSettings:
+            return StepAction(id: "engine", title: "Open Engine settings", systemImage: nil, kind: .primary,
+                              isEnabled: true, perform: perform)
+        case .openSetup:
+            return StepAction(id: "setup", title: "Open Setup", systemImage: nil, kind: .primary,
+                              isEnabled: true, perform: perform)
+        case .importKeys:
+            return StepAction(id: "keys", title: "Import prod.keys", systemImage: nil, kind: .primary,
+                              isEnabled: true, perform: perform)
+        case .openStorage:
+            return StepAction(id: "storage", title: "Open Storage", systemImage: nil, kind: .primary,
+                              isEnabled: true, perform: perform)
+        case .none:
+            return nil
+        }
     }
 
     private func play(path: String) {

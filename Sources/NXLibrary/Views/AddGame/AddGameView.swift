@@ -172,6 +172,9 @@ public struct AddGameView: View {
         case 1: return "Choose a game"
         case 2: return viewModel.selectedGame?.name ?? "Review"
         default:
+            if !viewModel.isBuilding, viewModel.buildError != nil, let reason = viewModel.portingFailureReason {
+                return reason.title
+            }
             let id = viewModel.currentBuildGameID ?? viewModel.lastBuildGameID
             return viewModel.libraryGames.first { $0.id == id }?.name ?? "Porting"
         }

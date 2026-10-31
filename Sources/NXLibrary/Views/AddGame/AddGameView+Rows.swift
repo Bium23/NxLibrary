@@ -177,8 +177,10 @@ extension AddGameView {
     private func readinessRows(includeBuildError: Bool) -> [AddGameRow] {
         var rows: [AddGameRow] = []
         if includeBuildError, let error = viewModel.buildError {
-            rows.append(AddGameRow(id: "buildError", kind: .warning(action: { viewModel.buildError = nil }),
-                                   title: "The last porting failed", about: error))
+            rows.append(AddGameRow(id: "buildError", kind: .warning(action: {
+                viewModel.buildError = nil
+                viewModel.portingFailureReason = nil
+            }), title: viewModel.portingFailureReason?.title ?? "The last porting failed", about: error))
         }
         if !viewModel.isProdKeysValid {
             rows.append(AddGameRow(id: "keys", kind: .action { viewModel.selectProdKeysFile() }, icon: .key,
@@ -215,6 +217,7 @@ extension AddGameView {
     private static let portingIcons: [String: MaterialIcon] = [
         "cancel": .close, "openLog": .history, "console": .terminal, "play": .play,
         "library": .collections, "another": .add, "reveal": .folder, "retry": .restartAlt,
-        "options": .tune, "review": .chevronLeft,
+        "options": .tune, "review": .chevronLeft, "portAnyway": .restartAlt, "engine": .settings,
+        "setup": .checklist, "keys": .key, "storage": .storage, "diagnostics": .info,
     ]
 }

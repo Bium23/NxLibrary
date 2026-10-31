@@ -19,4 +19,24 @@ extension AppViewModel {
         guard isBuilding, let portingProgress else { return nil }
         return PortingETA.text(portingProgress, lastFinishingSeconds: lastPortingFinishSeconds)
     }
+
+    /// Restarts the failed porting once with the reason's one `--allow-*` flag; the flag is not
+    /// remembered, and the Metal gate's flag still comes from the persisted override.
+    func portAnyway() {
+        guard case .portAnyway(let flag) = portingFailureReason?.action,
+              let id = lastBuildGameID,
+              let game = libraryGames.first(where: { $0.id == id }) else { return }
+        startBuild(for: game, extraArguments: PortingFailureClassifier.arguments([], adding: flag))
+    }
+
+    func performFailureAction(_ action: PortingFailureAction, router: AppRouter) {
+        switch action {
+        case .portAnyway: portAnyway()
+        case .openEngineSettings: router.openSettings(.engine)
+        case .openSetup: reopenSetup()
+        case .importKeys: selectProdKeysFile()
+        case .openStorage: router.openSettings(.storage)
+        case .none: break
+        }
+    }
 }

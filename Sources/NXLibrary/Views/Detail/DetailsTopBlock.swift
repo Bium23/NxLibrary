@@ -104,10 +104,15 @@ struct DetailsTopBlock: View {
             }
         case .normalAfterFailure(let failure):
             Button(action: onOpenLog) {
-                Text(PortingPillCopy.lastFailure(failure)).seleneFont(15).foregroundColor(SeleneTheme.ink60)
+                Text(PortingPillCopy.lastFailure(failure, reason: game.portingFailureReason))
+                    .seleneFont(15).foregroundColor(SeleneTheme.ink60)
             }
             .buttonStyle(.plain)
-        case .normal, .failed:
+        case .failed(let failure):
+            if failure == .failed, let reason = game.portingFailureReason {
+                Text(reason.title).seleneFont(15).foregroundColor(SeleneTheme.ink60)
+            }
+        case .normal:
             EmptyView()
         }
     }

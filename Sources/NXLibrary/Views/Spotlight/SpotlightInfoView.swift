@@ -106,12 +106,18 @@ struct SpotlightGameInfoView: View {
             }
         case .normalAfterFailure(let failure):
             Button(action: onOpenLog) {
-                Text(PortingPillCopy.lastFailure(failure))
+                Text(PortingPillCopy.lastFailure(failure, reason: game.portingFailureReason))
                     .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink60)
             }
             .buttonStyle(.plain)
-        case .normal, .failed:
+        case .failed(let failure):
+            if failure == .failed, let reason = game.portingFailureReason {
+                Text(reason.title)
+                    .seleneFont(15)
+                    .foregroundColor(SeleneTheme.ink60)
+            }
+        case .normal:
             EmptyView()
         }
     }
@@ -218,8 +224,9 @@ enum PortingPillCopy {
     /// Soft, never alarm red.
     static let softRed = Color(hex: 0xF2A0A0)
 
-    static func lastFailure(_ failure: PortingFailure) -> String {
-        failure == .cancelled ? "Last porting cancelled · Open log" : "Last porting failed · Open log"
+    static func lastFailure(_ failure: PortingFailure, reason: PortingFailureReason? = nil) -> String {
+        if failure == .cancelled { return "Last porting cancelled · Open log" }
+        return "\(reason?.title ?? "Last porting failed") · Open log"
     }
 }
 

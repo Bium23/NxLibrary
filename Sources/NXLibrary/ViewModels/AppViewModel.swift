@@ -253,6 +253,8 @@ public final class AppViewModel: ObservableObject {
     @Published public var showLiveLogsInBuild: Bool = true
     @Published public var logs: [LogEntry] = []
     @Published public var buildError: String? = nil
+    /// Why the porting on the Porting step failed, when recognised; nil otherwise.
+    @Published public var portingFailureReason: PortingFailureReason? = nil
     @Published public var buildSuccessPath: String? = nil
     @Published public var buildWizardStep: Int = 1 // 1: Select Game, 2: Configure & Output, 3: Porting
     @Published public var iconAppearanceMode: AppIconAppearanceMode = .auto {
@@ -1653,6 +1655,7 @@ public final class AppViewModel: ObservableObject {
     public func resetWizard() {
         buildWizardStep = 1
         buildError = nil
+        portingFailureReason = nil
         buildSuccessPath = nil
         buildState = .idle
         lastError = nil
@@ -1830,15 +1833,15 @@ public final class AppViewModel: ObservableObject {
         return library.games.first(where: { $0.titleId == titleId }) ?? game
     }
 
-    public func startBuild(for game: PortedGame) {
+    public func startBuild(for game: PortedGame, extraArguments: [String] = []) {
         do {
-            try beginBuild(for: game)
+            try beginBuild(for: game, extraArguments: extraArguments)
         } catch {
             presentBuildError(error)
         }
     }
 
-    private func beginBuild(for game: PortedGame) throws {
+    private func beginBuild(for game: PortedGame, extraArguments: [String] = []) throws {
         guard !isBuilding else { throw NXLibraryError.buildAlreadyRunning }
         var target = libraryGames.first(where: { $0.id == game.id }) ?? game
         guard let titleId = target.titleId,
@@ -1961,7 +1964,8 @@ public final class AppViewModel: ObservableObject {
             appName: target.name,
             bundleId: target.bundleId ?? "org.nxnative.\(titleId.lowercased())",
             language: selectedLanguage == "auto" ? nil : selectedLanguage,
-            allowUntestedToolchain: allowUntestedToolchain
+            allowUntestedToolchain: allowUntestedToolchain,
+            extraArguments: extraArguments
         )
 
         buildStartedAt = Date()
@@ -1972,6 +1976,7 @@ public final class AppViewModel: ObservableObject {
         isCancellingBuild = false
         buildState = .running
         buildError = nil
+        portingFailureReason = nil
         lastError = nil
         buildSuccessPath = nil
         progressFraction = 0
@@ -2162,6 +2167,7 @@ public final class AppViewModel: ObservableObject {
                 )
                 game.lastBuild = record
                 game.portingFailure = nil
+                game.portingFailureReason = nil
                 if let seconds = portingProgress?.finishingElapsed, seconds > 0 {
                     lastPortingFinishSeconds = seconds
                 }
@@ -2180,26 +2186,32 @@ public final class AppViewModel: ObservableObject {
                 game.status = buildPreviousStatus
                     ?? (game.sources.isEmpty ? .builtSourcesMissing : .notBuilt)
                 game.portingFailure = .cancelled
+                game.portingFailureReason = nil
                 buildState = .cancelled
                 buildError = nil
+                portingFailureReason = nil
                 lastError = "Build cancelled."
                 logs.append(LogEntry(level: .warning, message: "Build cancelled."))
             } else {
-                let rawLog = buildLogTail(result.logURL)
-                let message = BuildFailureDiagnostics.message(
-                    log: rawLog,
-                    gameName: game.name,
-                    fallback: result.error ?? "Build failed (exit code \(result.exitCode))."
+                let reason = PortingFailureClassifier.classify(
+                    log: buildLogTail(result.logURL),
+                    keysPath: keyStore.keyURL.path,
+                    sourcePaths: game.sources.map(\.url.path)
                 )
+                let message = reason.what(game: game.name)
                 game.status = .failed
                 game.portingFailure = .failed
+                game.portingFailureReason = reason
                 buildState = .failed
                 buildError = message
+                portingFailureReason = reason
                 lastError = message
-                logs.append(LogEntry(level: .error, message: message))
+                logs.append(LogEntry(level: .error,
+                                     message: result.error ?? "Build failed (exit code \(result.exitCode))."))
+                logs.append(LogEntry(level: .error, message: "\(reason.title). \(message) \(reason.next)"))
                 SoundEffectService.shared.play(.error)
                 NotificationService.shared.sendPortErrorNotification(
-                    gameName: game.name, error: message)
+                    gameName: game.name, error: reason.title)
             }
 
             library.games[index] = game
@@ -2251,6 +2263,7 @@ public final class AppViewModel: ObservableObject {
         let message = error.localizedDescription
         buildState = .failed
         buildError = message
+        portingFailureReason = nil
         lastError = message
         alertMessage = message
         logs.append(LogEntry(level: .error, message: message))
