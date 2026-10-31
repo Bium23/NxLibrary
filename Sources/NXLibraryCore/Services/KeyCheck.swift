@@ -32,6 +32,32 @@ public enum KeyCheck {
             case .fits, .cannotCheck: return false
             }
         }
+
+        /// The Review step's row: a warning for what stops a porting, a quiet note for a file that
+        /// cannot be checked, nil when the keys fit. Names files and firmware, never keys.
+        public var readiness: (title: String, about: String, warning: Bool)? {
+            switch self {
+            case .fits:
+                return nil
+            case .unreadableKeys, .noHeaderKey:
+                return ("Your keys could not be read", "prod.keys is missing, unreadable or has no header_key. Import it again.", true)
+            case .wrongHeaderKey(let file):
+                return ("These keys do not open \(file)", "Import prod.keys from the console these files were dumped with.", true)
+            case .tooOld(let part, let generation, _):
+                let what = part == .base ? "game" : (part == .update ? "update" : "DLC")
+                let firmware = KeyCheck.firmware(forGeneration: generation).map { "firmware \($0)" } ?? "a newer firmware"
+                return ("Your keys are too old for this \(what)",
+                        "It needs keys from \(firmware) or later. Dump prod.keys again from your console.", true)
+            case .cannotCheck(let file):
+                return ("Keys not checked against \(file)", "NX Library reads NSP and NSZ headers only; the porting checks the rest.", false)
+            }
+        }
+    }
+
+    /// The sources to check, base first, then the update, then DLC; files of unknown kind are left out.
+    public static func parts(_ sources: [(kind: SourceKind, url: URL)]) -> [(part: Part, url: URL)] {
+        let order: [(SourceKind, Part)] = [(.base, .base), (.update, .update), (.dlc, .dlc)]
+        return order.flatMap { kind, part in sources.filter { $0.kind == kind }.map { (part, $0.url) } }
     }
 
     /// The firmware that brought each master key revision (hactool's table); index = generation − 1.

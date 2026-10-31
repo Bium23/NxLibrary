@@ -67,7 +67,13 @@ public final class AppViewModel: ObservableObject {
             }
         }
     }
-    @Published public var selectedSourceIDs: Set<UUID> = []
+    @Published public var selectedSourceIDs: Set<UUID> = [] {
+        didSet { refreshKeyCheck() }
+    }
+    /// The imported keys against the selected sources (`refreshKeyCheck`); nil while it runs.
+    @Published public var keyCheck: KeyCheck.Outcome? = nil
+    /// What `keyCheck` was computed for; a result for an older token is dropped.
+    var keyCheckToken: String? = nil
     @Published public var isScanningGameFolder: Bool = false
     @Published public var scanError: String? = nil
     
@@ -466,6 +472,7 @@ public final class AppViewModel: ObservableObject {
             isProdKeysValid = summary.hasHeaderKey
             prodKeysPath = keyStore.keyURL.path
             prodKeysSource = "Imported once"
+            refreshKeyCheck()
             lastError = nil
             logs.append(LogEntry(
                 level: .success,
@@ -1585,6 +1592,7 @@ public final class AppViewModel: ObservableObject {
         !isBuilding
             && canAddSelectedGame
             && isProdKeysValid
+            && !keyCheckBlocks
             && isNxnativeValid
             && environmentStatus?.canBuild == true
             && !isDiskSpaceLow
@@ -1856,6 +1864,12 @@ public final class AppViewModel: ObservableObject {
         guard isProdKeysValid,
               FileManager.default.fileExists(atPath: keyStore.keyURL.path) else {
             throw NXLibraryError.missingKeys
+        }
+        // A few kilobytes per file: keys that cannot open the game stop here, not minutes into the extraction.
+        let keyOutcome = KeyCheck.run(keysURL: keyStore.keyURL,
+                                      files: KeyCheck.parts(target.sources.map { ($0.kind, $0.url) }))
+        if keyOutcome.blocks, let reason = PortingFailureReason.from(keyOutcome) {
+            throw NXLibraryError.keyCheck(reason, game: target.name)
         }
         guard isNxnativeValid else { throw NXLibraryError.engineMissing }
         guard let environmentStatus else {
@@ -2263,7 +2277,11 @@ public final class AppViewModel: ObservableObject {
         let message = error.localizedDescription
         buildState = .failed
         buildError = message
-        portingFailureReason = nil
+        if case .keyCheck(let reason, _) = error as? NXLibraryError {
+            portingFailureReason = reason
+        } else {
+            portingFailureReason = nil
+        }
         lastError = message
         alertMessage = message
         logs.append(LogEntry(level: .error, message: message))

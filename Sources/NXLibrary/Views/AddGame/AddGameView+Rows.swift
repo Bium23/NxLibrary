@@ -151,6 +151,7 @@ extension AddGameView {
     private var buildHint: String {
         if viewModel.canStartBuild { return "Builds the Mac app now; you can keep using the library meanwhile." }
         if !viewModel.isProdKeysValid { return "Import prod.keys first." }
+        if viewModel.keyCheckBlocks, let readiness = viewModel.keyCheck?.readiness { return "\(readiness.title)." }
         if !viewModel.isNxnativeValid { return "The nxnative checkout is missing." }
         if viewModel.environmentStatus?.canBuild != true { return "The build environment is incomplete." }
         if !viewModel.canPassToolchainGate { return "The toolchain is not certified; enable the override in Settings." }
@@ -186,6 +187,17 @@ extension AddGameView {
             rows.append(AddGameRow(id: "keys", kind: .action { viewModel.selectProdKeysFile() }, icon: .key,
                                    title: "Import prod.keys",
                                    about: "Copied once to Application Support, readable only by you."))
+        }
+        if viewModel.isProdKeysValid, let readiness = viewModel.keyCheck?.readiness {
+            if readiness.warning {
+                rows.append(AddGameRow(id: "keyCheck", kind: .warning(action: nil),
+                                       title: readiness.title, about: readiness.about))
+                rows.append(AddGameRow(id: "keys", kind: .action { viewModel.selectProdKeysFile() }, icon: .key,
+                                       title: "Import prod.keys",
+                                       about: "Copied once to Application Support, readable only by you."))
+            } else {
+                rows.append(AddGameRow(id: "keyCheck", kind: .note, title: "\(readiness.title). \(readiness.about)"))
+            }
         }
         if let environment = viewModel.environmentStatus, environment.xcodeVersion == nil {
             rows.append(AddGameRow(id: "xcode", kind: .action { viewModel.reopenSetup() }, icon: .checklist,

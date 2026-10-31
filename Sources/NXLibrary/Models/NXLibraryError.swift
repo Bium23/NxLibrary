@@ -1,4 +1,5 @@
 import Foundation
+import NXLibraryCore
 
 public enum NXLibraryError: Error, LocalizedError {
     case baseRequired
@@ -12,6 +13,8 @@ public enum NXLibraryError: Error, LocalizedError {
     case appMissing(String)
     case launchFailed(String)
     case noSelectedGame
+    /// The imported keys cannot open the game (`KeyCheck`); the engine was not started.
+    case keyCheck(PortingFailureReason, game: String)
 
     public var errorDescription: String? {
         switch self {
@@ -37,6 +40,8 @@ public enum NXLibraryError: Error, LocalizedError {
             return "macOS could not launch \(name)."
         case .noSelectedGame:
             return "Select a game first."
+        case .keyCheck(let reason, let game):
+            return "\(reason.what(game: game)) \(reason.next)"
         }
     }
 }

@@ -157,6 +157,29 @@ final class KeyCheckTests: XCTestCase {
         XCTAssertEqual(KeyCheck.run(keysURL: missing, files: []), .unreadableKeys)
     }
 
+    func testPartsOrderBaseUpdateDLCAndDropUnknown() {
+        let u = { (name: String) in URL(fileURLWithPath: "/g/" + name) }
+        let parts = KeyCheck.parts([(.dlc, u("d.nsp")), (.unknown, u("x.nsp")), (.update, u("u.nsp")), (.base, u("b.nsp"))])
+        XCTAssertEqual(parts.map(\.part), [.base, .update, .dlc])
+        XCTAssertEqual(parts.map(\.url.lastPathComponent), ["b.nsp", "u.nsp", "d.nsp"])
+    }
+
+    func testReadinessCopy() {
+        let tooOld = KeyCheck.Outcome.tooOld(part: .update, generation: 19, missing: "key_area_key_application_12")
+        XCTAssertEqual(tooOld.readiness?.title, "Your keys are too old for this update")
+        XCTAssertEqual(tooOld.readiness?.about,
+                       "It needs keys from firmware 19.0.0 or later. Dump prod.keys again from your console.")
+        XCTAssertEqual(tooOld.readiness?.warning, true)
+        let wrong = KeyCheck.Outcome.wrongHeaderKey(file: "base.nsp").readiness
+        XCTAssertEqual(wrong?.title, "These keys do not open base.nsp")
+        XCTAssertEqual(wrong?.warning, true)
+        let unchecked = KeyCheck.Outcome.cannotCheck(file: "game.xci").readiness
+        XCTAssertEqual(unchecked?.warning, false)
+        XCTAssertTrue(unchecked?.title.contains("game.xci") == true)
+        XCTAssertNil(KeyCheck.Outcome.fits.readiness)
+        XCTAssertFalse(tooOld.readiness!.about.contains("key_area"), "never a key name in the UI copy")
+    }
+
     private func le32(_ v: UInt32) -> [UInt8] { (0..<4).map { UInt8(truncatingIfNeeded: v >> (8 * $0)) } }
     private func le64(_ v: UInt64) -> [UInt8] { (0..<8).map { UInt8(truncatingIfNeeded: v >> (8 * $0)) } }
 }
