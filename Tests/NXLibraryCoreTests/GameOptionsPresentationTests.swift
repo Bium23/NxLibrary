@@ -55,19 +55,6 @@ final class GameOptionsPresentationTests: XCTestCase {
         }
     }
 
-    /// On Selene each kind of row has its own icon colour; the dangerous ones keep the danger red.
-    func testRowsHaveIconColoursByKind() {
-        for row in GameOptionsRow.allCases {
-            if row.isDestructive {
-                XCTAssertNil(row.iconTint, "\(row)")
-            } else {
-                XCTAssertEqual(row.iconTint?.count, 7, "\(row) has a #RRGGBB colour")
-            }
-        }
-        XCTAssertGreaterThanOrEqual(Set(GameOptionsRow.allCases.compactMap(\.iconTint)).count, 6)
-        XCTAssertNotEqual(GameOptionsRow.play.iconTint, GameOptionsRow.favorite.iconTint)
-    }
-
     func testRenderScaleRowOnlyWhenSupportedOtherwiseNote() {
         let supported = presentation(renderScale: true)
         XCTAssertTrue(supported.focusableRows(level: .main, origin: .details).contains(.renderScale))

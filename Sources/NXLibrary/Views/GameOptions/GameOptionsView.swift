@@ -233,7 +233,7 @@ struct GameOptionsView: View {
         }
     }
 
-    /// Selene's blue accent on every icon read poorly; on Selene each kind of row has its own colour.
+    /// Selene's headings are a soft ink, not its blue accent.
     private var isSelene: Bool { ThemeStore.shared.palette.id == SelenePaletteCatalog.defaultID }
 
     private func rowView(_ row: GameOptionsRow, _ p: GameOptionsPresentation,
@@ -243,8 +243,7 @@ struct GameOptionsView: View {
                         about: p.about(row),
                         focused: focused == row,
                         destructive: row.isDestructive,
-                        enabled: !p.isDimmed(row),
-                        tint: isSelene ? row.iconTint.flatMap { UInt32($0.dropFirst(), radix: 16) }.map { Color(hex: $0) } : nil) {
+                        enabled: !p.isDimmed(row)) {
             trailing(row)
         }
         .help(p.info(row) ?? "")

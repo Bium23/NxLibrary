@@ -100,24 +100,6 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
 
     /// Red title, confirmed in a dialog.
     public var isDestructive: Bool { self == .removeGame || self == .removeSources }
-
-    /// The icon's colour on Selene, by kind of row (nil for the dangerous ones, which stay red):
-    /// soft tones that read on the dark glass instead of one accent for every icon.
-    public var iconTint: String? {
-        switch self {
-        case .play, .openSaves: return "#7BD88F"                  // green: go, keep
-        case .editDetails, .changeMetadata, .metalFX: return "#C3A4F5"  // lilac: change
-        case .move, .fullscreen, .showInFinder: return "#7CC4FA"   // sky: place, screen
-        case .favorite, .storePage, .rumble, .rumbleStrength: return "#F5C451"  // amber
-        case .hidden, .restoreDefaults, .openLog: return "#A9B4C6" // slate: quiet tools
-        case .fps60, .rebuild: return "#F5A35C"                     // orange: speed, build
-        case .metalHUD, .attachSources: return "#6FD3C2"            // teal: diagnostics, links
-        case .consoleMode, .changeArtwork: return "#F28FB2"         // pink: play style, art
-        case .language: return "#8FB8F5"
-        case .renderScale: return "#B8E07A"
-        case .removeGame, .removeSources: return nil
-        }
-    }
 }
 
 /// One line of a Game options level, top to bottom.

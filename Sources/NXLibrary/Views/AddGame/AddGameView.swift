@@ -43,8 +43,6 @@ public struct AddGameView: View {
         self.showsHints = showsHints
     }
 
-    private var isSelene: Bool { ThemeStore.shared.palette.id == SelenePaletteCatalog.defaultID }
-
     public var body: some View {
         let rows = rows(for: viewModel.buildWizardStep)
         let focused = focusedRow(in: rows)
@@ -131,7 +129,7 @@ public struct AddGameView: View {
                         }
                         ForEach(rows) { row in
                             AddGameRowView(row: row, focused: row.id == focused?.id && !confirmDiscard,
-                                           isSelene: isSelene, editing: $editing)
+                                           editing: $editing)
                                 .id(row.id)
                                 .contentShape(Rectangle())
                                 .onTapGesture { click(row) }

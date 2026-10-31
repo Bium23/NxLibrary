@@ -29,13 +29,12 @@ extension AddGameView {
         rows.append(AddGameRow(id: "choose", kind: .action { viewModel.selectGameFolder() },
                                icon: .folder, title: folder == nil ? "Choose folder" : "Change folder",
                                about: folder.map { ($0.path as NSString).abbreviatingWithTildeInPath }
-                                   ?? "A folder with your NSP, XCI or NSZ files. You can also drop them here.",
-                               tint: AddGameRow.sky))
+                                   ?? "A folder with your NSP, XCI or NSZ files. You can also drop them here."))
         if let game = viewModel.selectedGame {
             rows.append(AddGameRow(id: "continue", kind: .action(goToReview), icon: .chevron,
                                    title: "Continue",
                                    about: "\(game.name) · \(sourceCountText) · \(viewModel.formattedSelectedSourcesSize)",
-                                   tint: AddGameRow.green, enabled: viewModel.canAddSelectedGame))
+                                   enabled: viewModel.canAddSelectedGame))
         }
         if viewModel.isScanningGameFolder {
             rows.append(AddGameRow(id: "scanning", kind: .note, title: "Reading the folder…"))
@@ -109,15 +108,14 @@ extension AddGameView {
     private var reviewRows: [AddGameRow] {
         var rows: [AddGameRow] = [
             AddGameRow(id: "build", kind: .action { addSelectedGame(buildNow: true) }, icon: .build,
-                       title: "Add and port", about: buildHint, tint: AddGameRow.orange,
-                       enabled: viewModel.canStartBuild),
+                       title: "Add and port", about: buildHint, enabled: viewModel.canStartBuild),
             AddGameRow(id: "library", kind: .action { addSelectedGame(buildNow: false) }, icon: .add,
                        title: "Add to library only", about: "Port it later from the game's page.",
-                       tint: AddGameRow.green, enabled: viewModel.canAddSelectedGame),
+                       enabled: viewModel.canAddSelectedGame),
             AddGameRow(id: "sources", kind: .action {
                 withAnimation(reduceMotion ? nil : SeleneTheme.standard) { viewModel.goToWizardStep(1) }
             }, icon: .folder, title: "Change sources",
-               about: "\(sourceCountText) · \(viewModel.formattedSelectedSourcesSize)", tint: AddGameRow.sky),
+               about: "\(sourceCountText) · \(viewModel.formattedSelectedSourcesSize)"),
             AddGameRow(id: "runtimeHeading", kind: .heading, title: "Runtime defaults"),
             toggle("fps60", "60 FPS", "Twice the frame rate; some games run too fast.",
                    $viewModel.pendingRuntimeConfig.enable60FPS),
@@ -185,13 +183,11 @@ extension AddGameView {
         if !viewModel.isProdKeysValid {
             rows.append(AddGameRow(id: "keys", kind: .action { viewModel.selectProdKeysFile() }, icon: .key,
                                    title: "Import prod.keys",
-                                   about: "Copied once to Application Support, readable only by you.",
-                                   tint: AddGameRow.amber))
+                                   about: "Copied once to Application Support, readable only by you."))
         }
         if let environment = viewModel.environmentStatus, environment.xcodeVersion == nil {
             rows.append(AddGameRow(id: "xcode", kind: .action { viewModel.reopenSetup() }, icon: .checklist,
-                                   title: "Open Setup", about: "Xcode is not ready; a porting needs it.",
-                                   tint: AddGameRow.slate))
+                                   title: "Open Setup", about: "Xcode is not ready; a porting needs it."))
         }
         if viewModel.isDiskSpaceLow {
             rows.append(AddGameRow(id: "disk", kind: .warning(action: nil), title: "Not enough disk space",
@@ -211,22 +207,14 @@ extension AddGameView {
     private var portingRows: [AddGameRow] {
         guard actionsStep == 3 else { return [] }
         return actions.filter { $0.id != "log" }.map { action in
-            let look = Self.portingLook[action.id] ?? (.chevron, AddGameRow.slate)
-            return AddGameRow(id: action.id, kind: .action(action.perform), icon: look.icon, title: action.title,
-                              tint: look.tint, enabled: action.isEnabled, destructive: action.id == "cancel")
+            AddGameRow(id: action.id, kind: .action(action.perform), icon: Self.portingIcons[action.id] ?? .chevron,
+                       title: action.title, enabled: action.isEnabled, destructive: action.id == "cancel")
         }
     }
 
-    private static let portingLook: [String: (icon: MaterialIcon, tint: String)] = [
-        "cancel": (.close, AddGameRow.slate),
-        "openLog": (.history, AddGameRow.slate),
-        "console": (.terminal, AddGameRow.teal),
-        "play": (.play, AddGameRow.green),
-        "library": (.collections, AddGameRow.sky),
-        "another": (.add, AddGameRow.green),
-        "reveal": (.folder, AddGameRow.sky),
-        "retry": (.restartAlt, AddGameRow.orange),
-        "options": (.tune, AddGameRow.lilac),
-        "review": (.chevronLeft, AddGameRow.slate),
+    private static let portingIcons: [String: MaterialIcon] = [
+        "cancel": .close, "openLog": .history, "console": .terminal, "play": .play,
+        "library": .collections, "another": .add, "reveal": .folder, "retry": .restartAlt,
+        "options": .tune, "review": .chevronLeft,
     ]
 }

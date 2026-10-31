@@ -21,8 +21,6 @@ struct AddGameRow: Identifiable {
     var icon: MaterialIcon? = nil
     var title: String
     var about: String? = nil
-    /// Icon colour on Selene (Game options' per-kind hues).
-    var tint: String? = nil
     var enabled = true
     var destructive = false
     /// Smaller type and padding: sources, switches, fields.
@@ -37,10 +35,6 @@ struct AddGameRow: Identifiable {
         default: return true
         }
     }
-
-    // Game options' hues: green go, sky place, orange build, lilac change, slate tools, amber keys, teal links.
-    static let green = "#7BD88F", sky = "#7CC4FA", orange = "#F5A35C", lilac = "#C3A4F5"
-    static let slate = "#A9B4C6", amber = "#F5C451", teal = "#6FD3C2", blue = "#8FB8F5"
 }
 
 /// Draws one `AddGameRow` in Game options' glass row look, a size smaller.
@@ -49,7 +43,6 @@ struct AddGameRowView: View {
 
     let row: AddGameRow
     let focused: Bool
-    let isSelene: Bool
     var editing: FocusState<String?>.Binding
 
     var body: some View {
@@ -117,8 +110,7 @@ struct AddGameRowView: View {
     private var iconColor: Color {
         if row.destructive { return PortingPillCopy.softRed }
         guard row.enabled else { return SeleneTheme.ink60 }
-        if isSelene, let hex = row.tint.flatMap({ UInt32($0.dropFirst(), radix: 16) }) { return Color(hex: hex) }
-        return SeleneTheme.glyph
+        return SeleneTheme.rowIcon
     }
 
     @ViewBuilder private var trailing: some View {
