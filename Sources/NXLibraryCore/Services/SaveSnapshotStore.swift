@@ -62,7 +62,12 @@ public final class SaveSnapshotStore {
               let snapshot = try? JSONDecoder().decode(SaveSnapshot.self, from: data),
               snapshot.schemaVersion == 1, snapshot.identity.titleID == titleID.uppercased(),
               snapshot.entries.allSatisfy({ ($0.path.isEmpty || SaveFiles.validRelative($0.path)) && $0.byteCount >= 0 && $0.byteCount < Int64.max / Int64(max(1, snapshot.entries.count)) }) else { throw SaveFailure.invalidSnapshot }
-        return snapshot
+        // Read older schema-1 backups portably too: provenance is assigned by macOS to a copy.
+        var portable = snapshot
+        for index in portable.entries.indices {
+            portable.entries[index].attributes = SaveFiles.portableAttributes(portable.entries[index].attributes)
+        }
+        return portable
     }
     internal func verifyContents(_ snapshot: SaveSnapshot, directory: URL) throws {
         var actual: [SaveInventoryEntry] = []

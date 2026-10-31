@@ -7,8 +7,18 @@ final class SavePresentationTests: XCTestCase {
         XCTAssertTrue(GameOptionsRow.openSaves.opensSubmenu)
         let p = GameOptionsPresentation(supportsRenderScale: false, isPlayable: true, sourcesDetached: false)
         let rows = p.focusableRows(level: .main, origin: .details)
-        XCTAssertEqual(Array(rows.prefix(3)), [.play, .editDetails, .cheats])
-        XCTAssertEqual(Array(rows.suffix(4)), [.rebuild, .showInFinder, .openSaves, .removeGame])
+        XCTAssertEqual(Array(rows.prefix(4)), [.play, .editDetails, .cheats, .openSaves])
+        XCTAssertEqual(Array(rows.suffix(3)), [.rebuild, .showInFinder, .removeGame])
+    }
+    func testCloudImportHasAnActionInsteadOfBeingDisabled() {
+        XCTAssertEqual(SavePresentation.importAction(available: true, busy: false, running: false,
+            recovery: false, cloud: true), .cloudSettings)
+        XCTAssertEqual(SavePresentation.importAction(available: true, busy: false, running: false,
+            recovery: false, cloud: false), .chooseFolder)
+        XCTAssertEqual(SavePresentation.importAction(available: true, busy: true, running: false,
+            recovery: false, cloud: true), .unavailable)
+        XCTAssertEqual(SavePresentation.importAction(available: true, busy: false, running: true,
+            recovery: false, cloud: false), .unavailable)
     }
     func testRestoreWarningNamesVersionsAndKeepsBackupPromise() {
         let identity = SaveIdentity(titleID: "0100000000000001", gameName: "Game", version: "1.0", buildID: nil)

@@ -3,6 +3,25 @@ import Darwin
 @testable import NXLibraryCore
 
 final class SaveSnapshotStoreTests: XCTestCase {
+    func testCopyIdentityIsExcludedButGuestNamesAndQuarantineRemainVerified() {
+        let metadata = ["com.apple.provenance": Data([1]),
+                        "org.d2rmobile.guest-name": Data("Save".utf8),
+                        "com.apple.quarantine": Data("quarantine".utf8)]
+        XCTAssertEqual(SaveFiles.portableAttributes(metadata), [
+            "org.d2rmobile.guest-name": Data("Save".utf8),
+            "com.apple.quarantine": Data("quarantine".utf8)])
+    }
+    func testOlderBackupCopyIdentityDoesNotPreventRestoreVerification() throws {
+        let h = try SaveTestHome(); defer { h.remove() }
+        let location = try h.location(); let store = SaveSnapshotStore(root: h.backups)
+        try h.write("save", location.directory(.account).appendingPathComponent("data"))
+        var snapshot = try store.create(location: location, identity: h.identity, reason: .manual)
+        for index in snapshot.entries.indices { snapshot.entries[index].attributes["com.apple.provenance"] = Data([1, 2, 3]) }
+        let directory = try store.directory(snapshotID: snapshot.id, titleID: h.tid)
+        try JSONEncoder().encode(snapshot).write(to: directory.appendingPathComponent("manifest.json"))
+        let verified = try store.verify(snapshotID: snapshot.id, titleID: h.tid)
+        XCTAssertTrue(verified.entries.allSatisfy { $0.attributes["com.apple.provenance"] == nil })
+    }
     func testRoundTripBothSlotsAndAttributes() throws {
         let h = try SaveTestHome(); defer { h.remove() }
         let location = try h.location()

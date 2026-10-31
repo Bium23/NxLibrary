@@ -1,10 +1,16 @@
 import Foundation
 
 public enum SavePresentation {
+    public enum ImportAction: Equatable { case chooseFolder, cloudSettings, unavailable }
+    /// Cloud prevents writes, but its row remains actionable so the player can resolve it.
+    public static func importAction(available: Bool, busy: Bool, running: Bool, recovery: Bool, cloud: Bool) -> ImportAction {
+        guard available, !busy, !running, !recovery else { return .unavailable }
+        return cloud ? .cloudSettings : .chooseFolder
+    }
     public static let closedNotice = "Keep the game closed, including launches from Finder, until the operation finishes."
     public static let cloudNotice = "Backups capture the local committed save, which may differ from a save not yet received from the cloud."
     public static let importWarning = "A save from a newer game version may not load. Cloud saves may replace this local save if you turn sync on later."
-    public static func slotName(_ slot: SaveSlot) -> String { slot == .account ? "Account / device-only" : "Separate device save" }
+    public static func slotName(_ slot: SaveSlot) -> String { slot == .account ? "User save" : "Device save" }
     public static func size(_ bytes: Int64) -> String { ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file) }
     public static func date(_ date: Date) -> String {
         let formatter = DateFormatter(); formatter.dateStyle = .medium; formatter.timeStyle = .short

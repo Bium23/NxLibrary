@@ -41,8 +41,8 @@ final class GameOptionsPresentationTests: XCTestCase {
     func testMainRowsFollowTheSpecOrder() {
         let rows = presentation().focusableRows(level: .main, origin: .spotlight)
         XCTAssertEqual(rows.first, .play)
-        XCTAssertEqual(Array(rows.prefix(6)), [.play, .editDetails, .cheats, .move, .favorite, .hidden])
-        XCTAssertEqual(Array(rows.suffix(4)), [.rebuild, .showInFinder, .openSaves, .removeGame])
+        XCTAssertEqual(Array(rows.prefix(7)), [.play, .editDetails, .cheats, .openSaves, .move, .favorite, .hidden])
+        XCTAssertEqual(Array(rows.suffix(3)), [.rebuild, .showInFinder, .removeGame])
         XCTAssertEqual(rows.last, .removeGame)
     }
 
@@ -53,6 +53,8 @@ final class GameOptionsPresentationTests: XCTestCase {
             let rows = p.focusableRows(level: .main, origin: origin)
             XCTAssertEqual(Array(rows.prefix(3)), [.play, .editDetails, .cheats], "\(origin)")
             XCTAssertEqual(rows.filter { $0 == .cheats }.count, 1)
+            XCTAssertEqual(rows.firstIndex(of: .cheats).map { rows[$0 + 1] }, .openSaves)
+            XCTAssertEqual(rows.filter { $0 == .openSaves }.count, 1)
             XCTAssertEqual(rows.firstIndex(of: .restoreDefaults).map { rows[$0 + 1] }, .rebuild)
         }
         XCTAssertEqual(p.cheatsValue, "None")

@@ -214,7 +214,7 @@ public struct GameOptionsPresentation: Equatable {
         case .restoreDefaults: return "Reset this game's runtime settings."
         case .rebuild: return rebuildAbout
         case .showInFinder: return "Reveal the app in Finder."
-        case .openSaves: return "Back up, import and restore this game's saves."
+        case .openSaves: return nil
         case .editDetails: return "Artwork, metadata, store page, sources and the build log."
         case .removeGame: return removal.message
         case .changeArtwork: return "Cover, background, icon and logo, from GameTDB, Title DB or a file."
@@ -250,7 +250,7 @@ public struct GameOptionsPresentation: Equatable {
     public func entries(level: GameOptionsLevel, origin: GameOptionsOrigin) -> [GameOptionsEntry] {
         switch level {
         case .main:
-            var entries: [GameOptionsEntry] = [.row(.play), .row(.editDetails), .row(.cheats)]
+            var entries: [GameOptionsEntry] = [.row(.play), .row(.editDetails), .row(.cheats), .row(.openSaves)]
             if origin == .spotlight { entries.append(.row(.move)) }
             entries += [.row(.favorite), .row(.hidden), .heading("Runtime")]
             entries += [.fullscreen, .fps60, .metalFX, .metalHUD, .consoleMode, .language, .rumble, .rumbleStrength]
@@ -260,7 +260,7 @@ public struct GameOptionsPresentation: Equatable {
             } else {
                 entries.append(.note(title: "Internal resolution", text: resolutionNote))
             }
-            entries += [.row(.restoreDefaults), .row(.rebuild), .row(.showInFinder), .row(.openSaves),
+            entries += [.row(.restoreDefaults), .row(.rebuild), .row(.showInFinder),
                         .gap, .row(.removeGame)]
             return entries
         case .editDetails:

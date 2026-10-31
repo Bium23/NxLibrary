@@ -31,6 +31,11 @@ extension SaveFiles {
         if let capacity = try? existing.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage,
            capacity < bytes { throw SaveFailure.io("There is not enough free space for this save operation.") }
     }
+    // macOS assigns provenance to copied files. It describes this host's copy,
+    // not save data. Guest-name mappings and security attributes still compare exactly.
+    static func portableAttributes(_ values: [String: Data]) -> [String: Data] {
+        values.filter { $0.key != "com.apple.provenance" }
+    }
     static func attributes(_ url: URL) throws -> [String: Data] {
         let size = listxattr(url.path, nil, 0, XATTR_NOFOLLOW)
         guard size >= 0 else { throw SaveFailure.io("Could not read save metadata.") }
@@ -47,7 +52,7 @@ extension SaveFiles {
             guard read == count else { throw SaveFailure.changed }
             result[name] = data
         }
-        return result
+        return portableAttributes(result)
     }
     static func inventory(_ directory: URL, slot: SaveSlot) throws -> [SaveInventoryEntry] {
         try safePath(directory)
