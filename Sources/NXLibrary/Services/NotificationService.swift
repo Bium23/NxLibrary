@@ -25,8 +25,9 @@ public final class NotificationService: NSObject, UNUserNotificationCenterDelega
         }
     }
 
-    public func sendPortingEnded(gameID: UUID, gameName: String, success: Bool, reason: PortingFailureReason?) {
-        let text = PortingNotice.text(game: gameName, success: success, reason: reason)
+    public func sendPortingEnded(gameID: UUID, gameName: String, success: Bool, reason: PortingFailureReason?,
+                                 held: Bool = false) {
+        let text = PortingNotice.text(game: gameName, success: success, reason: reason, held: held)
         let content = UNMutableNotificationContent()
         content.title = text.title
         content.body = text.body

@@ -23,6 +23,8 @@ public struct PortedGame: Identifiable, Codable, Equatable {
     public var portingFailure: PortingFailure?
     /// Why the last porting failed, when NX Library recognised it; cleared with `portingFailure`.
     public var portingFailureReason: PortingFailureReason?
+    /// A finished build waiting for the game to quit before it replaces the running app.
+    public var pendingInstall: PendingInstall?
 
     public init(id: UUID = UUID(), name: String, url: URL,
                 platform: TargetPlatform, sizeBytes: Int64,
@@ -68,6 +70,7 @@ public struct PortedGame: Identifiable, Codable, Equatable {
         isHidden = try c.decodeIfPresent(Bool.self, forKey: .isHidden) ?? false
         portingFailure = try c.decodeIfPresent(PortingFailure.self, forKey: .portingFailure)
         portingFailureReason = try c.decodeIfPresent(PortingFailureReason.self, forKey: .portingFailureReason)
+        pendingInstall = try c.decodeIfPresent(PendingInstall.self, forKey: .pendingInstall)
     }
 
     /// The bundle id the built app runs as: the stored one, else nxnative's default

@@ -39,6 +39,40 @@ final class BuildServiceTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: finalApp.appendingPathComponent("Contents/Info.plist").path))
     }
 
+    /// The game is open while its own build finishes: the new app waits beside the old one.
+    func testHeldBuildKeepsTempAppAndLeavesFinalApp() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("NXHold-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let script = root.appendingPathComponent("fake.sh")
+        let tempApp = root.appendingPathComponent("Temp/Game.app")
+        let finalApp = root.appendingPathComponent("Final.app")
+        try FileManager.default.createDirectory(at: finalApp.appendingPathComponent("Contents"),
+                                                withIntermediateDirectories: true)
+        try "old".write(to: finalApp.appendingPathComponent("Contents/Info.plist"), atomically: true, encoding: .utf8)
+        try """
+        #!/bin/sh
+        mkdir -p "$1/Contents"
+        printf 'new' > "$1/Contents/Info.plist"
+        exit 0
+        """.write(to: script, atomically: true, encoding: .utf8)
+        let command = BuildCommand(executable: URL(fileURLWithPath: "/bin/sh"),
+                                   arguments: [script.path, tempApp.path],
+                                   environment: [:], workingDirectory: root)
+        let service = BuildService()
+        let exp = expectation(description: "held")
+        var result: BuildResult?
+        service.start(command: command, logURL: root.appendingPathComponent("build.log"),
+                      tempApp: tempApp, finalApp: finalApp, holdInstall: { true },
+                      eventHandler: { _ in }, completion: { result = $0; exp.fulfill() })
+        wait(for: [exp], timeout: 10)
+        XCTAssertEqual(result?.success, true)
+        XCTAssertEqual(result?.heldApp, tempApp)
+        XCTAssertNil(result?.outputURL)
+        XCTAssertEqual(try String(contentsOf: finalApp.appendingPathComponent("Contents/Info.plist"), encoding: .utf8), "old")
+        XCTAssertEqual(try String(contentsOf: tempApp.appendingPathComponent("Contents/Info.plist"), encoding: .utf8), "new")
+    }
+
     func testCancelKillsChild() throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("NXCancel-\(UUID().uuidString)")

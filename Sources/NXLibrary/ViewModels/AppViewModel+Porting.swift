@@ -29,13 +29,13 @@ extension AppViewModel {
         startBuild(for: game, extraArguments: PortingFailureClassifier.arguments([], adding: flag))
     }
 
-    func notifyPortingEnded(_ game: PortedGame, success: Bool) {
+    func notifyPortingEnded(_ game: PortedGame, success: Bool, held: Bool = false) {
         let appActive = NSApp?.isActive ?? true
         guard PortingNotice.shouldNotify(success: success, cancelled: false,
                                          enabled: settingsStore?.settings.notifyPortingEnds ?? true,
                                          appActive: appActive) else { return }
         NotificationService.shared.sendPortingEnded(gameID: game.id, gameName: game.name, success: success,
-                                                    reason: game.portingFailureReason)
+                                                    reason: game.portingFailureReason, held: held)
     }
 
     /// Puts the Porting step back on the last failed porting, from what the game saved.

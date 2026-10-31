@@ -389,9 +389,13 @@ public struct AppShellView: View {
         SetupCheckModel.checkAtLaunch(viewModel: viewModel)
         runningGames.start(sessions: playSessions)
         runningGames.setGames(viewModel.libraryGames)
+        viewModel.installPendingBuilds()
         closeGameWatch = runningGames.$runningGameIDs.sink { [weak viewModel] ids in
+            guard let viewModel else { return }
+            // A game that quit lets the build that waited for it go in (after this change is published).
+            DispatchQueue.main.async { viewModel.installPendingBuilds() }
             // The game under Close Game quit by itself: its confirmation has nothing left to close.
-            guard let viewModel, let game = viewModel.gameToClose, !ids.contains(game.id) else { return }
+            guard let game = viewModel.gameToClose, !ids.contains(game.id) else { return }
             viewModel.dismissCloseGame()
         }
         viewModel.router = router

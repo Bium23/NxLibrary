@@ -22,6 +22,12 @@ final class PortingNoticeTests: XCTestCase {
         XCTAssertEqual(text.body, "Play it from your library.")
     }
 
+    func testHeldText() {
+        let text = PortingNotice.text(game: "A Game", success: true, reason: nil, held: true)
+        XCTAssertEqual(text.title, "A Game is ready")
+        XCTAssertEqual(text.body, "It installs when you quit the game.")
+    }
+
     func testFailureBodyIsReasonTitle() {
         let reason = PortingFailureReason(kind: .keysTooOld, detail: "19.0.0")
         let text = PortingNotice.text(game: "A Game", success: false, reason: reason)

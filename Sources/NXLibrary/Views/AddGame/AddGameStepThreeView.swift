@@ -34,6 +34,7 @@ struct AddGameStepThreeView: View {
         .onChange(of: viewModel.portingFailureReason) { _ in publishActions() }
         .onChange(of: didCopyDiagnostics) { _ in publishActions() }
         .onChange(of: viewModel.buildState) { _ in publishActions() }
+        .onChange(of: viewModel.buildHeldGameID) { _ in publishActions() }
     }
 
     @ViewBuilder
@@ -175,6 +176,11 @@ struct AddGameStepThreeView: View {
 
     // MARK: - Success
 
+    /// The game whose new app waits for it to quit, if this porting's did.
+    private var heldGameName: String? {
+        viewModel.buildHeldGameID.flatMap { id in viewModel.libraryGames.first { $0.id == id }?.name }
+    }
+
     private func successView(path: String) -> some View {
         SelenePanel {
             HStack(spacing: 14) {
@@ -182,7 +188,7 @@ struct AddGameStepThreeView: View {
                     .seleneFont(34)
                     .foregroundColor(SeleneTheme.success)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Ready to play")
+                    Text(heldGameName == nil ? "Ready to play" : PendingInstall.title)
                         .seleneFont(34, .semibold)
                         .foregroundColor(SeleneTheme.ink)
                     Text(path)
@@ -194,7 +200,8 @@ struct AddGameStepThreeView: View {
                 Spacer()
             }
 
-            Text("The app was installed atomically. Your library now points at the new build.")
+            Text(heldGameName.map(PendingInstall.message(gameName:))
+                 ?? "The app was installed atomically. Your library now points at the new build.")
                 .seleneFont(14)
                 .foregroundColor(SeleneTheme.ink90)
         }

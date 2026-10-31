@@ -268,6 +268,8 @@ public final class AppViewModel: ObservableObject {
     /// Why the porting on the Porting step failed, when recognised; nil otherwise.
     @Published public var portingFailureReason: PortingFailureReason? = nil
     @Published public var buildSuccessPath: String? = nil
+    /// The game whose finished build waits for it to quit (`PendingInstall`).
+    @Published var buildHeldGameID: UUID? = nil
     @Published public var buildWizardStep: Int = 1 // 1: Select Game, 2: Configure & Output, 3: Porting
     @Published public var iconAppearanceMode: AppIconAppearanceMode = .auto {
         didSet {
@@ -321,7 +323,7 @@ public final class AppViewModel: ObservableObject {
     public let pinnedEngineCommit = "ee369f09984f23adbe003f55e94be5d81cd8c0e6"
     private let core = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/NXLibrary")
-    private lazy var libraryStore = LibraryStore(directory: core)
+    lazy var libraryStore = LibraryStore(directory: core)
     lazy var keyStore = KeyStore(directory: core.appendingPathComponent("keys"))
     private let importService = ImportService()
     private let launchService = LaunchService()
@@ -386,8 +388,9 @@ public final class AppViewModel: ObservableObject {
         updateDockIcon()
         
         NotificationService.shared.requestAuthorization()
+        let held = PendingInstaller.keptFolders(libraryGames)
         DispatchQueue.global(qos: .utility).async { [weak self] in
-            self?.sweepStaleBuildTemp()
+            self?.sweepStaleBuildTemp(keeping: held)
         }
         NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification,
@@ -712,7 +715,8 @@ public final class AppViewModel: ObservableObject {
         showSetupCheck = true
     }
 
-    private func sweepStaleBuildTemp() {
+    /// `kept`: folders of builds that wait for their game to quit (standardized paths).
+    private func sweepStaleBuildTemp(keeping kept: Set<String>) {
         let temp = core.appendingPathComponent("Temp")
         guard let items = try? FileManager.default.contentsOfDirectory(
             at: temp, includingPropertiesForKeys: [.contentModificationDateKey]
@@ -722,7 +726,9 @@ public final class AppViewModel: ObservableObject {
             let date = (try? item.resourceValues(
                 forKeys: [.contentModificationDateKey]).contentModificationDate)
                 ?? Date.distantPast
-            if date < cutoff { try? FileManager.default.removeItem(at: item) }
+            if date < cutoff, !kept.contains(item.standardizedFileURL.path) {
+                try? FileManager.default.removeItem(at: item)
+            }
         }
     }
 
@@ -981,6 +987,8 @@ public final class AppViewModel: ObservableObject {
             RunningGameMonitor.activate(running)
             return
         }
+        // A build that waited for the game to quit goes in first.
+        let game = installingPendingBuild(of: game)
         guard game.isPlayableLocally else {
             let message = "This game is not built yet. Add sources and build it first."
             lastError = message
@@ -2004,6 +2012,7 @@ public final class AppViewModel: ObservableObject {
         portingFailureReason = nil
         lastError = nil
         buildSuccessPath = nil
+        buildHeldGameID = nil
         progressFraction = 0
         currentStageName = "Preparing build"
         currentStepName = ""
@@ -2031,6 +2040,8 @@ public final class AppViewModel: ObservableObject {
             logURL: logURL,
             tempApp: tempApp,
             finalApp: finalApp,
+            // Replacing the app under its running game can crash it: the new app waits for the game to quit.
+            holdInstall: { RunningGameMonitor.runningApplication(for: target) != nil },
             eventHandler: { [weak self] event in
                 DispatchQueue.main.async { self?.handleBuildEvent(event) }
             },
@@ -2157,7 +2168,7 @@ public final class AppViewModel: ObservableObject {
         isBuilding = false
         isCancellingBuild = false
         buildService = nil
-        try? FileManager.default.removeItem(at: tempDir)
+        if result.heldApp == nil { try? FileManager.default.removeItem(at: tempDir) }
         buildTempDirectory = nil
 
         var library = (try? libraryStore.load()) ?? LibraryFile(games: libraryGames)
@@ -2178,11 +2189,7 @@ public final class AppViewModel: ObservableObject {
             )
 
             if result.success {
-                game.status = .built
-                game.url = finalApp
-                game.modificationDate = Date()
-                game.versionString = Self.appVersion(at: finalApp) ?? game.versionString
-                game.toolchain = ToolchainInfo(
+                let toolchain = ToolchainInfo(
                     engineCommit: pinnedEngineCommit,
                     metalVersion: environmentStatus?.metalVersion,
                     xcodeVersion: environmentStatus?.xcodeVersion,
@@ -2190,22 +2197,29 @@ public final class AppViewModel: ObservableObject {
                     note: verified ? "Certified toolchain"
                                    : "Untested toolchain (explicit override)"
                 )
-                game.lastBuild = record
-                game.portingFailure = nil
-                game.portingFailureReason = nil
+                if let held = result.heldApp {
+                    PendingInstaller.hold(PendingInstall(tempApp: held, finalApp: finalApp,
+                                                         record: record, toolchain: toolchain), for: &game)
+                    buildHeldGameID = game.id
+                } else {
+                    PendingInstaller.discard(&game)
+                    game.recordInstalledBuild(record, toolchain: toolchain, at: finalApp,
+                                              version: Self.appVersion(at: finalApp), date: Date())
+                }
                 if let seconds = portingProgress?.finishingElapsed, seconds > 0 {
                     lastPortingFinishSeconds = seconds
                 }
                 progressFraction = 1
-                currentStageName = "Build completed"
+                currentStageName = result.heldApp == nil ? "Build completed" : PendingInstall.stageName
                 buildState = .succeeded
                 buildSuccessPath = finalApp.path
                 buildError = nil
                 lastError = nil
-                logs.append(LogEntry(level: .success,
-                                     message: "Build succeeded: \(finalApp.path)"))
+                logs.append(LogEntry(level: .success, message: result.heldApp == nil
+                    ? "Build succeeded: \(finalApp.path)"
+                    : "Build succeeded while \(game.name) is open: it installs when the game quits."))
                 SoundEffectService.shared.play(.launch)
-                notifyPortingEnded(game, success: true)
+                notifyPortingEnded(game, success: true, held: result.heldApp != nil)
             } else if result.cancelled {
                 game.status = buildPreviousStatus
                     ?? (game.sources.isEmpty ? .builtSourcesMissing : .notBuilt)

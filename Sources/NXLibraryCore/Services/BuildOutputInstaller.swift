@@ -12,6 +12,14 @@ public enum BuildInstallError: Error, LocalizedError {
 }
 
 public enum BuildOutputInstaller {
+    /// The app's CFBundleShortVersionString, if it has one.
+    public static func version(of app: URL) -> String? {
+        guard let data = try? Data(contentsOf: app.appendingPathComponent("Contents/Info.plist")),
+              let info = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
+        else { return nil }
+        return info["CFBundleShortVersionString"] as? String
+    }
+
     public static func install(tempApp: URL, finalApp: URL,
                                fileManager: FileManager = .default) throws {
         let plist = tempApp.appendingPathComponent("Contents/Info.plist")

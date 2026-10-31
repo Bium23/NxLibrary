@@ -8,15 +8,19 @@ public struct BuildResult: Equatable {
     public var cancelled: Bool
     public var logURL: URL
     public var outputURL: URL?
+    /// Set when the build succeeded while its game was running: the new app stays here, beside the running one,
+    /// until the game quits.
+    public var heldApp: URL?
     public var error: String?
 
     public init(success: Bool, exitCode: Int32, cancelled: Bool,
-                logURL: URL, outputURL: URL? = nil, error: String? = nil) {
+                logURL: URL, outputURL: URL? = nil, heldApp: URL? = nil, error: String? = nil) {
         self.success = success
         self.exitCode = exitCode
         self.cancelled = cancelled
         self.logURL = logURL
         self.outputURL = outputURL
+        self.heldApp = heldApp
         self.error = error
     }
 }
@@ -57,6 +61,7 @@ public final class BuildService {
         logURL: URL,
         tempApp: URL,
         finalApp: URL,
+        holdInstall: @escaping () -> Bool = { false },
         eventHandler: @escaping (BuildEvent) -> Void,
         completion: @escaping (BuildResult) -> Void
     ) {
@@ -107,7 +112,7 @@ public final class BuildService {
         }
         process.terminationHandler = { [weak self] proc in
             self?.finish(proc: proc, logURL: logURL,
-                         tempApp: tempApp, finalApp: finalApp)
+                         tempApp: tempApp, finalApp: finalApp, holdInstall: holdInstall)
         }
 
         do {
@@ -177,7 +182,9 @@ public final class BuildService {
         }
     }
 
-    private func finish(proc: Process, logURL: URL, tempApp: URL, finalApp: URL) {
+    /// `holdInstall` is asked once the build succeeds: true keeps the new app at `tempApp` (its game is running and
+    /// replacing the app under it can crash it).
+    private func finish(proc: Process, logURL: URL, tempApp: URL, finalApp: URL, holdInstall: @escaping () -> Bool) {
         ioQueue.async { [weak self] in
             guard let self else { return }
             self.drain(&self.stdoutBuffer, asError: false)
@@ -195,10 +202,18 @@ public final class BuildService {
             self.stateLock.unlock()
 
             var success = false
+            var held: URL?
             var error: String?
             if !wasCancelled && proc.terminationStatus == 0 {
                 do {
-                    try BuildOutputInstaller.install(tempApp: tempApp, finalApp: finalApp)
+                    if holdInstall() {
+                        guard self.fm.fileExists(atPath: tempApp.appendingPathComponent("Contents/Info.plist").path) else {
+                            throw BuildInstallError.invalidApp(tempApp.path)
+                        }
+                        held = tempApp
+                    } else {
+                        try BuildOutputInstaller.install(tempApp: tempApp, finalApp: finalApp)
+                    }
                     success = true
                 } catch let failure {
                     error = failure.localizedDescription
@@ -209,7 +224,7 @@ public final class BuildService {
             let result = BuildResult(
                 success: success, exitCode: proc.terminationStatus,
                 cancelled: wasCancelled, logURL: logURL,
-                outputURL: success ? finalApp : nil, error: error
+                outputURL: success && held == nil ? finalApp : nil, heldApp: held, error: error
             )
             done?(result)
         }

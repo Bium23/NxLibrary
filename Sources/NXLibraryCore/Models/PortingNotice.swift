@@ -7,8 +7,10 @@ public enum PortingNotice {
         enabled && !appActive && !cancelled
     }
 
-    public static func text(game: String, success: Bool, reason: PortingFailureReason?) -> (title: String, body: String) {
-        if success { return ("\(game) is ready", "Play it from your library.") }
+    /// `held`: the build finished while the game was open and installs when it quits.
+    public static func text(game: String, success: Bool, reason: PortingFailureReason?,
+                            held: Bool = false) -> (title: String, body: String) {
+        if success { return ("\(game) is ready", held ? "It installs when you quit the game." : "Play it from your library.") }
         return ("\(game) did not port", (reason ?? PortingFailureReason(kind: .unknown)).title)
     }
 }
