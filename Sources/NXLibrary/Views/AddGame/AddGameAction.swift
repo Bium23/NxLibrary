@@ -1,43 +1,6 @@
 import SwiftUI
 import NXLibraryCore
 
-// MARK: - Step bar
-
-/// Three small pills: the current step solid, the finished ones with a check.
-struct AddGameStepBar: View {
-    @Environment(\.seleneCanvas) private var canvas
-
-    let step: Int
-    private let titles = ["Choose", "Review", "Porting"]
-
-    var body: some View {
-        HStack(spacing: canvas.u(10)) {
-            ForEach(Array(titles.enumerated()), id: \.offset) { index, title in
-                let number = index + 1
-                let current = number == step
-                HStack(spacing: canvas.u(6)) {
-                    if number < step {
-                        MaterialIconView(.check, size: 15)
-                    }
-                    Text(title)
-                        .seleneFont(15, current ? .semibold : .regular)
-                }
-                .foregroundColor(current ? SeleneTheme.onFocus : (number < step ? SeleneTheme.ink : SeleneTheme.ink60))
-                .padding(.horizontal, canvas.u(16))
-                .frame(height: canvas.u(32))
-                .background(Capsule().fill(current ? SeleneTheme.focus : SeleneTheme.glassLight))
-                .overlay(Capsule().strokeBorder(current ? Color.clear : SeleneTheme.ink15,
-                                                lineWidth: max(1, canvas.u(1))))
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Step \(number), \(title)")
-                .accessibilityAddTraits(current ? .isSelected : [])
-            }
-            Spacer()
-        }
-        .animation(SeleneTheme.cubicOut(0.26), value: step)
-    }
-}
-
 // MARK: - Shared actions
 
 struct AddGameAction: Identifiable {

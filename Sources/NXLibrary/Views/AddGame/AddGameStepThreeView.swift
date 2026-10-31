@@ -11,7 +11,6 @@ struct AddGameStepThreeView: View {
 
     @Environment(\.seleneReduceMotion) private var reduceMotion
 
-    let focusedAction: Int
     let onActions: ([AddGameAction]) -> Void
 
     private struct StepAction {
@@ -24,10 +23,7 @@ struct AddGameStepThreeView: View {
     }
 
     var body: some View {
-        VStack(spacing: 18) {
-            content
-            actionRow
-        }
+        content
         .onAppear(perform: publishActions)
         .onChange(of: viewModel.isBuilding) { _ in publishActions() }
         .onChange(of: viewModel.isCancellingBuild) { _ in publishActions() }
@@ -280,21 +276,6 @@ struct AddGameStepThreeView: View {
 
     // MARK: - Actions
 
-    private var actionRow: some View {
-        HStack(spacing: 10) {
-            ForEach(actionSpecs.indices, id: \.self) { index in
-                let spec = actionSpecs[index]
-                SeleneActionButton(title: spec.title,
-                                   systemImage: spec.systemImage,
-                                   kind: spec.kind,
-                                   isEnabled: spec.isEnabled,
-                                   isFocused: focusedAction == index,
-                                   action: spec.perform)
-            }
-            Spacer()
-        }
-    }
-
     private var actionSpecs: [StepAction] {
         if viewModel.isBuilding {
             return [
@@ -312,7 +293,7 @@ struct AddGameStepThreeView: View {
                            isEnabled: !viewModel.isCancellingBuild) {
                     viewModel.cancelBuild()
                 },
-                StepAction(id: "openLog", title: "Open Log",
+                StepAction(id: "openLog", title: "Open log",
                            systemImage: "doc.text.magnifyingglass",
                            kind: .secondary, isEnabled: true) {
                     viewModel.openBuildLog()
@@ -331,18 +312,18 @@ struct AddGameStepThreeView: View {
                            isEnabled: FileManager.default.fileExists(atPath: path)) {
                     play(path: path)
                 },
-                StepAction(id: "library", title: "Show in Library",
+                StepAction(id: "library", title: "Show in library",
                            systemImage: "square.grid.2x2",
                            kind: .secondary, isEnabled: true) {
                     router.showLibrary()
                 },
-                StepAction(id: "another", title: "Build Another Game",
+                StepAction(id: "another", title: "Port another game",
                            systemImage: "plus", kind: .secondary, isEnabled: true) {
                     withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
                         viewModel.startNewAddGame()
                     }
                 },
-                StepAction(id: "openLog", title: "Open Log",
+                StepAction(id: "openLog", title: "Open log",
                            systemImage: "doc.text.magnifyingglass",
                            kind: .secondary, isEnabled: true) {
                     viewModel.openBuildLog()
@@ -356,19 +337,19 @@ struct AddGameStepThreeView: View {
 
         if viewModel.buildError != nil || viewModel.buildState == .cancelled {
             return [
-                StepAction(id: "retry", title: "Retry",
+                StepAction(id: "retry", title: "Try again",
                            systemImage: "arrow.clockwise", kind: .primary,
                            isEnabled: !viewModel.isBuilding) {
                     viewModel.retryLastBuild()
                 },
-                StepAction(id: "options", title: "Back to Options",
+                StepAction(id: "options", title: "Back to review",
                            systemImage: "slider.horizontal.3",
                            kind: .secondary, isEnabled: true) {
                     withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
                         viewModel.goToWizardStep(2)
                     }
                 },
-                StepAction(id: "openLog", title: "Open Log",
+                StepAction(id: "openLog", title: "Open log",
                            systemImage: "doc.text.magnifyingglass",
                            kind: .secondary, isEnabled: true) {
                     viewModel.openBuildLog()
@@ -381,7 +362,7 @@ struct AddGameStepThreeView: View {
         }
 
         return [
-            StepAction(id: "review", title: "Back to Review",
+            StepAction(id: "review", title: "Back to review",
                        systemImage: "arrow.left", kind: .secondary,
                        isEnabled: true) {
                 withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
