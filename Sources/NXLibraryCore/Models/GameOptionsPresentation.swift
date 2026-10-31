@@ -250,7 +250,7 @@ public struct GameOptionsPresentation: Equatable {
     public func entries(level: GameOptionsLevel, origin: GameOptionsOrigin) -> [GameOptionsEntry] {
         switch level {
         case .main:
-            var entries: [GameOptionsEntry] = [.row(.play), .row(.editDetails)]
+            var entries: [GameOptionsEntry] = [.row(.play), .row(.editDetails), .row(.cheats)]
             if origin == .spotlight { entries.append(.row(.move)) }
             entries += [.row(.favorite), .row(.hidden), .heading("Runtime")]
             entries += [.fullscreen, .fps60, .metalFX, .metalHUD, .consoleMode, .language, .rumble, .rumbleStrength]
@@ -260,7 +260,7 @@ public struct GameOptionsPresentation: Equatable {
             } else {
                 entries.append(.note(title: "Internal resolution", text: resolutionNote))
             }
-            entries += [.row(.restoreDefaults), .row(.cheats), .row(.rebuild), .row(.showInFinder), .row(.openSaves),
+            entries += [.row(.restoreDefaults), .row(.rebuild), .row(.showInFinder), .row(.openSaves),
                         .gap, .row(.removeGame)]
             return entries
         case .editDetails:

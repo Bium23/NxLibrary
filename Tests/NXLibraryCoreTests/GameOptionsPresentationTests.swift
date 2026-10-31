@@ -41,17 +41,20 @@ final class GameOptionsPresentationTests: XCTestCase {
     func testMainRowsFollowTheSpecOrder() {
         let rows = presentation().focusableRows(level: .main, origin: .spotlight)
         XCTAssertEqual(rows.first, .play)
-        XCTAssertEqual(Array(rows.prefix(5)), [.play, .editDetails, .move, .favorite, .hidden])
+        XCTAssertEqual(Array(rows.prefix(6)), [.play, .editDetails, .cheats, .move, .favorite, .hidden])
         XCTAssertEqual(Array(rows.suffix(4)), [.rebuild, .showInFinder, .openSaves, .removeGame])
         XCTAssertEqual(rows.last, .removeGame)
     }
 
-    func testCheatsRowSitsBeforeRebuild() {
+    /// Cheats is the third row, under Edit details, wherever the options open; Rebuild follows Restore defaults.
+    func testCheatsRowSitsUnderEditDetails() {
         let p = presentation()
-        let rows = p.focusableRows(level: .main, origin: .details)
-        let cheats = rows.firstIndex(of: .cheats)
-        XCTAssertNotNil(cheats)
-        XCTAssertEqual(cheats.map { rows[$0 + 1] }, .rebuild)
+        for origin in [GameOptionsOrigin.spotlight, .collection, .details] {
+            let rows = p.focusableRows(level: .main, origin: origin)
+            XCTAssertEqual(Array(rows.prefix(3)), [.play, .editDetails, .cheats], "\(origin)")
+            XCTAssertEqual(rows.filter { $0 == .cheats }.count, 1)
+            XCTAssertEqual(rows.firstIndex(of: .restoreDefaults).map { rows[$0 + 1] }, .rebuild)
+        }
         XCTAssertEqual(p.cheatsValue, "None")
         XCTAssertEqual(GameOptionsRow.cheats.title, "Cheats")
         XCTAssertEqual(GameOptionsRow.cheats.icon, .casino)
