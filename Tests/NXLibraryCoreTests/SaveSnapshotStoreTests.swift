@@ -97,6 +97,33 @@ final class SaveSnapshotStoreTests: XCTestCase {
         XCTAssertEqual(value.withUnsafeBytes { setxattr(copied.path, "org.d2rmobile.guest-name", $0.baseAddress, $0.count, 0, XATTR_NOFOLLOW) }, 0)
         XCTAssertThrowsError(try store.verify(snapshotID: snapshot.id, titleID: h.tid))
     }
+    func testFolderPickerRestoresBothSlotsFromADatedBackup() throws {
+        let h = try SaveTestHome(); defer { h.remove() }
+        let location = try h.location()
+        let store = SaveSnapshotStore(root: h.backups)
+        let account = location.directory(.account).appendingPathComponent("progress")
+        let device = location.directory(.device).appendingPathComponent("shared")
+        try h.write("first", account)
+        try h.write("island", device)
+        let snapshot = try store.create(location: location, identity: h.identity, reason: .manual)
+        let folder = try store.directory(snapshotID: snapshot.id, titleID: h.tid)
+        try h.write("second", account)
+        try h.write("other", device)
+
+        guard case .backup(let preview) = try store.previewFolder(folder, slot: .device, location: location) else {
+            return XCTFail("A dated backup must open the whole-backup confirmation.")
+        }
+        defer { try? store.discardRestore(preview, location: location) }
+        let safety = try SaveTransaction(store: store, isRunning: { false })
+            .restore(preview, location: location, identity: h.identity)
+        XCTAssertEqual(try String(contentsOf: account), "first")
+        XCTAssertEqual(try String(contentsOf: device), "island")
+        XCTAssertEqual(try store.list(titleID: h.tid).first?.created, safety.created)
+        XCTAssertEqual(safety.reason, .beforeRestore)
+        XCTAssertThrowsError(try store.previewFolder(folder, slot: .account, location: h.location(id: "0100000000000002")))
+        XCTAssertThrowsError(try store.previewFolder(folder.appendingPathComponent("save"), slot: .account, location: location))
+    }
+
     func testFailedCopyDoesNotPublishBackup() throws {
         let h = try SaveTestHome(); defer { h.remove() }
         let location = try h.location()

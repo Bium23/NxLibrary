@@ -5,10 +5,11 @@ import NXLibraryCore
 /// One panel's state; filesystem work runs on the library's serial save queue.
 final class SavePanelModel: ObservableObject {
     enum Activity {
-        case refresh, backup, importSave, restore
+        case refresh, backup, importSave, restore, openFolder
 
         var failureTitle: String {
             switch self {
+            case .openFolder: return "Folder unavailable"
             case .refresh: return "Refresh failed"
             case .backup: return "Backup failed"
             case .importSave: return "Import failed"
@@ -25,7 +26,7 @@ final class SavePanelModel: ObservableObject {
     @Published private(set) var issue: Issue?
     @Published private(set) var message: String?
     @Published private(set) var context: SaveContext?
-    @Published private(set) var snapshots: [SaveSnapshot] = []
+    @Published private(set) var latestBackupDate: Date?
     @Published private(set) var preview: SaveImportPreview?
     @Published private(set) var restorePreview: SaveRestorePreview?
     @Published private(set) var currentBytes: Int64 = 0
@@ -37,7 +38,6 @@ final class SavePanelModel: ObservableObject {
     private let store: SaveSnapshotStore
     private var lease: UUID?
     private var abandoned = false
-    var backupsURL: URL { viewModel.saveBackupRoot.appendingPathComponent((game.titleId ?? "").uppercased()) }
     var canMutate: Bool { !busy && !running && !recoveryRequired && context != nil && context?.cloudReason == nil }
     init(viewModel: AppViewModel, game: PortedGame) {
         self.viewModel = viewModel; self.game = game
@@ -77,7 +77,7 @@ final class SavePanelModel: ObservableObject {
         guard lease == nil, !busy, issue == nil else { return }
         guard acquire(recovering: true) else { return }
         viewModel.saveQueue.async {
-            var context: SaveContext?; var list: [SaveSnapshot] = []; var bytes: Int64 = 0; var date: Date?; var error: Error?
+            var context: SaveContext?; var latestBackup: Date?; var bytes: Int64 = 0; var date: Date?; var error: Error?
             let running = RunningGameMonitor.runningApplication(for: self.game) != nil
             do {
                 let location = try self.viewModel.defaultSaveLocation(for: self.game)
@@ -85,7 +85,7 @@ final class SavePanelModel: ObservableObject {
                     try self.transaction().recover(location: location)
                 }
                 context = try self.viewModel.saveContext(for: self.game)
-                list = try self.store.list(titleID: location.titleID)
+                latestBackup = try self.store.list(titleID: location.titleID).first?.created
                 if !running {
                     let inventory = try self.currentInventory(location)
                     bytes = inventory.reduce(0) { $0 + $1.byteCount }
@@ -95,7 +95,7 @@ final class SavePanelModel: ObservableObject {
             let recovery = (try? self.viewModel.defaultSaveLocation(for: self.game)).map { SaveTransaction.needsRecovery(location: $0) } ?? false
             self.viewModel.saveGate.setRecoveryBlocked(recovery, titleID: self.game.titleId ?? "")
             DispatchQueue.main.async {
-                self.context = context; self.snapshots = list; self.currentBytes = bytes; self.currentDate = date
+                self.context = context; self.latestBackupDate = latestBackup; self.currentBytes = bytes; self.currentDate = date
                 self.running = running; self.recoveryRequired = recovery
                 if let error { self.report(error, during: .refresh) } else { self.message = resultMessage }
                 self.release()
@@ -113,7 +113,7 @@ final class SavePanelModel: ObservableObject {
                 guard RunningGameMonitor.runningApplication(for: self.game) == nil else { throw SaveFailure.running }
                 let context = try self.viewModel.saveContext(for: self.game)
                 let snapshot = try self.store.create(location: context.location, identity: self.viewModel.saveIdentity(for: self.game), reason: .manual)
-                DispatchQueue.main.async { self.snapshots.insert(snapshot, at: 0); self.message = "Backup saved"; self.release() }
+                DispatchQueue.main.async { self.latestBackupDate = snapshot.created; self.message = "Backup saved"; self.release() }
             } catch { self.finishFailure(error) }
         }
     }
@@ -121,18 +121,25 @@ final class SavePanelModel: ObservableObject {
         guard canMutate, acquire(activity: .importSave) else { return }
         let panel = NSOpenPanel()
         panel.title = "Import a save for \(game.name)"
-        panel.message = "Choose a Ryujinx game folder or an exported save."
+        panel.message = "Choose a Ryujinx game folder, an exported save, or a dated backup."
         panel.prompt = "Preview"; panel.canChooseFiles = false; panel.canChooseDirectories = true; panel.allowsMultipleSelection = false
         guard panel.runModal() == .OK, let source = panel.url else { release(); return }
         viewModel.saveQueue.async {
             do {
                 guard RunningGameMonitor.runningApplication(for: self.game) == nil else { throw SaveFailure.running }
                 let context = try self.viewModel.saveContext(for: self.game); try context.requireWrites()
-                let preview = try self.store.stageImport(source: source, slot: slot, location: context.location)
+                let selection = try self.store.previewFolder(source, slot: slot, location: context.location)
                 DispatchQueue.main.async {
                     self.context = context
-                    if self.abandoned { self.preview = preview; self.busy = false; self.cancelPreview() }
-                    else { self.preview = preview; self.busy = false } // retain lease through confirmation
+                    switch selection {
+                    case .imported(let preview):
+                        self.preview = preview
+                    case .backup(let preview):
+                        self.activity = .restore
+                        self.restorePreview = preview
+                    }
+                    self.busy = false // retain the lease through confirmation
+                    if self.abandoned { self.cancelPreview() }
                 }
             } catch { self.finishFailure(error) }
         }
@@ -155,27 +162,13 @@ final class SavePanelModel: ObservableObject {
                 let backup = try self.transaction().importSave(preview, location: context.location, identity: self.viewModel.saveIdentity(for: self.game))
                 try? self.store.discard(preview, location: context.location)
                 DispatchQueue.main.async {
-                    self.preview = nil; self.snapshots.insert(backup, at: 0); self.message = "Save imported"
+                    self.preview = nil; self.latestBackupDate = backup.created; self.message = "Save imported"
                     self.release(); self.refreshAfterSuccess()
                 }
             } catch {
                 try? self.store.discard(preview, location: context.location)
                 self.finishFailure(error, clearPreview: true)
             }
-        }
-    }
-    func prepareRestore(_ snapshot: SaveSnapshot) {
-        guard canMutate, acquire(activity: .restore) else { return }
-        viewModel.saveQueue.async {
-            do {
-                guard RunningGameMonitor.runningApplication(for: self.game) == nil else { throw SaveFailure.running }
-                let context = try self.viewModel.saveContext(for: self.game); try context.requireWrites()
-                let preview = try self.store.stageRestore(snapshot, location: context.location)
-                DispatchQueue.main.async {
-                    self.context = context; self.restorePreview = preview; self.busy = false
-                    if self.abandoned { self.cancelPreview() }
-                }
-            } catch { self.finishFailure(error) }
         }
     }
     func confirmRestore() {
@@ -186,7 +179,7 @@ final class SavePanelModel: ObservableObject {
                 let backup = try self.transaction().restore(preview, location: context.location, identity: self.viewModel.saveIdentity(for: self.game))
                 try? self.store.discardRestore(preview, location: context.location)
                 DispatchQueue.main.async {
-                    self.restorePreview = nil; self.snapshots.insert(backup, at: 0); self.message = "Save restored"
+                    self.restorePreview = nil; self.latestBackupDate = backup.created; self.message = "Save restored"
                     self.release(); self.refreshAfterSuccess()
                 }
             } catch {
@@ -215,10 +208,18 @@ final class SavePanelModel: ObservableObject {
         let url = context.location.directory(.account)
         NSWorkspace.shared.activateFileViewerSelecting([FileManager.default.fileExists(atPath: url.path) ? url : context.location.root])
     }
-    func showBackups(_ snapshot: SaveSnapshot? = nil) {
+    func showBackups() {
         viewModel.saveQueue.async {
-            let url = snapshot.flatMap { try? self.store.directory(snapshotID: $0.id, titleID: self.game.titleId ?? "") } ?? self.backupsURL
-            DispatchQueue.main.async { NSWorkspace.shared.activateFileViewerSelecting([url]) }
+            do {
+                let folder = try self.store.backupFolder(titleID: self.game.titleId ?? "")
+                DispatchQueue.main.async {
+                    if !NSWorkspace.shared.open(folder) {
+                        self.report(SaveFailure.io("Finder could not open the backup folder."), during: .openFolder)
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async { self.report(error, during: .openFolder) }
+            }
         }
     }
     func close() {

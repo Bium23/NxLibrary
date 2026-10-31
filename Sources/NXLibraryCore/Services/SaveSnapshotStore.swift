@@ -10,6 +10,38 @@ public final class SaveSnapshotStore {
         let url = root.appendingPathComponent(titleID.uppercased())
         try SaveFiles.safePath(url); return url
     }
+    public func backupFolder(titleID: String) throws -> URL {
+        let folder = try titleRoot(titleID)
+        try SaveFiles.makeDirectory(folder)
+        return folder
+    }
+
+    public enum FolderPreview {
+        case imported(SaveImportPreview)
+        case backup(SaveRestorePreview)
+    }
+
+    /// The same picker accepts an external game save or a whole backup from Finder.
+    /// Only an existing snapshot of the selected title can enter the restore path.
+    public func previewFolder(_ selection: URL, slot: SaveSlot, location: SaveLocation) throws -> FolderPreview {
+        try SaveFiles.safePath(selection)
+        let folder = selection.standardizedFileURL
+        let backups = root.standardizedFileURL.path
+        guard folder.path == backups || folder.path.hasPrefix(backups + "/") else {
+            return .imported(try stageImport(source: folder, slot: slot, location: location))
+        }
+
+        let titleFolder = try titleRoot(location.titleID).standardizedFileURL
+        guard folder.deletingLastPathComponent().path == titleFolder.path,
+              !folder.lastPathComponent.hasPrefix(".") else {
+            throw SaveFailure.io("Choose a dated backup folder for this game.")
+        }
+        let snapshot = try readManifest(folder, titleID: location.titleID)
+        let registered = try directory(snapshotID: snapshot.id, titleID: location.titleID)
+        guard registered.standardizedFileURL.path == folder.path else { throw SaveFailure.invalidSnapshot }
+        return .backup(try stageRestore(snapshot, location: location))
+    }
+
     public func create(location: SaveLocation, identity: SaveIdentity, reason: SaveSnapshotReason) throws -> SaveSnapshot {
         guard identity.titleID == location.titleID else { throw SaveFailure.invalidSnapshot }
         let before = try SaveFiles.inventory(location)

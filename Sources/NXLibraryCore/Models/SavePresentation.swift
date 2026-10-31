@@ -21,8 +21,10 @@ public enum SavePresentation {
         let current = installedVersion ?? "unknown"
         return "Restore the backup from \(date(snapshot.created))? The current save will be backed up first.\n\nBackup game version: \(saved) · Installed: \(current). Different versions may be incompatible.\n\nCloud saves may replace the restored local save if sync is enabled later."
     }
-    public static func importMessage(_ preview: SaveImportPreview, destination: URL, version: String?) -> String {
-        "\(preview.fileCount) files · \(size(preview.byteCount))\n\nFrom: \(preview.source.path)\nTo: \(destination.path)\nInstalled version: \(version ?? "unknown")\n\nThe current save will be backed up first, then replaced without merging.\n\n\(importWarning)"
+    public static func importSummary(_ preview: SaveImportPreview, version: String?) -> String {
+        let files = preview.fileCount == 1 ? "1 file" : "\(preview.fileCount) files"
+        return [files, size(preview.byteCount), version.map { "Game v" + $0 }]
+            .compactMap { $0 }.joined(separator: " · ")
     }
     public static func reason(_ reason: SaveSnapshotReason) -> String {
         switch reason { case .manual: return "Manual backup"; case .beforeImport: return "Before import"; case .beforeRestore: return "Before restore" }

@@ -11,18 +11,17 @@ enum SeleneConfirmButton: Equatable {
 /// two pills). Cancel is the focused pill by default, so a stray A keeps the item.
 /// The caller owns input: it moves `focus` with Left/Right or hover, and acts on
 /// the two closures. Reused by Game options now and by later confirmations.
-struct SeleneConfirmDialog: View {
+struct SeleneConfirmDialog<Detail: View>: View {
     @Environment(\.seleneCanvas) private var canvas
 
     let title: String
     let message: String
     let confirmTitle: String
     var cancelTitle = "Cancel"
-    /// Longer text under the message (release notes), left-aligned in a scroll area.
-    var detail: String? = nil
     @Binding var focus: SeleneConfirmButton
     let onCancel: () -> Void
     let onConfirm: () -> Void
+    @ViewBuilder var detailContent: () -> Detail
 
     var body: some View {
         VStack(spacing: 0) {
@@ -37,22 +36,7 @@ struct SeleneConfirmDialog: View {
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, canvas.u(14))
-            if let detail, !detail.isEmpty {
-                ScrollView {
-                    Text(detail)
-                        .seleneFont(15)
-                        .foregroundColor(SeleneTheme.ink75)
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(canvas.u(16))
-                }
-                .frame(maxHeight: canvas.u(260))
-                .background(
-                    RoundedRectangle(cornerRadius: canvas.u(14), style: .continuous)
-                        .fill(SeleneTheme.glassLight)
-                )
-                .padding(.top, canvas.u(20))
-            }
+            detailContent()
             HStack(spacing: canvas.u(22)) {
                 SelenePillButton(title: cancelTitle, focused: focus == .cancel, action: onCancel)
                     .onHover { if $0 { focus = .cancel } }
@@ -64,6 +48,42 @@ struct SeleneConfirmDialog: View {
             .padding(.top, canvas.u(34))
         }
         .modifier(SeleneDialogCard())
+    }
+}
+
+extension SeleneConfirmDialog where Detail == SeleneDialogNotes {
+    init(title: String, message: String, confirmTitle: String, cancelTitle: String = "Cancel",
+         detail: String? = nil, focus: Binding<SeleneConfirmButton>,
+         onCancel: @escaping () -> Void, onConfirm: @escaping () -> Void) {
+        self.init(title: title, message: message, confirmTitle: confirmTitle, cancelTitle: cancelTitle,
+                  focus: focus, onCancel: onCancel, onConfirm: onConfirm) {
+            SeleneDialogNotes(detail: detail)
+        }
+    }
+}
+
+/// Plain release notes keep their own scrolling text layout.
+struct SeleneDialogNotes: View {
+    @Environment(\.seleneCanvas) private var canvas
+    let detail: String?
+
+    var body: some View {
+        if let detail, !detail.isEmpty {
+            ScrollView {
+                Text(detail)
+                    .seleneFont(15)
+                    .foregroundColor(SeleneTheme.ink75)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(canvas.u(16))
+            }
+            .frame(maxHeight: canvas.u(260))
+            .background(
+                RoundedRectangle(cornerRadius: canvas.u(14), style: .continuous)
+                    .fill(SeleneTheme.glassLight)
+            )
+            .padding(.top, canvas.u(20))
+        }
     }
 }
 
