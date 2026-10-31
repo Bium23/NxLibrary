@@ -47,17 +47,14 @@ public struct SaveLocation: Equatable {
     }
     public static func inspect(titleID: String, appURL: URL, home: URL, environment: [String: String],
                                gameCloudFolder: String?, libraryCloudFolder: String?) throws -> SaveContext {
-        guard validID(titleID) else { throw SaveFailure.invalidTitleID }
-        let location = SaveLocation(titleID: titleID.uppercased(), root: home.resolvingSymlinksInPath()
-            .appendingPathComponent("Library/Application Support/nxnative/\(titleID.uppercased())"))
-        try location.validate()
+        let location = try defaultLocation(titleID: titleID, home: home)
         var env = environment
         var origins = Dictionary(uniqueKeysWithValues: environment.keys.map { ($0, "the launch environment") })
         for (url, origin) in [(location.root.appendingPathComponent("env.txt"), "the game's env.txt"),
                               (appURL.appendingPathComponent("Contents/Resources/dm/env.txt"), "the app's env.txt")] {
             guard SaveFiles.exists(url) else { continue }
             try SaveFiles.safePath(url)
-            guard let text = try? String(contentsOf: url, encoding: .utf8) else { throw SaveFailure.unreadableConfiguration }
+            guard let data = try? SaveFiles.readRegular(url, limit: 1024 * 1024), let text = String(data: data, encoding: .utf8) else { throw SaveFailure.unreadableConfiguration }
             guard !text.contains("\0"), text.components(separatedBy: "\n").allSatisfy({ $0.utf8.count < 4095 }) else { throw SaveFailure.unreadableConfiguration }
             for (key, value) in text.components(separatedBy: "\n").flatMap({ CheatLocator.envLines($0) }) where env[key] == nil {
                 env[key] = value; origins[key] = origin
@@ -75,6 +72,13 @@ public struct SaveLocation: Equatable {
             reason = "the game's Cloud saves settings"
         }
         return SaveContext(location: location, cloudReason: reason)
+    }
+    public static func defaultLocation(titleID: String, home: URL) throws -> SaveLocation {
+        guard validID(titleID) else { throw SaveFailure.invalidTitleID }
+        let value = SaveLocation(titleID: titleID.uppercased(), root: home.resolvingSymlinksInPath()
+            .appendingPathComponent("Library/Application Support/nxnative/\(titleID.uppercased())"))
+        try value.validate()
+        return value
     }
     public func validate() throws {
         guard Self.validID(titleID), root.lastPathComponent == titleID else { throw SaveFailure.unsafePath }
@@ -100,7 +104,7 @@ internal enum SaveFiles {
             current.appendPathComponent(component)
             var s = stat()
             if lstat(current.path, &s) == 0 {
-                guard (s.st_mode & S_IFMT) != S_IFLNK else { throw SaveFailure.unsafePath }
+                guard (s.st_mode & S_IFMT) == S_IFDIR || (s.st_mode & S_IFMT) == S_IFREG else { throw SaveFailure.unsafePath }
                 if current.path != standardized.path && (s.st_mode & S_IFMT) != S_IFDIR { throw SaveFailure.unsafePath }
             } else if errno != ENOENT { throw SaveFailure.io("Could not inspect the save location.") }
         }

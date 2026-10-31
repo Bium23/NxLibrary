@@ -41,13 +41,18 @@ public final class SaveTransaction {
     @discardableResult
     public func restore(_ snapshot: SaveSnapshot, location: SaveLocation, identity: SaveIdentity) throws -> SaveSnapshot {
         try check(location)
-        guard snapshot.identity.titleID == location.titleID, identity.titleID == location.titleID else { throw SaveFailure.invalidSnapshot }
-        let verified = try store.verify(snapshotID: snapshot.id, titleID: location.titleID)
-        guard verified == snapshot else { throw SaveFailure.invalidSnapshot }
-        let directory = try store.directory(snapshotID: snapshot.id, titleID: location.titleID)
+        let preview = try store.stageRestore(snapshot, location: location)
+        defer { try? store.discardRestore(preview, location: location) }
+        return try restore(preview, location: location, identity: identity)
+    }
+    @discardableResult
+    public func restore(_ preview: SaveRestorePreview, location: SaveLocation, identity: SaveIdentity) throws -> SaveSnapshot {
+        try check(location)
+        guard identity.titleID == location.titleID else { throw SaveFailure.invalidSnapshot }
+        try store.validateRestore(preview, location: location)
         return try replace(location: location, identity: identity, reason: .beforeRestore,
-            desired: { directory.appendingPathComponent($0 == .account ? "save" : "save_device") },
-            revalidate: { _ = try self.store.verify(snapshotID: snapshot.id, titleID: location.titleID) })
+            desired: { preview.staging.appendingPathComponent($0 == .account ? "save" : "save_device") },
+            revalidate: { try self.store.validateRestore(preview, location: location) })
     }
     private func replace(location: SaveLocation, identity: SaveIdentity, reason: SaveSnapshotReason,
                          desired: (SaveSlot) -> URL, revalidate: () throws -> Void) throws -> SaveSnapshot {
@@ -113,7 +118,7 @@ public final class SaveTransaction {
         try location.validate()
         let file = journalURL(location)
         try SaveFiles.safePath(file)
-        guard let data = try? Data(contentsOf: file), data.count <= 32 * 1024 * 1024,
+        guard let data = try? SaveFiles.readRegular(file, limit: 32 * 1024 * 1024),
               let journal = try? JSONDecoder().decode(Journal.self, from: data), journal.version == 1,
               journal.titleID == location.titleID,
               journal.after.allSatisfy({ $0.path.isEmpty || SaveFiles.validRelative($0.path) }) else { throw SaveFailure.recoveryRequired }

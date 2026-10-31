@@ -13,6 +13,7 @@ public final class SaveSnapshotStore {
     public func create(location: SaveLocation, identity: SaveIdentity, reason: SaveSnapshotReason) throws -> SaveSnapshot {
         guard identity.titleID == location.titleID else { throw SaveFailure.invalidSnapshot }
         let before = try SaveFiles.inventory(location)
+        try SaveFiles.checkSpace(at: root, bytes: before.reduce(0) { $0 + $1.byteCount })
         let id = UUID(); let created = Date()
         let parent = try titleRoot(location.titleID)
         try SaveFiles.makeDirectory(parent)
@@ -57,10 +58,10 @@ public final class SaveSnapshotStore {
     private func readManifest(_ directory: URL, titleID: String) throws -> SaveSnapshot {
         let file = directory.appendingPathComponent("manifest.json")
         try SaveFiles.safePath(file)
-        guard let data = try? Data(contentsOf: file), data.count <= 32 * 1024 * 1024,
+        guard let data = try? SaveFiles.readRegular(file, limit: 32 * 1024 * 1024),
               let snapshot = try? JSONDecoder().decode(SaveSnapshot.self, from: data),
               snapshot.schemaVersion == 1, snapshot.identity.titleID == titleID.uppercased(),
-              snapshot.entries.allSatisfy({ $0.path.isEmpty || SaveFiles.validRelative($0.path) }) else { throw SaveFailure.invalidSnapshot }
+              snapshot.entries.allSatisfy({ ($0.path.isEmpty || SaveFiles.validRelative($0.path)) && $0.byteCount >= 0 && $0.byteCount < Int64.max / Int64(max(1, snapshot.entries.count)) }) else { throw SaveFailure.invalidSnapshot }
         return snapshot
     }
     internal func verifyContents(_ snapshot: SaveSnapshot, directory: URL) throws {
@@ -70,14 +71,17 @@ public final class SaveSnapshotStore {
         }
         guard actual == snapshot.entries, Set(actual.map(\.slot)) == snapshot.presentSlots else { throw SaveFailure.invalidSnapshot }
     }
+    public func currentInventory(location: SaveLocation) throws -> [SaveInventoryEntry] { try SaveFiles.inventory(location) }
     public func stageImport(source: URL, slot: SaveSlot, location: SaveLocation) throws -> SaveImportPreview {
         try location.validate()
+        try SaveFiles.safePath(source)
         let source = source.standardizedFileURL
         let managed = [location.root, root]
         guard !managed.contains(where: { source.path == $0.path || source.path.hasPrefix($0.path + "/") || $0.path.hasPrefix(source.path + "/") }) else { throw SaveFailure.unsafePath }
         let entries = try SaveFiles.inventory(source, slot: slot)
         guard entries.contains(where: { !$0.isDirectory }) else { throw SaveFailure.emptyImport }
         let current = try SaveFiles.inventory(location)
+        try SaveFiles.checkSpace(at: location.root, bytes: entries.reduce(0) { $0 + $1.byteCount })
         try SaveFiles.makeDirectory(location.root)
         let id = UUID(); let staging = location.root.appendingPathComponent(".nxlibrary-save-preview-\(id)")
         do {

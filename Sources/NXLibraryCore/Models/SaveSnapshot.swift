@@ -38,3 +38,10 @@ public struct SaveImportPreview: Equatable {
     public var fileCount: Int { entries.filter { !$0.isDirectory }.count }
     public var byteCount: Int64 { entries.reduce(0) { $0 + $1.byteCount } }
 }
+
+public struct SaveRestorePreview: Equatable {
+    public let id: UUID
+    public let snapshot: SaveSnapshot
+    public let staging: URL
+    public let currentEntries: [SaveInventoryEntry]
+}

@@ -54,6 +54,34 @@ final class SaveTransactionTests: XCTestCase {
             XCTAssertEqual(try String(contentsOf: location.directory(.device).appendingPathComponent("data")), prefix + "-device")
         }
     }
+    func testRestorePreviewRejectsChangedCurrentSave() throws {
+        let h = try SaveTestHome(); defer { h.remove() }
+        let location = try h.location(); let store = SaveSnapshotStore(root: h.backups)
+        try h.write("target", location.directory(.account).appendingPathComponent("data"))
+        let snapshot = try store.create(location: location, identity: h.identity, reason: .manual)
+        try h.write("current", location.directory(.account).appendingPathComponent("data"))
+        let preview = try store.stageRestore(snapshot, location: location)
+        try h.write("changed while confirming", location.directory(.account).appendingPathComponent("data"))
+        XCTAssertThrowsError(try SaveTransaction(store: store, isRunning: { false }).restore(preview, location: location, identity: h.identity))
+        XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("data")), "changed while confirming")
+        try store.discardRestore(preview, location: location)
+    }
+    func testRecoveryKeepsUnexpectedExternalChangesAndItsJournal() throws {
+        let h = try SaveTestHome(); defer { h.remove() }
+        let location = try h.location(); let store = SaveSnapshotStore(root: h.backups)
+        let file = location.directory(.account).appendingPathComponent("data")
+        try h.write("target", file)
+        let target = try store.create(location: location, identity: h.identity, reason: .manual)
+        try h.write("original", file)
+        var io = SaveFileIO()
+        io.afterMutation = { if $0 == "account" { throw SaveFailure.io("Interrupted") } }
+        XCTAssertThrowsError(try SaveTransaction(store: store, isRunning: { false }, io: io).restore(target, location: location, identity: h.identity))
+        try h.write("external change", file)
+        XCTAssertThrowsError(try SaveTransaction(store: store, isRunning: { false }).recover(location: location))
+        XCTAssertEqual(try String(contentsOf: file), "external change")
+        XCTAssertTrue(SaveTransaction.needsRecovery(location: location))
+        XCTAssertEqual(try store.list(titleID: h.tid).count, 2)
+    }
     func testRunningStaleAndWrongTitleRefused() throws {
         let h = try SaveTestHome(); defer { h.remove() }
         let location = try h.location(); let store = SaveSnapshotStore(root: h.backups)

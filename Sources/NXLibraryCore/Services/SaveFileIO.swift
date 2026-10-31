@@ -13,6 +13,24 @@ internal struct SaveFileIO {
 }
 
 extension SaveFiles {
+    static func readRegular(_ url: URL, limit: Int) throws -> Data {
+        try safePath(url)
+        let fd = open(url.path, O_RDONLY | O_NOFOLLOW | O_NONBLOCK)
+        guard fd >= 0 else { throw SaveFailure.io("Could not read save metadata.") }
+        let handle = FileHandle(fileDescriptor: fd, closeOnDealloc: true)
+        var st = stat()
+        guard fstat(fd, &st) == 0, (st.st_mode & S_IFMT) == S_IFREG, st.st_size <= limit else { throw SaveFailure.invalidSnapshot }
+        let data = try handle.read(upToCount: limit + 1) ?? Data()
+        guard data.count <= limit else { throw SaveFailure.invalidSnapshot }
+        return data
+    }
+    static func checkSpace(at directory: URL, bytes: Int64) throws {
+        guard bytes >= 0 else { throw SaveFailure.invalidSnapshot }
+        var existing = directory
+        while !exists(existing), existing.path != "/" { existing.deleteLastPathComponent() }
+        if let capacity = try? existing.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage,
+           capacity < bytes { throw SaveFailure.io("There is not enough free space for this save operation.") }
+    }
     static func attributes(_ url: URL) throws -> [String: Data] {
         let size = listxattr(url.path, nil, 0, XATTR_NOFOLLOW)
         guard size >= 0 else { throw SaveFailure.io("Could not read save metadata.") }

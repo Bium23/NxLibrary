@@ -1,4 +1,5 @@
 import XCTest
+import Darwin
 @testable import NXLibraryCore
 
 final class SaveLocationTests: XCTestCase {
@@ -37,6 +38,13 @@ final class SaveLocationTests: XCTestCase {
         try FileManager.default.createSymbolicLink(at: h.support.appendingPathComponent("save"), withDestinationURL: elsewhere)
         XCTAssertThrowsError(try h.location())
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: elsewhere.path), [])
+    }
+    func testSpecialConfigFileIsRefusedBeforeReading() throws {
+        let h = try SaveTestHome(); defer { h.remove() }
+        try FileManager.default.createDirectory(at: h.support, withIntermediateDirectories: true)
+        let pipe = h.support.appendingPathComponent("env.txt")
+        XCTAssertEqual(mkfifo(pipe.path, 0o600), 0)
+        XCTAssertThrowsError(try SaveFiles.safePath(pipe))
     }
     func testLibraryCloudAndUnreadableConfiguration() throws {
         let h = try SaveTestHome(); defer { h.remove() }

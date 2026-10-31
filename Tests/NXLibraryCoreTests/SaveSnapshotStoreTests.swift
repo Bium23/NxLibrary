@@ -57,6 +57,27 @@ final class SaveSnapshotStoreTests: XCTestCase {
         XCTAssertThrowsError(try store.stageImport(source: source, slot: .account, location: location))
         XCTAssertThrowsError(try store.stageImport(source: location.root, slot: .account, location: location))
     }
+    func testUnknownManifestAndChangedMetadataAreRefused() throws {
+        let h = try SaveTestHome(); defer { h.remove() }
+        let location = try h.location(); let store = SaveSnapshotStore(root: h.backups)
+        let file = location.directory(.account).appendingPathComponent("日本語/large.bin")
+        try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(repeating: 42, count: 2 * 1024 * 1024).write(to: file)
+        let snapshot = try store.create(location: location, identity: h.identity, reason: .manual)
+        XCTAssertEqual(snapshot.byteCount, 2 * 1024 * 1024)
+        let directory = try store.directory(snapshotID: snapshot.id, titleID: h.tid)
+        let manifest = directory.appendingPathComponent("manifest.json")
+        let original = try Data(contentsOf: manifest)
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: original) as? [String: Any])
+        json["schemaVersion"] = 99
+        try JSONSerialization.data(withJSONObject: json).write(to: manifest)
+        XCTAssertThrowsError(try store.verify(snapshotID: snapshot.id, titleID: h.tid))
+        try original.write(to: manifest)
+        let copied = directory.appendingPathComponent("save/日本語/large.bin")
+        let value = Data("changed".utf8)
+        XCTAssertEqual(value.withUnsafeBytes { setxattr(copied.path, "org.d2rmobile.guest-name", $0.baseAddress, $0.count, 0, XATTR_NOFOLLOW) }, 0)
+        XCTAssertThrowsError(try store.verify(snapshotID: snapshot.id, titleID: h.tid))
+    }
     func testFailedCopyDoesNotPublishBackup() throws {
         let h = try SaveTestHome(); defer { h.remove() }
         let location = try h.location()
