@@ -33,7 +33,7 @@ enum ConsoleControl: Hashable {
 }
 
 /// The app's build and launch output, drawn like Add game over the screen it was
-/// opened from (blurred by the shell): a centred column with a small title, one
+/// opened from (blurred by the shell) and fading in like Game options: a centred column with a small title, one
 /// row of quiet controls and the log in a glass panel.
 ///
 /// Input: Left/Right move along the controls, A runs one, Up/Down scroll the
@@ -62,7 +62,6 @@ public struct ConsoleView: View {
     @State private var scrollTarget: UUID?
     @State private var scrollTick = 0
     @State private var keyMonitor: Any?
-    @State private var shown = false
 
     public init(viewModel: AppViewModel, router: AppRouter, showsHints: Bool = true) {
         self.viewModel = viewModel
@@ -109,8 +108,6 @@ public struct ConsoleView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .scaleEffect(shown || reduceMotion ? 1 : 0.97)
-            .opacity(shown ? 1 : 0)
             if confirmClear {
                 ZStack {
                     SeleneTheme.scrim45.ignoresSafeArea()
@@ -491,11 +488,6 @@ public struct ConsoleView: View {
 
     private func appear() {
         installKeyMonitor()
-        DispatchQueue.main.async {
-            withAnimation(reduceMotion ? .easeOut(duration: 0.18) : .spring(response: 0.4, dampingFraction: 0.9)) {
-                shown = true
-            }
-        }
     }
 
     // MARK: - Input

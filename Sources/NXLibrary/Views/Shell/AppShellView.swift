@@ -60,6 +60,11 @@ public struct AppShellView: View {
         }
     }
 
+    /// Game options, Add game and the console open and close alike: a fade with a slight scale.
+    private var overlayTransition: AnyTransition {
+        reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.985))
+    }
+
     /// The screen plus the overlays that sit on it; split from `body` for the type checker.
     private var layers: some View {
         ZStack {
@@ -73,12 +78,13 @@ public struct AppShellView: View {
                             router: router,
                             artwork: artwork,
                             showsHints: settings.settings.showButtonHints)
+                    .transition(overlayTransition)
                     .zIndex(0.8)
             }
             if router.route == .console {
                 ConsoleView(viewModel: viewModel, router: router,
                             showsHints: settings.settings.showButtonHints)
-                    .transition(.opacity)
+                    .transition(overlayTransition)
                     .zIndex(0.8)
             }
             if router.isSearchPresented && isHomeRoute {
@@ -132,9 +138,7 @@ public struct AppShellView: View {
                         router.requestSpotlightMove(SpotlightItem.game(game.id).key)
                     }
                 )
-                .transition(reduceMotion
-                            ? .opacity
-                            : .opacity.combined(with: .scale(scale: 0.985)))
+                .transition(overlayTransition)
                 .zIndex(2)
             }
         }
@@ -155,7 +159,7 @@ public struct AppShellView: View {
         .animation(SeleneTheme.quick, value: router.isSearchPresented)
         .animation(reduceMotion ? nil : SeleneTheme.screen, value: viewModel.showSetupCheck)
         .animation(reduceMotion ? nil : SeleneTheme.screen, value: router.route == .addGame)
-        .animation(reduceMotion ? nil : SeleneTheme.quick, value: router.route == .console)
+        .animation(reduceMotion ? nil : SeleneTheme.screen, value: router.route == .console)
         .animation(reduceMotion ? nil : SeleneTheme.quick,
                    value: viewModel.gameToClose?.id)
         .animation(reduceMotion ? nil : SeleneTheme.quick,

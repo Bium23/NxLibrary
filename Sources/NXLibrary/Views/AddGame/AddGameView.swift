@@ -4,8 +4,7 @@ import NXLibraryCore
 
 /// Add game, in Game options' manner: the home stays behind, blurred and lightly
 /// shaded, and a centred column (1040u) holds the step's title and glass rows.
-/// It grows out of Spotlight's Add game card (or the porting tile) and rises
-/// from the centre otherwise; Reduce motion fades only.
+/// It opens and closes like Game options and the console (the shell's fade).
 ///
 /// Input: Up/Down move along the rows (the list follows the focus), Left/Right
 /// change a switch or a choice, A runs the row, B (or Esc) steps back: out of a
@@ -29,10 +28,6 @@ public struct AddGameView: View {
     @State var actionsStep = 0
     @State private var focusedID: String?
     @State private var keyMonitor: Any?
-    @State private var shown = false
-    /// The window frame it grows from or shrinks into; nil rises from the centre.
-    @State private var anchor: CGRect?
-    @State private var closing = false
     @State private var dropTargeted = false
     @FocusState private var editing: String?
 
@@ -46,41 +41,33 @@ public struct AddGameView: View {
     public var body: some View {
         let rows = rows(for: viewModel.buildWizardStep)
         let focused = focusedRow(in: rows)
-        return GeometryReader { geo in
-            let frame = geo.frame(in: .global)
-            ZStack {
-                SeleneTheme.scrim45
-                    .ignoresSafeArea()
-                    .contentShape(Rectangle())
-                    .onTapGesture { if !confirmDiscard { requestClose() } }
-                    .opacity(shown ? 1 : 0)
-                VStack(spacing: 0) {
-                    column(rows, focused: focused)
-                    if showsHints {
-                        SeleneHintsBar(left: [HintItem(.b, backLabel)], right: [HintItem(.a, aLabel(focused))],
-                                       bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
-                            .opacity(confirmDiscard ? 0 : 1)
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .scaleEffect(restScale(in: geo.size), anchor: .center)
-                .offset(restOffset(in: frame))
-                .opacity(shown ? 1 : 0)
-                if confirmDiscard {
-                    ZStack {
-                        SeleneTheme.scrim45.ignoresSafeArea()
-                        SeleneConfirmDialog(title: "Discard selected sources?",
-                                            message: "The files on disk are not changed.",
-                                            confirmTitle: "Discard",
-                                            cancelTitle: "Keep editing",
-                                            focus: $confirmFocus,
-                                            onCancel: dismissDiscard,
-                                            onConfirm: discardAndClose)
-                    }
-                    .transition(.opacity)
+        return ZStack {
+            SeleneTheme.scrim45
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture { if !confirmDiscard { requestClose() } }
+            VStack(spacing: 0) {
+                column(rows, focused: focused)
+                if showsHints {
+                    SeleneHintsBar(left: [HintItem(.b, backLabel)], right: [HintItem(.a, aLabel(focused))],
+                                   bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
+                        .opacity(confirmDiscard ? 0 : 1)
                 }
             }
-            .frame(width: geo.size.width, height: geo.size.height)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if confirmDiscard {
+                ZStack {
+                    SeleneTheme.scrim45.ignoresSafeArea()
+                    SeleneConfirmDialog(title: "Discard selected sources?",
+                                        message: "The files on disk are not changed.",
+                                        confirmTitle: "Discard",
+                                        cancelTitle: "Keep editing",
+                                        focus: $confirmFocus,
+                                        onCancel: dismissDiscard,
+                                        onConfirm: discardAndClose)
+                }
+                .transition(.opacity)
+            }
         }
         .onDrop(of: [.fileURL], isTargeted: $dropTargeted, perform: drop)
         .animation(reduceMotion ? nil : SeleneTheme.quick, value: confirmDiscard)
@@ -273,7 +260,7 @@ public struct AddGameView: View {
     }
 
     private func click(_ row: AddGameRow) {
-        guard row.focusable, !closing, !confirmDiscard else { return }
+        guard row.focusable, !confirmDiscard else { return }
         focusedID = row.id
         activate(row)
     }
@@ -302,47 +289,18 @@ public struct AddGameView: View {
         }
     }
 
-    // MARK: - Grow and shrink
-
-    /// Away from rest: toward the anchor tile, or 96% from the centre.
-    private func restScale(in size: CGSize) -> CGFloat {
-        guard !shown, !reduceMotion else { return 1 }
-        guard let anchor, size.width > 0, size.height > 0 else { return 0.96 }
-        return max(0.08, min(anchor.width / size.width, anchor.height / size.height) * 2)
-    }
-
-    private func restOffset(in frame: CGRect) -> CGSize {
-        guard !shown, !reduceMotion, let anchor else { return .zero }
-        return CGSize(width: anchor.midX - frame.midX, height: anchor.midY - frame.midY)
-    }
+    // MARK: - Open and close
 
     private func appear() {
         installKeyMonitor()
-        anchor = HomeAnchors.shared.frame(HomeAnchors.shared.openFrom)
-        HomeAnchors.shared.openFrom = nil
         focusedID = defaultRowID(for: viewModel.buildWizardStep)
-        shown = false
-        closing = false
-        DispatchQueue.main.async {
-            withAnimation(reduceMotion ? .easeOut(duration: 0.2) : .spring(response: 0.45, dampingFraction: 0.88)) {
-                shown = true
-            }
-        }
     }
 
-    /// Shrinks into the porting tile (or the card it came from), then leaves.
-    private func close(then finish: @escaping () -> Void) {
-        guard !closing else { return }
-        closing = true
+    /// During a porting the home selects the porting tile as the column fades.
+    private func close(then finish: () -> Void) {
         editing = nil
-        removeKeyMonitor()
-        if let id = viewModel.portingGameID {
-            router.requestSpotlightSelect(id)
-            anchor = HomeAnchors.shared.frame(SpotlightItem.game(id).key)
-        }
-        let duration = reduceMotion ? 0.18 : 0.3
-        withAnimation(.easeIn(duration: duration)) { shown = false }
-        DispatchQueue.main.asyncAfter(deadline: .now() + duration) { finish() }
+        if let id = viewModel.portingGameID { router.requestSpotlightSelect(id) }
+        finish()
     }
 
     // MARK: - Input
@@ -352,7 +310,6 @@ public struct AddGameView: View {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             guard router.route == .addGame,
                   !router.isMenuPresented,
-                  !closing,
                   viewModel.gameToClose == nil,
                   viewModel.gameToRemove == nil,
                   viewModel.alertMessage == nil,
@@ -390,7 +347,6 @@ public struct AddGameView: View {
     }
 
     private func handleGamepad(_ action: GamepadAction) {
-        guard !closing else { return }
         if confirmDiscard {
             switch action {
             case .navigateLeft, .navigateRight:
@@ -444,7 +400,7 @@ public struct AddGameView: View {
 
     private func requestClose() {
         if viewModel.isBuilding {
-            // The porting goes on; the column shrinks into its tile.
+            // The porting goes on; the home shows its tile.
             close { leave() }
             return
         }

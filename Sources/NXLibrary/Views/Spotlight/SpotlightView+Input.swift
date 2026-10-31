@@ -212,7 +212,6 @@ extension SpotlightView {
             guard let game = viewModel.libraryGames.first(where: { $0.id == id }) else { return }
             if viewModel.portingPills(game) == .porting {
                 SoundEffectService.shared.play(.click)
-                HomeAnchors.shared.openFrom = item.key
                 router.openAddGame()
                 return
             }
@@ -226,7 +225,6 @@ extension SpotlightView {
             break // Down enters its top games; the full screen comes later.
         case .card(.addGame):
             SoundEffectService.shared.play(.click)
-            HomeAnchors.shared.openFrom = HomeAnchors.addCard
             NotificationCenter.default.post(name: .nxLibraryOpenAddGame, object: nil)
         }
     }
@@ -235,8 +233,7 @@ extension SpotlightView {
         SoundEffectService.shared.play(.click)
         switch viewModel.portingPills(game) {
         case .porting:
-            // The porting pill shows the porting, growing out of its tile.
-            HomeAnchors.shared.openFrom = SpotlightItem.game(game.id).key
+            // The porting pill shows the porting.
             router.openAddGame()
             return
         case .failed:
