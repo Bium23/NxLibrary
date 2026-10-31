@@ -62,8 +62,9 @@ SOFTWARE.
 --------------------------------------------------------------------------------
 LNPANDY/NX2Apple
 https://github.com/LNPANDY/NX2Apple
-Adapted: the key check (Sources/NXLibraryCore/Services/KeyCheck.swift) and the
-engine failure-message table. Also a dependency-detection reference.
+Adapted: the key check (Sources/NXLibraryCore/Services/KeyCheck.swift), the
+engine failure-message table (PortingFailureReason.swift) and the diagnostics
+report idea (DiagnosticsReport.swift). Also a dependency-detection reference.
 
 MIT License
 
