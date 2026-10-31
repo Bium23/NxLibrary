@@ -4,6 +4,7 @@ import NXLibraryCore
 
 struct SettingsAboutSection: View {
     @ObservedObject var viewModel: AppViewModel
+    @EnvironmentObject private var updater: AppUpdater
 
     @State private var didCopyDiagnostics = false
 
@@ -32,6 +33,7 @@ struct SettingsAboutSection: View {
                 Text("Play time is tracked only for launches from NX Library. Not affiliated with Nintendo.")
                     .seleneFont(13)
                     .foregroundColor(SeleneTheme.ink60)
+                updateRow
                 Button {
                     viewModel.copyDiagnostics()
                     didCopyDiagnostics = true
@@ -134,6 +136,70 @@ struct SettingsAboutSection: View {
                     .seleneFont(13, .semibold)
                     .foregroundColor(SeleneTheme.ink60)
             }
+        }
+    }
+
+    // MARK: - Updates
+
+    private struct UpdateAction {
+        let title: String
+        var enabled = true
+        let perform: () -> Void
+    }
+
+    @ViewBuilder private var updateRow: some View {
+        if updater.state != .hidden {
+            HStack(spacing: 14) {
+                Text(updateText)
+                    .seleneFont(14)
+                    .foregroundColor(SeleneTheme.ink90)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                ForEach(updateActions, id: \.title) { action in
+                    Button(action.title, action: action.perform)
+                        .buttonStyle(.plain)
+                        .seleneFont(14, .semibold)
+                        .foregroundColor(action.enabled ? SeleneTheme.glyph : SeleneTheme.ink60)
+                        .disabled(!action.enabled)
+                }
+            }
+        }
+    }
+
+    private var updateText: String {
+        switch updater.state {
+        case .hidden: return ""
+        case .developer: return "Developer build: updates are off"
+        case .readOnly: return "Move NX Library to Applications to update"
+        case .idle: return "Updates not checked yet"
+        case .checking: return "Checking for updates…"
+        case .upToDate: return "NX Library is up to date"
+        case .available(let release):
+            return updater.blockedReason().map { "\(release.version) is available · \($0)" } ?? "\(release.version) is available"
+        case .downloading(let fraction): return "Downloading \(Int((fraction * 100).rounded()))%"
+        case .installing: return "Installing…"
+        case .failed(let message): return message
+        }
+    }
+
+    private var updateActions: [UpdateAction] {
+        let checkNow = UpdateAction(title: "Check now") { updater.checkNow() }
+        let notes = updater.releasePageURL.map { url in UpdateAction(title: "Release notes") { NSWorkspace.shared.open(url) } }
+        switch updater.state {
+        case .hidden, .developer, .checking, .downloading, .installing:
+            return []
+        case .readOnly:
+            return [UpdateAction(title: "Reveal in Finder") {
+                NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
+            }]
+        case .idle, .upToDate:
+            return [checkNow]
+        case .available:
+            return [UpdateAction(title: "Update", enabled: updater.blockedReason() == nil) { updater.update() }]
+                + [notes].compactMap { $0 }
+        case .failed:
+            let retry = updater.release.map { _ in UpdateAction(title: "Try again", enabled: updater.blockedReason() == nil) { updater.update() } }
+            return [retry].compactMap { $0 } + [checkNow]
         }
     }
 

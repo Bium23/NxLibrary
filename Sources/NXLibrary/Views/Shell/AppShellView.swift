@@ -44,7 +44,13 @@ public struct AppShellView: View {
     }
 
     /// The Close Game confirmation is open; menu commands and the dialog's input wait for it.
-    private var isCloseGameOpen: Bool { viewModel.gameToClose != nil || viewModel.gameToRemove != nil }
+    private var isCloseGameOpen: Bool {
+        viewModel.gameToClose != nil || viewModel.gameToRemove != nil || showsUpdateOffer
+    }
+    /// The update dialog waits for the intro and the Setup check.
+    private var showsUpdateOffer: Bool {
+        updater.offer != nil && !router.isIntroShowing && !viewModel.showSetupCheck
+    }
 
     private var reduceMotion: Bool {
         settings.settings.reduceMotion || accessibilityReduceMotion
@@ -106,6 +112,11 @@ public struct AppShellView: View {
             }
             if let game = viewModel.gameToRemove {
                 removeGameOverlay(game)
+                    .transition(.opacity)
+                    .zIndex(3)
+            }
+            if showsUpdateOffer, let release = updater.offer {
+                updateOfferOverlay(release)
                     .transition(.opacity)
                     .zIndex(3)
             }
@@ -180,6 +191,7 @@ public struct AppShellView: View {
         .onChange(of: viewModel.libraryGames) { games in
             runningGames.setGames(games)
         }
+        .onChange(of: showsUpdateOffer) { viewModel.isUpdateOfferOpen = $0 }
         .onChange(of: router.route) { route in
             recordLastHome(route)
             switch route {
@@ -286,6 +298,8 @@ public struct AppShellView: View {
                 viewModel.dismissCloseGame()
             } else if viewModel.gameToRemove != nil {
                 viewModel.dismissRemoveGame()
+            } else if showsUpdateOffer {
+                updater.later()
             } else if viewModel.gameForSettingsSheet != nil {
                 // Game options steps back (dialog, then Edit details) or closes.
                 NotificationCenter.default.post(name: .nxGameOptionsGamepadAction, object: GamepadAction.cancel)
@@ -412,6 +426,10 @@ public struct AppShellView: View {
                 removeGameInput(action)
                 return
             }
+            if showsUpdateOffer {
+                updateOfferInput(action)
+                return
+            }
             if router.isMenuPresented {
                 menuInput(action)
                 return
@@ -521,6 +539,52 @@ public struct AppShellView: View {
         }
     }
 
+    // MARK: - A newer release at launch
+
+    private func updateOfferOverlay(_ release: AppUpdate.Release) -> some View {
+        ZStack {
+            SeleneTheme.scrim45
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture { updater.later() }
+            SeleneConfirmDialog(title: "NX Library \(release.version) is available",
+                                message: updater.blockedReason().map { "You have \(updater.currentVersion). It installs \($0.prefix(1).lowercased() + $0.dropFirst())." }
+                                    ?? "You have \(updater.currentVersion). NX Library restarts to finish.",
+                                confirmTitle: "Update",
+                                cancelTitle: "Later",
+                                detail: release.notes.trimmingCharacters(in: .whitespacesAndNewlines),
+                                focus: $updater.offerFocus,
+                                onCancel: { updater.later() },
+                                onConfirm: confirmUpdateOffer)
+        }
+    }
+
+    private func confirmUpdateOffer() {
+        if updater.blockedReason() != nil {
+            SoundEffectService.shared.play(.error)
+            return
+        }
+        updater.update()
+    }
+
+    private func updateOfferInput(_ action: GamepadAction) {
+        switch action {
+        case .navigateLeft, .navigateRight:
+            let next: SeleneConfirmButton = action == .navigateLeft ? .cancel : .confirm
+            if updater.offerFocus != next {
+                updater.offerFocus = next
+                SoundEffectService.shared.play(.focus)
+            }
+        case .confirm:
+            SoundEffectService.shared.play(.click)
+            if updater.offerFocus == .confirm { confirmUpdateOffer() } else { updater.later() }
+        case .cancel:
+            updater.later()
+        default:
+            break
+        }
+    }
+
     private func removeGameInput(_ action: GamepadAction) {
         switch action {
         case .navigateLeft, .navigateRight:
@@ -583,7 +647,7 @@ public struct AppShellView: View {
                 return nil
             }
             // The Close Game and Delete confirmations take the keyboard: arrows, Return, Space and Esc go to them.
-            if viewModel.gameToClose != nil || viewModel.gameToRemove != nil, mods.isEmpty {
+            if viewModel.gameToClose != nil || viewModel.gameToRemove != nil || showsUpdateOffer, mods.isEmpty {
                 let closeAction: GamepadAction?
                 switch event.keyCode {
                 case 123: closeAction = .navigateLeft

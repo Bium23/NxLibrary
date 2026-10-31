@@ -78,6 +78,8 @@ public final class AppViewModel: ObservableObject {
     var lastPortingCommand: [String] = []
     /// Set by a failed porting's notification: the next Add game opens on that failure.
     var reviewsFailureOnAddGame = false
+    /// The update dialog is up (set by the shell); screens leave input to it.
+    var isUpdateOfferOpen = false
     @Published public var isScanningGameFolder: Bool = false
     @Published public var scanError: String? = nil
     

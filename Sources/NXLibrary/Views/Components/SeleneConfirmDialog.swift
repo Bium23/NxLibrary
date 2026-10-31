@@ -18,6 +18,8 @@ struct SeleneConfirmDialog: View {
     let message: String
     let confirmTitle: String
     var cancelTitle = "Cancel"
+    /// Longer text under the message (release notes), left-aligned in a scroll area.
+    var detail: String? = nil
     @Binding var focus: SeleneConfirmButton
     let onCancel: () -> Void
     let onConfirm: () -> Void
@@ -35,6 +37,22 @@ struct SeleneConfirmDialog: View {
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, canvas.u(14))
+            if let detail, !detail.isEmpty {
+                ScrollView {
+                    Text(detail)
+                        .seleneFont(15)
+                        .foregroundColor(SeleneTheme.ink75)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(canvas.u(16))
+                }
+                .frame(maxHeight: canvas.u(260))
+                .background(
+                    RoundedRectangle(cornerRadius: canvas.u(14), style: .continuous)
+                        .fill(SeleneTheme.glassLight)
+                )
+                .padding(.top, canvas.u(20))
+            }
             HStack(spacing: canvas.u(22)) {
                 SelenePillButton(title: cancelTitle, focused: focus == .cancel, action: onCancel)
                     .onHover { if $0 { focus = .cancel } }

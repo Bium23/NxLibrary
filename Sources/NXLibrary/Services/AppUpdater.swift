@@ -56,6 +56,12 @@ final class AppUpdater: ObservableObject {
 
     var currentVersion: String { runningVersion }
 
+    /// The release's page on GitHub, for its notes in full.
+    var releasePageURL: URL? {
+        guard let repository, let release else { return nil }
+        return URL(string: "https://github.com/\(repository)/releases/tag/\(release.tag)")
+    }
+
     /// The release the About row and the dialog act on.
     var release: AppUpdate.Release? {
         if case .available(let release) = state { return release }
