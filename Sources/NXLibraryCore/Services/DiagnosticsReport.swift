@@ -1,0 +1,86 @@
+import Foundation
+
+/// A Markdown report for an issue (the idea is NX2Apple's, MIT; see NOTICE). Private by
+/// construction: the home folder becomes `~`, a line that looks like key material keeps only the
+/// key's name, and no environment variable is ever included.
+public enum DiagnosticsReport {
+    public struct Inputs {
+        public var appVersion = "?"
+        public var buildDate: String? = nil
+        public var bundleID = "?"
+        public var macOS = "?"
+        public var chip = "?"
+        public var pinnedCommit = "?"
+        /// `~/nxnative` HEAD as "<short hash> <subject>"; nil when there is no checkout.
+        public var engineHead: String? = nil
+        public var xcodePath: String? = nil
+        public var xcodeVersion: String? = nil
+        public var metalFound: String? = nil
+        public var metalCertified: String? = nil
+        public var untestedOverride = false
+        public var dotnet: String? = nil
+        public var python: String? = nil
+        public var setupRows: [(name: String, ready: Bool)] = []
+        public var keysImported = false
+        public var hasHeaderKey = false
+        public var keyGenerations = 0
+        public var game: (name: String, titleID: String?, built: Bool, toolchainVerified: Bool?, failure: String?)? = nil
+        public var lastCommand: [String] = []
+        public var log: [String] = []
+        public var home = NSHomeDirectory()
+
+        public init() {}
+    }
+
+    static let logLines = 50
+
+    public static func markdown(_ i: Inputs) -> String {
+        func value(_ s: String?) -> String { s.map { $0.isEmpty ? "—" : $0 } ?? "—" }
+        func yes(_ b: Bool) -> String { b ? "yes" : "no" }
+        var lines = ["# NX Library diagnostics", ""]
+        lines += ["## App",
+                  "- Version: \(i.appVersion)" + (i.buildDate.map { " (built \($0))" } ?? ""),
+                  "- Bundle ID: \(i.bundleID)",
+                  "- macOS: \(i.macOS) · \(i.chip)", ""]
+        let headHash = i.engineHead?.split(separator: " ").first.map(String.init)
+        let matches = headHash.map { !$0.isEmpty && i.pinnedCommit.hasPrefix($0) } ?? false
+        lines += ["## Engine",
+                  "- Pinned: \(i.pinnedCommit)",
+                  "- ~/nxnative HEAD: \(value(i.engineHead))" + (i.engineHead == nil ? "" : (matches ? " (matches)" : " (differs)")),
+                  ""]
+        lines += ["## Toolchain",
+                  "- Xcode: \(value(i.xcodePath)) \(value(i.xcodeVersion))",
+                  "- Metal compiler: \(value(i.metalFound)) (certified: \(value(i.metalCertified)))",
+                  "- Untested-toolchain override: \(i.untestedOverride ? "on" : "off")",
+                  "- .NET SDK: \(value(i.dotnet))",
+                  "- Python: \(value(i.python))", ""]
+        lines += ["## Setup"] + i.setupRows.map { "- \($0.name): \($0.ready ? "ready" : "missing")" } + [""]
+        lines += ["## Keys",
+                  "- Imported: \(yes(i.keysImported))",
+                  "- header_key present: \(yes(i.hasHeaderKey))",
+                  "- Key generations: \(i.keyGenerations)", ""]
+        if let g = i.game {
+            lines += ["## Selected game",
+                      "- \(g.name) (\(value(g.titleID)))",
+                      "- Built: \(yes(g.built))",
+                      "- Toolchain verified: \(g.toolchainVerified.map(yes) ?? "—")",
+                      "- Last porting: \(value(g.failure))", ""]
+        }
+        lines += ["## Last porting",
+                  "```",
+                  i.lastCommand.isEmpty ? "(no porting this session)" : i.lastCommand.joined(separator: " "),
+                  "```", "",
+                  "```"] + i.log.suffix(logLines) + ["```", ""]
+        return lines.map { scrub($0, home: i.home) }.joined(separator: "\n")
+    }
+
+    private static let keyLine = try! NSRegularExpression(pattern: #"([A-Za-z0-9_]+)\s*=\s*[0-9A-Fa-f]{32,}"#)
+
+    /// The home folder as `~`; `name = <32+ hex>` anywhere in the line as `name = <redacted>`.
+    public static func scrub(_ line: String, home: String) -> String {
+        var out = home.isEmpty || home == "/" ? line : line.replacingOccurrences(of: home, with: "~")
+        let range = NSRange(out.startIndex..., in: out)
+        out = keyLine.stringByReplacingMatches(in: out, range: range, withTemplate: "$1 = <redacted>")
+        return out
+    }
+}

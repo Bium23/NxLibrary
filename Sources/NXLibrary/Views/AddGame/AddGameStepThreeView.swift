@@ -11,6 +11,8 @@ struct AddGameStepThreeView: View {
 
     @Environment(\.seleneReduceMotion) private var reduceMotion
 
+    @State private var didCopyDiagnostics = false
+
     let onActions: ([AddGameAction]) -> Void
 
     private struct StepAction {
@@ -30,6 +32,7 @@ struct AddGameStepThreeView: View {
         .onChange(of: viewModel.buildSuccessPath) { _ in publishActions() }
         .onChange(of: viewModel.buildError) { _ in publishActions() }
         .onChange(of: viewModel.portingFailureReason) { _ in publishActions() }
+        .onChange(of: didCopyDiagnostics) { _ in publishActions() }
         .onChange(of: viewModel.buildState) { _ in publishActions() }
     }
 
@@ -341,14 +344,25 @@ struct AddGameStepThreeView: View {
                let spec = failureActionSpec(action) {
                 specs.append(spec)
             }
+            let leadsWithAction = !specs.isEmpty
             specs += [
                 StepAction(id: "openLog", title: "Open log",
                            systemImage: "doc.text.magnifyingglass",
                            kind: .secondary, isEnabled: true) {
                     viewModel.openBuildLog()
                 },
+            ]
+            if viewModel.buildError != nil {
+                specs.append(StepAction(id: "diagnostics", title: didCopyDiagnostics ? "Copied" : "Copy diagnostics",
+                                        systemImage: nil, kind: .secondary, isEnabled: true) {
+                    viewModel.copyDiagnostics()
+                    didCopyDiagnostics = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) { didCopyDiagnostics = false }
+                })
+            }
+            specs += [
                 StepAction(id: "retry", title: "Try again",
-                           systemImage: "arrow.clockwise", kind: specs.isEmpty ? .primary : .secondary,
+                           systemImage: "arrow.clockwise", kind: leadsWithAction ? .secondary : .primary,
                            isEnabled: !viewModel.isBuilding) {
                     viewModel.retryLastBuild()
                 },

@@ -5,6 +5,8 @@ import NXLibraryCore
 struct SettingsAboutSection: View {
     @ObservedObject var viewModel: AppViewModel
 
+    @State private var didCopyDiagnostics = false
+
     private let credits: [(name: String, role: String, url: String)] = [
         ("seedds", "nxnative engine, NVN/Metal host and ARM64 rewriter", "https://github.com/seedds/nxnative"),
         ("d2r-mobile", "Foundational native execution architecture", "https://github.com/jhaizhou-ops/d2r-mobile"),
@@ -14,7 +16,7 @@ struct SettingsAboutSection: View {
         ("Khronos Group", "SPIRV-Cross Metal Shading Language compiler", "https://github.com/KhronosGroup/SPIRV-Cross"),
         ("GameTDB", "Switch box covers", "https://www.gametdb.com"),
         ("Title DB", "Game names, icons and banners", "https://github.com/blawar/titledb"),
-        ("NX2Apple", "Key check and failure explanations, adapted (MIT)", "https://github.com/LNPANDY/NX2Apple")
+        ("NX2Apple", "Key check, failure explanations and diagnostics, adapted (MIT)", "https://github.com/LNPANDY/NX2Apple")
     ]
 
     var body: some View {
@@ -30,6 +32,20 @@ struct SettingsAboutSection: View {
                 Text("Play time is tracked only for launches from NX Library. Not affiliated with Nintendo.")
                     .seleneFont(13)
                     .foregroundColor(SeleneTheme.ink60)
+                Button {
+                    viewModel.copyDiagnostics()
+                    didCopyDiagnostics = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) { didCopyDiagnostics = false }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(didCopyDiagnostics ? "Copied" : "Copy diagnostics")
+                        Image(systemName: didCopyDiagnostics ? "checkmark" : "doc.on.doc")
+                    }
+                    .seleneFont(14, .semibold)
+                    .foregroundColor(SeleneTheme.glyph)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("A report for an issue: versions, setup and the last porting. No keys.")
             }
 
             SelenePanel("Credits") {

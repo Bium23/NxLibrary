@@ -26,10 +26,11 @@ enum ConsoleControl: Hashable {
     case search
     case follow
     case copy
+    case diagnostics
     case reveal
     case clear
 
-    static let all: [ConsoleControl] = ConsoleFilter.allCases.map { .filter($0) } + [.search, .follow, .copy, .reveal, .clear]
+    static let all: [ConsoleControl] = ConsoleFilter.allCases.map { .filter($0) } + [.search, .follow, .copy, .diagnostics, .reveal, .clear]
 }
 
 /// The app's build and launch output, drawn like Add game over the screen it was
@@ -52,6 +53,7 @@ public struct ConsoleView: View {
     @State private var searchText = ""
     @State private var follow = true
     @State private var didCopy = false
+    @State private var didCopyDiagnostics = false
     @State private var confirmClear = false
     @State private var confirmFocus: SeleneConfirmButton = .cancel
     @State private var focus: ConsoleControl = .filter(.all)
@@ -217,6 +219,11 @@ public struct ConsoleView: View {
             }
             pill(.copy) {
                 Text(didCopy ? "Copied" : "Copy log")
+                    .seleneFont(15)
+                    .foregroundColor(SeleneTheme.ink)
+            }
+            pill(.diagnostics) {
+                Text(didCopyDiagnostics ? "Copied" : "Copy diagnostics")
                     .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink)
             }
@@ -392,6 +399,7 @@ public struct ConsoleView: View {
         case .search: return searching ? "Done" : "Search"
         case .follow: return follow ? "Stop following" : "Follow"
         case .copy: return "Copy log"
+        case .diagnostics: return "Copy diagnostics"
         case .reveal: return "Show in Finder"
         case .clear: return "Clear"
         }
@@ -424,6 +432,10 @@ public struct ConsoleView: View {
             SoundEffectService.shared.play(.key)
         case .copy:
             copyLog()
+        case .diagnostics:
+            viewModel.copyDiagnostics()
+            didCopyDiagnostics = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) { didCopyDiagnostics = false }
         case .reveal:
             SoundEffectService.shared.play(.click)
             viewModel.openBuildLog()

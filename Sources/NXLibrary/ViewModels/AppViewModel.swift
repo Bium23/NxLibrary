@@ -74,6 +74,8 @@ public final class AppViewModel: ObservableObject {
     @Published public var keyCheck: KeyCheck.Outcome? = nil
     /// What `keyCheck` was computed for; a result for an older token is dropped.
     var keyCheckToken: String? = nil
+    /// The last porting's command line, for Copy diagnostics (its environment is never kept).
+    var lastPortingCommand: [String] = []
     @Published public var isScanningGameFolder: Bool = false
     @Published public var scanError: String? = nil
     
@@ -1981,6 +1983,7 @@ public final class AppViewModel: ObservableObject {
             allowUntestedToolchain: allowUntestedToolchain,
             extraArguments: extraArguments
         )
+        lastPortingCommand = [command.executable.path] + command.arguments
 
         buildStartedAt = Date()
         buildTempDirectory = tempRoot
