@@ -1,0 +1,172 @@
+import XCTest
+@testable import NXLibraryCore
+
+final class AppUpdateTests: XCTestCase {
+    private var dir: URL!
+
+    override func setUpWithError() throws {
+        dir = FileManager.default.temporaryDirectory.appendingPathComponent("AppUpdate-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    }
+
+    override func tearDownWithError() throws {
+        try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: dir.path)
+        try? FileManager.default.removeItem(at: dir)
+    }
+
+    /// A minimal app bundle: Info.plist and an executable script.
+    @discardableResult
+    private func makeApp(_ name: String = "NXLibrary.app", in folder: URL? = nil, id: String = "local.nxlibrary",
+                         version: String = "0.2.0", release: Bool = true, minimumOS: String? = nil,
+                         executable: Bool = true, marker: String = "new") throws -> URL {
+        let app = (folder ?? dir).appendingPathComponent(name)
+        let macOS = app.appendingPathComponent("Contents/MacOS")
+        try FileManager.default.createDirectory(at: macOS, withIntermediateDirectories: true)
+        var info: [String: Any] = ["CFBundleIdentifier": id, "CFBundleExecutable": "NXLibrary",
+                                   "CFBundleShortVersionString": version]
+        if release { info[AppUpdate.releaseMarker] = true }
+        if let minimumOS { info["LSMinimumSystemVersion"] = minimumOS }
+        let plist = try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0)
+        try plist.write(to: app.appendingPathComponent("Contents/Info.plist"))
+        if executable {
+            let exe = macOS.appendingPathComponent("NXLibrary")
+            try Data("#!/bin/sh\n# \(marker)\n".utf8).write(to: exe)
+            try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: exe.path)
+        }
+        return app
+    }
+
+    private let os = OperatingSystemVersion(majorVersion: 27, minorVersion: 2, patchVersion: 0)
+
+    func testVersionCompareIsNumeric() {
+        XCTAssertTrue(AppUpdate.isNewer("0.10.0", than: "0.9.3"))
+        XCTAssertFalse(AppUpdate.isNewer("0.2", than: "0.2.0"))
+        XCTAssertFalse(AppUpdate.isNewer("0.1.9", than: "0.2.0"))
+        XCTAssertFalse(AppUpdate.isNewer("dev", than: "0.2.0"))
+        XCTAssertEqual(AppUpdate.version(fromTag: "v1.0.0"), "1.0.0")
+        XCTAssertEqual(AppUpdate.version(fromTag: "1.2"), "1.2")
+        XCTAssertNil(AppUpdate.version(fromTag: "v1.0-beta"))
+    }
+
+    private let releaseJSON = """
+    {"tag_name": "v0.3.0", "body": "Fixes.", "assets": [
+      {"name": "notes.txt", "browser_download_url": "https://example.com/notes.txt", "digest": null},
+      {"name": "NXLibrary-0.3.0.zip", "browser_download_url": "https://example.com/NXLibrary-0.3.0.zip",
+       "digest": "sha256:\(String(repeating: "a", count: 64))"}
+    ]}
+    """
+
+    func testParseReleasePicksNamedAsset() throws {
+        let release = try XCTUnwrap(AppUpdate.parseRelease(Data(releaseJSON.utf8)))
+        XCTAssertEqual(release.tag, "v0.3.0")
+        XCTAssertEqual(release.version, "0.3.0")
+        XCTAssertEqual(release.notes, "Fixes.")
+        XCTAssertEqual(release.zipURL.lastPathComponent, "NXLibrary-0.3.0.zip")
+        XCTAssertEqual(release.digest, "sha256:" + String(repeating: "a", count: 64))
+    }
+
+    func testParseReleaseWithoutAssetIsNil() {
+        let json = #"{"tag_name": "v0.3.0", "body": "", "assets": [{"name": "Other.zip", "browser_download_url": "https://e.com/o.zip"}]}"#
+        XCTAssertNil(AppUpdate.parseRelease(Data(json.utf8)))
+        XCTAssertNil(AppUpdate.parseRelease(Data("not json".utf8)))
+    }
+
+    func testDigestMatchMismatchMissing() throws {
+        let file = dir.appendingPathComponent("a.zip")
+        try Data("hello".utf8).write(to: file)
+        let sha = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        XCTAssertEqual(AppUpdate.checkDigest(file, expected: "sha256:" + sha), .match)
+        XCTAssertEqual(AppUpdate.checkDigest(file, expected: "sha256:" + String(repeating: "0", count: 64)), .mismatch)
+        XCTAssertEqual(AppUpdate.checkDigest(file, expected: nil), .missing)
+        XCTAssertEqual(AppUpdate.checkDigest(file, expected: "md5:abc"), .missing)
+    }
+
+    func testBundleChecks() throws {
+        let good = try makeApp("Good.app")
+        XCTAssertNil(AppUpdate.bundleProblem(good, expectedID: "local.nxlibrary", version: "0.2.0", runningOS: os))
+        let other = try makeApp("Other.app", id: "com.example")
+        XCTAssertEqual(AppUpdate.bundleProblem(other, expectedID: "local.nxlibrary", version: "0.2.0", runningOS: os),
+                       .wrongIdentifier)
+        let noExe = try makeApp("NoExe.app", executable: false)
+        XCTAssertEqual(AppUpdate.bundleProblem(noExe, expectedID: "local.nxlibrary", version: "0.2.0", runningOS: os),
+                       .noExecutable)
+        XCTAssertEqual(AppUpdate.bundleProblem(good, expectedID: "local.nxlibrary", version: "0.3.0", runningOS: os),
+                       .wrongVersion)
+        let future = try makeApp("Future.app", minimumOS: "28.0")
+        XCTAssertEqual(AppUpdate.bundleProblem(future, expectedID: "local.nxlibrary", version: "0.2.0", runningOS: os),
+                       .needsNewerMacOS("28.0"))
+        XCTAssertEqual(AppUpdate.bundleProblem(dir.appendingPathComponent("Missing.app"), expectedID: "local.nxlibrary",
+                                               version: "0.2.0", runningOS: os), .noInfo)
+    }
+
+    func testBundleWithoutMarkerIsRefused() throws {
+        let dev = try makeApp("Dev.app", release: false)
+        XCTAssertEqual(AppUpdate.bundleProblem(dev, expectedID: "local.nxlibrary", version: "0.2.0", runningOS: os),
+                       .notRelease)
+    }
+
+    func testInstallabilityDeveloperWithoutMarker() throws {
+        XCTAssertEqual(AppUpdate.installability(try makeApp("Dev.app", release: false)), .developer)
+        XCTAssertEqual(AppUpdate.installability(try makeApp("Rel.app")), .ok)
+        XCTAssertEqual(AppUpdate.installability(dir.appendingPathComponent("bare-binary")), .developer)
+    }
+
+    func testInstallabilityReadOnlyFolder() throws {
+        let folder = dir.appendingPathComponent("locked")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let app = try makeApp(in: folder)
+        try FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: folder.path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: folder.path) }
+        XCTAssertEqual(AppUpdate.installability(app), .readOnly)
+    }
+
+    func testSwapReplacesAndKeepsName() throws {
+        let installed = dir.appendingPathComponent("Applications")
+        try FileManager.default.createDirectory(at: installed, withIntermediateDirectories: true)
+        let current = try makeApp(in: installed, version: "0.1.0", marker: "old")
+        let stagedFolder = dir.appendingPathComponent("staged")
+        try FileManager.default.createDirectory(at: stagedFolder, withIntermediateDirectories: true)
+        let staged = try makeApp(in: stagedFolder, version: "0.2.0", marker: "new")
+        let placed = try AppUpdate.install(staged, over: current, trashOld: false)
+        XCTAssertEqual(placed.standardizedFileURL, current.standardizedFileURL)
+        let exe = try String(contentsOf: current.appendingPathComponent("Contents/MacOS/NXLibrary"), encoding: .utf8)
+        XCTAssertTrue(exe.contains("new"))
+        let left = try FileManager.default.contentsOfDirectory(atPath: installed.path)
+        XCTAssertEqual(left, ["NXLibrary.app"], "no (new) or (old) copy left behind")
+    }
+
+    func testSwapFailureKeepsCurrent() throws {
+        let current = try makeApp(version: "0.1.0", marker: "old")
+        XCTAssertThrowsError(try AppUpdate.install(dir.appendingPathComponent("gone/NXLibrary.app"), over: current,
+                                                   trashOld: false))
+        let exe = try String(contentsOf: current.appendingPathComponent("Contents/MacOS/NXLibrary"), encoding: .utf8)
+        XCTAssertTrue(exe.contains("old"))
+    }
+
+    func testLaterIsPerVersion() {
+        let now = Date(timeIntervalSince1970: 1_000_000)
+        let hourAgo = now.addingTimeInterval(-3600)
+        XCTAssertFalse(AppUpdate.shouldOffer("0.2.0", laterVersion: "0.2.0", laterAt: hourAgo, now: now))
+        XCTAssertTrue(AppUpdate.shouldOffer("0.2.1", laterVersion: "0.2.0", laterAt: hourAgo, now: now))
+        XCTAssertTrue(AppUpdate.shouldOffer("0.2.0", laterVersion: "0.2.0", laterAt: now.addingTimeInterval(-25 * 3600), now: now))
+        XCTAssertTrue(AppUpdate.shouldOffer("0.2.0", laterVersion: nil, laterAt: nil, now: now))
+    }
+
+    func testCheckEvery24Hours() {
+        let now = Date(timeIntervalSince1970: 1_000_000)
+        XCTAssertTrue(AppUpdate.shouldCheck(lastCheck: nil, now: now))
+        XCTAssertFalse(AppUpdate.shouldCheck(lastCheck: now.addingTimeInterval(-3600), now: now))
+        XCTAssertTrue(AppUpdate.shouldCheck(lastCheck: now.addingTimeInterval(-25 * 3600), now: now))
+    }
+
+    func testRepositoryOverride() throws {
+        let suite = "AppUpdateTests-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        XCTAssertEqual(AppUpdate.repository(defaults: defaults), AppUpdate.defaultRepository)
+        defaults.set("someone/NXLibrary", forKey: AppUpdate.repositoryOverrideKey)
+        XCTAssertEqual(AppUpdate.repository(defaults: defaults), "someone/NXLibrary")
+        defaults.set("not a repo", forKey: AppUpdate.repositoryOverrideKey)
+        XCTAssertEqual(AppUpdate.repository(defaults: defaults), AppUpdate.defaultRepository)
+    }
+}
