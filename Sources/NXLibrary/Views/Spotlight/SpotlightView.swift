@@ -139,7 +139,9 @@ public struct SpotlightView: View {
         let state = viewModel.spotlight
         SeleneHomeChrome(
             leftHints: state.isLifted || cardMenu != nil || state.focus != .row
-                ? [] : HintItem.homeGlobals(other: "Collection"),
+                ? [] : HintItem.homeGlobals(other: "Collection",
+                                            onOther: { if settings.settings.viewButtonSwitches { router.openCollection() } },
+                                            onMenu: { router.isMenuPresented = true }),
             rightHints: contextHints(model, state),
             rightReserve: hintReserve(state),
             hintsHidden: router.overlayHasHints(viewModel),

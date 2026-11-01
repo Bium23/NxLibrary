@@ -168,12 +168,39 @@ public final class GameControllerService: ObservableObject {
         }
         
         // Menu / Options
+        gamepad.buttonMenu.preferredSystemGestureState = .disabled
         gamepad.buttonMenu.pressedChangedHandler = { [weak self] _, _, pressed in
             self?.handleHoldButton(.menu, pressed: pressed, tap: .menu, hold: .menuHold)
         }
         // View (Minus / Select / Share); not every controller has one.
+        gamepad.buttonOptions?.preferredSystemGestureState = .disabled
         gamepad.buttonOptions?.pressedChangedHandler = { [weak self] _, _, pressed in
             self?.handleHoldButton(.view, pressed: pressed, tap: .view, hold: .viewHold)
+        }
+
+        // PlayStation Touchpad click (DualShock 4 / DualSense) as View / Select
+        if let ds = gamepad as? GCDualShockGamepad {
+            ds.touchpadButton.preferredSystemGestureState = .disabled
+            ds.touchpadButton.pressedChangedHandler = { [weak self] _, _, pressed in
+                self?.handleHoldButton(.view, pressed: pressed, tap: .view, hold: .viewHold)
+            }
+        } else if let ds = gamepad as? GCDualSenseGamepad {
+            ds.touchpadButton.preferredSystemGestureState = .disabled
+            ds.touchpadButton.pressedChangedHandler = { [weak self] _, _, pressed in
+                self?.handleHoldButton(.view, pressed: pressed, tap: .view, hold: .viewHold)
+            }
+        }
+
+        if let share = controller.physicalInputProfile.buttons[GCInputButtonShare] {
+            share.preferredSystemGestureState = .disabled
+            if gamepad.buttonOptions == nil || gamepad.buttonOptions != share {
+                share.pressedChangedHandler = { [weak self] _, _, pressed in
+                    self?.handleHoldButton(.view, pressed: pressed, tap: .view, hold: .viewHold)
+                }
+            }
+        }
+        if let options = controller.physicalInputProfile.buttons[GCInputButtonOptions] {
+            options.preferredSystemGestureState = .disabled
         }
 
         // Triggers jump to the start / end of the list; R3 is a plain press.
@@ -245,7 +272,7 @@ public final class GameControllerService: ObservableObject {
 
     private func startHoldTimer() {
         guard holdTimer == nil else { return }
-        holdTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
+        let timer = Timer(timeInterval: 0.05, repeats: true) { [weak self] _ in
             guard let self else { return }
             let now = ProcessInfo.processInfo.systemUptime
             for (button, var detector) in self.holdDetectors where detector.isPressed {
@@ -256,6 +283,8 @@ public final class GameControllerService: ObservableObject {
             }
             self.stopHoldTimerIfIdle()
         }
+        RunLoop.main.add(timer, forMode: .common)
+        holdTimer = timer
     }
 
     private func stopHoldTimerIfIdle() {
