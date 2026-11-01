@@ -8,10 +8,12 @@ public struct BuildResult: Equatable {
     public var cancelled: Bool
     public var logURL: URL
     public var outputURL: URL?
-    /// Set when the build succeeded while its game was running: the new app stays here, beside the running one,
-    /// until the game quits.
+    /// A valid compiled app waiting for installation, either while its game is
+    /// running or after installation failed. The caller must keep its folder.
     public var heldApp: URL?
     public var error: String?
+
+    public var installationFailed: Bool { !success && !cancelled && heldApp != nil }
 
     public init(success: Bool, exitCode: Int32, cancelled: Bool,
                 logURL: URL, outputURL: URL? = nil, heldApp: URL? = nil, error: String? = nil) {
@@ -207,15 +209,20 @@ public final class BuildService {
             var error: String?
             if !wasCancelled && proc.terminationStatus == 0 {
                 do {
+                    guard self.fm.fileExists(atPath: tempApp.appendingPathComponent("Contents/Info.plist").path) else {
+                        throw BuildInstallError.invalidApp(tempApp.path)
+                    }
                     let release = holdInstall() ? nil : acquireInstall()
                     defer { release?() }
                     if release == nil {
-                        guard self.fm.fileExists(atPath: tempApp.appendingPathComponent("Contents/Info.plist").path) else {
-                            throw BuildInstallError.invalidApp(tempApp.path)
-                        }
                         held = tempApp
                     } else {
-                        try BuildOutputInstaller.install(tempApp: tempApp, finalApp: finalApp)
+                        do {
+                            try BuildOutputInstaller.install(tempApp: tempApp, finalApp: finalApp, fileManager: self.fm)
+                        } catch {
+                            held = tempApp
+                            throw error
+                        }
                     }
                     success = true
                 } catch let failure {

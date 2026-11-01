@@ -45,11 +45,15 @@ public struct AppShellView: View {
 
     /// The Close Game confirmation is open; menu commands and the dialog's input wait for it.
     private var isCloseGameOpen: Bool {
-        viewModel.gameToClose != nil || viewModel.gameToRemove != nil || showsUpdateOffer
+        viewModel.gameToClose != nil || viewModel.gameToRemove != nil || showsUpdateOffer || showsInstallFailure
+    }
+    private var showsInstallFailure: Bool {
+        viewModel.gameWithInstallFailure != nil && !router.isIntroShowing && !viewModel.showSetupCheck
+            && viewModel.launchOverlay == nil && viewModel.gameToClose == nil && viewModel.gameToRemove == nil
     }
     /// The update dialog waits for the intro and the Setup check.
     private var showsUpdateOffer: Bool {
-        updater.offer != nil && !router.isIntroShowing && !viewModel.showSetupCheck
+        updater.offer != nil && !router.isIntroShowing && !viewModel.showSetupCheck && !showsInstallFailure
     }
 
     private var reduceMotion: Bool {
@@ -120,6 +124,11 @@ public struct AppShellView: View {
                     .transition(.opacity)
                     .zIndex(3)
             }
+            if showsInstallFailure, let game = viewModel.gameWithInstallFailure {
+                installFailureOverlay(game)
+                    .transition(.opacity)
+                    .zIndex(3)
+            }
             if router.isMenuPresented {
                 if router.isThemePickerOpen {
                     ThemePickerView(router: router, settings: settings, games: viewModel.libraryGames)
@@ -176,6 +185,8 @@ public struct AppShellView: View {
                    value: viewModel.gameToClose?.id)
         .animation(reduceMotion ? nil : SeleneTheme.quick,
                    value: viewModel.gameToRemove?.id)
+        .animation(reduceMotion ? nil : SeleneTheme.quick,
+                   value: viewModel.gameWithInstallFailure?.id)
         .environment(\.seleneReduceMotion, reduceMotion)
         .environment(\.seleneBackdropStyle, backdropStyle)
         .environment(\.seleneShowButtonHints, settings.settings.showButtonHints)
@@ -294,6 +305,8 @@ public struct AppShellView: View {
         .onExitCommand {
             if router.isScreenshotViewerOpen {
                 // The viewer's key monitor closes it.
+            } else if showsInstallFailure {
+                viewModel.gameWithInstallFailure = nil
             } else if viewModel.gameToClose != nil {
                 viewModel.dismissCloseGame()
             } else if viewModel.gameToRemove != nil {
@@ -422,6 +435,10 @@ public struct AppShellView: View {
                 NotificationCenter.default.post(name: .nxSetupCheckGamepadAction, object: action)
                 return
             }
+            if showsInstallFailure {
+                installFailureInput(action)
+                return
+            }
             if viewModel.gameToClose != nil {
                 closeGameInput(action)
                 return
@@ -484,6 +501,43 @@ public struct AppShellView: View {
                     NotificationCenter.default.post(name: .nxConsoleGamepadAction, object: action)
                 }
             }
+        }
+    }
+
+    // MARK: - Retry a ready build
+
+    private func installFailureOverlay(_ game: PortedGame) -> some View {
+        let app = game.pendingInstall?.finalApp ?? game.url
+        let currentExists = FileManager.default.fileExists(atPath: app.appendingPathComponent("Contents/Info.plist").path)
+        return ZStack {
+            SeleneTheme.scrim45.ignoresSafeArea().contentShape(Rectangle())
+                .onTapGesture { viewModel.gameWithInstallFailure = nil }
+            SeleneConfirmDialog(title: "Installation failed",
+                                message: "The new build of \(game.name) has been kept."
+                                    + (currentExists ? "\nYour current app is still available." : "\nYou can retry installation."),
+                                confirmTitle: "Retry", cancelTitle: "Close",
+                                focus: $viewModel.installFailureFocus,
+                                onCancel: { viewModel.gameWithInstallFailure = nil },
+                                onConfirm: { viewModel.retryFailedInstallation() })
+        }
+    }
+
+    private func installFailureInput(_ action: GamepadAction) {
+        switch action {
+        case .navigateLeft, .navigateRight:
+            let next: SeleneConfirmButton = action == .navigateLeft ? .cancel : .confirm
+            if viewModel.installFailureFocus != next {
+                viewModel.installFailureFocus = next
+                SoundEffectService.shared.play(.focus)
+            }
+        case .confirm:
+            if viewModel.installFailureFocus == .confirm {
+                viewModel.retryFailedInstallation()
+            } else {
+                viewModel.gameWithInstallFailure = nil
+            }
+        case .cancel: viewModel.gameWithInstallFailure = nil
+        default: break
         }
     }
 
@@ -655,7 +709,7 @@ public struct AppShellView: View {
                 return nil
             }
             // The Close Game and Delete confirmations take the keyboard: arrows, Return, Space and Esc go to them.
-            if viewModel.gameToClose != nil || viewModel.gameToRemove != nil || showsUpdateOffer, mods.isEmpty {
+            if viewModel.gameToClose != nil || viewModel.gameToRemove != nil || showsUpdateOffer || showsInstallFailure, mods.isEmpty {
                 let closeAction: GamepadAction?
                 switch event.keyCode {
                 case 123: closeAction = .navigateLeft
@@ -874,6 +928,9 @@ private struct SoundCueHooks: ViewModifier {
                 if id != nil { SoundEffectService.shared.play(.alert) }
             }
             .onChange(of: viewModel.gameToRemove?.id) { id in
+                if id != nil { SoundEffectService.shared.play(.alert) }
+            }
+            .onChange(of: viewModel.gameWithInstallFailure?.id) { id in
                 if id != nil { SoundEffectService.shared.play(.alert) }
             }
             .onChange(of: router.route) { route in

@@ -444,6 +444,7 @@ struct GameOptionsView: View {
             guard viewModel.gameForSettingsSheet?.id == game.id,
                   !panelOpen,
                   viewModel.gameToClose == nil,
+                  viewModel.gameWithInstallFailure == nil,
                   viewModel.alertMessage == nil,
                   let window = event.window,
                   !window.isSheet,

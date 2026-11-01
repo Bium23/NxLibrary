@@ -275,6 +275,14 @@ public final class AppViewModel: ObservableObject {
     @Published public var buildSuccessPath: String? = nil
     /// The game whose finished build waits for it to quit (`PendingInstall`).
     @Published var buildHeldGameID: UUID? = nil
+    /// The existing Selene dialog offers retrying the ready app, or closing it.
+    @Published var gameWithInstallFailure: PortedGame? = nil
+    @Published var installFailureFocus: SeleneConfirmButton = .cancel
+
+    var canRetryReadyInstall: Bool {
+        buildState == .failed && portingFailureReason == nil
+            && libraryGames.contains { $0.id == lastBuildGameID && $0.pendingInstall != nil }
+    }
     @Published public var buildWizardStep: Int = 1 // 1: Select Game, 2: Configure & Output, 3: Porting
     @Published public var iconAppearanceMode: AppIconAppearanceMode = .auto {
         didSet {
@@ -2118,6 +2126,10 @@ public final class AppViewModel: ObservableObject {
             logs.append(LogEntry(level: .error, message: lastError!))
             return
         }
+        if canRetryReadyInstall {
+            installPendingBuilds(only: id)
+            return
+        }
         startBuild(for: game)
     }
 
@@ -2209,7 +2221,7 @@ public final class AppViewModel: ObservableObject {
                 endedAt: Date(),
                 exitCode: result.exitCode,
                 logPath: result.logURL.path,
-                outputPath: result.success ? finalApp.path : nil,
+                outputPath: result.success || result.installationFailed ? finalApp.path : nil,
                 engineCommit: pinnedEngineCommit,
                 metalVersion: environmentStatus?.metalVersion,
                 xcodeVersion: environmentStatus?.xcodeVersion,
@@ -2217,7 +2229,7 @@ public final class AppViewModel: ObservableObject {
                 cancelled: result.cancelled
             )
 
-            if result.success {
+            if result.success || result.installationFailed {
                 let toolchain = ToolchainInfo(
                     engineCommit: pinnedEngineCommit,
                     metalVersion: environmentStatus?.metalVersion,
@@ -2240,15 +2252,25 @@ public final class AppViewModel: ObservableObject {
                 }
                 progressFraction = 1
                 currentStageName = result.heldApp == nil ? "Build completed" : PendingInstall.stageName
-                buildState = .succeeded
-                buildSuccessPath = finalApp.path
-                buildError = nil
-                lastError = nil
-                logs.append(LogEntry(level: .success, message: result.heldApp == nil
-                    ? "Build succeeded: \(finalApp.path)"
-                    : "Build succeeded while \(game.name) is open: it installs when the game quits."))
-                SoundEffectService.shared.play(.launch)
-                notifyPortingEnded(game, success: true, held: result.heldApp != nil)
+                if result.installationFailed {
+                    currentStageName = "Installation failed"
+                    buildState = .failed
+                    buildSuccessPath = nil
+                    buildError = "The build is ready. Retry installation."
+                    portingFailureReason = nil
+                    lastError = result.error
+                    presentInstallFailure(for: game, error: result.error ?? "Installation failed.")
+                } else {
+                    buildState = .succeeded
+                    buildSuccessPath = finalApp.path
+                    buildError = nil
+                    lastError = nil
+                    logs.append(LogEntry(level: .success, message: result.heldApp == nil
+                        ? "Build succeeded: \(finalApp.path)"
+                        : "Build succeeded while \(game.name) is open: it installs when the game quits."))
+                    SoundEffectService.shared.play(.launch)
+                    notifyPortingEnded(game, success: true, held: result.heldApp != nil)
+                }
             } else if result.cancelled {
                 game.status = buildPreviousStatus
                     ?? (game.sources.isEmpty ? .builtSourcesMissing : .notBuilt)
@@ -2281,11 +2303,21 @@ public final class AppViewModel: ObservableObject {
             }
 
             library.games[index] = game
-            try? libraryStore.save(library)
+            var saved = true
+            do {
+                try libraryStore.save(library)
+            } catch {
+                saved = false
+                if game.pendingInstall != nil {
+                    presentInstallFailure(for: game, error: error.localizedDescription)
+                } else {
+                    logs.append(LogEntry(level: .error, message: "Could not save the library: \(error.localizedDescription)"))
+                }
+            }
             libraryGames = library.games.sorted {
                 $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
             }
-            if result.success { loadLibrary() }
+            if result.success && saved { loadLibrary() }
         } else {
             buildState = result.success ? .succeeded
                 : (result.cancelled ? .cancelled : .failed)

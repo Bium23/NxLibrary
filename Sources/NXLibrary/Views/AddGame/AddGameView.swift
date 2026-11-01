@@ -315,6 +315,7 @@ public struct AddGameView: View {
                   !router.isMenuPresented,
                   viewModel.gameToClose == nil,
                   viewModel.gameToRemove == nil,
+                  viewModel.gameWithInstallFailure == nil,
                   !viewModel.isUpdateOfferOpen,
                   viewModel.alertMessage == nil,
                   let window = event.window,

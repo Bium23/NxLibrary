@@ -11,7 +11,7 @@ A personal, native macOS front-end for [nxnative](https://github.com/seedds/nxna
 - Detects NSP/XCI/NSZ/XCZ base, update and DLC files, including files reached through symlinks, and groups them by title ID.
 - Creates a symlinked workspace or uses a source folder in place; sources are never copied into the library.
 - Builds a Mac `.app` in `~/Applications` through the pinned nxnative CLI with JSON progress, stages, ETA, a live log and cancellation.
-- Installs validated game builds with an atomic swap, keeping the installed app at its normal path throughout replacement. Builds on another volume are prepared beside the destination first; interrupted installs can be retried safely.
+- Installs validated game builds with an atomic swap, keeping the installed app at its normal path throughout replacement. Builds on another volume are prepared beside the destination first; interrupted installs can be retried safely. If only installation fails, the ready build is kept and a Selene dialog offers **Retry** or **Close**. Retry installs that build without running the porting again.
 - Stores the library in `~/Library/Application Support/NXLibrary/library.json` with a backup copy.
 - Keeps runtime settings per game (FPS target, docked mode, render scale, MetalFX spatial upscale, Metal HUD, language, rumble, fullscreen). It reads the app's `launcher.json` to show only the settings the game supports, writes nxnative's `env.txt`, and passes the chosen values in the launch environment as well.
 - Shows storage usage and can delete only caches and logs; apps and sources require explicit action. **Remove Sources & Build Cache** deletes the original NSP/XCI files and the app-owned workspace for one game, keeping the installed app, saves and logs; sources can be attached again later.
@@ -151,7 +151,7 @@ Engine upgrades are manual and never follow `main`. Before changing the pin, rev
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 ```
 
-The suite covers models and persistence, source parsing (including a regression for `*.cnmt.nca` vs `*.cnmt.xml`), symlink workspaces, key import/permissions, the compatibility gate, build-command construction, atomic installation and interrupted retries, process cancellation, launch environment writing, import, storage, cheats, save snapshots and interrupted save recovery. Scans preserve pending installs and the last porting failure. The last code verification on 2026-11-01 passed **667 tests**. The [file catalog](docs/file-map.md#test-e-fixture) describes each test file's scope.
+The suite covers models and persistence, source parsing (including a regression for `*.cnmt.nca` vs `*.cnmt.xml`), symlink workspaces, key import/permissions, the compatibility gate, build-command construction, atomic installation and interrupted retries, process cancellation, launch environment writing, import, storage, cheats, save snapshots and interrupted save recovery. Scans preserve pending installs and the last porting failure. The last code verification on 2026-11-01 passed **670 tests**, including retrying a ready build after an installation error without invoking the engine again. The [file catalog](docs/file-map.md#test-e-fixture) describes each test file's scope.
 
 ## Repository layout
 

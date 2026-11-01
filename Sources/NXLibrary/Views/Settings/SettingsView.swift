@@ -294,6 +294,7 @@ public struct SettingsView: View {
                   !viewModel.showSetupCheck,
                   !showingControls,
                   viewModel.alertMessage == nil,
+                  viewModel.gameWithInstallFailure == nil,
                   let window = event.window,
                   !window.isSheet,
                   window.attachedSheet == nil,

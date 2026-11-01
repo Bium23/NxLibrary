@@ -65,7 +65,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Sources/NXLibrary/ViewModels/AppViewModel+Controller.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Controller.swift) | Conserva il contesto di gioco per i comandi e offre il collegamento alla cartella dei save. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Diagnostics.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Diagnostics.swift) | Raccoglie ambiente, toolchain e ultimo build per il rapporto diagnostico ripulito. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+KeyCheck.swift](../Sources/NXLibrary/ViewModels/AppViewModel+KeyCheck.swift) | Rilancia il controllo delle chiavi al variare delle sorgenti e scarta risultati superati. |
-| [Sources/NXLibrary/ViewModels/AppViewModel+PendingInstall.swift](../Sources/NXLibrary/ViewModels/AppViewModel+PendingInstall.swift) | Riprende le installazioni differite quando il gioco si chiude e i lease lo consentono. |
+| [Sources/NXLibrary/ViewModels/AppViewModel+PendingInstall.swift](../Sources/NXLibrary/ViewModels/AppViewModel+PendingInstall.swift) | Riprende le installazioni differite e gestisce errore e nuovo tentativo sul bundle pronto, rispettando i lease. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Porting.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Porting.swift) | Prepara tile, pill e stime del porting e coordina notifiche e azioni sugli errori riconosciuti. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Saves.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Saves.swift) | Risolve contesto e identità dei save, coordina i lease e avvia i recuperi pendenti. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Toolchain.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Toolchain.swift) | Espone il riepilogo del gate della toolchain per l’interfaccia. |
@@ -165,7 +165,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Sources/NXLibraryCore/Services/BuildCommandBuilder.swift](../Sources/NXLibraryCore/Services/BuildCommandBuilder.swift) | Costruisce il contratto CLI nxnative, comprese destinazione Mac, JSON e override toolchain. |
 | [Sources/NXLibraryCore/Services/BuildEvent.swift](../Sources/NXLibraryCore/Services/BuildEvent.swift) | Definisce gli eventi di fase, step, avanzamento e log ricevuti dal motore. |
 | [Sources/NXLibraryCore/Services/BuildEventParser.swift](../Sources/NXLibraryCore/Services/BuildEventParser.swift) | Decodifica eventi JSON e tratta le altre righe come log. |
-| [Sources/NXLibraryCore/Services/BuildService.swift](../Sources/NXLibraryCore/Services/BuildService.swift) | Avvia il porting, gestisce gruppo di processi, cancellazione, log, eventi e destinazione del risultato. |
+| [Sources/NXLibraryCore/Services/BuildService.swift](../Sources/NXLibraryCore/Services/BuildService.swift) | Avvia il porting, gestisce processi, cancellazione, log ed eventi; conserva il bundle valido quando fallisce solo l’installazione. |
 | [Sources/NXLibraryCore/Services/BuildOutputInstaller.swift](../Sources/NXLibraryCore/Services/BuildOutputInstaller.swift) | Pubblica il bundle con rinomina o scambio atomico, prepara copie fra volumi e riconosce i tentativi già completati tramite ricevuta. |
 | [Sources/NXLibraryCore/Services/LaunchService.swift](../Sources/NXLibraryCore/Services/LaunchService.swift) | Scrive l’ambiente runtime e avvia il bundle del gioco tramite NSWorkspace. |
 | [Sources/NXLibraryCore/Services/StorageManager.swift](../Sources/NXLibraryCore/Services/StorageManager.swift) | Misura app, cache e log e ne gestisce la pulizia. Include l’API preesistente di backup ZIP. |
@@ -247,7 +247,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Sources/NXLibrary/Views/AddGame/AddGameView+Rows.swift](../Sources/NXLibrary/Views/AddGame/AddGameView+Rows.swift) | Definisce righe, focus, conferme e input dei passaggi del wizard. |
 | [Sources/NXLibrary/Views/AddGame/AddGameRows.swift](../Sources/NXLibrary/Views/AddGame/AddGameRows.swift) | Rende le righe riutilizzabili per sorgenti e azioni di Add Game. |
 | [Sources/NXLibrary/Views/AddGame/AddGameAction.swift](../Sources/NXLibrary/Views/AddGame/AddGameAction.swift) | Identifica le azioni navigabili dei passaggi del wizard. |
-| [Sources/NXLibrary/Views/AddGame/AddGameStepThreeView.swift](../Sources/NXLibrary/Views/AddGame/AddGameStepThreeView.swift) | Mostra tile, progresso, fasi, log, cancellazione ed esito del porting. |
+| [Sources/NXLibrary/Views/AddGame/AddGameStepThreeView.swift](../Sources/NXLibrary/Views/AddGame/AddGameStepThreeView.swift) | Mostra progresso, log, cancellazione ed esito del porting, con nuovo tentativo d’installazione per una build già pronta. |
 
 ## UI · Spotlight
 
@@ -380,7 +380,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Tests/NXLibraryCoreTests/BuildCommandBuilderTests.swift](../Tests/NXLibraryCoreTests/BuildCommandBuilderTests.swift) | Contratto CLI, opzioni runtime/build e propagazione dell’override Metal. |
 | [Tests/NXLibraryCoreTests/BuildEventParserTests.swift](../Tests/NXLibraryCoreTests/BuildEventParserTests.swift) | Eventi JSON, fasi, percentuali e righe ordinarie di log. |
 | [Tests/NXLibraryCoreTests/BuildOutputInstallerTests.swift](../Tests/NXLibraryCoreTests/BuildOutputInstallerTests.swift) | Pubblicazione atomica, interruzioni, tentativi ripetuti, copie fra volumi e conservazione dei bundle in caso di errore. |
-| [Tests/NXLibraryCoreTests/BuildServiceTests.swift](../Tests/NXLibraryCoreTests/BuildServiceTests.swift) | Processi, eventi, installazione, cancellazione e coordinamento con i lease dei salvataggi. |
+| [Tests/NXLibraryCoreTests/BuildServiceTests.swift](../Tests/NXLibraryCoreTests/BuildServiceTests.swift) | Processi, eventi, cancellazione, lease e conservazione della build dopo un errore d’installazione, con retry senza nuova esecuzione del motore. |
 | [Tests/NXLibraryCoreTests/ButtonPromptsTests.swift](../Tests/NXLibraryCoreTests/ButtonPromptsTests.swift) | Etichette e simboli per tastiera, controller e scelte esplicite dell’utente. |
 | [Tests/NXLibraryCoreTests/CheatCopyTests.swift](../Tests/NXLibraryCoreTests/CheatCopyTests.swift) | Testi di intestazione, rifiuto, conferma e rimozione dei cheats. |
 | [Tests/NXLibraryCoreTests/CheatFileTests.swift](../Tests/NXLibraryCoreTests/CheatFileTests.swift) | Parsing dei codici secondo il motore, sezioni, metadati, nomi duplicati e codici non validi. |

@@ -221,7 +221,8 @@ struct AddGameStepThreeView: View {
                         .seleneFont(19)
                         .foregroundColor(SeleneTheme.ink90)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text(reason?.next ?? "The previous app was left untouched. The log has the failing command and output.")
+                    Text(viewModel.canRetryReadyInstall ? "Your build has been kept. Retry installs it without porting again."
+                         : reason?.next ?? "The previous app was left untouched. The log has the failing command and output.")
                         .seleneFont(17)
                         .foregroundColor(SeleneTheme.ink60)
                         .fixedSize(horizontal: false, vertical: true)
@@ -368,7 +369,7 @@ struct AddGameStepThreeView: View {
                 })
             }
             specs += [
-                StepAction(id: "retry", title: "Try again",
+                StepAction(id: "retry", title: viewModel.canRetryReadyInstall ? "Retry installation" : "Try again",
                            systemImage: "arrow.clockwise", kind: leadsWithAction ? .secondary : .primary,
                            isEnabled: !viewModel.isBuilding) {
                     viewModel.retryLastBuild()

@@ -3,6 +3,87 @@ import Darwin
 @testable import NXLibraryCore
 
 final class BuildServiceTests: XCTestCase {
+    func testFailedInstallationKeepsReadyBuildForRetryWithoutRunningEngineAgain() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("NXInstallRetry-\(UUID())")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let final = root.appendingPathComponent("Applications/Game.app")
+        let temp = root.appendingPathComponent("Temp/Game.app")
+        try FileManager.default.createDirectory(at: final.appendingPathComponent("Contents"), withIntermediateDirectories: true)
+        try Data("old".utf8).write(to: final.appendingPathComponent("Contents/Info.plist"))
+        let script = root.appendingPathComponent("engine.sh")
+        let runs = root.appendingPathComponent("engine-runs")
+        try """
+        echo run >> "$2"
+        mkdir -p "$1/Contents"
+        printf new > "$1/Contents/Info.plist"
+        """.write(to: script, atomically: true, encoding: .utf8)
+        let denied = DenyInstallDirectory(parent: final.deletingLastPathComponent())
+        let service = BuildService(fileManager: denied)
+        let finished = expectation(description: "installation failed after compilation")
+        var result: BuildResult?
+        service.start(command: BuildCommand(executable: URL(fileURLWithPath: "/bin/sh"),
+            arguments: [script.path, temp.path, runs.path], environment: [:], workingDirectory: root),
+            logURL: root.appendingPathComponent("build.log"), tempApp: temp, finalApp: final,
+            eventHandler: { _ in }, completion: { result = $0; finished.fulfill() })
+        wait(for: [finished], timeout: 10)
+        let ready = try XCTUnwrap(result)
+        XCTAssertFalse(ready.success)
+        XCTAssertFalse(ready.cancelled)
+        XCTAssertNotNil(ready.error)
+        XCTAssertTrue(ready.installationFailed)
+        XCTAssertEqual(ready.heldApp, temp)
+        XCTAssertNil(ready.outputURL)
+        XCTAssertEqual(try String(contentsOf: final.appendingPathComponent("Contents/Info.plist")), "old")
+        XCTAssertEqual(try String(contentsOf: temp.appendingPathComponent("Contents/Info.plist")), "new")
+
+        var game = PortedGame(name: "Game", url: final, platform: .macApp, sizeBytes: 1, modificationDate: Date())
+        game.status = .built
+        let pending = PendingInstall(tempApp: try XCTUnwrap(ready.heldApp), finalApp: final,
+            record: BuildRecord(startedAt: Date(timeIntervalSince1970: 10), engineCommit: "2716f78"),
+            toolchain: ToolchainInfo(engineCommit: "2716f78"))
+        PendingInstaller.hold(pending, for: &game)
+        XCTAssertThrowsError(try PendingInstaller.install(&game, fileManager: denied))
+        XCTAssertEqual(game.pendingInstall, pending)
+        let store = LibraryStore(directory: root.appendingPathComponent("catalog"))
+        try store.save(LibraryFile(games: [game]))
+        game = try XCTUnwrap(store.load().games.first)
+        XCTAssertEqual(game.pendingInstall, pending)
+        XCTAssertEqual(try PendingInstaller.install(&game), .installed)
+        XCTAssertNil(game.pendingInstall)
+        XCTAssertEqual(try String(contentsOf: final.appendingPathComponent("Contents/Info.plist")), "new")
+        XCTAssertEqual(try String(contentsOf: runs), "run\n", "Retry installs the existing build without starting the engine")
+    }
+
+    func testFailedEngineDoesNotKeepItsPartialOutputAsReady() throws {
+        try assertUnreadyOutput(script: "mkdir -p \"$1/Contents\"; printf partial > \"$1/Contents/Info.plist\"; exit 1")
+    }
+
+    func testInvalidSuccessfulOutputDoesNotBecomeAReadyBuild() throws {
+        try assertUnreadyOutput(script: "mkdir -p \"$1\"; exit 0")
+    }
+
+    private func assertUnreadyOutput(script: String) throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("NXUnready-\(UUID())")
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let file = root.appendingPathComponent("engine.sh")
+        try script.write(to: file, atomically: true, encoding: .utf8)
+        let service = BuildService()
+        let finished = expectation(description: "unready build")
+        service.start(command: BuildCommand(executable: URL(fileURLWithPath: "/bin/sh"),
+            arguments: [file.path, root.appendingPathComponent("Temp.app").path], environment: [:], workingDirectory: root),
+            logURL: root.appendingPathComponent("build.log"), tempApp: root.appendingPathComponent("Temp.app"),
+            finalApp: root.appendingPathComponent("Final.app"), eventHandler: { _ in }, completion: { result in
+                XCTAssertFalse(result.success)
+                XCTAssertFalse(result.installationFailed)
+                XCTAssertNil(result.heldApp)
+                XCTAssertNil(result.outputURL)
+                XCTAssertNotNil(result.error)
+                finished.fulfill()
+            })
+        wait(for: [finished], timeout: 10)
+    }
+
     func testParsesEventsAndInstallsApp() throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("NXBuild-\(UUID().uuidString)")
@@ -140,5 +221,15 @@ final class BuildServiceTests: XCTestCase {
         Thread.sleep(forTimeInterval: 0.5)
         XCTAssertEqual(kill(pid, 0), -1)
         XCTAssertEqual(errno, ESRCH)
+    }
+}
+
+private final class DenyInstallDirectory: FileManager, @unchecked Sendable {
+    let parent: URL
+    init(parent: URL) { self.parent = parent.standardizedFileURL; super.init() }
+    override func createDirectory(at url: URL, withIntermediateDirectories createIntermediates: Bool,
+                                  attributes: [FileAttributeKey: Any]? = nil) throws {
+        if url.standardizedFileURL == parent { throw CocoaError(.fileWriteNoPermission) }
+        try super.createDirectory(at: url, withIntermediateDirectories: createIntermediates, attributes: attributes)
     }
 }

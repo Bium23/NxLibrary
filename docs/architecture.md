@@ -1,6 +1,6 @@
 # NX Library — guida tecnica
 
-Aggiornata il 1 novembre 2026 sul codice del repository. La mappa comprende 224 file Swift di produzione e 91 file di test e supporto ai test. L’ultima verifica del codice ha eseguito 667 test con esito positivo.
+Aggiornata il 1 novembre 2026 sul codice del repository. La mappa comprende 224 file Swift di produzione e 91 file di test e supporto ai test. L’ultima verifica del codice ha eseguito 670 test con esito positivo.
 
 Questa guida descrive il funzionamento attuale. Il [catalogo dei file](file-map.md) assegna una responsabilità a ogni file versionato, suddiviso per area. Le specifiche e i piani datati in `superpowers/` conservano le decisioni e i passaggi di implementazione delle singole funzionalità.
 
@@ -91,6 +91,8 @@ Il lock del pin attuale certifica Metal `32023.921`, asset Apple `27A266a`. La [
 6. `BuildEventParser` decodifica il progresso JSON. `PortingProgress` lo aggrega per la UI, con gli shader fino al 90% e le fasi finali nel restante 10%. Il modello alimenta wizard, tile, percentuale e stima del tempo.
 7. `BuildOutputInstaller` valida il bundle temporaneo e pubblica il gioco con `renamex_np`: `RENAME_SWAP` scambia atomicamente due app esistenti; `RENAME_EXCL` installa la prima copia senza sovrascrivere una destinazione comparsa nel frattempo. Sullo stesso volume usa direttamente il bundle pronto. Fra volumi diversi prepara prima una copia nascosta accanto alla destinazione, lasciando disponibile l’app corrente fino allo scambio.
 8. Se il gioco è aperto o l’installazione è trattenuta da un’operazione sui salvataggi, `PendingInstall` conserva il risultato temporaneo. `AppViewModel+PendingInstall` lo riprende quando può acquisire l’accesso necessario.
+
+Se il motore termina correttamente con un bundle valido e fallisce solo l’installazione, `BuildResult.heldApp` conserva la build pronta e `installationFailed` distingue questo caso dal porting fallito. Il coordinatore registra la stessa `PendingInstall` già usata per i giochi aperti. Un dialogo Selene offre Retry e Close: Retry installa quel bundle senza riavviare il motore; Close conserva la build. Gli errori delle installazioni differite passano dallo stesso dialogo. La schermata del porting offre anche Retry installation finché la build resta in attesa. Un errore di scrittura del catalogo conserva lo stato in memoria e impedisce che una scansione immediata lo sostituisca con quello precedente.
 
 Prima della pubblicazione, l’installer registra una piccola ricevuta accanto all’app con percorso di staging e identità filesystem dei bundle. Una ricevuta per destinazione resta dopo il successo e viene aggiornata al prossimo porting: se il processo termina prima del salvataggio del catalogo, il tentativo successivo riconosce l’app già pubblicata e completa il record, anche dopo la pulizia dello staging. Evita così un secondo scambio che rimetterebbe la vecchia app al suo posto. Una destinazione modificata esternamente durante lo stesso tentativo causa un errore conservativo. La vecchia app e l’eventuale sorgente copiata vengono eliminate solo dopo la pubblicazione.
 

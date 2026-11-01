@@ -512,6 +512,7 @@ public struct ConsoleView: View {
                   viewModel.gameToClose == nil,
                   viewModel.gameToRemove == nil,
                   viewModel.alertMessage == nil,
+                  viewModel.gameWithInstallFailure == nil,
                   !viewModel.showSetupCheck,
                   let window = event.window,
                   !window.isSheet,
