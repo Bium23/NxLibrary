@@ -13,7 +13,9 @@ final class PendingInstallTests: XCTestCase {
 
     private func makeApp(_ url: URL, version: String) throws {
         try FileManager.default.createDirectory(at: url.appendingPathComponent("Contents"), withIntermediateDirectories: true)
-        let plist = try PropertyListSerialization.data(fromPropertyList: ["CFBundleShortVersionString": version],
+        let plist = try PropertyListSerialization.data(fromPropertyList: ["CFBundleShortVersionString": version,
+                                                       "CFBundleIdentifier": "org.nxnative.0100000000000001",
+                                                       "DMTitleID": "0100000000000001", "CFBundleName": "Game"],
                                                        format: .xml, options: 0)
         try plist.write(to: url.appendingPathComponent("Contents/Info.plist"))
     }
@@ -98,6 +100,50 @@ final class PendingInstallTests: XCTestCase {
         g.pendingInstall = p
         XCTAssertThrowsError(try PendingInstaller.install(&g))
         XCTAssertEqual(g.pendingInstall, p)
+    }
+
+    func testReloadAndRescanFinishAnAlreadyPublishedPendingBuild() throws {
+        let p = pending()
+        try makeApp(p.finalApp, version: "1.0.0")
+        try makeApp(p.tempApp, version: "1.2.0")
+        let importer = ImportService()
+        func scanned() -> [PortedGame] {
+            importer.scan(directories: [root]).map { importer.makeGame(from: $0) }
+        }
+        let storeDirectory = root.appendingPathComponent("catalog")
+        let store = LibraryStore(directory: storeDirectory)
+        var g = try XCTUnwrap(scanned().first)
+        g.status = .built
+        g.pendingInstall = p
+        g.portingFailure = .failed
+        g.portingFailureReason = PortingFailureReason(kind: .diskFull, detail: "Previous failure")
+        g.settings.metalHUD = true
+        try store.save(LibraryFile(games: [g]))
+        XCTAssertEqual(try store.merge(scanned: scanned()).games.first?.pendingInstall, p)
+
+        var io = BuildInstallIO()
+        io.afterPublish = { throw CocoaError(.userCancelled) }
+        XCTAssertThrowsError(try BuildOutputInstaller.install(tempApp: p.tempApp, finalApp: p.finalApp, io: io))
+        XCTAssertEqual(BuildOutputInstaller.version(of: p.finalApp), "1.2.0")
+        // Simulate termination after the bundle was published and staging was
+        // cleaned, but before the new build record reached the catalog.
+        try FileManager.default.removeItem(at: p.folder)
+        let reopened = LibraryStore(directory: storeDirectory)
+        g = try XCTUnwrap(try reopened.merge(scanned: scanned()).games.first)
+        XCTAssertEqual(g.pendingInstall, p)
+        XCTAssertEqual(try PendingInstaller.install(&g), .installed)
+        XCTAssertNil(g.pendingInstall)
+        XCTAssertNil(g.portingFailure)
+        XCTAssertNil(g.portingFailureReason)
+        XCTAssertEqual(g.versionString, "1.2.0")
+        XCTAssertEqual(g.lastBuild, p.record)
+        XCTAssertEqual(g.toolchain, p.toolchain)
+        XCTAssertTrue(g.settings.metalHUD)
+        try reopened.save(LibraryFile(games: [g]))
+        g = try XCTUnwrap(try reopened.merge(scanned: scanned()).games.first)
+        XCTAssertNil(try PendingInstaller.install(&g))
+        XCTAssertEqual(g.lastBuild, p.record)
+        XCTAssertEqual(BuildOutputInstaller.version(of: p.finalApp), "1.2.0")
     }
 
     func testHoldingAgainDiscardsTheEarlierHeldBuild() throws {

@@ -72,11 +72,19 @@ public final class LibraryStore {
                 return existing.titleId?.caseInsensitiveCompare(target) == .orderedSame
             }) {
                 let old = library.games[index]
-                var merged = game
-                merged.id = old.id
-                merged.settings = old.settings
-                merged.isFavorite = old.isFavorite
-                merged.isHidden = old.isHidden
+                // Scans refresh disk observations. Application-owned state survives a scan.
+                var merged = old
+                merged.name = game.name
+                merged.url = game.url
+                merged.platform = game.platform
+                merged.sizeBytes = game.sizeBytes
+                merged.modificationDate = game.modificationDate
+                merged.bundleId = game.bundleId
+                merged.titleId = game.titleId
+                merged.versionString = game.versionString
+                merged.status = game.status
+                merged.toolchain = game.toolchain
+                merged.lastBuild = game.lastBuild
                 if old.sources.isEmpty {
                     merged.sources = game.sources
                 } else {

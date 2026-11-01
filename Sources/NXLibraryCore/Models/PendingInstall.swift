@@ -70,11 +70,15 @@ public enum PendingInstaller {
     public static func install(_ game: inout PortedGame, now: Date = Date(),
                                fileManager: FileManager = .default) throws -> Outcome? {
         guard let pending = game.pendingInstall else { return nil }
-        guard fileManager.fileExists(atPath: pending.tempApp.path) else {
+        do {
+            // A completed install can be acknowledged even if staging was
+            // cleaned before its new build record reached the library.
+            try BuildOutputInstaller.install(tempApp: pending.tempApp, finalApp: pending.finalApp, fileManager: fileManager)
+        } catch BuildInstallError.invalidApp(let path) where path == pending.tempApp.standardizedFileURL.path
+            && !fileManager.fileExists(atPath: pending.tempApp.path) {
             game.pendingInstall = nil
             return .gone
         }
-        try BuildOutputInstaller.install(tempApp: pending.tempApp, finalApp: pending.finalApp, fileManager: fileManager)
         try? fileManager.removeItem(at: pending.folder)
         game.recordInstalledBuild(pending.record, toolchain: pending.toolchain, at: pending.finalApp,
                                   version: BuildOutputInstaller.version(of: pending.finalApp), date: now)

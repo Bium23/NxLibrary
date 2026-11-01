@@ -114,7 +114,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Sources/NXLibraryCore/Models/PlaySession.swift](../Sources/NXLibraryCore/Models/PlaySession.swift) | Descrive una sessione persistibile con gioco e riferimenti temporali. |
 | [Sources/NXLibraryCore/Models/ActivitySummary.swift](../Sources/NXLibraryCore/Models/ActivitySummary.swift) | Aggrega sessioni, giorni e tempi della settimana per la scheda Activity. |
 | [Sources/NXLibraryCore/Models/MoreLikeThis.swift](../Sources/NXLibraryCore/Models/MoreLikeThis.swift) | Ordina i giochi correlati usando generi, sviluppatore e publisher. |
-| [Sources/NXLibraryCore/Services/LibraryStore.swift](../Sources/NXLibraryCore/Services/LibraryStore.swift) | Carica, salva e unisce cataloghi JSON e conserva la copia di recupero valida. |
+| [Sources/NXLibraryCore/Services/LibraryStore.swift](../Sources/NXLibraryCore/Services/LibraryStore.swift) | Carica e salva cataloghi JSON; il merge conserva stato applicativo, installazioni in attesa ed errori. Mantiene la copia di recupero valida. |
 | [Sources/NXLibraryCore/Services/ImportService.swift](../Sources/NXLibraryCore/Services/ImportService.swift) | Scansiona bundle nxnative e ne ricava identità, versione, percorso e dimensioni. |
 | [Sources/NXLibraryCore/Services/AppSizeCache.swift](../Sources/NXLibraryCore/Services/AppSizeCache.swift) | Conserva dimensioni per percorso e data del bundle e decide lo stato vuoto della libreria. |
 | [Sources/NXLibraryCore/Services/AppSettingsStore.swift](../Sources/NXLibraryCore/Services/AppSettingsStore.swift) | Pubblica impostazioni globali, legge settings.json e salva le modifiche tramite file temporaneo. |
@@ -157,7 +157,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Sources/NXLibraryCore/Models/PortingPresentation.swift](../Sources/NXLibraryCore/Models/PortingPresentation.swift) | Definisce fallimento persistito, ETA, aspetto della tile e pill del porting. |
 | [Sources/NXLibraryCore/Models/PortingFailureReason.swift](../Sources/NXLibraryCore/Models/PortingFailureReason.swift) | Classifica messaggi del motore e rifiuti preliminari in motivazioni e azioni spiegabili. |
 | [Sources/NXLibraryCore/Models/PortingNotice.swift](../Sources/NXLibraryCore/Models/PortingNotice.swift) | Decide quando notificare l’esito di un porting e prepara il relativo messaggio. |
-| [Sources/NXLibraryCore/Models/PendingInstall.swift](../Sources/NXLibraryCore/Models/PendingInstall.swift) | Conserva un bundle pronto in attesa e ne gestisce installazione, scarto e aggiornamento del record. |
+| [Sources/NXLibraryCore/Models/PendingInstall.swift](../Sources/NXLibraryCore/Models/PendingInstall.swift) | Conserva un bundle pronto in attesa e ne gestisce installazione, scarto e aggiornamento del record, anche dopo una pubblicazione interrotta. |
 | [Sources/NXLibraryCore/Models/RunningGames.swift](../Sources/NXLibraryCore/Models/RunningGames.swift) | Confronta bundle ID e mantiene uno snapshot delle applicazioni in esecuzione. |
 | [Sources/NXLibraryCore/Services/SourceCatalog.swift](../Sources/NXLibraryCore/Services/SourceCatalog.swift) | Riconosce sorgenti NSP/XCI/NSZ/XCZ e raggruppa titoli, aggiornamenti e DLC. |
 | [Sources/NXLibraryCore/Services/WorkspaceManager.swift](../Sources/NXLibraryCore/Services/WorkspaceManager.swift) | Prepara collegamenti simbolici, verifica link interrotti e adotta workspace e cache esistenti. |
@@ -166,7 +166,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Sources/NXLibraryCore/Services/BuildEvent.swift](../Sources/NXLibraryCore/Services/BuildEvent.swift) | Definisce gli eventi di fase, step, avanzamento e log ricevuti dal motore. |
 | [Sources/NXLibraryCore/Services/BuildEventParser.swift](../Sources/NXLibraryCore/Services/BuildEventParser.swift) | Decodifica eventi JSON e tratta le altre righe come log. |
 | [Sources/NXLibraryCore/Services/BuildService.swift](../Sources/NXLibraryCore/Services/BuildService.swift) | Avvia il porting, gestisce gruppo di processi, cancellazione, log, eventi e destinazione del risultato. |
-| [Sources/NXLibraryCore/Services/BuildOutputInstaller.swift](../Sources/NXLibraryCore/Services/BuildOutputInstaller.swift) | Valida il bundle temporaneo e sostituisce il gioco tramite spostamenti con copia .old e rollback. |
+| [Sources/NXLibraryCore/Services/BuildOutputInstaller.swift](../Sources/NXLibraryCore/Services/BuildOutputInstaller.swift) | Pubblica il bundle con rinomina o scambio atomico, prepara copie fra volumi e riconosce i tentativi già completati tramite ricevuta. |
 | [Sources/NXLibraryCore/Services/LaunchService.swift](../Sources/NXLibraryCore/Services/LaunchService.swift) | Scrive l’ambiente runtime e avvia il bundle del gioco tramite NSWorkspace. |
 | [Sources/NXLibraryCore/Services/StorageManager.swift](../Sources/NXLibraryCore/Services/StorageManager.swift) | Misura app, cache e log e ne gestisce la pulizia. Include l’API preesistente di backup ZIP. |
 | [Sources/NXLibraryCore/Services/DiagnosticsReport.swift](../Sources/NXLibraryCore/Services/DiagnosticsReport.swift) | Genera il rapporto diagnostico e rimuove percorso home e valori riconosciuti come chiavi. |
@@ -379,7 +379,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Tests/NXLibraryCoreTests/BoxArtServiceTests.swift](../Tests/NXLibraryCoreTests/BoxArtServiceTests.swift) | Matching GameTDB, regioni e durata delle ricerche senza risultato. |
 | [Tests/NXLibraryCoreTests/BuildCommandBuilderTests.swift](../Tests/NXLibraryCoreTests/BuildCommandBuilderTests.swift) | Contratto CLI, opzioni runtime/build e propagazione dell’override Metal. |
 | [Tests/NXLibraryCoreTests/BuildEventParserTests.swift](../Tests/NXLibraryCoreTests/BuildEventParserTests.swift) | Eventi JSON, fasi, percentuali e righe ordinarie di log. |
-| [Tests/NXLibraryCoreTests/BuildOutputInstallerTests.swift](../Tests/NXLibraryCoreTests/BuildOutputInstallerTests.swift) | Sostituzione, rifiuto di destinazioni non-app e conservazione del bundle precedente in caso di errore. |
+| [Tests/NXLibraryCoreTests/BuildOutputInstallerTests.swift](../Tests/NXLibraryCoreTests/BuildOutputInstallerTests.swift) | Pubblicazione atomica, interruzioni, tentativi ripetuti, copie fra volumi e conservazione dei bundle in caso di errore. |
 | [Tests/NXLibraryCoreTests/BuildServiceTests.swift](../Tests/NXLibraryCoreTests/BuildServiceTests.swift) | Processi, eventi, installazione, cancellazione e coordinamento con i lease dei salvataggi. |
 | [Tests/NXLibraryCoreTests/ButtonPromptsTests.swift](../Tests/NXLibraryCoreTests/ButtonPromptsTests.swift) | Etichette e simboli per tastiera, controller e scelte esplicite dell’utente. |
 | [Tests/NXLibraryCoreTests/CheatCopyTests.swift](../Tests/NXLibraryCoreTests/CheatCopyTests.swift) | Testi di intestazione, rifiuto, conferma e rimozione dei cheats. |
@@ -410,7 +410,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Tests/NXLibraryCoreTests/LauncherSettingsTests.swift](../Tests/NXLibraryCoreTests/LauncherSettingsTests.swift) | Metadati launcher.json e fallback dei controlli per build precedenti. |
 | [Tests/NXLibraryCoreTests/LibraryPresentationTests.swift](../Tests/NXLibraryCoreTests/LibraryPresentationTests.swift) | Formattazione dei metadati e delle statistiche della libreria. |
 | [Tests/NXLibraryCoreTests/LibraryQueryTests.swift](../Tests/NXLibraryCoreTests/LibraryQueryTests.swift) | Filtri, ricerca, ordinamento e rapporto con la cronologia di gioco. |
-| [Tests/NXLibraryCoreTests/LibraryStoreTests.swift](../Tests/NXLibraryCoreTests/LibraryStoreTests.swift) | Persistenza, schema, merge e recupero del catalogo dalla copia valida. |
+| [Tests/NXLibraryCoreTests/LibraryStoreTests.swift](../Tests/NXLibraryCoreTests/LibraryStoreTests.swift) | Persistenza, merge, recupero e conservazione di installazioni in attesa ed errori dopo scansioni ripetute. |
 | [Tests/NXLibraryCoreTests/MaterialIconTests.swift](../Tests/NXLibraryCoreTests/MaterialIconTests.swift) | Integrità dei glifi e del font delle icone. |
 | [Tests/NXLibraryCoreTests/MetadataPickerTests.swift](../Tests/NXLibraryCoreTests/MetadataPickerTests.swift) | Alternative per campo, override persistiti e applicazione ai metadati del gioco. |
 | [Tests/NXLibraryCoreTests/MoonlightFieldTests.swift](../Tests/NXLibraryCoreTests/MoonlightFieldTests.swift) | Generazione deterministica e limiti dei dati delle particelle. |
@@ -420,7 +420,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Tests/NXLibraryCoreTests/OnlineArtworkSourcesTests.swift](../Tests/NXLibraryCoreTests/OnlineArtworkSourcesTests.swift) | Ricerca Steam e loghi MediaWiki/Commons con risposte sintetiche. |
 | [Tests/NXLibraryCoreTests/OnlineBackgroundsTests.swift](../Tests/NXLibraryCoreTests/OnlineBackgroundsTests.swift) | Parser degli sfondi fissi, risoluzioni, crediti e nomi dei download. |
 | [Tests/NXLibraryCoreTests/OnlineLiveSourcesTests.swift](../Tests/NXLibraryCoreTests/OnlineLiveSourcesTests.swift) | Parser e indirizzi dei provider di sfondi video. |
-| [Tests/NXLibraryCoreTests/PendingInstallTests.swift](../Tests/NXLibraryCoreTests/PendingInstallTests.swift) | Staging dei bundle pronti, successiva installazione e cartelle da conservare. |
+| [Tests/NXLibraryCoreTests/PendingInstallTests.swift](../Tests/NXLibraryCoreTests/PendingInstallTests.swift) | Staging, installazione e cartelle da conservare; riapertura e scansione prima di completare un’installazione già pubblicata. |
 | [Tests/NXLibraryCoreTests/PlaySessionStoreTests.swift](../Tests/NXLibraryCoreTests/PlaySessionStoreTests.swift) | Persistenza, durata, heartbeat e riconciliazione delle sessioni. |
 | [Tests/NXLibraryCoreTests/PortedGameTests.swift](../Tests/NXLibraryCoreTests/PortedGameTests.swift) | Modello del gioco, compatibilità dei record e condizioni di disponibilità dell’app. |
 | [Tests/NXLibraryCoreTests/PortingFailureReasonTests.swift](../Tests/NXLibraryCoreTests/PortingFailureReasonTests.swift) | Classificazione dei fallimenti e corrispondenza con i messaggi del motore locale. |

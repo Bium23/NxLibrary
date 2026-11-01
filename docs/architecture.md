@@ -1,6 +1,6 @@
 # NX Library — guida tecnica
 
-Aggiornata il 1 novembre 2026 sul codice del repository. La mappa comprende 224 file Swift di produzione e 91 file di test e supporto ai test. L’ultima verifica del codice ha eseguito 654 test con esito positivo.
+Aggiornata il 1 novembre 2026 sul codice del repository. La mappa comprende 224 file Swift di produzione e 91 file di test e supporto ai test. L’ultima verifica del codice ha eseguito 667 test con esito positivo.
 
 Questa guida descrive il funzionamento attuale. Il [catalogo dei file](file-map.md) assegna una responsabilità a ogni file versionato, suddiviso per area. Le specifiche e i piani datati in `superpowers/` conservano le decisioni e i passaggi di implementazione delle singole funzionalità.
 
@@ -65,6 +65,8 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
 
 `ImportService` scansiona i bundle `.app`, legge `Info.plist`, riconosce gli identificativi nxnative e produce le voci importabili. `AppSizeCache` ricorda le dimensioni in funzione di percorso e data di modifica. `LibraryStore` carica e salva il catalogo, conserva `library.json.bak` e offre il merge delle voci. Il coordinamento applicativo riconcilia app trovate, dati già salvati e sorgenti disponibili.
 
+Il merge parte dalla voce persistita e aggiorna esplicitamente i dati osservati dalla scansione. Conserva impostazioni, identità, preferiti, installazione in attesa ed errore dell’ultimo porting. Restano le regole precedenti per associare le sorgenti e conservare la provenienza di una build installata.
+
 `AppRouter` gestisce schermata corrente, cronologia di ritorno e richieste di selezione. I modelli `SpotlightState`, `LibrarySelectionState`, `DetailsFocus`, `MenuSelectionModel` e `FocusIndex` descrivono il focus indipendentemente dal disegno SwiftUI. `LibraryQuery` applica ricerca, filtri e ordinamento.
 
 Le viste principali sono Spotlight, Collection e Details. Ricerca, Add Game, Console, Game Options e Settings sono raggiunti dalla shell e dalle azioni del router. Le estensioni `…+Input.swift` traducono tastiera, mouse e controller in modifiche ai modelli di focus.
@@ -87,8 +89,10 @@ Il lock del pin attuale certifica Metal `32023.921`, asset Apple `27A266a`. La [
 4. Il coordinatore ricontrolla requisiti, spazio, chiavi e destinazione. `BuildCommandBuilder` produce eseguibile, argomenti, directory di lavoro e ambiente.
 5. `BuildService` avvia il processo del motore, gestisce il gruppo di processi, raccoglie stdout e stderr, scrive il log e mantiene l’asserzione contro lo stop per inattività.
 6. `BuildEventParser` decodifica il progresso JSON. `PortingProgress` lo aggrega per la UI, con gli shader fino al 90% e le fasi finali nel restante 10%. Il modello alimenta wizard, tile, percentuale e stima del tempo.
-7. `BuildOutputInstaller` valida il bundle temporaneo e installa il gioco con una sequenza di spostamenti, conservando `.old` durante la sostituzione e ripristinandolo se il nuovo spostamento fallisce.
+7. `BuildOutputInstaller` valida il bundle temporaneo e pubblica il gioco con `renamex_np`: `RENAME_SWAP` scambia atomicamente due app esistenti; `RENAME_EXCL` installa la prima copia senza sovrascrivere una destinazione comparsa nel frattempo. Sullo stesso volume usa direttamente il bundle pronto. Fra volumi diversi prepara prima una copia nascosta accanto alla destinazione, lasciando disponibile l’app corrente fino allo scambio.
 8. Se il gioco è aperto o l’installazione è trattenuta da un’operazione sui salvataggi, `PendingInstall` conserva il risultato temporaneo. `AppViewModel+PendingInstall` lo riprende quando può acquisire l’accesso necessario.
+
+Prima della pubblicazione, l’installer registra una piccola ricevuta accanto all’app con percorso di staging e identità filesystem dei bundle. Una ricevuta per destinazione resta dopo il successo e viene aggiornata al prossimo porting: se il processo termina prima del salvataggio del catalogo, il tentativo successivo riconosce l’app già pubblicata e completa il record, anche dopo la pulizia dello staging. Evita così un secondo scambio che rimetterebbe la vecchia app al suo posto. Una destinazione modificata esternamente durante lo stesso tentativo causa un errore conservativo. La vecchia app e l’eventuale sorgente copiata vengono eliminate solo dopo la pubblicazione.
 
 `BuildRecord` conserva l’esito e la provenienza del build. `PortingFailureClassifier` riconosce i messaggi del motore e propone un’azione, presentata da `AppViewModel+Porting`. `PortingNotice` decide se notificare l’esito mentre l’app è in background. `NotificationService` gestisce la notifica di sistema e la destinazione del clic.
 
@@ -171,6 +175,8 @@ I percorsi sono relativi alla home dell’utente. `Application Support/NXLibrary
 | `~/Library/Application Support/nxnative/<TID>/` | `env.txt`, `save`, eventuale `save_device`, cheats e dati runtime del motore. |
 | `~/Library/Logs/nxnative/<TID>.log` | Log del gioco avviato. |
 | `~/Applications/<nome>.app` | Bundle del gioco installato, salvo percorso importato o scelto. |
+| Accanto al gioco: `.nxlibrary-install-<hash>.json` | Ultima ricevuta di installazione per quel percorso, gestita da `BuildOutputInstaller`. |
+| Accanto al gioco: `.nxlibrary-incoming-<hash>.app` | Preparazione temporanea quando il bundle pronto si trova su un altro volume. |
 | `UserDefaults` del bundle NX Library | Percorsi ricordati, stato Setup, override toolchain e cache di alcuni controlli. |
 
 Nel repository, `.build/` contiene gli output SwiftPM. `work/Runtime` è il runtime preparato per il packaging, `work/release` contiene i prodotti di release e `dist/` il DMG di sviluppo. Queste cartelle sono escluse da Git. Il catalogo descrive i file versionati separatamente dai dati personali creati durante l’uso.

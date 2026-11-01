@@ -59,6 +59,41 @@ final class LibraryStoreTests: XCTestCase {
         XCTAssertEqual(merged.games.first?.isHidden, true)
     }
 
+    func testRepeatedScansKeepPendingInstallAndFailureDetails() throws {
+        let apps = dir.appendingPathComponent("Applications")
+        let app = apps.appendingPathComponent("Game.app")
+        try FileManager.default.createDirectory(at: app.appendingPathComponent("Contents"), withIntermediateDirectories: true)
+        let info = ["CFBundleIdentifier": "org.nxnative.0100000000000001",
+                    "DMTitleID": "0100000000000001", "CFBundleName": "Game",
+                    "CFBundleShortVersionString": "1.0"]
+        try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0)
+            .write(to: app.appendingPathComponent("Contents/Info.plist"))
+        let importer = ImportService()
+        let store = LibraryStore(directory: dir.appendingPathComponent("store"))
+        var game = try XCTUnwrap(importer.scan(directories: [apps]).first.map { importer.makeGame(from: $0) })
+        game.isFavorite = true
+        game.settings.metalHUD = true
+        game.pendingInstall = PendingInstall(tempApp: dir.appendingPathComponent("waiting/Game.app"), finalApp: app,
+            record: BuildRecord(startedAt: Date(timeIntervalSince1970: 1), engineCommit: "2716f78"),
+            toolchain: ToolchainInfo(engineCommit: "2716f78"))
+        game.portingFailure = .failed
+        game.portingFailureReason = PortingFailureReason(kind: .diskFull, detail: "Synthetic failure")
+        try store.save(LibraryFile(games: [game]))
+
+        for _ in 0..<3 {
+            let scanned = importer.scan(directories: [apps]).map { importer.makeGame(from: $0) }
+            let merged = try store.merge(scanned: scanned)
+            let saved = try XCTUnwrap(store.load().games.first)
+            XCTAssertEqual(merged.games.count, 1)
+            XCTAssertEqual(saved.id, game.id)
+            XCTAssertEqual(saved.pendingInstall, game.pendingInstall)
+            XCTAssertEqual(saved.portingFailure, game.portingFailure)
+            XCTAssertEqual(saved.portingFailureReason, game.portingFailureReason)
+            XCTAssertEqual(saved.settings, game.settings)
+            XCTAssertTrue(saved.isFavorite)
+        }
+    }
+
     func testCorruptFileRestoresBackup() throws {
         let store = LibraryStore(directory: dir)
         var game = PortedGame(name: "G", url: URL(fileURLWithPath: "/tmp/g.app"),
