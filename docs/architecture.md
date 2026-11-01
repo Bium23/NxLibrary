@@ -2,15 +2,9 @@
 
 Aggiornata il 1 novembre 2026 sul codice del repository. La mappa comprende 225 file Swift di produzione e 93 file di test e supporto ai test. L’ultima verifica completa ha superato 703 test Swift e 5 prove Python dei controlli di pubblicazione.
 
-Questa guida descrive il funzionamento attuale. Il [catalogo dei file](file-map.md) assegna una responsabilità a ogni file versionato, suddiviso per area. Le specifiche e i piani datati in `superpowers/` conservano le decisioni e i passaggi di implementazione delle singole funzionalità.
+Questa guida descrive il funzionamento attuale. Il [catalogo dei file](file-map.md) assegna una responsabilità a ogni file versionato, suddiviso per area.
 
-La [revisione dell’audit del 1 novembre](2026-11-01-audit-review.md) riporta i problemi riprodotti, le misure delle prestazioni e l’ordine proposto degli interventi.
-
-La [verifica delle impostazioni](2026-11-01-settings-audit.md) segue ogni controllo di Settings e le opzioni per titolo, distinguendo comportamento previsto, difetti riprodotti e verifiche manuali residue.
-
-La [revisione prima di GitHub](2026-11-01-pre-github-review.md) distingue la pubblicazione del codice dalla distribuzione dell'app e raccoglie i problemi ancora aperti, la passata UI proposta e le verifiche necessarie.
-
-La sezione finale di quella revisione registra le correzioni successive: lettura del porting per righe complete, focus con identità esplicita per le righe dinamiche, confini dei file e diagnostica, dialoghi Selene, guida comandi separata e preparazione asincrona degli aggiornamenti. Il runtime e i contenuti versionati vengono verificati da scripts/check_publication.py. Anche build_app.sh installa ora il bundle completo attraverso BuildOutputInstaller, dopo firma e verifica.
+Il [README](../README.md) è la guida d'uso; la [guida di sviluppo](development.md) raccoglie build, runtime, CI e release. Il [changelog](../CHANGELOG.md) distingue il lavoro non pubblicato dalle versioni distribuite. Il runtime e i contenuti versionati vengono verificati da `scripts/check_publication.py`; `build_app.sh` installa il bundle completo attraverso `BuildOutputInstaller`, dopo firma e verifica.
 
 ## Indice
 
@@ -167,7 +161,7 @@ All’avvio o al refresh, un journal incompleto porta al rollback del salvataggi
 
 Storage → Save backups apre la cartella comune degli snapshot. Il vecchio export ZIP di Storage è stato rimosso; la creazione delle copie passa dal pannello Saves.
 
-I backup sono copie locali conservate fino alla gestione dell’utente. Sono automatici prima di importazione e ripristino, oppure manuali con Back up now. Importazione e ripristino richiedono sincronizzazione cloud effettivamente disattivata. La [specifica dei salvataggi](superpowers/specs/2026-10-31-saves-design.md) dettaglia precedenze, casi rifiutati e verifiche eseguite.
+I backup sono copie locali conservate fino alla gestione dell’utente. Sono automatici prima di importazione e ripristino, oppure manuali con Back up now. Importazione e ripristino richiedono sincronizzazione cloud effettivamente disattivata. I casi rifiutati e le verifiche eseguite sono descritti nelle sezioni Saves del README e dei test.
 
 ## Artwork, metadati e sfondi
 

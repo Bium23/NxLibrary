@@ -1,6 +1,6 @@
 # NX Library — catalogo dei file
 
-Aggiornato il 1 novembre 2026. Copertura di **391 file** del progetto, compresi i nuovi controlli di pubblicazione, la CI e il master dell’icona. Le cartelle personali di audit, output e ricerca sono escluse.
+Aggiornato il 1 novembre 2026. Copertura di **363 file versionati** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona e le guide per sviluppo e media. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -35,16 +35,17 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 
 ## Progetto e configurazione
 
-La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURITY.md](../SECURITY.md), [la CI](../.github/workflows/ci.yml) e [il modello di segnalazione](../.github/ISSUE_TEMPLATE/bug_report.yml): istruzioni di contribuzione, canale per vulnerabilità, controlli automatici su codice e contenuti e richieste di riproduzione senza allegati privati.
+La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURITY.md](../SECURITY.md), [la CI](../.github/workflows/ci.yml) e [il modello di segnalazione](../.github/ISSUE_TEMPLATE/bug_report.yml): istruzioni di contribuzione e aggiornamento del changelog, canale per vulnerabilità, controlli automatici su codice e contenuti e richieste di riproduzione senza allegati privati.
 
 | File | Responsabilità |
 |---|---|
 | [.gitignore](../.gitignore) | Esclude output di build, bundle, cache, work e file personali dell’IDE dal versionamento. |
 | [AGENTS.md](../AGENTS.md) | Definisce vincoli per gli agenti, procedura di upgrade del motore e verifiche assegnate all’utente. |
+| [CHANGELOG.md](../CHANGELOG.md) | Registra le modifiche visibili all'utente per release; Unreleased raccoglie il lavoro non ancora pubblicato. |
 | [LICENSE](../LICENSE) | Contiene la licenza MIT di NX Library. |
 | [NOTICE](../NOTICE) | Conserva attribuzioni e provenienza dei componenti e dei riferimenti riutilizzati. |
 | [Package.swift](../Package.swift) | Dichiara i target SwiftPM, le loro dipendenze e il deployment macOS minimo. |
-| [README.md](../README.md) | Presenta funzionalità, uso, requisiti, build, release e collegamenti alla documentazione tecnica. |
+| [README.md](../README.md) | Presenta l'app con logo e badge, guida d'uso, requisiti, risoluzione dei problemi, crediti e note legali. |
 | [runtime.lock](../runtime.lock) | Fissa versioni, download e hash del runtime Python e degli strumenti inclusi nel bundle. |
 
 ## Ingresso e shell dell’app
@@ -499,49 +500,20 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Resources/Selene/Fonts/MaterialIcons-Regular.ttf](../Resources/Selene/Fonts/MaterialIcons-Regular.ttf) | Font dei glifi Material Icons disegnati dalla UI. |
 | [Resources/Selene/Fonts/MaterialIcons-LICENSE.txt](../Resources/Selene/Fonts/MaterialIcons-LICENSE.txt) | Licenza del font Material Icons incluso. |
 | [Resources/Selene/NOTICE.txt](../Resources/Selene/NOTICE.txt) | Attribuzioni delle risorse Selene incluse. |
-| [Resources/Selene/NOTICE-palettes.txt](../Resources/Selene/NOTICE-palettes.txt) | Attribuzioni delle palette e dei wallpaper inclusi con esse. |
+| [Resources/Selene/NOTICE-palettes.txt](../Resources/Selene/NOTICE-palettes.txt) | Attribuzioni delle palette incluse con esse. |
 | [Resources/Selene/Sounds/Boot.wav](../Resources/Selene/Sounds/Boot.wav) | Cue sonoro incluso per l’avvio. |
 | [Resources/Selene/Sounds/Key.wav](../Resources/Selene/Sounds/Key.wav) | Cue sonoro incluso per la pressione dei tasti. |
 | [Resources/Selene/Sounds/Success.wav](../Resources/Selene/Sounds/Success.wav) | Cue sonoro incluso per il completamento di un’azione. |
 | [Resources/Selene/Sounds/navigation.wav](../Resources/Selene/Sounds/navigation.wav) | Cue sonoro incluso per la navigazione. |
-| [Resources/Selene/Wallpapers/gruvbox/1-the-backwater.jpg](../Resources/Selene/Wallpapers/gruvbox/1-the-backwater.jpg) | Wallpaper incluso del gruppo Gruvbox, The Backwater. |
-| [Resources/Selene/Wallpapers/gruvbox/2-flower-basket.jpg](../Resources/Selene/Wallpapers/gruvbox/2-flower-basket.jpg) | Wallpaper incluso del gruppo Gruvbox, Flower Basket. |
-| [Resources/Selene/Wallpapers/gruvbox/3-village-square.jpg](../Resources/Selene/Wallpapers/gruvbox/3-village-square.jpg) | Wallpaper incluso del gruppo Gruvbox, Village Square. |
-| [Resources/Selene/Wallpapers/gruvbox/4-idyllic-procession.jpg](../Resources/Selene/Wallpapers/gruvbox/4-idyllic-procession.jpg) | Wallpaper incluso del gruppo Gruvbox, Idyllic Procession. |
-| [Resources/Selene/Wallpapers/kanagawa/1-kanagawa.jpg](../Resources/Selene/Wallpapers/kanagawa/1-kanagawa.jpg) | Wallpaper incluso del gruppo Kanagawa. |
 
 ## Documentazione tecnica e registri datati
 
 | File | Responsabilità |
 |---|---|
 | [docs/architecture.md](../docs/architecture.md) | Spiega architettura corrente, confini dei componenti, flussi, dati su disco e verifiche. |
+| [docs/development.md](../docs/development.md) | Documenta prerequisiti, runtime, build, debug, verifiche, CI e preparazione delle release. |
 | [docs/file-map.md](../docs/file-map.md) | Catalogo corrente delle responsabilità di tutti i file versionati, suddiviso per area. |
-| [docs/2026-11-01-audit-review.md](../docs/2026-11-01-audit-review.md) | Verifica i rilievi dell’audit, documenta conflitti riprodotti, misure prestazionali e priorità degli interventi. |
-| [docs/2026-11-01-settings-audit.md](../docs/2026-11-01-settings-audit.md) | Verifica ogni controllo di Settings e le opzioni per titolo, con trigger, prove isolate e priorità delle correzioni. |
-| [docs/2026-11-01-pre-github-review.md](../docs/2026-11-01-pre-github-review.md) | Distingue codice pubblico e release scaricabile; documenta difetti ancora aperti, coerenza UI, confini di sicurezza, risorse e verifiche prima della pubblicazione. |
-| [docs/superpowers/plans/2026-10-26-nxlibrary.md](../docs/superpowers/plans/2026-10-26-nxlibrary.md) | Piano datato di implementazione. NX Library Implementation Plan. |
-| [docs/superpowers/plans/2026-10-27-selene-ui-foundation.md](../docs/superpowers/plans/2026-10-27-selene-ui-foundation.md) | Piano datato di implementazione. Selene UI — Foundation, Library and Detail Implementation Plan. |
-| [docs/superpowers/plans/2026-10-27-selene-ui-settings-addgame.md](../docs/superpowers/plans/2026-10-27-selene-ui-settings-addgame.md) | Piano datato di implementazione. Selene UI — Settings, Add Game and Polish Implementation Plan. |
-| [docs/superpowers/plans/2026-10-29-selene-fidelity.md](../docs/superpowers/plans/2026-10-29-selene-fidelity.md) | Piano datato di implementazione. Selene Fidelity Pass Implementation Plan. |
-| [docs/superpowers/plans/2026-10-30-setup-check-bundled-runtime.md](../docs/superpowers/plans/2026-10-30-setup-check-bundled-runtime.md) | Piano datato di implementazione. Setup Check and Bundled Runtime Implementation Plan. |
-| [docs/superpowers/plans/2026-10-31-add-game-and-porting-tile.md](../docs/superpowers/plans/2026-10-31-add-game-and-porting-tile.md) | Piano datato di implementazione. Add game panel and porting tile Implementation Plan. |
-| [docs/superpowers/plans/2026-10-31-app-updates.md](../docs/superpowers/plans/2026-10-31-app-updates.md) | Piano datato di implementazione. App Updates Implementation Plan. |
-| [docs/superpowers/plans/2026-10-31-cheats.md](../docs/superpowers/plans/2026-10-31-cheats.md) | Piano datato di implementazione. Cheats Implementation Plan. |
-| [docs/superpowers/plans/2026-10-31-error-prevention.md](../docs/superpowers/plans/2026-10-31-error-prevention.md) | Piano datato di implementazione. Error Prevention Implementation Plan. |
-| [docs/superpowers/plans/2026-10-31-saves.md](../docs/superpowers/plans/2026-10-31-saves.md) | Piano datato di implementazione. Save Backups and Imports Implementation Plan. |
-| [docs/superpowers/specs/2026-10-26-nxlibrary-design.md](../docs/superpowers/specs/2026-10-26-nxlibrary-design.md) | Specifica datata di prodotto e comportamento. NX Library — Design Specification. |
-| [docs/superpowers/specs/2026-10-27-selene-ui-redesign-design.md](../docs/superpowers/specs/2026-10-27-selene-ui-redesign-design.md) | Specifica datata di prodotto e comportamento. NX Library — Selene-Inspired UI Redesign. |
-| [docs/superpowers/specs/2026-10-29-selene-fidelity-design.md](../docs/superpowers/specs/2026-10-29-selene-fidelity-design.md) | Specifica datata di prodotto e comportamento. NX Library — Selene Fidelity Pass. |
-| [docs/superpowers/specs/2026-10-30-online-and-live-backgrounds-design.md](../docs/superpowers/specs/2026-10-30-online-and-live-backgrounds-design.md) | Specifica datata di prodotto e comportamento. Online and live backgrounds. |
-| [docs/superpowers/specs/2026-10-30-setup-check-bundled-runtime-design.md](../docs/superpowers/specs/2026-10-30-setup-check-bundled-runtime-design.md) | Specifica datata di prodotto e comportamento. Setup check and bundled runtime — design. |
-| [docs/superpowers/specs/2026-10-30-setup-progress-and-harmony-design.md](../docs/superpowers/specs/2026-10-30-setup-progress-and-harmony-design.md) | Specifica datata di prodotto e comportamento. Setup check: progress and toolchain harmony. |
-| [docs/superpowers/specs/2026-10-30-switch-artwork-metadata-design.md](../docs/superpowers/specs/2026-10-30-switch-artwork-metadata-design.md) | Specifica datata di prodotto e comportamento. Switch artwork and metadata. |
-| [docs/superpowers/specs/2026-10-31-add-game-and-porting-tile-design.md](../docs/superpowers/specs/2026-10-31-add-game-and-porting-tile-design.md) | Specifica datata di prodotto e comportamento. Add game panel and the porting tile — design. |
-| [docs/superpowers/specs/2026-10-31-app-updates-design.md](../docs/superpowers/specs/2026-10-31-app-updates-design.md) | Specifica datata di prodotto e comportamento. App updates — design. |
-| [docs/superpowers/specs/2026-10-31-cheats-design.md](../docs/superpowers/specs/2026-10-31-cheats-design.md) | Specifica datata di prodotto e comportamento. Cheats — design. |
-| [docs/superpowers/specs/2026-10-31-error-prevention-design.md](../docs/superpowers/specs/2026-10-31-error-prevention-design.md) | Specifica datata di prodotto e comportamento. Error prevention and explanation — design. |
-| [docs/superpowers/specs/2026-10-31-saves-design.md](../docs/superpowers/specs/2026-10-31-saves-design.md) | Specifica datata di prodotto e comportamento. Save backups and imports — design. |
-| [docs/upstream-issues/2026-10-27-crash-bandicoot-rewriter.md](../docs/upstream-issues/2026-10-27-crash-bandicoot-rewriter.md) | Analisi del problema del rewriter riscontrato con Crash Bandicoot e riferimento al motore verificato. |
+| [docs/media/README.md](../docs/media/README.md) | Definisce schermate, didascalie e collocazione del video da aggiungere al README quando disponibili. |
 | [docs/upstream-upgrades/2026-10-27-06b7b3e-4f24ce6.md](../docs/upstream-upgrades/2026-10-27-06b7b3e-4f24ce6.md) | Registro della revisione del delta, scelte di adozione e verifiche per questo upgrade del motore. |
 | [docs/upstream-upgrades/2026-10-27-4f24ce6-1963fab.md](../docs/upstream-upgrades/2026-10-27-4f24ce6-1963fab.md) | Registro della revisione del delta, scelte di adozione e verifiche per questo upgrade del motore. |
 | [docs/upstream-upgrades/2026-10-29-1963fab-ee369f0.md](../docs/upstream-upgrades/2026-10-29-1963fab-ee369f0.md) | Registro della revisione del delta, scelte di adozione e verifiche per questo upgrade del motore. |

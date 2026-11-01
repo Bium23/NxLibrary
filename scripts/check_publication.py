@@ -11,6 +11,14 @@ import subprocess
 
 
 PRIVATE_ROOTS = {"output", "reports", "research_notes", ".superpowers", ".aws"}
+# Directories that hold private notes or artwork and must never be published.
+PRIVATE_DIRS = {
+    ("docs", "audits"),
+    ("docs", "superpowers"),
+    ("docs", "upstream-issues"),
+    ("docs", "private"),
+    ("Resources", "Selene", "Wallpapers"),
+}
 PRIVATE_EXTENSIONS = {
     ".keys", ".nsp", ".xci", ".nsz", ".xcz", ".nca", ".nso", ".tik", ".cert",
     ".app", ".dmg", ".ipa", ".log", ".p12", ".pfx",
@@ -27,7 +35,8 @@ def check_files(root):
     issues = []
     for name in filter(None, names):
         relative = Path(name)
-        if (relative.parts[0] in PRIVATE_ROOTS or relative.parts[:2] == ("docs", "audits")
+        if (relative.parts[0] in PRIVATE_ROOTS
+                or any(relative.parts[:len(folder)] == folder for folder in PRIVATE_DIRS)
                 or any(Path(part).suffix.lower() in PRIVATE_EXTENSIONS for part in relative.parts)
                 or (relative.name.startswith(".env") and relative.name != ".env.example")
                 or relative.name == "env.txt"):

@@ -1,206 +1,266 @@
-# NX Library
+<h1 align="center">
+  <img src="Resources/AppIcon-Dark.png" alt="NX Library app icon" width="80" height="80" align="absmiddle">
+  NX Library
+</h1>
 
-A personal, native macOS front-end for [nxnative](https://github.com/seedds/nxnative). It builds your own Switch dumps into self-contained Mac apps and launches them from a console-style library. No emulator is involved.
+<p align="center"><strong>A home for your games on Mac.</strong></p>
 
-**Status:** v0.1.0 alpha, developed and manually checked on one Apple-silicon Mac. Game compatibility and the first installation on another Mac still require manual verification. Current architecture and file responsibilities are documented in the [technical guide](docs/architecture.md) and [file catalog](docs/file-map.md). Dated designs and plans are in [`docs/superpowers/`](docs/superpowers/).
+<p align="center">
+  Organise your library, build your own Switch dumps with nxnative,<br>
+  and launch the resulting Mac apps from one place.
+</p>
 
-## What it does
+<p align="center">
+  <a href="#project-status"><img src="https://img.shields.io/badge/status-alpha-DB806B?style=flat" alt="Status: alpha"></a>
+  <a href="#requirements"><img src="https://img.shields.io/badge/macOS-13%2B-3D4754?style=flat" alt="macOS 13 or later"></a>
+  <a href="#requirements"><img src="https://img.shields.io/badge/Apple-silicon-3D4754?style=flat" alt="Apple silicon"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-64816C?style=flat" alt="MIT license"></a>
+</p>
 
-- Imports existing nxnative Mac apps (including the current 18.17 GB Breath of the Wild build) and keeps Play available when sources are missing.
-- Imports `prod.keys` once into Application Support with mode `0600`; the original file is untouched and key values are never shown or logged.
-- Detects NSP/XCI/NSZ/XCZ base, update and DLC files, including files reached through symlinks, and groups them by title ID.
-- Creates a symlinked workspace or uses a source folder in place; sources are never copied into the library.
-- Builds a Mac `.app` in `~/Applications` through the pinned nxnative CLI with JSON progress, stages, ETA, a live log and cancellation.
-- Installs validated game builds with an atomic swap, keeping the installed app at its normal path throughout replacement. Builds on another volume are prepared beside the destination first; interrupted installs can be retried safely. If only installation fails, the ready build is kept and a Selene dialog offers **Retry** or **Close**. Retry installs that build without running the porting again.
-- Stores the library in `~/Library/Application Support/NXLibrary/library.json` with a backup copy.
-- Keeps runtime settings per game (FPS target, docked mode, render scale, MetalFX spatial upscale, Metal HUD, language, rumble, fullscreen). It checks render-scale support in the app's `launcher.json` (with a fallback for older builds), writes nxnative's `env.txt`, and passes the chosen values in the launch environment as well.
-- Shows storage usage and can delete only caches and logs; apps and sources require explicit action. **Remove Sources & Build Cache** deletes the original NSP/XCI files and the app-owned workspace for one game, keeping the installed app, saves and logs; sources can be attached again later.
-- Checks the upstream `seedds/nxnative` commit history on demand in **Settings → Engine**. The check is read-only: it contacts the GitHub API, shows new commits and a compare link, never fetches, merges, checks out or re-pins the engine. The engine gate keeps blocking builds until an update is manually re-pinned and re-tested.
-- Includes synthesized UI tones, controller prompts, and keyboard shortcuts. The theme and symbols are original; no Nintendo assets are included.
+<p align="center">
+  <a href="#getting-started">Get started</a> ·
+  <a href="#using-nx-library">User guide</a> ·
+  <a href="#troubleshooting">Troubleshooting</a> ·
+  <a href="CHANGELOG.md">Changelog</a> ·
+  <a href="docs/development.md">Development</a>
+</p>
 
-## Interface
+<!-- NX-DEMO:START
+Insert the final GitHub-hosted video attachment here, below the introduction.
+Use the real recording; keep this slot hidden until the video is available.
+NX-DEMO:END -->
 
-NX Library follows the [Selene](https://github.com/mattxslv/Selene) Playnite theme (MIT) as closely as a SwiftUI app can: the same 1920×1080 canvas units, palettes, Material Icons glyphs, hint rows and motion. Only the button prompts differ: they show Apple's SF Symbols glyphs for the connected Switch, Xbox or PlayStation controller, as the controller itself reports them (System Settings remapping included; a generic controller gets Xbox's); on a Switch controller, confirm is the button printed A. With no controller they show the Mac keys instead. It does not include Sony or Nintendo branding, fonts, sounds or artwork.
+<!-- NX-SCREENSHOTS:START
+Insert the approved, current screenshots here. See docs/media/README.md.
+Do not render empty image links or substitute screenshots of older broken UI.
+NX-SCREENSHOTS:END -->
 
-- **Spotlight:** Selene's home row of square tiles (each game's own app icon) with cards (Collection, Surprise me, Activity, Add game), filter pill, info block with Play / Options / Favorite, screenshot strip and a full-screen screenshot viewer. Below the stats it is one page: genres, screenshots, description, Build & Sources with Your activity, More like this. Down glides the whole screen up as the row fades; the trackpad scrolls the page freely. Hold A to lift and move a tile.
-- **Collection:** a single row of covers over the selected game's art.
-- **Details:** banded page (Play / Options / Favorite, Build & Sources, screenshots, More like this) with Selene's scrim masks.
-- **Game options:** Selene's 1040u panel with runtime settings, favorite, hide and move, and confirm dialogs.
-- **Cheats:** Game Options → **Cheats** (the third row) installs a cheat file (drop it, or choose it) into the folder the game's engine reads, `~/Library/Application Support/nxnative/<title ID>/cheats/<build ID>.txt`, and switches each cheat and the master switch. A new file starts with every cheat off; changes apply at the next Play, and the in-game panel (⌘⇧C) shows the same files. Files are written only while the game is not running. An app built with an engine older than nxnative `ef9f9bb` shows **Rebuild**. The detail page shows CHEATS · On when at least one is on. Arrows, the wheel and the trackpad drive it; the pointer alone never moves the focus. Hidden games come back from **Settings → Games → Hidden games**.
-- **Saves:** Game Options → **Saves**, directly below Cheats, manages local saves, verified backups, folder imports and restores. Import uses a centered From → To preview and shows **Imported successfully** for three seconds after verified completion. The same import path handles each game's own file structure. [Save actions and workflow](#save-backups-and-imports).
-- **Control center:** Menu/Start or `⌘K` opens Selene's menu with Resume and Close Game for a running game, and Power (quit, relaunch).
-- **Launch screen:** on Play, the game's art and logo (per Settings → Games) stay up until the game's window appears.
-- **Find a game:** hold View or press `⌘F` for a search over the whole library.
-- **Settings:** Selene's two-column layout with Search and Changed, then Start-up, Navigation, Spotlight, Sound & music, Look, Games, Controllers, Library, Storage, Engine and About. Value rows step with Left/Right; X resets a group.
-- **Look:** 23 palettes, wallpaper per theme or none (Fill/Fit/Stretch), Wallpaper brightness (Like Selene's even 0.6, Bright on the right — the default, dim only under the text — or Bright) and an optional animated backdrop. Menu → Theme → background has two tabs, **Wallpapers** and **Live** (LB/RB or Q/E): your own pictures and looping videos (mp4, mov, m4v, played muted), online stills from **Wallhaven** (safe for work only) and **Danbooru** (general rating only), 16:9 and 2560 wide or more, and online live backgrounds from **MotionBGs** (4K and HD loops) and **Steam** (the Points Shop's animated profile backgrounds), browsed by category or search without leaving the app. A chosen online item is downloaded into `Application Support/NXLibrary/SeleneImports/Wallpapers/online/` (stills) or `live/` (videos) with its credit (uploader, artist or game, and page) in `credits.json`; X opens its page, Y removes it.
-- **Sounds:** Selene's cues. Four MIT cues ship with the app; **Settings → Sound & music → Import sounds and wallpapers from Selene** copies the rest from a Selene folder you own into Application Support.
-- **Intro:** the app mark with the boot cue on a cold launch (Settings → Start-up). Any input skips it.
-- **Add game:** a Game options-style column over the blurred home, opening like Game options and the console, three steps (Choose, Review, Porting); Esc steps back or closes, and during a porting closes while the porting goes on.
-- **Porting on the home:** the game being ported leads Spotlight's row. Its tile is black and white with a thin "k/n" step bar and the engine's step before the shaders, then colours from the bottom with one honest percentage (shaders 90%, the final stages the last 10%). The pills read Porting with the time left; a failed porting with no app shows a lock and Try again / Open log / Delete, and survives a relaunch.
-- **Key check before porting:** the Review step reads the first kilobyte of each NCA in the selected NSP/NSZ files and checks it against your `prod.keys`. Keys too old for the game (with the firmware it needs) or a `header_key` that opens nothing disable **Add and port** before the engine starts; an XCI is noted as not checked. Only key names and counts are ever used, never values.
-- **Explained failures:** a failed porting is recognised from the engine's own messages (Intel Python, shader translator, Command Line Tools selected, uncertified Metal compiler, shader regressions, damaged files, 32-bit games, keys, several games in a folder, disk space, a disconnected drive, iCloud folders, no game profile). The Porting step titles it, says what stopped it and offers one next step: **Port anyway** (shader regressions and damaged files only, once), Engine settings, Setup, Import prod.keys or Storage. Spotlight and Details show the reason under the pills, after a relaunch too.
-- **Copy diagnostics:** a Markdown report for an issue (versions, engine pin and checkout, toolchain, setup, keys present, the last porting's command and log tail), from Settings → About, the Console and a failed Porting step. The home folder becomes `~`, key-like lines keep only the name, and no environment is included.
-- **Notifications:** "<Game> is ready" or "<Game> did not port" only when NX Library is in the background, never for a cancel; clicking lands on the game or on the failure. Settings → Library → **Notify when a porting ends**.
-- **Updates:** a release copy looks for a newer NX Library on GitHub at launch (at most once a day; Settings → Start-up → **Check for app updates**) and in Settings → About. Update downloads the release, checks its SHA-256 against GitHub's digest, its bundle ID, version and release marker, then swaps the app (the old one goes to the Trash) and relaunches. It waits for a porting or a running game. Builds from source never update themselves.
-- **Setup, Console:** the first-run checklist and log share the canvas units. Console's **Copy log** copies the last 200 log lines and the latest build log's tail; **Copy diagnostics** copies the scrubbed report.
-- **Controller and keyboard:** A/Return confirms or plays, B/Esc goes back, LB/RB switch filters, View/Tab flips Spotlight and Collection, Menu/Start opens the control center, holding Menu or `⌘,` opens Settings.
-- **Controls guide:** Settings → Controllers → Button layout separates **Library** navigation from **In game** defaults. Both guides use Selene rows and support keyboard/controller scrolling. Older engine builds can have different game controls.
-- **Artwork:** Store descriptions and artwork are cached locally under Application Support. Nothing is written to the repository. Change artwork offers GameTDB, Title DB and the Nintendo store, then every online source for a game with the same name (or an edition of it): Steam (transparent logo, cover, background, screenshots), the Xbox Store (poster, hero, screenshots, square icon), GOG (logo, covers, screenshots), Nintendo Europe (banner, square), TheGamesDB (clear logo, box front, fan art, screenshots), Wikidata and Wikimedia Commons logos, Nintendo fan wiki logos and Wallhaven wallpapers. Wikidata also links a game to its Steam page when the names differ. The automatic logo falls back to these sources in the same order.
+## Overview
 
-The [technical guide](docs/architecture.md) describes the current implementation. Dated specifications and plans live in [`docs/superpowers/`](docs/superpowers/). The user performs interactive app and game checks. The automated suite covers the data, build and presentation-state layers.
+NX Library is an independent SwiftUI frontend for the external [nxnative](https://github.com/seedds/nxnative) toolchain. It brings your installed game apps, local build workflow and game options into a library inspired by [Selene](https://github.com/mattxslv/Selene).
 
-## Requirements
-
-- Apple-silicon Mac, macOS 13 or newer.
-- Xcode 27.1 or newer, with the matching Metal toolchain.
-- The .NET 10 SDK (the engine builds its extractor with `dotnet build`).
-- The nxnative checkout at `~/nxnative`, pinned to `2716f78f01e90a9f9bbf0d09e7a798903525962f`. A checkout elsewhere can be chosen in Settings → Engine; NX Library remembers it while the folder exists.
-
-Python 3.14 (with `capstone` 5, `lz4` and `fontTools`), `zstd` and `glslangValidator` ship inside the app. No Homebrew or pip is needed to use it. The Setup check installs the Metal toolchain, downloads Microsoft's .NET 10 SDK installer and clones the engine; Xcode itself comes from the App Store.
-
-## Install
-
-1. Download `NXLibrary-<version>.dmg` from the latest GitHub release, open it and drag **NX Library** to Applications. Later versions install from inside the app.
-2. The app is ad-hoc signed, not notarized. On first open, macOS blocks it: open **System Settings → Privacy & Security** and choose **Open Anyway**.
-3. The **Setup check** opens. It shows what is ready and what is missing: Xcode, the Metal compiler, the .NET 10 SDK, the engine, the bundled Python and tools, your `prod.keys` and the library folder. **Install all** does what it can by itself; the rest each card explains. When every card is ready, **Continue** opens the library.
-
-NX Library never runs `sudo`, never accepts the Xcode licence and never changes `xcode-select`. The .NET installer asks for your password in Apple's own Installer.
-
-## Building from source
-
-```bash
-cd ~/Developer/NXLibrary
-bash scripts/bundle_runtime.sh   # once, and after runtime.lock changes
-bash scripts/build_app.sh
-bash scripts/build_dmg.sh        # optional: dist/NXLibrary.dmg
-open "$HOME/Applications/NXLibrary.app"
-```
-
-`bundle_runtime.sh` is for the maintainer: it downloads the Python build and wheels pinned in `runtime.lock`, checks their hashes, copies Homebrew's `zstd` and `glslang` (the locked versions must be installed) with their libraries, relinks them to `@loader_path`, signs them ad hoc and audits the result into `work/Runtime`. Without `work/Runtime`, `build_app.sh` makes a developer build that uses `~/nxnative/.venv` and the tools on `PATH`.
-
-The app is ad-hoc signed and installed as `NXLibrary.app` (bundle ID `local.nxlibrary`). Set `NX_BUILD_CONFIG=debug` to package the debug binary:
-
-```bash
-NX_BUILD_CONFIG=debug bash scripts/build_app.sh /tmp/NXLibrary-Debug.app
-/tmp/NXLibrary-Debug.app/Contents/MacOS/NXLibrary --preview-build   # DEBUG only
-```
-
-`--show-setup` (DEBUG only) reopens the Setup check.
-
-### Making a release
-
-```bash
-bash scripts/release.sh 0.2.0                                   # build, verify, zip and DMG in work/release/
-bash scripts/release.sh 0.2.0 --publish --notes notes-0.2.0.md  # also tag v0.2.0 and create the GitHub release
-```
-
-It refuses a dirty tree, a version that is not dotted numbers, an existing tag or a missing `work/Runtime`. The app it builds carries the version and the `NXLibraryRelease` marker, the only kind of copy that updates itself; `build_app.sh` alone takes `NX_VERSION` and `NX_RELEASE=1` but sets neither by default. It also appends a hidden `<!-- nxlibrary-requires xcode=… engine=… -->` line to the notes, read from `ToolchainRequirements.minimumXcode` and `pinnedEngineCommit`: the update dialog warns about an Xcode to update first and says Setup brings the new engine after the restart, in one step. Players never update the engine on its own; a new engine always comes with a tested NX Library release. Before the first release, set `AppUpdate.defaultRepository` to the GitHub `owner/name`; until then the update feature is hidden (`defaults write local.nxlibrary NXLibrary_UpdateRepository owner/name` turns it on for testing).
-
-## First run
-
-The Setup check opens on the first start, and later when something that was ready breaks or falls out of step with the engine; **Settings → Start-up → Open Setup** opens it at any time. Each time it opens, NX Library fixes by itself what the engine requires: it clones or updates the engine to the pinned commit (never over local changes), downloads the certified Metal compiler by its Apple asset build, and downloads Microsoft's .NET 10 SDK installer. Every running card shows a progress bar. **Install all** also installs a newer .NET 10 patch when Microsoft has one. It rechecks every few seconds, so a card turns ready as soon as an installer finishes.
-
-What NX Library is tested with lives in one table, `ToolchainRequirements.current` (minimum Xcode, .NET major, certified Metal and its asset build); the engine commit stays in `AppViewModel.pinnedEngineCommit`. Imported apps are playable immediately; their rebuilds stay disabled until sources are located.
-
-## Adding a game
-
-1. Open **Add Game**, drop a folder or file, or use **Choose Folder**.
-2. Review the detected base/update/DLC sources. The base is locked; the newest update and non-empty DLC are selected by default.
-3. Review the destination and disk estimate (twice the selected sources plus 10 GB).
-4. Choose **Add and port** or **Add to library only**. An existing title offers **Rebuild** or **Save changes** and opens Review with its own saved options.
-
-Builds go to `~/Applications/<game>.app`. Sources stay where they are; a staged workspace uses symlinks.
-
-## Settings and artwork
-
-- **Settings → Games → New games** supplies starting values for newly added titles. Existing games keep their own choices.
-- **Game Options → Next launch** changes one title. **Use new game defaults** copies the current defaults once. Review shows and saves that title's actual options; rebuilds use its saved language.
-- **Cloud saves** is reapplied before every launch, including Off. Advanced save-sync overrides in configuration files remain reported in Saves.
-- **Settings → Look → Wallpaper** controls the app background. **Game backgrounds** shows game artwork in Spotlight and Collection when On, and the wallpaper when Off. Details keeps the game's artwork; launch-screen style is separate.
-- **Change artwork** saves choices for one title, with manual picks ahead of automatic images. Its status line indicates where the selected kind is used. **Wallpaper sizing** fits wallpapers; **Library shade** shades library text areas.
-- **Controllers → Library controls** affects navigation in NX Library. Its **New games** group supplies starting rumble values. Search lists each control; Changed includes icon, deadzone and folder choices.
-- **Start-up** respects the engine-check and library-refresh switches. With checks off, the saved library still opens and build screens check the environment on demand. Every new porting retains its mandatory compatibility gate.
-- **Settings errors** use Selene dialogs with Retry for failed writes. Unreadable preferences are preserved before defaults are saved. Reset Look includes brightness; group resets keep cloud sync and the sources folder and show a brief notice.
-- **Storage → Save backups** opens the verified backup folder for all games. Create backups from **Game Options → Saves**; Storage has no separate ZIP export.
-
-## Save backups and imports
-
-Open **Game Options → Saves** with the game closed. NX Library manages the committed local save under `~/Library/Application Support/nxnative/<title ID>/`.
-
-| Action | Purpose |
+| Area | What you can do |
 |---|---|
-| **Open folder** | Open the current local save in Finder. |
-| **Back up now** | Create a dated, verified copy of the current account and device saves. |
-| **Save type** | Choose the destination for an import. **User save** is the usual choice. **Device save** selects a separate device save for games that use both. |
-| **Import save…** | Preview an emulator/console export folder or restore a dated NX Library backup. |
-| **Refresh** | Read the current save and backup information again. |
-| **Backup folder** | Open this game's backup directory. The row shows the date and time of the latest copy. |
+| **Library** | Browse Spotlight and Collection, search, favourite, hide and reorder games. |
+| **Local builds** | Select your own sources, review updates and DLC, follow progress and retry a failed installation. |
+| **Game options** | Keep each title's launch settings, artwork and metadata together. |
+| **Saves** | Back up local progress, preview imports and restore a previous copy. |
+| **Cheats** | Import matching cheat files and choose what is enabled for the next launch. |
+| **Personalisation** | Choose palettes, wallpapers, live backgrounds, interface sounds and controller prompts. |
 
-For Ryujinx, choose the numbered game folder under `bis/user/save/`. A selection inside it is recognized too. NX Library checks the title ID in Ryujinx's metadata and imports the complete committed `0` tree, including every slot. Other exports should be selected at the folder containing the complete game save. Files retain their relative paths through the common import flow for all titles.
+Game files, keys and firmware are not provided. See [Legal and third-party notices](#legal-and-third-party-notices).
 
-After confirmation, import and restore first create and verify a full backup of the current saves. Import replaces the selected destination. Restoring a dated backup restores both recorded destinations, including their presence or absence. The preview shows the paths, file count, size and installed version. Every completed import displays a Selene **Imported successfully** card that fades away after three seconds.
+### Project status
 
-Backups preserve file contents and guest-name extended attributes. They live under `~/Library/Application Support/NXLibrary/SaveBackups/<title ID>/<timestamp>-<UUID>/`. Manual copies and copies made before import or restore appear in the same directory. To restore one, select its dated folder in **Import save…**. Backup retention is managed by the user in Finder.
+**0.1.0 alpha · source preview.** The current app has been developed and manually checked on one Apple-silicon Mac. No downloadable release has been published yet. Start with [Building from source](#building-from-source); installation instructions for packaged releases are kept below for when one is available.
 
-Import and restore require cloud sync to be off in the effective configuration, including the game's own preferences and env files. Keep the game closed until completion. The panel accepts default save paths and refuses symlinks or redirected destinations. An interrupted replacement is recovered before Play. Save compatibility depends on the game and version, and turning cloud sync on later can replace the imported local save.
+Automated checks cover the application code, publication inputs, compilation and development-app packaging. They do not certify game compatibility. Changes are recorded in the [changelog](CHANGELOG.md), and the current checks are available under [Actions](https://github.com/Bium23/NxLibrary/actions/workflows/ci.yml).
 
-Ryujinx imports have been exercised with Prince of Persia and Breath of the Wild. The user confirmed the imported Breath of the Wild progress works in-game. Automated tests also cover unrelated synthetic title IDs, different directory layouts and both destination types.
+## Getting started
 
-## Compatibility gate
+### Requirements
 
-New builds are blocked unless the installed engine commit, working tree, Metal compiler and nxnative CLI match the certified combination. The current pin certifies Metal `32023.921` (`metalfe-32023.921.6`), available as Apple's `27A266a` asset. The gate is visible under **Settings → Engine**.
+| Requirement | Details |
+|---|---|
+| **Mac** | Apple silicon, macOS 13 or later. |
+| **Xcode** | 27.1 or later, with the Metal compiler certified for the pinned engine. |
+| **.NET** | .NET 10 SDK, used by the engine's extractor. |
+| **Engine** | nxnative at the pinned commit. Setup can prepare the checkout; an existing folder can be chosen in **Settings → Engine**. |
+| **Your files** | Your own supported game sources and keys, with the rights and permissions needed to use them. |
 
-The [2026-10-31 upgrade note](docs/upstream-upgrades/2026-10-31-ee369f0-2716f78.md) records the user's explicit choice to verify Prince of Persia with Xcode 27.2 and Metal `32023.922` through the untested-toolchain override. That build records `toolchainVerified=false`.
+A packaged app includes Python and its required packages, `zstd` and `glslangValidator`. Homebrew is used to prepare that runtime during development; it is not needed to use a packaged copy. A source build without the bundled runtime uses the engine's virtual environment and tools on `PATH`.
 
-An explicit **Build anyway with an untested toolchain** override exists. It requires confirmation, persists in `UserDefaults`, passes `--allow-other-metal` to the engine, and records every build made under it as **untested**. Corrupted graphics are a documented upstream risk; the existing BotW build is left untouched.
+### Building from source
 
-## Updating the engine
+With the [development prerequisites](docs/development.md#development-prerequisites) installed:
 
-Engine upgrades are manual and never follow `main`. Before changing the pin, review the commits and decide what belongs in the UI and what stays backend-only. The checklist and dated notes are in [`docs/upstream-upgrades/`](docs/upstream-upgrades/); the current pin is `2716f78f01e90a9f9bbf0d09e7a798903525962f`.
+~~~bash
+git clone https://github.com/Bium23/NxLibrary.git
+cd NxLibrary
 
-## Tests
+bash scripts/bundle_runtime.sh
+bash scripts/build_app.sh
+open "$HOME/Applications/NXLibrary.app"
+~~~
 
-```bash
-DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
-```
+Run `bundle_runtime.sh` once, and again when `runtime.lock` changes. `build_app.sh` prepares, signs and verifies the app before installing it atomically in `~/Applications`.
 
-The suite covers models and persistence, source parsing (including a regression for `*.cnmt.nca` vs `*.cnmt.xml`), symlink workspaces, key import/permissions, the compatibility gate, build-command construction, atomic installation and interrupted retries, process cancellation, launch environment writing, import, storage, cheats, save snapshots and interrupted save recovery. Scans preserve pending installs and the last porting failure. The last code verification on 2026-11-01 passed **703 tests**, including interrupted installation and retry, per-title Review and language, explicit source replacement, cloud Off at launch, failed key replacement, unreadable preferences, individual setting search and exclusion between app updates and save operations. New regressions cover split UTF-8 output and EOF, duplicate row labels, download names and installer redirects, private key permissions and diagnostic redaction. Five Python checks exercise the publication guard in temporary repositories. The [file catalog](docs/file-map.md#test-e-fixture) describes each test file's scope.
+Build options, runtime dependencies, debug builds and release packaging are documented in the [development guide](docs/development.md).
 
-## Repository layout
+### Installing a packaged release
 
-- `Sources/NXLibraryCore/` — models, library store, source catalog, key store, workspace, build/launch/import/storage/compatibility services.
-- `Sources/NXLibrary/` — SwiftUI app, view model, views and theme.
-- `Tests/NXLibraryCoreTests/` — core tests with synthetic PFS0 fixtures; no copyrighted game data.
-- `Resources/` — original app icon and appearance variants.
-- `scripts/build_app.sh` — release/debug app bundling and ad-hoc signing.
-- `scripts/release.sh` — a release copy, its zip and DMG, and optionally the GitHub release.
-- `docs/superpowers/` — design spec and implementation plan.
+When a release is available:
 
-## Documentation
+1. Download its DMG from [Releases](https://github.com/Bium23/NxLibrary/releases).
+2. Open it and drag **NX Library** to Applications.
+3. Open the app and complete Setup.
 
-The repository includes [contribution instructions](CONTRIBUTING.md), a [security reporting policy](SECURITY.md), and CI for publication checks, automated tests and Release compilation. CI never imports keys or builds games. Local publication checks run with `python3 scripts/check_publication.py`; add `--runtime work/Runtime` to verify the runtime against its exact lock before packaging.
+Current development builds are ad-hoc signed and not notarised. If macOS blocks first opening, use **System Settings → Privacy & Security → Open Anyway** only for a copy you built or obtained from a source you trust. Release self-updates are separate from source builds and are not enabled yet.
 
-- [Technical guide](docs/architecture.md) — current architecture, dependencies, feature flows, persistence and verification, written in Italian.
-- [File catalog](docs/file-map.md) — every versioned file and its responsibility, grouped by area, written in Italian.
-- [2026-11-01 audit review](docs/2026-11-01-audit-review.md) — verified findings, reproduced installation conflicts and measured performance costs, written in Italian.
-- [2026-11-01 settings audit](docs/2026-11-01-settings-audit.md) — control-by-control verification, error triggers, persistence, resets and controller actions, written in Italian.
-- [2026-11-01 pre-GitHub review](docs/2026-11-01-pre-github-review.md) — publication priorities, reproduced remaining defects, UI consistency, security boundaries and release checks, written in Italian.
-- [Dated designs and plans](docs/superpowers/) — original design, feature specifications and implementation records.
-- [Engine upgrade notes](docs/upstream-upgrades/README.md) — adoption checklist, pin changes and verification evidence.
+### First-run setup
 
-## Licenses and attribution
+Setup shows which prerequisites are ready and which need attention. **Install all** handles the supported steps: the engine checkout, the certified Metal compiler and the official .NET installer. Xcode itself comes from the App Store; its licence and any system prompts remain your responsibility.
 
-NX Library is MIT licensed. `NOTICE` retains the MIT copyrights for nxnative and the [rennan101/nxnative_Launcher](https://github.com/rennan101/nxnative_Launcher) GUI baseline. Key checks, failure explanations, diagnostics and update rules include adaptations from [NX2Apple](https://github.com/LNPANDY/NX2Apple), with its MIT notices preserved. The app icon is original artwork created by the owner with AI; its master and generation notes are in [Resources/IconArtwork.md](Resources/IconArtwork.md).
+Import your `prod.keys` when prompted. NX Library keeps a private copy with mode `0600` and leaves the original file unchanged. Key values are not displayed or logged.
 
-Bundled media and their licenses are listed in `Resources/Selene/NOTICE.txt` and `NOTICE-palettes.txt`: Material Icons (Apache 2.0), Selene's four synthesized sounds (MIT), the Selene palettes (MIT) and five public-domain wallpapers. Other Selene sounds and wallpapers are never bundled; the import action copies them from the user's own checkout. Online wallpapers are never bundled or committed: they are fetched from Wallhaven, Danbooru, MotionBGs and Steam only when the player browses, belong to their owners, and are credited under the preview.
+When Setup is ready, choose **Continue**. Reopen it from **Settings → Start-up → Open Setup** whenever needed. NX Library never runs `sudo`, accepts the Xcode licence for you or changes `xcode-select`.
 
-No games, keys, Nintendo logos, fonts, sounds, or other Nintendo assets are included. NX Library is not affiliated with, endorsed by, or sponsored by Nintendo.
+Already have a built game app? Use **Settings → Library → Existing builds → Import**. Play remains available without the original sources; rebuilding requires attaching them again.
 
-## Known limitations
+## Using NX Library
 
-- The Breath of the Wild sources were removed from this Mac. Its imported app remains playable, but a BotW rebuild is blocked until the XCI base, update 1.9.0 and DLC are restored and attached.
-- Super Mario Odyssey 1.4.1 builds with engine `4f24ce6` (27,984 shaders and 32,864 pipeline pairs) and reaches the controller screen; gameplay beyond that is not yet verified.
-- Native 1440p/4K rendering is not supported. The window or fullscreen display sets output resolution; render scale is 50–100% and only changes the internal 3D resolution. MetalFX improves the upscale. BotW supports the render-scale stub; the current SMO build does not, so its render-scale card is hidden.
-- No notarization, no iOS/IPA output, no online compatibility database and no automatic engine updates. The upstream changelog check is manual and read-only; only the commit hash is sent to `api.github.com`.
-- The engine checkout is never modified; nxnative upgrades are manual and re-pin the engine commit in `AppViewModel.pinnedEngineCommit`.
-- A detached-sources game shows no source badge over its tile and keeps its artwork; the detail card shows **Sources detached** with an info tooltip and **Attach Sources…** next to Rebuild.
+### Your library
+
+**Spotlight** places your games in a row of square tiles, with Play, Options and Favourite beside the selected title. Scroll down for descriptions, screenshots, activity and build information. **Collection** offers a cover-based view.
+
+Use **Find a game** for search, **Game Options** for title-specific actions, and the menu for themes, Settings and running-game controls. Hidden games can be restored under **Settings → Games → Hidden games**.
+
+### Add or rebuild a game
+
+1. Open **Add game** and choose or drop a supported file or folder.
+2. Review the detected base game, update and DLC. Supported source formats are NSP, XCI, NSZ and XCZ.
+3. Check the destination, disk estimate and game options.
+4. Choose **Add and port** to build, or **Add to library only** to keep the entry for later.
+
+For a title already in the library, Review opens with that game's saved options and offers **Rebuild** or **Save changes**.
+
+Sources stay in place; staged workspaces use symbolic links. New game apps install in `~/Applications`. Build stages, progress, estimated time and a live log remain available while the operation runs. Closing the porting screen leaves the operation running; cancellation is a separate action.
+
+A rebuild of a running game waits to replace its app until it closes. If compilation finishes but installation fails, **Retry** installs the preserved result without compiling again. A library refresh preserves pending installations and failure information.
+
+### Know which settings apply
+
+| Where | Scope | When it applies |
+|---|---|---|
+| **Settings → Games → New games** | Starting values for titles added later. | When a new title is added. Existing titles keep their choices. |
+| **Game Options → Next launch** | The selected game. | Its next launch. |
+| **Game Options → Use new game defaults** | Copies the current defaults into that game once. | Its next launch. |
+| **Add game → Review** | The title being added or rebuilt. | That operation, including its saved language. |
+| **Settings → Games → Cloud saves** | Library-wide preference, subject to advanced game configuration overrides. | Reapplied before each launch, including when Off. |
+| **Settings → Look** | The library's presentation. | The app interface; game artwork and launch-screen style have their own controls. |
+
+Options include fullscreen, FPS target, docked mode, language, rumble, render scale, MetalFX spatial upscaling and Metal HUD. Some controls depend on the installed build's capabilities. A control being available does not guarantee that every game supports its effect.
+
+Settings includes **Search** and **Changed**. Group resets retain the cloud-sync choice and selected sources folder. Descriptions explain the scope; information buttons provide additional detail.
+
+### Saves: back up, import, restore
+
+Open **Game Options → Saves**, directly below Cheats. Keep the game closed during backup, import or restore.
+
+| Button | What it does |
+|---|---|
+| **Open folder** | Opens the current local save in Finder. |
+| **Back up now** | Creates a dated, verified copy of account and device saves. |
+| **Save type** | Selects the import destination. **User save** is the usual choice; **Device save** is for a separate device save. |
+| **Import save…** | Previews an exported save folder or a dated NX Library backup before replacing anything. |
+| **Refresh** | Reads save and backup information again. If recovery is needed, offers **Retry recovery**. |
+| **Backup folder** | Opens this game's backups in Finder. The row shows the latest backup's date and time. |
+
+**To import:** choose the folder, review the centred **From → To** preview, then confirm. NX Library backs up existing progress first and verifies the result. A successful import shows **Imported successfully**, which disappears after three seconds.
+
+For Ryujinx, choose the numbered game folder under `bis/user/save/`. A folder selected inside that tree is recognised too; NX Library checks its title metadata and imports the complete committed save, including all slots. For other exports, choose the folder containing the complete save.
+
+**To restore:** choose a dated backup folder through **Import save…**. A restore reinstates both recorded destinations, including whether either one was absent. An ordinary import replaces the selected destination.
+
+**Cloud sync and backups have different purposes.** Cloud sync can replace local files, so import and restore require it to be off in the effective configuration. A backup is a dated copy you manage in Finder. Save compatibility still depends on the game, platform and version; recognising the folder does not guarantee compatibility.
+
+Interrupted replacements must recover before Play. The Saves panel reports what is blocking an operation and keeps the backup folder accessible.
+
+### Cheats
+
+Open **Game Options → Cheats**, then choose or drop a matching cheat file. NX Library checks the title/build information; newly imported cheats start off. Enable the master switch and the individual cheats you want, then launch the game.
+
+Changes apply at the next Play and are written only while the game is closed. An older or unrecognised engine build may require **Rebuild**. The engine's in-game panel, `⌘⇧C`, reads the same files.
+
+### Artwork, themes and sound
+
+- **Game Options → Edit details** changes one game's artwork or metadata. Manual artwork choices take priority over automatic images.
+- **Menu → Theme** chooses palettes and wallpapers. Background choices include local images, muted looping videos and optional online sources; source credits appear in the picker.
+- **Settings → Look** controls wallpaper placement, sizing, brightness, game backgrounds, Reduce Motion and the Color/Monochrome app icon.
+- **Settings → Sound & music** controls interface cues and volume. Four Selene sounds are bundled; additional sounds can be imported from a Selene folder you own.
+
+Online artwork and wallpapers require their providers to be available. Their content and service terms remain those of the respective owners.
+
+### Controls
+
+| Action | Keyboard | Controller |
+|---|---|---|
+| Navigate | Arrow keys | D-pad / left stick |
+| Select | Return / Space | Confirm button |
+| Back | Escape | Back button |
+| Menu | `⌘K` | Menu / Start |
+| Settings | `⌘,` | Hold Menu |
+| Find a game | `⌘F` | Hold View |
+| Switch library view | Tab | View |
+| Switch tabs / filters | Q / E where shown | LB / RB |
+
+Prompts follow the connected controller and supported system remapping. **Settings → Controllers → Button layout** separates **Library** navigation from **In game** defaults. Game inputs are handled by the engine and can differ in older builds.
+
+## Troubleshooting
+
+| What you see | What to do |
+|---|---|
+| **Play works, Rebuild is blocked** | Open **Settings → Engine** and inspect the gate. Existing apps and new builds have separate requirements. |
+| **Sources detached / missing** | Use **Attach Sources…** or locate the original files. The installed app remains usable. |
+| **Ready build waiting to install** | Close the running game or finish the save operation, then retry the installation if prompted. |
+| **Import is unavailable** | Close the game, finish any active operation and follow the cloud-sync or recovery action shown in Saves. |
+| **Import fails** | Read the Selene message, check that the folder contains a complete save and inspect the preview before retrying. |
+| **A setting cannot be saved** | Use the dialog's **Retry**. Unreadable preferences are preserved before defaults are written. |
+| **Porting fails** | Use the explained failure and its suggested action. Console contains the build log and **Copy diagnostics**. |
+
+Before reporting a problem, review copied diagnostics and remove anything personal. Include your app/macOS versions, the operation and steps to reproduce. Read [SECURITY.md](SECURITY.md) before sharing a suspected vulnerability.
+
+### Compatibility and limitations
+
+- NX Library uses a manually pinned engine and checks its commit, working tree, CLI contract and Metal compiler before new builds. It does not follow upstream `main` automatically.
+- The current engine is `2716f78` and certifies Metal `32023.921`. **Build anyway with an untested toolchain** requires explicit confirmation and marks the resulting build as untested. A successful launch does not turn it into a certified combination.
+- Game compatibility depends on nxnative, the game version and the toolchain. Local checks of Prince of Persia and Breath of the Wild are not a compatibility database.
+- Output follows the window/display; native 1440p/4K internal rendering is not supported. Render scale is 50–100% where the build supports it. MetalFX is spatial upscaling.
+- Builds run one at a time. iOS/IPA output, automatic engine updates and notarisation are not currently provided.
+
+The [upgrade note](docs/upstream-upgrades/2026-10-31-ee369f0-2716f78.md) records the tested scenarios and the use of an untested compiler override.
+
+### Data and cleanup
+
+App data lives in `~/Library/Application Support/NXLibrary/`. Local game data uses `~/Library/Application Support/nxnative/<title ID>/`. Backups are stored under `NXLibrary/SaveBackups/<title ID>/`.
+
+Storage can clear caches and logs and open the shared backups folder. **Remove Sources & Build Cache deletes the selected original source files**, while retaining the installed app and saves. Read that confirmation carefully; it differs from clearing a cache.
+
+## Documentation and development
+
+| Document | Contents |
+|---|---|
+| [Changelog](CHANGELOG.md) | User-visible changes and release history. |
+| [Development guide](docs/development.md) | Runtime preparation, debug builds, tests, packaging and releases. |
+| [Screenshots and demo](docs/media/README.md) | Planned shots, captions and video placement. |
+| [Contributing](CONTRIBUTING.md) | Change and verification guidelines. |
+| [Security](SECURITY.md) | Private vulnerability reporting and handling sensitive files. |
+| [Technical guide](docs/architecture.md) | Current architecture and feature flows, in Italian. |
+| [File catalog](docs/file-map.md) | Responsibility of every project file, in Italian. |
+| [Engine upgrade notes](docs/upstream-upgrades/README.md) | Pin changes and their evidence. |
+
+## Credits and licences
+
+NX Library is MIT licensed. It uses upstream [nxnative](https://github.com/seedds/nxnative), the MIT [nxnative_Launcher](https://github.com/rennan101/nxnative_Launcher) GUI baseline, and adaptations from [NX2Apple](https://github.com/LNPANDY/NX2Apple) for key checks, failure explanations, diagnostics and updates.
+
+The interface draws from the MIT [Selene](https://github.com/mattxslv/Selene) theme. Bundled fonts, sounds, palettes and runtime components retain their own licences; see [NOTICE](NOTICE), [media notices](Resources/Selene/NOTICE.txt) and [palette notices](Resources/Selene/NOTICE-palettes.txt).
+
+The app icon is original artwork created by the owner with AI. Its [master and generation notes](Resources/IconArtwork.md) are included.
+
+## Legal and third-party notices
+
+**Project scope.** NX Library is an independent macOS frontend for organising and launching game applications. Its current nxnative integration also provides guided setup and local builds using the external nxnative toolchain.
+
+**Games and keys.** The project does not provide games, firmware, cryptographic keys or downloadable game packages. Users must supply their own game files and keys and have the rights and permissions required to use them. Do not submit these files through issues, pull requests or support requests.
+
+**Local processing and external services.** Game preparation uses locally supplied files and keys. NX Library checks encrypted game headers using the supplied keys and invokes nxnative to perform the build. Setup, updates and optional artwork features may contact third-party services.
+
+**Permitted use.** Owning a game or console does not necessarily authorise every form of copying, decryption or conversion. Applicable rules vary by jurisdiction. This project does not grant permission to circumvent technological protections or infringe third-party rights. Do not use it to distribute game files, keys or generated packages without the necessary authorisation.
+
+**Third-party software and content.** NX Library does not distribute proprietary Nintendo game code, game assets, firmware or cryptographic keys. Open-source dependencies and bundled resources remain subject to their respective licences and notices. Artwork retrieved from external services remains subject to its owners’ rights and the applicable service terms.
+
+**Trademarks.** NX Library is not affiliated with, sponsored by or endorsed by Nintendo or any other game publisher or platform provider. Product names, game titles and trademarks belong to their respective owners.
+
+**Rights concerns.** If you believe material distributed by this project infringes your rights, contact the maintainer with the relevant material, your rights claim and sufficient information to assess it. Substantiated concerns will be reviewed promptly and addressed as appropriate.
+
+**No warranty.** NX Library is provided “as is”, without warranty, as described in LICENSE. Third-party components are governed by their own licences. See NOTICE for acknowledgements.

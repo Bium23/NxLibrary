@@ -11,7 +11,7 @@ struct CheatContext {
     let version: String?
 }
 
-/// Cheats (docs/superpowers/specs/2026-10-31-cheats-design.md): whether a game's app can use them, its files as the
+/// Cheats: whether a game's app can use them, its files as the
 /// host reads them, and what to do with files the player adds. Writes go through `CheatStore`, only while the game is
 /// not running.
 extension AppViewModel {

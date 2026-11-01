@@ -32,7 +32,9 @@ class PublicationChecks(unittest.TestCase):
         self.assertEqual(self.scan().returncode, 0)
 
     def test_game_and_private_output_files_are_rejected_by_path(self):
-        for name in ["Games/Game.NSP", "reports/private.md", "docs/audits/local.md"]:
+        for name in ["Games/Game.NSP", "reports/private.md", "docs/audits/local.md",
+                     "docs/superpowers/plans/plan.md", "docs/upstream-issues/note.md",
+                     "Resources/Selene/Wallpapers/theme/one.jpg"]:
             with self.subTest(name=name):
                 self.track(name, "synthetic")
                 result = self.scan()

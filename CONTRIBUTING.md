@@ -28,3 +28,8 @@ before sharing them, and remove anything personal that remains.
 
 Use scripts/release.sh for packaged releases. Publishing is an explicit
 maintainer action; the CI only checks the code and does not publish anything.
+
+Record user-visible changes under **Unreleased** in [CHANGELOG.md](CHANGELOG.md).
+Keep the description focused on the resulting behaviour. Move entries into a
+dated version section when that release is actually published; unreleased work
+must not appear as an already available release.

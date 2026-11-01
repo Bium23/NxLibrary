@@ -29,11 +29,18 @@ dist/
 env.txt
 .aws/
 
-# Local agent artifacts and publication research.
+# Local agent artifacts, private notes and publication research.
 .superpowers/
+docs/superpowers/
 docs/audits/
+docs/upstream-issues/
+docs/private/
 output/
 reports/
 research_notes/
 __pycache__/
 *.pyc
+
+# Bundled wallpaper artwork is not distributed: the app reads the player's own
+# files and downloaded backgrounds from Application Support instead.
+Resources/Selene/Wallpapers/

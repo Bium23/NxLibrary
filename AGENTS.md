@@ -1,6 +1,6 @@
 # NX Library — agent guidance
 
-A personal macOS SwiftUI front-end for upstream [nxnative](https://github.com/seedds/nxnative). Read `README.md` and `docs/superpowers/specs/2026-10-26-nxlibrary-design.md` before changing behavior.
+A personal macOS SwiftUI front-end for upstream [nxnative](https://github.com/seedds/nxnative). Read `README.md` and `docs/architecture.md` before changing behavior.
 
 ## Non-negotiables
 
@@ -36,7 +36,6 @@ Never follow `main` automatically. A commit that is newer is not automatically a
 The user performs interactive app and game checks. Never use computer-use tools or other UI automation. Agents run automated tests and build/install the app, then report any manual checks that remain.
 
 ```bash
-cd ~/Developer/NXLibrary
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 bash scripts/build_app.sh
 codesign --verify --deep --strict "$HOME/Applications/NXLibrary.app"

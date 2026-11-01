@@ -3,8 +3,8 @@ import AppKit
 import UniformTypeIdentifiers
 import NXLibraryCore
 
-/// Game options → Cheats: this game's cheat files as the host reads them, switched here while the game is not running
-/// (docs/superpowers/specs/2026-10-31-cheats-design.md, Where it shows). Top to bottom: the header, notices, the master
+/// Game options → Cheats: this game's cheat files as the host reads them, switched here while the game is not running.
+/// Top to bottom: the header, notices, the master
 /// switch, the list, the actions, other builds' files.
 ///
 /// Input: Up/Down move, A (Return, Space) toggles or activates, B (or Esc) returns to Game options; in a dialog,
