@@ -27,3 +27,7 @@ jobs:
         run: swift test
       - name: Release compilation
         run: swift build -c release --product NXLibrary
+      - name: Package and verify development app
+        run: |
+          bash scripts/build_app.sh "$RUNNER_TEMP/NXLibrary.app"
+          codesign --verify --deep --strict "$RUNNER_TEMP/NXLibrary.app"
