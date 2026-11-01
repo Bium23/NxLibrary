@@ -1,4 +1,5 @@
 import SwiftUI
+import NXLibraryCore
 
 /// A soft black fade along the bottom of the window, so the button hints sit on
 /// their own ground instead of on top of the art (and the page reads as going on).
@@ -14,10 +15,10 @@ struct SeleneBottomScrim: View {
             Spacer(minLength: 0)
             LinearGradient(stops: [
                 .init(color: .black.opacity(0), location: 0),
-                .init(color: .black.opacity(0.3), location: 0.45),
-                .init(color: .black.opacity(0.62), location: 1)
+                .init(color: .black.opacity(0.12), location: 0.5),
+                .init(color: .black.opacity(0.32), location: 1)
             ], startPoint: .top, endPoint: .bottom)
-            .frame(height: canvas.u(300))
+            .frame(height: canvas.u(200))
         }
         .frame(width: canvas.size.width, height: canvas.size.height)
         .allowsHitTesting(false)
