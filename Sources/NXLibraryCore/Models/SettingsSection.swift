@@ -36,7 +36,7 @@ public enum SettingsSection: String, CaseIterable, Identifiable, Equatable {
         case .soundMusic: return "Interface sounds, volume and the launch screen."
         case .look: return "How NX Library looks and moves."
         case .games: return "Launch screen, hidden games and defaults for new games."
-        case .controllers: return "Gamepad, rumble and stick feel."
+        case .controllers: return "Library controls and new-game rumble."
         case .library: return "Folders, imports and artwork caches."
         case .storage: return "Caches, logs, saves and the console."
         case .engine: return "Engine pin, toolchain gate and keys."

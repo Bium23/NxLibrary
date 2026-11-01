@@ -106,9 +106,18 @@ What NX Library is tested with lives in one table, `ToolchainRequirements.curren
 1. Open **Add Game**, drop a folder or file, or use **Choose Folder**.
 2. Review the detected base/update/DLC sources. The base is locked; the newest update and non-empty DLC are selected by default.
 3. Review the destination and disk estimate (twice the selected sources plus 10 GB).
-4. Choose **Add to Library** or **Add & Build**.
+4. Choose **Add and port** or **Add to library only**. An existing title offers **Rebuild** or **Save changes** and opens Review with its own saved options.
 
 Builds go to `~/Applications/<game>.app`. Sources stay where they are; a staged workspace uses symlinks.
+
+## Settings and artwork
+
+- **Settings → Games → New games** supplies starting values for newly added titles. Existing games keep their own choices.
+- **Game Options → Next launch** changes one title. **Use new game defaults** copies the current defaults once. Review shows and saves that title's actual options; rebuilds use its saved language.
+- **Cloud saves** is reapplied before every launch, including Off. Advanced save-sync overrides in configuration files remain reported in Saves.
+- **Settings → Look → Wallpaper** controls the app background. **Game backgrounds** shows game artwork in Spotlight and Collection when On, and the wallpaper when Off. Details keeps the game's artwork; launch-screen style is separate.
+- **Change artwork** saves choices for one title, with manual picks ahead of automatic images. Its status line indicates where the selected kind is used. **Wallpaper sizing** fits wallpapers; **Library shade** shades library text areas.
+- **Controllers → Library controls** affects navigation in NX Library. Its **New games** group supplies starting rumble values. Search and Changed point rumble settings to Controllers.
 
 ## Save backups and imports
 
@@ -151,7 +160,7 @@ Engine upgrades are manual and never follow `main`. Before changing the pin, rev
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 ```
 
-The suite covers models and persistence, source parsing (including a regression for `*.cnmt.nca` vs `*.cnmt.xml`), symlink workspaces, key import/permissions, the compatibility gate, build-command construction, atomic installation and interrupted retries, process cancellation, launch environment writing, import, storage, cheats, save snapshots and interrupted save recovery. Scans preserve pending installs and the last porting failure. The last code verification on 2026-11-01 passed **670 tests**, including retrying a ready build after an installation error without invoking the engine again. The [file catalog](docs/file-map.md#test-e-fixture) describes each test file's scope.
+The suite covers models and persistence, source parsing (including a regression for `*.cnmt.nca` vs `*.cnmt.xml`), symlink workspaces, key import/permissions, the compatibility gate, build-command construction, atomic installation and interrupted retries, process cancellation, launch environment writing, import, storage, cheats, save snapshots and interrupted save recovery. Scans preserve pending installs and the last porting failure. The last code verification on 2026-11-01 passed **676 tests**, including retrying a ready build without recompiling, per-title Review settings and language, explicit source replacement, cloud Off at launch and controller-setting search. The [file catalog](docs/file-map.md#test-e-fixture) describes each test file's scope.
 
 ## Repository layout
 

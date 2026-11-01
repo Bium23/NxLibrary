@@ -14,6 +14,43 @@ final class LibraryStoreTests: XCTestCase {
         try? FileManager.default.removeItem(at: dir)
     }
 
+    func testExplicitSelectionReplacesExistingSourcesAndSurvivesLaterScans() throws {
+        let store = LibraryStore(directory: dir.appendingPathComponent("catalog"))
+        let app = dir.appendingPathComponent("Game.app")
+        try FileManager.default.createDirectory(at: app.appendingPathComponent("Contents"), withIntermediateDirectories: true)
+        try Data("plist".utf8).write(to: app.appendingPathComponent("Contents/Info.plist"))
+        let oldSource = dir.appendingPathComponent("old.nsp"), newSource = dir.appendingPathComponent("new.nsp")
+        try Data("old".utf8).write(to: oldSource)
+        try Data("new".utf8).write(to: newSource)
+        var old = PortedGame(name: "Game", url: app, platform: .macApp, sizeBytes: 1,
+                             modificationDate: Date(), titleId: "0100000000000001")
+        old.status = .built
+        old.isFavorite = true
+        old.settings.language = "it"
+        old.sources = [GameFileItem(url: oldSource, kind: .base, sizeBytes: 3)]
+        old.workspacePath = dir.appendingPathComponent("old-workspace").path
+        old.buildCachePath = dir.appendingPathComponent("old-cache").path
+        try store.save(LibraryFile(games: [old]))
+        var selected = old
+        selected.url = dir.appendingPathComponent("new-workspace")
+        selected.sources = [GameFileItem(url: newSource, kind: .base, sizeBytes: 3)]
+        selected.workspacePath = selected.url.path
+        selected.buildCachePath = dir.appendingPathComponent("new-cache").path
+        let result = try XCTUnwrap(try store.merge(scanned: [selected], replacingSources: true).games.first)
+        XCTAssertEqual(result.sources, selected.sources)
+        XCTAssertEqual(result.workspacePath, selected.workspacePath)
+        XCTAssertEqual(result.buildCachePath, selected.buildCachePath)
+        XCTAssertEqual(result.url, app)
+        XCTAssertEqual(result.id, old.id)
+        XCTAssertEqual(result.settings, old.settings)
+        XCTAssertTrue(result.isFavorite)
+        var scanned = selected
+        scanned.sources = []
+        let refreshed = try XCTUnwrap(try store.merge(scanned: [scanned]).games.first)
+        XCTAssertEqual(refreshed.sources, selected.sources)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: oldSource.path), "Replacing a selection never deletes sources")
+    }
+
     func testSaveLoadAndMergePreservesSettings() throws {
         let store = LibraryStore(directory: dir)
         var game = PortedGame(

@@ -72,10 +72,10 @@ final class CloudSavesTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: CloudSaves.iCloudDrive.folderURL(home: home)!.path))
     }
 
-    func testOffBeforeLaunchLeavesTheGamesOwnChoice() throws {
-        var writes = 0
-        let prefs = CloudSavesPreferences(write: { _, _ in writes += 1 }, home: home)
+    func testOffBeforeLaunchClearsTheGamesPreviousChoice() throws {
+        var writes: [String: String?] = ["org.nxnative.a": "old-folder"]
+        let prefs = CloudSavesPreferences(write: { path, domain in writes[domain] = .some(path) }, home: home)
         try prefs.applyBeforeLaunch(.off, domain: "org.nxnative.a")
-        XCTAssertEqual(writes, 0)
+        XCTAssertEqual(writes["org.nxnative.a"], .some(nil))
     }
 }

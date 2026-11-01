@@ -36,14 +36,6 @@ struct SettingsGamesSection: View {
 
     private var cloudSaves: CloudSaves { settings.settings.cloudSaves }
 
-    private var cloudSavesSubtitle: String {
-        switch cloudSaves {
-        case .off: return "Each game keeps its save on this Mac only."
-        case .iCloudDrive: return "iCloud Drive › nxnative Saves, shared with the games' iPhone apps."
-        case .folder(let path): return (path as NSString).abbreviatingWithTildeInPath
-        }
-    }
-
     private var pickedFolderSubtitle: String {
         let picked = settings.settings.cloudSavesPickedFolder
         return picked.isEmpty ? "None chosen yet." : (picked as NSString).abbreviatingWithTildeInPath
@@ -55,20 +47,20 @@ struct SettingsGamesSection: View {
 
     var body: some View {
         VStack(spacing: canvas.u(8)) {
-            SettingsSubheading("Launch screen")
+            SettingsSubheading("All games")
 
             SeleneCycleRow("Launch screen style",
-                           subtitle: "What shows while a game starts.",
+                           subtitle: "Artwork layout",
                            value: settings.settings.launchStyle.title) { step in
                 settings.settings.launchStyle = settings.settings.launchStyle.stepped(step)
             }
 
             SeleneToggleRow("Launch screen motion",
-                            subtitle: "A slow drift of the art while the game starts.",
+                            subtitle: "Artwork drift",
                             isOn: $settings.settings.launchMotion)
 
             SeleneCycleRow("Launch screen shade",
-                           subtitle: "How much the launch art is darkened.",
+                           subtitle: "Launch brightness",
                            value: settings.settings.launchShade.title) { step in
                 settings.settings.launchShade = settings.settings.launchShade.stepped(step)
             }
@@ -82,8 +74,8 @@ struct SettingsGamesSection: View {
             SettingsSubheading("Cloud saves")
 
             SeleneCycleRow("Cloud saves",
-                           subtitle: cloudSavesSubtitle,
-                           info: "A game's Mac and iPhone apps share one save through this folder. Every game uses the same folder and keeps its own file in it. Only games built with nxnative af616f5 or later read it: rebuild older ones.",
+                           subtitle: "All games · Next launch",
+                           info: "Applied before each game starts, including Off. Custom save-sync overrides in configuration files are reported in Saves.",
                            value: cloudSaves.title, cycle: stepCloudSaves)
 
             SeleneButtonRow("Cloud saves folder",
@@ -106,34 +98,35 @@ struct SettingsGamesSection: View {
                 }
             }
 
-            SettingsSubheading("Game defaults")
+            SettingsSubheading("New games")
 
             SeleneToggleRow("Fullscreen",
-                            subtitle: "Start newly added games in fullscreen.",
+                            subtitle: "Launch mode",
                             isOn: $settings.settings.gameDefaults.fullscreen)
 
             SeleneToggleRow("60 FPS",
-                            subtitle: "Target 60 frames per second instead of 30.",
+                            subtitle: "Frame-rate target",
                             info: "Some games tie their physics, animation speeds, or game loops to 30 FPS. If gameplay runs twice as fast or audio desyncs, keep this at 30.",
                             isOn: $settings.settings.gameDefaults.enable60FPS)
 
             SeleneToggleRow("Docked mode",
-                            subtitle: "Use the docked performance profile for new games.",
+                            subtitle: "Console profile",
                             info: "Simulates the Nintendo Switch docked TV profile (1080p target, higher clocks and memory limits). Disabling uses handheld profile (720p target, lower GPU load).",
                             isOn: $settings.settings.gameDefaults.isDockedMode)
 
             SeleneToggleRow("MetalFX spatial upscaling",
-                            subtitle: "Enable the engine's MetalFX present upscale.",
+                            subtitle: "Spatial upscaling",
                             info: "Uses Apple MetalFX Spatial Upscaling to upscale lower internal render targets to display resolution with edge sharpening, without raising GPU raster load.",
                             isOn: $settings.settings.gameDefaults.enableMetalFXUpscale)
 
             SeleneToggleRow("Metal HUD",
-                            subtitle: "Show the Metal performance overlay in new games.",
+                            subtitle: "Performance overlay",
                             info: "Displays Apple's official Metal Performance HUD overlay during gameplay showing real-time frame rates, frame time graphs, and GPU utilization.",
                             isOn: $settings.settings.gameDefaults.enableMetalHUD)
 
-            SeleneRow("Default game language",
-                      subtitle: "Game Default lets each title use the language in its own metadata.") {
+            SeleneRow("Game language",
+                      subtitle: "Starting language",
+                      info: "Game Default uses the language supplied by the game's build.") {
                 Picker("", selection: $settings.settings.gameDefaults.language) {
                     ForEach(languageOptions, id: \.code) { option in
                         Text(option.label).tag(option.code)
@@ -145,6 +138,7 @@ struct SettingsGamesSection: View {
             }
 
             SeleneRow("Render scale",
+                      subtitle: "Internal resolution",
                       info: "Scales the internal 3D rendering buffer relative to native target (50% to 100%). Lowering this reduces GPU heat on battery; UI remains full resolution.") {
                 HStack(spacing: 10) {
                     Slider(value: $settings.settings.gameDefaults.renderScale,
@@ -157,18 +151,6 @@ struct SettingsGamesSection: View {
                 }
             }
 
-            SelenePanel("Resolution") {
-                Text("Output follows the window or display. Render scale changes the internal 3D resolution only; native 1440p/4K is not available in this engine pin.")
-                    .seleneFont(15)
-                    .foregroundColor(SeleneTheme.ink90)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Text("Changing these defaults does not modify games already in the library.")
-                .seleneFont(13)
-                .foregroundColor(SeleneTheme.ink60)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, 2)
         }
         .onAppear(perform: publishActions)
         .onChange(of: hiddenGames.map(\.id)) { _ in publishActions() }
@@ -221,7 +203,7 @@ struct SettingsGamesSection: View {
             .init(id: "hud", title: "Metal HUD") {
                 settings.settings.gameDefaults.enableMetalHUD.toggle()
             },
-            .value("language", "Default game language") { step in
+            .value("language", "Game language") { step in
                 let codes = languageOptions.map(\.code)
                 if let next = codes.stepped(from: settings.settings.gameDefaults.language, step) {
                     settings.settings.gameDefaults.language = next

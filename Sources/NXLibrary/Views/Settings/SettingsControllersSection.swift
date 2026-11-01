@@ -10,6 +10,7 @@ struct SettingsControllersSection: View {
 
     var body: some View {
         VStack(spacing: 9) {
+            SettingsSubheading("Library controls")
             SeleneRow("Gamepad",
                       subtitle: controller.isGamepadConnected
                         ? controller.activeControllerName
@@ -26,13 +27,13 @@ struct SettingsControllersSection: View {
             }
 
             SeleneButtonRow("Button layout",
-                            subtitle: "See the controller mapping used by the library and overlays.",
+                            subtitle: "Library buttons",
                             buttonTitle: "View") {
                 onViewControls()
             }
 
             SeleneRow("Stick navigation deadzone",
-                      subtitle: "How far the left stick must move before focus changes.",
+                      subtitle: "Library navigation",
                       info: "Adjusts minimum thumbstick deflection needed to trigger menu navigation. Increase if your analog stick has slight drift causing unintended scrolling.") {
                 HStack(spacing: 10) {
                     Slider(value: Binding(
@@ -47,12 +48,14 @@ struct SettingsControllersSection: View {
                 }
             }
 
+            SettingsSubheading("New games")
+
             SeleneToggleRow("Rumble",
-                            subtitle: "Default rumble for newly added games.",
+                            subtitle: "Controller vibration",
                             isOn: $settings.settings.gameDefaults.rumble)
 
             SeleneRow("Rumble strength",
-                      subtitle: "Default gain for newly added games.",
+                      subtitle: "Vibration strength",
                       info: "Default haptic feedback multiplier (0: muted, 1: subtle, 2: standard, 3: intense) passed to game builds supporting macOS controller haptics.") {
                 Stepper(value: $settings.settings.gameDefaults.rumbleGain, in: 0...3) {
                     Text("\(settings.settings.gameDefaults.rumbleGain)")

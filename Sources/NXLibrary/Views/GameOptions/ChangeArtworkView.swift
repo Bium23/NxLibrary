@@ -135,13 +135,26 @@ struct ChangeArtworkView: View {
 
     @ViewBuilder
     private var status: some View {
-        let text = message ?? (searching.contains(slot) ? "Looking on the Nintendo stores, Steam, Xbox, GOG, TheGamesDB, the wikis and Wallhaven…"
-                                : (found[slot]?.isEmpty ?? false) ? "Nothing found online. Choose a file instead." : nil)
-        Text(text ?? " ")
+        let text = message ?? (searching.contains(slot) ? "Searching…"
+                                : (found[slot]?.isEmpty ?? false) ? "No images found" : artworkLocation)
+        Text(text)
             .seleneFont(14)
             .foregroundColor(SeleneTheme.ink60)
+            .lineLimit(1)
+            .frame(height: canvas.u(20), alignment: .leading)
             .padding(.leading, canvas.u(10))
             .padding(.vertical, canvas.u(10))
+    }
+
+    private var artworkLocation: String {
+        switch slot {
+        case .cover: return "Collection · Suggestions"
+        case .icon: return "Game tiles"
+        case .logo: return "Library · Launch"
+        case .background:
+            return viewModel.settingsStore?.settings.keepWallpaperOnGames == true
+                ? "Details · Launch · Home: wallpaper" : "Library · Launch"
+        }
     }
 
     private var grid: some View {

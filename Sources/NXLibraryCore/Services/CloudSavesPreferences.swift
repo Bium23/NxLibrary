@@ -59,10 +59,9 @@ public struct CloudSavesPreferences {
         for domain in Set(domains) { write(path, domain) }
     }
 
-    /// One game is about to start. Off leaves its key alone, so a folder the
-    /// player chose in the game's own settings window stays.
+    /// Reapply the library's choice before every launch, including Off.
     public func applyBeforeLaunch(_ choice: CloudSaves, domain: String) throws {
-        guard let path = try prepare(choice)?.path else { return }
+        let path = try prepare(choice)?.path
         write(path, domain)
     }
 }

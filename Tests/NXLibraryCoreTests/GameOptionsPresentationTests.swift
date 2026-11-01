@@ -89,9 +89,9 @@ final class GameOptionsPresentationTests: XCTestCase {
             .note(title: "Internal resolution", text: unsupported.resolutionNote)))
     }
 
-    func testRuntimeHeadingSitsBetweenHiddenAndTheRuntimeRows() {
+    func testNextLaunchHeadingSitsBetweenHiddenAndTheRuntimeRows() {
         let entries = presentation().entries(level: .main, origin: .spotlight)
-        guard let heading = entries.firstIndex(of: .heading("Runtime")),
+        guard let heading = entries.firstIndex(of: .heading("Next launch")),
               let hidden = entries.firstIndex(of: .row(.hidden)),
               let fullscreen = entries.firstIndex(of: .row(.fullscreen)) else {
             return XCTFail("Runtime heading or rows missing")

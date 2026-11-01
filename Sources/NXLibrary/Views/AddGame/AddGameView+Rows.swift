@@ -108,37 +108,38 @@ extension AddGameView {
     private var reviewRows: [AddGameRow] {
         var rows: [AddGameRow] = [
             AddGameRow(id: "build", kind: .action { addSelectedGame(buildNow: true) }, icon: .build,
-                       title: "Add and port", about: buildHint, enabled: viewModel.canStartBuild),
+                       title: viewModel.selectedLibraryGame == nil ? "Add and port" : "Rebuild", about: buildHint, enabled: viewModel.canStartBuild),
             AddGameRow(id: "library", kind: .action { addSelectedGame(buildNow: false) }, icon: .add,
-                       title: "Add to library only", about: "Port it later from the game's page.",
+                       title: viewModel.selectedLibraryGame == nil ? "Add to library only" : "Save changes",
+                       about: viewModel.selectedLibraryGame == nil ? "Port later" : "Next launch",
                        enabled: viewModel.canAddSelectedGame),
             AddGameRow(id: "sources", kind: .action {
                 withAnimation(reduceMotion ? nil : SeleneTheme.standard) { viewModel.goToWizardStep(1) }
             }, icon: .folder, title: "Change sources",
                about: "\(sourceCountText) · \(viewModel.formattedSelectedSourcesSize)"),
-            AddGameRow(id: "runtimeHeading", kind: .heading, title: "Runtime defaults"),
-            toggle("fps60", "60 FPS", "Twice the frame rate; some games run too fast.",
+            AddGameRow(id: "runtimeHeading", kind: .heading, title: "Next launch"),
+            toggle("fps60", "60 FPS", "Frame-rate target",
                    $viewModel.pendingRuntimeConfig.enable60FPS),
-            toggle("docked", "Docked mode", "The docked profile: 1080p and higher clocks.",
+            toggle("docked", "Docked mode", "Console profile",
                    $viewModel.pendingRuntimeConfig.isDockedMode),
-            toggle("metalFX", "MetalFX upscaling", "Sharper picture at your display's resolution.",
+            toggle("metalFX", "MetalFX upscaling", "Spatial upscaling",
                    $viewModel.pendingRuntimeConfig.enableMetalFXUpscale),
-            toggle("metalHUD", "Metal HUD", "Frame rate and GPU time over the game.",
+            toggle("metalHUD", "Metal HUD", "Performance overlay",
                    $viewModel.pendingRuntimeConfig.enableMetalHUD),
-            AddGameRow(id: "runtimeNote", kind: .note, title: "Each game can change these later in Game options."),
             AddGameRow(id: "appHeading", kind: .heading, title: "App"),
         ]
         let languages = languageOptions
-        let current = languages.firstIndex { $0.code == viewModel.selectedLanguage } ?? 0
+        let current = languages.firstIndex { $0.code == viewModel.pendingRuntimeConfig.language } ?? 0
         rows.append(AddGameRow(id: "language", kind: .choice(values: languages.map(\.label), index: current) { index in
             guard languages.indices.contains(index) else { return }
-            viewModel.selectedLanguage = languages[index].code
             viewModel.pendingRuntimeConfig.language = languages[index].code
         }, title: "Game language", compact: true))
         rows.append(AddGameRow(id: "appName", kind: .field($viewModel.appName, placeholder: viewModel.selectedGame?.name ?? "Name"),
                                title: "App name", compact: true))
-        rows.append(AddGameRow(id: "bundleID", kind: .field($viewModel.bundleId, placeholder: "org.nxnative.game"),
-                               title: "Bundle identifier", compact: true))
+        if viewModel.selectedLibraryGame == nil {
+            rows.append(AddGameRow(id: "bundleID", kind: .field($viewModel.bundleId, placeholder: "org.nxnative.game"),
+                                   title: "Bundle identifier", compact: true))
+        }
         rows += readinessRows(includeBuildError: true)
         rows.append(AddGameRow(id: "destination", kind: .note, title: destinationNote))
         return rows
@@ -160,7 +161,7 @@ extension AddGameView {
 
     private var languageOptions: [(code: String, label: String)] {
         var options = viewModel.availableLanguages
-        let current = viewModel.selectedLanguage
+        let current = viewModel.pendingRuntimeConfig.language
         if !options.contains(where: { $0.code == current }) {
             options.append((current, current.isEmpty ? "Game default" : current))
         }

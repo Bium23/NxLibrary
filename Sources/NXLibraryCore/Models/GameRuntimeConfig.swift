@@ -78,6 +78,14 @@ public struct GameRuntimeConfig: Codable, Equatable {
         mergedEnvContent(existing: nil)
     }
 
+    public var languageForBuild: String? {
+        language == "auto" || language.isEmpty ? nil : language
+    }
+
+    public static func forReview(existing game: PortedGame?, defaults: GameRuntimeConfig) -> GameRuntimeConfig {
+        game.map { load(for: $0) } ?? defaults
+    }
+
     public static func storageKey(for game: PortedGame) -> String {
         "NXNative_GameConfig_" + game.uniqueKey
     }

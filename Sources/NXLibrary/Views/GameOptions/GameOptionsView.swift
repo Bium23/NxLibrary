@@ -639,7 +639,7 @@ struct GameOptionsView: View {
             config.rumble.toggle()
         case .restoreDefaults:
             SoundEffectService.shared.play(.click)
-            config = GameRuntimeConfig()
+            config = viewModel.settingsStore?.settings.gameDefaults ?? GameRuntimeConfig()
         case .cheats:
             SoundEffectService.shared.play(.click)
             cheatsOpen = true

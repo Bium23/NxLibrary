@@ -36,7 +36,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
         case .rumble: return "Rumble"
         case .rumbleStrength: return "Rumble strength"
         case .renderScale: return "3D render scale"
-        case .restoreDefaults: return "Restore defaults"
+        case .restoreDefaults: return "Use new game defaults"
         case .cheats: return "Cheats"
         case .rebuild: return "Rebuild"
         case .showInFinder: return "Show in Finder"
@@ -202,16 +202,16 @@ public struct GameOptionsPresentation: Equatable {
         case .move: return "Change its place on Spotlight."
         case .favorite: return "On your Favorites tab."
         case .hidden: return "Hidden games stay out of your lists."
-        case .fullscreen: return "Output follows the display resolution."
-        case .fps60: return "Unlock the frame limiter when the game supports it."
-        case .metalFX: return "Spatial upscaling; it does not raise the internal resolution."
-        case .metalHUD: return "Apple's real-time performance overlay."
-        case .consoleMode: return "Docked uses the TV profile; handheld uses the portable profile."
-        case .language: return "Game Default leaves the engine's language untouched."
-        case .rumble: return "Controller vibration when the game supports it."
-        case .rumbleStrength: return "Gain from 0 to 3."
-        case .renderScale: return "100% keeps the game's own resolution."
-        case .restoreDefaults: return "Reset this game's runtime settings."
+        case .fullscreen: return "Launch mode"
+        case .fps60: return "Frame-rate target"
+        case .metalFX: return "Spatial upscaling"
+        case .metalHUD: return "Performance overlay"
+        case .consoleMode: return "Console profile"
+        case .language: return "Game language"
+        case .rumble: return "Controller vibration"
+        case .rumbleStrength: return "Vibration strength"
+        case .renderScale: return "Internal resolution"
+        case .restoreDefaults: return "Copy current defaults"
         case .rebuild: return rebuildAbout
         case .showInFinder: return "Reveal the app in Finder."
         case .openSaves: return "Back up, import and restore progress."
@@ -230,15 +230,17 @@ public struct GameOptionsPresentation: Equatable {
     public func info(_ row: GameOptionsRow) -> String? {
         switch row {
         case .fps60:
-            return "Overrides the default frame pacing target (DM_PRESENT_HZ=60). Recommended for games that support 60 fps; titles with physics tied to 30 fps ticks may run in fast-forward."
+            return "On targets 60 FPS; Off targets 30 FPS. Some games run too fast at 60 FPS."
         case .metalFX:
             return "Applies Apple MetalFX spatial upscaling (DM_PRESENT_UPSCALE=metalfx). It sharpens the 3D viewport to match your Mac display without increasing internal render workload."
         case .metalHUD:
             return "Displays Apple's real-time Metal developer HUD (DM_METAL_HUD=1). Shows frame rate, frame pacing graphs, GPU time per frame in milliseconds, and memory allocation."
         case .consoleMode:
-            return "Switches the Switch operational profile (DM_OPERATION_MODE). Docked targets higher clock profiles, higher LODs, and up to 1080p, while Handheld mimics the 720p portable mode with lower power draw."
+            return "Docked uses the game's TV profile; Handheld uses its portable profile."
         case .renderScale:
             return "Scales internal 3D scene resolution from 50% to 100% (DM_RENDER_SCALE). Decreasing internal resolution boosts framerates on demanding titles while UI overlays remain crisp."
+        case .restoreDefaults:
+            return "Copies your defaults for new games once. Later changes to those defaults leave this game unchanged."
         case .removeSources:
             return "Frees disk space by deleting original NSP/XCI dump files and the compilation cache workspace. The installed game in ~/Applications and all your save files are completely safe."
         default:
@@ -252,7 +254,7 @@ public struct GameOptionsPresentation: Equatable {
         case .main:
             var entries: [GameOptionsEntry] = [.row(.play), .row(.editDetails), .row(.cheats), .row(.openSaves)]
             if origin == .spotlight { entries.append(.row(.move)) }
-            entries += [.row(.favorite), .row(.hidden), .heading("Runtime")]
+            entries += [.row(.favorite), .row(.hidden), .heading("Next launch")]
             entries += [.fullscreen, .fps60, .metalFX, .metalHUD, .consoleMode, .language, .rumble, .rumbleStrength]
                 .map(GameOptionsEntry.row)
             if showRenderScale {

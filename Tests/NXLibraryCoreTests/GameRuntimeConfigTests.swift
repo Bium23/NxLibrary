@@ -2,6 +2,39 @@ import XCTest
 @testable import NXLibraryCore
 
 final class GameRuntimeConfigTests: XCTestCase {
+    func testExistingReviewLoadsTheGameAndSavesTheEditedValues() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("NXReview-\(UUID())")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let env = root.appendingPathComponent("Game.app/Contents/Resources/dm/env.txt")
+        try FileManager.default.createDirectory(at: env.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try "DM_FPS_TARGET=30\nDM_LANG=it\nDM_RENDER_SCALE=0.75\n".write(to: env, atomically: true, encoding: .utf8)
+        let game = PortedGame(name: "Game", url: root.appendingPathComponent("Game.app"), platform: .macApp,
+                              sizeBytes: 1, modificationDate: Date())
+        defer { UserDefaults.standard.removeObject(forKey: GameRuntimeConfig.storageKey(for: game)) }
+        let defaults = GameRuntimeConfig(language: "ja")
+        var review = GameRuntimeConfig.forReview(existing: game, defaults: defaults)
+        XCTAssertEqual(review.language, "it")
+        XCTAssertEqual(review.fpsTarget, 30)
+        XCTAssertEqual(review.renderScale, 0.75)
+        review.language = "fr"
+        review.save(for: game)
+        XCTAssertEqual(GameRuntimeConfig.forReview(existing: game, defaults: defaults).language, "fr")
+        XCTAssertEqual(defaults.language, "ja", "Review does not edit the new-game defaults")
+    }
+
+    func testNewReviewStartsWithCurrentNewGameDefaults() {
+        let defaults = GameRuntimeConfig(enable60FPS: false, language: "it", rumble: false, fullscreen: true)
+        XCTAssertEqual(GameRuntimeConfig.forReview(existing: nil, defaults: defaults), defaults)
+    }
+
+    func testBuildLanguageBelongsToTheGamesConfiguration() throws {
+        let game = try JSONDecoder().decode(GameRuntimeConfig.self,
+            from: JSONEncoder().encode(GameRuntimeConfig(language: "it")))
+        XCTAssertEqual(game.languageForBuild, "it")
+        XCTAssertNil(GameRuntimeConfig(language: "auto").languageForBuild)
+        XCTAssertNil(GameRuntimeConfig(language: "").languageForBuild)
+    }
+
     func testDefaultLanguageIsAutoAndOmitted() {
         let config = GameRuntimeConfig()
         XCTAssertEqual(config.language, "auto")

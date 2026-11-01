@@ -64,7 +64,7 @@ public final class LibraryStore {
         }
     }
 
-    public func merge(scanned: [PortedGame]) throws -> LibraryFile {
+    public func merge(scanned: [PortedGame], replacingSources: Bool = false) throws -> LibraryFile {
         var library = try load()
         for game in scanned {
             if let index = library.games.firstIndex(where: { existing in
@@ -85,7 +85,8 @@ public final class LibraryStore {
                 merged.status = game.status
                 merged.toolchain = game.toolchain
                 merged.lastBuild = game.lastBuild
-                if old.sources.isEmpty {
+                let explicitSources = replacingSources && !game.sources.isEmpty
+                if explicitSources || old.sources.isEmpty {
                     merged.sources = game.sources
                 } else {
                     let oldSourcesExist = old.sources.allSatisfy {
@@ -94,8 +95,8 @@ public final class LibraryStore {
                     merged.sources = (oldSourcesExist || game.sources.isEmpty)
                         ? old.sources : game.sources
                 }
-                merged.workspacePath = old.workspacePath ?? game.workspacePath
-                merged.buildCachePath = old.buildCachePath ?? game.buildCachePath
+                merged.workspacePath = explicitSources ? game.workspacePath ?? old.workspacePath : old.workspacePath ?? game.workspacePath
+                merged.buildCachePath = explicitSources ? game.buildCachePath ?? old.buildCachePath : old.buildCachePath ?? game.buildCachePath
                 if (old.status == .built || old.status == .builtSourcesMissing
                     || old.status == .needsRebuild),
                    old.url.pathExtension.lowercased() == "app",

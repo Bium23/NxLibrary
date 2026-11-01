@@ -12,9 +12,18 @@ final class SettingsCatalogTests: XCTestCase {
         XCTAssertTrue(SettingsCatalog.changed(in: settings).map(\.id).contains("interfaceSounds"))
     }
 
+    func testRumbleChangesBelongToControllersRatherThanGameDefaults() {
+        var settings = AppSettings()
+        settings.gameDefaults.rumble.toggle()
+        settings.gameDefaults.rumbleGain += 1
+        let changed = SettingsCatalog.changed(in: settings)
+        XCTAssertEqual(Set(changed.map(\.id)), ["gameDefaults.rumble", "gameDefaults.rumbleGain"])
+        XCTAssertTrue(changed.allSatisfy { $0.group == .controllers })
+    }
+
     func testSearchMatchesAboutText() {
         let titles = SettingsCatalog.search("crops").map(\.title)
-        XCTAssertTrue(titles.contains("Background sizing"))
+        XCTAssertTrue(titles.contains("Wallpaper sizing"))
     }
 
     func testWallpaperBrightnessIsFoundAndCountsAsChanged() {

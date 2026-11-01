@@ -2,6 +2,25 @@ import XCTest
 @testable import NXLibraryCore
 
 final class BuildCommandBuilderTests: XCTestCase {
+    func testEachGameSuppliesItsBuildLanguageAndAutoAddsNoOverride() throws {
+        let repo = URL(fileURLWithPath: "/tmp/repo")
+        for language in ["it", "ja", "auto"] {
+            let config = GameRuntimeConfig(language: language)
+            let command = BuildCommandBuilder.make(repo: repo,
+                toolchain: EngineToolchain.resolve(runtime: nil, repo: repo),
+                workspace: URL(fileURLWithPath: "/tmp/work"), keys: URL(fileURLWithPath: "/tmp/prod.keys"),
+                output: URL(fileURLWithPath: "/tmp/Game.app"),
+                developerDir: URL(fileURLWithPath: "/Applications/Xcode.app/Contents/Developer"),
+                language: config.languageForBuild)
+            if language == "auto" {
+                XCTAssertFalse(command.arguments.contains("-l"))
+            } else {
+                let flag = try XCTUnwrap(command.arguments.firstIndex(of: "-l"))
+                XCTAssertEqual(command.arguments[flag + 1], language)
+            }
+        }
+    }
+
     func testMacOnlyJSONCommand() {
         let repo = URL(fileURLWithPath: "/tmp/repo")
         let cmd = BuildCommandBuilder.make(

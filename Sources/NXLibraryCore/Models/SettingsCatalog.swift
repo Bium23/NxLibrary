@@ -80,20 +80,20 @@ public enum SettingsCatalog {
             "The palette for focus, text and backgrounds.") { $0.colorThemeID },
         row("wallpaperID", .look, "Wallpaper",
             "The picture behind the base gradient, per theme or none.") { $0.wallpaperID },
-        row("backgroundSizing", .look, "Background sizing",
+        row("settingsWallpaperID", .look, "Settings wallpaper",
+            "The picture behind Settings: the same as the app's, or one of its own.") { $0.settingsWallpaperID },
+        row("backgroundSizing", .look, "Wallpaper sizing",
             "Fill crops the picture to cover the screen, Fit shows all of it, Stretch distorts it to fit.") { $0.backgroundSizing },
         row("wallpaperBrightness", .look, "Wallpaper brightness",
             "How dark a wallpaper or live background is: dim like Selene, bright on the right away from the text, or bright everywhere.") { $0.wallpaperBrightness },
-        row("backgroundShade", .look, "Background shade",
-            "How much the game art is darkened behind text.") { $0.backgroundShade },
+        row("animatedBackground", .look, "Background motion",
+            "The moonlight's beam and motes move and a live background plays; off, they hold still.") { $0.animatedBackground },
+        row("keepWallpaperOnGames", .look, "Game backgrounds",
+            "On shows the selected game's art in Spotlight and Collection; Off keeps your wallpaper. Details keeps the game's art.") { $0.keepWallpaperOnGames },
+        row("backgroundShade", .look, "Library shade",
+            "Shading behind library text, over game artwork or your wallpaper.") { $0.backgroundShade },
         row("readableText", .look, "Text shadow",
             "Adds a soft shadow under text so it reads over bright art.") { $0.readableText },
-        row("settingsWallpaperID", .look, "Settings wallpaper",
-            "The picture behind Settings: the same as the app's, or one of its own.") { $0.settingsWallpaperID },
-        row("keepWallpaperOnGames", .look, "Keep wallpaper on games",
-            "Spotlight and Collection keep your wallpaper instead of the focused game's art; a game's page still shows its art.") { $0.keepWallpaperOnGames },
-        row("animatedBackground", .look, "Animated background",
-            "The moonlight's beam and motes move and a live background plays; off, they hold still.") { $0.animatedBackground },
         row("showClock", .look, "Clock",
             "Shows the time in the top bar.") { $0.showClock },
         row("reduceMotion", .look, "Reduce motion",
@@ -109,15 +109,24 @@ public enum SettingsCatalog {
         row("surprisePool", .games, "Surprise me pool",
             "Which games Surprise me picks from.") { $0.surprisePool },
         row("cloudSaves", .games, "Cloud saves",
-            "One folder every game syncs its save through, shared with the games' iPhone apps: off, iCloud Drive or a folder you choose.") { $0.cloudSaves },
+            "One sync choice for all games, applied at next launch: Off, iCloud Drive or a folder you choose.") { $0.cloudSaves },
         action("hiddenGames", .games, "Hidden games",
                "Games you hid from Game options; Show puts one back in your lists."),
-        row("gameDefaults", .games, "Game defaults",
-            "Runtime options new games start with: frame rate, upscaling, console mode, language and rumble.") { $0.gameDefaults },
+        row("gameDefaults", .games, "New games",
+            "Game defaults for newly added titles: frame rate, upscaling, console mode and language. Existing games keep their options.") {
+                var value = $0.gameDefaults
+                value.rumble = defaults.gameDefaults.rumble
+                value.rumbleGain = defaults.gameDefaults.rumbleGain
+                return value
+            },
 
         // Controllers
         action("controllerStatus", .controllers, "Controller",
                "The connected controller and how its buttons map."),
+        row("gameDefaults.rumble", .controllers, "Rumble",
+            "Default controller vibration for new games.") { $0.gameDefaults.rumble },
+        row("gameDefaults.rumbleGain", .controllers, "Rumble strength",
+            "Default vibration strength for new games.") { $0.gameDefaults.rumbleGain },
 
         // Library
         action("libraryFolders", .library, "Library folders",

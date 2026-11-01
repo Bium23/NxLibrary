@@ -1,6 +1,6 @@
 # NX Library — guida tecnica
 
-Aggiornata il 1 novembre 2026 sul codice del repository. La mappa comprende 224 file Swift di produzione e 91 file di test e supporto ai test. L’ultima verifica del codice ha eseguito 670 test con esito positivo.
+Aggiornata il 1 novembre 2026 sul codice del repository. La mappa comprende 224 file Swift di produzione e 91 file di test e supporto ai test. L’ultima verifica del codice ha eseguito 676 test con esito positivo.
 
 Questa guida descrive il funzionamento attuale. Il [catalogo dei file](file-map.md) assegna una responsabilità a ogni file versionato, suddiviso per area. Le specifiche e i piani datati in `superpowers/` conservano le decisioni e i passaggi di implementazione delle singole funzionalità.
 
@@ -67,6 +67,21 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
 
 Il merge parte dalla voce persistita e aggiorna esplicitamente i dati osservati dalla scansione. Conserva impostazioni, identità, preferiti, installazione in attesa ed errore dell’ultimo porting. Restano le regole precedenti per associare le sorgenti e conservare la provenienza di una build installata.
 
+L’aggiunta o il collegamento esplicito delle sorgenti usa `merge(replacingSources: true)`: la selezione confermata sostituisce sorgenti, workspace e percorso della cache, anche se i file precedenti esistono ancora. I file originali restano sul disco. Le scansioni automatiche continuano a conservare la selezione già registrata e il bundle installato.
+
+### Ambito delle impostazioni
+
+| Punto dell’interfaccia | Autorità |
+|---|---|
+| Settings → Games → New games | Valori iniziali copiati nei nuovi titoli. |
+| Game Options → Next launch | Configurazione di quel titolo, applicata al prossimo avvio. |
+| Use new game defaults | Copia una volta i default correnti nel gioco selezionato. |
+| Add Game → Review | Nuovo titolo: parte dai default. Titolo esistente: `GameRuntimeConfig.forReview` legge le sue opzioni effettive. La conferma salva i valori mostrati. |
+| Cloud saves | Preferenza riapplicata prima di ogni avvio, compreso Off. |
+| Controllers | Navigazione della libreria; il sottogruppo New games contiene i default della vibrazione. |
+
+Options e Play leggono `GameRuntimeConfig.load`: preferenze per titolo in UserDefaults, poi `env.txt` del titolo, quello nel bundle e infine i valori del modello. Il rebuild ricava `languageForBuild` dalla configurazione del titolo e non conserva una lingua separata dal wizard. Le modifiche dei default globali non aggiornano automaticamente i giochi già aggiunti. Search e Changed attribuiscono la vibrazione a Controllers.
+
 `AppRouter` gestisce schermata corrente, cronologia di ritorno e richieste di selezione. I modelli `SpotlightState`, `LibrarySelectionState`, `DetailsFocus`, `MenuSelectionModel` e `FocusIndex` descrivono il focus indipendentemente dal disegno SwiftUI. `LibraryQuery` applica ricerca, filtri e ordinamento.
 
 Le viste principali sono Spotlight, Collection e Details. Ricerca, Add Game, Console, Game Options e Settings sono raggiunti dalla shell e dalle azioni del router. Le estensioni `…+Input.swift` traducono tastiera, mouse e controller in modifiche ai modelli di focus.
@@ -104,6 +119,8 @@ Il flusso Play controlla operazioni di salvataggio, recuperi e installazioni in 
 
 `LaunchService` scrive `env.txt`, conserva le variabili non gestite tramite il merge del modello runtime e avvia il bundle con `NSWorkspace.OpenConfiguration`. Passa anche `DM_LAUNCHER=0`. `CloudSavesPreferences` applica la preferenza cloud al dominio del gioco prima del lancio.
 
+Off rimuove la preferenza cloud salvata dal launcher del gioco anche all’avvio. Gli override avanzati `DM_SAVE_SYNC` nei file o nell’ambiente mantengono la precedenza del motore: `SaveLocation.inspect` ne segnala l’origine e mantiene il blocco delle operazioni incompatibili con la sincronizzazione attiva.
+
 `RunningGameMonitor` confronta i bundle ID della libreria con le applicazioni in esecuzione e offre Resume e Close Game. `LaunchReadinessProbe` attende una finestra visibile del processo per chiudere la schermata di lancio. `PlaySessionStore` registra avvio, heartbeat, fine e riconciliazione delle sessioni. `ActivitySummary` aggrega la settimana, mentre `LibraryPresentation` e `GameDetailPresentation` preparano i valori delle schermate.
 
 ## Cheats
@@ -139,6 +156,10 @@ All’avvio o al refresh, un journal incompleto porta al rollback del salvataggi
 I backup sono copie locali conservate fino alla gestione dell’utente. Sono automatici prima di importazione e ripristino, oppure manuali con Back up now. Importazione e ripristino richiedono sincronizzazione cloud effettivamente disattivata. La [specifica dei salvataggi](superpowers/specs/2026-10-31-saves-design.md) dettaglia precedenze, casi rifiutati e verifiche eseguite.
 
 ## Artwork, metadati e sfondi
+
+Look distingue Wallpaper e Library screens. Game backgrounds è un controllo positivo: On mostra l’artwork del titolo in Spotlight e Collection, Off mantiene il wallpaper. Riusa la preferenza `keepWallpaperOnGames` invertendo soltanto il binding, senza migrazione dei dati. Details continua a usare l’artwork del gioco; il layout di avvio segue le proprie impostazioni globali. Wallpaper sizing riguarda il wallpaper e Library shade le maschere delle schermate della libreria.
+
+Change artwork conserva la precedenza delle scelte manuali per titolo. La riga di stato ha altezza stabile, testo breve per la ricerca e indicazione della destinazione dell’immagine; segnala Home: wallpaper quando lo sfondo della home è governato dal wallpaper globale.
 
 `NintendoStoreMetadataService`, `GameTDBStore`, Title DB e le sorgenti di artwork raccolgono descrizioni, date, generi, copertine, loghi, sfondi e screenshot. `ArtworkNames` confronta i nomi per limitare i candidati al gioco o alle sue edizioni. `ArtworkPicker` e `MetadataOptions` aggregano i risultati per i selettori. `ArtworkPicks` e `MetadataPicks` conservano le scelte manuali.
 

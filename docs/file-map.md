@@ -114,7 +114,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Sources/NXLibraryCore/Models/PlaySession.swift](../Sources/NXLibraryCore/Models/PlaySession.swift) | Descrive una sessione persistibile con gioco e riferimenti temporali. |
 | [Sources/NXLibraryCore/Models/ActivitySummary.swift](../Sources/NXLibraryCore/Models/ActivitySummary.swift) | Aggrega sessioni, giorni e tempi della settimana per la scheda Activity. |
 | [Sources/NXLibraryCore/Models/MoreLikeThis.swift](../Sources/NXLibraryCore/Models/MoreLikeThis.swift) | Ordina i giochi correlati usando generi, sviluppatore e publisher. |
-| [Sources/NXLibraryCore/Services/LibraryStore.swift](../Sources/NXLibraryCore/Services/LibraryStore.swift) | Carica e salva cataloghi JSON; il merge conserva stato applicativo, installazioni in attesa ed errori. Mantiene la copia di recupero valida. |
+| [Sources/NXLibraryCore/Services/LibraryStore.swift](../Sources/NXLibraryCore/Services/LibraryStore.swift) | Salva il catalogo con recupero; conserva lo stato nelle scansioni e sostituisce le sorgenti solo per una selezione esplicita. |
 | [Sources/NXLibraryCore/Services/ImportService.swift](../Sources/NXLibraryCore/Services/ImportService.swift) | Scansiona bundle nxnative e ne ricava identità, versione, percorso e dimensioni. |
 | [Sources/NXLibraryCore/Services/AppSizeCache.swift](../Sources/NXLibraryCore/Services/AppSizeCache.swift) | Conserva dimensioni per percorso e data del bundle e decide lo stato vuoto della libreria. |
 | [Sources/NXLibraryCore/Services/AppSettingsStore.swift](../Sources/NXLibraryCore/Services/AppSettingsStore.swift) | Pubblica impostazioni globali, legge settings.json e salva le modifiche tramite file temporaneo. |
@@ -151,7 +151,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Sources/NXLibraryCore/Models/GameFileItem.swift](../Sources/NXLibraryCore/Models/GameFileItem.swift) | Descrive sorgenti, tipo base/update/DLC, percorso, dimensione e metadati rilevati. |
 | [Sources/NXLibraryCore/Models/BuildRecord.swift](../Sources/NXLibraryCore/Models/BuildRecord.swift) | Conserva esito, tempi, log e provenienza di un porting. |
 | [Sources/NXLibraryCore/Models/TargetPlatform.swift](../Sources/NXLibraryCore/Models/TargetPlatform.swift) | Definisce il target mac-app e le sue etichette per l’interfaccia. |
-| [Sources/NXLibraryCore/Models/GameRuntimeConfig.swift](../Sources/NXLibraryCore/Models/GameRuntimeConfig.swift) | Mappa impostazioni dei giochi in DM_*, esegue il merge di env.txt e persiste le scelte. |
+| [Sources/NXLibraryCore/Models/GameRuntimeConfig.swift](../Sources/NXLibraryCore/Models/GameRuntimeConfig.swift) | Persiste opzioni per titolo, prepara Review e lingua del rebuild, mappa DM_* e unisce env.txt. |
 | [Sources/NXLibraryCore/Models/LauncherSettings.swift](../Sources/NXLibraryCore/Models/LauncherSettings.swift) | Legge launcher.json e verifica i controlli supportati, con fallback per le build precedenti. |
 | [Sources/NXLibraryCore/Models/PortingProgress.swift](../Sources/NXLibraryCore/Models/PortingProgress.swift) | Aggrega eventi del motore in fasi e percentuale complessiva per la UI. |
 | [Sources/NXLibraryCore/Models/PortingPresentation.swift](../Sources/NXLibraryCore/Models/PortingPresentation.swift) | Definisce fallimento persistito, ETA, aspetto della tile e pill del porting. |
@@ -191,7 +191,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Sources/NXLibraryCore/Models/SaveSnapshot.swift](../Sources/NXLibraryCore/Models/SaveSnapshot.swift) | Definisce identità, inventario, manifest e anteprime di importazione o ripristino. |
 | [Sources/NXLibraryCore/Models/SavePresentation.swift](../Sources/NXLibraryCore/Models/SavePresentation.swift) | Prepara riepiloghi, date, dimensioni, nomi degli slot e disponibilità dell’importazione. |
 | [Sources/NXLibraryCore/Models/CloudSaves.swift](../Sources/NXLibraryCore/Models/CloudSaves.swift) | Descrive scelta cloud, cartelle iCloud o personalizzate e passaggi fra le opzioni. |
-| [Sources/NXLibraryCore/Services/CloudSavesPreferences.swift](../Sources/NXLibraryCore/Services/CloudSavesPreferences.swift) | Prepara la cartella scelta e applica la preferenza cloud ai domini dei giochi. |
+| [Sources/NXLibraryCore/Services/CloudSavesPreferences.swift](../Sources/NXLibraryCore/Services/CloudSavesPreferences.swift) | Prepara la cartella e riapplica la scelta cloud ai domini dei giochi prima di ogni avvio, anche Off. |
 | [Sources/NXLibraryCore/Services/RyujinxSaveFolder.swift](../Sources/NXLibraryCore/Services/RyujinxSaveFolder.swift) | Riconosce contenitori Ryujinx, controlla il title ID e seleziona l’intero albero committed 0. |
 | [Sources/NXLibraryCore/Services/SaveFileIO.swift](../Sources/NXLibraryCore/Services/SaveFileIO.swift) | Centralizza copie, hash, xattr portabili, controlli dei percorsi, spazio e scritture durevoli. |
 | [Sources/NXLibraryCore/Services/SaveSnapshotStore.swift](../Sources/NXLibraryCore/Services/SaveSnapshotStore.swift) | Crea e verifica backup e prepara importazioni da esportazioni o backup datati. |
@@ -230,7 +230,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Sources/NXLibraryCore/Models/ScreenshotViewerState.swift](../Sources/NXLibraryCore/Models/ScreenshotViewerState.swift) | Mantiene indice e limiti della navigazione nel visualizzatore screenshot. |
 | [Sources/NXLibraryCore/Models/SeleneCanvas.swift](../Sources/NXLibraryCore/Models/SeleneCanvas.swift) | Calcola scala uniforme, stage centrato e conversione delle unità del canvas 1920×1080. |
 | [Sources/NXLibraryCore/Models/SelenePalette.swift](../Sources/NXLibraryCore/Models/SelenePalette.swift) | Decodifica palette, ordine del selettore e fallback della palette predefinita. |
-| [Sources/NXLibraryCore/Models/SettingsCatalog.swift](../Sources/NXLibraryCore/Models/SettingsCatalog.swift) | Descrive le righe delle impostazioni e calcola ricerca e valori modificati. |
+| [Sources/NXLibraryCore/Models/SettingsCatalog.swift](../Sources/NXLibraryCore/Models/SettingsCatalog.swift) | Descrive righe, ricerca e valori modificati, distinguendo i default dei nuovi giochi dalla vibrazione in Controllers. |
 | [Sources/NXLibraryCore/Models/SettingsSection.swift](../Sources/NXLibraryCore/Models/SettingsSection.swift) | Enumera gruppi, titoli e icone della schermata Settings. |
 | [Sources/NXLibraryCore/Models/SpotlightPage.swift](../Sources/NXLibraryCore/Models/SpotlightPage.swift) | Calcola estratti delle descrizioni e stati dello scorrimento della pagina Spotlight. |
 | [Sources/NXLibraryCore/Models/SpotlightRow.swift](../Sources/NXLibraryCore/Models/SpotlightRow.swift) | Costruisce la sequenza di card e giochi, riordino e selezione Surprise. |
@@ -284,7 +284,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | File | Responsabilità |
 |---|---|
 | [Sources/NXLibrary/Views/GameOptions/GameOptionsView.swift](../Sources/NXLibrary/Views/GameOptions/GameOptionsView.swift) | Presenta opzioni del gioco, Edit details, impostazioni runtime e conferme delle azioni. |
-| [Sources/NXLibrary/Views/GameOptions/ChangeArtworkView.swift](../Sources/NXLibrary/Views/GameOptions/ChangeArtworkView.swift) | Offre selezione per slot, sorgenti online, file locali e applicazione dell’artwork. |
+| [Sources/NXLibrary/Views/GameOptions/ChangeArtworkView.swift](../Sources/NXLibrary/Views/GameOptions/ChangeArtworkView.swift) | Seleziona artwork per titolo da rete o file e indica dove viene usato, con stato ad altezza stabile. |
 | [Sources/NXLibrary/Views/GameOptions/ChangeMetadataView.swift](../Sources/NXLibrary/Views/GameOptions/ChangeMetadataView.swift) | Offre alternative o testo personalizzato per descrizione, generi, crediti e data. |
 | [Sources/NXLibrary/Views/GameOptions/CheatsPanel.swift](../Sources/NXLibrary/Views/GameOptions/CheatsPanel.swift) | Presenta file, master switch, codici, importazione, rimozione e stato di scrittura dei cheats. |
 | [Sources/NXLibrary/Views/GameOptions/SavesPanel.swift](../Sources/NXLibrary/Views/GameOptions/SavesPanel.swift) | Presenta azioni sui save, anteprime, errori e popup di successo a scomparsa automatica. |
@@ -399,7 +399,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Tests/NXLibraryCoreTests/FocusIndexTests.swift](../Tests/NXLibraryCoreTests/FocusIndexTests.swift) | Movimento limitato agli elementi della lista e liste vuote. |
 | [Tests/NXLibraryCoreTests/GameDetailPresentationTests.swift](../Tests/NXLibraryCoreTests/GameDetailPresentationTests.swift) | Disponibilità di build e sorgenti e formattazione di metadati e azioni Details. |
 | [Tests/NXLibraryCoreTests/GameOptionsPresentationTests.swift](../Tests/NXLibraryCoreTests/GameOptionsPresentationTests.swift) | Ordine delle righe, focus, visibilità dei controlli e valori runtime. |
-| [Tests/NXLibraryCoreTests/GameRuntimeConfigTests.swift](../Tests/NXLibraryCoreTests/GameRuntimeConfigTests.swift) | Conversione DM_*, merge di env.txt e conservazione dei valori non gestiti. |
+| [Tests/NXLibraryCoreTests/GameRuntimeConfigTests.swift](../Tests/NXLibraryCoreTests/GameRuntimeConfigTests.swift) | Review di giochi nuovi ed esistenti, persistenza, lingua del rebuild e conversione DM_* con merge di env.txt. |
 | [Tests/NXLibraryCoreTests/GameTDBTests.swift](../Tests/NXLibraryCoreTests/GameTDBTests.swift) | Database, normalizzazione dei nomi, regioni e matching delle copertine. |
 | [Tests/NXLibraryCoreTests/HoldDetectorTests.swift](../Tests/NXLibraryCoreTests/HoldDetectorTests.swift) | Soglia temporale e distinzione fra pressione breve e prolungata. |
 | [Tests/NXLibraryCoreTests/ImportServiceTests.swift](../Tests/NXLibraryCoreTests/ImportServiceTests.swift) | Riconoscimento dei bundle nxnative e normalizzazione degli identificativi. |

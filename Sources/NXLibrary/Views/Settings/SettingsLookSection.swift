@@ -57,59 +57,67 @@ struct SettingsLookSection: View {
             SettingsSubheading("Theme")
 
             SeleneCycleRow("Color theme",
-                           subtitle: "The palette for focus, text and backgrounds.",
+                           subtitle: "Interface colours",
                            value: themeName) { stepTheme($0) }
 
+            SettingsSubheading("Wallpaper")
+
             SeleneCycleRow("Wallpaper",
-                           subtitle: "The picture behind the base gradient. Import more under Sound & music.",
+                           subtitle: "App background",
                            value: wallpaperTitle) { stepWallpaper($0) }
 
             SeleneCycleRow("Settings wallpaper",
-                           subtitle: "The picture behind Settings: the same as the app's, or one of its own.",
+                           subtitle: "Settings background",
                            value: settingsWallpaperTitle) { stepSettingsWallpaper($0) }
 
-            SeleneToggleRow("Keep wallpaper on games",
-                            subtitle: "Spotlight and Collection keep your wallpaper instead of the focused game's art. A game's page still shows its art.",
-                            isOn: $settings.settings.keepWallpaperOnGames)
-
-            SeleneCycleRow("Background sizing",
-                           subtitle: "Fill crops to cover, Fit shows all of it, Stretch distorts it to fit.",
+            SeleneCycleRow("Wallpaper sizing",
+                           subtitle: "Image fit",
+                           info: "Fill crops to cover, Fit shows all of it, Stretch distorts it to fit. Applies to wallpapers.",
                            value: settings.settings.backgroundSizing.title) { stepSizing($0) }
 
             SeleneCycleRow("Wallpaper brightness",
-                           subtitle: "Like Selene dims it evenly; Bright on the right keeps the left dim for text.",
+                           subtitle: "Wallpaper light",
+                           info: "Like Selene dims it evenly; Bright on the right keeps the left dim for text.",
                            value: settings.settings.wallpaperBrightness.title) { stepBrightness($0) }
 
-            SeleneToggleRow("Animated background",
-                            subtitle: "The moonlight's beam and motes move and a live background plays; off, they hold still.",
+            SeleneToggleRow("Background motion",
+                            subtitle: "Wallpaper & moonlight",
                             isOn: $settings.settings.animatedBackground)
 
-            SeleneCycleRow("Background shade",
-                           subtitle: "How much the game art is darkened behind text.",
+            SettingsSubheading("Library screens")
+
+            SeleneToggleRow("Game backgrounds",
+                            subtitle: "Spotlight & Collection",
+                            info: "On shows the selected game's artwork; Off keeps your wallpaper. Details and the launch screen keep their own artwork settings.",
+                            isOn: Binding(get: { !settings.settings.keepWallpaperOnGames },
+                                          set: { settings.settings.keepWallpaperOnGames = !$0 }))
+
+            SeleneCycleRow("Library shade",
+                           subtitle: "Behind library text",
                            value: settings.settings.backgroundShade.label) { stepShade($0) }
 
             SeleneToggleRow("Text shadow",
-                            subtitle: "Adds a soft shadow under text so it reads over bright art.",
+                            subtitle: "Text readability",
                             isOn: $settings.settings.readableText)
 
             SettingsSubheading("Screen")
 
             SeleneToggleRow("Clock",
-                            subtitle: "Shows the time in the top bar.",
+                            subtitle: "Top bar",
                             isOn: $settings.settings.showClock)
 
             SeleneToggleRow("Reduce motion",
-                            subtitle: "Replaces slides and zooms with fades.",
+                            subtitle: "Reduced transitions",
                             isOn: $settings.settings.reduceMotion)
 
             SeleneCycleRow("App icon",
-                           subtitle: "Changes the Dock icon and the in-app mark.",
+                           subtitle: "Dock & app",
                            value: viewModel.iconAppearanceMode.rawValue) { stepIcon($0) }
 
             SettingsSubheading("Artwork")
 
             SeleneButtonRow("Box covers",
-                            subtitle: "From GameTDB, a community database. A missing cover can be added there.",
+                            subtitle: "GameTDB covers",
                             buttonTitle: "Open GameTDB") {
                 NSWorkspace.shared.open(GameTDB.siteURL)
             }
@@ -122,15 +130,15 @@ struct SettingsLookSection: View {
             .value("theme", "Color theme") { stepTheme($0) },
             .value("wallpaper", "Wallpaper") { stepWallpaper($0) },
             .value("settingsWallpaper", "Settings wallpaper") { stepSettingsWallpaper($0) },
-            .init(id: "keepWallpaper", title: "Keep wallpaper on games") {
-                settings.settings.keepWallpaperOnGames.toggle()
-            },
-            .value("sizing", "Background sizing") { stepSizing($0) },
+            .value("sizing", "Wallpaper sizing") { stepSizing($0) },
             .value("brightness", "Wallpaper brightness") { stepBrightness($0) },
-            .init(id: "animated", title: "Animated background") {
+            .init(id: "animated", title: "Background motion") {
                 settings.settings.animatedBackground.toggle()
             },
-            .value("shade", "Background shade") { stepShade($0) },
+            .init(id: "keepWallpaper", title: "Game backgrounds") {
+                settings.settings.keepWallpaperOnGames.toggle()
+            },
+            .value("shade", "Library shade") { stepShade($0) },
             .init(id: "shadow", title: "Text shadow") {
                 settings.settings.readableText.toggle()
             },

@@ -62,15 +62,20 @@ public final class AppViewModel: ObservableObject {
     @Published public var selectedGame: SelectableGame? = nil {
         didSet {
             if let game = selectedGame {
-                self.appName = game.name
-                self.bundleId = ""
+                self.appName = selectedLibraryGame?.name ?? game.name
+                self.bundleId = selectedLibraryGame?.bundleId ?? ""
                 resetSourceSelection(for: game)
             } else {
                 selectedSourceIDs = []
                 appName = ""
                 bundleId = ""
             }
+            pendingRuntimeConfig = GameRuntimeConfig.forReview(existing: selectedLibraryGame, defaults: lastAddGameDefaults)
         }
+    }
+    var selectedLibraryGame: PortedGame? {
+        guard let titleID = selectedGame?.titleId else { return nil }
+        return libraryGames.first { $0.titleId?.caseInsensitiveCompare(titleID) == .orderedSame }
     }
     @Published public var selectedSourceIDs: Set<UUID> = [] {
         didSet { refreshKeyCheck() }
@@ -249,7 +254,6 @@ public final class AppViewModel: ObservableObject {
     // MARK: - Advanced Options
     @Published public var appName: String = ""
     @Published public var bundleId: String = ""
-    @Published public var selectedLanguage: String = "auto"
     
     // MARK: - Build State
     @Published public var isBuilding: Bool = false
@@ -1762,7 +1766,6 @@ public final class AppViewModel: ObservableObject {
         appName = ""
         bundleId = ""
         pendingRuntimeConfig = lastAddGameDefaults
-        selectedLanguage = lastAddGameDefaults.language
         resetWizard()
         addGameSessionActive = true
     }
@@ -1815,10 +1818,6 @@ public final class AppViewModel: ObservableObject {
         )
         let customName = appName.trimmingCharacters(in: .whitespacesAndNewlines)
         if !customName.isEmpty { detected.name = customName }
-        let titleId = String(format: "%016llX", baseTitleId)
-        let isNewGame = !libraryGames.contains {
-            $0.titleId?.caseInsensitiveCompare(titleId) == .orderedSame
-        }
         let useFolderMode = selectedGameFolder != nil
             && detectedGames.count == 1
             && files.count == selection.files.count
@@ -1830,12 +1829,9 @@ public final class AppViewModel: ObservableObject {
                 bundleId: bundleId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     ? nil : bundleId.trimmingCharacters(in: .whitespacesAndNewlines)
             )
-            // GameRuntimeConfig.load(for:) reads UserDefaults and the per-title
-            // env file, not the library record, so persist the review-screen
-            // defaults for a brand-new game. Existing games keep their config.
-            if isNewGame {
-                pendingRuntimeConfig.save(for: game)
-            }
+            // Existing titles start Review with their saved settings. The
+            // values the user confirms are the values used at the next launch.
+            pendingRuntimeConfig.save(for: game)
             librarySelection.selectedGameID = game.id
             logs.append(LogEntry(level: .success, message: "Added \(game.name) to the library."))
             if buildNow, canStartBuild {
@@ -1888,7 +1884,7 @@ public final class AppViewModel: ObservableObject {
         game.status = .notBuilt
         game.settings = pendingRuntimeConfig
 
-        let library = try libraryStore.merge(scanned: [game])
+        let library = try libraryStore.merge(scanned: [game], replacingSources: true)
         libraryGames = library.games.sorted {
             $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
         }
@@ -2031,7 +2027,7 @@ public final class AppViewModel: ObservableObject {
             developerDir: resolvedDeveloperDir(),
             appName: target.name,
             bundleId: target.bundleId ?? "org.nxnative.\(titleId.lowercased())",
-            language: selectedLanguage == "auto" ? nil : selectedLanguage,
+            language: GameRuntimeConfig.load(for: target).languageForBuild,
             allowUntestedToolchain: allowUntestedToolchain,
             extraArguments: extraArguments
         )
