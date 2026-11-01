@@ -351,6 +351,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/Views/Components/SeleneValueChip.swift](../Sources/NXLibrary/Views/Components/SeleneValueChip.swift) | Rende valori e badge compatti nel linguaggio visivo Selene. |
 | [Sources/NXLibrary/Views/Components/SpotlightTileArtwork.swift](../Sources/NXLibrary/Views/Components/SpotlightTileArtwork.swift) | Carica e disegna l’artwork quadrato usato dalle tile Spotlight. |
 | [Sources/NXLibrary/Views/Components/SwitchBoxArtCover.swift](../Sources/NXLibrary/Views/Components/SwitchBoxArtCover.swift) | Carica e disegna la copertina Switch mantenendone le proporzioni. |
+| [Sources/NXLibrary/Views/Components/SwitchPlatformIcon.swift](../Sources/NXLibrary/Views/Components/SwitchPlatformIcon.swift) | Icona vettoriale della console Switch per la riga della piattaforma. |
 
 ## UI · temi, rendering e sfondi
 

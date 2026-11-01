@@ -99,6 +99,7 @@ or sponsored by Nintendo.
 Bundled media (Material Icons, Selene sounds and palettes): see
 Resources/Selene/NOTICE.txt and
 Resources/Selene/NOTICE-palettes.txt, which ship inside the app bundle.
+Platform icon adapted from SVG Repo (https://www.svgrepo.com), CC0 / Open Vector License.
 
 --------------------------------------------------------------------------------
 Bundled runtime (Contents/Resources/Runtime, from scripts/bundle_runtime.sh)

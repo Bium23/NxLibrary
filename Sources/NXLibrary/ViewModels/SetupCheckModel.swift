@@ -23,8 +23,6 @@ final class SetupCheckModel: ObservableObject {
     private var overrides: [SetupItemID: SetupOverride] = [:]
     private var timer: Timer?
     private var probing = false
-    /// Set when the screen opens: the first probe then starts what is required.
-    private var autoArmed = false
     private var dotnetPackage: DotnetPackage?
     private var dotnetLookup = false
     private var dotnetObservation: NSKeyValueObservation?
@@ -75,16 +73,9 @@ final class SetupCheckModel: ObservableObject {
         if !items.isEmpty, !newlyReady.isEmpty { SoundEffectService.shared.play(.focus) }
         justReady = items.isEmpty ? [] : newlyReady
         items = updated
-
-        if autoArmed {
-            autoArmed = false
-            let required = SetupCheck.automatic(items, includeUpdates: false)
-            if !required.isEmpty { installAll(required) }
-        }
     }
 
     func startRechecking() {
-        autoArmed = true
         lookUpDotnet()
         refresh()
         timer?.invalidate()
@@ -94,7 +85,6 @@ final class SetupCheckModel: ObservableObject {
     func stopRechecking() {
         timer?.invalidate()
         timer = nil
-        autoArmed = false
     }
 
     /// Microsoft's newest SDK of the required major, once per session; offline it stays unknown.

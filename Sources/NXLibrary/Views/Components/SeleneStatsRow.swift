@@ -73,9 +73,9 @@ struct SeleneStatsRow: View {
                     value(text)
                 case .platform:
                     HStack(spacing: canvas.u(9)) {
-                        MaterialIconView(.platform, size: 21)
+                        SwitchPlatformIcon()
                             .foregroundColor(SeleneTheme.ink)
-                            .frame(width: canvas.u(22), height: canvas.u(22))
+                            .frame(width: canvas.u(27), height: canvas.u(27))
                         value("Nintendo Switch")
                     }
                 }
