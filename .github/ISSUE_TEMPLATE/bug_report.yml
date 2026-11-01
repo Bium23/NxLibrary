@@ -1,0 +1,32 @@
+name: Bug report
+description: Report a reproducible problem in NX Library.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For security vulnerabilities, read SECURITY.md first.
+        Do not attach keys, games, personal configuration or raw logs.
+  - type: input
+    id: version
+    attributes:
+      label: App and macOS versions
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the operation and the smallest sequence that triggers it.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Reviewed diagnostics
+      description: Copy diagnostics from the app, then review and remove personal details before pasting.

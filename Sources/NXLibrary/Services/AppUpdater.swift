@@ -17,6 +17,7 @@ final class AppUpdater: ObservableObject {
         case upToDate
         case available(AppUpdate.Release)
         case downloading(Double)
+        case verifying
         case installing
         case failed(String)
     }
@@ -161,22 +162,44 @@ final class AppUpdater: ObservableObject {
     }
 
     private func verifyAndInstall(zip: URL, release: AppUpdate.Release, folder: URL) {
+        state = .verifying
+        let expectedID = Bundle.main.bundleIdentifier ?? "local.nxlibrary"
+        let runningOS = ProcessInfo.processInfo.operatingSystemVersion
+        Task {
+            let prepared = await Task.detached(priority: .userInitiated) {
+                Self.prepare(zip: zip, release: release, folder: folder, expectedID: expectedID, runningOS: runningOS)
+            }.value
+            switch prepared {
+            case .failure(let error): fail(error.message)
+            case .success(let staged): install(staged: staged, folder: folder, release: release)
+            }
+        }
+    }
+
+    private struct PreparationError: Error {
+        let message: String
+    }
+
+    nonisolated private static func prepare(zip: URL, release: AppUpdate.Release, folder: URL,
+                                           expectedID: String, runningOS: OperatingSystemVersion) -> Result<URL, PreparationError> {
         guard AppUpdate.checkDigest(zip, expected: release.digest) == .match else {
-            return fail("The download did not match the release; nothing was changed.")
+            return .failure(.init(message: "The download did not match the release; nothing was changed."))
         }
         let unpacked = folder.appendingPathComponent("unpacked")
-        guard Self.run("/usr/bin/ditto", ["-x", "-k", zip.path, unpacked.path]) else {
-            return fail("The download could not be unpacked; nothing was changed.")
+        guard run("/usr/bin/ditto", ["-x", "-k", zip.path, unpacked.path]) else {
+            return .failure(.init(message: "The download could not be unpacked; nothing was changed."))
         }
         let staged = unpacked.appendingPathComponent("NXLibrary.app")
-        let expectedID = Bundle.main.bundleIdentifier ?? "local.nxlibrary"
-        if let problem = AppUpdate.bundleProblem(staged, expectedID: expectedID, version: release.version,
-                                                 runningOS: ProcessInfo.processInfo.operatingSystemVersion) {
+        if let problem = AppUpdate.bundleProblem(staged, expectedID: expectedID, version: release.version, runningOS: runningOS) {
             if case .needsNewerMacOS(let minimum) = problem {
-                return fail("NX Library \(release.version) needs macOS \(minimum) or later; nothing was changed.")
+                return .failure(.init(message: "NX Library \(release.version) needs macOS \(minimum) or later; nothing was changed."))
             }
-            return fail("The download is not a valid NX Library \(release.version); nothing was changed.")
+            return .failure(.init(message: "The download is not a valid NX Library \(release.version); nothing was changed."))
         }
+        return .success(staged)
+    }
+
+    private func install(staged: URL, folder: URL, release: AppUpdate.Release) {
         if let reason = blockedReason() { return fail("\(reason); nothing was changed.") }
         guard let releaseLease = acquireInstallLease() else {
             return fail("An operation is still running. Try the update again when it finishes.")
@@ -212,7 +235,7 @@ final class AppUpdater: ObservableObject {
             .appendingPathComponent("NXLibrary/Temp/Update")
     }
 
-    private static func run(_ tool: String, _ arguments: [String]) -> Bool {
+    nonisolated private static func run(_ tool: String, _ arguments: [String]) -> Bool {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: tool)
         process.arguments = arguments

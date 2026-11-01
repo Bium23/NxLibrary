@@ -5,7 +5,7 @@ import NXLibraryCore
 struct SettingsAboutSection: View {
     @ObservedObject var viewModel: AppViewModel
     @EnvironmentObject private var updater: AppUpdater
-    @Environment(\.seleneFocusedRowTitle) private var focusedRowTitle
+    @Environment(\.seleneFocusedRowID) private var focusedRowTitle
     let onActions: ([SettingsRowAction]) -> Void
 
     @State private var didCopyDiagnostics = false
@@ -223,6 +223,7 @@ struct SettingsAboutSection: View {
                 .map { " · new portings need Xcode \($0)" } ?? ""
             return (updater.blockedReason().map { "\(release.version) is available · \($0)" } ?? "\(release.version) is available") + xcode
         case .downloading(let fraction): return "Downloading \(Int((fraction * 100).rounded()))%"
+        case .verifying: return "Checking download…"
         case .installing: return "Installing…"
         case .failed(let message): return message
         }
@@ -232,7 +233,7 @@ struct SettingsAboutSection: View {
         let checkNow = UpdateAction(title: "Check now") { updater.checkNow() }
         let notes = updater.releasePageURL.map { url in UpdateAction(title: "Release notes") { NSWorkspace.shared.open(url) } }
         switch updater.state {
-        case .hidden, .developer, .checking, .downloading, .installing:
+        case .hidden, .developer, .checking, .downloading, .verifying, .installing:
             return []
         case .readOnly:
             return [UpdateAction(title: "Reveal in Finder") {

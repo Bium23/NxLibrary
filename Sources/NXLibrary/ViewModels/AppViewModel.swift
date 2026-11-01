@@ -9,6 +9,8 @@ struct SettingsNotice: Identifiable {
     let message: String
     var retry: (() -> Void)?
     var onDismiss: (() -> Void)? = nil
+    var actionTitle = "Retry"
+    var cancelTitle = "Back"
 }
 
 public final class AppViewModel: ObservableObject {
@@ -20,9 +22,11 @@ public final class AppViewModel: ObservableObject {
     @Published private(set) var hasActiveSaveOperations = false
     @Published var runningGameCount = 0
 
-    func showSettingsNotice(title: String, message: String, retry: (() -> Void)? = nil) {
+    func showSettingsNotice(title: String, message: String, actionTitle: String = "Retry",
+                            cancelTitle: String = "Back", retry: (() -> Void)? = nil) {
         settingsNoticeFocus = 0
-        settingsNotice = SettingsNotice(title: title, message: message, retry: retry)
+        settingsNotice = SettingsNotice(title: title, message: message, retry: retry,
+                                       actionTitle: actionTitle, cancelTitle: cancelTitle)
     }
 
     // MARK: - Storage Keys for Persistence
@@ -409,7 +413,7 @@ public final class AppViewModel: ObservableObject {
         // Restore user preferences
         if let savedMode = UserDefaults.standard.string(forKey: StorageKeys.savedIconAppearanceMode),
            let mode = AppIconAppearanceMode(rawValue: savedMode) {
-            self.iconAppearanceMode = mode
+            self.iconAppearanceMode = mode == .mono ? .mono : .auto
         }
         if UserDefaults.standard.object(forKey: StorageKeys.allowUntestedToolchain) != nil {
             self.allowUntestedToolchain = UserDefaults.standard.bool(forKey: StorageKeys.allowUntestedToolchain)

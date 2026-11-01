@@ -7,7 +7,6 @@ struct SettingsStorageSection: View {
     let onActions: ([SettingsRowAction]) -> Void
     let onOpenConsole: () -> Void
 
-    @State private var cleanupToConfirm: CleanupKind?
     @State private var metadataBytes: Int64 = 0
     @State private var artworkBytes: Int64 = 0
 
@@ -46,14 +45,14 @@ struct SettingsStorageSection: View {
                                 : "Extracted build caches for every library game. Apps, sources and saves are untouched.",
                             info: "Intermediate files created during shader translation and staging in the app-owned workspace. Deleting them frees disk space; your built games and saves will not be touched.",
                             buttonTitle: "Delete") {
-                cleanupToConfirm = .caches
+                confirmCleanup(.caches)
             }
             .disabled(viewModel.isBuilding)
 
             SeleneButtonRow("Logs",
                             subtitle: "Build and launch logs. Apps, sources and saves are untouched.",
                             buttonTitle: "Delete") {
-                cleanupToConfirm = .logs
+                confirmCleanup(.logs)
             }
             .disabled(viewModel.isBuilding)
 
@@ -93,44 +92,22 @@ struct SettingsStorageSection: View {
         }
         .onAppear(perform: publishActions)
         .onChange(of: viewModel.isBuilding) { _ in publishActions() }
-        .confirmationDialog(cleanupTitle, isPresented: cleanupBinding, titleVisibility: .visible) {
-            Button(cleanupButton, role: .destructive) {
-                switch cleanupToConfirm {
-                case .caches: viewModel.deleteCaches()
-                case .logs: viewModel.deleteLogs()
-                case nil: break
-                }
-                cleanupToConfirm = nil
-            }
-            Button("Cancel", role: .cancel) { cleanupToConfirm = nil }
-        } message: {
-            Text(cleanupMessage)
-        }
     }
 
-    private var cleanupBinding: Binding<Bool> {
-        Binding(
-            get: { cleanupToConfirm != nil },
-            set: { if !$0 { cleanupToConfirm = nil } }
-        )
-    }
-
-    private var cleanupTitle: String {
-        cleanupToConfirm == .logs ? "Delete build and runtime logs?" : "Delete build caches?"
-    }
-
-    private var cleanupButton: String {
-        cleanupToConfirm == .logs ? "Delete Logs" : "Delete Caches"
-    }
-
-    private var cleanupMessage: String {
-        let amount = cleanupToConfirm == .logs
+    private func confirmCleanup(_ kind: CleanupKind) {
+        let amount = kind == .logs
             ? seleneBytes(viewModel.storageUsage?.logsBytes ?? 0)
             : seleneBytes(viewModel.storageUsage?.cacheBytes ?? 0)
-        if cleanupToConfirm == .logs {
-            return "This removes \(amount) of logs for every library game. It does not touch saves, apps or sources."
+        let message = kind == .logs
+            ? "Remove \(amount) of logs for all games? Your games, sources and saves will be kept."
+            : "Remove \(amount) of build caches? Future portings will extract the sources again. Your games, sources and saves will be kept."
+        viewModel.showSettingsNotice(title: kind == .logs ? "Delete logs?" : "Delete build caches?",
+            message: message, actionTitle: "Delete", cancelTitle: "Cancel") {
+            switch kind {
+            case .caches: viewModel.deleteCaches()
+            case .logs: viewModel.deleteLogs()
+            }
         }
-        return "This removes \(amount) of extracted build caches for every library game. A future build will extract the sources again. Apps, sources and saves are not deleted."
     }
 
     private func usageRow(_ title: String, bytes: Int64, positive: Bool = false) -> some View {
@@ -155,10 +132,10 @@ struct SettingsStorageSection: View {
                 viewModel.refreshStorageUsage()
             },
             .init(id: "deleteCaches", title: "Build caches", isEnabled: !viewModel.isBuilding) {
-                cleanupToConfirm = .caches
+                confirmCleanup(.caches)
             },
             .init(id: "deleteLogs", title: "Logs", isEnabled: !viewModel.isBuilding) {
-                cleanupToConfirm = .logs
+                confirmCleanup(.logs)
             },
             .init(id: "metadataClear", title: "Metadata cache") {
                 viewModel.clearMetadataCache()

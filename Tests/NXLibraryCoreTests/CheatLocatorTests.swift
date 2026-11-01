@@ -56,6 +56,17 @@ final class CheatLocatorTests: XCTestCase {
                        support.appendingPathComponent("cheats").path)
     }
 
+    func testMalformedProgramIDsCannotEscapeTheGamesDataFolder() throws {
+        for invalid in ["..", ".", "not-a-title", "010000000001000", "０１０００００００００１００００"] {
+            try writePlist(["DMTitleID": invalid])
+            XCTAssertNil(CheatLocator.titleID(appURL: app, fallback: tid),
+                         "\(invalid): an invalid declared identity must not use a different game's fallback")
+            XCTAssertNil(CheatLocator.folder(titleID: invalid, appURL: app, home: home), invalid)
+        }
+        try writePlist(["CFBundleName": "Game"])
+        XCTAssertNil(CheatLocator.titleID(appURL: app, fallback: ".."))
+    }
+
     /// Review Focus 3: dm/mac/launcher.c env_file, the data folder's env.txt first, then the app's; the first value of a
     /// key wins; DM_CHEATS before DM_ROOT (hle_cheats.c dm_cheats_init); an empty value counts as unset there.
     func testFolderFollowsEnvFilesInLauncherOrder() throws {

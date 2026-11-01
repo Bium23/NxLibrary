@@ -2,9 +2,14 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
+extension Notification.Name {
+    static let nxIntroSkip = Notification.Name("NXIntroSkip")
+}
+
 /// The cold-launch intro: the app mark fades and grows in with the boot cue, holds, then fades out.
 /// Any key, click or controller input skips it.
 struct IntroView: View {
+    let settings: AppSettingsStore
     let reduceMotion: Bool
     let onFinish: () -> Void
 
@@ -17,13 +22,20 @@ struct IntroView: View {
     var body: some View {
         ZStack {
             SeleneBackdrop()
-            Image(nsImage: NSApplication.shared.applicationIconImage)
-                .resizable()
-                .interpolation(.high)
-                .frame(width: canvas.u(220), height: canvas.u(220))
-                .scaleEffect(markIn || reduceMotion ? 1 : 0.92)
-                .opacity(markIn ? 1 : 0)
-                .accessibilityLabel("NX Library")
+            VStack(spacing: canvas.u(26)) {
+                Image(nsImage: NSApplication.shared.applicationIconImage)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: canvas.u(220), height: canvas.u(220))
+                    .accessibilityHidden(true)
+                Text("NX Library")
+                    .seleneFont(38, .semibold)
+                    .tracking(canvas.u(-0.7))
+                    .foregroundColor(SeleneTheme.ink)
+            }
+            .scaleEffect(markIn || reduceMotion ? 1 : 0.96)
+            .opacity(markIn ? 1 : 0)
+            .accessibilityElement(children: .combine)
         }
         .opacity(leaving ? 0 : 1)
         .ignoresSafeArea()
@@ -31,6 +43,19 @@ struct IntroView: View {
         .onTapGesture { skip() }
         .onAppear(perform: start)
         .onDisappear(perform: removeKeyMonitor)
+        .onReceive(NotificationCenter.default.publisher(for: .nxIntroSkip)) { _ in skip() }
+        .task {
+            do { try await Task.sleep(nanoseconds: 1_400_000_000) } catch { return }
+            fadeOut()
+        }
+        .task(id: leaving) {
+            guard leaving else { return }
+            do { try await Task.sleep(nanoseconds: reduceMotion ? 150_000_000 : 400_000_000) } catch { return }
+            guard !finished else { return }
+            finished = true
+            removeKeyMonitor()
+            onFinish()
+        }
     }
 
     private func start() {
@@ -38,9 +63,9 @@ struct IntroView: View {
             skip()
             return nil
         }
+        SoundEffectService.shared.bind(to: settings)
         SoundEffectService.shared.play(.boot)
-        withAnimation(.easeOut(duration: 0.8)) { markIn = true }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) { fadeOut() }
+        withAnimation(.easeOut(duration: reduceMotion ? 0.15 : 0.6)) { markIn = true }
     }
 
     /// Input during the intro ends it at once with the closing fade.
@@ -48,13 +73,7 @@ struct IntroView: View {
 
     private func fadeOut() {
         guard !leaving else { return }
-        withAnimation(.easeIn(duration: 0.4)) { leaving = true }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            guard !finished else { return }
-            finished = true
-            removeKeyMonitor()
-            onFinish()
-        }
+        withAnimation(.easeIn(duration: reduceMotion ? 0.15 : 0.4)) { leaving = true }
     }
 
     private func removeKeyMonitor() {

@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 
 /// Where an online background comes from.
 public enum BackgroundSourceID: String, CaseIterable, Codable, Sendable {
@@ -464,6 +465,14 @@ public enum SteamAPI {
 
 /// Where a chosen online background is kept: online/ for stills, live/ for videos.
 public enum OnlineDownload {
+    private static func localID(for item: OnlineBackground) -> String {
+        let bytes = item.sourceID.utf8
+        if !bytes.isEmpty, bytes.count <= 128, bytes.allSatisfy({
+            (48...57).contains($0) || (65...90).contains($0) || (97...122).contains($0) || $0 == 45 || $0 == 95
+        }) { return item.id }
+        let digest = SHA256.hash(data: Data(bytes)).map { String(format: "%02x", $0) }.joined()
+        return "\(item.source.rawValue)-safe-\(digest)"
+    }
     public static func folder(for kind: BackgroundKind) -> String {
         kind == .video ? WallpaperCatalog.live : WallpaperCatalog.online
     }
@@ -472,11 +481,11 @@ public enum OnlineDownload {
     public static func fileName(for item: OnlineBackground, fileURL: URL) -> String {
         let ext = fileURL.pathExtension.lowercased()
         let known = item.kind == .video ? WallpaperCatalog.videoExtensions : WallpaperCatalog.imageExtensions
-        return "\(item.id).\(known.contains(ext) ? ext : (item.kind == .video ? "mp4" : "jpg"))"
+        return "\(localID(for: item)).\(known.contains(ext) ? ext : (item.kind == .video ? "mp4" : "jpg"))"
     }
 
     public static func wallpaperID(for item: OnlineBackground) -> String {
-        "\(folder(for: item.kind))/\(item.id)"
+        "\(folder(for: item.kind))/\(localID(for: item))"
     }
 }
 

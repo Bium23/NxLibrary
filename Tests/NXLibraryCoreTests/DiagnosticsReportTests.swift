@@ -39,6 +39,26 @@ final class DiagnosticsReportTests: XCTestCase {
         XCTAssertFalse(DiagnosticsReport.markdown(i).contains(hex))
     }
 
+    func testNamedSecretsAreRedactedInLogsAndCommandArguments() {
+        let lines = [
+            "api_token=sample-secret-nonhex",
+            #"{"client_secret": "sample-secret-nonhex"}"#,
+            "Authorization: Bearer sample-secret-nonhex",
+            "--api-key sample-secret-nonhex",
+            "https://example.invalid/?password=sample-secret-nonhex&kind=build",
+            "https://user:sample-secret-nonhex@example.invalid/build"
+        ]
+        for line in lines {
+            let scrubbed = DiagnosticsReport.scrub(line, home: "/h")
+            XCTAssertFalse(scrubbed.contains("sample-secret-nonhex"), scrubbed)
+            XCTAssertTrue(scrubbed.contains("<redacted>"), scrubbed)
+        }
+        var input = inputs()
+        input.log = lines
+        input.lastCommand += ["--api-key", "sample-secret-nonhex"]
+        XCTAssertFalse(DiagnosticsReport.markdown(input).contains("sample-secret-nonhex"))
+    }
+
     func testDiagnosticsCheatsLineHasNoNames() {
         var i = inputs()
         i.game = (name: "Game", titleID: "0100000000010000", built: true, toolchainVerified: true, failure: nil)

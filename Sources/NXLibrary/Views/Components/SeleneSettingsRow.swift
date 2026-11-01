@@ -39,22 +39,24 @@ public struct SeleneInfoTip: View {
 }
 
 public struct SeleneRow<Trailing: View>: View {
+    public let rowID: String
     public let title: String
     public let subtitle: String?
     public let info: String?
     @ViewBuilder public var trailing: () -> Trailing
 
-    @Environment(\.seleneFocusedRowTitle) private var focusedRowTitle
+    @Environment(\.seleneFocusedRowID) private var focusedRowID
 
-    public init(_ title: String, subtitle: String? = nil, info: String? = nil,
+    public init(_ title: String, id: String? = nil, subtitle: String? = nil, info: String? = nil,
                 @ViewBuilder trailing: @escaping () -> Trailing) {
+        self.rowID = id ?? title
         self.title = title
         self.subtitle = subtitle
         self.info = info
         self.trailing = trailing
     }
 
-    private var isFocused: Bool { focusedRowTitle == title }
+    private var isFocused: Bool { focusedRowID == rowID }
 
     public var body: some View {
         SeleneOptionRow(icon: nil, title: title, about: subtitle, focused: isFocused) {
@@ -65,7 +67,7 @@ public struct SeleneRow<Trailing: View>: View {
                 trailing()
             }
         }
-        .id("selene-row-\(title)")
+        .id("selene-row-\(rowID)")
     }
 }
 
@@ -132,14 +134,16 @@ public struct SeleneValueRow: View {
 }
 
 public struct SeleneButtonRow: View {
+    public let rowID: String
     public let title: String
     public let subtitle: String?
     public let info: String?
     public let buttonTitle: String
     public let action: () -> Void
 
-    public init(_ title: String, subtitle: String? = nil, info: String? = nil,
+    public init(_ title: String, id: String? = nil, subtitle: String? = nil, info: String? = nil,
                 buttonTitle: String, action: @escaping () -> Void) {
+        self.rowID = id ?? title
         self.title = title
         self.subtitle = subtitle
         self.info = info
@@ -148,7 +152,7 @@ public struct SeleneButtonRow: View {
     }
 
     public var body: some View {
-        SeleneRow(title, subtitle: subtitle, info: info) {
+        SeleneRow(title, id: rowID, subtitle: subtitle, info: info) {
             Button(buttonTitle, action: action)
                 .buttonStyle(.plain)
                 .seleneFont(15, .semibold)

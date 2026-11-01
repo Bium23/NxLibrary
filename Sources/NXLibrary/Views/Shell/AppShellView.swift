@@ -73,7 +73,7 @@ public struct AppShellView: View {
     /// The launch screen sits over everything, menu included, until the game's window shows.
     @ViewBuilder private var launchLayer: some View {
         if router.isIntroShowing {
-            IntroView(reduceMotion: reduceMotion) { router.isIntroShowing = false }
+            IntroView(settings: settings, reduceMotion: reduceMotion) { router.isIntroShowing = false }
         } else if let state = viewModel.launchOverlay {
             LaunchScreenView(state: state, viewModel: viewModel, artwork: artwork,
                              settings: settings.settings, reduceMotion: reduceMotion)
@@ -146,7 +146,7 @@ public struct AppShellView: View {
             }
             if router.isMenuPresented {
                 if router.isThemePickerOpen {
-                    ThemePickerView(router: router, settings: settings, games: viewModel.libraryGames)
+                    ThemePickerView(viewModel: viewModel, router: router, settings: settings, games: viewModel.libraryGames)
                         .transition(.opacity)
                         .zIndex(1)
                 } else {
@@ -360,13 +360,8 @@ public struct AppShellView: View {
                 router.back()
             }
         }
-        .alert("NX Library", isPresented: Binding(
-            get: { viewModel.alertMessage != nil },
-            set: { if !$0 { viewModel.alertMessage = nil } }
-        )) {
-            Button("OK", role: .cancel) { viewModel.alertMessage = nil }
-        } message: {
-            Text(viewModel.alertMessage ?? "")
+        .onChange(of: viewModel.alertMessage) { _ in
+            presentLegacyNotice()
         }
     }
 
@@ -422,6 +417,7 @@ public struct AppShellView: View {
     }
 
     private func startRuntime() {
+        presentLegacyNotice()
         viewModel.playSessionStore = playSessions
         viewModel.settingsStore = settings
         SoundEffectService.shared.bind(to: settings)
@@ -469,7 +465,7 @@ public struct AppShellView: View {
             guard let viewModel, let router else { return }
             if router.isIntroShowing {
                 // Any controller input skips the intro.
-                withAnimation(.easeIn(duration: 0.3)) { router.isIntroShowing = false }
+                NotificationCenter.default.post(name: .nxIntroSkip, object: nil)
                 return
             }
             if viewModel.showSetupCheck {
@@ -557,7 +553,7 @@ public struct AppShellView: View {
             SeleneTheme.scrim45.ignoresSafeArea().contentShape(Rectangle())
                 .onTapGesture { finishSettingsNotice(choice: 0) }
             SeleneChoiceDialog(title: notice.title, message: notice.message,
-                               choices: notice.retry == nil ? ["Back"] : ["Back", "Retry"],
+                               choices: notice.retry == nil ? [notice.cancelTitle] : [notice.cancelTitle, notice.actionTitle],
                                focus: $viewModel.settingsNoticeFocus,
                                onChoose: { finishSettingsNotice(choice: $0) })
         }
@@ -568,6 +564,12 @@ public struct AppShellView: View {
         viewModel.settingsNotice = nil
         notice?.onDismiss?()
         if choice == 1 { notice?.retry?() }
+    }
+
+    private func presentLegacyNotice() {
+        guard let message = viewModel.alertMessage else { return }
+        viewModel.alertMessage = nil
+        viewModel.showSettingsNotice(title: "NX Library", message: message)
     }
 
     private func settingsNoticeInput(_ action: GamepadAction) {

@@ -33,6 +33,39 @@ final class KeyStoreTests: XCTestCase {
         XCTAssertThrowsError(try KeyStore(directory: dir.appendingPathComponent("k2")).importKey(from: source))
     }
 
+    func testValidationRepairsTheManagedCopiesPermissionsWithoutChangingItsBytes() throws {
+        let source = dir.appendingPathComponent("source.keys")
+        try fakeKeys().write(to: source, atomically: true, encoding: .utf8)
+        let store = KeyStore(directory: dir.appendingPathComponent("managed"))
+        try store.importKey(from: source)
+        let before = try Data(contentsOf: store.keyURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: store.keyURL.path)
+        _ = try store.validate(at: store.keyURL)
+        let mode = try FileManager.default.attributesOfItem(atPath: store.keyURL.path)[.posixPermissions] as? NSNumber
+        XCTAssertEqual(mode?.intValue, 0o600)
+        XCTAssertEqual(try Data(contentsOf: store.keyURL), before)
+    }
+
+    func testValidationDoesNotChangeTheOriginalFilesPermissions() throws {
+        let source = dir.appendingPathComponent("source.keys")
+        try fakeKeys().write(to: source, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: source.path)
+        _ = try KeyStore(directory: dir.appendingPathComponent("managed")).validate(at: source)
+        let mode = try FileManager.default.attributesOfItem(atPath: source.path)[.posixPermissions] as? NSNumber
+        XCTAssertEqual(mode?.intValue, 0o644)
+    }
+
+    func testManagedSymlinkIsRejectedWithoutChangingItsTarget() throws {
+        let source = dir.appendingPathComponent("source.keys")
+        try fakeKeys().write(to: source, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: source.path)
+        let store = KeyStore(directory: dir)
+        try FileManager.default.createSymbolicLink(at: store.keyURL, withDestinationURL: source)
+        XCTAssertThrowsError(try store.validate(at: store.keyURL))
+        let mode = try FileManager.default.attributesOfItem(atPath: source.path)[.posixPermissions] as? NSNumber
+        XCTAssertEqual(mode?.intValue, 0o644)
+    }
+
     func testFailedReplacementKeepsTheManagedKeyAndTheSource() throws {
         let source = dir.appendingPathComponent("source.keys")
         try fakeKeys().write(to: source, atomically: true, encoding: .utf8)

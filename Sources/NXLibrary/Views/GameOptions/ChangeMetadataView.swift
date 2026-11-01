@@ -21,6 +21,10 @@ struct ChangeMetadataView: View {
     @State private var gameTDB: [GameTDBEntry] = []
     @State private var searching = true
     @State private var keyMonitor: Any?
+    @State private var editing = false
+    @State private var draft = ""
+    @State private var editorFocus: SeleneConfirmButton = .cancel
+    @FocusState private var editorHasFocus: Bool
 
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
@@ -90,6 +94,8 @@ struct ChangeMetadataView: View {
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .allowsHitTesting(!editing)
+            if editing { editor }
         }
         .onAppear(perform: installKeyMonitor)
         .onDisappear(perform: removeKeyMonitor)
@@ -214,30 +220,52 @@ struct ChangeMetadataView: View {
         case .option(let option):
             viewModel.pickMetadata(option.value, field: field, for: game)
         case .write:
-            guard let text = askForText() else { return }
-            viewModel.pickMetadata(text.isEmpty ? nil : text, field: field, for: game)
+            draft = pick ?? MetadataOptions.list(for: field, store: store, titleDB: nil, gameTDB: []).first?.value ?? ""
+            editorFocus = .cancel
+            editing = true
         }
         SoundEffectService.shared.play(.click)
     }
 
-    /// A plain macOS prompt: typing needs a keyboard anyway.
-    private func askForText() -> String? {
-        let alert = NSAlert()
-        alert.messageText = "\(field.title) for \(game.name)"
-        alert.informativeText = field == .genres ? "Separate genres with commas."
-            : field == .releaseDate ? "As YYYY-MM-DD." : "Leave it empty to go back to Automatic."
-        alert.addButton(withTitle: "Save")
-        alert.addButton(withTitle: "Cancel")
-        let tall = field == .description
-        let input = NSTextField(frame: NSRect(x: 0, y: 0, width: 420, height: tall ? 160 : 24))
-        input.stringValue = pick ?? MetadataOptions.list(for: field, store: store, titleDB: nil, gameTDB: []).first?.value ?? ""
-        input.usesSingleLineMode = !tall
-        input.cell?.wraps = tall
-        input.cell?.isScrollable = !tall
-        alert.accessoryView = input
-        alert.window.initialFirstResponder = input
-        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
-        return input.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+    private var editor: some View {
+        ZStack {
+            SeleneTheme.scrim45.ignoresSafeArea().contentShape(Rectangle())
+                .onTapGesture { editing = false }
+            SeleneConfirmDialog(title: field.title, message: game.name, confirmTitle: "Save",
+                focus: $editorFocus, onCancel: { editing = false }, onConfirm: saveDraft) {
+                VStack(alignment: .leading, spacing: canvas.u(12)) {
+                    if field == .description {
+                        TextEditor(text: $draft)
+                            .scrollContentBackground(.hidden)
+                            .frame(height: max(120, canvas.u(200)))
+                            .focused($editorHasFocus)
+                    } else {
+                        TextField(field.title, text: $draft)
+                            .textFieldStyle(.plain)
+                            .focused($editorHasFocus)
+                            .onSubmit(saveDraft)
+                    }
+                    Text(field == .genres ? "Separate with commas."
+                        : field == .releaseDate ? "YYYY-MM-DD"
+                        : field == .description ? "⌘Return to save · Empty for Automatic" : "Empty for Automatic")
+                        .seleneFont(14)
+                        .foregroundColor(SeleneTheme.ink60)
+                }
+                .seleneFont(17)
+                .foregroundColor(SeleneTheme.ink)
+                .padding(canvas.u(16))
+                .background(RoundedRectangle(cornerRadius: canvas.u(12)).fill(SeleneTheme.glassLight))
+                .padding(.top, canvas.u(24))
+                .onAppear { editorHasFocus = true }
+            }
+        }
+    }
+
+    private func saveDraft() {
+        let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        viewModel.pickMetadata(text.isEmpty ? nil : text, field: field, for: game)
+        editing = false
+        SoundEffectService.shared.play(.click)
     }
 
     // MARK: - Input
@@ -269,11 +297,22 @@ struct ChangeMetadataView: View {
     }
 
     private func close() {
+        if editing { editing = false; return }
         SoundEffectService.shared.play(.focus)
         onClose()
     }
 
     private func handleGamepad(_ action: GamepadAction) {
+        if editing {
+            switch action {
+            case .navigateLeft: editorFocus = .cancel
+            case .navigateRight: editorFocus = .confirm
+            case .confirm: if editorFocus == .confirm { saveDraft() } else { editing = false }
+            case .cancel, .menu: editing = false
+            default: break
+            }
+            return
+        }
         switch action {
         case .navigateUp: move(by: -1)
         case .navigateDown: move(by: 1)
@@ -288,9 +327,15 @@ struct ChangeMetadataView: View {
     private func installKeyMonitor() {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            guard viewModel.gameForSettingsSheet?.id == game.id,
+            guard viewModel.gameForSettingsSheet?.id == game.id, viewModel.settingsNotice == nil,
                   let window = event.window, !window.isSheet, window.attachedSheet == nil,
-                  NSApp.modalWindow == nil, !(window.firstResponder is NSText) else { return event }
+                  NSApp.modalWindow == nil else { return event }
+            if editing {
+                if event.keyCode == 53 { editing = false; return nil }
+                if [36, 76].contains(event.keyCode), event.modifierFlags.contains(.command) { saveDraft(); return nil }
+                return event
+            }
+            guard !(window.firstResponder is NSText) else { return event }
             guard event.modifierFlags.intersection([.command, .control, .option]).isEmpty else { return event }
             switch event.keyCode {
             case 126: move(by: -1)

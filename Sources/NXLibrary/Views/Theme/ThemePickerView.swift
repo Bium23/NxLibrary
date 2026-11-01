@@ -13,6 +13,7 @@ import NXLibraryCore
 /// online source's tile opens its grid: chips of categories, a search, and A
 /// downloads the full picture (B cancels) before applying it.
 struct ThemePickerView: View {
+    @ObservedObject var viewModel: AppViewModel
     @ObservedObject var router: AppRouter
     @ObservedObject var settings: AppSettingsStore
     /// The library, for the preview's tiles.
@@ -21,7 +22,6 @@ struct ThemePickerView: View {
     @ObservedObject private var theme = ThemeStore.shared
     @State private var state = ThemePickerState(themeIndex: 0, backgroundIndex: 0)
     @State private var opened = false
-    @State private var importError: String?
     @State private var errorTitle = "Couldn't add the picture"
     @StateObject private var browser = OnlineBrowser()
     @StateObject private var transfer = OnlineTransfer()
@@ -89,12 +89,6 @@ struct ThemePickerView: View {
         .onReceive(NotificationCenter.default.publisher(for: .nxThemePickerGamepadAction)) { note in
             guard let action = note.object as? GamepadAction else { return }
             handle(action)
-        }
-        .alert(errorTitle, isPresented: Binding(get: { importError != nil },
-                                                                set: { if !$0 { importError = nil } })) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(importError ?? "")
         }
     }
 
@@ -683,7 +677,7 @@ struct ThemePickerView: View {
                 use(id)
             case .failure(let error):
                 errorTitle = "Couldn't download the wallpaper"
-                importError = error.localizedDescription
+                viewModel.showSettingsNotice(title: errorTitle, message: error.localizedDescription)
             }
         }
     }
@@ -781,7 +775,7 @@ struct ThemePickerView: View {
             state.backgroundIndex = backgrounds.firstIndex(of: .wallpaper(id)) ?? state.backgroundIndex
             SoundEffectService.shared.play(.click)
         } catch {
-            importError = error.localizedDescription
+            viewModel.showSettingsNotice(title: errorTitle, message: error.localizedDescription)
         }
     }
 
@@ -824,7 +818,7 @@ struct ThemePickerView: View {
             SoundEffectService.shared.play(.click)
         } catch {
             errorTitle = "Couldn't remove it"
-            importError = error.localizedDescription
+            viewModel.showSettingsNotice(title: errorTitle, message: error.localizedDescription)
         }
     }
 

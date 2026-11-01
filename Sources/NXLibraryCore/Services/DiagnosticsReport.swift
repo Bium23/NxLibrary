@@ -81,12 +81,22 @@ public enum DiagnosticsReport {
     }
 
     private static let keyLine = try! NSRegularExpression(pattern: #"([A-Za-z0-9_]+)\s*=\s*[0-9A-Fa-f]{32,}"#)
+    private static let secrets: [(NSRegularExpression, String)] = [
+        (#"(?i)(\b(?:proxy-)?authorization\s*[:=]\s*)(?:bearer|basic)\s+[^\s"',;]+"#, "$1<redacted>"),
+        (#"(?i)(["']?\b[A-Za-z0-9_-]*(?:api[_-]?key|token|secret|password|passwd)["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\s,;&]+)"#, "$1<redacted>"),
+        (#"(?i)(--[A-Za-z0-9_-]*(?:api[_-]?key|token|secret|password|passwd)\s+)(?:"[^"]*"|'[^']*'|\S+)"#, "$1<redacted>"),
+        (#"(?i)(https?://)[^/\s:@]+:[^/\s@]+@"#, "$1<redacted>@")
+    ].map { (try! NSRegularExpression(pattern: $0.0), $0.1) }
 
     /// The home folder as `~`; `name = <32+ hex>` anywhere in the line as `name = <redacted>`.
     public static func scrub(_ line: String, home: String) -> String {
         var out = home.isEmpty || home == "/" ? line : line.replacingOccurrences(of: home, with: "~")
         let range = NSRange(out.startIndex..., in: out)
         out = keyLine.stringByReplacingMatches(in: out, range: range, withTemplate: "$1 = <redacted>")
+        for (pattern, replacement) in secrets {
+            out = pattern.stringByReplacingMatches(in: out,
+                range: NSRange(out.startIndex..., in: out), withTemplate: replacement)
+        }
         return out
     }
 }

@@ -2,7 +2,7 @@
 
 A personal, native macOS front-end for [nxnative](https://github.com/seedds/nxnative). It builds your own Switch dumps into self-contained Mac apps and launches them from a console-style library. No emulator is involved.
 
-**Status:** v0.1.0, implemented and verified on this Apple-silicon Mac. Current architecture and file responsibilities are documented in the [technical guide](docs/architecture.md) and [file catalog](docs/file-map.md). Dated designs and plans are in [`docs/superpowers/`](docs/superpowers/).
+**Status:** v0.1.0 alpha, developed and manually checked on one Apple-silicon Mac. Game compatibility and the first installation on another Mac still require manual verification. Current architecture and file responsibilities are documented in the [technical guide](docs/architecture.md) and [file catalog](docs/file-map.md). Dated designs and plans are in [`docs/superpowers/`](docs/superpowers/).
 
 ## What it does
 
@@ -44,6 +44,7 @@ NX Library follows the [Selene](https://github.com/mattxslv/Selene) Playnite the
 - **Updates:** a release copy looks for a newer NX Library on GitHub at launch (at most once a day; Settings → Start-up → **Check for app updates**) and in Settings → About. Update downloads the release, checks its SHA-256 against GitHub's digest, its bundle ID, version and release marker, then swaps the app (the old one goes to the Trash) and relaunches. It waits for a porting or a running game. Builds from source never update themselves.
 - **Setup, Console:** the first-run checklist and log share the canvas units. Console's **Copy log** copies the last 200 log lines and the latest build log's tail; **Copy diagnostics** copies the scrubbed report.
 - **Controller and keyboard:** A/Return confirms or plays, B/Esc goes back, LB/RB switch filters, View/Tab flips Spotlight and Collection, Menu/Start opens the control center, holding Menu or `⌘,` opens Settings.
+- **Controls guide:** Settings → Controllers → Button layout separates **Library** navigation from **In game** defaults. Both guides use Selene rows and support keyboard/controller scrolling. Older engine builds can have different game controls.
 - **Artwork:** Store descriptions and artwork are cached locally under Application Support. Nothing is written to the repository. Change artwork offers GameTDB, Title DB and the Nintendo store, then every online source for a game with the same name (or an edition of it): Steam (transparent logo, cover, background, screenshots), the Xbox Store (poster, hero, screenshots, square icon), GOG (logo, covers, screenshots), Nintendo Europe (banner, square), TheGamesDB (clear logo, box front, fan art, screenshots), Wikidata and Wikimedia Commons logos, Nintendo fan wiki logos and Wallhaven wallpapers. Wikidata also links a game to its Steam page when the names differ. The automatic logo falls back to these sources in the same order.
 
 The [technical guide](docs/architecture.md) describes the current implementation. Dated specifications and plans live in [`docs/superpowers/`](docs/superpowers/). The user performs interactive app and game checks. The automated suite covers the data, build and presentation-state layers.
@@ -163,7 +164,7 @@ Engine upgrades are manual and never follow `main`. Before changing the pin, rev
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 ```
 
-The suite covers models and persistence, source parsing (including a regression for `*.cnmt.nca` vs `*.cnmt.xml`), symlink workspaces, key import/permissions, the compatibility gate, build-command construction, atomic installation and interrupted retries, process cancellation, launch environment writing, import, storage, cheats, save snapshots and interrupted save recovery. Scans preserve pending installs and the last porting failure. The last code verification on 2026-11-01 passed **689 tests**, including interrupted installation and retry, per-title Review and language, explicit source replacement, cloud Off at launch, failed key replacement, unreadable preferences, individual setting search and exclusion between app updates and save operations. The [file catalog](docs/file-map.md#test-e-fixture) describes each test file's scope.
+The suite covers models and persistence, source parsing (including a regression for `*.cnmt.nca` vs `*.cnmt.xml`), symlink workspaces, key import/permissions, the compatibility gate, build-command construction, atomic installation and interrupted retries, process cancellation, launch environment writing, import, storage, cheats, save snapshots and interrupted save recovery. Scans preserve pending installs and the last porting failure. The last code verification on 2026-11-01 passed **703 tests**, including interrupted installation and retry, per-title Review and language, explicit source replacement, cloud Off at launch, failed key replacement, unreadable preferences, individual setting search and exclusion between app updates and save operations. New regressions cover split UTF-8 output and EOF, duplicate row labels, download names and installer redirects, private key permissions and diagnostic redaction. Five Python checks exercise the publication guard in temporary repositories. The [file catalog](docs/file-map.md#test-e-fixture) describes each test file's scope.
 
 ## Repository layout
 
@@ -177,16 +178,19 @@ The suite covers models and persistence, source parsing (including a regression 
 
 ## Documentation
 
+The repository includes [contribution instructions](CONTRIBUTING.md), a [security reporting policy](SECURITY.md), and CI for publication checks, automated tests and Release compilation. CI never imports keys or builds games. Local publication checks run with `python3 scripts/check_publication.py`; add `--runtime work/Runtime` to verify the runtime against its exact lock before packaging.
+
 - [Technical guide](docs/architecture.md) — current architecture, dependencies, feature flows, persistence and verification, written in Italian.
 - [File catalog](docs/file-map.md) — every versioned file and its responsibility, grouped by area, written in Italian.
 - [2026-11-01 audit review](docs/2026-11-01-audit-review.md) — verified findings, reproduced installation conflicts and measured performance costs, written in Italian.
 - [2026-11-01 settings audit](docs/2026-11-01-settings-audit.md) — control-by-control verification, error triggers, persistence, resets and controller actions, written in Italian.
+- [2026-11-01 pre-GitHub review](docs/2026-11-01-pre-github-review.md) — publication priorities, reproduced remaining defects, UI consistency, security boundaries and release checks, written in Italian.
 - [Dated designs and plans](docs/superpowers/) — original design, feature specifications and implementation records.
 - [Engine upgrade notes](docs/upstream-upgrades/README.md) — adoption checklist, pin changes and verification evidence.
 
 ## Licenses and attribution
 
-NX Library is MIT licensed. `NOTICE` retains the MIT copyrights for nxnative and the [rennan101/nxnative_Launcher](https://github.com/rennan101/nxnative_Launcher) GUI baseline; NX2Apple was a reference only and no code from it was copied. The app icon is original.
+NX Library is MIT licensed. `NOTICE` retains the MIT copyrights for nxnative and the [rennan101/nxnative_Launcher](https://github.com/rennan101/nxnative_Launcher) GUI baseline. Key checks, failure explanations, diagnostics and update rules include adaptations from [NX2Apple](https://github.com/LNPANDY/NX2Apple), with its MIT notices preserved. The app icon is original artwork created by the owner with AI; its master and generation notes are in [Resources/IconArtwork.md](Resources/IconArtwork.md).
 
 Bundled media and their licenses are listed in `Resources/Selene/NOTICE.txt` and `NOTICE-palettes.txt`: Material Icons (Apache 2.0), Selene's four synthesized sounds (MIT), the Selene palettes (MIT) and five public-domain wallpapers. Other Selene sounds and wallpapers are never bundled; the import action copies them from the user's own checkout. Online wallpapers are never bundled or committed: they are fetched from Wallhaven, Danbooru, MotionBGs and Steam only when the player browses, belong to their owners, and are credited under the preview.
 

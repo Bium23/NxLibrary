@@ -7,80 +7,45 @@ let iconset = out.appendingPathComponent("AppIcon.iconset")
 try? FileManager.default.removeItem(at: iconset)
 try FileManager.default.createDirectory(at: iconset, withIntermediateDirectories: true)
 
-func roundedFont(_ size: CGFloat) -> NSFont {
-    let base = NSFont.systemFont(ofSize: size, weight: .heavy)
-    if let desc = base.fontDescriptor.withDesign(.rounded),
-       let font = NSFont(descriptor: desc, size: size) { return font }
-    return base
+// The source is a full-bleed square. Apply the macOS silhouette here once,
+// then downsample that master for both Finder and the dynamic Dock icon.
+let masterURL = out.appendingPathComponent("IconArtwork.png")
+guard let artwork = NSImage(contentsOf: masterURL) else {
+    fatalError("Missing icon artwork: \(masterURL.path)")
 }
 
-func drawMaster(_ variant: String) -> NSImage {
-    let size = NSSize(width: 1024, height: 1024)
-    let image = NSImage(size: size)
+func macOSIcon(_ artwork: NSImage) -> NSImage {
+    let image = NSImage(size: NSSize(width: 1024, height: 1024))
     image.lockFocus()
     defer { image.unlockFocus() }
+    NSGraphicsContext.saveGraphicsState()
+    defer { NSGraphicsContext.restoreGraphicsState() }
 
-    let coral = NSColor(srgbRed: 1.0, green: 0.35, blue: 0.37, alpha: 1)
-    let cyan = NSColor(srgbRed: 0.35, green: 0.78, blue: 0.98, alpha: 1)
-    let graphite = NSColor(srgbRed: 0.082, green: 0.082, blue: 0.09, alpha: 1)
-    let white = NSColor.white
-
-    let rect = NSRect(x: 40, y: 40, width: 944, height: 944)
-    let path = NSBezierPath(roundedRect: rect, xRadius: 200, yRadius: 200)
-    path.addClip()
-
-    let background: NSColor
-    let foreground: NSColor
-    switch variant {
-    case "light":
-        background = coral
-        foreground = white
-    case "mono":
-        background = graphite
-        foreground = white
-    default:
-        background = graphite
-        foreground = white
-    }
-    NSGradient(colors: [background, background.blended(withFraction: 0.18, of: .black) ?? background])?
-        .draw(in: path, angle: -90)
-
-    // Inner coral glow for the dark icon.
-    if variant == "dark" || variant == "appicon" {
-        NSGradient(colors: [coral.withAlphaComponent(0.22), .clear])?
-            .draw(in: NSBezierPath(ovalIn: NSRect(x: -180, y: 480, width: 900, height: 700)), angle: 45)
-    }
-
-    let font = roundedFont(390)
-    let text = "NX" as NSString
-    let attributes: [NSAttributedString.Key: Any] = [
-        .font: font,
-        .foregroundColor: foreground,
-        .kern: -12,
-    ]
-    let textSize = text.size(withAttributes: attributes)
-    let textPoint = NSPoint(x: (1024 - textSize.width) / 2,
-                            y: (1024 - textSize.height) / 2 + 40)
-    text.draw(at: textPoint, withAttributes: attributes)
-
-    // Coral underline.
-    let underline = NSBezierPath(roundedRect: NSRect(x: 322, y: 250, width: 380, height: 30),
-                                 xRadius: 15, yRadius: 15)
-    coral.setFill()
-    underline.fill()
-
-    // Cyan selection dot.
-    let ring = NSBezierPath(ovalIn: NSRect(x: 748, y: 748, width: 70, height: 70))
-    cyan.setStroke()
-    ring.lineWidth = 18
-    ring.stroke()
-
-    NSColor.white.withAlphaComponent(0.12).setStroke()
-    let border = NSBezierPath(roundedRect: rect, xRadius: 200, yRadius: 200)
-    border.lineWidth = 6
-    border.stroke()
-
+    let tileRect = NSRect(x: 100, y: 100, width: 824, height: 824)
+    let tile = NSBezierPath(roundedRect: tileRect, xRadius: 185, yRadius: 185)
+    let shadow = NSShadow()
+    shadow.shadowColor = NSColor.black.withAlphaComponent(0.28)
+    shadow.shadowBlurRadius = 14
+    shadow.shadowOffset = NSSize(width: 0, height: -7)
+    shadow.set()
+    NSColor(srgbRed: 0.137, green: 0.141, blue: 0.149, alpha: 1).setFill()
+    tile.fill()
+    NSShadow().set()
+    tile.addClip()
+    NSGraphicsContext.current?.imageInterpolation = .high
+    artwork.draw(in: tileRect, from: .zero, operation: .sourceOver, fraction: 1)
     return image
+}
+
+func monochrome(_ image: NSImage) -> NSImage {
+    guard let data = image.tiffRepresentation,
+          let bitmap = NSBitmapImageRep(data: data),
+          let gray = bitmap.converting(to: .genericGray, renderingIntent: .default) else {
+        fatalError("Unable to create monochrome icon")
+    }
+    let result = NSImage(size: image.size)
+    result.addRepresentation(gray)
+    return result
 }
 
 func png(_ image: NSImage, pixels: Int) -> Data? {
@@ -93,13 +58,14 @@ func png(_ image: NSImage, pixels: Int) -> Data? {
     rep.size = NSSize(width: pixels, height: pixels)
     NSGraphicsContext.saveGraphicsState()
     NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+    NSGraphicsContext.current?.imageInterpolation = .high
     image.draw(in: NSRect(x: 0, y: 0, width: pixels, height: pixels),
                from: .zero, operation: .copy, fraction: 1)
     NSGraphicsContext.restoreGraphicsState()
     return rep.representation(using: .png, properties: [:])
 }
 
-let master = drawMaster("appicon")
+let master = macOSIcon(artwork)
 let sizes: [(String, Int)] = [
     ("icon_16x16", 16), ("icon_16x16@2x", 32),
     ("icon_32x32", 32), ("icon_32x32@2x", 64),
@@ -114,8 +80,19 @@ for (name, px) in sizes {
 }
 
 for variant in ["light", "dark", "mono"] {
-    let image = drawMaster(variant)
-    if let data = png(image, pixels: 240) {
+    let image = variant == "mono" ? monochrome(master) : master
+    if let data = png(image, pixels: 1024) {
         try data.write(to: out.appendingPathComponent("AppIcon-\(variant.capitalized).png"))
     }
 }
+
+// Package all standard Finder sizes into the bundle icon as well.
+let iconutil = Process()
+iconutil.executableURL = URL(fileURLWithPath: "/usr/bin/iconutil")
+iconutil.arguments = ["-c", "icns", iconset.path, "-o", out.appendingPathComponent("AppIcon.icns").path]
+try iconutil.run()
+iconutil.waitUntilExit()
+guard iconutil.terminationStatus == 0 else {
+    fatalError("iconutil failed: \(iconutil.terminationStatus)")
+}
+try FileManager.default.removeItem(at: iconset)

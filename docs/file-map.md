@@ -1,6 +1,6 @@
 # NX Library — catalogo dei file
 
-Aggiornato il 1 novembre 2026. Copertura di **379 file**, verificata confrontando il catalogo con i file versionati e il documento di verifica delle impostazioni introdotto in questa revisione.
+Aggiornato il 1 novembre 2026. Copertura di **391 file** del progetto, compresi i nuovi controlli di pubblicazione, la CI e il master dell’icona. Le cartelle personali di audit, output e ricerca sono escluse.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -34,6 +34,8 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 - [Documentazione tecnica e registri datati](#documentazione-tecnica-e-registri-datati)
 
 ## Progetto e configurazione
+
+La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURITY.md](../SECURITY.md), [la CI](../.github/workflows/ci.yml) e [il modello di segnalazione](../.github/ISSUE_TEMPLATE/bug_report.yml): istruzioni di contribuzione, canale per vulnerabilità, controlli automatici su codice e contenuti e richieste di riproduzione senza allegati privati.
 
 | File | Responsabilità |
 |---|---|
@@ -222,6 +224,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Sources/NXLibraryCore/Models/CollectionRow.swift](../Sources/NXLibraryCore/Models/CollectionRow.swift) | Definisce proporzioni delle copertine e geometria della riga Collection. |
 | [Sources/NXLibraryCore/Models/DetailsFocus.swift](../Sources/NXLibraryCore/Models/DetailsFocus.swift) | Gestisce zone e spostamenti del focus nelle azioni e nelle bande di Details. |
 | [Sources/NXLibraryCore/Models/FocusIndex.swift](../Sources/NXLibraryCore/Models/FocusIndex.swift) | Mantiene un indice di focus entro i limiti di una lista. |
+| [Sources/NXLibraryCore/Models/SettingsRowAction.swift](../Sources/NXLibraryCore/Models/SettingsRowAction.swift) | Identifica azioni e righe Settings, mantenendo una sola azione primaria per riga senza accorpare giochi omonimi. |
 | [Sources/NXLibraryCore/Models/GameOptionsPresentation.swift](../Sources/NXLibraryCore/Models/GameOptionsPresentation.swift) | Definisce righe, livelli, etichette, scelte runtime e focus di Game Options. |
 | [Sources/NXLibraryCore/Models/HoldDetector.swift](../Sources/NXLibraryCore/Models/HoldDetector.swift) | Distingue pressione breve e prolungata usando un tempo fornito dal chiamante. |
 | [Sources/NXLibraryCore/Models/MaterialIcon.swift](../Sources/NXLibraryCore/Models/MaterialIcon.swift) | Elenca i glifi del font Material Icons incluso nel bundle. |
@@ -320,7 +323,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Sources/NXLibrary/Views/Launch/LaunchScreenView.swift](../Sources/NXLibrary/Views/Launch/LaunchScreenView.swift) | Mostra artwork e logo durante l’avvio del gioco e chiude l’overlay a finestra visibile. |
 | [Sources/NXLibrary/Views/Search/FindGameView.swift](../Sources/NXLibrary/Views/Search/FindGameView.swift) | Presenta ricerca nella libreria e risultati navigabili e inoltra il gioco scelto alla home. |
 | [Sources/NXLibrary/Views/Console/ConsoleView.swift](../Sources/NXLibrary/Views/Console/ConsoleView.swift) | Mostra log e stato corrente e offre copia di log e diagnostica. |
-| [Sources/NXLibrary/Views/ControlsView.swift](../Sources/NXLibrary/Views/ControlsView.swift) | Mostra controlli disponibili e stato dei dispositivi collegati. |
+| [Sources/NXLibrary/Views/ControlsView.swift](../Sources/NXLibrary/Views/ControlsView.swift) | Guida Selene separata fra Library e In game; stato controller, rilevamento e scorrimento delle righe con tastiera/controller. |
 
 ## UI · componenti condivisi
 
@@ -365,6 +368,11 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Sources/NXLibrary/Views/Theme/ThemePreview.swift](../Sources/NXLibrary/Views/Theme/ThemePreview.swift) | Disegna un’anteprima della home con palette e sfondo in valutazione. |
 
 ## Test e fixture
+
+| File | Responsabilità aggiuntiva |
+|---|---|
+| [Tests/NXLibraryCoreTests/SettingsRowActionTests.swift](../Tests/NXLibraryCoreTests/SettingsRowActionTests.swift) | Regressioni per giochi omonimi e azioni secondarie della medesima riga. |
+| [Tests/PublicationChecks/test_publication.py](../Tests/PublicationChecks/test_publication.py) | Esegue il controllo reale in repository temporanee: sorgenti consentiti, file vietati, chiavi sintetiche senza esposizione e runtime non corrispondente al lock. |
 
 | File | Responsabilità |
 |---|---|
@@ -464,7 +472,9 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 
 | File | Responsabilità |
 |---|---|
-| [scripts/build_app.sh](../scripts/build_app.sh) | Compila l’eseguibile, prepara plist, runtime e risorse e applica e verifica la firma ad hoc. |
+| [scripts/build_app.sh](../scripts/build_app.sh) | Compila in staging, prepara plist, runtime e risorse, verifica la firma e pubblica il bundle con sostituzione atomica. |
+| [scripts/install_built_app.swift](../scripts/install_built_app.swift) | Piccolo ingresso CLI che riusa BuildOutputInstaller per installare NX Library dopo il packaging. |
+| [scripts/check_publication.py](../scripts/check_publication.py) | Rifiuta contenuti personali o di gioco versionati e formati di segreto riconoscibili; verifica il runtime rispetto al lock prima del packaging. |
 | [scripts/build_dmg.sh](../scripts/build_dmg.sh) | Confeziona un bundle già costruito in un’immagine DMG di sviluppo. |
 | [scripts/bundle_runtime.sh](../scripts/bundle_runtime.sh) | Prepara Python e strumenti dalle versioni bloccate, verifica gli hash e firma il runtime incluso. |
 | [scripts/release.sh](../scripts/release.sh) | Controlla i prerequisiti e produce ZIP e DMG di release, con pubblicazione esplicita opzionale. |
@@ -473,6 +483,11 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [scripts/import_selene_palettes.py](../scripts/import_selene_palettes.py) | Converte le palette Selene nel catalogo JSON usato dall’app. |
 
 ## Risorse incluse
+
+| File | Responsabilità aggiuntiva |
+|---|---|
+| [Resources/IconArtwork.png](../Resources/IconArtwork.png) | Master quadrato originale dell’icona, fornito dall’utente e creato con AI. |
+| [Resources/IconArtwork.md](../Resources/IconArtwork.md) | Provenienza dichiarata, brief e riproduzione delle varianti tramite il generatore. |
 
 | File | Responsabilità |
 |---|---|
@@ -503,6 +518,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [docs/file-map.md](../docs/file-map.md) | Catalogo corrente delle responsabilità di tutti i file versionati, suddiviso per area. |
 | [docs/2026-11-01-audit-review.md](../docs/2026-11-01-audit-review.md) | Verifica i rilievi dell’audit, documenta conflitti riprodotti, misure prestazionali e priorità degli interventi. |
 | [docs/2026-11-01-settings-audit.md](../docs/2026-11-01-settings-audit.md) | Verifica ogni controllo di Settings e le opzioni per titolo, con trigger, prove isolate e priorità delle correzioni. |
+| [docs/2026-11-01-pre-github-review.md](../docs/2026-11-01-pre-github-review.md) | Distingue codice pubblico e release scaricabile; documenta difetti ancora aperti, coerenza UI, confini di sicurezza, risorse e verifiche prima della pubblicazione. |
 | [docs/superpowers/plans/2026-10-26-nxlibrary.md](../docs/superpowers/plans/2026-10-26-nxlibrary.md) | Piano datato di implementazione. NX Library Implementation Plan. |
 | [docs/superpowers/plans/2026-10-27-selene-ui-foundation.md](../docs/superpowers/plans/2026-10-27-selene-ui-foundation.md) | Piano datato di implementazione. Selene UI — Foundation, Library and Detail Implementation Plan. |
 | [docs/superpowers/plans/2026-10-27-selene-ui-settings-addgame.md](../docs/superpowers/plans/2026-10-27-selene-ui-settings-addgame.md) | Piano datato di implementazione. Selene UI — Settings, Add Game and Polish Implementation Plan. |

@@ -114,6 +114,7 @@ actor OnlineBackgroundService {
         }
         let delegate = DownloadProgress(progress)
         let (temporary, response) = try await session.download(from: remote, delegate: delegate)
+        defer { try? FileManager.default.removeItem(at: temporary) }
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             try? FileManager.default.removeItem(at: temporary)
             throw URLError(.badServerResponse)
@@ -121,7 +122,10 @@ actor OnlineBackgroundService {
         let folder = Self.wallpapersFolder.appendingPathComponent(OnlineDownload.folder(for: item.kind), isDirectory: true)
         let fileManager = FileManager.default
         try fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
-        let destination = folder.appendingPathComponent(OnlineDownload.fileName(for: item, fileURL: remote))
+        let destination = folder.appendingPathComponent(OnlineDownload.fileName(for: item, fileURL: remote)).standardizedFileURL
+        guard destination.deletingLastPathComponent().path == folder.standardizedFileURL.path else {
+            throw CocoaError(.fileWriteInvalidFileName)
+        }
         if fileManager.fileExists(atPath: destination.path) { try fileManager.removeItem(at: destination) }
         try fileManager.moveItem(at: temporary, to: destination)
 

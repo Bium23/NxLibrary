@@ -187,6 +187,23 @@ final class OnlineBackgroundsTests: XCTestCase {
                        "wallhaven-qrppoq.jpg")
     }
 
+    func testRemoteIdentifiersCannotBecomeDownloadPaths() {
+        let folder = URL(fileURLWithPath: "/tmp/Wallpapers/online")
+        let file = URL(string: "https://example.invalid/wallpaper.jpg")!
+        for id in ["x/../../escaped", "../escape", "/absolute", "a\\b", "", String(repeating: "x", count: 400)] {
+            let item = OnlineBackground(source: .wallhaven, sourceID: id, kind: .image,
+                title: "Fixture", author: nil, width: 2560, height: 1440,
+                thumbnailURL: file, pageURL: file, fileURL: file)
+            let name = OnlineDownload.fileName(for: item, fileURL: file)
+            let destination = folder.appendingPathComponent(name).standardizedFileURL
+            XCTAssertEqual(destination.deletingLastPathComponent().path, folder.path, id)
+            XCTAssertFalse(name.contains("/"), id)
+            XCTAssertFalse(name.contains("\\"), id)
+            XCTAssertLessThan(name.utf8.count, 200)
+            XCTAssertEqual(OnlineDownload.wallpaperID(for: item), "online/" + String(name.dropLast(4)))
+        }
+    }
+
     func testCreditLines() {
         let page = URL(string: "https://wallhaven.cc/w/qrppoq")!
         XCTAssertEqual(BackgroundCredit(source: .wallhaven, title: "x", author: "SARATDSA", pageURL: page,

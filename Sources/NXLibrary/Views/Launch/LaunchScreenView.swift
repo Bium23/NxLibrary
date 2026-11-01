@@ -127,7 +127,11 @@ struct LaunchScreenView: View {
         if settings.launchMotion && !reduceMotion {
             withAnimation(.linear(duration: 20)) { drift = true }
         }
-        withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) { breathe = true }
+        if !reduceMotion {
+            withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) { breathe = true }
+        } else {
+            breathe = true
+        }
     }
 
     private func finish() {

@@ -38,5 +38,12 @@ Wallpapers (Wallpapers/)
   - "The Backwater" by Charles William Wyllie (public domain) - gruvbox/1-the-backwater.jpg
   - "A Basket of Flowers" by Jan Brueghel the Younger, The Metropolitan Museum of Art
     (public domain) - gruvbox/2-flower-basket.jpg
-  - 17th-century Dutch and Flemish landscapes (public domain) - gruvbox/3-village-square.jpg,
-    gruvbox/4-idyllic-procession.jpg
+  - "The Halt at the Inn" (1645), Isack van Ostade - gruvbox/3-village-square.jpg
+    National Gallery of Art, Washington, Widener Collection, 1942.9.49.
+    https://www.nga.gov/artworks/1188-halt-inn
+  - "Wooded Landscape with Travelers" (1610), Jan Brueghel the Elder
+    - gruvbox/4-idyllic-procession.jpg
+    National Gallery of Art, Washington.
+    https://www.nga.gov/artworks/222552-wooded-landscape-travelers
+    The museum marks both works' media as free and in the public domain:
+    https://www.nga.gov/artworks/free-images-and-open-access

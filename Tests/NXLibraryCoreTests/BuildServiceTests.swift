@@ -3,6 +3,62 @@ import Darwin
 @testable import NXLibraryCore
 
 final class BuildServiceTests: XCTestCase {
+    func testSplitUTF8EventIsDeliveredWithoutChangingTheRawLog() throws {
+        let prefix = #"{"ev":"say","msg":"Caf"#
+        let script = #"""
+        printf '{"ev":"say","msg":"Caf\303'
+        attempts=0
+        while [ "$(/usr/bin/stat -f %z "$1")" -lt "$2" ] && [ "$attempts" -lt 1000 ]; do
+            /bin/sleep 0.001
+            attempts=$((attempts + 1))
+        done
+        printf '\251"}\n'
+        exit 1
+        """#
+        let (events, log) = try captureOutput(script: script, firstChunkBytes: prefix.utf8.count + 1)
+        XCTAssertEqual(events, [.say("Café")])
+        XCTAssertEqual(log, Data("{\"ev\":\"say\",\"msg\":\"Café\"}\n".utf8))
+    }
+
+    func testFinalEventAndStderrLineAreDeliveredWithoutTrailingNewline() throws {
+        let (events, _) = try captureOutput(script: #"""
+        printf '{"ev":"say","msg":"Finished"}'
+        printf 'Compiler detail' >&2
+        exit 1
+        """#)
+        XCTAssertTrue(events.contains(.say("Finished")))
+        XCTAssertTrue(events.contains(.log("Compiler detail")))
+    }
+
+    func testMalformedUTF8LineDoesNotDiscardTheFollowingEvent() throws {
+        let (events, log) = try captureOutput(script: #"""
+        printf '\377\n{"ev":"say","msg":"Still here"}\n'
+        exit 1
+        """#)
+        XCTAssertTrue(events.contains(.say("Still here")))
+        XCTAssertEqual(log.first, 0xff, "The raw log keeps the original bytes")
+    }
+
+    private func captureOutput(script: String, firstChunkBytes: Int = 0) throws -> ([BuildEvent], Data) {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("NXOutput-\(UUID())")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let file = root.appendingPathComponent("engine.sh")
+        let log = root.appendingPathComponent("build.log")
+        try script.write(to: file, atomically: true, encoding: .utf8)
+        let finished = expectation(description: "captured output")
+        var events: [BuildEvent] = []
+        let service = BuildService()
+        service.start(command: BuildCommand(executable: URL(fileURLWithPath: "/bin/sh"),
+            arguments: [file.path, log.path, String(firstChunkBytes)],
+            environment: ["PATH": "/usr/bin:/bin"], workingDirectory: root),
+            logURL: log, tempApp: root.appendingPathComponent("Temp.app"),
+            finalApp: root.appendingPathComponent("Final.app"),
+            eventHandler: { events.append($0) }, completion: { _ in finished.fulfill() })
+        wait(for: [finished], timeout: 10)
+        return (events, try Data(contentsOf: log))
+    }
+
     func testFailedInstallationKeepsReadyBuildForRetryWithoutRunningEngineAgain() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("NXInstallRetry-\(UUID())")
         defer { try? FileManager.default.removeItem(at: root) }

@@ -320,9 +320,11 @@ final class SetupCheckModel: ObservableObject {
     }
 
     private func installDotnet(_ completion: @escaping (Bool) -> Void) {
+        let session = URLSession(configuration: .ephemeral, delegate: DotnetDownloadPolicy(), delegateQueue: nil)
         let chip = "DOWNLOADING…"
         setOverride(.dotnet, .working(chip, detail: "Asking Microsoft for the newest .NET \(Self.requirements.dotnetMajor) SDK…"))
         let fail: (String) -> Void = { [weak self] message in
+            session.finishTasksAndInvalidate()
             DispatchQueue.main.async {
                 self?.dotnetObservation = nil
                 self?.viewModel.logs.append(LogEntry(level: .error, message: ".NET SDK: \(message)"))
@@ -331,8 +333,11 @@ final class SetupCheckModel: ObservableObject {
             }
         }
         let download: (DotnetPackage) -> Void = { [weak self] package in
-            let task = URLSession.shared.downloadTask(with: package.url) { location, _, error in
-                guard let location, error == nil else { return fail(error?.localizedDescription ?? "The download stopped.") }
+            let task = session.downloadTask(with: package.url) { location, response, error in
+                defer { session.finishTasksAndInvalidate() }
+                guard let location, error == nil, let http = response as? HTTPURLResponse,
+                      http.statusCode == 200, let finalURL = http.url, DotnetRelease.trustedDownloadURL(finalURL)
+                else { return fail(error?.localizedDescription ?? "The download stopped.") }
                 let folder = FileManager.default.temporaryDirectory.appendingPathComponent("NXLibrary-dotnet")
                 let pkg = folder.appendingPathComponent(package.url.lastPathComponent)
                 do {
@@ -363,8 +368,10 @@ final class SetupCheckModel: ObservableObject {
             task.resume()
         }
         if let package = dotnetPackage { download(package); return }
-        URLSession.shared.dataTask(with: DotnetRelease.metadataURL) { data, _, error in
-            guard let data, error == nil else { return fail(error?.localizedDescription ?? "No answer from Microsoft.") }
+        session.dataTask(with: DotnetRelease.metadataURL) { data, response, error in
+            guard let data, error == nil, let http = response as? HTTPURLResponse,
+                  http.statusCode == 200, let finalURL = http.url, DotnetRelease.trustedDownloadURL(finalURL)
+            else { return fail(error?.localizedDescription ?? "No answer from Microsoft.") }
             do { download(try DotnetRelease.latestSDKPackage(from: data)) } catch { fail(error.localizedDescription) }
         }.resume()
     }

@@ -39,6 +39,7 @@ fi
 [ -z "$(git status --porcelain)" ] || fail "the working tree has changes; commit or stash them first"
 if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then fail "the tag $TAG already exists"; fi
 [ -d "$ROOT/work/Runtime" ] || fail "no work/Runtime: run scripts/bundle_runtime.sh first (a release carries its Python and tools)"
+python3 "$ROOT/scripts/check_publication.py" --runtime "$ROOT/work/Runtime"
 
 # What this release needs on a player's Mac, as a hidden line in its notes (AppUpdate.requirements(in:)): the
 # update dialog warns about an Xcode to update first and the engine Setup downloads after the restart.

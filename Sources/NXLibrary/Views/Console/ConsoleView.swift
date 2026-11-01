@@ -483,7 +483,7 @@ public struct ConsoleView: View {
         guard !text.isEmpty else { return SoundEffectService.shared.play(.error) }
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        pasteboard.setString(text, forType: .string)
+        pasteboard.setString(DiagnosticsReport.scrub(text, home: NSHomeDirectory()), forType: .string)
         SoundEffectService.shared.play(.success)
         didCopy = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {

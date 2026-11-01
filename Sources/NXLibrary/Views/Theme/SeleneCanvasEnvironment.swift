@@ -5,7 +5,15 @@ private struct SeleneCanvasKey: EnvironmentKey {
     static let defaultValue = SeleneCanvas(size: SeleneCanvas.design)
 }
 
+private struct SeleneMinimumFontKey: EnvironmentKey {
+    static let defaultValue: CGFloat = 0
+}
+
 public extension EnvironmentValues {
+    var seleneMinimumFont: CGFloat {
+        get { self[SeleneMinimumFontKey.self] }
+        set { self[SeleneMinimumFontKey.self] = newValue }
+    }
     var seleneCanvas: SeleneCanvas {
         get { self[SeleneCanvasKey.self] }
         set { self[SeleneCanvasKey.self] = newValue }
@@ -14,12 +22,13 @@ public extension EnvironmentValues {
 
 private struct SeleneFontModifier: ViewModifier {
     @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.seleneMinimumFont) private var minimum
     let size: CGFloat
     let weight: Font.Weight
     var design: Font.Design = .default
 
     func body(content: Content) -> some View {
-        content.font(.system(size: canvas.u(size), weight: weight, design: design))
+        content.font(.system(size: max(minimum, canvas.u(size)), weight: weight, design: design))
     }
 }
 

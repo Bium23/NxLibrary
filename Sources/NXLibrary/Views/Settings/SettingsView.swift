@@ -4,29 +4,6 @@ import NXLibraryCore
 
 enum SettingsFocusArea { case sidebar, rows }
 
-struct SettingsRowAction: Identifiable {
-    let id: String
-    let title: String
-    let isEnabled: Bool
-    /// Value rows step with Left/Right; nil rows hand Left back to the groups.
-    let cycle: ((Int) -> Void)?
-    let activate: () -> Void
-
-    init(id: String, title: String, isEnabled: Bool = true,
-         cycle: ((Int) -> Void)? = nil, activate: @escaping () -> Void) {
-        self.id = id
-        self.title = title
-        self.isEnabled = isEnabled
-        self.cycle = cycle
-        self.activate = activate
-    }
-
-    /// A value row: A steps forward, Left/Right step either way.
-    static func value(_ id: String, _ title: String, cycle: @escaping (Int) -> Void) -> SettingsRowAction {
-        SettingsRowAction(id: id, title: title, cycle: cycle) { cycle(1) }
-    }
-}
-
 /// Selene's settings screen (`SettingsScreen.cs`): groups on the left, the group's rows on the right.
 public struct SettingsView: View {
     private let initialSection: SettingsSection
@@ -110,9 +87,15 @@ public struct SettingsView: View {
             guard let action = note.object as? GamepadAction else { return }
             handleGamepad(action)
         }
-        .sheet(isPresented: $showingControls) {
-            ControlsView()
+        .overlay {
+            if showingControls {
+                ControlsView(canHandleInput: {
+                    !router.isMenuPresented && !viewModel.showSetupCheck
+                        && viewModel.settingsNotice == nil && viewModel.gameWithInstallFailure == nil
+                }) { showingControls = false }
+            }
         }
+        .environment(\.seleneMinimumFont, 12)
     }
 
     private var content: some View {
@@ -136,14 +119,14 @@ public struct SettingsView: View {
                     )
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .environment(\.seleneFocusedRowTitle, focusArea == .rows ? focusedRowTitle : nil)
+                .environment(\.seleneFocusedRowID, focusArea == .rows ? focusedRow?.rowID : nil)
                 .padding(.bottom, canvas.u(60))
             }
             .scrollIndicators(.hidden)
             .onChange(of: rowFocus.index) { _ in
                 guard focusArea == .rows,
                       rowActions.indices.contains(rowFocus.index) else { return }
-                let id = "selene-row-\(rowActions[rowFocus.index].title)"
+                let id = "selene-row-\(rowActions[rowFocus.index].rowID)"
                 withAnimation(reduceMotion ? nil : SeleneTheme.quick) {
                     proxy.scrollTo(id, anchor: .center)
                 }
@@ -174,14 +157,11 @@ public struct SettingsView: View {
         rowActions.indices.contains(rowFocus.index) ? rowActions[rowFocus.index] : nil
     }
 
-    private var focusedRowTitle: String? { focusedRow?.title }
-
     private func updateActions(_ actions: [SettingsRowAction]) {
         // One focus slot per visible row. Secondary buttons in a row stay
         // pointer-reachable; the controller uses the row's primary action.
         let focusedID = focusedRow?.id
-        var seen = Set<String>()
-        rowActions = actions.filter { seen.insert($0.title).inserted }
+        rowActions = SettingsRowAction.primaryActions(actions)
         if let focusedID, let index = rowActions.firstIndex(where: { $0.id == focusedID }) {
             rowFocus.index = index
         }
@@ -367,6 +347,10 @@ public struct SettingsView: View {
     }
 
     private func handleGamepad(_ action: GamepadAction) {
+        if showingControls {
+            NotificationCenter.default.post(name: .nxControlsGamepadAction, object: action)
+            return
+        }
         switch action {
         case .navigateUp: moveFocus(by: -1)
         case .navigateDown: moveFocus(by: 1)

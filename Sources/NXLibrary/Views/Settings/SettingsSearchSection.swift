@@ -108,14 +108,14 @@ struct SettingsDescriptorList: View {
     static func actions(_ rows: [SettingDescriptor],
                         onOpenGroup: @escaping (SettingsSection) -> Void) -> [SettingsRowAction] {
         rows.map { row in
-            SettingsRowAction(id: row.id, title: title(row)) { onOpenGroup(row.group) }
+            SettingsRowAction(id: row.id, title: title(row), rowID: row.id) { onOpenGroup(row.group) }
         }
     }
 
     var body: some View {
         VStack(spacing: canvas.u(8)) {
             ForEach(rows) { row in
-                SeleneRow(Self.title(row), subtitle: row.about) {
+                SeleneRow(Self.title(row), id: row.id, subtitle: row.about) {
                     MaterialIconView(.chevron, size: 24)
                         .foregroundColor(SeleneTheme.ink60)
                 }

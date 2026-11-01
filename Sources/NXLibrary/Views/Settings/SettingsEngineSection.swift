@@ -5,8 +5,7 @@ struct SettingsEngineSection: View {
     @ObservedObject var viewModel: AppViewModel
     let onActions: ([SettingsRowAction]) -> Void
 
-    @Environment(\.seleneFocusedRowTitle) private var focusedRowTitle
-    @State private var showOverrideConfirmation = false
+    @Environment(\.seleneFocusedRowID) private var focusedRowTitle
     private var configurationLocked: Bool { viewModel.isBuilding || viewModel.isUpdatingApp }
 
     var body: some View {
@@ -185,14 +184,15 @@ struct SettingsEngineSection: View {
         .onChange(of: viewModel.upstreamState) { _ in publishActions() }
         .onChange(of: viewModel.isBuilding) { _ in publishActions() }
         .onChange(of: viewModel.isUpdatingApp) { _ in publishActions() }
-        .alert("Enable the untested-toolchain override?", isPresented: $showOverrideConfirmation) {
-            Button("Enable Override", role: .destructive) {
+    }
+
+    private func confirmOverride() {
+        viewModel.showSettingsNotice(title: "Enable untested toolchain?",
+            message: "The engine and compiler do not match the certified combination. Builds may fail or show incorrect graphics and will be marked as untested.",
+            actionTitle: "Enable", cancelTitle: "Cancel") {
+                guard !configurationLocked else { return }
                 viewModel.allowUntestedToolchain = true
             }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("The installed engine, Metal compiler or CLI do not match the certified combination. Builds may produce corrupted pictures or fail. Each build made this way is marked as untested.")
-        }
     }
 
     private var overrideBinding: Binding<Bool> {
@@ -200,7 +200,7 @@ struct SettingsEngineSection: View {
             get: { viewModel.allowUntestedToolchain },
             set: { newValue in
                 if newValue {
-                    showOverrideConfirmation = true
+                    confirmOverride()
                 } else {
                     viewModel.allowUntestedToolchain = false
                 }
@@ -423,7 +423,7 @@ struct SettingsEngineSection: View {
                 if viewModel.allowUntestedToolchain {
                     viewModel.allowUntestedToolchain = false
                 } else {
-                    showOverrideConfirmation = true
+                    confirmOverride()
                 }
             },
             .init(id: "upstream", title: "Upstream") {

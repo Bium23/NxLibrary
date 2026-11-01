@@ -26,7 +26,10 @@ cd "$ROOT"
 swift build -c "$CONFIG" --product NXLibrary
 
 BIN="$ROOT/.build/$CONFIG/NXLibrary"
-rm -rf "$APP"
+DESTINATION="$APP"
+STAGE="$(mktemp -d "${TMPDIR:-/tmp/}nxlibrary-build.XXXXXX")"
+trap 'rm -rf "$STAGE"' EXIT
+APP="$STAGE/NXLibrary.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 cp "$BIN" "$APP/Contents/MacOS/NXLibrary"
@@ -43,6 +46,7 @@ done
 # Python and build tools from scripts/bundle_runtime.sh. Without it, a developer
 # build falls back to ~/nxnative/.venv and the PATH tools.
 if [ -d "$ROOT/work/Runtime" ]; then
+  python3 "$ROOT/scripts/check_publication.py" --runtime "$ROOT/work/Runtime"
   cp -R "$ROOT/work/Runtime" "$APP/Contents/Resources/Runtime"
 else
   echo "note: no work/Runtime; this build uses ~/nxnative/.venv (run scripts/bundle_runtime.sh)"
@@ -76,4 +80,7 @@ PLIST
 
 codesign --force --deep --sign - "$APP"
 codesign --verify --deep --strict "$APP"
-echo "Built $APP"
+swiftc -I "$ROOT/.build/$CONFIG" "$ROOT/scripts/install_built_app.swift" \
+  "$ROOT/.build/$CONFIG/NXLibraryCore.o" -o "$STAGE/install-app"
+"$STAGE/install-app" "$APP" "$DESTINATION"
+echo "Built $DESTINATION"

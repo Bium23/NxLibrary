@@ -92,7 +92,7 @@ struct SettingsGamesSection: View {
                     .padding(.leading, canvas.u(26))
             } else {
                 ForEach(hiddenGames) { game in
-                    SeleneButtonRow(game.name,
+                    SeleneButtonRow(game.name, id: "hidden-\(game.id)",
                                     subtitle: "Out of Spotlight, Collection, Surprise me and search.",
                                     buttonTitle: "Show") { unhide(game) }
                 }
@@ -164,7 +164,7 @@ struct SettingsGamesSection: View {
             .init(id: "cloudSavesFolder", title: "Cloud saves folder") { viewModel.chooseCloudSavesFolder() }
         ]
         let hidden = hiddenGames.map { game in
-            SettingsRowAction(id: "hidden-\(game.id)", title: game.name) { unhide(game) }
+            SettingsRowAction(id: "hidden-\(game.id)", title: game.name, rowID: "hidden-\(game.id)") { unhide(game) }
         }
         onActions(launchActions + cloud + hidden + defaultActions)
     }

@@ -16,6 +16,7 @@ struct FindGameView: View {
     let artwork: ArtworkStore
 
     @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.seleneReduceMotion) private var reduceMotion
     @State private var query = ""
     /// nil while the field has focus; otherwise the result under focus.
     @State private var focused: Int?
@@ -110,8 +111,8 @@ struct FindGameView: View {
                 .frame(width: canvas.u(160), height: canvas.u(160))
                 .clipShape(RoundedRectangle(cornerRadius: canvas.u(12), style: .continuous))
                 .overlay(SeleneTileRing(cornerRadius: canvas.u(12), active: selected))
-                .scaleEffect(selected ? 1.06 : 1)
-                .animation(SeleneTheme.quick, value: selected)
+                .scaleEffect(selected && !reduceMotion ? 1.06 : 1)
+                .animation(reduceMotion ? nil : SeleneTheme.quick, value: selected)
             Text(game.name)
                 .seleneFont(15, selected ? .semibold : .regular)
                 .foregroundColor(selected ? SeleneTheme.ink : SeleneTheme.ink60)

@@ -137,6 +137,7 @@ private struct SeleneDialogCard: ViewModifier {
             )
             .clipShape(RoundedRectangle(cornerRadius: canvas.u(28), style: .continuous))
             .shadow(color: .black.opacity(0.55), radius: canvas.u(30))
+            .environment(\.seleneMinimumFont, 12)
     }
 }
 

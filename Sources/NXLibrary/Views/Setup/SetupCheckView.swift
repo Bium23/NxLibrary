@@ -284,8 +284,8 @@ private struct StatusChip: View {
             .padding(.vertical, canvas.u(3))
             .background(Capsule().fill(tone.opacity(0.14)))
             .frame(maxWidth: canvas.u(200))
-            .scaleEffect(popping ? 1.18 : 1)
-            .animation(SeleneTheme.quick, value: popping)
+            .scaleEffect(popping && !reduceMotion ? 1.18 : 1)
+            .animation(reduceMotion ? nil : SeleneTheme.quick, value: popping)
             .opacity(item.state == .working && dim ? 0.45 : 1)
             .onAppear(perform: breathe)
             .onChange(of: item.state) { _ in breathe() }

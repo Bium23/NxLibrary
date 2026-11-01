@@ -49,7 +49,7 @@ struct SettingsLookSection: View {
     }
 
     private func stepIcon(_ step: Int) {
-        viewModel.iconAppearanceMode = viewModel.iconAppearanceMode.stepped(step)
+        viewModel.iconAppearanceMode = AppIconAppearanceMode.selectable.stepped(from: viewModel.iconAppearanceMode, step) ?? .auto
     }
 
     var body: some View {
@@ -112,7 +112,7 @@ struct SettingsLookSection: View {
 
             SeleneCycleRow("App icon",
                            subtitle: "Dock & app",
-                           value: viewModel.iconAppearanceMode.rawValue) { stepIcon($0) }
+                           value: viewModel.iconAppearanceMode.label) { stepIcon($0) }
 
             SettingsSubheading("Artwork")
 

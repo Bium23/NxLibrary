@@ -40,6 +40,11 @@ public final class KeyStore {
     }
 
     public func validate(at url: URL) throws -> KeySummary {
+        if url.standardizedFileURL == keyURL.standardizedFileURL {
+            let values = try url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+            guard values.isRegularFile == true, values.isSymbolicLink != true else { throw KeyStoreError.unreadable }
+            try fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+        }
         guard let text = try? String(contentsOf: url, encoding: .utf8) else {
             throw KeyStoreError.unreadable
         }

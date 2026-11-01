@@ -1,12 +1,16 @@
 # NX Library — guida tecnica
 
-Aggiornata il 1 novembre 2026 sul codice del repository. La mappa comprende 224 file Swift di produzione e 91 file di test e supporto ai test. L’ultima verifica del codice ha eseguito 689 test con esito positivo.
+Aggiornata il 1 novembre 2026 sul codice del repository. La mappa comprende 225 file Swift di produzione e 93 file di test e supporto ai test. L’ultima verifica completa ha superato 703 test Swift e 5 prove Python dei controlli di pubblicazione.
 
 Questa guida descrive il funzionamento attuale. Il [catalogo dei file](file-map.md) assegna una responsabilità a ogni file versionato, suddiviso per area. Le specifiche e i piani datati in `superpowers/` conservano le decisioni e i passaggi di implementazione delle singole funzionalità.
 
 La [revisione dell’audit del 1 novembre](2026-11-01-audit-review.md) riporta i problemi riprodotti, le misure delle prestazioni e l’ordine proposto degli interventi.
 
 La [verifica delle impostazioni](2026-11-01-settings-audit.md) segue ogni controllo di Settings e le opzioni per titolo, distinguendo comportamento previsto, difetti riprodotti e verifiche manuali residue.
+
+La [revisione prima di GitHub](2026-11-01-pre-github-review.md) distingue la pubblicazione del codice dalla distribuzione dell'app e raccoglie i problemi ancora aperti, la passata UI proposta e le verifiche necessarie.
+
+La sezione finale di quella revisione registra le correzioni successive: lettura del porting per righe complete, focus con identità esplicita per le righe dinamiche, confini dei file e diagnostica, dialoghi Selene, guida comandi separata e preparazione asincrona degli aggiornamenti. Il runtime e i contenuti versionati vengono verificati da scripts/check_publication.py. Anche build_app.sh installa ora il bundle completo attraverso BuildOutputInstaller, dopo firma e verifica.
 
 ## Indice
 

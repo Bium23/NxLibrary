@@ -30,7 +30,9 @@ struct MoonlightColors: Equatable {
 
 /// The device, the two pipelines and the particle field, made once and shared by
 /// every moonlight on screen. Nil when Metal or the shaders are unavailable.
-final class MoonlightEngine {
+final class MoonlightEngine: @unchecked Sendable {
+    // Pipelines, particle data and the command queue are immutable after init.
+    // Every snapshot owns its texture and command buffer.
     static let shared: MoonlightEngine? = MoonlightEngine()
 
     /// Breath period (s), and the time and breath of a still frame.
@@ -341,7 +343,14 @@ struct MoonlightStill: View {
                 }
             }
             .task(id: [w, h] + [colors.accent, colors.ink].flatMap { [$0.x, $0.y, $0.z].map { Int($0 * 255) } }) {
-                image = engine.snapshot(width: w, height: h, colors: colors)
+                // Keep the last frame while resizing. A cancelled request never
+                // replaces the latest size/palette with a late result.
+                do { try await Task.sleep(nanoseconds: 40_000_000) } catch { return }
+                let frame = await Task.detached(priority: .userInitiated) {
+                    engine.snapshot(width: w, height: h, colors: colors)
+                }.value
+                guard !Task.isCancelled else { return }
+                image = frame
             }
         }
     }

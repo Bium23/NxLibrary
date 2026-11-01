@@ -27,7 +27,7 @@ struct SettingsControllersSection: View {
             }
 
             SeleneButtonRow("Button layout",
-                            subtitle: "Library buttons",
+                            subtitle: "Library & game",
                             buttonTitle: "View") {
                 onViewControls()
             }

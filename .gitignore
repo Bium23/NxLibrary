@@ -9,3 +9,31 @@ xcuserdata/
 *.ipa
 work/
 dist/
+
+# Personal sources, keys, configuration and diagnostics.
+*.keys
+*.[nN][sS][pP]
+*.[nN][sS][zZ]
+*.[xX][cC][iI]
+*.[xX][cC][zZ]
+*.nca
+*.nso
+*.tik
+*.cert
+*.log
+*.p12
+*.pfx
+.env
+.env.*
+!.env.example
+env.txt
+.aws/
+
+# Local agent artifacts and publication research.
+.superpowers/
+docs/audits/
+output/
+reports/
+research_notes/
+__pycache__/
+*.pyc

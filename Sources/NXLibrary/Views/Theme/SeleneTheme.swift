@@ -137,7 +137,7 @@ private struct SeleneFocusedRowKey: EnvironmentKey {
 }
 
 public extension EnvironmentValues {
-    var seleneFocusedRowTitle: String? {
+    var seleneFocusedRowID: String? {
         get { self[SeleneFocusedRowKey.self] }
         set { self[SeleneFocusedRowKey.self] = newValue }
     }

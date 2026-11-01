@@ -33,8 +33,8 @@ public final class BuildService {
     private let stateLock = NSLock()
     private var process: Process?
     private var logHandle: FileHandle?
-    private var stdoutBuffer = ""
-    private var stderrBuffer = ""
+    private var stdoutBuffer = Data()
+    private var stderrBuffer = Data()
     private var cancelled = false
     private var eventHandler: ((BuildEvent) -> Void)?
     private var completion: ((BuildResult) -> Void)?
@@ -77,6 +77,8 @@ public final class BuildService {
         }
         stateLock.unlock()
         guard !alreadyRunning else { return }
+        stdoutBuffer.removeAll(keepingCapacity: true)
+        stderrBuffer.removeAll(keepingCapacity: true)
 
         try? fm.createDirectory(at: logURL.deletingLastPathComponent(),
                                 withIntermediateDirectories: true)
@@ -105,17 +107,33 @@ public final class BuildService {
 
         let out = Pipe()
         let err = Pipe()
+        let outputClosed = DispatchGroup()
+        outputClosed.enter()
+        outputClosed.enter()
         process.standardOutput = out
         process.standardError = err
         out.fileHandleForReading.readabilityHandler = { [weak self] handle in
-            self?.consume(handle.availableData, isError: false)
+            let data = handle.availableData
+            if data.isEmpty {
+                handle.readabilityHandler = nil
+                outputClosed.leave()
+            } else {
+                self?.consume(data, isError: false)
+            }
         }
         err.fileHandleForReading.readabilityHandler = { [weak self] handle in
-            self?.consume(handle.availableData, isError: true)
+            let data = handle.availableData
+            if data.isEmpty {
+                handle.readabilityHandler = nil
+                outputClosed.leave()
+            } else {
+                self?.consume(data, isError: true)
+            }
         }
         process.terminationHandler = { [weak self] proc in
             self?.finish(proc: proc, logURL: logURL,
-                         tempApp: tempApp, finalApp: finalApp, holdInstall: holdInstall, acquireInstall: acquireInstall)
+                         tempApp: tempApp, finalApp: finalApp, holdInstall: holdInstall,
+                         acquireInstall: acquireInstall, outputClosed: outputClosed)
         }
 
         do {
@@ -162,36 +180,47 @@ public final class BuildService {
         ioQueue.async { [weak self] in
             guard let self else { return }
             self.logHandle?.write(data)
-            guard let text = String(data: data, encoding: .utf8) else { return }
             if isError {
-                self.stderrBuffer += text
+                self.stderrBuffer.append(data)
                 self.drain(&self.stderrBuffer, asError: true)
             } else {
-                self.stdoutBuffer += text
+                self.stdoutBuffer.append(data)
                 self.drain(&self.stdoutBuffer, asError: false)
             }
         }
     }
 
-    private func drain(_ buffer: inout String, asError: Bool) {
-        while let range = buffer.range(of: "\n") {
-            let line = String(buffer[..<range.lowerBound])
-            buffer.removeSubrange(..<range.upperBound)
-            if asError {
-                eventHandler?(.log(line))
-            } else if let event = BuildEventParser.parse(line) {
-                eventHandler?(event)
-            }
+    private func drain(_ buffer: inout Data, asError: Bool, atEOF: Bool = false) {
+        while let newline = buffer.firstIndex(of: 0x0a) {
+            let line = Data(buffer[..<newline])
+            buffer.removeSubrange(...newline)
+            emit(line, asError: asError)
         }
+        if atEOF, !buffer.isEmpty {
+            emit(buffer, asError: asError)
+            buffer.removeAll(keepingCapacity: true)
+        }
+    }
+
+    private func emit(_ data: Data, asError: Bool) {
+        // Decode complete lines, so a pipe read may safely split any UTF-8 character.
+        // Malformed text stays visible; the disk log always keeps the original bytes.
+        let line = String(decoding: data, as: UTF8.self)
+        if asError { eventHandler?(.log(line)) }
+        else if let event = BuildEventParser.parse(line) { eventHandler?(event) }
     }
 
     /// `holdInstall` is asked once the build succeeds: true keeps the new app at `tempApp` (its game is running and
     /// replacing the app under it can crash it).
-    private func finish(proc: Process, logURL: URL, tempApp: URL, finalApp: URL, holdInstall: @escaping () -> Bool, acquireInstall: @escaping () -> (() -> Void)?) {
-        ioQueue.async { [weak self] in
+    private func finish(proc: Process, logURL: URL, tempApp: URL, finalApp: URL,
+                        holdInstall: @escaping () -> Bool, acquireInstall: @escaping () -> (() -> Void)?,
+                        outputClosed: DispatchGroup) {
+        // The process may exit before the last pipe callback. Finish only after
+        // both streams reached EOF and all their queued bytes were consumed.
+        outputClosed.notify(queue: ioQueue) { [weak self] in
             guard let self else { return }
-            self.drain(&self.stdoutBuffer, asError: false)
-            self.drain(&self.stderrBuffer, asError: true)
+            self.drain(&self.stdoutBuffer, asError: false, atEOF: true)
+            self.drain(&self.stderrBuffer, asError: true, atEOF: true)
             self.logHandle?.closeFile()
             self.logHandle = nil
             self.releaseAssertion()
