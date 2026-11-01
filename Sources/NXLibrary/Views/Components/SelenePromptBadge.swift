@@ -24,12 +24,7 @@ struct SelenePromptBadge: View {
         } else if let name = ButtonPrompts.symbol(button, style: style, connected: pad,
                                            reported: controller.buttonSymbols),
            let symbol = Self.filled(name) {
-            Image(systemName: symbol)
-                .symbolRenderingMode(.palette)
-                .foregroundStyle(SeleneTheme.scrim, SeleneTheme.ink)
-                .font(.system(size: canvas.u(height * 0.94), weight: .semibold))
-                .frame(minWidth: canvas.u(height), minHeight: canvas.u(height))
-                .accessibilityLabel(ButtonPrompts.label(button, style: style, connected: pad))
+            badgeImage(symbol)
         } else {
             let label = ButtonPrompts.label(button, style: style, connected: pad)
             Text(label)
@@ -39,6 +34,25 @@ struct SelenePromptBadge: View {
                 .frame(minWidth: canvas.u(height), minHeight: canvas.u(height))
                 .background(RoundedRectangle(cornerRadius: canvas.u(height / 2), style: .continuous)
                     .fill(SeleneTheme.ink))
+        }
+    }
+
+    @ViewBuilder
+    private func badgeImage(_ symbol: String) -> some View {
+        if symbol.hasSuffix(".fill") {
+            Image(systemName: symbol)
+                .symbolRenderingMode(.palette)
+                .foregroundStyle(SeleneTheme.scrim, SeleneTheme.ink)
+                .font(.system(size: canvas.u(height * 0.94), weight: .semibold))
+                .frame(minWidth: canvas.u(height), minHeight: canvas.u(height))
+                .accessibilityLabel(ButtonPrompts.label(button, style: style, connected: pad))
+        } else {
+            Image(systemName: symbol)
+                .font(.system(size: canvas.u(height * 0.5), weight: .bold))
+                .foregroundColor(SeleneTheme.scrim)
+                .frame(minWidth: canvas.u(height), minHeight: canvas.u(height))
+                .background(Circle().fill(SeleneTheme.ink))
+                .accessibilityLabel(ButtonPrompts.label(button, style: style, connected: pad))
         }
     }
 
@@ -69,8 +83,20 @@ struct SelenePromptBadge: View {
 
     static func filled(_ name: String) -> String? {
         if let known = cache[name] { return known }
-        let fill = name.hasSuffix(".fill") ? name : name + ".fill"
-        let resolved = [fill, name].first { NSImage(systemSymbolName: $0, accessibilityDescription: nil) != nil }
+        let candidates: [String]
+        if name.hasSuffix(".fill") {
+            candidates = [name]
+        } else if name.contains(".circle") || name.contains(".rectangle") {
+            candidates = [name + ".fill", name]
+        } else {
+            candidates = [
+                name + ".circle.fill",
+                name + ".circle",
+                name + ".fill",
+                name
+            ]
+        }
+        let resolved = candidates.first { NSImage(systemSymbolName: $0, accessibilityDescription: nil) != nil }
         cache[name] = resolved
         return resolved
     }
