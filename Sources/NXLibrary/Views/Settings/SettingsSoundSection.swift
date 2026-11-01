@@ -32,7 +32,7 @@ struct SettingsSoundSection: View {
                             info: "Movement and selection sounds stay quiet during launch. Game starting and Game ready still play.",
                             isOn: $settings.settings.quietLaunch)
 
-            SettingsSubheading("Selene")
+            SettingsSubheading("Theme assets")
 
             SeleneButtonRow("Import sounds and wallpapers from Selene",
                             subtitle: importNote

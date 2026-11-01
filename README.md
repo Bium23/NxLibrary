@@ -37,7 +37,7 @@ NX-SCREENSHOTS:END -->
 
 ## Overview
 
-NX Library is an independent SwiftUI frontend for the external [nxnative](https://github.com/seedds/nxnative) toolchain. It brings your installed game apps, local build workflow and game options into a library inspired by [Selene](https://github.com/mattxslv/Selene).
+NX Library is an independent SwiftUI frontend for the external [nxnative](https://github.com/seedds/nxnative) toolchain. It brings your installed game apps, local build workflow and game options into a modern Mac-native library inspired by [Selene](https://github.com/mattxslv/Selene).
 
 | Area | What you can do |
 |---|---|
@@ -177,7 +177,7 @@ Changes apply at the next Play and are written only while the game is closed. An
 - **Game Options → Edit details** changes one game's artwork or metadata. Manual artwork choices take priority over automatic images.
 - **Menu → Theme** chooses palettes and wallpapers. Background choices include local images, muted looping videos and optional online sources; source credits appear in the picker.
 - **Settings → Look** controls wallpaper placement, sizing, brightness, game backgrounds, Reduce Motion and the Color/Monochrome app icon.
-- **Settings → Sound & music** controls interface cues and volume. Four Selene sounds are bundled; additional sounds can be imported from a Selene folder you own.
+- **Settings → Sound & music** controls interface cues and volume. Four interface sounds are bundled; additional sounds and wallpapers can be imported from a Selene theme folder you own.
 
 Online artwork and wallpapers require their providers to be available. Their content and service terms remain those of the respective owners.
 
@@ -204,7 +204,7 @@ Prompts follow the connected controller and supported system remapping. **Settin
 | **Sources detached / missing** | Use **Attach Sources…** or locate the original files. The installed app remains usable. |
 | **Ready build waiting to install** | Close the running game or finish the save operation, then retry the installation if prompted. |
 | **Import is unavailable** | Close the game, finish any active operation and follow the cloud-sync or recovery action shown in Saves. |
-| **Import fails** | Read the Selene message, check that the folder contains a complete save and inspect the preview before retrying. |
+| **Import fails** | Read the error message, check that the folder contains a complete save and inspect the preview before retrying. |
 | **A setting cannot be saved** | Use the dialog's **Retry**. Unreadable preferences are preserved before defaults are written. |
 | **Porting fails** | Use the explained failure and its suggested action. Console contains the build log and **Copy diagnostics**. |
 

@@ -77,7 +77,7 @@ struct SettingsLookSection: View {
 
             SeleneCycleRow("Wallpaper brightness",
                            subtitle: "Wallpaper light",
-                           info: "Like Selene dims it evenly; Bright on the right keeps the left dim for text.",
+                           info: "Dim applies an even shade; Bright on the right keeps the left dim for text.",
                            value: settings.settings.wallpaperBrightness.title) { stepBrightness($0) }
 
             SeleneToggleRow("Background motion",

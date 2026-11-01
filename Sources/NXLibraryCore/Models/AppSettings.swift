@@ -52,7 +52,7 @@ public enum WallpaperBrightness: String, Codable, CaseIterable, Identifiable, Eq
     public var id: String { rawValue }
     public var title: String {
         switch self {
-        case .dim: return "Like Selene"
+        case .dim: return "Dim"
         case .balanced: return "Bright on the right"
         case .bright: return "Bright"
         }

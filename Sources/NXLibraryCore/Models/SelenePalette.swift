@@ -36,7 +36,7 @@ public struct SelenePalette: Codable, Equatable, Identifiable {
 
     /// Built-in Selene palette, used when palettes.json is unavailable.
     public static let fallback = SelenePalette(
-        id: "selene", name: "Selene", mode: .dark,
+        id: "selene", name: "Default", mode: .dark,
         focus: 0xFFFFFF, onFocus: 0x111111, ink: 0xFFFFFF, scrim: 0x000000,
         glass: 0x14181F, glyph: 0x9CCBFF, success: 0x3DDC84,
         base: .init(kind: .linear, stops: [

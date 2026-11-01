@@ -35,6 +35,7 @@ docs/superpowers/
 docs/audits/
 docs/upstream-issues/
 docs/private/
+docs/*-review.md
 output/
 reports/
 research_notes/

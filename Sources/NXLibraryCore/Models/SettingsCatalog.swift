@@ -85,7 +85,7 @@ public enum SettingsCatalog {
         row("backgroundSizing", .look, "Wallpaper sizing",
             "Fill crops the picture to cover the screen, Fit shows all of it, Stretch distorts it to fit.") { $0.backgroundSizing },
         row("wallpaperBrightness", .look, "Wallpaper brightness",
-            "How dark a wallpaper or live background is: dim like Selene, bright on the right away from the text, or bright everywhere.") { $0.wallpaperBrightness },
+            "How dark a wallpaper or live background is: dim evenly, bright on the right away from the text, or bright everywhere.") { $0.wallpaperBrightness },
         row("animatedBackground", .look, "Background motion",
             "The moonlight's beam and motes move and a live background plays; off, they hold still.") { $0.animatedBackground },
         row("keepWallpaperOnGames", .look, "Game backgrounds",

@@ -451,7 +451,7 @@
   },
   {
     "id": "selene",
-    "name": "Selene",
+    "name": "Default",
     "mode": "dark",
     "focus": 16777215,
     "onFocus": 1118481,

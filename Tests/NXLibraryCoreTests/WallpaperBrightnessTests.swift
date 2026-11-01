@@ -41,6 +41,6 @@ final class WallpaperBrightnessTests: XCTestCase {
             XCTAssertLessThanOrEqual(WallpaperBrightness.bright.opacity(at: x), 1)
         }
         XCTAssertEqual(WallpaperBrightness.allCases, [.dim, .balanced, .bright])
-        XCTAssertEqual(WallpaperBrightness.allCases.map(\.title), ["Like Selene", "Bright on the right", "Bright"])
+        XCTAssertEqual(WallpaperBrightness.allCases.map(\.title), ["Dim", "Bright on the right", "Bright"])
     }
 }
