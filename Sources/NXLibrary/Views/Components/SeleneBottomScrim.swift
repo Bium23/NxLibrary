@@ -15,10 +15,10 @@ struct SeleneBottomScrim: View {
             Spacer(minLength: 0)
             LinearGradient(stops: [
                 .init(color: .black.opacity(0), location: 0),
-                .init(color: .black.opacity(0.12), location: 0.5),
-                .init(color: .black.opacity(0.32), location: 1)
+                .init(color: .black.opacity(0.24), location: 0.45),
+                .init(color: .black.opacity(0.50), location: 1)
             ], startPoint: .top, endPoint: .bottom)
-            .frame(height: canvas.u(200))
+            .frame(height: canvas.u(260))
         }
         .frame(width: canvas.size.width, height: canvas.size.height)
         .allowsHitTesting(false)
