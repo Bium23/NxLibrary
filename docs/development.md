@@ -72,9 +72,9 @@ The latest complete local code verification on 1 November 2026 passed **703 Swif
 
 ### Continuous integration
 
-The [Checks workflow](../.github/workflows/ci.yml) runs publication checks and their regressions, Swift tests, Release compilation, development-app packaging and signature verification on the `xcode-27` runner. Its checkout action is pinned, repository permissions are read-only and credentials are not retained by checkout. It does not publish releases or run the UI, games or engine builds.
+The [Checks workflow](../.github/workflows/ci.yml) runs publication checks and their regressions, Swift tests, Release compilation, development-app packaging and signature verification on the `xcode-27` runner. Pull requests from forks stay off that runner and receive the hosted publication checks instead. The checkout action is pinned, repository permissions are read-only and credentials are not retained by checkout. It does not publish releases or run the UI, games or engine builds.
 
-The engine-log-fragment test skips when `~/nxnative` is absent. The [private CI run at commit `1846bdd`](https://github.com/Bium23/NxLibrary/actions/runs/41317014025) completed with **703 Swift tests reported: 702 passed and one skipped**, plus five Python checks. It verifies frontend packaging without the bundled game runtime; it does not replace the runtime check or the engine compatibility gate.
+The engine-log-fragment test skips when `~/nxnative` is absent. A private CI run completed with **703 Swift tests reported: 702 passed and one skipped**, plus five Python checks. It verifies frontend packaging without the bundled game runtime; it does not replace the runtime check or the engine compatibility gate.
 
 ### Manual checks
 

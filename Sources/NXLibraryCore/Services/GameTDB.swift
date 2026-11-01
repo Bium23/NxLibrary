@@ -3,7 +3,7 @@ import Foundation
 /// One Switch game in GameTDB (gametdb.com): what NX Library keeps from its
 /// English database for box covers and metadata.
 public struct GameTDBEntry: Codable, Equatable {
-    /// GameTDB's id, the product code without HAC- ("AAAAA" is Breath of the Wild).
+    /// GameTDB's id, the product code without HAC- ("AAAAA" is one retail title).
     public var id: String
     public var title: String
     /// "ALL", "NTSC-U", "PAL", "NTSC-J"…

@@ -33,7 +33,6 @@ public struct SelenePalette: Codable, Equatable, Identifiable {
     public var glyph: UInt32
     public var success: UInt32
     public var base: BaseGradient
-    public var defaultWallpaper: String?
 
     /// Built-in Selene palette, used when palettes.json is unavailable.
     public static let fallback = SelenePalette(
@@ -44,8 +43,7 @@ public struct SelenePalette: Codable, Equatable, Identifiable {
             .init(color: 0x17244A, location: 0),
             .init(color: 0x0C142C, location: 0.45),
             .init(color: 0x05080F, location: 1)
-        ]),
-        defaultWallpaper: nil
+        ])
     )
 }
 

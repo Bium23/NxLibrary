@@ -43,8 +43,6 @@ def parse(path):
     for field, key in COLOR_KEYS.items():
         out[field] = rgb(colors[key])
     out["base"] = base
-    wp = strings.get("SeleneDefaultWallpaper", "")
-    out["defaultWallpaper"] = wp or None
     return out
 
 

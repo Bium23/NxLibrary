@@ -214,7 +214,7 @@ Before reporting a problem, review copied diagnostics and remove anything person
 
 - NX Library uses a manually pinned engine and checks its commit, working tree, CLI contract and Metal compiler before new builds. It does not follow upstream `main` automatically.
 - The current engine is `2716f78` and certifies Metal `32023.921`. **Build anyway with an untested toolchain** requires explicit confirmation and marks the resulting build as untested. A successful launch does not turn it into a certified combination.
-- Game compatibility depends on nxnative, the game version and the toolchain. Local checks of Prince of Persia and Breath of the Wild are not a compatibility database.
+- Game compatibility depends on nxnative, the game version and the toolchain. Local checks of a few titles are not a compatibility database.
 - Output follows the window/display; native 1440p/4K internal rendering is not supported. Render scale is 50–100% where the build supports it. MetalFX is spatial upscaling.
 - Builds run one at a time. iOS/IPA output, automatic engine updates and notarisation are not currently provided.
 

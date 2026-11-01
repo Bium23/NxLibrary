@@ -33,3 +33,18 @@ jobs:
         run: |
           bash scripts/build_app.sh "$RUNNER_TEMP/NXLibrary.app"
           codesign --verify --deep --strict "$RUNNER_TEMP/NXLibrary.app"
+
+  fork-checks:
+    # A fork's pull request never reaches the self-hosted runner. Its content
+    # still gets the publication checks on a hosted machine.
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - name: Publication inputs
+        run: python3 scripts/check_publication.py
+      - name: Publication check regressions
+        run: python3 -m unittest discover -s Tests/PublicationChecks

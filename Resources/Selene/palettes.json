@@ -22,8 +22,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/catppuccin-latte/1-color-fade.png"
+    }
   },
   {
     "id": "catppuccin",
@@ -48,8 +47,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/catppuccin/1-totoro.png"
+    }
   },
   {
     "id": "ethereal",
@@ -74,8 +72,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/ethereal/1-cosmic.jpg"
+    }
   },
   {
     "id": "everforest",
@@ -100,8 +97,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/everforest/1-tree-tops.jpg"
+    }
   },
   {
     "id": "flexoki-light",
@@ -126,8 +122,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/flexoki-light/1-orb.png"
+    }
   },
   {
     "id": "gruvbox",
@@ -152,8 +147,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/gruvbox/1-the-backwater.jpg"
+    }
   },
   {
     "id": "hackerman",
@@ -178,8 +172,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/hackerman/1-synth-scape.jpg"
+    }
   },
   {
     "id": "kanagawa",
@@ -204,8 +197,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/kanagawa/1-kanagawa.jpg"
+    }
   },
   {
     "id": "last-horizon",
@@ -230,8 +222,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/last-horizon/1-eyes-wide.jpg"
+    }
   },
   {
     "id": "lumon",
@@ -256,8 +247,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/lumon/01-united-in-severance.jpg"
+    }
   },
   {
     "id": "lupine",
@@ -282,8 +272,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/lupine/01-cherry-blossom-bokeh.jpg"
+    }
   },
   {
     "id": "matte-black",
@@ -308,8 +297,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/matte-black/0-ship-at-sea.jpg"
+    }
   },
   {
     "id": "miasma",
@@ -334,8 +322,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/miasma/01-nature-of-fear.jpg"
+    }
   },
   {
     "id": "nord",
@@ -360,8 +347,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/nord/0-black-moon.jpg"
+    }
   },
   {
     "id": "osaka-jade",
@@ -386,8 +372,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/osaka-jade/1-glowing-city.jpg"
+    }
   },
   {
     "id": "retro-82",
@@ -412,8 +397,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/retro-82/1-in-the-groove.jpg"
+    }
   },
   {
     "id": "ristretto",
@@ -438,8 +422,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/ristretto/0-launch.png"
+    }
   },
   {
     "id": "rose-pine",
@@ -464,8 +447,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/rose-pine/1-funky-shapes.jpg"
+    }
   },
   {
     "id": "selene",
@@ -490,8 +472,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": null
+    }
   },
   {
     "id": "solitude",
@@ -516,8 +497,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/solitude/1-on-pole.jpg"
+    }
   },
   {
     "id": "tokyo-night",
@@ -542,8 +522,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/tokyo-night/0-winding-road.jpg"
+    }
   },
   {
     "id": "vantablack",
@@ -568,8 +547,7 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/vantablack/0-dot-hands.jpg"
+    }
   },
   {
     "id": "white",
@@ -594,7 +572,6 @@
           "location": 1.0
         }
       ]
-    },
-    "defaultWallpaper": "Wallpapers/white/1-white.jpg"
+    }
   }
 ]
