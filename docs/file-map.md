@@ -1,6 +1,6 @@
 # NX Library — catalogo dei file
 
-Aggiornato il 1 novembre 2026. Copertura di **377 file**, verificata confrontando il catalogo con i file versionati e i due documenti tecnici introdotti in questa revisione.
+Aggiornato il 1 novembre 2026. Copertura di **378 file**, verificata confrontando il catalogo con i file versionati e il documento di revisione dell’audit introdotto in questa revisione.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -501,6 +501,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 |---|---|
 | [docs/architecture.md](../docs/architecture.md) | Spiega architettura corrente, confini dei componenti, flussi, dati su disco e verifiche. |
 | [docs/file-map.md](../docs/file-map.md) | Catalogo corrente delle responsabilità di tutti i file versionati, suddiviso per area. |
+| [docs/2026-11-01-audit-review.md](../docs/2026-11-01-audit-review.md) | Verifica i rilievi dell’audit, documenta conflitti riprodotti, misure prestazionali e priorità degli interventi. |
 | [docs/superpowers/plans/2026-10-26-nxlibrary.md](../docs/superpowers/plans/2026-10-26-nxlibrary.md) | Piano datato di implementazione. NX Library Implementation Plan. |
 | [docs/superpowers/plans/2026-10-27-selene-ui-foundation.md](../docs/superpowers/plans/2026-10-27-selene-ui-foundation.md) | Piano datato di implementazione. Selene UI — Foundation, Library and Detail Implementation Plan. |
 | [docs/superpowers/plans/2026-10-27-selene-ui-settings-addgame.md](../docs/superpowers/plans/2026-10-27-selene-ui-settings-addgame.md) | Piano datato di implementazione. Selene UI — Settings, Add Game and Polish Implementation Plan. |

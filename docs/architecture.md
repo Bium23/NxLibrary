@@ -4,6 +4,8 @@ Aggiornata il 1 novembre 2026 sul codice del repository. La mappa comprende 224 
 
 Questa guida descrive il funzionamento attuale. Il [catalogo dei file](file-map.md) assegna una responsabilità a ogni file versionato, suddiviso per area. Le specifiche e i piani datati in `superpowers/` conservano le decisioni e i passaggi di implementazione delle singole funzionalità.
 
+La [revisione dell’audit del 1 novembre](2026-11-01-audit-review.md) riporta i problemi riprodotti, le misure delle prestazioni e l’ordine proposto degli interventi.
+
 ## Indice
 
 - [Struttura e dipendenze](#struttura-e-dipendenze)

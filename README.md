@@ -167,6 +167,7 @@ The suite covers models and persistence, source parsing (including a regression 
 
 - [Technical guide](docs/architecture.md) — current architecture, dependencies, feature flows, persistence and verification, written in Italian.
 - [File catalog](docs/file-map.md) — every versioned file and its responsibility, grouped by area, written in Italian.
+- [2026-11-01 audit review](docs/2026-11-01-audit-review.md) — verified findings, reproduced installation conflicts and measured performance costs, written in Italian.
 - [Dated designs and plans](docs/superpowers/) — original design, feature specifications and implementation records.
 - [Engine upgrade notes](docs/upstream-upgrades/README.md) — adoption checklist, pin changes and verification evidence.
 
