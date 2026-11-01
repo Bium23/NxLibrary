@@ -58,12 +58,14 @@ struct SettingsStartUpSection: View {
                             buttonTitle: "Open Setup") {
                 viewModel.reopenSetup()
             }
+            .disabled(viewModel.isBuilding || viewModel.isUpdatingApp)
 
             SeleneButtonRow("Environment",
                             subtitle: "Re-run the environment and compatibility checks.",
                             buttonTitle: "Re-check") {
                 viewModel.detectEnvironment()
             }
+            .disabled(viewModel.isBuilding || viewModel.isUpdatingApp)
 
             SelenePanel("Readiness",
                         info: "Summarizes the 4 essential gates: valid prod.keys, cloned nxnative repository, Python build environment, and certified Metal compiler version.") {
@@ -71,8 +73,9 @@ struct SettingsStartUpSection: View {
                     Circle()
                         .fill(readiness ? SeleneTheme.success : SeleneTheme.untested)
                         .frame(width: 8, height: 8)
-                    Text(readiness ? "Ready to build and play"
-                                   : "Setup needed or builds blocked")
+                    Text(viewModel.isCheckingEnvironment ? "Checking…"
+                         : viewModel.environmentStatus == nil && viewModel.setupCompleted ? "Not checked"
+                         : readiness ? "Ready to build and play" : "Setup needed or builds blocked")
                         .seleneFont(16, .semibold)
                         .foregroundColor(SeleneTheme.ink)
                     Spacer()
@@ -85,6 +88,8 @@ struct SettingsStartUpSection: View {
             }
         }
         .onAppear(perform: publishActions)
+        .onChange(of: viewModel.isBuilding) { _ in publishActions() }
+        .onChange(of: viewModel.isUpdatingApp) { _ in publishActions() }
     }
 
     private var readinessLine: String {
@@ -116,10 +121,10 @@ struct SettingsStartUpSection: View {
             .init(id: "intro", title: "Intro animation") {
                 settings.settings.introAnimation.toggle()
             },
-            .init(id: "setup", title: "Setup") {
+            .init(id: "setup", title: "Setup", isEnabled: !viewModel.isBuilding && !viewModel.isUpdatingApp) {
                 viewModel.reopenSetup()
             },
-            .init(id: "recheck", title: "Environment") {
+            .init(id: "recheck", title: "Environment", isEnabled: !viewModel.isBuilding && !viewModel.isUpdatingApp) {
                 viewModel.detectEnvironment()
             }
         ])

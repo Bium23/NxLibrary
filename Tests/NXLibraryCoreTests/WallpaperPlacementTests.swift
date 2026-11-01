@@ -58,6 +58,6 @@ final class WallpaperPlacementTests: XCTestCase {
 
     func testDialogCopy() {
         XCTAssertEqual(WallpaperPlacement.dialogTitle, "Where should this wallpaper go?")
-        XCTAssertEqual(WallpaperPlacement.allCases.map(\.title), ["Not now", "Settings only", "Everywhere"])
+        XCTAssertEqual(WallpaperPlacement.allCases.map(\.title), ["Not now", "Settings only", "App & Settings"])
     }
 }

@@ -7,7 +7,6 @@ struct SettingsStorageSection: View {
     let onActions: ([SettingsRowAction]) -> Void
     let onOpenConsole: () -> Void
 
-    @State private var backupGameID: UUID?
     @State private var cleanupToConfirm: CleanupKind?
     @State private var metadataBytes: Int64 = 0
     @State private var artworkBytes: Int64 = 0
@@ -49,12 +48,14 @@ struct SettingsStorageSection: View {
                             buttonTitle: "Delete") {
                 cleanupToConfirm = .caches
             }
+            .disabled(viewModel.isBuilding)
 
             SeleneButtonRow("Logs",
                             subtitle: "Build and launch logs. Apps, sources and saves are untouched.",
                             buttonTitle: "Delete") {
                 cleanupToConfirm = .logs
             }
+            .disabled(viewModel.isBuilding)
 
             SeleneValueRow("Metadata cache",
                            subtitle: "Nintendo Store descriptions and links.",
@@ -73,29 +74,10 @@ struct SettingsStorageSection: View {
                 artworkBytes = artwork.cacheSize()
             }
 
-            SeleneRow("Save backup",
-                      subtitle: "Export one game's save folder as a zip archive.") {
-                HStack(spacing: 10) {
-                    Picker("", selection: $backupGameID) {
-                        Text("Select a game").tag(nil as UUID?)
-                        ForEach(viewModel.libraryGames) { game in
-                            Text(game.name).tag(game.id as UUID?)
-                        }
-                    }
-                    .labelsHidden()
-                    .frame(width: 220)
-
-                    Button("Back Up...") {
-                        if let id = backupGameID,
-                           let game = viewModel.libraryGames.first(where: { $0.id == id }) {
-                            viewModel.backupSave(for: game)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .seleneFont(14, .semibold)
-                    .foregroundColor(SeleneTheme.glyph)
-                    .disabled(backupGameID == nil)
-                }
+            SeleneButtonRow("Save backups",
+                            subtitle: "All games",
+                            buttonTitle: "Open folder") {
+                viewModel.showAllSaveBackups()
             }
 
             SeleneButtonRow("Console",
@@ -108,9 +90,9 @@ struct SettingsStorageSection: View {
             viewModel.refreshStorageUsage()
             metadataBytes = viewModel.metadataCacheSize()
             artworkBytes = artwork.cacheSize()
-            if backupGameID == nil { backupGameID = viewModel.libraryGames.first?.id }
         }
         .onAppear(perform: publishActions)
+        .onChange(of: viewModel.isBuilding) { _ in publishActions() }
         .confirmationDialog(cleanupTitle, isPresented: cleanupBinding, titleVisibility: .visible) {
             Button(cleanupButton, role: .destructive) {
                 switch cleanupToConfirm {
@@ -186,11 +168,8 @@ struct SettingsStorageSection: View {
                 artwork.clear()
                 artworkBytes = artwork.cacheSize()
             },
-            .init(id: "backup", title: "Save backup", isEnabled: backupGameID != nil) {
-                if let id = backupGameID,
-                   let game = viewModel.libraryGames.first(where: { $0.id == id }) {
-                    viewModel.backupSave(for: game)
-                }
+            .init(id: "backups", title: "Save backups") {
+                viewModel.showAllSaveBackups()
             },
             .init(id: "console", title: "Console") {
                 onOpenConsole()

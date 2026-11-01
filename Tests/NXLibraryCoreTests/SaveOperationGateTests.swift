@@ -22,4 +22,29 @@ final class SaveOperationGateTests: XCTestCase {
         gate.setRecoveryBlocked(false, titleID: "0100000000000001")
         XCTAssertNotNil(gate.begin(titleID: "0100000000000001"))
     }
+
+    func testAppUpdateWaitsForActiveIOAndExcludesNewOperations() throws {
+        let gate = SaveOperationGate()
+        let title = "0100000000000001"
+        let operation = try XCTUnwrap(gate.begin(titleID: title))
+        XCTAssertTrue(gate.hasActiveOperations)
+        XCTAssertNil(gate.beginAppUpdate())
+        gate.end(titleID: title, token: operation)
+        let update = try XCTUnwrap(gate.beginAppUpdate())
+        XCTAssertNil(gate.begin(titleID: title))
+        XCTAssertNil(gate.begin(titleID: "0100000000000002", recovering: true))
+        gate.endAppUpdate(token: UUID())
+        XCTAssertNil(gate.begin(titleID: title))
+        gate.endAppUpdate(token: update)
+        XCTAssertNotNil(gate.begin(titleID: title))
+    }
+
+    func testAnInactiveRecoveryBlockDoesNotPreventAnAppUpdate() throws {
+        let gate = SaveOperationGate()
+        gate.setRecoveryBlocked(true, titleID: "0100000000000001")
+        XCTAssertFalse(gate.hasActiveOperations)
+        let update = try XCTUnwrap(gate.beginAppUpdate())
+        gate.endAppUpdate(token: update)
+        XCTAssertTrue(gate.isBusy(titleID: "0100000000000001"))
+    }
 }

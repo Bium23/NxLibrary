@@ -91,6 +91,7 @@ struct SeleneDialogNotes: View {
 struct SeleneSuccessNotice: View {
     @Environment(\.seleneCanvas) private var canvas
     let title: String
+    var message: String? = nil
 
     var body: some View {
         HStack(spacing: canvas.u(16)) {
@@ -98,9 +99,16 @@ struct SeleneSuccessNotice: View {
                 .font(.system(size: canvas.u(30), weight: .light))
                 .foregroundColor(SeleneTheme.ink75)
                 .accessibilityHidden(true)
-            Text(title)
-                .seleneFont(28, .semibold)
-                .foregroundColor(SeleneTheme.ink)
+            VStack(alignment: .leading, spacing: canvas.u(6)) {
+                Text(title)
+                    .seleneFont(28, .semibold)
+                    .foregroundColor(SeleneTheme.ink)
+                if let message {
+                    Text(message)
+                        .seleneFont(17)
+                        .foregroundColor(SeleneTheme.ink75)
+                }
+            }
         }
         .modifier(SeleneDialogCard())
         .accessibilityElement(children: .combine)

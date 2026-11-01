@@ -2,6 +2,15 @@ import AppKit
 import NXLibraryCore
 
 extension AppViewModel {
+    func showAllSaveBackups() {
+        do {
+            try FileManager.default.createDirectory(at: saveBackupRoot, withIntermediateDirectories: true)
+            NSWorkspace.shared.open(saveBackupRoot)
+        } catch {
+            showSettingsNotice(title: "Folder unavailable", message: "The backup folder could not be opened.")
+        }
+    }
+
     var saveBackupRoot: URL {
         FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/NXLibrary/SaveBackups")
     }

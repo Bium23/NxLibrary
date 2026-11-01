@@ -14,7 +14,7 @@ public enum WallpaperPlacement: CaseIterable, Sendable {
         switch self {
         case .notNow: return "Not now"
         case .settingsOnly: return "Settings only"
-        case .everywhere: return "Everywhere"
+        case .everywhere: return "App & Settings"
         }
     }
 

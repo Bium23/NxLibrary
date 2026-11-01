@@ -511,7 +511,7 @@ public struct ConsoleView: View {
                   !router.isMenuPresented,
                   viewModel.gameToClose == nil,
                   viewModel.gameToRemove == nil,
-                  viewModel.alertMessage == nil,
+                  viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
                   viewModel.gameWithInstallFailure == nil,
                   !viewModel.showSetupCheck,
                   let window = event.window,

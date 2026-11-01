@@ -41,6 +41,7 @@ public struct SettingsView: View {
     @State private var rowFocus = FocusIndex()
     @State private var rowActions: [SettingsRowAction] = []
     @State private var keyMonitor: Any?
+    @State private var resetNotice: String?
     @Environment(\.seleneReduceMotion) private var environmentReduceMotion
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneBackdropStyle) private var appBackdropStyle
@@ -82,6 +83,18 @@ public struct SettingsView: View {
             SeleneHintsBar(right: commandHints)
         }
         .id(theme.palette.id)
+        .overlay(alignment: .bottom) {
+            if let resetNotice {
+                SeleneSuccessNotice(title: "Group reset", message: resetNotice)
+                    .padding(.bottom, canvas.u(100))
+                    .allowsHitTesting(false)
+            }
+        }
+        .task(id: resetNotice) {
+            guard resetNotice != nil else { return }
+            do { try await Task.sleep(nanoseconds: 3_000_000_000) } catch { return }
+            withAnimation(reduceMotion ? nil : SeleneTheme.quick) { resetNotice = nil }
+        }
         .background(SeleneBackdrop().environment(\.seleneBackdropStyle, settingsBackdropStyle))
         .onAppear(perform: installKeyMonitor)
         .onDisappear(perform: removeKeyMonitor)
@@ -166,8 +179,12 @@ public struct SettingsView: View {
     private func updateActions(_ actions: [SettingsRowAction]) {
         // One focus slot per visible row. Secondary buttons in a row stay
         // pointer-reachable; the controller uses the row's primary action.
+        let focusedID = focusedRow?.id
         var seen = Set<String>()
         rowActions = actions.filter { seen.insert($0.title).inserted }
+        if let focusedID, let index = rowActions.firstIndex(where: { $0.id == focusedID }) {
+            rowFocus.index = index
+        }
         rowFocus.move(by: 0, count: rowActions.count)
         if rowActions.isEmpty, focusArea == .rows { focusArea = .sidebar }
     }
@@ -201,62 +218,67 @@ public struct SettingsView: View {
     private func resetSection() {
         guard canResetSection else { return }
         let defaults = AppSettings()
+        var next = settings.settings
         switch section {
         case .startUp:
-            settings.settings.startOn = defaults.startOn
-            settings.settings.restoreLastGame = defaults.restoreLastGame
-            settings.settings.checkEngineAtLaunch = defaults.checkEngineAtLaunch
-            settings.settings.refreshLibraryAtLaunch = defaults.refreshLibraryAtLaunch
-            settings.settings.checkAppUpdatesAtLaunch = defaults.checkAppUpdatesAtLaunch
-            settings.settings.introAnimation = defaults.introAnimation
+            next.startOn = defaults.startOn
+            next.restoreLastGame = defaults.restoreLastGame
+            next.checkEngineAtLaunch = defaults.checkEngineAtLaunch
+            next.refreshLibraryAtLaunch = defaults.refreshLibraryAtLaunch
+            next.checkAppUpdatesAtLaunch = defaults.checkAppUpdatesAtLaunch
+            next.introAnimation = defaults.introAnimation
         case .navigation:
-            settings.settings.showButtonHints = defaults.showButtonHints
-            settings.settings.buttonNames = defaults.buttonNames
-            settings.settings.viewButtonSwitches = defaults.viewButtonSwitches
+            next.showButtonHints = defaults.showButtonHints
+            next.buttonNames = defaults.buttonNames
+            next.viewButtonSwitches = defaults.viewButtonSwitches
         case .spotlight:
-            settings.settings.spotlightCards = defaults.spotlightCards
-            settings.settings.startingTab = defaults.startingTab
-            settings.settings.spotlightOrder = defaults.spotlightOrder
+            next.spotlightCards = defaults.spotlightCards
+            next.startingTab = defaults.startingTab
+            next.spotlightOrder = defaults.spotlightOrder
         case .soundMusic:
-            settings.settings.interfaceSounds = defaults.interfaceSounds
-            settings.settings.soundVolume = defaults.soundVolume
-            settings.settings.quietLaunch = defaults.quietLaunch
+            next.interfaceSounds = defaults.interfaceSounds
+            next.soundVolume = defaults.soundVolume
+            next.quietLaunch = defaults.quietLaunch
         case .look:
-            settings.settings.colorThemeID = defaults.colorThemeID
+            next.colorThemeID = defaults.colorThemeID
             ThemeStore.shared.apply(id: defaults.colorThemeID)
-            settings.settings.wallpaperID = defaults.wallpaperID
-            settings.settings.settingsWallpaperID = defaults.settingsWallpaperID
-            settings.settings.keepWallpaperOnGames = defaults.keepWallpaperOnGames
-            settings.settings.backgroundSizing = defaults.backgroundSizing
-            settings.settings.backgroundShade = defaults.backgroundShade
-            settings.settings.readableText = defaults.readableText
-            settings.settings.animatedBackground = defaults.animatedBackground
-            settings.settings.showClock = defaults.showClock
-            settings.settings.reduceMotion = defaults.reduceMotion
+            next.wallpaperID = defaults.wallpaperID
+            next.settingsWallpaperID = defaults.settingsWallpaperID
+            next.keepWallpaperOnGames = defaults.keepWallpaperOnGames
+            next.backgroundSizing = defaults.backgroundSizing
+            next.wallpaperBrightness = defaults.wallpaperBrightness
+            next.backgroundShade = defaults.backgroundShade
+            next.readableText = defaults.readableText
+            next.animatedBackground = defaults.animatedBackground
+            next.showClock = defaults.showClock
+            next.reduceMotion = defaults.reduceMotion
             viewModel.iconAppearanceMode = .auto
         case .games:
-            settings.settings.launchStyle = defaults.launchStyle
-            settings.settings.launchMotion = defaults.launchMotion
-            settings.settings.launchShade = defaults.launchShade
-            settings.settings.surprisePool = defaults.surprisePool
-            let rumble = settings.settings.gameDefaults.rumble
-            let gain = settings.settings.gameDefaults.rumbleGain
-            settings.settings.gameDefaults = defaults.gameDefaults
+            resetNotice = "Cloud sync kept"
+            next.launchStyle = defaults.launchStyle
+            next.launchMotion = defaults.launchMotion
+            next.launchShade = defaults.launchShade
+            next.surprisePool = defaults.surprisePool
+            let rumble = next.gameDefaults.rumble
+            let gain = next.gameDefaults.rumbleGain
+            next.gameDefaults = defaults.gameDefaults
             // Rumble lives under Controllers.
-            settings.settings.gameDefaults.rumble = rumble
-            settings.settings.gameDefaults.rumbleGain = gain
+            next.gameDefaults.rumble = rumble
+            next.gameDefaults.rumbleGain = gain
         case .controllers:
             GameControllerService.shared.deadzone = 0.35
-            settings.settings.gameDefaults.rumble = defaults.gameDefaults.rumble
-            settings.settings.gameDefaults.rumbleGain = defaults.gameDefaults.rumbleGain
+            next.gameDefaults.rumble = defaults.gameDefaults.rumble
+            next.gameDefaults.rumbleGain = defaults.gameDefaults.rumbleGain
         case .library:
-            settings.settings.notifyPortingEnds = defaults.notifyPortingEnds
+            resetNotice = "Sources folder kept"
+            next.notifyPortingEnds = defaults.notifyPortingEnds
             viewModel.libraryFolder = URL(fileURLWithPath: viewModel.defaultInstallPath)
                 .appendingPathComponent("Applications")
             viewModel.loadLibrary()
         case .search, .changed, .engine, .storage, .about:
             break
         }
+        settings.settings = next
         SoundEffectService.shared.play(.focus)
     }
 
@@ -293,7 +315,7 @@ public struct SettingsView: View {
                   !router.isMenuPresented,
                   !viewModel.showSetupCheck,
                   !showingControls,
-                  viewModel.alertMessage == nil,
+                  viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
                   viewModel.gameWithInstallFailure == nil,
                   let window = event.window,
                   !window.isSheet,

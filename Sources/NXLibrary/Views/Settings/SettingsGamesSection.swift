@@ -75,7 +75,7 @@ struct SettingsGamesSection: View {
 
             SeleneCycleRow("Cloud saves",
                            subtitle: "All games · Next launch",
-                           info: "Applied before each game starts, including Off. Custom save-sync overrides in configuration files are reported in Saves.",
+                           info: "Applied before each game starts, including Off. Reset group keeps cloud sync and its folder. Custom save-sync overrides are reported in Saves.",
                            value: cloudSaves.title, cycle: stepCloudSaves)
 
             SeleneButtonRow("Cloud saves folder",

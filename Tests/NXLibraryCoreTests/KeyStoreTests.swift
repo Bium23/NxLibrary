@@ -33,6 +33,35 @@ final class KeyStoreTests: XCTestCase {
         XCTAssertThrowsError(try KeyStore(directory: dir.appendingPathComponent("k2")).importKey(from: source))
     }
 
+    func testFailedReplacementKeepsTheManagedKeyAndTheSource() throws {
+        let source = dir.appendingPathComponent("source.keys")
+        try fakeKeys().write(to: source, atomically: true, encoding: .utf8)
+        let managed = dir.appendingPathComponent("managed")
+        let original = KeyStore(directory: managed)
+        try original.importKey(from: source)
+        let before = try Data(contentsOf: original.keyURL)
+        let store = KeyStore(directory: managed)
+        store.publish = { _, _ in throw CocoaError(.fileWriteNoPermission) }
+        XCTAssertThrowsError(try store.importKey(from: source))
+        XCTAssertEqual(try Data(contentsOf: store.keyURL), before)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: source.path))
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: managed.path), ["prod.keys"])
+    }
+
+    func testSuccessfulReplacementPublishesTheNewKeyWithPrivatePermissions() throws {
+        let source = dir.appendingPathComponent("source.keys")
+        try fakeKeys().write(to: source, atomically: true, encoding: .utf8)
+        let store = KeyStore(directory: dir.appendingPathComponent("managed"))
+        try store.importKey(from: source)
+        try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: store.keyURL.path)
+        let updated = fakeKeys() + "key_area_key_application_01 = " + String(repeating: "22", count: 16) + "\n"
+        try updated.write(to: source, atomically: true, encoding: .utf8)
+        XCTAssertEqual(try store.importKey(from: source).applicationKeyGenerations, [0, 1])
+        XCTAssertEqual(try Data(contentsOf: store.keyURL), try Data(contentsOf: source))
+        let permissions = try FileManager.default.attributesOfItem(atPath: store.keyURL.path)[.posixPermissions] as? NSNumber
+        XCTAssertEqual(permissions?.intValue, 0o600)
+    }
+
     func testMalformedLineDoesNotLeakContent() throws {
         let source = dir.appendingPathComponent("malformed.keys")
         try (fakeKeys() + "TOP_SECRET_KEY_MATERIAL\n")

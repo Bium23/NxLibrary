@@ -17,7 +17,7 @@ final class GameRuntimeConfigTests: XCTestCase {
         XCTAssertEqual(review.fpsTarget, 30)
         XCTAssertEqual(review.renderScale, 0.75)
         review.language = "fr"
-        review.save(for: game)
+        try review.save(for: game)
         XCTAssertEqual(GameRuntimeConfig.forReview(existing: game, defaults: defaults).language, "fr")
         XCTAssertEqual(defaults.language, "ja", "Review does not edit the new-game defaults")
     }
@@ -66,5 +66,21 @@ final class GameRuntimeConfigTests: XCTestCase {
         XCTAssertFalse(config.enable60FPS)
         XCTAssertEqual(config.language, "ja")
         XCTAssertTrue(config.metalHUD)
+    }
+
+    func testFailedEnvironmentWriteKeepsPreviousPerTitlePreferences() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("NXRuntimeFailure-\(UUID())")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let prefs = try XCTUnwrap(UserDefaults(suiteName: "NXRuntimeFailure-\(UUID())"))
+        let game = PortedGame(name: "Fixture", url: root.appendingPathComponent("Game.app"),
+                              platform: .macApp, sizeBytes: 0, modificationDate: Date(), titleId: "0100000000000001")
+        let previous = try JSONEncoder().encode(GameRuntimeConfig(language: "it"))
+        prefs.set(previous, forKey: GameRuntimeConfig.storageKey(for: game))
+        defer { prefs.removeObject(forKey: GameRuntimeConfig.storageKey(for: game)) }
+        let blocked = root.appendingPathComponent("not-a-directory")
+        try Data([1]).write(to: blocked)
+        XCTAssertThrowsError(try GameRuntimeConfig(language: "ja").save(for: game, baseDirectory: blocked, preferences: prefs))
+        XCTAssertEqual(prefs.data(forKey: GameRuntimeConfig.storageKey(for: game)), previous)
     }
 }

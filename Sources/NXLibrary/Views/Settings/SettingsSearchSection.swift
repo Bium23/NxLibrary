@@ -58,11 +58,26 @@ struct SettingsSearchSection: View {
 /// Changed: every row whose value differs from the default.
 struct SettingsChangedSection: View {
     @ObservedObject var settings: AppSettingsStore
+    @ObservedObject var viewModel: AppViewModel
+    @ObservedObject private var controller = GameControllerService.shared
     let onOpenGroup: (SettingsSection) -> Void
     let onActions: ([SettingsRowAction]) -> Void
     @Environment(\.seleneCanvas) private var canvas
 
-    private var rows: [SettingDescriptor] { SettingsCatalog.changed(in: settings.settings) }
+    private var rows: [SettingDescriptor] {
+        var external = Set<String>()
+        if viewModel.iconAppearanceMode != .auto { external.insert("iconAppearance") }
+        if abs(controller.deadzone - 0.35) > 0.001 { external.insert("controllerDeadzone") }
+        if viewModel.selectedGameFolder != nil { external.insert("gameFolder") }
+        let root = URL(fileURLWithPath: viewModel.defaultInstallPath)
+        if viewModel.libraryFolder?.standardizedFileURL != root.appendingPathComponent("Applications").standardizedFileURL {
+            external.insert("libraryFolder")
+        }
+        if URL(fileURLWithPath: viewModel.nxnativePath).standardizedFileURL != root.appendingPathComponent("nxnative").standardizedFileURL {
+            external.insert("engineFolder")
+        }
+        return SettingsCatalog.changed(in: settings.settings, externalChanges: external)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: canvas.u(8)) {

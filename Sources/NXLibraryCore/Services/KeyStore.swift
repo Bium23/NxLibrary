@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 public struct KeySummary: Equatable {
     public var hasHeaderKey: Bool
@@ -26,6 +27,12 @@ public enum KeyStoreError: Error, LocalizedError {
 public final class KeyStore {
     public let keyURL: URL
     private let fm: FileManager
+    /// Publication is one same-directory rename: failure leaves the existing key in place.
+    internal var publish: (URL, URL) throws -> Void = { incoming, destination in
+        guard rename(incoming.path, destination.path) == 0 else {
+            throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno))
+        }
+    }
 
     public init(directory: URL, fileManager: FileManager = .default) {
         self.fm = fileManager
@@ -66,11 +73,11 @@ public final class KeyStore {
                                attributes: [.posixPermissions: 0o700])
         let data = try Data(contentsOf: source)
         let tmp = keyURL.deletingLastPathComponent()
-            .appendingPathComponent("prod.keys.tmp")
+            .appendingPathComponent(".prod.keys-\(UUID()).tmp")
+        defer { try? fm.removeItem(at: tmp) }
         try data.write(to: tmp, options: .atomic)
         try fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: tmp.path)
-        if fm.fileExists(atPath: keyURL.path) { try fm.removeItem(at: keyURL) }
-        try fm.moveItem(at: tmp, to: keyURL)
+        try publish(tmp, keyURL)
         return summary
     }
 }

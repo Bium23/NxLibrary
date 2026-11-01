@@ -189,7 +189,7 @@ public struct SpotlightView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxSpotlightGamepadAction)) { note in
-            guard viewModel.alertMessage == nil else { return }
+            guard viewModel.alertMessage == nil, viewModel.settingsNotice == nil else { return }
             if let action = note.object as? GamepadAction { handle(action) }
         }
         .onChange(of: playSessions.sessions.count) { _ in reconcile() }

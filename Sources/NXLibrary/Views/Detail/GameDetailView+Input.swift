@@ -219,7 +219,7 @@ extension GameDetailView {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .scrollWheel]) { event in
             guard !router.isMenuPresented,
                   case .detail(let id) = router.route, id == game.id,
-                  viewModel.alertMessage == nil,
+                  viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
                   viewModel.gameForSettingsSheet == nil,
                   viewModel.gameToClose == nil,
                   viewModel.gameToRemove == nil,

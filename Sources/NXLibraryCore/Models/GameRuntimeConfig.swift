@@ -26,6 +26,26 @@ public struct GameRuntimeConfig: Codable, Equatable {
         self.fullscreen = fullscreen
     }
 
+    private enum CodingKeys: String, CodingKey {
+        case enable60FPS, enableMetalHUD, isDockedMode, renderScale, enableMetalFXUpscale
+        case language, rumble, rumbleGain, fullscreen
+    }
+
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            enable60FPS: try values.decodeIfPresent(Bool.self, forKey: .enable60FPS) ?? true,
+            enableMetalHUD: try values.decodeIfPresent(Bool.self, forKey: .enableMetalHUD) ?? false,
+            isDockedMode: try values.decodeIfPresent(Bool.self, forKey: .isDockedMode) ?? true,
+            renderScale: try values.decodeIfPresent(Double.self, forKey: .renderScale) ?? 1,
+            enableMetalFXUpscale: try values.decodeIfPresent(Bool.self, forKey: .enableMetalFXUpscale) ?? false,
+            language: try values.decodeIfPresent(String.self, forKey: .language) ?? "auto",
+            rumble: try values.decodeIfPresent(Bool.self, forKey: .rumble) ?? true,
+            rumbleGain: try values.decodeIfPresent(Int.self, forKey: .rumbleGain) ?? 1,
+            fullscreen: try values.decodeIfPresent(Bool.self, forKey: .fullscreen) ?? false
+        )
+    }
+
     // Core-facing aliases; the launcher views keep their original property names.
     public var fpsTarget: Int {
         get { enable60FPS ? 60 : 30 }
@@ -111,23 +131,25 @@ public struct GameRuntimeConfig: Codable, Equatable {
         return GameRuntimeConfig()
     }
 
-    public func save(for game: PortedGame) {
-        if let data = try? JSONEncoder().encode(self) {
-            UserDefaults.standard.set(data, forKey: Self.storageKey(for: game))
-        }
-        applyToDisk(for: game)
+    public func save(for game: PortedGame,
+                     baseDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
+                        .appendingPathComponent("Library/Application Support/nxnative"),
+                     preferences: UserDefaults = .standard) throws {
+        let data = try JSONEncoder().encode(self)
+        try applyToDisk(for: game, baseDirectory: baseDirectory)
+        preferences.set(data, forKey: Self.storageKey(for: game))
     }
 
-    public func applyToDisk(for game: PortedGame) {
+    public func applyToDisk(for game: PortedGame,
+                            baseDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
+                                .appendingPathComponent("Library/Application Support/nxnative")) throws {
         guard let titleId = game.titleId, !titleId.isEmpty else { return }
         let fm = FileManager.default
-        let dir = fm.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/nxnative")
-            .appendingPathComponent(titleId)
-        try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        let dir = baseDirectory.appendingPathComponent(titleId)
+        try fm.createDirectory(at: dir, withIntermediateDirectories: true)
         let envURL = dir.appendingPathComponent("env.txt")
-        let existing = try? String(contentsOf: envURL, encoding: .utf8)
-        try? mergedEnvContent(existing: existing).write(
+        let existing = fm.fileExists(atPath: envURL.path) ? try String(contentsOf: envURL, encoding: .utf8) : nil
+        try mergedEnvContent(existing: existing).write(
             to: envURL, atomically: true, encoding: .utf8
         )
     }

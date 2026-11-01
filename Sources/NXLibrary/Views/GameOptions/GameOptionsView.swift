@@ -79,8 +79,8 @@ struct GameOptionsView: View {
             isPlayable: game.isPlayableLocally,
             sourcesDetached: !game.sources.contains { $0.type == .base },
             // Mirrors GameDetailView.toolchainBlocked: a known report that does not pass, without the override.
-            toolchainBlocked: viewModel.compatibilityReport != nil && !viewModel.canPassToolchainGate,
-            toolchainHint: viewModel.toolchainGateSummary?.buildHint,
+            toolchainBlocked: viewModel.isCheckingEnvironment || (viewModel.compatibilityReport != nil && !viewModel.canPassToolchainGate),
+            toolchainHint: viewModel.isCheckingEnvironment ? "Checking environment" : viewModel.toolchainGateSummary?.buildHint,
             hasStorePage: viewModel.storeMetadata[game.id]?.storeURL != nil,
             gameName: game.name,
             appPath: game.url.path,
@@ -162,7 +162,10 @@ struct GameOptionsView: View {
         }
         .animation(reduceMotion ? nil : SeleneTheme.quick, value: confirm)
         .animation(reduceMotion ? nil : SeleneTheme.quick, value: panelOpen)
-        .onAppear(perform: installKeyMonitor)
+        .onAppear {
+            installKeyMonitor()
+            viewModel.prepareBuildEnvironmentIfNeeded()
+        }
         .onDisappear(perform: removeKeyMonitor)
         .onReceive(NotificationCenter.default.publisher(for: .nxGameOptionsGamepadAction)) { note in
             guard let action = note.object as? GamepadAction else { return }
@@ -445,7 +448,7 @@ struct GameOptionsView: View {
                   !panelOpen,
                   viewModel.gameToClose == nil,
                   viewModel.gameWithInstallFailure == nil,
-                  viewModel.alertMessage == nil,
+                  viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
                   let window = event.window,
                   !window.isSheet,
                   window.attachedSheet == nil,

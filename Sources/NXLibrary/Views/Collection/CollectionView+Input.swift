@@ -71,7 +71,7 @@ extension CollectionView {
                   !router.isSearchPresented,
                   !router.isIntroShowing,
                   router.route == .collection,
-                  viewModel.alertMessage == nil,
+                  viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
                   viewModel.gameForSettingsSheet == nil,
                   viewModel.gameToClose == nil,
                   viewModel.gameToRemove == nil,

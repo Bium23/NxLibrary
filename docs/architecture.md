@@ -1,10 +1,12 @@
 # NX Library — guida tecnica
 
-Aggiornata il 1 novembre 2026 sul codice del repository. La mappa comprende 224 file Swift di produzione e 91 file di test e supporto ai test. L’ultima verifica del codice ha eseguito 676 test con esito positivo.
+Aggiornata il 1 novembre 2026 sul codice del repository. La mappa comprende 224 file Swift di produzione e 91 file di test e supporto ai test. L’ultima verifica del codice ha eseguito 689 test con esito positivo.
 
 Questa guida descrive il funzionamento attuale. Il [catalogo dei file](file-map.md) assegna una responsabilità a ogni file versionato, suddiviso per area. Le specifiche e i piani datati in `superpowers/` conservano le decisioni e i passaggi di implementazione delle singole funzionalità.
 
 La [revisione dell’audit del 1 novembre](2026-11-01-audit-review.md) riporta i problemi riprodotti, le misure delle prestazioni e l’ordine proposto degli interventi.
+
+La [verifica delle impostazioni](2026-11-01-settings-audit.md) segue ogni controllo di Settings e le opzioni per titolo, distinguendo comportamento previsto, difetti riprodotti e verifiche manuali residue.
 
 ## Indice
 
@@ -57,6 +59,8 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
 
 `AppViewModel.swift` coordina libreria, rilevamento dell’ambiente, selezione delle sorgenti, porting e lancio. Le estensioni `AppViewModel+…` contengono le integrazioni di cheats, salvataggi, diagnostica, controlli delle chiavi, toolchain e installazioni in attesa. Sono parti dello stesso oggetto osservabile.
 
+La shell condivide un solo `AppSettingsStore` con router e coordinatore. L’avvio rispetta i flag di verifica del motore e scansione della libreria; senza scansione carica il catalogo salvato. Il primo Setup e la verifica prima di ogni porting restano obbligatori. I pannelli di build possono avviare la verifica su richiesta. I risultati asincroni relativi a un checkout precedente vengono scartati e il porting registra la propria fotografia della toolchain.
+
 `SetupCheckModel` e `SavePanelModel` possiedono lo stato dei rispettivi pannelli. `SavePanelModel`, per esempio, mantiene anteprima, operazione in corso, errore, ultimo backup ed evento di importazione riuscita. Gli aggiornamenti destinati alla UI vengono pubblicati sulla coda principale.
 
 ## Libreria e navigazione
@@ -81,6 +85,10 @@ L’aggiunta o il collegamento esplicito delle sorgenti usa `merge(replacingSour
 | Controllers | Navigazione della libreria; il sottogruppo New games contiene i default della vibrazione. |
 
 Options e Play leggono `GameRuntimeConfig.load`: preferenze per titolo in UserDefaults, poi `env.txt` del titolo, quello nel bundle e infine i valori del modello. Il rebuild ricava `languageForBuild` dalla configurazione del titolo e non conserva una lingua separata dal wizard. Le modifiche dei default globali non aggiornano automaticamente i giochi già aggiunti. Search e Changed attribuiscono la vibrazione a Controllers.
+
+Il catalogo Settings descrive i singoli controlli; Changed riceve anche le differenze delle preferenze esterne ad AppSettings. Le azioni da controller si aggiornano con lo stato dei pannelli e mantengono il focus per identità. About pubblica azioni selezionabili. Il reset aggiorna AppSettings con una sola assegnazione e segnala le scelte cloud/percorso preservate.
+
+`AppSettingsStore` pubblica gli errori e conserva una copia dei file illeggibili prima di consentirne la sostituzione. La UI usa un dialogo Selene, con Retry per una scrittura fallita. `GameRuntimeConfig.save` propaga gli errori di env.txt e persiste le preferenze per titolo dopo la scrittura riuscita. Un env.txt illeggibile viene conservato e segnalato.
 
 `AppRouter` gestisce schermata corrente, cronologia di ritorno e richieste di selezione. I modelli `SpotlightState`, `LibrarySelectionState`, `DetailsFocus`, `MenuSelectionModel` e `FocusIndex` descrivono il focus indipendentemente dal disegno SwiftUI. `LibraryQuery` applica ricerca, filtri e ordinamento.
 
@@ -153,6 +161,8 @@ All’avvio o al refresh, un journal incompleto porta al rollback del salvataggi
 
 `SavesPanel` espone apertura cartella, backup manuale, destinazione, importazione, refresh e cartella backup con data dell’ultima copia. L’anteprima From → To è in `SaveImportDetails`. Dopo ogni importazione riuscita, `SavePanelModel` pubblica un nuovo evento e la vista mostra `SeleneSuccessNotice`, che si chiude dopo tre secondi. Il timer della vista si annulla quando il pannello scompare.
 
+Storage → Save backups apre la cartella comune degli snapshot. Il vecchio export ZIP di Storage è stato rimosso; la creazione delle copie passa dal pannello Saves.
+
 I backup sono copie locali conservate fino alla gestione dell’utente. Sono automatici prima di importazione e ripristino, oppure manuali con Back up now. Importazione e ripristino richiedono sincronizzazione cloud effettivamente disattivata. La [specifica dei salvataggi](superpowers/specs/2026-10-31-saves-design.md) dettaglia precedenze, casi rifiutati e verifiche eseguite.
 
 ## Artwork, metadati e sfondi
@@ -209,6 +219,8 @@ Nel repository, `.build/` contiene gli output SwiftPM. `work/Runtime` è il runt
 `UpstreamChecker` consulta il changelog del motore e `UpstreamCopy` lo presenta. L’adozione di un nuovo commit passa dalla procedura manuale in [AGENTS.md](../AGENTS.md) e dalle [note di upgrade](upstream-upgrades/README.md).
 
 `AppUpdater` coordina gli aggiornamenti di NX Library. Le regole di versione, requisiti, digest, identità del bundle e installazione sono in `AppUpdate`. L’interfaccia espone il servizio quando è configurato un repository. Attualmente `AppUpdate.defaultRepository` vale `nil` e un override in UserDefaults consente le prove del manutentore.
+
+Prima dell’installazione, l’updater acquisisce un’esclusione globale dal `SaveOperationGate`: aspetta operazioni save/Play/installazioni attive e impedisce nuovi ingressi durante sostituzione e riavvio. Un recupero bloccato senza I/O attivo non impedisce l’aggiornamento. Il coordinatore esclude nuovi porting mentre l’app viene aggiornata.
 
 `bundle_runtime.sh` prepara Python e strumenti da `runtime.lock`, controlla gli hash e sistema i riferimenti Mach-O con `relink_macho.py`. `build_app.sh` compila e confeziona il bundle, risorse, plist e firma ad hoc. Il suo parametro di destinazione permette di preparare una copia temporanea prima della sostituzione della copia installata.
 

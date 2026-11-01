@@ -536,7 +536,7 @@ struct CheatsPanel: View {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             guard viewModel.gameForSettingsSheet?.id == game.id,
-                  viewModel.gameWithInstallFailure == nil,
+                  viewModel.gameWithInstallFailure == nil, viewModel.settingsNotice == nil,
                   let window = event.window, !window.isSheet, window.attachedSheet == nil,
                   NSApp.modalWindow == nil, !(window.firstResponder is NSText) else { return event }
             guard event.modifierFlags.intersection([.command, .control, .option]).isEmpty else { return event }

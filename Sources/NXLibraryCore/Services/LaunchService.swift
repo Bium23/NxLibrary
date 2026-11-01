@@ -45,7 +45,8 @@ public final class LaunchService {
         let dir = baseDirectory.appendingPathComponent(titleId)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let envURL = dir.appendingPathComponent("env.txt")
-        let existing = try? String(contentsOf: envURL, encoding: .utf8)
+        let existing = FileManager.default.fileExists(atPath: envURL.path)
+            ? try String(contentsOf: envURL, encoding: .utf8) : nil
         try settings.mergedEnvContent(existing: existing).write(
             to: envURL, atomically: true, encoding: .utf8)
     }

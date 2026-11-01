@@ -318,7 +318,7 @@ extension SpotlightView {
                   !router.isSearchPresented,
                   !router.isIntroShowing,
                   router.route == .library,
-                  viewModel.alertMessage == nil,
+                  viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
                   viewModel.gameForSettingsSheet == nil,
                   viewModel.gameToClose == nil,
                   viewModel.gameToRemove == nil,

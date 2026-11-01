@@ -18,7 +18,8 @@ struct SettingsSectionContent: View {
             SettingsSearchSection(settings: settings, onOpenGroup: onOpenGroup,
                                   onSubmit: onSearchSubmit, onActions: onActions)
         case .changed:
-            SettingsChangedSection(settings: settings, onOpenGroup: onOpenGroup, onActions: onActions)
+            SettingsChangedSection(settings: settings, viewModel: viewModel,
+                                   onOpenGroup: onOpenGroup, onActions: onActions)
         case .startUp:
             SettingsStartUpSection(viewModel: viewModel, settings: settings, onActions: onActions)
         case .navigation:
@@ -43,7 +44,7 @@ struct SettingsSectionContent: View {
         case .engine:
             SettingsEngineSection(viewModel: viewModel, onActions: onActions)
         case .about:
-            SettingsAboutSection(viewModel: viewModel)
+            SettingsAboutSection(viewModel: viewModel, onActions: onActions)
         }
     }
 }

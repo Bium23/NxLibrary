@@ -1,6 +1,6 @@
 # NX Library — catalogo dei file
 
-Aggiornato il 1 novembre 2026. Copertura di **378 file**, verificata confrontando il catalogo con i file versionati e il documento di revisione dell’audit introdotto in questa revisione.
+Aggiornato il 1 novembre 2026. Copertura di **379 file**, verificata confrontando il catalogo con i file versionati e il documento di verifica delle impostazioni introdotto in questa revisione.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -117,7 +117,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Sources/NXLibraryCore/Services/LibraryStore.swift](../Sources/NXLibraryCore/Services/LibraryStore.swift) | Salva il catalogo con recupero; conserva lo stato nelle scansioni e sostituisce le sorgenti solo per una selezione esplicita. |
 | [Sources/NXLibraryCore/Services/ImportService.swift](../Sources/NXLibraryCore/Services/ImportService.swift) | Scansiona bundle nxnative e ne ricava identità, versione, percorso e dimensioni. |
 | [Sources/NXLibraryCore/Services/AppSizeCache.swift](../Sources/NXLibraryCore/Services/AppSizeCache.swift) | Conserva dimensioni per percorso e data del bundle e decide lo stato vuoto della libreria. |
-| [Sources/NXLibraryCore/Services/AppSettingsStore.swift](../Sources/NXLibraryCore/Services/AppSettingsStore.swift) | Pubblica impostazioni globali, legge settings.json e salva le modifiche tramite file temporaneo. |
+| [Sources/NXLibraryCore/Services/AppSettingsStore.swift](../Sources/NXLibraryCore/Services/AppSettingsStore.swift) | Pubblica impostazioni ed errori, preserva i file illeggibili e salva settings.json tramite file temporaneo. |
 | [Sources/NXLibraryCore/Services/PlaySessionStore.swift](../Sources/NXLibraryCore/Services/PlaySessionStore.swift) | Registra avvio, heartbeat, fine e riconciliazione delle sessioni di gioco. |
 | [Sources/NXLibraryCore/Navigation/AppRouter.swift](../Sources/NXLibraryCore/Navigation/AppRouter.swift) | Gestisce route, ritorno, menu, ricerca e richieste di selezione o spostamento su Spotlight. |
 
@@ -139,7 +139,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Sources/NXLibraryCore/Services/SetupActions.swift](../Sources/NXLibraryCore/Services/SetupActions.swift) | Costruisce le operazioni Git ammesse per installare o allineare il motore al pin. |
 | [Sources/NXLibraryCore/Services/InstallProgress.swift](../Sources/NXLibraryCore/Services/InstallProgress.swift) | Interpreta avanzamento Git, percentuali, byte e righe parziali per le installazioni. |
 | [Sources/NXLibraryCore/Services/DotnetRelease.swift](../Sources/NXLibraryCore/Services/DotnetRelease.swift) | Seleziona il pacchetto SDK Microsoft dai metadati e ne verifica SHA-512. |
-| [Sources/NXLibraryCore/Services/KeyStore.swift](../Sources/NXLibraryCore/Services/KeyStore.swift) | Valida le chiavi, espone solo il riepilogo e importa la copia gestita con permessi 0600. |
+| [Sources/NXLibraryCore/Services/KeyStore.swift](../Sources/NXLibraryCore/Services/KeyStore.swift) | Valida le chiavi, espone solo il riepilogo e pubblica atomicamente la copia gestita con permessi 0600. |
 | [Sources/NXLibraryCore/Services/KeyCheck.swift](../Sources/NXLibraryCore/Services/KeyCheck.swift) | Legge intestazioni NCA e ticket e verifica se le chiavi possono aprire le sorgenti selezionate. |
 | [Sources/NXLibraryCore/Services/CommandRunner.swift](../Sources/NXLibraryCore/Services/CommandRunner.swift) | Confine sostituibile per comandi e output, con esecuzione sincrona o streaming delle righe. |
 | [Sources/NXLibraryCore/Services/UpstreamChecker.swift](../Sources/NXLibraryCore/Services/UpstreamChecker.swift) | Consulta i commit upstream tramite HTTP e produce stato e collegamento di confronto. |
@@ -168,7 +168,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Sources/NXLibraryCore/Services/BuildService.swift](../Sources/NXLibraryCore/Services/BuildService.swift) | Avvia il porting, gestisce processi, cancellazione, log ed eventi; conserva il bundle valido quando fallisce solo l’installazione. |
 | [Sources/NXLibraryCore/Services/BuildOutputInstaller.swift](../Sources/NXLibraryCore/Services/BuildOutputInstaller.swift) | Pubblica il bundle con rinomina o scambio atomico, prepara copie fra volumi e riconosce i tentativi già completati tramite ricevuta. |
 | [Sources/NXLibraryCore/Services/LaunchService.swift](../Sources/NXLibraryCore/Services/LaunchService.swift) | Scrive l’ambiente runtime e avvia il bundle del gioco tramite NSWorkspace. |
-| [Sources/NXLibraryCore/Services/StorageManager.swift](../Sources/NXLibraryCore/Services/StorageManager.swift) | Misura app, cache e log e ne gestisce la pulizia. Include l’API preesistente di backup ZIP. |
+| [Sources/NXLibraryCore/Services/StorageManager.swift](../Sources/NXLibraryCore/Services/StorageManager.swift) | Misura app, cache e log e ne gestisce la pulizia. I backup appartengono al flusso Saves. |
 | [Sources/NXLibraryCore/Services/DiagnosticsReport.swift](../Sources/NXLibraryCore/Services/DiagnosticsReport.swift) | Genera il rapporto diagnostico e rimuove percorso home e valori riconosciuti come chiavi. |
 | [Sources/NXLibraryCore/Services/AppUpdate.swift](../Sources/NXLibraryCore/Services/AppUpdate.swift) | Definisce repository, versioni, requisiti, digest e regole di verifica e sostituzione dell’app NX Library. |
 
@@ -197,7 +197,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Sources/NXLibraryCore/Services/SaveSnapshotStore.swift](../Sources/NXLibraryCore/Services/SaveSnapshotStore.swift) | Crea e verifica backup e prepara importazioni da esportazioni o backup datati. |
 | [Sources/NXLibraryCore/Services/SaveRestorePreview.swift](../Sources/NXLibraryCore/Services/SaveRestorePreview.swift) | Estende lo store con staging, validazione e rilascio delle anteprime di ripristino. |
 | [Sources/NXLibraryCore/Services/SaveTransaction.swift](../Sources/NXLibraryCore/Services/SaveTransaction.swift) | Esegue sostituzioni con copia protettiva e journal e recupera o ripulisce transazioni interrotte. |
-| [Sources/NXLibraryCore/Services/SaveOperationGate.swift](../Sources/NXLibraryCore/Services/SaveOperationGate.swift) | Assegna lease per title ID a salvataggi, Play e installazioni e mantiene i blocchi di recupero. |
+| [Sources/NXLibraryCore/Services/SaveOperationGate.swift](../Sources/NXLibraryCore/Services/SaveOperationGate.swift) | Assegna lease per titolo e un’esclusione globale per l’updater; coordina salvataggi, Play, installazioni e recuperi. |
 
 ## Core · artwork, metadati e sfondi online
 
@@ -306,7 +306,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Sources/NXLibrary/Views/Settings/SettingsGamesSection.swift](../Sources/NXLibrary/Views/Settings/SettingsGamesSection.swift) | Espone default runtime, cloud saves e gestione dei giochi nascosti. |
 | [Sources/NXLibrary/Views/Settings/SettingsControllersSection.swift](../Sources/NXLibrary/Views/Settings/SettingsControllersSection.swift) | Espone preferenze dei controller e relative azioni di gruppo. |
 | [Sources/NXLibrary/Views/Settings/SettingsLibrarySection.swift](../Sources/NXLibrary/Views/Settings/SettingsLibrarySection.swift) | Espone cartella della libreria, scansione e notifiche dei porting. |
-| [Sources/NXLibrary/Views/Settings/SettingsStorageSection.swift](../Sources/NXLibrary/Views/Settings/SettingsStorageSection.swift) | Mostra spazio occupato e azioni su cache e log. |
+| [Sources/NXLibrary/Views/Settings/SettingsStorageSection.swift](../Sources/NXLibrary/Views/Settings/SettingsStorageSection.swift) | Mostra spazio occupato, azioni su cache/log e accesso alla cartella comune dei backup verificati. |
 | [Sources/NXLibrary/Views/Settings/SettingsEngineSection.swift](../Sources/NXLibrary/Views/Settings/SettingsEngineSection.swift) | Mostra checkout, pin, gate, toolchain, runtime, chiavi e changelog upstream. |
 | [Sources/NXLibrary/Views/Settings/SettingsAboutSection.swift](../Sources/NXLibrary/Views/Settings/SettingsAboutSection.swift) | Mostra versione, attribuzioni, diagnostica, documentazione e aggiornamenti dell’app. |
 
@@ -370,7 +370,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 |---|---|
 | [Tests/NXLibraryCoreTests/ActivitySummaryTests.swift](../Tests/NXLibraryCoreTests/ActivitySummaryTests.swift) | Totali settimanali, distribuzione giornaliera, sessioni aperte e passaggi di mezzanotte. |
 | [Tests/NXLibraryCoreTests/AppRouterTests.swift](../Tests/NXLibraryCoreTests/AppRouterTests.swift) | Route iniziale, ritorno, overlay e richieste di selezione o spostamento. |
-| [Tests/NXLibraryCoreTests/AppSettingsStoreTests.swift](../Tests/NXLibraryCoreTests/AppSettingsStoreTests.swift) | Default, salvataggio, lettura e compatibilità di file precedenti ai nuovi campi. |
+| [Tests/NXLibraryCoreTests/AppSettingsStoreTests.swift](../Tests/NXLibraryCoreTests/AppSettingsStoreTests.swift) | Default, persistenza, errori osservabili, conservazione dei file illeggibili e compatibilità dei campi mancanti. |
 | [Tests/NXLibraryCoreTests/AppSizeCacheTests.swift](../Tests/NXLibraryCoreTests/AppSizeCacheTests.swift) | Riuso delle dimensioni, invalidazione sui bundle modificati e scansione senza falso stato vuoto. |
 | [Tests/NXLibraryCoreTests/AppUpdateTests.swift](../Tests/NXLibraryCoreTests/AppUpdateTests.swift) | Versioni, asset release, requisiti, digest, identità del bundle e sostituzione dell’app. |
 | [Tests/NXLibraryCoreTests/ArtworkPickerFocusTests.swift](../Tests/NXLibraryCoreTests/ArtworkPickerFocusTests.swift) | Spostamenti nella griglia dei candidati e passaggi fra slot di artwork. |
@@ -405,7 +405,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Tests/NXLibraryCoreTests/ImportServiceTests.swift](../Tests/NXLibraryCoreTests/ImportServiceTests.swift) | Riconoscimento dei bundle nxnative e normalizzazione degli identificativi. |
 | [Tests/NXLibraryCoreTests/InstallProgressTests.swift](../Tests/NXLibraryCoreTests/InstallProgressTests.swift) | Fasi Git, percentuali, byte e ricomposizione delle righe parziali. |
 | [Tests/NXLibraryCoreTests/KeyCheckTests.swift](../Tests/NXLibraryCoreTests/KeyCheckTests.swift) | Cifratura e lettura delle intestazioni sintetiche e chiavi richieste dalle sorgenti. |
-| [Tests/NXLibraryCoreTests/KeyStoreTests.swift](../Tests/NXLibraryCoreTests/KeyStoreTests.swift) | Importazione, permessi 0600, riepilogo e rifiuto di file non validi. |
+| [Tests/NXLibraryCoreTests/KeyStoreTests.swift](../Tests/NXLibraryCoreTests/KeyStoreTests.swift) | Importazione e sostituzione atomica, conservazione della copia precedente in caso di errore, permessi 0600 e riepilogo. |
 | [Tests/NXLibraryCoreTests/LaunchServiceTests.swift](../Tests/NXLibraryCoreTests/LaunchServiceTests.swift) | Scrittura dell’ambiente, avvio del bundle e propagazione degli errori. |
 | [Tests/NXLibraryCoreTests/LauncherSettingsTests.swift](../Tests/NXLibraryCoreTests/LauncherSettingsTests.swift) | Metadati launcher.json e fallback dei controlli per build precedenti. |
 | [Tests/NXLibraryCoreTests/LibraryPresentationTests.swift](../Tests/NXLibraryCoreTests/LibraryPresentationTests.swift) | Formattazione dei metadati e delle statistiche della libreria. |
@@ -431,7 +431,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Tests/NXLibraryCoreTests/RunningGamesTests.swift](../Tests/NXLibraryCoreTests/RunningGamesTests.swift) | Associazione bundle ID, applicazioni aperte e voci della libreria. |
 | [Tests/NXLibraryCoreTests/RyujinxSaveImportTests.swift](../Tests/NXLibraryCoreTests/RyujinxSaveImportTests.swift) | Contenitori e slot Ryujinx, identità del titolo e importazioni con strutture e destinazioni differenti. |
 | [Tests/NXLibraryCoreTests/SaveLocationTests.swift](../Tests/NXLibraryCoreTests/SaveLocationTests.swift) | Identificativi, percorsi sicuri, precedenze dell’ambiente e cloud effettivo. |
-| [Tests/NXLibraryCoreTests/SaveOperationGateTests.swift](../Tests/NXLibraryCoreTests/SaveOperationGateTests.swift) | Lease per titolo, voci duplicate, esclusione delle operazioni e recupero bloccato. |
+| [Tests/NXLibraryCoreTests/SaveOperationGateTests.swift](../Tests/NXLibraryCoreTests/SaveOperationGateTests.swift) | Lease per titolo, esclusione globale dell’updater, operazioni concorrenti e recupero bloccato senza I/O attivo. |
 | [Tests/NXLibraryCoreTests/SavePresentationTests.swift](../Tests/NXLibraryCoreTests/SavePresentationTests.swift) | Riepiloghi, date, nomi degli slot e accessibilità dell’azione di importazione. |
 | [Tests/NXLibraryCoreTests/SaveSnapshotStoreTests.swift](../Tests/NXLibraryCoreTests/SaveSnapshotStoreTests.swift) | Inventari, xattr, integrità dei backup, staging e selezione dei backup datati. |
 | [Tests/NXLibraryCoreTests/SaveTestHome.swift](../Tests/NXLibraryCoreTests/SaveTestHome.swift) | Fixture condivisa che crea una home e un bundle sintetici in una directory temporanea dedicata. |
@@ -449,7 +449,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [Tests/NXLibraryCoreTests/SpotlightPageTests.swift](../Tests/NXLibraryCoreTests/SpotlightPageTests.swift) | Estratti del testo e stati dello scorrimento della pagina del gioco. |
 | [Tests/NXLibraryCoreTests/SpotlightRowTests.swift](../Tests/NXLibraryCoreTests/SpotlightRowTests.swift) | Ordine, card, riordino delle tile e selezione Surprise. |
 | [Tests/NXLibraryCoreTests/SpotlightStateTests.swift](../Tests/NXLibraryCoreTests/SpotlightStateTests.swift) | Focus, selezione, filtri, azioni e spostamento delle tile Spotlight. |
-| [Tests/NXLibraryCoreTests/StorageManagerTests.swift](../Tests/NXLibraryCoreTests/StorageManagerTests.swift) | Misure e cancellazioni di cache e log e API di backup ZIP. |
+| [Tests/NXLibraryCoreTests/StorageManagerTests.swift](../Tests/NXLibraryCoreTests/StorageManagerTests.swift) | Misure e cancellazioni di cache e log. |
 | [Tests/NXLibraryCoreTests/ThemePickerTests.swift](../Tests/NXLibraryCoreTests/ThemePickerTests.swift) | Navigazione della griglia, tab e selezione degli sfondi. |
 | [Tests/NXLibraryCoreTests/ToolchainGateCopyTests.swift](../Tests/NXLibraryCoreTests/ToolchainGateCopyTests.swift) | Testi del gate per Metal certificato, precedente, successivo e altre cause di blocco. |
 | [Tests/NXLibraryCoreTests/ToolchainRequirementsTests.swift](../Tests/NXLibraryCoreTests/ToolchainRequirementsTests.swift) | Versioni minime e identificativi degli asset Metal da scaricare. |
@@ -502,6 +502,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 | [docs/architecture.md](../docs/architecture.md) | Spiega architettura corrente, confini dei componenti, flussi, dati su disco e verifiche. |
 | [docs/file-map.md](../docs/file-map.md) | Catalogo corrente delle responsabilità di tutti i file versionati, suddiviso per area. |
 | [docs/2026-11-01-audit-review.md](../docs/2026-11-01-audit-review.md) | Verifica i rilievi dell’audit, documenta conflitti riprodotti, misure prestazionali e priorità degli interventi. |
+| [docs/2026-11-01-settings-audit.md](../docs/2026-11-01-settings-audit.md) | Verifica ogni controllo di Settings e le opzioni per titolo, con trigger, prove isolate e priorità delle correzioni. |
 | [docs/superpowers/plans/2026-10-26-nxlibrary.md](../docs/superpowers/plans/2026-10-26-nxlibrary.md) | Piano datato di implementazione. NX Library Implementation Plan. |
 | [docs/superpowers/plans/2026-10-27-selene-ui-foundation.md](../docs/superpowers/plans/2026-10-27-selene-ui-foundation.md) | Piano datato di implementazione. Selene UI — Foundation, Library and Detail Implementation Plan. |
 | [docs/superpowers/plans/2026-10-27-selene-ui-settings-addgame.md](../docs/superpowers/plans/2026-10-27-selene-ui-settings-addgame.md) | Piano datato di implementazione. Selene UI — Settings, Add Game and Polish Implementation Plan. |

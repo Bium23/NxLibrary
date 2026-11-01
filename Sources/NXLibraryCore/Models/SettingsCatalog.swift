@@ -71,8 +71,8 @@ public enum SettingsCatalog {
         row("soundVolume", .soundMusic, "Sound volume",
             "How loud the interface sounds are.") { $0.soundVolume },
         row("quietLaunch", .soundMusic, "Quiet launch screen",
-            "Keeps the launch screen silent while a game starts.") { $0.quietLaunch },
-        action("importSeleneSounds", .soundMusic, "Import sounds",
+            "Game cues only during launch; movement and selection sounds stay quiet.") { $0.quietLaunch },
+        action("importSeleneSounds", .soundMusic, "Import sounds and wallpapers from Selene",
                "Copies optional sounds and wallpapers from a local Selene folder you own."),
 
         // Look
@@ -98,6 +98,8 @@ public enum SettingsCatalog {
             "Shows the time in the top bar.") { $0.showClock },
         row("reduceMotion", .look, "Reduce motion",
             "Replaces slides and zooms with fades.") { $0.reduceMotion },
+        action("iconAppearance", .look, "App icon", "The icon appearance in the Dock."),
+        action("boxCovers", .look, "Box covers", "Open GameTDB for box covers."),
 
         // Games
         row("launchStyle", .games, "Launch screen style",
@@ -110,45 +112,70 @@ public enum SettingsCatalog {
             "Which games Surprise me picks from.") { $0.surprisePool },
         row("cloudSaves", .games, "Cloud saves",
             "One sync choice for all games, applied at next launch: Off, iCloud Drive or a folder you choose.") { $0.cloudSaves },
+        row("cloudSavesPickedFolder", .games, "Cloud saves folder",
+            "The chosen folder for save sync; choosing a folder enables it.") { $0.cloudSavesPickedFolder },
         action("hiddenGames", .games, "Hidden games",
                "Games you hid from Game options; Show puts one back in your lists."),
-        row("gameDefaults", .games, "New games",
-            "Game defaults for newly added titles: frame rate, upscaling, console mode and language. Existing games keep their options.") {
-                var value = $0.gameDefaults
-                value.rumble = defaults.gameDefaults.rumble
-                value.rumbleGain = defaults.gameDefaults.rumbleGain
-                return value
-            },
+        row("gameDefaults.fullscreen", .games, "Fullscreen",
+            "New games: start in fullscreen or a window.") { $0.gameDefaults.fullscreen },
+        row("gameDefaults.enable60FPS", .games, "60 FPS",
+            "New games: frame-rate target of 30 or 60 FPS.") { $0.gameDefaults.enable60FPS },
+        row("gameDefaults.isDockedMode", .games, "Docked mode",
+            "New games: console profile or handheld mode.") { $0.gameDefaults.isDockedMode },
+        row("gameDefaults.enableMetalFXUpscale", .games, "MetalFX spatial upscaling",
+            "New games: spatial upscaling of the presented picture.") { $0.gameDefaults.enableMetalFXUpscale },
+        row("gameDefaults.enableMetalHUD", .games, "Metal HUD",
+            "New games: Metal performance overlay.") { $0.gameDefaults.enableMetalHUD },
+        row("gameDefaults.language", .games, "Game language",
+            "New games: starting language; Game Default uses the build's language.") { $0.gameDefaults.language },
+        row("gameDefaults.renderScale", .games, "Render scale",
+            "New games: internal 3D resolution, from 50% to 100% when supported.") { $0.gameDefaults.renderScale },
 
         // Controllers
-        action("controllerStatus", .controllers, "Controller",
+        action("controllerStatus", .controllers, "Gamepad",
                "The connected controller and how its buttons map."),
+        action("buttonLayout", .controllers, "Button layout", "View the library controls."),
+        action("controllerDeadzone", .controllers, "Stick navigation deadzone",
+               "Thumbstick threshold for library navigation; does not alter game input."),
         row("gameDefaults.rumble", .controllers, "Rumble",
             "Default controller vibration for new games.") { $0.gameDefaults.rumble },
         row("gameDefaults.rumbleGain", .controllers, "Rumble strength",
             "Default vibration strength for new games.") { $0.gameDefaults.rumbleGain },
 
         // Library
-        action("libraryFolders", .library, "Library folders",
-               "Where NX Library looks for ported games."),
-        action("importBuilds", .library, "Import existing builds",
+        action("gameFolder", .library, "Game ROMs folder", "Where NX Library looks for game sources."),
+        action("libraryFolder", .library, "App library folder", "An additional folder to discover built Mac apps."),
+        action("importBuilds", .library, "Existing builds",
                "Adds games you already built to the library."),
+        action("libraryRefresh", .library, "Library refresh", "Rescan the app folders."),
         row("notifyPortingEnds", .library, "Notify when a porting ends",
             "A notification when a porting finishes while NX Library is in the background.") { $0.notifyPortingEnds },
 
         // Storage
-        action("clearCaches", .storage, "Clear caches",
-               "Removes downloaded artwork and store metadata. They load again when needed."),
-        action("openLogs", .storage, "Logs",
-               "Opens the folder with NX Library and build logs."),
+        action("storageUsage", .storage, "Storage usage", "Recalculate apps, caches, logs and free space."),
+        action("buildCaches", .storage, "Build caches", "Delete extracted build caches after the active porting."),
+        action("logs", .storage, "Logs", "Delete build and launch logs after confirmation."),
+        action("metadataCache", .storage, "Metadata cache", "Clear cached store descriptions and links."),
+        action("artworkCache", .storage, "Artwork cache", "Clear downloaded images; manual picks are kept."),
+        action("saveBackups", .storage, "Save backups", "Open the folder of verified per-game backups."),
+        action("console", .storage, "Console", "View, search and copy logs."),
 
         // Engine
-        action("engineStatus", .engine, "Engine",
-               "The pinned engine commit, the toolchain gate and your keys."),
+        action("engineFolder", .engine, "Engine repository", "The upstream checkout used for porting; updates stay manual."),
+        action("engineStatus", .engine, "Compatibility", "Engine commit, Metal compiler, toolchain gate and required flags."),
+        action("toolchainOverride", .engine, "Untested toolchain override", "Explicitly allow unverified new portings."),
+        action("upstream", .engine, "Upstream", "Check newer engine commits without installing them."),
+        action("compare", .engine, "Compare", "Open the commit comparison on GitHub."),
+        action("keys", .engine, "prod.keys", "Import, replace or detect private keys."),
+        action("setup", .startUp, "Setup", "Open the setup checklist."),
+        action("environment", .startUp, "Environment", "Re-check the environment and build requirements."),
+        action("diagnostics", .about, "Copy diagnostics", "Copy a scrubbed support report."),
+        action("appUpdates", .about, "App updates", "Check now, update or read release notes."),
+        action("projectDocs", .about, "Open project docs", "Open the project documentation."),
     ]
 
-    public static func changed(in settings: AppSettings) -> [SettingDescriptor] {
-        all.filter { $0.isChanged(settings) }
+    public static func changed(in settings: AppSettings, externalChanges: Set<String> = []) -> [SettingDescriptor] {
+        all.filter { $0.isChanged(settings) || externalChanges.contains($0.id) }
     }
 
     /// Case- and diacritic-insensitive match over title and about.

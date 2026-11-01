@@ -1,4 +1,5 @@
 import XCTest
+import Combine
 @testable import NXLibraryCore
 
 final class AppSettingsStoreTests: XCTestCase {
@@ -53,6 +54,57 @@ final class AppSettingsStoreTests: XCTestCase {
         let store = AppSettingsStore(fileURL: url)
         XCTAssertEqual(store.settings, AppSettings())
         XCTAssertNotNil(store.loadError)
+    }
+
+    func testChangingDefaultsAfterAReadFailurePreservesTheUnreadableFile() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("NXSettingsRecovery-\(UUID())")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let url = root.appendingPathComponent("settings.json")
+        let unreadable = Data("{ incomplete".utf8)
+        try unreadable.write(to: url)
+        let store = AppSettingsStore(fileURL: url)
+        store.settings.showClock = false
+        let files = try FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
+        XCTAssertTrue(files.contains { $0 != url && (try? Data(contentsOf: $0)) == unreadable })
+        XCTAssertFalse(AppSettingsStore(fileURL: url).settings.showClock)
+    }
+
+    func testUnreadableSettingsAreNotOverwrittenIfTheRecoveryCopyFails() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("NXSettingsCopyFailure-\(UUID())")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let url = root.appendingPathComponent("settings.json")
+        let unreadable = Data("{ incomplete".utf8)
+        try unreadable.write(to: url)
+        let store = AppSettingsStore(fileURL: url, fileManager: RejectSettingsCopy())
+        store.settings.showClock = false
+        XCTAssertEqual(try Data(contentsOf: url), unreadable)
+        XCTAssertNotNil(store.loadError)
+    }
+
+    func testExplicitSaveFailureIsObservableAndKeepsTheSavedValues() throws {
+        let url = tempURL()
+        defer { try? FileManager.default.removeItem(at: url) }
+        try JSONEncoder().encode(AppSettings()).write(to: url)
+        let store = AppSettingsStore(fileURL: url, fileManager: RejectSettingsWrite())
+        var notifications = 0
+        let subscription = store.objectWillChange.sink { notifications += 1 }
+        store.save()
+        XCTAssertNotNil(store.loadError)
+        XCTAssertGreaterThan(notifications, 0)
+        XCTAssertEqual(AppSettingsStore(fileURL: url).settings, AppSettings())
+        withExtendedLifetime(subscription) {}
+    }
+
+    func testPartialGameDefaultsKeepValidGlobalAndPerGameChoices() throws {
+        let data = Data(#"{"backgroundShade":"deep","gameDefaults":{"enable60FPS":false,"language":"it"}}"#.utf8)
+        let settings = try JSONDecoder().decode(AppSettings.self, from: data)
+        XCTAssertEqual(settings.backgroundShade, .deep)
+        XCTAssertFalse(settings.gameDefaults.enable60FPS)
+        XCTAssertEqual(settings.gameDefaults.language, "it")
+        XCTAssertTrue(settings.gameDefaults.rumble)
+        XCTAssertEqual(settings.gameDefaults.renderScale, 1)
     }
 
     func testOldJSONWithoutSpotlightFieldsDecodesDefaults() throws {
@@ -121,6 +173,19 @@ final class AppSettingsStoreTests: XCTestCase {
         XCTAssertEqual(BackgroundShade.light.scrimMultiplier, 0.7)
         XCTAssertEqual(BackgroundShade.balanced.scrimMultiplier, 1)
         XCTAssertEqual(BackgroundShade.deep.scrimMultiplier, 1.6)
+    }
+}
+
+private final class RejectSettingsCopy: FileManager, @unchecked Sendable {
+    override func copyItem(at srcURL: URL, to dstURL: URL) throws {
+        throw CocoaError(.fileWriteNoPermission)
+    }
+}
+
+private final class RejectSettingsWrite: FileManager, @unchecked Sendable {
+    override func createDirectory(at url: URL, withIntermediateDirectories createIntermediates: Bool,
+                                  attributes: [FileAttributeKey: Any]? = nil) throws {
+        throw CocoaError(.fileWriteNoPermission)
     }
 }
 

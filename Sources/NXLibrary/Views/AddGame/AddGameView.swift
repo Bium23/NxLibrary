@@ -317,7 +317,7 @@ public struct AddGameView: View {
                   viewModel.gameToRemove == nil,
                   viewModel.gameWithInstallFailure == nil,
                   !viewModel.isUpdateOfferOpen,
-                  viewModel.alertMessage == nil,
+                  viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
                   let window = event.window,
                   !window.isSheet,
                   window.attachedSheet == nil,

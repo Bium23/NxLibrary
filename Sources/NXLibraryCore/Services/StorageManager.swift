@@ -73,21 +73,6 @@ public final class StorageManager {
         }
     }
 
-    public func backupSave(for game: PortedGame, to destination: URL) throws {
-        guard let titleId = game.titleId else { return }
-        let source = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/nxnative")
-            .appendingPathComponent(titleId).appendingPathComponent("save")
-        guard fm.fileExists(atPath: source.path) else { return }
-        try fm.createDirectory(at: destination.deletingLastPathComponent(),
-                               withIntermediateDirectories: true)
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
-        process.arguments = ["-c", "-k", "--sequesterRsrc", source.path, destination.path]
-        try process.run()
-        process.waitUntilExit()
-        if process.terminationStatus != 0 { throw CocoaError(.fileWriteUnknown) }
-    }
 
     private func buildLogURL(for titleId: String) -> URL {
         supportRoot.appendingPathComponent("Logs").appendingPathComponent("\(titleId).log")

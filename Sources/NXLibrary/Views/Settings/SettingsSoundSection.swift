@@ -28,7 +28,8 @@ struct SettingsSoundSection: View {
             }
 
             SeleneToggleRow("Quiet launch screen",
-                            subtitle: "Keeps the launch screen silent while a game starts.",
+                            subtitle: "Game cues only",
+                            info: "Movement and selection sounds stay quiet during launch. Game starting and Game ready still play.",
                             isOn: $settings.settings.quietLaunch)
 
             SettingsSubheading("Selene")

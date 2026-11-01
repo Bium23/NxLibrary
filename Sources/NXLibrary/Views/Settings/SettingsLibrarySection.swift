@@ -13,7 +13,8 @@ struct SettingsLibrarySection: View {
     var body: some View {
         VStack(spacing: 9) {
             SeleneRow("Game ROMs folder",
-                      subtitle: "Where NX Library looks for NSP, XCI and NSZ files.") {
+                      subtitle: "Game sources",
+                      info: "Reset group keeps this folder. Clear removes the selection, keeping your files.") {
                 HStack(spacing: 10) {
                     Text(viewModel.selectedGameFolder?.path ?? "Not selected")
                         .seleneFont(15, .medium)
@@ -35,7 +36,8 @@ struct SettingsLibrarySection: View {
             }
 
             SeleneRow("App library folder",
-                      subtitle: "Where built Mac apps are installed and discovered.") {
+                      subtitle: "App discovery",
+                      info: "Adds a folder to search for built apps. New portings install in ~/Applications; rebuilds keep the existing app's location.") {
                 HStack(spacing: 10) {
                     Text(viewModel.libraryFolder?.path ?? "Default")
                         .seleneFont(15, .medium)
@@ -99,6 +101,7 @@ struct SettingsLibrarySection: View {
             artworkBytes = artwork.cacheSize()
         }
         .onAppear(perform: publishActions)
+        .onChange(of: viewModel.isScanningLibrary) { _ in publishActions() }
     }
 
     private func publishActions() {

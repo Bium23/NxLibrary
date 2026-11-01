@@ -3,9 +3,27 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
+struct SettingsNotice: Identifiable {
+    let id = UUID()
+    let title: String
+    let message: String
+    var retry: (() -> Void)?
+    var onDismiss: (() -> Void)? = nil
+}
+
 public final class AppViewModel: ObservableObject {
     let saveGate = SaveOperationGate()
     let saveQueue = DispatchQueue(label: "local.nxlibrary.saves", qos: .userInitiated)
+    @Published var settingsNotice: SettingsNotice?
+    @Published var settingsNoticeFocus = 0
+    @Published var isUpdatingApp = false
+    @Published private(set) var hasActiveSaveOperations = false
+    @Published var runningGameCount = 0
+
+    func showSettingsNotice(title: String, message: String, retry: (() -> Void)? = nil) {
+        settingsNoticeFocus = 0
+        settingsNotice = SettingsNotice(title: title, message: message, retry: retry)
+    }
 
     // MARK: - Storage Keys for Persistence
     private enum StorageKeys {
@@ -43,7 +61,7 @@ public final class AppViewModel: ObservableObject {
         didSet {
             if let folder = selectedGameFolder {
                 UserDefaults.standard.set(folder.path, forKey: StorageKeys.savedGameFolder)
-                scanGameFolder(folder)
+                if !restoringGameFolder { scanGameFolder(folder) }
             } else {
                 if !keepsRememberedGameFolder {
                     UserDefaults.standard.removeObject(forKey: StorageKeys.savedGameFolder)
@@ -58,6 +76,7 @@ public final class AppViewModel: ObservableObject {
         }
     }
     private var keepsRememberedGameFolder = false
+    private var restoringGameFolder = false
     @Published public var detectedGames: [SelectableGame] = []
     @Published public var selectedGame: SelectableGame? = nil {
         didSet {
@@ -354,11 +373,20 @@ public final class AppViewModel: ObservableObject {
     private var scanGeneration = UUID()
     private var buildService: BuildService?
     private var buildPreviousStatus: GameStatus?
-    private var activeBuildToolchainVerified = false
+    private var activeBuildToolchain: ToolchainInfo?
+    private var environmentCheckGeneration = UUID()
     private var buildStartedAt: Date?
     private var buildTempDirectory: URL?
     
-    public init() {
+    public init(settingsStore: AppSettingsStore = AppSettingsStore()) {
+        self.settingsStore = settingsStore
+        saveGate.onActivityChange = { [weak self] in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.hasActiveSaveOperations = self.saveGate.hasActiveOperations
+            }
+        }
+        let startup = settingsStore.settings
         let didCompleteSetup = UserDefaults.standard.bool(forKey: StorageKeys.setupCompleted)
         self.setupCompleted = didCompleteSetup
         self.showSetupCheck = !didCompleteSetup
@@ -387,17 +415,21 @@ public final class AppViewModel: ObservableObject {
             self.allowUntestedToolchain = UserDefaults.standard.bool(forKey: StorageKeys.allowUntestedToolchain)
         }
         
-        detectEnvironment()
+        restoreBuildInputs()
+        if startup.checkEngineAtLaunch || !didCompleteSetup { refreshCompatibility() }
         
         // Restore saved game folder if it exists
         if let savedGamePath = UserDefaults.standard.string(forKey: StorageKeys.savedGameFolder) {
             var isDir: ObjCBool = false
             if FileManager.default.fileExists(atPath: savedGamePath, isDirectory: &isDir), isDir.boolValue {
+                restoringGameFolder = !startup.refreshLibraryAtLaunch
                 self.selectedGameFolder = URL(fileURLWithPath: savedGamePath)
+                restoringGameFolder = false
             }
         }
         
-        loadLibrary()
+        restoreLibraryFromDisk()
+        if startup.refreshLibraryAtLaunch { loadLibrary() }
         if let data = UserDefaults.standard.data(forKey: upstreamCacheKey),
            let cached = try? JSONDecoder().decode(UpstreamStatus.self, from: data),
            cached.baseCommit == pinnedEngineCommit {
@@ -452,13 +484,25 @@ public final class AppViewModel: ObservableObject {
     
     // MARK: - Environment Detection
     public func detectEnvironment(customRyujinxDir: String? = nil) {
+        guard !isBuilding, !isUpdatingApp else { return }
+        restoreBuildInputs(customRyujinxDir: customRyujinxDir)
+        refreshCompatibility()
+    }
+
+    private func restoreBuildInputs(customRyujinxDir: String? = nil) {
         let nxResult = SystemDetector.shared.detectNxnativeDirectory(
             saved: UserDefaults.standard.string(forKey: StorageKeys.savedEngineFolder))
         self.nxnativePath = nxResult.path
         self.isNxnativeValid = nxResult.isValid
         ensureKeysImported(customRyujinxDir: customRyujinxDir)
-        refreshCompatibility()
     }
+
+    /// With launch checks off, inspecting a build screen performs the check on demand.
+    public func prepareBuildEnvironmentIfNeeded() {
+        if environmentStatus == nil, !isCheckingEnvironment { detectEnvironment() }
+    }
+
+    @Published public private(set) var isCheckingEnvironment = false
 
     private func ensureKeysImported(customRyujinxDir: String? = nil) {
         let fm = FileManager.default
@@ -494,6 +538,10 @@ public final class AppViewModel: ObservableObject {
     }
 
     public func importKeys(from url: URL) {
+        guard !isBuilding, !isUpdatingApp else {
+            showSettingsNotice(title: "Porting in progress", message: "Change keys after the porting finishes.")
+            return
+        }
         do {
             let summary = try keyStore.importKey(from: url)
             keySummary = summary
@@ -507,20 +555,31 @@ public final class AppViewModel: ObservableObject {
                 message: "prod.keys imported: header key present, \(summary.applicationKeyGenerations.count) application key generations."
             ))
         } catch {
-            keySummary = nil
-            isProdKeysValid = false
+            keySummary = try? keyStore.validate(at: keyStore.keyURL)
+            isProdKeysValid = keySummary?.hasHeaderKey == true
+            prodKeysPath = isProdKeysValid ? keyStore.keyURL.path : ""
             lastError = error.localizedDescription
+            showSettingsNotice(title: "Keys not changed", message: isProdKeysValid
+                ? "The key file could not be imported. Your previous copy is kept."
+                : "The key file could not be imported. Choose a valid prod.keys file.")
             logs.append(LogEntry(level: .error,
                                  message: "Could not import prod.keys: \(error.localizedDescription)"))
         }
     }
 
     public func refreshCompatibility() {
+        guard !isBuilding, !isUpdatingApp else { return }
+        let generation = UUID()
+        environmentCheckGeneration = generation
         guard isNxnativeValid, !nxnativePath.isEmpty else {
             compatibilityReport = nil
             environmentStatus = nil
+            isCheckingEnvironment = false
             return
         }
+        isCheckingEnvironment = true
+        environmentStatus = nil
+        compatibilityReport = nil
         let repo = URL(fileURLWithPath: nxnativePath)
         let toolchain = engineToolchain
         let developerDir = resolvedDeveloperDir()
@@ -537,13 +596,16 @@ public final class AppViewModel: ObservableObject {
                 .replacingOccurrences(of: "current ", with: "")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             DispatchQueue.main.async {
-                self?.environmentStatus = status
-                self?.compatibilityReport = report
-                self?.currentEngineCommit = (currentCommit?.isEmpty == false) ? currentCommit : nil
+                guard let self, self.environmentCheckGeneration == generation,
+                      self.nxnativePath == repo.path else { return }
+                self.isCheckingEnvironment = false
+                self.environmentStatus = status
+                self.compatibilityReport = report
+                self.currentEngineCommit = (currentCommit?.isEmpty == false) ? currentCommit : nil
                 if let report, !report.ok {
                     let blocked = report.checks.filter { $0.status == .block }
                         .map { "\($0.title): \($0.detail)" }.joined(separator: " | ")
-                    self?.logs.append(LogEntry(level: .warning, message: "Toolchain gate: \(blocked)"))
+                    self.logs.append(LogEntry(level: .warning, message: "Toolchain gate: \(blocked)"))
                 }
             }
         }
@@ -731,6 +793,7 @@ public final class AppViewModel: ObservableObject {
     }
 
     public func reopenSetup() {
+        guard !isBuilding, !isUpdatingApp else { return }
         showSetupCheck = true
     }
 
@@ -803,30 +866,6 @@ public final class AppViewModel: ObservableObject {
         refreshStorageUsage()
     }
 
-    public func backupSave(for game: PortedGame) {
-        let profile = GameDetailsProfile.inspect(for: game)
-        guard profile.saveExists else {
-            lastError = "No save folder exists for \(game.name)."
-            logs.append(LogEntry(level: .warning, message: lastError!))
-            return
-        }
-        let panel = NSSavePanel()
-        panel.canCreateDirectories = true
-        panel.nameFieldStringValue = "\(game.name) save.zip"
-        panel.title = "Back Up Save"
-        panel.prompt = "Back Up"
-        if panel.runModal() == .OK, let destination = panel.url {
-            do {
-                try storageManager.backupSave(for: game, to: destination)
-                logs.append(LogEntry(level: .success,
-                                     message: "Save backed up to \(destination.path)"))
-            } catch {
-                lastError = error.localizedDescription
-                logs.append(LogEntry(level: .error,
-                                     message: "Save backup failed: \(error.localizedDescription)"))
-            }
-        }
-    }
     
     // MARK: - Drag and Drop & ZIP
     public func handleDroppedURLs(_ urls: [URL]) {
@@ -847,6 +886,18 @@ public final class AppViewModel: ObservableObject {
     // MARK: - Library
     public func refreshLibrary() {
         loadLibrary()
+    }
+
+    private func restoreLibraryFromDisk() {
+        do {
+            libraryGames = try libraryStore.load().games.sorted {
+                $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+            }
+            recoverSavesAtStartup()
+        } catch {
+            lastError = error.localizedDescription
+            logs.append(LogEntry(level: .error, message: "Could not read the library: \(error.localizedDescription)"))
+        }
     }
 
     public func loadLibrary() {
@@ -1066,8 +1117,9 @@ public final class AppViewModel: ObservableObject {
             do {
                 try cloudSavesPreferences.applyBeforeLaunch(choice, domain: domain)
             } catch {
-                // The game still starts; it keeps its save where it was.
                 logs.append(LogEntry(level: .warning, message: "Cloud saves: \(error.localizedDescription)"))
+                showSettingsNotice(title: "Cloud unavailable",
+                                   message: "Cloud sync could not be updated for this launch. Check Games → Cloud saves.")
             }
         }
 
@@ -1149,7 +1201,10 @@ public final class AppViewModel: ObservableObject {
         do {
             try cloudSavesPreferences.apply(choice, to: libraryGames.compactMap(\.effectiveBundleId))
         } catch {
-            alertMessage = error.localizedDescription
+            let message = (error as? CloudSavesPreferences.Failure) == .iCloudDriveOff
+                ? "Turn on iCloud Drive or choose a sync folder."
+                : "The sync folder is unavailable. Choose another folder."
+            showSettingsNotice(title: "Cloud unavailable", message: message)
             SoundEffectService.shared.play(.error)
             logs.append(LogEntry(level: .error, message: error.localizedDescription))
             return
@@ -1276,9 +1331,18 @@ public final class AppViewModel: ObservableObject {
         LauncherSettingsReader.load(for: game.url)
     }
 
-    public func saveRuntimeConfig(_ config: GameRuntimeConfig, for game: PortedGame) {
-        config.save(for: game)
-        logs.append(LogEntry(level: .success, message: "Saved settings for \(game.name)"))
+    @discardableResult public func saveRuntimeConfig(_ config: GameRuntimeConfig, for game: PortedGame) -> Bool {
+        do {
+            try config.save(for: game)
+            logs.append(LogEntry(level: .success, message: "Saved settings for \(game.name)"))
+            return true
+        } catch {
+            logs.append(LogEntry(level: .error, message: "Could not save settings for \(game.name): \(error.localizedDescription)"))
+            showSettingsNotice(title: "Options not saved", message: "Your game options could not be saved. Try again.") { [weak self] in
+                self?.saveRuntimeConfig(config, for: game)
+            }
+            return false
+        }
     }
 
     public func revealInFinder(url: URL) {
@@ -1576,6 +1640,7 @@ public final class AppViewModel: ObservableObject {
     
     // MARK: - File Pickers
     public func selectNxnativeFolder() {
+        guard !isBuilding, !isUpdatingApp else { return }
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
@@ -1615,6 +1680,7 @@ public final class AppViewModel: ObservableObject {
     }
     
     public func selectProdKeysFile() {
+        guard !isBuilding, !isUpdatingApp else { return }
         let panel = NSOpenPanel()
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
@@ -1629,6 +1695,7 @@ public final class AppViewModel: ObservableObject {
     }
     
     public func selectRyujinxFolder() {
+        guard !isBuilding, !isUpdatingApp else { return }
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
@@ -1644,6 +1711,7 @@ public final class AppViewModel: ObservableObject {
     // MARK: - Build Actions
     public var canStartBuild: Bool {
         !isBuilding
+            && !isUpdatingApp
             && canAddSelectedGame
             && isProdKeysValid
             && !keyCheckBlocks
@@ -1655,6 +1723,7 @@ public final class AppViewModel: ObservableObject {
 
     public func canBuild(_ game: PortedGame) -> Bool {
         guard !isBuilding,
+              !isUpdatingApp,
               isProdKeysValid,
               isNxnativeValid,
               environmentStatus?.canBuild == true,
@@ -1727,6 +1796,7 @@ public final class AppViewModel: ObservableObject {
     /// resumes on the live step; returning with Back keeps the draft; any other
     /// entry starts clean so an old success or failure screen never comes back.
     public func addGameDidBecomeVisible(defaults: GameRuntimeConfig, returningFromBack: Bool) {
+        prepareBuildEnvironmentIfNeeded()
         if isBuilding {
             buildWizardStep = 3
             addGameSessionActive = true
@@ -1831,7 +1901,7 @@ public final class AppViewModel: ObservableObject {
             )
             // Existing titles start Review with their saved settings. The
             // values the user confirms are the values used at the next launch.
-            pendingRuntimeConfig.save(for: game)
+            try pendingRuntimeConfig.save(for: game)
             librarySelection.selectedGameID = game.id
             logs.append(LogEntry(level: .success, message: "Added \(game.name) to the library."))
             if buildNow, canStartBuild {
@@ -1901,6 +1971,7 @@ public final class AppViewModel: ObservableObject {
 
     private func beginBuild(for game: PortedGame, extraArguments: [String] = []) throws {
         guard !isBuilding else { throw NXLibraryError.buildAlreadyRunning }
+        guard !isUpdatingApp else { throw NXLibraryError.environmentBlocked("wait for the app update to finish") }
         var target = libraryGames.first(where: { $0.id == game.id }) ?? game
         guard let titleId = target.titleId,
               UInt64(titleId, radix: 16) != nil else {
@@ -1944,7 +2015,12 @@ public final class AppViewModel: ObservableObject {
                 ?? "the compatibility check is unavailable"
             throw NXLibraryError.incompatibleToolchain(reason)
         }
-        activeBuildToolchainVerified = report?.ok == true
+        environmentCheckGeneration = UUID()
+        isCheckingEnvironment = false
+        activeBuildToolchain = ToolchainInfo(engineCommit: pinnedEngineCommit,
+            metalVersion: environmentStatus.metalVersion, xcodeVersion: environmentStatus.xcodeVersion,
+            verified: report?.ok == true,
+            note: report?.ok == true ? "Certified toolchain" : "Untested toolchain (explicit override)")
 
         let merged = try libraryStore.merge(scanned: [target])
         libraryGames = merged.games.sorted {
@@ -2211,7 +2287,8 @@ public final class AppViewModel: ObservableObject {
         var library = (try? libraryStore.load()) ?? LibraryFile(games: libraryGames)
         if let index = library.games.firstIndex(where: { $0.id == gameID }) {
             var game = library.games[index]
-            let verified = activeBuildToolchainVerified
+            let toolchain = activeBuildToolchain ?? ToolchainInfo(engineCommit: pinnedEngineCommit, verified: false)
+            let verified = toolchain.verified
             let record = BuildRecord(
                 startedAt: buildStartedAt ?? Date(),
                 endedAt: Date(),
@@ -2219,21 +2296,13 @@ public final class AppViewModel: ObservableObject {
                 logPath: result.logURL.path,
                 outputPath: result.success || result.installationFailed ? finalApp.path : nil,
                 engineCommit: pinnedEngineCommit,
-                metalVersion: environmentStatus?.metalVersion,
-                xcodeVersion: environmentStatus?.xcodeVersion,
+                metalVersion: toolchain.metalVersion,
+                xcodeVersion: toolchain.xcodeVersion,
                 toolchainVerified: verified,
                 cancelled: result.cancelled
             )
 
             if result.success || result.installationFailed {
-                let toolchain = ToolchainInfo(
-                    engineCommit: pinnedEngineCommit,
-                    metalVersion: environmentStatus?.metalVersion,
-                    xcodeVersion: environmentStatus?.xcodeVersion,
-                    verified: verified,
-                    note: verified ? "Certified toolchain"
-                                   : "Untested toolchain (explicit override)"
-                )
                 if let held = result.heldApp {
                     PendingInstaller.hold(PendingInstall(tempApp: held, finalApp: finalApp,
                                                          record: record, toolchain: toolchain), for: &game)
@@ -2326,7 +2395,7 @@ public final class AppViewModel: ObservableObject {
         buildStartedAt = nil
         buildPreviousStatus = nil
         currentBuildGameID = nil
-        activeBuildToolchainVerified = false
+        activeBuildToolchain = nil
     }
 
     public func logURL(for game: PortedGame) -> URL? {

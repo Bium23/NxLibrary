@@ -182,7 +182,7 @@ struct FindGameView: View {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             guard router.isSearchPresented, !router.isMenuPresented,
-                  viewModel.alertMessage == nil else { return event }
+                  viewModel.alertMessage == nil, viewModel.settingsNotice == nil else { return event }
             let typing = fieldFocused
             switch event.keyCode {
             case 53:                                   // Esc

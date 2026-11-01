@@ -73,7 +73,7 @@ public struct CollectionView: View {
         .onChange(of: filter) { _ in reconcile() }
         .onChange(of: viewModel.librarySelection.selectedGameID) { _ in selectionChanged() }
         .onReceive(NotificationCenter.default.publisher(for: .nxCollectionGamepadAction)) { note in
-            guard viewModel.alertMessage == nil else { return }
+            guard viewModel.alertMessage == nil, viewModel.settingsNotice == nil else { return }
             if let action = note.object as? GamepadAction { handle(action) }
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxFindGameSelect)) { note in

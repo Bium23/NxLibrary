@@ -27,6 +27,8 @@ final class AppUpdater: ObservableObject {
     @Published var offerFocus: SeleneConfirmButton = .confirm
     /// Why an update must wait ("After the porting"); nil when it may run. Set by the shell.
     var blockedReason: () -> String? = { nil }
+    /// Held across replacement and relaunch so new save operations cannot enter between the checks.
+    var acquireInstallLease: () -> (() -> Void)? = { nil }
 
     private let repository: String?
     private let runningVersion: String
@@ -176,11 +178,15 @@ final class AppUpdater: ObservableObject {
             return fail("The download is not a valid NX Library \(release.version); nothing was changed.")
         }
         if let reason = blockedReason() { return fail("\(reason); nothing was changed.") }
+        guard let releaseLease = acquireInstallLease() else {
+            return fail("An operation is still running. Try the update again when it finishes.")
+        }
         state = .installing
         let current = Bundle.main.bundleURL
         Task.detached(priority: .userInitiated) {
             let result = Result { try AppUpdate.install(staged, over: current) }
             await MainActor.run {
+                defer { releaseLease() }
                 try? FileManager.default.removeItem(at: folder)
                 switch result {
                 case .success(let placed):

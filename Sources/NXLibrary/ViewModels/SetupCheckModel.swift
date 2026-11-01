@@ -124,10 +124,13 @@ final class SetupCheckModel: ObservableObject {
     /// broke or fell out of step with the engine; opening it starts the fix.
     static func checkAtLaunch(viewModel: AppViewModel) {
         guard viewModel.setupCompleted else { return }
+        let enginePath = viewModel.nxnativePath
         let probe = makeProbe(viewModel, runner: SystemCommandRunner())
         DispatchQueue.global(qos: .utility).async {
             let current = SetupCheck.items(from: probe.facts())
             DispatchQueue.main.async {
+                guard !viewModel.isBuilding, !viewModel.isUpdatingApp,
+                      viewModel.nxnativePath == enginePath else { return }
                 let stored = UserDefaults.standard.dictionary(forKey: lastStatesKey) as? [String: String] ?? [:]
                 var previous: [SetupItemID: SetupState] = [:]
                 for (key, value) in stored {

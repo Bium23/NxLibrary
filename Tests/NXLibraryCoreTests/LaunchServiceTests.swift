@@ -55,6 +55,20 @@ final class LaunchServiceTests: XCTestCase {
         XCTAssertEqual(launchError, "sample launch error")
     }
 
+    func testUnreadableEnvironmentIsKeptInsteadOfReplacingUnknownOptions() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("NXLaunchUnreadable-\(UUID())")
+        let title = "0100000000000001"
+        let folder = root.appendingPathComponent(title)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let env = folder.appendingPathComponent("env.txt")
+        let invalid = Data([0xff, 0xfe, 0xff])
+        try invalid.write(to: env)
+        let service = LaunchService(launcher: FakeLauncher())
+        XCTAssertThrowsError(try service.writeEnvironment(settings: GameRuntimeConfig(), titleId: title, baseDirectory: root))
+        XCTAssertEqual(try Data(contentsOf: env), invalid)
+    }
+
     /// NX Library's Game options are the game's settings window: a game it starts skips the engine's own
     /// (dm/mac/launcher.c, DM_LAUNCHER=0), which would ask again and, on Quit, leave a process macOS never reports ended.
     func testLaunchSkipsTheEnginesSettingsWindow() {

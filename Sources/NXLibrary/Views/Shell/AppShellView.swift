@@ -4,9 +4,9 @@ import Combine
 import NXLibraryCore
 
 public struct AppShellView: View {
-    @StateObject private var viewModel = AppViewModel()
-    @StateObject private var router = AppShellView.startingRouter()
-    @StateObject private var settings = AppSettingsStore()
+    @StateObject private var viewModel: AppViewModel
+    @StateObject private var router: AppRouter
+    @StateObject private var settings: AppSettingsStore
     @StateObject private var playSessions = PlaySessionStore()
     @StateObject private var artwork = ArtworkStore()
     @StateObject private var runningGames = RunningGameMonitor()
@@ -18,11 +18,15 @@ public struct AppShellView: View {
 
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
 
-    public init() {}
+    public init() {
+        let store = AppSettingsStore()
+        _settings = StateObject(wrappedValue: store)
+        _viewModel = StateObject(wrappedValue: AppViewModel(settingsStore: store))
+        _router = StateObject(wrappedValue: Self.startingRouter(saved: store.settings))
+    }
 
     /// The router, already on the screen the Start on setting names.
-    private static func startingRouter() -> AppRouter {
-        let saved = AppSettingsStore().settings
+    private static func startingRouter(saved: AppSettings) -> AppRouter {
         // The palette is in place before the first frame.
         ThemeStore.shared.apply(id: saved.colorThemeID)
         let router = AppRouter()
@@ -45,7 +49,7 @@ public struct AppShellView: View {
 
     /// The Close Game confirmation is open; menu commands and the dialog's input wait for it.
     private var isCloseGameOpen: Bool {
-        viewModel.gameToClose != nil || viewModel.gameToRemove != nil || showsUpdateOffer || showsInstallFailure
+        viewModel.gameToClose != nil || viewModel.gameToRemove != nil || showsUpdateOffer || showsInstallFailure || showsSettingsNotice
     }
     private var showsInstallFailure: Bool {
         viewModel.gameWithInstallFailure != nil && !router.isIntroShowing && !viewModel.showSetupCheck
@@ -54,6 +58,12 @@ public struct AppShellView: View {
     /// The update dialog waits for the intro and the Setup check.
     private var showsUpdateOffer: Bool {
         updater.offer != nil && !router.isIntroShowing && !viewModel.showSetupCheck && !showsInstallFailure
+    }
+    private var showsSettingsNotice: Bool {
+        viewModel.settingsNotice != nil && !router.isIntroShowing && !viewModel.showSetupCheck
+            && !router.isScreenshotViewerOpen && viewModel.launchOverlay == nil
+            && viewModel.gameToClose == nil && viewModel.gameToRemove == nil
+            && !showsInstallFailure && !showsUpdateOffer
     }
 
     private var reduceMotion: Bool {
@@ -129,6 +139,11 @@ public struct AppShellView: View {
                     .transition(.opacity)
                     .zIndex(3)
             }
+            if showsSettingsNotice, let notice = viewModel.settingsNotice {
+                settingsNoticeOverlay(notice)
+                    .transition(.opacity)
+                    .zIndex(4)
+            }
             if router.isMenuPresented {
                 if router.isThemePickerOpen {
                     ThemePickerView(router: router, settings: settings, games: viewModel.libraryGames)
@@ -187,6 +202,7 @@ public struct AppShellView: View {
                    value: viewModel.gameToRemove?.id)
         .animation(reduceMotion ? nil : SeleneTheme.quick,
                    value: viewModel.gameWithInstallFailure?.id)
+        .animation(reduceMotion ? nil : SeleneTheme.quick, value: viewModel.settingsNotice?.id)
         .environment(\.seleneReduceMotion, reduceMotion)
         .environment(\.seleneBackdropStyle, backdropStyle)
         .environment(\.seleneShowButtonHints, settings.settings.showButtonHints)
@@ -195,6 +211,16 @@ public struct AppShellView: View {
         .preferredColorScheme(.dark)
         .frame(minWidth: 1100, minHeight: 700)
         .onAppear(perform: startRuntime)
+        .onReceive(settings.$loadError) { error in
+            guard error != nil else { return }
+            let writing = settings.errorKind == .writing
+            viewModel.showSettingsNotice(
+                title: writing ? "Settings not saved" : "Settings unavailable",
+                message: writing ? "Your changes could not be saved. Try again."
+                    : "Defaults are in use. Your previous settings file has been kept.",
+                retry: writing ? { _ = settings.save() } : nil)
+            viewModel.settingsNotice?.onDismiss = { settings.dismissError() }
+        }
         .onDisappear {
             runningGames.stop()
             removeGestureKeyMonitor()
@@ -238,7 +264,7 @@ public struct AppShellView: View {
             router.showDetail(game.id)
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenGameOptions)) { _ in
-            guard !router.isMenuPresented else { return }
+            guard !router.isMenuPresented, !isCloseGameOpen else { return }
             switch router.route {
             case .library:
                 if let game = viewModel.currentFocusedGame {
@@ -257,25 +283,25 @@ public struct AppShellView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryCheckUpstream)) { _ in
-            guard !router.isMenuPresented, !router.isScreenshotViewerOpen else { return }
+            guard !router.isMenuPresented, !router.isScreenshotViewerOpen, !isCloseGameOpen else { return }
             viewModel.checkUpstreamChangelog()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenMenu)) { _ in
-            guard viewModel.gameForSettingsSheet == nil, !router.isScreenshotViewerOpen else { return }
+            guard !isCloseGameOpen, viewModel.gameForSettingsSheet == nil, !router.isScreenshotViewerOpen else { return }
             router.isMenuPresented = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenSettings)) { _ in
-            guard !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
+            guard !isCloseGameOpen, !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
             router.closeMenu()
             router.openSettings(.startUp)
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenConsole)) { _ in
-            guard !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
+            guard !isCloseGameOpen, !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
             router.closeMenu()
             router.openConsole()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryPortingNoticeOpened)) { note in
-            guard !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil,
+            guard !isCloseGameOpen, !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil,
                   let id = (note.userInfo?["gameID"] as? String).flatMap(UUID.init(uuidString:)) else { return }
             router.closeMenu()
             if note.userInfo?["outcome"] as? String == "failed" {
@@ -292,12 +318,12 @@ public struct AppShellView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenLibrary)) { _ in
-            guard !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
+            guard !isCloseGameOpen, !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
             router.closeMenu()
             router.showLibrary()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenAddGame)) { _ in
-            guard !router.isMenuPresented, !router.isScreenshotViewerOpen,
+            guard !isCloseGameOpen, !router.isMenuPresented, !router.isScreenshotViewerOpen,
                   viewModel.gameForSettingsSheet == nil else { return }
             router.closeMenu()
             openFreshAddGame()
@@ -305,6 +331,8 @@ public struct AppShellView: View {
         .onExitCommand {
             if router.isScreenshotViewerOpen {
                 // The viewer's key monitor closes it.
+            } else if showsSettingsNotice {
+                finishSettingsNotice(choice: 0)
             } else if showsInstallFailure {
                 viewModel.gameWithInstallFailure = nil
             } else if viewModel.gameToClose != nil {
@@ -399,12 +427,13 @@ public struct AppShellView: View {
         SoundEffectService.shared.bind(to: settings)
         artwork.trimCache()
         viewModel.refreshBoxArtIndex()
-        SetupCheckModel.checkAtLaunch(viewModel: viewModel)
+        if settings.settings.checkEngineAtLaunch { SetupCheckModel.checkAtLaunch(viewModel: viewModel) }
         runningGames.start(sessions: playSessions)
         runningGames.setGames(viewModel.libraryGames)
         viewModel.installPendingBuilds()
         closeGameWatch = runningGames.$runningGameIDs.sink { [weak viewModel] ids in
             guard let viewModel else { return }
+            viewModel.runningGameCount = ids.count
             // A game that quit lets the build that waited for it go in (after this change is published).
             DispatchQueue.main.async { viewModel.installPendingBuilds() }
             // The game under Close Game quit by itself: its confirmation has nothing left to close.
@@ -415,11 +444,24 @@ public struct AppShellView: View {
         updater.blockedReason = { [weak viewModel, weak runningGames] in
             guard let viewModel else { return nil }
             if viewModel.isBuilding { return "After the porting" }
+            if viewModel.launchingGameId != nil { return "After the game starts" }
+            if viewModel.saveGate.hasActiveOperations { return "After the save operation" }
             if let ids = runningGames?.runningGameIDs, let id = ids.first {
                 let name = viewModel.libraryGames.first { $0.id == id }?.name ?? "the game"
                 return "After you quit \(name)"
             }
             return nil
+        }
+        updater.acquireInstallLease = { [weak viewModel, weak runningGames] in
+            guard let viewModel, !viewModel.isBuilding, viewModel.launchingGameId == nil,
+                  runningGames?.runningGameIDs.isEmpty == true,
+                  let token = viewModel.saveGate.beginAppUpdate() else { return nil }
+            let gate = viewModel.saveGate
+            viewModel.isUpdatingApp = true
+            return { [weak viewModel] in
+                gate.endAppUpdate(token: token)
+                viewModel?.isUpdatingApp = false
+            }
         }
         updater.checkAtLaunch(enabled: settings.settings.checkAppUpdatesAtLaunch)
         installGestureKeyMonitor()
@@ -433,6 +475,10 @@ public struct AppShellView: View {
             if viewModel.showSetupCheck {
                 // The Setup check owns the controller; Menu does nothing there (as in Selene).
                 NotificationCenter.default.post(name: .nxSetupCheckGamepadAction, object: action)
+                return
+            }
+            if showsSettingsNotice {
+                settingsNoticeInput(action)
                 return
             }
             if showsInstallFailure {
@@ -505,6 +551,34 @@ public struct AppShellView: View {
     }
 
     // MARK: - Retry a ready build
+
+    private func settingsNoticeOverlay(_ notice: SettingsNotice) -> some View {
+        ZStack {
+            SeleneTheme.scrim45.ignoresSafeArea().contentShape(Rectangle())
+                .onTapGesture { finishSettingsNotice(choice: 0) }
+            SeleneChoiceDialog(title: notice.title, message: notice.message,
+                               choices: notice.retry == nil ? ["Back"] : ["Back", "Retry"],
+                               focus: $viewModel.settingsNoticeFocus,
+                               onChoose: { finishSettingsNotice(choice: $0) })
+        }
+    }
+
+    private func finishSettingsNotice(choice: Int) {
+        let notice = viewModel.settingsNotice
+        viewModel.settingsNotice = nil
+        notice?.onDismiss?()
+        if choice == 1 { notice?.retry?() }
+    }
+
+    private func settingsNoticeInput(_ action: GamepadAction) {
+        switch action {
+        case .navigateLeft: viewModel.settingsNoticeFocus = 0
+        case .navigateRight: viewModel.settingsNoticeFocus = viewModel.settingsNotice?.retry == nil ? 0 : 1
+        case .confirm: finishSettingsNotice(choice: viewModel.settingsNoticeFocus)
+        case .cancel: finishSettingsNotice(choice: 0)
+        default: break
+        }
+    }
 
     private func installFailureOverlay(_ game: PortedGame) -> some View {
         let app = game.pendingInstall?.finalApp ?? game.url
@@ -709,7 +783,7 @@ public struct AppShellView: View {
                 return nil
             }
             // The Close Game and Delete confirmations take the keyboard: arrows, Return, Space and Esc go to them.
-            if viewModel.gameToClose != nil || viewModel.gameToRemove != nil || showsUpdateOffer || showsInstallFailure, mods.isEmpty {
+            if viewModel.gameToClose != nil || viewModel.gameToRemove != nil || showsUpdateOffer || showsInstallFailure || showsSettingsNotice, mods.isEmpty {
                 let closeAction: GamepadAction?
                 switch event.keyCode {
                 case 123: closeAction = .navigateLeft

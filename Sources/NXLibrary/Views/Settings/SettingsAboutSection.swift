@@ -5,6 +5,8 @@ import NXLibraryCore
 struct SettingsAboutSection: View {
     @ObservedObject var viewModel: AppViewModel
     @EnvironmentObject private var updater: AppUpdater
+    @Environment(\.seleneFocusedRowTitle) private var focusedRowTitle
+    let onActions: ([SettingsRowAction]) -> Void
 
     @State private var didCopyDiagnostics = false
 
@@ -35,9 +37,7 @@ struct SettingsAboutSection: View {
                     .foregroundColor(SeleneTheme.ink60)
                 updateRow
                 Button {
-                    viewModel.copyDiagnostics()
-                    didCopyDiagnostics = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) { didCopyDiagnostics = false }
+                    copyDiagnostics()
                 } label: {
                     HStack(spacing: 4) {
                         Text(didCopyDiagnostics ? "Copied" : "Copy diagnostics")
@@ -47,6 +47,9 @@ struct SettingsAboutSection: View {
                     .foregroundColor(SeleneTheme.glyph)
                 }
                 .buttonStyle(.plain)
+                .padding(6)
+                .seleneRowFocus(focusedRowTitle == "Copy diagnostics")
+                .id("selene-row-Copy diagnostics")
                 .accessibilityHint("A report for an issue: versions, setup and the last porting. No keys.")
             }
 
@@ -76,6 +79,8 @@ struct SettingsAboutSection: View {
                             .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                         }
                         .buttonStyle(.plain)
+                        .seleneRowFocus(focusedRowTitle == credit.name, radius: 7)
+                        .id("selene-row-\(credit.name)")
                         .accessibilityLabel("\(credit.name), \(credit.role)")
                     }
                 }
@@ -98,6 +103,9 @@ struct SettingsAboutSection: View {
                     .foregroundColor(SeleneTheme.glyph)
                 }
                 .buttonStyle(.plain)
+                .padding(6)
+                .seleneRowFocus(focusedRowTitle == "Selene")
+                .id("selene-row-Selene")
                 Text("Selene is a Playnite theme for Windows. No Selene name, logo, wallpaper, avatar or sound is used as NX Library branding; this is a visual adaptation in SwiftUI.")
                     .seleneFont(13)
                     .foregroundColor(SeleneTheme.ink60)
@@ -131,12 +139,45 @@ struct SettingsAboutSection: View {
                     .foregroundColor(SeleneTheme.glyph)
                 }
                 .buttonStyle(.plain)
+                .padding(6)
+                .seleneRowFocus(focusedRowTitle == "Open project docs")
+                .id("selene-row-Open project docs")
 
                 Text("This app is not affiliated with Nintendo.")
                     .seleneFont(13, .semibold)
                     .foregroundColor(SeleneTheme.ink60)
             }
         }
+        .onAppear(perform: publishActions)
+        .onChange(of: updater.state) { _ in publishActions() }
+        .onChange(of: viewModel.isBuilding) { _ in publishActions() }
+        .onChange(of: viewModel.hasActiveSaveOperations) { _ in publishActions() }
+        .onChange(of: viewModel.isUpdatingApp) { _ in publishActions() }
+        .onChange(of: viewModel.runningGameCount) { _ in publishActions() }
+    }
+
+    private func copyDiagnostics() {
+        viewModel.copyDiagnostics()
+        didCopyDiagnostics = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) { didCopyDiagnostics = false }
+    }
+
+    private func publishActions() {
+        var actions = updateActions.map { action in
+            SettingsRowAction(id: "update-\(action.title)", title: action.title,
+                              isEnabled: action.enabled, activate: action.perform)
+        }
+        actions.append(.init(id: "diagnostics", title: "Copy diagnostics", activate: copyDiagnostics))
+        actions += credits.map { credit in
+            SettingsRowAction(id: "credit-\(credit.name)", title: credit.name) {
+                if let url = URL(string: credit.url) { NSWorkspace.shared.open(url) }
+            }
+        }
+        actions.append(.init(id: "selene", title: "Selene") {
+            NSWorkspace.shared.open(URL(string: "https://github.com/mattxslv/Selene")!)
+        })
+        actions.append(.init(id: "docs", title: "Open project docs", activate: openProjectDocs))
+        onActions(actions)
     }
 
     // MARK: - Updates
@@ -161,6 +202,9 @@ struct SettingsAboutSection: View {
                         .seleneFont(14, .semibold)
                         .foregroundColor(action.enabled ? SeleneTheme.glyph : SeleneTheme.ink60)
                         .disabled(!action.enabled)
+                        .padding(6)
+                        .seleneRowFocus(focusedRowTitle == action.title)
+                        .id("selene-row-\(action.title)")
                 }
             }
         }
@@ -223,7 +267,7 @@ struct SettingsAboutSection: View {
         if FileManager.default.fileExists(atPath: docs.path) {
             NSWorkspace.shared.open(docs)
         } else {
-            NSWorkspace.shared.open(FileManager.default.homeDirectoryForCurrentUser)
+            viewModel.showSettingsNotice(title: "Docs unavailable", message: "Project documentation is not installed on this Mac.")
         }
     }
 }

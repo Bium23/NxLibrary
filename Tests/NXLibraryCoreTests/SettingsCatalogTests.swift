@@ -43,10 +43,36 @@ final class SettingsCatalogTests: XCTestCase {
         XCTAssertEqual(SettingsCatalog.search("   ").count, 0)
     }
 
-    func testEveryGroupExceptSearchChangedAboutHasRows() {
+    func testVisibleControlNamesCanBeFoundInTheirOwnGroups() {
+        let controls: [(String, SettingsSection)] = [
+            ("60 FPS", .games), ("Fullscreen", .games), ("Metal HUD", .games),
+            ("Render scale", .games), ("App icon", .look),
+            ("Stick navigation deadzone", .controllers), ("Cloud saves folder", .games),
+            ("Engine repository", .engine), ("Game ROMs folder", .library)
+        ]
+        for (name, group) in controls {
+            XCTAssertTrue(SettingsCatalog.search(name).contains { $0.group == group }, name)
+        }
+    }
+
+    func testIndividualNewGameChoicesAreIdentifiableInChanged() {
+        var settings = AppSettings()
+        settings.gameDefaults.fullscreen = true
+        settings.gameDefaults.enableMetalHUD = true
+        XCTAssertEqual(Set(SettingsCatalog.changed(in: settings).map(\.id)),
+                       ["gameDefaults.fullscreen", "gameDefaults.enableMetalHUD"])
+    }
+
+    func testChangedIncludesExternalPreferencesWithoutUnrelatedRows() {
+        let changed = SettingsCatalog.changed(in: AppSettings(), externalChanges: ["controllerDeadzone", "iconAppearance"])
+        XCTAssertEqual(Set(changed.map(\.id)), ["controllerDeadzone", "iconAppearance"])
+        XCTAssertEqual(Set(changed.map(\.group)), [.controllers, .look])
+    }
+
+    func testEveryGroupExceptSearchAndChangedHasRows() {
         let groups = Set(SettingsCatalog.all.map(\.group))
         for section in SettingsSection.allCases {
-            if [.search, .changed, .about].contains(section) {
+            if [.search, .changed].contains(section) {
                 XCTAssertFalse(groups.contains(section), "\(section) should have no rows")
             } else {
                 XCTAssertTrue(groups.contains(section), "\(section) has no rows")

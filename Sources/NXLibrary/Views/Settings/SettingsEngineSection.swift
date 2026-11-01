@@ -7,6 +7,7 @@ struct SettingsEngineSection: View {
 
     @Environment(\.seleneFocusedRowTitle) private var focusedRowTitle
     @State private var showOverrideConfirmation = false
+    private var configurationLocked: Bool { viewModel.isBuilding || viewModel.isUpdatingApp }
 
     var body: some View {
         VStack(spacing: 9) {
@@ -23,6 +24,7 @@ struct SettingsEngineSection: View {
                         .buttonStyle(.plain)
                         .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
+                        .disabled(configurationLocked)
                     Button("Reveal") {
                         viewModel.revealInFinder(url: URL(fileURLWithPath: viewModel.nxnativePath))
                     }
@@ -50,6 +52,7 @@ struct SettingsEngineSection: View {
                         .buttonStyle(.plain)
                         .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
+                        .disabled(configurationLocked)
                 }
 
                 if let message = viewModel.toolchainGateSummary?.message {
@@ -104,7 +107,7 @@ struct SettingsEngineSection: View {
                 Toggle("", isOn: overrideBinding)
                     .labelsHidden()
                     .toggleStyle(SeleneToggleStyle())
-                    .disabled(viewModel.compatibilityReport?.ok != false)
+                    .disabled(configurationLocked || viewModel.compatibilityReport?.ok != false)
                     .accessibilityValue(viewModel.allowUntestedToolchain ? "On" : "Off")
             }
 
@@ -157,10 +160,12 @@ struct SettingsEngineSection: View {
                     .buttonStyle(.plain)
                     .seleneFont(14, .semibold)
                     .foregroundColor(SeleneTheme.glyph)
+                    .disabled(configurationLocked)
                     Button("Detect Ryujinx...") { viewModel.selectRyujinxFolder() }
                         .buttonStyle(.plain)
                         .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
+                        .disabled(configurationLocked)
                     Spacer()
                 }
 
@@ -171,8 +176,15 @@ struct SettingsEngineSection: View {
             }
             .seleneRowFocus(focusedRowTitle == "prod.keys", radius: SeleneTheme.cardRadius)
         }
-        .onAppear(perform: publishActions)
+        .onAppear {
+            viewModel.prepareBuildEnvironmentIfNeeded()
+            publishActions()
+        }
         .onChange(of: viewModel.allowUntestedToolchain) { _ in publishActions() }
+        .onChange(of: viewModel.compatibilityReport?.ok) { _ in publishActions() }
+        .onChange(of: viewModel.upstreamState) { _ in publishActions() }
+        .onChange(of: viewModel.isBuilding) { _ in publishActions() }
+        .onChange(of: viewModel.isUpdatingApp) { _ in publishActions() }
         .alert("Enable the untested-toolchain override?", isPresented: $showOverrideConfirmation) {
             Button("Enable Override", role: .destructive) {
                 viewModel.allowUntestedToolchain = true
@@ -400,14 +412,14 @@ struct SettingsEngineSection: View {
 
     private func publishActions() {
         var actions: [SettingsRowAction] = [
-            .init(id: "repo", title: "Engine repository") {
+            .init(id: "repo", title: "Engine repository", isEnabled: !configurationLocked) {
                 viewModel.selectNxnativeFolder()
             },
-            .init(id: "recheck", title: "Compatibility") {
+            .init(id: "recheck", title: "Compatibility", isEnabled: !configurationLocked) {
                 viewModel.detectEnvironment()
             },
             .init(id: "override", title: "Untested toolchain override",
-                  isEnabled: viewModel.compatibilityReport?.ok == false) {
+                  isEnabled: !configurationLocked && viewModel.compatibilityReport?.ok == false) {
                 if viewModel.allowUntestedToolchain {
                     viewModel.allowUntestedToolchain = false
                 } else {
@@ -423,7 +435,7 @@ struct SettingsEngineSection: View {
                 viewModel.openUpstreamCompare()
             })
         }
-        actions.append(.init(id: "keys", title: "prod.keys") {
+        actions.append(.init(id: "keys", title: "prod.keys", isEnabled: !configurationLocked) {
             viewModel.selectProdKeysFile()
         })
         onActions(actions)

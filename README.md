@@ -13,7 +13,7 @@ A personal, native macOS front-end for [nxnative](https://github.com/seedds/nxna
 - Builds a Mac `.app` in `~/Applications` through the pinned nxnative CLI with JSON progress, stages, ETA, a live log and cancellation.
 - Installs validated game builds with an atomic swap, keeping the installed app at its normal path throughout replacement. Builds on another volume are prepared beside the destination first; interrupted installs can be retried safely. If only installation fails, the ready build is kept and a Selene dialog offers **Retry** or **Close**. Retry installs that build without running the porting again.
 - Stores the library in `~/Library/Application Support/NXLibrary/library.json` with a backup copy.
-- Keeps runtime settings per game (FPS target, docked mode, render scale, MetalFX spatial upscale, Metal HUD, language, rumble, fullscreen). It reads the app's `launcher.json` to show only the settings the game supports, writes nxnative's `env.txt`, and passes the chosen values in the launch environment as well.
+- Keeps runtime settings per game (FPS target, docked mode, render scale, MetalFX spatial upscale, Metal HUD, language, rumble, fullscreen). It checks render-scale support in the app's `launcher.json` (with a fallback for older builds), writes nxnative's `env.txt`, and passes the chosen values in the launch environment as well.
 - Shows storage usage and can delete only caches and logs; apps and sources require explicit action. **Remove Sources & Build Cache** deletes the original NSP/XCI files and the app-owned workspace for one game, keeping the installed app, saves and logs; sources can be attached again later.
 - Checks the upstream `seedds/nxnative` commit history on demand in **Settings → Engine**. The check is read-only: it contacts the GitHub API, shows new commits and a compare link, never fetches, merges, checks out or re-pins the engine. The engine gate keeps blocking builds until an update is manually re-pinned and re-tested.
 - Includes synthesized UI tones, controller prompts, and keyboard shortcuts. The theme and symbols are original; no Nintendo assets are included.
@@ -117,7 +117,10 @@ Builds go to `~/Applications/<game>.app`. Sources stay where they are; a staged 
 - **Cloud saves** is reapplied before every launch, including Off. Advanced save-sync overrides in configuration files remain reported in Saves.
 - **Settings → Look → Wallpaper** controls the app background. **Game backgrounds** shows game artwork in Spotlight and Collection when On, and the wallpaper when Off. Details keeps the game's artwork; launch-screen style is separate.
 - **Change artwork** saves choices for one title, with manual picks ahead of automatic images. Its status line indicates where the selected kind is used. **Wallpaper sizing** fits wallpapers; **Library shade** shades library text areas.
-- **Controllers → Library controls** affects navigation in NX Library. Its **New games** group supplies starting rumble values. Search and Changed point rumble settings to Controllers.
+- **Controllers → Library controls** affects navigation in NX Library. Its **New games** group supplies starting rumble values. Search lists each control; Changed includes icon, deadzone and folder choices.
+- **Start-up** respects the engine-check and library-refresh switches. With checks off, the saved library still opens and build screens check the environment on demand. Every new porting retains its mandatory compatibility gate.
+- **Settings errors** use Selene dialogs with Retry for failed writes. Unreadable preferences are preserved before defaults are saved. Reset Look includes brightness; group resets keep cloud sync and the sources folder and show a brief notice.
+- **Storage → Save backups** opens the verified backup folder for all games. Create backups from **Game Options → Saves**; Storage has no separate ZIP export.
 
 ## Save backups and imports
 
@@ -160,7 +163,7 @@ Engine upgrades are manual and never follow `main`. Before changing the pin, rev
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 ```
 
-The suite covers models and persistence, source parsing (including a regression for `*.cnmt.nca` vs `*.cnmt.xml`), symlink workspaces, key import/permissions, the compatibility gate, build-command construction, atomic installation and interrupted retries, process cancellation, launch environment writing, import, storage, cheats, save snapshots and interrupted save recovery. Scans preserve pending installs and the last porting failure. The last code verification on 2026-11-01 passed **676 tests**, including retrying a ready build without recompiling, per-title Review settings and language, explicit source replacement, cloud Off at launch and controller-setting search. The [file catalog](docs/file-map.md#test-e-fixture) describes each test file's scope.
+The suite covers models and persistence, source parsing (including a regression for `*.cnmt.nca` vs `*.cnmt.xml`), symlink workspaces, key import/permissions, the compatibility gate, build-command construction, atomic installation and interrupted retries, process cancellation, launch environment writing, import, storage, cheats, save snapshots and interrupted save recovery. Scans preserve pending installs and the last porting failure. The last code verification on 2026-11-01 passed **689 tests**, including interrupted installation and retry, per-title Review and language, explicit source replacement, cloud Off at launch, failed key replacement, unreadable preferences, individual setting search and exclusion between app updates and save operations. The [file catalog](docs/file-map.md#test-e-fixture) describes each test file's scope.
 
 ## Repository layout
 
@@ -177,6 +180,7 @@ The suite covers models and persistence, source parsing (including a regression 
 - [Technical guide](docs/architecture.md) — current architecture, dependencies, feature flows, persistence and verification, written in Italian.
 - [File catalog](docs/file-map.md) — every versioned file and its responsibility, grouped by area, written in Italian.
 - [2026-11-01 audit review](docs/2026-11-01-audit-review.md) — verified findings, reproduced installation conflicts and measured performance costs, written in Italian.
+- [2026-11-01 settings audit](docs/2026-11-01-settings-audit.md) — control-by-control verification, error triggers, persistence, resets and controller actions, written in Italian.
 - [Dated designs and plans](docs/superpowers/) — original design, feature specifications and implementation records.
 - [Engine upgrade notes](docs/upstream-upgrades/README.md) — adoption checklist, pin changes and verification evidence.
 
