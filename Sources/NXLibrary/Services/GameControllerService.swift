@@ -239,7 +239,11 @@ public final class GameControllerService: ObservableObject {
             .lt: pad.leftTrigger, .rt: pad.rightTrigger,
             .rs: pad.rightThumbstickButton, .view: pad.buttonOptions, .menu: pad.buttonMenu
         ]
-        return elements.compactMapValues { $0?.sfSymbolsName }
+        return elements.compactMapValues { element in
+            guard let name = element?.sfSymbolsName, !name.isEmpty,
+                  !ButtonPrompts.isGenericShape(name) else { return nil }
+            return name
+        }
     }
 
     private enum HoldButton: Hashable { case menu, view }

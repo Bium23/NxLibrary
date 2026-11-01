@@ -62,13 +62,20 @@ public enum ButtonPrompts {
                               reported: [PromptButton: String] = [:]) -> String? {
         if style == .automatic {
             guard connected != .none else { return nil }
-            if let name = reported[button], !name.isEmpty { return name }
+            if let name = reported[button], !name.isEmpty, !isGenericShape(name) { return name }
         }
         switch resolved(style, connected) {
         case .nintendo: return nintendoSymbol(button)
         case .playstation: return playstationSymbol(button)
         default: return xboxSymbol(button)
         }
+    }
+
+    /// Identifies generic placeholder shapes (like plain "circle" or "capsule") reported by
+    /// GameController when a physical button does not have an explicit SF Symbol icon.
+    public static func isGenericShape(_ name: String) -> Bool {
+        let stripped = name.hasSuffix(".fill") ? String(name.dropLast(5)) : name
+        return stripped == "circle" || stripped == "capsule" || stripped == "square" || stripped == "rectangle"
     }
 
     private static func nintendoSymbol(_ b: PromptButton) -> String {

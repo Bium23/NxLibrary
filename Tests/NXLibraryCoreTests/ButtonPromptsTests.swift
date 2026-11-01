@@ -38,6 +38,26 @@ final class ButtonPromptsTests: XCTestCase {
         XCTAssertEqual(symbol, "a.circle")
     }
 
+    func testAutomaticIgnoresGenericReportedGlyphs() {
+        let viewSym = ButtonPrompts.symbol(.view, style: .automatic, connected: .playstation,
+                                           reported: [.view: "circle"])
+        XCTAssertEqual(viewSym, "square.and.arrow.up.circle")
+
+        let menuSym = ButtonPrompts.symbol(.menu, style: .automatic, connected: .playstation,
+                                           reported: [.menu: "circle.fill"])
+        XCTAssertEqual(menuSym, "line.3.horizontal.circle")
+    }
+
+    func testGenericShapeDetection() {
+        XCTAssertTrue(ButtonPrompts.isGenericShape("circle"))
+        XCTAssertTrue(ButtonPrompts.isGenericShape("circle.fill"))
+        XCTAssertTrue(ButtonPrompts.isGenericShape("capsule"))
+        XCTAssertTrue(ButtonPrompts.isGenericShape("square"))
+        XCTAssertFalse(ButtonPrompts.isGenericShape("xmark.circle"))
+        XCTAssertFalse(ButtonPrompts.isGenericShape("square.and.arrow.up.circle"))
+        XCTAssertFalse(ButtonPrompts.isGenericShape("line.3.horizontal.circle"))
+    }
+
     func testAutomaticFallsBackToTheBrandTable() {
         XCTAssertEqual(ButtonPrompts.symbol(.a, style: .automatic, connected: .playstation), "xmark.circle")
         XCTAssertEqual(ButtonPrompts.symbol(.lt, style: .automatic, connected: .nintendo), "zl.rectangle.roundedtop")

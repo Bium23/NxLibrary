@@ -39,7 +39,7 @@ struct SelenePromptBadge: View {
 
     @ViewBuilder
     private func badgeImage(_ symbol: String) -> some View {
-        if symbol.hasSuffix(".fill") {
+        if symbol.hasSuffix(".fill") && !ButtonPrompts.isGenericShape(symbol) {
             Image(systemName: symbol)
                 .symbolRenderingMode(.palette)
                 .foregroundStyle(SeleneTheme.scrim, SeleneTheme.ink)
@@ -47,13 +47,20 @@ struct SelenePromptBadge: View {
                 .frame(minWidth: canvas.u(height), minHeight: canvas.u(height))
                 .accessibilityLabel(ButtonPrompts.label(button, style: style, connected: pad))
         } else {
-            Image(systemName: symbol)
+            Image(systemName: cleanGlyph(symbol))
                 .font(.system(size: canvas.u(height * 0.5), weight: .bold))
                 .foregroundColor(SeleneTheme.scrim)
                 .frame(minWidth: canvas.u(height), minHeight: canvas.u(height))
                 .background(Circle().fill(SeleneTheme.ink))
                 .accessibilityLabel(ButtonPrompts.label(button, style: style, connected: pad))
         }
+    }
+
+    private func cleanGlyph(_ name: String) -> String {
+        var clean = name
+        if clean.hasSuffix(".fill") { clean = String(clean.dropLast(5)) }
+        if clean.hasSuffix(".circle") { clean = String(clean.dropLast(7)) }
+        return clean
     }
 
     /// A Mac key: a rounded square (not the round controller buttons), ink with the
@@ -82,6 +89,7 @@ struct SelenePromptBadge: View {
     private static var cache: [String: String?] = [:]
 
     static func filled(_ name: String) -> String? {
+        if ButtonPrompts.isGenericShape(name) { return nil }
         if let known = cache[name] { return known }
         let candidates: [String]
         if name.hasSuffix(".fill") {
@@ -96,7 +104,10 @@ struct SelenePromptBadge: View {
                 name
             ]
         }
-        let resolved = candidates.first { NSImage(systemSymbolName: $0, accessibilityDescription: nil) != nil }
+        let resolved = candidates.first { candidate in
+            guard !ButtonPrompts.isGenericShape(candidate) else { return false }
+            return NSImage(systemSymbolName: candidate, accessibilityDescription: nil) != nil
+        }
         cache[name] = resolved
         return resolved
     }
