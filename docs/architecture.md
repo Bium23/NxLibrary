@@ -1,6 +1,6 @@
 # NX Library — guida tecnica
 
-Aggiornata il 2 novembre 2026 sul codice del repository. La mappa comprende 232 file Swift di produzione e 96 file di test e supporto ai test. Il ramo comprende il candidato nxnative 163a9905, il canale di aggiornamento e i flussi cartelle/disponibilità, con 744 test Swift superati; la prova di gioco manuale è stata confermata dall’utente, mentre il re-pin resta in attesa della verifica dei prompt del controller.
+Aggiornata il 2 novembre 2026 sul codice del repository. La mappa comprende 232 file Swift di produzione e 96 file di test e supporto ai test. Il ramo comprende nxnative 163a9905 adottato, il canale di aggiornamento e i flussi cartelle/disponibilità, con 744 test Swift superati. La build certificata e la prova di gioco manuale sono state confermate dall’utente; la versione principale usa ora lo stesso pin della preview validata.
 
 Questa guida descrive il funzionamento attuale. Il [catalogo dei file](file-map.md) assegna una responsabilità a ogni file versionato, suddiviso per area.
 
@@ -47,7 +47,7 @@ flowchart TD
     Core --> Network["Cataloghi artwork, metadati e release"]
 ```
 
-Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e runtime dei giochi compilati. NX Library prepara gli argomenti, controlla i requisiti e presenta lo stato delle operazioni. Il pin attuale è `2716f78f01e90a9f9bbf0d09e7a798903525962f`, definito in `AppViewModel.pinnedEngineCommit`.
+Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e runtime dei giochi compilati. NX Library prepara gli argomenti, controlla i requisiti e presenta lo stato delle operazioni. Il pin attuale è `163a990515bd42749af9f5dcf4001a68d07390f7`, definito in `AppViewModel.pinnedEngineCommit`. La cache dello stato upstream viene riutilizzata soltanto quando il suo commit di base coincide con il pin.
 
 ## Avvio e stato dell’app
 
@@ -104,11 +104,11 @@ Le prime schede sono Game apps e Game files, con copy condiviso in `GameFoldersC
 
 `CompatibilityChecker` verifica commit, modifiche del checkout, contratto CLI e compilatore Metal richiesto dal lock del motore. `ToolchainRequirements.current` contiene Xcode minimo, major .NET e asset Metal. `ToolchainGateCopy` produce la spiegazione del risultato per la UI.
 
-Il lock del pin attuale certifica Metal `32023.921`, asset Apple `27A266a`. La [nota dell’upgrade del 31 ottobre](upstream-upgrades/2026-10-31-ee369f0-2716f78.md) registra la scelta dell’utente di verificare quel porting con Metal `32023.922` e override esplicito. Un build con override riceve `toolchainVerified=false` e `--allow-other-metal`. Play valuta la disponibilità dell’app già installata separatamente dal gate per un nuovo porting.
+Il lock del pin attuale certifica Metal `32023.922`, asset Apple `27B47`, con Xcode minimo `27.2`. La [nota dell’upgrade del 2 novembre](upstream-upgrades/2026-11-02-2716f78-163a9905-review.md) registra gate certificato senza override, build reale e avvio confermati dall’utente. Un build con override riceve `toolchainVerified=false` e `--allow-other-metal`. Play valuta la disponibilità dell’app già installata separatamente dal gate per un nuovo porting.
 
 ## Sorgenti e porting
 
-La revisione del [candidato 163a9905](upstream-upgrades/2026-11-02-2716f78-163a9905-review.md) aggiunge un ingresso per cartelle estratte e metadati per pacchetti con più contenuti. `EnginePackageReader` riusa il lettore content-meta upstream; `ExtractedSourceCatalog` legge NPDM e profili registrati senza chiavi. `SourceSelection` tiene separati contenuti selezionati e file fisici: un pacchetto si conta e si collega una sola volta, il DLC incorporato rimane incluso e la versione scelta viene passata con `-p`.
+L'integrazione di [nxnative 163a9905](upstream-upgrades/2026-11-02-2716f78-163a9905-review.md) aggiunge un ingresso per cartelle estratte e metadati per pacchetti con più contenuti. `EnginePackageReader` riusa il lettore content-meta upstream; `ExtractedSourceCatalog` legge NPDM e profili registrati senza chiavi. `SourceSelection` tiene separati contenuti selezionati e file fisici: un pacchetto si conta e si collega una sola volta, il DLC incorporato rimane incluso e la versione scelta viene passata con `-p`.
 
 `GameFileItem` conserva facoltativamente layout e requisito di selezione del titolo; i vecchi JSON continuano a indicare pacchetti. Questi requisiti sono verificati prima del build anche cambiando checkout. Le cartelle estratte sono collegate nel layout `base/`, `updates/<version>/`, `dlc/<title>/0/romfs/`; il restaging rimuove link esclusi e contenitori vuoti, preservando cache e originali. Un pacchetto illeggibile non nasconde gli altri giochi validi: la scansione mantiene i risultati e segnala i file saltati.
 

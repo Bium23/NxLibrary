@@ -5,7 +5,7 @@ This guide covers building NX Library itself. For app setup, game preparation an
 ## Development prerequisites
 
 - An Apple-silicon Mac running macOS 13 or later.
-- Full Xcode selected for the build. The current game toolchain requires Xcode 27.1 or later and the Metal compiler certified for the pinned engine. `Package.swift` declares Swift tools 5.9 and macOS 13 as package minimums; those values do not certify an engine/compiler combination.
+- Full Xcode selected for the build. The current game toolchain requires Xcode 27.2 or later and the Metal compiler certified for the pinned engine. `Package.swift` declares Swift tools 5.9 and macOS 13 as package minimums; those values do not certify an engine/compiler combination.
 - Git and the command-line tools supplied with Xcode.
 - Python 3 for the publication checks and packaging helpers.
 - Homebrew's `zstd` and `glslang`, at the versions recorded in [runtime.lock](../runtime.lock), when preparing the bundled runtime. The script checks installed versions; it does not install or silently upgrade them.
@@ -110,7 +110,7 @@ The updater uses `Bium23/NxLibrary` directly, with anonymous public access. No s
 
 ### First installation and A → B update test
 
-Use a new macOS account without copying NX Library preferences or data. Xcode, Metal and .NET may remain available system-wide; this tests first use and updates, not installation of every prerequisite on a clean Mac. Finish the candidate-engine build and manual launch before adopting its pin or distributing a package as ready.
+Use a new macOS account without copying NX Library preferences or data. Xcode, Metal and .NET may remain available system-wide; this tests first use and updates, not installation of every prerequisite on a clean Mac. For any new engine pin, complete a certified game build and manual launch before adoption or distributing a package as ready.
 
 1. Publish only release A initially. Download its DMG from GitHub in the new account, install normally, eject the DMG and complete Setup. Check whether the installation folder is writable by that account; updates must not require changing permissions silently.
 2. Build and launch one supported game using the user's own files. Save progress, set a favourite and change one preference. Create a save backup, then close the game and app.

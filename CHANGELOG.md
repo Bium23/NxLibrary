@@ -10,7 +10,7 @@ The current source preview identifies itself as **0.1.0 alpha**. No tagged or do
 
 - Public GitHub app-update channel on `Bium23/NxLibrary`, without a separate user login. Packaged release copies can offer, download, verify and install newer versions; the first downloadable release and interactive A → B check are still pending.
 
-- Candidate integration for nxnative `163a9905`: extracted-folder inputs without keys, registered-profile checks, multi-title package selection, bundled-content review and unique source-size accounting. A certified build and manual launch have been confirmed by the user; the stable pin is unchanged while the controller-prompt correction is verified before adoption.
+- Integration for nxnative `163a9905`: extracted-folder inputs without keys, registered-profile checks, multi-title package selection, bundled-content review and unique source-size accounting. A certified build and manual launch have been confirmed by the user.
 
 - A native macOS library with Spotlight, Collection, search, favourites, hidden games and game details.
 - Guided Setup and local nxnative builds from user-supplied sources, with base/update/DLC review, progress, logs and cancellation. Existing game apps can be imported and played without their sources.
@@ -27,7 +27,7 @@ The current source preview identifies itself as **0.1.0 alpha**. No tagged or do
 
 - New-game defaults and each game's **Next launch** settings have explicit scopes. Rebuild review retains the selected title's saved options; **Use new game defaults** copies defaults once.
 - The Saves page keeps one **Backup folder** row showing the latest backup's date and time. Imports use a centred From → To preview with outlined paths and a subtle directional animation.
-- The engine is pinned to `2716f78`. Adoption and toolchain verification are recorded in the [2026-10-31 upgrade note](docs/upstream-upgrades/2026-10-31-ee369f0-2716f78.md); newer upstream commits are not adopted automatically.
+- The engine is pinned to `163a9905`, with Xcode 27.2 and certified Metal `32023.922`. Adoption and verification are recorded in the [2026-11-02 upgrade note](docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md); newer upstream commits are not adopted automatically. The main app replaces the separate EnginePreview launcher.
 - App-update preparation and background snapshot preparation run outside the main UI work. Source builds do not update themselves; packaged releases use the project's public GitHub release channel.
 
 ### Fixed
