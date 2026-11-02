@@ -2,6 +2,16 @@
 
 User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
+## Unreleased
+
+### Added
+
+- Game options show **Frame rate** (30 / 60 / 120 FPS), **Button layout** (Switch positions / Xbox labels) and **Screen fill** (Keep aspect ratio / Fill screen) for a game whose app offers them in its `launcher.json`. Other games keep the 60 FPS switch; a choice is written to the game's `env.txt` only once it is made.
+
+### Changed
+
+- Builds run faster: the animated background holds still while a build runs, the shader compile runs two workers above the core count (unless `J` is set), and a build keeps the app out of App Nap at user-initiated priority.
+
 ## 0.1.1 — 2026-11-02
 
 ### Changed

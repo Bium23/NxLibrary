@@ -16,7 +16,8 @@ public enum GameOptionsLevel: Equatable, Sendable {
 /// Every focusable row of Game options. Headings and notes are not rows (see `GameOptionsEntry`).
 public enum GameOptionsRow: String, CaseIterable, Sendable {
     case play, move, favorite, hidden
-    case fullscreen, fps60, metalFX, metalHUD, consoleMode, language, rumble, rumbleStrength
+    case fullscreen, fps60, frameRate, metalFX, metalHUD, consoleMode, language, rumble, rumbleStrength
+    case buttonLayout, screenFill
     case renderScale, restoreDefaults
     case cheats, rebuild, showInFinder, openSaves, editDetails, removeGame
     case changeArtwork, changeMetadata, storePage, attachSources, openLog, removeSources
@@ -29,6 +30,9 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
         case .hidden: return "Hidden"
         case .fullscreen: return "Fullscreen"
         case .fps60: return "60 FPS"
+        case .frameRate: return "Frame rate"
+        case .buttonLayout: return "Button layout"
+        case .screenFill: return "Screen fill"
         case .metalFX: return "MetalFX"
         case .metalHUD: return "Metal HUD"
         case .consoleMode: return "Console mode"
@@ -59,7 +63,9 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
         case .favorite: return .star
         case .hidden: return .hidden
         case .fullscreen: return .monitor
-        case .fps60: return .sync
+        case .fps60, .frameRate: return .sync
+        case .buttonLayout: return .gamepad
+        case .screenFill: return .monitor
         case .metalFX: return .tune
         case .metalHUD: return .timeline
         case .consoleMode: return .gamepad
@@ -92,7 +98,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
     /// A value chip on the trailing edge: Left/Right cycle it, A cycles forward.
     public var isChoice: Bool {
         switch self {
-        case .consoleMode, .language, .rumbleStrength, .renderScale: return true
+        case .consoleMode, .language, .rumbleStrength, .renderScale, .frameRate, .buttonLayout, .screenFill: return true
         default: return false
         }
     }
@@ -122,6 +128,11 @@ public struct GameRemovalCopy: Equatable, Sendable {
 
 public struct GameOptionsPresentation: Equatable {
     public let showRenderScale: Bool
+    /// The app offers 120 FPS: Frame rate (30 / 60 / 120) replaces the 60 FPS switch.
+    public let showFrameRate: Bool
+    /// The app offers DM_PAD_LAYOUT / DM_PRESENT_FILL (its launcher.json lists them).
+    public let showButtonLayout: Bool
+    public let showScreenFill: Bool
     public let canPlay: Bool
     public let sourcesDetached: Bool
     /// The Metal gate refuses new builds (a known report that does not pass, without the override).
@@ -139,7 +150,11 @@ public struct GameOptionsPresentation: Equatable {
     public init(supportsRenderScale: Bool, isPlayable: Bool, sourcesDetached: Bool,
                 toolchainBlocked: Bool = false, toolchainHint: String? = nil, hasStorePage: Bool = false,
                 gameName: String = "", appPath: String = "", canDeleteBundle: Bool = false,
-                cheatsValue: String = "None") {
+                cheatsValue: String = "None", supportsFrameRate: Bool = false,
+                supportsButtonLayout: Bool = false, supportsScreenFill: Bool = false) {
+        self.showFrameRate = supportsFrameRate
+        self.showButtonLayout = supportsButtonLayout
+        self.showScreenFill = supportsScreenFill
         self.cheatsValue = cheatsValue
         self.showRenderScale = supportsRenderScale
         self.canPlay = isPlayable
@@ -203,7 +218,9 @@ public struct GameOptionsPresentation: Equatable {
         case .favorite: return "On your Favorites tab."
         case .hidden: return "Hidden games stay out of your lists."
         case .fullscreen: return "Launch mode"
-        case .fps60: return "Frame-rate target"
+        case .fps60, .frameRate: return "Frame-rate target"
+        case .buttonLayout: return "Xbox and PlayStation face buttons"
+        case .screenFill: return "Black bars or the whole screen"
         case .metalFX: return "Spatial upscaling"
         case .metalHUD: return "Performance overlay"
         case .consoleMode: return "Console profile"
@@ -231,6 +248,12 @@ public struct GameOptionsPresentation: Equatable {
         switch row {
         case .fps60:
             return "On targets 60 FPS; Off targets 30 FPS. Some games run too fast at 60 FPS."
+        case .frameRate:
+            return "30, 60 or 120 FPS (DM_FPS_TARGET). 120 FPS needs a 120 Hz display and uses more power; the game offers it only where its timing was checked at 120."
+        case .buttonLayout:
+            return "Xbox labels: an Xbox or PlayStation controller's A/Cross presses the game's A, B/Circle its B, X/Square its X, Y/Triangle its Y (DM_PAD_LAYOUT=xbox). Switch positions keeps the Switch's places."
+        case .screenFill:
+            return "Fill screen stretches the picture to the display's shape with no black bars (DM_PRESENT_FILL=stretch); Keep aspect ratio shows the game's 16:9 with bars."
         case .metalFX:
             return "Applies Apple MetalFX spatial upscaling (DM_PRESENT_UPSCALE=metalfx). It sharpens the 3D viewport to match your Mac display without increasing internal render workload."
         case .metalHUD:
@@ -255,8 +278,10 @@ public struct GameOptionsPresentation: Equatable {
             var entries: [GameOptionsEntry] = [.row(.play), .row(.editDetails), .row(.cheats), .row(.openSaves)]
             if origin == .spotlight { entries.append(.row(.move)) }
             entries += [.row(.favorite), .row(.hidden), .heading("Next launch")]
-            entries += [.fullscreen, .fps60, .metalFX, .metalHUD, .consoleMode, .language, .rumble, .rumbleStrength]
+            entries += [.fullscreen, showFrameRate ? .frameRate : .fps60, .metalFX, .metalHUD, .consoleMode, .language, .rumble, .rumbleStrength]
                 .map(GameOptionsEntry.row)
+            if showButtonLayout { entries.append(.row(.buttonLayout)) }
+            if showScreenFill { entries.append(.row(.screenFill)) }
             if showRenderScale {
                 entries.append(.row(.renderScale))
             } else {
@@ -319,6 +344,23 @@ public struct GameOptionsFocus: Equatable, Sendable {
 public enum GameOptionsValues {
     public static let rumbleStrengthCount = 4
     public static let renderScaleStops = Array(stride(from: 50, through: 100, by: 5))
+
+    public static let frameRates = [30, 60, 120]
+    public static let buttonLayouts = [("position", "Switch positions"), ("xbox", "Xbox labels")]
+    public static let screenFills = [("fit", "Keep aspect ratio"), ("stretch", "Fill screen")]
+
+    public static func steppedFrameRate(_ fps: Int, by delta: Int) -> Int {
+        frameRates[steppedIndex(frameRates.firstIndex(of: fps), by: delta, count: frameRates.count)]
+    }
+
+    /// The next value of a two-or-more value list; nil (the app's own choice) starts at the first.
+    public static func steppedValue(_ value: String?, in list: [(String, String)], by delta: Int) -> String {
+        list[steppedIndex(list.firstIndex { $0.0 == value }, by: delta, count: list.count)].0
+    }
+
+    public static func valueLabel(_ value: String?, in list: [(String, String)]) -> String {
+        list.first { $0.0 == value }?.1 ?? "App default"
+    }
 
     public static func consoleModeLabel(docked: Bool) -> String {
         docked ? "Docked" : "Handheld"

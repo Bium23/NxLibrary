@@ -126,6 +126,10 @@ final class GameOptionsPresentationTests: XCTestCase {
                     seen.formUnion(p.focusableRows(level: .editDetails, origin: origin))
                 }
             }
+            // A game whose app offers 120 FPS, Button layout and Screen fill (EA SPORTS FC 26)
+            let extras = GameOptionsPresentation(supportsRenderScale: true, isPlayable: true, sourcesDetached: false,
+                                                 supportsFrameRate: true, supportsButtonLayout: true, supportsScreenFill: true)
+            seen.formUnion(extras.focusableRows(level: .main, origin: origin))
         }
         XCTAssertEqual(seen, Set(GameOptionsRow.allCases))
     }

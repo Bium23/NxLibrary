@@ -10,11 +10,18 @@ public struct GameRuntimeConfig: Codable, Equatable {
     public var rumble: Bool
     public var rumbleGain: Int
     public var fullscreen: Bool
+    /// With `enable60FPS`: 120 FPS instead of 60, for a game whose app offers it (its launcher.json lists DM_FPS_TARGET 120).
+    public var highFrameRate: Bool
+    /// DM_PAD_LAYOUT ("position" or "xbox"); nil leaves the app's own choice.
+    public var buttonLayout: String?
+    /// DM_PRESENT_FILL ("fit" or "stretch"); nil leaves the app's own choice.
+    public var screenFill: String?
 
     public init(enable60FPS: Bool = true, enableMetalHUD: Bool = false,
                 isDockedMode: Bool = true, renderScale: Double = 1.0,
                 enableMetalFXUpscale: Bool = false, language: String = "auto",
-                rumble: Bool = true, rumbleGain: Int = 1, fullscreen: Bool = false) {
+                rumble: Bool = true, rumbleGain: Int = 1, fullscreen: Bool = false,
+                highFrameRate: Bool = false, buttonLayout: String? = nil, screenFill: String? = nil) {
         self.enable60FPS = enable60FPS
         self.enableMetalHUD = enableMetalHUD
         self.isDockedMode = isDockedMode
@@ -24,11 +31,15 @@ public struct GameRuntimeConfig: Codable, Equatable {
         self.rumble = rumble
         self.rumbleGain = rumbleGain
         self.fullscreen = fullscreen
+        self.highFrameRate = highFrameRate
+        self.buttonLayout = buttonLayout
+        self.screenFill = screenFill
     }
 
     private enum CodingKeys: String, CodingKey {
         case enable60FPS, enableMetalHUD, isDockedMode, renderScale, enableMetalFXUpscale
         case language, rumble, rumbleGain, fullscreen
+        case highFrameRate, buttonLayout, screenFill
     }
 
     public init(from decoder: Decoder) throws {
@@ -42,14 +53,17 @@ public struct GameRuntimeConfig: Codable, Equatable {
             language: try values.decodeIfPresent(String.self, forKey: .language) ?? "auto",
             rumble: try values.decodeIfPresent(Bool.self, forKey: .rumble) ?? true,
             rumbleGain: try values.decodeIfPresent(Int.self, forKey: .rumbleGain) ?? 1,
-            fullscreen: try values.decodeIfPresent(Bool.self, forKey: .fullscreen) ?? false
+            fullscreen: try values.decodeIfPresent(Bool.self, forKey: .fullscreen) ?? false,
+            highFrameRate: try values.decodeIfPresent(Bool.self, forKey: .highFrameRate) ?? false,
+            buttonLayout: try values.decodeIfPresent(String.self, forKey: .buttonLayout),
+            screenFill: try values.decodeIfPresent(String.self, forKey: .screenFill)
         )
     }
 
     // Core-facing aliases; the launcher views keep their original property names.
     public var fpsTarget: Int {
-        get { enable60FPS ? 60 : 30 }
-        set { enable60FPS = newValue != 30 }
+        get { enable60FPS ? (highFrameRate ? 120 : 60) : 30 }
+        set { enable60FPS = newValue != 30; highFrameRate = newValue == 120 }
     }
     public var metalHUD: Bool {
         get { enableMetalHUD }
@@ -66,7 +80,7 @@ public struct GameRuntimeConfig: Codable, Equatable {
 
     public func toEnvironmentDict() -> [String: String] {
         var values: [String: String] = [
-            "DM_FPS_TARGET": enable60FPS ? "60" : "30",
+            "DM_FPS_TARGET": "\(fpsTarget)",
             "DM_METAL_HUD": enableMetalHUD ? "1" : "0",
             "DM_OPMODE": isDockedMode ? "1" : "0",
             "DM_RENDER_SCALE": String(format: "%.2f", renderScale),
@@ -75,6 +89,8 @@ public struct GameRuntimeConfig: Codable, Equatable {
             "DM_RUMBLE_GAIN": "\(rumbleGain)",
             "DM_FULLSCREEN": fullscreen ? "1" : "0",
         ]
+        if let buttonLayout, !buttonLayout.isEmpty { values["DM_PAD_LAYOUT"] = buttonLayout }
+        if let screenFill, !screenFill.isEmpty { values["DM_PRESENT_FILL"] = screenFill }
         // "auto" lets the engine's own language (DMLanguage) apply.
         if language != "auto", !language.isEmpty {
             values["DM_LANG"] = language
@@ -178,7 +194,9 @@ public struct GameRuntimeConfig: Codable, Equatable {
             let key = parts[0].trimmingCharacters(in: .whitespaces)
             let value = parts[1].trimmingCharacters(in: .whitespaces)
             switch key {
-            case "DM_FPS_TARGET": config.enable60FPS = value != "30"
+            case "DM_FPS_TARGET": config.fpsTarget = Int(value) ?? 60
+            case "DM_PAD_LAYOUT": config.buttonLayout = value
+            case "DM_PRESENT_FILL": config.screenFill = value
             case "DM_METAL_HUD": config.enableMetalHUD = value == "1"
             case "DM_OPMODE": config.isDockedMode = value != "0"
             case "DM_RENDER_SCALE": config.renderScale = Double(value) ?? 1.0

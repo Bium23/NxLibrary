@@ -39,6 +39,9 @@ public final class BuildService {
     private var eventHandler: ((BuildEvent) -> Void)?
     private var completion: ((BuildResult) -> Void)?
     private var sleepAssertion: IOPMAssertionID?
+    /// Keeps App Nap off the app while it builds: hidden or in the background, a napping app's timers and
+    /// pipes slow down, and the build's progress and output handling with them.
+    private var buildActivity: NSObjectProtocol?
 
     public init(fileManager: FileManager = .default) { self.fm = fileManager }
 
@@ -94,6 +97,8 @@ public final class BuildService {
         ) == kIOReturnSuccess {
             sleepAssertion = assertion
         }
+        buildActivity = ProcessInfo.processInfo.beginActivity(
+            options: [.userInitiated, .idleSystemSleepDisabled], reason: "NX Library build")
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/bash")
@@ -103,6 +108,7 @@ public final class BuildService {
                              command.executable.path] + command.arguments
         process.currentDirectoryURL = command.workingDirectory
         process.environment = command.environment
+        process.qualityOfService = .userInitiated
         self.process = process
 
         let out = Pipe()
@@ -274,6 +280,10 @@ public final class BuildService {
         if let sleepAssertion {
             IOPMAssertionRelease(sleepAssertion)
             self.sleepAssertion = nil
+        }
+        if let buildActivity {
+            ProcessInfo.processInfo.endActivity(buildActivity)
+            self.buildActivity = nil
         }
     }
 }
