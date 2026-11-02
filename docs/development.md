@@ -60,6 +60,8 @@ bash scripts/build_app.sh
 codesign --verify --deep --strict "$HOME/Applications/NXLibrary.app"
 ~~~
 
+When reviewing an engine upgrade in a separate checkout, set `NX_TEST_ENGINE_REPO` to that checkout's absolute path for `swift test`. The engine-fragment regression reads the application's pin and checks it in that repository; an invalid explicit path fails. Without the variable it uses `~/nxnative`, skipping only when that default checkout is absent. This allows verification without fetching into or changing the engine used by the installed app.
+
 To check the prepared runtime as well:
 
 ~~~sh
@@ -97,7 +99,7 @@ Use `scripts/release.sh` for releases. It requires a clean working tree, an unus
 For example, to prepare a later release locally:
 
 ~~~sh
-bash scripts/release.sh 0.1.1
+bash scripts/release.sh 0.1.2
 ~~~
 
 The script builds a release-marked app, verifies its version and signature, and produces a ZIP and DMG in `work/release/`. Without `--publish`, it does not push a tag or create a GitHub release. Version `0.1.0` is the first public alpha; use an unused version for later releases.

@@ -55,11 +55,11 @@ Game files, keys and firmware are not provided. See [Legal and third-party notic
 
 ### Project status
 
-**0.1.0 alpha.** Download the packaged app from [Releases](https://github.com/Bium23/NxLibrary/releases/latest), or [build it from source](#building-from-source).
+**0.1.1 alpha.** Download the packaged app from [Releases](https://github.com/Bium23/NxLibrary/releases/latest), or [build it from source](#building-from-source).
 
 Automated checks cover the application code, publication inputs, compilation and development-app packaging. They do not certify game compatibility. Changes are recorded in the [changelog](CHANGELOG.md), and the current checks are available under [Actions](https://github.com/Bium23/NxLibrary/actions/workflows/ci.yml).
 
-The engine is pinned to `163a9905`, with support for extracted game folders and multi-title packages, using Xcode 27.2 / Metal 32023.922. See the [engine upgrade notes](docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md).
+The engine is pinned to `65501fbb`, with support for extracted game folders and multi-title packages, using Xcode 27.2 / Metal 32023.922. See the [engine upgrade notes](docs/upstream-upgrades/2026-11-02-163a9905-65501fbb-review.md).
 
 ## Getting started
 
@@ -258,12 +258,12 @@ Before reporting a problem, review copied diagnostics and remove anything person
 ### Compatibility and limitations
 
 - NX Library uses a manually pinned engine and checks its commit, working tree, CLI contract and Metal compiler before new builds. It does not follow upstream `main` automatically.
-- The current engine is `163a9905` and certifies Metal `32023.922`. **Build anyway with an untested toolchain** requires explicit confirmation and marks the resulting build as untested. A successful launch does not turn it into a certified combination.
+- The current engine is `65501fbb` and certifies Metal `32023.922`. **Build anyway with an untested toolchain** requires explicit confirmation and marks the resulting build as untested. A successful launch does not turn it into a certified combination.
 - Game compatibility depends on nxnative, the game version and the toolchain.
 - Output follows the window/display; native 1440p/4K internal rendering is not supported. Render scale is 50–100% where the build supports it. MetalFX is spatial upscaling.
 - Builds run one at a time. iOS/IPA output, automatic engine updates and notarisation are not currently provided.
 
-The [upgrade note](docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md) records the engine review and toolchain requirements.
+The [upgrade note](docs/upstream-upgrades/2026-11-02-163a9905-65501fbb-review.md) records the engine review and toolchain requirements.
 
 ### Data and cleanup
 

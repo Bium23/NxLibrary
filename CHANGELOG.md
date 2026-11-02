@@ -2,6 +2,13 @@
 
 User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
+## 0.1.1 — 2026-11-02
+
+### Changed
+
+- Updated the pinned nxnative engine to `65501fbb`, including AV1 movie decoding with an automatic dav1d fallback, shader-cache and texture-lifetime fixes, more robust rewriting and updated game profiles. Xcode 27.2 and certified Metal `32023.922` remain the requirements.
+- Existing game apps remain playable. Setup prepares the new engine; rebuilding a game applies it to that game. No new everyday settings are required.
+
 ## 0.1.0 — 2026-11-02
 
 First public alpha for Apple-silicon Macs, with a DMG for installation and a ZIP for app updates. See the [release notes and downloads](https://github.com/Bium23/NxLibrary/releases/tag/v0.1.0).

@@ -1,6 +1,6 @@
 # NX Library — catalogo dei file
 
-Aggiornato il 2 novembre 2026. Copertura di **388 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il setup in due passaggi con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 2 novembre 2026. Copertura di **389 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il setup in due passaggi con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -446,7 +446,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/PendingInstallTests.swift](../Tests/NXLibraryCoreTests/PendingInstallTests.swift) | Staging, installazione e cartelle da conservare; riapertura e scansione prima di completare un’installazione già pubblicata. |
 | [Tests/NXLibraryCoreTests/PlaySessionStoreTests.swift](../Tests/NXLibraryCoreTests/PlaySessionStoreTests.swift) | Persistenza, durata, heartbeat e riconciliazione delle sessioni. |
 | [Tests/NXLibraryCoreTests/PortedGameTests.swift](../Tests/NXLibraryCoreTests/PortedGameTests.swift) | Modello del gioco, compatibilità dei record e condizioni di disponibilità dell’app. |
-| [Tests/NXLibraryCoreTests/PortingFailureReasonTests.swift](../Tests/NXLibraryCoreTests/PortingFailureReasonTests.swift) | Classificazione dei fallimenti e corrispondenza con i messaggi del motore locale. |
+| [Tests/NXLibraryCoreTests/PortingFailureReasonTests.swift](../Tests/NXLibraryCoreTests/PortingFailureReasonTests.swift) | Classificazione dei fallimenti e corrispondenza con i messaggi del pin, anche da un checkout separato scelto con NX_TEST_ENGINE_REPO. |
 | [Tests/NXLibraryCoreTests/PortingNoticeTests.swift](../Tests/NXLibraryCoreTests/PortingNoticeTests.swift) | Condizioni e testi delle notifiche di esito del porting. |
 | [Tests/NXLibraryCoreTests/PortingPresentationTests.swift](../Tests/NXLibraryCoreTests/PortingPresentationTests.swift) | ETA, tile, pill e rappresentazione dei fallimenti del porting. |
 | [Tests/NXLibraryCoreTests/PortingProgressTests.swift](../Tests/NXLibraryCoreTests/PortingProgressTests.swift) | Aggregazione delle fasi, avanzamento monotono e peso degli shader. |
@@ -549,6 +549,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [docs/upstream-upgrades/2026-10-29-1963fab-ee369f0.md](../docs/upstream-upgrades/2026-10-29-1963fab-ee369f0.md) | Registro della revisione del delta, scelte di adozione e verifiche per questo upgrade del motore. |
 | [docs/upstream-upgrades/2026-10-31-ee369f0-2716f78.md](../docs/upstream-upgrades/2026-10-31-ee369f0-2716f78.md) | Registro della revisione del delta, scelte di adozione e verifiche per questo upgrade del motore. |
 | [docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md](../docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md) | Registra revisione e adozione del pin: toolchain certificata, nuove sorgenti, interventi UI, prove sintetiche e conferma manuale di build e avvio. |
+| [docs/upstream-upgrades/2026-11-02-163a9905-65501fbb-review.md](../docs/upstream-upgrades/2026-11-02-163a9905-65501fbb-review.md) | Registra l’adozione di 65501fbb, le decisioni UI/backend, i test, la build certificata e l’avvio manuale. |
 | [docs/upstream-upgrades/README.md](../docs/upstream-upgrades/README.md) | Checklist obbligatoria e indice delle revisioni del pin upstream. |
 
 ## Aggiornare questo catalogo

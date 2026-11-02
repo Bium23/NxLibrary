@@ -1,6 +1,6 @@
 # NX Library — guida tecnica
 
-Aggiornata il 2 novembre 2026 sul codice del repository. La mappa comprende 235 file Swift di produzione e 98 file di test e supporto ai test. Il ramo comprende nxnative 163a9905 adottato, il canale di aggiornamento, i flussi cartelle/disponibilità e il setup in due passaggi, con 774 test Swift superati. La build certificata e la prova di gioco manuale sono state confermate dall’utente; la versione principale usa ora lo stesso pin della preview validata.
+Aggiornata il 2 novembre 2026 sul codice del repository. La mappa comprende 235 file Swift di produzione e 98 file di test e supporto ai test. Il ramo comprende nxnative 65501fbb, il canale di aggiornamento, i flussi cartelle/disponibilità e il setup in due passaggi, con 774 test Swift superati.
 
 Questa guida descrive il funzionamento attuale. Il [catalogo dei file](file-map.md) assegna una responsabilità a ogni file versionato, suddiviso per area.
 
@@ -47,7 +47,7 @@ flowchart TD
     Core --> Network["Cataloghi artwork, metadati e release"]
 ```
 
-Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e runtime dei giochi compilati. NX Library prepara gli argomenti, controlla i requisiti e presenta lo stato delle operazioni. Il pin attuale è `163a990515bd42749af9f5dcf4001a68d07390f7`, definito in `AppViewModel.pinnedEngineCommit`. La cache dello stato upstream viene riutilizzata soltanto quando il suo commit di base coincide con il pin.
+Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e runtime dei giochi compilati. NX Library prepara gli argomenti, controlla i requisiti e presenta lo stato delle operazioni. Il pin attuale è `65501fbbaf8526f7aab0a1edd028135888590f8e`, definito in `AppViewModel.pinnedEngineCommit`. La cache dello stato upstream viene riutilizzata soltanto quando il suo commit di base coincide con il pin.
 
 ## Avvio e stato dell’app
 
@@ -106,7 +106,9 @@ Get ready mostra soltanto i sei requisiti tecnici, in una griglia 3×2; i proble
 
 `CompatibilityChecker` verifica commit, modifiche del checkout, contratto CLI e compilatore Metal richiesto dal lock del motore. `ToolchainRequirements.current` contiene Xcode minimo, major .NET e asset Metal. `ToolchainGateCopy` produce la spiegazione del risultato per la UI.
 
-Il lock del pin attuale certifica Metal `32023.922`, asset Apple `27B47`, con Xcode minimo `27.2`. La [nota dell’upgrade del 2 novembre](upstream-upgrades/2026-11-02-2716f78-163a9905-review.md) registra gate certificato senza override, build reale e avvio confermati dall’utente. Un build con override riceve `toolchainVerified=false` e `--allow-other-metal`. Play valuta la disponibilità dell’app già installata separatamente dal gate per un nuovo porting.
+Il lock del pin attuale certifica Metal `32023.922`, asset Apple `27B47`, con Xcode minimo `27.2`. La [nota dell’upgrade del 2 novembre](upstream-upgrades/2026-11-02-163a9905-65501fbb-review.md) registra gate certificato senza override, build reale e avvio confermati dall’utente. Un build con override riceve `toolchainVerified=false` e `--allow-other-metal`. Play valuta la disponibilità dell’app già installata separatamente dal gate per un nuovo porting.
+
+Il pin `65501fbb` aggiorna riscrittura, shader, gestione delle texture, profili e decoder AV1 senza nuovi controlli ordinari. Il motore compila dav1d dalle proprie sorgenti incluse; il runtime del frontend non cambia. Gli hook per incorporare la vista del gioco in un frontend non vengono adottati: NX Library avvia app di gioco separate.
 
 ## Sorgenti e porting
 
@@ -240,7 +242,7 @@ Prima dell’installazione, l’updater acquisisce un’esclusione globale dal `
 
 ## Verifica e manutenzione
 
-La suite Core usa fixture sintetiche, directory temporanee, runner e confini I/O sostituibili. Copre modelli, persistenza, sorgenti, chiavi, contratti CLI, processi, installazione, lancio, UI state, artwork, cheats e transazioni dei salvataggi. Il [catalogo dei test](file-map.md#test-e-fixture) indica la responsabilità di ogni file.
+`NX_TEST_ENGINE_REPO` permette al controllo dei messaggi del motore di usare un checkout separato; il valore esplicito non valido produce un errore. La suite Core usa fixture sintetiche, directory temporanee, runner e confini I/O sostituibili. Copre modelli, persistenza, sorgenti, chiavi, contratti CLI, processi, installazione, lancio, UI state, artwork, cheats e transazioni dei salvataggi. Il [catalogo dei test](file-map.md#test-e-fixture) indica la responsabilità di ogni file.
 
 ```bash
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test

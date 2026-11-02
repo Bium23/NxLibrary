@@ -145,8 +145,11 @@ final class PortingFailureReasonTests: XCTestCase {
 /// The pinned engine still prints every message the table reads; a re-pin that rewords one fails here.
 final class PortingFailureEngineTests: XCTestCase {
     func testFragmentsStillInPinnedEngine() throws {
-        let engine = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("nxnative")
+        let explicitEngine = ProcessInfo.processInfo.environment["NX_TEST_ENGINE_REPO"]
+        let engine = explicitEngine.map { URL(fileURLWithPath: $0) }
+            ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("nxnative")
         guard FileManager.default.fileExists(atPath: engine.appendingPathComponent(".git").path) else {
+            if explicitEngine != nil { return XCTFail("NX_TEST_ENGINE_REPO is not an engine checkout") }
             throw XCTSkip("no ~/nxnative checkout")
         }
         let source = URL(fileURLWithPath: #filePath)

@@ -54,6 +54,8 @@ This directory records the review that must happen before the pin changes, plus 
 - [2026-10-31 — ee369f0 → 2716f78](2026-10-31-ee369f0-2716f78.md) (host cheats; verified with the untested Metal 32023.922 override)
 - [2026-11-02 — 2716f78 → 163a9905](2026-11-02-2716f78-163a9905-review.md) (certified Metal 32023.922; real build and manual launch confirmed by the user; EnginePreview launcher retired)
 
+- [2026-11-02 — 163a9905 → 65501fbb](2026-11-02-163a9905-65501fbb-review.md) (Metal 32023.922; AV1, shader/runtime fixes and updated profiles)
+
 ## Guardrails
 
 - Never patch the engine checkout.
