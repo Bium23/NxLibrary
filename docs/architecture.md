@@ -1,6 +1,6 @@
 # NX Library — guida tecnica
 
-Aggiornata il 2 novembre 2026 sul codice del repository. La mappa comprende 232 file Swift di produzione e 96 file di test e supporto ai test. Il ramo comprende il candidato nxnative 163a9905, il canale di aggiornamento e i flussi cartelle/disponibilità, con 742 test Swift superati; il re-pin definitivo richiede ancora la prova di gioco manuale.
+Aggiornata il 2 novembre 2026 sul codice del repository. La mappa comprende 232 file Swift di produzione e 96 file di test e supporto ai test. Il ramo comprende il candidato nxnative 163a9905, il canale di aggiornamento e i flussi cartelle/disponibilità, con 744 test Swift superati; la prova di gioco manuale è stata confermata dall’utente, mentre il re-pin resta in attesa della verifica dei prompt del controller.
 
 Questa guida descrive il funzionamento attuale. Il [catalogo dei file](file-map.md) assegna una responsabilità a ogni file versionato, suddiviso per area.
 
@@ -191,7 +191,7 @@ Per gli sfondi online, i parser dei provider sono in `OnlineBackgrounds.swift`. 
 
 I componenti condivisi in `Views/Components` disegnano righe, switch, pill, focus, suggerimenti dei tasti, dialoghi e conferme. `SeleneBackdrop` combina gradiente, wallpaper e sfondo animato. `MoonlightRenderer` e `MoonlightShaders` rendono la componente Metal dell’interfaccia. `LiveBackdrop` usa AVFoundation per i video in loop.
 
-`GameControllerService` produce `GamepadAction` e riconosce i simboli dei tasti. La shell assegna l’input al livello attivo. `ButtonPrompts`, `HoldDetector` e i modelli di focus rendono verificabili mapping e navigazione. `SoundEffectService` risolve i cue tramite `SeleneImporter` e applica le impostazioni di volume e attivazione.
+`GameControllerService` produce `GamepadAction` e riconosce i simboli dei tasti. La shell assegna l’input al livello attivo. `ButtonPrompts` esclude i segnaposto costituiti soltanto da forme, comprese varianti come `capsule.portrait.fill`, e usa in quel caso i simboli della marca riconosciuta; conserva glifi significativi come `circle.circle` e `square.circle`. `HoldDetector` e i modelli di focus rendono verificabili mapping e navigazione. `SoundEffectService` risolve i cue tramite `SeleneImporter` e applica le impostazioni di volume e attivazione.
 
 La preferenza Riduci movimento unisce l’impostazione dell’app a quella di sistema. Le viste consumano `seleneReduceMotion`, insieme agli altri valori dell’ambiente Selene.
 

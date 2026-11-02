@@ -58,6 +58,31 @@ final class ButtonPromptsTests: XCTestCase {
         XCTAssertFalse(ButtonPrompts.isGenericShape("line.3.horizontal.circle"))
     }
 
+    func testAutomaticPlayStationRejectsDecoratedShapePlaceholders() {
+        for name in ["capsule.portrait", "capsule.portrait.fill", "oval.portrait.fill",
+                     "rectangle.portrait.fill", "rectangle.roundedtop.fill", "button.horizontal.fill"] {
+            XCTAssertTrue(ButtonPrompts.isGenericShape(name), name)
+            XCTAssertEqual(ButtonPrompts.symbol(.view, style: .automatic, connected: .playstation,
+                                               reported: [.view: name]), "square.and.arrow.up.circle", name)
+            XCTAssertEqual(ButtonPrompts.symbol(.menu, style: .automatic, connected: .playstation,
+                                               reported: [.menu: name]), "line.3.horizontal.circle", name)
+        }
+        XCTAssertEqual(ButtonPrompts.symbol(.view, style: .automatic, connected: .xbox,
+                                           reported: [.view: "capsule.portrait"]), "rectangle.on.rectangle.circle")
+        XCTAssertEqual(ButtonPrompts.symbol(.menu, style: .automatic, connected: .nintendo,
+                                           reported: [.menu: "button.horizontal.fill"]), "plus.circle")
+    }
+
+    func testGeometricFaceButtonsAndMeaningfulReportedGlyphsArePreserved() {
+        for name in ["circle.circle", "circle.circle.fill", "square.circle", "square.circle.fill",
+                     "rectangle.on.rectangle.circle", "square.and.arrow.up.circle.fill",
+                     "l1.rectangle.roundedbottom", "triangle.circle.fill"] {
+            XCTAssertFalse(ButtonPrompts.isGenericShape(name), name)
+            XCTAssertEqual(ButtonPrompts.symbol(.a, style: .automatic, connected: .playstation,
+                                               reported: [.a: name]), name)
+        }
+    }
+
     func testAutomaticFallsBackToTheBrandTable() {
         XCTAssertEqual(ButtonPrompts.symbol(.a, style: .automatic, connected: .playstation), "xmark.circle")
         XCTAssertEqual(ButtonPrompts.symbol(.lt, style: .automatic, connected: .nintendo), "zl.rectangle.roundedtop")

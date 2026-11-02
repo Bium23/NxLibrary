@@ -10,7 +10,7 @@ The current source preview identifies itself as **0.1.0 alpha**. No tagged or do
 
 - Public GitHub app-update channel on `Bium23/NxLibrary`, without a separate user login. Packaged release copies can offer, download, verify and install newer versions; the first downloadable release and interactive A → B check are still pending.
 
-- Candidate integration for nxnative `163a9905`: extracted-folder inputs without keys, registered-profile checks, multi-title package selection, bundled-content review and unique source-size accounting. The stable engine pin is unchanged pending a real certified build and manual launch.
+- Candidate integration for nxnative `163a9905`: extracted-folder inputs without keys, registered-profile checks, multi-title package selection, bundled-content review and unique source-size accounting. A certified build and manual launch have been confirmed by the user; the stable pin is unchanged while the controller-prompt correction is verified before adoption.
 
 - A native macOS library with Spotlight, Collection, search, favourites, hidden games and game details.
 - Guided Setup and local nxnative builds from user-supplied sources, with base/update/DLC review, progress, logs and cancellation. Existing game apps can be imported and played without their sources.
@@ -31,6 +31,8 @@ The current source preview identifies itself as **0.1.0 alpha**. No tagged or do
 - App-update preparation and background snapshot preparation run outside the main UI work. Source builds do not update themselves; packaged releases use the project's public GitHub release channel.
 
 ### Fixed
+
+- Automatic controller prompts discard shape-only variants such as `capsule.portrait` and use the controller brand's readable symbols. Collection/Menu prompts no longer accept those shapes as black filled badges; meaningful PlayStation face-button glyphs remain unchanged.
 
 - Missing configured folders remain remembered, and a folder selected during the startup scan is scanned before results are published. Unbuilt workspaces and active portings are no longer mistaken for missing installed apps during refresh.
 

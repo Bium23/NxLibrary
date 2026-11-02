@@ -71,12 +71,19 @@ public enum ButtonPrompts {
         }
     }
 
-    /// Identifies generic placeholder shapes (like plain "circle" or "capsule") reported by
-    /// GameController when a physical button does not have an explicit SF Symbol icon.
+    /// Shape-only placeholders have no button mark to show in a two-colour badge.
+    /// Keep real glyphs such as `circle.circle`, `square.circle` and stacked rectangles.
     public static func isGenericShape(_ name: String) -> Bool {
-        let stripped = name.hasSuffix(".fill") ? String(name.dropLast(5)) : name
-        return stripped == "circle" || stripped == "capsule" || stripped == "square" || stripped == "rectangle"
+        let parts = name.split(separator: ".")
+        guard let shape = parts.first, genericShapes.contains(String(shape)) else { return false }
+        return parts.dropFirst().allSatisfy { shapeModifiers.contains(String($0)) }
     }
+
+    private static let genericShapes: Set<String> = ["circle", "capsule", "square", "rectangle", "oval", "button"]
+    private static let shapeModifiers: Set<String> = [
+        "fill", "portrait", "landscape", "horizontal", "vertical", "roundedtop", "roundedbottom",
+        "inset", "filled", "dashed", "dotted", "lefthalf", "righthalf", "tophalf", "bottomhalf"
+    ]
 
     private static func nintendoSymbol(_ b: PromptButton) -> String {
         switch b {
