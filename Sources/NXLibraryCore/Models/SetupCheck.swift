@@ -1,9 +1,9 @@
 import Foundation
 
-/// The Setup check's cards, in screen order: what NX Library installs first,
-/// then what the player brings.
+/// The Setup check's cards, in screen order: the player's folders first,
+/// then prerequisites for building games.
 public enum SetupItemID: String, CaseIterable, Codable {
-    case xcode, metal, dotnet, engine, runtime, keys, library
+    case library, sources, xcode, metal, dotnet, engine, runtime, keys
 }
 
 public enum SetupState: String, Codable, Equatable {
@@ -22,6 +22,8 @@ public struct SetupItem: Identifiable, Equatable {
     public var actionTitle: String?
     /// While working: how far it has got, for the card's bar; nil draws a moving bar.
     public var progress: Double? = nil
+    /// Optional choices stay visible without counting as unfinished Setup steps.
+    public var isRequired: Bool = true
 }
 
 public enum EngineFacts: Equatable {
@@ -47,7 +49,13 @@ public struct SetupFacts: Equatable {
     /// Only engines with an extracted-folder input can build without prod.keys.
     public var keysOptional: Bool = false
     /// nil: no folder chosen.
-    public var libraryWritable: Bool?
+    public var libraryReadable: Bool?
+    public var libraryFolder: URL? = nil
+    /// First Setup still needs an explicit choice, even if a default folder exists.
+    public var libraryNeedsConfirmation: Bool = false
+    public var sourcesFolder: URL? = nil
+    public var sourcesReadable: Bool? = nil
+    public var extractedFoldersSupported: Bool = false
     /// "27.1"; nil when xcodebuild did not say.
     public var xcodeVersion: String?
     /// The newest SDK of the required major Microsoft publishes; nil until known.
@@ -59,7 +67,7 @@ public struct SetupFacts: Equatable {
 
     public init(xcodeStatus: Int32?, metalVersion: String?, certifiedMetal: String, allowUntested: Bool,
                 dotnetSDKs: [String], engine: EngineFacts, engineFolder: URL, pinnedCommit: String,
-                runtimeProblem: String?, keys: KeySummary?, keysError: String?, libraryWritable: Bool?,
+                runtimeProblem: String?, keys: KeySummary?, keysError: String?, libraryReadable: Bool?,
                 xcodeVersion: String? = nil, dotnetLatest: String? = nil,
                 requirements: ToolchainRequirements = .current, engineBehind: Bool? = nil) {
         self.xcodeStatus = xcodeStatus
@@ -73,7 +81,7 @@ public struct SetupFacts: Equatable {
         self.runtimeProblem = runtimeProblem
         self.keys = keys
         self.keysError = keysError
-        self.libraryWritable = libraryWritable
+        self.libraryReadable = libraryReadable
         self.xcodeVersion = xcodeVersion
         self.dotnetLatest = dotnetLatest
         self.requirements = requirements
@@ -140,7 +148,8 @@ public enum SetupCheck {
     /// never for something the player has not set up yet.
     public static func shouldReopen(previous: [SetupItemID: SetupState], current: [SetupItem]) -> Bool {
         current.contains { item in
-            previous[item.id] == .ready && (item.state == .missing || item.state == .warning || item.state == .failed)
+            item.isRequired && previous[item.id] == .ready
+                && (item.state == .missing || item.state == .warning || item.state == .failed)
         }
     }
 
@@ -250,17 +259,40 @@ public enum SetupCheck {
             return SetupItem(id: id, title: "Keys", state: .missing, chip: "NOT IMPORTED", about: about,
                              detail: f.keysError ?? "Choose your prod.keys file.", actionTitle: "Choose file")
         case .library:
-            let about = "Where built games go."
-            switch f.libraryWritable {
+            let about = GameFoldersCopy.appsAbout
+            if f.libraryNeedsConfirmation {
+                return SetupItem(id: id, title: GameFoldersCopy.appsTitle, state: .needsYou, chip: "CHOOSE FOLDER", about: about,
+                                 detail: f.libraryFolder.map { "Choose this folder or another: \($0.path)" }
+                                    ?? "Choose a folder for existing apps, or an empty folder to start.",
+                                 actionTitle: "Choose folder")
+            }
+            switch f.libraryReadable {
             case nil:
-                return SetupItem(id: id, title: "Library folder", state: .missing, chip: "NOT CHOSEN", about: about,
-                                 detail: "Choose a folder for your games.", actionTitle: "Choose folder")
+                return SetupItem(id: id, title: GameFoldersCopy.appsTitle, state: .missing, chip: "NOT CHOSEN", about: about,
+                                 detail: "Choose the folder containing your game apps.", actionTitle: "Choose folder")
             case false?:
-                return SetupItem(id: id, title: "Library folder", state: .warning, chip: "NOT WRITABLE", about: about,
-                                 detail: "NX Library cannot write there. Choose another folder.", actionTitle: "Choose folder")
+                return SetupItem(id: id, title: GameFoldersCopy.appsTitle, state: .warning, chip: "NOT READABLE", about: about,
+                                 detail: f.libraryFolder.map { "Cannot read \($0.path). Reconnect it or choose another." }
+                                    ?? "NX Library cannot read this folder. Reconnect it or choose another.", actionTitle: "Choose folder")
             case true?:
-                return SetupItem(id: id, title: "Library folder", state: .ready, chip: "✓ READY", about: about,
-                                 detail: "Games build here.", actionTitle: "Change")
+                return SetupItem(id: id, title: GameFoldersCopy.appsTitle, state: .ready, chip: "✓ READY", about: about,
+                                 detail: f.libraryFolder?.path ?? "Ready to find existing game apps.", actionTitle: "Change")
+            }
+        case .sources:
+            let about = GameFoldersCopy.sourcesAbout(extractedFolders: f.extractedFoldersSupported)
+            switch f.sourcesReadable {
+            case nil:
+                return SetupItem(id: id, title: GameFoldersCopy.sourcesTitle, state: .ready, chip: "OPTIONAL", about: about,
+                                 detail: "Existing game apps play without sources. Choose later in Settings → Library.",
+                                 actionTitle: "Choose folder", isRequired: false)
+            case false?:
+                return SetupItem(id: id, title: GameFoldersCopy.sourcesTitle, state: .warning, chip: "FOLDER UNAVAILABLE", about: about,
+                                 detail: f.sourcesFolder.map { "Unavailable: \($0.path). Existing game apps still play." }
+                                    ?? "Reconnect this folder or choose another. Existing game apps still play.",
+                                 actionTitle: "Change", isRequired: false)
+            case true?:
+                return SetupItem(id: id, title: GameFoldersCopy.sourcesTitle, state: .ready, chip: "✓ CHOSEN", about: about,
+                                 detail: f.sourcesFolder?.path ?? "Ready to find game sources.", actionTitle: "Change", isRequired: false)
             }
         }
     }

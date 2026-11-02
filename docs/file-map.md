@@ -1,6 +1,6 @@
 # NX Library — catalogo dei file
 
-Aggiornato il 2 novembre 2026. Copertura di **372 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, l'integrazione del candidato nxnative e il canale di aggiornamento dell'app. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 2 novembre 2026. Copertura di **375 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, l'integrazione del candidato nxnative, il canale di aggiornamento e i flussi cartelle/disponibilità. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -109,6 +109,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/PortedGame.swift](../Sources/NXLibraryCore/Models/PortedGame.swift) | Modello persistente del gioco con bundle, sorgenti, impostazioni, build e installazione in attesa. |
 | [Sources/NXLibraryCore/Models/LibraryFile.swift](../Sources/NXLibraryCore/Models/LibraryFile.swift) | Contenitore versionato del catalogo della libreria. |
 | [Sources/NXLibraryCore/Models/GameStatus.swift](../Sources/NXLibraryCore/Models/GameStatus.swift) | Enumera disponibilità e stato del gioco rispetto ad app, sorgenti e porting. |
+| [Sources/NXLibraryCore/Models/GameResourceState.swift](../Sources/NXLibraryCore/Models/GameResourceState.swift) | Distingue app mancanti, sorgenti assenti e workspace non compilati, riconcilia gli stati e conserva Play per una build esistente. |
 | [Sources/NXLibraryCore/Models/AppSettings.swift](../Sources/NXLibraryCore/Models/AppSettings.swift) | Definisce impostazioni globali, default e decodifica compatibile dei campi aggiunti nel tempo. |
 | [Sources/NXLibraryCore/Models/LibraryFilter.swift](../Sources/NXLibraryCore/Models/LibraryFilter.swift) | Definisce filtri, PlayHistory e LibraryQuery per ricerca e ordinamento dei giochi. |
 | [Sources/NXLibraryCore/Models/LibrarySelectionState.swift](../Sources/NXLibraryCore/Models/LibrarySelectionState.swift) | Mantiene selezione e spostamento nel risultato filtrato della Collection. |
@@ -132,6 +133,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/ToolchainInfo.swift](../Sources/NXLibraryCore/Models/ToolchainInfo.swift) | Registra provenienza e verifica della toolchain associata a un build. |
 | [Sources/NXLibraryCore/Models/ToolchainGateCopy.swift](../Sources/NXLibraryCore/Models/ToolchainGateCopy.swift) | Traduce il gate in testi distinguendo Metal certificato, precedente e successivo. |
 | [Sources/NXLibraryCore/Models/SetupCheck.swift](../Sources/NXLibraryCore/Models/SetupCheck.swift) | Converte fatti e override del Setup in schede, stati, azioni e condizioni di riapertura. |
+| [Sources/NXLibraryCore/Models/GameFoldersCopy.swift](../Sources/NXLibraryCore/Models/GameFoldersCopy.swift) | Condivide nomi delle cartelle, formati e descrizioni tra Setup, Settings e selettori dei percorsi. |
 | [Sources/NXLibraryCore/Models/SetupGrid.swift](../Sources/NXLibraryCore/Models/SetupGrid.swift) | Calcola disposizione, centratura e navigazione del focus nella griglia del Setup. |
 | [Sources/NXLibraryCore/Models/UpstreamCopy.swift](../Sources/NXLibraryCore/Models/UpstreamCopy.swift) | Prepara i testi del changelog upstream e dell’adozione degli aggiornamenti tramite NX Library. |
 | [Sources/NXLibraryCore/Services/NXNativeEnvironment.swift](../Sources/NXLibraryCore/Services/NXNativeEnvironment.swift) | Ispeziona strumenti, Python, Xcode, Metal e .NET e restituisce uno stato dell’ambiente. |
@@ -413,6 +415,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/EnvironmentTests.swift](../Tests/NXLibraryCoreTests/EnvironmentTests.swift) | Parsing di Metal e controlli dell’ambiente mediante runner sintetico. |
 | [Tests/NXLibraryCoreTests/FocusIndexTests.swift](../Tests/NXLibraryCoreTests/FocusIndexTests.swift) | Movimento limitato agli elementi della lista e liste vuote. |
 | [Tests/NXLibraryCoreTests/GameDetailPresentationTests.swift](../Tests/NXLibraryCoreTests/GameDetailPresentationTests.swift) | Disponibilità di build e sorgenti e formattazione di metadati e azioni Details. |
+| [Tests/NXLibraryCoreTests/GameResourceStateTests.swift](../Tests/NXLibraryCoreTests/GameResourceStateTests.swift) | App spostata e ripristinata, input assenti, Play senza sorgenti e conservazione di workspace e build attive durante Refresh. |
 | [Tests/NXLibraryCoreTests/GameOptionsPresentationTests.swift](../Tests/NXLibraryCoreTests/GameOptionsPresentationTests.swift) | Ordine delle righe, focus, visibilità dei controlli e valori runtime. |
 | [Tests/NXLibraryCoreTests/GameRuntimeConfigTests.swift](../Tests/NXLibraryCoreTests/GameRuntimeConfigTests.swift) | Review di giochi nuovi ed esistenti, persistenza, lingua del rebuild e conversione DM_* con merge di env.txt. |
 | [Tests/NXLibraryCoreTests/GameTDBTests.swift](../Tests/NXLibraryCoreTests/GameTDBTests.swift) | Database, normalizzazione dei nomi, regioni e matching delle copertine. |

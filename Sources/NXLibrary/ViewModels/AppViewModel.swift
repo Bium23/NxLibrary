@@ -230,6 +230,10 @@ public final class AppViewModel: ObservableObject {
             }
         }
     }
+    /// First use asks explicitly where the ready-made games are; later Setup visits keep that choice.
+    public var requiresGameAppsFolderChoice: Bool {
+        !setupCompleted && UserDefaults.standard.string(forKey: StorageKeys.savedLibraryFolder) == nil
+    }
     @Published public var isScanningLibrary: Bool = false
     @Published public var gameForSettingsSheet: PortedGame? = nil
     /// Where the open Game options came from; decides its rows (Move is Spotlight-only).
@@ -396,8 +400,7 @@ public final class AppViewModel: ObservableObject {
         // The launcher's old ~/Games default is not a Mac-app library.
         let oldGamesDefault = root.appendingPathComponent("Games").standardized.path
         if let savedLib = UserDefaults.standard.string(forKey: StorageKeys.savedLibraryFolder),
-           savedLib != oldGamesDefault,
-           FileManager.default.fileExists(atPath: savedLib) {
+           savedLib != oldGamesDefault, !savedLib.isEmpty, savedLib != "/" {
             self.libraryFolder = URL(fileURLWithPath: savedLib)
         } else {
             self.libraryFolder = root.appendingPathComponent("Applications")
@@ -418,8 +421,7 @@ public final class AppViewModel: ObservableObject {
         
         // Restore saved game folder if it exists
         if let savedGamePath = UserDefaults.standard.string(forKey: StorageKeys.savedGameFolder) {
-            var isDir: ObjCBool = false
-            if FileManager.default.fileExists(atPath: savedGamePath, isDirectory: &isDir), isDir.boolValue {
+            if !savedGamePath.isEmpty, savedGamePath != "/" {
                 restoringGameFolder = !startup.refreshLibraryAtLaunch
                 self.selectedGameFolder = URL(fileURLWithPath: savedGamePath)
                 restoringGameFolder = false
@@ -782,9 +784,14 @@ public final class AppViewModel: ObservableObject {
             && (isProdKeysValid || engineSourceCapabilities.extractedFolders)
             && environmentStatus?.canBuild == true
             && libraryFolder != nil
+            && !requiresGameAppsFolderChoice
     }
 
     public func completeSetup() {
+        guard !requiresGameAppsFolderChoice else {
+            alertMessage = "Choose your Game apps folder to continue."
+            return
+        }
         setupCompleted = true
         showSetupCheck = false
         UserDefaults.standard.set(true, forKey: StorageKeys.setupCompleted)
@@ -917,12 +924,19 @@ public final class AppViewModel: ObservableObject {
         }
         let store = libraryStore
         let importer = importService
+        let folderSnapshot = libraryFolder?.standardizedFileURL
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let loaded = (try? store.load()) ?? LibraryFile()
             let scanned = importer.scan(directories: directories)
             let importedGames = scanned.map { importer.makeGame(from: $0) }
             DispatchQueue.main.async {
                 guard let self else { return }
+                // A folder chosen during the startup scan gets its own scan before results appear.
+                guard self.libraryFolder?.standardizedFileURL == folderSnapshot else {
+                    self.isScanningLibrary = false
+                    self.loadLibrary()
+                    return
+                }
                 self.importedApps = scanned
                 var scannedByTitle: [String: ImportedApp] = [:]
                 for app in scanned {
@@ -953,22 +967,9 @@ public final class AppViewModel: ObservableObject {
                             ?? library.games[index].bundleId
                     }
                     let appExists = fm.fileExists(atPath: library.games[index].url.path)
-                    let sourcesExist = !library.games[index].sources.isEmpty
-                        && library.games[index].sources.allSatisfy { fm.fileExists(atPath: $0.url.path) }
-                    if !appExists {
-                        library.games[index].status = .appMissing
-                    } else if !sourcesExist {
-                        if library.games[index].sources.isEmpty
-                            || library.games[index].status == .built
-                            || library.games[index].status == .builtSourcesMissing
-                            || library.games[index].status == .needsRebuild {
-                            library.games[index].status = .builtSourcesMissing
-                        }
-                    } else if library.games[index].status == .builtSourcesMissing
-                                || library.games[index].status == .needsRebuild
-                                || library.games[index].status == .appMissing {
-                        library.games[index].status = .built
-                    }
+                    let sourcesExist = GameResourceState.sourcesAvailable(for: library.games[index], fileManager: fm)
+                    library.games[index].status = GameResourceState.reconciledStatus(
+                        for: library.games[index], appExists: appExists, sourcesAvailable: sourcesExist)
                 }
                 try? store.save(library)
                 self.libraryGames = library.games.sorted {
@@ -1052,10 +1053,16 @@ public final class AppViewModel: ObservableObject {
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
-        panel.prompt = "Select Library Folder"
-        panel.message = "Choose a folder containing built Mac apps."
+        panel.canCreateDirectories = true
+        panel.directoryURL = libraryFolder
+        panel.prompt = "Choose folder"
+        panel.message = GameFoldersCopy.appsPickerMessage
 
         if panel.runModal() == .OK, let url = panel.url {
+            guard url.standardizedFileURL.path != "/" else {
+                alertMessage = "Choose the folder containing your game apps, rather than a whole disk."
+                return
+            }
             self.libraryFolder = url
             loadLibrary()
         }
@@ -1071,8 +1078,19 @@ public final class AppViewModel: ObservableObject {
         guard savesPermitPlay(game) else { return }
         // A build that waited for the game to quit goes in first.
         let game = installingPendingBuild(of: game)
+        if !FileManager.default.fileExists(atPath: game.url.path),
+           game.isPlayableLocally || game.status == .appMissing {
+            let reason = GameUnavailableReason.appMissing
+            lastError = reason.title + ". " + reason.detail
+            alertMessage = lastError
+            updateStoredStatus(.appMissing, for: game)
+            SoundEffectService.shared.play(.error)
+            return
+        }
         guard game.isPlayableLocally else {
-            let message = "This game is not built yet. Add sources and build it first."
+            let reason = GameResourceState.unavailableReason(for: game)
+            let message = reason.map { $0.title + ". " + $0.detail }
+                ?? "This game is not built yet. Build it first."
             lastError = message
             alertMessage = message
             SoundEffectService.shared.play(.error)
@@ -1080,7 +1098,8 @@ public final class AppViewModel: ObservableObject {
             return
         }
         guard FileManager.default.fileExists(atPath: game.url.path) else {
-            lastError = NXLibraryError.appMissing(game.url.path).localizedDescription
+            let reason = GameUnavailableReason.appMissing
+            lastError = reason.title + ". " + reason.detail
             alertMessage = lastError
             updateStoredStatus(.appMissing, for: game)
             SoundEffectService.shared.play(.error)
@@ -1732,8 +1751,9 @@ public final class AppViewModel: ObservableObject {
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
-        panel.prompt = "Choose Game Folder"
-        panel.message = "Select a folder holding your game NSP, NSZ, or XCI files."
+        panel.directoryURL = selectedGameFolder
+        panel.prompt = "Choose folder"
+        panel.message = GameFoldersCopy.sourcesPickerMessage(extractedFolders: engineSourceCapabilities.extractedFolders)
         
         if panel.runModal() == .OK, let url = panel.url {
             self.selectedGameFolder = url

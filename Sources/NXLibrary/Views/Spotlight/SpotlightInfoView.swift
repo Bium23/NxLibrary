@@ -51,6 +51,13 @@ struct SpotlightGameInfoView: View {
                         .padding(.leading, canvas.u(4))
                         .padding(.top, canvas.u(20))
                 }
+                if let reason = pillSet.unavailableReason {
+                    Text(reason.title)
+                        .seleneFont(19, .semibold)
+                        .foregroundColor(SeleneTheme.ink75)
+                        .padding(.leading, canvas.u(4))
+                        .padding(.top, canvas.u(20))
+                }
                 pills
                     .padding(.leading, canvas.u(2))
                     .padding(.top, canvas.u(pillSet.isFailed ? 10 : 18))
@@ -117,8 +124,15 @@ struct SpotlightGameInfoView: View {
                     .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink60)
             }
+        case .unavailable(let reason):
+            Text(reason.detail).seleneFont(15).foregroundColor(SeleneTheme.ink60)
         case .normal:
-            EmptyView()
+            if !game.sources.isEmpty, !GameResourceState.sourcesAvailable(for: game) {
+                Text("Game files not found · Rebuild unavailable")
+                    .seleneFont(15).foregroundColor(SeleneTheme.ink60)
+            } else if !game.isPlayableLocally {
+                Text("Not built yet").seleneFont(15).foregroundColor(SeleneTheme.ink60)
+            }
         }
     }
 
@@ -135,15 +149,15 @@ struct SpotlightGameInfoView: View {
                                                  focused: focusedPill == index) { onPill(index) })
                 }
             }
-        case .normal, .normalAfterFailure:
+        case .normal, .normalAfterFailure, .unavailable:
             normalPills
         }
     }
 
     private var normalPills: some View {
         HStack(spacing: canvas.u(14)) {
-            pill(0, SelenePillButton(title: isRunning ? "Resume" : "Play", height: 52,
-                                     focused: focusedPill == 0) { onPill(0) })
+            pill(0, SelenePillButton(title: primaryTitle, height: 52, focused: focusedPill == 0,
+                                     enabled: isRunning || pillSet.unavailableReason == nil) { onPill(0) })
             pill(1, SelenePillButton(title: isRunning ? "Close Game" : "Options", height: 52,
                                      focused: focusedPill == 1) { onPill(1) })
             pill(2, SelenePillButton(title: nil, icon: game.isFavorite ? .favorite : .favoriteBorder,
@@ -151,6 +165,12 @@ struct SpotlightGameInfoView: View {
                                      focused: focusedPill == 2) { onPill(2) })
                 .accessibilityLabel(game.isFavorite ? "Remove from favorites" : "Add to favorites")
         }
+    }
+
+    private var primaryTitle: String {
+        if isRunning { return "Resume" }
+        if pillSet.unavailableReason != nil { return "Unavailable" }
+        return game.isPlayableLocally ? "Play" : "Build"
     }
 
     /// Selene's pill Button is 60 high around a 52 high capsule.

@@ -52,6 +52,13 @@ struct DetailsTopBlock: View {
                     .padding(.leading, canvas.u(4))
                     .padding(.top, canvas.u(22))
             }
+            if let reason = pillSet.unavailableReason {
+                Text(reason.title)
+                    .seleneFont(19, .semibold)
+                    .foregroundColor(SeleneTheme.ink75)
+                    .padding(.leading, canvas.u(4))
+                    .padding(.top, canvas.u(22))
+            }
             pills
                 .padding(.top, canvas.u(pillSet.isFailed ? 10 : 26))
             note
@@ -114,8 +121,14 @@ struct DetailsTopBlock: View {
             if failure == .failed, let reason = game.portingFailureReason {
                 Text(reason.title).seleneFont(15).foregroundColor(SeleneTheme.ink60)
             }
+        case .unavailable(let reason):
+            Text(reason.detail).seleneFont(15).foregroundColor(SeleneTheme.ink60)
         case .normal:
-            EmptyView()
+            if !game.sources.isEmpty, !GameResourceState.sourcesAvailable(for: game) {
+                Text("Game files not found · Rebuild unavailable").seleneFont(15).foregroundColor(SeleneTheme.ink60)
+            } else if !game.isPlayableLocally {
+                Text("Not built yet").seleneFont(15).foregroundColor(SeleneTheme.ink60)
+            }
         }
     }
 
@@ -134,7 +147,7 @@ struct DetailsTopBlock: View {
                         .onHover { if $0 { onHoverPill(index) } }
                 }
             }
-        case .normal, .normalAfterFailure:
+        case .normal, .normalAfterFailure, .unavailable:
             normalPills
         }
     }
@@ -143,7 +156,7 @@ struct DetailsTopBlock: View {
         HStack(spacing: canvas.u(14)) {
             SelenePillButton(title: primaryTitle, minWidth: 200, height: 52,
                              horizontalPadding: 36, focused: focusedPill == 0,
-                             enabled: primaryEnabled, action: onPrimary)
+                             enabled: isRunning || (primaryEnabled && pillSet.unavailableReason == nil), action: onPrimary)
                 .onHover { if $0 { onHoverPill(0) } }
             SelenePillButton(title: isRunning ? "Close Game" : "Options", minWidth: 200, height: 52,
                              horizontalPadding: 36, focused: focusedPill == 1,
@@ -159,6 +172,7 @@ struct DetailsTopBlock: View {
 
     private var primaryTitle: String {
         if isRunning { return "Resume" }
+        if pillSet.unavailableReason != nil { return "Unavailable" }
         return presentation.canPlay ? "Play" : "Build"
     }
 

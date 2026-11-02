@@ -1,6 +1,6 @@
 # NX Library — guida tecnica
 
-Aggiornata il 2 novembre 2026 sul codice del repository. La mappa comprende 230 file Swift di produzione e 95 file di test e supporto ai test. L'integrazione del candidato nxnative 163a9905 e del canale di aggiornamento ha superato 726 test Swift; il re-pin definitivo richiede ancora la prova di gioco manuale.
+Aggiornata il 2 novembre 2026 sul codice del repository. La mappa comprende 232 file Swift di produzione e 96 file di test e supporto ai test. Il ramo comprende il candidato nxnative 163a9905, il canale di aggiornamento e i flussi cartelle/disponibilità, con 742 test Swift superati; il re-pin definitivo richiede ancora la prova di gioco manuale.
 
 Questa guida descrive il funzionamento attuale. Il [catalogo dei file](file-map.md) assegna una responsabilità a ogni file versionato, suddiviso per area.
 
@@ -65,6 +65,8 @@ La shell condivide un solo `AppSettingsStore` con router e coordinatore. L’avv
 
 `PortedGame` rappresenta un titolo della libreria. Include identità, app installata, sorgenti, impostazioni runtime, ultimo porting, toolchain e installazione eventualmente differita. `LibraryFile` è il contenitore persistito in `library.json`.
 
+`GameResourceState` riconcilia app, sorgenti e stato: conserva build in corso e workspace non ancora compilati, distingue app mancante e file di origine mancanti e mantiene Play per una build esistente. Le viste usano `PortingPills.unavailable` per il motivo breve e l'azione primaria disabilitata; `PortingTileLook.locked` riusa sfocatura e lucchetto. La voce rimane in libreria. Non viene aggiunta alcuna ricerca dell'app spostata; Refresh controlla le cartelle già configurate. Un cambio cartella durante la scansione scarta il contesto precedente e avvia quella nuova.
+
 `ImportService` scansiona i bundle `.app`, legge `Info.plist`, riconosce gli identificativi nxnative e produce le voci importabili. `AppSizeCache` ricorda le dimensioni in funzione di percorso e data di modifica. `LibraryStore` carica e salva il catalogo, conserva `library.json.bak` e offre il merge delle voci. Il coordinamento applicativo riconcilia app trovate, dati già salvati e sorgenti disponibili.
 
 Il merge parte dalla voce persistita e aggiorna esplicitamente i dati osservati dalla scansione. Conserva impostazioni, identità, preferiti, installazione in attesa ed errore dell’ultimo porting. Restano le regole precedenti per associare le sorgenti e conservare la provenienza di una build installata.
@@ -97,6 +99,8 @@ Le viste principali sono Spotlight, Collection e Details. Ricerca, Add Game, Con
 `SystemDetector` e `EngineLocation` individuano checkout e cartelle dell’utente. `NXNativeEnvironment` raccoglie lo stato di Python, strumenti, Xcode, Metal e .NET. `EngineToolchain` risolve Python e `PATH`, preferendo il runtime incluso nel bundle quando disponibile.
 
 `SetupProbe` costruisce i dati del Setup. `SetupCheck` li traduce in schede, stati e azioni. `SetupCheckModel` esegue i controlli in background e coordina installazioni e avanzamento. `SetupActions` prepara gli argomenti Git per portare un checkout gestibile al pin. `DotnetRelease` seleziona il pacchetto Microsoft e verifica SHA-512 prima dell’apertura nell’Installer di macOS.
+
+Le prime schede sono Game apps e Game files, con copy condiviso in `GameFoldersCopy`. Game apps richiede la scelta esplicita al primo Setup e soltanto lettura della cartella; Game files è facoltativa e non entra nei requisiti di completamento o riapertura. Le selezioni restano ricordate anche quando un percorso non è disponibile. Settings → Library usa gli stessi nomi. Queste cartelle governano scoperta delle app e selezione degli input: l'installazione delle nuove build resta in `~/Applications` e le selezioni dei sorgenti per singolo gioco vengono sostituite soltanto con conferma esplicita.
 
 `CompatibilityChecker` verifica commit, modifiche del checkout, contratto CLI e compilatore Metal richiesto dal lock del motore. `ToolchainRequirements.current` contiene Xcode minimo, major .NET e asset Metal. `ToolchainGateCopy` produce la spiegazione del risultato per la UI.
 

@@ -48,7 +48,7 @@ final class SettingsCatalogTests: XCTestCase {
             ("60 FPS", .games), ("Fullscreen", .games), ("Metal HUD", .games),
             ("Render scale", .games), ("App icon", .look),
             ("Stick navigation deadzone", .controllers), ("Cloud saves folder", .games),
-            ("Engine repository", .engine), ("Game ROMs folder", .library)
+            ("Engine repository", .engine), ("Game apps", .library), ("Game files", .library)
         ]
         for (name, group) in controls {
             XCTAssertTrue(SettingsCatalog.search(name).contains { $0.group == group }, name)

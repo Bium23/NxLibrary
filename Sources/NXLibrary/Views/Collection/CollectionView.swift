@@ -243,6 +243,21 @@ struct CollectionInfoView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             logoArea
+            if let reason = GameResourceState.unavailableReason(for: game) {
+                Text(reason.title)
+                    .seleneFont(19, .semibold)
+                    .foregroundColor(SeleneTheme.ink75)
+                    .padding(.top, canvas.u(20))
+                Text(reason.detail)
+                    .seleneFont(15)
+                    .foregroundColor(SeleneTheme.ink60)
+                    .padding(.top, canvas.u(6))
+            } else if !game.isPlayableLocally, game.status != .building, game.portingFailure == nil {
+                Text("Not built yet")
+                    .seleneFont(17)
+                    .foregroundColor(SeleneTheme.ink75)
+                    .padding(.top, canvas.u(20))
+            }
             SeleneStatsRow(presentation: presentation)
                 .padding(.top, canvas.u(28))
             if !presentation.genres.isEmpty {

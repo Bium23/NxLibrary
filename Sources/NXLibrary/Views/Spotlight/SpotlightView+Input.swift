@@ -243,6 +243,11 @@ extension SpotlightView {
             default: viewModel.askRemoveGame(game)
             }
             return
+        case .unavailable:
+            if index == 0, !runningGames.isRunning(game) {
+                SoundEffectService.shared.play(.error)
+                return
+            }
         case .normal, .normalAfterFailure:
             break
         }
@@ -267,11 +272,16 @@ extension SpotlightView {
     }
 
     private func play(_ game: PortedGame) {
+        guard GameResourceState.unavailableReason(for: game) == nil else {
+            SoundEffectService.shared.play(.error)
+            return
+        }
         if game.isPlayableLocally {
             viewModel.launchGame(game)
         } else {
             // Not built yet: scroll down to Build & Sources.
-            mutate { $0.focus = .actions; $0.actionIndex = 0 }
+            let canBuild = GameResourceState.sourcesAvailable(for: game)
+            mutate { $0.focus = .actions; $0.actionIndex = canBuild ? 1 : 0 }
         }
     }
 

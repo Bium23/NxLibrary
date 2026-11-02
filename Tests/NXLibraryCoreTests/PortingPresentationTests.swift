@@ -65,7 +65,7 @@ final class PortingPresentationTests: XCTestCase {
                        .preparing(step: 3, count: 7, title: "Rewrite", detail: "checking the inputs"))
         XCTAssertEqual(PortingTileLook.make(game: porting, portingGameID: porting.id, progress: inShaders),
                        .filling(0.45))
-        XCTAssertEqual(PortingTileLook.make(game: porting, portingGameID: UUID(), progress: inShaders), .normal)
+        XCTAssertEqual(PortingTileLook.make(game: porting, portingGameID: UUID(), progress: inShaders), .locked)
     }
 
     func testLockOnlyWithoutAWorkingApp() {
@@ -75,6 +75,28 @@ final class PortingPresentationTests: XCTestCase {
         XCTAssertEqual(PortingTileLook.make(game: rebuild, portingGameID: nil, progress: nil), .normal)
         XCTAssertEqual(PortingTileLook.make(game: game(app: false, failure: .cancelled), portingGameID: nil,
                                             progress: nil), .locked)
+    }
+
+    func testMissingAppUsesLockAndUnavailableActions() {
+        var missing = game(app: true)
+        missing.status = .appMissing
+        XCTAssertEqual(PortingTileLook.make(game: missing, portingGameID: nil, progress: nil), .locked)
+        XCTAssertNotEqual(PortingPills.make(game: missing, portingGameID: nil), .normal)
+    }
+
+    func testMissingSourceFilesDoNotOfferPlayOrAttachSourcesAsPrimaryAction() {
+        var missing = game(app: false)
+        missing.sources = [GameFileItem(url: URL(fileURLWithPath: "/missing-\(UUID())/base.nsp"), kind: .base, sizeBytes: 1)]
+        XCTAssertNotEqual(PortingPills.make(game: missing, portingGameID: nil), .normal)
+    }
+
+    func testWorkingAppStaysPlayableWhenSourcesAreUnavailable() {
+        var existing = game(app: true)
+        existing.status = .builtSourcesMissing
+        existing.sources = [GameFileItem(url: URL(fileURLWithPath: "/missing-\(UUID())/base.nsp"), kind: .base, sizeBytes: 1)]
+        XCTAssertEqual(PortingTileLook.make(game: existing, portingGameID: nil, progress: nil), .normal)
+        XCTAssertEqual(PortingPills.make(game: existing, portingGameID: nil), .normal)
+        XCTAssertTrue(existing.isPlayableLocally)
     }
 
     // MARK: - Pills

@@ -4,6 +4,7 @@ import XCTest
 final class SetupGridTests: XCTestCase {
     func testRowCounts() {
         XCTAssertEqual(SetupGrid.rowCounts(7), [4, 3])
+        XCTAssertEqual(SetupGrid.rowCounts(8), [4, 4])
         XCTAssertEqual(SetupGrid.rowCounts(11), [6, 5])
         XCTAssertEqual(SetupGrid.rowCounts(6), [6])
         XCTAssertEqual(SetupGrid.rowCounts(1), [1])

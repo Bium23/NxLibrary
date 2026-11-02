@@ -77,6 +77,11 @@ extension GameDetailView {
                 viewModel.askRemoveGame(game)
             }
             return
+        case .unavailable:
+            if index == 0, !runningGames.isRunning(game) {
+                SoundEffectService.shared.play(.error)
+                return
+            }
         case .normal, .normalAfterFailure:
             break
         }
@@ -137,6 +142,8 @@ extension GameDetailView {
         if runningGames.isRunning(game) {
             SoundEffectService.shared.play(.click)
             runningGames.resume(game)
+        } else if GameResourceState.unavailableReason(for: game) != nil {
+            SoundEffectService.shared.play(.error)
         } else if currentModel.presentation.canPlay {
             SoundEffectService.shared.play(.click)
             viewModel.launchGame(game)

@@ -68,7 +68,7 @@ python3 scripts/check_publication.py --runtime work/Runtime
 
 The Swift suite covers persistence, sources, keys and permissions, CLI contracts, process output and cancellation, compatibility gates, installation and retries, launch configuration, presentation state, artwork, cheats and save recovery. Publication regressions use temporary repositories and synthetic content. Tests must never require copyrighted game content or real keys.
 
-The latest complete local code verification on 2 November 2026 passed **726 Swift tests and 15 Python checks**. The development-app bundle passed signature verification, and a headless check exercised a real public GitHub download, its redirect and rejection of a mismatched size. These checks do not establish that the interactive update or a game worked. This is dated evidence, not a promise about future changes. See the [test catalog](file-map.md#test-e-fixture).
+The latest complete local code verification on 2 November 2026 passed **742 Swift tests and 15 Python checks**. The development-app bundle passed signature verification, and a headless check exercised a real public GitHub download, its redirect and rejection of a mismatched size. These checks do not establish that the interactive update or a game worked. This is dated evidence, not a promise about future changes. See the [test catalog](file-map.md#test-e-fixture).
 
 ### Continuous integration
 

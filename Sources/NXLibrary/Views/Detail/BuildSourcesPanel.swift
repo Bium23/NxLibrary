@@ -63,7 +63,9 @@ struct BuildSourcesPanel: View {
                     .padding(.leading, canvas.u(2))
             }
             if presentation.sourcesDetached {
-                Text("The installed app is playable. A rebuild needs the original XCI/NSP files; attach them again without touching saves.")
+                Text(presentation.canPlay
+                     ? "Game files are missing or not attached. Play is available; attach them to rebuild."
+                     : "Game files are missing or not attached. Attach them to build.")
                     .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink60)
                     .padding(.top, canvas.u(4))

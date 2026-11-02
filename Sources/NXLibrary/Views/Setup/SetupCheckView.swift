@@ -38,7 +38,7 @@ struct SetupCheckView: View {
                 Text("Let's get NX Library ready")
                     .seleneFont(46, .semibold)
                     .foregroundColor(SeleneTheme.ink)
-                Text("NX Library checks what it needs. You can come back here anytime from the menu: Setup check.")
+                Text("Choose your game folders, then check what you need to build. Change folders later in Settings → Library.")
                     .seleneFont(19)
                     .foregroundColor(SeleneTheme.ink75)
                     .padding(.top, canvas.u(10))
@@ -134,7 +134,7 @@ struct SetupCheckView: View {
         case .engine: return .rocket
         case .runtime: return .storage
         case .keys: return .key
-        case .library: return .folder
+        case .library, .sources: return .folder
         }
     }
 
@@ -166,7 +166,9 @@ struct SetupCheckView: View {
                 Text(story.detail)
                     .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink75)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(2)
+                    .truncationMode(.middle)
+                    .help(story.detail)
             }
             Spacer(minLength: 0)
             if let action = story.action {
@@ -205,21 +207,24 @@ struct SetupCheckView: View {
             if names.isEmpty {
                 return Story(icon: .check, tone: SeleneTheme.success, title: "Install all", state: "Done",
                              about: "Everything NX Library can install by itself is installed.",
-                             detail: "Xcode, your keys and your library folder stay with you.", action: nil)
+                             detail: "Choose game folders and import your keys on their cards.", action: nil)
             }
             return Story(icon: .sync, tone: SeleneTheme.glyph, title: "Install all", state: "\(names.count) to go",
                          about: names.joined(separator: " · "),
-                         detail: "Xcode, your keys and your library folder stay with you.", action: "Install all")
+                         detail: "Choose game folders and import your keys on their cards.", action: "Install all")
         default:
-            let ready = items.filter { $0.state == .ready }.count
-            let left = items.filter { $0.state != .ready }.map(\.title)
+            let required = items.filter(\.isRequired)
+            let ready = required.filter { $0.state == .ready }.count
+            let left = required.filter { $0.state != .ready }.map(\.title)
             if left.isEmpty {
                 return Story(icon: .check, tone: SeleneTheme.success, title: "All set", state: "Ready",
                              about: "Everything NX Library needs is here.", detail: "", action: isFirstRun ? "Continue" : "Done")
             }
-            return Story(icon: .checklist, tone: SeleneTheme.glyph, title: "\(ready) of \(items.count) ready",
+            return Story(icon: .checklist, tone: SeleneTheme.glyph, title: "\(ready) of \(required.count) ready",
                          state: "\(left.count) left", about: "Still to do: \(left.joined(separator: ", ")).",
-                         detail: "You can finish this later from the menu: Setup check. Games you already built still play.",
+                         detail: viewModel.requiresGameAppsFolderChoice
+                            ? "Choose your Game apps folder to continue. Build prerequisites can wait; existing apps still play."
+                            : "Finish build setup later from Settings → Start-up → Open Setup. Existing apps still play.",
                          action: isFirstRun ? "Continue" : "Done")
         }
     }

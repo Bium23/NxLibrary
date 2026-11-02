@@ -56,8 +56,8 @@ public struct GameDetailPresentation: Equatable {
         toolchainNote = game.toolchain.note
         canPlay = game.isPlayableLocally
         hasBaseSource = game.sources.contains { $0.type == .base }
-        canRebuild = hasBaseSource
-        sourcesDetached = !hasBaseSource
+        canRebuild = GameResourceState.sourcesAvailable(for: game)
+        sourcesDetached = !canRebuild
         storeURL = metadata?.storeURL
         hltbURL = Self.hltbURL(for: game.name)
         appPath = game.url.path

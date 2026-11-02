@@ -22,12 +22,17 @@ The current source preview identifies itself as **0.1.0 alpha**. No tagged or do
 
 ### Changed
 
+- Setup starts with explicit **Game apps** selection and a separate optional **Game files** folder, with matching names in Settings → Library and all supported package extensions listed. App discovery needs read access; new builds still install in `~/Applications`.
+- Unavailable games keep their library entry and use the existing blurred, locked artwork with a short reason. Missing apps no longer send the primary action to Attach sources; missing inputs disable rebuilding while existing apps remain playable.
+
 - New-game defaults and each game's **Next launch** settings have explicit scopes. Rebuild review retains the selected title's saved options; **Use new game defaults** copies defaults once.
 - The Saves page keeps one **Backup folder** row showing the latest backup's date and time. Imports use a centred From → To preview with outlined paths and a subtle directional animation.
 - The engine is pinned to `2716f78`. Adoption and toolchain verification are recorded in the [2026-10-31 upgrade note](docs/upstream-upgrades/2026-10-31-ee369f0-2716f78.md); newer upstream commits are not adopted automatically.
 - App-update preparation and background snapshot preparation run outside the main UI work. Source builds do not update themselves; packaged releases use the project's public GitHub release channel.
 
 ### Fixed
+
+- Missing configured folders remain remembered, and a folder selected during the startup scan is scanned before results are published. Unbuilt workspaces and active portings are no longer mistaken for missing installed apps during refresh.
 
 - A saved untested-toolchain override can be turned off after the gate becomes certified. Restaged source workspaces discard deselected links and empty DLC containers while preserving their build cache. Sources that require new engine capabilities cannot silently rebuild through an older engine.
 

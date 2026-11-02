@@ -27,7 +27,7 @@ extension SetupCheckView {
     func placeInitialFocus() {
         guard !focusPlaced, !items.isEmpty else { return }
         focusPlaced = true
-        if let index = items.firstIndex(where: { $0.state != .ready }) { focus = .card(index) }
+        if let index = items.firstIndex(where: { $0.isRequired && $0.state != .ready }) { focus = .card(index) }
     }
 
     private func navigate(_ direction: MoveDirection) {
@@ -75,6 +75,11 @@ extension SetupCheckView {
             SoundEffectService.shared.play(.click)
             setup.installAll()
         case .carryOn:
+            if isFirstRun && viewModel.requiresGameAppsFolderChoice {
+                if let index = items.firstIndex(where: { $0.id == .library }) { move(to: .card(index)) }
+                shake()
+                return
+            }
             SoundEffectService.shared.play(.click)
             if isFirstRun { viewModel.completeSetup() } else { close() }
         }

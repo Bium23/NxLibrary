@@ -40,7 +40,9 @@ final class SetupCheckModel: ObservableObject {
                    pinnedCommit: viewModel.pinnedEngineCommit,
                    certifiedMetal: viewModel.requiredMetalVersion ?? requirements.fallbackMetal,
                    allowUntested: viewModel.allowUntestedToolchain,
-                   keyStore: viewModel.keyStore, libraryFolder: viewModel.libraryFolder)
+                   keyStore: viewModel.keyStore, libraryFolder: viewModel.libraryFolder,
+                   sourcesFolder: viewModel.selectedGameFolder,
+                   libraryNeedsConfirmation: viewModel.requiresGameAppsFolderChoice)
     }
 
     func refresh() {
@@ -173,6 +175,9 @@ final class SetupCheckModel: ObservableObject {
             refresh()
         case .library:
             viewModel.selectLibraryFolder()
+            refresh()
+        case .sources:
+            viewModel.selectGameFolder()
             refresh()
         }
     }

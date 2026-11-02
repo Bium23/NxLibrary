@@ -77,7 +77,7 @@ struct GameOptionsView: View {
         return GameOptionsPresentation(
             supportsRenderScale: supportsRenderScale,
             isPlayable: game.isPlayableLocally,
-            sourcesDetached: !game.sources.contains { $0.type == .base },
+            sourcesDetached: !GameResourceState.sourcesAvailable(for: game),
             // Mirrors GameDetailView.toolchainBlocked: a known report that does not pass, without the override.
             toolchainBlocked: viewModel.isCheckingEnvironment || (viewModel.compatibilityReport != nil && !viewModel.canPassToolchainGate),
             toolchainHint: viewModel.isCheckingEnvironment ? "Checking environment" : viewModel.toolchainGateSummary?.buildHint,

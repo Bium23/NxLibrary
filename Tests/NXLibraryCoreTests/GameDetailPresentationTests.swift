@@ -2,6 +2,16 @@ import XCTest
 @testable import NXLibraryCore
 
 final class GameDetailPresentationTests: XCTestCase {
+    func testRebuildIsUnavailableWhenRecordedSourceFilesAreMissing() {
+        var missing = PortedGame(name: "Synthetic", url: URL(fileURLWithPath: "/Applications/Synthetic.app"),
+                                 platform: .macApp, sizeBytes: 0, modificationDate: .distantPast)
+        missing.status = .builtSourcesMissing
+        missing.sources = [GameFileItem(url: URL(fileURLWithPath: "/missing-\(UUID())/base.nsp"), kind: .base, sizeBytes: 1)]
+        let presentation = GameDetailPresentation(game: missing, metadata: nil, totalPlaytime: 0, lastPlayed: nil)
+        XCTAssertTrue(presentation.canPlay)
+        XCTAssertFalse(presentation.canRebuild)
+    }
+
     func testBuildAndSourceState() {
         var game = PortedGame(name: "Game", url: URL(fileURLWithPath: "/tmp/Game.app"),
                               platform: .macApp, sizeBytes: 18_000_000_000,
@@ -25,13 +35,16 @@ final class GameDetailPresentationTests: XCTestCase {
         XCTAssertTrue(p.size.contains("18"))
     }
 
-    func testAttachedSourcesAllowRebuild() {
+    func testAttachedSourcesAllowRebuild() throws {
+        let source = FileManager.default.temporaryDirectory.appendingPathComponent("base-\(UUID()).xci")
+        try Data("synthetic".utf8).write(to: source)
+        defer { try? FileManager.default.removeItem(at: source) }
         var game = PortedGame(name: "Game", url: URL(fileURLWithPath: "/tmp/Game.app"),
                               platform: .macApp, sizeBytes: 1,
                               modificationDate: Date(timeIntervalSince1970: 0),
                               titleId: "0100000000010000")
         game.status = .built
-        game.sources = [GameFileItem(url: URL(fileURLWithPath: "/tmp/base.xci"),
+        game.sources = [GameFileItem(url: source,
                                      name: "base.xci", sizeBytes: 1, type: .base)]
         let p = GameDetailPresentation(game: game, metadata: nil,
                                        totalPlaytime: 0, lastPlayed: nil)

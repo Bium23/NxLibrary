@@ -462,6 +462,9 @@ public struct SpotlightView: View {
                 if viewModel.portingPills(game) == .porting {
                     return [HintItem(.y, "Options"), HintItem(.a, "Porting")]
                 }
+                if viewModel.portingPills(game).unavailableReason != nil, !runningGames.isRunning(game) {
+                    return [HintItem(.y, "Options")]
+                }
                 if game.isPlayableLocally {
                     return [HintItem(.y, "Options"), HintItem(.a, "Play")]
                 }

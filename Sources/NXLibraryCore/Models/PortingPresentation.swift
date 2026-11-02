@@ -38,7 +38,7 @@ public enum PortingTileLook: Equatable {
     case preparing(step: Int, count: Int, title: String, detail: String)
     /// Colour risen to this fraction, the percentage in the middle.
     case filling(Double)
-    /// The last porting failed and there is no app to play: black and white with a lock.
+    /// No app can be played: black and white with a lock.
     case locked
 
     public static func make(game: PortedGame, portingGameID: UUID?, progress: PortingProgress?) -> PortingTileLook {
@@ -51,7 +51,7 @@ public enum PortingTileLook: Equatable {
             case .done, .failed: break
             }
         }
-        if game.portingFailure != nil, !game.isPlayableLocally { return .locked }
+        if !game.isPlayableLocally { return .locked }
         return .normal
     }
 }
@@ -66,12 +66,20 @@ public enum PortingPills: Equatable {
     case failed(PortingFailure)
     /// The normal pills over a working app, with a small "last porting failed" line.
     case normalAfterFailure(PortingFailure)
+    /// Keep the entry and its options, with a disabled primary action and a short reason.
+    case unavailable(GameUnavailableReason)
 
     public static func make(game: PortedGame, portingGameID: UUID?) -> PortingPills {
         if game.id == portingGameID { return .porting }
+        if let reason = GameResourceState.unavailableReason(for: game) { return .unavailable(reason) }
         guard let failure = game.portingFailure else { return .normal }
         return game.isPlayableLocally ? .normalAfterFailure(failure) : .failed(failure)
     }
 
     public var count: Int { self == .porting ? 1 : 3 }
+
+    public var unavailableReason: GameUnavailableReason? {
+        if case .unavailable(let reason) = self { return reason }
+        return nil
+    }
 }

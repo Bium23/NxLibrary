@@ -160,7 +160,7 @@ final class GameOptionsPresentationTests: XCTestCase {
         XCTAssertEqual(presentation().rebuildAbout,
                        "Build a new app; the old app stays if the build fails.")
         XCTAssertEqual(presentation(detached: true).rebuildAbout,
-                       "A base source is required. Attach sources in Edit details.")
+                       "Game files are missing or not attached. Attach sources in Edit details.")
         XCTAssertEqual(presentation(blocked: true).rebuildAbout,
                        "Blocked by the Metal gate. See Settings → Engine.")
         let newer = GameOptionsPresentation(supportsRenderScale: true, isPlayable: true, sourcesDetached: false,
@@ -168,7 +168,7 @@ final class GameOptionsPresentationTests: XCTestCase {
                                             toolchainHint: "Newer Metal: turn on the override in Settings → Engine")
         XCTAssertEqual(newer.rebuildAbout, "Newer Metal: turn on the override in Settings → Engine.")
         XCTAssertEqual(presentation(detached: true).attachAbout,
-                       "Sources are detached. Attach them to rebuild.")
+                       "Game files are missing or not attached. Attach them to rebuild.")
         XCTAssertEqual(presentation().attachAbout,
                        "Sources attached. Rebuild without touching saves.")
     }

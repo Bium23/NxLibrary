@@ -12,34 +12,11 @@ struct SettingsLibrarySection: View {
 
     var body: some View {
         VStack(spacing: 9) {
-            SeleneRow("Game ROMs folder",
-                      subtitle: "Game sources",
-                      info: "Reset group keeps this folder. Clear removes the selection, keeping your files.") {
+            SeleneRow(GameFoldersCopy.appsTitle,
+                      subtitle: "Existing nxnative .apps · New builds go to ~/Applications.",
+                      info: "Reads existing nxnative game .apps here. Read access is enough. Rebuilds keep the existing app's location.") {
                 HStack(spacing: 10) {
-                    Text(viewModel.selectedGameFolder?.path ?? "Not selected")
-                        .seleneFont(15, .medium)
-                        .foregroundColor(SeleneTheme.ink.opacity(0.62))
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                        .frame(maxWidth: 320, alignment: .trailing)
-                    Button("Choose") { viewModel.selectGameFolder() }
-                        .buttonStyle(.plain)
-                        .seleneFont(14, .semibold)
-                        .foregroundColor(SeleneTheme.glyph)
-                    if viewModel.selectedGameFolder != nil {
-                        Button("Clear") { viewModel.selectedGameFolder = nil }
-                            .buttonStyle(.plain)
-                            .seleneFont(14, .semibold)
-                            .foregroundColor(SeleneTheme.danger)
-                    }
-                }
-            }
-
-            SeleneRow("App library folder",
-                      subtitle: "App discovery",
-                      info: "Adds a folder to search for built apps. New portings install in ~/Applications; rebuilds keep the existing app's location.") {
-                HStack(spacing: 10) {
-                    Text(viewModel.libraryFolder?.path ?? "Default")
+                    Text(viewModel.libraryFolder?.path ?? "Not selected")
                         .seleneFont(15, .medium)
                         .foregroundColor(SeleneTheme.ink.opacity(0.62))
                         .lineLimit(1)
@@ -60,9 +37,32 @@ struct SettingsLibrarySection: View {
                 }
             }
 
+            SeleneRow(GameFoldersCopy.sourcesTitle,
+                      subtitle: GameFoldersCopy.sourcesAbout(extractedFolders: viewModel.engineSourceCapabilities.extractedFolders),
+                      info: "Existing game apps play without their sources. Reset group keeps this folder. Clear removes the selection, keeping your files.") {
+                HStack(spacing: 10) {
+                    Text(viewModel.selectedGameFolder?.path ?? "Not selected · Optional")
+                        .seleneFont(15, .medium)
+                        .foregroundColor(SeleneTheme.ink.opacity(0.62))
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .frame(maxWidth: 320, alignment: .trailing)
+                    Button("Choose") { viewModel.selectGameFolder() }
+                        .buttonStyle(.plain)
+                        .seleneFont(14, .semibold)
+                        .foregroundColor(SeleneTheme.glyph)
+                    if viewModel.selectedGameFolder != nil {
+                        Button("Clear") { viewModel.selectedGameFolder = nil }
+                            .buttonStyle(.plain)
+                            .seleneFont(14, .semibold)
+                            .foregroundColor(SeleneTheme.danger)
+                    }
+                }
+            }
+
             SeleneButtonRow("Existing builds",
-                            subtitle: "Scan the app library for nxnative builds made outside NX Library.",
-                            info: "Searches your Applications folder for standalone game .app bundles that were compiled with nxnative CLI or previous workflows, and registers them into NX Library.",
+                            subtitle: "Find nxnative games (.app) in your Game apps folder.",
+                            info: "Registers existing game apps from your selected folder and Applications folders. Source game files are optional for Play.",
                             buttonTitle: "Import") {
                 viewModel.importExistingBuilds()
             }
@@ -106,11 +106,11 @@ struct SettingsLibrarySection: View {
 
     private func publishActions() {
         onActions([
-            .init(id: "romChoose", title: "Game ROMs folder") {
-                viewModel.selectGameFolder()
-            },
-            .init(id: "appsChange", title: "App library folder") {
+            .init(id: "appsChange", title: GameFoldersCopy.appsTitle) {
                 viewModel.selectLibraryFolder()
+            },
+            .init(id: "romChoose", title: GameFoldersCopy.sourcesTitle) {
+                viewModel.selectGameFolder()
             },
             .init(id: "import", title: "Existing builds") {
                 viewModel.importExistingBuilds()

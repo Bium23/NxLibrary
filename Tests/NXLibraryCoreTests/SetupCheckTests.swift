@@ -21,7 +21,7 @@ final class SetupCheckTests: XCTestCase {
                    engine: .checkout(head: pin, dirty: false), engineFolder: folder, pinnedCommit: pin,
                    runtimeProblem: nil,
                    keys: KeySummary(hasHeaderKey: true, applicationKeyGenerations: [0, 1, 2]), keysError: nil,
-                   libraryWritable: true)
+                   libraryReadable: true)
     }
 
     private func item(_ id: SetupItemID, _ change: (inout SetupFacts) -> Void = { _ in }) -> SetupItem {
@@ -153,13 +153,62 @@ final class SetupCheckTests: XCTestCase {
     }
 
     func testLibrary() {
-        let missing = item(.library) { $0.libraryWritable = nil }
+        let missing = item(.library) { $0.libraryReadable = nil }
         XCTAssertEqual(missing.state, .missing)
         XCTAssertEqual(missing.chip, "NOT CHOSEN")
         XCTAssertEqual(missing.actionTitle, "Choose folder")
-        XCTAssertEqual(item(.library) { $0.libraryWritable = false }.state, .warning)
-        XCTAssertEqual(item(.library) { $0.libraryWritable = false }.chip, "NOT WRITABLE")
+        XCTAssertEqual(item(.library) { $0.libraryReadable = false }.state, .warning)
+        XCTAssertEqual(item(.library) { $0.libraryReadable = false }.chip, "NOT READABLE")
         XCTAssertEqual(item(.library).state, .ready)
+    }
+
+    func testGameAppsFolderNeedsExplicitFirstSetupChoiceEvenWhenReadable() {
+        let card = item(.library) {
+            $0.libraryFolder = URL(fileURLWithPath: "/Users/a b/Applications")
+            $0.libraryNeedsConfirmation = true
+        }
+        XCTAssertEqual(card.state, .needsYou)
+        XCTAssertEqual(card.actionTitle, "Choose folder")
+        XCTAssertTrue(card.detail.contains("/Users/a b/Applications"))
+        XCTAssertTrue(card.isRequired)
+    }
+
+    func testGameFolderCardsLeadSetupAndShowDifferentPurposes() throws {
+        var input = facts()
+        input.libraryFolder = URL(fileURLWithPath: "/Volumes/Games/Mac apps")
+        input.sourcesFolder = URL(fileURLWithPath: "/Volumes/Games/Packages")
+        input.sourcesReadable = true
+        let cards = SetupCheck.items(from: input)
+        XCTAssertEqual(Array(cards.prefix(2)).map(\.id.rawValue), ["library", "sources"])
+        let apps = try XCTUnwrap(cards.first { $0.id == .library })
+        XCTAssertTrue(apps.about.contains(".app"))
+        XCTAssertTrue(apps.about.contains("~/Applications"))
+        XCTAssertTrue(apps.detail.contains("/Volumes/Games/Mac apps"))
+        let files = try XCTUnwrap(cards.first { $0.id.rawValue == "sources" })
+        XCTAssertTrue(files.detail.contains("/Volumes/Games/Packages"))
+        for format in ["NSP", "XCI", "NSZ", "XCZ"] {
+            XCTAssertTrue(files.about.contains(format), "Missing \(format)")
+        }
+        XCTAssertFalse(files.about.lowercased().contains("extracted"))
+
+        input.extractedFoldersSupported = true
+        let supported = try XCTUnwrap(SetupCheck.items(from: input).first { $0.id.rawValue == "sources" })
+        XCTAssertTrue(supported.about.lowercased().contains("extracted folders"))
+    }
+
+    func testGameFilesFolderIsOptionalWhenUnchosenOrUnavailable() throws {
+        for readable in [nil, false] as [Bool?] {
+            var input = facts()
+            input.sourcesReadable = readable
+            if readable != nil { input.sourcesFolder = URL(fileURLWithPath: "/Volumes/Disconnected/Sources") }
+            let cards = SetupCheck.items(from: input)
+            let files = try XCTUnwrap(cards.first { $0.id.rawValue == "sources" })
+            XCTAssertFalse(files.isRequired)
+            XCTAssertEqual(files.state, readable == nil ? .ready : .warning)
+            XCTAssertTrue(cards.filter(\.isRequired).allSatisfy { $0.state == .ready })
+            XCTAssertFalse(SetupCheck.shouldReopen(previous: [files.id: .ready], current: cards))
+            XCTAssertEqual(SetupCheck.automatic(cards, includeUpdates: true), [])
+        }
     }
 
     func testOverridesWin() {
@@ -231,10 +280,97 @@ final class SetupCheckTests: XCTestCase {
         }
     }
 
-    private func probe(_ runner: FakeRunner, engine: URL, home: URL) -> SetupProbe {
+    private func probe(_ runner: FakeRunner, engine: URL, home: URL,
+                       library: URL? = nil, sources: URL? = nil, needsConfirmation: Bool = false) -> SetupProbe {
         SetupProbe(runner: runner, toolchain: .resolve(runtime: nil, repo: engine), developerDir: nil,
                    engineFolder: engine, pinnedCommit: pin, certifiedMetal: "32023.921", allowUntested: false,
-                   keyStore: KeyStore(directory: home.appendingPathComponent("keys")), libraryFolder: nil)
+                   keyStore: KeyStore(directory: home.appendingPathComponent("keys")), libraryFolder: library,
+                   sourcesFolder: sources, libraryNeedsConfirmation: needsConfirmation)
+    }
+
+    func testReadOnlyGameAppsFolderIsReadyForDiscovery() throws {
+        let fm = FileManager.default
+        let home = fm.temporaryDirectory.appendingPathComponent("SetupProbe-\(UUID().uuidString)")
+        let library = home.appendingPathComponent("Existing game apps")
+        try fm.createDirectory(at: library, withIntermediateDirectories: true)
+        defer {
+            try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: library.path)
+            try? fm.removeItem(at: home)
+        }
+        try fm.setAttributes([.posixPermissions: 0o555], ofItemAtPath: library.path)
+        XCTAssertTrue(fm.isReadableFile(atPath: library.path))
+        XCTAssertFalse(fm.isWritableFile(atPath: library.path))
+
+        let facts = SetupProbe(runner: FakeRunner(), toolchain: .resolve(runtime: nil, repo: home),
+                               developerDir: nil, engineFolder: home, pinnedCommit: pin,
+                               certifiedMetal: "32023.921", allowUntested: false,
+                               keyStore: KeyStore(directory: home.appendingPathComponent("keys")),
+                               libraryFolder: library).facts()
+        let card = SetupCheck.items(from: facts).first { $0.id == .library }
+        XCTAssertEqual(card?.state, .ready)
+    }
+
+    func testProbeRejectsFilesAndKeepsUnavailableFolderPaths() throws {
+        let fm = FileManager.default
+        let home = fm.temporaryDirectory.appendingPathComponent("SetupProbe-\(UUID().uuidString)")
+        try fm.createDirectory(at: home, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: home) }
+        let file = home.appendingPathComponent("file.nsp")
+        try Data().write(to: file)
+        let missing = home.appendingPathComponent("disconnected sources")
+
+        let facts = probe(FakeRunner(), engine: home, home: home, library: file, sources: missing,
+                          needsConfirmation: true).facts()
+        XCTAssertEqual(facts.libraryReadable, false, "App discovery needs a directory, not a readable file")
+        XCTAssertEqual(facts.libraryFolder, file)
+        XCTAssertTrue(facts.libraryNeedsConfirmation)
+        XCTAssertEqual(facts.sourcesReadable, false)
+        XCTAssertEqual(facts.sourcesFolder, missing)
+    }
+
+    func testProbeReadsOptionalSourceFolderAndEngineCapabilities() throws {
+        let fm = FileManager.default
+        let home = fm.temporaryDirectory.appendingPathComponent("SetupProbe-\(UUID().uuidString)")
+        let scripts = home.appendingPathComponent("scripts")
+        let sources = home.appendingPathComponent("sources")
+        try fm.createDirectory(at: scripts, withIntermediateDirectories: true)
+        try fm.createDirectory(at: sources, withIntermediateDirectories: true)
+        defer {
+            try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: sources.path)
+            try? fm.removeItem(at: home)
+        }
+        try fm.setAttributes([.posixPermissions: 0o555], ofItemAtPath: sources.path)
+        let script = scripts.appendingPathComponent("build_ipa_from_nsp.py")
+        try "import pack_dump\nparser.add_argument('--title-id')".write(to: script, atomically: true, encoding: .utf8)
+
+        let facts = probe(FakeRunner(), engine: home, home: home, library: home, sources: sources).facts()
+        XCTAssertEqual(facts.sourcesReadable, true)
+        XCTAssertEqual(facts.sourcesFolder, sources)
+        XCTAssertTrue(facts.extractedFoldersSupported)
+        XCTAssertTrue(facts.keysOptional)
+        let card = SetupCheck.items(from: facts).first { $0.id == .sources }
+        XCTAssertEqual(card?.state, .ready)
+        XCTAssertTrue(card?.about.contains("extracted folders") == true)
+
+        try "parser.add_argument('--nsp')".write(to: script, atomically: true, encoding: .utf8)
+        let legacy = probe(FakeRunner(), engine: home, home: home, library: home, sources: sources).facts()
+        XCTAssertFalse(legacy.extractedFoldersSupported)
+    }
+
+    func testProbeWarnsForUnreadableGameAppsDirectory() throws {
+        let fm = FileManager.default
+        let home = fm.temporaryDirectory.appendingPathComponent("SetupProbe-\(UUID().uuidString)")
+        let library = home.appendingPathComponent("apps")
+        try fm.createDirectory(at: library, withIntermediateDirectories: true)
+        defer {
+            try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: library.path)
+            try? fm.removeItem(at: home)
+        }
+        try fm.setAttributes([.posixPermissions: 0o000], ofItemAtPath: library.path)
+        XCTAssertFalse(fm.isReadableFile(atPath: library.path))
+        let facts = probe(FakeRunner(), engine: home, home: home, library: library).facts()
+        XCTAssertEqual(facts.libraryReadable, false)
+        XCTAssertEqual(SetupCheck.items(from: facts).first { $0.id == .library }?.state, .warning)
     }
 
     /// `-I` makes Python ignore PYTHONDONTWRITEBYTECODE, so each call passes `-B` itself: a bundled
@@ -277,7 +413,7 @@ final class SetupCheckTests: XCTestCase {
         XCTAssertEqual(facts.metalVersion, "32023.921")
         XCTAssertEqual(facts.dotnetSDKs, ["10.0.401 [/usr/local/share/dotnet/sdk]"])
         XCTAssertNil(facts.keys)
-        XCTAssertNil(facts.libraryWritable)
+        XCTAssertNil(facts.libraryReadable)
 
         runner.responses["status --porcelain"] = CommandResult(status: 0, stdout: " M scripts/build_ipa_from_nsp.py\n", stderr: "")
         XCTAssertEqual(probe(runner, engine: engine, home: home).facts().engine, .checkout(head: pin, dirty: true))

@@ -13,10 +13,13 @@ public struct SetupProbe {
     private let allowUntested: Bool
     private let keyStore: KeyStore
     private let libraryFolder: URL?
+    private let sourcesFolder: URL?
+    private let libraryNeedsConfirmation: Bool
 
     public init(runner: CommandRunning, fileManager: FileManager = .default, toolchain: EngineToolchain,
                 developerDir: URL?, engineFolder: URL, pinnedCommit: String, certifiedMetal: String,
-                allowUntested: Bool, keyStore: KeyStore, libraryFolder: URL?) {
+                allowUntested: Bool, keyStore: KeyStore, libraryFolder: URL?,
+                sourcesFolder: URL? = nil, libraryNeedsConfirmation: Bool = false) {
         self.runner = runner
         self.fileManager = fileManager
         self.toolchain = toolchain
@@ -27,6 +30,8 @@ public struct SetupProbe {
         self.allowUntested = allowUntested
         self.keyStore = keyStore
         self.libraryFolder = libraryFolder
+        self.sourcesFolder = sourcesFolder
+        self.libraryNeedsConfirmation = libraryNeedsConfirmation
     }
 
     public func facts() -> SetupFacts {
@@ -46,10 +51,22 @@ public struct SetupProbe {
             engine: engine, engineFolder: engineFolder, pinnedCommit: pinnedCommit,
             runtimeProblem: runtimeProblem(),
             keys: keys, keysError: keysError,
-            libraryWritable: libraryFolder.map { fileManager.isWritableFile(atPath: $0.path) },
+            libraryReadable: libraryFolder.map { readableDirectory($0) },
             xcodeVersion: xcode.version, engineBehind: behind(engine))
-        facts.keysOptional = EngineSourceCapabilities(repo: engineFolder).extractedFolders
+        let capabilities = EngineSourceCapabilities(repo: engineFolder)
+        facts.keysOptional = capabilities.extractedFolders
+        facts.libraryFolder = libraryFolder
+        facts.libraryNeedsConfirmation = libraryNeedsConfirmation
+        facts.sourcesFolder = sourcesFolder
+        facts.sourcesReadable = sourcesFolder.map { readableDirectory($0) }
+        facts.extractedFoldersSupported = capabilities.extractedFolders
         return facts
+    }
+
+    private func readableDirectory(_ url: URL) -> Bool {
+        var isDirectory: ObjCBool = false
+        return fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory)
+            && isDirectory.boolValue && fileManager.isReadableFile(atPath: url.path)
     }
 
     /// Whether the checkout's HEAD is an ancestor of the pin (`git merge-base --is-ancestor`); nil when git cannot

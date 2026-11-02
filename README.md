@@ -105,11 +105,15 @@ Packaged releases check this repository for app updates; no GitHub account is ne
 
 Setup shows which prerequisites are ready and which need attention. **Install all** handles the supported steps: the engine checkout, the certified Metal compiler and the official .NET installer. Xcode itself comes from the App Store; its licence and any system prompts remain your responsibility.
 
+Choose **Game apps** first: the folder containing your existing nxnative games (`.app`), or an empty folder if you are starting fresh. **Game files** is separate and optional: NSP, XCI, NSZ and XCZ inputs for building; supported engines can also use extracted folders. Both choices can be changed in **Settings → Library**. The app folder is for discovery; new builds install in `~/Applications`.
+
 Import your `prod.keys` when prompted. NX Library keeps a private copy with mode `0600` and leaves the original file unchanged. Key values are not displayed or logged.
 
 When Setup is ready, choose **Continue**. Reopen it from **Settings → Start-up → Open Setup** whenever needed. NX Library never runs `sudo`, accepts the Xcode licence for you or changes `xcode-select`.
 
 Already have a built game app? Use **Settings → Library → Existing builds → Import**. Play remains available without the original sources; rebuilding requires attaching them again.
+
+If an installed app is moved or removed, its library entry stays with a blurred, locked tile and **App not found**. Restore it to its folder or change **Game apps**, then refresh the library. NX Library does not search elsewhere for it. Missing build inputs show **Game files not found** when there is no app to play. An existing app still plays when its source files are missing; only rebuilding is unavailable. To reconnect a game's moved inputs, use **Game Options → Edit details → Attach sources…**.
 
 ## Using NX Library
 

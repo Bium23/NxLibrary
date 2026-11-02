@@ -143,8 +143,8 @@ public enum SettingsCatalog {
             "Default vibration strength for new games.") { $0.gameDefaults.rumbleGain },
 
         // Library
-        action("gameFolder", .library, "Game ROMs folder", "Where NX Library looks for game sources."),
-        action("libraryFolder", .library, "App library folder", "An additional folder to discover built Mac apps."),
+        action("gameFolder", .library, GameFoldersCopy.sourcesTitle, "Game sources: NSP, XCI, NSZ and XCZ files for builds. Optional for existing apps."),
+        action("libraryFolder", .library, GameFoldersCopy.appsTitle, "Discover existing nxnative games (.app). New builds install in ~/Applications."),
         action("importBuilds", .library, "Existing builds",
                "Adds games you already built to the library."),
         action("libraryRefresh", .library, "Library refresh", "Rescan the app folders."),
