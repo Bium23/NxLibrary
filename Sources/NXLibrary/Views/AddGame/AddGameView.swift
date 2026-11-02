@@ -20,6 +20,7 @@ public struct AddGameView: View {
 
     private let showsHints: Bool
     private let artwork: ArtworkStore?
+    private let reviewSelectionID: UUID?
 
     @State private var confirmDiscard = false
     @State private var confirmFocus: SeleneConfirmButton = .cancel
@@ -31,11 +32,13 @@ public struct AddGameView: View {
     @State private var dropTargeted = false
     @FocusState private var editing: String?
 
-    public init(viewModel: AppViewModel, router: AppRouter, artwork: ArtworkStore? = nil, showsHints: Bool = true) {
+    public init(viewModel: AppViewModel, router: AppRouter, artwork: ArtworkStore? = nil, showsHints: Bool = true,
+                reviewSelectionID: UUID? = nil) {
         self.viewModel = viewModel
         self.router = router
         self.artwork = artwork
         self.showsHints = showsHints
+        self.reviewSelectionID = reviewSelectionID
     }
 
     public var body: some View {
@@ -74,15 +77,19 @@ public struct AddGameView: View {
         .animation(reduceMotion ? nil : SeleneTheme.quick, value: dropTargeted)
         .onAppear(perform: appear)
         .onDisappear(perform: removeKeyMonitor)
+        .onChange(of: reviewSelectionID) { _ in reviewEntryIfReady() }
         .onChange(of: viewModel.buildWizardStep) { step in
             editing = nil
             focusedID = defaultRowID(for: step)
         }
         .onChange(of: viewModel.canAddSelectedGame) { canAdd in
             guard viewModel.buildWizardStep == 1 else { return }
-            if canAdd, focusedID == nil || focusedID == "choose" { focusedID = "continue" }
+            reviewEntryIfReady()
+            guard viewModel.buildWizardStep == 1 else { return }
+            if canAdd, focusedID == nil || focusedID == "choose" || focusedID == "chooseFiles" { focusedID = "continue" }
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxAddGameGamepadAction)) { note in
+            guard !viewModel.showSetupCheck else { return }
             guard let action = note.object as? GamepadAction else { return }
             handleGamepad(action)
         }
@@ -297,6 +304,12 @@ public struct AddGameView: View {
     private func appear() {
         installKeyMonitor()
         focusedID = defaultRowID(for: viewModel.buildWizardStep)
+        reviewEntryIfReady()
+    }
+
+    private func reviewEntryIfReady() {
+        guard !viewModel.showSetupCheck, viewModel.consumePreparedReviewEntry(reviewSelectionID) else { return }
+        goToReview()
     }
 
     /// During a porting the home selects the porting tile as the column fades.
@@ -312,6 +325,7 @@ public struct AddGameView: View {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             guard router.route == .addGame,
+                  !viewModel.showSetupCheck,
                   !router.isMenuPresented,
                   viewModel.gameToClose == nil,
                   viewModel.gameToRemove == nil,
@@ -431,10 +445,7 @@ public struct AddGameView: View {
     private func discardAndClose() {
         dismissDiscard()
         close {
-            viewModel.selectedGameFolder = nil
-            viewModel.appName = ""
-            viewModel.bundleId = ""
-            viewModel.resetWizard()
+            viewModel.startNewAddGame()
             leave()
         }
     }

@@ -15,7 +15,7 @@ extension AddGameView {
     /// The row a step opens on.
     func defaultRowID(for step: Int) -> String {
         switch step {
-        case 1: return viewModel.canAddSelectedGame ? "continue" : "choose"
+        case 1: return viewModel.canAddSelectedGame ? "continue" : "chooseFiles"
         case 2: return viewModel.canStartBuild ? "build" : "library"
         default: return portingRows.first(where: \.focusable)?.id ?? ""
         }
@@ -26,6 +26,8 @@ extension AddGameView {
     private var chooseRows: [AddGameRow] {
         var rows: [AddGameRow] = []
         let folder = viewModel.selectedGameFolder
+        rows.append(AddGameRow(id: "chooseFiles", kind: .action { viewModel.selectGameFiles() },
+                               icon: .add, title: "Choose game files", about: "NSP, XCI, NSZ or XCZ."))
         rows.append(AddGameRow(id: "choose", kind: .action { viewModel.selectGameFolder() },
                                icon: .folder, title: folder == nil ? "Choose folder" : "Change folder",
                                about: folder.map { ($0.path as NSString).abbreviatingWithTildeInPath }
@@ -50,7 +52,7 @@ extension AddGameView {
             rows.append(AddGameRow(id: "empty", kind: .note, title: "No games were found in this folder."))
         }
         if viewModel.detectedGames.count > 1 {
-            rows.append(AddGameRow(id: "gamesHeading", kind: .heading, title: "Games in this folder"))
+            rows.append(AddGameRow(id: "gamesHeading", kind: .heading, title: "Choose a game"))
             for game in viewModel.detectedGames {
                 rows.append(AddGameRow(id: "game:\(game.id)", kind: .action { viewModel.selectedGame = game },
                                        title: game.name, about: "\(game.summaryText) · \(game.titleId ?? game.id)", compact: true,
@@ -100,7 +102,7 @@ extension AddGameView {
         return parts.joined(separator: " · ")
     }
 
-    private func goToReview() {
+    func goToReview() {
         guard viewModel.canAddSelectedGame else { return }
         withAnimation(reduceMotion ? nil : SeleneTheme.standard) { viewModel.goToWizardStep(2) }
     }

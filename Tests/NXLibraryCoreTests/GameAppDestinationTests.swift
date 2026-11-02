@@ -5,6 +5,23 @@ final class GameAppDestinationTests: XCTestCase {
     private var root: URL!
     private let title = "0100000000010000"
 
+    func testFirstUseCanPrepareTheDefaultFolderWithoutAnExtraPicker() throws {
+        let home = try folder("New home")
+        let apps = home.appendingPathComponent("Applications")
+        try GameAppDestination.prepareInitialFolder(apps, hasExplicitChoice: false, home: home)
+        XCTAssertNil(GameAppDestination.folderProblem(at: apps))
+    }
+
+    func testFirstUseNeverRecreatesAnUnavailableCustomOrConfirmedFolder() throws {
+        let home = try folder("New home")
+        let custom = root.appendingPathComponent("Disconnected/Games")
+        try GameAppDestination.prepareInitialFolder(custom, hasExplicitChoice: false, home: home)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: custom.path))
+        let apps = home.appendingPathComponent("Applications")
+        try GameAppDestination.prepareInitialFolder(apps, hasExplicitChoice: true, home: home)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: apps.path))
+    }
+
     override func setUpWithError() throws {
         root = FileManager.default.temporaryDirectory.appendingPathComponent("NXDestination-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

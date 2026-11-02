@@ -13,6 +13,7 @@ public struct AppShellView: View {
     @StateObject private var updater = AppUpdater()
     @ObservedObject private var theme = ThemeStore.shared
     @State private var gestureKeyMonitor: Any?
+    @State private var setupSourceEntryID: UUID?
     /// Dismisses the Close Game confirmation when its game quits by itself.
     @State private var closeGameWatch: AnyCancellable?
 
@@ -98,7 +99,9 @@ public struct AppShellView: View {
                 AddGameView(viewModel: viewModel,
                             router: router,
                             artwork: artwork,
-                            showsHints: settings.settings.showButtonHints)
+                            showsHints: settings.settings.showButtonHints,
+                            reviewSelectionID: setupSourceEntryID)
+                    .allowsHitTesting(!viewModel.showSetupCheck)
                     .transition(overlayTransition)
                     .zIndex(0.8)
             }
@@ -115,7 +118,19 @@ public struct AppShellView: View {
                     .zIndex(0.5)
             }
             if viewModel.showSetupCheck {
-                SetupCheckView(viewModel: viewModel, isFirstRun: !viewModel.setupCompleted)
+                Group {
+                    if viewModel.firstRunSetup.page == .games {
+                        YourGamesSetupView(viewModel: viewModel,
+                                           onChooseFiles: { chooseFirstGame(usingFolder: false) },
+                                           onChooseFolder: { chooseFirstGame(usingFolder: true) },
+                                           onFinish: {
+                                               viewModel.completeSetup()
+                                               router.navigate(to: .library)
+                                           })
+                    } else {
+                        SetupCheckView(viewModel: viewModel, isFirstRun: !viewModel.setupCompleted)
+                    }
+                }
                     .transition(.opacity)
                     .zIndex(2.5)
             }
@@ -194,6 +209,7 @@ public struct AppShellView: View {
         .animation(reduceMotion ? nil : SeleneTheme.screen, value: router.isThemePickerOpen)
         .animation(SeleneTheme.quick, value: router.isSearchPresented)
         .animation(reduceMotion ? nil : SeleneTheme.screen, value: viewModel.showSetupCheck)
+        .animation(reduceMotion ? nil : SeleneTheme.screen, value: viewModel.firstRunSetup.page)
         .animation(reduceMotion ? nil : SeleneTheme.screen, value: router.route == .addGame)
         .animation(reduceMotion ? nil : SeleneTheme.screen, value: router.route == .console)
         .animation(reduceMotion ? nil : SeleneTheme.quick,
@@ -235,9 +251,11 @@ public struct AppShellView: View {
             case .addGame:
                 viewModel.addGameDidBecomeVisible(
                     defaults: settings.settings.gameDefaults,
-                    returningFromBack: router.isReturningFromBack
+                    returningFromBack: router.isReturningFromBack,
+                    preservingSelection: setupSourceEntryID != nil
                 )
             case .library, .collection, .detail:
+                setupSourceEntryID = nil
                 viewModel.addGameDidLeave()
             default:
                 break
@@ -973,6 +991,18 @@ public struct AppShellView: View {
         default: return
         }
         if settings.settings.lastHome != home { settings.settings.lastHome = home }
+    }
+
+    private func chooseFirstGame(usingFolder: Bool) {
+        guard viewModel.showSetupCheck,
+              viewModel.firstRunSetup.page == .games else { return }
+        let defaults = settings.settings.gameDefaults
+        let picked = usingFolder ? viewModel.selectGameFolder(startingNewGameWith: defaults)
+            : viewModel.selectGameFiles(startingNewGameWith: defaults)
+        guard picked else { return }
+        setupSourceEntryID = UUID()
+        viewModel.completeSetup()
+        router.openAddGame()
     }
 
     private func openFreshAddGame() {

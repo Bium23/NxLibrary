@@ -88,6 +88,7 @@ public struct SpotlightState: Equatable {
         let preferred = preferredGameID.map { SpotlightItem.game($0) }
         let pick = preferred.flatMap { p in items.first { $0 == p } }
             ?? items.first { if case .game = $0 { return true } else { return false } }
+            ?? items.first { $0 == .card(.addGame) }
             ?? items.first
         selectedKey = pick?.key
         focus = .row

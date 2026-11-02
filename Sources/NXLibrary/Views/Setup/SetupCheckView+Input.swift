@@ -1,10 +1,13 @@
 import SwiftUI
+import AppKit
 import NXLibraryCore
 
 extension SetupCheckView {
     /// The shell sends every controller action (and the keys, mapped) here while
     /// the Setup check is up.
     func handle(_ action: GamepadAction) {
+        guard viewModel.showSetupCheck, NSApp.modalWindow == nil,
+              viewModel.firstRunSetup.page == .requirements else { return }
         switch action {
         case .navigateLeft: navigate(.left)
         case .navigateRight: navigate(.right)
@@ -57,6 +60,8 @@ extension SetupCheckView {
     }
 
     func activate() {
+        guard viewModel.showSetupCheck, viewModel.firstRunSetup.page == .requirements,
+              NSApp.modalWindow == nil else { return }
         switch focus {
         case .card(let index):
             guard items.indices.contains(index) else { return }
@@ -75,13 +80,8 @@ extension SetupCheckView {
             SoundEffectService.shared.play(.click)
             setup.installAll()
         case .carryOn:
-            if isFirstRun && viewModel.requiresGameAppsFolderChoice {
-                if let index = items.firstIndex(where: { $0.id == .library }) { move(to: .card(index)) }
-                shake()
-                return
-            }
             SoundEffectService.shared.play(.click)
-            if isFirstRun { viewModel.completeSetup() } else { close() }
+            viewModel.advanceSetupToGames()
         }
     }
 

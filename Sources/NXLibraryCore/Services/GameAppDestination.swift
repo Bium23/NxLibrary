@@ -2,6 +2,15 @@ import Foundation
 
 /// Shared by build review, disk checks and installation. Resolving a path never moves an app.
 public enum GameAppDestination {
+    /// A new user may accept ~/Applications without a picker. Never recreate a remembered destination.
+    public static func prepareInitialFolder(_ folder: URL, hasExplicitChoice: Bool,
+                                            home: URL = FileManager.default.homeDirectoryForCurrentUser) throws {
+        let initial = home.appendingPathComponent("Applications")
+        guard !hasExplicitChoice, folder.standardizedFileURL.path == initial.standardizedFileURL.path,
+              !FileManager.default.fileExists(atPath: folder.path) else { return }
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+    }
+
     public static func url(for game: PortedGame, in folder: URL) -> URL {
         if game.status != .notBuilt, game.canDeleteAppBundle(),
            FileManager.default.fileExists(atPath: game.url.path) {

@@ -68,7 +68,7 @@ struct SettingsChangedSection: View {
         var external = Set<String>()
         if viewModel.iconAppearanceMode != .auto { external.insert("iconAppearance") }
         if abs(controller.deadzone - 0.35) > 0.001 { external.insert("controllerDeadzone") }
-        if viewModel.selectedGameFolder != nil { external.insert("gameFolder") }
+        if viewModel.gameFilesFolder != nil { external.insert("gameFolder") }
         let root = URL(fileURLWithPath: viewModel.defaultInstallPath)
         if viewModel.libraryFolder?.standardizedFileURL != root.appendingPathComponent("Applications").standardizedFileURL {
             external.insert("libraryFolder")

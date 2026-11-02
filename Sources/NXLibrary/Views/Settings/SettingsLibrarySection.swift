@@ -41,7 +41,7 @@ struct SettingsLibrarySection: View {
                       subtitle: GameFoldersCopy.sourcesAbout(extractedFolders: viewModel.engineSourceCapabilities.extractedFolders),
                       info: "Existing game apps play without their sources. Reset group keeps this folder. Clear removes the selection, keeping your files.") {
                 HStack(spacing: 10) {
-                    Text(viewModel.selectedGameFolder?.path ?? "Not selected · Optional")
+                    Text(viewModel.gameFilesFolder?.path ?? "Not selected · Optional")
                         .seleneFont(15, .medium)
                         .foregroundColor(SeleneTheme.ink.opacity(0.62))
                         .lineLimit(1)
@@ -51,7 +51,7 @@ struct SettingsLibrarySection: View {
                         .buttonStyle(.plain)
                         .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
-                    if viewModel.selectedGameFolder != nil {
+                    if viewModel.gameFilesFolder != nil {
                         Button("Clear") { viewModel.selectedGameFolder = nil }
                             .buttonStyle(.plain)
                             .seleneFont(14, .semibold)

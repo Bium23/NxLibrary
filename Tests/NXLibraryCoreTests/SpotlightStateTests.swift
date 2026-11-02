@@ -2,6 +2,12 @@ import XCTest
 @testable import NXLibraryCore
 
 final class SpotlightStateTests: XCTestCase {
+    func testNewEmptyLibraryFocusesAddGameRatherThanAnEmptyUtilityPage() {
+        var state = SpotlightState()
+        state.reconcile(with: [.card(.collection), .card(.activity), .card(.addGame)])
+        XCTAssertEqual(state.selectedKey, SpotlightItem.card(.addGame).key)
+    }
+
     private let a = UUID(), b = UUID(), c = UUID()
 
     private var items: [SpotlightItem] {

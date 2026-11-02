@@ -53,7 +53,7 @@ public struct SetupFacts: Equatable {
     /// Read access permits discovery; new builds also need permission to write here.
     public var libraryWritable: Bool? = nil
     public var libraryFolder: URL? = nil
-    /// First Setup still needs an explicit choice, even if a default folder exists.
+    /// Your games can ask for a choice until the user chooses a folder or accepts the default with Skip.
     public var libraryNeedsConfirmation: Bool = false
     public var sourcesFolder: URL? = nil
     public var sourcesReadable: Bool? = nil
@@ -98,6 +98,11 @@ public enum SetupOverride: Equatable {
 }
 
 public enum SetupCheck {
+    /// The technical screen has no folder choices; those belong to Your games and Settings → Library.
+    public static func requirements(_ items: [SetupItem]) -> [SetupItem] {
+        items.filter { $0.id != .library && $0.id != .sources }
+    }
+
     public static func items(from facts: SetupFacts) -> [SetupItem] {
         SetupItemID.allCases.map { item($0, facts) }
     }
@@ -149,7 +154,7 @@ public enum SetupCheck {
     /// The screen opens by itself only when a card that was ready has broken,
     /// never for something the player has not set up yet.
     public static func shouldReopen(previous: [SetupItemID: SetupState], current: [SetupItem]) -> Bool {
-        current.contains { item in
+        requirements(current).contains { item in
             item.isRequired && previous[item.id] == .ready
                 && (item.state == .missing || item.state == .warning || item.state == .failed)
         }

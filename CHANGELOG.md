@@ -8,6 +8,8 @@ The current source preview identifies itself as **0.1.0 alpha**. No tagged or do
 
 ### Added
 
+- Two-step setup: **Get ready** for tools and keys, then **Your games** for the app folder, existing games and a first source-file or folder choice. **Skip for now** is remembered; interrupted setup resumes, and both steps can be reopened from Settings without resetting the library.
+
 - Public GitHub app-update channel on `Bium23/NxLibrary`, without a separate user login. Packaged release copies can offer, download, verify and install newer versions; the first downloadable release and interactive A → B check are still pending.
 
 - Integration for nxnative `163a9905`: extracted-folder inputs without keys, registered-profile checks, multi-title package selection, bundled-content review and unique source-size accounting. A certified build and manual launch have been confirmed by the user.
@@ -21,6 +23,9 @@ The current source preview identifies itself as **0.1.0 alpha**. No tagged or do
 - A user guide, architecture guide, file catalog, contribution and security policies, publication checks and continuous integration.
 
 ### Changed
+
+- Add Game accepts individual NSP/XCI/NSZ/XCZ files as well as folders. File picks stage only the selected packages and preserve the global Game files folder. A first single-title selection opens Review; multi-title scans require an explicit choice. Key rescans retain update/DLC selections, and cancelling or discarding a draft preserves folder preferences.
+- An empty Spotlight initially focuses Add Game; Collection keeps an **Add your first game** prompt after setup is skipped.
 
 - **Game apps** is the single folder for existing nxnative apps and new builds, chosen in Setup or Settings → Library (default `~/Applications`). Changing it does not move installed games; rebuilds update the existing app where it is. Review and disk checks use the actual destination, and disconnected or read-only folders stop installation while preserving a ready build for retry. **Game files** remains separate and optional.
 - Unavailable games keep their library entry and use the existing blurred, locked artwork with a short reason. Missing apps no longer send the primary action to Attach sources; missing inputs disable rebuilding while existing apps remain playable.

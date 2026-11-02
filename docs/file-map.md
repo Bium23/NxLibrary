@@ -1,6 +1,6 @@
 # NX Library — catalogo dei file
 
-Aggiornato il 2 novembre 2026. Copertura di **377 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, l'integrazione di nxnative, il canale di aggiornamento e la cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 2 novembre 2026. Copertura di **380 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, l'integrazione di nxnative, il canale di aggiornamento e il setup in due passaggi con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -133,6 +133,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/ToolchainInfo.swift](../Sources/NXLibraryCore/Models/ToolchainInfo.swift) | Registra provenienza e verifica della toolchain associata a un build. |
 | [Sources/NXLibraryCore/Models/ToolchainGateCopy.swift](../Sources/NXLibraryCore/Models/ToolchainGateCopy.swift) | Traduce il gate in testi distinguendo Metal certificato, precedente e successivo. |
 | [Sources/NXLibraryCore/Models/SetupCheck.swift](../Sources/NXLibraryCore/Models/SetupCheck.swift) | Converte fatti e override del Setup in schede, stati, azioni e condizioni di riapertura. |
+| [Sources/NXLibraryCore/Models/FirstRunSetup.swift](../Sources/NXLibraryCore/Models/FirstRunSetup.swift) | Coordina pagine, completamento, ripresa del primo avvio, stato della scansione, focus e consumo unico delle selezioni avviate da Your games. |
 | [Sources/NXLibraryCore/Models/GameFoldersCopy.swift](../Sources/NXLibraryCore/Models/GameFoldersCopy.swift) | Condivide nomi delle cartelle, formati e descrizioni tra Setup, Settings e selettori dei percorsi. |
 | [Sources/NXLibraryCore/Models/SetupGrid.swift](../Sources/NXLibraryCore/Models/SetupGrid.swift) | Calcola disposizione, centratura e navigazione del focus nella griglia del Setup. |
 | [Sources/NXLibraryCore/Models/UpstreamCopy.swift](../Sources/NXLibraryCore/Models/UpstreamCopy.swift) | Prepara i testi del changelog upstream e dell’adozione degli aggiornamenti tramite NX Library. |
@@ -155,7 +156,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | File | Responsabilità |
 |---|---|
 | [Sources/NXLibraryCore/Models/GameFileItem.swift](../Sources/NXLibraryCore/Models/GameFileItem.swift) | Descrive sorgenti, tipo base/update/DLC, percorso, dimensione e metadati rilevati. |
-| [Sources/NXLibraryCore/Models/SourceSelection.swift](../Sources/NXLibraryCore/Models/SourceSelection.swift) | Gestisce selezione dei contenuti, DLC incorporati, dimensioni uniche, versione di build e requisiti del motore. |
+| [Sources/NXLibraryCore/Models/SourceSelection.swift](../Sources/NXLibraryCore/Models/SourceSelection.swift) | Gestisce scelta esplicita dei titoli, selezione e ripristino logico dei contenuti, DLC incorporati, dimensioni uniche, versione di build e requisiti del motore. |
 | [Sources/NXLibraryCore/Models/BuildRecord.swift](../Sources/NXLibraryCore/Models/BuildRecord.swift) | Conserva esito, tempi, log e provenienza di un porting. |
 | [Sources/NXLibraryCore/Models/TargetPlatform.swift](../Sources/NXLibraryCore/Models/TargetPlatform.swift) | Definisce il target mac-app e le sue etichette per l’interfaccia. |
 | [Sources/NXLibraryCore/Models/GameRuntimeConfig.swift](../Sources/NXLibraryCore/Models/GameRuntimeConfig.swift) | Persiste opzioni per titolo, prepara Review e lingua del rebuild, mappa DM_* e unisce env.txt. |
@@ -327,6 +328,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 |---|---|
 | [Sources/NXLibrary/Views/Setup/SetupCheckView.swift](../Sources/NXLibrary/Views/Setup/SetupCheckView.swift) | Disegna schede dei requisiti, dettagli, progressi e pulsanti Install all/Continue. |
 | [Sources/NXLibrary/Views/Setup/SetupCheckView+Input.swift](../Sources/NXLibrary/Views/Setup/SetupCheckView+Input.swift) | Gestisce focus iniziale, navigazione della griglia e attivazione delle schede Setup. |
+| [Sources/NXLibrary/Views/Setup/YourGamesSetupView.swift](../Sources/NXLibrary/Views/Setup/YourGamesSetupView.swift) | Disegna scelta cartella, primo gioco, apertura libreria e Skip; condivide l'indicatore dei due passaggi e gestisce mouse, tastiera e controller. |
 | [Sources/NXLibrary/Views/Launch/IntroView.swift](../Sources/NXLibrary/Views/Launch/IntroView.swift) | Mostra l’intro a freddo e gestisce il salto tramite input. |
 | [Sources/NXLibrary/Views/Launch/LaunchScreenView.swift](../Sources/NXLibrary/Views/Launch/LaunchScreenView.swift) | Mostra artwork e logo durante l’avvio del gioco e chiude l’overlay a finestra visibile. |
 | [Sources/NXLibrary/Views/Search/FindGameView.swift](../Sources/NXLibrary/Views/Search/FindGameView.swift) | Presenta ricerca nella libreria e risultati navigabili e inoltra il gioco scelto alla home. |
@@ -464,6 +466,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/SetupActionsTests.swift](../Tests/NXLibraryCoreTests/SetupActionsTests.swift) | Comandi Git del Setup e rispetto delle modifiche locali nel checkout. |
 | [Tests/NXLibraryCoreTests/SetupCheckTests.swift](../Tests/NXLibraryCoreTests/SetupCheckTests.swift) | Stati delle schede, requisiti, override e condizioni di riapertura del Setup. |
 | [Tests/NXLibraryCoreTests/SetupGridTests.swift](../Tests/NXLibraryCoreTests/SetupGridTests.swift) | Bilanciamento delle righe e spostamento del focus fra le schede. |
+| [Tests/NXLibraryCoreTests/FirstRunSetupTests.swift](../Tests/NXLibraryCoreTests/FirstRunSetupTests.swift) | Skip persistente, ripresa, riapertura manuale senza reset, attesa della scansione, separazione dei requisiti e navigazione del primo gioco. |
 | [Tests/NXLibraryCoreTests/SmokeTests.swift](../Tests/NXLibraryCoreTests/SmokeTests.swift) | Importabilità e versione nominale del modulo Core. |
 | [Tests/NXLibraryCoreTests/SourceCatalogTests.swift](../Tests/NXLibraryCoreTests/SourceCatalogTests.swift) | Fixture PFS0/CNMT e riconoscimento di base, aggiornamenti e DLC. |
 | [Tests/NXLibraryCoreTests/EngineUpgradeSourcesTests.swift](../Tests/NXLibraryCoreTests/EngineUpgradeSourcesTests.swift) | Copre cartelle estratte, pacchetti multipli, selezione, persistenza, bridge Python, file illeggibili e restaging senza perdita di cache o originali. |

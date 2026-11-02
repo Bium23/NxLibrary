@@ -27,24 +27,25 @@ struct SetupCheckView: View {
         self.model = viewModel.setupModel
     }
 
-    var items: [SetupItem] { model.items }
-    var rows: [Int] { SetupGrid.rowCounts(items.count) }
+    var items: [SetupItem] { SetupCheck.requirements(model.items) }
+    var rows: [Int] { SetupGrid.rowCounts(items.count, maxPerRow: 3) }
     var setup: SetupCheckModel { model }
 
     var body: some View {
         ZStack {
             SeleneBackdrop()
             VStack(spacing: 0) {
+                SetupStepIndicator(page: .requirements).padding(.bottom, canvas.u(18))
                 Text("Let's get NX Library ready")
                     .seleneFont(46, .semibold)
                     .foregroundColor(SeleneTheme.ink)
-                Text("Choose your game folders, then check what you need to build. Change folders later in Settings → Library.")
+                Text("Check what you need to build. Your games come next.")
                     .seleneFont(19)
                     .foregroundColor(SeleneTheme.ink75)
                     .padding(.top, canvas.u(10))
-                grid.padding(.top, canvas.u(46))
-                panel.padding(.top, canvas.u(34))
-                buttons.padding(.top, canvas.u(30))
+                grid.padding(.top, canvas.u(30))
+                panel.padding(.top, canvas.u(22))
+                buttons.padding(.top, canvas.u(20))
             }
             .modifier(Shake(amount: CGFloat(shakes)))
             .offset(y: canvas.u(-20))
@@ -207,25 +208,23 @@ struct SetupCheckView: View {
             if names.isEmpty {
                 return Story(icon: .check, tone: SeleneTheme.success, title: "Install all", state: "Done",
                              about: "Everything NX Library can install by itself is installed.",
-                             detail: "Choose game folders and import your keys on their cards.", action: nil)
+                             detail: "Import your keys on their card if needed.", action: nil)
             }
             return Story(icon: .sync, tone: SeleneTheme.glyph, title: "Install all", state: "\(names.count) to go",
                          about: names.joined(separator: " · "),
-                         detail: "Choose game folders and import your keys on their cards.", action: "Install all")
+                         detail: "Import your keys on their card if needed.", action: "Install all")
         default:
             let required = items.filter(\.isRequired)
             let ready = required.filter { $0.state == .ready }.count
             let left = required.filter { $0.state != .ready }.map(\.title)
             if left.isEmpty {
                 return Story(icon: .check, tone: SeleneTheme.success, title: "All set", state: "Ready",
-                             about: "Everything NX Library needs is here.", detail: "", action: isFirstRun ? "Continue" : "Done")
+                             about: "Everything NX Library needs is here.", detail: "", action: "Continue")
             }
             return Story(icon: .checklist, tone: SeleneTheme.glyph, title: "\(ready) of \(required.count) ready",
                          state: "\(left.count) left", about: "Still to do: \(left.joined(separator: ", ")).",
-                         detail: viewModel.requiresGameAppsFolderChoice
-                            ? "Choose your Game apps folder to continue. Build prerequisites can wait; existing apps still play."
-                            : "Finish build setup later from Settings → Start-up → Open Setup. Existing apps still play.",
-                         action: isFirstRun ? "Continue" : "Done")
+                         detail: "Build setup can wait. Existing game apps still play.",
+                         action: "Continue")
         }
     }
 
@@ -245,7 +244,7 @@ struct SetupCheckView: View {
             }
             .onHover { if $0 { move(to: .installAll) } }
             .opacity(model.installAllRunning ? 0.75 : 1)
-            SelenePillButton(title: isFirstRun ? "Continue" : "Done", minWidth: 200, focused: focus == .carryOn) {
+            SelenePillButton(title: "Continue", minWidth: 200, focused: focus == .carryOn) {
                 move(to: .carryOn); activate()
             }
             .onHover { if $0 { move(to: .carryOn) } }

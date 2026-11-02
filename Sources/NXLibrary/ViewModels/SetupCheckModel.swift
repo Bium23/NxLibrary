@@ -41,7 +41,7 @@ final class SetupCheckModel: ObservableObject {
                    certifiedMetal: viewModel.requiredMetalVersion ?? requirements.fallbackMetal,
                    allowUntested: viewModel.allowUntestedToolchain,
                    keyStore: viewModel.keyStore, libraryFolder: viewModel.libraryFolder,
-                   sourcesFolder: viewModel.selectedGameFolder,
+                   sourcesFolder: viewModel.gameFilesFolder,
                    libraryNeedsConfirmation: viewModel.requiresGameAppsFolderChoice)
     }
 

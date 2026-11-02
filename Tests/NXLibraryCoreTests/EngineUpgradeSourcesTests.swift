@@ -2,6 +2,44 @@ import XCTest
 @testable import NXLibraryCore
 
 final class EngineUpgradeSourcesTests: XCTestCase {
+    func testMultipleTitlesNeedAnExplicitChoiceButRescansKeepTheChosenTitle() {
+        let titles = ["0100000000010000", "0100000000020000"]
+        XCTAssertNil(SourceSelection.initialTitleID(available: titles, previous: nil))
+        XCTAssertNil(SourceSelection.initialTitleID(available: titles, previous: "other"))
+        XCTAssertEqual(SourceSelection.initialTitleID(available: titles, previous: titles[1]), titles[1])
+        XCTAssertEqual(SourceSelection.initialTitleID(available: [titles[0]], previous: nil), titles[0])
+    }
+
+    private func choice(_ name: String, kind: SourceKind, version: String? = nil) -> GameFileItem {
+        GameFileItem(url: URL(fileURLWithPath: "/tmp/\(name).nsp"), kind: kind,
+                     titleId: "0100000000010000", versionString: version, sizeBytes: 1)
+    }
+
+    func testKeyRescanPreservesChosenUpdateAndExcludedDLCWithNewItemIDs() {
+        let old = [choice("base", kind: .base), choice("update1", kind: .update, version: "v1"),
+                   choice("update2", kind: .update, version: "v2"), choice("dlc", kind: .dlc)]
+        let current = [choice("base", kind: .base), choice("update1", kind: .update, version: "1"),
+                       choice("update2", kind: .update, version: "2"), choice("dlc", kind: .dlc)]
+        let restored = SourceSelection.restoredSelection(previous: old, selected: [old[0].id, old[1].id], current: current)
+        XCTAssertEqual(restored, [current[0].id, current[1].id])
+        XCTAssertEqual(SourceSelection.versionForBuild(current.filter { restored.contains($0.id) }), "v1")
+    }
+
+    func testKeyRescanKeepsTheUsersNoUpdateChoiceWhenMoreVersionsBecomeReadable() {
+        let old = [choice("base", kind: .base), choice("update1", kind: .update, version: "v1")]
+        let current = [choice("base", kind: .base), choice("update1", kind: .update, version: "v1"),
+                       choice("newer", kind: .update, version: "v2")]
+        XCTAssertEqual(SourceSelection.restoredSelection(previous: old, selected: [old[0].id], current: current),
+                       [current[0].id])
+    }
+
+    func testKeyRescanRecognisesPreviouslyChosenContentAfterReadingItsVersion() {
+        let old = [choice("base", kind: .base), choice("update", kind: .update)]
+        let current = [choice("base", kind: .base), choice("update", kind: .update, version: "v65536")]
+        XCTAssertEqual(SourceSelection.restoredSelection(previous: old, selected: Set(old.map(\.id)), current: current),
+                       Set(current.map(\.id)))
+    }
+
     private let title: UInt64 = 0x0400000000000000
 
     private func temporaryFolder() throws -> URL {

@@ -2,6 +2,54 @@ import Foundation
 
 /// Selection is by content; workspace links and disk usage are by physical input.
 public enum SourceSelection {
+    public static func initialTitleID(available: [String], previous: String?) -> String? {
+        if let previous, available.contains(previous) { return previous }
+        return available.count == 1 ? available.first : nil
+    }
+
+    /// Catalog rescans create new UUIDs. Restore choices by physical content, never by those transient IDs.
+    public static func restoredSelection(previous: [GameFileItem], selected: Set<UUID>,
+                                         current: [GameFileItem]) -> Set<UUID> {
+        let old = previous.map { (file: $0, key: ContentKey($0)) }
+        let next = current.map { (file: $0, key: ContentKey($0)) }
+        var result = initial(in: current)
+        for entry in next where entry.file.kind != .base {
+            let matches = old.filter { $0.key.matches(entry.key) }
+            guard matches.count == 1, let match = matches.first else { continue }
+            if selected.contains(match.file.id) { result.insert(entry.file.id) }
+            else { result.remove(entry.file.id) }
+        }
+        if old.contains(where: { $0.file.kind == .update }) {
+            result.subtract(current.filter { $0.kind == .update }.map(\.id))
+            let chosen = old.filter { $0.file.kind == .update && selected.contains($0.file.id) }
+            let updates = next.filter { entry in
+                entry.file.kind == .update && chosen.contains { $0.key.matches(entry.key) }
+            }
+            if updates.count == 1, let update = updates.first { result.insert(update.file.id) }
+        }
+        return includingBundledDLC(in: current, selected: result)
+    }
+
+    private struct ContentKey {
+        let path: String
+        let kind: SourceKind
+        let title: String?
+        let version: Int?
+
+        init(_ file: GameFileItem) {
+            path = SourceSelection.path(file)
+            kind = file.kind
+            title = file.titleId?.uppercased()
+            version = file.versionString.flatMap { Int($0.lowercased().replacingOccurrences(of: "v", with: "")) }
+        }
+
+        func matches(_ other: Self) -> Bool {
+            path == other.path && kind == other.kind
+                && (title == nil || other.title == nil || title == other.title)
+                && (version == nil || other.version == nil || version == other.version)
+        }
+    }
+
     public static func supported(_ files: [GameFileItem], titleSelection: Bool, extractedFolders: Bool) -> Bool {
         files.allSatisfy { ($0.layout != .extracted || extractedFolders)
             && ($0.requiresTitleSelection != true || titleSelection) }

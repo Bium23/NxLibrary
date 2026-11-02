@@ -142,8 +142,8 @@ public struct CollectionView: View {
                 .allowsHitTesting(false)
         } else {
             VStack(spacing: canvas.u(14)) {
-                Text("No games yet").seleneFont(34).foregroundColor(SeleneTheme.ink)
-                Text("Add a game to start your collection.")
+                Text("Add your first game").seleneFont(34).foregroundColor(SeleneTheme.ink)
+                Text("Choose game files or find your existing apps.")
                     .seleneFont(19).foregroundColor(SeleneTheme.ink60)
                 HStack(spacing: canvas.u(14)) {
                     SelenePillButton(title: "Add game", focused: true) { router.openAddGame() }

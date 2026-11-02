@@ -103,15 +103,21 @@ Packaged releases check this repository for app updates; no GitHub account is ne
 
 ### First-run setup
 
-Setup shows which prerequisites are ready and which need attention. **Install all** handles the supported steps: the engine checkout, the certified Metal compiler and the official .NET installer. Xcode itself comes from the App Store; its licence and any system prompts remain your responsibility.
+Setup has two steps, **Get ready** and **Your games**.
 
-Choose **Game apps** first: where to keep your nxnative game apps (`.app`). NX Library finds existing games there and installs new builds into the same folder; an empty folder is fine when starting fresh. The default is `~/Applications`. Changing this choice does not move apps already installed, and a rebuild updates an existing app in its current location. A read-only folder still allows discovery and Play; installing new builds needs write access.
+**Get ready** shows the engine, build tools and keys. **Install all** handles the supported steps: the engine checkout, the certified Metal compiler and the official .NET installer. Xcode itself comes from the App Store; its licence and any system prompts remain your responsibility. Choose **Continue** to proceed; incomplete build requirements can be finished later, and existing game apps remain playable.
 
-**Game files** is separate and optional: NSP, XCI, NSZ and XCZ inputs for building; supported engines can also use extracted folders. Both choices can be changed in **Settings → Library**.
+**Your games** shows **Game apps**: where to keep existing nxnative games (`.app`) and install new builds. It checks the selected folder before reporting an empty library. Use **Change** to choose another folder, **Choose game file** for NSP, XCI, NSZ or XCZ, or **Choose a folder instead** for a source folder, including supported extracted inputs. A single detected title opens the existing build review; multiple titles require a choice. Selecting sources never starts a build by itself. Cancelling the picker stays on this page.
+
+If games are found, **Open library** takes you to them. **Skip for now** enters the launcher without adding a game and is remembered: the welcome flow does not return automatically just because the library is empty. Add games later from Spotlight's Add Game card or Collection. An interrupted first setup resumes on its current step.
+
+The default Game apps folder is `~/Applications`; first use can prepare this default without an extra picker. Remembered or custom unavailable folders are never recreated automatically. Changing folders does not move installed apps, and a rebuild updates an existing app in its current location. A read-only folder still allows discovery and Play; installing new builds needs write access.
+
+**Game files** is a separate optional folder preference in **Settings → Library**. Selecting individual files for a porting does not replace that preference or scan their siblings. Both folder choices can be changed in Settings later.
 
 Import your `prod.keys` when prompted. NX Library keeps a private copy with mode `0600` and leaves the original file unchanged. Key values are not displayed or logged.
 
-When Setup is ready, choose **Continue**. Reopen it from **Settings → Start-up → Open Setup** whenever needed. NX Library never runs `sudo`, accepts the Xcode licence for you or changes `xcode-select`.
+Reopen both setup steps from **Settings → Start-up → Open Setup** whenever needed; this keeps your library and completion state. NX Library never runs `sudo`, accepts the Xcode licence for you or changes `xcode-select`.
 
 Already have a built game app? Use **Settings → Library → Existing builds → Import**. Play remains available without the original sources; rebuilding requires attaching them again.
 
