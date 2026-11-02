@@ -242,7 +242,7 @@ public struct GameOptionsPresentation: Equatable {
         case .restoreDefaults:
             return "Copies your defaults for new games once. Later changes to those defaults leave this game unchanged."
         case .removeSources:
-            return "Frees disk space by deleting original NSP/XCI dump files and the compilation cache workspace. The installed game in ~/Applications and all your save files are completely safe."
+            return "Frees disk space by deleting original NSP/XCI dump files and the compilation cache workspace. The installed game app and all your save files are completely safe."
         default:
             return nil
         }

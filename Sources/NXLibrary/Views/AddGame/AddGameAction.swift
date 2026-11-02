@@ -85,21 +85,3 @@ struct SeleneActionButton: View {
         }
     }
 }
-
-// MARK: - Destination text
-
-enum AddGameDestination {
-    static func name(appName: String, gameName: String?) -> String {
-        var value = appName.trimmingCharacters(in: .whitespacesAndNewlines)
-        if value.isEmpty { value = gameName ?? "Game" }
-        value = value
-            .replacingOccurrences(of: "/", with: "-")
-            .replacingOccurrences(of: ":", with: " -")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        return value.isEmpty ? "Game" : value
-    }
-
-    static func path(appName: String, gameName: String?) -> String {
-        "~/Applications/\(name(appName: appName, gameName: gameName)).app"
-    }
-}

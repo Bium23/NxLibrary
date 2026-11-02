@@ -1,8 +1,9 @@
 /// Shared folder wording for Setup, Settings and their pickers.
 public enum GameFoldersCopy {
     public static let appsTitle = "Game apps"
-    public static let appsAbout = "Existing nxnative games (.app). New builds go to ~/Applications."
-    public static let appsPickerMessage = "Choose the folder containing your nxnative games (.app). Change it later in Settings → Library. New builds go to ~/Applications."
+    public static let appsAbout = "Choose where to keep your game apps."
+    public static let appsContents = "Existing games and new builds."
+    public static let appsPickerMessage = "Choose where to keep your game apps. Put any existing nxnative games (.app) here. Change it later in Settings → Library."
     public static let sourcesTitle = "Game files"
 
     public static func sourceFormats(extractedFolders: Bool) -> String {

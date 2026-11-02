@@ -247,7 +247,8 @@ public final class BuildService {
                         held = tempApp
                     } else {
                         do {
-                            try BuildOutputInstaller.install(tempApp: tempApp, finalApp: finalApp, fileManager: self.fm)
+                            try BuildOutputInstaller.install(tempApp: tempApp, finalApp: finalApp,
+                                                             fileManager: self.fm, requiresExistingParent: true)
                         } catch {
                             held = tempApp
                             throw error

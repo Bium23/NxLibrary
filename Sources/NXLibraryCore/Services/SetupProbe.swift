@@ -56,6 +56,7 @@ public struct SetupProbe {
         let capabilities = EngineSourceCapabilities(repo: engineFolder)
         facts.keysOptional = capabilities.extractedFolders
         facts.libraryFolder = libraryFolder
+        facts.libraryWritable = libraryFolder.map { GameAppDestination.folderProblem(at: $0) == nil }
         facts.libraryNeedsConfirmation = libraryNeedsConfirmation
         facts.sourcesFolder = sourcesFolder
         facts.sourcesReadable = sourcesFolder.map { readableDirectory($0) }

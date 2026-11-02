@@ -56,12 +56,13 @@ public enum BuildOutputInstaller {
     }
 
     public static func install(tempApp: URL, finalApp: URL,
-                               fileManager: FileManager = .default) throws {
-        try install(tempApp: tempApp, finalApp: finalApp, fileManager: fileManager, io: BuildInstallIO())
+                               fileManager: FileManager = .default, requiresExistingParent: Bool = false) throws {
+        try install(tempApp: tempApp, finalApp: finalApp, fileManager: fileManager,
+                    requiresExistingParent: requiresExistingParent, io: BuildInstallIO())
     }
 
     internal static func install(tempApp: URL, finalApp: URL, fileManager: FileManager = .default,
-                                 io: BuildInstallIO) throws {
+                                 requiresExistingParent: Bool = false, io: BuildInstallIO) throws {
         installLock.lock()
         defer { installLock.unlock() }
         let source = tempApp.standardizedFileURL
@@ -106,7 +107,13 @@ public enum BuildOutputInstaller {
             throw BuildInstallError.replaceFailed("refusing to replace a non-app item at \(destination.path)")
         }
         guard sourceID != previous else { throw BuildInstallError.invalidApp(tempApp.path) }
-        try fileManager.createDirectory(at: parent, withIntermediateDirectories: true)
+        if requiresExistingParent {
+            if let problem = GameAppDestination.folderProblem(at: parent, fileManager: fileManager) {
+                throw BuildInstallError.replaceFailed(problem)
+            }
+        } else {
+            try fileManager.createDirectory(at: parent, withIntermediateDirectories: true)
+        }
         let copied = try !io.sameVolume(source, parent)
         // Only a recorded cross-volume preparation owns the reserved incoming path.
         if identity(copy, fileManager) != nil {

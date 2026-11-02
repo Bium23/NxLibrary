@@ -1,6 +1,6 @@
 # NX Library — guida tecnica
 
-Aggiornata il 2 novembre 2026 sul codice del repository. La mappa comprende 232 file Swift di produzione e 96 file di test e supporto ai test. Il ramo comprende nxnative 163a9905 adottato, il canale di aggiornamento e i flussi cartelle/disponibilità, con 744 test Swift superati. La build certificata e la prova di gioco manuale sono state confermate dall’utente; la versione principale usa ora lo stesso pin della preview validata.
+Aggiornata il 2 novembre 2026 sul codice del repository. La mappa comprende 233 file Swift di produzione e 97 file di test e supporto ai test. Il ramo comprende nxnative 163a9905 adottato, il canale di aggiornamento e i flussi cartelle/disponibilità, con 755 test Swift superati. La build certificata e la prova di gioco manuale sono state confermate dall’utente; la versione principale usa ora lo stesso pin della preview validata.
 
 Questa guida descrive il funzionamento attuale. Il [catalogo dei file](file-map.md) assegna una responsabilità a ogni file versionato, suddiviso per area.
 
@@ -100,7 +100,7 @@ Le viste principali sono Spotlight, Collection e Details. Ricerca, Add Game, Con
 
 `SetupProbe` costruisce i dati del Setup. `SetupCheck` li traduce in schede, stati e azioni. `SetupCheckModel` esegue i controlli in background e coordina installazioni e avanzamento. `SetupActions` prepara gli argomenti Git per portare un checkout gestibile al pin. `DotnetRelease` seleziona il pacchetto Microsoft e verifica SHA-512 prima dell’apertura nell’Installer di macOS.
 
-Le prime schede sono Game apps e Game files, con copy condiviso in `GameFoldersCopy`. Game apps richiede la scelta esplicita al primo Setup e soltanto lettura della cartella; Game files è facoltativa e non entra nei requisiti di completamento o riapertura. Le selezioni restano ricordate anche quando un percorso non è disponibile. Settings → Library usa gli stessi nomi. Queste cartelle governano scoperta delle app e selezione degli input: l'installazione delle nuove build resta in `~/Applications` e le selezioni dei sorgenti per singolo gioco vengono sostituite soltanto con conferma esplicita.
+Le prime schede sono Game apps e Game files, con copy condiviso in `GameFoldersCopy`. Game apps richiede la scelta esplicita al primo Setup e indica la cartella unica in cui cercare i giochi nxnative esistenti e installare le prime build; il default è `~/Applications`. La lettura basta per scoperta e Play; una cartella di sola lettura mostra READ ONLY e impedisce nuove installazioni. Game files è facoltativa e non entra nei requisiti di completamento o riapertura. Le selezioni restano ricordate anche quando un percorso non è disponibile. Settings → Library usa gli stessi nomi. Cambiare Game apps non sposta app già registrate; cambiare Game files non sostituisce i sorgenti di un titolo senza conferma esplicita.
 
 `CompatibilityChecker` verifica commit, modifiche del checkout, contratto CLI e compilatore Metal richiesto dal lock del motore. `ToolchainRequirements.current` contiene Xcode minimo, major .NET e asset Metal. `ToolchainGateCopy` produce la spiegazione del risultato per la UI.
 
@@ -112,7 +112,7 @@ L'integrazione di [nxnative 163a9905](upstream-upgrades/2026-11-02-2716f78-163a9
 
 `GameFileItem` conserva facoltativamente layout e requisito di selezione del titolo; i vecchi JSON continuano a indicare pacchetti. Questi requisiti sono verificati prima del build anche cambiando checkout. Le cartelle estratte sono collegate nel layout `base/`, `updates/<version>/`, `dlc/<title>/0/romfs/`; il restaging rimuove link esclusi e contenitori vuoti, preservando cache e originali. Un pacchetto illeggibile non nasconde gli altri giochi validi: la scansione mantiene i risultati e segnala i file saltati.
 
-Con un engine che riconosce cartelle estratte, Setup permette di proseguire senza chiavi. La selezione di pacchetti cifrati continua a richiederle e a eseguire il preflight. La guida In game include Shift + frecce per la levetta destra delle nuove build. L'integrazione è disponibile nella copia di validazione; il pin stabile rimane quello riportato sopra fino alla prova reale.
+Con un engine che riconosce cartelle estratte, Setup permette di proseguire senza chiavi. La selezione di pacchetti cifrati continua a richiederle e a eseguire il preflight. La guida In game include Shift + frecce per la levetta destra delle nuove build. L'integrazione è inclusa nella versione principale al pin riportato sopra.
 
 1. `AddGameView` raccoglie cartelle o file. `SourceCatalog` riconosce NSP, XCI, NSZ e XCZ e raggruppa base, aggiornamenti e DLC.
 2. `AppViewModel+KeyCheck` invoca `KeyCheck` sulle sorgenti selezionate. Il risultato dipende dalla selezione corrente, così un controllo precedente non abilita un porting diverso.
@@ -122,6 +122,8 @@ Con un engine che riconosce cartelle estratte, Setup permette di proseguire senz
 6. `BuildEventParser` decodifica il progresso JSON. `PortingProgress` lo aggrega per la UI, con gli shader fino al 90% e le fasi finali nel restante 10%. Il modello alimenta wizard, tile, percentuale e stima del tempo.
 7. `BuildOutputInstaller` valida il bundle temporaneo e pubblica il gioco con `renamex_np`: `RENAME_SWAP` scambia atomicamente due app esistenti; `RENAME_EXCL` installa la prima copia senza sovrascrivere una destinazione comparsa nel frattempo. Sullo stesso volume usa direttamente il bundle pronto. Fra volumi diversi prepara prima una copia nascosta accanto alla destinazione, lasciando disponibile l’app corrente fino allo scambio.
 8. Se il gioco è aperto o l’installazione è trattenuta da un’operazione sui salvataggi, `PendingInstall` conserva il risultato temporaneo. `AppViewModel+PendingInstall` lo riprende quando può acquisire l’accesso necessario.
+
+`GameAppDestination` centralizza il percorso mostrato nella review, il volume controllato per lo spazio e la destinazione effettiva. Le prime build usano Game apps; un rebuild conserva l'app esistente quando il suo percorso è sicuro, anche dopo un cambio di cartella. I conflitti di nome con app di altri titoli ricevono un percorso distinto. La destinazione viene fissata prima del porting e rimane tale anche nelle installazioni differite. Le installazioni dei giochi richiedono che la cartella esista ancora: se si disconnette o diventa non scrivibile, il risultato pronto viene conservato per Retry. Il packaging del frontend continua a poter creare la propria cartella di installazione.
 
 Se il motore termina correttamente con un bundle valido e fallisce solo l’installazione, `BuildResult.heldApp` conserva la build pronta e `installationFailed` distingue questo caso dal porting fallito. Il coordinatore registra la stessa `PendingInstall` già usata per i giochi aperti. Un dialogo Selene offre Retry e Close: Retry installa quel bundle senza riavviare il motore; Close conserva la build. Gli errori delle installazioni differite passano dallo stesso dialogo. La schermata del porting offre anche Retry installation finché la build resta in attesa. Un errore di scrittura del catalogo conserva lo stato in memoria e impedisce che una scansione immediata lo sostituisca con quello precedente.
 
@@ -215,7 +217,7 @@ I percorsi sono relativi alla home dell’utente. `Application Support/NXLibrary
 | `Application Support/NXLibrary/Logs/<TID>.log` | Log di porting costruito dall’app. |
 | `~/Library/Application Support/nxnative/<TID>/` | `env.txt`, `save`, eventuale `save_device`, cheats e dati runtime del motore. |
 | `~/Library/Logs/nxnative/<TID>.log` | Log del gioco avviato. |
-| `~/Applications/<nome>.app` | Bundle del gioco installato, salvo percorso importato o scelto. |
+| `<Game apps>/<nome>.app` | Prima installazione del gioco; default `~/Applications`. I rebuild aggiornano l'app nella sua posizione esistente. |
 | Accanto al gioco: `.nxlibrary-install-<hash>.json` | Ultima ricevuta di installazione per quel percorso, gestita da `BuildOutputInstaller`. |
 | Accanto al gioco: `.nxlibrary-incoming-<hash>.app` | Preparazione temporanea quando il bundle pronto si trova su un altro volume. |
 | `UserDefaults` del bundle NX Library | Percorsi ricordati, stato Setup, override toolchain e cache di alcuni controlli. |

@@ -181,8 +181,6 @@ final class SetupCheckTests: XCTestCase {
         let cards = SetupCheck.items(from: input)
         XCTAssertEqual(Array(cards.prefix(2)).map(\.id.rawValue), ["library", "sources"])
         let apps = try XCTUnwrap(cards.first { $0.id == .library })
-        XCTAssertTrue(apps.about.contains(".app"))
-        XCTAssertTrue(apps.about.contains("~/Applications"))
         XCTAssertTrue(apps.detail.contains("/Volumes/Games/Mac apps"))
         let files = try XCTUnwrap(cards.first { $0.id.rawValue == "sources" })
         XCTAssertTrue(files.detail.contains("/Volumes/Games/Packages"))
@@ -288,7 +286,7 @@ final class SetupCheckTests: XCTestCase {
                    sourcesFolder: sources, libraryNeedsConfirmation: needsConfirmation)
     }
 
-    func testReadOnlyGameAppsFolderIsReadyForDiscovery() throws {
+    func testReadOnlyGameAppsFolderWarnsThatNewBuildsCannotBeInstalled() throws {
         let fm = FileManager.default
         let home = fm.temporaryDirectory.appendingPathComponent("SetupProbe-\(UUID().uuidString)")
         let library = home.appendingPathComponent("Existing game apps")
@@ -307,7 +305,8 @@ final class SetupCheckTests: XCTestCase {
                                keyStore: KeyStore(directory: home.appendingPathComponent("keys")),
                                libraryFolder: library).facts()
         let card = SetupCheck.items(from: facts).first { $0.id == .library }
-        XCTAssertEqual(card?.state, .ready)
+        XCTAssertEqual(card?.state, .warning)
+        XCTAssertNotNil(card?.actionTitle)
     }
 
     func testProbeRejectsFilesAndKeepsUnavailableFolderPaths() throws {

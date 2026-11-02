@@ -50,6 +50,8 @@ public struct SetupFacts: Equatable {
     public var keysOptional: Bool = false
     /// nil: no folder chosen.
     public var libraryReadable: Bool?
+    /// Read access permits discovery; new builds also need permission to write here.
+    public var libraryWritable: Bool? = nil
     public var libraryFolder: URL? = nil
     /// First Setup still needs an explicit choice, even if a default folder exists.
     public var libraryNeedsConfirmation: Bool = false
@@ -263,7 +265,7 @@ public enum SetupCheck {
             if f.libraryNeedsConfirmation {
                 return SetupItem(id: id, title: GameFoldersCopy.appsTitle, state: .needsYou, chip: "CHOOSE FOLDER", about: about,
                                  detail: f.libraryFolder.map { "Choose this folder or another: \($0.path)" }
-                                    ?? "Choose a folder for existing apps, or an empty folder to start.",
+                                    ?? "Choose where to keep your game apps. An empty folder is fine.",
                                  actionTitle: "Choose folder")
             }
             switch f.libraryReadable {
@@ -275,8 +277,14 @@ public enum SetupCheck {
                                  detail: f.libraryFolder.map { "Cannot read \($0.path). Reconnect it or choose another." }
                                     ?? "NX Library cannot read this folder. Reconnect it or choose another.", actionTitle: "Choose folder")
             case true?:
+                if f.libraryWritable == false {
+                    return SetupItem(id: id, title: GameFoldersCopy.appsTitle, state: .warning, chip: "READ ONLY", about: about,
+                                     detail: "Choose a writable folder for new builds. Existing apps still play.",
+                                     actionTitle: "Change")
+                }
                 return SetupItem(id: id, title: GameFoldersCopy.appsTitle, state: .ready, chip: "✓ READY", about: about,
-                                 detail: f.libraryFolder?.path ?? "Ready to find existing game apps.", actionTitle: "Change")
+                                 detail: [GameFoldersCopy.appsContents, f.libraryFolder?.path].compactMap { $0 }.joined(separator: "\n"),
+                                 actionTitle: "Change")
             }
         case .sources:
             let about = GameFoldersCopy.sourcesAbout(extractedFolders: f.extractedFoldersSupported)

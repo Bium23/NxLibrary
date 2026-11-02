@@ -2,6 +2,27 @@ import XCTest
 @testable import NXLibraryCore
 
 final class PendingInstallTests: XCTestCase {
+    func testRetryWaitsForTheChosenFolderToReturnAndKeepsItsOriginalDestination() throws {
+        let fm = FileManager.default
+        let chosen = root.appendingPathComponent("Chosen games")
+        try fm.createDirectory(at: chosen, withIntermediateDirectories: true)
+        var p = pending()
+        p.finalApp = chosen.appendingPathComponent("Game.app")
+        try makeApp(p.tempApp, version: "2.0.0")
+        var g = game()
+        g.pendingInstall = p
+        try fm.removeItem(at: chosen)
+        XCTAssertThrowsError(try PendingInstaller.install(&g))
+        XCTAssertEqual(g.pendingInstall, p)
+        XCTAssertTrue(fm.fileExists(atPath: p.tempApp.path))
+        XCTAssertFalse(fm.fileExists(atPath: chosen.path))
+        guard g.pendingInstall != nil else { return }
+        try fm.createDirectory(at: chosen, withIntermediateDirectories: true)
+        XCTAssertEqual(try PendingInstaller.install(&g), .installed)
+        XCTAssertEqual(g.url, p.finalApp)
+        XCTAssertEqual(g.versionString, "2.0.0")
+    }
+
     private var root: URL!
 
     override func setUpWithError() throws {

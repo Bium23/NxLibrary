@@ -13,8 +13,8 @@ struct SettingsLibrarySection: View {
     var body: some View {
         VStack(spacing: 9) {
             SeleneRow(GameFoldersCopy.appsTitle,
-                      subtitle: "Existing nxnative .apps · New builds go to ~/Applications.",
-                      info: "Reads existing nxnative game .apps here. Read access is enough. Rebuilds keep the existing app's location.") {
+                      subtitle: GameFoldersCopy.appsContents,
+                      info: "Choose where to keep your game apps. Put any existing nxnative games (.app) here. Changing folders does not move apps; rebuilds update them where they are.") {
                 HStack(spacing: 10) {
                     Text(viewModel.libraryFolder?.path ?? "Not selected")
                         .seleneFont(15, .medium)
@@ -62,7 +62,7 @@ struct SettingsLibrarySection: View {
 
             SeleneButtonRow("Existing builds",
                             subtitle: "Find nxnative games (.app) in your Game apps folder.",
-                            info: "Registers existing game apps from your selected folder and Applications folders. Source game files are optional for Play.",
+                            info: "Finds existing nxnative game apps in your Game apps folder. Source game files are optional for Play.",
                             buttonTitle: "Import") {
                 viewModel.importExistingBuilds()
             }

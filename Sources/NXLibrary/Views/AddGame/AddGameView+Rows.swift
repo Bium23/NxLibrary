@@ -80,7 +80,7 @@ extension AddGameView {
                                    title: "The base stays in. One update at a time; bundled DLC stay together."))
         }
         rows += readinessRows(includeBuildError: false)
-        rows.append(AddGameRow(id: "destination", kind: .note, title: destinationNote))
+        rows.append(destinationRow)
         return rows
     }
 
@@ -143,7 +143,7 @@ extension AddGameView {
                                    title: "Bundle identifier", compact: true))
         }
         rows += readinessRows(includeBuildError: true)
-        rows.append(AddGameRow(id: "destination", kind: .note, title: destinationNote))
+        rows.append(destinationRow)
         return rows
     }
 
@@ -214,9 +214,12 @@ extension AddGameView {
         return rows
     }
 
-    private var destinationNote: String {
-        let path = AddGameDestination.path(appName: viewModel.appName, gameName: viewModel.selectedGame?.name)
-        return "Installs to \(path). On a failure or a cancel the previous app stays as it was."
+    private var destinationRow: AddGameRow {
+        if let problem = viewModel.buildDestinationProblem {
+            return AddGameRow(id: "destination", kind: .warning(action: nil), title: "App folder unavailable", about: problem)
+        }
+        return AddGameRow(id: "destination", kind: .note,
+                          title: "Installs to \(viewModel.selectedBuildAppURL.path). On a failure or a cancel the previous app stays as it was.")
     }
 
     // MARK: - Porting

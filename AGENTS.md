@@ -6,7 +6,7 @@ A personal macOS SwiftUI front-end for upstream [nxnative](https://github.com/se
 
 - Use upstream nxnative in place. Never patch `~/nxnative`; engine updates are manual and re-pinned in `AppViewModel.pinnedEngineCommit`.
 - No Nintendo assets, keys, ROMs, or game content in the repository.
-- Sources are symlinked, never copied. Builds install to `~/Applications` and replace the previous app atomically.
+- Sources are symlinked, never copied. New builds install to the selected **Game apps** folder (default `~/Applications`); rebuilds replace the existing app atomically in its current location. Changing the folder never moves installed apps.
 - Keys stay mode `0600`; never log key values.
 - The Metal gate blocks new builds unless the toolchain is certified or the explicit untested override is enabled. An override records `toolchainVerified=false`.
 - Play remains available for an existing app even when a new build is blocked.

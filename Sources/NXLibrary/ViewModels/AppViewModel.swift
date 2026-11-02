@@ -142,8 +142,26 @@ public final class AppViewModel: ObservableObject {
     }
 
     public var availableOutputDiskBytes: Int64? {
-        freeBytes(at: URL(fileURLWithPath: NSHomeDirectory())
-            .appendingPathComponent("Applications"))
+        freeBytes(at: selectedBuildAppURL.deletingLastPathComponent())
+    }
+
+    var gameAppsFolder: URL {
+        libraryFolder ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Applications")
+    }
+
+    /// Review and the first-build space check use the same destination policy as the installer.
+    var selectedBuildAppURL: URL {
+        let customName = appName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = customName.isEmpty ? selectedGame?.name ?? "Game" : customName
+        if var existing = selectedLibraryGame {
+            existing.name = name
+            return finalAppURL(for: existing)
+        }
+        return GameAppDestination.url(name: name, titleId: selectedGame?.titleId, in: gameAppsFolder)
+    }
+
+    var buildDestinationProblem: String? {
+        GameAppDestination.folderProblem(at: selectedBuildAppURL.deletingLastPathComponent())
     }
 
     /// The wizard reserves space for both the extracted cache and the temporary
@@ -230,7 +248,7 @@ public final class AppViewModel: ObservableObject {
             }
         }
     }
-    /// First use asks explicitly where the ready-made games are; later Setup visits keep that choice.
+    /// First use asks where to find existing games and install new ones; later visits keep that choice.
     public var requiresGameAppsFolderChoice: Bool {
         !setupCompleted && UserDefaults.standard.string(forKey: StorageKeys.savedLibraryFolder) == nil
     }
@@ -916,12 +934,7 @@ public final class AppViewModel: ObservableObject {
             }
         }
         let fm = FileManager.default
-        let home = URL(fileURLWithPath: NSHomeDirectory())
-        var directories = [home.appendingPathComponent("Applications")]
-        if let libraryFolder, !libraryFolder.path.isEmpty, libraryFolder.path != "/",
-           !directories.contains(where: { $0.standardizedFileURL == libraryFolder.standardizedFileURL }) {
-            directories.append(libraryFolder)
-        }
+        let directories = [gameAppsFolder]
         let store = libraryStore
         let importer = importService
         let folderSnapshot = libraryFolder?.standardizedFileURL
@@ -1800,6 +1813,7 @@ public final class AppViewModel: ObservableObject {
             && isNxnativeValid
             && environmentStatus?.canBuild == true
             && !isDiskSpaceLow
+            && buildDestinationProblem == nil
             && canPassToolchainGate
     }
 
@@ -1816,12 +1830,9 @@ public final class AppViewModel: ObservableObject {
             return false
         }
         let required = SourceSelection.uniqueSize(game.sources) * 2 + 10_000_000_000
-        if let titleId = game.titleId {
-            let parent = finalAppURL(for: game, titleId: titleId).deletingLastPathComponent()
-            if let free = freeBytes(at: parent), free < required { return false }
-        } else if let free = availableOutputDiskBytes, free < required {
-            return false
-        }
+        let parent = finalAppURL(for: game).deletingLastPathComponent()
+        guard GameAppDestination.folderProblem(at: parent) == nil else { return false }
+        if let free = freeBytes(at: parent), free < required { return false }
         if let path = game.workspacePath,
            let free = freeBytes(at: URL(fileURLWithPath: path)), free < required {
             return false
@@ -2067,6 +2078,11 @@ public final class AppViewModel: ObservableObject {
               target.sources.allSatisfy({ FileManager.default.fileExists(atPath: $0.url.path) }) else {
             throw NXLibraryError.missingSources
         }
+        // Snapshot the destination before any build work. Changing folders later cannot redirect this build.
+        let finalApp = finalAppURL(for: target)
+        if let problem = GameAppDestination.folderProblem(at: finalApp.deletingLastPathComponent()) {
+            throw NXLibraryError.environmentBlocked(problem)
+        }
         let requiresKeys = SourceSelection.requiresKeys(target.sources)
         guard supportsSources(target.sources) else {
             throw NXLibraryError.environmentBlocked("These sources need an engine with extracted-folder or multi-title support.")
@@ -2162,7 +2178,6 @@ public final class AppViewModel: ObservableObject {
             }
         }
 
-        let finalApp = finalAppURL(for: target, titleId: titleId)
         let requiredDisk = SourceSelection.uniqueSize(target.sources) * 2 + 10_000_000_000
         for volume in [workspace.directory, finalApp.deletingLastPathComponent()] {
             if let free = freeBytes(at: volume), free < requiredDisk {
@@ -2576,44 +2591,8 @@ public final class AppViewModel: ObservableObject {
                               requiresTitleSelection: file.requiresTitleSelection == true)
     }
 
-    private func finalAppURL(for game: PortedGame, titleId: String) -> URL {
-        if game.url.pathExtension.lowercased() == "app",
-           game.status != .notBuilt,
-           game.canDeleteAppBundle(),
-           FileManager.default.fileExists(atPath: game.url.path) {
-            return game.url
-        }
-        let applications = URL(fileURLWithPath: NSHomeDirectory())
-            .appendingPathComponent("Applications")
-        let base = Self.sanitizedAppFileName(game.name)
-        let candidate = applications.appendingPathComponent(base + ".app")
-        if FileManager.default.fileExists(atPath: candidate.path),
-           Self.appTitleId(at: candidate)?.caseInsensitiveCompare(titleId) != .orderedSame {
-            return applications.appendingPathComponent("\(base) (\(titleId)).app")
-        }
-        return candidate
-    }
-
-    private static func sanitizedAppFileName(_ name: String) -> String {
-        var value = name
-            .replacingOccurrences(of: "/", with: "-")
-            .replacingOccurrences(of: ":", with: " -")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        if value.isEmpty { value = "Game" }
-        return value
-    }
-
-    private static func appTitleId(at app: URL) -> String? {
-        let info = app.appendingPathComponent("Contents/Info.plist")
-        guard let data = try? Data(contentsOf: info),
-              let object = try? PropertyListSerialization.propertyList(
-                from: data, options: [], format: nil) as? [String: Any] else { return nil }
-        if let title = object["DMTitleID"] as? String { return title }
-        if let bundle = object["CFBundleIdentifier"] as? String,
-           bundle.hasPrefix("org.nxnative.") {
-            return bundle.split(separator: ".").last.map(String.init)
-        }
-        return nil
+    private func finalAppURL(for game: PortedGame) -> URL {
+        GameAppDestination.url(for: game, in: gameAppsFolder)
     }
 
     private static func appVersion(at app: URL) -> String? {

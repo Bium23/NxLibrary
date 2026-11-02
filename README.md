@@ -105,7 +105,9 @@ Packaged releases check this repository for app updates; no GitHub account is ne
 
 Setup shows which prerequisites are ready and which need attention. **Install all** handles the supported steps: the engine checkout, the certified Metal compiler and the official .NET installer. Xcode itself comes from the App Store; its licence and any system prompts remain your responsibility.
 
-Choose **Game apps** first: the folder containing your existing nxnative games (`.app`), or an empty folder if you are starting fresh. **Game files** is separate and optional: NSP, XCI, NSZ and XCZ inputs for building; supported engines can also use extracted folders. Both choices can be changed in **Settings → Library**. The app folder is for discovery; new builds install in `~/Applications`.
+Choose **Game apps** first: where to keep your nxnative game apps (`.app`). NX Library finds existing games there and installs new builds into the same folder; an empty folder is fine when starting fresh. The default is `~/Applications`. Changing this choice does not move apps already installed, and a rebuild updates an existing app in its current location. A read-only folder still allows discovery and Play; installing new builds needs write access.
+
+**Game files** is separate and optional: NSP, XCI, NSZ and XCZ inputs for building; supported engines can also use extracted folders. Both choices can be changed in **Settings → Library**.
 
 Import your `prod.keys` when prompted. NX Library keeps a private copy with mode `0600` and leaves the original file unchanged. Key values are not displayed or logged.
 
@@ -132,9 +134,9 @@ Use **Find a game** for search, **Game Options** for title-specific actions, and
 
 For a title already in the library, Review opens with that game's saved options and offers **Rebuild** or **Save changes**.
 
-Sources stay in place; staged workspaces use symbolic links. New game apps install in `~/Applications`. Build stages, progress, estimated time and a live log remain available while the operation runs. Closing the porting screen leaves the operation running; cancellation is a separate action.
+Sources stay in place; staged workspaces use symbolic links. New game apps install in the chosen **Game apps** folder. Review shows the actual destination, including any filename needed to avoid an unrelated app. Build stages, progress, estimated time and a live log remain available while the operation runs. Closing the porting screen leaves the operation running; cancellation is a separate action.
 
-A rebuild of a running game waits to replace its app until it closes. If compilation finishes but installation fails, **Retry** installs the preserved result without compiling again. A library refresh preserves pending installations and failure information.
+A rebuild of a running game waits to replace its app until it closes. If compilation finishes but installation fails, **Retry** installs the preserved result without compiling again. If the destination folder disconnects, reconnect it before retrying: the ready build keeps its original destination. A library refresh preserves pending installations and failure information.
 
 ### Know which settings apply
 

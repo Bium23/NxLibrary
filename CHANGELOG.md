@@ -22,7 +22,7 @@ The current source preview identifies itself as **0.1.0 alpha**. No tagged or do
 
 ### Changed
 
-- Setup starts with explicit **Game apps** selection and a separate optional **Game files** folder, with matching names in Settings → Library and all supported package extensions listed. App discovery needs read access; new builds still install in `~/Applications`.
+- **Game apps** is the single folder for existing nxnative apps and new builds, chosen in Setup or Settings → Library (default `~/Applications`). Changing it does not move installed games; rebuilds update the existing app where it is. Review and disk checks use the actual destination, and disconnected or read-only folders stop installation while preserving a ready build for retry. **Game files** remains separate and optional.
 - Unavailable games keep their library entry and use the existing blurred, locked artwork with a short reason. Missing apps no longer send the primary action to Attach sources; missing inputs disable rebuilding while existing apps remain playable.
 
 - New-game defaults and each game's **Next launch** settings have explicit scopes. Rebuild review retains the selected title's saved options; **Use new game defaults** copies defaults once.

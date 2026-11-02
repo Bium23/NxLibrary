@@ -3,6 +3,35 @@ import Darwin
 @testable import NXLibraryCore
 
 final class BuildServiceTests: XCTestCase {
+    func testDestinationDisconnectedDuringBuildKeepsTheReadyAppWithoutRecreatingTheFolder() throws {
+        let fm = FileManager.default
+        let root = fm.temporaryDirectory.appendingPathComponent("NXDisconnected-\(UUID())")
+        defer { try? fm.removeItem(at: root) }
+        let destinationFolder = root.appendingPathComponent("Chosen games")
+        try fm.createDirectory(at: destinationFolder, withIntermediateDirectories: true)
+        let staged = root.appendingPathComponent("Staging/Game.app")
+        let script = root.appendingPathComponent("engine.sh")
+        try """
+        mkdir -p "$1/Contents"
+        printf '<plist><dict/></plist>' > "$1/Contents/Info.plist"
+        rmdir "$2"
+        """.write(to: script, atomically: true, encoding: .utf8)
+        let finished = expectation(description: "ready app preserved")
+        var result: BuildResult?
+        let service = BuildService()
+        service.start(command: BuildCommand(executable: URL(fileURLWithPath: "/bin/sh"),
+            arguments: [script.path, staged.path, destinationFolder.path], environment: [:], workingDirectory: root),
+            logURL: root.appendingPathComponent("build.log"), tempApp: staged,
+            finalApp: destinationFolder.appendingPathComponent("Game.app"), eventHandler: { _ in },
+            completion: { result = $0; finished.fulfill() })
+        wait(for: [finished], timeout: 10)
+        let ready = try XCTUnwrap(result)
+        XCTAssertTrue(ready.installationFailed)
+        XCTAssertEqual(ready.heldApp, staged)
+        XCTAssertFalse(fm.fileExists(atPath: destinationFolder.path))
+        XCTAssertTrue(fm.fileExists(atPath: staged.appendingPathComponent("Contents/Info.plist").path))
+    }
+
     func testSplitUTF8EventIsDeliveredWithoutChangingTheRawLog() throws {
         let prefix = #"{"ev":"say","msg":"Caf"#
         let script = #"""
@@ -283,9 +312,8 @@ final class BuildServiceTests: XCTestCase {
 private final class DenyInstallDirectory: FileManager, @unchecked Sendable {
     let parent: URL
     init(parent: URL) { self.parent = parent.standardizedFileURL; super.init() }
-    override func createDirectory(at url: URL, withIntermediateDirectories createIntermediates: Bool,
-                                  attributes: [FileAttributeKey: Any]? = nil) throws {
-        if url.standardizedFileURL == parent { throw CocoaError(.fileWriteNoPermission) }
-        try super.createDirectory(at: url, withIntermediateDirectories: createIntermediates, attributes: attributes)
+    override func isWritableFile(atPath path: String) -> Bool {
+        if URL(fileURLWithPath: path).standardizedFileURL == parent { return false }
+        return super.isWritableFile(atPath: path)
     }
 }
