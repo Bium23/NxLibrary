@@ -51,7 +51,7 @@ final class AppUpdateTests: XCTestCase {
     private let releaseJSON = """
     {"tag_name": "v0.3.0", "body": "Fixes.", "assets": [
       {"name": "notes.txt", "browser_download_url": "https://example.com/notes.txt", "digest": null},
-      {"name": "NXLibrary-0.3.0.zip", "browser_download_url": "https://example.com/NXLibrary-0.3.0.zip",
+      {"name": "NXLibrary-0.3.0.zip", "browser_download_url": "https://github.com/Bium23/NxLibrary/releases/download/v0.3.0/NXLibrary-0.3.0.zip", "size": 1024,
        "digest": "sha256:\(String(repeating: "a", count: 64))"}
     ]}
     """
@@ -63,6 +63,75 @@ final class AppUpdateTests: XCTestCase {
         XCTAssertEqual(release.notes, "Fixes.")
         XCTAssertEqual(release.zipURL.lastPathComponent, "NXLibrary-0.3.0.zip")
         XCTAssertEqual(release.digest, "sha256:" + String(repeating: "a", count: 64))
+    }
+
+    private func changingAsset(_ change: (inout [String: Any]) -> Void) throws -> Data {
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(releaseJSON.utf8)) as? [String: Any])
+        var assets = try XCTUnwrap(object["assets"] as? [[String: Any]])
+        change(&assets[1])
+        object["assets"] = assets
+        return try JSONSerialization.data(withJSONObject: object)
+    }
+
+    func testDownloadSourceIsPublicProjectRepository() {
+        XCTAssertEqual(AppUpdate.defaultRepository, "Bium23/NxLibrary")
+    }
+
+    func testRejectsReleaseWithoutDigest() throws {
+        XCTAssertNil(AppUpdate.parseRelease(try changingAsset { $0.removeValue(forKey: "digest") }))
+    }
+
+    func testRejectsReleaseWithoutDownloadSize() throws {
+        XCTAssertNil(AppUpdate.parseRelease(try changingAsset { $0.removeValue(forKey: "size") }))
+    }
+
+    func testRejectsOversizedOrEmptyDownload() throws {
+        for size: Int64 in [0, -1, 536_870_913] {
+            XCTAssertNil(AppUpdate.parseRelease(try changingAsset { $0["size"] = size }))
+        }
+    }
+
+    func testRejectsDownloadFromAnotherRepositoryOrHost() throws {
+        for url in [
+            "http://github.com/Bium23/NxLibrary/releases/download/v0.3.0/NXLibrary-0.3.0.zip",
+            "https://github.com/other/project/releases/download/v0.3.0/NXLibrary-0.3.0.zip",
+            "https://github.com.evil.example/Bium23/NxLibrary/releases/download/v0.3.0/NXLibrary-0.3.0.zip",
+            "https://user:password@github.com/Bium23/NxLibrary/releases/download/v0.3.0/NXLibrary-0.3.0.zip",
+            "https://github.com/Bium23/NxLibrary/releases/download/v0.2.0/NXLibrary-0.3.0.zip"
+        ] {
+            XCTAssertNil(AppUpdate.parseRelease(try changingAsset { $0["browser_download_url"] = url }), url)
+        }
+    }
+
+    func testDownloadBudgetAndGitHubRedirectBoundary() {
+        XCTAssertTrue(AppUpdate.downloadWithinLimit(received: 1024, expected: 1024))
+        XCTAssertFalse(AppUpdate.downloadWithinLimit(received: 1025, expected: 1024))
+        XCTAssertFalse(AppUpdate.downloadWithinLimit(received: 1, expected: 536_870_913))
+        XCTAssertFalse(AppUpdate.downloadWithinLimit(received: 0, expected: 0))
+        XCTAssertTrue(AppUpdate.trustedDownloadURL(URL(string: "https://release-assets.githubusercontent.com/example?signature=test")!))
+        XCTAssertFalse(AppUpdate.trustedDownloadURL(URL(string: "https://release-assets.githubusercontent.com.evil.example/example")!))
+        XCTAssertFalse(AppUpdate.trustedDownloadURL(URL(string: "https://github.com:444/example")!))
+    }
+
+    func testSignatureRejectsUnsignedAndTamperedBundle() throws {
+        let app = try makeApp("Signed.app")
+        XCTAssertFalse(AppUpdate.validCodeSignature(app))
+        let executable = app.appendingPathComponent("Contents/MacOS/NXLibrary")
+        try FileManager.default.removeItem(at: executable)
+        try FileManager.default.copyItem(at: URL(fileURLWithPath: "/usr/bin/true"), to: executable)
+        let resource = app.appendingPathComponent("Contents/Resources/check.txt")
+        try FileManager.default.createDirectory(at: resource.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data("original".utf8).write(to: resource)
+        let signer = Process()
+        signer.executableURL = URL(fileURLWithPath: "/usr/bin/codesign")
+        signer.arguments = ["--force", "--sign", "-", app.path]
+        signer.standardOutput = FileHandle.nullDevice
+        signer.standardError = FileHandle.nullDevice
+        try signer.run(); signer.waitUntilExit()
+        XCTAssertEqual(signer.terminationStatus, 0)
+        XCTAssertTrue(AppUpdate.validCodeSignature(app))
+        try Data("changed".utf8).write(to: resource)
+        XCTAssertFalse(AppUpdate.validCodeSignature(app))
     }
 
     func testRequirementsAreReadFromTheNotesAndHidden() {

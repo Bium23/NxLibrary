@@ -1,6 +1,6 @@
 # NX Library — guida tecnica
 
-Aggiornata il 2 novembre 2026 sul codice del repository. La mappa comprende 229 file Swift di produzione e 94 file di test e supporto ai test. L'integrazione del candidato nxnative 163a9905 ha superato 719 test Swift; il re-pin definitivo richiede ancora la prova di gioco manuale.
+Aggiornata il 2 novembre 2026 sul codice del repository. La mappa comprende 230 file Swift di produzione e 95 file di test e supporto ai test. L'integrazione del candidato nxnative 163a9905 e del canale di aggiornamento ha superato 726 test Swift; il re-pin definitivo richiede ancora la prova di gioco manuale.
 
 Questa guida descrive il funzionamento attuale. Il [catalogo dei file](file-map.md) assegna una responsabilità a ogni file versionato, suddiviso per area.
 
@@ -222,7 +222,7 @@ Nel repository, `.build/` contiene gli output SwiftPM. `work/Runtime` è il runt
 
 `UpstreamChecker` consulta il changelog del motore e `UpstreamCopy` lo presenta. L’adozione di un nuovo commit passa dalla procedura manuale in [AGENTS.md](../AGENTS.md) e dalle [note di upgrade](upstream-upgrades/README.md).
 
-`AppUpdater` coordina gli aggiornamenti di NX Library. Le regole di versione, requisiti, digest, identità del bundle e installazione sono in `AppUpdate`. L’interfaccia espone il servizio quando è configurato un repository. Attualmente `AppUpdate.defaultRepository` vale `nil` e un override in UserDefaults consente le prove del manutentore.
+`AppUpdater` coordina gli aggiornamenti di NX Library da `Bium23/NxLibrary`, senza autenticazione. Le regole di versione, requisiti, digest, identità del bundle e installazione sono in `AppUpdate`. Le copie di sviluppo non si sostituiscono. `AppUpdateDownload` limita il trasferimento alla dimensione dichiarata e agli host HTTPS di GitHub. `validate_update.py` verifica struttura e percorsi, poi estrae contando i dati effettivamente decompressi tramite il Python incluso; prima della sostituzione vengono controllati versione, marker, identificativo e firma del bundle. La firma ad hoc protegge il contenuto sigillato ma non identifica autonomamente il manutentore. La prova interattiva A → B resta necessaria.
 
 Prima dell’installazione, l’updater acquisisce un’esclusione globale dal `SaveOperationGate`: aspetta operazioni save/Play/installazioni attive e impedisce nuovi ingressi durante sostituzione e riavvio. Un recupero bloccato senza I/O attivo non impedisce l’aggiornamento. Il coordinatore esclude nuovi porting mentre l’app viene aggiornata.
 

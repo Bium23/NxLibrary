@@ -15,13 +15,14 @@ import CryptoKit
 ///   replaces itself; a developer's `build_app.sh` build never does.
 /// - A failure anywhere leaves a working app where it was.
 public enum AppUpdate {
-    /// "owner/name" on GitHub; nil until the project is published, which hides the feature.
-    public static let defaultRepository: String? = nil
+    /// Public release source. Development copies still never replace themselves.
+    public static let defaultRepository: String? = "Bium23/NxLibrary"
     /// A UserDefaults override of `defaultRepository`, for testing before publishing.
     public static let repositoryOverrideKey = "NXLibrary_UpdateRepository"
     /// The Info.plist key that marks a release copy.
     public static let releaseMarker = "NXLibraryRelease"
     static let interval: TimeInterval = 24 * 3600
+    public static let maximumDownloadBytes: Int64 = 512 * 1024 * 1024
 
     public static func repository(defaults: UserDefaults = .standard) -> String? {
         if let value = defaults.string(forKey: repositoryOverrideKey)?.trimmingCharacters(in: .whitespaces),
@@ -41,6 +42,7 @@ public enum AppUpdate {
         public var zipURL: URL
         /// "sha256:<hex>"; nil when GitHub gave none.
         public var digest: String?
+        public var archiveBytes: Int64
         public var requirements = Requirements()
     }
 
@@ -105,16 +107,46 @@ public enum AppUpdate {
     }
 
     /// GitHub's `releases/latest` answer, with the asset named `NXLibrary-<version>.zip`.
-    public static func parseRelease(_ json: Data) -> Release? {
-        guard let object = try? JSONSerialization.jsonObject(with: json) as? [String: Any],
+    public static func parseRelease(_ json: Data, repository: String = "Bium23/NxLibrary") -> Release? {
+        guard json.count <= 1024 * 1024,
+              let object = try? JSONSerialization.jsonObject(with: json) as? [String: Any],
               let tag = object["tag_name"] as? String, let version = version(fromTag: tag),
               let assets = object["assets"] as? [[String: Any]],
               let asset = assets.first(where: { $0["name"] as? String == "NXLibrary-\(version).zip" }),
-              let link = asset["browser_download_url"] as? String, let url = URL(string: link)
+              let link = asset["browser_download_url"] as? String, let url = URL(string: link),
+              trustedDownloadURL(url), url.host?.lowercased() == "github.com",
+              url.path == "/\(repository)/releases/download/\(tag)/NXLibrary-\(version).zip",
+              url.query == nil, url.fragment == nil,
+              let bytes = asset["size"] as? Int64, bytes > 0, bytes <= maximumDownloadBytes,
+              let digest = asset["digest"] as? String,
+              digest.range(of: #"^sha256:[0-9a-fA-F]{64}$"#, options: .regularExpression) != nil
         else { return nil }
         let (requirements, notes) = requirements(in: object["body"] as? String ?? "")
-        return Release(tag: tag, version: version, notes: notes, zipURL: url, digest: asset["digest"] as? String,
+        return Release(tag: tag, version: version, notes: notes, zipURL: url, digest: digest, archiveBytes: bytes,
                        requirements: requirements)
+    }
+
+    /// GitHub's release redirect stays within its HTTPS download infrastructure.
+    public static func trustedDownloadURL(_ url: URL) -> Bool {
+        url.scheme?.lowercased() == "https" && url.user == nil && url.password == nil
+            && (url.port == nil || url.port == 443)
+            && ["github.com", "release-assets.githubusercontent.com", "objects.githubusercontent.com"]
+                .contains(url.host?.lowercased() ?? "")
+    }
+
+    public static func downloadWithinLimit(received: Int64, expected: Int64) -> Bool {
+        expected > 0 && expected <= maximumDownloadBytes && received >= 0 && received <= expected
+    }
+
+    /// Validate the sealed bundle before it can replace the installed copy.
+    public static func validCodeSignature(_ app: URL) -> Bool {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/codesign")
+        process.arguments = ["--verify", "--deep", "--strict", app.path]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        do { try process.run(); process.waitUntilExit(); return process.terminationStatus == 0 }
+        catch { return false }
     }
 
     /// "v1.2.3" or "1.2.3" → "1.2.3"; nil when it is not dotted numbers.

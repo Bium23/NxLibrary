@@ -34,7 +34,7 @@ final class AppUpdater: ObservableObject {
     private let repository: String?
     private let runningVersion: String
     private let defaults = UserDefaults.standard
-    private var progressWatch: NSKeyValueObservation?
+    private var downloadSession: URLSession?
     private var lastRelease: AppUpdate.Release?
 
     private enum Keys {
@@ -94,15 +94,20 @@ final class AppUpdater: ObservableObject {
         Task {
             do {
                 let (data, response) = try await URLSession.shared.data(for: request)
-                defaults.set(Date(), forKey: Keys.lastCheck)
                 let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-                if status == 404 { state = .upToDate; return }
+                if status == 404 {
+                    defaults.set(Date(), forKey: Keys.lastCheck)
+                    lastRelease = nil; offer = nil; state = .upToDate; return
+                }
                 guard status == 200 else { state = .failed("GitHub answered \(status); try again later."); return }
-                guard let release = AppUpdate.parseRelease(data) else {
-                    state = .failed("The latest release has no NX Library download.")
+                guard let release = AppUpdate.parseRelease(data, repository: repository) else {
+                    state = .failed("The update could not be verified. Try again later.")
                     return
                 }
-                guard AppUpdate.isNewer(release.version, than: runningVersion) else { state = .upToDate; return }
+                defaults.set(Date(), forKey: Keys.lastCheck)
+                guard AppUpdate.isNewer(release.version, than: runningVersion) else {
+                    lastRelease = nil; offer = nil; state = .upToDate; return
+                }
                 lastRelease = release
                 state = .available(release)
                 let laterVersion = defaults.string(forKey: Keys.laterVersion)
@@ -137,7 +142,12 @@ final class AppUpdater: ObservableObject {
         let folder = Self.workFolder()
         try? FileManager.default.removeItem(at: folder)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let task = URLSession.shared.downloadTask(with: release.zipURL) { [weak self] location, response, error in
+        let policy = AppUpdateDownload(expectedBytes: release.archiveBytes, progress: { [weak self] fraction in
+            Task { @MainActor in
+                guard let self, case .downloading = self.state else { return }
+                self.state = .downloading(fraction)
+            }
+        }) { [weak self] location, response, error in
             let zip = folder.appendingPathComponent("NXLibrary-\(release.version).zip")
             let status = (response as? HTTPURLResponse)?.statusCode ?? 0
             var moved = false
@@ -146,18 +156,17 @@ final class AppUpdater: ObservableObject {
             }
             Task { @MainActor in
                 guard let self else { return }
-                self.progressWatch = nil
+                self.downloadSession = nil
                 guard moved else { return self.fail("The download did not finish; nothing was changed.") }
                 self.verifyAndInstall(zip: zip, release: release, folder: folder)
             }
         }
-        progressWatch = task.progress.observe(\.fractionCompleted) { [weak self] progress, _ in
-            let fraction = progress.fractionCompleted
-            Task { @MainActor in
-                guard let self, case .downloading = self.state else { return }
-                self.state = .downloading(fraction)
-            }
-        }
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.timeoutIntervalForRequest = 60
+        configuration.timeoutIntervalForResource = 15 * 60
+        let session = URLSession(configuration: configuration, delegate: policy, delegateQueue: nil)
+        downloadSession = session
+        let task = session.downloadTask(with: release.zipURL)
         task.resume()
     }
 
@@ -186,8 +195,11 @@ final class AppUpdater: ObservableObject {
             return .failure(.init(message: "The download did not match the release; nothing was changed."))
         }
         let unpacked = folder.appendingPathComponent("unpacked")
-        guard run("/usr/bin/ditto", ["-x", "-k", zip.path, unpacked.path]) else {
-            return .failure(.init(message: "The download could not be unpacked; nothing was changed."))
+        guard let resources = Bundle.main.resourceURL,
+              let runtime = BundledRuntime.locate(resourceURL: resources),
+              run(runtime.python.path, ["-I", "-B", resources.appendingPathComponent("validate_update.py").path,
+                                        zip.path, unpacked.path]) else {
+            return .failure(.init(message: "The update archive could not be verified; nothing was changed."))
         }
         let staged = unpacked.appendingPathComponent("NXLibrary.app")
         if let problem = AppUpdate.bundleProblem(staged, expectedID: expectedID, version: release.version, runningOS: runningOS) {
@@ -195,6 +207,9 @@ final class AppUpdater: ObservableObject {
                 return .failure(.init(message: "NX Library \(release.version) needs macOS \(minimum) or later; nothing was changed."))
             }
             return .failure(.init(message: "The download is not a valid NX Library \(release.version); nothing was changed."))
+        }
+        guard AppUpdate.validCodeSignature(staged) else {
+            return .failure(.init(message: "The app signature could not be verified; nothing was changed."))
         }
         return .success(staged)
     }

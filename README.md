@@ -97,7 +97,9 @@ When a release is available:
 2. Open it and drag **NX Library** to Applications.
 3. Open the app and complete Setup.
 
-Current development builds are ad-hoc signed and not notarised. If macOS blocks first opening, use **System Settings → Privacy & Security → Open Anyway** only for a copy you built or obtained from a source you trust. Release self-updates are separate from source builds and are not enabled yet.
+Current development builds are ad-hoc signed and not notarised. If macOS blocks first opening, use **System Settings → Privacy & Security → Open Anyway** only for a copy you built or obtained from a source you trust.
+
+Packaged releases check this repository for app updates; no GitHub account is needed. Choose **Update** to download, verify, install and reopen NX Library while keeping your library and preferences. Automatic checks run at most once every 24 hours; **Settings → About → Check now** checks immediately. Updates wait while a build, a running game or a save operation requires the app. Development builds never replace themselves. The first downloadable release and the full A → B installation test are still pending.
 
 ### First-run setup
 

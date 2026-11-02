@@ -42,6 +42,7 @@ for icon in "$ROOT"/Resources/AppIcon-*.png; do
 done
 [ -f "$ROOT/LICENSE" ] && cp "$ROOT/LICENSE" "$APP/Contents/Resources/LICENSE"
 [ -f "$ROOT/NOTICE" ] && cp "$ROOT/NOTICE" "$APP/Contents/Resources/NOTICE"
+cp "$ROOT/scripts/validate_update.py" "$APP/Contents/Resources/validate_update.py"
 [ -d "$ROOT/Resources/Selene" ] && cp -R "$ROOT/Resources/Selene" "$APP/Contents/Resources/Selene"
 # Python and build tools from scripts/bundle_runtime.sh. Without it, a developer
 # build falls back to ~/nxnative/.venv and the PATH tools.

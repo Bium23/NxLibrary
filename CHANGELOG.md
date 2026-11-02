@@ -8,6 +8,8 @@ The current source preview identifies itself as **0.1.0 alpha**. No tagged or do
 
 ### Added
 
+- Public GitHub app-update channel on `Bium23/NxLibrary`, without a separate user login. Packaged release copies can offer, download, verify and install newer versions; the first downloadable release and interactive A → B check are still pending.
+
 - Candidate integration for nxnative `163a9905`: extracted-folder inputs without keys, registered-profile checks, multi-title package selection, bundled-content review and unique source-size accounting. The stable engine pin is unchanged pending a real certified build and manual launch.
 
 - A native macOS library with Spotlight, Collection, search, favourites, hidden games and game details.
@@ -23,7 +25,7 @@ The current source preview identifies itself as **0.1.0 alpha**. No tagged or do
 - New-game defaults and each game's **Next launch** settings have explicit scopes. Rebuild review retains the selected title's saved options; **Use new game defaults** copies defaults once.
 - The Saves page keeps one **Backup folder** row showing the latest backup's date and time. Imports use a centred From → To preview with outlined paths and a subtle directional animation.
 - The engine is pinned to `2716f78`. Adoption and toolchain verification are recorded in the [2026-10-31 upgrade note](docs/upstream-upgrades/2026-10-31-ee369f0-2716f78.md); newer upstream commits are not adopted automatically.
-- App-update preparation and background snapshot preparation run outside the main UI work. Source builds do not update themselves; the current preview has no anonymous release-update source configured.
+- App-update preparation and background snapshot preparation run outside the main UI work. Source builds do not update themselves; packaged releases use the project's public GitHub release channel.
 
 ### Fixed
 
@@ -38,6 +40,8 @@ The current source preview identifies itself as **0.1.0 alpha**. No tagged or do
 - Settings rows with identical labels remain independently reachable. Intro, controls, dialogs and Reduce Motion handling have been aligned with the shared interface components.
 
 ### Security
+
+- Updates require a GitHub-hosted asset with a valid digest and bounded size, reject unsafe paths and bound actual decompressed output while extracting to staging. The sealed app signature is verified before replacement. Failed update checks do not suppress retries for a full day.
 
 - Managed key replacement preserves the existing file on failure and enforces private `0600` permissions. Key values are never included in diagnostics.
 - Cheat title IDs and downloaded background filenames are validated. Custom cheat destinations require confirmation.

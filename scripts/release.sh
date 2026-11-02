@@ -35,6 +35,10 @@ TAG="v$VERSION"
 if [ "$PUBLISH" = "1" ]; then
   [ -n "$NOTES" ] && [ -f "$NOTES" ] || fail "--publish needs --notes <file> with the release notes"
   command -v gh >/dev/null || fail "--publish needs the GitHub CLI (gh)"
+  REPOSITORY="$(sed -n 's/.*defaultRepository: String? = "\([^"]*\)".*/\1/p' "$ROOT/Sources/NXLibraryCore/Services/AppUpdate.swift")"
+  [ -n "$REPOSITORY" ] || fail "no public update repository is configured"
+  [ "$(gh api "repos/$REPOSITORY" --jq .private)" = "false" ] \
+    || fail "the update repository must be publicly accessible before publishing"
 fi
 [ -z "$(git status --porcelain)" ] || fail "the working tree has changes; commit or stash them first"
 if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then fail "the tag $TAG already exists"; fi
@@ -62,7 +66,13 @@ codesign --verify --deep --strict "$APP"
 [ "$(/usr/libexec/PlistBuddy -c 'Print :NXLibraryRelease' "$APP/Contents/Info.plist")" = "true" ] \
   || fail "the built app is not marked as a release"
 
-ditto -c -k --keepParent "$APP" "$ZIP"
+# Finder metadata becomes AppleDouble sidecars in a ZIP; release bundles need only
+# their sealed files and relative links, not those extra unsealed resources.
+ditto --norsrc -c -k --keepParent "$APP" "$ZIP"
+"$APP/Contents/Resources/Runtime/python/bin/python3" -I -B \
+  "$APP/Contents/Resources/validate_update.py" "$ZIP" "$OUT/.update-check"
+codesign --verify --deep --strict "$OUT/.update-check/NXLibrary.app"
+rm -rf "$OUT/.update-check"
 echo "Zip: $ZIP"
 echo "SHA-256: $(shasum -a 256 "$ZIP" | cut -d' ' -f1)"
 DMG="$OUT/NXLibrary-$VERSION.dmg"
@@ -74,7 +84,8 @@ if [ "$PUBLISH" = "1" ]; then
   git tag "$TAG"
   git push origin "$TAG"
   { cat "$NOTES"; printf '\n\n%s\n' "$REQUIRES"; } > "$OUT/notes.md"
-  gh release create "$TAG" "$ZIP" "$DMG" --title "NX Library $VERSION" --notes-file "$OUT/notes.md"
+  gh release create "$TAG" "$ZIP" "$DMG" --repo "$REPOSITORY" \
+    --title "NX Library $VERSION" --notes-file "$OUT/notes.md"
   echo "Published $TAG"
 else
   echo "Not published (add --publish --notes <file> to create the GitHub release)."

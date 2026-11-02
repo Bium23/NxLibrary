@@ -68,7 +68,7 @@ python3 scripts/check_publication.py --runtime work/Runtime
 
 The Swift suite covers persistence, sources, keys and permissions, CLI contracts, process output and cancellation, compatibility gates, installation and retries, launch configuration, presentation state, artwork, cheats and save recovery. Publication regressions use temporary repositories and synthetic content. Tests must never require copyrighted game content or real keys.
 
-The latest complete local code verification on 1 November 2026 passed **703 Swift tests and five Python checks**. This is dated evidence, not a promise about future changes. See the [test catalog](file-map.md#test-e-fixture).
+The latest complete local code verification on 2 November 2026 passed **726 Swift tests and 15 Python checks**. The development-app bundle passed signature verification, and a headless check exercised a real public GitHub download, its redirect and rejection of a mismatched size. These checks do not establish that the interactive update or a game worked. This is dated evidence, not a promise about future changes. See the [test catalog](file-map.md#test-e-fixture).
 
 ### Continuous integration
 
@@ -104,9 +104,21 @@ Publishing requires an explicit maintainer decision and the script's `--publish 
 
 ### Distribution work still open
 
-No downloadable release has been published. Public binary distribution still needs a final app identity and signing policy, updater signing-identity verification, archive/download resource limits and a clean-Mac installation test. Current copies are ad-hoc signed and not notarised.
+No downloadable release has been published. Public binary distribution still needs a final app identity and signing policy, signing-identity verification for a future Developer ID release, and the first-installation/update test. Current copies are ad-hoc signed and not notarised. Updates verify GitHub's SHA-256 digest and the sealed app signature; ad-hoc signatures do not independently identify the publisher.
 
-The updater's default repository is intentionally unset for the current preview. A test repository must not become an anonymous update source. Source builds do not self-update; release copies need a deliberately configured, accessible release source before that feature can be offered.
+The updater uses `Bium23/NxLibrary` directly, with anonymous public access. No separate download repository or login is needed for users. Release copies update themselves; source builds remain excluded. `release.sh --publish` requires the configured repository to be public. ZIP downloads are limited to 512 MiB, restricted to GitHub's HTTPS download hosts and checked against the published size and digest. The bundled Python checks paths, symlinks, duplicates, special files and a 30,000-entry limit, then extracts using bounded raw decompression with a 2 GiB total limit. It verifies actual output size and CRC rather than trusting ZIP size fields. Release packaging uses this same extraction path and verifies the extracted bundle signature; ZIPs omit Finder metadata sidecars.
+
+### First installation and A → B update test
+
+Use a new macOS account without copying NX Library preferences or data. Xcode, Metal and .NET may remain available system-wide; this tests first use and updates, not installation of every prerequisite on a clean Mac. Finish the candidate-engine build and manual launch before adopting its pin or distributing a package as ready.
+
+1. Publish only release A initially. Download its DMG from GitHub in the new account, install normally, eject the DMG and complete Setup. Check whether the installation folder is writable by that account; updates must not require changing permissions silently.
+2. Build and launch one supported game using the user's own files. Save progress, set a favourite and change one preference. Create a save backup, then close the game and app.
+3. Back in the development account, prepare B with a higher numeric version and clear test notes, keeping the same bundle ID, data paths and engine pin. No artificial feature is required to exercise replacement.
+4. Publish B through `scripts/release.sh`. Return to the test account and open A. Automatic checks run at most once per 24 hours; use **Settings → About → Check now** for an immediate check. The manual check exposes availability in About; the launch popup is a separate check after the interval.
+5. Update from inside A. Verify B reopens, reports its version and retains the library, favourite, preference, keys, backups and game progress. Test the automatic launch offer separately. Record actual results; compilation does not establish that this interactive flow worked.
+
+The updater reads `releases/latest`, which excludes draft and prerelease entries. Keep both A's DMG and ZIP when preparing B: `release.sh` replaces its local `work/release` output. Do not alter the Mac's clock to exercise the interval.
 
 These are distribution decisions. Do not bypass the dirty-tree check, change the engine pin or weaken the Metal gate to make packaging succeed.
 
