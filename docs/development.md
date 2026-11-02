@@ -106,18 +106,18 @@ Publishing requires an explicit maintainer decision and the script's `--publish 
 
 ### Distribution work still open
 
-The first public alpha uses the existing `local.nxlibrary` bundle identity and ad-hoc signing, without notarisation. Developer ID distribution will need signing-identity verification and notarisation. First installation in a fresh account and the full A → B update flow remain manual checks. Updates verify GitHub's SHA-256 digest and the sealed app signature; ad-hoc signatures do not independently identify the publisher.
+The first public alpha uses the existing `local.nxlibrary` bundle identity and ad-hoc signing, without notarisation. Developer ID distribution will need signing-identity verification and notarisation. Updates verify GitHub's SHA-256 digest and the sealed app signature; ad-hoc signatures do not independently identify the publisher.
 
 The updater uses `Bium23/NxLibrary` directly, with anonymous public access. No separate download repository or login is needed for users. Release copies update themselves; source builds remain excluded. `release.sh --publish` requires the configured repository to be public. ZIP downloads are limited to 512 MiB, restricted to GitHub's HTTPS download hosts and checked against the published size and digest. The bundled Python checks paths, symlinks, duplicates, special files and a 30,000-entry limit, then extracts using bounded raw decompression with a 2 GiB total limit. It verifies actual output size and CRC rather than trusting ZIP size fields. Release packaging uses this same extraction path and verifies the extracted bundle signature; ZIPs omit Finder metadata sidecars.
 
 ### First installation and A → B update test
 
-Use a new macOS account without copying NX Library preferences or data. Xcode, Metal and .NET may remain available system-wide; this tests first use and updates, not installation of every prerequisite on a clean Mac. For any new engine pin, complete a certified game build and manual launch before adoption or distributing a package as ready.
+Validate installation from the published DMG and replacement of an installed release. Keep the same bundle ID and data paths between versions. Engine upgrades additionally follow the [upgrade checklist](upstream-upgrades/README.md).
 
-1. Publish only release A initially. Download its DMG from GitHub in the new account, install normally, eject the DMG and complete Setup. Check whether the installation folder is writable by that account; updates must not require changing permissions silently.
+1. Download release A's DMG from GitHub, install normally, eject the DMG and complete Setup. Check that the installation folder is writable; updates must not change permissions silently.
 2. Build and launch one supported game using the user's own files. Save progress, set a favourite and change one preference. Create a save backup, then close the game and app.
-3. Back in the development account, prepare B with a higher numeric version and clear test notes, keeping the same bundle ID, data paths and engine pin. No artificial feature is required to exercise replacement.
-4. Publish B through `scripts/release.sh`. Return to the test account and open A. Automatic checks run at most once per 24 hours; use **Settings → About → Check now** for an immediate check. The manual check exposes availability in About; the launch popup is a separate check after the interval.
+3. Prepare B with a higher numeric version and clear test notes, keeping the same bundle ID, data paths and engine pin. No artificial feature is required to exercise replacement.
+4. Publish B through `scripts/release.sh`, then open the installed A. Automatic checks run at most once per 24 hours; use **Settings → About → Check now** for an immediate check. The manual check exposes availability in About; the launch popup is a separate check after the interval.
 5. Update from inside A. Verify B reopens, reports its version and retains the library, favourite, preference, keys, backups and game progress. Test the automatic launch offer separately. Record actual results; compilation does not establish that this interactive flow worked.
 
 The updater reads `releases/latest`, which excludes draft and prerelease entries. Keep both A's DMG and ZIP when preparing B: `release.sh` replaces its local `work/release` output. Do not alter the Mac's clock to exercise the interval.

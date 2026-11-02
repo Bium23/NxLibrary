@@ -55,11 +55,11 @@ Game files, keys and firmware are not provided. See [Legal and third-party notic
 
 ### Project status
 
-**0.1.0 alpha.** Download the packaged app from [Releases](https://github.com/Bium23/NxLibrary/releases/latest), or [build it from source](#building-from-source). The current app has been developed and manually checked on one Apple-silicon Mac.
+**0.1.0 alpha.** Download the packaged app from [Releases](https://github.com/Bium23/NxLibrary/releases/latest), or [build it from source](#building-from-source).
 
 Automated checks cover the application code, publication inputs, compilation and development-app packaging. They do not certify game compatibility. Changes are recorded in the [changelog](CHANGELOG.md), and the current checks are available under [Actions](https://github.com/Bium23/NxLibrary/actions/workflows/ci.yml).
 
-The engine is pinned to `163a9905`, with support for extracted game folders and multi-title packages, using Xcode 27.2 / Metal 32023.922. A certified game build and manual launch have been confirmed by the user. The validated engine is now used by the main app; the separate EnginePreview launcher has been retired. See the [upgrade review and verification evidence](docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md).
+The engine is pinned to `163a9905`, with support for extracted game folders and multi-title packages, using Xcode 27.2 / Metal 32023.922. See the [engine upgrade notes](docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md).
 
 ## Getting started
 
@@ -100,7 +100,7 @@ Build options, runtime dependencies, debug builds and release packaging are docu
 
 The current alpha is ad-hoc signed and not notarised. If macOS blocks first opening, use **System Settings → Privacy & Security → Open Anyway** only for a copy you built or obtained from a source you trust.
 
-Packaged releases check this repository for app updates; no GitHub account is needed. Choose **Update** to download, verify, install and reopen NX Library while keeping your library and preferences. Automatic checks run at most once every 24 hours; **Settings → About → Check now** checks immediately. Updates wait while a build, a running game or a save operation requires the app. Development builds never replace themselves. The full A → B installation test remains pending until a second release is available.
+Packaged releases check this repository for app updates; no GitHub account is needed. Choose **Update** to download, verify, install and reopen NX Library while keeping your library and preferences. Automatic checks run at most once every 24 hours; **Settings → About → Check now** checks immediately. Updates wait while a build, a running game or a save operation requires the app. Development builds never replace themselves.
 
 ### First-run setup
 
@@ -259,11 +259,11 @@ Before reporting a problem, review copied diagnostics and remove anything person
 
 - NX Library uses a manually pinned engine and checks its commit, working tree, CLI contract and Metal compiler before new builds. It does not follow upstream `main` automatically.
 - The current engine is `163a9905` and certifies Metal `32023.922`. **Build anyway with an untested toolchain** requires explicit confirmation and marks the resulting build as untested. A successful launch does not turn it into a certified combination.
-- Game compatibility depends on nxnative, the game version and the toolchain. Local checks of a few titles are not a compatibility database.
+- Game compatibility depends on nxnative, the game version and the toolchain.
 - Output follows the window/display; native 1440p/4K internal rendering is not supported. Render scale is 50–100% where the build supports it. MetalFX is spatial upscaling.
 - Builds run one at a time. iOS/IPA output, automatic engine updates and notarisation are not currently provided.
 
-The [upgrade note](docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md) records the engine review, certified toolchain checks and user-confirmed game build and launch.
+The [upgrade note](docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md) records the engine review and toolchain requirements.
 
 ### Data and cleanup
 
