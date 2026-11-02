@@ -1,36 +1,33 @@
 # Immagini e video del README
 
-Il README apre con logo, nome, descrizione e pochi badge. Il video andrà subito sotto questa presentazione, seguito dalle immagini delle funzioni. La guida d'uso continua più sotto; il blocco legale rimane in fondo.
+Il README apre con logo, nome, descrizione e pochi badge. Spotlight introduce l'app; gli altri screenshot accompagnano la funzione descritta nella guida. Il video avrà posto subito sotto la presentazione, prima di Spotlight. Il blocco legale rimane in fondo.
 
-Al momento non sono state inserite immagini dell'app né un video: gli screenshot ricevuti durante lo sviluppo mostravano anche stati ormai corretti. Le due posizioni sono riservate con commenti invisibili nel README, senza collegamenti vuoti o anteprime inventate. L'utente registra e fotografa la versione attuale; gli agenti non aprono né automatizzano l'app.
+## Screenshot inclusi
 
-## Quattro immagini utili
+Le otto catture fornite dall'utente il 2 novembre 2026 sono state rinominate nelle copie del repository. Gli originali sul Desktop restano invariati. Gli agenti non hanno aperto né automatizzato l'app.
 
-| File da fornire | Schermata | Cosa racconta | Didascalia proposta |
-|---|---|---|---|
-| `spotlight.png` | Spotlight con una libreria ordinata. | La prima impressione: giochi, artwork e navigazione. | **Your library, together.** Browse games, artwork and activity in Spotlight. |
-| `porting.png` | Add game, Review oppure porting in corso. | Il percorso guidato dalla selezione delle sorgenti alla build locale. | **From your files to a Mac app.** Review sources and follow each build stage. |
-| `save-import.png` | Anteprima di importazione con From, percorsi e freccia. | Il passaggio fra origine e destinazione prima della conferma. | **Keep your progress.** Back up local saves and preview imports before replacing them. |
-| `settings.png` | Settings con un gruppo leggibile, oppure Next launch di un gioco. | La distinzione fra libreria, nuovi giochi e scelte per titolo. | **Make it yours.** Keep library preferences and each game's launch options clear. |
+| Nome originale | File nel repository | Posizione nel README |
+|---|---|---|
+| `Spotlight View.png` | [spotlight.webp](spotlight.webp) | Apertura, prima di Overview. |
+| `Details Games.png` | [game-details.webp](game-details.webp) | Your library: dettagli e attività del gioco. |
+| `Rapid Menu.png` | [quick-menu.webp](quick-menu.webp) | Your library: accesso al menu rapido. |
+| `Porting State home .png` | [porting-progress.webp](porting-progress.webp) | Add or rebuild a game: avanzamento in Spotlight. |
+| `Setting View.png` | [settings.webp](settings.webp) | Know which settings apply: categorie e Start-up. |
+| `Color theme.png` | [color-themes.webp](color-themes.webp) | Artwork, themes and sound: scelta della palette. |
+| `Background Static Wallpaper.png` | [static-wallpapers.webp](static-wallpapers.webp) | Artwork, themes and sound: sfondi statici. |
+| `Background Wallpaper Live .png` | [live-wallpapers.webp](live-wallpapers.webp) | Artwork, themes and sound: sfondi animati. |
 
-Una quinta immagine di Collection può essere utile se mostra qualcosa di diverso. Evitare una galleria lunga di schermate quasi uguali.
+Le copie WebP sono larghe 1920 pixel, mantengono proporzioni e contenuto delle catture e usano il profilo colore sRGB. Occupano complessivamente circa 2,3 MB, rispetto ai circa 73 MB degli originali. I metadati personali non vengono trasferiti. Le didascalie e i testi alternativi sono in inglese; ciascuna immagine ha una propria riga per preservare la leggibilità.
 
-Usare finestre della stessa proporzione, idealmente 16:10 o 16:9, con testo leggibile e una larghezza indicativa di 1600–1920 pixel. PNG è adatto agli screenshot dell'interfaccia. Le immagini devono mostrare il comportamento reale; eventuali oscuramenti di dati personali non devono cambiare lo stato rappresentato.
+La cattura di Settings mostra ancora il precedente pin `2716f78`; il pin corrente e i requisiti sono quelli del README. Aggiornare questa foto alla prossima sessione di cattura. Anche lo stato delle sorgenti e della toolchain nei dettagli di un gioco descrive soltanto il gioco fotografato.
 
-Prima di includerle, controllare nomi utente, percorsi, notifiche e informazioni personali. Non aggiungere asset Nintendo, chiavi, file di gioco o loro contenuti al repository. Per artwork e immagini visibili usare materiale originale o con diritti di redistribuzione adeguati, rispettando questo vincolo: le immagini caricate da servizi esterni non diventano automaticamente risorse del progetto.
+Le immagini illustrano la libreria dell'utente. Copertine, loghi e wallpaper visibili restano soggetti ai diritti e ai termini dei rispettivi proprietari; la licenza MIT del codice non ne modifica i termini.
 
-## Inserimento delle immagini
+## Aggiornare le immagini
 
-Quando i file sono disponibili, conservarli in questa cartella e sostituire il commento `NX-SCREENSHOTS` nel README con immagini e didascalie. Usare percorsi relativi al README, ad esempio:
+Conservare le catture complete, senza modificare lo stato mostrato o ricreare l'interfaccia. Preparare copie ottimizzate in questa cartella e collegarle alla sezione pertinente del README con testo alternativo e una didascalia breve. Controllare che non siano visibili chiavi, percorsi privati o notifiche personali. Non aggiungere file di gioco o asset separati.
 
-~~~html
-<p align="center">
-  <img src="docs/media/spotlight.png" alt="NX Library Spotlight showing the game library" width="100%">
-</p>
-<p align="center"><strong>Your library, together.</strong><br>Browse games, artwork and activity in Spotlight.</p>
-~~~
-
-L'immagine principale può occupare tutta la larghezza. Le altre funzionano meglio una per riga se contengono testo: una griglia riduce troppo i dettagli. Aggiungere al [catalogo dei file](../file-map.md) ogni immagine effettivamente inclusa.
+Gli screenshot del setup in due passaggi e dell'anteprima dei salvataggi potranno essere aggiunti quando disponibili; non ci sono segnaposto visibili. Il commento `NX-SCREENSHOTS` delimita l'immagine d'apertura e `NX-DEMO` riserva il posto al video. Aggiornare anche il [catalogo dei file](../file-map.md) quando si aggiungono o rinominano immagini.
 
 ## Video subito dopo la presentazione
 

@@ -2,15 +2,15 @@
 
 User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
-## Unreleased
+## 0.1.0 — 2026-11-02
 
-The current source preview identifies itself as **0.1.0 alpha**. No tagged or downloadable release has been published yet. This section describes the work included in the preview; it is not a history of published versions.
+First public alpha for Apple-silicon Macs, with a DMG for installation and a ZIP for app updates. See the [release notes and downloads](https://github.com/Bium23/NxLibrary/releases/tag/v0.1.0).
 
 ### Added
 
 - Two-step setup: **Get ready** for tools and keys, then **Your games** for the app folder, existing games and a first source-file or folder choice. **Skip for now** is remembered; interrupted setup resumes, and both steps can be reopened from Settings without resetting the library.
 
-- Public GitHub app-update channel on `Bium23/NxLibrary`, without a separate user login. Packaged release copies can offer, download, verify and install newer versions; the first downloadable release and interactive A → B check are still pending.
+- Public GitHub app-update channel on `Bium23/NxLibrary`, without a separate user login. Packaged release copies can offer, download, verify and install newer versions; the interactive A → B check remains pending until a second release is available.
 
 - Integration for nxnative `163a9905`: extracted-folder inputs without keys, registered-profile checks, multi-title package selection, bundled-content review and unique source-size accounting. A certified build and manual launch have been confirmed by the user.
 
@@ -20,7 +20,7 @@ The current source preview identifies itself as **0.1.0 alpha**. No tagged or do
 - Local save backups, folder-import previews and restores, including recovery after an interrupted replacement.
 - Cheat-file import and per-cheat switches, with changes applied at the next launch.
 - Selene-style setup and error dialogs, separate Library and In game controls guides, and a brief **Imported successfully** notice after verified save imports.
-- A user guide, architecture guide, file catalog, contribution and security policies, publication checks and continuous integration.
+- An illustrated user guide with screenshots and planned next steps, an architecture guide, a file catalog, contribution and security policies, publication checks and continuous integration.
 
 ### Changed
 

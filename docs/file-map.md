@@ -1,6 +1,6 @@
 # NX Library — catalogo dei file
 
-Aggiornato il 2 novembre 2026. Copertura di **380 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, l'integrazione di nxnative, il canale di aggiornamento e il setup in due passaggi con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 2 novembre 2026. Copertura di **388 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il setup in due passaggi con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -31,6 +31,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 - [Test e fixture](#test-e-fixture)
 - [Script di sviluppo e packaging](#script-di-sviluppo-e-packaging)
 - [Risorse incluse](#risorse-incluse)
+- [Screenshot e demo](#screenshot-e-demo)
 - [Documentazione tecnica e registri datati](#documentazione-tecnica-e-registri-datati)
 
 ## Progetto e configurazione
@@ -522,6 +523,20 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Resources/Selene/Sounds/Success.wav](../Resources/Selene/Sounds/Success.wav) | Cue sonoro incluso per il completamento di un’azione. |
 | [Resources/Selene/Sounds/navigation.wav](../Resources/Selene/Sounds/navigation.wav) | Cue sonoro incluso per la navigazione. |
 
+## Screenshot e demo
+
+| File | Responsabilità |
+|---|---|
+| [docs/media/README.md](../docs/media/README.md) | Registra provenienza e posizione degli screenshot, ottimizzazione delle copie e inserimento del video futuro. |
+| [docs/media/spotlight.webp](../docs/media/spotlight.webp) | Presenta Spotlight e la libreria nell'apertura del README. |
+| [docs/media/game-details.webp](../docs/media/game-details.webp) | Mostra dettagli, attività e informazioni di build di un gioco. |
+| [docs/media/quick-menu.webp](../docs/media/quick-menu.webp) | Illustra il menu rapido sopra la libreria. |
+| [docs/media/porting-progress.webp](../docs/media/porting-progress.webp) | Mostra l'avanzamento di un porting dalla schermata Spotlight. |
+| [docs/media/settings.webp](../docs/media/settings.webp) | Illustra le categorie di Settings e il pannello Start-up. |
+| [docs/media/color-themes.webp](../docs/media/color-themes.webp) | Mostra la scelta delle palette con anteprima della libreria. |
+| [docs/media/static-wallpapers.webp](../docs/media/static-wallpapers.webp) | Illustra il browser degli sfondi statici e la relativa anteprima. |
+| [docs/media/live-wallpapers.webp](../docs/media/live-wallpapers.webp) | Mostra il selettore degli sfondi animati e l'importazione di video personali. |
+
 ## Documentazione tecnica e registri datati
 
 | File | Responsabilità |
@@ -529,12 +544,11 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [docs/architecture.md](../docs/architecture.md) | Spiega architettura corrente, confini dei componenti, flussi, dati su disco e verifiche. |
 | [docs/development.md](../docs/development.md) | Documenta prerequisiti, runtime, build, debug, verifiche, CI e preparazione delle release. |
 | [docs/file-map.md](../docs/file-map.md) | Catalogo corrente delle responsabilità di tutti i file versionati, suddiviso per area. |
-| [docs/media/README.md](../docs/media/README.md) | Definisce schermate, didascalie e collocazione del video da aggiungere al README quando disponibili. |
 | [docs/upstream-upgrades/2026-10-27-06b7b3e-4f24ce6.md](../docs/upstream-upgrades/2026-10-27-06b7b3e-4f24ce6.md) | Registro della revisione del delta, scelte di adozione e verifiche per questo upgrade del motore. |
 | [docs/upstream-upgrades/2026-10-27-4f24ce6-1963fab.md](../docs/upstream-upgrades/2026-10-27-4f24ce6-1963fab.md) | Registro della revisione del delta, scelte di adozione e verifiche per questo upgrade del motore. |
 | [docs/upstream-upgrades/2026-10-29-1963fab-ee369f0.md](../docs/upstream-upgrades/2026-10-29-1963fab-ee369f0.md) | Registro della revisione del delta, scelte di adozione e verifiche per questo upgrade del motore. |
 | [docs/upstream-upgrades/2026-10-31-ee369f0-2716f78.md](../docs/upstream-upgrades/2026-10-31-ee369f0-2716f78.md) | Registro della revisione del delta, scelte di adozione e verifiche per questo upgrade del motore. |
-| [docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md](../docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md) | Revisione del candidato non ancora adottato: toolchain certificata, nuove sorgenti, interventi UI, prove sintetiche e verifiche mancanti prima del re-pin. |
+| [docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md](../docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md) | Registra revisione e adozione del pin: toolchain certificata, nuove sorgenti, interventi UI, prove sintetiche e conferma manuale di build e avvio. |
 | [docs/upstream-upgrades/README.md](../docs/upstream-upgrades/README.md) | Checklist obbligatoria e indice delle revisioni del pin upstream. |
 
 ## Aggiornare questo catalogo

@@ -94,19 +94,19 @@ An upgrade requires reviewing the upstream delta and CLI, deciding which capabil
 
 Use `scripts/release.sh` for releases. It requires a clean working tree, an unused version tag and a runtime that matches the lock. Commit or deliberately stash local work first; do not discard changes to satisfy the check.
 
-For example, to prepare version 0.1.0 locally when it is ready:
+For example, to prepare a later release locally:
 
 ~~~sh
-bash scripts/release.sh 0.1.0
+bash scripts/release.sh 0.1.1
 ~~~
 
-This example does not mean that 0.1.0 has been released. The script builds a release-marked app, verifies its version and signature, and produces a ZIP and DMG in `work/release/`. Without `--publish`, it does not push a tag or create a GitHub release.
+The script builds a release-marked app, verifies its version and signature, and produces a ZIP and DMG in `work/release/`. Without `--publish`, it does not push a tag or create a GitHub release. Version `0.1.0` is the first public alpha; use an unused version for later releases.
 
 Publishing requires an explicit maintainer decision and the script's `--publish --notes <file>` options. Prepare reviewed notes from [CHANGELOG.md](../CHANGELOG.md), then date the version when it is actually published. The script adds engine/Xcode requirement metadata to release notes for the updater. Never publish automatically as part of an agent's verification.
 
 ### Distribution work still open
 
-No downloadable release has been published. Public binary distribution still needs a final app identity and signing policy, signing-identity verification for a future Developer ID release, and the first-installation/update test. Current copies are ad-hoc signed and not notarised. Updates verify GitHub's SHA-256 digest and the sealed app signature; ad-hoc signatures do not independently identify the publisher.
+The first public alpha uses the existing `local.nxlibrary` bundle identity and ad-hoc signing, without notarisation. Developer ID distribution will need signing-identity verification and notarisation. First installation in a fresh account and the full A → B update flow remain manual checks. Updates verify GitHub's SHA-256 digest and the sealed app signature; ad-hoc signatures do not independently identify the publisher.
 
 The updater uses `Bium23/NxLibrary` directly, with anonymous public access. No separate download repository or login is needed for users. Release copies update themselves; source builds remain excluded. `release.sh --publish` requires the configured repository to be public. ZIP downloads are limited to 512 MiB, restricted to GitHub's HTTPS download hosts and checked against the published size and digest. The bundled Python checks paths, symlinks, duplicates, special files and a 30,000-entry limit, then extracts using bounded raw decompression with a 2 GiB total limit. It verifies actual output size and CRC rather than trusting ZIP size fields. Release packaging uses this same extraction path and verifies the extracted bundle signature; ZIPs omit Finder metadata sidecars.
 

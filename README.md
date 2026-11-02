@@ -18,10 +18,12 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/Bium23/NxLibrary/releases/latest">Download</a> ·
   <a href="#getting-started">Get started</a> ·
   <a href="#using-nx-library">User guide</a> ·
   <a href="#troubleshooting">Troubleshooting</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
+  <a href="#next-steps">Next steps</a> ·
   <a href="docs/development.md">Development</a>
 </p>
 
@@ -30,10 +32,11 @@ Insert the final GitHub-hosted video attachment here, below the introduction.
 Use the real recording; keep this slot hidden until the video is available.
 NX-DEMO:END -->
 
-<!-- NX-SCREENSHOTS:START
-Insert the approved, current screenshots here. See docs/media/README.md.
-Do not render empty image links or substitute screenshots of older broken UI.
-NX-SCREENSHOTS:END -->
+<!-- NX-SCREENSHOTS:START -->
+![NX Library Spotlight with a selected game, artwork, play history and library navigation](docs/media/spotlight.webp)
+
+<p align="center"><strong>Your library, together.</strong><br>Games, artwork and activity in Spotlight.</p>
+<!-- NX-SCREENSHOTS:END -->
 
 ## Overview
 
@@ -52,7 +55,7 @@ Game files, keys and firmware are not provided. See [Legal and third-party notic
 
 ### Project status
 
-**0.1.0 alpha · source preview.** The current app has been developed and manually checked on one Apple-silicon Mac. No downloadable release has been published yet. Start with [Building from source](#building-from-source); installation instructions for packaged releases are kept below for when one is available.
+**0.1.0 alpha.** Download the packaged app from [Releases](https://github.com/Bium23/NxLibrary/releases/latest), or [build it from source](#building-from-source). The current app has been developed and manually checked on one Apple-silicon Mac.
 
 Automated checks cover the application code, publication inputs, compilation and development-app packaging. They do not certify game compatibility. Changes are recorded in the [changelog](CHANGELOG.md), and the current checks are available under [Actions](https://github.com/Bium23/NxLibrary/actions/workflows/ci.yml).
 
@@ -91,15 +94,13 @@ Build options, runtime dependencies, debug builds and release packaging are docu
 
 ### Installing a packaged release
 
-When a release is available:
-
-1. Download its DMG from [Releases](https://github.com/Bium23/NxLibrary/releases).
+1. Download the DMG from [Releases](https://github.com/Bium23/NxLibrary/releases/latest).
 2. Open it and drag **NX Library** to Applications.
 3. Open the app and complete Setup.
 
-Current development builds are ad-hoc signed and not notarised. If macOS blocks first opening, use **System Settings → Privacy & Security → Open Anyway** only for a copy you built or obtained from a source you trust.
+The current alpha is ad-hoc signed and not notarised. If macOS blocks first opening, use **System Settings → Privacy & Security → Open Anyway** only for a copy you built or obtained from a source you trust.
 
-Packaged releases check this repository for app updates; no GitHub account is needed. Choose **Update** to download, verify, install and reopen NX Library while keeping your library and preferences. Automatic checks run at most once every 24 hours; **Settings → About → Check now** checks immediately. Updates wait while a build, a running game or a save operation requires the app. Development builds never replace themselves. The first downloadable release and the full A → B installation test are still pending.
+Packaged releases check this repository for app updates; no GitHub account is needed. Choose **Update** to download, verify, install and reopen NX Library while keeping your library and preferences. Automatic checks run at most once every 24 hours; **Settings → About → Check now** checks immediately. Updates wait while a build, a running game or a save operation requires the app. Development builds never replace themselves. The full A → B installation test remains pending until a second release is available.
 
 ### First-run setup
 
@@ -129,7 +130,15 @@ If an installed app is moved or removed, its library entry stays with a blurred,
 
 **Spotlight** places your games in a row of square tiles, with Play, Options and Favourite beside the selected title. Scroll down for descriptions, screenshots, activity and build information. **Collection** offers a cover-based view.
 
+![Game details with screenshots, a description, play activity and build information](docs/media/game-details.webp)
+
+<p align="center"><strong>A closer look at each game.</strong><br>Artwork, play history and build details in one place.</p>
+
 Use **Find a game** for search, **Game Options** for title-specific actions, and the menu for themes, Settings and running-game controls. Hidden games can be restored under **Settings → Games → Hidden games**.
+
+![The quick menu open over Spotlight, with Theme selected](docs/media/quick-menu.webp)
+
+<p align="center"><strong>Quick access.</strong><br>Open the menu without leaving your library.</p>
 
 ### Add or rebuild a game
 
@@ -143,6 +152,10 @@ For a title already in the library, Review opens with that game's saved options 
 Sources stay in place; staged workspaces use symbolic links. New game apps install in the chosen **Game apps** folder. Review shows the actual destination, including any filename needed to avoid an unrelated app. Build stages, progress, estimated time and a live log remain available while the operation runs. Closing the porting screen leaves the operation running; cancellation is a separate action.
 
 A rebuild of a running game waits to replace its app until it closes. If compilation finishes but installation fails, **Retry** installs the preserved result without compiling again. If the destination folder disconnects, reconnect it before retrying: the ready build keeps its original destination. A library refresh preserves pending installations and failure information.
+
+![A game build in progress in Spotlight, showing its progress and estimated time remaining](docs/media/porting-progress.webp)
+
+<p align="center"><strong>Follow the build.</strong><br>Keep track of porting progress from Spotlight.</p>
 
 ### Know which settings apply
 
@@ -158,6 +171,10 @@ A rebuild of a running game waits to replace its app until it closes. If compila
 Options include fullscreen, FPS target, docked mode, language, rumble, render scale, MetalFX spatial upscaling and Metal HUD. Some controls depend on the installed build's capabilities. A control being available does not guarantee that every game supports its effect.
 
 Settings includes **Search** and **Changed**. Group resets retain the cloud-sync choice and selected sources folder. Descriptions explain the scope; information buttons provide additional detail.
+
+![Settings with categories, Start-up preferences and access to Setup](docs/media/settings.webp)
+
+<p align="center"><strong>Settings by area.</strong><br>Find library, appearance, controller and start-up preferences.</p>
 
 ### Saves: back up, import, restore
 
@@ -196,6 +213,18 @@ Changes apply at the next Play and are written only while the game is closed. An
 - **Settings → Sound & music** controls interface cues and volume. Four interface sounds are bundled; additional sounds and wallpapers can be imported from a Selene theme folder you own.
 
 Online artwork and wallpapers require their providers to be available. Their content and service terms remain those of the respective owners.
+
+![The colour theme picker with palettes and a live library preview](docs/media/color-themes.webp)
+
+<p align="center"><strong>Choose your colours.</strong><br>Preview each palette before applying it.</p>
+
+![The static wallpaper browser with categories, image thumbnails and a library preview](docs/media/static-wallpapers.webp)
+
+<p align="center"><strong>Find a wallpaper.</strong><br>Browse backgrounds and preview them in your library.</p>
+
+![The live background picker with online sources, local videos and a library preview](docs/media/live-wallpapers.webp)
+
+<p align="center"><strong>Add a little motion.</strong><br>Choose a live background or bring your own video.</p>
 
 ### Controls
 
@@ -242,13 +271,24 @@ App data lives in `~/Library/Application Support/NXLibrary/`. Local game data us
 
 Storage can clear caches and logs and open the shared backups folder. **Remove Sources & Build Cache deletes the selected original source files**, while retaining the installed app and saves. Read that confirmation carefully; it differs from clearing a cache.
 
+## Next steps
+
+- **Simpler Settings** — Keep everyday options easy to find, with advanced controls grouped within each category.
+- **In-app bug reporting** — Make it easier to report a problem directly from NX Library.
+- **Broader game discovery** — Discover and launch games from Steam, CrossOver and the Mac App Store, alongside nxnative apps.
+- **An in-app mod browser** — Browse, download and install game mods without leaving the app.
+- **Better controller support** — Refine controller settings and offer more flexible button mapping.
+- **Continued polish** — Fix bugs and improve navigation, feedback and visual details throughout the app.
+
+More to come as NX Library evolves.
+
 ## Documentation and development
 
 | Document | Contents |
 |---|---|
 | [Changelog](CHANGELOG.md) | User-visible changes and release history. |
 | [Development guide](docs/development.md) | Runtime preparation, debug builds, tests, packaging and releases. |
-| [Screenshots and demo](docs/media/README.md) | Planned shots, captions and video placement. |
+| [Screenshots and demo](docs/media/README.md) | Screenshot inventory, placement and the upcoming video. |
 | [Contributing](CONTRIBUTING.md) | Change and verification guidelines. |
 | [Security](SECURITY.md) | Private vulnerability reporting and handling sensitive files. |
 | [Technical guide](docs/architecture.md) | Current architecture and feature flows, in Italian. |
