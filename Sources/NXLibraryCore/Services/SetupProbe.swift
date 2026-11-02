@@ -37,7 +37,7 @@ public struct SetupProbe {
         }
         let xcode = xcode()
         let engine = engine()
-        return SetupFacts(
+        var facts = SetupFacts(
             xcodeStatus: xcode.status,
             metalVersion: MetalVersion.parse(run("/usr/bin/xcrun", ["metal", "--version"]).stdout),
             certifiedMetal: certifiedMetal, allowUntested: allowUntested,
@@ -48,6 +48,8 @@ public struct SetupProbe {
             keys: keys, keysError: keysError,
             libraryWritable: libraryFolder.map { fileManager.isWritableFile(atPath: $0.path) },
             xcodeVersion: xcode.version, engineBehind: behind(engine))
+        facts.keysOptional = EngineSourceCapabilities(repo: engineFolder).extractedFolders
+        return facts
     }
 
     /// Whether the checkout's HEAD is an ancestor of the pin (`git merge-base --is-ancestor`); nil when git cannot

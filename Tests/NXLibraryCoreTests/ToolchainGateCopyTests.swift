@@ -2,6 +2,12 @@ import XCTest
 @testable import NXLibraryCore
 
 final class ToolchainGateCopyTests: XCTestCase {
+    func testCertifiedToolchainAllowsTurningAnOldOverrideOffButNotOn() {
+        XCTAssertTrue(ToolchainGateCopy.canChangeOverride(certified: true, overrideOn: true, locked: false))
+        XCTAssertFalse(ToolchainGateCopy.canChangeOverride(certified: true, overrideOn: false, locked: false))
+        XCTAssertTrue(ToolchainGateCopy.canChangeOverride(certified: false, overrideOn: false, locked: false))
+        XCTAssertFalse(ToolchainGateCopy.canChangeOverride(certified: false, overrideOn: true, locked: true))
+    }
     private func report(metal: MetalStanding, otherBlock: Bool = false) -> CompatibilityReport {
         var checks = [CompatibilityCheck(id: "metal", title: "Metal compiler",
                                          status: metal == .same ? .pass : .block, detail: "")]

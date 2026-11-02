@@ -102,11 +102,11 @@ struct SettingsEngineSection: View {
 
             SeleneRow("Untested toolchain override",
                       subtitle: overrideSubtitle,
-                      info: "Permits building games when your installed Metal compiler or Xcode differs from the certified version (Xcode 27.1, Metal 32023.921). Passes --allow-other-metal to nxnative. Builds are recorded as unverified.") {
+                      info: "Permits building games when the toolchain differs from the certified engine and Metal combination shown above. Passes --allow-other-metal to nxnative. Builds are recorded as unverified.") {
                 Toggle("", isOn: overrideBinding)
                     .labelsHidden()
                     .toggleStyle(SeleneToggleStyle())
-                    .disabled(configurationLocked || viewModel.compatibilityReport?.ok != false)
+                    .disabled(!canChangeOverride)
                     .accessibilityValue(viewModel.allowUntestedToolchain ? "On" : "Off")
             }
 
@@ -206,6 +206,11 @@ struct SettingsEngineSection: View {
                 }
             }
         )
+    }
+
+    private var canChangeOverride: Bool {
+        ToolchainGateCopy.canChangeOverride(certified: viewModel.compatibilityReport?.ok,
+            overrideOn: viewModel.allowUntestedToolchain, locked: configurationLocked)
     }
 
     private var overrideSubtitle: String {
@@ -419,7 +424,7 @@ struct SettingsEngineSection: View {
                 viewModel.detectEnvironment()
             },
             .init(id: "override", title: "Untested toolchain override",
-                  isEnabled: !configurationLocked && viewModel.compatibilityReport?.ok == false) {
+                  isEnabled: canChangeOverride) {
                 if viewModel.allowUntestedToolchain {
                     viewModel.allowUntestedToolchain = false
                 } else {

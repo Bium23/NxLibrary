@@ -29,7 +29,7 @@ extension AddGameView {
         rows.append(AddGameRow(id: "choose", kind: .action { viewModel.selectGameFolder() },
                                icon: .folder, title: folder == nil ? "Choose folder" : "Change folder",
                                about: folder.map { ($0.path as NSString).abbreviatingWithTildeInPath }
-                                   ?? "A folder with your NSP, XCI or NSZ files. You can also drop them here."))
+                                   ?? "Game packages or an extracted game folder. You can also drop them here."))
         if let game = viewModel.selectedGame {
             rows.append(AddGameRow(id: "continue", kind: .action(goToReview), icon: .chevron,
                                    title: "Continue",
@@ -41,7 +41,7 @@ extension AddGameView {
         }
         if let error = viewModel.scanError {
             rows.append(AddGameRow(id: "scanError", kind: .warning(action: nil),
-                                   title: "Could not read this folder", about: error))
+                                   title: viewModel.detectedGames.isEmpty ? "Could not read this folder" : "Some files were skipped", about: error))
         }
         if let error = viewModel.dropErrorMessage {
             rows.append(AddGameRow(id: "dropError", kind: .warning(action: nil), title: error))
@@ -53,7 +53,7 @@ extension AddGameView {
             rows.append(AddGameRow(id: "gamesHeading", kind: .heading, title: "Games in this folder"))
             for game in viewModel.detectedGames {
                 rows.append(AddGameRow(id: "game:\(game.id)", kind: .action { viewModel.selectedGame = game },
-                                       title: game.name, about: game.summaryText, compact: true,
+                                       title: game.name, about: "\(game.summaryText) · \(game.titleId ?? game.id)", compact: true,
                                        checked: viewModel.selectedGame?.id == game.id))
             }
         }
@@ -64,7 +64,7 @@ extension AddGameView {
                                        about: "This folder has an update or DLC but no base game."))
             }
             for item in game.files {
-                let isBase = item.type == .base
+                let locked = SourceSelection.isLocked(item, in: game.files, selected: viewModel.selectedSourceIDs)
                 rows.append(AddGameRow(
                     id: "source:\(item.id)",
                     kind: .toggle(Binding(get: { viewModel.selectedSourceIDs.contains(item.id) },
@@ -74,10 +74,10 @@ extension AddGameView {
                                               }
                                           })),
                     title: item.name, about: sourceAbout(item), compact: true))
-                if isBase { rows[rows.count - 1].enabled = false }
+                if locked { rows[rows.count - 1].enabled = false }
             }
             rows.append(AddGameRow(id: "sourcesNote", kind: .note,
-                                   title: "The base game stays in. One update at a time; DLC one by one."))
+                                   title: "The base stays in. One update at a time; bundled DLC stay together."))
         }
         rows += readinessRows(includeBuildError: false)
         rows.append(AddGameRow(id: "destination", kind: .note, title: destinationNote))
@@ -85,7 +85,7 @@ extension AddGameView {
     }
 
     private var sourceCountText: String {
-        let count = viewModel.selectedSources.count
+        let count = Set(viewModel.selectedSources.map { $0.url.resolvingSymlinksInPath().path }).count
         return count == 1 ? "1 source" : "\(count) sources"
     }
 
@@ -94,7 +94,9 @@ extension AddGameView {
         if let raw = item.versionString?.trimmingCharacters(in: .whitespaces), !raw.isEmpty {
             parts.append(raw.lowercased().hasPrefix("v") ? raw : "v\(raw)")
         }
-        parts.append(item.formattedSize)
+        let bundled = viewModel.selectedGame?.files.contains { $0.id != item.id && $0.url == item.url } == true
+        if bundled && item.type != .base { parts.append("In package") }
+        else { parts.append(item.layout == .extracted ? "Extracted folder" : item.formattedSize) }
         return parts.joined(separator: " · ")
     }
 
@@ -151,7 +153,8 @@ extension AddGameView {
 
     private var buildHint: String {
         if viewModel.canStartBuild { return "Builds the Mac app now; you can keep using the library meanwhile." }
-        if !viewModel.isProdKeysValid { return "Import prod.keys first." }
+        if !viewModel.supportsSources(viewModel.selectedSources) { return "These sources need a newer engine." }
+        if viewModel.selectedSourcesRequireKeys && !viewModel.isProdKeysValid { return "Import prod.keys first." }
         if viewModel.keyCheckBlocks, let readiness = viewModel.keyCheck?.readiness { return "\(readiness.title)." }
         if !viewModel.isNxnativeValid { return "The nxnative checkout is missing." }
         if viewModel.environmentStatus?.canBuild != true { return "The build environment is incomplete." }
@@ -184,7 +187,7 @@ extension AddGameView {
                 viewModel.portingFailureReason = nil
             }), title: viewModel.portingFailureReason?.title ?? "The last porting failed", about: error))
         }
-        if !viewModel.isProdKeysValid {
+        if viewModel.selectedSourcesRequireKeys && !viewModel.isProdKeysValid {
             rows.append(AddGameRow(id: "keys", kind: .action { viewModel.selectProdKeysFile() }, icon: .key,
                                    title: "Import prod.keys",
                                    about: "Copied once to Application Support, readable only by you."))

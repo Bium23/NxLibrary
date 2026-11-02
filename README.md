@@ -56,6 +56,8 @@ Game files, keys and firmware are not provided. See [Legal and third-party notic
 
 Automated checks cover the application code, publication inputs, compilation and development-app packaging. They do not certify game compatibility. Changes are recorded in the [changelog](CHANGELOG.md), and the current checks are available under [Actions](https://github.com/Bium23/NxLibrary/actions/workflows/ci.yml).
 
+The `163a9905` engine upgrade is currently being validated. This branch prepares support for extracted game folders and multi-title packages, with Xcode 27.2 / Metal 32023.922. The stable engine pin remains `2716f78` until a certified game build and manual launch are confirmed. See the [candidate review and validation instructions](docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md).
+
 ## Getting started
 
 ### Requirements

@@ -1,5 +1,9 @@
 import Foundation
 
+public enum SourceLayout: String, Codable, Equatable {
+    case package, extracted
+}
+
 public enum SourceKind: String, Codable, Equatable {
     case base, update, dlc, unknown
 
@@ -31,10 +35,15 @@ public struct GameFileItem: Identifiable, Codable, Equatable {
     public var titleId: String?
     public var versionString: String?
     public var isSymlink: Bool
+    /// Absent in older libraries, whose sources are packages.
+    public var sourceLayout: SourceLayout?
+    public var requiresTitleSelection: Bool?
+    public var layout: SourceLayout { sourceLayout ?? .package }
 
     public init(id: UUID = UUID(), url: URL, name: String, sizeBytes: Int64,
                 type: SourceKind, titleId: String? = nil,
-                versionString: String? = nil, isSymlink: Bool = false) {
+                versionString: String? = nil, isSymlink: Bool = false, sourceLayout: SourceLayout? = nil,
+                requiresTitleSelection: Bool? = nil) {
         self.id = id
         self.url = url
         self.name = name
@@ -43,14 +52,18 @@ public struct GameFileItem: Identifiable, Codable, Equatable {
         self.titleId = titleId
         self.versionString = versionString
         self.isSymlink = isSymlink
+        self.sourceLayout = sourceLayout
+        self.requiresTitleSelection = requiresTitleSelection
     }
 
     public init(id: UUID = UUID(), url: URL, kind: SourceKind,
                 titleId: String? = nil, versionString: String? = nil,
-                sizeBytes: Int64, isSymlink: Bool = false) {
+                sizeBytes: Int64, isSymlink: Bool = false, sourceLayout: SourceLayout? = nil,
+                requiresTitleSelection: Bool? = nil) {
         self.init(id: id, url: url, name: url.lastPathComponent,
                   sizeBytes: sizeBytes, type: kind, titleId: titleId,
-                  versionString: versionString, isSymlink: isSymlink)
+                  versionString: versionString, isSymlink: isSymlink, sourceLayout: sourceLayout,
+                  requiresTitleSelection: requiresTitleSelection)
     }
 
     public var kind: SourceKind { type }

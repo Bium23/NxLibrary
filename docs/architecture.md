@@ -1,6 +1,6 @@
 # NX Library — guida tecnica
 
-Aggiornata il 1 novembre 2026 sul codice del repository. La mappa comprende 225 file Swift di produzione e 93 file di test e supporto ai test. L’ultima verifica completa ha superato 703 test Swift e 5 prove Python dei controlli di pubblicazione.
+Aggiornata il 2 novembre 2026 sul codice del repository. La mappa comprende 229 file Swift di produzione e 94 file di test e supporto ai test. L'integrazione del candidato nxnative 163a9905 ha superato 719 test Swift; il re-pin definitivo richiede ancora la prova di gioco manuale.
 
 Questa guida descrive il funzionamento attuale. Il [catalogo dei file](file-map.md) assegna una responsabilità a ogni file versionato, suddiviso per area.
 
@@ -103,6 +103,12 @@ Le viste principali sono Spotlight, Collection e Details. Ricerca, Add Game, Con
 Il lock del pin attuale certifica Metal `32023.921`, asset Apple `27A266a`. La [nota dell’upgrade del 31 ottobre](upstream-upgrades/2026-10-31-ee369f0-2716f78.md) registra la scelta dell’utente di verificare quel porting con Metal `32023.922` e override esplicito. Un build con override riceve `toolchainVerified=false` e `--allow-other-metal`. Play valuta la disponibilità dell’app già installata separatamente dal gate per un nuovo porting.
 
 ## Sorgenti e porting
+
+La revisione del [candidato 163a9905](upstream-upgrades/2026-11-02-2716f78-163a9905-review.md) aggiunge un ingresso per cartelle estratte e metadati per pacchetti con più contenuti. `EnginePackageReader` riusa il lettore content-meta upstream; `ExtractedSourceCatalog` legge NPDM e profili registrati senza chiavi. `SourceSelection` tiene separati contenuti selezionati e file fisici: un pacchetto si conta e si collega una sola volta, il DLC incorporato rimane incluso e la versione scelta viene passata con `-p`.
+
+`GameFileItem` conserva facoltativamente layout e requisito di selezione del titolo; i vecchi JSON continuano a indicare pacchetti. Questi requisiti sono verificati prima del build anche cambiando checkout. Le cartelle estratte sono collegate nel layout `base/`, `updates/<version>/`, `dlc/<title>/0/romfs/`; il restaging rimuove link esclusi e contenitori vuoti, preservando cache e originali. Un pacchetto illeggibile non nasconde gli altri giochi validi: la scansione mantiene i risultati e segnala i file saltati.
+
+Con un engine che riconosce cartelle estratte, Setup permette di proseguire senza chiavi. La selezione di pacchetti cifrati continua a richiederle e a eseguire il preflight. La guida In game include Shift + frecce per la levetta destra delle nuove build. L'integrazione è disponibile nella copia di validazione; il pin stabile rimane quello riportato sopra fino alla prova reale.
 
 1. `AddGameView` raccoglie cartelle o file. `SourceCatalog` riconosce NSP, XCI, NSZ e XCZ e raggruppa base, aggiornamenti e DLC.
 2. `AppViewModel+KeyCheck` invoca `KeyCheck` sulle sorgenti selezionate. Il risultato dipende dalla selezione corrente, così un controllo precedente non abilita un porting diverso.

@@ -1,6 +1,6 @@
 # NX Library — catalogo dei file
 
-Aggiornato il 1 novembre 2026. Copertura di **363 file versionati** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona e le guide per sviluppo e media. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 2 novembre 2026. Copertura di **369 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media e l'integrazione del candidato nxnative. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -137,6 +137,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Services/NXNativeEnvironment.swift](../Sources/NXLibraryCore/Services/NXNativeEnvironment.swift) | Ispeziona strumenti, Python, Xcode, Metal e .NET e restituisce uno stato dell’ambiente. |
 | [Sources/NXLibraryCore/Services/EngineLocation.swift](../Sources/NXLibraryCore/Services/EngineLocation.swift) | Risolve checkout predefinito o scelto e produce i candidati per prod.keys. |
 | [Sources/NXLibraryCore/Services/EngineToolchain.swift](../Sources/NXLibraryCore/Services/EngineToolchain.swift) | Individua runtime incluso o venv del checkout e prepara ambiente e PATH dei processi. |
+| [Sources/NXLibraryCore/Services/EnginePackageReader.swift](../Sources/NXLibraryCore/Services/EnginePackageReader.swift) | Legge capacità delle sorgenti e content meta tramite il lettore upstream, validando identità e tipi senza esporre chiavi. |
 | [Sources/NXLibraryCore/Services/CompatibilityChecker.swift](../Sources/NXLibraryCore/Services/CompatibilityChecker.swift) | Controlla commit, modifiche del checkout, Metal e opzioni CLI richieste dal frontend. |
 | [Sources/NXLibraryCore/Services/SetupProbe.swift](../Sources/NXLibraryCore/Services/SetupProbe.swift) | Raccoglie i fatti mostrati dal Setup usando comandi e controlli mirati. |
 | [Sources/NXLibraryCore/Services/SetupActions.swift](../Sources/NXLibraryCore/Services/SetupActions.swift) | Costruisce le operazioni Git ammesse per installare o allineare il motore al pin. |
@@ -152,6 +153,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | File | Responsabilità |
 |---|---|
 | [Sources/NXLibraryCore/Models/GameFileItem.swift](../Sources/NXLibraryCore/Models/GameFileItem.swift) | Descrive sorgenti, tipo base/update/DLC, percorso, dimensione e metadati rilevati. |
+| [Sources/NXLibraryCore/Models/SourceSelection.swift](../Sources/NXLibraryCore/Models/SourceSelection.swift) | Gestisce selezione dei contenuti, DLC incorporati, dimensioni uniche, versione di build e requisiti del motore. |
 | [Sources/NXLibraryCore/Models/BuildRecord.swift](../Sources/NXLibraryCore/Models/BuildRecord.swift) | Conserva esito, tempi, log e provenienza di un porting. |
 | [Sources/NXLibraryCore/Models/TargetPlatform.swift](../Sources/NXLibraryCore/Models/TargetPlatform.swift) | Definisce il target mac-app e le sue etichette per l’interfaccia. |
 | [Sources/NXLibraryCore/Models/GameRuntimeConfig.swift](../Sources/NXLibraryCore/Models/GameRuntimeConfig.swift) | Persiste opzioni per titolo, prepara Review e lingua del rebuild, mappa DM_* e unisce env.txt. |
@@ -163,6 +165,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/PendingInstall.swift](../Sources/NXLibraryCore/Models/PendingInstall.swift) | Conserva un bundle pronto in attesa e ne gestisce installazione, scarto e aggiornamento del record, anche dopo una pubblicazione interrotta. |
 | [Sources/NXLibraryCore/Models/RunningGames.swift](../Sources/NXLibraryCore/Models/RunningGames.swift) | Confronta bundle ID e mantiene uno snapshot delle applicazioni in esecuzione. |
 | [Sources/NXLibraryCore/Services/SourceCatalog.swift](../Sources/NXLibraryCore/Services/SourceCatalog.swift) | Riconosce sorgenti NSP/XCI/NSZ/XCZ e raggruppa titoli, aggiornamenti e DLC. |
+| [Sources/NXLibraryCore/Services/ExtractedSourceCatalog.swift](../Sources/NXLibraryCore/Services/ExtractedSourceCatalog.swift) | Verifica il layout di un gioco estratto, legge NPDM e profilo registrato e rileva update e DLC. |
 | [Sources/NXLibraryCore/Services/WorkspaceManager.swift](../Sources/NXLibraryCore/Services/WorkspaceManager.swift) | Prepara collegamenti simbolici, verifica link interrotti e adotta workspace e cache esistenti. |
 | [Sources/NXLibraryCore/Services/BuildCommand.swift](../Sources/NXLibraryCore/Services/BuildCommand.swift) | Valore con eseguibile, argomenti, ambiente e directory di lavoro del processo di porting. |
 | [Sources/NXLibraryCore/Services/BuildCommandBuilder.swift](../Sources/NXLibraryCore/Services/BuildCommandBuilder.swift) | Costruisce il contratto CLI nxnative, comprese destinazione Mac, JSON e override toolchain. |
@@ -456,6 +459,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/SetupGridTests.swift](../Tests/NXLibraryCoreTests/SetupGridTests.swift) | Bilanciamento delle righe e spostamento del focus fra le schede. |
 | [Tests/NXLibraryCoreTests/SmokeTests.swift](../Tests/NXLibraryCoreTests/SmokeTests.swift) | Importabilità e versione nominale del modulo Core. |
 | [Tests/NXLibraryCoreTests/SourceCatalogTests.swift](../Tests/NXLibraryCoreTests/SourceCatalogTests.swift) | Fixture PFS0/CNMT e riconoscimento di base, aggiornamenti e DLC. |
+| [Tests/NXLibraryCoreTests/EngineUpgradeSourcesTests.swift](../Tests/NXLibraryCoreTests/EngineUpgradeSourcesTests.swift) | Copre cartelle estratte, pacchetti multipli, selezione, persistenza, bridge Python, file illeggibili e restaging senza perdita di cache o originali. |
 | [Tests/NXLibraryCoreTests/SpotlightPageTests.swift](../Tests/NXLibraryCoreTests/SpotlightPageTests.swift) | Estratti del testo e stati dello scorrimento della pagina del gioco. |
 | [Tests/NXLibraryCoreTests/SpotlightRowTests.swift](../Tests/NXLibraryCoreTests/SpotlightRowTests.swift) | Ordine, card, riordino delle tile e selezione Surprise. |
 | [Tests/NXLibraryCoreTests/SpotlightStateTests.swift](../Tests/NXLibraryCoreTests/SpotlightStateTests.swift) | Focus, selezione, filtri, azioni e spostamento delle tile Spotlight. |
@@ -519,6 +523,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [docs/upstream-upgrades/2026-10-27-4f24ce6-1963fab.md](../docs/upstream-upgrades/2026-10-27-4f24ce6-1963fab.md) | Registro della revisione del delta, scelte di adozione e verifiche per questo upgrade del motore. |
 | [docs/upstream-upgrades/2026-10-29-1963fab-ee369f0.md](../docs/upstream-upgrades/2026-10-29-1963fab-ee369f0.md) | Registro della revisione del delta, scelte di adozione e verifiche per questo upgrade del motore. |
 | [docs/upstream-upgrades/2026-10-31-ee369f0-2716f78.md](../docs/upstream-upgrades/2026-10-31-ee369f0-2716f78.md) | Registro della revisione del delta, scelte di adozione e verifiche per questo upgrade del motore. |
+| [docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md](../docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md) | Revisione del candidato non ancora adottato: toolchain certificata, nuove sorgenti, interventi UI, prove sintetiche e verifiche mancanti prima del re-pin. |
 | [docs/upstream-upgrades/README.md](../docs/upstream-upgrades/README.md) | Checklist obbligatoria e indice delle revisioni del pin upstream. |
 
 ## Aggiornare questo catalogo

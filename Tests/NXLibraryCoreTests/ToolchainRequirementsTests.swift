@@ -2,6 +2,12 @@ import XCTest
 @testable import NXLibraryCore
 
 final class ToolchainRequirementsTests: XCTestCase {
+    func testCandidateRequirementsCertifyTheInstalledXcode27_2Compiler() {
+        XCTAssertEqual(ToolchainRequirements.current.minimumXcode, "27.2")
+        XCTAssertEqual(ToolchainRequirements.current.fallbackMetal, "32023.922")
+        XCTAssertEqual(ToolchainRequirements.current.metalDownload(for: "32023.922"),
+                       ["-downloadComponent", "MetalToolchain", "-buildVersion", "27B47"])
+    }
     func testVersionCompareIsNumeric() {
         XCTAssertTrue(VersionNumber.isOlder("10.0.401", than: "10.0.403"))
         XCTAssertTrue(VersionNumber.isOlder("27.1", than: "27.10"))

@@ -34,7 +34,7 @@ public struct ControlsView: View {
                 ("Press left / right stick", "F · G"),
                 ("Plus · Minus", "Return · Tab"),
                 ("Shake", "Hold Space"),
-                ("Right stick", "Controller"),
+                ("Right stick", "Shift + Arrow keys · Controller"),
                 ("Touchscreen", "Click and drag · Handheld mode"),
                 ("Gamepad", "USB or Bluetooth · Button positions follow the engine's layout"),
                 ("Rumble", "Depends on the game, build and controller")

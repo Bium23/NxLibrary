@@ -2,6 +2,20 @@ import XCTest
 @testable import NXLibraryCore
 
 final class BuildCommandBuilderTests: XCTestCase {
+    func testExtractedInputOmitsKeysAndNamesSelectedTitleAndVersion() {
+        let repo = URL(fileURLWithPath: "/tmp/engine")
+        let command = BuildCommandBuilder.make(repo: repo,
+            toolchain: EngineToolchain.resolve(runtime: nil, repo: repo),
+            workspace: URL(fileURLWithPath: "/tmp/dump"), keys: nil,
+            output: URL(fileURLWithPath: "/tmp/Game.app"),
+            developerDir: URL(fileURLWithPath: "/Applications/Xcode.app/Contents/Developer"),
+            titleId: "0400000000000000", packageVersion: "v65536")
+        XCTAssertFalse(command.arguments.contains("-k"))
+        XCTAssertTrue(command.arguments.contains("--title-id"))
+        XCTAssertTrue(command.arguments.contains("0400000000000000"))
+        XCTAssertTrue(command.arguments.contains("-p"))
+        XCTAssertTrue(command.arguments.contains("v65536"))
+    }
     func testEachGameSuppliesItsBuildLanguageAndAutoAddsNoOverride() throws {
         let repo = URL(fileURLWithPath: "/tmp/repo")
         for language in ["it", "ja", "auto"] {

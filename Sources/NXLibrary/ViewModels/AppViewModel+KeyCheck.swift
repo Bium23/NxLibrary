@@ -11,7 +11,7 @@ extension AppViewModel {
     func refreshKeyCheck() {
         let sources = selectedSources
         let files = KeyCheck.parts(sources.map { ($0.kind, $0.url) })
-        guard isProdKeysValid, !files.isEmpty else {
+        guard SourceSelection.requiresKeys(sources), isProdKeysValid, !files.isEmpty else {
             keyCheck = nil
             keyCheckToken = nil
             return

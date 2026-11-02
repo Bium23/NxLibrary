@@ -21,10 +21,10 @@ public struct ToolchainRequirements: Equatable {
     }
 
     public static let current = ToolchainRequirements(
-        minimumXcode: "27.1",
+        minimumXcode: "27.2",
         dotnetMajor: 10,
-        fallbackMetal: "32023.921",
-        metalAssets: ["32023.921": "27A266a"])
+        fallbackMetal: "32023.922",
+        metalAssets: ["32023.921": "27A266a", "32023.922": "27B47"])
 
     /// For /usr/bin/xcodebuild: whatever Metal toolchain matches this Xcode.
     public static let anyMetalDownload = ["-downloadComponent", "MetalToolchain"]

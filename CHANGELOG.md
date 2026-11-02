@@ -8,6 +8,8 @@ The current source preview identifies itself as **0.1.0 alpha**. No tagged or do
 
 ### Added
 
+- Candidate integration for nxnative `163a9905`: extracted-folder inputs without keys, registered-profile checks, multi-title package selection, bundled-content review and unique source-size accounting. The stable engine pin is unchanged pending a real certified build and manual launch.
+
 - A native macOS library with Spotlight, Collection, search, favourites, hidden games and game details.
 - Guided Setup and local nxnative builds from user-supplied sources, with base/update/DLC review, progress, logs and cancellation. Existing game apps can be imported and played without their sources.
 - Per-game launch options, artwork and metadata; library themes, wallpapers, interface sounds and keyboard/controller navigation.
@@ -24,6 +26,8 @@ The current source preview identifies itself as **0.1.0 alpha**. No tagged or do
 - App-update preparation and background snapshot preparation run outside the main UI work. Source builds do not update themselves; the current preview has no anonymous release-update source configured.
 
 ### Fixed
+
+- A saved untested-toolchain override can be turned off after the gate becomes certified. Restaged source workspaces discard deselected links and empty DLC containers while preserving their build cache. Sources that require new engine capabilities cannot silently rebuild through an older engine.
 
 - Library scans preserve pending installations and previous build failures. Ready builds can be installed again after an installation failure without recompiling.
 - Game apps and development app builds are installed through a staged, atomic replacement. A running game delays replacement of its app.

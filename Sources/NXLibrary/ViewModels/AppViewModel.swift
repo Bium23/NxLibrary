@@ -158,7 +158,18 @@ public final class AppViewModel: ObservableObject {
     }
     
     public var selectedSourcesSizeBytes: Int64 {
-        selectedSources.reduce(0) { $0 + $1.sizeBytes }
+        SourceSelection.uniqueSize(selectedSources)
+    }
+
+    public var selectedSourcesRequireKeys: Bool { SourceSelection.requiresKeys(selectedSources) }
+    public var engineSourceCapabilities: EngineSourceCapabilities {
+        EngineSourceCapabilities(repo: URL(fileURLWithPath: nxnativePath))
+    }
+
+    public func supportsSources(_ sources: [GameFileItem]) -> Bool {
+        let capabilities = engineSourceCapabilities
+        return SourceSelection.supported(sources, titleSelection: capabilities.titleSelection,
+                                         extractedFolders: capabilities.extractedFolders)
     }
     
     public var formattedSelectedSourcesSize: String {
@@ -199,29 +210,12 @@ public final class AppViewModel: ObservableObject {
     }
     
     public func resetSourceSelection(for game: SelectableGame) {
-        var ids = Set<UUID>()
-        if let base = game.baseFile { ids.insert(base.id) }
-        if let update = game.newestUpdate { ids.insert(update.id) }
-        for dlc in game.files where dlc.type == .dlc && dlc.sizeBytes > 0 {
-            ids.insert(dlc.id)
-        }
-        selectedSourceIDs = ids
+        selectedSourceIDs = SourceSelection.initial(in: game.files)
     }
     
     public func toggleSource(_ item: GameFileItem) {
-        guard let game = selectedGame,
-              let file = game.files.first(where: { $0.id == item.id }) else { return }
-        if file.type == .base { return }
-        if selectedSourceIDs.contains(file.id) {
-            selectedSourceIDs.remove(file.id)
-        } else {
-            if file.type == .update {
-                selectedSourceIDs.subtract(
-                    game.files.filter { $0.type == .update }.map(\.id)
-                )
-            }
-            selectedSourceIDs.insert(file.id)
-        }
+        guard let game = selectedGame else { return }
+        selectedSourceIDs = SourceSelection.toggling(item.id, in: game.files, selected: selectedSourceIDs)
     }
     
     // MARK: - Drag & Drop & ZIP
@@ -553,6 +547,7 @@ public final class AppViewModel: ObservableObject {
             prodKeysPath = keyStore.keyURL.path
             prodKeysSource = "Imported once"
             refreshKeyCheck()
+            if let folder = selectedGameFolder { scanGameFolder(folder) }
             lastError = nil
             logs.append(LogEntry(
                 level: .success,
@@ -784,7 +779,7 @@ public final class AppViewModel: ObservableObject {
 
     public var canCompleteSetup: Bool {
         isNxnativeValid
-            && isProdKeysValid
+            && (isProdKeysValid || engineSourceCapabilities.extractedFolders)
             && environmentStatus?.canBuild == true
             && libraryFolder != nil
     }
@@ -1005,10 +1000,15 @@ public final class AppViewModel: ObservableObject {
 
         isScanningGameFolder = true
         let catalog = sourceCatalog
+        let repo = URL(fileURLWithPath: nxnativePath)
+        let toolchain = engineToolchain
+        let keys = isProdKeysValid ? keyStore.keyURL : nil
+        let developer = resolvedDeveloperDir()
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let urls = Self.sourceFileURLs(in: folder)
-            let readable = urls.filter { (try? catalog.inspect($0)) != nil }
-            let detected = (try? catalog.scan(files: readable)) ?? []
+            let urls = ExtractedSourceCatalog.recognizes(folder) ? [] : Self.sourceFileURLs(in: folder)
+            let outcome = Result { try Self.scanSources(in: folder, files: urls, catalog: catalog,
+                repo: repo, toolchain: toolchain, keys: keys, developerDir: developer) }
+            let detected = (try? outcome.get().games) ?? []
             let match = detected.first {
                 String(format: "%016llX", $0.baseTitleId)
                     .caseInsensitiveCompare(titleId) == .orderedSame
@@ -1017,7 +1017,8 @@ public final class AppViewModel: ObservableObject {
                 guard let self else { return }
                 self.isScanningGameFolder = false
                 guard let match, let base = match.base else {
-                    self.alertMessage = "No base, update or DLC files for \(game.name) were found in that folder."
+                    if case .failure(let error) = outcome { self.alertMessage = error.localizedDescription }
+                    else { self.alertMessage = "No base, update or DLC files for \(game.name) were found in that folder." }
                     self.logs.append(LogEntry(level: .warning, message: self.alertMessage!))
                     return
                 }
@@ -1555,6 +1556,10 @@ public final class AppViewModel: ObservableObject {
     
     // MARK: - Game Scan
     private func scanGameFolder(_ folder: URL) {
+        let previousTitle = selectedGame?.id
+        let previousName = appName
+        let previousBundle = bundleId
+        let previousConfig = pendingRuntimeConfig
         scanError = nil
         isScanningGameFolder = true
         selectedGame = nil
@@ -1562,10 +1567,15 @@ public final class AppViewModel: ObservableObject {
         let generation = UUID()
         scanGeneration = generation
         let catalog = sourceCatalog
+        let repo = URL(fileURLWithPath: nxnativePath)
+        let toolchain = engineToolchain
+        let keys = isProdKeysValid ? keyStore.keyURL : nil
+        let developer = resolvedDeveloperDir()
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let urls = Self.sourceFileURLs(in: folder)
-            let readable = urls.filter { (try? catalog.inspect($0)) != nil }
-            let detected = (try? catalog.scan(files: readable)) ?? []
+            let urls = ExtractedSourceCatalog.recognizes(folder) ? [] : Self.sourceFileURLs(in: folder)
+            let outcome = Result { try Self.scanSources(in: folder, files: urls, catalog: catalog,
+                repo: repo, toolchain: toolchain, keys: keys, developerDir: developer) }
+            let detected = (try? outcome.get().games) ?? []
             let games = detected.map(Self.selectableGame(from:))
             DispatchQueue.main.async {
                 guard let self,
@@ -1575,11 +1585,21 @@ public final class AppViewModel: ObservableObject {
                 }
                 self.isScanningGameFolder = false
                 self.detectedGames = games
-                self.selectedGame = games.first
+                self.selectedGame = games.first { $0.id == previousTitle } ?? games.first
+                if let previousTitle, self.selectedGame?.id == previousTitle {
+                    self.appName = previousName
+                    self.bundleId = previousBundle
+                    self.pendingRuntimeConfig = previousConfig
+                }
+                if let skipped = try? outcome.get().skipped, !skipped.isEmpty {
+                    self.scanError = "Unreadable packages: " + skipped.joined(separator: ", ")
+                }
                 if games.isEmpty {
-                    self.scanError = urls.isEmpty
+                    if case .failure(let error) = outcome {
+                        self.scanError = error.localizedDescription
+                    } else { self.scanError = urls.isEmpty
                         ? "No NSP, XCI, NSZ or XCZ files were found in this folder."
-                        : "No readable game files were found. Check that the files are complete and have a title ID or ticket."
+                        : "No readable game files were found. Check that the files are complete and have a title ID or ticket." }
                     self.logs.append(LogEntry(level: .warning, message: self.scanError!))
                 } else {
                     self.logs.append(LogEntry(level: .info,
@@ -1587,6 +1607,42 @@ public final class AppViewModel: ObservableObject {
                 }
             }
         }
+    }
+
+    private struct ScannedSources {
+        var games: [DetectedGame]
+        var skipped: [String] = []
+    }
+
+    private static func scanSources(in folder: URL, files: [URL], catalog: SourceCatalog,
+                                    repo: URL, toolchain: EngineToolchain, keys: URL?, developerDir: URL) throws -> ScannedSources {
+        let capabilities = EngineSourceCapabilities(repo: repo)
+        if ExtractedSourceCatalog.recognizes(folder) {
+            guard capabilities.extractedFolders else {
+                throw NXLibraryError.environmentBlocked("This engine does not support extracted folders.")
+            }
+            return ScannedSources(games: [try ExtractedSourceCatalog(profiles: repo.appendingPathComponent("dm/games")).scan(folder: folder)])
+        }
+        var detected: [DetectedGame]
+        var skipped: [String] = []
+        if capabilities.titleSelection, let keys {
+            let reader = EnginePackageReader(repo: repo, toolchain: toolchain, keys: keys, developerDir: developerDir)
+            detected = try catalog.scan(files: files, skippingUnreadable: true,
+                onUnreadable: { url, _ in skipped.append(url.lastPathComponent) }) { file in
+                try reader.contents(of: file, alreadyIdentified: (try? catalog.inspect(file)) != nil)
+            }
+        } else {
+            detected = try catalog.scan(files: files.filter { (try? catalog.inspect($0)) != nil })
+        }
+        for index in detected.indices {
+            let title = detected[index].id
+            let profile = repo.appendingPathComponent("dm/games/\(title)/game.tsv")
+            if let text = try? String(contentsOf: profile, encoding: .utf8),
+               let name = text.split(separator: "\n").first(where: { $0.hasPrefix("name\t") }) {
+                detected[index].name = String(name.dropFirst(5))
+            }
+        }
+        return ScannedSources(games: detected, skipped: skipped)
     }
     
     private static func sourceFileURLs(in folder: URL) -> [URL] {
@@ -1636,7 +1692,8 @@ public final class AppViewModel: ObservableObject {
                     kind: source.kind,
                     titleId: String(format: "%016llX", source.titleId),
                     versionString: source.version.map { "v\($0)" },
-                    sizeBytes: source.sizeBytes
+                    sizeBytes: source.sizeBytes, sourceLayout: source.layout,
+                    requiresTitleSelection: source.requiresTitleSelection
                 )
             }
         )
@@ -1717,7 +1774,8 @@ public final class AppViewModel: ObservableObject {
         !isBuilding
             && !isUpdatingApp
             && canAddSelectedGame
-            && isProdKeysValid
+            && supportsSources(selectedSources)
+            && (!selectedSourcesRequireKeys || isProdKeysValid)
             && !keyCheckBlocks
             && isNxnativeValid
             && environmentStatus?.canBuild == true
@@ -1728,7 +1786,8 @@ public final class AppViewModel: ObservableObject {
     public func canBuild(_ game: PortedGame) -> Bool {
         guard !isBuilding,
               !isUpdatingApp,
-              isProdKeysValid,
+              (!SourceSelection.requiresKeys(game.sources) || isProdKeysValid),
+              supportsSources(game.sources),
               isNxnativeValid,
               environmentStatus?.canBuild == true,
               !game.sources.isEmpty,
@@ -1736,7 +1795,7 @@ public final class AppViewModel: ObservableObject {
               game.sources.allSatisfy({ FileManager.default.fileExists(atPath: $0.url.path) }) else {
             return false
         }
-        let required = game.sources.reduce(0) { $0 + $1.sizeBytes } * 2 + 10_000_000_000
+        let required = SourceSelection.uniqueSize(game.sources) * 2 + 10_000_000_000
         if let titleId = game.titleId {
             let parent = finalAppURL(for: game, titleId: titleId).deletingLastPathComponent()
             if let free = freeBytes(at: parent), free < required { return false }
@@ -1895,6 +1954,7 @@ public final class AppViewModel: ObservableObject {
         let useFolderMode = selectedGameFolder != nil
             && detectedGames.count == 1
             && files.count == selection.files.count
+            && files.allSatisfy { $0.layout == .package }
         do {
             let game = try addGame(
                 detected: detected,
@@ -1941,7 +2001,7 @@ public final class AppViewModel: ObservableObject {
             name: detected.name,
             url: workspace.buildCache.deletingLastPathComponent(),
             platform: .macApp,
-            sizeBytes: selected.reduce(0) { $0 + $1.sizeBytes },
+            sizeBytes: selectedGame.totalSizeBytes,
             modificationDate: Date(),
             bundleId: bundleId ?? "org.nxnative.\(titleId.lowercased())",
             titleId: titleId,
@@ -1951,7 +2011,8 @@ public final class AppViewModel: ObservableObject {
             GameFileItem(url: $0.url, kind: $0.kind,
                          titleId: String(format: "%016llX", $0.titleId),
                          versionString: $0.version.map(String.init),
-                         sizeBytes: $0.sizeBytes, isSymlink: folder == nil)
+                         sizeBytes: $0.sizeBytes, isSymlink: folder == nil, sourceLayout: $0.layout,
+                         requiresTitleSelection: $0.requiresTitleSelection)
         }
         game.workspacePath = workspace.directory.path
         game.buildCachePath = workspace.buildCache.path
@@ -1986,15 +2047,22 @@ public final class AppViewModel: ObservableObject {
               target.sources.allSatisfy({ FileManager.default.fileExists(atPath: $0.url.path) }) else {
             throw NXLibraryError.missingSources
         }
-        guard isProdKeysValid,
-              FileManager.default.fileExists(atPath: keyStore.keyURL.path) else {
-            throw NXLibraryError.missingKeys
+        let requiresKeys = SourceSelection.requiresKeys(target.sources)
+        guard supportsSources(target.sources) else {
+            throw NXLibraryError.environmentBlocked("These sources need an engine with extracted-folder or multi-title support.")
         }
-        // A few kilobytes per file: keys that cannot open the game stop here, not minutes into the extraction.
-        let keyOutcome = KeyCheck.run(keysURL: keyStore.keyURL,
-                                      files: KeyCheck.parts(target.sources.map { ($0.kind, $0.url) }))
-        if keyOutcome.blocks, let reason = PortingFailureReason.from(keyOutcome) {
-            throw NXLibraryError.keyCheck(reason, game: target.name)
+        if requiresKeys {
+            guard isProdKeysValid, FileManager.default.fileExists(atPath: keyStore.keyURL.path) else {
+                throw NXLibraryError.missingKeys
+            }
+            // A few kilobytes per file: keys that cannot open the game stop here, not minutes into the extraction.
+            let keyOutcome = KeyCheck.run(keysURL: keyStore.keyURL,
+                                          files: KeyCheck.parts(target.sources.map { ($0.kind, $0.url) }))
+            if keyOutcome.blocks, let reason = PortingFailureReason.from(keyOutcome) {
+                throw NXLibraryError.keyCheck(reason, game: target.name)
+            }
+        } else if !engineSourceCapabilities.extractedFolders {
+            throw NXLibraryError.environmentBlocked("This engine does not support extracted folders.")
         }
         guard isNxnativeValid else { throw NXLibraryError.engineMissing }
         guard let environmentStatus else {
@@ -2023,8 +2091,8 @@ public final class AppViewModel: ObservableObject {
         isCheckingEnvironment = false
         activeBuildToolchain = ToolchainInfo(engineCommit: pinnedEngineCommit,
             metalVersion: environmentStatus.metalVersion, xcodeVersion: environmentStatus.xcodeVersion,
-            verified: report?.ok == true,
-            note: report?.ok == true ? "Certified toolchain" : "Untested toolchain (explicit override)")
+            verified: report?.ok == true && !allowUntestedToolchain,
+            note: report?.ok == true && !allowUntestedToolchain ? "Certified toolchain" : "Untested toolchain (explicit override)")
 
         let merged = try libraryStore.merge(scanned: [target])
         libraryGames = merged.games.sorted {
@@ -2049,7 +2117,10 @@ public final class AppViewModel: ObservableObject {
                 && workspaceManager.brokenLinks(in: directory).isEmpty
                 && expectedNames.allSatisfy { existingNames.contains($0) }
         } ?? false
-        if let directory = existingDirectory, existingLinksOK {
+        let managed = existingDirectory?.deletingLastPathComponent().resolvingSymlinksInPath()
+            == core.appendingPathComponent("workspaces").resolvingSymlinksInPath()
+        if let directory = existingDirectory, existingLinksOK, !managed,
+           target.sources.allSatisfy({ $0.layout == .package }) {
             let cache = target.buildCachePath.map(URL.init(fileURLWithPath:))
                 ?? directory.appendingPathComponent("\(titleId)_build")
             try FileManager.default.createDirectory(at: cache, withIntermediateDirectories: true)
@@ -2072,7 +2143,7 @@ public final class AppViewModel: ObservableObject {
         }
 
         let finalApp = finalAppURL(for: target, titleId: titleId)
-        let requiredDisk = target.sources.reduce(0) { $0 + $1.sizeBytes } * 2 + 10_000_000_000
+        let requiredDisk = SourceSelection.uniqueSize(target.sources) * 2 + 10_000_000_000
         for volume in [workspace.directory, finalApp.deletingLastPathComponent()] {
             if let free = freeBytes(at: volume), free < requiredDisk {
                 let freeText = ByteCountFormatter.string(fromByteCount: free, countStyle: .file)
@@ -2102,12 +2173,14 @@ public final class AppViewModel: ObservableObject {
             repo: repo,
             toolchain: toolchain,
             workspace: workspace.directory,
-            keys: keyStore.keyURL,
+            keys: requiresKeys ? keyStore.keyURL : nil,
             output: tempApp,
             developerDir: resolvedDeveloperDir(),
             appName: target.name,
             bundleId: target.bundleId ?? "org.nxnative.\(titleId.lowercased())",
             language: GameRuntimeConfig.load(for: target).languageForBuild,
+            titleId: engineSourceCapabilities.titleSelection ? titleId : nil,
+            packageVersion: engineSourceCapabilities.titleSelection ? SourceSelection.versionForBuild(target.sources) : nil,
             allowUntestedToolchain: allowUntestedToolchain,
             extraArguments: extraArguments
         )
@@ -2457,7 +2530,8 @@ public final class AppViewModel: ObservableObject {
                 Int($0.lowercased().hasPrefix("v") ? String($0.dropFirst()) : $0)
             }
             return DetectedSource(url: item.url, kind: item.kind, titleId: titleId,
-                                  version: version, sizeBytes: item.sizeBytes)
+                                  version: version, sizeBytes: item.sizeBytes, layout: item.layout,
+                                  requiresTitleSelection: item.requiresTitleSelection == true)
         }
         guard let base = sources.first(where: { $0.kind == .base }) else {
             throw NXLibraryError.baseRequired
@@ -2478,7 +2552,8 @@ public final class AppViewModel: ObservableObject {
             Int($0.lowercased().hasPrefix("v") ? String($0.dropFirst()) : $0)
         }
         return DetectedSource(url: file.url, kind: file.type, titleId: titleId,
-                              version: version, sizeBytes: file.sizeBytes)
+                              version: version, sizeBytes: file.sizeBytes, layout: file.layout,
+                              requiresTitleSelection: file.requiresTitleSelection == true)
     }
 
     private func finalAppURL(for game: PortedGame, titleId: String) -> URL {

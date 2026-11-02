@@ -5,7 +5,7 @@ public enum BuildCommandBuilder {
         repo: URL,
         toolchain: EngineToolchain,
         workspace: URL,
-        keys: URL,
+        keys: URL?,
         output: URL,
         developerDir: URL,
         appName: String? = nil,
@@ -15,18 +15,22 @@ public enum BuildCommandBuilder {
         envFile: URL? = nil,
         motion: Bool? = nil,
         romfsMode: String? = nil,
+        titleId: String? = nil,
+        packageVersion: String? = nil,
         allowUntestedToolchain: Bool = false,
         extraArguments: [String] = []
     ) -> BuildCommand {
         var args = [
             repo.appendingPathComponent("scripts/build_ipa_from_nsp.py").path,
             workspace.path,
-            "-k", keys.path,
             "--platform", "mac-app",
             "--progress", "json",
             "-o", output.path,
             "--keep-extracted",
         ]
+        if let keys { args += ["-k", keys.path] }
+        if let titleId { args += ["--title-id", titleId] }
+        if let packageVersion { args += ["-p", packageVersion] }
         if let appName, !appName.isEmpty { args += ["--app-name", appName] }
         if let bundleId, !bundleId.isEmpty { args += ["--bundle-id", bundleId] }
         if let language, !language.isEmpty { args += ["-l", language] }

@@ -44,6 +44,8 @@ public struct SetupFacts: Equatable {
     public var runtimeProblem: String?
     public var keys: KeySummary?
     public var keysError: String?
+    /// Only engines with an extracted-folder input can build without prod.keys.
+    public var keysOptional: Bool = false
     /// nil: no folder chosen.
     public var libraryWritable: Bool?
     /// "27.1"; nil when xcodebuild did not say.
@@ -240,6 +242,10 @@ public enum SetupCheck {
                 return SetupItem(id: id, title: "Keys", state: .ready, chip: "✓ IMPORTED", about: about,
                                  detail: "Header key and \(keys.applicationKeyGenerations.count) application key generations.",
                                  actionTitle: "Replace")
+            }
+            if f.keysOptional {
+                return SetupItem(id: id, title: "Keys", state: .ready, chip: "OPTIONAL", about: about,
+                                 detail: "Needed for NSP/XCI packages. Extracted folders do not use keys.", actionTitle: "Choose file")
             }
             return SetupItem(id: id, title: "Keys", state: .missing, chip: "NOT IMPORTED", about: about,
                              detail: f.keysError ?? "Choose your prod.keys file.", actionTitle: "Choose file")

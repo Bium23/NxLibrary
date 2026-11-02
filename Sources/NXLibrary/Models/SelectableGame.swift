@@ -15,7 +15,7 @@ public struct SelectableGame: Identifiable, Equatable {
     }
     
     public var totalSizeBytes: Int64 {
-        files.reduce(0) { $0 + $1.sizeBytes }
+        SourceSelection.uniqueSize(files)
     }
     
     public var formattedSize: String {

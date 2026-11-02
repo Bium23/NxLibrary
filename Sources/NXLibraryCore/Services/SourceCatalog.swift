@@ -7,15 +7,20 @@ public struct DetectedSource: Identifiable, Equatable {
     public var titleId: UInt64
     public var version: Int?
     public var sizeBytes: Int64
+    public var layout: SourceLayout
+    public var requiresTitleSelection: Bool
 
     public init(id: UUID = UUID(), url: URL, kind: SourceKind,
-                titleId: UInt64, version: Int? = nil, sizeBytes: Int64) {
+                titleId: UInt64, version: Int? = nil, sizeBytes: Int64, layout: SourceLayout = .package,
+                requiresTitleSelection: Bool = false) {
         self.id = id
         self.url = url
         self.kind = kind
         self.titleId = titleId
         self.version = version
         self.sizeBytes = sizeBytes
+        self.layout = layout
+        self.requiresTitleSelection = requiresTitleSelection
     }
 }
 
@@ -27,7 +32,12 @@ public struct DetectedGame: Identifiable, Equatable {
     public var updates: [DetectedSource]
     public var dlcs: [DetectedSource]
     public var allSources: [DetectedSource] { [base].compactMap { $0 } + updates + dlcs }
-    public var totalSizeBytes: Int64 { allSources.reduce(0) { $0 + $1.sizeBytes } }
+    public var totalSizeBytes: Int64 {
+        var seen = Set<String>()
+        return allSources.reduce(0) { total, source in
+            total + (seen.insert(source.url.resolvingSymlinksInPath().path).inserted ? source.sizeBytes : 0)
+        }
+    }
 
     public init(baseTitleId: UInt64, name: String, base: DetectedSource?,
                 updates: [DetectedSource] = [], dlcs: [DetectedSource] = []) {
@@ -77,29 +87,47 @@ public final class SourceCatalog {
         }
     }
 
-    public func scan(files: [URL]) throws -> [DetectedGame] {
+    public func scan(files: [URL], skippingUnreadable: Bool = false,
+                     onUnreadable: ((URL, Error) -> Void)? = nil,
+                     contentsReader: ((URL) throws -> [PackageContent])? = nil) throws -> [DetectedGame] {
         var groups: [UInt64: (base: DetectedSource?, updates: [DetectedSource], dlcs: [DetectedSource])] = [:]
+        var firstError: Error?
 
         for url in files {
             guard !url.hasDirectoryPath else { continue }
-            let source = try inspect(url)
-            let appId = Self.baseTitleId(for: source.titleId, kind: source.kind)
-            var group = groups[appId] ?? (nil, [], [])
-            switch source.kind {
-            case .base:
-                if group.base == nil || (source.version ?? -1) > (group.base?.version ?? -1) {
-                    group.base = source
+            let sources: [DetectedSource]
+            do {
+                let contents = try contentsReader?(url) ?? []
+                sources = contents.isEmpty ? [try inspect(url)] : contents.map {
+                    DetectedSource(url: url, kind: $0.kind, titleId: $0.titleId, version: $0.version,
+                                   sizeBytes: fileSize(url), requiresTitleSelection: contents.count > 1)
                 }
-            case .update:
-                group.updates.append(source)
-            case .dlc:
-                group.dlcs.append(source)
-            case .unknown:
+            } catch {
+                guard skippingUnreadable else { throw error }
+                if firstError == nil { firstError = error }
+                onUnreadable?(url, error)
                 continue
             }
-            groups[appId] = group
+            for source in sources {
+                let appId = Self.baseTitleId(for: source.titleId, kind: source.kind)
+                var group = groups[appId] ?? (nil, [], [])
+                switch source.kind {
+                case .base:
+                    if group.base == nil || (source.version ?? -1) > (group.base?.version ?? -1) {
+                        group.base = source
+                    }
+                case .update:
+                    group.updates.append(source)
+                case .dlc:
+                    group.dlcs.append(source)
+                case .unknown:
+                    continue
+                }
+                groups[appId] = group
+            }
         }
 
+        if groups.isEmpty, let firstError { throw firstError }
         return groups.map { appId, group in
             let named = group.base ?? group.updates.first ?? group.dlcs.first
             let name = named.map { Self.cleanName($0.url) } ?? String(format: "%016llX", appId)

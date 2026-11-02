@@ -4,6 +4,10 @@ import Foundation
 /// one is information, an older one a warning; both still need the untested-toolchain override to build (AGENTS.md).
 /// Any other failed check stays "Blocked".
 public enum ToolchainGateCopy {
+    /// A saved override can always be turned off once a certified engine arrives.
+    public static func canChangeOverride(certified: Bool?, overrideOn: Bool, locked: Bool) -> Bool {
+        !locked && (overrideOn || certified == false)
+    }
     public enum Tone: Equatable, Sendable {
         case certified
         /// A newer Metal compiler: no alarm.

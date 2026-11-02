@@ -2,6 +2,16 @@ import XCTest
 @testable import NXLibraryCore
 
 final class SetupCheckTests: XCTestCase {
+    func testKeysAreOptionalOnlyForAnEngineSupportingExtractedFolders() {
+        var input = facts()
+        input.keys = nil
+        input.keysOptional = true
+        let optional = SetupCheck.items(from: input).first { $0.id == .keys }
+        XCTAssertEqual(optional?.state, .ready)
+        XCTAssertEqual(optional?.chip, "OPTIONAL")
+        input.keysOptional = false
+        XCTAssertEqual(SetupCheck.items(from: input).first { $0.id == .keys }?.state, .missing)
+    }
     private let pin = "af616f54652fa7f50a2e223ceed1d08a9bc83848"
     private let folder = URL(fileURLWithPath: "/Users/a b/nxnative")
 
@@ -38,7 +48,7 @@ final class SetupCheckTests: XCTestCase {
         XCTAssertEqual(old.state, .needsYou)
         XCTAssertEqual(old.chip, "UPDATE XCODE")
         XCTAssertEqual(old.actionTitle, "Open App Store")
-        XCTAssertTrue(old.detail.contains("27.1"))
+        XCTAssertTrue(old.detail.contains("27.2"))
         XCTAssertEqual(item(.xcode) { $0.xcodeVersion = "27.2" }.state, .ready)
     }
 
