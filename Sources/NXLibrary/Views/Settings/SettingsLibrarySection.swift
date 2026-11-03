@@ -60,19 +60,14 @@ struct SettingsLibrarySection: View {
                 }
             }
 
-            SeleneButtonRow("Existing builds",
-                            subtitle: "Find nxnative games (.app) in your Game apps folder.",
-                            info: "Finds existing nxnative game apps in your Game apps folder. Source game files are optional for Play.",
-                            buttonTitle: "Import") {
-                viewModel.importExistingBuilds()
-            }
-
-            SeleneButtonRow("Library refresh",
+            SeleneButtonRow("Scan game apps",
                             subtitle: viewModel.isScanningLibrary
-                                ? "Scanning the app library..." : "Rescan folders for new or removed apps.",
-                            buttonTitle: "Refresh") {
+                                ? "Scanning game apps…" : "Find existing nxnative builds and refresh the library.",
+                            info: "Checks Game apps and its subfolders. Existing library entries are kept; no apps are moved. Source files are optional for Play.",
+                            buttonTitle: "Scan") {
                 viewModel.refreshLibrary()
             }
+            .disabled(viewModel.isScanningLibrary)
 
             if !viewModel.libraryScanWarnings.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
@@ -126,10 +121,7 @@ struct SettingsLibrarySection: View {
             .init(id: "romChoose", title: GameFoldersCopy.sourcesTitle) {
                 viewModel.selectGameFolder()
             },
-            .init(id: "import", title: "Existing builds") {
-                viewModel.importExistingBuilds()
-            },
-            .init(id: "refresh", title: "Library refresh", isEnabled: !viewModel.isScanningLibrary) {
+            .init(id: "refresh", title: "Scan game apps", isEnabled: !viewModel.isScanningLibrary) {
                 viewModel.refreshLibrary()
             },
             .init(id: "notify", title: "Notify when a porting ends") {

@@ -56,6 +56,8 @@ This directory records the review that must happen before the pin changes, plus 
 
 - [2026-11-02 — 163a9905 → 65501fbb](2026-11-02-163a9905-65501fbb-review.md) (Metal 32023.922; AV1, shader/runtime fixes and updated profiles)
 
+- [2026-11-03 — 65501fbb → b64a5ff0](2026-11-03-65501fbb-b64a5ff0-review.md) (certified Wonder build, maintainer-confirmed visible launch and final UI checks)
+
 ## Guardrails
 
 - Never patch the engine checkout.

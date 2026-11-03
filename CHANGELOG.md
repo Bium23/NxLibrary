@@ -4,6 +4,8 @@ User-visible changes to NX Library are recorded here. Entries are grouped by rel
 
 ## Unreleased
 
+## 0.1.2 — 2026-11-03
+
 ### Added
 
 - **Check for Updates…** in the macOS app menu, using the same dialog as About: checking, release notes, up-to-date results, errors and download progress, with keyboard/controller support.
@@ -11,8 +13,11 @@ User-visible changes to NX Library are recorded here. Entries are grouped by rel
 
 ### Changed
 
+- Updated the pinned nxnative engine to `b64a5ff0`: audio-start and memory-alignment fixes, renderer/shader corrections, updated game profiles and lower shader-build memory use. Certified Metal `32023.922` and Xcode 27.2 remain the requirements. Existing apps receive the new runtime only when rebuilt.
 - Native menus wait until they close before opening screens and keep the library selection still while active. Game Details follows Spotlight’s existing page, Game Options uses its normal overlay, and unavailable commands are disabled. The upstream changelog stays in Engine settings; the duplicate native View menu is removed.
 - The launcher uses one window; File → Add Game replaces the unsupported New Window command.
+- **Scan game apps** in Library settings combines existing-build discovery and library refresh into one action.
+- Shader-cache cleanup is shown as an activity without an estimated remaining time.
 
 - Existing nxnative apps are discovered inside subfolders of the selected Game apps folder. Scans have depth and directory limits, skip app contents and explain skipped folders in Library settings while retaining the saved library.
 - The pointer hides after three seconds without movement in the fullscreen launcher. Moving the mouse reveals it; keyboard/controller navigation keeps it hidden. Native system panels and leaving fullscreen or the app restore it.
@@ -20,6 +25,7 @@ User-visible changes to NX Library are recorded here. Entries are grouped by rel
 ### Fixed
 
 - When multiple builds of a title are discovered, library refresh keeps the installed app and its own metadata together. Existing references outside the newly selected folder remain intact while the app exists.
+- New engine diagnostics explain outdated keys with the required firmware when known, and distinguish a missing package ticket from a key-file problem.
 
 ## 0.1.1 — 2026-11-02
 

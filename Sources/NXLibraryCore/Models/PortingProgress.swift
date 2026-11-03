@@ -28,6 +28,8 @@ public struct PortingProgress: Equatable {
     public private(set) var stageName = ""
     public private(set) var stepName = ""
     public private(set) var shaderETA: Double?
+    /// Cache maintenance has no count or reliable ETA; show its activity instead.
+    public private(set) var isCleaningShaderCache = false
     /// Seconds the stages after the shaders took so far.
     public private(set) var finishingElapsed: Double = 0
 
@@ -40,6 +42,7 @@ public struct PortingProgress: Equatable {
         guard phase != .done, phase != .failed else { return }
         switch event {
         case .stage(let k, let n, let name, let stepTitle):
+            isCleaningShaderCache = false
             step = k
             count = n
             stageName = name
@@ -51,6 +54,7 @@ public struct PortingProgress: Equatable {
                 phase = .finishing
             }
         case .step(let title):
+            isCleaningShaderCache = false
             stepName = title
         case .progress(let fraction, let done, _, _, let eta):
             guard countsAsShaders(hasCount: done != nil) else { return }
@@ -67,12 +71,19 @@ public struct PortingProgress: Equatable {
                 let stages = max(Self.expectedFinishingStages, count - (shaderStep ?? count))
                 raise(to: Self.shaderShare + (1 - Self.shaderShare) * Double(finishingEnded) / Double(stages))
             }
-        case .say, .log:
+        case .say(let message):
+            if message.contains("removing the shader cache of other chain versions") {
+                isCleaningShaderCache = true
+            } else if message.contains("removed old shader cache entries:") {
+                isCleaningShaderCache = false
+            }
+        case .log:
             break
         }
     }
 
     public mutating func finish(success: Bool) {
+        isCleaningShaderCache = false
         if success {
             overall = 1
             phase = .done

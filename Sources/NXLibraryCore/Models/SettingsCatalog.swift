@@ -147,9 +147,7 @@ public enum SettingsCatalog {
         // Library
         action("gameFolder", .library, GameFoldersCopy.sourcesTitle, "Game sources: NSP, XCI, NSZ and XCZ files for builds. Optional for existing apps."),
         action("libraryFolder", .library, GameFoldersCopy.appsTitle, "Choose where to find existing nxnative game apps and install new builds."),
-        action("importBuilds", .library, "Existing builds",
-               "Adds games you already built to the library."),
-        action("libraryRefresh", .library, "Library refresh", "Rescan the app folders."),
+        action("libraryRefresh", .library, "Scan game apps", "Find existing nxnative builds and refresh the library."),
         row("notifyPortingEnds", .library, "Notify when a porting ends",
             "A notification when a porting finishes while NX Library is in the background.") { $0.notifyPortingEnds },
 

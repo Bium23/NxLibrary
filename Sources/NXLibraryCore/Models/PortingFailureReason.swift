@@ -14,6 +14,10 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
     /// What the message adds: GB needed, a drive or folder, a firmware, a file, a rewrite address.
     public var detail: String?
 
+    // Keep the persisted kind readable by older launchers during rollback.
+    static let missingTicketDetail = "missing-common-ticket"
+    private var isMissingTicket: Bool { kind == .keys && detail == Self.missingTicketDetail }
+
     public init(kind: Kind, detail: String? = nil) {
         self.kind = kind
         self.detail = detail
@@ -42,7 +46,7 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
         case .shaderRegression: return "Some shaders broke in this engine"
         case .damagedNSP: return "Some game files are damaged"
         case .a32Program: return "This game is not supported"
-        case .keys: return "Your keys could not be read"
+        case .keys: return isMissingTicket ? "Game ticket missing" : "Your keys could not be read"
         case .keysTooOld: return "Your keys are too old"
         case .keysWrong: return "These keys do not open the game"
         case .severalGames: return "The folder holds more than one game"
@@ -65,7 +69,9 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
         case .shaderRegression: return "Shaders that translated before fail with the engine's current translator."
         case .damagedNSP: return "Some files of \(game) fail their hash check: an incomplete copy or a broken download."
         case .a32Program: return "\(game) is a 32-bit ARM program, and nxnative runs only 64-bit games."
-        case .keys: return "prod.keys is missing, unreadable or has no header_key."
+        case .keys: return isMissingTicket
+            ? "The package has no common ticket needed to open \(game)."
+            : "prod.keys is missing, unreadable or has no header_key."
         case .keysTooOld: return "\(game) needs keys newer than the ones you imported."
         case .keysWrong: return "header_key does not open \(detail ?? "the game's files")."
         case .severalGames: return "Each porting needs one game; this folder holds files of several."
@@ -92,7 +98,9 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
         case .shaderRegression: return "Port anyway to keep the broken shaders out, or wait for an engine update."
         case .damagedNSP: return "Dump or download the game again, or port anyway with the damaged files as read."
         case .a32Program: return "Nothing to fix here: this title cannot run."
-        case .keys: return "Import prod.keys from your console again."
+        case .keys: return isMissingTicket
+            ? "Export the complete game package again from your console, including its ticket."
+            : "Import prod.keys from your console again."
         case .keysTooOld:
             if let firmware = detail { return "Dump prod.keys again from a console on firmware \(firmware) or later." }
             return "Dump prod.keys again from an up-to-date console."
@@ -113,7 +121,8 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
         case .damagedNSP: return .portAnyway(flag: "--allow-damaged")
         case .otherMetal: return .openEngineSettings
         case .translator, .cltSelected: return .openSetup
-        case .keys, .keysTooOld, .keysWrong: return .importKeys
+        case .keys: return isMissingTicket ? .none : .importKeys
+        case .keysTooOld, .keysWrong: return .importKeys
         case .diskFull: return .openStorage
         default: return .none
         }
@@ -149,6 +158,9 @@ public enum PortingFailureClassifier {
         ("nsp.damaged", .damagedNSP, "files fail the NCA's hash check", "files fail the NCA's hash check"),
         ("arm32.program", .a32Program, "is a 32-bit ARM program", "is a 32-bit ARM program"),
         ("keys.missing", .keys, #"no such file: [^"\n]*prod\.keys"#, "no such file: "),
+        ("keys.tooOld", .keysTooOld, #"prod\.keys has no [^\n]+the keys are older than the game"#,
+         "the keys are older than the game"),
+        ("keys.ticket", .keys, "the package has no common ticket for it", "the package has no common ticket for it"),
         ("games.several", .severalGames, "more than one game in the folder", "more than one game in the folder"),
         ("games.noTitleID", .noTitleID, "no NSP with a readable title ID in ", "no NSP with a readable title ID in "),
         ("disk.low", .diskFull, "less than [0-9]+ GB free on the volume of", "GB free on the volume of"),
@@ -189,6 +201,18 @@ public enum PortingFailureClassifier {
 
     private static func detail(of kind: PortingFailureReason.Kind, in log: String) -> String? {
         switch kind {
+        case .keys:
+            return log.contains("the package has no common ticket for it") ? PortingFailureReason.missingTicketDetail : nil
+        case .keysTooOld:
+            let prefix = "which came with firmware "
+            // Package probes can fail before the final preflight reports the worst requirement.
+            let errors = try? NSRegularExpression(pattern: #"prod\.keys has no [^\n]*?the keys are older than the game"#)
+            guard let last = errors?.matches(in: log, range: NSRange(log.startIndex..., in: log)).last,
+                  let messageRange = Range(last.range, in: log) else { return nil }
+            let message = String(log[messageRange])
+            guard let range = message.range(of: #"which came with firmware [0-9]+(?:\.[0-9]+){1,2}"#,
+                                        options: .regularExpression) else { return nil }
+            return String(message[range].dropFirst(prefix.count))
         case .diskFull:
             guard let r = log.range(of: "less than [0-9]+ GB free", options: .regularExpression) else { return nil }
             return log[r].split(separator: " ").dropFirst(2).first.map(String.init)
