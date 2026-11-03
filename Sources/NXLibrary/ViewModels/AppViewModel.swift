@@ -983,7 +983,9 @@ public final class AppViewModel: ObservableObject {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let loaded = (try? store.load()) ?? LibraryFile()
             let scanned = importer.scan(directories: directories)
-            let importedGames = scanned.map { importer.makeGame(from: $0) }
+            let scanWarnings = importer.scanWarnings
+            let selected = importer.appsForLibrary(scanned: scanned, existing: loaded.games)
+            let importedGames = selected.map { importer.makeGame(from: $0) }
             DispatchQueue.main.async {
                 guard let self else { return }
                 // A folder chosen during the startup scan gets its own scan before results appear.
@@ -992,10 +994,10 @@ public final class AppViewModel: ObservableObject {
                     self.loadLibrary()
                     return
                 }
-                self.importedApps = scanned
+                self.importedApps = selected
                 var scannedByTitle: [String: ImportedApp] = [:]
-                for app in scanned {
-                    if let titleId = app.titleId {
+                for app in selected {
+                    if let titleId = app.titleId, scannedByTitle[titleId.uppercased()] == nil {
                         scannedByTitle[titleId.uppercased()] = app
                     }
                 }
@@ -1031,6 +1033,16 @@ public final class AppViewModel: ObservableObject {
                     $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
                 }
                 self.isScanningLibrary = false
+                if !scanWarnings.isEmpty {
+                    for warning in scanWarnings {
+                        self.logs.append(LogEntry(level: .warning, message: warning))
+                    }
+                    if self.setupCompleted, self.settingsNotice == nil {
+                        self.showSettingsNotice(title: "Scan incomplete",
+                            message: "Some folders could not be checked. Your existing games are still in the library.",
+                            retry: { [weak self] in self?.loadLibrary() })
+                    }
+                }
             }
         }
     }

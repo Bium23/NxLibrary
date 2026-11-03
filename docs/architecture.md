@@ -1,6 +1,6 @@
 # NX Library — guida tecnica
 
-Aggiornata il 2 novembre 2026 sul codice del repository. La mappa comprende 235 file Swift di produzione e 98 file di test e supporto ai test. Il ramo comprende nxnative 65501fbb, il canale di aggiornamento, i flussi cartelle/disponibilità e il setup in due passaggi, con 774 test Swift superati.
+Aggiornata il 3 novembre 2026 sul codice del repository. La mappa comprende 237 file Swift di produzione e 99 file di test e supporto ai test. Il ramo comprende nxnative 65501fbb, il canale di aggiornamento, i flussi cartelle/disponibilità e il setup in due passaggi, con 774 test Swift superati.
 
 Questa guida descrive il funzionamento attuale. Il [catalogo dei file](file-map.md) assegna una responsabilità a ogni file versionato, suddiviso per area.
 
@@ -69,7 +69,11 @@ La shell condivide un solo `AppSettingsStore` con router e coordinatore. L’avv
 
 `GameResourceState` riconcilia app, sorgenti e stato: conserva build in corso e workspace non ancora compilati, distingue app mancante e file di origine mancanti e mantiene Play per una build esistente. Le viste usano `PortingPills.unavailable` per il motivo breve e l'azione primaria disabilitata; `PortingTileLook.locked` riusa sfocatura e lucchetto. La voce rimane in libreria. Non viene aggiunta alcuna ricerca dell'app spostata; Refresh controlla le cartelle già configurate. Un cambio cartella durante la scansione scarta il contesto precedente e avvia quella nuova.
 
-`ImportService` scansiona i bundle `.app`, legge `Info.plist`, riconosce gli identificativi nxnative e produce le voci importabili. `AppSizeCache` ricorda le dimensioni in funzione di percorso e data di modifica. `LibraryStore` carica e salva il catalogo, conserva `library.json.bak` e offre il merge delle voci. Il coordinamento applicativo riconcilia app trovate, dati già salvati e sorgenti disponibili.
+`ImportService` scansiona i bundle `.app`, legge `Info.plist`, riconosce gli identificativi nxnative e produce le voci importabili. La candidata UX aggiunge una visita breadth-first nelle sole cartelle scelte, fino a sei livelli e 4000 directory, con deduplicazione dei percorsi canonici. Non entra in bundle/package e non segue i symlink delle sottocartelle. Limiti e letture fallite producono avvisi, riportati senza cancellare il catalogo. `appsForLibrary` seleziona una sola osservazione per titolo: il percorso già registrato se esiste, altrimenti la prima osservazione del risultato ordinato dalla più recente. Se un'app esiste fuori dall'area scandita, la sua voce resta invariata. Merge e metadati usano la stessa selezione.
+
+`AppSizeCache` ricorda le dimensioni in funzione di percorso e data di modifica. `LibraryStore` carica e salva il catalogo, conserva `library.json.bak` e offre il merge delle voci. Il coordinamento applicativo riconcilia app trovate, dati già salvati e sorgenti disponibili.
+
+La candidata UX integra `FullscreenCursorView` nella shell. Un NSView osserva la propria finestra, il mouse e le transizioni native; `CursorIdleState` decide la visibilità usando il tempo monotono. Il puntatore si nasconde dopo tre secondi solo nelle schermate di navigazione attive in fullscreen, con mouse dentro il contenuto. Menu nativi e interni, pannelli, ricerca, opzioni, Setup e lancio sospendono il comportamento. Il distacco rimuove monitor, timer e osservatori e ripristina la visibilità e il precedente `acceptsMouseMovedEvents`. **Scansione e cursore attendono la verifica manuale del maintainer prima della pubblicazione.**
 
 Il merge parte dalla voce persistita e aggiorna esplicitamente i dati osservati dalla scansione. Conserva impostazioni, identità, preferiti, installazione in attesa ed errore dell’ultimo porting. Restano le regole precedenti per associare le sorgenti e conservare la provenienza di una build installata.
 

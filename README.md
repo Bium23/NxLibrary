@@ -114,6 +114,8 @@ If games are found, **Open library** takes you to them. **Skip for now** enters 
 
 The default Game apps folder is `~/Applications`; first use can prepare this default without an extra picker. Remembered or custom unavailable folders are never recreated automatically. Changing folders does not move installed apps, and a rebuild updates an existing app in its current location. A read-only folder still allows discovery and Play; installing new builds needs write access.
 
+Discovery includes subfolders of Game apps. It stays inside the chosen folders, skips app contents and limits how far it searches. An incomplete scan is reported and keeps existing library entries. If several builds of a title are found, the registered app is retained while it exists; a newly discovered title uses the most recently modified build.
+
 **Game files** is a separate optional folder preference in **Settings → Library**. Selecting individual files for a porting does not replace that preference or scan their siblings. Both folder choices can be changed in Settings later.
 
 Import your `prod.keys` when prompted. NX Library keeps a private copy with mode `0600` and leaves the original file unchanged. Key values are not displayed or logged.
@@ -227,6 +229,8 @@ Online artwork and wallpapers require their providers to be available. Their con
 <p align="center"><strong>Add a little motion.</strong><br>Choose a live background or bring your own video.</p>
 
 ### Controls
+
+While browsing Spotlight, Collection or game details in fullscreen, the pointer hides after three seconds without mouse activity. Moving, clicking or scrolling reveals it. Menus, search, options and dialogs keep it visible.
 
 | Action | Keyboard | Controller |
 |---|---|---|

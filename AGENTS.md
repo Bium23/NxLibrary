@@ -11,6 +11,18 @@ A personal macOS SwiftUI front-end for upstream [nxnative](https://github.com/se
 - The Metal gate blocks new builds unless the toolchain is certified or the explicit untested override is enabled. An override records `toolchainVerified=false`.
 - Play remains available for an existing app even when a new build is blocked.
 
+## Product value and human validation
+
+These principles apply in every session, including work based on research, community suggestions or competitor features.
+
+- Every feature must address a concrete user need and provide a clear benefit. State the problem, expected value and smallest coherent scope before implementation, with detail proportionate to the change. Improving an existing flow may be the right solution.
+- Research and competitor features are inputs to evaluate, not an implementation checklist. Verify capabilities against the official engine and existing app behavior; defer ideas whose value or prerequisites are unproven.
+- Give each feature time and attention through the complete user flow: discoverability, visual consistency, concise copy, keyboard/controller navigation, persistence, errors, cancellation and recovery where relevant. Keep the experience simple and preserve existing behavior outside the agreed scope.
+- Optimize in response to a demonstrated problem. Establish a baseline and verify the benefit and tradeoffs; passing tests alone does not establish a performance improvement.
+- Every added feature requires human review and manual validation by the maintainer (the user). Automated tests, successful compilation and agent reviews support that decision; they do not replace it.
+- Complete the implementation and appropriate automated checks, then provide a concrete build and focused manual checks covering the intended behavior, relevant failure triggers and regressions. Until the user confirms the outcome, report the feature as **awaiting human validation**, not complete or release-ready. Preserve that status in handoffs so another session cannot assume approval.
+- Finish and evaluate the current feature before expanding its scope or starting unrelated additions. Any research backlog remains a set of proposals until deliberately selected for work.
+
 ## Upstream engine upgrade
 
 Every re-pin is a product decision, not just a hash change. Before changing the pin:

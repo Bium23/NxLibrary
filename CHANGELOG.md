@@ -2,6 +2,17 @@
 
 User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
+## Unreleased
+
+### Changed
+
+- Existing nxnative apps are discovered inside subfolders of the selected Game apps folder. Scans have depth and directory limits, skip app contents and report incomplete results while retaining the saved library.
+- The pointer hides after three seconds of mouse inactivity while browsing the fullscreen launcher. Mouse input, menus, dialogs and focus changes restore it.
+
+### Fixed
+
+- When multiple builds of a title are discovered, library refresh keeps the installed app and its own metadata together. Existing references outside the newly selected folder remain intact while the app exists.
+
 ## 0.1.1 — 2026-11-02
 
 ### Changed
