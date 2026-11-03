@@ -71,17 +71,6 @@ public struct AppShellView: View {
         settings.settings.reduceMotion || accessibilityReduceMotion
     }
 
-    private var cursorIdleSuspended: Bool {
-        let browsing: Bool
-        switch router.route {
-        case .library, .collection, .detail: browsing = true
-        default: browsing = false
-        }
-        return !browsing || router.isIntroShowing || viewModel.showSetupCheck
-            || router.isMenuPresented || router.isSearchPresented || router.isScreenshotViewerOpen
-            || viewModel.gameForSettingsSheet != nil || viewModel.launchOverlay != nil || isCloseGameOpen
-    }
-
     /// The launch screen sits over everything, menu included, until the game's window shows.
     @ViewBuilder private var launchLayer: some View {
         if router.isIntroShowing {
@@ -209,7 +198,7 @@ public struct AppShellView: View {
     /// Layers with environment, sheets and lifecycle; split from `body` for the type checker.
     private var styled: some View {
         layers
-        .background(FullscreenCursorView(suspended: cursorIdleSuspended))
+        .background(FullscreenCursorView())
         .overlay { launchLayer }
         .modifier(SoundCueHooks(router: router, viewModel: viewModel))
         // Inside the canvas root so the sheet inherits the window's canvas units.

@@ -4,17 +4,12 @@ import NXLibraryCore
 
 /// Observes only the launcher's window; every event keeps its normal destination.
 struct FullscreenCursorView: NSViewRepresentable {
-    var suspended: Bool
-
     func makeNSView(context: Context) -> CursorWindowView { CursorWindowView() }
-    func updateNSView(_ view: CursorWindowView, context: Context) { view.suspended = suspended }
+    func updateNSView(_ view: CursorWindowView, context: Context) {}
     static func dismantleNSView(_ view: CursorWindowView, coordinator: ()) { view.stop() }
 }
 
 final class CursorWindowView: NSView {
-    var suspended = true {
-        didSet { if oldValue != suspended { reset() } }
-    }
     private var state = CursorIdleState()
     private var appliedHidden = false
     private var timer: Timer?
@@ -33,10 +28,10 @@ final class CursorWindowView: NSView {
         observedWindow = window
         previousMouseMovedEvents = window.acceptsMouseMovedEvents
         window.acceptsMouseMovedEvents = true
-        let events: NSEvent.EventTypeMask = [.mouseMoved, .leftMouseDown, .rightMouseDown,
-            .otherMouseDown, .leftMouseDragged, .rightMouseDragged, .otherMouseDragged, .scrollWheel]
+        let events: NSEvent.EventTypeMask = [.mouseMoved, .leftMouseDragged,
+            .rightMouseDragged, .otherMouseDragged]
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: events) { [weak self] event in
-            self?.reset()
+            if event.window === self?.observedWindow { self?.observePointerMovement() }
             return event
         }
         // Native panels and focus/fullscreen transitions restore the cursor immediately.
@@ -53,8 +48,13 @@ final class CursorWindowView: NSView {
         }
         for name in [NSMenu.didBeginTrackingNotification, NSMenu.didEndTrackingNotification] {
             observers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-                self?.menuTracking = name == NSMenu.didBeginTrackingNotification
-                self?.reset()
+                guard let self else { return }
+                self.observePointerMovement()
+                self.menuTracking = name == NSMenu.didBeginTrackingNotification
+                if !self.menuTracking {
+                    // AppKit may have auto-revealed the cursor while its nested tracking loop owned events.
+                    self.apply(hidden: self.state.isHidden, force: true)
+                }
             })
         }
         let timer = Timer(timeInterval: 0.25, repeats: true) { [weak self] _ in self?.tick() }
@@ -82,19 +82,28 @@ final class CursorWindowView: NSView {
     }
 
     private func tick() {
+        observePointerMovement()
+        // Native menus own mouse tracking. Opening one with the keyboard must not reveal the pointer.
+        guard !menuTracking else { return }
         var eligible = false
         if let window, let content = window.contentView {
             let pointer = content.convert(window.mouseLocationOutsideOfEventStream, from: nil)
-            eligible = !suspended && !menuTracking && NSApp.isActive && window.isKeyWindow && window.isVisible
+            eligible = NSApp.isActive && window.isKeyWindow && window.isVisible
                 && window.styleMask.contains(.fullScreen) && window.attachedSheet == nil
-                && NSApp.modalWindow == nil && !(window.firstResponder is NSText)
+                && NSApp.modalWindow == nil
                 && content.bounds.contains(pointer)
         }
         apply(hidden: state.update(now: ProcessInfo.processInfo.systemUptime, eligible: eligible))
     }
 
-    private func apply(hidden: Bool) {
-        guard hidden != appliedHidden else { return }
+    private func observePointerMovement() {
+        if state.observePointer(at: NSEvent.mouseLocation, now: ProcessInfo.processInfo.systemUptime) {
+            apply(hidden: false)
+        }
+    }
+
+    private func apply(hidden: Bool, force: Bool = false) {
+        guard force || hidden != appliedHidden else { return }
         NSCursor.setHiddenUntilMouseMoves(hidden)
         appliedHidden = hidden
     }

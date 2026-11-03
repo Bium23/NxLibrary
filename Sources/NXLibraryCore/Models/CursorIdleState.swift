@@ -4,6 +4,7 @@ import Foundation
 public struct CursorIdleState {
     public private(set) var isHidden = false
     private var idleSince: TimeInterval?
+    private var lastPointerPosition: CGPoint?
     public init() {}
     public mutating func update(now: TimeInterval, eligible: Bool) -> Bool {
         guard eligible else {
@@ -18,5 +19,14 @@ public struct CursorIdleState {
     public mutating func mouseActivity(now: TimeInterval) {
         idleSince = now
         isHidden = false
+    }
+
+    /// Native menu/control tracking can consume mouse events before a local monitor sees them.
+    public mutating func observePointer(at position: CGPoint, now: TimeInterval) -> Bool {
+        let previous = lastPointerPosition
+        lastPointerPosition = position
+        guard let previous, previous != position else { return false }
+        mouseActivity(now: now)
+        return true
     }
 }

@@ -6,8 +6,8 @@ User-visible changes to NX Library are recorded here. Entries are grouped by rel
 
 ### Changed
 
-- Existing nxnative apps are discovered inside subfolders of the selected Game apps folder. Scans have depth and directory limits, skip app contents and report incomplete results while retaining the saved library.
-- The pointer hides after three seconds of mouse inactivity while browsing the fullscreen launcher. Mouse input, menus, dialogs and focus changes restore it.
+- Existing nxnative apps are discovered inside subfolders of the selected Game apps folder. Scans have depth and directory limits, skip app contents and explain skipped folders in Library settings while retaining the saved library.
+- The pointer hides after three seconds without movement in the fullscreen launcher. Moving the mouse reveals it; keyboard/controller navigation keeps it hidden. Native system panels and leaving fullscreen or the app restore it.
 
 ### Fixed
 

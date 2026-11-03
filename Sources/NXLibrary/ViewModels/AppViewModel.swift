@@ -269,6 +269,8 @@ public final class AppViewModel: ObservableObject {
         !setupCompleted && UserDefaults.standard.string(forKey: StorageKeys.savedLibraryFolder) == nil
     }
     @Published public var isScanningLibrary: Bool = false
+    /// Non-blocking scan details shown beside Library refresh, never an automatic launch dialog.
+    @Published public var libraryScanWarnings: [String] = []
     @Published public var gameForSettingsSheet: PortedGame? = nil
     /// Where the open Game options came from; decides its rows (Move is Spotlight-only).
     @Published public var gameOptionsOrigin: GameOptionsOrigin = .collection
@@ -1032,15 +1034,11 @@ public final class AppViewModel: ObservableObject {
                 self.libraryGames = library.games.sorted {
                     $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
                 }
+                self.libraryScanWarnings = scanWarnings
                 self.isScanningLibrary = false
                 if !scanWarnings.isEmpty {
                     for warning in scanWarnings {
                         self.logs.append(LogEntry(level: .warning, message: warning))
-                    }
-                    if self.setupCompleted, self.settingsNotice == nil {
-                        self.showSettingsNotice(title: "Scan incomplete",
-                            message: "Some folders could not be checked. Your existing games are still in the library.",
-                            retry: { [weak self] in self?.loadLibrary() })
                     }
                 }
             }

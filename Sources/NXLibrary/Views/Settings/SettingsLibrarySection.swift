@@ -74,6 +74,20 @@ struct SettingsLibrarySection: View {
                 viewModel.refreshLibrary()
             }
 
+            if !viewModel.libraryScanWarnings.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(viewModel.libraryScanWarnings, id: \.self) { warning in
+                        Text(warning)
+                            .seleneFont(14)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .foregroundColor(SeleneTheme.ink60)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 8)
+            }
+
             SeleneToggleRow("Notify when a porting ends",
                             subtitle: "A notification when a porting finishes while NX Library is in the background.",
                             isOn: $settings.settings.notifyPortingEnds)

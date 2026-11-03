@@ -53,7 +53,7 @@ public final class ImportService {
             let canonical = url.resolvingSymlinksInPath().standardizedFileURL.path
             guard !visited.contains(canonical) else { return }
             guard queue.count < maximumDirectories else {
-                warn("The scan reached its limit of \(maximumDirectories) folders.")
+                warn("Search stopped at \(maximumDirectories) folders. Choose a Game apps folder closer to your games.")
                 return
             }
             visited.insert(canonical)
@@ -75,7 +75,7 @@ public final class ImportService {
                                                   .contentModificationDateKey],
                     options: [.skipsHiddenFiles])
             } catch {
-                warn("Could not read \(directory.path): \(error.localizedDescription)")
+                warn("Cannot read \(directory.path). Check folder access or choose another Game apps folder. (\(error.localizedDescription))")
                 continue
             }
             for item in items.sorted(by: { $0.path < $1.path }) {
@@ -83,7 +83,7 @@ public final class ImportService {
                     if let values = try? item.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey, .isPackageKey]),
                        values.isDirectory == true, values.isSymbolicLink != true, values.isPackage != true {
                         if depth < maximumDepth { enqueue(item, depth: depth + 1) }
-                        else { warn("Some folders are deeper than the scan limit of \(maximumDepth) levels.") }
+                        else { warn("Some subfolders are more than \(maximumDepth) levels deep. Choose their parent as Game apps to scan them.") }
                     }
                     continue
                 }
