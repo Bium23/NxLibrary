@@ -305,7 +305,7 @@ More to come as NX Library evolves.
 
 ## Credits and licences
 
-NX Library is MIT licensed. It uses upstream [nxnative](https://github.com/seedds/nxnative), the MIT nxnative_Launcher GUI baseline (that repository is no longer available; the attribution stays in [NOTICE](NOTICE)), and adaptations from [NX2Apple](https://github.com/LNPANDY/NX2Apple) for key checks, failure explanations, diagnostics and updates.
+NX Library is MIT licensed. It uses upstream [nxnative](https://github.com/seedds/nxnative). It began from the MIT nxnative_Launcher codebase, which has been rewritten since; that repository is no longer available and its notice stays in [NOTICE](NOTICE). Adaptations from [NX2Apple](https://github.com/LNPANDY/NX2Apple) cover key checks, failure explanations, diagnostics and updates.
 
 The interface draws from the MIT [Selene](https://github.com/mattxslv/Selene) theme. Bundled fonts, sounds, palettes and runtime components retain their own licences; see [NOTICE](NOTICE), [media notices](Resources/Selene/NOTICE.txt) and [palette notices](Resources/Selene/NOTICE-palettes.txt).
 
