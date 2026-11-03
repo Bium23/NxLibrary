@@ -100,7 +100,7 @@ Build options, runtime dependencies, debug builds and release packaging are docu
 
 The current alpha is ad-hoc signed and not notarised. If macOS blocks first opening, use **System Settings → Privacy & Security → Open Anyway** only for a copy you built or obtained from a source you trust.
 
-Packaged releases check this repository for app updates; no GitHub account is needed. Choose **Update** to download, verify, install and reopen NX Library while keeping your library and preferences. Automatic checks run at most once every 24 hours; **Settings → About → Check now** checks immediately. Updates wait while a build, a running game or a save operation requires the app. Development builds never replace themselves.
+Packaged releases check this repository for app updates; no GitHub account is needed. Choose **Update** to download, verify, install and reopen NX Library while keeping your library and preferences. Automatic checks run at most once every 24 hours; **NX Library → Check for Updates…** in the macOS menu bar and **Settings → About → Check now** check immediately. Both open the same app-style dialog, with scrollable release notes and a visible result even when no update is available. Updates wait while a build, a running game or a save operation requires the app. Development builds can check public releases manually but never replace themselves.
 
 ### First-run setup
 
@@ -229,6 +229,10 @@ Online artwork and wallpapers require their providers to be available. Their con
 <p align="center"><strong>Add a little motion.</strong><br>Choose a live background or bring your own video.</p>
 
 ### Controls
+
+**Settings → Start-up → Start in fullscreen** chooses the launcher window mode at the next opening. It is separate from each game’s Fullscreen option.
+
+The macOS **Game** menu follows the current selection. **Game Details** opens the existing game page in Spotlight or the selected cover’s details in Collection; **Game Options…** opens the same options as the in-app button. Unavailable commands are disabled.
 
 In fullscreen, the pointer hides after three seconds without movement. Moving the mouse reveals it; keyboard/controller navigation, clicks and scrolling do not. Leaving fullscreen, switching apps or opening a native system panel restores it.
 

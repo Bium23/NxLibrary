@@ -325,6 +325,7 @@ public struct AddGameView: View {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             guard router.route == .addGame,
+                  !NativeMenuCommands.shared.isTracking,
                   !viewModel.showSetupCheck,
                   !router.isMenuPresented,
                   viewModel.gameToClose == nil,

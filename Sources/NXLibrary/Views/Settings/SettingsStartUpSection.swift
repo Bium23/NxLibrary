@@ -34,6 +34,10 @@ struct SettingsStartUpSection: View {
                             subtitle: "Reopen the game that was selected when you quit.",
                             isOn: $settings.settings.restoreLastGame)
 
+            SeleneToggleRow("Start in fullscreen",
+                            subtitle: "Applies at the next launch.",
+                            isOn: $settings.settings.startInFullscreen)
+
             SeleneToggleRow("Check engine at launch",
                             subtitle: "Verify the pinned engine commit and toolchain when the app starts.",
                             info: "Checks the nxnative checkout against the certified engine commit and confirms your installed Metal compiler matches the lock file before builds are attempted.",
@@ -108,6 +112,9 @@ struct SettingsStartUpSection: View {
             },
             .init(id: "restore", title: "Restore last selected game") {
                 settings.settings.restoreLastGame.toggle()
+            },
+            .init(id: "startupFullscreen", title: "Start in fullscreen") {
+                settings.settings.startInFullscreen.toggle()
             },
             .init(id: "engine", title: "Check engine at launch") {
                 settings.settings.checkEngineAtLaunch.toggle()

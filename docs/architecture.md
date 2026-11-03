@@ -1,6 +1,6 @@
 # NX Library — guida tecnica
 
-Aggiornata il 3 novembre 2026 sul codice del repository. La mappa comprende 237 file Swift di produzione e 99 file di test e supporto ai test. Il ramo comprende nxnative 65501fbb, il canale di aggiornamento, i flussi cartelle/disponibilità e il setup in due passaggi, con 783 test Swift superati nella candidata UX.
+Aggiornata il 3 novembre 2026 sul codice del repository. La mappa comprende 241 file Swift di produzione e 100 file di test e supporto ai test. Il ramo comprende nxnative 65501fbb, il canale di aggiornamento, i flussi cartelle/disponibilità e il setup in due passaggi, con 786 test Swift superati nella candidata UX.
 
 Questa guida descrive il funzionamento attuale. Il [catalogo dei file](file-map.md) assegna una responsabilità a ogni file versionato, suddiviso per area.
 
@@ -51,9 +51,14 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
 
 ## Avvio e stato dell’app
 
-`NXLibraryApp.swift` registra la finestra e i comandi della barra menu. `AppDelegate.swift` registra il font Material Icons e gestisce chiusura e riapertura della finestra. `MainView.swift` presenta `AppShellView`.
+`NXLibraryApp.swift` registra una sola `Window` e i comandi della barra menu. File → Add Game sostituisce New Window: controller, updater e catalogo condiviso non offrono un flusso multi-finestra. `AppDelegate.swift` registra il font Material Icons e gestisce chiusura e riapertura della finestra. `MainView.swift` presenta `AppShellView`.
 
 `AppShellView.swift` possiede gli oggetti condivisi tramite `@StateObject`. Comprendono `AppViewModel`, router, impostazioni, sessioni di gioco, artwork, monitor dei giochi e updater. Imposta palette, canvas Selene, preferenze di accessibilità e livelli sovrapposti. Intro, Setup, menu, ricerca, opzioni di un gioco e conferme ricevono una priorità esplicita nell’input.
+
+`NativeMenuCommands` osserva il tracking dei menu AppKit e rinvia le azioni al turno successivo della coda principale, conservando la sospensione dell’input durante il passaggio. La shell pubblica le disponibilità nella scena attiva tramite `FocusedValues`: intro, Setup, pannelli e assenza di selezione disabilitano i comandi non applicabili. Mouse, monitor tastiera e dispatch controller non cambiano selezione sotto un menu nativo. In Spotlight, Game Details usa `SpotlightState.showGameDetails` come il comando interno e conserva il titolo selezionato; in Collection apre la pagina Details. Game Options blocca l’hit testing del contenuto sottostante.
+
+`startInFullscreen` viene salvato in AppSettings, ha default false per i vecchi file, compare in Search/Changed e viene ripristinato dal reset Start-up. `StartupWindowView` legge il valore alla creazione e applica una sola volta la modalità alla finestra visibile e attiva. Cambiare la preferenza non altera la finestra corrente.
+
 
 `AppViewModel.swift` coordina libreria, rilevamento dell’ambiente, selezione delle sorgenti, porting e lancio. Le estensioni `AppViewModel+…` contengono le integrazioni di cheats, salvataggi, diagnostica, controlli delle chiavi, toolchain e installazioni in attesa. Sono parti dello stesso oggetto osservabile.
 
@@ -73,7 +78,7 @@ La shell condivide un solo `AppSettingsStore` con router e coordinatore. L’avv
 
 `AppSizeCache` ricorda le dimensioni in funzione di percorso e data di modifica. `LibraryStore` carica e salva il catalogo, conserva `library.json.bak` e offre il merge delle voci. Il coordinamento applicativo riconcilia app trovate, dati già salvati e sorgenti disponibili.
 
-La candidata UX integra `FullscreenCursorView` nella shell. Un NSView osserva la propria finestra, il mouse e le transizioni native; `CursorIdleState` decide la visibilità usando il tempo monotono. In fullscreen attivo, con mouse nel contenuto, il puntatore si nasconde dopo tre secondi senza movimento. Cambi di schermata, menu interni, ricerca, opzioni, tastiera/controller, click e scroll non lo rendono visibile. La posizione reale viene campionata anche dal timer: i loop nativi di menu e controlli possono consumare gli eventi prima del monitor locale. Durante un menu nativo si sospende il nuovo nascondimento, senza svelare un puntatore già nascosto; alla chiusura viene riallineato lo stato AppKit. Un movimento riavvia il ritardo. Pannelli di sistema, perdita di focus e uscita fullscreen ripristinano la visibilità. Il distacco rimuove monitor, timer e osservatori e ripristina il precedente `acceptsMouseMovedEvents`. **Scansione e cursore attendono la nuova verifica manuale del maintainer prima della pubblicazione.**
+La candidata UX integra `FullscreenCursorView` nella shell. Un NSView osserva la propria finestra, il mouse e le transizioni native; `CursorIdleState` decide la visibilità usando il tempo monotono. In fullscreen attivo, con mouse nel contenuto, il puntatore si nasconde dopo tre secondi senza movimento. Cambi di schermata, menu interni, ricerca, opzioni, tastiera/controller, click e scroll non lo rendono visibile. La posizione reale viene campionata anche dal timer: i loop nativi di menu e controlli possono consumare gli eventi prima del monitor locale. Durante un menu nativo si sospende il nuovo nascondimento, senza svelare un puntatore già nascosto; alla chiusura viene riallineato lo stato AppKit. Un movimento riavvia il ritardo. Pannelli di sistema, perdita di focus e uscita fullscreen ripristinano la visibilità. Il distacco rimuove monitor, timer e osservatori e ripristina il precedente `acceptsMouseMovedEvents`. **Il maintainer ha confermato la revisione 2 di scansione e cursore. Menu nativi, nuovo dialogo aggiornamenti e avvio fullscreen della revisione 3 attendono la verifica manuale.**
 
 Il merge parte dalla voce persistita e aggiorna esplicitamente i dati osservati dalla scansione. Conserva impostazioni, identità, preferiti, installazione in attesa ed errore dell’ultimo porting. Restano le regole precedenti per associare le sorgenti e conservare la provenienza di una build installata.
 
@@ -233,6 +238,11 @@ I percorsi sono relativi alla home dell’utente. `Application Support/NXLibrary
 Nel repository, `.build/` contiene gli output SwiftPM. `work/Runtime` è il runtime preparato per il packaging, `work/release` contiene i prodotti di release e `dist/` il DMG di sviluppo. Queste cartelle sono escluse da Git. Il catalogo descrive i file versionati separatamente dai dati personali creati durante l’uso.
 
 ## Aggiornamenti e distribuzione
+
+Il controllo manuale da menu macOS e About presenta `AppUpdateDialog` sia durante la richiesta sia al suo esito: versione corrente, nuova release con note scorrevoli, errore con Retry o progresso. Il dialogo ha priorità sull’input sottostante; frecce/controller scorrono le note e selezionano le azioni, Escape chiude. La chiusura durante il download lascia il trasferimento in corso. Una richiesta manuale durante un controllo automatico impedisce una successiva seconda offerta automatica per la stessa risposta. Le note mostrano la propria versione anche quando la candidata è più recente dell’ultima release pubblica.
+
+`AppUpdateState` descrive gli stati nel Core. `AppUpdate.mayInstall` impone versione più recente e copia installabile: i controlli manuali di copie di sviluppo o in sola lettura leggono le release, senza autorizzarne la sostituzione. Il gate viene verificato prima del download e prima dell’installazione, insieme ai controlli e ai lease già esistenti. Il motivo di attesa viene passato al dialogo come valore, così la chiusura di un gioco aggiorna il pulsante Update.
+
 
 `UpstreamChecker` consulta il changelog del motore e `UpstreamCopy` lo presenta. L’adozione di un nuovo commit passa dalla procedura manuale in [AGENTS.md](../AGENTS.md) e dalle [note di upgrade](upstream-upgrades/README.md).
 

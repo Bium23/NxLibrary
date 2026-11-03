@@ -49,7 +49,7 @@ extension SpotlightView {
         case .secondaryAction:
             // X scrolls to the game's page (the pills), like Down from the row.
             if selectedGame != nil {
-                mutate { if $0.focus == .row { $0.focus = .pills; $0.pillIndex = 0; moved = true } }
+                mutate { if $0.focus == .row { moved = $0.showGameDetails() } }
             }
         case .contextAction:
             if let game = selectedGame {
@@ -325,6 +325,7 @@ extension SpotlightView {
             // An alert or sheet owns Return and Esc; consuming them here would
             // replay the action that raised the alert.
             guard !router.isMenuPresented,
+                  !NativeMenuCommands.shared.isTracking,
                   !router.isSearchPresented,
                   !router.isIntroShowing,
                   router.route == .library,

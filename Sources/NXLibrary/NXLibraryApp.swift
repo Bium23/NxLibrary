@@ -2,7 +2,7 @@ import SwiftUI
 
 extension Notification.Name {
     static let nxLibraryPlayFocused = Notification.Name("NXLibraryPlayFocused")
-    static let nxLibraryCheckUpstream = Notification.Name("NXLibraryCheckUpstream")
+    static let nxLibraryCheckAppUpdates = Notification.Name("NXLibraryCheckAppUpdates")
     static let nxLibraryOpenMenu = Notification.Name("NXLibraryOpenMenu")
     static let nxSettingsGamepadAction = Notification.Name("NXSettingsGamepadAction")
     static let nxAddGameGamepadAction = Notification.Name("NXAddGameGamepadAction")
@@ -24,52 +24,61 @@ extension Notification.Name {
 @main
 struct NXLibraryApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @FocusedValue(\.nxMenuAvailability) private var availability
 
     var body: some Scene {
-        WindowGroup {
+        Window("NX Library", id: "main") {
             MainView()
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1440, height: 900)
         .commands {
             SidebarCommands()
+            CommandGroup(replacing: .newItem) {
+                Button("Add Game…") { NativeMenuCommands.shared.post(.nxLibraryOpenAddGame) }
+                    .keyboardShortcut("n", modifiers: [.command])
+                    .disabled(availability?.general != true)
+            }
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates…") { NativeMenuCommands.shared.post(.nxLibraryCheckAppUpdates) }
+                    .disabled(availability?.general != true)
+            }
             CommandGroup(replacing: .appSettings) {
                 Button("Settings…") {
-                    NotificationCenter.default.post(name: .nxLibraryOpenSettings, object: nil)
+                    NativeMenuCommands.shared.post(.nxLibraryOpenSettings)
                 }
                 .keyboardShortcut(",", modifiers: [.command])
+                .disabled(availability?.general != true)
             }
             CommandMenu("Game") {
                 Button("Add Game…") {
-                    NotificationCenter.default.post(name: .nxLibraryOpenAddGame, object: nil)
+                    NativeMenuCommands.shared.post(.nxLibraryOpenAddGame)
                 }
-                .keyboardShortcut("n", modifiers: [.command])
+                .disabled(availability?.general != true)
                 Divider()
                 Button("Play Selected Game") {
-                    NotificationCenter.default.post(name: .nxLibraryPlayFocused, object: nil)
+                    NativeMenuCommands.shared.post(.nxLibraryPlayFocused)
                 }
                 .keyboardShortcut(.return, modifiers: [.command])
+                .disabled(availability?.play != true)
                 Divider()
                 Button("Game Details") {
-                    NotificationCenter.default.post(name: .nxLibraryOpenDetails, object: nil)
+                    NativeMenuCommands.shared.post(.nxLibraryOpenDetails)
                 }
                 .keyboardShortcut("d", modifiers: [.command])
+                .disabled(availability?.details != true)
                 Button("Game Options…") {
-                    NotificationCenter.default.post(name: .nxLibraryOpenGameOptions, object: nil)
+                    NativeMenuCommands.shared.post(.nxLibraryOpenGameOptions)
                 }
                 .keyboardShortcut("o", modifiers: [.command])
+                .disabled(availability?.options != true)
             }
-            CommandMenu("Engine") {
-                Button("Check Upstream Changelog") {
-                    NotificationCenter.default.post(name: .nxLibraryCheckUpstream, object: nil)
-                }
-                .keyboardShortcut("u", modifiers: [.command])
-            }
-            CommandMenu("View") {
+            CommandGroup(after: .sidebar) {
                 Button("Menu") {
-                    NotificationCenter.default.post(name: .nxLibraryOpenMenu, object: nil)
+                    NativeMenuCommands.shared.post(.nxLibraryOpenMenu)
                 }
                 .keyboardShortcut("k", modifiers: [.command])
+                .disabled(availability?.general != true)
             }
         }
     }

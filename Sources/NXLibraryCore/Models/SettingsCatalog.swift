@@ -40,6 +40,8 @@ public enum SettingsCatalog {
             "The screen NX Library opens on: Spotlight, Collection, or where you left it.") { $0.startOn },
         row("restoreLastGame", .startUp, "Restore last game",
             "Opens with the game you had selected last time.") { $0.restoreLastGame },
+        row("startInFullscreen", .startUp, "Start in fullscreen",
+            "Open NX Library in fullscreen. Applies at the next launch.") { $0.startInFullscreen },
         row("checkEngineAtLaunch", .startUp, "Check engine at launch",
             "Checks the engine and toolchain each time NX Library starts.") { $0.checkEngineAtLaunch },
         row("refreshLibraryAtLaunch", .startUp, "Refresh library at launch",

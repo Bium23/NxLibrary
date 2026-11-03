@@ -4,7 +4,15 @@ User-visible changes to NX Library are recorded here. Entries are grouped by rel
 
 ## Unreleased
 
+### Added
+
+- **Check for Updates…** in the macOS app menu, using the same dialog as About: checking, release notes, up-to-date results, errors and download progress, with keyboard/controller support.
+- **Start in fullscreen** in Start-up settings, applied at the next launch and kept separate from game display options.
+
 ### Changed
+
+- Native menus wait until they close before opening screens and keep the library selection still while active. Game Details follows Spotlight’s existing page, Game Options uses its normal overlay, and unavailable commands are disabled. The upstream changelog stays in Engine settings; the duplicate native View menu is removed.
+- The launcher uses one window; File → Add Game replaces the unsupported New Window command.
 
 - Existing nxnative apps are discovered inside subfolders of the selected Game apps folder. Scans have depth and directory limits, skip app contents and explain skipped folders in Library settings while retaining the saved library.
 - The pointer hides after three seconds without movement in the fullscreen launcher. Moving the mouse reveals it; keyboard/controller navigation keeps it hidden. Native system panels and leaving fullscreen or the app restore it.

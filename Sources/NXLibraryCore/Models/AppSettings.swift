@@ -114,6 +114,7 @@ public struct AppSettings: Codable, Equatable {
     public var showButtonHints: Bool
     public var showClock: Bool
     public var restoreLastGame: Bool
+    public var startInFullscreen: Bool
     public var checkEngineAtLaunch: Bool
     public var refreshLibraryAtLaunch: Bool
     public var lastSelectedGameID: UUID?
@@ -159,6 +160,7 @@ public struct AppSettings: Codable, Equatable {
                 showButtonHints: Bool = true,
                 showClock: Bool = true,
                 restoreLastGame: Bool = true,
+                startInFullscreen: Bool = false,
                 checkEngineAtLaunch: Bool = true,
                 refreshLibraryAtLaunch: Bool = true,
                 lastSelectedGameID: UUID? = nil,
@@ -193,6 +195,7 @@ public struct AppSettings: Codable, Equatable {
         self.showButtonHints = showButtonHints
         self.showClock = showClock
         self.restoreLastGame = restoreLastGame
+        self.startInFullscreen = startInFullscreen
         self.checkEngineAtLaunch = checkEngineAtLaunch
         self.refreshLibraryAtLaunch = refreshLibraryAtLaunch
         self.lastSelectedGameID = lastSelectedGameID
@@ -226,6 +229,7 @@ public struct AppSettings: Codable, Equatable {
     enum CodingKeys: String, CodingKey {
         case backgroundShade, readableText, reduceMotion, showButtonHints, showClock
         case restoreLastGame, checkEngineAtLaunch, refreshLibraryAtLaunch, lastSelectedGameID
+        case startInFullscreen
         case gameDefaults, colorThemeID, buttonNames
         case spotlightCards, spotlightOrder, startingTab, surprisePool, cloudSaves, cloudSavesPickedFolder
         case startOn, lastHome
@@ -243,6 +247,7 @@ public struct AppSettings: Codable, Equatable {
         self.showButtonHints = try container.decodeIfPresent(Bool.self, forKey: .showButtonHints) ?? true
         self.showClock = try container.decodeIfPresent(Bool.self, forKey: .showClock) ?? true
         self.restoreLastGame = try container.decodeIfPresent(Bool.self, forKey: .restoreLastGame) ?? true
+        self.startInFullscreen = try container.decodeIfPresent(Bool.self, forKey: .startInFullscreen) ?? false
         self.checkEngineAtLaunch = try container.decodeIfPresent(Bool.self, forKey: .checkEngineAtLaunch) ?? true
         self.refreshLibraryAtLaunch = try container.decodeIfPresent(Bool.self, forKey: .refreshLibraryAtLaunch) ?? true
         self.lastSelectedGameID = try container.decodeIfPresent(UUID.self, forKey: .lastSelectedGameID)

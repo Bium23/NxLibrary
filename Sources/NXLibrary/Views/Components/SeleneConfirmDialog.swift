@@ -17,7 +17,8 @@ struct SeleneConfirmDialog<Detail: View>: View {
     let title: String
     let message: String
     let confirmTitle: String
-    var cancelTitle = "Cancel"
+    var cancelTitle: String? = "Cancel"
+    var confirmEnabled = true
     @Binding var focus: SeleneConfirmButton
     let onCancel: () -> Void
     let onConfirm: () -> Void
@@ -38,10 +39,12 @@ struct SeleneConfirmDialog<Detail: View>: View {
                 .padding(.top, canvas.u(14))
             detailContent()
             HStack(spacing: canvas.u(22)) {
-                SelenePillButton(title: cancelTitle, focused: focus == .cancel, action: onCancel)
-                    .onHover { if $0 { focus = .cancel } }
-                    .accessibilityLabel(cancelTitle)
-                SelenePillButton(title: confirmTitle, focused: focus == .confirm, action: onConfirm)
+                if let cancelTitle {
+                    SelenePillButton(title: cancelTitle, focused: focus == .cancel, action: onCancel)
+                        .onHover { if $0 { focus = .cancel } }
+                        .accessibilityLabel(cancelTitle)
+                }
+                SelenePillButton(title: confirmTitle, focused: focus == .confirm, enabled: confirmEnabled, action: onConfirm)
                     .onHover { if $0 { focus = .confirm } }
                     .accessibilityLabel(confirmTitle)
             }
@@ -52,7 +55,7 @@ struct SeleneConfirmDialog<Detail: View>: View {
 }
 
 extension SeleneConfirmDialog where Detail == SeleneDialogNotes {
-    init(title: String, message: String, confirmTitle: String, cancelTitle: String = "Cancel",
+    init(title: String, message: String, confirmTitle: String, cancelTitle: String? = "Cancel",
          detail: String? = nil, focus: Binding<SeleneConfirmButton>,
          onCancel: @escaping () -> Void, onConfirm: @escaping () -> Void) {
         self.init(title: title, message: message, confirmTitle: confirmTitle, cancelTitle: cancelTitle,
@@ -66,16 +69,31 @@ extension SeleneConfirmDialog where Detail == SeleneDialogNotes {
 struct SeleneDialogNotes: View {
     @Environment(\.seleneCanvas) private var canvas
     let detail: String?
+    var scrollRequest = 0
+    @Environment(\.seleneReduceMotion) private var reduceMotion
 
     var body: some View {
         if let detail, !detail.isEmpty {
-            ScrollView {
-                Text(detail)
-                    .seleneFont(15)
-                    .foregroundColor(SeleneTheme.ink75)
-                    .multilineTextAlignment(.leading)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: canvas.u(7)) {
+                        ForEach(Array(detail.components(separatedBy: "\n").enumerated()), id: \.offset) { index, line in
+                            let heading = line.hasPrefix("#")
+                            let shown = heading ? String(line.drop(while: { $0 == "#" || $0 == " " })) : line
+                            Text((try? AttributedString(markdown: shown.isEmpty ? " " : shown,
+                                options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(shown))
+                                .seleneFont(heading ? 17 : 15, heading ? .semibold : .regular)
+                                .foregroundColor(SeleneTheme.ink75)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .id(index)
+                        }
+                    }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(canvas.u(16))
+                }
+                .onChange(of: scrollRequest) { index in
+                    withAnimation(reduceMotion ? nil : SeleneTheme.quick) { proxy.scrollTo(index, anchor: .top) }
+                }
             }
             .frame(maxHeight: canvas.u(260))
             .background(

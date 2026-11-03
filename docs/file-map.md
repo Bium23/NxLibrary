@@ -1,6 +1,6 @@
 # NX Library — catalogo dei file
 
-Aggiornato il 3 novembre 2026. Copertura di **392 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il setup in due passaggi con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 3 novembre 2026. Copertura di **397 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il setup in due passaggi con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -58,6 +58,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/Views/MainView.swift](../Sources/NXLibrary/Views/MainView.swift) | Presenta AppShellView come contenuto della finestra principale. |
 | [Sources/NXLibrary/Views/Shell/AppShellView.swift](../Sources/NXLibrary/Views/Shell/AppShellView.swift) | Possiede lo stato condiviso, compone schermate e overlay e assegna priorità all’input. |
 | [Sources/NXLibrary/Views/Shell/FullscreenCursorView.swift](../Sources/NXLibrary/Views/Shell/FullscreenCursorView.swift) | Gestisce il cursore inattivo nella sola finestra fullscreen del launcher, sospendendolo per pannelli e menu e ripristinando gli eventi al distacco. |
+| [Sources/NXLibrary/Views/Shell/StartupWindowView.swift](../Sources/NXLibrary/Views/Shell/StartupWindowView.swift) | Applica una sola volta alla finestra pronta la preferenza fullscreen letta al lancio. |
 | [Sources/NXLibrary/Views/Shell/MenuOverlayView.swift](../Sources/NXLibrary/Views/Shell/MenuOverlayView.swift) | Disegna il control center con azioni, focus e sottomenu Power. |
 | [Sources/NXLibraryCore/NXLibraryCore.swift](../Sources/NXLibraryCore/NXLibraryCore.swift) | Espone la versione nominale del modulo Core. |
 
@@ -96,6 +97,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | File | Responsabilità |
 |---|---|
 | [Sources/NXLibrary/Services/AppUpdater.swift](../Sources/NXLibrary/Services/AppUpdater.swift) | Coordina controllo release, download, verifica, installazione e riavvio di NX Library. |
+| [Sources/NXLibrary/Services/NativeMenuCommands.swift](../Sources/NXLibrary/Services/NativeMenuCommands.swift) | Coordina tracking, disponibilità nella scena e passaggio differito dai menu macOS alle azioni del launcher. |
 | [Sources/NXLibrary/Services/GameControllerService.swift](../Sources/NXLibrary/Services/GameControllerService.swift) | Rileva controller e rimappature, gestisce tap e hold e produce azioni e simboli dei pulsanti. |
 | [Sources/NXLibrary/Services/LaunchReadinessProbe.swift](../Sources/NXLibrary/Services/LaunchReadinessProbe.swift) | Attende una finestra visibile del gioco per terminare la schermata di lancio. |
 | [Sources/NXLibrary/Services/NotificationService.swift](../Sources/NXLibrary/Services/NotificationService.swift) | Invia notifiche dei porting e instrada i clic verso il titolo o l’errore interessato. |
@@ -184,6 +186,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Services/StorageManager.swift](../Sources/NXLibraryCore/Services/StorageManager.swift) | Misura app, cache e log e ne gestisce la pulizia. I backup appartengono al flusso Saves. |
 | [Sources/NXLibraryCore/Services/DiagnosticsReport.swift](../Sources/NXLibraryCore/Services/DiagnosticsReport.swift) | Genera il rapporto diagnostico e rimuove percorso home e valori riconosciuti come chiavi. |
 | [Sources/NXLibraryCore/Services/AppUpdate.swift](../Sources/NXLibraryCore/Services/AppUpdate.swift) | Definisce repository, versioni, requisiti, limiti di download, digest, firma e regole di verifica e sostituzione dell’app NX Library. |
+| [Sources/NXLibraryCore/Models/AppUpdatePresentation.swift](../Sources/NXLibraryCore/Models/AppUpdatePresentation.swift) | Definisce gli stati dell’updater e il gate di installazione per versione e tipo di copia. |
 | [Sources/NXLibraryCore/Services/AppUpdateDownload.swift](../Sources/NXLibraryCore/Services/AppUpdateDownload.swift) | Scarica gli aggiornamenti con limiti di dimensione, redirect HTTPS vincolati a GitHub e gestione del file temporaneo. |
 
 ## Core · cheats
@@ -350,6 +353,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/Views/Components/ScreenshotViewer.swift](../Sources/NXLibrary/Views/Components/ScreenshotViewer.swift) | Mostra screenshot a schermo pieno e navigazione fra le immagini. |
 | [Sources/NXLibrary/Views/Components/SeleneBottomScrim.swift](../Sources/NXLibrary/Views/Components/SeleneBottomScrim.swift) | Definisce maschera inferiore e spazi riservati ai suggerimenti dei tasti. |
 | [Sources/NXLibrary/Views/Components/SeleneConfirmDialog.swift](../Sources/NXLibrary/Views/Components/SeleneConfirmDialog.swift) | Definisce card e pulsanti delle conferme, scelte multiple e SeleneSuccessNotice. |
+| [Sources/NXLibrary/Views/Components/AppUpdateDialog.swift](../Sources/NXLibrary/Views/Components/AppUpdateDialog.swift) | Presenta controllo aggiornamenti, note di release, errori e progresso nel dialogo dell’app. |
 | [Sources/NXLibrary/Views/Components/SeleneHintsBar.swift](../Sources/NXLibrary/Views/Components/SeleneHintsBar.swift) | Disegna i suggerimenti contestuali allineati ai bordi inferiori della schermata. |
 | [Sources/NXLibrary/Views/Components/SeleneHomeChrome.swift](../Sources/NXLibrary/Views/Components/SeleneHomeChrome.swift) | Rende elementi condivisi della cornice e dei controlli della home Selene. |
 | [Sources/NXLibrary/Views/Components/SeleneOptionRow.swift](../Sources/NXLibrary/Views/Components/SeleneOptionRow.swift) | Disegna righe di opzioni con icona, titolo, descrizione, focus e contenuto laterale. |
@@ -396,6 +400,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/AppSettingsStoreTests.swift](../Tests/NXLibraryCoreTests/AppSettingsStoreTests.swift) | Default, persistenza, errori osservabili, conservazione dei file illeggibili e compatibilità dei campi mancanti. |
 | [Tests/NXLibraryCoreTests/AppSizeCacheTests.swift](../Tests/NXLibraryCoreTests/AppSizeCacheTests.swift) | Riuso delle dimensioni, invalidazione sui bundle modificati e scansione senza falso stato vuoto. |
 | [Tests/NXLibraryCoreTests/AppUpdateTests.swift](../Tests/NXLibraryCoreTests/AppUpdateTests.swift) | Versioni, asset release, requisiti, digest, identità del bundle e sostituzione dell’app. |
+| [Tests/NXLibraryCoreTests/AppUpdatePresentationTests.swift](../Tests/NXLibraryCoreTests/AppUpdatePresentationTests.swift) | Verifica che i controlli manuali non permettano sostituzioni di copie di sviluppo, in sola lettura o con una versione uguale/più recente. |
 | [Tests/NXLibraryCoreTests/ArtworkPickerFocusTests.swift](../Tests/NXLibraryCoreTests/ArtworkPickerFocusTests.swift) | Spostamenti nella griglia dei candidati e passaggi fra slot di artwork. |
 | [Tests/NXLibraryCoreTests/ArtworkPickerTests.swift](../Tests/NXLibraryCoreTests/ArtworkPickerTests.swift) | Decodifica Title DB, candidati per slot e scelte manuali. |
 | [Tests/NXLibraryCoreTests/ArtworkStoreTests.swift](../Tests/NXLibraryCoreTests/ArtworkStoreTests.swift) | Cache, download, immagini trasparenti, ridimensionamento e fallback. |

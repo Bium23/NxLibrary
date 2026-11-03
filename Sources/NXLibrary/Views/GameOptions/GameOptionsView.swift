@@ -445,6 +445,8 @@ struct GameOptionsView: View {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .scrollWheel]) { event in
             guard viewModel.gameForSettingsSheet?.id == game.id,
+                  !viewModel.isUpdateOfferOpen,
+                  !NativeMenuCommands.shared.isTracking,
                   !panelOpen,
                   viewModel.gameToClose == nil,
                   viewModel.gameWithInstallFailure == nil,
