@@ -139,4 +139,33 @@ final class PortingProgressTests: XCTestCase {
         """
         XCTAssertNil(PortingProgress.finishingSeconds(inLog: noShaders))
     }
+
+    func testCacheCleanupIsVisibleWithoutInventingProgressOrAnETA() {
+        var progress = run(shaders + [
+            .progress(fraction: 1, done: 100, total: 100, unit: "shaders", eta: 0),
+            .stageEnd(name: "Mac shaders", ok: true, elapsed: 10, summary: nil),
+        ])
+        let fraction = progress.overall
+        progress.apply(.say("[15:00:00] removing the shader cache of other chain versions (the first time, up to half an hour for a large game on an external drive)"))
+        XCTAssertEqual(PortingETA.text(progress, lastFinishingSeconds: 60), "Cleaning shader cache")
+        XCTAssertEqual(progress.overall, fraction)
+        progress.apply(.say("[15:00:01] another engine message"))
+        XCTAssertEqual(PortingETA.text(progress, lastFinishingSeconds: nil), "Cleaning shader cache")
+        progress.apply(.stage(k: 6, n: 8, name: "Mac host", step: nil))
+        XCTAssertEqual(PortingETA.text(progress, lastFinishingSeconds: nil), "Finishing up")
+    }
+
+    func testReusedShadersClearCleanupOnCompletionAndNextStep() {
+        let cleanup = BuildEvent.say("removing the shader cache of other chain versions")
+        var progress = run(beforeShaders + [.stage(k: 5, n: 8, name: "Mac shaders", step: "checking the inputs"), cleanup])
+        XCTAssertEqual(PortingETA.text(progress, lastFinishingSeconds: nil), "Cleaning shader cache")
+        progress.apply(.say("removed old shader cache entries: 10 (1 MB)"))
+        XCTAssertNil(PortingETA.text(progress, lastFinishingSeconds: nil))
+        progress.apply(cleanup)
+        progress.apply(.step("compiling"))
+        XCTAssertNil(PortingETA.text(progress, lastFinishingSeconds: nil))
+        progress.apply(cleanup)
+        progress.finish(success: false)
+        XCTAssertNil(PortingETA.text(progress, lastFinishingSeconds: nil))
+    }
 }

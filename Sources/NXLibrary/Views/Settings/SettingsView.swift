@@ -91,6 +91,7 @@ public struct SettingsView: View {
             if showingControls {
                 ControlsView(canHandleInput: {
                     !router.isMenuPresented && !viewModel.showSetupCheck
+                        && !viewModel.isUpdateOfferOpen && !NativeMenuCommands.shared.isTracking
                         && viewModel.settingsNotice == nil && viewModel.gameWithInstallFailure == nil
                 }) { showingControls = false }
             }
@@ -203,6 +204,7 @@ public struct SettingsView: View {
         case .startUp:
             next.startOn = defaults.startOn
             next.restoreLastGame = defaults.restoreLastGame
+            next.startInFullscreen = defaults.startInFullscreen
             next.checkEngineAtLaunch = defaults.checkEngineAtLaunch
             next.refreshLibraryAtLaunch = defaults.refreshLibraryAtLaunch
             next.checkAppUpdatesAtLaunch = defaults.checkAppUpdatesAtLaunch
@@ -292,6 +294,8 @@ public struct SettingsView: View {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             guard case .settings = router.route,
+                  !viewModel.isUpdateOfferOpen,
+                  !NativeMenuCommands.shared.isTracking,
                   !router.isMenuPresented,
                   !viewModel.showSetupCheck,
                   !showingControls,

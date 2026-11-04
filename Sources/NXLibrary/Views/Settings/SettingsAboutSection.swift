@@ -213,7 +213,7 @@ struct SettingsAboutSection: View {
     private var updateText: String {
         switch updater.state {
         case .hidden: return ""
-        case .developer: return "Developer build: updates are off"
+        case .developer: return "Development copy · manual checks only"
         case .readOnly: return "Move NX Library to Applications to update"
         case .idle: return "Updates not checked yet"
         case .checking: return "Checking for updates…"
@@ -231,22 +231,19 @@ struct SettingsAboutSection: View {
 
     private var updateActions: [UpdateAction] {
         let checkNow = UpdateAction(title: "Check now") { updater.checkNow() }
-        let notes = updater.releasePageURL.map { url in UpdateAction(title: "Release notes") { NSWorkspace.shared.open(url) } }
         switch updater.state {
-        case .hidden, .developer, .checking, .downloading, .verifying, .installing:
+        case .hidden, .checking, .downloading, .verifying, .installing:
             return []
         case .readOnly:
-            return [UpdateAction(title: "Reveal in Finder") {
+            return [checkNow, UpdateAction(title: "Reveal in Finder") {
                 NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
             }]
-        case .idle, .upToDate:
+        case .developer, .idle, .upToDate:
             return [checkNow]
         case .available:
-            return [UpdateAction(title: "Update", enabled: updater.blockedReason() == nil) { updater.update() }]
-                + [notes].compactMap { $0 }
+            return [UpdateAction(title: "View update") { updater.showDetails() }, checkNow]
         case .failed:
-            let retry = updater.release.map { _ in UpdateAction(title: "Try again", enabled: updater.blockedReason() == nil) { updater.update() } }
-            return [retry].compactMap { $0 } + [checkNow]
+            return [checkNow]
         }
     }
 

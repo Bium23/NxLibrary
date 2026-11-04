@@ -3,6 +3,17 @@ import Combine
 @testable import NXLibraryCore
 
 final class AppSettingsStoreTests: XCTestCase {
+    func testFullscreenStartupSurvivesSavingAndOldSettingsStayWindowed() throws {
+        let decoder = JSONDecoder()
+        let enabled = try decoder.decode(AppSettings.self, from: Data(#"{"startInFullscreen":true}"#.utf8))
+        let encoded = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(enabled)) as? [String: Any])
+        XCTAssertEqual(encoded["startInFullscreen"] as? Bool, true)
+        let old = try decoder.decode(AppSettings.self, from: Data("{}".utf8))
+        let oldEncoded = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(old)) as? [String: Any])
+        XCTAssertEqual(oldEncoded["startInFullscreen"] as? Bool, false)
+        XCTAssertTrue(SettingsCatalog.changed(in: enabled).contains { $0.id == "startInFullscreen" && $0.group == .startUp })
+    }
+
     private func tempURL() -> URL {
         FileManager.default.temporaryDirectory
             .appendingPathComponent("NXSettings-\(UUID().uuidString).json")

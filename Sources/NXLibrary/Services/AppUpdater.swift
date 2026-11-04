@@ -6,25 +6,14 @@ import NXLibraryCore
 /// the swap and the relaunch. Hidden entirely while `AppUpdate.repository()` is nil.
 @MainActor
 final class AppUpdater: ObservableObject {
-    enum State: Equatable {
-        case hidden
-        /// Not a release copy: updates are off.
-        case developer
-        /// A release copy that cannot be replaced where it is.
-        case readOnly
-        case idle
-        case checking
-        case upToDate
-        case available(AppUpdate.Release)
-        case downloading(Double)
-        case verifying
-        case installing
-        case failed(String)
-    }
+    typealias State = AppUpdateState
 
     @Published private(set) var state: State
     /// The release the launch dialog offers; nil when no dialog is up.
     @Published var offer: AppUpdate.Release?
+    @Published var isCheckPresented = false
+    @Published private(set) var checkedRelease: AppUpdate.Release?
+    @Published var notesScroll = 0
     @Published var offerFocus: SeleneConfirmButton = .confirm
     /// Why an update must wait ("After the porting"); nil when it may run. Set by the shell.
     var blockedReason: () -> String? = { nil }
@@ -36,6 +25,7 @@ final class AppUpdater: ObservableObject {
     private let defaults = UserDefaults.standard
     private var downloadSession: URLSession?
     private var lastRelease: AppUpdate.Release?
+    private var shouldOfferResult = false
 
     private enum Keys {
         static let lastCheck = "NXLibrary_UpdateLastCheck"
@@ -58,6 +48,30 @@ final class AppUpdater: ObservableObject {
     }
 
     var currentVersion: String { runningVersion }
+    var installation: AppUpdate.Installability { AppUpdate.installability(Bundle.main.bundleURL) }
+    var canInstallRelease: Bool {
+        release.map { AppUpdate.mayInstall($0, runningVersion: runningVersion, installation: installation) } == true
+    }
+    var dialogRelease: AppUpdate.Release? { offer ?? checkedRelease ?? release }
+    var dialogHasSecondaryButton: Bool {
+        switch state {
+        case .available: return canInstallRelease
+        case .failed: return true
+        default: return false
+        }
+    }
+    func showDetails() {
+        notesScroll = 0
+        offerFocus = .confirm
+        isCheckPresented = true
+    }
+    func confirmDialog() {
+        switch state {
+        case .available where canInstallRelease: update()
+        case .failed: checkNow()
+        default: later()
+        }
+    }
 
     /// The release's page on GitHub, for its notes in full.
     var releasePageURL: URL? {
@@ -78,9 +92,15 @@ final class AppUpdater: ObservableObject {
         check(offering: true)
     }
 
-    func checkNow() {
+    func checkNow(presenting: Bool = true) {
+        shouldOfferResult = false
+        if presenting {
+            notesScroll = 0
+            offerFocus = .confirm
+            isCheckPresented = true
+        }
         switch state {
-        case .idle, .upToDate, .available, .failed: check(offering: false)
+        case .developer, .readOnly, .idle, .upToDate, .available, .failed: check(offering: false)
         default: break
         }
     }
@@ -89,6 +109,9 @@ final class AppUpdater: ObservableObject {
         guard let repository,
               let url = URL(string: "https://api.github.com/repos/\(repository)/releases/latest") else { return }
         state = .checking
+        offer = nil
+        shouldOfferResult = offering
+        checkedRelease = nil
         var request = URLRequest(url: url, timeoutInterval: 20)
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         Task {
@@ -104,6 +127,7 @@ final class AppUpdater: ObservableObject {
                     state = .failed("The update could not be verified. Try again later.")
                     return
                 }
+                checkedRelease = release
                 defaults.set(Date(), forKey: Keys.lastCheck)
                 guard AppUpdate.isNewer(release.version, than: runningVersion) else {
                     lastRelease = nil; offer = nil; state = .upToDate; return
@@ -112,8 +136,9 @@ final class AppUpdater: ObservableObject {
                 state = .available(release)
                 let laterVersion = defaults.string(forKey: Keys.laterVersion)
                 let laterAt = defaults.object(forKey: Keys.laterAt) as? Date
-                if offering, AppUpdate.shouldOffer(release.version, laterVersion: laterVersion, laterAt: laterAt, now: Date()) {
+                if shouldOfferResult, AppUpdate.shouldOffer(release.version, laterVersion: laterVersion, laterAt: laterAt, now: Date()) {
                     offerFocus = .confirm
+                    notesScroll = 0
                     offer = release
                 }
             } catch {
@@ -129,15 +154,17 @@ final class AppUpdater: ObservableObject {
             defaults.set(Date(), forKey: Keys.laterAt)
         }
         offer = nil
+        isCheckPresented = false
     }
 
     func update() {
-        guard let release, blockedReason() == nil else { return }
+        guard let release, canInstallRelease, blockedReason() == nil else { return }
         offer = nil
         switch state {
         case .available, .failed: break
         default: return
         }
+        isCheckPresented = true
         state = .downloading(0)
         let folder = Self.workFolder()
         try? FileManager.default.removeItem(at: folder)
@@ -215,6 +242,9 @@ final class AppUpdater: ObservableObject {
     }
 
     private func install(staged: URL, folder: URL, release: AppUpdate.Release) {
+        guard AppUpdate.mayInstall(release, runningVersion: runningVersion, installation: installation) else {
+            return fail("This copy cannot install updates. Download a release copy to Applications.")
+        }
         if let reason = blockedReason() { return fail("\(reason); nothing was changed.") }
         guard let releaseLease = acquireInstallLease() else {
             return fail("An operation is still running. Try the update again when it finishes.")

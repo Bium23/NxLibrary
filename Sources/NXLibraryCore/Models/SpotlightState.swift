@@ -66,6 +66,14 @@ public struct SpotlightState: Equatable {
         return UUID(uuidString: String(selectedKey.dropFirst("game:".count)))
     }
 
+    @discardableResult
+    public mutating func showGameDetails() -> Bool {
+        guard selectedGameID != nil, !isLifted else { return false }
+        focus = .pills
+        pillIndex = 0
+        return true
+    }
+
     public func selectedIndex(in items: [SpotlightItem]) -> Int? {
         guard let selectedKey else { return nil }
         return items.firstIndex { $0.key == selectedKey }

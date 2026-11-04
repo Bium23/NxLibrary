@@ -1,6 +1,6 @@
 # NX Library — guida tecnica
 
-Aggiornata il 2 novembre 2026 sul codice del repository. La mappa comprende 235 file Swift di produzione e 98 file di test e supporto ai test. Il ramo comprende nxnative 65501fbb, il canale di aggiornamento, i flussi cartelle/disponibilità e il setup in due passaggi, con 774 test Swift superati.
+Aggiornata il 3 novembre 2026 sul codice del repository. La mappa comprende 241 file Swift di produzione e 100 file di test e supporto ai test. Il ramo comprende nxnative b64a5ff0, il canale di aggiornamento, i flussi cartelle/disponibilità e il setup in due passaggi, con 793 test Swift superati. Il maintainer ha confermato l'avvio visibile di Wonder con il nuovo engine; il maintainer ha confermato anche menu, dialogo aggiornamenti, avvio fullscreen, scansione e gate nella candidata UI.
 
 Questa guida descrive il funzionamento attuale. Il [catalogo dei file](file-map.md) assegna una responsabilità a ogni file versionato, suddiviso per area.
 
@@ -47,13 +47,18 @@ flowchart TD
     Core --> Network["Cataloghi artwork, metadati e release"]
 ```
 
-Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e runtime dei giochi compilati. NX Library prepara gli argomenti, controlla i requisiti e presenta lo stato delle operazioni. Il pin attuale è `65501fbbaf8526f7aab0a1edd028135888590f8e`, definito in `AppViewModel.pinnedEngineCommit`. La cache dello stato upstream viene riutilizzata soltanto quando il suo commit di base coincide con il pin.
+Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e runtime dei giochi compilati. NX Library prepara gli argomenti, controlla i requisiti e presenta lo stato delle operazioni. Il pin attuale è `b64a5ff09f4dc0f57e9297b6ccaf6f7d95256a44`, definito in `AppViewModel.pinnedEngineCommit`. La cache dello stato upstream viene riutilizzata soltanto quando il suo commit di base coincide con il pin.
 
 ## Avvio e stato dell’app
 
-`NXLibraryApp.swift` registra la finestra e i comandi della barra menu. `AppDelegate.swift` registra il font Material Icons e gestisce chiusura e riapertura della finestra. `MainView.swift` presenta `AppShellView`.
+`NXLibraryApp.swift` registra una sola `Window` e i comandi della barra menu. File → Add Game sostituisce New Window: controller, updater e catalogo condiviso non offrono un flusso multi-finestra. `AppDelegate.swift` registra il font Material Icons e gestisce chiusura e riapertura della finestra. `MainView.swift` presenta `AppShellView`.
 
 `AppShellView.swift` possiede gli oggetti condivisi tramite `@StateObject`. Comprendono `AppViewModel`, router, impostazioni, sessioni di gioco, artwork, monitor dei giochi e updater. Imposta palette, canvas Selene, preferenze di accessibilità e livelli sovrapposti. Intro, Setup, menu, ricerca, opzioni di un gioco e conferme ricevono una priorità esplicita nell’input.
+
+`NativeMenuCommands` osserva il tracking dei menu AppKit e rinvia le azioni al turno successivo della coda principale, conservando la sospensione dell’input durante il passaggio. La shell pubblica le disponibilità nella scena attiva tramite `FocusedValues`: intro, Setup, pannelli e assenza di selezione disabilitano i comandi non applicabili. Mouse, monitor tastiera e dispatch controller non cambiano selezione sotto un menu nativo. In Spotlight, Game Details usa `SpotlightState.showGameDetails` come il comando interno e conserva il titolo selezionato; in Collection apre la pagina Details. Game Options blocca l’hit testing del contenuto sottostante.
+
+`startInFullscreen` viene salvato in AppSettings, ha default false per i vecchi file, compare in Search/Changed e viene ripristinato dal reset Start-up. `StartupWindowView` legge il valore alla creazione e applica una sola volta la modalità alla finestra visibile e attiva. Cambiare la preferenza non altera la finestra corrente.
+
 
 `AppViewModel.swift` coordina libreria, rilevamento dell’ambiente, selezione delle sorgenti, porting e lancio. Le estensioni `AppViewModel+…` contengono le integrazioni di cheats, salvataggi, diagnostica, controlli delle chiavi, toolchain e installazioni in attesa. Sono parti dello stesso oggetto osservabile.
 
@@ -69,9 +74,15 @@ La shell condivide un solo `AppSettingsStore` con router e coordinatore. L’avv
 
 `GameResourceState` riconcilia app, sorgenti e stato: conserva build in corso e workspace non ancora compilati, distingue app mancante e file di origine mancanti e mantiene Play per una build esistente. Le viste usano `PortingPills.unavailable` per il motivo breve e l'azione primaria disabilitata; `PortingTileLook.locked` riusa sfocatura e lucchetto. La voce rimane in libreria. Non viene aggiunta alcuna ricerca dell'app spostata; Refresh controlla le cartelle già configurate. Un cambio cartella durante la scansione scarta il contesto precedente e avvia quella nuova.
 
-`ImportService` scansiona i bundle `.app`, legge `Info.plist`, riconosce gli identificativi nxnative e produce le voci importabili. `AppSizeCache` ricorda le dimensioni in funzione di percorso e data di modifica. `LibraryStore` carica e salva il catalogo, conserva `library.json.bak` e offre il merge delle voci. Il coordinamento applicativo riconcilia app trovate, dati già salvati e sorgenti disponibili.
+`ImportService` scansiona i bundle `.app`, legge `Info.plist`, riconosce gli identificativi nxnative e produce le voci importabili. La candidata UX aggiunge una visita breadth-first nelle sole cartelle scelte, fino a sei livelli e 4000 directory, con deduplicazione dei percorsi canonici. Non entra in bundle/package e non segue i symlink delle sottocartelle. Limiti e letture fallite producono avvisi con motivo e azione utile: sono visibili accanto a Scan game apps nelle impostazioni e, nel primo Setup, sotto Game apps. Non aprono dialoghi automatici né un ciclo Retry all’avvio e non cancellano il catalogo. Una scansione successiva aggiorna o rimuove gli avvisi. `appsForLibrary` seleziona una sola osservazione per titolo: il percorso già registrato se esiste, altrimenti la prima osservazione del risultato ordinato dalla più recente. Se un'app esiste fuori dall'area scandita, la sua voce resta invariata. Merge e metadati usano la stessa selezione.
+
+`AppSizeCache` ricorda le dimensioni in funzione di percorso e data di modifica. `LibraryStore` carica e salva il catalogo, conserva `library.json.bak` e offre il merge delle voci. Il coordinamento applicativo riconcilia app trovate, dati già salvati e sorgenti disponibili.
+
+La candidata UX integra `FullscreenCursorView` nella shell. Un NSView osserva la propria finestra, il mouse e le transizioni native; `CursorIdleState` decide la visibilità usando il tempo monotono. In fullscreen attivo, con mouse nel contenuto, il puntatore si nasconde dopo tre secondi senza movimento. Cambi di schermata, menu interni, ricerca, opzioni, tastiera/controller, click e scroll non lo rendono visibile. La posizione reale viene campionata anche dal timer: i loop nativi di menu e controlli possono consumare gli eventi prima del monitor locale. Durante un menu nativo si sospende il nuovo nascondimento, senza svelare un puntatore già nascosto; alla chiusura viene riallineato lo stato AppKit. Un movimento riavvia il ritardo. Pannelli di sistema, perdita di focus e uscita fullscreen ripristinano la visibilità. Il distacco rimuove monitor, timer e osservatori e ripristina il precedente `acceptsMouseMovedEvents`. **Il maintainer ha confermato la revisione 2 di scansione e cursore e, nella candidata finale 0.1.2, menu nativi, dialogo aggiornamenti, avvio fullscreen, riga di scansione e gate certificato.**
 
 Il merge parte dalla voce persistita e aggiorna esplicitamente i dati osservati dalla scansione. Conserva impostazioni, identità, preferiti, installazione in attesa ed errore dell’ultimo porting. Restano le regole precedenti per associare le sorgenti e conservare la provenienza di una build installata.
+
+Settings → Library usa un'unica riga **Scan game apps**, con la stessa azione per scoperta e refresh. La riga e l'azione controller sono disabilitate durante la scansione. Il catalogo Search usa lo stesso nome; Collection conserva il proprio ingresso per importare build esistenti.
 
 L’aggiunta o il collegamento esplicito delle sorgenti usa `merge(replacingSources: true)`: la selezione confermata sostituisce sorgenti, workspace e percorso della cache, anche se i file precedenti esistono ancora. I file originali restano sul disco. Le scansioni automatiche continuano a conservare la selezione già registrata e il bundle installato.
 
@@ -106,9 +117,9 @@ Get ready mostra soltanto i sei requisiti tecnici, in una griglia 3×2; i proble
 
 `CompatibilityChecker` verifica commit, modifiche del checkout, contratto CLI e compilatore Metal richiesto dal lock del motore. `ToolchainRequirements.current` contiene Xcode minimo, major .NET e asset Metal. `ToolchainGateCopy` produce la spiegazione del risultato per la UI.
 
-Il lock del pin attuale certifica Metal `32023.922`, asset Apple `27B47`, con Xcode minimo `27.2`. La [nota dell’upgrade del 2 novembre](upstream-upgrades/2026-11-02-163a9905-65501fbb-review.md) registra gate certificato senza override, build reale e avvio confermati dall’utente. Un build con override riceve `toolchainVerified=false` e `--allow-other-metal`. Play valuta la disponibilità dell’app già installata separatamente dal gate per un nuovo porting.
+Il lock del pin attuale certifica Metal `32023.922`, asset Apple `27B47`, con Xcode minimo `27.2`. La [nota dell’upgrade del 3 novembre](upstream-upgrades/2026-11-03-65501fbb-b64a5ff0-review.md) registra gate certificato senza override, build reale e avvio confermati dall’utente. Un build con override riceve `toolchainVerified=false` e `--allow-other-metal`. Play valuta la disponibilità dell’app già installata separatamente dal gate per un nuovo porting.
 
-Il pin `65501fbb` aggiorna riscrittura, shader, gestione delle texture, profili e decoder AV1 senza nuovi controlli ordinari. Il motore compila dav1d dalle proprie sorgenti incluse; il runtime del frontend non cambia. Gli hook per incorporare la vista del gioco in un frontend non vengono adottati: NX Library avvia app di gioco separate.
+Il pin `b64a5ff0` aggiorna audio, allineamento memoria, rendering, shader e profili; aggiunge il controllo chiavi anticipato e la pulizia cache. NUP resta un formato sorgente non esposto dal frontend, i diagnostici non diventano nuovi toggle e i controlli FPS rimangono quelli già supportati. Le precedenti correzioni AV1 restano incluse. Il motore compila dav1d dalle proprie sorgenti incluse; il runtime del frontend non cambia. Gli hook per incorporare la vista del gioco in un frontend non vengono adottati: NX Library avvia app di gioco separate.
 
 ## Sorgenti e porting
 
@@ -134,6 +145,8 @@ Se il motore termina correttamente con un bundle valido e fallisce solo l’inst
 Prima della pubblicazione, l’installer registra una piccola ricevuta accanto all’app con percorso di staging e identità filesystem dei bundle. Una ricevuta per destinazione resta dopo il successo e viene aggiornata al prossimo porting: se il processo termina prima del salvataggio del catalogo, il tentativo successivo riconosce l’app già pubblicata e completa il record, anche dopo la pulizia dello staging. Evita così un secondo scambio che rimetterebbe la vecchia app al suo posto. Una destinazione modificata esternamente durante lo stesso tentativo causa un errore conservativo. La vecchia app e l’eventuale sorgente copiata vengono eliminate solo dopo la pubblicazione.
 
 `BuildRecord` conserva l’esito e la provenienza del build. `PortingFailureClassifier` riconosce i messaggi del motore e propone un’azione, presentata da `AppViewModel+Porting`. `PortingNotice` decide se notificare l’esito mentre l’app è in background. `NotificationService` gestisce la notifica di sistema e la destinazione del clic.
+
+Gli adattamenti di b64a5ff0 riconoscono i nuovi errori di chiavi troppo vecchie, conservando la versione firmware quando conosciuta, e il ticket comune mancante nel pacchetto. Quest'ultimo usa il kind persistito `keys` con un dettaglio identificativo: anche un launcher precedente riesce a leggere la voce durante un rollback. La UI corrente offre la spiegazione sul ticket senza proporre di sostituire le chiavi o forzare il porting. Gli eventi `say` della pulizia cache aggiornano `PortingProgress.isCleaningShaderCache`; `PortingETA` mostra **Cleaning shader cache** senza avanzare la percentuale né stimare una durata. Lo stato si azzera su completamento pulizia, stage/step successivo e termine del build.
 
 ## Avvio dei giochi e sessioni
 
@@ -230,6 +243,11 @@ Nel repository, `.build/` contiene gli output SwiftPM. `work/Runtime` è il runt
 
 ## Aggiornamenti e distribuzione
 
+Il controllo manuale da menu macOS e About presenta `AppUpdateDialog` sia durante la richiesta sia al suo esito: versione corrente, nuova release con note scorrevoli, errore con Retry o progresso. Il dialogo ha priorità sull’input sottostante; frecce/controller scorrono le note e selezionano le azioni, Escape chiude. La chiusura durante il download lascia il trasferimento in corso. Una richiesta manuale durante un controllo automatico impedisce una successiva seconda offerta automatica per la stessa risposta. Le note mostrano la propria versione anche quando la candidata è più recente dell’ultima release pubblica.
+
+`AppUpdateState` descrive gli stati nel Core. `AppUpdate.mayInstall` impone versione più recente e copia installabile: i controlli manuali di copie di sviluppo o in sola lettura leggono le release, senza autorizzarne la sostituzione. Il gate viene verificato prima del download e prima dell’installazione, insieme ai controlli e ai lease già esistenti. Il motivo di attesa viene passato al dialogo come valore, così la chiusura di un gioco aggiorna il pulsante Update.
+
+
 `UpstreamChecker` consulta il changelog del motore e `UpstreamCopy` lo presenta. L’adozione di un nuovo commit passa dalla procedura manuale in [AGENTS.md](../AGENTS.md) e dalle [note di upgrade](upstream-upgrades/README.md).
 
 `AppUpdater` coordina gli aggiornamenti di NX Library da `Bium23/NxLibrary`, senza autenticazione. Le regole di versione, requisiti, digest, identità del bundle e installazione sono in `AppUpdate`. Le copie di sviluppo non si sostituiscono. `AppUpdateDownload` limita il trasferimento alla dimensione dichiarata e agli host HTTPS di GitHub. `validate_update.py` verifica struttura e percorsi, poi estrae contando i dati effettivamente decompressi tramite il Python incluso; prima della sostituzione vengono controllati versione, marker, identificativo e firma del bundle. La firma ad hoc protegge il contenuto sigillato ma non identifica autonomamente il manutentore. La prova interattiva A → B resta necessaria.
@@ -242,7 +260,7 @@ Prima dell’installazione, l’updater acquisisce un’esclusione globale dal `
 
 ## Verifica e manutenzione
 
-`NX_TEST_ENGINE_REPO` permette al controllo dei messaggi del motore di usare un checkout separato; il valore esplicito non valido produce un errore. La suite Core usa fixture sintetiche, directory temporanee, runner e confini I/O sostituibili. Copre modelli, persistenza, sorgenti, chiavi, contratti CLI, processi, installazione, lancio, UI state, artwork, cheats e transazioni dei salvataggi. Il [catalogo dei test](file-map.md#test-e-fixture) indica la responsabilità di ogni file.
+`NX_TEST_ENGINE_REPO` permette al controllo dei messaggi del motore di usare un checkout separato; il valore esplicito non valido produce un errore. Durante una revisione, `NX_TEST_ENGINE_COMMIT` seleziona l'hash completo del candidato prima di cambiare il pin dell'app; senza override il test controlla sempre il pin. La suite Core usa fixture sintetiche, directory temporanee, runner e confini I/O sostituibili. Copre modelli, persistenza, sorgenti, chiavi, contratti CLI, processi, installazione, lancio, UI state, artwork, cheats e transazioni dei salvataggi. Il [catalogo dei test](file-map.md#test-e-fixture) indica la responsabilità di ogni file.
 
 ```bash
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test

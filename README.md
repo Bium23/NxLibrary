@@ -55,11 +55,11 @@ Game files, keys and firmware are not provided. See [Legal and third-party notic
 
 ### Project status
 
-**0.1.1 alpha.** Download the packaged app from [Releases](https://github.com/Bium23/NxLibrary/releases/latest), or [build it from source](#building-from-source).
+**0.1.2 alpha.** Download the packaged app from [Releases](https://github.com/Bium23/NxLibrary/releases/latest), or [build it from source](#building-from-source).
 
 Automated checks cover the application code, publication inputs, compilation and development-app packaging. They do not certify game compatibility. Changes are recorded in the [changelog](CHANGELOG.md), and the current checks are available under [Actions](https://github.com/Bium23/NxLibrary/actions/workflows/ci.yml).
 
-The engine is pinned to `65501fbb`, with support for extracted game folders and multi-title packages, using Xcode 27.2 / Metal 32023.922. See the [engine upgrade notes](docs/upstream-upgrades/2026-11-02-163a9905-65501fbb-review.md).
+The engine is pinned to `b64a5ff0`, with audio, memory and renderer fixes, updated game profiles and shader-build improvements, using Xcode 27.2 / Metal 32023.922. See the [engine upgrade notes](docs/upstream-upgrades/2026-11-03-65501fbb-b64a5ff0-review.md).
 
 ## Getting started
 
@@ -100,7 +100,7 @@ Build options, runtime dependencies, debug builds and release packaging are docu
 
 The current alpha is ad-hoc signed and not notarised. If macOS blocks first opening, use **System Settings → Privacy & Security → Open Anyway** only for a copy you built or obtained from a source you trust.
 
-Packaged releases check this repository for app updates; no GitHub account is needed. Choose **Update** to download, verify, install and reopen NX Library while keeping your library and preferences. Automatic checks run at most once every 24 hours; **Settings → About → Check now** checks immediately. Updates wait while a build, a running game or a save operation requires the app. Development builds never replace themselves.
+Packaged releases check this repository for app updates; no GitHub account is needed. Choose **Update** to download, verify, install and reopen NX Library while keeping your library and preferences. Automatic checks run at most once every 24 hours; **NX Library → Check for Updates…** in the macOS menu bar and **Settings → About → Check now** check immediately. Both open the same app-style dialog, with scrollable release notes and a visible result even when no update is available. Updates wait while a build, a running game or a save operation requires the app. Development builds can check public releases manually but never replace themselves.
 
 ### First-run setup
 
@@ -114,13 +114,15 @@ If games are found, **Open library** takes you to them. **Skip for now** enters 
 
 The default Game apps folder is `~/Applications`; first use can prepare this default without an extra picker. Remembered or custom unavailable folders are never recreated automatically. Changing folders does not move installed apps, and a rebuild updates an existing app in its current location. A read-only folder still allows discovery and Play; installing new builds needs write access.
 
+Discovery includes subfolders of Game apps. It stays inside the chosen folders, skips app contents and limits how far it searches. Search limits and unreadable folders are explained beside **Settings → Library → Scan game apps**, without interrupting launch. Existing library entries are kept. If several builds of a title are found, the registered app is retained while it exists; a newly discovered title uses the most recently modified build.
+
 **Game files** is a separate optional folder preference in **Settings → Library**. Selecting individual files for a porting does not replace that preference or scan their siblings. Both folder choices can be changed in Settings later.
 
 Import your `prod.keys` when prompted. NX Library keeps a private copy with mode `0600` and leaves the original file unchanged. Key values are not displayed or logged.
 
 Reopen both setup steps from **Settings → Start-up → Open Setup** whenever needed; this keeps your library and completion state. NX Library never runs `sudo`, accepts the Xcode licence for you or changes `xcode-select`.
 
-Already have a built game app? Use **Settings → Library → Existing builds → Import**. Play remains available without the original sources; rebuilding requires attaching them again.
+Already have a built nxnative game app? Use **Settings → Library → Scan game apps → Scan**. The same action finds existing builds and refreshes the library. Play remains available without the original sources; rebuilding requires attaching them again.
 
 If an installed app is moved or removed, its library entry stays with a blurred, locked tile and **App not found**. Restore it to its folder or change **Game apps**, then refresh the library. NX Library does not search elsewhere for it. Missing build inputs show **Game files not found** when there is no app to play. An existing app still plays when its source files are missing; only rebuilding is unavailable. To reconnect a game's moved inputs, use **Game Options → Edit details → Attach sources…**.
 
@@ -149,7 +151,7 @@ Use **Find a game** for search, **Game Options** for title-specific actions, and
 
 For a title already in the library, Review opens with that game's saved options and offers **Rebuild** or **Save changes**.
 
-Sources stay in place; staged workspaces use symbolic links. New game apps install in the chosen **Game apps** folder. Review shows the actual destination, including any filename needed to avoid an unrelated app. Build stages, progress, estimated time and a live log remain available while the operation runs. Closing the porting screen leaves the operation running; cancellation is a separate action.
+Sources stay in place; staged workspaces use symbolic links. New game apps install in the chosen **Game apps** folder. Review shows the actual destination, including any filename needed to avoid an unrelated app. Build stages, progress, estimated time and a live log remain available while the operation runs. Cleaning an older shader cache shows **Cleaning shader cache** instead of an ETA; the first cleanup can take longer on large caches or external drives. Closing the porting screen leaves the operation running; cancellation is a separate action.
 
 A rebuild of a running game waits to replace its app until it closes. If compilation finishes but installation fails, **Retry** installs the preserved result without compiling again. If the destination folder disconnects, reconnect it before retrying: the ready build keeps its original destination. A library refresh preserves pending installations and failure information.
 
@@ -228,6 +230,12 @@ Online artwork and wallpapers require their providers to be available. Their con
 
 ### Controls
 
+**Settings → Start-up → Start in fullscreen** chooses the launcher window mode at the next opening. It is separate from each game’s Fullscreen option.
+
+The macOS **Game** menu follows the current selection. **Game Details** opens the existing game page in Spotlight or the selected cover’s details in Collection; **Game Options…** opens the same options as the in-app button. Unavailable commands are disabled.
+
+In fullscreen, the pointer hides after three seconds without movement. Moving the mouse reveals it; keyboard/controller navigation, clicks and scrolling do not. Leaving fullscreen, switching apps or opening a native system panel restores it.
+
 | Action | Keyboard | Controller |
 |---|---|---|
 | Navigate | Arrow keys | D-pad / left stick |
@@ -258,12 +266,12 @@ Before reporting a problem, review copied diagnostics and remove anything person
 ### Compatibility and limitations
 
 - NX Library uses a manually pinned engine and checks its commit, working tree, CLI contract and Metal compiler before new builds. It does not follow upstream `main` automatically.
-- The current engine is `65501fbb` and certifies Metal `32023.922`. **Build anyway with an untested toolchain** requires explicit confirmation and marks the resulting build as untested. A successful launch does not turn it into a certified combination.
+- The current engine is `b64a5ff0` and certifies Metal `32023.922`. **Build anyway with an untested toolchain** requires explicit confirmation and marks the resulting build as untested. A successful launch does not turn it into a certified combination.
 - Game compatibility depends on nxnative, the game version and the toolchain.
 - Output follows the window/display; native 1440p/4K internal rendering is not supported. Render scale is 50–100% where the build supports it. MetalFX is spatial upscaling.
 - Builds run one at a time. iOS/IPA output, automatic engine updates and notarisation are not currently provided.
 
-The [upgrade note](docs/upstream-upgrades/2026-11-02-163a9905-65501fbb-review.md) records the engine review and toolchain requirements.
+The [upgrade note](docs/upstream-upgrades/2026-11-03-65501fbb-b64a5ff0-review.md) records the engine review and toolchain requirements.
 
 ### Data and cleanup
 
@@ -297,7 +305,7 @@ More to come as NX Library evolves.
 
 ## Credits and licences
 
-NX Library is MIT licensed. It uses upstream [nxnative](https://github.com/seedds/nxnative), the MIT [nxnative_Launcher](https://github.com/rennan101/nxnative_Launcher) GUI baseline, and adaptations from [NX2Apple](https://github.com/LNPANDY/NX2Apple) for key checks, failure explanations, diagnostics and updates.
+NX Library is MIT licensed. It uses upstream [nxnative](https://github.com/seedds/nxnative). It began from the MIT nxnative_Launcher codebase, which has been rewritten since; that repository is no longer available and its notice stays in [NOTICE](NOTICE). Adaptations from [NX2Apple](https://github.com/LNPANDY/NX2Apple) cover key checks, failure explanations, diagnostics and updates.
 
 The interface draws from the MIT [Selene](https://github.com/mattxslv/Selene) theme. Bundled fonts, sounds, palettes and runtime components retain their own licences; see [NOTICE](NOTICE), [media notices](Resources/Selene/NOTICE.txt) and [palette notices](Resources/Selene/NOTICE-palettes.txt).
 

@@ -14,6 +14,8 @@ final class PortingFailureReasonTests: XCTestCase {
         ("nsp.damaged", .damagedNSP, "[RED] 3 files fail the NCA's hash check (an incomplete copy or a broken download); copy or download it again, or pass --allow-damaged"),
         ("arm32.program", .a32Program, "[RED] Mario Kart 8 Deluxe v0 (1.0.0) is a 32-bit ARM program, which nxnative does not run"),
         ("keys.missing", .keys, "[RED] no such file: /Users/x/prod.keys"),
+        ("keys.tooOld", .keysTooOld, "[RED] Example.nsp: prod.keys has no key_area_key_application_14 (master key 14, which came with firmware 21.0.0): the keys are older than the game; dump prod.keys again from a console on firmware 21.0.0 or later"),
+        ("keys.ticket", .keys, "[RED] Example.nsp: no title key for rights ID 00000000000000000000000000000000: the package has no common ticket for it"),
         ("games.several", .severalGames, "[RED] more than one game in the folder, keep one game per folder: 0100000000010000, 0100000000020000"),
         ("games.noTitleID", .noTitleID, "[RED] no NSP with a readable title ID in /Users/x/Games/Foo"),
         ("disk.low", .diskFull, "[RED] less than 40 GB free on the volume of /Users/x/work"),
@@ -140,6 +142,46 @@ final class PortingFailureReasonTests: XCTestCase {
     func testTooOldCopyNamesFirmware() {
         XCTAssertTrue(PortingFailureReason(kind: .keysTooOld, detail: "19.0.0").next.contains("19.0.0"))
     }
+
+    func testEngineKeyErrorNamesFirmwareWithoutKeepingKeyNames() {
+        let line = Self.engineLines.first { $0.id == "keys.tooOld" }!.line
+        let reason = classify(#"{"ev":"say","msg":""# + line + #""}"#)
+        XCTAssertEqual(reason, PortingFailureReason(kind: .keysTooOld, detail: "21.0.0"))
+        XCTAssertEqual(reason.action, .importKeys)
+        XCTAssertFalse(reason.next.contains("key_area_key"))
+    }
+
+    func testUnknownFirmwareDoesNotRecommendTheLastKnownVersion() {
+        let log = "prod.keys has no titlekek_15 (master key 15, which came with a firmware after 21.0.0): the keys are older than the game; dump prod.keys again from a console on a firmware after 21.0.0"
+        XCTAssertEqual(classify(log), PortingFailureReason(kind: .keysTooOld))
+    }
+
+    func testFinalKeyPreflightWinsOverEarlierPackageProbeFirmware() {
+        let earlier = #"{"ev":"say","msg":"[RED] base.nsp: prod.keys has no key_area_key_application_10 (master key 10, which came with firmware 17.0.0): the keys are older than the game"}"#
+        let final = #"{"ev":"say","msg":"[RED] update.nsp: prod.keys has no key_area_key_application_14 (master key 14, which came with firmware 21.0.0): the keys are older than the game"}"#
+        XCTAssertEqual(classify(earlier + "\n" + final).detail, "21.0.0")
+        let future = final.replacingOccurrences(of: "which came with firmware 21.0.0", with: "which came with a firmware after 21.0.0")
+        XCTAssertNil(classify(earlier + "\n" + future).detail)
+    }
+
+    func testMissingTicketDoesNotSuggestReplacingKeysOrPortAnyway() {
+        let line = "[RED] Example.nsp: no title key for rights ID 00000000000000000000000000000000: the package has no common ticket for it"
+        let reason = classify(line, keys: "/synthetic/prod.keys")
+        XCTAssertEqual(reason.title, "Game ticket missing")
+        XCTAssertEqual(reason.action, .none)
+        XCTAssertTrue(reason.next.contains("ticket"))
+    }
+
+    func testMissingTicketKeepsThePersistedKindReadableByEarlierLaunchers() throws {
+        let line = Self.engineLines.first { $0.id == "keys.ticket" }!.line
+        let reason = classify(line)
+        let data = try JSONEncoder().encode(reason)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        XCTAssertEqual(json["kind"] as? String, "keys")
+        let decoded = try JSONDecoder().decode(PortingFailureReason.self, from: data)
+        XCTAssertEqual(decoded.title, "Game ticket missing")
+        XCTAssertEqual(decoded.action, .none)
+    }
 }
 
 /// The pinned engine still prints every message the table reads; a re-pin that rewords one fails here.
@@ -159,7 +201,11 @@ final class PortingFailureEngineTests: XCTestCase {
         guard let match = text.range(of: #"pinnedEngineCommit = "[0-9a-f]{40}""#, options: .regularExpression) else {
             return XCTFail("no pinnedEngineCommit in AppViewModel.swift")
         }
-        let pin = String(text[match].dropFirst("pinnedEngineCommit = \"".count).dropLast())
+        let pin = ProcessInfo.processInfo.environment["NX_TEST_ENGINE_COMMIT"]
+            ?? String(text[match].dropFirst("pinnedEngineCommit = \"".count).dropLast())
+        guard pin.range(of: #"^[0-9a-f]{40}$"#, options: .regularExpression) != nil else {
+            return XCTFail("NX_TEST_ENGINE_COMMIT must be a full commit hash")
+        }
         for row in PortingFailureClassifier.table where row.engineFragment != nil {
             let fragment = row.engineFragment!
             let found = gitGrep(fragment, at: pin, in: engine)

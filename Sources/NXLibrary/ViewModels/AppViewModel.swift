@@ -269,6 +269,8 @@ public final class AppViewModel: ObservableObject {
         !setupCompleted && UserDefaults.standard.string(forKey: StorageKeys.savedLibraryFolder) == nil
     }
     @Published public var isScanningLibrary: Bool = false
+    /// Non-blocking scan details shown beside Library refresh, never an automatic launch dialog.
+    @Published public var libraryScanWarnings: [String] = []
     @Published public var gameForSettingsSheet: PortedGame? = nil
     /// Where the open Game options came from; decides its rows (Move is Spotlight-only).
     @Published public var gameOptionsOrigin: GameOptionsOrigin = .collection
@@ -403,7 +405,7 @@ public final class AppViewModel: ObservableObject {
         .resolve(runtime: .locate(), repo: URL(fileURLWithPath: nxnativePath))
     }
 
-    public let pinnedEngineCommit = "65501fbbaf8526f7aab0a1edd028135888590f8e"
+    public let pinnedEngineCommit = "b64a5ff09f4dc0f57e9297b6ccaf6f7d95256a44"
     private let core = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/NXLibrary")
     lazy var libraryStore = LibraryStore(directory: core)
@@ -983,7 +985,9 @@ public final class AppViewModel: ObservableObject {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let loaded = (try? store.load()) ?? LibraryFile()
             let scanned = importer.scan(directories: directories)
-            let importedGames = scanned.map { importer.makeGame(from: $0) }
+            let scanWarnings = importer.scanWarnings
+            let selected = importer.appsForLibrary(scanned: scanned, existing: loaded.games)
+            let importedGames = selected.map { importer.makeGame(from: $0) }
             DispatchQueue.main.async {
                 guard let self else { return }
                 // A folder chosen during the startup scan gets its own scan before results appear.
@@ -992,10 +996,10 @@ public final class AppViewModel: ObservableObject {
                     self.loadLibrary()
                     return
                 }
-                self.importedApps = scanned
+                self.importedApps = selected
                 var scannedByTitle: [String: ImportedApp] = [:]
-                for app in scanned {
-                    if let titleId = app.titleId {
+                for app in selected {
+                    if let titleId = app.titleId, scannedByTitle[titleId.uppercased()] == nil {
                         scannedByTitle[titleId.uppercased()] = app
                     }
                 }
@@ -1030,7 +1034,13 @@ public final class AppViewModel: ObservableObject {
                 self.libraryGames = library.games.sorted {
                     $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
                 }
+                self.libraryScanWarnings = scanWarnings
                 self.isScanningLibrary = false
+                if !scanWarnings.isEmpty {
+                    for warning in scanWarnings {
+                        self.logs.append(LogEntry(level: .warning, message: warning))
+                    }
+                }
             }
         }
     }

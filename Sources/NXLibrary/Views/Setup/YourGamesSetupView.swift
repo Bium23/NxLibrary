@@ -46,6 +46,13 @@ struct YourGamesSetupView: View {
                 .help(viewModel.gameAppsFolder.path)
                 .padding(.top, canvas.u(32))
 
+                if !viewModel.isScanningLibrary, let warning = viewModel.libraryScanWarnings.first {
+                    Text(warning).seleneFont(15).foregroundColor(SeleneTheme.ink75)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, canvas.u(12))
+                }
+
                 row(.file, title: "Choose game file", detail: "NSP · XCI · NSZ · XCZ", icon: .add,
                     enabled: folderProblem == nil, action: onChooseFiles)
                     .padding(.top, canvas.u(12))

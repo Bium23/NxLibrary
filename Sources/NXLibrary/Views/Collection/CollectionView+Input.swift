@@ -68,6 +68,7 @@ extension CollectionView {
             // An alert or sheet owns Return and Esc; consuming them here would
             // replay the action that raised the alert.
             guard !router.isMenuPresented,
+                  !NativeMenuCommands.shared.isTracking,
                   !router.isSearchPresented,
                   !router.isIntroShowing,
                   router.route == .collection,

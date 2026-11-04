@@ -508,6 +508,8 @@ public struct ConsoleView: View {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             guard router.route == .console,
+                  !viewModel.isUpdateOfferOpen,
+                  !NativeMenuCommands.shared.isTracking,
                   !router.isMenuPresented,
                   viewModel.gameToClose == nil,
                   viewModel.gameToRemove == nil,

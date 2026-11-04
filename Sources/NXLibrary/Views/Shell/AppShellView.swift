@@ -11,6 +11,7 @@ public struct AppShellView: View {
     @StateObject private var artwork = ArtworkStore()
     @StateObject private var runningGames = RunningGameMonitor()
     @StateObject private var updater = AppUpdater()
+    @StateObject private var nativeMenus = NativeMenuCommands.shared
     @ObservedObject private var theme = ThemeStore.shared
     @State private var gestureKeyMonitor: Any?
     @State private var setupSourceEntryID: UUID?
@@ -60,7 +61,9 @@ public struct AppShellView: View {
     }
     /// The update dialog waits for the intro and the Setup check.
     private var showsUpdateOffer: Bool {
-        updater.offer != nil && !router.isIntroShowing && !viewModel.showSetupCheck && !showsInstallFailure
+        (updater.offer != nil || updater.isCheckPresented) && !router.isIntroShowing && !viewModel.showSetupCheck
+            && !showsInstallFailure && viewModel.gameToClose == nil && viewModel.gameToRemove == nil
+            && viewModel.launchOverlay == nil && !router.isScreenshotViewerOpen
     }
     private var showsSettingsNotice: Bool {
         viewModel.settingsNotice != nil && !router.isIntroShowing && !viewModel.showSetupCheck
@@ -71,6 +74,16 @@ public struct AppShellView: View {
 
     private var reduceMotion: Bool {
         settings.settings.reduceMotion || accessibilityReduceMotion
+    }
+
+    private var nativeMenuAvailability: NativeMenuAvailability {
+        let general = !router.isIntroShowing && !viewModel.showSetupCheck
+            && !isCloseGameOpen && !router.isScreenshotViewerOpen && !router.isSearchPresented
+            && viewModel.gameForSettingsSheet == nil && viewModel.launchOverlay == nil && NSApp.modalWindow == nil
+            && NSApp.keyWindow?.attachedSheet == nil && NSApp.keyWindow?.isSheet != true
+        let game = general && !router.isMenuPresented ? viewModel.currentFocusedGame : nil
+        return NativeMenuAvailability(general: general, play: game?.isPlayableLocally == true,
+            details: isHomeRoute && game != nil, options: game != nil)
     }
 
     /// The launch screen sits over everything, menu included, until the game's window shows.
@@ -96,7 +109,7 @@ public struct AppShellView: View {
             content
                 // Game options, Add game and the console blur the screen behind instead of darkening it.
                 .blur(radius: viewModel.gameForSettingsSheet == nil && !router.route.isOverlay ? 0 : 10)
-                .allowsHitTesting(!router.route.isOverlay)
+                .allowsHitTesting(!router.route.isOverlay && viewModel.gameForSettingsSheet == nil)
             if router.route == .addGame {
                 AddGameView(viewModel: viewModel,
                             router: router,
@@ -146,8 +159,8 @@ public struct AppShellView: View {
                     .transition(.opacity)
                     .zIndex(3)
             }
-            if showsUpdateOffer, let release = updater.offer {
-                updateOfferOverlay(release)
+            if showsUpdateOffer {
+                updateOfferOverlay()
                     .transition(.opacity)
                     .zIndex(3)
             }
@@ -200,6 +213,10 @@ public struct AppShellView: View {
     /// Layers with environment, sheets and lifecycle; split from `body` for the type checker.
     private var styled: some View {
         layers
+        .allowsHitTesting(!nativeMenus.isTracking)
+        .background(FullscreenCursorView())
+        .background(StartupWindowView(fullscreen: settings.settings.startInFullscreen))
+        .focusedSceneValue(\.nxMenuAvailability, nativeMenuAvailability)
         .overlay { launchLayer }
         .modifier(SoundCueHooks(router: router, viewModel: viewModel))
         // Inside the canvas root so the sheet inherits the window's canvas units.
@@ -221,6 +238,7 @@ public struct AppShellView: View {
         .animation(reduceMotion ? nil : SeleneTheme.quick,
                    value: viewModel.gameWithInstallFailure?.id)
         .animation(reduceMotion ? nil : SeleneTheme.quick, value: viewModel.settingsNotice?.id)
+        .animation(reduceMotion ? nil : SeleneTheme.quick, value: showsUpdateOffer)
         .environment(\.seleneReduceMotion, reduceMotion)
         .environment(\.seleneBackdropStyle, backdropStyle)
         .environment(\.seleneShowButtonHints, settings.settings.showButtonHints)
@@ -269,7 +287,7 @@ public struct AppShellView: View {
         styled
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryPlayFocused)) { _ in
             guard !router.isMenuPresented,
-                  isHomeRoute,
+                  nativeMenuAvailability.play,
                   viewModel.gameForSettingsSheet == nil,
                   !isCloseGameOpen,
                   let game = viewModel.currentFocusedGame else { return }
@@ -281,10 +299,11 @@ public struct AppShellView: View {
                   !isCloseGameOpen,
                   isHomeRoute,
                   let game = viewModel.currentFocusedGame else { return }
-            router.showDetail(game.id)
+            if router.route == .library { viewModel.spotlight.showGameDetails() }
+            else { router.showDetail(game.id) }
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenGameOptions)) { _ in
-            guard !router.isMenuPresented, !isCloseGameOpen else { return }
+            guard nativeMenuAvailability.options else { return }
             switch router.route {
             case .library:
                 if let game = viewModel.currentFocusedGame {
@@ -302,9 +321,10 @@ public struct AppShellView: View {
                 break
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .nxLibraryCheckUpstream)) { _ in
-            guard !router.isMenuPresented, !router.isScreenshotViewerOpen, !isCloseGameOpen else { return }
-            viewModel.checkUpstreamChangelog()
+        .onReceive(NotificationCenter.default.publisher(for: .nxLibraryCheckAppUpdates)) { _ in
+            guard nativeMenuAvailability.general else { return }
+            router.closeMenu()
+            updater.checkNow()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenMenu)) { _ in
             guard !isCloseGameOpen, viewModel.gameForSettingsSheet == nil, !router.isScreenshotViewerOpen else { return }
@@ -483,6 +503,7 @@ public struct AppShellView: View {
         installGestureKeyMonitor()
         GameControllerService.shared.onAction = { [weak viewModel, weak router] action in
             guard let viewModel, let router else { return }
+            guard !nativeMenus.isTracking else { return }
             if router.isIntroShowing {
                 // Any controller input skips the intro.
                 NotificationCenter.default.post(name: .nxIntroSkip, object: nil)
@@ -695,49 +716,40 @@ public struct AppShellView: View {
 
     // MARK: - A newer release at launch
 
-    private func updateOfferOverlay(_ release: AppUpdate.Release) -> some View {
+    private func updateOfferOverlay() -> some View {
         ZStack {
             SeleneTheme.scrim45
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
                 .onTapGesture { updater.later() }
-            SeleneConfirmDialog(title: "NX Library \(release.version) is available",
-                                message: ([updater.blockedReason().map { "You have \(updater.currentVersion). It installs \($0.prefix(1).lowercased() + $0.dropFirst())." }
-                                    ?? "You have \(updater.currentVersion). NX Library restarts to finish."]
-                                    + AppUpdate.requirementNotes(release.requirements,
-                                                                 installedXcode: viewModel.environmentStatus?.xcodeVersion,
-                                                                 currentEngine: viewModel.pinnedEngineCommit))
-                                    .joined(separator: "\n\n"),
-                                confirmTitle: "Update",
-                                cancelTitle: "Later",
-                                detail: release.notes.trimmingCharacters(in: .whitespacesAndNewlines),
-                                focus: $updater.offerFocus,
-                                onCancel: { updater.later() },
-                                onConfirm: confirmUpdateOffer)
+            AppUpdateDialog(updater: updater, requirementNotes: updater.dialogRelease.map {
+                AppUpdate.requirementNotes($0.requirements,
+                    installedXcode: viewModel.environmentStatus?.xcodeVersion,
+                    currentEngine: viewModel.pinnedEngineCommit)
+            } ?? [], blockedReason: updater.blockedReason())
         }
-    }
-
-    private func confirmUpdateOffer() {
-        if updater.blockedReason() != nil {
-            SoundEffectService.shared.play(.error)
-            return
-        }
-        updater.update()
     }
 
     private func updateOfferInput(_ action: GamepadAction) {
         switch action {
         case .navigateLeft, .navigateRight:
-            let next: SeleneConfirmButton = action == .navigateLeft ? .cancel : .confirm
+            let next: SeleneConfirmButton = action == .navigateLeft && updater.dialogHasSecondaryButton ? .cancel : .confirm
             if updater.offerFocus != next {
                 updater.offerFocus = next
                 SoundEffectService.shared.play(.focus)
             }
         case .confirm:
             SoundEffectService.shared.play(.click)
-            if updater.offerFocus == .confirm { confirmUpdateOffer() } else { updater.later() }
+            if updater.offerFocus == .confirm { updater.confirmDialog() } else { updater.later() }
         case .cancel:
             updater.later()
+        case .navigateUp, .navigateDown, .jumpToStart, .jumpToEnd:
+            let last = max(0, (updater.dialogRelease?.notes.components(separatedBy: "\n").count ?? 1) - 1)
+            switch action {
+            case .jumpToStart: updater.notesScroll = 0
+            case .jumpToEnd: updater.notesScroll = last
+            default: updater.notesScroll = min(last, max(0, updater.notesScroll + (action == .navigateUp ? -3 : 3)))
+            }
         default:
             break
         }
@@ -777,6 +789,7 @@ public struct AppShellView: View {
     private func installGestureKeyMonitor() {
         guard gestureKeyMonitor == nil else { return }
         gestureKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [router, viewModel] event in
+            if nativeMenus.isTracking { return event }
             // The screenshot viewer owns the keyboard (its own monitor handles it); no navigating underneath.
             if router.isScreenshotViewerOpen { return event }
             // The intro's own monitor takes any key as "skip".
@@ -810,6 +823,8 @@ public struct AppShellView: View {
                 switch event.keyCode {
                 case 123: closeAction = .navigateLeft
                 case 124: closeAction = .navigateRight
+                case 125: closeAction = showsUpdateOffer ? .navigateDown : nil
+                case 126: closeAction = showsUpdateOffer ? .navigateUp : nil
                 case 36, 76, 49: closeAction = .confirm
                 case 53: closeAction = .cancel
                 default: closeAction = nil

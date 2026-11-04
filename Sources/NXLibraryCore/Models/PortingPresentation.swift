@@ -13,6 +13,7 @@ public enum PortingETA {
     /// Mac, or the shaders' part alone. Finishing: what is left of last time.
     /// Nothing before the shaders.
     public static func text(_ progress: PortingProgress, lastFinishingSeconds: Double?) -> String? {
+        if progress.isCleaningShaderCache { return "Cleaning shader cache" }
         switch progress.phase {
         case .shaders:
             guard let eta = progress.shaderETA else { return nil }
