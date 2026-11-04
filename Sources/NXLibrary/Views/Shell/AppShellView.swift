@@ -40,7 +40,9 @@ public struct AppShellView: View {
     private var backdropStyle: SeleneBackdropStyle {
         SeleneBackdropStyle(wallpaperURL: theme.wallpaper(for: settings.settings.wallpaperID)?.url,
                             sizing: settings.settings.backgroundSizing,
-                            animated: settings.settings.animatedBackground,
+                            // Held still while a build runs: the moving backdrop cost close to a core (NXLibrary plus WindowServer)
+                            // that the shader compile, which uses every core, could have had.
+                            animated: settings.settings.animatedBackground && !viewModel.isBuilding,
                             brightness: settings.settings.wallpaperBrightness)
     }
 

@@ -21,6 +21,10 @@ struct GameOptionsView: View {
     let onMove: () -> Void
     /// Read once: it parses the game's launcher file, which the rows must not do on every draw.
     private let supportsRenderScale: Bool
+    /// Likewise read once: what the app's launcher.json offers beyond the fixed rows.
+    private let supportsFrameRate: Bool
+    private let supportsButtonLayout: Bool
+    private let supportsScreenFill: Bool
 
     @State private var config: GameRuntimeConfig
     @State private var level: GameOptionsLevel = .main
@@ -61,6 +65,10 @@ struct GameOptionsView: View {
         self.onShowBuild = onShowBuild
         self.onMove = onMove
         supportsRenderScale = viewModel.supportsSetting("DM_RENDER_SCALE", for: game)
+        let listed = LauncherSettingsReader.load(for: game.url)?.settings.map(\.env) ?? []
+        supportsFrameRate = LauncherSettingsReader.offers("DM_FPS_TARGET", value: "120", for: game.url)
+        supportsButtonLayout = listed.contains("DM_PAD_LAYOUT")
+        supportsScreenFill = listed.contains("DM_PRESENT_FILL")
         _config = State(initialValue: viewModel.loadRuntimeConfig(for: game))
         _cheatsValue = State(initialValue: viewModel.cheatRowValue(for: game))
     }
@@ -85,7 +93,10 @@ struct GameOptionsView: View {
             gameName: game.name,
             appPath: game.url.path,
             canDeleteBundle: game.canDeleteAppBundle(),
-            cheatsValue: cheatsValue
+            cheatsValue: cheatsValue,
+            supportsFrameRate: supportsFrameRate,
+            supportsButtonLayout: supportsButtonLayout,
+            supportsScreenFill: supportsScreenFill
         )
     }
 
@@ -343,6 +354,12 @@ struct GameOptionsView: View {
             return "\(config.rumbleGain)"
         case .renderScale:
             return GameOptionsValues.renderScaleLabel(config.renderScale)
+        case .frameRate:
+            return "\(config.fpsTarget) FPS"
+        case .buttonLayout:
+            return GameOptionsValues.valueLabel(config.buttonLayout, in: GameOptionsValues.buttonLayouts)
+        case .screenFill:
+            return GameOptionsValues.valueLabel(config.screenFill, in: GameOptionsValues.screenFills)
         default:
             return ""
         }
@@ -588,6 +605,12 @@ struct GameOptionsView: View {
             config.rumbleGain = GameOptionsValues.steppedRumbleStrength(config.rumbleGain, by: delta)
         case .renderScale:
             config.renderScale = GameOptionsValues.steppedRenderScale(config.renderScale, by: delta)
+        case .frameRate:
+            config.fpsTarget = GameOptionsValues.steppedFrameRate(config.fpsTarget, by: delta)
+        case .buttonLayout:
+            config.buttonLayout = GameOptionsValues.steppedValue(config.buttonLayout, in: GameOptionsValues.buttonLayouts, by: delta)
+        case .screenFill:
+            config.screenFill = GameOptionsValues.steppedValue(config.screenFill, in: GameOptionsValues.screenFills, by: delta)
         default:
             break
         }
@@ -637,7 +660,7 @@ struct GameOptionsView: View {
         case .metalHUD:
             SoundEffectService.shared.play(.click)
             config.enableMetalHUD.toggle()
-        case .consoleMode, .language, .rumbleStrength, .renderScale:
+        case .consoleMode, .language, .rumbleStrength, .renderScale, .frameRate, .buttonLayout, .screenFill:
             adjust(row, by: 1)
         case .rumble:
             SoundEffectService.shared.play(.click)

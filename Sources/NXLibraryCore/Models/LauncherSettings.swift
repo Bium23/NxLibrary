@@ -83,6 +83,11 @@ public enum LauncherSettingsReader {
         return true
     }
 
+    /// Whether the app's launcher.json lists this value for the setting (DM_FPS_TARGET 120). Apps without the file offer only the fixed UI.
+    public static func offers(_ env: String, value: String, for appURL: URL) -> Bool {
+        load(for: appURL)?.settings.first { $0.env == env }?.options?.contains { $0.value == value } ?? false
+    }
+
     public static func hasRenderScaleFixup(_ appURL: URL) -> Bool {
         let url = appURL
             .appendingPathComponent("Contents/Resources/dm/main.fixups.tsv")
