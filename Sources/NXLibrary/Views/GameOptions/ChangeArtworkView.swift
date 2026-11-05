@@ -51,6 +51,9 @@ struct ChangeArtworkView: View {
     @State private var browseItems: [ArtworkSlot: [Found]] = [:]
     @State private var browseLoading: Set<ArtworkSlot> = []
     @State private var downloading = false
+    /// After an Icon pick for a game whose app has an icon of its own: show the pick on the app too?
+    @State private var askAppIcon = false
+    @State private var appIconFocus: SeleneConfirmButton = .confirm
     /// The main grid's focus, restored on leaving a source.
     @State private var mainFocus = 0
     @FocusState private var fieldFocused: Bool
@@ -162,6 +165,45 @@ struct ChangeArtworkView: View {
             }
         }
         .task(id: "\(slot.rawValue)|\(picks.revision)") { await loadPickPreview() }
+        .overlay {
+            if askAppIcon {
+                ZStack {
+                    SeleneTheme.scrim45.ignoresSafeArea()
+                    SeleneConfirmDialog(title: "Use it for the app too?",
+                                        message: appIconMessage,
+                                        confirmTitle: "Use on the Mac",
+                                        cancelTitle: "Only here",
+                                        focus: $appIconFocus,
+                                        onCancel: { answerAppIcon(false) },
+                                        onConfirm: { answerAppIcon(true) })
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(reduceMotion ? nil : SeleneTheme.quick, value: askAppIcon)
+    }
+
+    private var appIconMessage: String {
+        let running = RunningGameMonitor.runningApplication(for: game) != nil
+        return "\(game.name) shows it in Finder and the Dock, and keeps it after a rebuild. Automatic brings back the game's own icon."
+            + (running ? " It changes when the game quits." : " A large game takes about a minute.")
+    }
+
+    private func answerAppIcon(_ use: Bool) {
+        SoundEffectService.shared.play(.click)
+        askAppIcon = false
+        viewModel.setUsesPickedAppIcon(use, for: game)
+    }
+
+    /// An Icon pick changes the game app's icon too: at once when the app has none of its own, after asking otherwise.
+    private func iconPicked() {
+        guard slot == .icon else { return }
+        if viewModel.shouldAskAboutAppIcon(game) {
+            appIconFocus = .confirm
+            askAppIcon = true
+        } else {
+            viewModel.appIconPickChanged(for: game, removed: false)
+        }
     }
 
     private var rightHints: [HintItem] {
@@ -217,16 +259,27 @@ struct ChangeArtworkView: View {
     @ViewBuilder
     private var status: some View {
         Text(message ?? (browsing.map(browseStatus) ?? mainStatus))
-            .seleneFont(14)
+            .seleneFont(16)
             .foregroundColor(SeleneTheme.ink60)
             .lineLimit(1)
-            .frame(height: canvas.u(20), alignment: .leading)
+            .frame(height: canvas.u(22), alignment: .leading)
             .padding(.leading, canvas.u(10))
             .padding(.vertical, canvas.u(10))
     }
 
     private var mainStatus: String {
-        searching.contains(slot) ? "Searching…" : (found[slot]?.isEmpty ?? false) ? "No images found" : artworkLocation
+        if let appIcon = appIconStatus { return appIcon }
+        return searching.contains(slot) ? "Searching…" : (found[slot]?.isEmpty ?? false) ? "No images found" : artworkLocation
+    }
+
+    /// On the Icon tab, how the game app's own icon change stands: signing a large app takes about a minute.
+    private var appIconStatus: String? {
+        guard slot == .icon, let progress = viewModel.appIconProgress[game.id] else { return nil }
+        switch progress {
+        case .updating: return "Updating the app icon in Finder and the Dock… about a minute for a large game"
+        case .updated: return "App icon updated in Finder and the Dock"
+        case .failed(let reason): return "The app icon was not changed: \(reason)"
+        }
     }
 
     private func browseStatus(_ source: ArtworkBrowseSource) -> String {
@@ -502,6 +555,7 @@ struct ChangeArtworkView: View {
             guard hasPick else { return }
             picks.remove(titleID: titleKey, slot: slot)
             applied()
+            if slot == .icon { viewModel.appIconPickChanged(for: game, removed: true) }
         case .yourPick:
             SoundEffectService.shared.play(.click)
         case .art(let item):
@@ -546,6 +600,7 @@ struct ChangeArtworkView: View {
             applied()
             // The check moves to Your pick, second in the grid.
             focus = 1
+            iconPicked()
         } catch {
             message = error.localizedDescription
             SoundEffectService.shared.play(.error)
@@ -683,6 +738,20 @@ struct ChangeArtworkView: View {
     private func handleGamepad(_ action: GamepadAction) {
         // The key dialog reads the controller itself.
         if viewModel.isEditingSteamGridDBKey { return }
+        if askAppIcon {
+            switch action {
+            case .navigateLeft, .navigateRight:
+                let next: SeleneConfirmButton = action == .navigateLeft ? .cancel : .confirm
+                if appIconFocus != next {
+                    appIconFocus = next
+                    SoundEffectService.shared.play(.focus)
+                }
+            case .confirm: answerAppIcon(appIconFocus == .confirm)
+            case .cancel: answerAppIcon(false)
+            default: break
+            }
+            return
+        }
         switch action {
         case .navigateUp: move(.up)
         case .navigateDown: move(.down)
@@ -706,6 +775,16 @@ struct ChangeArtworkView: View {
                   let window = event.window, !window.isSheet, window.attachedSheet == nil,
                   NSApp.modalWindow == nil, !(window.firstResponder is NSText) else { return event }
             guard event.modifierFlags.intersection([.command, .control, .option]).isEmpty else { return event }
+            if askAppIcon {
+                switch event.keyCode {
+                case 123: handleGamepad(.navigateLeft)
+                case 124: handleGamepad(.navigateRight)
+                case 36, 76, 49: handleGamepad(.confirm)
+                case 53: handleGamepad(.cancel)
+                default: break
+                }
+                return nil
+            }
             switch event.keyCode {
             case 126: move(.up)
             case 125: move(.down)

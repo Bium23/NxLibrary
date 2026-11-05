@@ -71,6 +71,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/ViewModels/AppViewModel+Controller.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Controller.swift) | Conserva il contesto di gioco per i comandi e offre il collegamento alla cartella dei save. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Diagnostics.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Diagnostics.swift) | Raccoglie ambiente, toolchain e ultimo build per il rapporto diagnostico ripulito. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+KeyCheck.swift](../Sources/NXLibrary/ViewModels/AppViewModel+KeyCheck.swift) | Rilancia il controllo delle chiavi al variare delle sorgenti e scarta risultati superati. |
+| [Sources/NXLibrary/ViewModels/AppViewModel+AppIcon.swift](../Sources/NXLibrary/ViewModels/AppViewModel+AppIcon.swift) | Applica o ripristina l’icona dell’app del gioco dopo build, avvio e chiusura del gioco, senza toccare giochi in esecuzione o in build. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+PendingInstall.swift](../Sources/NXLibrary/ViewModels/AppViewModel+PendingInstall.swift) | Riprende le installazioni differite e gestisce errore e nuovo tentativo sul bundle pronto, rispettando i lease. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Porting.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Porting.swift) | Prepara tile, pill e stime del porting e coordina notifiche e azioni sugli errori riconosciuti. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Saves.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Saves.swift) | Risolve contesto e identità dei save, coordina i lease e avvia i recuperi pendenti. |
@@ -231,6 +232,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 |---|---|
 | [Sources/NXLibraryCore/Models/OnlineBackgrounds.swift](../Sources/NXLibraryCore/Models/OnlineBackgrounds.swift) | Modella sorgenti e risultati e interpreta le risposte dei provider di sfondi fissi e video. |
 | [Sources/NXLibraryCore/Services/ArtworkStore.swift](../Sources/NXLibraryCore/Services/ArtworkStore.swift) | Scarica, ridimensiona e conserva immagini e screenshot nella cache per titolo e tipo. |
+| [Sources/NXLibraryCore/Services/AppIconWriter.swift](../Sources/NXLibraryCore/Services/AppIconWriter.swift) | Scrive l’icona scelta nell’app del gioco, conserva l’originale, rifirma e verifica, e annulla tutto in caso di errore. |
 | [Sources/NXLibraryCore/Services/ArtworkPicker.swift](../Sources/NXLibraryCore/Services/ArtworkPicker.swift) | Aggrega candidati per cover, sfondo, icona e logo e conserva le scelte manuali. |
 | [Sources/NXLibraryCore/Services/MetadataPicker.swift](../Sources/NXLibraryCore/Services/MetadataPicker.swift) | Aggrega valori alternativi dei metadati e conserva gli override dell’utente per campo. |
 | [Sources/NXLibraryCore/Services/BoxArtService.swift](../Sources/NXLibraryCore/Services/BoxArtService.swift) | Trova copertine Switch in GameTDB e ricorda copertine e ricerche senza risultato. |

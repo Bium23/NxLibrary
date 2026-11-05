@@ -4,6 +4,10 @@ User-visible changes to NX Library are recorded here. Entries are grouped by rel
 
 ## Unreleased
 
+### Added
+
+- **Game app icons follow your Icon choice.** A game whose app has no icon (Switch 2 games and dumps) shows the Icon you choose in **Change artwork** in Finder and the Dock. For a game with its own icon, a question after choosing lets you use yours on the Mac too. The icon stays after a rebuild, and **Automatic** brings back the game's own. Updating a large game's app takes about a minute.
+
 ### Changed
 
 - The intro shows only the moving background, without the app icon.

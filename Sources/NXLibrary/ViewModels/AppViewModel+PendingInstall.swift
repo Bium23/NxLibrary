@@ -25,6 +25,7 @@ extension AppViewModel {
                 switch try PendingInstaller.install(&library.games[index]) {
                 case .installed:
                     logs.append(LogEntry(level: .success, message: "Installed the new build of \(name)."))
+                    library.games[index].appIconPending = true
                     if gameWithInstallFailure?.id == library.games[index].id { gameWithInstallFailure = nil }
                     if canRetryReadyInstall, lastBuildGameID == library.games[index].id {
                         buildState = .succeeded

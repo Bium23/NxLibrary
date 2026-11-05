@@ -25,6 +25,11 @@ public struct PortedGame: Identifiable, Codable, Equatable {
     public var portingFailureReason: PortingFailureReason?
     /// A finished build waiting for the game to quit before it replaces the running app.
     public var pendingInstall: PendingInstall?
+    /// The player chose to show NX Library's Icon pick as the game app's icon in Finder and the Dock
+    /// (`AppIconWriter`); written again after every build.
+    public var usesPickedAppIcon = false
+    /// The app's icon still has to be written or put back: the game was running. Done when it quits.
+    public var appIconPending = false
 
     public init(id: UUID = UUID(), name: String, url: URL,
                 platform: TargetPlatform, sizeBytes: Int64,
@@ -71,6 +76,8 @@ public struct PortedGame: Identifiable, Codable, Equatable {
         portingFailure = try c.decodeIfPresent(PortingFailure.self, forKey: .portingFailure)
         portingFailureReason = try c.decodeIfPresent(PortingFailureReason.self, forKey: .portingFailureReason)
         pendingInstall = try c.decodeIfPresent(PendingInstall.self, forKey: .pendingInstall)
+        usesPickedAppIcon = try c.decodeIfPresent(Bool.self, forKey: .usesPickedAppIcon) ?? false
+        appIconPending = try c.decodeIfPresent(Bool.self, forKey: .appIconPending) ?? false
     }
 
     /// The bundle id the built app runs as: the stored one, else nxnative's default

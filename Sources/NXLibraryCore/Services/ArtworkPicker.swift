@@ -250,7 +250,9 @@ public final class ArtworkPicks: ObservableObject {
     @discardableResult
     public func save(_ data: Data, titleID: String, slot: ArtworkSlot) throws -> URL {
         let kind = slot.kind
-        guard let image = ArtworkStore.downsample(data, maxPixelSize: kind.maxPixelSize, png: kind.isPNG) else {
+        // An Icon pick can become the game app's icon, whose largest size is 1024 pixels.
+        let size = slot == .icon ? 1024 : kind.maxPixelSize
+        guard let image = ArtworkStore.downsample(data, maxPixelSize: size, png: kind.isPNG) else {
             throw Failure.notAnImage
         }
         let target = files(titleID: titleID, slot: slot)[0]
@@ -260,6 +262,9 @@ public final class ArtworkPicks: ObservableObject {
         revision += 1
         return target
     }
+
+    /// Screens reload their art: something they show besides the picks changed (a game app's icon).
+    public func touch() { revision += 1 }
 
     /// Back to automatic art.
     public func remove(titleID: String, slot: ArtworkSlot) {

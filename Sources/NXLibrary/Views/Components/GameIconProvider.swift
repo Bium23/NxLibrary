@@ -39,6 +39,12 @@ public enum GameIconProvider {
 
     private static let artCache = NSCache<NSString, NSImage>()
 
+    /// The app's icon changed (`AppIconWriter`): read it again.
+    public static func forget(_ game: PortedGame) {
+        cache.removeObject(forKey: game.uniqueKey as NSString)
+        artCache.removeObject(forKey: game.uniqueKey as NSString)
+    }
+
     /// The game's own square icon art, full bleed: the built app's icon file
     /// (what Finder and the Dock show), else the icon nxnative extracted into
     /// the workspace. Nil when neither exists.

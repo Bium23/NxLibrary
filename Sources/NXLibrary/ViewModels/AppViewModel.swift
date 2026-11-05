@@ -15,6 +15,11 @@ struct SettingsNotice: Identifiable {
 }
 
 public final class AppViewModel: ObservableObject {
+    /// Games whose app icon is being written (`AppViewModel+AppIcon`), and those asked again meanwhile.
+    var appIconsInFlight = Set<UUID>()
+    var appIconRerun = Set<UUID>()
+    /// The last app icon change per game, for Change artwork's status line.
+    @Published var appIconProgress: [UUID: AppIconProgress] = [:]
     let saveGate = SaveOperationGate()
     let saveQueue = DispatchQueue(label: "local.nxlibrary.saves", qos: .userInitiated)
     @Published var settingsNotice: SettingsNotice?
@@ -1098,6 +1103,8 @@ public final class AppViewModel: ObservableObject {
                 }
                 self.libraryScanWarnings = scanWarnings
                 self.isScanningLibrary = false
+                // Paths are known again: icons chosen while an app was elsewhere, or left half done, go on now.
+                self.reconcileAppIcons()
                 if !scanWarnings.isEmpty {
                     for warning in scanWarnings {
                         self.logs.append(LogEntry(level: .warning, message: warning))
@@ -1203,6 +1210,12 @@ public final class AppViewModel: ObservableObject {
             return
         }
         guard savesPermitPlay(game) else { return }
+        // The app is being signed again with a new icon: starting it now could read a half-written bundle.
+        guard !appIconsInFlight.contains(game.id) else {
+            alertMessage = "\(game.name)'s app icon is being updated. Play again in a moment."
+            SoundEffectService.shared.play(.error)
+            return
+        }
         // A build that waited for the game to quit goes in first.
         let game = installingPendingBuild(of: game)
         if !FileManager.default.fileExists(atPath: game.url.path),
@@ -2284,6 +2297,9 @@ public final class AppViewModel: ObservableObject {
     private func beginBuild(for game: PortedGame, extraArguments: [String] = []) throws {
         guard !isBuilding else { throw NXLibraryError.buildAlreadyRunning }
         guard !isUpdatingApp else { throw NXLibraryError.environmentBlocked("wait for the app update to finish") }
+        guard !appIconsInFlight.contains(game.id) else {
+            throw NXLibraryError.environmentBlocked("wait for the app icon update to finish")
+        }
         var target = libraryGames.first(where: { $0.id == game.id }) ?? game
         guard let titleId = target.titleId,
               UInt64(titleId, radix: 16) != nil else {
@@ -2644,6 +2660,8 @@ public final class AppViewModel: ObservableObject {
                     PendingInstaller.discard(&game)
                     game.recordInstalledBuild(record, toolchain: toolchain, at: finalApp,
                                               version: Self.appVersion(at: finalApp), date: Date())
+                    // A new app has the build's icon: the player's goes back on (AppViewModel+AppIcon).
+                    game.appIconPending = true
                 }
                 if let seconds = portingProgress?.finishingElapsed, seconds > 0 {
                     lastPortingFinishSeconds = seconds
@@ -2715,7 +2733,10 @@ public final class AppViewModel: ObservableObject {
             libraryGames = library.games.sorted {
                 $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
             }
-            if result.success && saved { loadLibrary() }
+            if result.success && saved {
+                loadLibrary()
+                syncPendingAppIcons()
+            }
         } else {
             buildState = result.success ? .succeeded
                 : (result.cancelled ? .cancelled : .failed)
