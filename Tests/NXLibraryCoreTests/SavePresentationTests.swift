@@ -7,7 +7,7 @@ final class SavePresentationTests: XCTestCase {
         XCTAssertTrue(GameOptionsRow.openSaves.opensSubmenu)
         let p = GameOptionsPresentation(supportsRenderScale: false, isPlayable: true, sourcesDetached: false)
         let rows = p.focusableRows(level: .main, origin: .details)
-        XCTAssertEqual(Array(rows.prefix(4)), [.play, .editDetails, .cheats, .openSaves])
+        XCTAssertEqual(Array(rows.prefix(5)), [.play, .editDetails, .cheats, .mods, .openSaves])
         XCTAssertEqual(Array(rows.suffix(3)), [.rebuild, .showInFinder, .removeGame])
     }
     func testCloudImportHasAnActionInsteadOfBeingDisabled() {

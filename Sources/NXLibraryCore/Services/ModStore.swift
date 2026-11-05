@@ -70,6 +70,11 @@ public struct ModStore {
         self.trash = trash
     }
 
+    /// The Mods row's value: "None" without mods, "Off" when none is on, otherwise "<n> on".
+    public static func rowValue(on: Int, total: Int) -> String {
+        total == 0 ? "None" : on == 0 ? "Off" : "\(on) on"
+    }
+
     public var modsFolder: URL { supportFolder.appendingPathComponent("mods") }
     public var envFile: URL { supportFolder.appendingPathComponent("env.txt") }
 

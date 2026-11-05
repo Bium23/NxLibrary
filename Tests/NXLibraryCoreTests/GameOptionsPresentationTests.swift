@@ -41,7 +41,7 @@ final class GameOptionsPresentationTests: XCTestCase {
     func testMainRowsFollowTheSpecOrder() {
         let rows = presentation().focusableRows(level: .main, origin: .spotlight)
         XCTAssertEqual(rows.first, .play)
-        XCTAssertEqual(Array(rows.prefix(7)), [.play, .editDetails, .cheats, .openSaves, .move, .favorite, .hidden])
+        XCTAssertEqual(Array(rows.prefix(8)), [.play, .editDetails, .cheats, .mods, .openSaves, .move, .favorite, .hidden])
         XCTAssertEqual(Array(rows.suffix(3)), [.rebuild, .showInFinder, .removeGame])
         XCTAssertEqual(rows.last, .removeGame)
     }
@@ -53,7 +53,7 @@ final class GameOptionsPresentationTests: XCTestCase {
             let rows = p.focusableRows(level: .main, origin: origin)
             XCTAssertEqual(Array(rows.prefix(3)), [.play, .editDetails, .cheats], "\(origin)")
             XCTAssertEqual(rows.filter { $0 == .cheats }.count, 1)
-            XCTAssertEqual(rows.firstIndex(of: .cheats).map { rows[$0 + 1] }, .openSaves)
+            XCTAssertEqual(rows.firstIndex(of: .cheats).map { rows[$0 + 1] }, .mods)
             XCTAssertEqual(rows.filter { $0 == .openSaves }.count, 1)
             XCTAssertEqual(rows.firstIndex(of: .restoreDefaults).map { rows[$0 + 1] }, .rebuild)
         }
@@ -64,6 +64,30 @@ final class GameOptionsPresentationTests: XCTestCase {
         XCTAssertEqual(p.about(.cheats), "Install and switch this game's cheats.")
         let set = GameOptionsPresentation(supportsRenderScale: true, isPlayable: true, sourcesDetached: false, cheatsValue: "3 on")
         XCTAssertEqual(set.cheatsValue, "3 on")
+    }
+
+    /// Mods follows Cheats wherever the options open, then Open saves.
+    func testModsRowFollowsCheats() {
+        let p = presentation()
+        for origin in [GameOptionsOrigin.spotlight, .collection, .details] {
+            let rows = p.focusableRows(level: .main, origin: origin)
+            XCTAssertEqual(rows.filter { $0 == .mods }.count, 1, "\(origin)")
+            XCTAssertEqual(rows.firstIndex(of: .cheats).map { rows[$0 + 1] }, .mods, "\(origin)")
+            XCTAssertEqual(rows.firstIndex(of: .mods).map { rows[$0 + 1] }, .openSaves, "\(origin)")
+        }
+        XCTAssertEqual(GameOptionsRow.mods.title, "Mods")
+        XCTAssertEqual(GameOptionsRow.mods.icon, .puzzle)
+        XCTAssertTrue(GameOptionsRow.mods.opensSubmenu)
+        XCTAssertEqual(p.about(.mods), "Turn this game's file mods on and off, and choose which one wins.")
+    }
+
+    func testModsRowValue() {
+        XCTAssertEqual(presentation().modsValue, "None")
+        let set = GameOptionsPresentation(supportsRenderScale: true, isPlayable: true, sourcesDetached: false, modsValue: "2 on")
+        XCTAssertEqual(set.modsValue, "2 on")
+        XCTAssertEqual(ModStore.rowValue(on: 0, total: 0), "None")
+        XCTAssertEqual(ModStore.rowValue(on: 0, total: 3), "Off")
+        XCTAssertEqual(ModStore.rowValue(on: 2, total: 3), "2 on")
     }
 
     /// Edit details sits under Play wherever the options open.

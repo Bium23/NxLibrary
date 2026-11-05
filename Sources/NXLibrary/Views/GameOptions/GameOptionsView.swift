@@ -710,6 +710,8 @@ struct GameOptionsView: View {
         case .cheats:
             SoundEffectService.shared.play(.click)
             cheatsOpen = true
+        case .mods:
+            break
         case .rebuild:
             rebuild(current)
         case .showInFinder:

@@ -18,7 +18,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
     case play, move, favorite, hidden
     case fullscreen, fps60, frameRate, metalFX, gameUpscaler, metalHUD, consoleMode, language, rumble, rumbleStrength
     case renderScale, moreSettings, restoreDefaults
-    case cheats, rebuild, showInFinder, openSaves, editDetails, removeGame
+    case cheats, mods, rebuild, showInFinder, openSaves, editDetails, removeGame
     case changeArtwork, changeMetadata, storePage, attachSources, openLog, removeSources
 
     public var title: String {
@@ -41,6 +41,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
         case .renderScale: return "3D render scale"
         case .restoreDefaults: return "Use new game defaults"
         case .cheats: return "Cheats"
+        case .mods: return "Mods"
         case .rebuild: return "Rebuild"
         case .showInFinder: return "Show in Finder"
         case .openSaves: return "Saves"
@@ -73,6 +74,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
         case .renderScale: return .tune
         case .restoreDefaults: return .restore
         case .cheats: return .casino
+        case .mods: return .puzzle
         case .rebuild: return .build
         case .showInFinder: return .folder
         case .openSaves: return .save
@@ -104,7 +106,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
 
     /// Opens a sub-list (chevron).
     public var opensSubmenu: Bool {
-        [.editDetails, .changeArtwork, .changeMetadata, .cheats, .openSaves, .moreSettings].contains(self)
+        [.editDetails, .changeArtwork, .changeMetadata, .cheats, .mods, .openSaves, .moreSettings].contains(self)
     }
 
     /// The engine setting a row shows, for a build with saved choices.
@@ -170,14 +172,17 @@ public struct GameOptionsPresentation: Equatable {
     public let resolutionNote: String
     /// The Cheats row's value (CheatStatus.rowValue).
     public let cheatsValue: String
+    /// The Mods row's value (ModStore.rowValue).
+    public let modsValue: String
     /// The build's settings, for a build with saved choices; nil keeps the fixed rows of older builds.
     public let settings: GameSettingsSnapshot?
 
     public init(supportsRenderScale: Bool, isPlayable: Bool, sourcesDetached: Bool,
                 toolchainBlocked: Bool = false, toolchainHint: String? = nil, hasStorePage: Bool = false,
                 gameName: String = "", appPath: String = "", canDeleteBundle: Bool = false,
-                cheatsValue: String = "None", settings: GameSettingsSnapshot? = nil) {
+                cheatsValue: String = "None", modsValue: String = "None", settings: GameSettingsSnapshot? = nil) {
         self.cheatsValue = cheatsValue
+        self.modsValue = modsValue
         self.settings = settings
         self.showRenderScale = supportsRenderScale
         self.canPlay = isPlayable
@@ -245,6 +250,7 @@ public struct GameOptionsPresentation: Equatable {
         switch row {
         case .play: return "Launch the installed Mac app."
         case .cheats: return "Install and switch this game's cheats."
+        case .mods: return "Turn this game's file mods on and off, and choose which one wins."
         case .move: return "Change its place on Spotlight."
         case .favorite: return "On your Favorites tab."
         case .hidden: return "Hidden games stay out of your lists."
@@ -300,7 +306,7 @@ public struct GameOptionsPresentation: Equatable {
     public func entries(level: GameOptionsLevel, origin: GameOptionsOrigin) -> [GameOptionsEntry] {
         switch level {
         case .main:
-            var entries: [GameOptionsEntry] = [.row(.play), .row(.editDetails), .row(.cheats), .row(.openSaves)]
+            var entries: [GameOptionsEntry] = [.row(.play), .row(.editDetails), .row(.cheats), .row(.mods), .row(.openSaves)]
             if origin == .spotlight { entries.append(.row(.move)) }
             entries += [.row(.favorite), .row(.hidden), .heading("Next launch")]
             if let settings {
