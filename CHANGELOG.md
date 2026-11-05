@@ -2,7 +2,7 @@
 
 User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
-## Unreleased
+## 0.1.3.1 — 2026-11-05
 
 ### Fixed
 
