@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # scripts/bundle_runtime.sh — maintainer only.
 # Builds work/Runtime from runtime.lock: python-build-standalone CPython, the
-# engine's wheels (zbic's GPLv2 source beside them), and Homebrew's zstd and glslangValidator with their
+# engine's wheels (zbic's GPLv2 source beside them; nsz and its dependencies for
+# NSZ / XCZ inputs), and Homebrew's zstd and glslangValidator with their
 # dylibs, relinked to @loader_path and ad-hoc signed. build_app.sh copies it
 # into the app. Follows LumaNX's scripts/bundle_runtime.py (MIT).
 set -euo pipefail
@@ -104,6 +105,13 @@ for dist in "$SITE"/*.dist-info; do
   for file in "$dist"/LICENSE* "$dist"/licenses/*; do
     [ -f "$file" ] && cp "$file" "$STAGE/licenses/$name-$(basename "$file")"
   done
+  # Licences of bundled code kept in subfolders (pycryptodome's src/*/LICENSE).
+  if [ -d "$dist/licenses" ]; then
+    find "$dist/licenses" -mindepth 2 -type f | while IFS= read -r file; do
+      rel="${file#"$dist/licenses/"}"
+      cp "$file" "$STAGE/licenses/$name-${rel//\//-}"
+    done
+  fi
 done
 for formula in zstd glslang spirv-tools xz lz4; do
   prefix="$(brew --prefix "$formula")"
@@ -112,18 +120,16 @@ for formula in zstd glslang spirv-tools xz lz4; do
   done
 done
 
-cat > "$STAGE/versions.json" <<JSON
-{
-  "python": "$(lock python.version)",
-  "capstone": "$(lock wheels.0.version)",
-  "lz4": "$(lock wheels.1.version)",
-  "fonttools": "$(lock wheels.2.version)",
-  "zbic": "$(lock wheels.3.version)",
-  "zstd": "$(lock brew.0.version)",
-  "glslang": "$(lock brew.1.version)",
-  "lock": "$(sha256 "$LOCK")"
-}
-JSON
+# Every wheel and Homebrew tool of the lock, by name (check_publication.py compares them).
+"$PY" -I -B - "$LOCK" "$(sha256 "$LOCK")" > "$STAGE/versions.json" <<'PY'
+import json, sys
+lock = json.load(open(sys.argv[1]))
+versions = {"python": lock["python"]["version"]}
+versions.update((w["name"].lower(), w["version"]) for w in lock["wheels"])
+versions.update((b["formula"], b["version"]) for b in lock["brew"])
+versions["lock"] = sys.argv[2]
+print(json.dumps(versions, indent=2))
+PY
 
 # 9. Audit.
 STAMP="$WORK/audit.stamp"
@@ -136,7 +142,7 @@ while IFS= read -r -d '' file; do
     fi
   fi
 done < <(find "$STAGE" -type f -print0)
-"$PY" -I -B -c "import capstone, lz4.block, fontTools, zbic; assert capstone.cs_version()[0] == 5; assert zbic.decompress(zbic.compress(b'nx')) == b'nx'" \
+"$PY" -I -B -c "import capstone, lz4.block, fontTools, zbic, nsz; assert capstone.cs_version()[0] == 5; assert zbic.decompress(zbic.compress(b'nx')) == b'nx'" \
   || fail "audit: the Python packages do not import."
 env -i PATH=/usr/bin:/bin "$STAGE/bin/zstd" --version >/dev/null || fail "audit: zstd does not run."
 env -i PATH=/usr/bin:/bin "$STAGE/bin/glslangValidator" --version >/dev/null || fail "audit: glslangValidator does not run."

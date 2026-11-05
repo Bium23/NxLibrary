@@ -38,15 +38,16 @@ This directory records the review that must happen before the pin changes, plus 
    - **UI** only when the user must choose, see a state, or take an action that the existing screens cannot express.
    - **Backend** when the new behavior is automatic and the current build/launch/settings UI already gives the needed control (for example a shader fix, a new game profile, or a controller rumble fix).
    - **Not adopted** when the feature is diagnostic, game-specific tooling, or conflicts with the app's scope.
-5. **Integrate new engine flags** in `BuildCommandBuilder` (or the relevant service) and add a unit test. Do not leave an engine gate or override without a caller.
-6. **Verify**:
-   - full unit tests, with `PortingFailureEngineTests` run against the new pin (every engine message the failure table reads is still printed);
+5. **Bundle new Python packages.** Compare the README's `pip install` line and any new lazy `import` under `scripts/` and `dm/` with `runtime.lock`. Add every new wheel with its dependencies, rebuild `scripts/bundle_runtime.sh`, update `NOTICE` (a GPL package ships its source in `Runtime/sources/`), and add it to the Setup probe. `EngineRuntimeRequirementsTests` checks the README line and, where the engine has it, `.github/requirements/tools.txt`; zbic (system 22.0.0+ code) and nsz (NSZ / XCZ) reached players missing because nobody did this.
+6. **Integrate new engine flags** in `BuildCommandBuilder` (or the relevant service) and add a unit test. Do not leave an engine gate or override without a caller.
+7. **Verify**:
+   - full unit tests, with `PortingFailureEngineTests` and `EngineRuntimeRequirementsTests` run against the new pin (every engine message the failure table reads is still printed);
    - app rebuilt, signed, installed;
    - compatibility gate green (or an explicit recorded override);
    - one real certified build, including the pipeline archive stage;
    - smoke launch to a visible screen.
-7. **Re-pin** `AppViewModel.pinnedEngineCommit`, invalidate the cached upstream status, update `README.md` and the design spec, and write the dated note.
-8. **Record** the old and new commit hashes, the reason for the upgrade, what was not adopted, and the verification evidence.
+8. **Re-pin** `AppViewModel.pinnedEngineCommit`, invalidate the cached upstream status, update `README.md` and the design spec, and write the dated note.
+9. **Record** the old and new commit hashes, the reason for the upgrade, what was not adopted, and the verification evidence.
 
 ## Dated notes
 

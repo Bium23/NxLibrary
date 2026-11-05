@@ -6,7 +6,8 @@ User-visible changes to NX Library are recorded here. Entries are grouped by rel
 
 ### Fixed
 
-- Games and updates for system 22.0.0 and later, whose code Nintendo compresses with ZBIC (its own zstd variant), build again. Before, the porting stopped with "The engine needs the zbic package to read this game's code", even after `pip install zbic`: NX Library uses only its built-in Python, which lacked the package. The built-in Python now includes zbic 1.0.1.post1 (GPLv2; its source ships in `Runtime/sources/`), and Setup checks it with the other modules.
+- Games and updates for system 22.0.0 and later, whose code Nintendo compresses with ZBIC (its own zstd variant), now build. Before, the porting stopped with "The engine needs the zbic package to read this game's code", even after `pip install zbic`: NX Library uses only its built-in Python, which lacked the package. The built-in Python now includes zbic 1.0.1.post1 (GPLv2; its source ships in `Runtime/sources/`), and Setup checks it with the other modules.
+- NSZ and XCZ files build without a separate nsz install. The engine converts them with the nsz tool, which the built-in Python lacked, so they worked only where nsz happened to be installed. The built-in Python now includes nsz 5.0.0 and its dependencies.
 
 ## 0.1.3.1 — 2026-11-05
 

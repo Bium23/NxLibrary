@@ -19,7 +19,7 @@ public struct BundledRuntime: Equatable {
         guard let data = try? Data(contentsOf: versionsURL),
               let versions = try? JSONDecoder().decode([String: String].self, from: data) else { return nil }
         let order = [("python", "Python"), ("capstone", "capstone"), ("lz4", "lz4"),
-                     ("fonttools", "fonttools"), ("zbic", "zbic"), ("zstd", "zstd"), ("glslang", "glslang")]
+                     ("fonttools", "fonttools"), ("zbic", "zbic"), ("nsz", "nsz"), ("zstd", "zstd"), ("glslang", "glslang")]
         return order.compactMap { key, name in versions[key].map { "\(name) \($0)" } }.joined(separator: " · ")
     }
 

@@ -118,8 +118,8 @@ public struct SetupProbe {
         // -I ignores PYTHONDONTWRITEBYTECODE; -B keeps __pycache__ out of a bundled runtime,
         // whose new files would break the app's code signature.
         let modules = run(toolchain.python.path,
-                          ["-I", "-B", "-c", "import capstone, lz4.block, fontTools, zbic; assert capstone.cs_version()[0] == 5"])
-        if modules.status != 0 { return "Python or its modules (capstone 5, lz4, fontTools, zbic) did not start" }
+                          ["-I", "-B", "-c", "import capstone, lz4.block, fontTools, zbic, nsz; assert capstone.cs_version()[0] == 5"])
+        if modules.status != 0 { return "Python or its modules (capstone 5, lz4, fontTools, zbic, nsz) did not start" }
         for tool in ["zstd", "glslangValidator"] where run("/usr/bin/env", [tool, "--version"]).status != 0 {
             return "\(tool) did not run"
         }
