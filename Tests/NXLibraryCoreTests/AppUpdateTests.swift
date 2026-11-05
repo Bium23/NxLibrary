@@ -38,6 +38,19 @@ final class AppUpdateTests: XCTestCase {
 
     private let os = OperatingSystemVersion(majorVersion: 27, minorVersion: 2, patchVersion: 0)
 
+    func testDevelopmentCopySaysSo() {
+        XCTAssertEqual(AppUpdate.versionLabel(["CFBundleShortVersionString": "0.1.3", "NXLibraryRelease": true]), "0.1.3")
+        XCTAssertEqual(AppUpdate.versionLabel(["CFBundleShortVersionString": "0.1.3"]), "0.1.3 (development build)")
+    }
+
+    /// The development version is the one in progress, and a release never ships under another number.
+    func testVersionFileIsTheVersionInProgress() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let version = try String(contentsOf: root.appendingPathComponent("VERSION"), encoding: .utf8)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        XCTAssertNotNil(version.range(of: #"^[0-9]+(\.[0-9]+){1,3}$"#, options: .regularExpression))
+    }
+
     func testVersionCompareIsNumeric() {
         XCTAssertTrue(AppUpdate.isNewer("0.10.0", than: "0.9.3"))
         XCTAssertFalse(AppUpdate.isNewer("0.2", than: "0.2.0"))

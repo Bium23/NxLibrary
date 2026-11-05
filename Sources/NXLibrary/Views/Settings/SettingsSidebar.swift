@@ -9,9 +9,7 @@ struct SettingsSidebar: View {
     @Environment(\.seleneCanvas) private var canvas
 
     private var version: String {
-        let info = Bundle.main.infoDictionary
-        let short = info?["CFBundleShortVersionString"] as? String ?? "dev"
-        return "Version \(short)"
+        "Version \(AppUpdate.versionLabel(Bundle.main.infoDictionary))"
     }
 
     var body: some View {

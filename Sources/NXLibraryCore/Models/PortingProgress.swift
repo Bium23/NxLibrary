@@ -61,7 +61,7 @@ public struct PortingProgress: Equatable {
             phase = .shaders
             raise(to: Self.shaderShare * min(max(fraction, 0), 1))
             shaderETA = eta
-        case .stageEnd(let name, let ok, let elapsed, _):
+        case .stageEnd(let name, let ok, let elapsed, _, _):
             if name == Self.shaderStageName {
                 raise(to: Self.shaderShare)
                 phase = .finishing

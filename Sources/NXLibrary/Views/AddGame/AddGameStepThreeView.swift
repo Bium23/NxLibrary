@@ -152,6 +152,10 @@ struct AddGameStepThreeView: View {
             Image(systemName: "xmark")
                 .seleneFont(14, .bold)
                 .foregroundColor(PortingPillCopy.softRed)
+        } else if stage.hasWarning {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .seleneFont(14, .bold)
+                .foregroundColor(SeleneTheme.untested)
         } else if stage.isRunning {
             ProgressView()
                 .controlSize(.small)
@@ -204,6 +208,18 @@ struct AddGameStepThreeView: View {
                  ?? "The app was installed atomically. Your library now points at the new build.")
                 .seleneFont(14)
                 .foregroundColor(SeleneTheme.ink90)
+
+            ForEach(viewModel.buildStages.filter(\.hasWarning)) { stage in
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .seleneFont(14)
+                        .foregroundColor(SeleneTheme.untested)
+                    Text(BuildWarningCopy.text(stage: stage.name, summary: stage.summary))
+                        .seleneFont(14)
+                        .foregroundColor(SeleneTheme.ink90)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
     }
 

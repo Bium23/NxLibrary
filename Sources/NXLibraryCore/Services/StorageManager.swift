@@ -84,14 +84,7 @@ public final class StorageManager {
         if !isDirectory.boolValue {
             return Int64((try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0)
         }
-        guard let enumerator = fm.enumerator(
-            at: url, includingPropertiesForKeys: [.fileSizeKey],
-            options: [.skipsHiddenFiles]) else { return 0 }
-        var total: Int64 = 0
-        for case let item as URL in enumerator {
-            total += Int64((try? item.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0)
-        }
-        return total
+        return DirectorySize.bytes(at: url)
     }
 
     private func freeSpace(at url: URL) -> Int64 {

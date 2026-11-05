@@ -82,6 +82,16 @@ final class CheatStoreTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: folder.appendingPathComponent(".cheats-off-\(tid)").path))
     }
 
+    func testSwitchesWorkBeforeTheFolderExists() throws {
+        // A game whose cheats folder was never made (no file installed yet): the master switch and All off still work.
+        XCTAssertFalse(FileManager.default.fileExists(atPath: folder.path))
+        try store().setMaster(on: false)
+        XCTAssertFalse(store().state().masterOn)
+        try store().setMaster(on: true)
+        XCTAssertTrue(store().state().masterOn)
+        try store().turnAllOff()
+    }
+
     func testSafeModeFlagIsReadNeverWritten() throws {
         try store().install(abc, replacing: false)
         let flag = folder.appendingPathComponent(".cheats-running-\(tid)")

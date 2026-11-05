@@ -102,6 +102,7 @@ public enum SettingsCatalog {
             "Replaces slides and zooms with fades.") { $0.reduceMotion },
         action("iconAppearance", .look, "App icon", "The icon appearance in the Dock."),
         action("boxCovers", .look, "Box covers", "Open GameTDB for box covers."),
+        action("steamGridDB", .look, "SteamGridDB", "Add your API key to find covers, backgrounds, logos and icons in Change artwork."),
 
         // Games
         row("launchStyle", .games, "Launch screen style",
@@ -145,7 +146,7 @@ public enum SettingsCatalog {
             "Default vibration strength for new games.") { $0.gameDefaults.rumbleGain },
 
         // Library
-        action("gameFolder", .library, GameFoldersCopy.sourcesTitle, "Game sources: NSP, XCI, NSZ and XCZ files for builds. Optional for existing apps."),
+        action("gameFolder", .library, GameFoldersCopy.sourcesTitle, "Game sources: NSP, XCI, NSZ and XCZ files, or Switch 2 NUP files and extracted folders, for builds. Optional for existing apps."),
         action("libraryFolder", .library, GameFoldersCopy.appsTitle, "Choose where to find existing nxnative game apps and install new builds."),
         action("libraryRefresh", .library, "Scan game apps", "Find existing nxnative builds and refresh the library."),
         row("notifyPortingEnds", .library, "Notify when a porting ends",

@@ -124,6 +124,7 @@ final class GameOptionsPresentationTests: XCTestCase {
                     let p = presentation(renderScale: renderScale, store: store)
                     seen.formUnion(p.focusableRows(level: .main, origin: origin))
                     seen.formUnion(p.focusableRows(level: .editDetails, origin: origin))
+                    seen.formUnion(savedChoices(full: true).focusableRows(level: .main, origin: origin))
                 }
             }
         }
@@ -201,6 +202,91 @@ final class GameOptionsPresentationTests: XCTestCase {
         for row in GameOptionsRow.allCases {
             XCTAssertNotNil(p.about(row), "\(row)")
         }
+    }
+
+
+    // MARK: - Settings from the build's list
+
+    private func setting(_ env: String, _ kind: String, _ def: String, extra: String = "") -> LauncherSetting {
+        let json = #"{"env":"\#(env)","kind":"\#(kind)","section":"Game","label":"\#(env)","default":"\#(def)"\#(extra)}"#
+        return try! JSONDecoder().decode(LauncherSetting.self, from: Data(json.utf8))
+    }
+
+    /// Bananza's list; `full` adds the rows a newer build offers.
+    private func savedChoices(full: Bool = false, rumble: String = "1", fixed: Set<String> = []) -> GameOptionsPresentation {
+        var settings = [
+            setting("DM_OPMODE", "choice", "1", extra: #","options":[["1","Docked"],["0","Handheld"]]"#),
+            setting("DM_PRESENT_UPSCALE", "choice", "off", extra: #","options":[["off","Standard"],["metalfx","MetalFX"]]"#),
+            setting("DM_FULLSCREEN", "choice", "0", extra: #","options":[["0","Window"],["1","Fullscreen"]]"#),
+            setting("DM_RUMBLE", "toggle", "1", extra: #","on":"1","off":"0""#),
+            setting("DM_RUMBLE_GAIN", "range", "1.0", extra: #","needs":"DM_RUMBLE=1","min":0,"max":3,"step":0.1"#),
+            setting("DM_PSO_MTL4", "toggle", "1", extra: #","on":"1","off":"0""#),
+            setting("DM_METAL_HUD", "toggle", "0", extra: #","on":"1","off":"0""#),
+        ]
+        if full {
+            settings += [
+                setting("DM_FPS_TARGET", "choice", "60", extra: #","options":[["30","30 fps"],["60","60 fps"],["120","120 fps"]]"#),
+                setting("DM_UPSCALER", "choice", "game", extra: #","options":[["game","Game's own"],["metalfx","MetalFX"]]"#),
+                setting("DM_LANG", "choice", "en-US", extra: #","options":[["en-US","American English"]]"#),
+                setting("DM_RENDER_SCALE", "range", "1.0", extra: #","min":0.5,"max":1,"step":0.05"#),
+            ]
+        }
+        var values = Dictionary(uniqueKeysWithValues: settings.map { ($0.env, $0.defaultValue ?? "") })
+        values["DM_RUMBLE"] = rumble
+        return GameOptionsPresentation(supportsRenderScale: full, isPlayable: true, sourcesDetached: false,
+                                       settings: GameSettingsSnapshot(settings: settings, values: values, fixed: fixed))
+    }
+
+    func testSavedChoicesShowOnlyWhatTheBuildOffers() {
+        let rows = savedChoices().focusableRows(level: .main, origin: .collection)
+        for absent: GameOptionsRow in [.fps60, .frameRate, .language, .renderScale, .gameUpscaler] {
+            XCTAssertFalse(rows.contains(absent), "\(absent)")
+        }
+        for present: GameOptionsRow in [.fullscreen, .metalFX, .metalHUD, .consoleMode, .rumble, .rumbleStrength, .moreSettings] {
+            XCTAssertTrue(rows.contains(present), "\(present)")
+        }
+        XCTAssertEqual(savedChoices().settings?.extraSettings.map(\.env), ["DM_PSO_MTL4"])
+    }
+
+    func testNewerBuildGetsFrameRateAndUpscalerRows() {
+        let rows = savedChoices(full: true).focusableRows(level: .main, origin: .collection)
+        XCTAssertTrue(rows.contains(.frameRate))
+        XCTAssertFalse(rows.contains(.fps60), "Frame rate replaces the 60 FPS switch")
+        XCTAssertTrue(rows.contains(.gameUpscaler))
+        XCTAssertTrue(rows.contains(.renderScale))
+        XCTAssertTrue(rows.contains(.language))
+    }
+
+    func testRumbleStrengthNeedsRumble() {
+        XCTAssertFalse(savedChoices(rumble: "0").focusableRows(level: .main, origin: .collection).contains(.rumbleStrength))
+    }
+
+    func testKeySetInEnvIsFixed() {
+        let p = savedChoices(fixed: ["DM_OPMODE"])
+        XCTAssertTrue(p.isDimmed(.consoleMode))
+        XCTAssertEqual(p.about(.consoleMode), "Set in env.txt")
+        XCTAssertFalse(p.isDimmed(.rumble))
+    }
+
+    func testLegacyBuildKeepsTodaysRows() {
+        let rows = presentation().focusableRows(level: .main, origin: .collection)
+        XCTAssertTrue(rows.contains(.fps60))
+        XCTAssertFalse(rows.contains(.frameRate))
+        XCTAssertFalse(rows.contains(.moreSettings))
+    }
+
+    func testSettingValuesStepAndLabel() {
+        let gain = setting("DM_RUMBLE_GAIN", "range", "1.0", extra: #","min":0,"max":3,"step":0.1"#)
+        XCTAssertEqual(GameSettingValues.label(gain, "1"), "100%")
+        XCTAssertEqual(GameSettingValues.stepped(gain, from: "1", by: 1), "1.1")
+        XCTAssertEqual(GameSettingValues.stepped(gain, from: "3", by: 1), "0", "wraps like the other value rows")
+        XCTAssertEqual(GameSettingValues.stepped(gain, from: "0.45", by: -1), "0.4", "an off-step value moves to its neighbour")
+        let fps = setting("DM_FPS_TARGET", "choice", "60", extra: #","options":[["30","30 fps"],["60","60 fps"],["120","120 fps"]]"#)
+        XCTAssertEqual(GameSettingValues.label(fps, "120"), "120 fps")
+        XCTAssertEqual(GameSettingValues.stepped(fps, from: "120", by: 1), "30")
+        let toggle = setting("DM_PSO_MTL4", "toggle", "1", extra: #","on":"1","off":"0""#)
+        XCTAssertEqual(GameSettingValues.label(toggle, "1"), "On")
+        XCTAssertEqual(GameSettingValues.stepped(toggle, from: "1", by: 1), "0")
     }
 
     // MARK: - Focus

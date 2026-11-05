@@ -25,12 +25,14 @@ public struct PackageContent: Equatable {
 }
 
 public enum EngineSourceError: Error, LocalizedError {
-    case invalidPackage, invalidDump(String), missingProfile(String)
+    case invalidPackage, invalidDump(String), invalidContainer(String), containerNotAlone, missingProfile(String)
     public var errorDescription: String? {
         switch self {
         case .invalidPackage: return "The package contents could not be read. Check the files and imported keys."
         case .invalidDump(let detail): return "The extracted folder is incomplete: \(detail)."
-        case .missingProfile(let title): return "The selected engine has no registered profile for \(title). Extracted folders need a registered profile."
+        case .invalidContainer(let detail): return "The NUP file could not be read: \(detail)."
+        case .containerNotAlone: return "Choose one NUP file on its own: it holds the whole game."
+        case .missingProfile(let title): return "The selected engine has no registered profile for \(title). Extracted folders and NUP files need a registered profile."
         }
     }
 }
@@ -39,10 +41,13 @@ public enum EngineSourceError: Error, LocalizedError {
 public struct EngineSourceCapabilities {
     public let titleSelection: Bool
     public let extractedFolders: Bool
+    /// Builds from a `.nup` file (scripts/pack_nup.py).
+    public let nupContainers: Bool
     public init(repo: URL) {
         let text = (try? String(contentsOf: repo.appendingPathComponent("scripts/build_ipa_from_nsp.py"), encoding: .utf8)) ?? ""
         titleSelection = text.contains("'--title-id'") || text.contains("\"--title-id\"")
         extractedFolders = text.contains("import pack_dump") && titleSelection
+        nupContainers = text.contains("import pack_nup") && titleSelection
     }
 }
 

@@ -412,7 +412,7 @@ public struct SpotlightView: View {
     /// "No screenshots" only once the answer is final: not before the first
     /// request starts, nor while a stale empty cache entry is being refetched.
     private func screenshotsKnown(_ game: PortedGame, metadata: NintendoStoreMetadata?) -> Bool {
-        if viewModel.storeMetadataLoading.contains(game.id) { return false }
+        if viewModel.storeMetadataLoading.contains(game.id) || viewModel.screenshotLookups.contains(game.id) { return false }
         guard let titleId = game.titleId, !titleId.isEmpty else { return true }
         return metadata != nil || viewModel.storeMetadataErrors[game.id] != nil
     }

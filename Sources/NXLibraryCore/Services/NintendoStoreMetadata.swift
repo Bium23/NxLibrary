@@ -15,6 +15,8 @@ public struct NintendoStoreMetadata: Codable, Equatable {
     public var nsuid: String?
     public var fetchedAt: Date
     public var screenshotURLs: [URL] = []
+    /// Where `screenshotURLs` came from when not the store or Title DB ("LaunchBox"); shown, never saved.
+    public var screenshotSource: String?
 
     public init(titleId: String, name: String, description: String, developers: [String],
                 publishers: [String], genres: [String], releaseDate: String?, storeURL: URL,
@@ -204,7 +206,7 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         // Older games are fully described in the legacy catalog. Try it first:
         // one request and no product-page download.
         if let old = try? await searchOld(name: game.name),
-           let hit = chooseOld(old, name: game.name) {
+           let hit = chooseOld(old, name: game.name, titleId: cacheKey) {
             var meta = metadata(from: hit, titleId: cacheKey)
             if meta.headerImageURL == nil && cacheKey.count == 16 && cacheKey.hasPrefix("0100") {
                 meta.headerImageURL = URL(string: "https://api.nlib.cc/nx/\(cacheKey)/banner")
@@ -213,7 +215,7 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         }
 
         let newHits = (try? await searchNew(name: game.name)) ?? []
-        guard let hit = chooseNew(newHits, name: game.name),
+        guard let hit = chooseNew(newHits, name: game.name, titleId: cacheKey),
               let urlPath = hit.url,
               let storeURL = URL(string: urlPath.hasPrefix("http") ? urlPath
                                  : "https://www.nintendo.com\(urlPath)") else {
@@ -225,7 +227,7 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         }
 
         if let old = try? await searchOld(name: game.name),
-           let oldHit = chooseOld(old, name: game.name) {
+           let oldHit = chooseOld(old, name: game.name, titleId: cacheKey) {
             var meta = metadata(from: oldHit, titleId: cacheKey, storeURL: storeURL)
             if meta.headerImageURL == nil && cacheKey.count == 16 && cacheKey.hasPrefix("0100") {
                 meta.headerImageURL = URL(string: "https://api.nlib.cc/nx/\(cacheKey)/banner")
@@ -495,13 +497,23 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         )
     }
 
-    private func chooseNew(_ hits: [NewHit], name: String) -> NewHit? {
+    /// The store's platforms, the game's own first: a Switch 2 title ID starts with 04. A game sold for both
+    /// (a Nintendo Switch 2 Edition) then gets the page of the version that was ported.
+    static func platforms(forTitleId titleId: String) -> [String] {
+        titleId.hasPrefix("04") ? ["Nintendo Switch 2", "Nintendo Switch"] : ["Nintendo Switch", "Nintendo Switch 2"]
+    }
+
+    static func ordered<Hit>(_ hits: [Hit], platform: (Hit) -> String?, titleId: String) -> [Hit] {
+        let order = platforms(forTitleId: titleId)
+        return order.flatMap { wanted in hits.filter { platform($0) == wanted } }
+    }
+
+    private func chooseNew(_ hits: [NewHit], name: String, titleId: String) -> NewHit? {
         let target = Self.normalize(name)
-        let games = hits.filter {
+        let games = Self.ordered(hits.filter {
             ($0.topLevelCategory ?? "").caseInsensitiveCompare("Games") == .orderedSame
-                && ($0.platform ?? "") == "Nintendo Switch"
                 && $0.url != nil
-        }
+        }, platform: \.platform, titleId: titleId)
         return games.first { Self.normalize($0.title ?? "") == target }
             ?? games.first {
                 let title = Self.normalize($0.title ?? "")
@@ -510,12 +522,10 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
             ?? games.first
     }
 
-    private func chooseOld(_ hits: [OldHit], name: String) -> OldHit? {
+    private func chooseOld(_ hits: [OldHit], name: String, titleId: String) -> OldHit? {
         let target = Self.normalize(name)
-        let games = hits.filter {
-            ($0.platform ?? "") == "Nintendo Switch"
-                && !($0.description ?? "").isEmpty
-        }
+        let games = Self.ordered(hits.filter { !($0.description ?? "").isEmpty },
+                                 platform: \.platform, titleId: titleId)
         return games.first { Self.normalize($0.title ?? "") == target }
             ?? games.first {
                 let title = Self.normalize($0.title ?? "")

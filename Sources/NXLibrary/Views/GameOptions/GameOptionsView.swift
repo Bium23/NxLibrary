@@ -23,6 +23,8 @@ struct GameOptionsView: View {
     private let supportsRenderScale: Bool
 
     @State private var config: GameRuntimeConfig
+    /// The build's settings and their values, for a build with saved choices; nil for an older build (`config`).
+    @State private var snapshot: GameSettingsSnapshot?
     @State private var level: GameOptionsLevel = .main
     /// The focused row by identity; nil means the top row of the level.
     @State private var pickedRow: GameOptionsRow?
@@ -34,10 +36,11 @@ struct GameOptionsView: View {
     /// The Cheats panel, likewise.
     @State private var cheatsOpen = false
     @State private var savesOpen = false
+    @State private var moreOpen = false
     /// The Cheats row's value: read from disk when Game options opens and when the panel closes, not on every draw.
     @State private var cheatsValue: String
     /// A panel over the list has the input.
-    private var panelOpen: Bool { artworkOpen || metadataOpen || cheatsOpen || savesOpen }
+    private var panelOpen: Bool { artworkOpen || metadataOpen || cheatsOpen || savesOpen || moreOpen }
     @State private var confirmFocus: SeleneConfirmButton = .cancel
     @State private var keyMonitor: Any?
     /// Row frames in the list's viewport, written while scrolling without redrawing.
@@ -62,6 +65,7 @@ struct GameOptionsView: View {
         self.onMove = onMove
         supportsRenderScale = viewModel.supportsSetting("DM_RENDER_SCALE", for: game)
         _config = State(initialValue: viewModel.loadRuntimeConfig(for: game))
+        _snapshot = State(initialValue: viewModel.settingsSnapshot(for: game))
         _cheatsValue = State(initialValue: viewModel.cheatRowValue(for: game))
     }
 
@@ -85,7 +89,8 @@ struct GameOptionsView: View {
             gameName: game.name,
             appPath: game.url.path,
             canDeleteBundle: game.canDeleteAppBundle(),
-            cheatsValue: cheatsValue
+            cheatsValue: cheatsValue,
+            settings: snapshot
         )
     }
 
@@ -150,6 +155,15 @@ struct GameOptionsView: View {
                 SavesPanel(viewModel: viewModel, game: current) { savesOpen = false }
                     .transition(.opacity)
                     .zIndex(2)
+            }
+
+            if moreOpen {
+                MoreSettingsPanel(viewModel: viewModel, game: current) {
+                    moreOpen = false
+                    snapshot = viewModel.settingsSnapshot(for: current)
+                }
+                .transition(.opacity)
+                .zIndex(2)
             }
 
             if let target = confirm {
@@ -321,6 +335,9 @@ struct GameOptionsView: View {
     }
 
     private func toggleValue(_ row: GameOptionsRow) -> Bool {
+        if let (setting, value) = settingValue(row) {
+            return value == (setting.kind == "toggle" ? setting.on : row.onValue)
+        }
         switch row {
         case .favorite: return current.isFavorite
         case .hidden: return current.isHidden
@@ -334,6 +351,7 @@ struct GameOptionsView: View {
     }
 
     private func choiceText(_ row: GameOptionsRow) -> String {
+        if let (setting, value) = settingValue(row) { return GameSettingValues.label(setting, value) }
         switch row {
         case .consoleMode:
             return GameOptionsValues.consoleModeLabel(docked: config.isDockedMode)
@@ -576,8 +594,40 @@ struct GameOptionsView: View {
         perform(row)
     }
 
+    /// A setting row of a build with saved choices, with the value that applies now.
+    private func settingValue(_ row: GameOptionsRow) -> (LauncherSetting, String)? {
+        guard let snapshot, let key = row.settingKey, let setting = snapshot.setting(key) else { return nil }
+        return (setting, snapshot.value(key) ?? setting.defaultValue ?? "")
+    }
+
+    /// Changes a setting row of a build with saved choices: a switch flips, a value steps. A row env.txt sets
+    /// does not change.
+    private func changeSetting(_ row: GameOptionsRow, by delta: Int) {
+        guard let (setting, value) = settingValue(row) else { return }
+        guard !presentation.isFixed(row) else {
+            SoundEffectService.shared.play(.error)
+            return
+        }
+        SoundEffectService.shared.play(.click)
+        let next: String
+        if row.isToggle, setting.kind != "toggle" {
+            // A two-option choice drawn as a switch (Display mode, Upscaling).
+            next = value == row.onValue
+                ? (setting.options?.first { $0.value != row.onValue }?.value ?? value)
+                : row.onValue
+        } else {
+            next = GameSettingValues.stepped(setting, from: value, by: delta)
+        }
+        viewModel.setGameSetting(setting.env, to: next, for: current)
+        snapshot = viewModel.settingsSnapshot(for: current)
+    }
+
     /// Left/Right on a choice row: step backwards or forwards.
     private func adjust(_ row: GameOptionsRow, by delta: Int) {
+        if snapshot != nil, row.settingKey != nil {
+            changeSetting(row, by: delta)
+            return
+        }
         SoundEffectService.shared.play(.click)
         switch row {
         case .consoleMode:
@@ -603,6 +653,10 @@ struct GameOptionsView: View {
 
     /// The row's action. A on a choice row steps it forwards.
     private func perform(_ row: GameOptionsRow) {
+        if snapshot != nil, row.settingKey != nil {
+            changeSetting(row, by: 1)
+            return
+        }
         switch row {
         case .play:
             guard presentation.canPlay else {
@@ -637,14 +691,22 @@ struct GameOptionsView: View {
         case .metalHUD:
             SoundEffectService.shared.play(.click)
             config.enableMetalHUD.toggle()
-        case .consoleMode, .language, .rumbleStrength, .renderScale:
+        case .consoleMode, .language, .rumbleStrength, .renderScale, .frameRate, .gameUpscaler:
             adjust(row, by: 1)
+        case .moreSettings:
+            SoundEffectService.shared.play(.click)
+            moreOpen = true
         case .rumble:
             SoundEffectService.shared.play(.click)
             config.rumble.toggle()
         case .restoreDefaults:
             SoundEffectService.shared.play(.click)
-            config = viewModel.settingsStore?.settings.gameDefaults ?? GameRuntimeConfig()
+            if snapshot != nil {
+                viewModel.restoreGameDefaults(for: current)
+                snapshot = viewModel.settingsSnapshot(for: current)
+            } else {
+                config = viewModel.settingsStore?.settings.gameDefaults ?? GameRuntimeConfig()
+            }
         case .cheats:
             SoundEffectService.shared.play(.click)
             cheatsOpen = true

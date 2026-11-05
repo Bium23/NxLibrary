@@ -50,8 +50,10 @@ public enum SourceSelection {
         }
     }
 
-    public static func supported(_ files: [GameFileItem], titleSelection: Bool, extractedFolders: Bool) -> Bool {
+    public static func supported(_ files: [GameFileItem], titleSelection: Bool, extractedFolders: Bool,
+                                 nupContainers: Bool = false) -> Bool {
         files.allSatisfy { ($0.layout != .extracted || extractedFolders)
+            && ($0.layout != .container || nupContainers)
             && ($0.requiresTitleSelection != true || titleSelection) }
     }
     private static func path(_ file: GameFileItem) -> String {

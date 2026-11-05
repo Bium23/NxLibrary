@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # scripts/build_app.sh [destination.app]
-# NX_VERSION sets the app version (default 0.1.0); NX_RELEASE=1 marks a release copy, the only kind
-# that updates itself. scripts/release.sh sets both; a plain build sets neither.
+# NX_VERSION sets the app version (default: the version in progress, from the VERSION file); NX_RELEASE=1
+# marks a release copy, the only kind that updates itself. scripts/release.sh sets both; a plain build sets
+# neither, so a development copy carries the version being worked on and says it is a development build.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 APP="${1:-$HOME/Applications/NXLibrary.app}"
 CONFIG="${NX_BUILD_CONFIG:-release}"
-VERSION="${NX_VERSION:-0.1.0}"
+VERSION="${NX_VERSION:-$(tr -d '[:space:]' < "$ROOT/VERSION")}"
 if ! [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,3}$ ]]; then
   echo "error: NX_VERSION must be dotted numbers, got '$VERSION'" >&2
   exit 1

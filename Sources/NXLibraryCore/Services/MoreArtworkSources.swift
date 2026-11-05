@@ -29,9 +29,9 @@ public enum ArtworkNames {
     }
 }
 
-/// Every online source in the order the picker lists them: the stores (Steam, Xbox,
-/// GOG, Nintendo Europe), then the databases (TheGamesDB, Wikidata), then the
-/// wikis' logos and Wallhaven's backgrounds.
+/// Every online source the picker lists by itself, in its order: Steam, the other stores (Xbox, GOG, Nintendo Europe),
+/// then the databases (TheGamesDB, Wikidata), then the wikis' logos and Wallhaven's backgrounds. LaunchBox and
+/// SteamGridDB are browsed on their own from Change artwork (`ArtworkBrowseSource`).
 public enum OnlineArtwork {
     /// Screenshots kept per source.
     static let screenshotLimit = 4

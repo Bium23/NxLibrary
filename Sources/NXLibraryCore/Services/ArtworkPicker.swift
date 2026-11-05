@@ -115,12 +115,21 @@ public struct ArtworkCandidate: Equatable, Hashable, Sendable {
     public let url: URL
     /// Tried when `url` is missing: the standard size of a file asked for at twice the size.
     public let fallback: URL?
+    /// The full-size file, downloaded only when the player chooses this image; `url` is then a small preview.
+    public let full: URL?
+    /// The full file's size in pixels, as its source states it.
+    public let width: Int?
+    public let height: Int?
 
-    public init(slot: ArtworkSlot, source: String, url: URL, fallback: URL? = nil) {
+    public init(slot: ArtworkSlot, source: String, url: URL, fallback: URL? = nil,
+                full: URL? = nil, width: Int? = nil, height: Int? = nil) {
         self.slot = slot
         self.source = source
         self.url = url
         self.fallback = fallback
+        self.full = full
+        self.width = width
+        self.height = height
     }
 }
 
@@ -131,7 +140,11 @@ public struct LoadedArtwork: Equatable, Sendable {
     public let pixelWidth: Int
     public let pixelHeight: Int
 
-    public var resolution: String { "\(pixelWidth) × \(pixelHeight)" }
+    /// The size of the image a choice saves: the full file's when the source states it, not the preview's.
+    public var resolution: String {
+        if let width = candidate.width, let height = candidate.height, width > 0, height > 0 { return "\(width) × \(height)" }
+        return "\(pixelWidth) × \(pixelHeight)"
+    }
 }
 
 public enum ArtworkCandidates {
@@ -183,10 +196,17 @@ public enum ArtworkCandidates {
         return await load(candidate, from: fallback, client: client)
     }
 
+    /// The image a choice saves: the full file when the candidate has one, otherwise what `load` read.
+    public static func chosenData(_ artwork: LoadedArtwork,
+                                  client: ArtworkHTTPClient = URLSessionArtworkClient()) async -> Data? {
+        guard let full = artwork.candidate.full else { return artwork.data }
+        return await load(artwork.candidate, from: full, client: client, timeout: 60)?.data
+    }
+
     private static func load(_ candidate: ArtworkCandidate, from url: URL,
-                             client: ArtworkHTTPClient) async -> LoadedArtwork? {
+                             client: ArtworkHTTPClient, timeout: TimeInterval = 20) async -> LoadedArtwork? {
         var request = URLRequest(url: url)
-        request.timeoutInterval = 20
+        request.timeoutInterval = timeout
         request.setValue("NXLibrary/0.1 (macOS; personal app)", forHTTPHeaderField: "User-Agent")
         guard let (data, http) = try? await client.data(for: request), (200..<300).contains(http.statusCode),
               let size = pixelSize(of: data) else { return nil }

@@ -27,7 +27,7 @@ extension AddGameView {
         var rows: [AddGameRow] = []
         let folder = viewModel.selectedGameFolder
         rows.append(AddGameRow(id: "chooseFiles", kind: .action { viewModel.selectGameFiles() },
-                               icon: .add, title: "Choose game files", about: "NSP, XCI, NSZ or XCZ."))
+                               icon: .add, title: "Choose game files", about: "NSP, XCI, NSZ, XCZ or a Switch 2 NUP."))
         rows.append(AddGameRow(id: "choose", kind: .action { viewModel.selectGameFolder() },
                                icon: .folder, title: folder == nil ? "Choose folder" : "Change folder",
                                about: folder.map { ($0.path as NSString).abbreviatingWithTildeInPath }
@@ -97,7 +97,7 @@ extension AddGameView {
             parts.append(raw.lowercased().hasPrefix("v") ? raw : "v\(raw)")
         }
         let bundled = viewModel.selectedGame?.files.contains { $0.id != item.id && $0.url == item.url } == true
-        if bundled && item.type != .base { parts.append("In package") }
+        if bundled && item.type != .base { parts.append(item.layout == .container ? "In the NUP file" : "In package") }
         else { parts.append(item.layout == .extracted ? "Extracted folder" : item.formattedSize) }
         return parts.joined(separator: " · ")
     }

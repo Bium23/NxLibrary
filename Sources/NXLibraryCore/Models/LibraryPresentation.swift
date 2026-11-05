@@ -9,6 +9,8 @@ public struct LibraryPresentation: Equatable {
     public let playtime: String
     public let lastPlayed: String
     public let platform: String
+    /// "Nintendo Switch 2" for a Switch 2 title (ID starting 04), else "Nintendo Switch".
+    public let console: String
     public let sourcesDetached: Bool
     public let summary: String
 
@@ -22,6 +24,7 @@ public struct LibraryPresentation: Equatable {
         playtime = Self.duration(totalPlaytime)
         self.lastPlayed = Self.relative(lastPlayed, now: now)
         platform = "nxnative"
+        console = game.consoleName
         sourcesDetached = !game.sources.contains { $0.type == .base }
         summary = (metadata?.description ?? "")
             .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)

@@ -47,6 +47,7 @@ final class LibraryPresentationTests: XCTestCase {
         XCTAssertEqual(presentation.lastPlayed, "1h ago")
         XCTAssertTrue(presentation.sourcesDetached)
         XCTAssertEqual(presentation.platform, "nxnative")
+        XCTAssertEqual(presentation.console, "Nintendo Switch")
         XCTAssertEqual(presentation.summary, "A world of discovery.")
     }
 

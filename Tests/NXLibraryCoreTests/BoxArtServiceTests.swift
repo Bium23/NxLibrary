@@ -69,7 +69,7 @@ final class BoxArtServiceTests: XCTestCase {
 
         let none = await boxArt.boxArt(titleID: "01007EF00011E000", names: ["The Legend of Zelda: Breath of the Wild"])
         XCTAssertNil(none)
-        XCTAssertEqual(client.requested.count, GameTDB.coverRegions.count)
+        XCTAssertEqual(client.requested.count, GameTDB.coverRegions.count + 1, "every GameTDB region, then the TheGamesDB search")
 
         client.requested = []
         _ = await boxArt.boxArt(titleID: "01007EF00011E000", names: ["The Legend of Zelda: Breath of the Wild"])
@@ -77,7 +77,26 @@ final class BoxArtServiceTests: XCTestCase {
 
         now = now.addingTimeInterval(8 * 24 * 3600)
         _ = await boxArt.boxArt(titleID: "01007EF00011E000", names: ["The Legend of Zelda: Breath of the Wild"])
-        XCTAssertEqual(client.requested.count, GameTDB.coverRegions.count)
+        XCTAssertEqual(client.requested.count, GameTDB.coverRegions.count + 1, "every GameTDB region, then the TheGamesDB search")
+    }
+
+    func testTheGamesDBCoverWhenGameTDBHasNone() async throws {
+        let client = RoutedClient()
+        let search = TheGamesDBArt.searchURL(for: "Donkey Kong Bananza")!.absoluteString
+        client.routes[search] = Data("""
+        <a href="./game.php?id=132468"><div class="card"><img src="x"><div class="card-footer bg-secondary">
+          <p>Donkey Kong Bananza</p><p class="text-muted">Nintendo Switch</p></div></div></a>
+        """.utf8)
+        client.routes[TheGamesDBArt.gameURL(id: 132468).absoluteString] = Data("""
+        <a href="https://cdn.thegamesdb.net/images/original/boxart/front/132468-1.jpg"></a>
+        """.utf8)
+        client.routes["https://cdn.thegamesdb.net/images/original/boxart/front/132468-1.jpg"] = jpeg(width: 500, height: 500)
+        let (boxArt, artwork, index) = try service(client)
+        try index.save([zelda])
+
+        let url = await boxArt.boxArt(titleID: "040074A01BF12000", names: ["Donkey Kong Bananza"])
+        XCTAssertNotNil(url)
+        XCTAssertEqual(url, artwork.cachedURL(titleID: "040074A01BF12000", kind: .boxart))
     }
 
     func testNewNameRetriesAfterMiss() async throws {

@@ -41,6 +41,10 @@ public struct BuildStageStepperView: View {
                 if stage.isRunning {
                     ProgressView()
                         .controlSize(.mini)
+                } else if stage.hasWarning {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(SeleneTheme.untested)
+                        .seleneFont(19)
                 } else if stage.isCompleted {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(SeleneTheme.success)

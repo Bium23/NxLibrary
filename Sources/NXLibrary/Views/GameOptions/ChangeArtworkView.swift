@@ -6,13 +6,18 @@ import NXLibraryCore
 
 /// Game options → Edit details → Change artwork, after Playnite's artwork picker.
 /// Tabs for Cover, Background, Icon and Logo; each shows Automatic, the player's
-/// pick, every image GameTDB, Title DB, the Nintendo store and the online sources
-/// (`OnlineArtwork`: stores, databases, wikis, Wallhaven) offer, with its size in
-/// pixels, and From file…. A choice is kept in `ArtworkPicks` and never
-/// overwritten by automatic art; Automatic takes it back.
+/// pick, a "Browse online" tile for LaunchBox and for SteamGridDB, then every image GameTDB,
+/// Title DB, the Nintendo store and the online sources (`OnlineArtwork`: stores, databases,
+/// wikis, Wallhaven) offer, with its size in pixels, and From file….
+/// A choice is kept in `ArtworkPicks` and never overwritten by automatic art; Automatic takes it back.
 ///
-/// Input: arrows or the stick move in the grid, L/R (Q/E) change the tab, A chooses,
-/// B (or Esc) returns to Game options. A click chooses.
+/// Browsing a source replaces the grid with that source's images for the open tab, as the Theme screen browses
+/// wallpaper sites: a search prefilled with the game's name, each image credited with its kind or author and its
+/// full size. Only previews load; the full image downloads when chosen. SteamGridDB asks for the player's key first.
+///
+/// Input: arrows or the stick move in the grid (up from the first row reaches the search field while browsing),
+/// L/R (Q/E) change the tab, A chooses, X opens the source's page while browsing, B (or Esc) goes back.
+/// A click chooses.
 struct ChangeArtworkView: View {
     @ObservedObject var viewModel: AppViewModel
     let game: PortedGame
@@ -20,6 +25,7 @@ struct ChangeArtworkView: View {
 
     @ObservedObject private var picks = ArtworkPicks.shared
     @State private var slot: ArtworkSlot = .cover
+    /// The focused tile; while browsing, -1 is the search field.
     @State private var focus = 0
     /// Images found per slot, in the order the picker lists them, with small previews.
     @State private var found: [ArtworkSlot: [Found]] = [:]
@@ -32,6 +38,23 @@ struct ChangeArtworkView: View {
     @State private var message: String?
     @State private var keyMonitor: Any?
 
+    // Browsing a source
+    @State private var browsing: ArtworkBrowseSource?
+    /// SteamGridDB, waiting for its key dialog.
+    @State private var pendingBrowse: ArtworkBrowseSource?
+    /// The name searched, and the field's text.
+    @State private var browseQuery = ""
+    @State private var browseDraft = ""
+    /// Raised by every search, so an answer for an older one is dropped.
+    @State private var browseRound = 0
+    @State private var browseResult: ArtworkBrowseSource.Found?
+    @State private var browseItems: [ArtworkSlot: [Found]] = [:]
+    @State private var browseLoading: Set<ArtworkSlot> = []
+    @State private var downloading = false
+    /// The main grid's focus, restored on leaving a source.
+    @State private var mainFocus = 0
+    @FocusState private var fieldFocused: Bool
+
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
 
@@ -42,14 +65,24 @@ struct ChangeArtworkView: View {
     }
 
     enum Tile: Equatable {
-        case automatic, yourPick, art(Found), file
+        case automatic, yourPick, art(Found), browse(ArtworkBrowseSource), file
     }
 
     private var titleKey: String { game.titleId ?? game.uniqueKey }
     private var hasPick: Bool { picks.url(titleID: titleKey, slot: slot) != nil }
+    private var switch2: Bool { game.titleId?.hasPrefix("04") == true }
+    private var gameNames: [String] {
+        let metadata = viewModel.storeMetadata[game.id]
+        return [game.name, metadata?.name, titleDB?.name].compactMap { $0 }
+            .reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
+    }
 
     private var tiles: [Tile] {
-        [.automatic] + (hasPick ? [.yourPick] : []) + (found[slot] ?? []).map(Tile.art) + [.file]
+        if browsing != nil { return (browseItems[slot] ?? []).map(Tile.art) }
+        // The sources to browse come right after Automatic (and Your pick), so a search is one move away and never
+        // waits for the found images to load; From file… ends the grid.
+        return [.automatic] + (hasPick ? [.yourPick] : []) + ArtworkBrowseSource.allCases.map(Tile.browse)
+            + (found[slot] ?? []).map(Tile.art) + [.file]
     }
 
     // MARK: - Geometry (Selene units)
@@ -76,11 +109,11 @@ struct ChangeArtworkView: View {
             SeleneTheme.scrim65
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
-                .onTapGesture { close() }
+                .onTapGesture { back() }
 
             VStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("CHANGE ARTWORK")
+                    Text(browsing.map { "\($0.title.uppercased()) · BROWSE ONLINE" } ?? "CHANGE ARTWORK")
                         .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink60)
                         .padding(.leading, canvas.u(8))
@@ -91,6 +124,10 @@ struct ChangeArtworkView: View {
                         .padding(.leading, canvas.u(6))
                         .padding(.bottom, canvas.u(14))
                     tabs
+                    if browsing != nil {
+                        searchField
+                            .padding(.top, canvas.u(14))
+                    }
                     status
                     grid
                 }
@@ -100,9 +137,9 @@ struct ChangeArtworkView: View {
                 .padding(.bottom, canvas.u(20))
                 .contentShape(Rectangle())
 
-                SeleneHintsBar(left: [HintItem(.b, "Back", action: close)],
-                               right: [HintItem(.lb, "Previous"), HintItem(.rb, "Next"), HintItem(.a, "Choose")],
-                               bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
+                SeleneHintsBar(left: [HintItem(.b, "Back", action: back)], right: rightHints,
+                               bottom: SeleneBottomScrim.hintsBottom, leftInset: 18,
+                               rightReserve: [["Open page"], ["Previous"], ["Next"], ["Choose", "Search"]])
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -113,7 +150,27 @@ struct ChangeArtworkView: View {
             handleGamepad(action)
         }
         .task(id: slot) { await search(slot) }
+        .task(id: browseTaskKey) { await browse() }
+        .overlay {
+            if viewModel.isEditingSteamGridDBKey {
+                SteamGridDBKeyDialog(viewModel: viewModel, gamepad: .nxGameOptionsGamepadAction) { saved in
+                    viewModel.isEditingSteamGridDBKey = false
+                    let source = pendingBrowse
+                    pendingBrowse = nil
+                    if saved, let source { openBrowse(source) }
+                }
+            }
+        }
         .task(id: "\(slot.rawValue)|\(picks.revision)") { await loadPickPreview() }
+    }
+
+    private var rightHints: [HintItem] {
+        let move = [HintItem(.lb, "Previous"), HintItem(.rb, "Next")]
+        guard browsing != nil else { return move + [HintItem(.a, "Choose")] }
+        let page = browseResult?.page.map { url in HintItem(.x, "Open page", action: { NSWorkspace.shared.open(url) }) }
+        let accept = focus < 0 ? HintItem(.a, "Search", action: { fieldFocused = true })
+                               : HintItem(.a, "Choose", action: chooseFocused)
+        return (page.map { [$0] } ?? []) + move + (downloading ? [] : [accept])
     }
 
     private var tabs: some View {
@@ -133,17 +190,56 @@ struct ChangeArtworkView: View {
         .padding(.leading, canvas.u(2))
     }
 
+    /// The source's search, prefilled with the game's name; Return searches.
+    private var searchField: some View {
+        HStack(spacing: canvas.u(10)) {
+            MaterialIconView(.search, size: 22).foregroundColor(SeleneTheme.ink60)
+            TextField("", text: $browseDraft,
+                      prompt: Text("Search \(browsing?.title ?? "")").foregroundColor(SeleneTheme.ink60))
+                .textFieldStyle(.plain)
+                .seleneFont(18)
+                .foregroundColor(SeleneTheme.ink)
+                .focused($fieldFocused)
+                .onSubmit(submitSearch)
+                .onExitCommand { fieldFocused = false }
+        }
+        .padding(.horizontal, canvas.u(16))
+        .padding(.vertical, canvas.u(10))
+        .background(Capsule().fill(SeleneTheme.glassSolid))
+        .overlay(Capsule().strokeBorder(SeleneTheme.focus, lineWidth: canvas.u(2.5))
+            .padding(canvas.u(-4))
+            .opacity(focus < 0 ? 1 : 0))
+        .frame(width: canvas.u(560))
+        .padding(.leading, canvas.u(8))
+        .onChange(of: fieldFocused) { focused in if focused { focus = -1 } }
+    }
+
     @ViewBuilder
     private var status: some View {
-        let text = message ?? (searching.contains(slot) ? "Searching…"
-                                : (found[slot]?.isEmpty ?? false) ? "No images found" : artworkLocation)
-        Text(text)
+        Text(message ?? (browsing.map(browseStatus) ?? mainStatus))
             .seleneFont(14)
             .foregroundColor(SeleneTheme.ink60)
             .lineLimit(1)
             .frame(height: canvas.u(20), alignment: .leading)
             .padding(.leading, canvas.u(10))
             .padding(.vertical, canvas.u(10))
+    }
+
+    private var mainStatus: String {
+        searching.contains(slot) ? "Searching…" : (found[slot]?.isEmpty ?? false) ? "No images found" : artworkLocation
+    }
+
+    private func browseStatus(_ source: ArtworkBrowseSource) -> String {
+        if downloading { return "Downloading the full image from \(source.title)…" }
+        guard let result = browseResult else { return "Searching \(source.title) for “\(browseQuery)”…" }
+        guard result.page != nil else {
+            return "\(source.title) has no \(source == .launchBox ? "Switch game" : "game") called “\(browseQuery)”"
+        }
+        if browseLoading.contains(slot) && (browseItems[slot] ?? []).isEmpty { return "Loading…" }
+        if (browseItems[slot] ?? []).isEmpty {
+            return "\(source.title) has no \(slot.title.lowercased()) for “\(browseQuery)”"
+        }
+        return "\(source.title) · “\(browseQuery)” · full size downloads when you choose"
     }
 
     private var artworkLocation: String {
@@ -186,6 +282,7 @@ struct ChangeArtworkView: View {
             .padding(.horizontal, canvas.u(8 - Self.ringRoom))
             .padding(.top, canvas.u(-Self.ringRoom / 2))
             .onChange(of: focus) { index in
+                guard index >= 0 else { return }
                 withAnimation(reduceMotion ? nil : SeleneTheme.quick) { proxy.scrollTo(index, anchor: .center) }
             }
         }
@@ -243,6 +340,8 @@ struct ChangeArtworkView: View {
             glyphFace(.restore)
         case .file:
             glyphFace(.folder)
+        case .browse:
+            glyphFace(.language)
         case .yourPick:
             if let pickPreview { image(pickPreview) } else { glyphFace(.image) }
         case .art(let item):
@@ -278,6 +377,9 @@ struct ChangeArtworkView: View {
             return ("Your pick", "Saved on this Mac")
         case .art(let item):
             return (item.art.candidate.source, item.art.resolution)
+        case .browse(let source):
+            let keyless = source.needsKey && !viewModel.hasSteamGridDBKey
+            return (source.title, keyless ? "Browse online · add your key" : "Browse online")
         case .file:
             return ("From file…", "PNG or JPEG")
         }
@@ -303,31 +405,73 @@ struct ChangeArtworkView: View {
             titleDBLoaded = true
         }
         let metadata = viewModel.storeMetadata[game.id]
-        let names = [game.name, metadata?.name, titleDB?.name].compactMap { $0 }
+        let names = gameNames
         let entries = slot == .cover ? await viewModel.boxArt.pickerEntries(names: names) : []
         if online == nil { online = await OnlineArtwork.find(names: names) }
         let candidates = ArtworkCandidates.list(for: slot, entries: entries, titleDB: titleDB,
                                                 storeHeader: metadata?.headerImageURL, storeImage: metadata?.imageURL,
                                                 storeLogo: metadata?.logoURL, online: online ?? [])
         found[slot] = []
-        await withTaskGroup(of: Found?.self) { group in
-            for (order, candidate) in candidates.enumerated() {
-                group.addTask {
-                    guard let art = await ArtworkCandidates.load(candidate),
-                          let preview = Self.thumbnail(art.data) else { return nil }
-                    return Found(order: order, art: art, preview: preview)
-                }
-            }
-            for await item in group {
-                guard let item else { continue }
-                var list = found[slot] ?? []
-                list.append(item)
-                list.sort { $0.order < $1.order }
-                found[slot] = list
-            }
+        for await item in Self.previews(of: candidates) {
+            var list = found[slot] ?? []
+            list.append(item)
+            list.sort { $0.order < $1.order }
+            found[slot] = list
         }
         // Left for another tab before it finished: search again on return.
         if Task.isCancelled { found[slot] = nil }
+    }
+
+    /// Downloads each candidate's preview at once and yields those that are images, as they arrive.
+    private static func previews(of candidates: [ArtworkCandidate]) -> AsyncStream<Found> {
+        AsyncStream { continuation in
+            let task = Task {
+                await withTaskGroup(of: Found?.self) { group in
+                    for (order, candidate) in candidates.enumerated() {
+                        group.addTask {
+                            guard let art = await ArtworkCandidates.load(candidate),
+                                  let preview = thumbnail(art.data) else { return nil }
+                            return Found(order: order, art: art, preview: preview)
+                        }
+                    }
+                    for await item in group {
+                        if let item { continuation.yield(item) }
+                    }
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+    private var browseTaskKey: String {
+        guard let browsing else { return "" }
+        return "\(browsing.rawValue)|\(browseRound)|\(slot.rawValue)"
+    }
+
+    /// Searches the source once per name, then loads the open tab's previews.
+    private func browse() async {
+        guard let source = browsing else { return }
+        let round = browseRound
+        if browseResult == nil {
+            let key = source.needsKey ? SteamGridDBKey().load() : nil
+            let result = await source.search(browseQuery, gameNames: gameNames, switch2: switch2, key: key)
+            guard round == browseRound, browsing == source, !Task.isCancelled else { return }
+            browseResult = result
+        }
+        let slot = self.slot
+        guard browseItems[slot] == nil, !browseLoading.contains(slot), let result = browseResult else { return }
+        browseLoading.insert(slot)
+        defer { browseLoading.remove(slot) }
+        browseItems[slot] = []
+        for await item in Self.previews(of: result.candidates.filter { $0.slot == slot }) {
+            guard round == browseRound, browsing == source else { return }
+            var list = browseItems[slot] ?? []
+            list.append(item)
+            list.sort { $0.order < $1.order }
+            browseItems[slot] = list
+        }
+        if Task.isCancelled, round == browseRound { browseItems[slot] = nil }
     }
 
     private func loadPickPreview() async {
@@ -361,10 +505,38 @@ struct ChangeArtworkView: View {
         case .yourPick:
             SoundEffectService.shared.play(.click)
         case .art(let item):
-            save(item.art.data)
+            if browsing != nil { chooseBrowsed(item) } else { save(item.art.data) }
+        case .browse(let source):
+            SoundEffectService.shared.play(.click)
+            mainFocus = focus
+            if source.needsKey && !viewModel.hasSteamGridDBKey {
+                pendingBrowse = source
+                viewModel.isEditingSteamGridDBKey = true
+            } else {
+                openBrowse(source)
+            }
         case .file:
             SoundEffectService.shared.play(.click)
             chooseFile()
+        }
+    }
+
+    /// Downloads the full image, saves it and returns to the grid with it as Your pick.
+    private func chooseBrowsed(_ item: Found) {
+        guard !downloading, let source = browsing else { return }
+        downloading = true
+        SoundEffectService.shared.play(.click)
+        Task { @MainActor in
+            let data = await ArtworkCandidates.chosenData(item.art)
+            downloading = false
+            guard browsing == source else { return }
+            guard let data else {
+                message = "The full image could not be downloaded from \(source.title). Try again."
+                SoundEffectService.shared.play(.error)
+                return
+            }
+            closeBrowse()
+            save(data)
         }
     }
 
@@ -401,6 +573,56 @@ struct ChangeArtworkView: View {
         save(data)
     }
 
+    // MARK: - Browsing a source
+
+    private func openBrowse(_ source: ArtworkBrowseSource) {
+        browsing = source
+        browseDraft = game.name
+        browseQuery = game.name
+        startBrowseSearch()
+    }
+
+    private func submitSearch() {
+        let text = browseDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        if text.isEmpty { browseDraft = game.name }
+        fieldFocused = false
+        SoundEffectService.shared.play(.click)
+        let query = text.isEmpty ? game.name : text
+        guard query != browseQuery || browseResult?.page == nil else {
+            focus = tiles.isEmpty ? -1 : 0
+            return
+        }
+        browseQuery = query
+        startBrowseSearch()
+    }
+
+    private func startBrowseSearch() {
+        browseResult = nil
+        browseItems = [:]
+        browseLoading = []
+        message = nil
+        focus = 0
+        browseRound += 1
+    }
+
+    private func closeBrowse() {
+        browsing = nil
+        browseResult = nil
+        browseItems = [:]
+        browseLoading = []
+        downloading = false
+        fieldFocused = false
+        message = nil
+        browseRound += 1
+        focus = mainFocus
+    }
+
+    private func openPage() {
+        guard browsing != nil, let page = browseResult?.page else { return }
+        SoundEffectService.shared.play(.click)
+        NSWorkspace.shared.open(page)
+    }
+
     // MARK: - Input
 
     private func select(_ tab: ArtworkSlot) {
@@ -412,10 +634,35 @@ struct ChangeArtworkView: View {
     }
 
     private func move(_ direction: ArtworkPickerFocus.Direction) {
-        let next = ArtworkPickerFocus.moved(focus, by: direction, count: tiles.count, columns: columns)
+        let count = tiles.count
+        if browsing != nil {
+            if focus < 0 {
+                guard direction == .down, count > 0 else { return }
+                fieldFocused = false
+                focus = 0
+                SoundEffectService.shared.play(.focus)
+                return
+            }
+            if direction == .up, focus < columns {
+                focus = -1
+                SoundEffectService.shared.play(.focus)
+                return
+            }
+        }
+        let next = ArtworkPickerFocus.moved(focus, by: direction, count: count, columns: columns)
         guard next != focus else { return }
         focus = next
         SoundEffectService.shared.play(.focus)
+    }
+
+    /// Back: out of the source, or out of the picker.
+    private func back() {
+        if browsing != nil {
+            SoundEffectService.shared.play(.focus)
+            closeBrowse()
+        } else {
+            close()
+        }
     }
 
     private func close() {
@@ -424,12 +671,18 @@ struct ChangeArtworkView: View {
     }
 
     private func chooseFocused() {
+        if browsing != nil, focus < 0 {
+            fieldFocused = true
+            return
+        }
         let tiles = self.tiles
         guard tiles.indices.contains(focus) else { return }
         choose(tiles[focus])
     }
 
     private func handleGamepad(_ action: GamepadAction) {
+        // The key dialog reads the controller itself.
+        if viewModel.isEditingSteamGridDBKey { return }
         switch action {
         case .navigateUp: move(.up)
         case .navigateDown: move(.down)
@@ -438,16 +691,18 @@ struct ChangeArtworkView: View {
         case .tabPrevious: select(ArtworkPickerFocus.slot(after: slot, by: -1))
         case .tabNext: select(ArtworkPickerFocus.slot(after: slot, by: 1))
         case .confirm: chooseFocused()
-        case .cancel, .secondaryAction, .menu: close()
+        case .secondaryAction: browsing != nil ? openPage() : close()
+        case .cancel: back()
+        case .menu: close()
         default: break
         }
     }
 
-    /// Arrows, Return/Space, Esc, and Q/E for the tabs (L and R on the keyboard).
+    /// Arrows, Return/Space, Esc, Q/E for the tabs (L and R on the keyboard) and X for the source's page.
     private func installKeyMonitor() {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            guard viewModel.gameForSettingsSheet?.id == game.id,
+            guard viewModel.gameForSettingsSheet?.id == game.id, !viewModel.isEditingSteamGridDBKey,
                   let window = event.window, !window.isSheet, window.attachedSheet == nil,
                   NSApp.modalWindow == nil, !(window.firstResponder is NSText) else { return event }
             guard event.modifierFlags.intersection([.command, .control, .option]).isEmpty else { return event }
@@ -458,8 +713,9 @@ struct ChangeArtworkView: View {
             case 124: move(.right)
             case 12: select(ArtworkPickerFocus.slot(after: slot, by: -1))
             case 14: select(ArtworkPickerFocus.slot(after: slot, by: 1))
+            case 7 where browsing != nil: openPage()
             case 36, 76, 49: chooseFocused()
-            case 53: close()
+            case 53: back()
             default: return event
             }
             return nil

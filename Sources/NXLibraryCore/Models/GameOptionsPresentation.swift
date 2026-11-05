@@ -16,8 +16,8 @@ public enum GameOptionsLevel: Equatable, Sendable {
 /// Every focusable row of Game options. Headings and notes are not rows (see `GameOptionsEntry`).
 public enum GameOptionsRow: String, CaseIterable, Sendable {
     case play, move, favorite, hidden
-    case fullscreen, fps60, metalFX, metalHUD, consoleMode, language, rumble, rumbleStrength
-    case renderScale, restoreDefaults
+    case fullscreen, fps60, frameRate, metalFX, gameUpscaler, metalHUD, consoleMode, language, rumble, rumbleStrength
+    case renderScale, moreSettings, restoreDefaults
     case cheats, rebuild, showInFinder, openSaves, editDetails, removeGame
     case changeArtwork, changeMetadata, storePage, attachSources, openLog, removeSources
 
@@ -29,6 +29,9 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
         case .hidden: return "Hidden"
         case .fullscreen: return "Fullscreen"
         case .fps60: return "60 FPS"
+        case .frameRate: return "Frame rate"
+        case .gameUpscaler: return "Game's upscaler"
+        case .moreSettings: return "More settings"
         case .metalFX: return "MetalFX"
         case .metalHUD: return "Metal HUD"
         case .consoleMode: return "Console mode"
@@ -59,7 +62,9 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
         case .favorite: return .star
         case .hidden: return .hidden
         case .fullscreen: return .monitor
-        case .fps60: return .sync
+        case .fps60, .frameRate: return .sync
+        case .gameUpscaler: return .tune
+        case .moreSettings: return .settings
         case .metalFX: return .tune
         case .metalHUD: return .timeline
         case .consoleMode: return .gamepad
@@ -92,13 +97,43 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
     /// A value chip on the trailing edge: Left/Right cycle it, A cycles forward.
     public var isChoice: Bool {
         switch self {
-        case .consoleMode, .language, .rumbleStrength, .renderScale: return true
+        case .consoleMode, .language, .rumbleStrength, .renderScale, .frameRate, .gameUpscaler: return true
         default: return false
         }
     }
 
     /// Opens a sub-list (chevron).
-    public var opensSubmenu: Bool { self == .editDetails || self == .changeArtwork || self == .changeMetadata || self == .cheats || self == .openSaves }
+    public var opensSubmenu: Bool {
+        [.editDetails, .changeArtwork, .changeMetadata, .cheats, .openSaves, .moreSettings].contains(self)
+    }
+
+    /// The engine setting a row shows, for a build with saved choices.
+    public var settingKey: String? {
+        switch self {
+        case .fullscreen: return "DM_FULLSCREEN"
+        case .fps60, .frameRate: return "DM_FPS_TARGET"
+        case .metalFX: return "DM_PRESENT_UPSCALE"
+        case .gameUpscaler: return "DM_UPSCALER"
+        case .metalHUD: return "DM_METAL_HUD"
+        case .consoleMode: return "DM_OPMODE"
+        case .language: return "DM_LANG"
+        case .rumble: return "DM_RUMBLE"
+        case .rumbleStrength: return "DM_RUMBLE_GAIN"
+        case .renderScale: return "DM_RENDER_SCALE"
+        default: return nil
+        }
+    }
+
+    /// A switch row's "on" value when the build lists the setting as a choice (Display mode, Upscaling).
+    public var onValue: String {
+        self == .metalFX ? "metalfx" : "1"
+    }
+
+    /// The setting rows of the main list, in order, for a build with saved choices.
+    public static let settingRows: [GameOptionsRow] = [
+        .fullscreen, .frameRate, .metalFX, .gameUpscaler, .metalHUD, .consoleMode, .language,
+        .rumble, .rumbleStrength, .renderScale,
+    ]
 
     /// Red title, confirmed in a dialog.
     public var isDestructive: Bool { self == .removeGame || self == .removeSources }
@@ -135,12 +170,15 @@ public struct GameOptionsPresentation: Equatable {
     public let resolutionNote: String
     /// The Cheats row's value (CheatStatus.rowValue).
     public let cheatsValue: String
+    /// The build's settings, for a build with saved choices; nil keeps the fixed rows of older builds.
+    public let settings: GameSettingsSnapshot?
 
     public init(supportsRenderScale: Bool, isPlayable: Bool, sourcesDetached: Bool,
                 toolchainBlocked: Bool = false, toolchainHint: String? = nil, hasStorePage: Bool = false,
                 gameName: String = "", appPath: String = "", canDeleteBundle: Bool = false,
-                cheatsValue: String = "None") {
+                cheatsValue: String = "None", settings: GameSettingsSnapshot? = nil) {
         self.cheatsValue = cheatsValue
+        self.settings = settings
         self.showRenderScale = supportsRenderScale
         self.canPlay = isPlayable
         self.sourcesDetached = sourcesDetached
@@ -187,6 +225,7 @@ public struct GameOptionsPresentation: Equatable {
 
     /// A row that looks disabled. It still takes focus, and its action explains why it cannot run.
     public func isDimmed(_ row: GameOptionsRow) -> Bool {
+        if isFixed(row) { return true }
         switch row {
         case .play: return !canPlay
         case .rebuild: return rebuildDimmed
@@ -194,8 +233,15 @@ public struct GameOptionsPresentation: Equatable {
         }
     }
 
+    /// A row whose setting the player's env.txt sets: shown, not changeable, as the engine's own window does.
+    public func isFixed(_ row: GameOptionsRow) -> Bool {
+        guard let settings, let key = row.settingKey else { return false }
+        return settings.fixed.contains(key)
+    }
+
     /// The row's one-line description, when it has one.
     public func about(_ row: GameOptionsRow) -> String? {
+        if isFixed(row) { return "Set in env.txt" }
         switch row {
         case .play: return "Launch the installed Mac app."
         case .cheats: return "Install and switch this game's cheats."
@@ -203,7 +249,9 @@ public struct GameOptionsPresentation: Equatable {
         case .favorite: return "On your Favorites tab."
         case .hidden: return "Hidden games stay out of your lists."
         case .fullscreen: return "Launch mode"
-        case .fps60: return "Frame-rate target"
+        case .fps60, .frameRate: return "Frame-rate target"
+        case .gameUpscaler: return "The game's own upscaler, or MetalFX"
+        case .moreSettings: return "Other settings this build offers."
         case .metalFX: return "Spatial upscaling"
         case .metalHUD: return "Performance overlay"
         case .consoleMode: return "Console profile"
@@ -255,12 +303,22 @@ public struct GameOptionsPresentation: Equatable {
             var entries: [GameOptionsEntry] = [.row(.play), .row(.editDetails), .row(.cheats), .row(.openSaves)]
             if origin == .spotlight { entries.append(.row(.move)) }
             entries += [.row(.favorite), .row(.hidden), .heading("Next launch")]
-            entries += [.fullscreen, .fps60, .metalFX, .metalHUD, .consoleMode, .language, .rumble, .rumbleStrength]
-                .map(GameOptionsEntry.row)
-            if showRenderScale {
-                entries.append(.row(.renderScale))
+            if let settings {
+                entries += GameOptionsRow.settingRows
+                    .filter { $0.settingKey.map(settings.visible) ?? false }
+                    .map(GameOptionsEntry.row)
+                if !settings.isOffered("DM_RENDER_SCALE") {
+                    entries.append(.note(title: "Internal resolution", text: resolutionNote))
+                }
+                if !settings.extraSettings.isEmpty { entries.append(.row(.moreSettings)) }
             } else {
-                entries.append(.note(title: "Internal resolution", text: resolutionNote))
+                entries += [.fullscreen, .fps60, .metalFX, .metalHUD, .consoleMode, .language, .rumble, .rumbleStrength]
+                    .map(GameOptionsEntry.row)
+                if showRenderScale {
+                    entries.append(.row(.renderScale))
+                } else {
+                    entries.append(.note(title: "Internal resolution", text: resolutionNote))
+                }
             }
             entries += [.row(.restoreDefaults), .row(.rebuild), .row(.showInFinder),
                         .gap, .row(.removeGame)]
@@ -354,5 +412,50 @@ public enum GameOptionsValues {
         guard count > 0 else { return 0 }
         guard let index else { return 0 }
         return ((index + delta) % count + count) % count
+    }
+}
+
+extension GameSettingsSnapshot {
+    /// The settings the build offers that no main-list row shows, for More settings, in the build's order.
+    public var extraSettings: [LauncherSetting] {
+        let shown = Set(GameOptionsRow.settingRows.compactMap(\.settingKey))
+        return settings.filter { !shown.contains($0.env) }
+    }
+}
+
+/// Labels and steps for a setting drawn from the build's list.
+public enum GameSettingValues {
+    /// A choice's option label, On / Off for a toggle, a percentage for a range (as the engine's window shows it).
+    public static func label(_ setting: LauncherSetting, _ value: String) -> String {
+        switch setting.kind {
+        case "toggle": return value == setting.on ? "On" : "Off"
+        case "range":
+            guard let x = LauncherSetting.number(value) else { return value }
+            return "\(Int((x * 100).rounded()))%"
+        default: return setting.options?.first { $0.value == value }?.label ?? value
+        }
+    }
+
+    /// The next value in the direction, wrapping at the ends as the other value rows do.
+    public static func stepped(_ setting: LauncherSetting, from value: String, by delta: Int) -> String {
+        switch setting.kind {
+        case "toggle":
+            return value == setting.on ? (setting.off ?? value) : (setting.on ?? value)
+        case "range":
+            guard let min = setting.min, let max = setting.max, max >= min else { return value }
+            let step = (setting.step ?? 0.1) > 0 ? (setting.step ?? 0.1) : 0.1
+            let count = Int(((max - min) / step).rounded())
+            let stops = (0...count).map { Swift.min(max, min + Double($0) * step) }
+            let x = LauncherSetting.number(value) ?? setting.defaultValue.flatMap(LauncherSetting.number) ?? min
+            let next = delta > 0
+                ? (stops.first { $0 > x + 1e-9 } ?? stops[0])
+                : (stops.last { $0 < x - 1e-9 } ?? stops[stops.count - 1])
+            return LauncherSetting.rangeString(next)
+        default:
+            let options = setting.options ?? []
+            guard !options.isEmpty else { return value }
+            let index = options.firstIndex { $0.value == value }
+            return options[GameOptionsValues.steppedIndex(index, by: delta, count: options.count)].value
+        }
     }
 }

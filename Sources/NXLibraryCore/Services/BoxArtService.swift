@@ -28,16 +28,22 @@ public actor BoxArtService {
         self.now = now
     }
 
-    /// The cached cover, or one fetched now; nil when GameTDB has none.
+    /// The cached cover, or one fetched now: GameTDB first, then TheGamesDB, which also lists games GameTDB's
+    /// Switch database lacks (Switch 2 games). Nil when neither has one.
     public func boxArt(titleID: String, names: [String]) async -> URL? {
         if let cached = artwork.cachedURL(titleID: titleID, kind: .boxart) { return cached }
         guard let entries = loadEntries() else { return nil }
-        let missKey = ([titleID] + names.map(GameTDB.normalize)).joined(separator: "|")
+        // "tgdb": misses recorded before the TheGamesDB fallback are tried again.
+        let missKey = (["tgdb", titleID] + names.map(GameTDB.normalize)).joined(separator: "|")
         if let missed = missTable()[missKey], now().timeIntervalSince(missed) < Self.missRetry { return nil }
 
         let match = names.lazy.compactMap { GameTDB.exactMatch(for: $0, in: entries) }.first
         for url in match.map({ GameTDB.coverURLs(id: $0.id) }) ?? [] {
             if let found = await artwork.fetch(titleID: titleID, remoteURL: url, kind: .boxart) { return found }
+        }
+        let covers = await TheGamesDBArt.find(names: names, client: client).filter { $0.slot == .cover }
+        for candidate in covers {
+            if let found = await artwork.fetch(titleID: titleID, remoteURL: candidate.url, kind: .boxart) { return found }
         }
         recordMiss(missKey)
         return nil

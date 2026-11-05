@@ -7,7 +7,7 @@ public enum GameFoldersCopy {
     public static let sourcesTitle = "Game files"
 
     public static func sourceFormats(extractedFolders: Bool) -> String {
-        "NSP, XCI, NSZ and XCZ files" + (extractedFolders ? " or extracted folders" : "")
+        "NSP, XCI, NSZ and XCZ files" + (extractedFolders ? ", or Switch 2 NUP files and extracted folders" : "")
     }
 
     public static func sourcesAbout(extractedFolders: Bool) -> String {

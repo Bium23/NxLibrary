@@ -2,6 +2,8 @@ import Foundation
 
 public struct GameDetailPresentation: Equatable {
     public let title: String
+    /// "Nintendo Switch 2" for a Switch 2 title, else "Nintendo Switch".
+    public let console: String
     public let eyebrow: String
     public let description: String
     public let genres: [String]
@@ -33,6 +35,7 @@ public struct GameDetailPresentation: Equatable {
                 playtimeByGame: [UUID: TimeInterval] = [:],
                 calendar: Calendar = .current, locale: Locale = .current) {
         title = game.name
+        console = game.consoleName
         eyebrow = Self.eyebrow(from: metadata?.name ?? "")
         description = metadata?.description ?? ""
         var seenGenres = Set<String>()

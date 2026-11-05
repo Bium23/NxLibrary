@@ -4,6 +4,26 @@ User-visible changes to NX Library are recorded here. Entries are grouped by rel
 
 ## Unreleased
 
+### Changed
+
+- **Game options follow each game's build.** For games built with a current engine, NX Library keeps your choices where the game itself keeps them (its saved choices), so a change made in the game's own settings window, opened from Finder, shows in NX Library, and NX Library's choices apply from Finder too. Only choices that differ from the game's tested default are kept, so a rebuild with better defaults reaches you. Rows appear only when the game offers them: Frame rate (with 120 fps where a game supports it) replaces the 60 FPS switch, a new Game's upscaler row appears where available, and the other settings a game offers are under **More settings**. Your existing choices are moved over automatically; lines you wrote yourself in `env.txt` stay and are shown as fixed. Games built with an older engine keep working as before until rebuilt. Thanks to PR #1 for showing that Game options should read the game's own settings list.
+- Switch 2 games get their description, genres, background and cover automatically: the Nintendo store's Switch 2 pages are used, and a cover GameTDB lacks is taken from TheGamesDB.
+- Switch 2 games show **Nintendo Switch 2** as their platform.
+- A build stage that finishes with a warning shows ⚠ instead of ✓, and **Ready to play** explains it. Engines that send the warning (newer than the pinned one) use it when a game's pipeline archive cannot be made: the app is still built, and the game prepares its shaders when it first needs them.
+- Development builds show the version in progress, marked **(development build)**, instead of 0.1.0. They never offer app updates.
+
+### Added
+
+- **Switch 2 NUP files.** Add Game accepts a `.nup` file, chosen on its own or as the only one in a folder. Review lists its base game, updates and DLC: one update is chosen at a time, and every DLC in the file is included, as the engine builds it. A NUP that carries the game's icon gives the app that icon; a plain dump folder still builds without one.
+- **Browse LaunchBox and SteamGridDB in Change artwork.** Two **Browse online** tiles, right after Automatic, open a source's own grid, as the Theme screen browses wallpaper sites: the search starts with the game's name and can be changed, results follow the open tab (Cover, Background, Icon, Logo), each image shows its kind and region (LaunchBox) or its author (SteamGridDB) and its full size, and X opens the game's page on the source. The grid loads small previews; the full image is downloaded only when you choose it. SteamGridDB needs your free API key: without one, its tile asks for it first (it can also be added in Settings → Look). The key stays on this Mac in a private file and is sent only to SteamGridDB; only still images are listed, and art tagged NSFW, humor or epilepsy is left out.
+- **Screenshots for Switch 2 games.** When Title DB has no screenshots for a game, LaunchBox's gameplay screenshots are used at full size, in Spotlight and Details (credited there as **Screenshots · LaunchBox**). They are looked up with the game's other details, when you select or open it, once per game; the answer is kept for 30 days. Library scans never ask.
+
+### Fixed
+
+- Refreshing the library no longer takes minutes for large game apps on an external drive: app sizes are measured the way `du` does, and each measured size is kept even if you quit during the scan (issue #2).
+- The Cheats switch and **All off** no longer show an error for a game that has no cheat file yet.
+- The Collection card in Spotlight now says "in one row": Collection is a single row of covers, not a grid (issue #3).
+
 ## 0.1.2 — 2026-11-03
 
 ### Added

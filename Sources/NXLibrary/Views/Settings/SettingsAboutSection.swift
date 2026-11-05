@@ -19,6 +19,8 @@ struct SettingsAboutSection: View {
         ("Khronos Group", "SPIRV-Cross Metal Shading Language compiler", "https://github.com/KhronosGroup/SPIRV-Cross"),
         ("GameTDB", "Switch box covers", "https://www.gametdb.com"),
         ("Title DB", "Game names, icons and banners", "https://github.com/blawar/titledb"),
+        ("LaunchBox Games Database", "Box covers, logos, backgrounds and square art in Change artwork", "https://gamesdb.launchbox-app.com"),
+        ("SteamGridDB", "Community covers, backgrounds, logos and icons, with your API key", "https://www.steamgriddb.com"),
         ("NX2Apple", "Key check, failure explanations and diagnostics, adapted (MIT)", "https://github.com/LNPANDY/NX2Apple")
     ]
 
@@ -248,7 +250,7 @@ struct SettingsAboutSection: View {
     }
 
     private var version: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0"
+        AppUpdate.versionLabel(Bundle.main.infoDictionary)
     }
 
     private var buildDate: String {

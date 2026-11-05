@@ -96,6 +96,52 @@ final class NintendoStoreMetadataTests: XCTestCase {
         XCTAssertNil(metadata.imageURL)
     }
 
+    func testSwitch2GameFindsItsSwitch2ProductPage() async throws {
+        let client = FakeClient()
+        client.responses["ncom_game_en_us/query"] = Data(#"{"hits":[]}"#.utf8)
+        client.responses["store_all_products_en_us/query"] = Data("""
+        {"hits":[{"title":"Donkey Kong™ Bananza","nsuid":"70010000096809",
+          "platform":"Nintendo Switch 2","topLevelCategory":"Games",
+          "url":"/us/store/products/donkey-kong-bananza-switch-2/"},
+          {"title":"amiibo™ - Donkey Kong™ Bananza Series","platform":"Nintendo Switch",
+          "topLevelCategory":"Hardware","url":"/us/store/products/amiibo-dk/"}]}
+        """.utf8)
+        let page = """
+        <html><script id="__NEXT_DATA__" type="application/json">
+        {"props":{"pageProps":{
+          "initialApolloState":{
+            "Product:{\\"sku\\":\\"7500062442\\"}":{"name":"Donkey Kong™ Bananza: DK Island & Emerald Rush","description":""},
+            "Product:{\\"sku\\":\\"7100096809\\"}":{
+              "name":"Donkey Kong™ Bananza",
+              "description":"Smash and bash your way through a vast underground world.",
+              "tags":{"genres":[{"label":"Action"},{"label":"Adventure"}]},
+              "productImage":{"url":"https://assets.nintendo.com/bananza.jpg"},
+              "releaseDate":"2025-07-17"
+            }
+          },
+          "linkedData":[{"publisher":{"name":"Nintendo"}}]
+        }}}
+        </script></html>
+        """
+        client.responses["nintendo.com/us/store/products/donkey-kong-bananza-switch-2"] = Data(page.utf8)
+        let service = NintendoStoreMetadataService(client: client, cacheDirectory: cacheDirectory())
+        let metadata = try await service.metadata(for: game(name: "Donkey Kong Bananza", titleId: "040074A01BF12000"))
+        XCTAssertEqual(metadata.name, "Donkey Kong™ Bananza")
+        XCTAssertTrue(metadata.description.contains("underground world"))
+        XCTAssertEqual(metadata.genres, ["Action", "Adventure"])
+        XCTAssertEqual(metadata.headerImageURL?.absoluteString, "https://assets.nintendo.com/bananza.jpg")
+    }
+
+    func testStorePlatformsPutTheTitleIdsOwnFirst() {
+        XCTAssertEqual(NintendoStoreMetadataService.platforms(forTitleId: "040074A01BF12000"),
+                       ["Nintendo Switch 2", "Nintendo Switch"])
+        XCTAssertEqual(NintendoStoreMetadataService.platforms(forTitleId: "010015100B514000"),
+                       ["Nintendo Switch", "Nintendo Switch 2"])
+        let hits = ["Nintendo Switch", "Wii U", "Nintendo Switch 2"]
+        XCTAssertEqual(NintendoStoreMetadataService.ordered(hits, platform: { $0 }, titleId: "0400C3F00006E000"),
+                       ["Nintendo Switch 2", "Nintendo Switch"])
+    }
+
     func testCachesTheResult() async throws {
         let client = FakeClient()
         client.responses["ncom_game_en_us/query"] = Data("""

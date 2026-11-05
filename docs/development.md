@@ -24,6 +24,8 @@ codesign --verify --deep --strict "$HOME/Applications/NXLibrary.app"
 
 The default destination is `~/Applications/NXLibrary.app`. `build_app.sh` compiles the Release configuration, creates the bundle in staging, includes resources and notices, ad-hoc signs and verifies it, then installs it through the same atomic installer used by the application. It does not launch the app.
 
+A development copy carries the version in progress from the `VERSION` file at the repository root and shows it as "(development build)" in Settings; it has no release marker, so it never offers or installs app updates. `scripts/release.sh <version>` sets the released version itself. After a release, raise `VERSION` to the next version being worked on.
+
 An alternate destination can be supplied without replacing the installed development copy:
 
 ~~~sh

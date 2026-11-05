@@ -5,7 +5,7 @@ import NXLibraryCore
 struct SeleneStat: Identifiable {
     enum Value {
         case text(String)
-        case platform
+        case platform(String)
     }
 
     let label: String
@@ -17,7 +17,7 @@ struct SeleneStat: Identifiable {
         SeleneStat(label: label, value: .text(value))
     }
 
-    static let platform = SeleneStat(label: "PLATFORM", value: .platform)
+    static func platform(_ console: String) -> SeleneStat { SeleneStat(label: "PLATFORM", value: .platform(console)) }
 }
 
 /// Selene's at-a-glance stats line, with a 1u rule between items. Spotlight and
@@ -35,7 +35,7 @@ struct SeleneStatsRow: View {
         var items = [
             SeleneStat.text("PLAYTIME", presentation.playtime),
             SeleneStat.text("LAST PLAYED", presentation.lastPlayed),
-            SeleneStat.platform
+            SeleneStat.platform(presentation.console)
         ]
         if let year = presentation.releaseYear {
             items.append(SeleneStat.text("RELEASED", year))
@@ -71,12 +71,12 @@ struct SeleneStatsRow: View {
                 switch item.value {
                 case .text(let text):
                     value(text)
-                case .platform:
+                case .platform(let console):
                     HStack(spacing: canvas.u(9)) {
                         SwitchPlatformIcon()
                             .foregroundColor(SeleneTheme.ink)
                             .frame(width: canvas.u(27), height: canvas.u(27))
-                        value("Nintendo Switch")
+                        value(console)
                     }
                 }
             }

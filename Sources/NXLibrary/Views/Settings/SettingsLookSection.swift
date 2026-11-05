@@ -121,8 +121,20 @@ struct SettingsLookSection: View {
                             buttonTitle: "Open GameTDB") {
                 NSWorkspace.shared.open(GameTDB.siteURL)
             }
+
+            SeleneButtonRow("SteamGridDB",
+                            subtitle: viewModel.hasSteamGridDBKey
+                                ? "Key saved · covers, backgrounds, logos and icons in Change artwork"
+                                : "Add your free API key to find art in Change artwork",
+                            buttonTitle: viewModel.hasSteamGridDBKey ? "Remove key" : "Add key") {
+                steamGridDBAction()
+            }
         }
         .onAppear(perform: publishActions)
+    }
+
+    private func steamGridDBAction() {
+        if viewModel.hasSteamGridDBKey { viewModel.removeSteamGridDBKey() } else { viewModel.isEditingSteamGridDBKey = true }
     }
 
     private func publishActions() {
@@ -151,7 +163,8 @@ struct SettingsLookSection: View {
             .value("icon", "App icon") { stepIcon($0) },
             .init(id: "covers", title: "Box covers") {
                 NSWorkspace.shared.open(GameTDB.siteURL)
-            }
+            },
+            .init(id: "SteamGridDB", title: "SteamGridDB") { steamGridDBAction() }
         ])
     }
 }

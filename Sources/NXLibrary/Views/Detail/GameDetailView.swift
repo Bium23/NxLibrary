@@ -110,7 +110,7 @@ struct GameDetailView: View {
     /// "No screenshots" only once the answer is final: not before the first request
     /// starts, nor while a stale empty cache entry is being refetched.
     var screenshotsKnown: Bool {
-        if viewModel.storeMetadataLoading.contains(game.id) { return false }
+        if viewModel.storeMetadataLoading.contains(game.id) || viewModel.screenshotLookups.contains(game.id) { return false }
         guard let titleId = game.titleId, !titleId.isEmpty else { return true }
         return metadata != nil || viewModel.storeMetadataErrors[game.id] != nil
     }
@@ -217,6 +217,7 @@ struct GameDetailView: View {
                 DetailsScreenshotsBand(
                     titleID: game.titleId ?? game.uniqueKey,
                     urls: model.screenshots,
+                    source: metadata?.screenshotSource,
                     known: model.screenshotsKnown,
                     focusedIndex: focus.zone == DetailsFocus.screenshotsZone ? focus.shot : nil,
                     artwork: artwork,

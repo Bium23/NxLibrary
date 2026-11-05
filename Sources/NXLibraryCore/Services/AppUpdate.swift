@@ -24,6 +24,13 @@ public enum AppUpdate {
     static let interval: TimeInterval = 24 * 3600
     public static let maximumDownloadBytes: Int64 = 512 * 1024 * 1024
 
+    /// The version as Settings shows it: a copy without the release marker is a development build
+    /// of the version in progress, so it never reads like a published release.
+    public static func versionLabel(_ info: [String: Any]?) -> String {
+        let short = info?["CFBundleShortVersionString"] as? String ?? "?"
+        return info?[releaseMarker] as? Bool == true ? short : "\(short) (development build)"
+    }
+
     public static func repository(defaults: UserDefaults = .standard) -> String? {
         if let value = defaults.string(forKey: repositoryOverrideKey)?.trimmingCharacters(in: .whitespaces),
            value.range(of: #"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"#, options: .regularExpression) != nil {

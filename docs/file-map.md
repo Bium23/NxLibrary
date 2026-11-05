@@ -74,6 +74,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/ViewModels/AppViewModel+PendingInstall.swift](../Sources/NXLibrary/ViewModels/AppViewModel+PendingInstall.swift) | Riprende le installazioni differite e gestisce errore e nuovo tentativo sul bundle pronto, rispettando i lease. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Porting.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Porting.swift) | Prepara tile, pill e stime del porting e coordina notifiche e azioni sugli errori riconosciuti. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Saves.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Saves.swift) | Risolve contesto e identità dei save, coordina i lease e avvia i recuperi pendenti. |
+| [Sources/NXLibrary/ViewModels/AppViewModel+SteamGridDB.swift](../Sources/NXLibrary/ViewModels/AppViewModel+SteamGridDB.swift) | Verifica, salva e rimuove la chiave SteamGridDB dell’utente senza registrarne il valore. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Toolchain.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Toolchain.swift) | Espone il riepilogo del gate della toolchain per l’interfaccia. |
 | [Sources/NXLibrary/ViewModels/SavePanelModel.swift](../Sources/NXLibrary/ViewModels/SavePanelModel.swift) | Gestisce refresh, anteprime, backup, importazione, ripristino, errori e conferma temporanea di successo. |
 | [Sources/NXLibrary/ViewModels/SetupCheckModel.swift](../Sources/NXLibrary/ViewModels/SetupCheckModel.swift) | Esegue probe e installazioni del Setup in background, con avanzamento e ricontrollo periodico. |
@@ -146,6 +147,11 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Services/EngineLocation.swift](../Sources/NXLibraryCore/Services/EngineLocation.swift) | Risolve checkout predefinito o scelto e produce i candidati per prod.keys. |
 | [Sources/NXLibraryCore/Services/EngineToolchain.swift](../Sources/NXLibraryCore/Services/EngineToolchain.swift) | Individua runtime incluso o venv del checkout e prepara ambiente e PATH dei processi. |
 | [Sources/NXLibraryCore/Services/EnginePackageReader.swift](../Sources/NXLibraryCore/Services/EnginePackageReader.swift) | Legge capacità delle sorgenti e content meta tramite il lettore upstream, validando identità e tipi senza esporre chiavi. |
+| [Sources/NXLibraryCore/Models/BuildWarningCopy.swift](../Sources/NXLibraryCore/Models/BuildWarningCopy.swift) | Testo mostrato a fine build per una fase terminata con `warn` dell’engine (archivio delle pipeline mancante). |
+| [Sources/NXLibraryCore/Services/NUPSourceCatalog.swift](../Sources/NXLibraryCore/Services/NUPSourceCatalog.swift) | Riconosce i file NUP Switch 2 e ne elenca base, update e DLC tramite il lettore pack_nup dell’engine. |
+| [Sources/NXLibraryCore/Services/DirectorySize.swift](../Sources/NXLibraryCore/Services/DirectorySize.swift) | Misura le cartelle con fts come du, così il refresh non resta bloccato su app grandi in dischi esterni (issue #2). |
+| [Sources/NXLibraryCore/Services/NXNativeGameSettings.swift](../Sources/NXLibraryCore/Services/NXNativeGameSettings.swift) | Legge l’elenco impostazioni del build, i valori attuali e le chiavi fissate da env.txt. |
+| [Sources/NXLibraryCore/Services/SavedChoicesStore.swift](../Sources/NXLibraryCore/Services/SavedChoicesStore.swift) | Legge e scrive le scelte salvate launcher.<env> nel dominio preferenze dell’app gioco. |
 | [Sources/NXLibraryCore/Services/CompatibilityChecker.swift](../Sources/NXLibraryCore/Services/CompatibilityChecker.swift) | Controlla commit, modifiche del checkout, Metal e opzioni CLI richieste dal frontend. |
 | [Sources/NXLibraryCore/Services/SetupProbe.swift](../Sources/NXLibraryCore/Services/SetupProbe.swift) | Raccoglie i fatti mostrati dal Setup usando comandi e controlli mirati. |
 | [Sources/NXLibraryCore/Services/SetupActions.swift](../Sources/NXLibraryCore/Services/SetupActions.swift) | Costruisce le operazioni Git ammesse per installare o allineare il motore al pin. |
@@ -230,6 +236,10 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Services/OnlineArtworkSources.swift](../Sources/NXLibraryCore/Services/OnlineArtworkSources.swift) | Ricava artwork Steam e loghi da MediaWiki e Wikimedia Commons. |
 | [Sources/NXLibraryCore/Services/SeleneImporter.swift](../Sources/NXLibraryCore/Services/SeleneImporter.swift) | Importa suoni e wallpaper dalla cartella Selene dell’utente e risolve cue e fallback. |
 | [Sources/NXLibraryCore/Services/MoreArtworkSources.swift](../Sources/NXLibraryCore/Services/MoreArtworkSources.swift) | Aggiunge matching dei nomi e sorgenti Xbox, GOG, Nintendo Europe, wiki e altri cataloghi. |
+| [Sources/NXLibraryCore/Services/ArtworkBrowse.swift](../Sources/NXLibraryCore/Services/ArtworkBrowse.swift) | Sorgenti sfogliabili da Change artwork (LaunchBox, SteamGridDB): nomi cercati e risultati per tutti gli slot. |
+| [Sources/NXLibraryCore/Services/LaunchBoxArt.swift](../Sources/NXLibraryCore/Services/LaunchBoxArt.swift) | Legge ricerca e pagina gioco di LaunchBox; dal payload Nuxt ricava anteprime, file pieni, tipo, regione e dimensioni; screenshot Gameplay. |
+| [Sources/NXLibraryCore/Services/SteamGridDBArt.swift](../Sources/NXLibraryCore/Services/SteamGridDBArt.swift) | Conserva la chiave SteamGridDB in un file 0600 e interroga l’API v2 per griglie, hero, loghi e icone statiche accreditate. |
+| [Sources/NXLibraryCore/Services/ScreenshotFallback.swift](../Sources/NXLibraryCore/Services/ScreenshotFallback.swift) | Conserva per 30 giorni gli screenshot LaunchBox dei giochi senza screenshot Title DB e li sovrappone ai metadati. |
 
 ## Core · presentazione Selene, focus e impostazioni
 
@@ -306,6 +316,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/Views/GameOptions/ChangeMetadataView.swift](../Sources/NXLibrary/Views/GameOptions/ChangeMetadataView.swift) | Offre alternative o testo personalizzato per descrizione, generi, crediti e data. |
 | [Sources/NXLibrary/Views/GameOptions/CheatsPanel.swift](../Sources/NXLibrary/Views/GameOptions/CheatsPanel.swift) | Presenta file, master switch, codici, importazione, rimozione e stato di scrittura dei cheats. |
 | [Sources/NXLibrary/Views/GameOptions/SavesPanel.swift](../Sources/NXLibrary/Views/GameOptions/SavesPanel.swift) | Presenta azioni sui save, anteprime, errori e popup di successo a scomparsa automatica. |
+| [Sources/NXLibrary/Views/GameOptions/MoreSettingsPanel.swift](../Sources/NXLibrary/Views/GameOptions/MoreSettingsPanel.swift) | Mostra le impostazioni del launcher.json senza riga dedicata: interruttori, scelte e intervalli; le righe fissate da env.txt restano attenuate. |
 | [Sources/NXLibrary/Views/GameOptions/SaveImportDetails.swift](../Sources/NXLibrary/Views/GameOptions/SaveImportDetails.swift) | Disegna percorsi From/To centrati, riquadri leggeri e freccia con riflesso direzionale. |
 
 ## UI · Settings
@@ -367,6 +378,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/Views/Components/SeleneValueChip.swift](../Sources/NXLibrary/Views/Components/SeleneValueChip.swift) | Rende valori e badge compatti nel linguaggio visivo Selene. |
 | [Sources/NXLibrary/Views/Components/SpotlightTileArtwork.swift](../Sources/NXLibrary/Views/Components/SpotlightTileArtwork.swift) | Carica e disegna l’artwork quadrato usato dalle tile Spotlight. |
 | [Sources/NXLibrary/Views/Components/SwitchBoxArtCover.swift](../Sources/NXLibrary/Views/Components/SwitchBoxArtCover.swift) | Carica e disegna la copertina Switch mantenendone le proporzioni. |
+| [Sources/NXLibrary/Views/Components/SteamGridDBKeyDialog.swift](../Sources/NXLibrary/Views/Components/SteamGridDBKeyDialog.swift) | Popup per incollare e verificare la chiave SteamGridDB da Settings → Look e da Change artwork. |
 | [Sources/NXLibrary/Views/Components/SwitchPlatformIcon.swift](../Sources/NXLibrary/Views/Components/SwitchPlatformIcon.swift) | Icona vettoriale della console Switch per la riga della piattaforma. |
 
 ## UI · temi, rendering e sfondi
@@ -390,6 +402,8 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | File | Responsabilità aggiuntiva |
 |---|---|
 | [Tests/NXLibraryCoreTests/SettingsRowActionTests.swift](../Tests/NXLibraryCoreTests/SettingsRowActionTests.swift) | Regressioni per giochi omonimi e azioni secondarie della medesima riga. |
+| [Tests/NXLibraryCoreTests/ScreenshotFallbackTests.swift](../Tests/NXLibraryCoreTests/ScreenshotFallbackTests.swift) | Screenshot LaunchBox cercati una volta e conservati, precedenza di quelli propri e dimensione piena della scelta. |
+| [Tests/NXLibraryCoreTests/SteamGridDBArtTests.swift](../Tests/NXLibraryCoreTests/SteamGridDBArtTests.swift) | Chiave privata, richieste con la chiave solo a SteamGridDB, crediti, anteprime e ricerca da Browse online. |
 | [Tests/PublicationChecks/test_publication.py](../Tests/PublicationChecks/test_publication.py) | Esegue il controllo reale in repository temporanee: sorgenti consentiti, file vietati, chiavi sintetiche senza esposizione e runtime non corrispondente al lock. |
 | [Tests/PublicationChecks/test_update_archive.py](../Tests/PublicationChecks/test_update_archive.py) | Verifica il controllo ZIP reale con bundle sintetici, symlink, percorsi non sicuri, collisioni Unicode, header incoerenti e dimensioni eccessive. |
 
@@ -420,6 +434,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/CloudSavesTests.swift](../Tests/NXLibraryCoreTests/CloudSavesTests.swift) | Cartelle cloud, preferenze per gioco e decodifica delle impostazioni precedenti. |
 | [Tests/NXLibraryCoreTests/CompatibilityCheckerTests.swift](../Tests/NXLibraryCoreTests/CompatibilityCheckerTests.swift) | Commit, modifiche ammesse nel checkout, Metal, CLI e override del gate. |
 | [Tests/NXLibraryCoreTests/DetailsFocusTests.swift](../Tests/NXLibraryCoreTests/DetailsFocusTests.swift) | Spostamento nelle bande di Details, limiti e sezioni vuote. |
+| [Tests/NXLibraryCoreTests/DirectorySizeTests.swift](../Tests/NXLibraryCoreTests/DirectorySizeTests.swift) | Somma dei file regolari ignorando nascosti e collegamenti; cartella mancante a zero. |
 | [Tests/NXLibraryCoreTests/DiagnosticsReportTests.swift](../Tests/NXLibraryCoreTests/DiagnosticsReportTests.swift) | Rimozione di percorsi personali e chiavi e contenuto delle sezioni diagnostiche. |
 | [Tests/NXLibraryCoreTests/DotnetReleaseTests.swift](../Tests/NXLibraryCoreTests/DotnetReleaseTests.swift) | Selezione del pacchetto ARM64 e verifica del suo hash. |
 | [Tests/NXLibraryCoreTests/EngineLocationTests.swift](../Tests/NXLibraryCoreTests/EngineLocationTests.swift) | Percorso predefinito, cartella scelta e fallback quando scompare. |
@@ -439,6 +454,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/KeyStoreTests.swift](../Tests/NXLibraryCoreTests/KeyStoreTests.swift) | Importazione e sostituzione atomica, conservazione della copia precedente in caso di errore, permessi 0600 e riepilogo. |
 | [Tests/NXLibraryCoreTests/LaunchServiceTests.swift](../Tests/NXLibraryCoreTests/LaunchServiceTests.swift) | Scrittura dell’ambiente, avvio del bundle e propagazione degli errori. |
 | [Tests/NXLibraryCoreTests/LauncherSettingsTests.swift](../Tests/NXLibraryCoreTests/LauncherSettingsTests.swift) | Metadati launcher.json e fallback dei controlli per build precedenti. |
+| [Tests/NXLibraryCoreTests/LaunchBoxArtTests.swift](../Tests/NXLibraryCoreTests/LaunchBoxArtTests.swift) | Risultati di ricerca, scelta della voce Switch/Switch 2, payload Nuxt con file pieni e screenshot. |
 | [Tests/NXLibraryCoreTests/LibraryPresentationTests.swift](../Tests/NXLibraryCoreTests/LibraryPresentationTests.swift) | Formattazione dei metadati e delle statistiche della libreria. |
 | [Tests/NXLibraryCoreTests/LibraryQueryTests.swift](../Tests/NXLibraryCoreTests/LibraryQueryTests.swift) | Filtri, ricerca, ordinamento e rapporto con la cronologia di gioco. |
 | [Tests/NXLibraryCoreTests/LibraryStoreTests.swift](../Tests/NXLibraryCoreTests/LibraryStoreTests.swift) | Persistenza, merge, recupero e conservazione di installazioni in attesa ed errori dopo scansioni ripetute. |
@@ -448,6 +464,8 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/MoreArtworkSourcesTests.swift](../Tests/NXLibraryCoreTests/MoreArtworkSourcesTests.swift) | Matching dei titoli e risposte delle sorgenti artwork aggiuntive. |
 | [Tests/NXLibraryCoreTests/MoreLikeThisTests.swift](../Tests/NXLibraryCoreTests/MoreLikeThisTests.swift) | Ranking dei giochi correlati e gestione di metadati incompleti. |
 | [Tests/NXLibraryCoreTests/NintendoStoreMetadataTests.swift](../Tests/NXLibraryCoreTests/NintendoStoreMetadataTests.swift) | Decodifica store e Title DB, cache, screenshot e risposte incomplete. |
+| [Tests/NXLibraryCoreTests/NUPSourceCatalogTests.swift](../Tests/NXLibraryCoreTests/NUPSourceCatalogTests.swift) | Magic NUP, cartelle, lettura tramite engine, nomi NACP, profili mancanti e selezione. |
+| [Tests/NXLibraryCoreTests/NXNativeGameSettingsTests.swift](../Tests/NXLibraryCoreTests/NXNativeGameSettingsTests.swift) | Build senza adattatore, migrazione da env.txt, scrittura dei soli valori diversi dal default e chiavi fissate. |
 | [Tests/NXLibraryCoreTests/OnlineArtworkSourcesTests.swift](../Tests/NXLibraryCoreTests/OnlineArtworkSourcesTests.swift) | Ricerca Steam e loghi MediaWiki/Commons con risposte sintetiche. |
 | [Tests/NXLibraryCoreTests/OnlineBackgroundsTests.swift](../Tests/NXLibraryCoreTests/OnlineBackgroundsTests.swift) | Parser degli sfondi fissi, risoluzioni, crediti e nomi dei download. |
 | [Tests/NXLibraryCoreTests/OnlineLiveSourcesTests.swift](../Tests/NXLibraryCoreTests/OnlineLiveSourcesTests.swift) | Parser e indirizzi dei provider di sfondi video. |

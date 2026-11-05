@@ -19,6 +19,9 @@ public final class AppViewModel: ObservableObject {
     let saveQueue = DispatchQueue(label: "local.nxlibrary.saves", qos: .userInitiated)
     @Published var settingsNotice: SettingsNotice?
     @Published var settingsNoticeFocus = 0
+    /// A SteamGridDB API key is saved (Settings → Look → SteamGridDB), so Change artwork searches it.
+    @Published var hasSteamGridDBKey = SteamGridDBKey().load() != nil
+    @Published var isEditingSteamGridDBKey = false
     @Published var isUpdatingApp = false
     @Published private(set) var hasActiveSaveOperations = false
     @Published var runningGameCount = 0
@@ -109,7 +112,7 @@ public final class AppViewModel: ObservableObject {
                 appName = ""
                 bundleId = ""
             }
-            pendingRuntimeConfig = GameRuntimeConfig.forReview(existing: selectedLibraryGame, defaults: lastAddGameDefaults)
+            pendingRuntimeConfig = selectedLibraryGame.map(loadRuntimeConfig) ?? lastAddGameDefaults
         }
     }
     var selectedLibraryGame: PortedGame? {
@@ -203,7 +206,8 @@ public final class AppViewModel: ObservableObject {
     public func supportsSources(_ sources: [GameFileItem]) -> Bool {
         let capabilities = engineSourceCapabilities
         return SourceSelection.supported(sources, titleSelection: capabilities.titleSelection,
-                                         extractedFolders: capabilities.extractedFolders)
+                                         extractedFolders: capabilities.extractedFolders,
+                                         nupContainers: capabilities.nupContainers)
     }
     
     public var formattedSelectedSourcesSize: String {
@@ -689,6 +693,7 @@ public final class AppViewModel: ObservableObject {
         guard let titleId = game.titleId, !titleId.isEmpty else { return }
         if storeMetadataLoading.contains(game.id) { return }
         if let existing = storeMetadata[game.id], storeMetadataService.isFresh(existing) {
+            loadFallbackScreenshots(for: game)
             return
         }
 
@@ -704,6 +709,7 @@ public final class AppViewModel: ObservableObject {
                 self.storeMetadataErrors[game.id] = error.localizedDescription
             }
             self.storeMetadataLoading.remove(game.id)
+            self.loadFallbackScreenshots(for: game)
         }
     }
 
@@ -726,7 +732,31 @@ public final class AppViewModel: ObservableObject {
     /// Keeps the fetched metadata and shows it with the player's choices (`MetadataPicks`) over it.
     private func setStoreMetadata(_ metadata: NintendoStoreMetadata, for game: PortedGame) {
         storeMetadataOriginals[game.id] = metadata
-        storeMetadata[game.id] = MetadataPicks.shared.applied(to: metadata, titleID: game.titleId ?? game.uniqueKey)
+        let shown = MetadataPicks.shared.applied(to: metadata, titleID: game.titleId ?? game.uniqueKey)
+        storeMetadata[game.id] = screenshotFallback.filled(shown)
+    }
+
+    private let screenshotFallback = ScreenshotFallbackStore()
+    /// Games whose LaunchBox screenshots are being looked up; Details waits before saying it has none.
+    @Published public private(set) var screenshotLookups: Set<UUID> = []
+
+    /// A game whose metadata has no screenshots (Title DB has none for Switch 2 games) asks LaunchBox once, when the
+    /// game is selected or opened as its metadata is, and keeps the answer for 30 days. A scan never asks.
+    public func loadFallbackScreenshots(for game: PortedGame) {
+        guard let titleId = game.titleId, !titleId.isEmpty, let metadata = storeMetadata[game.id],
+              !storeMetadataLoading.contains(game.id), screenshotFallback.wantsLookup(metadata),
+              screenshotLookups.insert(game.id).inserted else { return }
+        let names = [game.name, metadata.name].reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
+        let store = screenshotFallback
+        Task { @MainActor [weak self] in
+            let urls = await LaunchBoxArt.screenshots(names: names, switch2: game.isSwitch2)
+            guard let self else { return }
+            self.screenshotLookups.remove(game.id)
+            // Unreachable: asked again next time Details opens.
+            guard let urls else { return }
+            try? store.save(.init(urls: urls, fetchedAt: Date()), for: titleId)
+            if let original = self.storeMetadataOriginals[game.id] { self.setStoreMetadata(original, for: game) }
+        }
     }
 
     /// The metadata as the store gave it: what Automatic means in Change metadata.
@@ -1187,9 +1217,15 @@ public final class AppViewModel: ObservableObject {
         launchOverlay = LaunchOverlayState(game: game)
         SoundEffectService.shared.play(.launch)
 
+        // A saved-choices build reads the game's own store; only an older build takes env.txt and the environment.
+        let gameSettings = gameSettings(for: game)
         let config = GameRuntimeConfig.load(for: game)
         do {
-            try launchService.writeEnvironment(settings: config, titleId: titleId)
+            if let gameSettings {
+                try gameSettings.migrate()
+            } else {
+                try launchService.writeEnvironment(settings: config, titleId: titleId)
+            }
         } catch {
             saveGate.end(titleID: titleId, token: saveLaunchToken)
             launchingGameId = nil
@@ -1213,7 +1249,7 @@ public final class AppViewModel: ObservableObject {
         }
 
         launchService.launch(appURL: game.url,
-                             environment: config.toEnvironmentDict()) { [weak self] success, error in
+                             environment: gameSettings == nil ? config.toEnvironmentDict() : [:]) { [weak self] success, error in
             DispatchQueue.main.async {
                 guard let self else { return }
                 self.saveGate.end(titleID: titleId, token: saveLaunchToken)
@@ -1409,7 +1445,45 @@ public final class AppViewModel: ObservableObject {
     }
 
     public func loadRuntimeConfig(for game: PortedGame) -> GameRuntimeConfig {
-        GameRuntimeConfig.load(for: game)
+        gameSettings(for: game)?.runtimeConfig() ?? GameRuntimeConfig.load(for: game)
+    }
+
+    /// The game's saved-choices store, or nil for a build from before saved choices (env.txt).
+    public func gameSettings(for game: PortedGame) -> NXNativeGameSettings? {
+        NXNativeGameSettings.forGame(game)
+    }
+
+    public func settingsSnapshot(for game: PortedGame) -> GameSettingsSnapshot? {
+        gameSettings(for: game)?.snapshot()
+    }
+
+    /// One saved choice; false (with a notice) when it could not be kept.
+    @discardableResult public func setGameSetting(_ env: String, to value: String, for game: PortedGame) -> Bool {
+        guard let settings = gameSettings(for: game) else { return false }
+        do {
+            try settings.set(env, to: value)
+            return true
+        } catch {
+            settingsNotSaved(game, error)
+            return false
+        }
+    }
+
+    /// Use new game defaults: every setting to the build's default, then NX Library's new-game defaults.
+    public func restoreGameDefaults(for game: PortedGame) {
+        guard let settings = gameSettings(for: game) else { return }
+        do {
+            try settings.resetAll()
+            let base = settings.runtimeConfig()
+            try settings.apply(settingsStore?.settings.gameDefaults ?? GameRuntimeConfig(), changedFrom: base)
+        } catch {
+            settingsNotSaved(game, error)
+        }
+    }
+
+    private func settingsNotSaved(_ game: PortedGame, _ error: Error) {
+        logs.append(LogEntry(level: .error, message: "Could not save settings for \(game.name): \(error.localizedDescription)"))
+        showSettingsNotice(title: "Options not saved", message: "Your game options could not be saved. Try again.")
     }
 
     public func supportsSetting(_ env: String, for game: PortedGame) -> Bool {
@@ -1689,7 +1763,7 @@ public final class AppViewModel: ObservableObject {
                     if case .failure(let error) = outcome {
                         self.scanError = error.localizedDescription
                     } else { self.scanError = urls.isEmpty
-                        ? "No NSP, XCI, NSZ or XCZ files were found in this folder."
+                        ? "No NSP, XCI, NSZ, XCZ or NUP files were found in this folder."
                         : "No readable game files were found. Check that the files are complete and have a title ID or ticket." }
                     self.logs.append(LogEntry(level: .warning, message: self.scanError!))
                 } else {
@@ -1714,6 +1788,18 @@ public final class AppViewModel: ObservableObject {
                 throw NXLibraryError.environmentBlocked("This engine does not support extracted folders.")
             }
             return ScannedSources(games: [try ExtractedSourceCatalog(profiles: repo.appendingPathComponent("dm/games")).scan(folder: folder)])
+        }
+        // A Switch 2 NUP file holds the whole game: picked on its own, or the one .nup in a folder without packages.
+        let pickedNUPs = files.filter { $0.pathExtension.lowercased() == "nup" }
+        guard pickedNUPs.isEmpty || (files.count == 1 && NUPSourceCatalog.isNUP(files[0])) else {
+            throw EngineSourceError.containerNotAlone
+        }
+        if let nup = pickedNUPs.first ?? (allowExtractedFolder ? NUPSourceCatalog.container(in: folder) : nil) {
+            guard capabilities.nupContainers else {
+                throw NXLibraryError.environmentBlocked("This engine does not support NUP files.")
+            }
+            let reader = NUPSourceCatalog(repo: repo, toolchain: toolchain, developerDir: developerDir)
+            return ScannedSources(games: [try reader.scan(nup: nup)])
         }
         var detected: [DetectedGame]
         var skipped: [String] = []
@@ -1843,9 +1929,9 @@ public final class AppViewModel: ObservableObject {
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = true
-        panel.allowedContentTypes = ["nsp", "xci", "nsz", "xcz"].compactMap { UTType(filenameExtension: $0) }
+        panel.allowedContentTypes = ["nsp", "xci", "nsz", "xcz", "nup"].compactMap { UTType(filenameExtension: $0) }
         panel.prompt = "Choose files"
-        panel.message = "Choose NSP, XCI, NSZ or XCZ files."
+        panel.message = "Choose NSP, XCI, NSZ or XCZ files, or one Switch 2 NUP file."
         guard panel.runModal() == .OK, let first = panel.urls.first else { return false }
         if let defaults { startNewAddGame(defaults: defaults) }
         let folder = first.deletingLastPathComponent()
@@ -2089,7 +2175,12 @@ public final class AppViewModel: ObservableObject {
             )
             // Existing titles start Review with their saved settings. The
             // values the user confirms are the values used at the next launch.
-            try pendingRuntimeConfig.save(for: game)
+            if let gameSettings = gameSettings(for: game) {
+                try gameSettings.migrate()
+                try gameSettings.apply(pendingRuntimeConfig, changedFrom: gameSettings.runtimeConfig())
+            } else {
+                try pendingRuntimeConfig.save(for: game)
+            }
             librarySelection.selectedGameID = game.id
             logs.append(LogEntry(level: .success, message: "Added \(game.name) to the library."))
             if buildNow, canStartBuild {
@@ -2306,7 +2397,7 @@ public final class AppViewModel: ObservableObject {
             developerDir: resolvedDeveloperDir(),
             appName: target.name,
             bundleId: target.bundleId ?? "org.nxnative.\(titleId.lowercased())",
-            language: GameRuntimeConfig.load(for: target).languageForBuild,
+            language: loadRuntimeConfig(for: target).languageForBuild,
             titleId: engineSourceCapabilities.titleSelection ? titleId : nil,
             packageVersion: engineSourceCapabilities.titleSelection ? SourceSelection.versionForBuild(target.sources) : nil,
             allowUntestedToolchain: allowUntestedToolchain,
@@ -2455,18 +2546,20 @@ public final class AppViewModel: ObservableObject {
                 }
             }
 
-        case .stageEnd(let name, let ok, let elapsed, let summary):
+        case .stageEnd(let name, let ok, let elapsed, let summary, let warn):
+            let warned = ok && warn
             if let index = buildStages.firstIndex(where: { $0.name == name })
                 ?? buildStages.firstIndex(where: { $0.isRunning }) {
                 buildStages[index].isRunning = false
                 buildStages[index].isCompleted = ok
                 buildStages[index].isFailed = !ok
+                buildStages[index].hasWarning = warned
                 buildStages[index].elapsedSeconds = elapsed
                 buildStages[index].summary = summary
             }
             logs.append(LogEntry(
-                level: ok ? .success : .error,
-                message: "\(ok ? "✓" : "✗") \(name)\(summary.map { " — \($0)" } ?? "")"
+                level: warned ? .warning : ok ? .success : .error,
+                message: "\(warned ? "⚠" : ok ? "✓" : "✗") \(name)\(summary.map { " — \($0)" } ?? "")"
             ))
 
         case .say(let message):

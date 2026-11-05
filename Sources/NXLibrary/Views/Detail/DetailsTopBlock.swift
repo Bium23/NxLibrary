@@ -190,7 +190,7 @@ struct DetailsTopBlock: View {
         if cheatsOn {
             items.append(SeleneStat.text("CHEATS", "On"))
         }
-        items.append(SeleneStat.platform)
+        items.append(SeleneStat.platform(presentation.console))
         return SeleneStatsRow(items: items, gap: 28)
             .padding(.leading, canvas.u(4))
     }

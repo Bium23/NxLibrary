@@ -9,6 +9,8 @@ public struct BuildStageItem: Identifiable, Equatable {
     public var isFailed: Bool
     public var elapsedSeconds: Double?
     public var summary: String?
+    /// Finished, but without what it makes (the engine's `warn`).
+    public var hasWarning = false
     
     public init(
         id: Int,

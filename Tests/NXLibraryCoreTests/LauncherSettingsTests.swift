@@ -65,4 +65,49 @@ final class LauncherSettingsTests: XCTestCase {
         XCTAssertFalse(LauncherSettingsReader.supports("DM_RENDER_SCALE", for: app))
         XCTAssertTrue(LauncherSettingsReader.supports("DM_FPS_TARGET", for: app))
     }
+
+    private func setting(_ json: String) throws -> LauncherSetting {
+        try JSONDecoder().decode(LauncherSetting.self, from: Data(json.utf8))
+    }
+
+    func testAcceptsOnlyWhatTheBuildOffers() throws {
+        let choice = try setting(#"{"env":"DM_FPS_TARGET","kind":"choice","section":"Game","label":"Frame rate","default":"60","options":[["30","30 fps"],["60","60 fps"]],"level":"basic"}"#)
+        XCTAssertEqual(choice.level, "basic")
+        XCTAssertTrue(choice.accepts("30"))
+        XCTAssertFalse(choice.accepts("120"))
+
+        let toggle = try setting(#"{"env":"DM_RUMBLE","kind":"toggle","section":"Controls","label":"Game rumble","default":"1","on":"1","off":"0"}"#)
+        XCTAssertTrue(toggle.accepts("0"))
+        XCTAssertFalse(toggle.accepts("true"))
+
+        let range = try setting(#"{"env":"DM_RUMBLE_GAIN","kind":"range","section":"Controls","label":"Rumble strength","default":"1.0","needs":"DM_RUMBLE=1","min":0.0,"max":3.0,"step":0.1}"#)
+        XCTAssertTrue(range.accepts("0.45"))
+        XCTAssertTrue(range.accepts("3"))
+        for bad in [" 1", "0x1", "nan", "3.5", "", "1 ", "inf"] {
+            XCTAssertFalse(range.accepts(bad), bad)
+        }
+    }
+
+    func testRangeDefaultsCompareAsNumbers() throws {
+        let range = try setting(#"{"env":"DM_RENDER_SCALE","kind":"range","section":"Game","label":"Render scale","default":"1.0","min":0.5,"max":1.0,"step":0.05}"#)
+        XCTAssertTrue(range.isDefault("1"))
+        XCTAssertTrue(range.isDefault("1.00"))
+        XCTAssertFalse(range.isDefault("0.75"))
+        XCTAssertEqual(LauncherSetting.rangeString(1.0), "1")
+        XCTAssertEqual(LauncherSetting.rangeString(0.45), "0.45")
+        XCTAssertEqual(LauncherSetting.rangeString(0.1 + 0.2), "0.3")
+        let choice = try setting(#"{"env":"DM_OPMODE","kind":"choice","section":"Game","label":"Console mode","default":"1","options":[["1","Docked"],["0","Handheld"]]}"#)
+        XCTAssertTrue(choice.isDefault("1"))
+        XCTAssertFalse(choice.isDefault("1.0"), "only ranges compare as numbers")
+    }
+
+    func testNeedsHoldsOnlyForItsValue() throws {
+        let range = try setting(#"{"env":"DM_RUMBLE_GAIN","kind":"range","section":"Controls","label":"Rumble strength","default":"1.0","needs":"DM_RUMBLE=1","min":0.0,"max":3.0,"step":0.1}"#)
+        XCTAssertEqual(range.needs, "DM_RUMBLE=1")
+        XCTAssertTrue(range.needsSatisfied(["DM_RUMBLE": "1"]))
+        XCTAssertFalse(range.needsSatisfied(["DM_RUMBLE": "0"]))
+        XCTAssertFalse(range.needsSatisfied([:]))
+        let free = try setting(#"{"env":"DM_RUMBLE","kind":"toggle","section":"Controls","label":"Game rumble","default":"1","on":"1","off":"0"}"#)
+        XCTAssertTrue(free.needsSatisfied([:]))
+    }
 }

@@ -169,3 +169,30 @@ final class PortingProgressTests: XCTestCase {
         XCTAssertNil(PortingETA.text(progress, lastFinishingSeconds: nil))
     }
 }
+
+final class BuildWarningTests: XCTestCase {
+    func testEngineWarnIsRead() {
+        XCTAssertEqual(BuildEventParser.parse(#"{"ev":"stage_end","k":7,"name":"Pipeline archive","ok":true,"summary":"failed, the app is packed without one","elapsed":3.1,"warn":true}"#),
+                       .stageEnd(name: "Pipeline archive", ok: true, elapsed: 3.1, summary: "failed, the app is packed without one", warn: true))
+        XCTAssertEqual(BuildEventParser.parse(#"{"ev":"stage_end","name":"pack","ok":true,"summary":"done","elapsed":1}"#),
+                       .stageEnd(name: "pack", ok: true, elapsed: 1, summary: "done"), "older engines: no warning")
+    }
+
+    func testWarningCopy() {
+        XCTAssertTrue(BuildWarningCopy.text(stage: "Pipeline archive", summary: "failed, the app is packed without one")
+            .hasPrefix("The pipeline archive could not be made"))
+        XCTAssertEqual(BuildWarningCopy.text(stage: "mac host", summary: " slow disk "),
+                       "Mac host finished with a warning: slow disk. The log has the details.")
+        XCTAssertEqual(BuildWarningCopy.text(stage: "pack", summary: nil), "Pack finished with a warning. The log has the details.")
+    }
+
+    func testAWarnedStageStillCountsAsFinished() {
+        var progress = PortingProgress()
+        progress.apply(.stage(k: 1, n: 2, name: "Mac shaders", step: nil))
+        progress.apply(.stageEnd(name: "Mac shaders", ok: true, elapsed: 1, summary: nil))
+        let before = progress.overall
+        progress.apply(.stage(k: 2, n: 2, name: "Pipeline archive", step: nil))
+        progress.apply(.stageEnd(name: "Pipeline archive", ok: true, elapsed: 1, summary: "failed", warn: true))
+        XCTAssertGreaterThan(progress.overall, before)
+    }
+}

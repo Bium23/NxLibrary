@@ -157,9 +157,11 @@ public struct CheatStore {
 
     private func allowed() throws { guard canWrite() else { throw CheatStoreError.notAllowed } }
 
+    /// The folder is made first: a game with no cheat file yet has none, and its switches still write their flags.
     private func write(_ data: Data, to url: URL) throws {
         let tmp = url.deletingLastPathComponent().appendingPathComponent(".\(url.lastPathComponent).nxlibrary-\(UUID().uuidString)")
         do {
+            try fm.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
             try data.write(to: tmp)
             guard rename(tmp.path, url.path) == 0 else {
                 throw CheatStoreError.writeFailed(String(cString: strerror(errno)))

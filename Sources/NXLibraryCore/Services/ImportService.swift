@@ -176,24 +176,13 @@ public final class ImportService {
         return object
     }
 
-    /// The remembered size while the app's date is unchanged, else measured.
+    /// The remembered size while the app's date is unchanged, else measured. Each new size is saved at once,
+    /// so quitting during a long first scan keeps the apps already measured.
     private func size(of app: URL, date: Date) -> Int64 {
         if let known = sizeCache.size(for: app, date: date) { return known }
-        let measured = directorySize(app)
+        let measured = DirectorySize.bytes(at: app)
         sizeCache.set(measured, for: app, date: date)
+        sizeCache.save()
         return measured
-    }
-
-    private func directorySize(_ url: URL) -> Int64 {
-        guard let enumerator = fm.enumerator(
-            at: url,
-            includingPropertiesForKeys: [.fileSizeKey],
-            options: [.skipsHiddenFiles]
-        ) else { return 0 }
-        var total: Int64 = 0
-        for case let item as URL in enumerator {
-            total += Int64((try? item.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0)
-        }
-        return total
     }
 }

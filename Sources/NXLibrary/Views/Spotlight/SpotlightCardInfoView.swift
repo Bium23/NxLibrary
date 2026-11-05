@@ -52,7 +52,7 @@ struct SpotlightCardInfoView: View {
 
     private var about: String {
         switch card {
-        case .collection: return "Every game in your library, in one grid."
+        case .collection: return "Every game in your library, in one row."
         case .surprise: return "Can't decide? Pick a game for me."
         case .activity: return "What you played this week."
         case .addGame: return "Build a game from your own dumps."

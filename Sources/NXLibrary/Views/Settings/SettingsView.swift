@@ -88,6 +88,13 @@ public struct SettingsView: View {
             handleGamepad(action)
         }
         .overlay {
+            if viewModel.isEditingSteamGridDBKey {
+                SteamGridDBKeyDialog(viewModel: viewModel, gamepad: .nxSettingsGamepadAction) { _ in
+                    viewModel.isEditingSteamGridDBKey = false
+                }
+            }
+        }
+        .overlay {
             if showingControls {
                 ControlsView(canHandleInput: {
                     !router.isMenuPresented && !viewModel.showSetupCheck
@@ -298,7 +305,7 @@ public struct SettingsView: View {
                   !NativeMenuCommands.shared.isTracking,
                   !router.isMenuPresented,
                   !viewModel.showSetupCheck,
-                  !showingControls,
+                  !showingControls, !viewModel.isEditingSteamGridDBKey,
                   viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
                   viewModel.gameWithInstallFailure == nil,
                   let window = event.window,
@@ -351,6 +358,8 @@ public struct SettingsView: View {
     }
 
     private func handleGamepad(_ action: GamepadAction) {
+        // The key dialog takes the controller while it is open.
+        if viewModel.isEditingSteamGridDBKey { return }
         if showingControls {
             NotificationCenter.default.post(name: .nxControlsGamepadAction, object: action)
             return

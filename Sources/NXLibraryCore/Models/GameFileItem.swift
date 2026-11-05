@@ -1,7 +1,9 @@
 import Foundation
 
 public enum SourceLayout: String, Codable, Equatable {
-    case package, extracted
+    /// An NSP / XCI / NSZ / XCZ package; `extracted` a dump folder; `container` one package of a `.nup` file,
+    /// whose packages all share that file.
+    case package, extracted, container
 }
 
 public enum SourceKind: String, Codable, Equatable {

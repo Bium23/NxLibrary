@@ -25,6 +25,8 @@ struct DetailsScreenshotsBand: View {
 
     let titleID: String
     let urls: [URL]
+    /// Credited in the title when not the store or Title DB ("LaunchBox").
+    let source: String?
     let known: Bool
     let focusedIndex: Int?
     let artwork: ArtworkStore
@@ -34,7 +36,7 @@ struct DetailsScreenshotsBand: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if !urls.isEmpty || known {
-                DetailsBandTitle(text: "Screenshots")
+                DetailsBandTitle(text: source.map { "Screenshots · \($0)" } ?? "Screenshots")
             }
             SpotlightScreenshotStrip(titleID: titleID, urls: urls, known: known,
                                      focusedIndex: focusedIndex, artwork: artwork,

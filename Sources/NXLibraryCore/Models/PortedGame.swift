@@ -81,6 +81,11 @@ public struct PortedGame: Identifiable, Codable, Equatable {
         return nil
     }
 
+    /// Switch 2 titles have IDs starting 04.
+    public var isSwitch2: Bool { titleId?.hasPrefix("04") == true }
+
+    public var consoleName: String { isSwitch2 ? "Nintendo Switch 2" : "Nintendo Switch" }
+
     public var uniqueKey: String {
         if let titleId, !titleId.isEmpty { return titleId }
         if let bundleId, !bundleId.isEmpty { return bundleId }

@@ -16,6 +16,7 @@ public enum BuildEventParser {
         let ok: Bool?
         let summary: String?
         let msg: String?
+        let warn: Bool?
     }
 
     public static func parse(_ line: String) -> BuildEvent? {
@@ -35,7 +36,7 @@ public enum BuildEventParser {
                              total: wire.total, unit: wire.unit, eta: wire.eta)
         case "stage_end":
             return .stageEnd(name: wire.name ?? "", ok: wire.ok ?? true,
-                             elapsed: wire.elapsed, summary: wire.summary)
+                             elapsed: wire.elapsed, summary: wire.summary, warn: wire.warn ?? false)
         case "say":
             return wire.msg.map { .say($0) }
         default:
