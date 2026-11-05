@@ -42,7 +42,8 @@ final class SetupCheckModel: ObservableObject {
                    allowUntested: viewModel.allowUntestedToolchain,
                    keyStore: viewModel.keyStore, libraryFolder: viewModel.libraryFolder,
                    sourcesFolder: viewModel.gameFilesFolder,
-                   libraryNeedsConfirmation: viewModel.requiresGameAppsFolderChoice)
+                   libraryNeedsConfirmation: viewModel.requiresGameAppsFolderChoice,
+                   newestEngine: viewModel.newestEngineChoice)
     }
 
     func refresh() {
@@ -292,7 +293,12 @@ final class SetupCheckModel: ObservableObject {
 
     private func fetchEngine(_ completion: @escaping (Bool) -> Void) {
         guard let facts else { completion(false); return }
-        let action = SetupActions.engineAction(for: facts.engine, pinned: facts.pinnedCommit)
+        if case .checkout(let head, false) = facts.engine, head == facts.newestEngine?.commit {
+            backToTestedEngine(completion)
+            return
+        }
+        let action = SetupActions.engineAction(for: facts.engine, pinned: facts.pinnedCommit,
+                                               newest: facts.newestEngine?.commit)
         let commands = SetupActions.gitCommands(for: action, folder: facts.engineFolder, pinned: facts.pinnedCommit)
         guard !commands.isEmpty else { completion(false); return }
         let chip = action == .clone ? "CLONING…" : "UPDATING…"
@@ -310,6 +316,28 @@ final class SetupCheckModel: ObservableObject {
             DispatchQueue.main.async {
                 self.viewModel.detectEnvironment()
                 self.finish(.engine, result, "nxnative engine", completion)
+            }
+        }
+    }
+
+    /// The newest engine's card: A returns to the tested engine, the same action as Settings → Engine.
+    private func backToTestedEngine(_ completion: @escaping (Bool) -> Void) {
+        setOverride(.engine, .working("SWITCHING…", detail: "Returning to the tested engine…"))
+        viewModel.useTestedEngine()
+        waitForEngineSwitch(completion)
+    }
+
+    private func waitForEngineSwitch(_ completion: @escaping (Bool) -> Void) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            guard let self else { return }
+            if self.viewModel.isSwitchingEngine { self.waitForEngineSwitch(completion); return }
+            if let problem = self.viewModel.newestEngineProblem {
+                self.setOverride(.engine, .failed(problem))
+                completion(false)
+            } else {
+                self.setOverride(.engine, nil)
+                self.refresh()
+                completion(true)
             }
         }
     }

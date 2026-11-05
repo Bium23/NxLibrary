@@ -195,7 +195,7 @@ struct SetupCheckView: View {
         switch focus {
         case .card(let index) where items.indices.contains(index):
             let item = items[index]
-            return Story(icon: Self.icon(item.id), tone: StatusChip.tone(item.state), title: item.title,
+            return Story(icon: Self.icon(item.id), tone: StatusChip.tone(item), title: item.title,
                          state: StatusChip.stateName(item), about: item.about, detail: item.detail,
                          action: item.actionTitle)
         case .installAll:
@@ -274,12 +274,17 @@ private struct StatusChip: View {
         }
     }
 
+    /// Ready but untested by NX Library (the newest engine) reads orange, without an alarm.
+    static func tone(_ item: SetupItem) -> Color {
+        item.isUntested && item.state == .ready ? SeleneTheme.untested : tone(item.state)
+    }
+
     static func stateName(_ item: SetupItem) -> String {
         item.chip.replacingOccurrences(of: "✓ ", with: "").capitalized
     }
 
     var body: some View {
-        let tone = Self.tone(item.state)
+        let tone = Self.tone(item)
         Text(item.chip)
             .seleneFont(12, .bold)
             .foregroundColor(tone)

@@ -45,6 +45,7 @@ public final class AppViewModel: ObservableObject {
         static let setupPage = "NXLibrary_SetupPage"
         /// A chosen engine folder other than ~/nxnative.
         static let savedEngineFolder = "NXLibrary_EngineFolder"
+        static let newestEngineChoice = "NXLibrary_NewestEngineChoice"
     }
     
     // MARK: - Workspace & Paths
@@ -322,6 +323,21 @@ public final class AppViewModel: ObservableObject {
             UserDefaults.standard.set(allowUntestedToolchain, forKey: StorageKeys.allowUntestedToolchain)
         }
     }
+    /// The newest nxnative the player chose in Settings → Engine; nil while the tested engine is in use.
+    @Published public internal(set) var newestEngineChoice: NewestEngineChoice? = nil {
+        didSet {
+            if let choice = newestEngineChoice, let data = try? JSONEncoder().encode(choice) {
+                UserDefaults.standard.set(data, forKey: StorageKeys.newestEngineChoice)
+            } else {
+                UserDefaults.standard.removeObject(forKey: StorageKeys.newestEngineChoice)
+            }
+        }
+    }
+    /// Whether upstream main can be used here, read from its lock after an Upstream check.
+    @Published public internal(set) var newestEngineReadiness: NewestEngineReadiness? = nil
+    @Published public internal(set) var isSwitchingEngine = false
+    /// Why the last switch did not happen, shown calmly in the Newest engine row.
+    @Published public internal(set) var newestEngineProblem: String? = nil
     
     // MARK: - Advanced Options
     @Published public var appName: String = ""
@@ -409,7 +425,7 @@ public final class AppViewModel: ObservableObject {
         .resolve(runtime: .locate(), repo: URL(fileURLWithPath: nxnativePath))
     }
 
-    public let pinnedEngineCommit = "b64a5ff09f4dc0f57e9297b6ccaf6f7d95256a44"
+    public let pinnedEngineCommit = "4a0551e4b9abc75ea736006e4dbd30fcac0d03a4"
     private let core = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/NXLibrary")
     lazy var libraryStore = LibraryStore(directory: core)
@@ -466,6 +482,9 @@ public final class AppViewModel: ObservableObject {
         }
         if UserDefaults.standard.object(forKey: StorageKeys.allowUntestedToolchain) != nil {
             self.allowUntestedToolchain = UserDefaults.standard.bool(forKey: StorageKeys.allowUntestedToolchain)
+        }
+        if let data = UserDefaults.standard.data(forKey: StorageKeys.newestEngineChoice) {
+            self.newestEngineChoice = try? JSONDecoder().decode(NewestEngineChoice.self, from: data)
         }
         
         restoreBuildInputs()
@@ -637,11 +656,14 @@ public final class AppViewModel: ObservableObject {
         let repo = URL(fileURLWithPath: nxnativePath)
         let toolchain = engineToolchain
         let developerDir = resolvedDeveloperDir()
-        let expected = pinnedEngineCommit
+        let expected = activeEngineCommit
+        let pinned = pinnedEngineCommit
+        let choice = newestEngineChoice
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let environment = NXNativeEnvironment(repoURL: repo, toolchain: toolchain,
                                                   developerDir: developerDir)
             let status = environment.inspect()
+            let includedInPin = choice.flatMap { NewestEngineSwitcher(repo: repo).isIncluded($0.commit, in: pinned) }
             let checker = CompatibilityChecker(repoURL: repo, toolchain: toolchain,
                                                developerDir: developerDir)
             let report = try? checker.check(expectedEngineCommit: expected)
@@ -656,6 +678,14 @@ public final class AppViewModel: ObservableObject {
                 self.environmentStatus = status
                 self.compatibilityReport = report
                 self.currentEngineCommit = (currentCommit?.isEmpty == false) ? currentCommit : nil
+                if let choice, !NewestEngine.keeps(choice, head: self.currentEngineCommit, pinned: pinned,
+                                                    includedInPin: includedInPin) {
+                    // The checkout moved (Setup, Back to tested, by hand) or an NX Library update tested this
+                    // commit: the tested engine is in charge again.
+                    self.forgetNewestEngine()
+                    self.refreshCompatibility()
+                    return
+                }
                 if let report, !report.ok {
                     let blocked = report.checks.filter { $0.status == .block }
                         .map { "\($0.title): \($0.detail)" }.joined(separator: " | ")
@@ -667,7 +697,8 @@ public final class AppViewModel: ObservableObject {
 
     public func checkUpstreamChangelog() {
         if case .checking = upstreamState { return }
-        let base = currentEngineCommit ?? pinnedEngineCommit
+        // Always against the tested pin, so the newest engine stays measurable from the engine NX Library tested.
+        let base = pinnedEngineCommit
         upstreamState = .checking
         let checker = upstreamChecker
         Task { @MainActor [weak self] in
@@ -678,6 +709,7 @@ public final class AppViewModel: ObservableObject {
                 if let data = try? JSONEncoder().encode(status) {
                     UserDefaults.standard.set(data, forKey: self.upstreamCacheKey)
                 }
+                self.checkNewestEngineReadiness(status)
             } catch {
                 self.upstreamState = .failed(Self.upstreamErrorMessage(error))
             }
@@ -1787,7 +1819,9 @@ public final class AppViewModel: ObservableObject {
             guard capabilities.extractedFolders else {
                 throw NXLibraryError.environmentBlocked("This engine does not support extracted folders.")
             }
-            return ScannedSources(games: [try ExtractedSourceCatalog(profiles: repo.appendingPathComponent("dm/games")).scan(folder: folder)])
+            let catalog = ExtractedSourceCatalog(profiles: repo.appendingPathComponent("dm/games"),
+                                                 provisional: capabilities.provisionalDumps)
+            return ScannedSources(games: [try catalog.scan(folder: folder)])
         }
         // A Switch 2 NUP file holds the whole game: picked on its own, or the one .nup in a folder without packages.
         let pickedNUPs = files.filter { $0.pathExtension.lowercased() == "nup" }
@@ -2020,11 +2054,15 @@ public final class AppViewModel: ObservableObject {
     /// a title. Without one the engine builds from a provisional profile and
     /// may fail in the rewrite or at run time.
     public func hasVerifiedEngineProfile(for game: PortedGame) -> Bool {
-        guard let titleId = game.titleId, !titleId.isEmpty else { return true }
+        hasVerifiedEngineProfile(titleId: game.titleId)
+    }
+
+    public func hasVerifiedEngineProfile(titleId: String?) -> Bool {
+        guard let titleId, !titleId.isEmpty else { return true }
         guard !nxnativePath.isEmpty else { return true }
         var isDirectory: ObjCBool = false
         let path = URL(fileURLWithPath: nxnativePath)
-            .appendingPathComponent("dm/games/\(titleId)").path
+            .appendingPathComponent("dm/games/\(titleId.uppercased())").path
         return FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory)
             && isDirectory.boolValue
     }
@@ -2299,7 +2337,7 @@ public final class AppViewModel: ObservableObject {
             toolchain: engineToolchain,
             developerDir: resolvedDeveloperDir()
         )
-        let report = try? checker.check(expectedEngineCommit: pinnedEngineCommit)
+        let report = try? checker.check(expectedEngineCommit: activeEngineCommit)
         compatibilityReport = report
         if report?.ok != true && !allowUntestedToolchain {
             let reason = report?.checks.filter { $0.status == .block }
@@ -2309,10 +2347,13 @@ public final class AppViewModel: ObservableObject {
         }
         environmentCheckGeneration = UUID()
         isCheckingEnvironment = false
-        activeBuildToolchain = ToolchainInfo(engineCommit: pinnedEngineCommit,
+        let certified = report?.ok == true && !allowUntestedToolchain && !usesNewestEngine
+        activeBuildToolchain = ToolchainInfo(engineCommit: activeEngineCommit,
             metalVersion: environmentStatus.metalVersion, xcodeVersion: environmentStatus.xcodeVersion,
-            verified: report?.ok == true && !allowUntestedToolchain,
-            note: report?.ok == true && !allowUntestedToolchain ? "Certified toolchain" : "Untested toolchain (explicit override)")
+            verified: certified,
+            note: certified ? "Certified toolchain"
+                : usesNewestEngine ? "Newest engine, not yet tested by NX Library"
+                : "Untested toolchain (explicit override)")
 
         let merged = try libraryStore.merge(scanned: [target])
         libraryGames = merged.games.sorted {
@@ -2585,7 +2626,7 @@ public final class AppViewModel: ObservableObject {
         var library = (try? libraryStore.load()) ?? LibraryFile(games: libraryGames)
         if let index = library.games.firstIndex(where: { $0.id == gameID }) {
             var game = library.games[index]
-            let toolchain = activeBuildToolchain ?? ToolchainInfo(engineCommit: pinnedEngineCommit, verified: false)
+            let toolchain = activeBuildToolchain ?? ToolchainInfo(engineCommit: activeEngineCommit, verified: false)
             let verified = toolchain.verified
             let record = BuildRecord(
                 startedAt: buildStartedAt ?? Date(),
@@ -2593,7 +2634,7 @@ public final class AppViewModel: ObservableObject {
                 exitCode: result.exitCode,
                 logPath: result.logURL.path,
                 outputPath: result.success || result.installationFailed ? finalApp.path : nil,
-                engineCommit: pinnedEngineCommit,
+                engineCommit: toolchain.engineCommit ?? activeEngineCommit,
                 metalVersion: toolchain.metalVersion,
                 xcodeVersion: toolchain.xcodeVersion,
                 toolchainVerified: verified,

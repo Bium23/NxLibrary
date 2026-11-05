@@ -68,12 +68,14 @@ except pack_nup.Error as e:
         }
         let fileSize = (try? nup.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? 0
         return try Self.parse(result.stdout, nup: nup, fileSize: fileSize,
-                              profiles: repo.appendingPathComponent("dm/games"))
+                              profiles: repo.appendingPathComponent("dm/games"),
+                              provisional: EngineSourceCapabilities(repo: repo).provisionalNUP)
     }
 
     /// The probe's lines → the game. The base carries the file's size, so the unique source size is the file's; the
-    /// name is the profile's, else the container's NACP. A game without a registered profile is refused, as a dump is.
-    static func parse(_ output: String, nup: URL, fileSize: Int64, profiles: URL) throws -> DetectedGame {
+    /// name is the profile's, else the container's NACP. A game without a registered profile is refused, as a dump is,
+    /// unless the engine makes a provisional profile for it (`provisional`).
+    static func parse(_ output: String, nup: URL, fileSize: Int64, profiles: URL, provisional: Bool = false) throws -> DetectedGame {
         var title: UInt64?
         var nacpName = ""
         var hasBase = false
@@ -111,11 +113,10 @@ except pack_nup.Error as e:
         }
         guard hasBase else { throw EngineSourceError.invalidContainer("no base game") }
         let identity = String(format: "%016llX", title)
-        guard let profile = try? String(contentsOf: profiles.appendingPathComponent(identity).appendingPathComponent("game.tsv"),
-                                        encoding: .utf8) else {
-            throw EngineSourceError.missingProfile(identity)
-        }
-        let profileName = profile.split(separator: "\n").first(where: { $0.hasPrefix("name\t") }).map { String($0.dropFirst(5)) }
+        let profile = try? String(contentsOf: profiles.appendingPathComponent(identity).appendingPathComponent("game.tsv"),
+                                  encoding: .utf8)
+        guard profile != nil || provisional else { throw EngineSourceError.missingProfile(identity) }
+        let profileName = profile?.split(separator: "\n").first(where: { $0.hasPrefix("name\t") }).map { String($0.dropFirst(5)) }
         let name = profileName ?? (nacpName.isEmpty ? identity : nacpName)
         let base = DetectedSource(url: nup, kind: .base, titleId: title, version: 0, sizeBytes: fileSize, layout: .container)
         return DetectedGame(baseTitleId: title, name: name, base: base,

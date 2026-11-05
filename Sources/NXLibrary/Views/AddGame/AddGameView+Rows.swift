@@ -65,6 +65,12 @@ extension AddGameView {
                 rows.append(AddGameRow(id: "noBase", kind: .warning(action: nil), title: "Base game required",
                                        about: "This folder has an update or DLC but no base game."))
             }
+            // The same note for an NSP, a NUP or a folder: the engine makes a provisional profile for each.
+            if !viewModel.hasVerifiedEngineProfile(titleId: game.titleId) {
+                rows.append(AddGameRow(id: "noProfile", kind: .warning(action: nil), title: "Not tested with this engine yet",
+                                       about: "The engine has no profile for this game, so it makes a provisional one. "
+                                           + "The porting may stop, or the game may not start."))
+            }
             for item in game.files {
                 let locked = SourceSelection.isLocked(item, in: game.files, selected: viewModel.selectedSourceIDs)
                 rows.append(AddGameRow(

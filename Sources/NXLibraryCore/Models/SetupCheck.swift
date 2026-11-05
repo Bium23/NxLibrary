@@ -24,6 +24,8 @@ public struct SetupItem: Identifiable, Equatable {
     public var progress: Double? = nil
     /// Optional choices stay visible without counting as unfinished Setup steps.
     public var isRequired: Bool = true
+    /// Ready, but with something NX Library has not tested (the newest engine): an orange chip, no alarm.
+    public var isUntested: Bool = false
 }
 
 public enum EngineFacts: Equatable {
@@ -66,6 +68,8 @@ public struct SetupFacts: Equatable {
     /// The checkout's HEAD is an ancestor of the pin (an NX Library update brought a newer engine); false when it
     /// is ahead or elsewhere; nil when git cannot tell (the pin is not fetched yet, so it is newer).
     public var engineBehind: Bool?
+    /// The newest nxnative the player chose in Settings → Engine; nil while the tested engine is in use.
+    public var newestEngine: NewestEngineChoice? = nil
 
     public init(xcodeStatus: Int32?, metalVersion: String?, certifiedMetal: String, allowUntested: Bool,
                 dotnetSDKs: [String], engine: EngineFacts, engineFolder: URL, pinnedCommit: String,
@@ -231,6 +235,14 @@ public enum SetupCheck {
                 return SetupItem(id: id, title: "nxnative engine", state: .warning, chip: "LOCAL CHANGES", about: about,
                                  detail: "\(f.engineFolder.path) has changed files. NX Library never touches them: put them aside, then check again.",
                                  actionTitle: nil)
+            case .checkout(let head, false) where head == f.newestEngine?.commit && head != f.pinnedCommit:
+                // The player's own choice: ready, never "other version", and A goes back to the tested engine.
+                var card = ready(id, "nxnative engine", NewestEngineCopy.note,
+                                 NewestEngineCopy.setupDetail(choice: f.newestEngine!, tested: f.pinnedCommit))
+                card.chip = "NEWEST ENGINE"
+                card.isUntested = true
+                card.actionTitle = "Back to tested"
+                return card
             case .checkout(let head, false) where head != f.pinnedCommit:
                 // Warning either way: Setup reopens for it and Install all runs it.
                 if f.engineBehind == false {

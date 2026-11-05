@@ -43,6 +43,8 @@ Every re-pin is a product decision, not just a hash change. Before changing the 
 
 Never follow `main` automatically. A commit that is newer is not automatically a commit that is tested with this Mac's toolchain.
 
+The only exception is the player's own choice in **Settings → Engine → Newest engine**: it moves the checkout to upstream `main` on request, turns the untested override on and records builds as untested, and is refused when `main` certifies a different Metal compiler. Setup keeps installing the pinned commit and never treats that choice as an error. Do not add any automatic path to `main`.
+
 ## Verification
 
 The user performs interactive app and game checks. Never use computer-use tools or other UI automation. Agents run automated tests and build/install the app, then report any manual checks that remain.

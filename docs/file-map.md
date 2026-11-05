@@ -75,6 +75,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/ViewModels/AppViewModel+Porting.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Porting.swift) | Prepara tile, pill e stime del porting e coordina notifiche e azioni sugli errori riconosciuti. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Saves.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Saves.swift) | Risolve contesto e identità dei save, coordina i lease e avvia i recuperi pendenti. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+SteamGridDB.swift](../Sources/NXLibrary/ViewModels/AppViewModel+SteamGridDB.swift) | Verifica, salva e rimuove la chiave SteamGridDB dell’utente senza registrarne il valore. |
+| [Sources/NXLibrary/ViewModels/AppViewModel+NewestEngine.swift](../Sources/NXLibrary/ViewModels/AppViewModel+NewestEngine.swift) | Usa l’engine più nuovo o torna a quello testato, accende l’override e controlla se main è utilizzabile. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Toolchain.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Toolchain.swift) | Espone il riepilogo del gate della toolchain per l’interfaccia. |
 | [Sources/NXLibrary/ViewModels/SavePanelModel.swift](../Sources/NXLibrary/ViewModels/SavePanelModel.swift) | Gestisce refresh, anteprime, backup, importazione, ripristino, errori e conferma temporanea di successo. |
 | [Sources/NXLibrary/ViewModels/SetupCheckModel.swift](../Sources/NXLibrary/ViewModels/SetupCheckModel.swift) | Esegue probe e installazioni del Setup in background, con avanzamento e ricontrollo periodico. |
@@ -148,6 +149,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Services/EngineToolchain.swift](../Sources/NXLibraryCore/Services/EngineToolchain.swift) | Individua runtime incluso o venv del checkout e prepara ambiente e PATH dei processi. |
 | [Sources/NXLibraryCore/Services/EnginePackageReader.swift](../Sources/NXLibraryCore/Services/EnginePackageReader.swift) | Legge capacità delle sorgenti e content meta tramite il lettore upstream, validando identità e tipi senza esporre chiavi. |
 | [Sources/NXLibraryCore/Models/BuildWarningCopy.swift](../Sources/NXLibraryCore/Models/BuildWarningCopy.swift) | Testo mostrato a fine build per una fase terminata con `warn` dell’engine (archivio delle pipeline mancante). |
+| [Sources/NXLibraryCore/Services/NewestEngine.swift](../Sources/NXLibraryCore/Services/NewestEngine.swift) | Scelta dell’engine più nuovo: testi condivisi, lettura del Metal dal lock di main, cambio di commit con git senza toccare file modificati. |
 | [Sources/NXLibraryCore/Services/NUPSourceCatalog.swift](../Sources/NXLibraryCore/Services/NUPSourceCatalog.swift) | Riconosce i file NUP Switch 2 e ne elenca base, update e DLC tramite il lettore pack_nup dell’engine. |
 | [Sources/NXLibraryCore/Services/DirectorySize.swift](../Sources/NXLibraryCore/Services/DirectorySize.swift) | Misura le cartelle con fts come du, così il refresh non resta bloccato su app grandi in dischi esterni (issue #2). |
 | [Sources/NXLibraryCore/Services/NXNativeGameSettings.swift](../Sources/NXLibraryCore/Services/NXNativeGameSettings.swift) | Legge l’elenco impostazioni del build, i valori attuali e le chiavi fissate da env.txt. |
@@ -464,6 +466,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/MoreArtworkSourcesTests.swift](../Tests/NXLibraryCoreTests/MoreArtworkSourcesTests.swift) | Matching dei titoli e risposte delle sorgenti artwork aggiuntive. |
 | [Tests/NXLibraryCoreTests/MoreLikeThisTests.swift](../Tests/NXLibraryCoreTests/MoreLikeThisTests.swift) | Ranking dei giochi correlati e gestione di metadati incompleti. |
 | [Tests/NXLibraryCoreTests/NintendoStoreMetadataTests.swift](../Tests/NXLibraryCoreTests/NintendoStoreMetadataTests.swift) | Decodifica store e Title DB, cache, screenshot e risposte incomplete. |
+| [Tests/NXLibraryCoreTests/NewestEngineTests.swift](../Tests/NXLibraryCoreTests/NewestEngineTests.swift) | Lock e Metal di main, validità della scelta, comandi git del cambio, gate Newest engine, scheda Setup e frase. |
 | [Tests/NXLibraryCoreTests/NUPSourceCatalogTests.swift](../Tests/NXLibraryCoreTests/NUPSourceCatalogTests.swift) | Magic NUP, cartelle, lettura tramite engine, nomi NACP, profili mancanti e selezione. |
 | [Tests/NXLibraryCoreTests/NXNativeGameSettingsTests.swift](../Tests/NXLibraryCoreTests/NXNativeGameSettingsTests.swift) | Build senza adattatore, migrazione da env.txt, scrittura dei soli valori diversi dal default e chiavi fissate. |
 | [Tests/NXLibraryCoreTests/OnlineArtworkSourcesTests.swift](../Tests/NXLibraryCoreTests/OnlineArtworkSourcesTests.swift) | Ricerca Steam e loghi MediaWiki/Commons con risposte sintetiche. |
@@ -577,6 +580,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md](../docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md) | Registra revisione e adozione del pin: toolchain certificata, nuove sorgenti, interventi UI, prove sintetiche e conferma manuale di build e avvio. |
 | [docs/upstream-upgrades/2026-11-02-163a9905-65501fbb-review.md](../docs/upstream-upgrades/2026-11-02-163a9905-65501fbb-review.md) | Registra l’adozione di 65501fbb, le decisioni UI/backend, i test, la build certificata e l’avvio manuale. |
 | [docs/upstream-upgrades/2026-11-03-65501fbb-b64a5ff0-review.md](../docs/upstream-upgrades/2026-11-03-65501fbb-b64a5ff0-review.md) | Registra l’adozione di b64a5ff0, le scelte UI/backend, la build certificata e la conferma manuale di avvio. |
+| [docs/upstream-upgrades/2026-11-05-b64a5ff0-4a0551e4-review.md](../docs/upstream-upgrades/2026-11-05-b64a5ff0-4a0551e4-review.md) | Registra l’adozione di 4a0551e4: righe Front-ends, profili provvisori, avviso dell’archivio pipeline, uscita con Home, build Wonder certificata e avvio confermato. |
 | [docs/upstream-upgrades/README.md](../docs/upstream-upgrades/README.md) | Checklist obbligatoria e indice delle revisioni del pin upstream. |
 
 ## Aggiornare questo catalogo

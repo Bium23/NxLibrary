@@ -96,6 +96,25 @@ final class NUPSourceCatalogTests: XCTestCase {
         }
     }
 
+    func testAnEngineWithProvisionalProfilesTakesTheGameByItsNACPName() throws {
+        let engine = dir.appendingPathComponent("empty-engine")
+        let game = try NUPSourceCatalog.parse(probe, nup: dir.appendingPathComponent("G.nup"), fileSize: 1,
+                                              profiles: engine.appendingPathComponent("dm/games"), provisional: true)
+        XCTAssertEqual(game.name, "Test Game")
+        XCTAssertEqual(game.baseTitleId, 0x040074A01BF12000)
+    }
+
+    func testProvisionalProfilesAreReadFromTheEngine() {
+        let old = EngineSourceCapabilities(script: "'--title-id'\nimport pack_dump\nimport pack_nup\n")
+        XCTAssertTrue(old.nupContainers)
+        XCTAssertFalse(old.provisionalNUP)
+        XCTAssertFalse(old.provisionalDumps)
+        let new = EngineSourceCapabilities(script: "'--title-id'\nimport pack_dump\nimport pack_nup\ndef survey_nup(\ndef survey_dump(\n")
+        XCTAssertTrue(new.provisionalNUP)
+        XCTAssertTrue(new.provisionalDumps)
+        XCTAssertFalse(EngineSourceCapabilities(script: "def survey_nup(\n").provisionalNUP, "only with NUP support")
+    }
+
     func testEngineErrorReachesThePlayer() throws {
         let nup = try write("Broken.nup", "NUP\u{1}")
         let runner = Runner(CommandResult(status: 1, stdout: "", stderr: "Broken.nup: not a NUP (too short)\n"))

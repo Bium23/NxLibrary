@@ -32,7 +32,7 @@ public enum EngineSourceError: Error, LocalizedError {
         case .invalidDump(let detail): return "The extracted folder is incomplete: \(detail)."
         case .invalidContainer(let detail): return "The NUP file could not be read: \(detail)."
         case .containerNotAlone: return "Choose one NUP file on its own: it holds the whole game."
-        case .missingProfile(let title): return "The selected engine has no registered profile for \(title). Extracted folders and NUP files need a registered profile."
+        case .missingProfile(let title): return "The selected engine has no registered profile for \(title). With this engine, extracted folders and NUP files need a registered profile."
         }
     }
 }
@@ -43,11 +43,21 @@ public struct EngineSourceCapabilities {
     public let extractedFolders: Bool
     /// Builds from a `.nup` file (scripts/pack_nup.py).
     public let nupContainers: Bool
+    /// A NUP or an extracted folder of a game with no registered profile gets a provisional one, as an NSP does
+    /// (nxnative 056e41fe: survey_nup, survey_dump). Before it, such a game is refused.
+    public let provisionalNUP: Bool
+    public let provisionalDumps: Bool
     public init(repo: URL) {
         let text = (try? String(contentsOf: repo.appendingPathComponent("scripts/build_ipa_from_nsp.py"), encoding: .utf8)) ?? ""
+        self.init(script: text)
+    }
+
+    init(script text: String) {
         titleSelection = text.contains("'--title-id'") || text.contains("\"--title-id\"")
         extractedFolders = text.contains("import pack_dump") && titleSelection
         nupContainers = text.contains("import pack_nup") && titleSelection
+        provisionalNUP = nupContainers && text.contains("survey_nup")
+        provisionalDumps = extractedFolders && text.contains("survey_dump")
     }
 }
 

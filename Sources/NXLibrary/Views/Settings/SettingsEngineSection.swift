@@ -116,6 +116,10 @@ struct SettingsEngineSection: View {
                 viewModel.checkUpstreamChangelog()
             }
 
+            if viewModel.usesNewestEngine || viewModel.newestEngineOffer != nil {
+                newestEngineRow
+            }
+
             if case .loaded(let status) = viewModel.upstreamState {
                 upstreamCommitsPanel(status)
 
@@ -182,6 +186,9 @@ struct SettingsEngineSection: View {
         .onChange(of: viewModel.allowUntestedToolchain) { _ in publishActions() }
         .onChange(of: viewModel.compatibilityReport?.ok) { _ in publishActions() }
         .onChange(of: viewModel.upstreamState) { _ in publishActions() }
+        .onChange(of: viewModel.newestEngineChoice) { _ in publishActions() }
+        .onChange(of: viewModel.newestEngineReadiness) { _ in publishActions() }
+        .onChange(of: viewModel.isSwitchingEngine) { _ in publishActions() }
         .onChange(of: viewModel.isBuilding) { _ in publishActions() }
         .onChange(of: viewModel.isUpdatingApp) { _ in publishActions() }
     }
@@ -210,10 +217,12 @@ struct SettingsEngineSection: View {
 
     private var canChangeOverride: Bool {
         ToolchainGateCopy.canChangeOverride(certified: viewModel.compatibilityReport?.ok,
-            overrideOn: viewModel.allowUntestedToolchain, locked: configurationLocked)
+            overrideOn: viewModel.allowUntestedToolchain, locked: configurationLocked,
+            newest: viewModel.usesNewestEngine)
     }
 
     private var overrideSubtitle: String {
+        if viewModel.usesNewestEngine { return "On while you use the newest engine." }
         guard let report = viewModel.compatibilityReport else {
             return "Available when the compatibility gate blocks a build."
         }
@@ -235,7 +244,7 @@ struct SettingsEngineSection: View {
         switch summary.tone {
         case .certified: return SeleneTheme.success
         case .info: return SeleneTheme.glyph
-        case .warning, .override: return SeleneTheme.untested
+        case .warning, .override, .newest: return SeleneTheme.untested
         case .blocked: return SeleneTheme.danger
         }
     }
@@ -251,6 +260,67 @@ struct SettingsEngineSection: View {
         case .failed(let message):
             return message
         }
+    }
+
+    // MARK: - Newest engine
+
+    /// The player's way to build with nxnative main before NX Library has tested it: an orange dot and one
+    /// sentence, no alarm. Setup's engine card says the same.
+    private var newestEngineRow: some View {
+        SeleneRow("Newest engine", subtitle: newestSubtitle, info: NewestEngineCopy.info) {
+            HStack(spacing: 10) {
+                if viewModel.usesNewestEngine {
+                    Circle()
+                        .fill(SeleneTheme.untested)
+                        .frame(width: 8, height: 8)
+                        .accessibilityHidden(true)
+                    Text("In use")
+                        .seleneFont(14, .semibold)
+                        .foregroundColor(SeleneTheme.untested)
+                }
+                if let title = newestButtonTitle {
+                    Button(title) { newestAction() }
+                        .buttonStyle(.plain)
+                        .seleneFont(15, .semibold)
+                        .foregroundColor(newestButtonEnabled ? SeleneTheme.glyph : SeleneTheme.ink60)
+                        .disabled(!newestButtonEnabled)
+                }
+            }
+        }
+    }
+
+    private var newestNeedsNewerApp: String? {
+        if case .needsNewerApp(let metal) = viewModel.newestEngineReadiness { return metal }
+        return nil
+    }
+
+    private var newestSubtitle: String {
+        if viewModel.isSwitchingEngine { return "Switching the engine…" }
+        if let choice = viewModel.newestEngineChoice {
+            let base = "\(NewestEngineCopy.note) In use: \(choice.shortCommit), "
+                + "\(NewestEngineCopy.ahead(choice.aheadBy)) of the tested \(seleneShort(viewModel.pinnedEngineCommit))."
+            return viewModel.newestEngineProblem.map { "\(base) \($0)" } ?? base
+        }
+        if let metal = newestNeedsNewerApp { return NewestEngineCopy.needsNewerApp(metal: metal) }
+        if let problem = viewModel.newestEngineProblem { return problem }
+        guard let offer = viewModel.newestEngineOffer else { return NewestEngineCopy.note }
+        return NewestEngineCopy.offer(commit: offer.upstreamCommit, aheadBy: offer.newCommitsCount)
+    }
+
+    private var newestButtonTitle: String? {
+        if viewModel.isSwitchingEngine { return "Switching…" }
+        if viewModel.usesNewestEngine { return "Back to tested" }
+        return newestNeedsNewerApp == nil ? "Use newest" : nil
+    }
+
+    private var newestButtonEnabled: Bool {
+        guard viewModel.canSwitchEngine else { return false }
+        return viewModel.usesNewestEngine || (viewModel.newestEngineOffer != nil && newestNeedsNewerApp == nil)
+    }
+
+    private func newestAction() {
+        guard newestButtonEnabled else { return }
+        if viewModel.usesNewestEngine { viewModel.useTestedEngine() } else { viewModel.useNewestEngine() }
     }
 
     private var upstreamButtonTitle: String {
@@ -435,6 +505,11 @@ struct SettingsEngineSection: View {
                 viewModel.checkUpstreamChangelog()
             }
         ]
+        if viewModel.usesNewestEngine || viewModel.newestEngineOffer != nil {
+            actions.append(.init(id: "newest", title: "Newest engine", isEnabled: newestButtonEnabled) {
+                newestAction()
+            })
+        }
         if case .loaded = viewModel.upstreamState {
             actions.append(.init(id: "compare", title: "Compare") {
                 viewModel.openUpstreamCompare()

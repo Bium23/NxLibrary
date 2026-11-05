@@ -4,8 +4,10 @@ import Foundation
 /// metadata only; it neither packs nor modifies the supplied files.
 public struct ExtractedSourceCatalog {
     public let profiles: URL
+    /// The engine makes a provisional profile for a game without one (`EngineSourceCapabilities.provisionalDumps`).
+    public let provisional: Bool
     private let fm = FileManager.default
-    public init(profiles: URL) { self.profiles = profiles }
+    public init(profiles: URL, provisional: Bool = false) { self.profiles = profiles; self.provisional = provisional }
 
     public static func recognizes(_ folder: URL) -> Bool {
         let packages = (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)) ?? []
@@ -20,11 +22,11 @@ public struct ExtractedSourceCatalog {
         guard title != 0, title & 0xFFF == 0 else { throw EngineSourceError.invalidDump("invalid base program ID") }
         let identity = String(format: "%016llX", title)
         let profile = profiles.appendingPathComponent(identity).appendingPathComponent("game.tsv")
-        guard let profileText = try? String(contentsOf: profile, encoding: .utf8) else {
-            throw EngineSourceError.missingProfile(identity)
-        }
-        let name = profileText.split(separator: "\n").first(where: { $0.hasPrefix("name\t") })
-            .map { String($0.dropFirst(5)) } ?? identity
+        let profileText = try? String(contentsOf: profile, encoding: .utf8)
+        guard profileText != nil || provisional else { throw EngineSourceError.missingProfile(identity) }
+        // A dump has no control data, so without a profile its name is the folder's.
+        let name = profileText?.split(separator: "\n").first(where: { $0.hasPrefix("name\t") })
+            .map { String($0.dropFirst(5)) } ?? (profileText == nil ? folder.lastPathComponent : identity)
         let base = try source(baseFolder, kind: .base, title: title, version: 0)
         var updates: [DetectedSource] = []
         for url in children(folder.appendingPathComponent("updates")) {

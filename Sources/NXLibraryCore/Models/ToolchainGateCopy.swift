@@ -5,8 +5,9 @@ import Foundation
 /// Any other failed check stays "Blocked".
 public enum ToolchainGateCopy {
     /// A saved override can always be turned off once a certified engine arrives.
-    public static func canChangeOverride(certified: Bool?, overrideOn: Bool, locked: Bool) -> Bool {
-        !locked && (overrideOn || certified == false)
+    /// While the newest engine is in use the override stays on: Back to tested turns it off.
+    public static func canChangeOverride(certified: Bool?, overrideOn: Bool, locked: Bool, newest: Bool = false) -> Bool {
+        !locked && !newest && (overrideOn || certified == false)
     }
     public enum Tone: Equatable, Sendable {
         case certified
@@ -16,6 +17,8 @@ public enum ToolchainGateCopy {
         case warning
         case override
         case blocked
+        /// The player chose nxnative main: it builds, untested by NX Library (orange, no alarm).
+        case newest
     }
 
     public struct Summary: Equatable, Sendable {
@@ -27,7 +30,13 @@ public enum ToolchainGateCopy {
         public let buildHint: String
     }
 
-    public static func summary(report: CompatibilityReport, overrideOn: Bool) -> Summary {
+    /// `newest`: the engine is the newest nxnative the player chose, so a passing check means "untested", never
+    /// "Certified".
+    public static func summary(report: CompatibilityReport, overrideOn: Bool, newest: Bool = false) -> Summary {
+        if newest && report.ok {
+            // The Newest engine row right below says the sentence; the panel only names the state.
+            return Summary(label: "Newest engine", tone: .newest, message: nil, buildHint: "")
+        }
         if report.ok { return Summary(label: "Certified", tone: .certified, message: nil, buildHint: "") }
         let blockers = report.checks.filter { $0.status == .block }
         if blockers.allSatisfy({ $0.id == "metal" }) {

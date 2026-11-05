@@ -37,7 +37,9 @@ public struct ControlsView: View {
                 ("Right stick", "Shift + Arrow keys · Controller"),
                 ("Touchscreen", "Click and drag · Handheld mode"),
                 ("Gamepad", "USB or Bluetooth · Button positions follow the engine's layout"),
-                ("Rumble", "Depends on the game, build and controller")
+                ("Rumble", "Depends on the game, build and controller"),
+                // nxnative 48888df5 (home_quit.h): held for 2 s, a prompt; A quits as ⌘Q does, B or Home goes back.
+                ("Quit the game", "⌘Q · Hold Home for 2 s, then A, in games built with the current engine")
             ]
         }
         return [

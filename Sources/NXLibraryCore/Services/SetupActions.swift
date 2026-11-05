@@ -10,10 +10,11 @@ public enum SetupActions {
     public static let engineRemote = "https://github.com/seedds/nxnative"
 
     /// Only a missing engine or a clean checkout at another commit is changed;
-    /// local changes are the player's and stay untouched.
-    public static func engineAction(for facts: EngineFacts, pinned: String) -> EngineAction {
+    /// local changes are the player's and stay untouched, and so is the newest engine the player chose.
+    public static func engineAction(for facts: EngineFacts, pinned: String, newest: String? = nil) -> EngineAction {
         switch facts {
         case .missing: return .clone
+        case .checkout(let head, false) where head == newest: return .none
         case .checkout(let head, false) where head != pinned: return .checkout
         default: return .none
         }

@@ -108,6 +108,16 @@ final class EngineUpgradeSourcesTests: XCTestCase {
         XCTAssertThrowsError(try catalog.scan(folder: root))
     }
 
+    func testExtractedFolderWithoutProfileIsNamedByItsFolderWhenTheEngineMakesOne() throws {
+        let root = try temporaryFolder()
+        let dump = root.appendingPathComponent("Kirby Air Riders")
+        try version(dump.appendingPathComponent("base"), title: title)
+        let catalog = ExtractedSourceCatalog(profiles: root.appendingPathComponent("profiles"), provisional: true)
+        let game = try catalog.scan(folder: dump)
+        XCTAssertEqual(game.name, "Kirby Air Riders")
+        XCTAssertEqual(game.baseTitleId, title)
+    }
+
     func testMergedPackageExposesBothGamesAndCountsPhysicalFileOnce() throws {
         let root = try temporaryFolder()
         let file = root.appendingPathComponent("two-games.xci")

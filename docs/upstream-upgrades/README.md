@@ -12,7 +12,11 @@ This directory records the review that must happen before the pin changes, plus 
    git -C ~/nxnative log --oneline <pinned>..origin/main
    git -C ~/nxnative diff --stat <pinned>..origin/main
    ```
-2. **Read the contract surface**, not only commit subjects:
+2. **Read the contract surface**, not only commit subjects. Since `ae031161`, commits carry `Front-ends:` lines (`new`, `interface`, `break`) for what only their author knows; read every one in the range (`docs/frontends.md`, "Following main"):
+   ```bash
+   git -C ~/nxnative log --grep='^Front-ends:' --format='%h %s%n%b' <pinned>..<candidate>
+   ```
+   Then:
    - `scripts/build_ipa_from_nsp.py -h`
    - `docs/env_switches.tsv`
    - `dm/gfx/tools/dmsh_chain.lock`
@@ -64,3 +68,5 @@ This directory records the review that must happen before the pin changes, plus 
 - Never re-pin a commit that has not passed the gate and a real build on this Mac.
 - Never expose a diagnostic `DM_*` switch in the main UI just because the engine added it.
 - A newer commit is not automatically a tested commit. `4f24ce6` was chosen over `e09ff95` because the latter was a brand-new RomFS streaming feature without SMO validation.
+
+- [2026-11-05 — b64a5ff0 → 4a0551e4](2026-11-05-b64a5ff0-4a0551e4-review.md) (certified Wonder build, maintainer-confirmed visible launch; provisional profiles, build warnings, Home quit)

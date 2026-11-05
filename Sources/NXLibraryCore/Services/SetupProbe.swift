@@ -15,11 +15,13 @@ public struct SetupProbe {
     private let libraryFolder: URL?
     private let sourcesFolder: URL?
     private let libraryNeedsConfirmation: Bool
+    private let newestEngine: NewestEngineChoice?
 
     public init(runner: CommandRunning, fileManager: FileManager = .default, toolchain: EngineToolchain,
                 developerDir: URL?, engineFolder: URL, pinnedCommit: String, certifiedMetal: String,
                 allowUntested: Bool, keyStore: KeyStore, libraryFolder: URL?,
-                sourcesFolder: URL? = nil, libraryNeedsConfirmation: Bool = false) {
+                sourcesFolder: URL? = nil, libraryNeedsConfirmation: Bool = false,
+                newestEngine: NewestEngineChoice? = nil) {
         self.runner = runner
         self.fileManager = fileManager
         self.toolchain = toolchain
@@ -32,6 +34,7 @@ public struct SetupProbe {
         self.libraryFolder = libraryFolder
         self.sourcesFolder = sourcesFolder
         self.libraryNeedsConfirmation = libraryNeedsConfirmation
+        self.newestEngine = newestEngine
     }
 
     public func facts() -> SetupFacts {
@@ -58,6 +61,7 @@ public struct SetupProbe {
         facts.libraryFolder = libraryFolder
         facts.libraryWritable = libraryFolder.map { GameAppDestination.folderProblem(at: $0) == nil }
         facts.libraryNeedsConfirmation = libraryNeedsConfirmation
+        facts.newestEngine = newestEngine
         facts.sourcesFolder = sourcesFolder
         facts.sourcesReadable = sourcesFolder.map { readableDirectory($0) }
         facts.extractedFoldersSupported = capabilities.extractedFolders
