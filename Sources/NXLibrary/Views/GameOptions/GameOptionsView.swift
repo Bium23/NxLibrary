@@ -36,11 +36,14 @@ struct GameOptionsView: View {
     /// The Cheats panel, likewise.
     @State private var cheatsOpen = false
     @State private var savesOpen = false
+    /// The Mods panel, likewise.
+    @State private var modsOpen: Bool
+    @State private var modsValue: String
     @State private var moreOpen = false
     /// The Cheats row's value: read from disk when Game options opens and when the panel closes, not on every draw.
     @State private var cheatsValue: String
     /// A panel over the list has the input.
-    private var panelOpen: Bool { artworkOpen || metadataOpen || cheatsOpen || savesOpen || moreOpen }
+    private var panelOpen: Bool { artworkOpen || metadataOpen || cheatsOpen || modsOpen || savesOpen || moreOpen }
     @State private var confirmFocus: SeleneConfirmButton = .cancel
     @State private var keyMonitor: Any?
     /// Row frames in the list's viewport, written while scrolling without redrawing.
@@ -56,7 +59,7 @@ struct GameOptionsView: View {
 
     init(viewModel: AppViewModel, game: PortedGame, origin: GameOptionsOrigin,
          onClose: @escaping () -> Void, onShowBuild: @escaping () -> Void,
-         onMove: @escaping () -> Void) {
+         onMove: @escaping () -> Void, opensMods: Bool = false) {
         self.viewModel = viewModel
         self.game = game
         self.origin = origin
@@ -67,6 +70,8 @@ struct GameOptionsView: View {
         _config = State(initialValue: viewModel.loadRuntimeConfig(for: game))
         _snapshot = State(initialValue: viewModel.settingsSnapshot(for: game))
         _cheatsValue = State(initialValue: viewModel.cheatRowValue(for: game))
+        _modsValue = State(initialValue: viewModel.modsRowValue(for: game))
+        _modsOpen = State(initialValue: opensMods)
     }
 
     // MARK: - Model
@@ -90,6 +95,7 @@ struct GameOptionsView: View {
             appPath: game.url.path,
             canDeleteBundle: game.canDeleteAppBundle(),
             cheatsValue: cheatsValue,
+            modsValue: modsValue,
             settings: snapshot
         )
     }
@@ -147,6 +153,15 @@ struct GameOptionsView: View {
                     cheatsOpen = false
                     cheatsValue = viewModel.cheatRowValue(for: current)
                 })
+                .transition(.opacity)
+                .zIndex(2)
+            }
+
+            if modsOpen {
+                ModsPanel(viewModel: viewModel, game: current) {
+                    modsOpen = false
+                    modsValue = viewModel.modsRowValue(for: current)
+                }
                 .transition(.opacity)
                 .zIndex(2)
             }
@@ -310,6 +325,7 @@ struct GameOptionsView: View {
         if row.isToggle { return toggleValue(row) ? "On" : "Off" }
         if row.isChoice { return choiceText(row) }
         if row == .cheats { return presentation.cheatsValue }
+        if row == .mods { return presentation.modsValue }
         return nil
     }
 
@@ -320,9 +336,9 @@ struct GameOptionsView: View {
             SeleneSwitch(isOn: .constant(toggleValue(row))).allowsHitTesting(false)
         } else if row.isChoice {
             SeleneValueChip(text: choiceText(row))
-        } else if row == .cheats {
+        } else if row == .cheats || row == .mods {
             HStack(spacing: canvas.u(10)) {
-                SeleneValueChip(text: presentation.cheatsValue)
+                SeleneValueChip(text: row == .cheats ? presentation.cheatsValue : presentation.modsValue)
                 MaterialIconView(.chevron, size: 24)
                     .foregroundColor(SeleneTheme.ink60)
             }
@@ -711,7 +727,8 @@ struct GameOptionsView: View {
             SoundEffectService.shared.play(.click)
             cheatsOpen = true
         case .mods:
-            break
+            SoundEffectService.shared.play(.click)
+            modsOpen = true
         case .rebuild:
             rebuild(current)
         case .showInFinder:
