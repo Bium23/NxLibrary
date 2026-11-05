@@ -26,6 +26,21 @@
       "file": "fonttools-4.67.0-cp314-cp314-macosx_10_15_universal2.whl",
       "url": "https://files.pythonhosted.org/packages/25/5b/c418f48918e40ef8c3f0f555567fe013c0c8058a8afa8040d6baeec80683/fonttools-4.67.0-cp314-cp314-macosx_10_15_universal2.whl",
       "sha256": "846982e89b1861d6c9d7fcd6567aec3fa5a10ad313e7f2076045fcd339cfbd8e"
+    },
+    {
+      "name": "zbic",
+      "version": "1.0.1.post1",
+      "file": "zbic-1.0.1.post1-cp314-cp314-macosx_11_0_arm64.whl",
+      "url": "https://files.pythonhosted.org/packages/7d/0e/16419890fde662047ff22e79ef01379d549f56a6875c77285687ab35ec77/zbic-1.0.1.post1-cp314-cp314-macosx_11_0_arm64.whl",
+      "sha256": "fb508131293c71a242b1fc50e9179da2a73a4ec42dfcf3652963672bbe144e12"
+    }
+  ],
+  "sources": [
+    {
+      "name": "zbic",
+      "file": "zbic-1.0.1.post1.tar.gz",
+      "url": "https://files.pythonhosted.org/packages/51/34/a108004438db175641f13b9d9de8b6b57c96911c582e8f39fc57b277f9d8/zbic-1.0.1.post1.tar.gz",
+      "sha256": "a798c24aea58f81a0b4bb0226f0f383b7e7f07a9a0150732cb45dc65ac541ff3"
     }
   ],
   "brew": [

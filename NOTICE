@@ -109,6 +109,9 @@ Bundled runtime (Contents/Resources/Runtime, from scripts/bundle_runtime.sh)
 - capstone 5.0.9: BSD 3-Clause.
 - lz4 4.4.5 (python-lz4): BSD 3-Clause; LZ4 library 1.10.0: BSD 2-Clause.
 - fontTools 4.67.0: MIT.
+- zbic 1.0.1.post1 (https://github.com/kinnay/zbic, with zstd code from
+  Atmosphère): GPLv2. Its complete source ships beside it in Runtime/sources/,
+  and NX Library calls it as a separate Python module.
 - Zstandard 1.5.7: BSD 3-Clause (dual GPLv2).
 - xz / liblzma 5.8.4: 0BSD.
 - glslang 16.6.0: BSD 3-Clause and others listed in its LICENSE.txt.

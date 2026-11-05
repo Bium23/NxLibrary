@@ -92,7 +92,7 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
         switch kind {
         case .rosetta: return "Reinstall NX Library so the porting uses its own arm64 Python."
         case .translator: return "Open Setup and install the .NET 10 SDK."
-        case .zbic: return "Reinstall NX Library to restore its bundled Python."
+        case .zbic: return "Update NX Library: its built-in Python includes zbic from 0.1.3.2. Installing zbic with pip does not reach it."
         case .cltSelected: return "Open Setup and select Xcode."
         case .otherMetal: return "Install the certified compiler from Setup, or allow untested toolchains in Settings → Engine."
         case .shaderRegression: return "Port anyway to keep the broken shaders out, or wait for an engine update."
