@@ -6,15 +6,14 @@ extension Notification.Name {
     static let nxIntroSkip = Notification.Name("NXIntroSkip")
 }
 
-/// The cold-launch intro: the app mark fades and grows in with the boot cue, holds, then fades out.
+/// The cold-launch intro: the backdrop's flow with the boot cue, held briefly, then faded out over the library.
+/// No icon and no wordmark for now; a designed opening animation may replace it later.
 /// Any key, click or controller input skips it.
 struct IntroView: View {
     let settings: AppSettingsStore
     let reduceMotion: Bool
     let onFinish: () -> Void
 
-    @Environment(\.seleneCanvas) private var canvas
-    @State private var markIn = false
     @State private var leaving = false
     @State private var finished = false
     @State private var keyMonitor: Any?
@@ -22,21 +21,9 @@ struct IntroView: View {
     var body: some View {
         ZStack {
             SeleneBackdrop()
-            VStack(spacing: canvas.u(26)) {
-                Image(nsImage: NSApplication.shared.applicationIconImage)
-                    .resizable()
-                    .interpolation(.high)
-                    .frame(width: canvas.u(220), height: canvas.u(220))
-                    .accessibilityHidden(true)
-                Text("NX Library")
-                    .seleneFont(38, .semibold)
-                    .tracking(canvas.u(-0.7))
-                    .foregroundColor(SeleneTheme.ink)
-            }
-            .scaleEffect(markIn || reduceMotion ? 1 : 0.96)
-            .opacity(markIn ? 1 : 0)
-            .accessibilityElement(children: .combine)
         }
+        .accessibilityElement()
+        .accessibilityLabel("NX Library")
         .opacity(leaving ? 0 : 1)
         .ignoresSafeArea()
         .contentShape(Rectangle())
@@ -65,7 +52,6 @@ struct IntroView: View {
         }
         SoundEffectService.shared.bind(to: settings)
         SoundEffectService.shared.play(.boot)
-        withAnimation(.easeOut(duration: reduceMotion ? 0.15 : 0.6)) { markIn = true }
     }
 
     /// Input during the intro ends it at once with the closing fade.

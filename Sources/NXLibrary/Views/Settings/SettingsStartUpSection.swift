@@ -52,7 +52,7 @@ struct SettingsStartUpSection: View {
                             isOn: $settings.settings.checkAppUpdatesAtLaunch)
 
             SeleneToggleRow("Intro animation",
-                            subtitle: "Plays the app mark when NX Library opens.",
+                            subtitle: "Plays a short opening with the boot sound when the app opens.",
                             isOn: $settings.settings.introAnimation)
 
             SettingsSubheading("Setup")

@@ -49,7 +49,7 @@ public enum SettingsCatalog {
         row("checkAppUpdatesAtLaunch", .startUp, "Check for app updates",
             "Looks for a newer NX Library release at launch, at most once a day.") { $0.checkAppUpdatesAtLaunch },
         row("introAnimation", .startUp, "Intro animation",
-            "Plays the app mark when NX Library opens.") { $0.introAnimation },
+            "Plays a short opening with the boot sound when the app opens.") { $0.introAnimation },
 
         // Navigation
         row("showButtonHints", .navigation, "Button hints",

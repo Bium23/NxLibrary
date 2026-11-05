@@ -349,7 +349,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/Views/Setup/SetupCheckView.swift](../Sources/NXLibrary/Views/Setup/SetupCheckView.swift) | Disegna schede dei requisiti, dettagli, progressi e pulsanti Install all/Continue. |
 | [Sources/NXLibrary/Views/Setup/SetupCheckView+Input.swift](../Sources/NXLibrary/Views/Setup/SetupCheckView+Input.swift) | Gestisce focus iniziale, navigazione della griglia e attivazione delle schede Setup. |
 | [Sources/NXLibrary/Views/Setup/YourGamesSetupView.swift](../Sources/NXLibrary/Views/Setup/YourGamesSetupView.swift) | Disegna scelta cartella, primo gioco, apertura libreria e Skip; condivide l'indicatore dei due passaggi e gestisce mouse, tastiera e controller. |
-| [Sources/NXLibrary/Views/Launch/IntroView.swift](../Sources/NXLibrary/Views/Launch/IntroView.swift) | Mostra l’intro a freddo e gestisce il salto tramite input. |
+| [Sources/NXLibrary/Views/Launch/IntroView.swift](../Sources/NXLibrary/Views/Launch/IntroView.swift) | Mostra l’intro a freddo (solo lo sfondo animato, senza icona né scritta) e gestisce il salto tramite input. |
 | [Sources/NXLibrary/Views/Launch/LaunchScreenView.swift](../Sources/NXLibrary/Views/Launch/LaunchScreenView.swift) | Mostra artwork e logo durante l’avvio del gioco e chiude l’overlay a finestra visibile. |
 | [Sources/NXLibrary/Views/Search/FindGameView.swift](../Sources/NXLibrary/Views/Search/FindGameView.swift) | Presenta ricerca nella libreria e risultati navigabili e inoltra il gioco scelto alla home. |
 | [Sources/NXLibrary/Views/Console/ConsoleView.swift](../Sources/NXLibrary/Views/Console/ConsoleView.swift) | Mostra log e stato corrente e offre copia di log e diagnostica. |
