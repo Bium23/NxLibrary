@@ -153,6 +153,105 @@ final class NUPSourceCatalogTests: XCTestCase {
         XCTAssertTrue(SourceSelection.supported(files, titleSelection: true, extractedFolders: true, nupContainers: true))
     }
 
+    // The probe's output for a NUP with no base game (nxnative 777a5f6c: no base record and updates marked
+    // standalone_update, or an empty base record): two updates and one DLC, no `base` line.
+    private let updateOnlyProbe = "title 040074A01BF12000\nname 546573742047616d65\nupdate 393216 500\nupdate 458752 660\ndlc 040074A01BF13001 300\n"
+
+    private func files(_ game: DetectedGame) -> [GameFileItem] {
+        game.allSources.map {
+            GameFileItem(url: $0.url, kind: $0.kind, titleId: String(format: "%016llX", $0.titleId),
+                         versionString: $0.version.map { "v\($0)" }, sizeBytes: $0.sizeBytes, sourceLayout: $0.layout)
+        }
+    }
+
+    func testNUPWithoutBaseOffersOnlyItsUpdates() throws {
+        let nup = dir.appendingPathComponent("Bananza.nup")
+        let game = try NUPSourceCatalog.parse(updateOnlyProbe, nup: nup, fileSize: 12,
+                                              profiles: try repo().appendingPathComponent("dm/games"))
+        XCTAssertNil(game.base, "no v0 to offer")
+        XCTAssertTrue(game.hasGame)
+        XCTAssertEqual(game.name, "Donkey Kong Bananza")
+        XCTAssertEqual(game.updates.map(\.version), [393216, 458752])
+        XCTAssertEqual(game.updates.map(\.sizeBytes), [12, 12], "the update stands in for the base: it carries the file's size")
+        XCTAssertEqual(game.dlcs.map(\.titleId), [0x040074A01BF13001])
+        XCTAssertEqual(game.totalSizeBytes, 12, "one file, counted once")
+    }
+
+    func testNUPWithNeitherBaseNorUpdateIsRefused() {
+        for bad in ["title 040074A01BF12000\n", "title 040074A01BF12000\ndlc 040074A01BF13001 300\n"] {
+            XCTAssertThrowsError(try NUPSourceCatalog.parse(bad, nup: dir.appendingPathComponent("G.nup"), fileSize: 1,
+                                                            profiles: try repo().appendingPathComponent("dm/games"))) { error in
+                XCTAssertEqual(error.localizedDescription,
+                               EngineSourceError.invalidContainer("no base game or update").localizedDescription)
+            }
+        }
+    }
+
+    /// With no base the newest update is selected, one update always stays in (there is no v0 to fall back to), and the
+    /// build is told the chosen version.
+    func testSelectionOfANUPWithoutBase() throws {
+        let game = try NUPSourceCatalog.parse(updateOnlyProbe, nup: dir.appendingPathComponent("Bananza.nup"), fileSize: 12,
+                                              profiles: try repo().appendingPathComponent("dm/games"))
+        let files = files(game)
+        XCTAssertTrue(SourceSelection.isUpdateOnlyNUP(files))
+        XCTAssertTrue(SourceSelection.hasGame(files))
+        let selected = SourceSelection.initial(in: files)
+        let newest = try XCTUnwrap(files.first { $0.versionString == "v458752" })
+        let older = try XCTUnwrap(files.first { $0.versionString == "v393216" })
+        let dlc = try XCTUnwrap(files.first { $0.kind == .dlc })
+        XCTAssertEqual(selected, [newest.id, dlc.id])
+        XCTAssertEqual(SourceSelection.versionForBuild(files.filter { selected.contains($0.id) }), "v458752")
+        XCTAssertEqual(SourceSelection.uniqueSize(files.filter { selected.contains($0.id) }), 12)
+
+        XCTAssertTrue(SourceSelection.isLocked(newest, in: files, selected: selected))
+        XCTAssertFalse(SourceSelection.isLocked(older, in: files, selected: selected), "another update can be chosen")
+        XCTAssertEqual(SourceSelection.toggling(newest.id, in: files, selected: selected), selected,
+                       "the selected update cannot be cleared")
+        let switched = SourceSelection.toggling(older.id, in: files, selected: selected)
+        XCTAssertEqual(switched, [older.id, dlc.id])
+        XCTAssertEqual(SourceSelection.versionForBuild(files.filter { switched.contains($0.id) }), "v393216")
+        XCTAssertTrue(SourceSelection.hasGame(files.filter { switched.contains($0.id) }))
+
+        // A rescan restores the chosen update, and falls back to the newest when it is gone.
+        let rescanned = self.files(game)
+        let restored = SourceSelection.restoredSelection(previous: files, selected: switched, current: rescanned)
+        XCTAssertEqual(Set(rescanned.filter { restored.contains($0.id) }.compactMap(\.versionString)), ["v393216"])
+        let gone = SourceSelection.restoredSelection(previous: files, selected: [dlc.id], current: rescanned)
+        XCTAssertEqual(Set(rescanned.filter { gone.contains($0.id) }.compactMap(\.versionString)), ["v458752"])
+    }
+
+    func testOnlyANUPUpdateStandsInForTheBase() {
+        let nsp = GameFileItem(url: dir.appendingPathComponent("Update.nsp"), kind: .update, versionString: "v65536", sizeBytes: 1)
+        XCTAssertFalse(SourceSelection.hasGame([nsp]), "the engine needs the base game beside an NSP update")
+        XCTAssertFalse(SourceSelection.isUpdateOnlyNUP([nsp]))
+        XCTAssertFalse(SourceSelection.isLocked(nsp, in: [nsp], selected: [nsp.id]))
+        let dlc = GameFileItem(url: dir.appendingPathComponent("G.nup"), kind: .dlc, sizeBytes: 1, sourceLayout: .container)
+        XCTAssertFalse(SourceSelection.hasGame([dlc]))
+    }
+
+    func testNUPWithoutBaseAttachesAndBuildsTheChosenUpdate() throws {
+        let nup = try write("Bananza.nup", "NUP\u{1}")
+        let game = try NUPSourceCatalog.parse(updateOnlyProbe, nup: nup, fileSize: 4,
+                                              profiles: try repo().appendingPathComponent("dm/games"))
+        let workspace = try WorkspaceManager(root: dir.appendingPathComponent("workspaces")).makeWorkspace(for: game, mode: .staged)
+        XCTAssertEqual(workspace.links.map(\.lastPathComponent), ["Bananza.nup"])
+
+        var ported = PortedGame(name: game.name, url: workspace.directory, platform: .macApp, sizeBytes: 4,
+                                modificationDate: .distantPast)
+        ported.sources = files(game).filter { $0.versionString != "v393216" }
+        XCTAssertTrue(GameResourceState.sourcesAvailable(for: ported), "the update is the game: sources are attached")
+        XCTAssertFalse(LibraryPresentation(game: ported, metadata: nil, totalPlaytime: 0, lastPlayed: nil).sourcesDetached)
+
+        let repo = URL(fileURLWithPath: "/tmp/engine")
+        let command = BuildCommandBuilder.make(repo: repo, toolchain: EngineToolchain.resolve(runtime: nil, repo: repo),
+            workspace: workspace.directory, keys: nil, output: URL(fileURLWithPath: "/tmp/Game.app"),
+            developerDir: URL(fileURLWithPath: "/Applications/Xcode.app/Contents/Developer"),
+            titleId: "040074A01BF12000", packageVersion: SourceSelection.versionForBuild(ported.sources))
+        let flag = try XCTUnwrap(command.arguments.firstIndex(of: "-p"))
+        XCTAssertEqual(command.arguments[flag + 1], "v458752", "never v0: the NUP has none")
+        XCTAssertFalse(command.arguments.contains("-k"), "a NUP needs no keys")
+    }
+
     func testWorkspaceLinksTheFileOnce() throws {
         let nup = try write("Bananza.nup", "NUP\u{1}")
         let game = try NUPSourceCatalog.parse(probe, nup: nup, fileSize: 4, profiles: try repo().appendingPathComponent("dm/games"))

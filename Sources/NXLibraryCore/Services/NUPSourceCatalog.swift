@@ -3,7 +3,8 @@ import Foundation
 /// A Switch 2 game in one NUP container (a `.nup` file, https://github.com/a55uka/nup): its base game, updates and
 /// DLC, read by upstream's own scripts/pack_nup.py so the checks are the engine's. Reads metadata only; the file is
 /// never modified. Every package shares the file, so the workspace links it once and the build packs the version
-/// chosen with `--package`, with every DLC the container holds.
+/// chosen with `--package`, with every DLC the container holds. A NUP may hold no base game (nxnative 777a5f6c):
+/// then there is no v0, and the selected update is taken as the whole game.
 public struct NUPSourceCatalog {
     public let repo: URL
     public let toolchain: EngineToolchain
@@ -44,7 +45,9 @@ try:
         app, base, vers, dlc = pack_nup.scan(n)
         newest = vers[max(vers)] if vers else base
         name = ''
-        for k in (newest, base):
+        # No base game (nxnative 777a5f6c): the name comes from the newest update, else the metadata record.
+        for k in (newest, base if base is not None else pack_nup.app_package(n)):
+            if k is None: continue
             nacp = k.meta().get(pack_nup.T_NACP, b'')
             for i in range(16):
                 raw = nacp[i * 0x300:i * 0x300 + 0x200].split(b'\0', 1)[0]
@@ -53,7 +56,7 @@ try:
             if name: break
         print(f'title {app:016X}')
         print('name ' + name.encode().hex())
-        print(f'base {n.tree_bytes(base.root)}')
+        if base is not None: print(f'base {n.tree_bytes(base.root)}')
         for v, k in sorted(vers.items()): print(f'update {v} {n.tree_bytes(k.root)}')
         for t, k in sorted(dlc.items()): print(f'dlc {t:016X} {n.tree_bytes(k.root)}')
 except pack_nup.Error as e:
@@ -72,8 +75,9 @@ except pack_nup.Error as e:
                               provisional: EngineSourceCapabilities(repo: repo).provisionalNUP)
     }
 
-    /// The probe's lines → the game. The base carries the file's size, so the unique source size is the file's; the
-    /// name is the profile's, else the container's NACP. A game without a registered profile is refused, as a dump is,
+    /// The probe's lines → the game. The base carries the file's size, so the unique source size is the file's (with no
+    /// base game, each update carries it, as the selected update stands in for the base); the name is the profile's,
+    /// else the container's NACP. A game without a registered profile is refused, as a dump is,
     /// unless the engine makes a provisional profile for it (`provisional`).
     static func parse(_ output: String, nup: URL, fileSize: Int64, profiles: URL, provisional: Bool = false) throws -> DetectedGame {
         var title: UInt64?
@@ -111,14 +115,17 @@ except pack_nup.Error as e:
                 break
             }
         }
-        guard hasBase else { throw EngineSourceError.invalidContainer("no base game") }
+        guard hasBase || !updates.isEmpty else { throw EngineSourceError.invalidContainer("no base game or update") }
+        if !hasBase { updates = updates.map { var update = $0; update.sizeBytes = fileSize; return update } }
         let identity = String(format: "%016llX", title)
         let profile = try? String(contentsOf: profiles.appendingPathComponent(identity).appendingPathComponent("game.tsv"),
                                   encoding: .utf8)
         guard profile != nil || provisional else { throw EngineSourceError.missingProfile(identity) }
         let profileName = profile?.split(separator: "\n").first(where: { $0.hasPrefix("name\t") }).map { String($0.dropFirst(5)) }
         let name = profileName ?? (nacpName.isEmpty ? identity : nacpName)
-        let base = DetectedSource(url: nup, kind: .base, titleId: title, version: 0, sizeBytes: fileSize, layout: .container)
+        let base = hasBase
+            ? DetectedSource(url: nup, kind: .base, titleId: title, version: 0, sizeBytes: fileSize, layout: .container)
+            : nil
         return DetectedGame(baseTitleId: title, name: name, base: base,
                             updates: updates.sorted { ($0.version ?? 0) < ($1.version ?? 0) }, dlcs: dlcs)
     }

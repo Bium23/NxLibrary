@@ -61,9 +61,14 @@ extension AddGameView {
         }
         if let game = viewModel.selectedGame {
             rows.append(AddGameRow(id: "sourcesHeading", kind: .heading, title: "Sources"))
-            if !game.hasBase {
+            if !game.hasGame {
                 rows.append(AddGameRow(id: "noBase", kind: .warning(action: nil), title: "Base game required",
                                        about: "This folder has an update or DLC but no base game."))
+            } else if game.isUpdateOnlyNUP {
+                // The engine's NO_BASE note (nxnative 777a5f6c): nothing in the file proves the update is complete.
+                rows.append(AddGameRow(id: "updateOnlyNUP", kind: .warning(action: nil), title: "No base game in this NUP",
+                                       about: "The selected update is played as the whole game. If the game stops on "
+                                           + "missing files, use a NUP that includes the base game."))
             }
             // The same note for an NSP, a NUP or a folder: the engine makes a provisional profile for each.
             if !viewModel.hasVerifiedEngineProfile(titleId: game.titleId) {
@@ -85,7 +90,9 @@ extension AddGameView {
                 if locked { rows[rows.count - 1].enabled = false }
             }
             rows.append(AddGameRow(id: "sourcesNote", kind: .note,
-                                   title: "The base stays in. One update at a time; bundled DLC stay together."))
+                                   title: game.isUpdateOnlyNUP
+                                       ? "One update at a time; bundled DLC stay together."
+                                       : "The base stays in. One update at a time; bundled DLC stay together."))
         }
         rows += readinessRows(includeBuildError: false)
         rows.append(destinationRow)

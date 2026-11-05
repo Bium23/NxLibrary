@@ -2,6 +2,12 @@
 
 User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
+## Unreleased
+
+### Fixed
+
+- Add Game accepts Switch 2 NUP files that hold only updates, as the engine does. Before, such a file stopped with "The NUP file could not be read: AttributeError: 'NoneType' object has no attribute 'meta'". Review lists the file's updates (the newest is selected; one always stays selected) and its DLC, and notes **No base game in this NUP**: the selected update is played as the whole game, and if the game stops on missing files, a NUP that includes the base game is needed.
+
 ## 0.1.3 — 2026-11-05
 
 ### Changed
