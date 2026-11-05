@@ -144,3 +144,104 @@ struct DetailsMoreBand: View {
         .accessibilityAddTraits(focused ? [.isButton, .isSelected] : .isButton)
     }
 }
+
+/// Band 2: the game's mods (`ModStore`), one Selene glass tile (272 × 153) per mod with its state, then Manage mods.
+/// A click focuses a tile; a double click (or A) opens Game options → Mods, where mods are switched and ordered.
+struct DetailsModsBand: View {
+    @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.seleneReduceMotion) private var reduceMotion
+
+    let mods: [LocalMod]
+    let focusedIndex: Int?
+    let onFocus: (Int) -> Void
+    let onOpen: (Int) -> Void
+
+    static let width: CGFloat = 272
+    static let height: CGFloat = 153
+    static let gap: CGFloat = 22
+    /// Tiles shown before Manage mods; the panel lists every mod.
+    static let maxTiles = 5
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            DetailsBandTitle(text: title)
+            HStack(alignment: .top, spacing: canvas.u(Self.gap)) {
+                ForEach(Array(Self.shown(mods).enumerated()), id: \.element.folderName) { index, mod in
+                    tile(index: index, focused: focusedIndex == index) {
+                        modFace(mod)
+                    }
+                    .accessibilityLabel("\(mod.folderName), \(Self.state(mod))")
+                }
+                let manage = Self.shown(mods).count
+                tile(index: manage, focused: focusedIndex == manage) {
+                    manageFace
+                }
+                .accessibilityLabel("Manage mods")
+            }
+        }
+    }
+
+    private var title: String {
+        let on = mods.filter(\.isOn).count
+        return on == 0 ? "Mods" : "Mods · \(on) on"
+    }
+
+    static func shown(_ mods: [LocalMod]) -> [LocalMod] { Array(mods.prefix(maxTiles)) }
+
+    /// Tiles the band holds: the mods shown plus Manage mods.
+    static func tileCount(_ mods: [LocalMod]) -> Int { shown(mods).count + 1 }
+
+    static func state(_ mod: LocalMod) -> String { mod.romfs == nil ? "Not a mod" : mod.isOn ? "On" : "Off" }
+
+    private func modFace(_ mod: LocalMod) -> some View {
+        VStack(alignment: .leading, spacing: canvas.u(8)) {
+            MaterialIconView(.puzzle, size: 26)
+                .foregroundColor(mod.isOn ? SeleneTheme.focus : SeleneTheme.ink60)
+            Spacer(minLength: 0)
+            Text(mod.folderName)
+                .seleneFont(19, .semibold)
+                .foregroundColor(SeleneTheme.ink)
+                .lineLimit(2)
+            Text(Self.state(mod))
+                .seleneFont(15, .medium)
+                .foregroundColor(mod.isOn ? SeleneTheme.ink82 : SeleneTheme.ink60)
+        }
+    }
+
+    private var manageFace: some View {
+        VStack(alignment: .leading, spacing: canvas.u(8)) {
+            MaterialIconView(mods.isEmpty ? .add : .settings, size: 26)
+                .foregroundColor(SeleneTheme.ink75)
+            Spacer(minLength: 0)
+            Text(mods.isEmpty ? "Add mods" : "Manage mods")
+                .seleneFont(19, .semibold)
+                .foregroundColor(SeleneTheme.ink)
+            Text(mods.isEmpty ? "File mods, no rebuild" : mods.count > Self.maxTiles ? "All \(mods.count) mods" : "Order, folder, Remove")
+                .seleneFont(15, .medium)
+                .foregroundColor(SeleneTheme.ink60)
+        }
+    }
+
+    private func tile<Face: View>(index: Int, focused: Bool, @ViewBuilder face: () -> Face) -> some View {
+        let w = canvas.u(Self.width), h = canvas.u(Self.height)
+        let shape = RoundedRectangle(cornerRadius: canvas.u(14), style: .continuous)
+        return ZStack {
+            shape.fill(SeleneTheme.glass)
+            shape.stroke(SeleneTheme.ink15, lineWidth: canvas.u(1))
+            face()
+                .padding(canvas.u(18))
+                .frame(width: w, height: h, alignment: .topLeading)
+            SeleneTileRing(cornerRadius: canvas.u(21), active: focused)
+                .frame(width: w + canvas.u(14), height: h + canvas.u(14))
+        }
+        .frame(width: w, height: h)
+        .shadow(color: .black.opacity(0.45), radius: canvas.u(9))
+        .scaleEffect(focused ? 1.05 : 1)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: focused)
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2) { onOpen(index) }
+        .simultaneousGesture(TapGesture().onEnded { onFocus(index) })
+        .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(focused ? [.isButton, .isSelected] : .isButton)
+    }
+}

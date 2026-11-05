@@ -1,7 +1,7 @@
 import Foundation
 
 /// Focus on the Details page (spec §5.4). Zone 0 is the top block (Play or
-/// Build, then Game options). Zones 1 to 3 are the bands: Screenshots,
+/// Build, then Game options). Zones 1 to 4 are the bands: Screenshots, Mods,
 /// Build & Sources (a two-column grid of actions, the activity beside it) and
 /// More like this. A band with nothing to focus is skipped; Down goes to the
 /// next band, Up back to the previous one, and Up from the first returns to
@@ -10,11 +10,13 @@ public struct DetailsFocus: Equatable {
     /// How many items each band holds. A band with 0 items is not navigable.
     public struct Bands: Equatable {
         public var screenshots: Int
+        public var mods: Int
         public var actions: Int
         public var more: Int
 
-        public init(screenshots: Int = 0, actions: Int = 0, more: Int = 0) {
+        public init(screenshots: Int = 0, mods: Int = 0, actions: Int = 0, more: Int = 0) {
             self.screenshots = max(0, screenshots)
+            self.mods = max(0, mods)
             self.actions = max(0, actions)
             self.more = max(0, more)
         }
@@ -22,6 +24,7 @@ public struct DetailsFocus: Equatable {
         func count(_ zone: Int) -> Int {
             switch zone {
             case DetailsFocus.screenshotsZone: return screenshots
+            case DetailsFocus.modsZone: return mods
             case DetailsFocus.actionsZone: return actions
             case DetailsFocus.moreZone: return more
             default: return 0
@@ -31,8 +34,9 @@ public struct DetailsFocus: Equatable {
 
     public static let topZone = 0
     public static let screenshotsZone = 1
-    public static let actionsZone = 2
-    public static let moreZone = 3
+    public static let modsZone = 2
+    public static let actionsZone = 3
+    public static let moreZone = 4
     /// Play or Build, then Options, then the Favorite heart.
     public static let pillCount = 3
     /// Build & Sources lays its actions out in rows, as on Spotlight.
@@ -43,6 +47,7 @@ public struct DetailsFocus: Equatable {
     /// Pills on screen now: one while the game ports, otherwise `pillCount`.
     public private(set) var pillLimit = DetailsFocus.pillCount
     public var shot = 0
+    public var mod = 0
     public var action = 0
     public var more = 0
 
@@ -85,6 +90,10 @@ public struct DetailsFocus: Equatable {
             guard let next = Self.moved(shot, by: -1, count: bands.screenshots) else { return false }
             shot = next
             return true
+        case Self.modsZone:
+            guard let next = Self.moved(mod, by: -1, count: bands.mods) else { return false }
+            mod = next
+            return true
         case Self.actionsZone:
             guard action % Self.actionColumns > 0 else { return false }
             action -= 1
@@ -107,6 +116,10 @@ public struct DetailsFocus: Equatable {
             guard let next = Self.moved(shot, by: 1, count: bands.screenshots) else { return false }
             shot = next
             return true
+        case Self.modsZone:
+            guard let next = Self.moved(mod, by: 1, count: bands.mods) else { return false }
+            mod = next
+            return true
         case Self.actionsZone:
             guard action % Self.actionColumns < Self.actionColumns - 1, action + 1 < bands.actions else { return false }
             action += 1
@@ -124,6 +137,7 @@ public struct DetailsFocus: Equatable {
         zone = target
         switch target {
         case Self.screenshotsZone: shot = Self.clamp(index, count: bands.screenshots)
+        case Self.modsZone: mod = Self.clamp(index, count: bands.mods)
         case Self.actionsZone: action = Self.clamp(index, count: bands.actions)
         default: more = Self.clamp(index, count: bands.more)
         }
@@ -136,6 +150,7 @@ public struct DetailsFocus: Equatable {
             zone = neighbour(of: zone, by: -1, in: bands) ?? Self.topZone
         }
         shot = Self.clamp(shot, count: bands.screenshots)
+        mod = Self.clamp(mod, count: bands.mods)
         action = Self.clamp(action, count: bands.actions)
         more = Self.clamp(more, count: bands.more)
     }

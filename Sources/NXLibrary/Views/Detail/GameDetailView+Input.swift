@@ -126,6 +126,8 @@ extension GameDetailView {
             runPill(focus.pill)
         case DetailsFocus.screenshotsZone:
             openViewer(at: focus.shot)
+        case DetailsFocus.modsZone:
+            openMods()
         case DetailsFocus.actionsZone:
             guard focus.action < model.rows.count else { return }
             model.rows[focus.action].action()
@@ -177,6 +179,16 @@ extension GameDetailView {
     func openOptions() {
         SoundEffectService.shared.play(.click)
         viewModel.openGameOptions(game, from: .details)
+    }
+
+    /// Game options, opened on its Mods panel.
+    func openMods() {
+        SoundEffectService.shared.play(.click)
+        viewModel.openGameOptions(game, from: .details, opensMods: true)
+    }
+
+    func reloadMods() {
+        localMods = viewModel.modStore(for: game)?.mods()
     }
 
     /// A More like this game: Spotlight opens with it selected (All games when its filter hides it).

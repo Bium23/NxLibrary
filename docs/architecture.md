@@ -168,6 +168,8 @@ Off rimuove la preferenza cloud salvata dal launcher del gioco anche all’avvio
 
 `CheatStore` legge e modifica file, metadati, master switch e selezione `.enabled`. `AppViewModel+Cheats` espone contesto, stato della riga e informazioni per la diagnostica. `CheatsPanel` presenta lista, importazione, conferme e switch. Il gioco chiuso è una condizione delle modifiche. I file installati vengono poi letti dal motore al lancio.
 
+Le mod di file (RomFS) di un gioco stanno in `~/Library/Application Support/nxnative/<title ID>/mods/<cartella>/romfs`. `ModFolderScanner` trova le cartelle e il loro `romfs` (anche nel formato Atmosphère). `ModStore` tiene ordine e stato acceso/spento in `~/Library/Application Support/NXLibrary/mods/<TID>.json` e scrive nell'`env.txt` del gioco solo la riga `DM_ROMFS_OVERLAY` (con `EnvFileEditor`), che il motore legge al lancio: le mod accese, la prima vince, senza rebuild. Il valore non supera 4077 byte (il buffer di riga del launcher). Remove sposta la cartella nel Cestino; nessuna modifica mentre il gioco è aperto. `AppViewModel+Mods` crea lo store e traduce gli errori; `ModsPanel` (Game options → Mods) e la fascia Mods della pagina del gioco (`DetailsModsBand`) presentano lo stato. Le mod che modificano il codice (exefs) non funzionano con il motore.
+
 ## Salvataggi, backup e recupero
 
 ### Riconoscimento e anteprima

@@ -10,8 +10,8 @@ final class DetailsModelCache {
 
 /// The Details page (spec §5.4, Selene GameDetails + DetailsStage). The top
 /// block sits on the stage; Down glides the page up into the bands, which
-/// are Screenshots (720), Build & Sources with Your activity (950) and More
-/// like this (1180). A band below the one in focus peeks in, blurred, until
+/// are Screenshots (720), Mods (950, for a game with a title ID), Build &
+/// Sources with Your activity and More like this, one band pitch (230) apart. A band below the one in focus peeks in, blurred, until
 /// it is focused. Input lives in GameDetailView+Input.swift.
 struct GameDetailView: View {
     @ObservedObject var viewModel: AppViewModel
@@ -36,6 +36,9 @@ struct GameDetailView: View {
     @State var keyMonitor: Any?
     @State var wheel = DetailsWheel()
     @State var cache = DetailsModelCache()
+    /// The game's mods, read when the page appears and when Game options or the app comes back; nil without a
+    /// title ID (no Mods band).
+    @State var localMods: [LocalMod]?
 
     struct ViewerContext: Equatable {
         var titleID: String
@@ -52,6 +55,7 @@ struct GameDetailView: View {
         let screenshots: [URL]
         let screenshotsKnown: Bool
         let more: [PortedGame]
+        let mods: [LocalMod]?
         let bands: DetailsFocus.Bands
         /// The Metal gate refuses new builds (a known report that does not pass, without the override).
         let buildBlocked: Bool
@@ -71,7 +75,9 @@ struct GameDetailView: View {
         return Model(presentation: p, rows: rows, screenshots: urls,
                      screenshotsKnown: screenshotsKnown,
                      more: more,
-                     bands: DetailsFocus.Bands(screenshots: urls.count, actions: rows.count, more: more.count),
+                     mods: localMods,
+                     bands: DetailsFocus.Bands(screenshots: urls.count, mods: localMods.map(DetailsModsBand.tileCount) ?? 0,
+                                               actions: rows.count, more: more.count),
                      buildBlocked: blocked,
                      primaryEnabled: p.canPlay || (p.canRebuild && !blocked))
     }
@@ -149,6 +155,9 @@ struct GameDetailView: View {
         }
         .onChange(of: viewer != nil) { router.isScreenshotViewerOpen = $0 }
         .onChange(of: model.bands) { _ in settleFocus(model.bands) }
+        // Game options (its Mods panel) closing, or NX Library coming back from Finder, re-reads the mods.
+        .onChange(of: viewModel.gameForSettingsSheet == nil) { closed in if closed { reloadMods() } }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in reloadMods() }
         // The key monitor captures this view's value: reinstall it when the game changes.
         .onChange(of: game) { _ in
             removeKeyMonitor()
@@ -185,14 +194,19 @@ struct GameDetailView: View {
         }
     }
 
-    /// Selene's band pitch (230), and 100 more for the tall last band so its covers clear the hints.
+    /// Selene's band pitch (230), and 100 more for the tall last band so its covers clear the hints. The Mods band,
+    /// when there is one, pushes the bands below it one pitch down.
     var pageShift: CGFloat {
+        let mods = modsBandShift
         switch focus.zone {
-        case DetailsFocus.actionsZone: return -230
-        case DetailsFocus.moreZone: return -560
+        case DetailsFocus.modsZone: return -230
+        case DetailsFocus.actionsZone: return -230 - mods
+        case DetailsFocus.moreZone: return -560 - mods
         default: return 0
         }
     }
+
+    var modsBandShift: CGFloat { currentModel.mods == nil ? 0 : 230 }
 
     private func page(_ model: Model) -> some View {
         ZStack(alignment: .topLeading) {
@@ -229,6 +243,20 @@ struct GameDetailView: View {
             }
             .offset(x: canvas.u(110), y: canvas.u(740))
 
+            if let mods = model.mods {
+                band(zone: DetailsFocus.modsZone) {
+                    DetailsModsBand(
+                        mods: mods,
+                        focusedIndex: focus.zone == DetailsFocus.modsZone ? focus.mod : nil,
+                        onFocus: { focusPointer(zone: DetailsFocus.modsZone, index: $0, bands: model.bands) },
+                        onOpen: { index in
+                            focusPointer(zone: DetailsFocus.modsZone, index: index, bands: model.bands)
+                            openMods()
+                        })
+                }
+                .offset(x: canvas.u(110), y: canvas.u(970))
+            }
+
             band(zone: DetailsFocus.actionsZone) {
                 HStack(alignment: .top, spacing: 0) {
                     BuildSourcesPanel(
@@ -245,7 +273,7 @@ struct GameDetailView: View {
                 }
                 .frame(width: canvas.u(1700), alignment: .topLeading)
             }
-            .offset(x: canvas.u(110), y: canvas.u(970))
+            .offset(x: canvas.u(110), y: canvas.u(970 + (model.mods == nil ? 0 : 230)))
 
             if !model.more.isEmpty {
                 band(zone: DetailsFocus.moreZone) {
@@ -262,7 +290,7 @@ struct GameDetailView: View {
                             selectOnSpotlight(model.more[index])
                         })
                 }
-                .offset(x: canvas.u(110), y: canvas.u(1200))
+                .offset(x: canvas.u(110), y: canvas.u(1200 + (model.mods == nil ? 0 : 230)))
             }
         }
     }
@@ -296,6 +324,7 @@ struct GameDetailView: View {
         installKeyMonitor()
         router.isSearchPresented = false
         viewModel.loadStoreMetadata(for: game)
+        reloadMods()
         focus = DetailsFocus()
         settleFocus(model.bands)
     }

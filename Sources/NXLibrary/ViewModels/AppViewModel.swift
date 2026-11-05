@@ -284,6 +284,8 @@ public final class AppViewModel: ObservableObject {
     @Published public var gameForSettingsSheet: PortedGame? = nil
     /// Where the open Game options came from; decides its rows (Move is Spotlight-only).
     @Published public var gameOptionsOrigin: GameOptionsOrigin = .collection
+    /// Game options opens straight on its Mods panel (the Details page's Mods band).
+    @Published public var gameOptionsOpensMods = false
     /// The running game whose Close Game confirmation is open. The shell draws the dialog.
     @Published public var gameToClose: PortedGame? = nil
     @Published var closeGameFocus: SeleneConfirmButton = .cancel
@@ -1350,8 +1352,9 @@ public final class AppViewModel: ObservableObject {
     }
 
     /// Opens Game options for a game, remembering the screen it was opened from.
-    public func openGameOptions(_ game: PortedGame, from origin: GameOptionsOrigin) {
+    public func openGameOptions(_ game: PortedGame, from origin: GameOptionsOrigin, opensMods: Bool = false) {
         gameOptionsOrigin = origin
+        gameOptionsOpensMods = opensMods
         gameForSettingsSheet = game
     }
 

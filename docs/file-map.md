@@ -68,6 +68,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 |---|---|
 | [Sources/NXLibrary/ViewModels/AppViewModel.swift](../Sources/NXLibrary/ViewModels/AppViewModel.swift) | Coordina libreria, sorgenti, ambiente, porting, log, impostazioni dei giochi e lancio. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Cheats.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Cheats.swift) | Adatta Core e bundle installato al pannello Cheats, alla riga di stato e alla diagnostica. |
+| [Sources/NXLibrary/ViewModels/AppViewModel+Mods.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Mods.swift) | Crea lo `ModStore` di un gioco, il valore della riga Mods e le frasi per ogni errore. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Controller.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Controller.swift) | Conserva il contesto di gioco per i comandi e offre il collegamento alla cartella dei save. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Diagnostics.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Diagnostics.swift) | Raccoglie ambiente, toolchain e ultimo build per il rapporto diagnostico ripulito. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+KeyCheck.swift](../Sources/NXLibrary/ViewModels/AppViewModel+KeyCheck.swift) | Rilancia il controllo delle chiavi al variare delle sorgenti e scarta risultati superati. |
@@ -209,6 +210,10 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/CheatStatus.swift](../Sources/NXLibraryCore/Models/CheatStatus.swift) | Valuta il supporto del motore tramite ancestry e prepara stato della riga e indicatore attivo. |
 | [Sources/NXLibraryCore/Models/CheatCopy.swift](../Sources/NXLibraryCore/Models/CheatCopy.swift) | Centralizza testi di stato, rifiuto, importazione, sostituzione e rimozione dei cheats. |
 | [Sources/NXLibraryCore/Services/CheatStore.swift](../Sources/NXLibraryCore/Services/CheatStore.swift) | Legge e modifica cheats, file enabled, master switch e metadati della build corrente. |
+| [Sources/NXLibraryCore/Services/ModStore.swift](../Sources/NXLibraryCore/Services/ModStore.swift) | Ordine, stato acceso/spento, conflitti, Cestino e riga `DM_ROMFS_OVERLAY` delle mod RomFS di un gioco. |
+| [Sources/NXLibraryCore/Services/ModFolderScanner.swift](../Sources/NXLibraryCore/Services/ModFolderScanner.swift) | Trova le cartelle delle mod, il loro `romfs` e i file che contengono. |
+| [Sources/NXLibraryCore/Services/EnvFileEditor.swift](../Sources/NXLibraryCore/Services/EnvFileEditor.swift) | Cambia una sola variabile di un `env.txt` lasciando intatte le altre righe. |
+| [Sources/NXLibraryCore/Models/LocalMod.swift](../Sources/NXLibraryCore/Models/LocalMod.swift) | Una cartella della cartella mods di un gioco, con il suo `romfs` e lo stato. |
 
 ## Core · salvataggi e cloud
 
@@ -309,7 +314,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/Views/Detail/GameDetailView+Input.swift](../Sources/NXLibrary/Views/Detail/GameDetailView+Input.swift) | Gestisce azioni, screenshot, navigazione e passaggio ai giochi correlati da Details. |
 | [Sources/NXLibrary/Views/Detail/DetailsBackground.swift](../Sources/NXLibrary/Views/Detail/DetailsBackground.swift) | Compone hero e maschere dello sfondo dedicato alla pagina Details. |
 | [Sources/NXLibrary/Views/Detail/DetailsTopBlock.swift](../Sources/NXLibrary/Views/Detail/DetailsTopBlock.swift) | Mostra logo, crediti, azioni, statistiche, generi e descrizione del gioco. |
-| [Sources/NXLibrary/Views/Detail/DetailsBands.swift](../Sources/NXLibrary/Views/Detail/DetailsBands.swift) | Disegna bande screenshot, attività e giochi correlati con i relativi titoli. |
+| [Sources/NXLibrary/Views/Detail/DetailsBands.swift](../Sources/NXLibrary/Views/Detail/DetailsBands.swift) | Disegna bande screenshot, mod, attività e giochi correlati con i relativi titoli. |
 | [Sources/NXLibrary/Views/Detail/BuildSourcesPanel.swift](../Sources/NXLibrary/Views/Detail/BuildSourcesPanel.swift) | Prepara e disegna le azioni di app, sorgenti, rebuild, log e cartelle. |
 
 ## UI · Game Options, cheats e salvataggi
@@ -320,6 +325,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/Views/GameOptions/ChangeArtworkView.swift](../Sources/NXLibrary/Views/GameOptions/ChangeArtworkView.swift) | Seleziona artwork per titolo da rete o file e indica dove viene usato, con stato ad altezza stabile. |
 | [Sources/NXLibrary/Views/GameOptions/ChangeMetadataView.swift](../Sources/NXLibrary/Views/GameOptions/ChangeMetadataView.swift) | Offre alternative o testo personalizzato per descrizione, generi, crediti e data. |
 | [Sources/NXLibrary/Views/GameOptions/CheatsPanel.swift](../Sources/NXLibrary/Views/GameOptions/CheatsPanel.swift) | Presenta file, master switch, codici, importazione, rimozione e stato di scrittura dei cheats. |
+| [Sources/NXLibrary/Views/GameOptions/ModsPanel.swift](../Sources/NXLibrary/Views/GameOptions/ModsPanel.swift) | Game options → Mods: accende, ordina e sposta nel Cestino le mod RomFS, apre la cartella mods. |
 | [Sources/NXLibrary/Views/GameOptions/SavesPanel.swift](../Sources/NXLibrary/Views/GameOptions/SavesPanel.swift) | Presenta azioni sui save, anteprime, errori e popup di successo a scomparsa automatica. |
 | [Sources/NXLibrary/Views/GameOptions/MoreSettingsPanel.swift](../Sources/NXLibrary/Views/GameOptions/MoreSettingsPanel.swift) | Mostra le impostazioni del launcher.json senza riga dedicata: interruttori, scelte e intervalli; le righe fissate da env.txt restano attenuate. |
 | [Sources/NXLibrary/Views/GameOptions/SaveImportDetails.swift](../Sources/NXLibrary/Views/GameOptions/SaveImportDetails.swift) | Disegna percorsi From/To centrati, riquadri leggeri e freccia con riflesso direzionale. |
@@ -436,6 +442,9 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/CheatLocatorTests.swift](../Tests/NXLibraryCoreTests/CheatLocatorTests.swift) | Identità nel bundle e precedenza dei percorsi cheats e delle variabili del launcher. |
 | [Tests/NXLibraryCoreTests/CheatStatusTests.swift](../Tests/NXLibraryCoreTests/CheatStatusTests.swift) | Ancestry del motore, necessità di rebuild, valore della riga e indicatore attivo. |
 | [Tests/NXLibraryCoreTests/CheatStoreTests.swift](../Tests/NXLibraryCoreTests/CheatStoreTests.swift) | Installazione, enabled, master switch, sostituzione e metadati dei file cheats. |
+| [Tests/NXLibraryCoreTests/ModStoreTests.swift](../Tests/NXLibraryCoreTests/ModStoreTests.swift) | Ordine, acceso/spento, limite dell'overlay, conflitti, Cestino e righe dell'`env.txt` delle mod. |
+| [Tests/NXLibraryCoreTests/ModFolderScannerTests.swift](../Tests/NXLibraryCoreTests/ModFolderScannerTests.swift) | Cartelle delle mod, layout `romfs`/Atmosphère, symlink e file relativi. |
+| [Tests/NXLibraryCoreTests/EnvFileEditorTests.swift](../Tests/NXLibraryCoreTests/EnvFileEditorTests.swift) | Modifica di una chiave dell'`env.txt`: commenti, duplicati, CRLF, merge al lancio. |
 | [Tests/NXLibraryCoreTests/CloudSavesTests.swift](../Tests/NXLibraryCoreTests/CloudSavesTests.swift) | Cartelle cloud, preferenze per gioco e decodifica delle impostazioni precedenti. |
 | [Tests/NXLibraryCoreTests/CompatibilityCheckerTests.swift](../Tests/NXLibraryCoreTests/CompatibilityCheckerTests.swift) | Commit, modifiche ammesse nel checkout, Metal, CLI e override del gate. |
 | [Tests/NXLibraryCoreTests/DetailsFocusTests.swift](../Tests/NXLibraryCoreTests/DetailsFocusTests.swift) | Spostamento nelle bande di Details, limiti e sezioni vuote. |

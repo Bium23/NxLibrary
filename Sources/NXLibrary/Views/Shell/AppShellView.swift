@@ -200,7 +200,8 @@ public struct AppShellView: View {
                     onMove: {
                         viewModel.gameForSettingsSheet = nil
                         router.requestSpotlightMove(SpotlightItem.game(game.id).key)
-                    }
+                    },
+                    opensMods: viewModel.gameOptionsOpensMods
                 )
                 .transition(overlayTransition)
                 .zIndex(2)

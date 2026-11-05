@@ -133,4 +133,38 @@ final class DetailsFocusTests: XCTestCase {
         focus.focus(zone: DetailsFocus.moreZone, index: 9, in: all)
         XCTAssertEqual(focus.more, 1)
     }
+
+    func testDownFromScreenshotsGoesToMods() {
+        let bands = DetailsFocus.Bands(screenshots: 3, mods: 2, actions: 5, more: 2)
+        var focus = DetailsFocus()
+        XCTAssertTrue(focus.down(in: bands))
+        XCTAssertEqual(focus.zone, DetailsFocus.screenshotsZone)
+        XCTAssertTrue(focus.down(in: bands))
+        XCTAssertEqual(focus.zone, DetailsFocus.modsZone)
+        XCTAssertTrue(focus.right(in: bands))
+        XCTAssertEqual(focus.mod, 1)
+        XCTAssertFalse(focus.right(in: bands), "the last tile holds")
+        XCTAssertTrue(focus.left(in: bands))
+        XCTAssertEqual(focus.mod, 0)
+        XCTAssertTrue(focus.down(in: bands))
+        XCTAssertEqual(focus.zone, DetailsFocus.actionsZone)
+        XCTAssertTrue(focus.up(in: bands))
+        XCTAssertEqual(focus.zone, DetailsFocus.modsZone)
+        focus.focus(zone: DetailsFocus.modsZone, index: 7, in: bands)
+        XCTAssertEqual(focus.mod, 1)
+    }
+
+    func testEmptyModsBandIsSkipped() {
+        let bands = DetailsFocus.Bands(screenshots: 3, mods: 0, actions: 5, more: 2)
+        var focus = DetailsFocus()
+        focus.focus(zone: DetailsFocus.screenshotsZone, index: 0, in: bands)
+        XCTAssertTrue(focus.down(in: bands))
+        XCTAssertEqual(focus.zone, DetailsFocus.actionsZone)
+        focus.focus(zone: DetailsFocus.modsZone, index: 0, in: bands)
+        XCTAssertEqual(focus.zone, DetailsFocus.actionsZone, "an empty band takes no pointer focus")
+        var onMods = DetailsFocus()
+        onMods.focus(zone: DetailsFocus.modsZone, index: 1, in: DetailsFocus.Bands(screenshots: 0, mods: 2, actions: 1))
+        onMods.settle(in: DetailsFocus.Bands(screenshots: 0, mods: 0, actions: 1))
+        XCTAssertEqual(onMods.zone, DetailsFocus.topZone, "a vanished band gives way to the one above")
+    }
 }
