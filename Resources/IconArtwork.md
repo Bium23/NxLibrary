@@ -5,7 +5,7 @@ created by them with AI. This master and the variants below are derived from
 that owner-provided reference.
 
 `IconArtwork.png` is the full-bleed 1024 × 1024 square master, edited with
-built-in imagegen on 2026-11-01 from the user's selected diagonal controller
+built-in imagegen on 2026-11-02 from the user's selected diagonal controller
 artwork. The source is opaque and has no pre-rendered icon frame, transparent
 padding, rounded corners, rim or external shadow.
 
@@ -15,6 +15,13 @@ four small buttons each and delicate trailing ribbons. Make the neutral
 charcoal background just slightly darker than the previous version (roughly
 #232426); extend it to all four square edges. Center the complete symbol
 with balanced padding. No text, monogram, extra objects or icon mockup.
+
+Symmetry refinement (2026-11-02, built-in imagegen): align the four small
+circles in each section into matching 2 × 2 grids, with equal row/column
+spacing and matching diameters between blue and coral. Balance each group
+and its large circle within its section, with corresponding placement
+reversed between sections. Preserve the charcoal background, colored outlines
+and trailing ribbons.
 
 Regenerate the Finder icon and Dock appearance resources on macOS:
 
