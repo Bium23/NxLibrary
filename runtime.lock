@@ -26,6 +26,77 @@
       "file": "fonttools-4.67.0-cp314-cp314-macosx_10_15_universal2.whl",
       "url": "https://files.pythonhosted.org/packages/25/5b/c418f48918e40ef8c3f0f555567fe013c0c8058a8afa8040d6baeec80683/fonttools-4.67.0-cp314-cp314-macosx_10_15_universal2.whl",
       "sha256": "846982e89b1861d6c9d7fcd6567aec3fa5a10ad313e7f2076045fcd339cfbd8e"
+    },
+    {
+      "name": "zbic",
+      "version": "1.0.1.post1",
+      "file": "zbic-1.0.1.post1-cp314-cp314-macosx_11_0_arm64.whl",
+      "url": "https://files.pythonhosted.org/packages/7d/0e/16419890fde662047ff22e79ef01379d549f56a6875c77285687ab35ec77/zbic-1.0.1.post1-cp314-cp314-macosx_11_0_arm64.whl",
+      "sha256": "fb508131293c71a242b1fc50e9179da2a73a4ec42dfcf3652963672bbe144e12"
+    },
+    {
+      "name": "nsz",
+      "version": "5.0.0",
+      "file": "nsz-5.0.0-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/85/7f/e11c738d92ffa58116184b443636b27c4cdefc0a7d73e5eacff1c9e3b6dd/nsz-5.0.0-py3-none-any.whl",
+      "sha256": "b3698cab8d7720aed056a0290017ff60a989d8343b7bb9c3c161ab137ec03965"
+    },
+    {
+      "name": "pycryptodome",
+      "version": "3.24.1",
+      "file": "pycryptodome-3.24.1-cp37-abi3-macosx_10_9_universal2.whl",
+      "url": "https://files.pythonhosted.org/packages/9f/08/014128274efca5bc18ae7e4e4f5c593d1fd6d43b77bf7492b233589cef79/pycryptodome-3.24.1-cp37-abi3-macosx_10_9_universal2.whl",
+      "sha256": "558b9233ff2afb42f92115ae9b4414d08c0e567790619e878cf72947d7c38a11"
+    },
+    {
+      "name": "zstandard",
+      "version": "0.25.0",
+      "file": "zstandard-0.25.0-cp314-cp314-macosx_11_0_arm64.whl",
+      "url": "https://files.pythonhosted.org/packages/8d/09/d0a2a14fc3439c5f874042dca72a79c70a532090b7ba0003be73fee37ae2/zstandard-0.25.0-cp314-cp314-macosx_11_0_arm64.whl",
+      "sha256": "05df5136bc5a011f33cd25bc9f506e7426c0c9b3f9954f056831ce68f3b6689f"
+    },
+    {
+      "name": "enlighten",
+      "version": "1.14.1",
+      "file": "enlighten-1.14.1-py2.py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/73/1e/244bb2fc5713ad21ae9f9012067f6432c682593816c6a45372c24f5a7d61/enlighten-1.14.1-py2.py3-none-any.whl",
+      "sha256": "5fbd0c959ca1644034c41bb0ace5db19c9852cf9d721b6103f5f130663c57be8"
+    },
+    {
+      "name": "blessed",
+      "version": "1.51.0",
+      "file": "blessed-1.51.0-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/eb/a8/9be4834180908c89052a00ca7289f60fce0cc0ffe0b1758f1c3007259429/blessed-1.51.0-py3-none-any.whl",
+      "sha256": "1904583e1d36f426bf652571caa5fc9e08719b57cbe2b0d3fa98640fe8496a44"
+    },
+    {
+      "name": "jinxed",
+      "version": "2.1.0",
+      "file": "jinxed-2.1.0-py2.py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/f1/1d/0a6be99b69bb448448403a45a241aff0dca751832ae54f027ed940d2eb52/jinxed-2.1.0-py2.py3-none-any.whl",
+      "sha256": "43b802d18b70e405d410fb66eb2837d1101e7e5ea922e666507bb43f34d11d09"
+    },
+    {
+      "name": "prefixed",
+      "version": "0.9.0",
+      "file": "prefixed-0.9.0-py2.py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/c3/61/d9957a0ed189ac8a89075c59c97588fb1c77e51d8d44a26f5cdf001d260c/prefixed-0.9.0-py2.py3-none-any.whl",
+      "sha256": "3cdb74bfc4cf0aba28f3574662b13afdcac27c463dcbef320fe5d03f4c5fbca8"
+    },
+    {
+      "name": "wcwidth",
+      "version": "0.9.2",
+      "file": "wcwidth-0.9.2-cp310-abi3-macosx_11_0_arm64.whl",
+      "url": "https://files.pythonhosted.org/packages/a0/07/cb6940e81134b7ed25fa312ee9ab536a63db0793b149f88a90e603ceace9/wcwidth-0.9.2-cp310-abi3-macosx_11_0_arm64.whl",
+      "sha256": "ae0800c5339423cc53d33a266ad264b42ba8aaa16d4464f6e6b1bee607f50b17"
+    }
+  ],
+  "sources": [
+    {
+      "name": "zbic",
+      "file": "zbic-1.0.1.post1.tar.gz",
+      "url": "https://files.pythonhosted.org/packages/51/34/a108004438db175641f13b9d9de8b6b57c96911c582e8f39fc57b277f9d8/zbic-1.0.1.post1.tar.gz",
+      "sha256": "a798c24aea58f81a0b4bb0226f0f383b7e7f07a9a0150732cb45dc65ac541ff3"
     }
   ],
   "brew": [

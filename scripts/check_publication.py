@@ -67,6 +67,8 @@ def check_runtime(root, runtime):
             return ["Runtime is missing an executable."]
         if not (runtime / "licenses").is_dir():
             return ["Runtime is missing its licenses."]
+        if not all((runtime / "sources" / item["file"]).is_file() for item in lock.get("sources", [])):
+            return ["Runtime is missing the source of a GPL package."]
     except (OSError, ValueError, KeyError, TypeError):
         return ["Runtime metadata could not be verified."]
     return []

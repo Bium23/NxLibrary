@@ -74,6 +74,27 @@ class PublicationChecks(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("runtime", result.stdout.lower())
 
+    def test_runtime_must_carry_gpl_sources(self):
+        lock = {"python": {"version": "3.14.6"}, "wheels": [], "brew": [],
+                "sources": [{"name": "zbic", "file": "zbic-1.0.1.post1.tar.gz"}]}
+        data = json.dumps(lock).encode()
+        (self.root / "runtime.lock").write_bytes(data)
+        runtime = self.root / "runtime"
+        runtime.mkdir()
+        for path in ["python/bin/python3", "bin/zstd", "bin/glslangValidator"]:
+            file = runtime / path
+            file.parent.mkdir(parents=True, exist_ok=True)
+            file.write_text("fixture")
+            file.chmod(0o755)
+        (runtime / "licenses").mkdir()
+        (runtime / "versions.json").write_text(json.dumps({"python": "3.14.6", "lock": hashlib.sha256(data).hexdigest()}))
+        result = self.scan("--runtime", str(runtime))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("source", result.stdout.lower())
+        (runtime / "sources").mkdir()
+        (runtime / "sources" / "zbic-1.0.1.post1.tar.gz").write_bytes(b"fixture")
+        self.assertEqual(self.scan("--runtime", str(runtime)).returncode, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

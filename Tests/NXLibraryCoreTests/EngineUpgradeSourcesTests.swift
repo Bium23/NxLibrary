@@ -118,6 +118,71 @@ final class EngineUpgradeSourcesTests: XCTestCase {
         XCTAssertEqual(game.baseTitleId, title)
     }
 
+    /// exefs/ and romfs/ directly in the chosen folder count as the base, as in the engine's pack_dump.base_of
+    /// (`nup extract` writes them so, and players pick the `base` folder itself).
+    func testFolderHoldingExeFSAndRomFSIsTheBase() throws {
+        let root = try temporaryFolder()
+        let dump = root.appendingPathComponent("Super Mario/base")
+        try version(dump, title: title)
+        XCTAssertTrue(ExtractedSourceCatalog.recognizes(dump))
+        let game = try ExtractedSourceCatalog(profiles: root.appendingPathComponent("profiles"), provisional: true).scan(folder: dump)
+        XCTAssertEqual(game.base?.url, dump)
+        XCTAssertEqual(game.name, "Super Mario", "a folder named base is named after the one holding it")
+        XCTAssertTrue(game.hasGame)
+        let workspace = try WorkspaceManager(root: root.appendingPathComponent("work")).makeWorkspace(for: game, mode: .staged)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: workspace.directory.appendingPathComponent("base/exefs/main.npdm").path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: workspace.directory.appendingPathComponent("base/romfs/data").path))
+    }
+
+    /// A dump of an update alone (updates/<version>/ with its code and RomFS) is the whole game, as for the engine.
+    func testUpdateOnlyDumpIsTheWholeGame() throws {
+        let root = try temporaryFolder()
+        let dump = root.appendingPathComponent("Fortune's Weave")
+        try version(dump.appendingPathComponent("updates/65536"), title: title)
+        try version(dump.appendingPathComponent("updates/131072"), title: title)
+        XCTAssertTrue(ExtractedSourceCatalog.recognizes(dump))
+        let game = try ExtractedSourceCatalog(profiles: root.appendingPathComponent("profiles"), provisional: true).scan(folder: dump)
+        XCTAssertNil(game.base)
+        XCTAssertEqual(game.baseTitleId, title)
+        XCTAssertEqual(game.updates.map(\.version), [65536, 131072])
+        XCTAssertTrue(game.hasGame)
+    }
+
+    /// base/ may lack its RomFS when an update has one (the update's RomFS is whole).
+    func testBaseWithoutRomFSIsAcceptedWhenAnUpdateHasOne() throws {
+        let root = try temporaryFolder()
+        let dump = root.appendingPathComponent("dump")
+        try version(dump.appendingPathComponent("base"), title: title)
+        try FileManager.default.removeItem(at: dump.appendingPathComponent("base/romfs"))
+        XCTAssertFalse(ExtractedSourceCatalog.recognizes(dump), "code alone is no game")
+        try version(dump.appendingPathComponent("updates/131072"), title: title)
+        XCTAssertTrue(ExtractedSourceCatalog.recognizes(dump))
+        let game = try ExtractedSourceCatalog(profiles: root.appendingPathComponent("profiles"), provisional: true).scan(folder: dump)
+        XCTAssertNil(game.base, "code without its RomFS adds nothing: the update is the whole game")
+        XCTAssertEqual(game.updates.map(\.version), [131072])
+        XCTAssertTrue(game.hasGame)
+    }
+
+    /// The `base` folder of a full dump chosen: its updates and DLC beside it are not left out.
+    func testBaseFolderOfAFullDumpScansTheWholeDump() throws {
+        let root = try temporaryFolder()
+        let dump = root.appendingPathComponent("Bananza")
+        try version(dump.appendingPathComponent("base"), title: title)
+        try version(dump.appendingPathComponent("updates/458752"), title: title)
+        let game = try ExtractedSourceCatalog(profiles: root.appendingPathComponent("profiles"), provisional: true)
+            .scan(folder: dump.appendingPathComponent("base"))
+        XCTAssertEqual(game.name, "Bananza")
+        XCTAssertEqual(game.base?.url, dump.appendingPathComponent("base"))
+        XCTAssertEqual(game.updates.map(\.version), [458752])
+    }
+
+    func testFolderWithoutAGameLayoutIsNotRecognized() throws {
+        let root = try temporaryFolder()
+        try FileManager.default.createDirectory(at: root.appendingPathComponent("exefs"), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: root.appendingPathComponent("romfs"), withIntermediateDirectories: true)
+        XCTAssertFalse(ExtractedSourceCatalog.recognizes(root), "no main.npdm")
+    }
+
     func testMergedPackageExposesBothGamesAndCountsPhysicalFileOnce() throws {
         let root = try temporaryFolder()
         let file = root.appendingPathComponent("two-games.xci")

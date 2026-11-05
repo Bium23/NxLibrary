@@ -40,10 +40,10 @@ final class EngineToolchainTests: XCTestCase {
         let runtime = try XCTUnwrap(BundledRuntime.locate(resourceURL: resources))
         XCTAssertNil(runtime.versionSummary())
 
-        let json = #"{"glslang": "16.6.0", "python": "3.14.6", "capstone": "5.0.9", "lz4": "4.4.5", "fonttools": "4.67.0", "zstd": "1.5.7"}"#
+        let json = #"{"glslang": "16.6.0", "python": "3.14.6", "capstone": "5.0.9", "lz4": "4.4.5", "fonttools": "4.67.0", "zbic": "1.0.1.post1", "nsz": "5.0.0", "zstd": "1.5.7"}"#
         try Data(json.utf8).write(to: runtime.versionsURL)
         XCTAssertEqual(runtime.versionSummary(),
-                       "Python 3.14.6 · capstone 5.0.9 · lz4 4.4.5 · fonttools 4.67.0 · zstd 1.5.7 · glslang 16.6.0")
+                       "Python 3.14.6 · capstone 5.0.9 · lz4 4.4.5 · fonttools 4.67.0 · zbic 1.0.1.post1 · nsz 5.0.0 · zstd 1.5.7 · glslang 16.6.0")
     }
 
     func testResolveFallsBackToVenv() {

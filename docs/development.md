@@ -19,12 +19,12 @@ From the repository root:
 ~~~sh
 bash scripts/bundle_runtime.sh
 bash scripts/build_app.sh
-codesign --verify --deep --strict "$HOME/Applications/NXLibrary.app"
+codesign --verify --deep --strict "$HOME/Applications/NXLibrary Dev.app"
 ~~~
 
-The default destination is `~/Applications/NXLibrary.app`. `build_app.sh` compiles the Release configuration, creates the bundle in staging, includes resources and notices, ad-hoc signs and verifies it, then installs it through the same atomic installer used by the application. It does not launch the app.
+The default destination is `~/Applications/NXLibrary Dev.app`, named **NX Library Dev**: the copy every change is tested in, kept apart from the released **NX Library** (`~/Applications/NX Library.app`, installed from GitHub and updated by itself), which a development build never replaces. Both use the bundle ID `local.nxlibrary`, so they share the library, keys and settings, and macOS runs only one at a time: quit one before opening the other. `build_app.sh` compiles the Release configuration, creates the bundle in staging, includes resources and notices, ad-hoc signs and verifies it, then installs it through the same atomic installer used by the application. It does not launch the app.
 
-A development copy carries the version in progress from the `VERSION` file at the repository root and shows it as "(development build)" in Settings; it has no release marker, so it never offers or installs app updates. `scripts/release.sh <version>` sets the released version itself. After a release, raise `VERSION` to the next version being worked on.
+A development copy carries the version in progress from the `VERSION` file at the repository root and shows it as "(development build)" in Settings; it has no release marker, so it never offers or installs app updates. `scripts/release.sh <version>` sets the released version itself and refuses to run unless `VERSION` already says that version. After a release, raise `VERSION` to the next version being worked on.
 
 An alternate destination can be supplied without replacing the installed development copy:
 
@@ -36,7 +36,7 @@ A plain development app uses bundle ID `local.nxlibrary`, defaults to version `0
 
 ### Bundled runtime
 
-`bundle_runtime.sh` prepares `work/Runtime/` from the exact downloads and hashes in `runtime.lock`. It includes Python, capstone, lz4, fontTools, `zstd` and `glslangValidator`, their required non-system libraries and licence notices. It relinks the native libraries for the bundle, signs them and checks that the tools run without Homebrew on `PATH`.
+`bundle_runtime.sh` prepares `work/Runtime/` from the exact downloads and hashes in `runtime.lock`. It includes Python, capstone, lz4, fontTools, zbic (Nintendo's zstd variant, read by the engine for system 22.0.0+ code), nsz with its dependencies (NSZ / XCZ inputs), `zstd` and `glslangValidator`, their required non-system libraries and licence notices. zbic is GPLv2, so its source archive ships in `Runtime/sources/`. `EngineRuntimeRequirementsTests` fails when the pinned engine's README or `.github/requirements/tools.txt` asks for a Python package that `runtime.lock` lacks. It relinks the native libraries for the bundle, signs them and checks that the tools run without Homebrew on `PATH`.
 
 Run it again when the lock changes. `build_app.sh` checks the runtime metadata against the lock before copying it. The lock is a reviewed input, not a request to install whichever package versions happen to be newest.
 
@@ -59,7 +59,7 @@ python3 scripts/check_publication.py
 python3 -m unittest discover -s Tests/PublicationChecks
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 bash scripts/build_app.sh
-codesign --verify --deep --strict "$HOME/Applications/NXLibrary.app"
+codesign --verify --deep --strict "$HOME/Applications/NXLibrary Dev.app"
 ~~~
 
 When reviewing an engine upgrade in a separate checkout, set `NX_TEST_ENGINE_REPO` to that checkout's absolute path for `swift test`. The engine-fragment regression reads the application's pin and checks it in that repository; an invalid explicit path fails. Without the variable it uses `~/nxnative`, skipping only when that default checkout is absent. This allows verification without fetching into or changing the engine used by the installed app.
@@ -96,7 +96,7 @@ An upgrade requires reviewing the upstream delta and CLI, deciding which capabil
 
 ## Release packaging
 
-Use `scripts/release.sh` for releases. It requires a clean working tree, an unused version tag and a runtime that matches the lock. Commit or deliberately stash local work first; do not discard changes to satisfy the check.
+Use `scripts/release.sh` for releases. It requires a clean working tree, an unused version tag, a `VERSION` file that names the release and a runtime that matches the lock, and runs `swift test` and the publication checks' tests first. With `--publish` it also requires HEAD to be the pushed `origin/main`, so the tag always marks what players see on main. Commit or deliberately stash local work first; do not discard changes to satisfy the check.
 
 For example, to prepare a later release locally:
 
