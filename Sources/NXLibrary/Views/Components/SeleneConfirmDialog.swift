@@ -77,15 +77,8 @@ struct SeleneDialogNotes: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: canvas.u(7)) {
-                        ForEach(Array(detail.components(separatedBy: "\n").enumerated()), id: \.offset) { index, line in
-                            let heading = line.hasPrefix("#")
-                            let shown = heading ? String(line.drop(while: { $0 == "#" || $0 == " " })) : line
-                            Text((try? AttributedString(markdown: shown.isEmpty ? " " : shown,
-                                options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(shown))
-                                .seleneFont(heading ? 17 : 15, heading ? .semibold : .regular)
-                                .foregroundColor(SeleneTheme.ink75)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .id(index)
+                        ForEach(Array(ReleaseNotesLayout.lines(detail).enumerated()), id: \.offset) { index, line in
+                            noteLine(line, first: index == 0).id(index)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -102,6 +95,46 @@ struct SeleneDialogNotes: View {
             )
             .padding(.top, canvas.u(20))
         }
+    }
+
+    /// Headings as the app's section labels, items with a dot and a hanging indent, blank lines as spacing only.
+    @ViewBuilder
+    private func noteLine(_ line: ReleaseNotesLayout.Line, first: Bool) -> some View {
+        switch line.kind {
+        case .heading:
+            Text(line.text.uppercased())
+                .seleneFont(13, .semibold)
+                .tracking(1.2)
+                .foregroundColor(SeleneTheme.ink60)
+                .padding(.top, first ? 0 : canvas.u(10))
+                .accessibilityAddTraits(.isHeader)
+        case .item:
+            HStack(alignment: .firstTextBaseline, spacing: canvas.u(10)) {
+                Circle()
+                    .fill(SeleneTheme.glyph)
+                    .frame(width: canvas.u(5), height: canvas.u(5))
+                    .alignmentGuide(.firstTextBaseline) { $0[.bottom] + canvas.u(1) }
+                    .accessibilityHidden(true)
+                inline(line.text)
+                    .seleneFont(15)
+                    .foregroundColor(SeleneTheme.ink82)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.leading, canvas.u(2))
+        case .text:
+            inline(line.text)
+                .seleneFont(15)
+                .foregroundColor(SeleneTheme.ink75)
+                .fixedSize(horizontal: false, vertical: true)
+        case .blank:
+            Color.clear.frame(height: canvas.u(2))
+        }
+    }
+
+    /// Bold and code inside a line, as GitHub shows them.
+    private func inline(_ text: String) -> Text {
+        Text((try? AttributedString(markdown: text, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
+             ?? AttributedString(text))
     }
 }
 

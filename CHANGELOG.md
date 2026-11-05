@@ -2,7 +2,7 @@
 
 User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
-## Unreleased
+## 0.1.3 — 2026-11-05
 
 ### Changed
 
@@ -13,6 +13,7 @@ User-visible changes to NX Library are recorded here. Entries are grouped by rel
 - A build stage that finishes with a warning shows ⚠ instead of ✓, and **Ready to play** explains it. The engine uses it when a game's pipeline archive cannot be made: the app is still built, and the game prepares its shaders when it first needs them.
 - NUP files and extracted folders for a game the engine has no profile for are accepted: the engine makes a provisional one. Review shows **Not tested with this engine yet** for any source without a profile, NSP included, because the porting may stop or the game may not start. A folder without a profile is named after itself.
 - The controls guide lists quitting a game with the controller: hold Home for 2 seconds, then A, in games built with the current engine.
+- Release notes in the update dialog are easier to read: section headings, and each item with a dot and aligned wrapped lines. Updates after 0.1.3 show their notes this way.
 - Development builds show the version in progress, marked **(development build)**, instead of 0.1.0. They never offer app updates.
 
 ### Added
