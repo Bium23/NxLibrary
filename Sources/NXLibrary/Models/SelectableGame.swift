@@ -36,7 +36,7 @@ public struct SelectableGame: Identifiable, Equatable {
     /// A base game, or an update of a NUP with no base game (the engine takes it as the whole game).
     public var hasGame: Bool { SourceSelection.hasGame(files) }
 
-    public var isUpdateOnlyNUP: Bool { SourceSelection.isUpdateOnlyNUP(files) }
+    public var isUpdateOnly: Bool { SourceSelection.isUpdateOnly(files) }
 
     private static func versionNumber(_ value: String?) -> Int {
         guard let value else { return -1 }

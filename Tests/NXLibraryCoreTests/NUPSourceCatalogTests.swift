@@ -193,7 +193,7 @@ final class NUPSourceCatalogTests: XCTestCase {
         let game = try NUPSourceCatalog.parse(updateOnlyProbe, nup: dir.appendingPathComponent("Bananza.nup"), fileSize: 12,
                                               profiles: try repo().appendingPathComponent("dm/games"))
         let files = files(game)
-        XCTAssertTrue(SourceSelection.isUpdateOnlyNUP(files))
+        XCTAssertTrue(SourceSelection.isUpdateOnly(files))
         XCTAssertTrue(SourceSelection.hasGame(files))
         let selected = SourceSelection.initial(in: files)
         let newest = try XCTUnwrap(files.first { $0.versionString == "v458752" })
@@ -220,10 +220,25 @@ final class NUPSourceCatalogTests: XCTestCase {
         XCTAssertEqual(Set(rescanned.filter { gone.contains($0.id) }.compactMap(\.versionString)), ["v458752"])
     }
 
+    /// An extracted dump with only updates follows the same rules: the newest update is selected and stays in.
+    func testAnExtractedUpdateStandsInForTheBaseToo() {
+        let older = GameFileItem(url: dir.appendingPathComponent("updates/65536"), kind: .update, versionString: "v65536",
+                                 sizeBytes: 1, sourceLayout: .extracted)
+        let newest = GameFileItem(url: dir.appendingPathComponent("updates/131072"), kind: .update, versionString: "v131072",
+                                  sizeBytes: 1, sourceLayout: .extracted)
+        let files = [older, newest]
+        XCTAssertTrue(SourceSelection.isUpdateOnly(files))
+        XCTAssertTrue(SourceSelection.hasGame(files))
+        let selected = SourceSelection.initial(in: files)
+        XCTAssertEqual(selected, [newest.id])
+        XCTAssertTrue(SourceSelection.isLocked(newest, in: files, selected: selected))
+        XCTAssertEqual(SourceSelection.versionForBuild(files.filter { selected.contains($0.id) }), "v131072")
+    }
+
     func testOnlyANUPUpdateStandsInForTheBase() {
         let nsp = GameFileItem(url: dir.appendingPathComponent("Update.nsp"), kind: .update, versionString: "v65536", sizeBytes: 1)
         XCTAssertFalse(SourceSelection.hasGame([nsp]), "the engine needs the base game beside an NSP update")
-        XCTAssertFalse(SourceSelection.isUpdateOnlyNUP([nsp]))
+        XCTAssertFalse(SourceSelection.isUpdateOnly([nsp]))
         XCTAssertFalse(SourceSelection.isLocked(nsp, in: [nsp], selected: [nsp.id]))
         let dlc = GameFileItem(url: dir.appendingPathComponent("G.nup"), kind: .dlc, sizeBytes: 1, sourceLayout: .container)
         XCTAssertFalse(SourceSelection.hasGame([dlc]))

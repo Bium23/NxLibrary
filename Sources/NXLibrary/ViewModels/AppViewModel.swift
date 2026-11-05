@@ -1795,7 +1795,7 @@ public final class AppViewModel: ObservableObject {
                     if case .failure(let error) = outcome {
                         self.scanError = error.localizedDescription
                     } else { self.scanError = urls.isEmpty
-                        ? "No NSP, XCI, NSZ, XCZ or NUP files were found in this folder."
+                        ? "No game was found in this folder: no NSP, XCI, NSZ, XCZ or NUP file, and no extracted game (a folder with exefs and romfs, or with base/exefs and base/romfs)."
                         : "No readable game files were found. Check that the files are complete and have a title ID or ticket." }
                     self.logs.append(LogEntry(level: .warning, message: self.scanError!))
                 } else {

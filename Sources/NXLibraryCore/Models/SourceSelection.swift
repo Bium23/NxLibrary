@@ -65,15 +65,16 @@ public enum SourceSelection {
         return files.reduce(0) { $0 + (seen.insert(path($1)).inserted ? $1.sizeBytes : 0) }
     }
 
-    /// Whether the files hold a game the engine can build: a base game, or an update of a NUP with no base game.
+    /// Whether the files hold a game the engine can build: a base game, or an update of a NUP or a dump with no base game.
     public static func hasGame(_ files: [GameFileItem]) -> Bool {
-        files.contains { $0.kind == .base } || isUpdateOnlyNUP(files)
+        files.contains { $0.kind == .base } || isUpdateOnly(files)
     }
 
-    /// A NUP with no base game (nxnative 777a5f6c): it has no v0, and the selected update is taken as the whole game.
-    /// An NSP update without its base cannot be built.
-    public static func isUpdateOnlyNUP(_ files: [GameFileItem]) -> Bool {
-        !files.contains { $0.kind == .base } && files.contains { $0.kind == .update && $0.layout == .container }
+    /// A NUP (nxnative 777a5f6c) or an extracted dump (pack_dump) with no base game: it has no v0, and the selected
+    /// update is taken as the whole game. An NSP update without its base cannot be built.
+    public static func isUpdateOnly(_ files: [GameFileItem]) -> Bool {
+        !files.contains { $0.kind == .base }
+            && files.contains { $0.kind == .update && ($0.layout == .container || $0.layout == .extracted) }
     }
 
     public static func requiresKeys(_ files: [GameFileItem]) -> Bool {
@@ -99,7 +100,7 @@ public enum SourceSelection {
     /// The base stays in; with no base game, the selected update stays in until another is chosen.
     public static func isLocked(_ file: GameFileItem, in files: [GameFileItem], selected: Set<UUID>) -> Bool {
         file.kind == .base
-            || (file.kind == .update && selected.contains(file.id) && isUpdateOnlyNUP(files))
+            || (file.kind == .update && selected.contains(file.id) && isUpdateOnly(files))
             || (file.kind == .dlc && files.contains {
             selected.contains($0.id) && $0.kind != .dlc && path($0) == path(file)
         })
@@ -123,7 +124,7 @@ public enum SourceSelection {
     /// With no base game, one update is always selected: the newest when none of the previous choices remains.
     private static func withRequiredUpdate(in files: [GameFileItem], selected: Set<UUID>) -> Set<UUID> {
         let updates = files.filter { $0.kind == .update }
-        guard isUpdateOnlyNUP(files), !updates.contains(where: { selected.contains($0.id) }),
+        guard isUpdateOnly(files), !updates.contains(where: { selected.contains($0.id) }),
               let newest = updates.max(by: { version($0) < version($1) }) else { return selected }
         return selected.union([newest.id])
     }

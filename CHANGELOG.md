@@ -2,6 +2,16 @@
 
 User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
+## 0.1.3.3 — 2026-11-05
+
+### Fixed
+
+- Extracted games (dumps) are recognised in every layout the engine accepts. Before, only a folder holding `base/exefs` and `base/romfs` worked, and choosing the `base` folder itself said "No NSP, XCI, NSZ, XCZ or NUP files were found in this folder". Now these work too:
+  - a folder with `exefs` and `romfs` directly in it (the `base` folder, or what `nup extract` writes); a `base` folder inside a dump with updates or DLC brings them along;
+  - a dump with only an update (`updates/<version>/`), played as the whole game like a NUP without a base game;
+  - a `base` with only its code, when an update has the RomFS.
+- A folder with no game says what NX Library looks for, extracted folders included.
+
 ## 0.1.3.2 — 2026-11-05
 
 ### Fixed
