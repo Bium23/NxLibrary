@@ -3,10 +3,19 @@
 # NX_VERSION sets the app version (default: the version in progress, from the VERSION file); NX_RELEASE=1
 # marks a release copy, the only kind that updates itself. scripts/release.sh sets both; a plain build sets
 # neither, so a development copy carries the version being worked on and says it is a development build.
+# A development copy is "NX Library Dev" (default ~/Applications/NXLibrary Dev.app), the maintainer's test copy,
+# beside the released "NX Library" that updates itself. Both keep the bundle ID local.nxlibrary, so they share the
+# library, keys and settings, and macOS runs only one of them at a time.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-APP="${1:-$HOME/Applications/NXLibrary.app}"
+if [ "${NX_RELEASE:-0}" = "1" ]; then
+  NAME="NX Library"
+  APP="${1:-$HOME/Applications/NX Library.app}"
+else
+  NAME="NX Library Dev"
+  APP="${1:-$HOME/Applications/NXLibrary Dev.app}"
+fi
 CONFIG="${NX_BUILD_CONFIG:-release}"
 VERSION="${NX_VERSION:-$(tr -d '[:space:]' < "$ROOT/VERSION")}"
 if ! [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,3}$ ]]; then
@@ -60,12 +69,12 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <plist version="1.0">
 <dict>
   <key>CFBundleDevelopmentRegion</key><string>en</string>
-  <key>CFBundleDisplayName</key><string>NX Library</string>
+  <key>CFBundleDisplayName</key><string>$NAME</string>
   <key>CFBundleExecutable</key><string>NXLibrary</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundleIdentifier</key><string>local.nxlibrary</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
-  <key>CFBundleName</key><string>NX Library</string>
+  <key>CFBundleName</key><string>$NAME</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
   <key>CFBundleVersion</key><string>1</string>

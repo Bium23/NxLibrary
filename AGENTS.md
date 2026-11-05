@@ -53,8 +53,10 @@ The user performs interactive app and game checks. Never use computer-use tools 
 ```bash
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 bash scripts/build_app.sh
-codesign --verify --deep --strict "$HOME/Applications/NXLibrary.app"
+codesign --verify --deep --strict "$HOME/Applications/NXLibrary Dev.app"
 ```
+
+Development builds install as **NX Library Dev** (`~/Applications/NXLibrary Dev.app`), the maintainer's only test copy. Never build over, replace or test in the released `~/Applications/NX Library.app`; it is the copy installed from GitHub and updates itself.
 
 Then verify the gate in **Settings → Engine**, build one real game, and launch it to a visible screen. Do not claim a build or game is working from compilation alone.
 
