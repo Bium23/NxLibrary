@@ -17,6 +17,15 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
     // Keep the persisted kind readable by older launchers during rollback.
     static let missingTicketDetail = "missing-common-ticket"
     private var isMissingTicket: Bool { kind == .keys && detail == Self.missingTicketDetail }
+    /// Damage `--allow-damaged` cannot get past (a filesystem's own tables, a cut-off package).
+    static let unreadableDamageDetail = "unreadable"
+    private var isUnreadableDamage: Bool { kind == .damagedNSP && detail == Self.unreadableDamageDetail }
+    /// The game lacks the language its Game options ask for; the detail names it ("missing-language:Japanese").
+    static let missingLanguagePrefix = "missing-language:"
+    private var missingLanguage: String? {
+        guard kind == .unknown, let detail, detail.hasPrefix(Self.missingLanguagePrefix) else { return nil }
+        return String(detail.dropFirst(Self.missingLanguagePrefix.count))
+    }
 
     public init(kind: Kind, detail: String? = nil) {
         self.kind = kind
@@ -55,7 +64,7 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
         case .driveMissing: return "A drive is not connected"
         case .cloudFolder: return "The library is in a cloud folder"
         case .noProfile: return "This game is not supported yet"
-        case .unknown: return "The porting stopped"
+        case .unknown: return missingLanguage == nil ? "The porting stopped" : "The game does not have this language"
         }
     }
 
@@ -67,7 +76,9 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
         case .cltSelected: return "The selected developer folder is the Command Line Tools, which cannot build the app."
         case .otherMetal: return "The shaders were tested with another Metal compiler than the one on this Mac."
         case .shaderRegression: return "Shaders that translated before fail with the engine's current translator."
-        case .damagedNSP: return "Some files of \(game) fail their hash check: an incomplete copy or a broken download."
+        case .damagedNSP: return isUnreadableDamage
+            ? "\(game)'s package is cut off or its own tables fail their hash check: an incomplete copy or a broken download."
+            : "Some files of \(game) fail their hash check: an incomplete copy or a broken download."
         case .a32Program: return "\(game) is a 32-bit ARM program, and nxnative runs only 64-bit games."
         case .keys: return isMissingTicket
             ? "The package has no common ticket needed to open \(game)."
@@ -84,7 +95,9 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
         case .noProfile:
             let at = detail.map { " (rewrite stopped at 0x\($0))" } ?? ""
             return "\(game) has no verified nxnative game profile\(at); the pinned engine does not support it yet."
-        case .unknown: return "The engine stopped without a message NX Library recognises."
+        case .unknown:
+            if let language = missingLanguage { return "\(game) has no \(language), the language set in its Game options." }
+            return "The engine stopped without a message NX Library recognises."
         }
     }
 
@@ -96,7 +109,9 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
         case .cltSelected: return "Open Setup and select Xcode."
         case .otherMetal: return "Install the certified compiler from Setup, or allow untested toolchains in Settings → Engine."
         case .shaderRegression: return "Port anyway to keep the broken shaders out, or wait for an engine update."
-        case .damagedNSP: return "Dump or download the game again, or port anyway with the damaged files as read."
+        case .damagedNSP: return isUnreadableDamage
+            ? "Dump or download the game again."
+            : "Dump or download the game again, or port anyway with the damaged files as read."
         case .a32Program: return "Nothing to fix here: this title cannot run."
         case .keys: return isMissingTicket
             ? "Export the complete game package again from your console, including its ticket."
@@ -111,14 +126,16 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
         case .driveMissing: return "Connect \(detail ?? "the drive"), then try again."
         case .cloudFolder: return "Move the library to a folder outside iCloud Drive."
         case .noProfile: return "Watch for an engine update that adds this game."
-        case .unknown: return "Open the log, or copy diagnostics for a bug report."
+        case .unknown:
+            if missingLanguage != nil { return "In Game options, set Language to Game Default or to one of the game's languages, then port again." }
+            return "Open the log, or copy diagnostics for a bug report."
         }
     }
 
     public var action: PortingFailureAction {
         switch kind {
         case .shaderRegression: return .portAnyway(flag: "--allow-shader-regressions")
-        case .damagedNSP: return .portAnyway(flag: "--allow-damaged")
+        case .damagedNSP: return isUnreadableDamage ? .none : .portAnyway(flag: "--allow-damaged")
         case .otherMetal: return .openEngineSettings
         case .translator, .cltSelected: return .openSetup
         case .keys: return isMissingTicket ? .none : .importKeys
@@ -156,6 +173,9 @@ public enum PortingFailureClassifier {
         ("shaders.regression", .shaderRegression, "a change to the translation chain broke them",
          "a change to the translation chain broke them"),
         ("nsp.damaged", .damagedNSP, "files fail the NCA's hash check", "files fail the NCA's hash check"),
+        ("nsp.tables", .damagedNSP, "own tables fail the NCA's hash check", "own tables fail the NCA's hash check"),
+        ("nsp.truncated", .damagedNSP, "truncated PFS0 (header|file-name table)", "truncated PFS0 "),
+        ("language.missing", .unknown, #"the game has no [A-Za-z-]+ \([^)]+\); its languages"#, "); its languages: "),
         ("arm32.program", .a32Program, "is a 32-bit ARM program", "is a 32-bit ARM program"),
         ("keys.missing", .keys, #"no such file: [^"\n]*prod\.keys"#, "no such file: "),
         ("keys.tooOld", .keysTooOld, #"prod\.keys has no [^\n]+the keys are older than the game"#,
@@ -203,6 +223,14 @@ public enum PortingFailureClassifier {
         switch kind {
         case .keys:
             return log.contains("the package has no common ticket for it") ? PortingFailureReason.missingTicketDetail : nil
+        case .damagedNSP:
+            let unreadable = log.contains("own tables fail the NCA's hash check") || log.contains("truncated PFS0 ")
+            return unreadable ? PortingFailureReason.unreadableDamageDetail : nil
+        case .unknown:
+            guard let r = log.range(of: #"the game has no [A-Za-z-]+ \([^)]+\)"#, options: .regularExpression),
+                  let open = log[r].firstIndex(of: "(") else { return nil }
+            let name = log[log.index(after: open)..<log.index(before: r.upperBound)]
+            return PortingFailureReason.missingLanguagePrefix + name
         case .keysTooOld:
             let prefix = "which came with firmware "
             // Package probes can fail before the final preflight reports the worst requirement.

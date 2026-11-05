@@ -24,7 +24,7 @@ codesign --verify --deep --strict "$HOME/Applications/NXLibrary.app"
 
 The default destination is `~/Applications/NXLibrary.app`. `build_app.sh` compiles the Release configuration, creates the bundle in staging, includes resources and notices, ad-hoc signs and verifies it, then installs it through the same atomic installer used by the application. It does not launch the app.
 
-A development copy carries the version in progress from the `VERSION` file at the repository root and shows it as "(development build)" in Settings; it has no release marker, so it never offers or installs app updates. `scripts/release.sh <version>` sets the released version itself. After a release, raise `VERSION` to the next version being worked on.
+A development copy carries the version in progress from the `VERSION` file at the repository root and shows it as "(development build)" in Settings; it has no release marker, so it never offers or installs app updates. `scripts/release.sh <version>` sets the released version itself and refuses to run unless `VERSION` already says that version. After a release, raise `VERSION` to the next version being worked on.
 
 An alternate destination can be supplied without replacing the installed development copy:
 
@@ -96,7 +96,7 @@ An upgrade requires reviewing the upstream delta and CLI, deciding which capabil
 
 ## Release packaging
 
-Use `scripts/release.sh` for releases. It requires a clean working tree, an unused version tag and a runtime that matches the lock. Commit or deliberately stash local work first; do not discard changes to satisfy the check.
+Use `scripts/release.sh` for releases. It requires a clean working tree, an unused version tag, a `VERSION` file that names the release and a runtime that matches the lock, and runs `swift test` and the publication checks' tests first. With `--publish` it also requires HEAD to be the pushed `origin/main`, so the tag always marks what players see on main. Commit or deliberately stash local work first; do not discard changes to satisfy the check.
 
 For example, to prepare a later release locally:
 

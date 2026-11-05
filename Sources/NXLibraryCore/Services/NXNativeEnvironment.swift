@@ -76,9 +76,10 @@ public final class NXNativeEnvironment {
             if !version.isEmpty, !Self.pythonAtLeast312(version) {
                 issues.append("venv Python \(version) is too old; nxnative needs Python 3.12+ for RomFS image builds (3.14 recommended)")
             }
-            let probe = run(pythonURL.path, ["-c", "import lz4.block, capstone, fontTools\nimport sys\ntry:\n import compression.zstd\nexcept ImportError:\n import backports.zstd"])
+            // The engine README's packages: zbic reads system 22.0.0+ code, nsz converts NSZ / XCZ files.
+            let probe = run(pythonURL.path, ["-c", "import lz4.block, capstone, fontTools, zbic, nsz\nimport sys\ntry:\n import compression.zstd\nexcept ImportError:\n import backports.zstd"])
             if probe.status != 0 {
-                issues.append("venv is missing lz4/capstone/fontTools or zstd (stdlib on Python 3.14, backports.zstd before)")
+                issues.append("Python is missing lz4/capstone/fontTools/zbic/nsz or zstd (stdlib on Python 3.14, backports.zstd before)")
             } else {
                 // nxnative's rewriter needs Capstone 5.x; Capstone 6 renamed the ARM64 names it uses.
                 let capstone = run(pythonURL.path, ["-c", "import capstone; print(capstone.cs_version()[0], capstone.__version__)"])
@@ -104,7 +105,8 @@ public final class NXNativeEnvironment {
 
         // A Mac build needs no xcodegen, and SPIRV-Cross is the engine's own in-repo build.
         var tools: [ToolStatus] = []
-        for tool in ["zstd", "glslangValidator"] {
+        // make builds the engine's Mac host (it comes with Xcode).
+        for tool in ["zstd", "glslangValidator", "make"] {
             let result = run("/usr/bin/env", [tool, "--version"])
             let ok = result.status == 0
             tools.append(ToolStatus(id: tool, name: tool, ok: ok,

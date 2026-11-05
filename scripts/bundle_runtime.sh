@@ -54,8 +54,9 @@ done
 [ "$i" -gt 0 ] || fail "runtime.lock lists no wheels."
 "$PY" -I -m pip install --disable-pip-version-check --no-deps --no-compile --require-hashes \
   --only-binary=:all: --target "$SITE" -r "$REQS"
-# The runtime is read-only: no pip inside it.
-rm -rf "$SITE"/pip "$SITE"/pip-*.dist-info "$STAGE"/python/bin/pip*
+# The runtime is read-only: no pip inside it. Console scripts (nsz, ttx…) are not used (the engine runs
+# modules with the bundled python) and their shebangs name this Mac's staging folder.
+rm -rf "$SITE"/pip "$SITE"/pip-*.dist-info "$STAGE"/python/bin/pip* "$SITE"/bin
 
 # 4b. Source of the GPL wheels (zbic), shipped beside them as GPLv2 section 3(a) asks.
 mkdir -p "$STAGE/sources"

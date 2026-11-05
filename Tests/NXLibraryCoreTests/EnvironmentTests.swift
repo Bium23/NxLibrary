@@ -84,7 +84,8 @@ final class EnvironmentTests: XCTestCase {
         XCTAssertTrue(runner.calls.contains("env glslangValidator --version"))
         XCTAssertTrue(runner.calls.contains("env dotnet --list-sdks"))
         XCTAssertFalse(runner.calls.contains { $0.contains("xcodegen") || $0.contains("spirv-cross") })
-        XCTAssertEqual(status.tools.map(\.id), ["zstd", "glslangValidator"])
+        XCTAssertTrue(runner.calls.contains("env make --version"))
+        XCTAssertEqual(status.tools.map(\.id), ["zstd", "glslangValidator", "make"])
         XCTAssertTrue(runner.environments.contains {
             $0?["PATH"]?.hasPrefix(EngineToolchain.standardPath) == true
         })

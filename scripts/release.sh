@@ -42,6 +42,18 @@ if [ "$PUBLISH" = "1" ]; then
 fi
 [ -z "$(git status --porcelain)" ] || fail "the working tree has changes; commit or stash them first"
 if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then fail "the tag $TAG already exists"; fi
+[ "$(tr -d '[:space:]' < "$ROOT/VERSION")" = "$VERSION" ] || fail "VERSION says $(tr -d '[:space:]' < "$ROOT/VERSION"); set it to $VERSION first"
+if [ "$PUBLISH" = "1" ]; then
+  # The tag goes on what players can see: the tip of the pushed main branch.
+  git fetch -q origin main
+  [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] \
+    || fail "HEAD is not origin/main; merge the release into main and push it first"
+fi
+# Every release is tested from its own tree.
+DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}" swift test --package-path "$ROOT" \
+  || fail "swift test failed"
+(cd "$ROOT" && python3 -m unittest discover -s Tests/PublicationChecks >/dev/null 2>&1) \
+  || fail "the publication checks' tests failed (python3 -m unittest discover -s Tests/PublicationChecks)"
 [ -d "$ROOT/work/Runtime" ] || fail "no work/Runtime: run scripts/bundle_runtime.sh first (a release carries its Python and tools)"
 python3 "$ROOT/scripts/check_publication.py" --runtime "$ROOT/work/Runtime"
 

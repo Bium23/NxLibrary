@@ -12,6 +12,9 @@ final class PortingFailureReasonTests: XCTestCase {
         ("metal.other", .otherMetal, "[RED] this Mac's Metal compiler is not the one the shaders were tested with (dm/gfx/tools/dmsh_chain.lock): 32023.999"),
         ("shaders.regression", .shaderRegression, "[RED] 12 shaders that translated in b-abc fail in b-def: a change to the translation chain broke them"),
         ("nsp.damaged", .damagedNSP, "[RED] 3 files fail the NCA's hash check (an incomplete copy or a broken download); copy or download it again, or pass --allow-damaged"),
+        ("nsp.tables", .damagedNSP, "[RED] the NSP is damaged: a filesystem's own tables fail the NCA's hash check, so --allow-damaged cannot read it either: an incomplete copy or a broken download, which a SHA-256 of each NCA shows (its file name is the hash's first 16 bytes); copy or download it again"),
+        ("nsp.truncated", .damagedNSP, "[RED] truncated PFS0 header: Example.nsp"),
+        ("language.missing", .unknown, "[RED] the game has no ja (Japanese); its languages: en-US (American English), fr (French) (--language / LANGUAGE)"),
         ("arm32.program", .a32Program, "[RED] Mario Kart 8 Deluxe v0 (1.0.0) is a 32-bit ARM program, which nxnative does not run"),
         ("keys.missing", .keys, "[RED] no such file: /Users/x/prod.keys"),
         ("keys.tooOld", .keysTooOld, "[RED] Example.nsp: prod.keys has no key_area_key_application_14 (master key 14, which came with firmware 21.0.0): the keys are older than the game; dump prod.keys again from a console on firmware 21.0.0 or later"),
@@ -162,6 +165,28 @@ final class PortingFailureReasonTests: XCTestCase {
         XCTAssertEqual(classify(earlier + "\n" + final).detail, "21.0.0")
         let future = final.replacingOccurrences(of: "which came with firmware 21.0.0", with: "which came with a firmware after 21.0.0")
         XCTAssertNil(classify(earlier + "\n" + future).detail)
+    }
+
+    func testMissingLanguageNamesItAndPointsToGameOptions() {
+        let line = Self.engineLines.first { $0.id == "language.missing" }!.line
+        let reason = classify(#"{"ev":"say","msg":""# + line + #""}"#)
+        XCTAssertEqual(reason.kind, .unknown, "an older launcher still reads the saved kind")
+        XCTAssertEqual(reason.title, "The game does not have this language")
+        XCTAssertTrue(reason.what(game: "Game").contains("Japanese"))
+        XCTAssertTrue(reason.next.contains("Game Default"))
+        XCTAssertEqual(reason.action, .none)
+        XCTAssertEqual(PortingFailureReason(kind: .unknown).title, "The porting stopped")
+    }
+
+    func testDamageThatAllowDamagedCannotReadOffersNoPortAnyway() {
+        for id in ["nsp.tables", "nsp.truncated"] {
+            let reason = classify(Self.engineLines.first { $0.id == id }!.line)
+            XCTAssertEqual(reason.kind, .damagedNSP, id)
+            XCTAssertEqual(reason.action, .none, id)
+            XCTAssertFalse(reason.next.contains("port anyway"), id)
+        }
+        let files = classify(Self.engineLines.first { $0.id == "nsp.damaged" }!.line)
+        XCTAssertEqual(files.action, .portAnyway(flag: "--allow-damaged"))
     }
 
     func testMissingTicketDoesNotSuggestReplacingKeysOrPortAnyway() {
