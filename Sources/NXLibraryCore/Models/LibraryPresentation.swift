@@ -25,7 +25,7 @@ public struct LibraryPresentation: Equatable {
         self.lastPlayed = Self.relative(lastPlayed, now: now)
         platform = "nxnative"
         console = game.consoleName
-        sourcesDetached = !game.sources.contains { $0.type == .base }
+        sourcesDetached = !SourceSelection.hasGame(game.sources)
         summary = (metadata?.description ?? "")
             .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)

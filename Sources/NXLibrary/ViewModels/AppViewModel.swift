@@ -242,8 +242,8 @@ public final class AppViewModel: ObservableObject {
     
     public var canAddSelectedGame: Bool {
         guard !isBuilding, !isScanningGameFolder, let game = selectedGame else { return false }
-        return game.hasBase
-            && selectedSources.contains(where: { $0.type == .base })
+        return game.hasGame
+            && SourceSelection.hasGame(selectedSources)
             && selectedSourcesSizeBytes > 0
             && !isAddDiskSpaceLow
     }
@@ -1144,13 +1144,13 @@ public final class AppViewModel: ObservableObject {
             DispatchQueue.main.async {
                 guard let self else { return }
                 self.isScanningGameFolder = false
-                guard let match, let base = match.base else {
+                guard let match, match.hasGame else {
                     if case .failure(let error) = outcome { self.alertMessage = error.localizedDescription }
                     else { self.alertMessage = "No base, update or DLC files for \(game.name) were found in that folder." }
                     self.logs.append(LogEntry(level: .warning, message: self.alertMessage!))
                     return
                 }
-                var selected = [base]
+                var selected = [match.base].compactMap { $0 }
                 if let newest = match.updates.max(by: {
                     ($0.version ?? -1) < ($1.version ?? -1)
                 }) {
@@ -2031,7 +2031,7 @@ public final class AppViewModel: ObservableObject {
               isNxnativeValid,
               environmentStatus?.canBuild == true,
               !game.sources.isEmpty,
-              game.sources.contains(where: { $0.kind == .base }),
+              SourceSelection.hasGame(game.sources),
               game.sources.allSatisfy({ FileManager.default.fileExists(atPath: $0.url.path) }) else {
             return false
         }
@@ -2178,21 +2178,17 @@ public final class AppViewModel: ObservableObject {
             return
         }
         let files = selectedSources
-        guard let baseFile = files.first(where: { $0.type == .base }),
-              let baseSource = Self.detectedSource(from: baseFile),
-              let baseTitleId = UInt64(selection.titleId ?? "", radix: 16) else {
-            presentBuildError(NXLibraryError.baseRequired)
-            return
-        }
         let sources = files.compactMap(Self.detectedSource(from:))
-        guard sources.contains(where: { $0.kind == .base }) else {
+        // A NUP with no base game has only its updates: the selected one is taken as the whole game.
+        guard SourceSelection.hasGame(files),
+              let baseTitleId = UInt64(selection.titleId ?? "", radix: 16) else {
             presentBuildError(NXLibraryError.baseRequired)
             return
         }
         var detected = DetectedGame(
             baseTitleId: baseTitleId,
             name: selection.name,
-            base: baseSource,
+            base: sources.first(where: { $0.kind == .base }),
             updates: sources.filter { $0.kind == .update },
             dlcs: sources.filter { $0.kind == .dlc }
         )
@@ -2234,16 +2230,14 @@ public final class AppViewModel: ObservableObject {
     @discardableResult
     public func addGame(detected: DetectedGame, selected: [DetectedSource],
                         folder: URL?, bundleId: String? = nil) throws -> PortedGame {
-        guard let base = selected.first(where: { $0.kind == .base }) else {
-            throw NXLibraryError.baseRequired
-        }
         let selectedGame = DetectedGame(
             baseTitleId: detected.baseTitleId,
             name: detected.name,
-            base: base,
+            base: selected.first(where: { $0.kind == .base }),
             updates: selected.filter { $0.kind == .update },
             dlcs: selected.filter { $0.kind == .dlc }
         )
+        guard selectedGame.hasGame else { throw NXLibraryError.baseRequired }
         let mode: WorkspaceMode = folder.map { .folder($0) } ?? .staged
         let workspace = try workspaceManager.makeWorkspace(for: selectedGame, mode: mode)
         let titleId = String(format: "%016llX", detected.baseTitleId)
@@ -2296,7 +2290,7 @@ public final class AppViewModel: ObservableObject {
             throw NXLibraryError.missingTitleId
         }
         guard !target.sources.isEmpty,
-              target.sources.contains(where: { $0.kind == .base }),
+              SourceSelection.hasGame(target.sources),
               target.sources.allSatisfy({ FileManager.default.fileExists(atPath: $0.url.path) }) else {
             throw NXLibraryError.missingSources
         }
@@ -2795,15 +2789,15 @@ public final class AppViewModel: ObservableObject {
                                   version: version, sizeBytes: item.sizeBytes, layout: item.layout,
                                   requiresTitleSelection: item.requiresTitleSelection == true)
         }
-        guard let base = sources.first(where: { $0.kind == .base }) else {
-            throw NXLibraryError.baseRequired
-        }
         guard let titleId = game.titleId.flatMap({ UInt64($0, radix: 16) }) else {
             throw NXLibraryError.missingTitleId
         }
-        return DetectedGame(baseTitleId: titleId, name: game.name, base: base,
-                            updates: sources.filter { $0.kind == .update },
-                            dlcs: sources.filter { $0.kind == .dlc })
+        let detected = DetectedGame(baseTitleId: titleId, name: game.name,
+                                    base: sources.first(where: { $0.kind == .base }),
+                                    updates: sources.filter { $0.kind == .update },
+                                    dlcs: sources.filter { $0.kind == .dlc })
+        guard detected.hasGame else { throw NXLibraryError.baseRequired }
+        return detected
     }
 
     private static func detectedSource(from file: GameFileItem) -> DetectedSource? {

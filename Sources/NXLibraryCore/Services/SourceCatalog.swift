@@ -32,6 +32,8 @@ public struct DetectedGame: Identifiable, Equatable {
     public var updates: [DetectedSource]
     public var dlcs: [DetectedSource]
     public var allSources: [DetectedSource] { [base].compactMap { $0 } + updates + dlcs }
+    /// A base game, or an update of a NUP with no base game (the engine takes it as the whole game).
+    public var hasGame: Bool { base != nil || updates.contains { $0.layout == .container } }
     public var totalSizeBytes: Int64 {
         var seen = Set<String>()
         return allSources.reduce(0) { total, source in

@@ -21,7 +21,7 @@ public enum GameUnavailableReason: Equatable {
 
 public enum GameResourceState {
     public static func sourcesAvailable(for game: PortedGame, fileManager: FileManager = .default) -> Bool {
-        game.sources.contains { $0.type == .base }
+        SourceSelection.hasGame(game.sources)
             && game.sources.allSatisfy { fileManager.fileExists(atPath: $0.url.path) }
     }
 
