@@ -10,8 +10,12 @@ public enum SpotlightFocusArea: Hashable {
     case actions
     /// More like this.
     case more
+    /// The Mods band, between the screenshots and About this game.
+    case mods
     /// The Activity card's top-game tiles.
     case topGames
+    /// The Mods card's store, below the card; `ModStoreFocus` moves inside it.
+    case store
 }
 
 /// A tile lifted off the row to be moved. `order` is the working order (item
@@ -41,6 +45,7 @@ public struct SpotlightState: Equatable {
     /// Pills on screen now: one while a game ports, otherwise `pillCount`.
     public private(set) var pillLimit = SpotlightState.pillCount
     public var moreIndex = 0
+    public var modsIndex = 0
     /// Non-nil while a tile is lifted for moving.
     public var lift: SpotlightLift?
     /// The starting tab is applied once per app session, on the first visit.
@@ -105,6 +110,7 @@ public struct SpotlightState: Equatable {
         topGameIndex = 0
         actionIndex = 0
         moreIndex = 0
+        modsIndex = 0
     }
 
     /// Moves the row selection, clamped to the ends. Returns whether it moved.
@@ -142,14 +148,15 @@ public struct SpotlightState: Equatable {
         topGameIndex = 0
         actionIndex = 0
         moreIndex = 0
+        modsIndex = 0
     }
 
-    /// Down: row → pills (games only) → strip → Build & Sources (row by row) →
+    /// Down: row → pills (games only) → strip → Build & Sources (row by row) → Mods (row by row) →
     /// More like this, skipping whatever is empty.
     @discardableResult
     public mutating func moveDown(selectedIsGame: Bool, screenshotCount: Int,
                                   selectedIsActivity: Bool = false, topGameCount: Int = 0,
-                                  actionCount: Int = 0, moreCount: Int = 0) -> Bool {
+                                  actionCount: Int = 0, moreCount: Int = 0, modsCount: Int = 0) -> Bool {
         switch focus {
         case .row:
             if selectedIsActivity {
@@ -169,26 +176,41 @@ public struct SpotlightState: Equatable {
                 stripIndex = min(stripIndex, screenshotCount - 1)
                 return true
             }
-            return enterActions(actionCount: actionCount, moreCount: moreCount)
+            return enterActions(actionCount: actionCount, moreCount: moreCount, modsCount: modsCount)
         case .strip:
-            return enterActions(actionCount: actionCount, moreCount: moreCount)
+            return enterActions(actionCount: actionCount, moreCount: moreCount, modsCount: modsCount)
         case .actions:
             if let below = Self.actionBelow(actionIndex, count: actionCount) {
                 actionIndex = below
                 return true
             }
-            guard moreCount > 0 else { return false }
-            focus = .more
-            moreIndex = 0
-            return true
+            return enterMods(modsCount: modsCount, moreCount: moreCount)
         case .about:
-            guard moreCount > 0 else { return false }
-            focus = .more
-            moreIndex = 0
-            return true
-        case .more, .topGames:
+            return enterMods(modsCount: modsCount, moreCount: moreCount)
+        case .mods:
+            if let below = ModsBandLayout.below(modsIndex, count: modsCount) {
+                modsIndex = below
+                return true
+            }
+            return enterMore(moreCount: moreCount)
+        case .more, .topGames, .store:
             return false
         }
+    }
+
+    /// Down into the Mods grid lands on its first row, in the column it had.
+    private mutating func enterMods(modsCount: Int, moreCount: Int) -> Bool {
+        guard modsCount > 0 else { return enterMore(moreCount: moreCount) }
+        focus = .mods
+        modsIndex = ModsBandLayout.entryFromAbove(modsIndex, count: modsCount)
+        return true
+    }
+
+    private mutating func enterMore(moreCount: Int) -> Bool {
+        guard moreCount > 0 else { return false }
+        focus = .more
+        moreIndex = 0
+        return true
     }
 
     /// The action under `index` in the next row; above a short last row's gap, its last action.
@@ -198,50 +220,68 @@ public struct SpotlightState: Equatable {
         return index < lastRowStart ? count - 1 : nil
     }
 
-    private mutating func enterActions(actionCount: Int, moreCount: Int) -> Bool {
-        if actionCount > 0 {
-            focus = .actions
-            actionIndex = 0
-            return true
-        }
-        guard moreCount > 0 else { return false }
-        focus = .more
-        moreIndex = 0
+    private mutating func enterActions(actionCount: Int, moreCount: Int, modsCount: Int) -> Bool {
+        guard actionCount > 0 else { return enterMods(modsCount: modsCount, moreCount: moreCount) }
+        focus = .actions
+        actionIndex = 0
         return true
     }
 
-    /// Up: More like this → Build & Sources (row by row) → strip → pills → row.
+    /// Up: More like this → Mods (row by row) → Build & Sources (row by row) → strip → pills → row.
     @discardableResult
-    public mutating func moveUp(screenshotCount: Int = 1, actionCount: Int = 0) -> Bool {
+    public mutating func moveUp(screenshotCount: Int = 1, actionCount: Int = 0, modsCount: Int = 0) -> Bool {
+        let aboveActions: SpotlightFocusArea = screenshotCount > 0 ? .strip : .pills
         switch focus {
         case .row: return false
-        case .pills, .topGames: focus = .row
+        case .pills, .topGames, .store: focus = .row
         case .strip: focus = .pills
         case .about:
-            focus = screenshotCount > 0 ? .strip : .pills
+            focus = aboveActions
         case .actions:
             if actionIndex >= Self.actionColumns {
                 actionIndex -= Self.actionColumns
             } else {
-                focus = screenshotCount > 0 ? .strip : .pills
+                focus = aboveActions
+            }
+        case .mods:
+            if let above = ModsBandLayout.above(modsIndex) {
+                modsIndex = above
+            } else {
+                enterLastActionRow(actionCount: actionCount, otherwise: aboveActions)
             }
         case .more:
-            if actionCount > 0 {
-                focus = .actions
-                actionIndex = ((actionCount - 1) / Self.actionColumns) * Self.actionColumns
+            if modsCount > 0 {
+                // Up into the Mods grid lands on its last row, in the column it had.
+                focus = .mods
+                modsIndex = ModsBandLayout.entryFromBelow(modsIndex, count: modsCount)
             } else {
-                focus = screenshotCount > 0 ? .strip : .pills
+                enterLastActionRow(actionCount: actionCount, otherwise: aboveActions)
             }
         }
         return true
+    }
+
+    /// Up into Build & Sources lands on its last row's first action.
+    private mutating func enterLastActionRow(actionCount: Int, otherwise: SpotlightFocusArea) {
+        guard actionCount > 0 else {
+            focus = otherwise
+            return
+        }
+        focus = .actions
+        actionIndex = ((actionCount - 1) / Self.actionColumns) * Self.actionColumns
     }
 
     /// Left/Right inside the pills, the strip, Build & Sources or More like this.
     /// Left of Build & Sources' first column is Read more, when `readMore`.
     @discardableResult
     public mutating func moveSideways(by delta: Int, screenshotCount: Int, topGameCount: Int = 0,
-                                      actionCount: Int = 0, moreCount: Int = 0, readMore: Bool = false) -> Bool {
+                                      actionCount: Int = 0, moreCount: Int = 0, readMore: Bool = false,
+                                      modsCount: Int = 0) -> Bool {
         switch focus {
+        case .mods:
+            guard let next = ModsBandLayout.beside(modsIndex, by: delta, count: modsCount) else { return false }
+            modsIndex = next
+            return true
         case .about:
             guard delta > 0, actionCount > 0 else { return false }
             focus = .actions
@@ -263,7 +303,7 @@ public struct SpotlightState: Equatable {
             let next = min(max(moreIndex + delta, 0), moreCount - 1)
             defer { moreIndex = next }
             return next != moreIndex
-        case .row:
+        case .row, .store:
             return false
         case .pills:
             let next = min(max(pillIndex + delta, 0), pillLimit - 1)

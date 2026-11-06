@@ -17,6 +17,8 @@ struct SpotlightCardInfoView: View {
     let focusedTop: Int?
     let artwork: ArtworkStore
     let onTopGame: (Int) -> Void
+    /// The Mods card: working mods found so far and the games they are for.
+    var modCounts: (mods: Int, games: Int, looking: Bool)? = nil
 
     /// Monday first, whatever the locale (matches `Activity.summary`).
     private static let dayLetters = ["M", "T", "W", "T", "F", "S", "S"]
@@ -46,6 +48,7 @@ struct SpotlightCardInfoView: View {
         case .collection: return "Collection"
         case .surprise: return "Surprise me"
         case .activity: return "Activity"
+        case .mods: return "Mods"
         case .addGame: return "Add a game"
         }
     }
@@ -55,6 +58,7 @@ struct SpotlightCardInfoView: View {
         case .collection: return "Every game in your library, in one row."
         case .surprise: return "Can't decide? Pick a game for me."
         case .activity: return "What you played this week."
+        case .mods: return "Mods that work with your games, from GameBanana."
         case .addGame: return "Build a game from your own dumps."
         }
     }
@@ -63,7 +67,8 @@ struct SpotlightCardInfoView: View {
         switch card {
         case .collection: return "Open"
         case .surprise: return "Pick"
-        case .activity: return nil
+        // Activity and Mods have no button here: the hint in the corner says it once.
+        case .activity, .mods: return nil
         case .addGame: return "Add"
         }
     }
@@ -81,6 +86,16 @@ struct SpotlightCardInfoView: View {
             stat("PICKS FROM", poolLabel)
         case .activity:
             activityDetail
+        case .mods:
+            if let counts = modCounts, counts.mods > 0 {
+                HStack(spacing: canvas.u(26)) {
+                    stat("MODS", "\(counts.mods)")
+                    divider
+                    stat("FOR", counts.games == 1 ? "1 game" : "\(counts.games) games")
+                }
+            } else {
+                stat("MODS", modCounts?.looking == false ? "None yet" : "Looking…")
+            }
         case .addGame:
             EmptyView()
         }

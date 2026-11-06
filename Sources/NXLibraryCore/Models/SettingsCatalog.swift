@@ -61,7 +61,7 @@ public enum SettingsCatalog {
 
         // Spotlight
         row("spotlightCards", .spotlight, "Cards",
-            "Which cards sit in the Spotlight row: Collection, Surprise me, Activity and Add game.") { $0.spotlightCards },
+            "Which cards sit in the Spotlight row: Collection, Surprise me, Activity, Mods and Add game.") { $0.visibleSpotlightCards },
         row("startingTab", .spotlight, "Starting tab",
             "The filter Spotlight and Collection open on.") { $0.startingTab },
         row("spotlightOrder", .spotlight, "Tile order",

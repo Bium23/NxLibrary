@@ -223,11 +223,13 @@ public struct GameBananaModSummary: Decodable, Equatable, Sendable {
     public let likes: Int
     public let dateAdded: Date?
     public let dateUpdated: Date?
+    /// The root category's name in the game ("Skins", "Maps"…).
+    public let rootCategory: String
 
     public init(id: Int, name: String, profileURL: URL? = nil, version: String = "", isObsolete: Bool = false,
                 hasContentRatings: Bool = false, images: [GameBananaImage] = [],
                 submitter: GameBananaSubmitter = GameBananaSubmitter(name: ""), likes: Int = 0,
-                dateAdded: Date? = nil, dateUpdated: Date? = nil) {
+                dateAdded: Date? = nil, dateUpdated: Date? = nil, rootCategory: String = "") {
         self.id = id
         self.name = name
         self.profileURL = profileURL
@@ -239,6 +241,7 @@ public struct GameBananaModSummary: Decodable, Equatable, Sendable {
         self.likes = likes
         self.dateAdded = dateAdded
         self.dateUpdated = dateUpdated
+        self.rootCategory = rootCategory
     }
 
     public init(from decoder: Decoder) throws {
@@ -254,6 +257,7 @@ public struct GameBananaModSummary: Decodable, Equatable, Sendable {
         likes = c.value("_nLikeCount", 0)
         dateAdded = c.date("_tsDateAdded")
         dateUpdated = c.date("_tsDateUpdated")
+        rootCategory = (try? c.nestedContainer(keyedBy: AnyKey.self, forKey: AnyKey("_aRootCategory")))?.value("_sName", "") ?? ""
     }
 }
 

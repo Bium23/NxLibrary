@@ -291,6 +291,92 @@ final class SpotlightLiftTests: XCTestCase {
         XCTAssertEqual(s.focus, .strip)
     }
 
+    func testModsBandSitsBetweenTheActionsAndMoreLikeThis() {
+        // Seven actions in rows of three: 0 1 2 / 3 4 5 / 6.
+        var s = SpotlightState(selectedKey: "game:x", focus: .strip)
+        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 7, moreCount: 2, modsCount: 4))
+        XCTAssertEqual(s.focus, .actions)
+        s.actionIndex = 6
+        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 7, moreCount: 2, modsCount: 4))
+        XCTAssertEqual(s.focus, .mods)
+        XCTAssertEqual(s.modsIndex, 0)
+        for _ in 0..<3 { XCTAssertTrue(s.moveSideways(by: 1, screenshotCount: 3, actionCount: 7, moreCount: 2, modsCount: 4)) }
+        XCTAssertEqual(s.modsIndex, 3)
+        XCTAssertFalse(s.moveSideways(by: 1, screenshotCount: 3, actionCount: 7, moreCount: 2, modsCount: 4))
+        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 7, moreCount: 2, modsCount: 4))
+        XCTAssertEqual(s.focus, .more)
+        XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 7, modsCount: 4))
+        XCTAssertEqual(s.focus, .mods)
+        XCTAssertEqual(s.modsIndex, 3)
+        XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 7, modsCount: 4))
+        XCTAssertEqual(s.focus, .actions)
+        XCTAssertEqual(s.actionIndex, 6)
+        // Read more goes down to the band too.
+        s.focus = .about
+        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 7, moreCount: 2, modsCount: 4))
+        XCTAssertEqual(s.focus, .mods)
+    }
+
+    func testModsBandWithoutScreenshotsOrActions() {
+        var s = SpotlightState(selectedKey: "game:x", focus: .pills)
+        XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 0, actionCount: 0, moreCount: 0, modsCount: 1))
+        XCTAssertEqual(s.focus, .mods)
+        XCTAssertFalse(s.moveDown(selectedIsGame: true, screenshotCount: 0, actionCount: 0, moreCount: 0, modsCount: 1))
+        XCTAssertTrue(s.moveUp(screenshotCount: 0, actionCount: 0, modsCount: 1))
+        XCTAssertEqual(s.focus, .pills)
+        s.focus = .more
+        XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 0, modsCount: 1))
+        XCTAssertEqual(s.focus, .mods)
+        XCTAssertTrue(s.moveUp(screenshotCount: 3, actionCount: 0, modsCount: 1))
+        XCTAssertEqual(s.focus, .strip)
+    }
+
+    func testModsGridMovesByRowsAndLeavesFromItsEdges() {
+        // Fourteen tiles, six to a row: 0-5 / 6-11 / 12-13.
+        XCTAssertEqual(ModsBandLayout.columns, 6)
+        let down = { (s: inout SpotlightState) in s.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 1, moreCount: 2, modsCount: 14) }
+        let up = { (s: inout SpotlightState) in s.moveUp(screenshotCount: 3, actionCount: 1, modsCount: 14) }
+        let side = { (s: inout SpotlightState, d: Int) in s.moveSideways(by: d, screenshotCount: 3, actionCount: 1, moreCount: 2, modsCount: 14) }
+        var s = SpotlightState(selectedKey: "game:x", focus: .mods)
+        s.modsIndex = 5
+        XCTAssertFalse(side(&s, 1), "Right stops at the row's end")
+        XCTAssertTrue(down(&s))
+        XCTAssertEqual(s.modsIndex, 11)
+        XCTAssertTrue(down(&s), "above the short last row's gap, its last tile")
+        XCTAssertEqual(s.modsIndex, 13)
+        XCTAssertTrue(side(&s, -1))
+        XCTAssertFalse(side(&s, -1), "Left stops at the row's start")
+        XCTAssertEqual(s.modsIndex, 12)
+        XCTAssertTrue(up(&s))
+        XCTAssertEqual(s.modsIndex, 6)
+        XCTAssertTrue(down(&s))
+        XCTAssertTrue(down(&s), "Down from the last row leaves the band")
+        XCTAssertEqual(s.focus, .more)
+        // Back up lands on the last row, in the column it had; Up from the first row leaves the band.
+        XCTAssertTrue(up(&s))
+        XCTAssertEqual(s.focus, .mods)
+        XCTAssertEqual(s.modsIndex, 12)
+        s.modsIndex = 3
+        XCTAssertTrue(up(&s))
+        XCTAssertEqual(s.focus, .actions)
+        // Down into the band from above lands on its first row, in the column it had.
+        XCTAssertTrue(down(&s))
+        XCTAssertEqual(s.focus, .mods)
+        XCTAssertEqual(s.modsIndex, 3)
+        s.modsIndex = 9
+        s.focus = .actions
+        XCTAssertTrue(down(&s))
+        XCTAssertEqual(s.modsIndex, 3)
+    }
+
+    func testSelectingAnotherGameResetsTheModsTile() {
+        var s = SpotlightState(selectedKey: "game:x", focus: .mods)
+        s.modsIndex = 2
+        s.select(.game(UUID()))
+        XCTAssertEqual(s.modsIndex, 0)
+        XCTAssertEqual(s.focus, .row)
+    }
+
     func testStripKeepsItsTileAcrossTheBands() {
         var s = SpotlightState(selectedKey: "game:x", focus: .strip, stripIndex: 4)
         XCTAssertTrue(s.moveDown(selectedIsGame: true, screenshotCount: 6, actionCount: 7))

@@ -18,10 +18,13 @@ public struct AvailableMod: Equatable, Identifiable, Sendable {
     public let downloads: Int
     /// The files that work, newest first.
     public let files: [GameBananaFile]
+    /// GameBanana's root category for the mod in its game ("Skins", "Maps"…); empty when unknown.
+    public let category: String
+    public let added: Date?
 
     public init(id: Int, rank: Int, name: String, author: String, avatarURL: URL?, images: [URL], thumbnailURL: URL?,
                 version: String, updated: Date, pageURL: URL, description: String, likes: Int, downloads: Int,
-                files: [GameBananaFile]) {
+                files: [GameBananaFile], category: String = "", added: Date? = nil) {
         self.id = id
         self.rank = rank
         self.name = name
@@ -36,6 +39,8 @@ public struct AvailableMod: Equatable, Identifiable, Sendable {
         self.likes = likes
         self.downloads = downloads
         self.files = files
+        self.category = category
+        self.added = added
     }
 }
 
@@ -121,7 +126,8 @@ public struct AvailableModsFinder: Sendable {
             pageURL: profile.profileURL ?? summary.profileURL ?? URL(string: "https://gamebanana.com/mods/\(profile.id)")!,
             description: GameBananaAPI.plainText(fromHTML: profile.text),
             likes: max(profile.likes, summary.likes), downloads: profile.downloads,
-            files: files.sorted { ($0.dateAdded ?? .distantPast) > ($1.dateAdded ?? .distantPast) })
+            files: files.sorted { ($0.dateAdded ?? .distantPast) > ($1.dateAdded ?? .distantPast) },
+            category: summary.rootCategory, added: profile.dateAdded ?? summary.dateAdded)
     }
 }
 

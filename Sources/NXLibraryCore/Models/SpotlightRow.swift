@@ -1,13 +1,14 @@
 import Foundation
 
 public enum SpotlightCard: String, Codable, CaseIterable {
-    case collection, surprise, activity, addGame
+    case collection, surprise, activity, mods, addGame
 
     public var title: String {
         switch self {
         case .collection: return "Collection"
         case .surprise: return "Surprise me"
         case .activity: return "Activity"
+        case .mods: return "Mods"
         case .addGame: return "Add Game"
         }
     }
@@ -17,6 +18,7 @@ public enum SpotlightCard: String, Codable, CaseIterable {
         case .collection: return .collections
         case .surprise: return .casino
         case .activity: return .timeline
+        case .mods: return .puzzle
         case .addGame: return .add
         }
     }

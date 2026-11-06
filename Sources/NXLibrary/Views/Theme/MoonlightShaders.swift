@@ -15,7 +15,10 @@ struct Uniforms {
     float4 size;    // width px, height px, time s, aspect
     float4 accent;  // rgb, overall strength
     float4 ink;     // rgb, unused
-    float4 look;    // breath 0...1, unused...
+    float4 look;    // breath 0...1, presence 0...1 (the whole layer's opacity), unused...
+    float4 tintTop;     // the Mods card's ground: top rgb, amount 0...1
+    float4 tintMid;     // rgb at 0.45 of the height
+    float4 tintBottom;  // rgb at the bottom
 };
 
 struct Particle { float start, lane, depth, speed, size, phase, kind, tint; };
@@ -151,7 +154,15 @@ fragment float4 moon_light_fragment(FullOut in [[stage_in]], constant Uniforms &
     c *= u.accent.w;
     // Dither so the dark gradients never band.
     c += (hash21(in.position.xy + fract(t)) - 0.5) / 255.0;
-    return premultiplied(c);
+    float4 light = premultiplied(c);
+    // The Mods card's ground under the light, as opaque as `amount`: drawn here, on the render thread, so it
+    // glides in step with the accent and costs a few operations per pixel of a pass that runs anyway.
+    float amount = u.tintTop.w;
+    if (amount <= 0.0) { return light * u.look.y; }
+    float y = in.position.y / u.size.y;
+    float3 ground = y < 0.45 ? mix(u.tintTop.rgb, u.tintMid.rgb, y / 0.45)
+                             : mix(u.tintMid.rgb, u.tintBottom.rgb, (y - 0.45) / 0.55);
+    return float4(min(ground * amount + light.rgb, 1.0), amount + light.a * (1.0 - amount)) * u.look.y;
 }
 
 // MARK: Motes
@@ -243,7 +254,7 @@ vertex DotOut moon_dot_vertex(uint vid [[vertex_id]], uint iid [[instance_id]],
     o.local = corner * extent;
     o.radius = radius;
     // Motes finer than a pixel draw at a pixel, dimmer.
-    o.alpha = place.life * spread * far * twinkle * bright * u.accent.w * clamp(sharp / 0.9, 0.3, 1.0);
+    o.alpha = place.life * spread * far * twinkle * bright * u.accent.w * u.look.y * clamp(sharp / 0.9, 0.3, 1.0);
     o.bokeh = smoothstep(2.5, 12.0, blur);
     o.color = q.tint > 0.5 ? mix(u.ink.rgb, u.accent.rgb, 0.25) : mix(u.accent.rgb, float3(1.0), 0.3);
     return o;

@@ -10,8 +10,7 @@ extension GameDetailView {
 
     func handle(_ action: GamepadAction) {
         if viewer != nil { return handleViewer(action) }
-        if let mod = modDetail { return handleModDetail(action, mod: mod) }
-        if gameBananaFind.isOpen { return handleFind(action) }
+        if modsHost.isPanelOpen { return modsHost.handlePanel(action) }
         var moved = false
         switch action {
         case .navigateLeft: moved = moveFocus { $0.left(in: $1) }
@@ -189,88 +188,14 @@ extension GameDetailView {
         viewModel.openGameOptions(game, from: .details, opensMods: true)
     }
 
-    /// Re-reads the mods folder; a mod deleted in Finder also leaves the overlay (the store does nothing while the
-    /// game runs, and a refusal here shows in the Mods panel instead).
-    func reloadMods() {
-        let store = viewModel.modStore(for: game)
-        if let store { _ = viewModel.performModChange { try store.sync() } }
-        localMods = store?.mods()
-        modRecords = store?.gameBananaRecords() ?? [:]
-    }
+    /// Re-reads the mods folder (and the overlay).
+    func reloadMods() { modsHost.reload(game, viewModel: viewModel) }
 
-    /// GameBanana's mods for this game, by its name and its official store name.
-    func startGameBanana() {
-        gameBanana.onInstalled = { reloadMods() }
-        let names = [game.name, viewModel.storeMetadata[game.id]?.name].compactMap { $0 }
-        gameBanana.start(names: names, store: viewModel.modStore(for: game))
-    }
+    /// GameBanana's mods for this game.
+    func startGameBanana() { modsHost.startOnline(game, viewModel: viewModel) }
 
-    /// A Mods band tile: installed mods and Manage open Game options → Mods; a GameBanana mod opens its detail; a
-    /// status tile does what it says.
-    func activateModsTile(_ index: Int) {
-        guard let mods = localMods else { return }
-        let tiles = DetailsModsBand.tiles(mods: mods, gameBanana: gameBanana)
-        guard tiles.indices.contains(index) else { return }
-        switch tiles[index] {
-        case .installed, .manage:
-            openMods()
-        case .available(let id):
-            guard let mod = gameBanana.available.first(where: { $0.id == id }) else { return }
-            SoundEffectService.shared.play(.click)
-            modDetailFocus = ModDetailPanel.rows(for: mod).firstIndex { if case .file = $0 { return true } else { return false } } ?? 0
-            modDetailExpanded = false
-            modDetail = mod
-        case .status(let action):
-            SoundEffectService.shared.play(.click)
-            switch action {
-            case .retry: gameBanana.retry()
-            case .openPage(let url): viewModel.openURL(url)
-            case .candidate(let id): if let match = gameBanana.candidate(id) { gameBanana.confirm(match) }
-            case .noneOfThese: gameBanana.noneOfThese()
-            case .findGame, .wrongGame: gameBananaFind.open(name: game.name, using: gameBanana)
-            }
-        }
-    }
-
-    func closeModDetail() {
-        SoundEffectService.shared.play(.focus)
-        modDetail = nil
-    }
-
-    /// The mod detail panel owns the controller while it is open.
-    func handleModDetail(_ action: GamepadAction, mod: AvailableMod) {
-        let rows = ModDetailPanel.rows(for: mod)
-        switch action {
-        case .navigateUp, .navigateDown:
-            let next = min(max(modDetailFocus + (action == .navigateUp ? -1 : 1), 0), rows.count - 1)
-            if next != modDetailFocus {
-                modDetailFocus = next
-                SoundEffectService.shared.play(.focus)
-            }
-        case .confirm:
-            guard rows.indices.contains(modDetailFocus) else { return }
-            ModDetailPanel.activate(rows[modDetailFocus], mod: mod, installed: modRecords[mod.id], model: gameBanana,
-                                    expanded: $modDetailExpanded)
-        case .cancel, .menu:
-            closeModDetail()
-        default: break
-        }
-    }
-
-    /// The Find the game panel owns the controller while it is open.
-    func handleFind(_ action: GamepadAction) {
-        switch action {
-        case .navigateUp: if gameBananaFind.move(by: -1) { SoundEffectService.shared.play(.focus) }
-        case .navigateDown: if gameBananaFind.move(by: 1) { SoundEffectService.shared.play(.focus) }
-        case .confirm:
-            SoundEffectService.shared.play(.click)
-            gameBananaFind.confirm(using: gameBanana)
-        case .cancel, .menu:
-            SoundEffectService.shared.play(.focus)
-            gameBananaFind.close()
-        default: break
-        }
-    }
+    /// A Mods band tile (`ModsBandHost.activate`).
+    func activateModsTile(_ index: Int) { modsHost.activate(index, viewModel: viewModel, openMods: openMods) }
 
     /// A More like this game: Spotlight opens with it selected (All games when its filter hides it).
     func selectOnSpotlight(_ target: PortedGame) {
@@ -336,14 +261,9 @@ extension GameDetailView {
             }
             let modifiers = event.modifierFlags.intersection([.command, .control, .option])
             guard modifiers.isEmpty else { return event }
-            if modDetail != nil || gameBananaFind.isOpen {
-                switch event.keyCode {
-                case 125: handle(.navigateDown)
-                case 126: handle(.navigateUp)
-                case 36, 49: handle(.confirm)
-                case 53: handle(.cancel)
-                default: return event
-                }
+            if modsHost.isPanelOpen {
+                guard let action = ModsBandHost.panelAction(keyCode: event.keyCode) else { return event }
+                handle(action)
                 return nil
             }
             if viewer != nil {
@@ -378,7 +298,7 @@ extension GameDetailView {
 
     /// The wheel moves between bands, except while the description is open: then it scrolls the text.
     private func handleWheel(_ event: NSEvent) -> NSEvent? {
-        guard !expanded, modDetail == nil, !gameBananaFind.isOpen else { return event }
+        guard !expanded, !modsHost.isPanelOpen else { return event }
         let dy = event.scrollingDeltaY
         guard abs(dy) > abs(event.scrollingDeltaX), event.momentumPhase.isEmpty else { return nil }
         let threshold: CGFloat = event.hasPreciseScrollingDeltas ? 6 : 1

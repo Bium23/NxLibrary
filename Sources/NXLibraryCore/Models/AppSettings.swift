@@ -121,7 +121,19 @@ public struct AppSettings: Codable, Equatable {
     public var gameDefaults: GameRuntimeConfig
     public var colorThemeID: String
     public var buttonNames: ButtonNameStyle
+    /// The cards the released app knows too; the Mods card is kept apart (`showsModsCard`), so a version that does
+    /// not know it still reads this list.
     public var spotlightCards: [SpotlightCard]
+    public var showsModsCard: Bool
+
+    /// The cards in Spotlight's row, in their canonical order.
+    public var visibleSpotlightCards: [SpotlightCard] {
+        get { SpotlightCard.allCases.filter { $0 == .mods ? showsModsCard : spotlightCards.contains($0) } }
+        set {
+            spotlightCards = SpotlightCard.allCases.filter { $0 != .mods && newValue.contains($0) }
+            showsModsCard = newValue.contains(.mods)
+        }
+    }
     public var spotlightOrder: [String]
     public var startingTab: LibraryFilter.RawValue
     public var surprisePool: SurprisePool
@@ -168,6 +180,7 @@ public struct AppSettings: Codable, Equatable {
                 colorThemeID: String = "selene",
                 buttonNames: ButtonNameStyle = .automatic,
                 spotlightCards: [SpotlightCard] = [.surprise, .activity, .addGame],
+                showsModsCard: Bool = true,
                 spotlightOrder: [String] = [],
                 startingTab: LibraryFilter.RawValue = "All games",
                 surprisePool: SurprisePool = .installed,
@@ -202,7 +215,8 @@ public struct AppSettings: Codable, Equatable {
         self.gameDefaults = gameDefaults
         self.colorThemeID = colorThemeID
         self.buttonNames = buttonNames
-        self.spotlightCards = spotlightCards
+        self.spotlightCards = spotlightCards.filter { $0 != .mods }
+        self.showsModsCard = showsModsCard
         self.spotlightOrder = spotlightOrder
         self.startingTab = startingTab
         self.surprisePool = surprisePool
@@ -231,7 +245,7 @@ public struct AppSettings: Codable, Equatable {
         case restoreLastGame, checkEngineAtLaunch, refreshLibraryAtLaunch, lastSelectedGameID
         case startInFullscreen
         case gameDefaults, colorThemeID, buttonNames
-        case spotlightCards, spotlightOrder, startingTab, surprisePool, cloudSaves, cloudSavesPickedFolder
+        case spotlightCards, showsModsCard, spotlightOrder, startingTab, surprisePool, cloudSaves, cloudSavesPickedFolder
         case startOn, lastHome
         case introAnimation, viewButtonSwitches, interfaceSounds, soundVolume, quietLaunch
         case wallpaperID, backgroundSizing, animatedBackground, wallpaperBrightness, launchStyle, launchMotion, launchShade
@@ -254,7 +268,9 @@ public struct AppSettings: Codable, Equatable {
         self.gameDefaults = try container.decodeIfPresent(GameRuntimeConfig.self, forKey: .gameDefaults) ?? GameRuntimeConfig()
         self.colorThemeID = try container.decodeIfPresent(String.self, forKey: .colorThemeID) ?? "selene"
         self.buttonNames = try container.decodeIfPresent(ButtonNameStyle.self, forKey: .buttonNames) ?? .automatic
-        self.spotlightCards = try container.decodeIfPresent([SpotlightCard].self, forKey: .spotlightCards) ?? [.surprise, .activity, .addGame]
+        let cards = try container.decodeIfPresent([SpotlightCard].self, forKey: .spotlightCards) ?? [.surprise, .activity, .addGame]
+        self.spotlightCards = cards.filter { $0 != .mods }
+        self.showsModsCard = try container.decodeIfPresent(Bool.self, forKey: .showsModsCard) ?? true
         self.spotlightOrder = try container.decodeIfPresent([String].self, forKey: .spotlightOrder) ?? []
         self.startingTab = try container.decodeIfPresent(String.self, forKey: .startingTab) ?? "All games"
         self.surprisePool = try container.decodeIfPresent(SurprisePool.self, forKey: .surprisePool) ?? .installed

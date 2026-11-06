@@ -52,7 +52,7 @@ public enum GameBananaChoice: Codable, Equatable, Sendable {
 }
 
 /// The remembered GameBanana page of each game, by title ID, in one JSON file.
-public struct GameBananaMatchStore {
+public struct GameBananaMatchStore: Sendable {
     public let file: URL
 
     public init(file: URL) { self.file = file }

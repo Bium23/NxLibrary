@@ -145,7 +145,7 @@ struct DetailsMoreBand: View {
     }
 }
 
-/// Band 2: the game's mods. Left to right (`ModsBandLayout`): installed mods (`ModStore`, at most 5) with their state,
+/// The game's mods, between Build & Sources and More like this. Left to right (`ModsBandLayout`): installed mods (`ModStore`, at most 5) with their state,
 /// Manage mods, the GameBanana mods that work (image, name, author, Installed / Update), then status tiles (Retry, the
 /// "Is this the right game?" candidates, Wrong game?…). The row slides so the focused tile stays on screen. A click
 /// focuses a tile; a double click (or A) opens it.
@@ -161,11 +161,12 @@ struct DetailsModsBand: View {
     let onFocus: (Int) -> Void
     let onOpen: (Int) -> Void
 
-    static let width: CGFloat = 272
-    static let height: CGFloat = 153
-    static let gap: CGFloat = 22
-    /// Tiles fully on screen (1700 wide).
-    static let visible = 5
+    /// Selene DetailsStage's band tiles, as the screenshot strip draws them in Details.
+    private static let style = SpotlightScreenshotStrip.Style.details
+    /// How much taller than one row of tiles the band is, for the pages that place the bands below it.
+    static func extraHeight(tileCount: Int) -> CGFloat {
+        CGFloat(max(ModsBandLayout.rows(count: tileCount) - 1, 0)) * (style.tileHeight + style.gap)
+    }
 
     static func tiles(mods: [LocalMod], gameBanana: GameBananaBandModel) -> [ModsBandTile] {
         ModsBandLayout.tiles(installed: mods.count, available: gameBanana.available.map(\.id), status: gameBanana.statusTiles)
@@ -173,7 +174,9 @@ struct DetailsModsBand: View {
 
     var body: some View {
         let tiles = Self.tiles(mods: mods, gameBanana: gameBanana)
-        let first = ModsBandLayout.scrollIndex(focused: focusedIndex, count: tiles.count, visible: Self.visible)
+        let style = Self.style
+        let columns = Array(repeating: GridItem(.fixed(canvas.u(style.tileWidth)), spacing: canvas.u(style.gap),
+                                                alignment: .topLeading), count: ModsBandLayout.columns)
         return VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: canvas.u(18)) {
                 DetailsBandTitle(text: title)
@@ -190,13 +193,16 @@ struct DetailsModsBand: View {
                 }
             }
             .frame(width: canvas.u(1700), alignment: .leading)
-            HStack(alignment: .top, spacing: canvas.u(Self.gap)) {
-                ForEach(Array(tiles.enumerated()), id: \.offset) { index, kind in
+            // A grid six tiles to a row that never slides: Left/Right stay in the row, Down walks the rows. Each
+            // tile keeps its identity as GameBanana's mods arrive, so nothing redraws under the focus; grow and
+            // ring share the strip's one curve.
+            LazyVGrid(columns: columns, alignment: .leading, spacing: canvas.u(style.gap)) {
+                ForEach(Array(tiles.enumerated()), id: \.element) { index, kind in
                     tileView(kind, index: index, focused: focusedIndex == index)
                 }
             }
-            .offset(x: -canvas.u(CGFloat(first) * (Self.width + Self.gap)))
-            .animation(reduceMotion ? nil : SeleneTheme.quick, value: first)
+            .padding(.top, canvas.u(14))
+            .animation(reduceMotion ? nil : SpotlightScreenshotStrip.motion, value: focusedIndex)
         }
     }
 
@@ -325,23 +331,31 @@ struct DetailsModsBand: View {
         }
     }
 
+    /// A tile on glass, as the screenshot strip's: rasterised once so it slides as one layer, the focus ring 4
+    /// outside it, and the grow on the strip's curve.
     private func tile<Face: View>(index: Int, focused: Bool, bleed: Bool = false, @ViewBuilder face: () -> Face) -> some View {
-        let w = canvas.u(Self.width), h = canvas.u(Self.height)
-        let shape = RoundedRectangle(cornerRadius: canvas.u(14), style: .continuous)
+        let style = Self.style
+        let w = canvas.u(style.tileWidth), h = canvas.u(style.tileHeight)
+        let shape = RoundedRectangle(cornerRadius: canvas.u(style.radius), style: .continuous)
         return ZStack {
-            shape.fill(SeleneTheme.glass)
+            shape.fill(SeleneTheme.glassSolid)
             face()
                 .padding(bleed ? 0 : canvas.u(18))
                 .frame(width: w, height: h, alignment: .topLeading)
                 .clipShape(shape)
-            shape.stroke(SeleneTheme.ink15, lineWidth: canvas.u(1))
-            SeleneTileRing(cornerRadius: canvas.u(21), active: focused)
-                .frame(width: w + canvas.u(14), height: h + canvas.u(14))
         }
         .frame(width: w, height: h)
-        .shadow(color: .black.opacity(0.45), radius: canvas.u(9))
-        .scaleEffect(focused ? 1.05 : 1)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: focused)
+        .drawingGroup()
+        .overlay(
+            RoundedRectangle(cornerRadius: canvas.u(style.radius + 3), style: .continuous)
+                .strokeBorder(SeleneTheme.focus, lineWidth: canvas.u(3))
+                .padding(canvas.u(-4))
+                .opacity(focused ? 1 : 0)
+        )
+        .scaleEffect(focused ? style.focusScale : 1)
+        // The grown tile and its ring draw over the neighbours in the grid.
+        .zIndex(focused ? 1 : 0)
+        .animation(reduceMotion ? nil : SpotlightScreenshotStrip.motion, value: focused)
         .contentShape(Rectangle())
         .onTapGesture(count: 2) { onOpen(index) }
         .simultaneousGesture(TapGesture().onEnded { onFocus(index) })
@@ -357,6 +371,41 @@ struct GameBananaImageView: View {
     var contentMode: ContentMode = .fill
     @State private var image: NSImage?
 
+    /// Decoded images stay in memory (about 160 MB at most), so a tile that comes back into view, or the same art
+    /// in another row, shows at once instead of decoding again.
+    private static let decoded: NSCache<NSString, NSImage> = {
+        let cache = NSCache<NSString, NSImage>()
+        cache.totalCostLimit = 160 * 1024 * 1024
+        return cache
+    }()
+
+    private static func key(_ url: URL, _ size: Int) -> NSString { "\(size)|\(url.absoluteString)" as NSString }
+
+    /// Decodes art before a view asks for it (the store's next rows), at low priority.
+    static func prewarm(_ urls: [URL], maxPixelSize: Int) {
+        let missing = urls.filter { decoded.object(forKey: key($0, maxPixelSize)) == nil }
+        guard !missing.isEmpty else { return }
+        Task(priority: .utility) {
+            for url in missing where decoded.object(forKey: key(url, maxPixelSize)) == nil {
+                guard let file = await GameBananaServices.shared.images.file(for: url),
+                      let image = await GameArtLoader.decode(at: file, maxPixelSize: maxPixelSize) else { continue }
+                store(image, for: key(url, maxPixelSize))
+            }
+        }
+    }
+
+    private static func store(_ image: NSImage, for key: NSString) {
+        let pixels = image.representations.first.map { $0.pixelsWide * $0.pixelsHigh } ?? 0
+        decoded.setObject(image, forKey: key, cost: max(pixels, 1) * 4)
+    }
+
+    init(url: URL?, maxPixelSize: Int = 800, contentMode: ContentMode = .fill) {
+        self.url = url
+        self.maxPixelSize = maxPixelSize
+        self.contentMode = contentMode
+        _image = State(initialValue: url.flatMap { Self.decoded.object(forKey: Self.key($0, maxPixelSize)) })
+    }
+
     var body: some View {
         ZStack {
             SeleneTheme.glassSolid
@@ -370,10 +419,17 @@ struct GameBananaImageView: View {
         }
         .clipped()
         .task(id: url) {
+            guard let url else { image = nil; return }
+            let key = Self.key(url, maxPixelSize)
+            if let cached = Self.decoded.object(forKey: key) {
+                if image !== cached { image = cached }
+                return
+            }
             image = nil
-            guard let url, let file = await GameBananaServices.shared.images.file(for: url),
+            guard let file = await GameBananaServices.shared.images.file(for: url),
                   let decoded = await GameArtLoader.decode(at: file, maxPixelSize: maxPixelSize),
                   !Task.isCancelled else { return }
+            Self.store(decoded, for: key)
             withAnimation(.easeOut(duration: 0.25)) { image = decoded }
         }
     }

@@ -10,8 +10,8 @@ final class DetailsModelCache {
 
 /// The Details page (spec §5.4, Selene GameDetails + DetailsStage). The top
 /// block sits on the stage; Down glides the page up into the bands, which
-/// are Screenshots (720), Mods (950, for a game with a title ID), Build &
-/// Sources with Your activity and More like this, one band pitch (230) apart. A band below the one in focus peeks in, blurred, until
+/// are Screenshots (720), Build & Sources with Your activity, Mods (for a game
+/// with a title ID) and More like this, one band pitch (230) apart. A band below the one in focus peeks in, blurred, until
 /// it is focused. Input lives in GameDetailView+Input.swift.
 struct GameDetailView: View {
     @ObservedObject var viewModel: AppViewModel
@@ -36,18 +36,9 @@ struct GameDetailView: View {
     @State var keyMonitor: Any?
     @State var wheel = DetailsWheel()
     @State var cache = DetailsModelCache()
-    /// The game's mods, read when the page appears and when Game options or the app comes back; nil without a
-    /// title ID (no Mods band).
-    @State var localMods: [LocalMod]?
-    /// GameBanana records of the installed mods, by GameBanana mod id.
-    @State var modRecords: [Int: ModRecord] = [:]
-    /// The GameBanana part of the Mods band (match, mods that work, installs).
-    @StateObject var gameBanana = GameBananaBandModel.shared()
-    @StateObject var gameBananaFind = GameBananaFindModel()
-    /// The open mod detail panel.
-    @State var modDetail: AvailableMod?
-    @State var modDetailFocus = 0
-    @State var modDetailExpanded = false
+    /// The Mods band: the game's mods (read when the page appears and when Game options or the app comes back),
+    /// GameBanana's, and their panels. Shared with Spotlight's page.
+    @StateObject var modsHost = ModsBandHost()
 
     struct ViewerContext: Equatable {
         var titleID: String
@@ -84,8 +75,8 @@ struct GameDetailView: View {
         return Model(presentation: p, rows: rows, screenshots: urls,
                      screenshotsKnown: screenshotsKnown,
                      more: more,
-                     mods: localMods,
-                     bands: DetailsFocus.Bands(screenshots: urls.count, mods: localMods.map { DetailsModsBand.tiles(mods: $0, gameBanana: gameBanana).count } ?? 0,
+                     mods: modsHost.localMods,
+                     bands: DetailsFocus.Bands(screenshots: urls.count, mods: modsHost.tiles.count,
                                                actions: rows.count, more: more.count),
                      buildBlocked: blocked,
                      primaryEnabled: p.canPlay || (p.canRebuild && !blocked))
@@ -152,9 +143,7 @@ struct GameDetailView: View {
                 .offset(x: canvas.stageOrigin.x, y: canvas.stageOrigin.y)
         }
         .overlay(viewerOverlay)
-        .overlay(gameBananaOverlay)
-        .animation(.easeOut(duration: 0.2), value: gameBananaFind.isOpen)
-        .animation(.easeOut(duration: 0.2), value: modDetail?.id)
+        .overlay(ModsBandOverlay(host: modsHost, find: modsHost.find, game: game))
         .animation(.easeOut(duration: 0.2), value: viewer != nil)
         .frame(width: canvas.size.width, height: canvas.size.height, alignment: .topLeading)
         .clipped()
@@ -162,9 +151,7 @@ struct GameDetailView: View {
         .onAppear { focus.setPillLimit(viewModel.portingPills(game).count) }
         .onChange(of: viewModel.portingPills(game).count) { focus.setPillLimit($0) }
         .onDisappear {
-            gameBanana.stop()
-            gameBananaFind.close()
-            modDetail = nil
+            modsHost.stop()
             removeKeyMonitor()
             router.isScreenshotViewerOpen = false
         }
@@ -177,7 +164,6 @@ struct GameDetailView: View {
         .onChange(of: game) { _ in
             removeKeyMonitor()
             installKeyMonitor()
-            gameBanana.stop()
             reloadMods()
             startGameBanana()
         }
@@ -200,7 +186,7 @@ struct GameDetailView: View {
             page(model)
                 .offset(y: canvas.u(pageShift))
                 // The glide is movement: reduce motion makes it instant.
-                .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.32), value: focus.zone)
+                .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.32), value: pageShift)
 
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
@@ -213,18 +199,24 @@ struct GameDetailView: View {
     }
 
     /// Selene's band pitch (230), and 100 more for the tall last band so its covers clear the hints. The Mods band,
-    /// when there is one, pushes the bands below it one pitch down.
+    /// when there is one, sits between Build & Sources and More like this and pushes More like this one pitch down,
+    /// plus one tile row for each row of its grid after the first; focused, it rises by those rows too, so its last
+    /// row rests where a one-row band would.
     var pageShift: CGFloat {
         let mods = modsBandShift
         switch focus.zone {
-        case DetailsFocus.modsZone: return -230
-        case DetailsFocus.actionsZone: return -230 - mods
+        case DetailsFocus.actionsZone: return -230
+        case DetailsFocus.modsZone: return -460 - modsGridExtra
         case DetailsFocus.moreZone: return -560 - mods
         default: return 0
         }
     }
 
-    var modsBandShift: CGFloat { currentModel.mods == nil ? 0 : 230 }
+    var modsBandShift: CGFloat { currentModel.mods == nil ? 0 : 230 + modsGridExtra }
+
+    var modsGridExtra: CGFloat {
+        currentModel.mods == nil ? 0 : DetailsModsBand.extraHeight(tileCount: modsHost.tiles.count)
+    }
 
     private func page(_ model: Model) -> some View {
         ZStack(alignment: .topLeading) {
@@ -265,8 +257,8 @@ struct GameDetailView: View {
                 band(zone: DetailsFocus.modsZone) {
                     DetailsModsBand(
                         mods: mods,
-                        records: modRecords,
-                        gameBanana: gameBanana,
+                        records: modsHost.records,
+                        gameBanana: modsHost.gameBanana,
                         focusedIndex: focus.zone == DetailsFocus.modsZone ? focus.mod : nil,
                         onFocus: { focusPointer(zone: DetailsFocus.modsZone, index: $0, bands: model.bands) },
                         onOpen: { index in
@@ -274,7 +266,7 @@ struct GameDetailView: View {
                             activateModsTile(index)
                         })
                 }
-                .offset(x: canvas.u(110), y: canvas.u(970))
+                .offset(x: canvas.u(110), y: canvas.u(1200))
             }
 
             band(zone: DetailsFocus.actionsZone) {
@@ -293,7 +285,7 @@ struct GameDetailView: View {
                 }
                 .frame(width: canvas.u(1700), alignment: .topLeading)
             }
-            .offset(x: canvas.u(110), y: canvas.u(970 + (model.mods == nil ? 0 : 230)))
+            .offset(x: canvas.u(110), y: canvas.u(970))
 
             if !model.more.isEmpty {
                 band(zone: DetailsFocus.moreZone) {
@@ -310,7 +302,7 @@ struct GameDetailView: View {
                             selectOnSpotlight(model.more[index])
                         })
                 }
-                .offset(x: canvas.u(110), y: canvas.u(1200 + (model.mods == nil ? 0 : 230)))
+                .offset(x: canvas.u(110), y: canvas.u(1200 + modsBandShift))
             }
         }
     }
@@ -338,17 +330,6 @@ struct GameDetailView: View {
         }
     }
 
-    @ViewBuilder
-    private var gameBananaOverlay: some View {
-        if let mod = modDetail {
-            ModDetailPanel(model: gameBanana, mod: mod, game: game, installed: modRecords[mod.id],
-                           focus: $modDetailFocus, expanded: $modDetailExpanded, onClose: closeModDetail)
-                .transition(.opacity)
-        } else if gameBananaFind.isOpen {
-            GameBananaFindPanel(model: gameBananaFind, band: gameBanana, gameName: game.name)
-                .transition(.opacity)
-        }
-    }
 
     // MARK: - Lifecycle
 

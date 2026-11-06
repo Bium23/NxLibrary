@@ -8,6 +8,7 @@ User-visible changes to NX Library are recorded here. Entries are grouped by rel
 
 - **Mods.** Put file mods (a folder with `romfs` inside) into a game's mods folder, turn them on in the game's new **Mods** band or in **Game options → Mods**, and play: no rebuild. The order decides which mod wins when two change the same file, and **Remove** moves a mod to the Trash. Mods that patch code (`exefs`, such as 60 fps patches) don't work with the engine.
 - **Mods from GameBanana.** A game's **Mods** band also lists the GameBanana mods that work with the engine (file mods only). Open one to see its images, author and version, and press **Install**: it downloads into the game's mods folder and is on at the next launch. **Update** appears when the author replaces the file. When the game's GameBanana page isn't certain, the band asks once; **Wrong game?** picks another. Every mod links to its page on GameBanana.
+- **Mod store.** A new **Mods** card in Spotlight's row. Go down from it into a store of the mods that work with your games: a large Featured banner, the most popular mods for your games, a row per category (characters, worlds, graphics, music, interface, gameplay) and a row for each of your games, last played first. Sort by Popular, Most liked, Newest or Recently updated at the top. It opens at once from what it found last time and checks GameBanana again in the background. The card shows the art of the best mods, and the background glides to gold while it is selected. Hide the card in **Settings → Spotlight** or with its Y menu.
 - **Game app icons follow your Icon choice.** A game whose app has no icon (Switch 2 games and dumps) shows the Icon you choose in **Change artwork** in Finder and the Dock. For a game with its own icon, a question after choosing lets you use yours on the Mac too. The icon stays after a rebuild, and **Automatic** brings back the game's own. Updating a large game's app takes about a minute.
 
 ### Changed
@@ -16,6 +17,7 @@ User-visible changes to NX Library are recorded here. Entries are grouped by rel
 
 ### Fixed
 
+- Moving between games no longer makes the background art jump or flash for an instant.
 - macOS no longer turns Game Mode on for NX Library itself: it is a launcher, not a game, and Game Mode lowers the priority of background work such as builds. Games keep Game Mode off as the engine sets it, because it holds the GPU at its lowest clock after a few minutes. If macOS already remembers NX Library as a game, turn it off once in full screen: Command-Esc, Game Overlay, Game Mode.
 
 ## 0.1.3.3 — 2026-11-05

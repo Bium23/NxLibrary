@@ -221,7 +221,7 @@ public struct SettingsView: View {
             next.buttonNames = defaults.buttonNames
             next.viewButtonSwitches = defaults.viewButtonSwitches
         case .spotlight:
-            next.spotlightCards = defaults.spotlightCards
+            next.visibleSpotlightCards = defaults.visibleSpotlightCards
             next.startingTab = defaults.startingTab
             next.spotlightOrder = defaults.spotlightOrder
         case .soundMusic:

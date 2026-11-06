@@ -118,6 +118,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/LibraryFile.swift](../Sources/NXLibraryCore/Models/LibraryFile.swift) | Contenitore versionato del catalogo della libreria. |
 | [Sources/NXLibraryCore/Models/GameStatus.swift](../Sources/NXLibraryCore/Models/GameStatus.swift) | Enumera disponibilità e stato del gioco rispetto ad app, sorgenti e porting. |
 | [Sources/NXLibraryCore/Models/GameResourceState.swift](../Sources/NXLibraryCore/Models/GameResourceState.swift) | Distingue app mancanti, sorgenti assenti e workspace non compilati, riconcilia gli stati e conserva Play per una build esistente. |
+| [Sources/NXLibraryCore/Models/BackdropArt.swift](../Sources/NXLibraryCore/Models/BackdropArt.swift) | Regola che tiene l’arte del gioco precedente sullo sfondo Spotlight (`BackdropArtRule`) dissolvenza di un layer calcolata sull’orologio (`OpacityFade`) e livelli ormai coperti da togliere (`ArtStack`). |
 | [Sources/NXLibraryCore/Models/AppSettings.swift](../Sources/NXLibraryCore/Models/AppSettings.swift) | Definisce impostazioni globali, default e decodifica compatibile dei campi aggiunti nel tempo. |
 | [Sources/NXLibraryCore/Models/LibraryFilter.swift](../Sources/NXLibraryCore/Models/LibraryFilter.swift) | Definisce filtri, PlayHistory e LibraryQuery per ricerca e ordinamento dei giochi. |
 | [Sources/NXLibraryCore/Models/LibrarySelectionState.swift](../Sources/NXLibraryCore/Models/LibrarySelectionState.swift) | Mantiene selezione e spostamento nel risultato filtrato della Collection. |
@@ -220,9 +221,13 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Services/GameBanana/AvailableModsFinder.swift](../Sources/NXLibraryCore/Services/GameBanana/AvailableModsFinder.swift) | Cerca le mod di un gioco che funzionano e capisce quando una mod installata ha un aggiornamento. |
 | [Sources/NXLibraryCore/Services/GameBanana/ModInstaller.swift](../Sources/NXLibraryCore/Services/GameBanana/ModInstaller.swift) | Controlla, estrae con `bsdtar` e installa una mod scaricata nella cartella del gioco. |
 | [Sources/NXLibraryCore/Services/GameBanana/GameBananaBandModel.swift](../Sources/NXLibraryCore/Services/GameBanana/GameBananaBandModel.swift) | Stato della fascia Mods di un gioco: abbinamento, mod che funzionano, installazioni. |
+| [Sources/NXLibraryCore/Services/GameBanana/ModCatalog.swift](../Sources/NXLibraryCore/Services/GameBanana/ModCatalog.swift) | Categorie nostre, ordinamenti e sezioni della pagina dello store (altezze fisse). |
+| [Sources/NXLibraryCore/Services/GameBanana/ModCatalogSnapshots.swift](../Sources/NXLibraryCore/Services/GameBanana/ModCatalogSnapshots.swift) | Le mod di ogni gioco salvate su disco, per aprire lo store subito; solo link GameBanana. |
+| [Sources/NXLibraryCore/Services/GameBanana/ModStoreModel.swift](../Sources/NXLibraryCore/Services/GameBanana/ModStoreModel.swift) | Dati dello store: apre dalle copie su disco, aggiorna in background due giochi alla volta, abbina solo se sicuro. |
+| [Sources/NXLibraryCore/Models/ModStoreFocus.swift](../Sources/NXLibraryCore/Models/ModStoreFocus.swift) | Focus nella pagina dello store, ancorato al tipo di sezione; ogni sezione ricorda la sua tessera. |
 | [Sources/NXLibraryCore/Services/GameBanana/GameBananaFindModel.swift](../Sources/NXLibraryCore/Services/GameBanana/GameBananaFindModel.swift) | Stato della ricerca per nome: campo, risultati, None of these. |
 | [Sources/NXLibraryCore/Services/GameBanana/ModDownload.swift](../Sources/NXLibraryCore/Services/GameBanana/ModDownload.swift) | Scarica un file di GameBanana con avanzamento e Cancel, solo da host fidati. |
-| [Sources/NXLibraryCore/Models/ModsBandLayout.swift](../Sources/NXLibraryCore/Models/ModsBandLayout.swift) | Ordine e scorrimento delle tessere della fascia Mods. |
+| [Sources/NXLibraryCore/Models/ModsBandLayout.swift](../Sources/NXLibraryCore/Models/ModsBandLayout.swift) | Ordine delle tessere della fascia Mods e movimento nella sua griglia (sei per riga). |
 | [Sources/NXLibraryCore/Services/EnvFileEditor.swift](../Sources/NXLibraryCore/Services/EnvFileEditor.swift) | Cambia una sola variabile di un `env.txt` lasciando intatte le altre righe. |
 | [Sources/NXLibraryCore/Models/LocalMod.swift](../Sources/NXLibraryCore/Models/LocalMod.swift) | Una cartella della cartella mods di un gioco, con il suo `romfs` e lo stato. |
 
@@ -304,13 +309,13 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 |---|---|
 | [Sources/NXLibrary/Views/Spotlight/SpotlightView.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightView.swift) | Compone home, selezione, filtri, pagina del gioco e stato delle tile. |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightView+Input.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightView+Input.swift) | Traduce input, card, azioni, screenshot e riordino nel modello Spotlight. |
-| [Sources/NXLibrary/Views/Spotlight/SpotlightRowView.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightRowView.swift) | Disegna la riga di tile con finestra visibile, focus e titoli. |
+| [Sources/NXLibrary/Views/Spotlight/SpotlightRowView.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightRowView.swift) | Disegna la riga di tile con finestra visibile, focus e titoli; la faccia della card Mods (`ModsCardCover`). |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightTopBar.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightTopBar.swift) | Disegna filtri, prompt dei dorsali e orologio condivisi con Collection. |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightInfoView.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightInfoView.swift) | Mostra logo, Play/Options/Favorite, statistiche e stato di porting del gioco selezionato. |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightCardInfoView.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightCardInfoView.swift) | Mostra informazioni e azioni delle card Collection, Surprise, Activity e Add Game. |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightPageSections.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightPageSections.swift) | Prepara generi, descrizione, Build & Sources e giochi correlati della pagina inferiore. |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightScreenshotStrip.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightScreenshotStrip.swift) | Disegna la striscia di screenshot con focus e stile adattabile alle schermate. |
-| [Sources/NXLibrary/Views/Spotlight/SeleneArtBackground.swift](../Sources/NXLibrary/Views/Spotlight/SeleneArtBackground.swift) | Compone wallpaper, sfondo del gioco, transizioni e maschere Selene. |
+| [Sources/NXLibrary/Views/Spotlight/SeleneArtBackground.swift](../Sources/NXLibrary/Views/Spotlight/SeleneArtBackground.swift) | Compone wallpaper, sfondo del gioco, transizioni e maschere Selene; l'arte è un `CALayer` che dissolve nel render server (`SeleneArtLayer`). |
 | [Sources/NXLibrary/Views/Spotlight/SeleneHeroArt.swift](../Sources/NXLibrary/Views/Spotlight/SeleneHeroArt.swift) | Coordina il caricamento differito di hero e logo del gioco selezionato. |
 | [Sources/NXLibrary/Views/Spotlight/GameArtLoader.swift](../Sources/NXLibrary/Views/Spotlight/GameArtLoader.swift) | Carica e memorizza hero e loghi attraverso ArtworkStore e decoder immagini dedicati. |
 
@@ -339,6 +344,10 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/Views/GameOptions/ModsPanel.swift](../Sources/NXLibrary/Views/GameOptions/ModsPanel.swift) | Game options → Mods: accende, ordina e sposta nel Cestino le mod RomFS, apre la cartella mods. |
 | [Sources/NXLibrary/Views/Detail/ModDetailPanel.swift](../Sources/NXLibrary/Views/Detail/ModDetailPanel.swift) | Dettaglio di una mod GameBanana: immagini, autore, versione, descrizione, Install/Update e link. |
 | [Sources/NXLibrary/Views/Detail/GameBananaFindPanel.swift](../Sources/NXLibrary/Views/Detail/GameBananaFindPanel.swift) | Cerca su GameBanana la pagina del gioco quando l'abbinamento automatico non basta. |
+| [Sources/NXLibrary/ViewModels/ModStoreHost.swift](../Sources/NXLibrary/ViewModels/ModStoreHost.swift) | Store della card Mods: catalogo, ordinamento, focus, chip Installed/Update e pannello della mod. |
+| [Sources/NXLibrary/Views/Store/ModStorePage.swift](../Sources/NXLibrary/Views/Store/ModStorePage.swift) | Pagina dello store: barra di ordinamento, banner Featured, righe di tessere; disegna solo le sezioni vicine al focus. |
+| [Sources/NXLibrary/Views/Store/GameBananaBlur.swift](../Sources/NXLibrary/Views/Store/GameBananaBlur.swift) | Arte di una mod rimpicciolita e sfocata una volta, fuori dal main thread, e tenuta in memoria: sfondo del Featured. |
+| [Sources/NXLibrary/ViewModels/ModsBandHost.swift](../Sources/NXLibrary/ViewModels/ModsBandHost.swift) | Fascia Mods condivisa da Spotlight e Details: mod installate, GameBanana, pannelli di dettaglio e ricerca. |
 | [Sources/NXLibrary/ViewModels/GameBananaServices.swift](../Sources/NXLibrary/ViewModels/GameBananaServices.swift) | Client, cache delle immagini e abbinamenti GameBanana condivisi da tutta l'app. |
 | [Sources/NXLibrary/Views/GameOptions/SavesPanel.swift](../Sources/NXLibrary/Views/GameOptions/SavesPanel.swift) | Presenta azioni sui save, anteprime, errori e popup di successo a scomparsa automatica. |
 | [Sources/NXLibrary/Views/GameOptions/MoreSettingsPanel.swift](../Sources/NXLibrary/Views/GameOptions/MoreSettingsPanel.swift) | Mostra le impostazioni del launcher.json senza riga dedicata: interruttori, scelte e intervalli; le righe fissate da env.txt restano attenuate. |

@@ -1,9 +1,9 @@
 import Foundation
 
 /// Focus on the Details page (spec §5.4). Zone 0 is the top block (Play or
-/// Build, then Game options). Zones 1 to 4 are the bands: Screenshots, Mods,
-/// Build & Sources (a two-column grid of actions, the activity beside it) and
-/// More like this. A band with nothing to focus is skipped; Down goes to the
+/// Build, then Game options). Zones 1 to 4 are the bands: Screenshots,
+/// Build & Sources (a grid of actions, the activity beside it), Mods and
+/// More like this, as on Spotlight's page. A band with nothing to focus is skipped; Down goes to the
 /// next band, Up back to the previous one, and Up from the first returns to
 /// the top block.
 public struct DetailsFocus: Equatable {
@@ -34,8 +34,8 @@ public struct DetailsFocus: Equatable {
 
     public static let topZone = 0
     public static let screenshotsZone = 1
-    public static let modsZone = 2
-    public static let actionsZone = 3
+    public static let actionsZone = 2
+    public static let modsZone = 3
     public static let moreZone = 4
     /// Play or Build, then Options, then the Favorite heart.
     public static let pillCount = 3
@@ -66,7 +66,11 @@ public struct DetailsFocus: Equatable {
             action = below
             return true
         }
-        return moveZone(to: neighbour(of: zone, by: 1, in: bands))
+        if zone == Self.modsZone, let below = ModsBandLayout.below(mod, count: bands.mods) {
+            mod = below
+            return true
+        }
+        return moveZone(to: neighbour(of: zone, by: 1, in: bands), in: bands)
     }
 
     /// Up: inside the action grid, the previous row; otherwise the previous band.
@@ -76,7 +80,11 @@ public struct DetailsFocus: Equatable {
             action -= Self.actionColumns
             return true
         }
-        return moveZone(to: neighbour(of: zone, by: -1, in: bands))
+        if zone == Self.modsZone, let above = ModsBandLayout.above(mod) {
+            mod = above
+            return true
+        }
+        return moveZone(to: neighbour(of: zone, by: -1, in: bands), in: bands)
     }
 
     @discardableResult
@@ -91,7 +99,7 @@ public struct DetailsFocus: Equatable {
             shot = next
             return true
         case Self.modsZone:
-            guard let next = Self.moved(mod, by: -1, count: bands.mods) else { return false }
+            guard let next = ModsBandLayout.beside(mod, by: -1, count: bands.mods) else { return false }
             mod = next
             return true
         case Self.actionsZone:
@@ -117,7 +125,7 @@ public struct DetailsFocus: Equatable {
             shot = next
             return true
         case Self.modsZone:
-            guard let next = Self.moved(mod, by: 1, count: bands.mods) else { return false }
+            guard let next = ModsBandLayout.beside(mod, by: 1, count: bands.mods) else { return false }
             mod = next
             return true
         case Self.actionsZone:
@@ -171,8 +179,13 @@ public struct DetailsFocus: Equatable {
         return nil
     }
 
-    private mutating func moveZone(to target: Int?) -> Bool {
+    private mutating func moveZone(to target: Int?, in bands: Bands) -> Bool {
         guard let target, target != zone else { return false }
+        // The Mods grid is entered on the row nearest the band it is entered from.
+        if target == Self.modsZone {
+            mod = target > zone ? ModsBandLayout.entryFromAbove(mod, count: bands.mods)
+                                : ModsBandLayout.entryFromBelow(mod, count: bands.mods)
+        }
         zone = target
         return true
     }

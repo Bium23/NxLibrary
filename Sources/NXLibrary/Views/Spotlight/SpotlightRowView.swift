@@ -23,6 +23,8 @@ struct SpotlightRowView: View {
     let artwork: ArtworkStore
     /// The porting look of a game's tile (`PortingTileLook`).
     var tileLook: (PortedGame) -> PortingTileLook = { _ in .normal }
+    /// Mods' art for the Mods card's face (up to four); empty draws Selene's own face.
+    var modsCover: [URL] = []
     let onSelect: (SpotlightItem) -> Void
     let onActivate: (SpotlightItem) -> Void
 
@@ -139,6 +141,10 @@ struct SpotlightRowView: View {
                         .frame(width: side, height: side)
                         .clipShape(face)
                 }
+            case .card(.mods):
+                ModsCardCover(urls: modsCover, side: side)
+                    .clipShape(face)
+                    .overlay(face.strokeBorder(SeleneTheme.ink15, lineWidth: max(1, canvas.u(1))))
             case .card(let card):
                 face.fill(SeleneTheme.glass)
                     .overlay(face.strokeBorder(SeleneTheme.ink15, lineWidth: max(1, canvas.u(1))))
@@ -187,5 +193,53 @@ struct SpotlightRowView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .allowsHitTesting(false)
+    }
+}
+
+/// The Mods card's face, filling the tile like a game icon: four mods' art as a mosaic (one when fewer), blurred
+/// and dimmed, with the puzzle glyph in the middle like the other cards. With no art yet the ground is Selene's
+/// accent gradient; the two crossfade under the glyph. Only the art GameBanana shows for the mods.
+struct ModsCardCover: View {
+    @Environment(\.seleneCanvas) private var canvas
+    let urls: [URL]
+    let side: CGFloat
+
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [SeleneTheme.focus.opacity(0.85), SeleneTheme.glassSolid],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+            if !urls.isEmpty {
+                mosaic
+                    .blur(radius: canvas.u(5), opaque: true)
+                    .overlay(Color.black.opacity(0.35))
+                    .transition(.opacity)
+            }
+            MaterialIconView(.puzzle, size: 60)
+                .foregroundColor(SeleneTheme.ink)
+                .shadow(color: .black.opacity(0.45), radius: canvas.u(8))
+        }
+        .frame(width: side, height: side)
+        .animation(.easeOut(duration: 0.4), value: urls)
+        .drawingGroup()
+    }
+
+    @ViewBuilder
+    private var mosaic: some View {
+        if urls.count >= 4 {
+            let half = side / 2
+            VStack(spacing: 0) {
+                HStack(spacing: 0) { cell(urls[0], half); cell(urls[1], half) }
+                HStack(spacing: 0) { cell(urls[2], half); cell(urls[3], half) }
+            }
+            .frame(width: side, height: side)
+        } else {
+            cell(urls[0], side)
+        }
+    }
+
+    private func cell(_ url: URL, _ size: CGFloat) -> some View {
+        GameBananaImageView(url: url, maxPixelSize: 700)
+            .frame(width: size, height: size)
+            .clipped()
     }
 }

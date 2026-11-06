@@ -10,20 +10,20 @@ struct SettingsSpotlightSection: View {
 
     private func cardBinding(_ card: SpotlightCard) -> Binding<Bool> {
         Binding(
-            get: { settings.settings.spotlightCards.contains(card) },
+            get: { settings.settings.visibleSpotlightCards.contains(card) },
             set: { _ in toggle(card) }
         )
     }
 
     private func toggle(_ card: SpotlightCard) {
-        var cards = settings.settings.spotlightCards
+        var cards = settings.settings.visibleSpotlightCards
         if let index = cards.firstIndex(of: card) {
             cards.remove(at: index)
         } else {
             // Keep the canonical order so the row reads the same every time.
             cards = SpotlightCard.allCases.filter { cards.contains($0) || $0 == card }
         }
-        settings.settings.spotlightCards = cards
+        settings.settings.visibleSpotlightCards = cards
     }
 
     private func stepTab(_ step: Int) {

@@ -55,6 +55,25 @@ struct SeleneBackdrop: View {
     /// Covered (a game's art over it): the moonlight or the video holds still and costs nothing.
     var still = false
 
+    /// The Mods card: the moonlight turns gold (over a wallpaper too), gliding there and back.
+    var modsTint = false
+
+    /// The Mods card's colours, whatever the palette.
+    static let modsAccent = Color(hex: 0xFFC94A)
+    static let modsGradient = LinearGradient(stops: [
+        .init(color: Color(hex: 0x8A5A0E), location: 0),
+        .init(color: Color(hex: 0x3A2508), location: 0.45),
+        .init(color: Color(hex: 0x05080F), location: 1)
+    ], startPoint: .top, endPoint: .bottom)
+    /// The tint's glide, the same length as the moonlight's colour glide.
+    static let tintGlide = Animation.easeInOut(duration: 1.2)
+
+    func modsTint(_ on: Bool) -> SeleneBackdrop {
+        var copy = self
+        copy.modsTint = on
+        return copy
+    }
+
     func still(_ on: Bool) -> SeleneBackdrop {
         var copy = self
         copy.still = on
@@ -62,23 +81,53 @@ struct SeleneBackdrop: View {
     }
 
     var body: some View {
-        ZStack {
+        let moving = style.animated && !reduceMotion && !still
+        let hasWallpaper = style.wallpaperURL != nil
+        return ZStack {
             SeleneTheme.scrim
             Rectangle().fill(SeleneTheme.baseGradient).opacity(baseOpacity)
+            if MoonlightEngine.shared == nil {
+                // Without Metal the tint is a layer of its own; with it the moonlight's shader draws the ground,
+                // in step with its light and off the main thread.
+                modsGround.opacity(modsTint ? 1 : 0)
+            }
             if let url = style.wallpaperURL, WallpaperCatalog.kind(of: url) == .video {
-                LiveBackdrop(url: url, playing: style.animated && !reduceMotion && !still, sizing: style.sizing)
+                // Under the Mods card's moonlight the video holds still and costs nothing.
+                LiveBackdrop(url: url, playing: moving && !modsTint, sizing: style.sizing)
                     .mask(style.brightness.mask)
             } else if let url = style.wallpaperURL, let image = WallpaperImageCache.shared.image(at: url) {
                 wallpaper(image)
                     .mask(style.brightness.mask)
             } else {
-                MoonlightBackdrop(accent: SeleneTheme.glyph, ink: SeleneTheme.ink,
-                                  moving: style.animated && !reduceMotion && !still)
+                MoonlightBackdrop(accent: modsTint ? Self.modsAccent : SeleneTheme.glyph, ink: SeleneTheme.ink,
+                                  tint: modsTint ? 1 : 0, moving: moving)
+            }
+            if hasWallpaper, MoonlightEngine.shared != nil {
+                // Over a wallpaper the Mods card brings its own moonlight. It stays mounted (hidden and idle while
+                // gone) and glides in and out on its render thread, so a quick there-and-back carries on from
+                // where it is, and the motes never start over.
+                MoonlightBackdrop(accent: Self.modsAccent, ink: SeleneTheme.ink, tint: 1,
+                                  presence: modsTint ? 1 : 0, moving: moving)
+            } else if modsTint, hasWallpaper {
+                ZStack {
+                    modsGround
+                    MoonlightBackdrop(accent: Self.modsAccent, ink: SeleneTheme.ink, tint: 1, moving: moving)
+                }
+                .transition(.opacity)
             }
         }
+        .animation(Self.tintGlide, value: modsTint)
         .ignoresSafeArea()
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+
+    /// The Mods card's ground, the base it replaces (its own scrim, so no blue shows through and greys it).
+    private var modsGround: some View {
+        ZStack {
+            SeleneTheme.scrim
+            Rectangle().fill(Self.modsGradient).opacity(baseOpacity)
+        }
     }
 
     @ViewBuilder private func wallpaper(_ image: NSImage) -> some View {
@@ -107,12 +156,16 @@ struct SeleneBackdrop: View {
 struct MoonlightBackdrop: View {
     let accent: Color
     let ink: Color
+    /// The Mods card's gold ground drawn under the light (0...1).
+    var tint: Float = 0
+    /// The whole layer's opacity (0...1), gliding.
+    var presence: Float = 1
     var moving = true
     /// A still image instead of a live layer: for small cards that clip and round it.
     var asImage = false
 
     var body: some View {
-        let colors = MoonlightColors(accent: accent, ink: ink)
+        let colors = MoonlightColors(accent: accent, ink: ink, tint: tint, presence: presence)
         if let engine = MoonlightEngine.shared {
             if asImage {
                 MoonlightStill(engine: engine, colors: colors)

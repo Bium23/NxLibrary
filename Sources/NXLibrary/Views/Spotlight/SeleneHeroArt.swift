@@ -35,10 +35,13 @@ final class SeleneHeroArt: ObservableObject {
     /// `settle` is the pause before loading; Collection waits longer so its logo leads.
     func loadHero(game: PortedGame?, current: () -> UUID?, metadata: NintendoStoreMetadata?,
                   artwork: ArtworkStore,
-                  settle: UInt64 = 150_000_000) async {
+                  settle: UInt64 = 150_000_000, keepsWithoutGame: Bool = false) async {
         guard let game else {
-            image = nil
-            key = "none"
+            // Spotlight keeps the last game's art over a card, so coming back to that game needs no reload.
+            if !keepsWithoutGame {
+                image = nil
+                key = "none"
+            }
             return
         }
         // Loaded already, unless the player has picked new art since.

@@ -8,6 +8,13 @@ extension SpotlightView {
         if viewer != nil { return handleViewer(action) }
         if viewModel.spotlight.isLifted { return handleLifted(action) }
         if cardMenu != nil { return handleCardMenu(action) }
+        if modsHost.isPanelOpen { return modsHost.handlePanel(action) }
+        if storeHost.isPanelOpen { return storeHost.panel.handlePanel(action) }
+        if viewModel.spotlight.focus == .store {
+            if handleStore(action) { return }
+            // Y (the card's menu), X and the row's jumps belong to the row, not the store.
+            if [.contextAction, .secondaryAction, .jumpToStart, .jumpToEnd].contains(action) { return }
+        }
         let items = self.items
         let shots = screenshotCount
         let tops = topGameCount
@@ -15,6 +22,7 @@ extension SpotlightView {
         let actions = page?.rows.count ?? 0
         let more = page?.more.count ?? 0
         let readMore = page.map { aboutExcerpt($0).truncated } ?? false
+        let mods = selectedGame.flatMap { modsHost.game?.id == $0.id ? modsHost.tiles.count : nil } ?? 0
         var moved = false
         switch action {
         case .navigateLeft, .navigateRight:
@@ -23,18 +31,20 @@ extension SpotlightView {
                 moved = state.focus == .row
                     ? state.move(by: delta, in: items)
                     : state.moveSideways(by: delta, screenshotCount: shots, topGameCount: tops,
-                                         actionCount: actions, moreCount: more, readMore: readMore)
+                                         actionCount: actions, moreCount: more, readMore: readMore, modsCount: mods)
             }
+        case .navigateDown where selectedItem == .card(.mods) && viewModel.spotlight.focus == .row:
+            enterStore()
         case .navigateDown:
             let isGame = selectedGame != nil
             let isActivity = selectedItem == .card(.activity)
             mutate {
                 moved = $0.moveDown(selectedIsGame: isGame, screenshotCount: shots,
                                     selectedIsActivity: isActivity, topGameCount: tops,
-                                    actionCount: actions, moreCount: more)
+                                    actionCount: actions, moreCount: more, modsCount: mods)
             }
         case .navigateUp:
-            mutate { moved = $0.moveUp(screenshotCount: shots, actionCount: actions) }
+            mutate { moved = $0.moveUp(screenshotCount: shots, actionCount: actions, modsCount: mods) }
         case .tabPrevious:
             setFilter(filter.shifted(by: -1))
         case .tabNext:
@@ -93,9 +103,13 @@ extension SpotlightView {
             guard state.moreIndex < more.count else { return }
             SoundEffectService.shared.play(.click)
             selectGame(more[state.moreIndex].id)
+        case .mods:
+            modsHost.activate(state.modsIndex, viewModel: viewModel, openMods: openMods)
         case .topGames:
             let ids = visibleTopGameIDs
             if state.topGameIndex < ids.count { selectGame(ids[state.topGameIndex]) }
+        case .store:
+            break // The store takes A itself (`handleStore`).
         }
     }
 
@@ -151,7 +165,7 @@ extension SpotlightView {
                 // Under a filter, fold the visible order into the full one.
                 let full = SpotlightRow.build(
                     games: LibraryQuery(filter: .all).apply(to: viewModel.libraryGames, history: playSessions),
-                    enabledCards: settings.settings.spotlightCards,
+                    enabledCards: settings.settings.visibleSpotlightCards,
                     order: settings.settings.spotlightOrder).map(\.key)
                 settings.settings.spotlightOrder = SpotlightRow.merging(visibleOrder: order, into: full)
             }
@@ -199,7 +213,7 @@ extension SpotlightView {
         let neighbour: SpotlightItem? = before.firstIndex { $0.key == key }.flatMap { index in
             index + 1 < before.count ? before[index + 1] : (index > 0 ? before[index - 1] : nil)
         }
-        settings.settings.spotlightCards.removeAll { $0 == card }
+        settings.settings.visibleSpotlightCards.removeAll { $0 == card }
         if let neighbour, viewModel.spotlight.selectedKey == key { mutate { $0.select(neighbour) } }
         reconcile()
     }
@@ -223,6 +237,8 @@ extension SpotlightView {
             surprise()
         case .card(.activity):
             break // Down enters its top games; the full screen comes later.
+        case .card(.mods):
+            enterStore()
         case .card(.addGame):
             SoundEffectService.shared.play(.click)
             NotificationCenter.default.post(name: .nxLibraryOpenAddGame, object: nil)
@@ -340,9 +356,18 @@ extension SpotlightView {
                   window.attachedSheet == nil,
                   NSApp.modalWindow == nil,
                   !(window.firstResponder is NSText) else { return event }
-            if event.type == .scrollWheel { return scrollPage(with: event) }
+            if event.type == .scrollWheel {
+                if modsHost.isPanelOpen || storeHost.isPanelOpen { return nil }
+                return selectedItem == .card(.mods) ? scrollStore(with: event) : scrollPage(with: event)
+            }
             let modifiers = event.modifierFlags.intersection([.command, .control, .option])
             guard modifiers.isEmpty else { return event }
+            if modsHost.isPanelOpen || storeHost.isPanelOpen {
+                // The mod detail or Find the game panel owns the arrows, Return and Esc.
+                guard let action = ModsBandHost.panelAction(keyCode: event.keyCode) else { return event }
+                handle(action)
+                return nil
+            }
             if viewer != nil {
                 // The viewer owns the keyboard: arrows page, Esc closes, the rest is swallowed.
                 switch event.keyCode {
@@ -425,7 +450,10 @@ extension SpotlightView {
         }
         let page = currentPage
         // An open description can run past More like this's resting place.
-        let bottom = page.map { min(offset(for: $0.more.isEmpty ? .actions : .more), offset(for: .about)) }
+        let last: (SpotlightPageModel) -> SpotlightFocusArea = {
+            !$0.more.isEmpty ? .more : modsHost.localMods != nil ? .mods : .actions
+        }
+        let bottom = page.map { min(offset(for: last($0)), offset(for: .about)) }
             ?? offset(for: .pills)
         let clamped = min(first, max(bottom, next))
         if event.hasPreciseScrollingDeltas || reduceMotion {
@@ -453,6 +481,7 @@ extension SpotlightView {
         var areas: [SpotlightFocusArea] = [.pills]
         if screenshotCount > 0 { areas.append(.strip) }
         if !page.rows.isEmpty { areas.append(.actions) }
+        if modsHost.localMods != nil { areas.append(.mods) }
         if !page.more.isEmpty { areas.append(.more) }
         let current = scroll
         guard let nearest = areas.min(by: { abs(offset(for: $0) - current) < abs(offset(for: $1) - current) }),
@@ -470,5 +499,71 @@ extension SpotlightView {
     func removeKeyMonitor() {
         if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
         keyMonitor = nil
+    }
+}
+
+// MARK: - Store
+
+extension SpotlightView {
+    /// Down (or A) on the Mods card: the store rises below it.
+    func enterStore() {
+        guard selectedItem == .card(.mods), viewModel.spotlight.focus == .row else { return }
+        mutate { $0.focus = .store }
+        SoundEffectService.shared.play(.focus)
+    }
+
+    /// The store's arrows, A and B; true when it took the action. Up from its top and B give the focus back to
+    /// the row.
+    func handleStore(_ action: GamepadAction) -> Bool {
+        switch action {
+        case .navigateUp, .navigateDown, .navigateLeft, .navigateRight, .confirm, .cancel: break
+        default: return false
+        }
+        switch storeHost.handle(action) {
+        case .moved:
+            SoundEffectService.shared.play(.focus)
+        case .leave:
+            mutate { $0.focus = .row }
+            SoundEffectService.shared.play(.focus)
+        case .stayed:
+            break
+        }
+        return true
+    }
+
+    /// The wheel or trackpad in the store moves section by section: one notch, or a swipe's worth of travel, is
+    /// one section; the first scroll down from the card enters the store with the page's glide.
+    func scrollStore(with event: NSEvent) -> NSEvent? {
+        guard viewer == nil, cardMenu == nil, !viewModel.spotlight.isLifted else { return event }
+        let dy = event.scrollingDeltaY
+        guard abs(dy) >= abs(event.scrollingDeltaX) else { return event }
+        if event.phase == .began { storeWheel = 0 }
+        if wheelLocked {
+            // One section per gesture: the rest of a swipe (its momentum too) is ignored.
+            let fresh = event.phase == .began || (!event.hasPreciseScrollingDeltas && !isGliding)
+            guard fresh else { return nil }
+            wheelLocked = false
+        }
+        guard !isGliding else { return nil }
+        let step = event.hasPreciseScrollingDeltas ? dy : dy * canvas.u(48)
+        if viewModel.spotlight.focus == .row {
+            guard step < -2 else { return nil }
+            storeWheel = 0
+            wheelLocked = true
+            enterStore()
+            return nil
+        }
+        storeWheel += step
+        let threshold = canvas.u(90)
+        if storeWheel <= -threshold {
+            storeWheel = 0
+            wheelLocked = true
+            _ = handleStore(.navigateDown)
+        } else if storeWheel >= threshold {
+            storeWheel = 0
+            wheelLocked = true
+            _ = handleStore(.navigateUp)
+        }
+        return nil
     }
 }

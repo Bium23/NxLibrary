@@ -10,17 +10,31 @@ struct MoonlightUniforms {
     var accent: SIMD4<Float>
     var ink: SIMD4<Float>
     var look: SIMD4<Float>
+    var tintTop: SIMD4<Float>
+    var tintMid: SIMD4<Float>
+    var tintBottom: SIMD4<Float>
 }
 
 /// The moonlight's colors, as the shaders take them.
 struct MoonlightColors: Equatable {
     var accent: SIMD3<Float>
     var ink: SIMD3<Float>
+    /// How much of the Mods card's gold ground the shader draws under the light (0...1); glides with the accent.
+    var tint: Float = 0
+    /// The whole layer's opacity (0...1): the Mods card's moonlight over a wallpaper glides in and out with it.
+    var presence: Float = 1
 
-    init(accent: Color, ink: Color) {
+    init(accent: Color, ink: Color, tint: Float = 0, presence: Float = 1) {
         self.accent = Self.rgb(accent)
         self.ink = Self.rgb(ink)
+        self.tint = tint
+        self.presence = presence
     }
+
+    /// The Mods card's ground (`SeleneBackdrop.modsGradient` at the base's 0.6 over the black scrim).
+    static let tintTop = SIMD3<Float>(0x8A, 0x5A, 0x0E) / 255 * 0.6
+    static let tintMid = SIMD3<Float>(0x3A, 0x25, 0x08) / 255 * 0.6
+    static let tintBottom = SIMD3<Float>(0x05, 0x08, 0x0F) / 255 * 0.6
 
     private static func rgb(_ color: Color) -> SIMD3<Float> {
         guard let c = NSColor(color).usingColorSpace(.sRGB) else { return SIMD3(1, 1, 1) }
@@ -89,7 +103,10 @@ final class MoonlightEngine: @unchecked Sendable {
         return MoonlightUniforms(size: SIMD4(w, h, time, w / h),
                                  accent: SIMD4(colors.accent, 1),
                                  ink: SIMD4(colors.ink, 0),
-                                 look: SIMD4(breath, 0, 0, 0))
+                                 look: SIMD4(breath, colors.presence, 0, 0),
+                                 tintTop: SIMD4(MoonlightColors.tintTop, colors.tint),
+                                 tintMid: SIMD4(MoonlightColors.tintMid, 0),
+                                 tintBottom: SIMD4(MoonlightColors.tintBottom, 0))
     }
 
     private func encode(_ pass: MTLRenderPassDescriptor, _ buffer: MTLCommandBuffer, _ u: MoonlightUniforms) {
@@ -179,6 +196,13 @@ final class MoonlightLayerView: NSView {
     /// Shared with the render thread, under `lock`.
     private struct State {
         var colors = MoonlightColors(accent: .white, ink: .white)
+        /// A colour change glides from `from` over `blend` seconds (the Mods card's tint): only the uniform
+        /// changes, the frame costs the same.
+        var from: MoonlightColors?
+        var blendStart: CFTimeInterval = 0
+        var hasColors = false
+        /// The last frame drawn from the link, for the frame-rate ceiling.
+        var lastFrame: CFTimeInterval?
         var moving = false
         var visible = true
         /// Seconds of motion so far: it stops while still and carries on from the
@@ -189,6 +213,8 @@ final class MoonlightLayerView: NSView {
     }
     private var state = State()
     private let lock = NSLock()
+    /// How long a colour change glides.
+    static let blend: CFTimeInterval = 1.2
     /// The frame rate's ceiling (a 120 Hz display draws every other refresh).
     private static let frameInterval = 1.0 / 60 - 0.002
 
@@ -215,12 +241,36 @@ final class MoonlightLayerView: NSView {
 
     func update(colors: MoonlightColors, moving: Bool) {
         lock.lock()
+        if state.hasColors, colors != state.colors {
+            // A change mid-glide starts from where the glide is now.
+            state.from = Self.blended(state, at: CACurrentMediaTime())
+            state.blendStart = CACurrentMediaTime()
+        }
+        state.hasColors = true
         state.colors = colors
         state.moving = moving
         if !moving { state.lastTick = nil }
         lock.unlock()
         updateLink()
         if !moving { renderFrame() }
+    }
+
+    /// Gone (presence 0, no glide): the layer is hidden and draws nothing, so a moonlight kept ready over a
+    /// wallpaper costs nothing until the Mods card brings it in.
+    private func isAbsent(at now: CFTimeInterval) -> Bool {
+        state.colors.presence <= 0 && !blending(at: now)
+    }
+
+    private func updateVisibility() {
+        lock.lock()
+        let hidden = isAbsent(at: CACurrentMediaTime())
+        lock.unlock()
+        if metalLayer.isHidden != hidden {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            metalLayer.isHidden = hidden
+            CATransaction.commit()
+        }
     }
 
     func stop() {
@@ -273,11 +323,31 @@ final class MoonlightLayerView: NSView {
         }
     }
 
-    /// Runs the display link only while moving, on screen and visible.
+    /// The colours at `now`: the glide's ease-in-out from `from` to `colors`, then `colors`.
+    private static func blended(_ state: State, at now: CFTimeInterval) -> MoonlightColors {
+        guard let from = state.from else { return state.colors }
+        let t = min(max((now - state.blendStart) / blend, 0), 1)
+        guard t < 1 else { return state.colors }
+        let e = Float(t * t * (3 - 2 * t))
+        var c = state.colors
+        c.accent = from.accent + (c.accent - from.accent) * e
+        c.ink = from.ink + (c.ink - from.ink) * e
+        c.tint = from.tint + (c.tint - from.tint) * e
+        c.presence = from.presence + (c.presence - from.presence) * e
+        return c
+    }
+
+    private func blending(at now: CFTimeInterval) -> Bool {
+        state.from != nil && now - state.blendStart < Self.blend
+    }
+
+    /// Runs the display link only while moving (or a colour glides), on screen and visible.
     private func updateLink() {
         lock.lock()
-        let run = state.moving && state.visible && window != nil
+        let now = CACurrentMediaTime()
+        let run = ((state.moving && !isAbsent(at: now)) || blending(at: now)) && state.visible && window != nil
         lock.unlock()
+        updateVisibility()
         if run {
             if link == nil {
                 var created: CVDisplayLink?
@@ -300,7 +370,7 @@ final class MoonlightLayerView: NSView {
     private func tick() {
         let now = CACurrentMediaTime()
         lock.lock()
-        if let last = state.lastTick, now - last < Self.frameInterval {
+        if let last = state.lastFrame, now - last < Self.frameInterval {
             lock.unlock()
             return
         }
@@ -315,9 +385,14 @@ final class MoonlightLayerView: NSView {
             if let last = state.lastTick { state.clock += min(now - last, 0.1) }
             state.lastTick = now
         }
+        state.lastFrame = now
         let clock = state.clock
-        let colors = state.colors
+        let colors = Self.blended(state, at: now)
+        let glideEnded = state.from != nil && !blending(at: now)
+        if glideEnded { state.from = nil }
         lock.unlock()
+        // The glide is over: a still layer's link stops on its last frame, a gone one hides.
+        if glideEnded { DispatchQueue.main.async { [weak self] in self?.updateLink() } }
         let size = metalLayer.drawableSize
         guard size.width >= 1, size.height >= 1 else { return }
         let breath = Float(0.5 + 0.5 * sin(2 * .pi * clock / MoonlightEngine.breathPeriod))

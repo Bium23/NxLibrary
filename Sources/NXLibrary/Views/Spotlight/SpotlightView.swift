@@ -57,6 +57,16 @@ public struct SpotlightView: View {
     @State var wheelSettle: Task<Void, Never>?
     /// About this game shows its whole text (Read more); closes with the game.
     @State var aboutExpanded = false
+    /// The selected game's Mods band (installed mods, GameBanana's, their panels); shared with Details.
+    @StateObject var modsHost = ModsBandHost()
+    /// The Mods card's store, below the card.
+    @StateObject var storeHost = ModStoreHost()
+    /// The backdrop's gold (`updateModsBackdrop`).
+    @State var modsBackdrop = false
+    /// Whether the previous game's art may stay while the next game's loads (`shownArt`).
+    @State var artRule = BackdropArtRule()
+    /// The wheel's travel inside the store, toward the next section.
+    @State var storeWheel: CGFloat = 0
     var isGliding: Bool { Date() < glideEnds }
 
     struct ViewerContext: Equatable {
@@ -92,7 +102,7 @@ public struct SpotlightView: View {
 
     var items: [SpotlightItem] {
         SpotlightRow.build(games: games,
-                           enabledCards: settings.settings.spotlightCards,
+                           enabledCards: settings.settings.visibleSpotlightCards,
                            order: viewModel.spotlight.lift?.order ?? settings.settings.spotlightOrder,
                            front: viewModel.frontGameID)
     }
@@ -146,9 +156,12 @@ public struct SpotlightView: View {
             rightReserve: hintReserve(state),
             hintsHidden: router.overlayHasHints(viewModel),
             backdrop: {
-                SeleneArtBackground(image: art.image, imageKey: art.key,
+                // On a card no art; on the Mods card the moonlight glides to gold (and stays gold until the next
+                // game's art has arrived, so leaving the card is one change, not gold → blue → art).
+                let shown = shownArt(model)
+                SeleneArtBackground(image: shown, imageKey: shown == nil ? "none" : art.key,
                                     shade: settings.settings.backgroundShade, crossfade: 0.8,
-                                    showsArt: !settings.settings.keepWallpaperOnGames)
+                                    showsArt: !settings.settings.keepWallpaperOnGames, modsTint: modsBackdrop)
                 // Deeper in the page the art dims so the text reads.
                 Color.black.opacity(dimmed ? 0.4 : 0)
                     .allowsHitTesting(false)
@@ -156,12 +169,17 @@ public struct SpotlightView: View {
             stage: { stage(model, state: state) })
         .overlay(viewerOverlay)
         .animation(.easeOut(duration: 0.2), value: viewer != nil)
+        .overlay(model.selectedGame.map { ModsBandOverlay(host: modsHost, find: modsHost.find, game: $0) })
+        .overlay(storeOverlay(model))
         .onAppear(perform: appear)
+        .onAppear { storeHost.loadCover() }
         .onAppear { mutate { $0.setPillLimit(selectedPillCount) } }
         .onChange(of: selectedPillCount) { count in mutate { $0.setPillLimit(count) } }
         .onDisappear {
             removeKeyMonitor()
             router.isScreenshotViewerOpen = false
+            modsHost.stop()
+            storeHost.close()
             pillTask?.cancel()
             mutate { $0.cancelLift() }
         }
@@ -170,14 +188,23 @@ public struct SpotlightView: View {
             reconcile()
             filterChanged(to: newFilter)
         }
-        .onChange(of: settings.settings.spotlightCards) { _ in reconcile() }
+        .onChange(of: settings.settings.visibleSpotlightCards) { _ in reconcile() }
         .onChange(of: settings.settings.spotlightOrder) { _ in reconcile() }
         .onChange(of: viewModel.spotlight.selectedKey) { _ in
             aboutExpanded = false
             selectionChanged()
         }
-        .onChange(of: viewModel.spotlight.focus) { _ in syncPage() }
+        .onChange(of: viewModel.spotlight.focus) { focus in
+            syncPage()
+            startModsOnline(focus)
+        }
+        // Game options (its Mods panel) closing, or NX Library coming back from Finder, re-reads the mods.
+        .onChange(of: viewModel.gameForSettingsSheet == nil) { closed in if closed { reloadMods() } }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in reloadMods() }
         .onChange(of: blocks) { _ in syncPage() }
+        // Inside the store the page glides section to section on a shorter curve.
+        .onChange(of: storeHost.focus) { _ in syncPage(glide: Self.storeGlide) }
+        .onChange(of: storeHost.sections.map(\.kind)) { _ in syncPage(glide: Self.storeGlide) }
         .onChange(of: viewer != nil) { router.isScreenshotViewerOpen = $0 }
         .onChange(of: router.pendingSpotlightMove) { _ in consumePendingMove() }
         .onReceive(NotificationCenter.default.publisher(for: .nxFindGameSelect)) { note in
@@ -197,6 +224,13 @@ public struct SpotlightView: View {
         .onChange(of: playSessions.sessions.count) { _ in reconcile() }
         .task(id: art.heroTaskKey(model.selectedGame, metadata: model.selectedGame.flatMap { viewModel.storeMetadata[$0.id] })) { await loadHero(model.selectedGame) }
         .task(id: art.logoTaskKey(model.selectedGame, metadata: model.selectedGame.flatMap { viewModel.storeMetadata[$0.id] })) { await loadLogo(model.selectedGame) }
+    }
+
+    @ViewBuilder
+    private func storeOverlay(_ model: Snapshot) -> some View {
+        if model.selectedItem == .card(.mods), let game = storeHost.panel.game {
+            ModsBandOverlay(host: storeHost.panel, find: storeHost.panel.find, game: game)
+        }
     }
 
     @ViewBuilder
@@ -227,6 +261,7 @@ public struct SpotlightView: View {
                         isReadingLibrary: viewModel.isScanningLibrary) ? filter : nil,
                     artwork: artwork,
                     tileLook: viewModel.portingTileLook,
+                    modsCover: storeHost.cover,
                     onSelect: { item in
                         guard !state.isLifted else { return }
                         mutate { $0.select(item) }
@@ -264,7 +299,7 @@ public struct SpotlightView: View {
             SpotlightUpHint()
                 .frame(width: canvas.stageSize.width)
                 .padding(.top, canvas.u(24))
-                .opacity([.pills, .strip, .about, .actions].contains(state.focus) ? 1 : 0)
+                .opacity([.pills, .strip, .about, .actions, .store].contains(state.focus) ? 1 : 0)
                 .animation(.easeInOut(duration: 0.4), value: state.focus)
                 .allowsHitTesting(false)
 
@@ -361,6 +396,19 @@ public struct SpotlightView: View {
                     // Hidden while the row has focus: it rises in with the page.
                     .opacity(belowShown ? 1 : 0)
             }
+        } else if model.selectedItem == .card(.mods) {
+            VStack(alignment: .leading, spacing: 0) {
+                SpotlightCardInfoView(
+                    card: .mods, gameCount: 0, installedCount: 0, poolLabel: "", activity: ActivitySummary(),
+                    topGames: [], focusedTop: nil, artwork: artwork, onTopGame: { _ in },
+                    modCounts: storeHost.counts)
+                    .padding(.top, canvas.u(10))
+                    .spotlightBlock(.head)
+                ModStorePage(host: storeHost, catalog: storeHost.catalog, active: state.focus == .store)
+                    .padding(.top, canvas.u(Self.storeGap))
+                    // Hidden while the row has focus: it rises in with the page.
+                    .opacity(belowShown ? 1 : 0)
+            }
         } else if case .card(let card) = model.selectedItem {
             let summary = card == .activity ? activitySummary : ActivitySummary()
             let top = summary.topGames.compactMap { model.gamesByID[$0] }.filter { !$0.isHidden }
@@ -429,7 +477,8 @@ public struct SpotlightView: View {
         if state.isLifted || cardMenu != nil { return [] }
         switch state.focus {
         case .row: return [[], ["Play", "Build", "Pick", "Open"]]
-        case .pills, .strip, .about, .actions, .more: return [[], ["Select", "View", "Show"]]
+        case .pills, .strip, .mods, .about, .actions, .more: return [[], ["Select", "View", "Show"]]
+        case .store: return [[], ["Sort", "View"]]
         case .topGames: return []
         }
     }
@@ -446,17 +495,22 @@ public struct SpotlightView: View {
             return [HintItem(.b, "Back"), HintItem(.a, "Select")]
         case .strip:
             return [HintItem(.b, "Back"), HintItem(.a, "View")]
-        case .about, .actions:
+        case .mods, .about, .actions:
             return [HintItem(.b, "Back"), HintItem(.a, "Select")]
         case .more:
             return [HintItem(.b, "Back"), HintItem(.a, "Show")]
         case .topGames:
             return [HintItem(.a, "Show")]
+        case .store:
+            // On the sort bar A sorts, and only when the focused order is not the one shown already.
+            guard storeHost.focus.kind == .sort else { return [HintItem(.b, "Back"), HintItem(.a, "View")] }
+            let chosen = ModStoreSort.allCases.firstIndex(of: storeHost.sort) == storeHost.focus.index
+            return chosen ? [HintItem(.b, "Back")] : [HintItem(.b, "Back"), HintItem(.a, "Sort")]
         case .row:
             switch model.selectedItem {
             case .card(let card):
                 let more = [HintItem(.y, "Card options")]
-                return card == .activity ? more : more + [HintItem(.a, card == .surprise ? "Pick" : "Open")]
+                return card == .activity ? more : more + [HintItem(.a, card == .surprise ? "Pick" : card == .mods ? "Browse" : "Open")]
             case .game:
                 guard let game = model.selectedGame else { return [] }
                 if viewModel.portingPills(game) == .porting {
@@ -543,6 +597,7 @@ public struct SpotlightView: View {
         }
         hadGames = hasGames
         reconcile()
+        if selectedItem == .card(.mods) { openStore() }
     }
 
     func reconcile() {
@@ -564,11 +619,64 @@ public struct SpotlightView: View {
     }
 
     private func selectionChanged() {
+        if selectedItem == .card(.mods) { openStore() } else { storeHost.close() }
+        updateModsBackdrop()
+        artRule.select(viewModel.spotlight.selectedKey, isGame: selectedGame != nil)
+        reloadMods()
+        startModsOnline(viewModel.spotlight.focus)
         guard let game = selectedGame else { return }
         if settings.settings.lastSelectedGameID != game.id {
             settings.settings.lastSelectedGameID = game.id
         }
         viewModel.loadStoreMetadata(for: game)
+    }
+
+    // MARK: - Mods
+
+    /// The selected game's installed mods; another game (or a card) stops the previous game's band.
+    func reloadMods() {
+        if let game = selectedGame { modsHost.reload(game, viewModel: viewModel) } else { modsHost.stop() }
+    }
+
+    /// GameBanana is asked once the game's page is open, not while the row is browsed.
+    func startModsOnline(_ focus: SpotlightFocusArea) {
+        guard focus != .row, focus != .topGames, let game = selectedGame else { return }
+        modsHost.startOnline(game, viewModel: viewModel)
+    }
+
+    /// Game options, opened on its Mods panel.
+    func openMods() {
+        guard let game = selectedGame else { return }
+        SoundEffectService.shared.play(.click)
+        viewModel.openGameOptions(game, from: .spotlight, opensMods: true)
+    }
+
+    // MARK: - Store
+
+    /// The store asks about every visible game, last played first.
+    func openStore() {
+        let games = LibraryQuery(filter: .all).apply(to: viewModel.libraryGames, history: playSessions).filter { !$0.isHidden }
+        storeHost.open(games, viewModel: viewModel)
+    }
+
+    /// Between the card's text and the store's sort bar.
+    static let storeGap: CGFloat = 56
+
+    /// Section to section inside the store: quick, with a long soft landing.
+    static let storeGlide = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.55)
+
+    /// The store's scroll: the sort bar rides the first shift (the card's title rises to the top); every other
+    /// section rises to the top line at 150, until the store's end sits above the hints.
+    func storeOffset() -> CGFloat {
+        let first = -canvas.u(Self.pageTravel)
+        let kinds = storeHost.sections.map(\.kind)
+        let at = storeHost.focus.position(in: storeHost.focusSections)
+        guard at > 0 else { return first }
+        let storeTop = canvas.u(420) + (blocks[.head] ?? 0) + canvas.u(Self.storeGap)
+        let target = canvas.u(150) - storeTop - canvas.u(ModStoreLayout.top(of: at, in: kinds))
+        let bottom = storeTop + canvas.u(ModStoreLayout.top(of: kinds.count, in: kinds)) + canvas.u(90)
+        let end = canvas.size.height - canvas.u(130) - bottom
+        return min(first, max(target, end))
     }
 
     // MARK: - Art
@@ -577,7 +685,29 @@ public struct SpotlightView: View {
         await art.loadHero(game: game, current: { selectedGame?.id },
                            metadata: game.flatMap { viewModel.storeMetadata[$0.id] }, artwork: artwork,
                            // The logo leads (0.3 s); the art turns after it.
-                           settle: 420_000_000)
+                           settle: 420_000_000, keepsWithoutGame: true)
+        // The game's art is in (or it has none): the gold gives way under it.
+        if let game, !Task.isCancelled, selectedGame?.id == game.id { modsBackdrop = false }
+    }
+
+    /// The art behind the page: none on a card; on a game its own art, or the previous game's while the next
+    /// loads when browsing from game to game (never another game's art right after a card). The rule answers for
+    /// the selection this render sees, so the art never drops out for the render before `onChange` runs.
+    private func shownArt(_ model: Snapshot) -> NSImage? {
+        guard let game = model.selectedGame, let image = art.image else { return nil }
+        return art.key.hasPrefix(game.id.uuidString)
+            || artRule.keepsOtherArt(selection: viewModel.spotlight.selectedKey, isGame: true) ? image : nil
+    }
+
+    /// Gold on the Mods card; another card turns it off at once, a game once its art has arrived.
+    private func updateModsBackdrop() {
+        if selectedItem == .card(.mods) {
+            modsBackdrop = true
+        } else if let game = selectedGame {
+            if art.key.hasPrefix(game.id.uuidString) { modsBackdrop = false }
+        } else {
+            modsBackdrop = false
+        }
     }
 
     // MARK: - Page
@@ -601,25 +731,36 @@ public struct SpotlightView: View {
         let stripBottom = canvas.u(420) + h(.head) + h(.genres) + h(.strip)
         // The description block includes its 44 top padding.
         let aboutTop = stripBottom + canvas.u(44)
-        let moreTop = stripBottom + h(.description) + canvas.u(Self.moreGap)
+        // The Mods band (its top gap included) sits between About this game and More like this.
+        let modsTop = stripBottom + h(.description) + canvas.u(Self.moreGap)
+        let moreTop = stripBottom + h(.description) + h(.mods) + canvas.u(Self.moreGap)
         switch area {
         case .row, .topGames:
             return 0
+        case .store:
+            return storeOffset()
         case .pills:
             return first
         case .strip:
             // Keep the strip clear of the hints on the window's bottom edge.
             return min(first, canvas.size.height - canvas.u(130) - stripBottom)
-        case .about, .actions, .more:
-            // The band reports a height only when it has games.
+        case .about, .actions, .mods, .more:
+            // The bands report a height only when they are shown.
             let more = h(.more) > 0
+            let pageBottom = stripBottom + h(.description) + h(.mods) + (more ? h(.more) : 0)
             let rest = SpotlightPageScroll.resting(
-                first: first, aboutTop: aboutTop, moreTop: more ? moreTop : nil,
-                pageBottom: stripBottom + h(.description) + (more ? h(.more) : 0),
+                first: first, aboutTop: aboutTop, moreTop: more ? moreTop : nil, pageBottom: pageBottom,
                 top: canvas.u(150), viewport: canvas.size.height, bottomInset: canvas.u(130))
             switch area {
             case .actions: return rest.actions
             case .more: return rest.more
+            case .mods:
+                // The band's title rises to the top line, as More like this does, unless the page ends first.
+                guard h(.mods) > 0 else { return rest.actions }
+                return SpotlightPageScroll.resting(
+                    first: first, aboutTop: aboutTop, moreTop: modsTop,
+                    pageBottom: pageBottom, top: canvas.u(150), viewport: canvas.size.height,
+                    bottomInset: canvas.u(130)).more
             default:
                 // Read more (or Show less, under the whole text) comes into view.
                 return SpotlightPageScroll.revealing(rest.actions, bottom: aboutTop + h(.about),
@@ -663,7 +804,7 @@ public struct SpotlightView: View {
     /// first and the sections below fade in behind the glide; coming back, the
     /// sections go first and the icons return as the page settles. Under reduce
     /// motion the page jumps and only the fades run.
-    func syncPage() {
+    func syncPage(glide: Animation = Self.glide) {
         let state = viewModel.spotlight
         let target = pageOffset(state)
         let onRow = state.focus == .row || state.focus == .topGames
@@ -673,9 +814,11 @@ public struct SpotlightView: View {
         } else if reduceMotion {
             scroll = target
         } else if abs(scroll - target) > 0.5 {
-            glideEnds = Date().addingTimeInterval(1.05)
-            withAnimation(Self.glide) { scroll = target }
+            glideEnds = Date().addingTimeInterval(glide == Self.glide ? 1.05 : 0.6)
+            withAnimation(glide) { scroll = target }
         }
+        // Mods found in the background wait until the page rests: no rebuild under a glide.
+        if selectedItem == .card(.mods) { storeHost.hold(until: glideEnds) }
         setPageFades(onRow: onRow, deep: isDeep(state))
     }
 
@@ -707,7 +850,8 @@ public struct SpotlightView: View {
 
     /// Past the screenshots the art dims behind the text.
     func isDeep(_ state: SpotlightState) -> Bool {
-        state.focus == .about || state.focus == .actions || state.focus == .more
+        state.focus == .about || state.focus == .actions || state.focus == .mods || state.focus == .more
+            || state.focus == .store
     }
 
     var currentPage: SpotlightPageModel? { selectedGame.map(page(for:)) }
@@ -775,6 +919,24 @@ public struct SpotlightView: View {
             .frame(width: canvas.u(1700), alignment: .topLeading)
             .padding(.top, canvas.u(44))
             .spotlightBlock(.description)
+
+            if let mods = modsHost.localMods, modsHost.game?.id == game.id {
+                DetailsModsBand(
+                    mods: mods,
+                    records: modsHost.records,
+                    gameBanana: modsHost.gameBanana,
+                    focusedIndex: state.focus == .mods ? state.modsIndex : nil,
+                    onFocus: { index in
+                        guard !isGliding else { return }
+                        mutate { $0.focus = .mods; $0.modsIndex = index }
+                    },
+                    onOpen: { index in
+                        mutate { $0.focus = .mods; $0.modsIndex = index }
+                        modsHost.activate(index, viewModel: viewModel, openMods: openMods)
+                    })
+                    .padding(.top, canvas.u(Self.moreGap))
+                    .spotlightBlock(.mods)
+            }
 
             if !page.more.isEmpty {
                 DetailsMoreBand(

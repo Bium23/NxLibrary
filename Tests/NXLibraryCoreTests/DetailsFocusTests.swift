@@ -134,22 +134,25 @@ final class DetailsFocusTests: XCTestCase {
         XCTAssertEqual(focus.more, 1)
     }
 
-    func testDownFromScreenshotsGoesToMods() {
+    func testModsBandSitsBetweenTheActionsAndMoreLikeThis() {
         let bands = DetailsFocus.Bands(screenshots: 3, mods: 2, actions: 5, more: 2)
         var focus = DetailsFocus()
+        focus.focus(zone: DetailsFocus.screenshotsZone, index: 0, in: bands)
         XCTAssertTrue(focus.down(in: bands))
-        XCTAssertEqual(focus.zone, DetailsFocus.screenshotsZone)
+        XCTAssertEqual(focus.zone, DetailsFocus.actionsZone)
+        XCTAssertTrue(focus.down(in: bands))
+        XCTAssertEqual(focus.action, 3)
         XCTAssertTrue(focus.down(in: bands))
         XCTAssertEqual(focus.zone, DetailsFocus.modsZone)
         XCTAssertTrue(focus.right(in: bands))
         XCTAssertEqual(focus.mod, 1)
         XCTAssertFalse(focus.right(in: bands), "the last tile holds")
-        XCTAssertTrue(focus.left(in: bands))
-        XCTAssertEqual(focus.mod, 0)
         XCTAssertTrue(focus.down(in: bands))
-        XCTAssertEqual(focus.zone, DetailsFocus.actionsZone)
+        XCTAssertEqual(focus.zone, DetailsFocus.moreZone)
         XCTAssertTrue(focus.up(in: bands))
         XCTAssertEqual(focus.zone, DetailsFocus.modsZone)
+        XCTAssertTrue(focus.up(in: bands))
+        XCTAssertEqual(focus.zone, DetailsFocus.actionsZone)
         focus.focus(zone: DetailsFocus.modsZone, index: 7, in: bands)
         XCTAssertEqual(focus.mod, 1)
     }
@@ -157,15 +160,15 @@ final class DetailsFocusTests: XCTestCase {
     func testEmptyModsBandIsSkipped() {
         let bands = DetailsFocus.Bands(screenshots: 3, mods: 0, actions: 5, more: 2)
         var focus = DetailsFocus()
-        focus.focus(zone: DetailsFocus.screenshotsZone, index: 0, in: bands)
+        focus.focus(zone: DetailsFocus.actionsZone, index: 3, in: bands)
         XCTAssertTrue(focus.down(in: bands))
-        XCTAssertEqual(focus.zone, DetailsFocus.actionsZone)
+        XCTAssertEqual(focus.zone, DetailsFocus.moreZone)
         focus.focus(zone: DetailsFocus.modsZone, index: 0, in: bands)
-        XCTAssertEqual(focus.zone, DetailsFocus.actionsZone, "an empty band takes no pointer focus")
+        XCTAssertEqual(focus.zone, DetailsFocus.moreZone, "an empty band takes no pointer focus")
         var onMods = DetailsFocus()
         onMods.focus(zone: DetailsFocus.modsZone, index: 1, in: DetailsFocus.Bands(screenshots: 0, mods: 2, actions: 1))
         onMods.settle(in: DetailsFocus.Bands(screenshots: 0, mods: 0, actions: 1))
-        XCTAssertEqual(onMods.zone, DetailsFocus.topZone, "a vanished band gives way to the one above")
+        XCTAssertEqual(onMods.zone, DetailsFocus.actionsZone, "a vanished band gives way to the one above")
     }
 
     func testModsBandCountsAvailableTiles() {
@@ -180,10 +183,45 @@ final class DetailsFocusTests: XCTestCase {
         XCTAssertEqual(focus.mod, 18)
     }
 
-    func testModsBandScrollKeepsFocusVisible() {
-        XCTAssertEqual(ModsBandLayout.scrollIndex(focused: 2, count: 19, visible: 6), 0)
-        XCTAssertEqual(ModsBandLayout.scrollIndex(focused: 8, count: 19, visible: 6), 3)
-        XCTAssertEqual(ModsBandLayout.scrollIndex(focused: 18, count: 19, visible: 6), 13)
-        XCTAssertEqual(ModsBandLayout.scrollIndex(focused: nil, count: 19, visible: 6), 0)
+    func testModsGridMovesByRowsAndLeavesFromItsEdges() {
+        // Fourteen tiles, six to a row: 0-5 / 6-11 / 12-13.
+        let bands = DetailsFocus.Bands(screenshots: 3, mods: 14, actions: 1, more: 2)
+        var focus = DetailsFocus()
+        focus.focus(zone: DetailsFocus.modsZone, index: 5, in: bands)
+        XCTAssertFalse(focus.right(in: bands), "Right stops at the row's end")
+        XCTAssertTrue(focus.down(in: bands))
+        XCTAssertEqual(focus.mod, 11)
+        XCTAssertTrue(focus.down(in: bands))
+        XCTAssertEqual(focus.mod, 13)
+        XCTAssertTrue(focus.left(in: bands))
+        XCTAssertFalse(focus.left(in: bands), "Left stops at the row's start")
+        XCTAssertTrue(focus.up(in: bands))
+        XCTAssertEqual(focus.mod, 6)
+        XCTAssertTrue(focus.down(in: bands))
+        XCTAssertTrue(focus.down(in: bands))
+        XCTAssertEqual(focus.zone, DetailsFocus.moreZone)
+        XCTAssertTrue(focus.up(in: bands))
+        XCTAssertEqual(focus.zone, DetailsFocus.modsZone)
+        XCTAssertEqual(focus.mod, 12, "back on the last row, in the column it had")
+        focus.focus(zone: DetailsFocus.modsZone, index: 3, in: bands)
+        XCTAssertTrue(focus.up(in: bands))
+        XCTAssertEqual(focus.zone, DetailsFocus.actionsZone)
+        focus.mod = 9
+        XCTAssertTrue(focus.down(in: bands))
+        XCTAssertEqual(focus.zone, DetailsFocus.modsZone)
+        XCTAssertEqual(focus.mod, 3, "from above, the first row in the column it had")
+    }
+
+    func testModsGridRowCount() {
+        XCTAssertEqual(ModsBandLayout.rows(count: 0), 0)
+        XCTAssertEqual(ModsBandLayout.rows(count: 6), 1)
+        XCTAssertEqual(ModsBandLayout.rows(count: 7), 2)
+        XCTAssertEqual(ModsBandLayout.rows(count: 19), 4)
+    }
+
+    func testModsBandTilesAreIdentifiedByWhatTheyShow() {
+        let tiles = ModsBandLayout.tiles(installed: 1, available: [7, 9], status: [.wrongGame])
+        XCTAssertEqual(Set(tiles).count, tiles.count)
+        XCTAssertEqual(tiles.last, .status(.wrongGame))
     }
 }

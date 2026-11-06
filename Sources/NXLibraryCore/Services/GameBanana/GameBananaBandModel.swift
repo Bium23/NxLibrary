@@ -41,6 +41,8 @@ public final class GameBananaBandModel: ObservableObject {
     private var task: Task<Void, Never>?
     private var downloads: [Int: ModDownload] = [:]
     private var cancelled: Set<Int> = []
+    /// The download attempt in progress for each mod.
+    private var attempts: [Int: UUID] = [:]
     private var startedFor: String?
     /// Games whose leftovers of an interrupted install were cleared in this run.
     private static var swept: Set<String> = []
@@ -71,12 +73,20 @@ public final class GameBananaBandModel: ObservableObject {
         resolve()
     }
 
+    /// The store's mod panel: installs go into this game's folder, without asking GameBanana which game it is.
+    /// A download already running keeps the folder it started with.
+    public func attach(store: ModStore) {
+        if store.isWritable, Self.swept.insert(store.titleID).inserted { store.removeLeftoverInstalls() }
+        self.store = store
+    }
+
     public func stop() {
         task?.cancel()
         task = nil
         downloads.values.forEach { $0.cancel() }
-        cancelled.formUnion(downloads.keys)
         downloads = [:]
+        attempts = [:]
+        cancelled = []
         startedFor = nil
         available = []
         installs = [:]
@@ -229,17 +239,28 @@ public final class GameBananaBandModel: ObservableObject {
         cancelled.remove(mod.id)
         installs[mod.id] = .downloading(0)
         let archive = store.modsFolder.appendingPathComponent(".installing-\(UUID().uuidString).download")
+        // Each attempt answers only for itself: a stopped download that finishes late never touches a new one.
+        let attempt = UUID()
         let download = ModDownload(
             file: file, destination: archive, userAgent: userAgent,
             progress: { [weak self] fraction in
                 Task { @MainActor in
-                    guard let self, case .downloading = self.installs[mod.id] else { return }
+                    guard let self, self.attempts[mod.id] == attempt, case .downloading = self.installs[mod.id] else { return }
                     self.installs[mod.id] = .downloading(min(max(fraction, 0), 1))
                 }
             },
             complete: { [weak self] result in
-                Task { @MainActor in self?.downloaded(result, mod: mod, file: file, store: store) }
+                Task { @MainActor in
+                    guard let self else { return }
+                    guard self.attempts[mod.id] == attempt else {
+                        if case .success(let archive) = result { try? FileManager.default.removeItem(at: archive) }
+                        return
+                    }
+                    self.attempts[mod.id] = nil
+                    self.downloaded(result, mod: mod, file: file, store: store)
+                }
             })
+        attempts[mod.id] = attempt
         downloads[mod.id] = download
         download.start()
     }

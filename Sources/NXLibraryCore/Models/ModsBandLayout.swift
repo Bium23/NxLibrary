@@ -1,7 +1,7 @@
 import Foundation
 
 /// What a status tile of the Mods band does.
-public enum ModsBandAction: Equatable, Sendable {
+public enum ModsBandAction: Hashable, Sendable {
     case retry
     case openPage(URL)
     /// "Is this the right game?": this GameBanana game id.
@@ -12,7 +12,7 @@ public enum ModsBandAction: Equatable, Sendable {
     case wrongGame
 }
 
-public enum ModsBandTile: Equatable, Sendable {
+public enum ModsBandTile: Hashable, Sendable {
     /// An installed mod, by its index in the list.
     case installed(Int)
     case manage
@@ -35,9 +35,42 @@ public enum ModsBandLayout {
         min(max(installed, 0), maxInstalled) + 1 + max(available, 0) + max(statusTiles, 0)
     }
 
-    /// The first tile shown when the row slides so the focused tile stays on screen.
-    public static func scrollIndex(focused: Int?, count: Int, visible: Int) -> Int {
-        guard let focused, visible > 0 else { return 0 }
-        return min(max(0, focused - visible + 1), max(0, count - visible))
+    /// The band is a grid that never slides sideways: six tiles to a row, as many rows as it needs, and Down walks
+    /// the rows as in Build & Sources.
+    public static let columns = 6
+
+    public static func rows(count: Int) -> Int {
+        count <= 0 ? 0 : (count - 1) / columns + 1
+    }
+
+    /// The tile under `index` in the next row; above a short last row's gap, its last tile; nil on the last row.
+    public static func below(_ index: Int, count: Int) -> Int? {
+        if index + columns < count { return index + columns }
+        let lastRowStart = max(count - 1, 0) / columns * columns
+        return index < lastRowStart ? count - 1 : nil
+    }
+
+    /// The tile above `index`; nil on the first row.
+    public static func above(_ index: Int) -> Int? {
+        index >= columns ? index - columns : nil
+    }
+
+    /// Left or Right inside the row; nil at the row's edge.
+    public static func beside(_ index: Int, by delta: Int, count: Int) -> Int? {
+        let column = index % columns
+        if delta < 0 { return column > 0 ? index - 1 : nil }
+        return column < columns - 1 && index + 1 < count ? index + 1 : nil
+    }
+
+    /// Down into the band: its first row, in the column it had.
+    public static func entryFromAbove(_ index: Int, count: Int) -> Int {
+        guard count > 0 else { return 0 }
+        return min(index % columns, count - 1)
+    }
+
+    /// Up into the band: its last row, in the column it had.
+    public static func entryFromBelow(_ index: Int, count: Int) -> Int {
+        guard count > 0 else { return 0 }
+        return min((count - 1) / columns * columns + index % columns, count - 1)
     }
 }

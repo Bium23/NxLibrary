@@ -128,6 +128,24 @@ final class AppSettingsStoreTests: XCTestCase {
         XCTAssertEqual(s.surprisePool, .installed)
     }
 
+    func testModsCardIsShownAndNeverSavedWhereTheReleasedAppReadsCards() throws {
+        // Older settings show the Mods card too.
+        let old = Data(#"{"spotlightCards":["activity"]}"#.utf8)
+        var s = try JSONDecoder().decode(AppSettings.self, from: old)
+        XCTAssertEqual(s.visibleSpotlightCards, [.activity, .mods])
+        s.visibleSpotlightCards = [.surprise, .mods]
+        XCTAssertEqual(s.spotlightCards, [.surprise], "the released app cannot read a card it does not know")
+        let json = String(decoding: try JSONEncoder().encode(s), as: UTF8.self)
+        XCTAssertFalse(json.contains(#""mods""#))
+        s.visibleSpotlightCards = [.surprise]
+        let back = try JSONDecoder().decode(AppSettings.self, from: try JSONEncoder().encode(s))
+        XCTAssertEqual(back.visibleSpotlightCards, [.surprise])
+        // A list that somehow holds the card keeps it out of the saved cards.
+        let stray = try JSONDecoder().decode(AppSettings.self, from: Data(#"{"spotlightCards":["mods","addGame"]}"#.utf8))
+        XCTAssertEqual(stray.spotlightCards, [.addGame])
+        XCTAssertEqual(stray.visibleSpotlightCards, [.mods, .addGame])
+    }
+
     func testSettingsWithRetiredSteamGridDBKeyStillDecode() throws {
         let old = Data(#"{"backgroundShade":"deep","steamGridDbApiKey":"abc"}"#.utf8)
         let s = try JSONDecoder().decode(AppSettings.self, from: old)
