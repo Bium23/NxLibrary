@@ -93,6 +93,16 @@ public struct ModStore {
     /// The overlay value for the mods that are on, top first; nil when none is.
     public func overlayValue() -> String? { overlay(for: mods()) }
 
+    /// The records of mods installed from GameBanana whose folder still exists, by GameBanana mod id.
+    public func gameBananaRecords() -> [Int: ModRecord] {
+        let present = Set(ModFolderScanner.entries(in: modsFolder).map(\.lastPathComponent))
+        var found: [Int: ModRecord] = [:]
+        for record in loadRecords() where present.contains(record.folderName) {
+            if let id = record.gameBananaModID, found[id] == nil { found[id] = record }
+        }
+        return found
+    }
+
     /// Pairs of mods that are on and share a file, in list order.
     public func conflicts() -> [ModConflict] {
         let on = mods().filter { $0.isOn }.compactMap { mod in mod.romfs.map { (mod.folderName, ModFolderScanner.files(under: $0)) } }
