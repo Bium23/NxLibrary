@@ -14,6 +14,10 @@ User-visible changes to NX Library are recorded here. Entries are grouped by rel
 
 - The intro shows only the moving background, without the app icon.
 
+### Fixed
+
+- macOS no longer turns Game Mode on for NX Library itself: it is a launcher, not a game, and Game Mode lowers the priority of background work such as builds. Games keep Game Mode off as the engine sets it, because it holds the GPU at its lowest clock after a few minutes. If macOS already remembers NX Library as a game, turn it off once in full screen: Command-Esc, Game Overlay, Game Mode.
+
 ## 0.1.3.3 — 2026-11-05
 
 ### Fixed
