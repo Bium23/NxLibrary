@@ -103,6 +103,15 @@ final class GameBananaClientTests: XCTestCase {
         XCTAssertEqual(http.count("Core/Item/Data"), 1)
     }
 
+    func testEmptyListingIsAskedAgain() async throws {
+        http.serve("itemid=8&", "[]")
+        let first = try await client().archivePaths(fileID: 8)
+        XCTAssertEqual(first, [])
+        http.serve("itemid=8&", #"[["romfs/a"]]"#)
+        let second = try await client().archivePaths(fileID: 8)
+        XCTAssertEqual(second, ["romfs/a"])
+    }
+
     func testOfflineFallsBackToExpiredCache() async throws {
         http.serve("Mod/5/ProfilePage", profile)
         _ = try await client().profile(modID: 5)

@@ -42,7 +42,7 @@ struct GameDetailView: View {
     /// GameBanana records of the installed mods, by GameBanana mod id.
     @State var modRecords: [Int: ModRecord] = [:]
     /// The GameBanana part of the Mods band (match, mods that work, installs).
-    @StateObject var gameBanana = GameBananaBandModel()
+    @StateObject var gameBanana = GameBananaBandModel.shared()
     @StateObject var gameBananaFind = GameBananaFindModel()
     /// The open mod detail panel.
     @State var modDetail: AvailableMod?

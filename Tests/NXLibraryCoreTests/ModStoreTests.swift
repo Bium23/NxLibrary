@@ -222,6 +222,22 @@ final class ModStoreTests: XCTestCase {
         return romfs
     }
 
+    func testLeftoverInstallsGoAndModsStay() throws {
+        try mod("Keep")
+        try FileManager.default.createDirectory(at: mods.appendingPathComponent(".installing-A/romfs"), withIntermediateDirectories: true)
+        try Data("x".utf8).write(to: mods.appendingPathComponent(".installing-B.download"))
+        try Data("x".utf8).write(to: mods.appendingPathComponent(".DS_Store"))
+        store().removeLeftoverInstalls()
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: mods.path).sorted(), [".DS_Store", "Keep"])
+    }
+
+    func testLeftoverInstallsStayWhileTheGameRuns() throws {
+        try FileManager.default.createDirectory(at: mods.appendingPathComponent(".installing-A"), withIntermediateDirectories: true)
+        allowed = false
+        store().removeLeftoverInstalls()
+        XCTAssertTrue(FileManager.default.fileExists(atPath: mods.appendingPathComponent(".installing-A").path))
+    }
+
     func testAdoptUpdateKeepsPlaceAndState() throws {
         try mod("A"); try mod("C")
         XCTAssertTrue(try store().adopt(staged: staged("old"), folderName: "B",

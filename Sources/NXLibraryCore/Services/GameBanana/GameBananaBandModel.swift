@@ -1,34 +1,11 @@
 import Foundation
-import AppKit
-import NXLibraryCore
-
-/// One GameBanana client, image cache and match store for the whole app (caches in
-/// `~/Library/Caches/NXLibrary/gamebanana`, matches in `~/Library/Application Support/NXLibrary/gamebanana`).
-final class GameBananaServices: @unchecked Sendable {
-    static let shared = GameBananaServices()
-
-    let userAgent: String
-    let client: GameBananaClient
-    let images: GameBananaImageCache
-    let matches: GameBananaMatchStore
-
-    private init() {
-        let fm = FileManager.default
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
-        userAgent = GameBananaClient.userAgent(version: version)
-        let caches = fm.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("NXLibrary/gamebanana")
-        let support = fm.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/NXLibrary/gamebanana")
-        client = GameBananaClient(cacheFolder: caches.appendingPathComponent("api"), userAgent: userAgent)
-        images = GameBananaImageCache(folder: caches.appendingPathComponent("images"), userAgent: userAgent)
-        matches = GameBananaMatchStore(file: support.appendingPathComponent("matches.json"))
-    }
-}
+import Combine
 
 /// The GameBanana part of one game's Mods band: which GameBanana game it is, the mods that work, and their installs.
 /// Requests run only between `start` (the page appears) and `stop` (it goes away).
 @MainActor
-final class GameBananaBandModel: ObservableObject {
-    enum Phase: Equatable {
+public final class GameBananaBandModel: ObservableObject {
+    public enum Phase: Equatable {
         case idle, matching
         case ask([GameBananaGame])
         case noPage, looking, ready
@@ -36,7 +13,7 @@ final class GameBananaBandModel: ObservableObject {
         case offline, failed
     }
 
-    enum InstallState: Equatable {
+    public enum InstallState: Equatable {
         case downloading(Double)
         case installing
         case failed(String)
@@ -44,44 +21,62 @@ final class GameBananaBandModel: ObservableObject {
         case done(String?)
     }
 
-    @Published private(set) var phase: Phase = .idle
-    @Published private(set) var available: [AvailableMod] = []
-    @Published private(set) var installs: [Int: InstallState] = [:]
-    @Published private(set) var match: GameBananaChoice?
+    @Published public private(set) var phase: Phase = .idle
+    @Published public private(set) var available: [AvailableMod] = []
+    @Published public private(set) var installs: [Int: InstallState] = [:]
+    @Published public private(set) var match: GameBananaChoice?
 
     /// Runs after an install changed the mods folder (the page re-reads its mods).
-    var onInstalled: (() -> Void)?
+    public var onInstalled: (() -> Void)?
 
-    private let services = GameBananaServices.shared
+    private let client: GameBananaClient
+    private let matches: GameBananaMatchStore
+    private let userAgent: String
     private var names: [String] = []
     private var store: ModStore?
     private var task: Task<Void, Never>?
     private var downloads: [Int: ModDownload] = [:]
     private var cancelled: Set<Int> = []
     private var startedFor: String?
+    /// Games whose leftovers of an interrupted install were cleared in this run.
+    private static var swept: Set<String> = []
+
+    public init(client: GameBananaClient, matches: GameBananaMatchStore, userAgent: String) {
+        self.client = client
+        self.matches = matches
+        self.userAgent = userAgent
+    }
 
     // MARK: - Lifecycle
 
-    func start(names: [String], store: ModStore?) {
+    public func start(names: [String], store: ModStore?) {
         guard let store else { return stop() }
         self.names = names.filter { !$0.isEmpty }
         self.store = store
         if startedFor == store.titleID, phase != .idle { return }
+        if startedFor != store.titleID { stop() }
+        // Nothing of this run is installing yet, so a staging folder or download left now is from a run that quit
+        // mid-install.
+        if store.isWritable, Self.swept.insert(store.titleID).inserted { store.removeLeftoverInstalls() }
+        self.store = store
         startedFor = store.titleID
         resolve()
     }
 
-    func stop() {
+    public func stop() {
         task?.cancel()
         task = nil
         downloads.values.forEach { $0.cancel() }
         cancelled.formUnion(downloads.keys)
         downloads = [:]
         startedFor = nil
+        available = []
+        installs = [:]
+        match = nil
         phase = .idle
     }
 
-    func retry() {
+    public func retry() {
         if case .game = match { look() } else { resolve() }
     }
 
@@ -89,7 +84,8 @@ final class GameBananaBandModel: ObservableObject {
 
     private func resolve() {
         guard let store else { return }
-        match = services.matches.choice(titleID: store.titleID)
+        available = []
+        match = matches.choice(titleID: store.titleID)
         switch match {
         case .game: look()
         case .noPage: phase = .noPage
@@ -101,7 +97,7 @@ final class GameBananaBandModel: ObservableObject {
         task?.cancel()
         phase = .matching
         let names = self.names
-        let client = services.client
+        let client = self.client
         task = Task { [weak self] in
             do {
                 var results: [GameBananaGame] = []
@@ -122,36 +118,36 @@ final class GameBananaBandModel: ObservableObject {
     }
 
     /// The player's (or the automatic) choice of GameBanana game.
-    func confirm(_ game: GameBananaGame) {
+    public func confirm(_ game: GameBananaGame) {
         guard let store else { return }
         let page = game.profileURL ?? URL(string: "https://gamebanana.com/games/\(game.id)")!
         let choice = GameBananaChoice.game(id: game.id, name: game.name, profileURL: page)
-        try? services.matches.set(choice, titleID: store.titleID)
+        try? matches.set(choice, titleID: store.titleID)
         match = choice
         look()
     }
 
-    func noneOfThese() {
+    public func noneOfThese() {
         guard let store else { return }
         task?.cancel()
-        try? services.matches.set(.noPage, titleID: store.titleID)
+        try? matches.set(.noPage, titleID: store.titleID)
         match = .noPage
         available = []
         phase = .noPage
     }
 
-    func search(_ text: String) async -> [GameBananaGame] {
+    public func search(_ text: String) async -> [GameBananaGame] {
         let query = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return [] }
-        return ((try? await services.client.searchGames(query)) ?? []).filter { !$0.hasContentRatings }
+        return ((try? await self.client.searchGames(query)) ?? []).filter { !$0.hasContentRatings }
     }
 
-    var matchedName: String? {
+    public var matchedName: String? {
         if case .game(_, let name, _) = match { return name }
         return nil
     }
 
-    var matchedPage: URL? {
+    public var matchedPage: URL? {
         if case .game(_, _, let url) = match { return url }
         return nil
     }
@@ -163,7 +159,7 @@ final class GameBananaBandModel: ObservableObject {
         task?.cancel()
         available = []
         phase = .looking
-        let finder = AvailableModsFinder(client: services.client, titleID: store.titleID)
+        let finder = AvailableModsFinder(client: self.client, titleID: store.titleID)
         task = Task { [weak self] in
             do {
                 for try await mod in finder.stream(gameID: id) {
@@ -185,7 +181,7 @@ final class GameBananaBandModel: ObservableObject {
     }
 
     /// The band's status line, under its title.
-    var statusLine: String? {
+    public var statusLine: String? {
         switch phase {
         case .looking: return "Looking for mods that work…"
         case .ask: return "Is this the right game?"
@@ -198,7 +194,7 @@ final class GameBananaBandModel: ObservableObject {
     }
 
     /// The status tiles after the mods.
-    var statusTiles: [ModsBandAction] {
+    public var statusTiles: [ModsBandAction] {
         switch phase {
         case .ask(let candidates): return candidates.map { .candidate($0.id) } + [.noneOfThese]
         case .noPage: return [.findGame]
@@ -209,14 +205,14 @@ final class GameBananaBandModel: ObservableObject {
         }
     }
 
-    func candidate(_ id: Int) -> GameBananaGame? {
+    public func candidate(_ id: Int) -> GameBananaGame? {
         if case .ask(let candidates) = phase { return candidates.first { $0.id == id } }
         return nil
     }
 
     // MARK: - Installing
 
-    func install(_ mod: AvailableMod, file: GameBananaFile) {
+    public func install(_ mod: AvailableMod, file: GameBananaFile) {
         guard let store, downloads[mod.id] == nil, installs[mod.id] != .installing else { return }
         guard store.isWritable else {
             installs[mod.id] = .failed(ModInstallError.notAllowed.message)
@@ -226,7 +222,7 @@ final class GameBananaBandModel: ObservableObject {
         installs[mod.id] = .downloading(0)
         let archive = store.modsFolder.appendingPathComponent(".installing-\(UUID().uuidString).download")
         let download = ModDownload(
-            file: file, destination: archive, userAgent: services.userAgent,
+            file: file, destination: archive, userAgent: userAgent,
             progress: { [weak self] fraction in
                 Task { @MainActor in
                     guard let self, case .downloading = self.installs[mod.id] else { return }
@@ -240,7 +236,7 @@ final class GameBananaBandModel: ObservableObject {
         download.start()
     }
 
-    func cancel(_ modID: Int) {
+    public func cancel(_ modID: Int) {
         guard let download = downloads[modID] else { return }
         cancelled.insert(modID)
         download.cancel()

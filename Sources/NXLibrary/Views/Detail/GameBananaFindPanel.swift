@@ -2,68 +2,6 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
-/// "Find the game" / "Wrong game?": search GameBanana by name and pick this game's page. Its state lives here so the
-/// page's controller and key handling can drive it.
-@MainActor
-final class GameBananaFindModel: ObservableObject {
-    @Published var isOpen = false
-    @Published var query = ""
-    @Published private(set) var results: [GameBananaGame] = []
-    @Published private(set) var searching = false
-    @Published private(set) var searched = false
-    /// The focused row: results, then None of these.
-    @Published var focus = 0
-
-    private var task: Task<Void, Never>?
-
-    var rowCount: Int { results.count + 1 }
-
-    func open(name: String, using band: GameBananaBandModel) {
-        query = name
-        results = []
-        searched = false
-        focus = 0
-        isOpen = true
-        search(using: band)
-    }
-
-    func close() {
-        task?.cancel()
-        isOpen = false
-    }
-
-    func search(using band: GameBananaBandModel) {
-        task?.cancel()
-        let text = query
-        searching = true
-        task = Task { [weak self] in
-            let found = await band.search(text)
-            guard !Task.isCancelled, let self else { return }
-            self.results = Array(found.prefix(8))
-            self.searching = false
-            self.searched = true
-            self.focus = 0
-        }
-    }
-
-    func move(by delta: Int) -> Bool {
-        let next = min(max(focus + delta, 0), rowCount - 1)
-        guard next != focus else { return false }
-        focus = next
-        return true
-    }
-
-    /// Runs the focused row; true when it closed the panel.
-    func activate(_ index: Int, using band: GameBananaBandModel) {
-        if index < results.count {
-            band.confirm(results[index])
-        } else {
-            band.noneOfThese()
-        }
-        close()
-    }
-}
-
 struct GameBananaFindPanel: View {
     @ObservedObject var model: GameBananaFindModel
     @ObservedObject var band: GameBananaBandModel
@@ -94,14 +32,17 @@ struct GameBananaFindPanel: View {
                         .foregroundColor(SeleneTheme.ink)
                         .focused($fieldFocused)
                         .onSubmit {
-                            fieldFocused = false
-                            model.search(using: band)
+                            model.editing = true
+                            model.confirm(using: band)
                         }
                         .onExitCommand { close() }
                 }
                 .padding(.horizontal, canvas.u(16))
                 .padding(.vertical, canvas.u(10))
                 .background(Capsule().fill(SeleneTheme.glassSolid))
+                .overlay(Capsule().strokeBorder(SeleneTheme.focus, lineWidth: canvas.u(2.5)).opacity(model.editing ? 1 : 0))
+                .onChange(of: model.editing) { if fieldFocused != $0 { fieldFocused = $0 } }
+                .onChange(of: fieldFocused) { if model.editing != $0 { model.editing = $0 } }
 
                 if model.searching {
                     Text("Searching GameBanana…").seleneFont(16).foregroundColor(SeleneTheme.ink60)
@@ -113,6 +54,7 @@ struct GameBananaFindPanel: View {
                         row(index: index, title: game.name, icon: game.iconURL)
                     }
                     row(index: model.results.count, title: "None of these", icon: nil)
+                        .opacity(model.searched && !model.searching ? 1 : 0.5)
                 }
                 Text("Mod data provided by GameBanana")
                     .seleneFont(14)
@@ -125,7 +67,7 @@ struct GameBananaFindPanel: View {
     }
 
     private func row(index: Int, title: String, icon: URL?) -> some View {
-        let focused = model.focus == index && !fieldFocused
+        let focused = model.focus == index && !model.editing
         return HStack(spacing: canvas.u(14)) {
             if let icon {
                 GameBananaImageView(url: icon, maxPixelSize: 128)

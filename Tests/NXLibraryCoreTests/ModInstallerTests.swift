@@ -116,6 +116,48 @@ final class ModInstallerTests: XCTestCase {
         XCTAssertEqual(envText(), "DM_ROMFS_OVERLAY=\(mods.appendingPathComponent("Pack/romfs").path)\n")
     }
 
+    func testWriteFailureShowsAFixedSentence() {
+        XCTAssertEqual(ModInstallError.writeFailed("The file \u{201C}a.bin\u{201D} couldn\u{2019}t be saved.").message,
+                       "The mod couldn't be copied into the game's folder. Try again.")
+    }
+
+    func testSymlinkEntryIsRefusedBeforeUnpacking() throws {
+        let outside = dir.appendingPathComponent("outside")
+        try FileManager.default.createDirectory(at: outside, withIntermediateDirectories: true)
+        let src = dir.appendingPathComponent("src-link")
+        try FileManager.default.createDirectory(at: src.appendingPathComponent("romfs/real"), withIntermediateDirectories: true)
+        try Data("y".utf8).write(to: src.appendingPathComponent("romfs/real/x.bin"))
+        try FileManager.default.createSymbolicLink(atPath: src.appendingPathComponent("romfs/link").path,
+                                                   withDestinationPath: outside.path)
+        let evil = dir.appendingPathComponent("link.tar")
+        let tar = URL(fileURLWithPath: "/usr/bin/bsdtar")
+        XCTAssertEqual(try SystemCommandRunner().run(tar, ["-cf", evil.path, "romfs/link"], environment: nil,
+                                                     currentDirectory: src).status, 0)
+        XCTAssertEqual(try SystemCommandRunner().run(tar, ["-rf", evil.path, "-s", ",romfs/real,romfs/link,", "romfs/real/x.bin"],
+                                                     environment: nil, currentDirectory: src).status, 0)
+        var extracted = false
+        runner.onExtract = { extracted = true }
+        try assertInstallFails(.unsafe, archive: evil)
+        XCTAssertFalse(extracted)
+        XCTAssertEqual(newEntries(), [])
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: outside.path), [])
+    }
+
+    func testHardlinkEntryIsRefusedBeforeUnpacking() throws {
+        let src = dir.appendingPathComponent("src-hard")
+        try FileManager.default.createDirectory(at: src.appendingPathComponent("romfs"), withIntermediateDirectories: true)
+        try Data("y".utf8).write(to: src.appendingPathComponent("romfs/a.bin"))
+        try FileManager.default.linkItem(at: src.appendingPathComponent("romfs/a.bin"), to: src.appendingPathComponent("romfs/b.bin"))
+        let evil = dir.appendingPathComponent("hard.tar")
+        XCTAssertEqual(try SystemCommandRunner().run(URL(fileURLWithPath: "/usr/bin/bsdtar"), ["-cf", evil.path, "romfs"],
+                                                     environment: nil, currentDirectory: src).status, 0)
+        var extracted = false
+        runner.onExtract = { extracted = true }
+        try assertInstallFails(.unsafe, archive: evil)
+        XCTAssertFalse(extracted)
+        XCTAssertEqual(newEntries(), [])
+    }
+
     func testTraversalArchiveIsUnsafe() throws {
         let payload = dir.appendingPathComponent("a.bin")
         try Data("y".utf8).write(to: payload)

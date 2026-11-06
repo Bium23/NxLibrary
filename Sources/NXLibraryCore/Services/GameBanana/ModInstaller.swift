@@ -14,7 +14,8 @@ public enum ModInstallError: Error, Equatable {
         case .unsafe: return "This archive has files outside its folder, so it wasn't installed."
         case .noRomFS: return "This file has no romfs folder, so it can't work."
         case .noSpace: return "There isn't enough space to install this mod."
-        case .writeFailed(let reason): return "The mod could not be installed: \(reason)"
+        // The reason stays out of the sentence: the player gets plain words, not a system error.
+        case .writeFailed: return "The mod couldn't be copied into the game's folder. Try again."
         }
     }
 }
@@ -40,7 +41,7 @@ public enum ModInstallResult: Equatable {
 
 /// Installs a downloaded GameBanana file into the game's mods folder: verify size and MD5, list the archive with the
 /// system `bsdtar`, refuse absolute or `..` paths, find the single RomFS root, unpack into a hidden staging folder
-/// inside the mods folder, refuse symlinks, then hand the RomFS tree to `ModStore.adopt`. The staging folder is
+/// inside the mods folder, refuse links, then hand the RomFS tree to `ModStore.adopt`. The staging folder is
 /// removed whatever happens; the downloaded archive belongs to the caller.
 public struct ModInstaller {
     public let store: ModStore
@@ -95,6 +96,10 @@ public struct ModInstaller {
         guard !raw.contains(where: { $0.hasPrefix("/") }),
               !paths.contains(where: { $0.split(separator: "/").contains("..") }) else { throw ModInstallError.unsafe }
         guard let root = ModSupport.romfsRoot(in: paths, titleID: store.titleID) else { throw ModInstallError.noRomFS }
+        // Links of any kind are refused before anything is unpacked: bsdtar -tv starts a symlink's line with `l` and
+        // ends a hard link's with `link to <target>`.
+        let verbose = try tar(["-tvf", archive.path]).split(separator: "\n")
+        guard !verbose.contains(where: { $0.hasPrefix("l") || $0.contains(" link to ") }) else { throw ModInstallError.unsafe }
 
         let fm = FileManager.default
         let staging = store.modsFolder.appendingPathComponent(".installing-\(UUID().uuidString)")

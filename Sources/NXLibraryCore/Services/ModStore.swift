@@ -115,6 +115,17 @@ public struct ModStore {
         return found
     }
 
+    /// Removes what an install interrupted by a quit or crash left in the mods folder: the hidden `.installing-<UUID>`
+    /// staging folders and `.installing-<UUID>.download` archives. Mods and other files stay; nothing happens while
+    /// the game runs.
+    public func removeLeftoverInstalls() {
+        guard canWrite() else { return }
+        let fm = FileManager.default
+        for name in (try? fm.contentsOfDirectory(atPath: modsFolder.path)) ?? [] where name.hasPrefix(".installing-") {
+            try? fm.removeItem(at: modsFolder.appendingPathComponent(name))
+        }
+    }
+
     // MARK: - Changing
 
     public func setOn(_ on: Bool, folderName: String) throws {

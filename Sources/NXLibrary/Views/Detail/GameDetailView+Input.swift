@@ -264,7 +264,7 @@ extension GameDetailView {
         case .navigateDown: if gameBananaFind.move(by: 1) { SoundEffectService.shared.play(.focus) }
         case .confirm:
             SoundEffectService.shared.play(.click)
-            gameBananaFind.activate(gameBananaFind.focus, using: gameBanana)
+            gameBananaFind.confirm(using: gameBanana)
         case .cancel, .menu:
             SoundEffectService.shared.play(.focus)
             gameBananaFind.close()

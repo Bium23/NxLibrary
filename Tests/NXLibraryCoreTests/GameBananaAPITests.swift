@@ -89,6 +89,15 @@ final class GameBananaAPITests: XCTestCase {
         XCTAssertNil(GameBananaAPI.archivePaths(in: Data("<html></html>".utf8)))
     }
 
+    func testUntrustedPageURLsAreDropped() throws {
+        let profile = try JSONDecoder().decode(GameBananaModProfile.self,
+                                               from: Data(#"{"_idRow": 5, "_sName": "X", "_sProfileUrl": "file:///etc/hosts"}"#.utf8))
+        XCTAssertNil(profile.profileURL)
+        let game = try JSONDecoder().decode(GameBananaGame.self,
+                                            from: Data(#"{"_idRow": 6, "_sName": "G", "_sProfileUrl": "http://gamebanana.com/games/6"}"#.utf8))
+        XCTAssertNil(game.profileURL)
+    }
+
     func testTrustedHosts() {
         for good in ["https://gamebanana.com/dl/1", "https://files.gamebanana.com/x", "https://filecache20.gamebanana.com/x",
                      "https://images.gamebanana.com/x"] {

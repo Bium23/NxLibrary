@@ -114,8 +114,10 @@ private extension KeyedDecodingContainer where Key == AnyKey {
     func date(_ key: String) -> Date? {
         optional(key).map { (seconds: Int) in Date(timeIntervalSince1970: TimeInterval(seconds)) }
     }
+    /// A GameBanana link: anything that is not https on a GameBanana host is dropped, so nothing from the API can
+    /// make NX Library open or fetch somewhere else.
     func url(_ key: String) -> URL? {
-        optional(key).flatMap { (string: String) in URL(string: string) }
+        optional(key).flatMap { (string: String) in URL(string: string) }.flatMap { GameBananaAPI.trusted($0) ? $0 : nil }
     }
     /// `_aPreviewMedia._aImages`, or nothing when the media object is missing or `[]`.
     func previewImages<T: Decodable>() -> [T] {

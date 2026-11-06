@@ -32,7 +32,7 @@ actor GameBananaGate {
 
 /// GameBanana's API with good manners: one User-Agent, a 15 s timeout, at most 4 requests at once, and responses
 /// cached on disk (game searches 1 day, mod pages 6 h, archive listings forever, since a file's contents never
-/// change). When the network fails, an expired cache entry is used rather than nothing.
+/// change; an empty listing is not kept, since GameBanana may still be reading a new file). When the network fails, an expired cache entry is used rather than nothing.
 public actor GameBananaClient {
     public static func userAgent(version: String) -> String { "NXLibrary/\(version) (macOS; personal app)" }
 
@@ -70,7 +70,8 @@ public actor GameBananaClient {
     }
 
     public func archivePaths(fileID: Int) async throws -> [String] {
-        try await fetch(GameBananaAPI.archiveListURL(fileID: fileID), kind: "listing", key: "\(fileID)", lifetime: nil) {
+        try await fetch(GameBananaAPI.archiveListURL(fileID: fileID), kind: "listing", key: "\(fileID)", lifetime: nil,
+                        keep: { !$0.isEmpty }) {
             GameBananaAPI.archivePaths(in: $0)
         }
     }
@@ -81,11 +82,11 @@ public actor GameBananaClient {
         SHA256.hash(data: Data(text.utf8)).map { String(format: "%02x", $0) }.joined()
     }
 
-    /// `lifetime` nil keeps the entry forever.
+    /// `lifetime` nil keeps the entry forever; `keep` says whether an answer is saved at all.
     private func fetch<T>(_ url: URL, kind: String, key: String, lifetime: TimeInterval?,
-                          parse: (Data) -> T?) async throws -> T {
+                          keep: (T) -> Bool = { _ in true }, parse: (Data) -> T?) async throws -> T {
         let file = cacheFolder.appendingPathComponent(kind).appendingPathComponent(key + ".json")
-        let cached = (try? Data(contentsOf: file)).flatMap(parse)
+        let cached = (try? Data(contentsOf: file)).flatMap(parse).flatMap { keep($0) ? $0 : nil }
         if let cached, let lifetime, let saved = Self.savedDate(file), now().timeIntervalSince(saved) < lifetime {
             return cached
         }
@@ -102,7 +103,7 @@ public actor GameBananaClient {
         switch outcome {
         case .success(let (data, response)):
             if (200..<300).contains(response.statusCode), let value = parse(data) {
-                store(data, at: file)
+                if keep(value) { store(data, at: file) }
                 return value
             }
             if let cached { return cached }
