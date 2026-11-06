@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import os
 
 /// The GameBanana part of one game's Mods band: which GameBanana game it is, the mods that work, and their installs.
 /// Requests run only between `start` (the page appears) and `stop` (it goes away).
@@ -21,7 +22,10 @@ public final class GameBananaBandModel: ObservableObject {
         case done(String?)
     }
 
-    @Published public private(set) var phase: Phase = .idle
+    @Published public private(set) var phase: Phase = .idle {
+        didSet { if phase != oldValue { Self.log.notice("phase \(String(describing: self.phase), privacy: .public) available \(self.available.count, privacy: .public)") } }
+    }
+    private static let log = Logger(subsystem: "local.nxlibrary", category: "gamebanana")
     @Published public private(set) var available: [AvailableMod] = []
     @Published public private(set) var installs: [Int: InstallState] = [:]
     @Published public private(set) var match: GameBananaChoice?
@@ -50,7 +54,11 @@ public final class GameBananaBandModel: ObservableObject {
     // MARK: - Lifecycle
 
     public func start(names: [String], store: ModStore?) {
-        guard let store else { return stop() }
+        guard let store else {
+            Self.log.notice("start without a title ID")
+            return stop()
+        }
+        Self.log.notice("start \(store.titleID, privacy: .public)")
         self.names = names.filter { !$0.isEmpty }
         self.store = store
         if startedFor == store.titleID, phase != .idle { return }
