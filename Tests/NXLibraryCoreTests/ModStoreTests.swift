@@ -214,4 +214,54 @@ final class ModStoreTests: XCTestCase {
         try store().sync()
         XCTAssertEqual(envText(), "DM_ROMFS_OVERLAY=/Users/me/my-mod\n")
     }
+
+    private func staged(_ text: String) throws -> URL {
+        let romfs = mods.appendingPathComponent(".installing-\(UUID().uuidString)/romfs")
+        try FileManager.default.createDirectory(at: romfs.appendingPathComponent("Data"), withIntermediateDirectories: true)
+        try Data(text.utf8).write(to: romfs.appendingPathComponent("Data/a.bin"))
+        return romfs
+    }
+
+    func testAdoptUpdateKeepsPlaceAndState() throws {
+        try mod("A"); try mod("C")
+        XCTAssertTrue(try store().adopt(staged: staged("old"), folderName: "B",
+                                        record: ModRecord(folderName: "B", isOn: false, gameBananaModID: 7), turnOn: true))
+        // The first change records the folders where they stand (by name): B sits between A and C.
+        XCTAssertEqual(store().mods().map(\.folderName), ["A", "B", "C"])
+        let on = try store().adopt(staged: staged("new"), folderName: "ignored",
+                                   record: ModRecord(folderName: "ignored", isOn: false, gameBananaModID: 7, gameBananaFileID: 2),
+                                   turnOn: true)
+        XCTAssertTrue(on)
+        XCTAssertEqual(store().mods().map(\.folderName), ["A", "B", "C"])
+        XCTAssertEqual(store().mods().map(\.isOn), [false, true, false])
+        XCTAssertEqual(trashed, ["B"])
+        XCTAssertEqual(try String(contentsOf: mods.appendingPathComponent("B/romfs/Data/a.bin"), encoding: .utf8), "new")
+        XCTAssertEqual(store().gameBananaRecords()[7]?.gameBananaFileID, 2)
+    }
+
+    func testAdoptOverLimitInstallsOff() throws {
+        let long = String(repeating: "x", count: 200)
+        for i in 0..<30 {
+            let name = "\(i)-\(long)"
+            try mod(name)
+            do { try store().setOn(true, folderName: name) } catch ModStoreError.overlayTooLong { break }
+        }
+        let before = envText()
+        let on = try store().adopt(staged: staged("x"), folderName: "New \(long)",
+                                   record: ModRecord(folderName: "New \(long)", isOn: false, gameBananaModID: 9), turnOn: true)
+        XCTAssertFalse(on)
+        XCTAssertEqual(store().mods().last?.folderName, "New \(long)")
+        XCTAssertEqual(store().mods().last?.isOn, false)
+        XCTAssertTrue(envText() == before)
+    }
+
+    func testAdoptRefusedWhileRunning() throws {
+        let romfs = try staged("x")
+        allowed = false
+        XCTAssertThrowsError(try store().adopt(staged: romfs, folderName: "B",
+                                               record: ModRecord(folderName: "B", isOn: false), turnOn: true)) {
+            XCTAssertEqual($0 as? ModStoreError, .notAllowed)
+        }
+        XCTAssertFalse(FileManager.default.fileExists(atPath: mods.appendingPathComponent("B").path))
+    }
 }

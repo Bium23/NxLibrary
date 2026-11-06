@@ -138,6 +138,39 @@ public struct ModStore {
         }
     }
 
+    /// Whether changes are allowed now (the game is not running).
+    public var isWritable: Bool { canWrite() }
+
+    /// Takes a mod installed from GameBanana: moves the `staged` RomFS tree to `mods/<folderName>/romfs` and records
+    /// it. An update (a record with the same GameBanana mod id) moves the old folder to the Trash and keeps its folder
+    /// name, place in the list and on/off state. A new mod goes to the bottom, on when `turnOn` and the overlay still
+    /// fits the launcher's line. Returns whether the mod is on.
+    @discardableResult
+    public func adopt(staged romfs: URL, folderName: String, record: ModRecord, turnOn: Bool) throws -> Bool {
+        guard canWrite() else { throw ModStoreError.notAllowed }
+        let fm = FileManager.default
+        let previous = record.gameBananaModID.flatMap { gameBananaRecords()[$0] }
+        let name = previous?.folderName ?? folderName
+        let folder = modsFolder.appendingPathComponent(name)
+        do {
+            if previous != nil, fm.fileExists(atPath: folder.path) { try trash(folder) }
+            try fm.createDirectory(at: folder, withIntermediateDirectories: true)
+            try fm.moveItem(at: romfs, to: folder.appendingPathComponent("romfs"))
+        } catch {
+            throw ModStoreError.writeFailed(error.localizedDescription)
+        }
+        var list = mods()
+        if previous == nil, turnOn, let index = list.firstIndex(where: { $0.folderName == name }),
+           list[index].romfs != nil, !name.contains(":") {
+            list[index].isOn = true
+            if let value = overlay(for: list), value.utf8.count > Self.overlayLimit { list[index].isOn = false }
+        }
+        var adopted = record
+        adopted.folderName = name
+        try save(list, replacing: adopted)
+        return list.first { $0.folderName == name }?.isOn ?? false
+    }
+
     /// Moves the mod's folder to the Trash and forgets it.
     public func remove(folderName: String) throws {
         guard canWrite() else { throw ModStoreError.notAllowed }
@@ -176,8 +209,9 @@ public struct ModStore {
     }
 
     /// Records the whole list (hand-installed folders get a record where they stand) and writes the overlay.
-    private func save(_ list: [LocalMod]) throws {
-        let previous = Dictionary(loadRecords().map { ($0.folderName, $0) }, uniquingKeysWith: { first, _ in first })
+    private func save(_ list: [LocalMod], replacing: ModRecord? = nil) throws {
+        var previous = Dictionary(loadRecords().map { ($0.folderName, $0) }, uniquingKeysWith: { first, _ in first })
+        if let replacing { previous[replacing.folderName] = replacing }
         let records = list.map { mod -> ModRecord in
             var record = previous[mod.folderName] ?? ModRecord(folderName: mod.folderName, isOn: false)
             record.isOn = mod.isOn
