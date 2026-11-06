@@ -12,21 +12,38 @@ public enum EnvFileEditor {
         if existing == nil && value == nil { return }
         let text = existing ?? ""
         let newline = text.contains("\r\n") ? "\r\n" : "\n"
-        var lines = text.components(separatedBy: newline)
-        if lines.last == "" { lines.removeLast() }
 
-        var output: [String] = []
+        var output = ""
         var placed = false
-        for line in lines {
-            guard lineKey(line) == key else { output.append(line); continue }
-            if let value, !placed { output.append("\(key)=\(value)"); placed = true }
+        for (line, ending) in lines(of: text) {
+            guard lineKey(line) == key else { output += line + ending; continue }
+            if let value, !placed { output += "\(key)=\(value)" + (ending.isEmpty ? newline : ending); placed = true }
         }
-        if let value, !placed { output.append("\(key)=\(value)") }
+        if let value, !placed {
+            if let last = output.last, last != "\n" && last != "\r\n" { output += newline }
+            output += "\(key)=\(value)" + newline
+        }
 
-        let content = output.isEmpty ? "" : output.joined(separator: newline) + newline
-        if content == text { return }
+        if output == text { return }
         try fm.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try content.write(to: file, atomically: true, encoding: .utf8)
+        try output.write(to: file, atomically: true, encoding: .utf8)
+    }
+
+    /// Each line with its own ending ("\n", "\r\n", or "" for a last line without one), so a file that mixes
+    /// endings keeps every line apart (the launcher splits on "\n").
+    private static func lines(of text: String) -> [(String, String)] {
+        var result: [(String, String)] = []
+        var current = ""
+        for character in text {
+            if character == "\n" || character == "\r\n" {
+                result.append((current, String(character)))
+                current = ""
+            } else {
+                current.append(character)
+            }
+        }
+        if !current.isEmpty { result.append((current, "")) }
+        return result
     }
 
     private static func lineKey(_ line: String) -> String? {

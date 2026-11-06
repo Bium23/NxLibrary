@@ -57,6 +57,14 @@ final class EnvFileEditorTests: XCTestCase {
         XCTAssertEqual(read(), "DM_X=1\r\nDM_ROMFS_OVERLAY=/new\r\n")
     }
 
+    func testMixedLineEndingsKeepEveryLine() throws {
+        try write("DM_FPS=60\r\nDM_ROMFS_OVERLAY=/old\nDM_X=1\r\n")
+        try EnvFileEditor.set(key, to: "/new", in: env)
+        XCTAssertEqual(read(), "DM_FPS=60\r\nDM_ROMFS_OVERLAY=/new\nDM_X=1\r\n")
+        try EnvFileEditor.set(key, to: nil, in: env)
+        XCTAssertEqual(read(), "DM_FPS=60\r\nDM_X=1\r\n")
+    }
+
     func testRemovingFromMissingFileCreatesNothing() throws {
         try EnvFileEditor.set(key, to: nil, in: env)
         XCTAssertFalse(FileManager.default.fileExists(atPath: env.path))

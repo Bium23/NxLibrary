@@ -211,7 +211,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/CheatCopy.swift](../Sources/NXLibraryCore/Models/CheatCopy.swift) | Centralizza testi di stato, rifiuto, importazione, sostituzione e rimozione dei cheats. |
 | [Sources/NXLibraryCore/Services/CheatStore.swift](../Sources/NXLibraryCore/Services/CheatStore.swift) | Legge e modifica cheats, file enabled, master switch e metadati della build corrente. |
 | [Sources/NXLibraryCore/Services/ModStore.swift](../Sources/NXLibraryCore/Services/ModStore.swift) | Ordine, stato acceso/spento, conflitti, Cestino e riga `DM_ROMFS_OVERLAY` delle mod RomFS di un gioco. |
-| [Sources/NXLibraryCore/Services/ModFolderScanner.swift](../Sources/NXLibraryCore/Services/ModFolderScanner.swift) | Trova le cartelle delle mod, il loro `romfs` e i file che contengono. |
+| [Sources/NXLibraryCore/Services/ModFolderScanner.swift](../Sources/NXLibraryCore/Services/ModFolderScanner.swift) | Trova le voci della cartella mods (cartelle e file sparsi), il loro `romfs` e i file che contengono (senza quelli nascosti). |
 | [Sources/NXLibraryCore/Services/EnvFileEditor.swift](../Sources/NXLibraryCore/Services/EnvFileEditor.swift) | Cambia una sola variabile di un `env.txt` lasciando intatte le altre righe. |
 | [Sources/NXLibraryCore/Models/LocalMod.swift](../Sources/NXLibraryCore/Models/LocalMod.swift) | Una cartella della cartella mods di un gioco, con il suo `romfs` e lo stato. |
 
@@ -443,7 +443,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/CheatStatusTests.swift](../Tests/NXLibraryCoreTests/CheatStatusTests.swift) | Ancestry del motore, necessità di rebuild, valore della riga e indicatore attivo. |
 | [Tests/NXLibraryCoreTests/CheatStoreTests.swift](../Tests/NXLibraryCoreTests/CheatStoreTests.swift) | Installazione, enabled, master switch, sostituzione e metadati dei file cheats. |
 | [Tests/NXLibraryCoreTests/ModStoreTests.swift](../Tests/NXLibraryCoreTests/ModStoreTests.swift) | Ordine, acceso/spento, limite dell'overlay, conflitti, Cestino e righe dell'`env.txt` delle mod. |
-| [Tests/NXLibraryCoreTests/ModFolderScannerTests.swift](../Tests/NXLibraryCoreTests/ModFolderScannerTests.swift) | Cartelle delle mod, layout `romfs`/Atmosphère, symlink e file relativi. |
+| [Tests/NXLibraryCoreTests/ModFolderScannerTests.swift](../Tests/NXLibraryCoreTests/ModFolderScannerTests.swift) | Voci della cartella mods, layout `romfs`/Atmosphère, symlink, file relativi e file nascosti. |
 | [Tests/NXLibraryCoreTests/EnvFileEditorTests.swift](../Tests/NXLibraryCoreTests/EnvFileEditorTests.swift) | Modifica di una chiave dell'`env.txt`: commenti, duplicati, CRLF, merge al lancio. |
 | [Tests/NXLibraryCoreTests/CloudSavesTests.swift](../Tests/NXLibraryCoreTests/CloudSavesTests.swift) | Cartelle cloud, preferenze per gioco e decodifica delle impostazioni precedenti. |
 | [Tests/NXLibraryCoreTests/CompatibilityCheckerTests.swift](../Tests/NXLibraryCoreTests/CompatibilityCheckerTests.swift) | Commit, modifiche ammesse nel checkout, Metal, CLI e override del gate. |

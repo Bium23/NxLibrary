@@ -42,7 +42,7 @@ final class ModFolderScannerTests: XCTestCase {
         try FileManager.default.createDirectory(at: dir.appendingPathComponent("Empty"), withIntermediateDirectories: true)
         XCTAssertNil(ModFolderScanner.romfs(in: dir.appendingPathComponent("Loose"), titleID: tid))
         XCTAssertNil(ModFolderScanner.romfs(in: dir.appendingPathComponent("Empty"), titleID: tid))
-        XCTAssertEqual(ModFolderScanner.folders(in: dir).map(\.lastPathComponent), ["Empty", "Loose"])
+        XCTAssertEqual(ModFolderScanner.entries(in: dir).map(\.lastPathComponent), ["Empty", "Loose"])
     }
 
     func testSymlinkedRomFSIsRejected() throws {
@@ -54,14 +54,15 @@ final class ModFolderScannerTests: XCTestCase {
         XCTAssertNil(ModFolderScanner.romfs(in: mod, titleID: tid))
     }
 
-    func testFoldersAreSortedAndSkipHiddenAndFiles() throws {
+    func testEntriesAreSortedSkipHiddenAndKeepStrayFiles() throws {
         try file(".DS_Store")
         try file("mod.zip")
         try file("b/romfs/x")
         try file("a/romfs/x")
         try file(".hidden/romfs/x")
-        XCTAssertEqual(ModFolderScanner.folders(in: dir).map(\.lastPathComponent), ["a", "b"])
-        XCTAssertEqual(ModFolderScanner.folders(in: dir.appendingPathComponent("missing")), [])
+        // A stray file (an archive not unzipped yet) is listed, so the panel can say it is not a mod.
+        XCTAssertEqual(ModFolderScanner.entries(in: dir).map(\.lastPathComponent), ["a", "b", "mod.zip"])
+        XCTAssertEqual(ModFolderScanner.entries(in: dir.appendingPathComponent("missing")), [])
     }
 
     func testFilesAreRelativePaths() throws {
@@ -69,5 +70,12 @@ final class ModFolderScannerTests: XCTestCase {
         try file("Mod/romfs/Top.txt")
         let romfs = dir.appendingPathComponent("Mod/romfs")
         XCTAssertEqual(ModFolderScanner.files(under: romfs), ["Data/x.bin", "Top.txt"])
+    }
+
+    func testFilesSkipHiddenFinderFiles() throws {
+        try file("Mod/romfs/.DS_Store")
+        try file("Mod/romfs/Data/.DS_Store")
+        try file("Mod/romfs/Data/x.bin")
+        XCTAssertEqual(ModFolderScanner.files(under: dir.appendingPathComponent("Mod/romfs")), ["Data/x.bin"])
     }
 }

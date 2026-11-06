@@ -187,8 +187,12 @@ extension GameDetailView {
         viewModel.openGameOptions(game, from: .details, opensMods: true)
     }
 
+    /// Re-reads the mods folder; a mod deleted in Finder also leaves the overlay (the store does nothing while the
+    /// game runs, and a refusal here shows in the Mods panel instead).
     func reloadMods() {
-        localMods = viewModel.modStore(for: game)?.mods()
+        let store = viewModel.modStore(for: game)
+        if let store { _ = viewModel.performModChange { try store.sync() } }
+        localMods = store?.mods()
     }
 
     /// A More like this game: Spotlight opens with it selected (All games when its filter hides it).

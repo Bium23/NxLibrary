@@ -7,7 +7,8 @@ import NXLibraryCore
 /// the mods, conflicts, the actions and a help line.
 ///
 /// Input: Up/Down move, A (Return, Space) switches a mod or activates an action, Left/Right move the focused mod up or
-/// down, Y (Delete) moves it to the Trash after a confirmation, B (or Esc) returns. A click activates a row.
+/// down, Y (Delete, or a click on the Remove hint) moves it to the Trash after a confirmation, B (or Esc) returns. A
+/// click activates a row.
 struct ModsPanel: View {
     @ObservedObject var viewModel: AppViewModel
     let game: PortedGame
@@ -111,7 +112,7 @@ struct ModsPanel: View {
 
     private var hints: [HintItem] {
         guard let mod = focusedMod else { return [HintItem(.a, "Select")] }
-        var items = [HintItem(nil, "◂ ▸  Move"), HintItem(.y, "Remove")]
+        var items = [HintItem(nil, "◂ ▸  Move"), HintItem(.y, "Remove", action: askRemove)]
         items.append(HintItem(.a, mod.romfs == nil ? "Select" : mod.isOn ? "Turn off" : "Turn on"))
         return items
     }
@@ -195,7 +196,10 @@ struct ModsPanel: View {
         switch row {
         case .mod(let name):
             guard let mod = mods.first(where: { $0.folderName == name }) else { return (nil, name, nil, nil, false) }
-            if mod.romfs == nil { return (.puzzle, name, ModsCopy.notAMod, nil, false) }
+            if mod.romfs == nil {
+                let isFolder = (try? mod.folder.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
+                return (.puzzle, name, isFolder ? ModsCopy.notAMod : ModsCopy.notAFolder, nil, false)
+            }
             if name.contains(":") { return (.puzzle, name, ModsCopy.colon, nil, false) }
             return (.puzzle, name, nil, mod.isOn, !running)
         case .openFolder:
@@ -390,6 +394,7 @@ enum ModsCopy {
 
     static let empty = "Open the mods folder and put each mod in its own folder, with a romfs folder inside."
     static let notAMod = "Not a mod: needs a romfs folder."
+    static let notAFolder = "Not a mod: unzip it into its own folder first."
     static let colon = "Rename this folder: its name can't contain ':'."
     static let help = "Mods change the game's files only: mods that patch code (exefs, such as 60 fps patches) don't work. "
         + "Changes apply at the next launch. If a mod changes nothing, rebuild the game."

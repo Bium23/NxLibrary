@@ -173,4 +173,45 @@ final class ModStoreTests: XCTestCase {
         try store().setOn(true, folderName: "A")
         XCTAssertEqual(envText(), "# mine\nDM_FPS_TARGET=30\nDM_ROMFS_OVERLAY=\(romfs("A"))\n")
     }
+
+    func testHiddenFinderFilesAreNotConflicts() throws {
+        try mod("A", files: ["Data/a.bin", ".DS_Store"])
+        try mod("B", files: ["Data/b.bin", ".DS_Store"])
+        try store().setOn(true, folderName: "A")
+        try store().setOn(true, folderName: "B")
+        XCTAssertEqual(store().conflicts(), [])
+    }
+
+    func testStrayFileIsListedAsNotAModAndCanBeRemoved() throws {
+        try mod("A")
+        try FileManager.default.createDirectory(at: mods, withIntermediateDirectories: true)
+        try Data("zip".utf8).write(to: mods.appendingPathComponent("mod.zip"))
+        let list = store().mods()
+        XCTAssertEqual(list.map(\.folderName), ["A", "mod.zip"])
+        XCTAssertNil(list[1].romfs)
+        XCTAssertThrowsError(try store().setOn(true, folderName: "mod.zip")) { XCTAssertEqual($0 as? ModStoreError, .notAMod("mod.zip")) }
+        try store().remove(folderName: "mod.zip")
+        XCTAssertEqual(trashed, ["mod.zip"])
+    }
+
+    func testSyncOverLimitLeavesEnvAsIsAndSaysSo() throws {
+        // The records say 20 long-named mods are on (for example after the player restructured them in Finder):
+        // together they no longer fit the launcher's line.
+        let names = (0..<20).map { "\($0)-" + String(repeating: "x", count: 200) }
+        for name in names { try mod(name) }
+        try FileManager.default.createDirectory(at: records.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try JSONEncoder().encode(names.map { ModRecord(folderName: $0, isOn: true) }).write(to: records)
+        try FileManager.default.createDirectory(at: support, withIntermediateDirectories: true)
+        try "DM_X=1\n".write(to: env, atomically: true, encoding: .utf8)
+        XCTAssertGreaterThan(try XCTUnwrap(store().overlayValue()).utf8.count, ModStore.overlayLimit)
+        XCTAssertThrowsError(try store().sync()) { XCTAssertEqual($0 as? ModStoreError, .overlayTooLong) }
+        XCTAssertTrue(envText() == "DM_X=1\n", "env.txt is left as it was")
+    }
+
+    func testSyncLeavesAHandWrittenOverlayWhenNXLibraryNeverManagedTheMods() throws {
+        try FileManager.default.createDirectory(at: support, withIntermediateDirectories: true)
+        try "DM_ROMFS_OVERLAY=/Users/me/my-mod\n".write(to: env, atomically: true, encoding: .utf8)
+        try store().sync()
+        XCTAssertEqual(envText(), "DM_ROMFS_OVERLAY=/Users/me/my-mod\n")
+    }
 }

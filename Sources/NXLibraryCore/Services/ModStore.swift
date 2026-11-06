@@ -82,7 +82,7 @@ public struct ModStore {
 
     /// Recorded mods in their order (only those whose folder exists), then folders without a record, off, by name.
     public func mods() -> [LocalMod] {
-        let names = ModFolderScanner.folders(in: modsFolder).map(\.lastPathComponent)
+        let names = ModFolderScanner.entries(in: modsFolder).map(\.lastPathComponent)
         let present = Set(names)
         let recorded = loadRecords().filter { present.contains($0.folderName) }
         let known = Set(recorded.map(\.folderName))
@@ -139,17 +139,20 @@ public struct ModStore {
     }
 
     /// Drops records whose folder is gone and brings the overlay line in line with the list. Does nothing while the
-    /// game runs.
+    /// game runs, or before NX Library has managed this game's mods (no records yet: a hand-written overlay stays). A
+    /// list whose overlay no longer fits the launcher's line leaves `env.txt` as it is and throws `overlayTooLong`.
     public func sync() throws {
-        guard canWrite() else { return }
+        guard canWrite(), FileManager.default.fileExists(atPath: recordsFile.path) else { return }
         let list = mods()
+        let value = overlay(for: list)
+        if let value, value.utf8.count > Self.overlayLimit { throw ModStoreError.overlayTooLong }
         let stored = loadRecords()
         let recorded = Set(stored.map(\.folderName))
         let kept = list.filter { recorded.contains($0.folderName) }.map(\.folderName)
         if kept != stored.map(\.folderName) {
             try write(records: stored.filter { kept.contains($0.folderName) })
         }
-        try writeOverlay(overlay(for: list))
+        try writeOverlay(value)
     }
 
     // MARK: - Internals
