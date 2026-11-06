@@ -39,6 +39,13 @@ struct GameDetailView: View {
     /// The game's mods, read when the page appears and when Game options or the app comes back; nil without a
     /// title ID (no Mods band).
     @State var localMods: [LocalMod]?
+    /// GameBanana records of the installed mods, by GameBanana mod id.
+    @State var modRecords: [Int: ModRecord] = [:]
+    /// The GameBanana part of the Mods band (match, mods that work, installs).
+    @StateObject var gameBanana = GameBananaBandModel()
+    @StateObject var gameBananaFind = GameBananaFindModel()
+    /// The open mod detail panel.
+    @State var modDetail: AvailableMod?
 
     struct ViewerContext: Equatable {
         var titleID: String
@@ -76,7 +83,7 @@ struct GameDetailView: View {
                      screenshotsKnown: screenshotsKnown,
                      more: more,
                      mods: localMods,
-                     bands: DetailsFocus.Bands(screenshots: urls.count, mods: localMods.map(DetailsModsBand.tileCount) ?? 0,
+                     bands: DetailsFocus.Bands(screenshots: urls.count, mods: localMods.map { DetailsModsBand.tiles(mods: $0, gameBanana: gameBanana).count } ?? 0,
                                                actions: rows.count, more: more.count),
                      buildBlocked: blocked,
                      primaryEnabled: p.canPlay || (p.canRebuild && !blocked))
@@ -143,6 +150,8 @@ struct GameDetailView: View {
                 .offset(x: canvas.stageOrigin.x, y: canvas.stageOrigin.y)
         }
         .overlay(viewerOverlay)
+        .overlay(gameBananaOverlay)
+        .animation(.easeOut(duration: 0.2), value: gameBananaFind.isOpen)
         .animation(.easeOut(duration: 0.2), value: viewer != nil)
         .frame(width: canvas.size.width, height: canvas.size.height, alignment: .topLeading)
         .clipped()
@@ -150,6 +159,8 @@ struct GameDetailView: View {
         .onAppear { focus.setPillLimit(viewModel.portingPills(game).count) }
         .onChange(of: viewModel.portingPills(game).count) { focus.setPillLimit($0) }
         .onDisappear {
+            gameBanana.stop()
+            gameBananaFind.close()
             removeKeyMonitor()
             router.isScreenshotViewerOpen = false
         }
@@ -162,6 +173,9 @@ struct GameDetailView: View {
         .onChange(of: game) { _ in
             removeKeyMonitor()
             installKeyMonitor()
+            gameBanana.stop()
+            reloadMods()
+            startGameBanana()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxDetailGamepadAction)) { note in
             guard viewModel.alertMessage == nil, viewModel.settingsNotice == nil else { return }
@@ -247,11 +261,13 @@ struct GameDetailView: View {
                 band(zone: DetailsFocus.modsZone) {
                     DetailsModsBand(
                         mods: mods,
+                        records: modRecords,
+                        gameBanana: gameBanana,
                         focusedIndex: focus.zone == DetailsFocus.modsZone ? focus.mod : nil,
                         onFocus: { focusPointer(zone: DetailsFocus.modsZone, index: $0, bands: model.bands) },
                         onOpen: { index in
                             focusPointer(zone: DetailsFocus.modsZone, index: index, bands: model.bands)
-                            openMods()
+                            activateModsTile(index)
                         })
                 }
                 .offset(x: canvas.u(110), y: canvas.u(970))
@@ -318,6 +334,14 @@ struct GameDetailView: View {
         }
     }
 
+    @ViewBuilder
+    private var gameBananaOverlay: some View {
+        if gameBananaFind.isOpen {
+            GameBananaFindPanel(model: gameBananaFind, band: gameBanana, gameName: game.name)
+                .transition(.opacity)
+        }
+    }
+
     // MARK: - Lifecycle
 
     private func appear() {
@@ -325,6 +349,7 @@ struct GameDetailView: View {
         router.isSearchPresented = false
         viewModel.loadStoreMetadata(for: game)
         reloadMods()
+        startGameBanana()
         focus = DetailsFocus()
         settleFocus(model.bands)
     }

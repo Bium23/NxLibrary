@@ -10,6 +10,7 @@ extension GameDetailView {
 
     func handle(_ action: GamepadAction) {
         if viewer != nil { return handleViewer(action) }
+        if gameBananaFind.isOpen { return handleFind(action) }
         var moved = false
         switch action {
         case .navigateLeft: moved = moveFocus { $0.left(in: $1) }
@@ -127,7 +128,7 @@ extension GameDetailView {
         case DetailsFocus.screenshotsZone:
             openViewer(at: focus.shot)
         case DetailsFocus.modsZone:
-            openMods()
+            activateModsTile(focus.mod)
         case DetailsFocus.actionsZone:
             guard focus.action < model.rows.count else { return }
             model.rows[focus.action].action()
@@ -193,6 +194,54 @@ extension GameDetailView {
         let store = viewModel.modStore(for: game)
         if let store { _ = viewModel.performModChange { try store.sync() } }
         localMods = store?.mods()
+        modRecords = store?.gameBananaRecords() ?? [:]
+    }
+
+    /// GameBanana's mods for this game, by its name and its official store name.
+    func startGameBanana() {
+        gameBanana.onInstalled = { reloadMods() }
+        let names = [game.name, viewModel.storeMetadata[game.id]?.name].compactMap { $0 }
+        gameBanana.start(names: names, store: viewModel.modStore(for: game))
+    }
+
+    /// A Mods band tile: installed mods and Manage open Game options → Mods; a GameBanana mod opens its detail; a
+    /// status tile does what it says.
+    func activateModsTile(_ index: Int) {
+        guard let mods = localMods else { return }
+        let tiles = DetailsModsBand.tiles(mods: mods, gameBanana: gameBanana)
+        guard tiles.indices.contains(index) else { return }
+        switch tiles[index] {
+        case .installed, .manage:
+            openMods()
+        case .available(let id):
+            guard let mod = gameBanana.available.first(where: { $0.id == id }) else { return }
+            SoundEffectService.shared.play(.click)
+            modDetail = mod
+        case .status(let action):
+            SoundEffectService.shared.play(.click)
+            switch action {
+            case .retry: gameBanana.retry()
+            case .openPage(let url): viewModel.openURL(url)
+            case .candidate(let id): if let match = gameBanana.candidate(id) { gameBanana.confirm(match) }
+            case .noneOfThese: gameBanana.noneOfThese()
+            case .findGame, .wrongGame: gameBananaFind.open(name: game.name, using: gameBanana)
+            }
+        }
+    }
+
+    /// The Find the game panel owns the controller while it is open.
+    func handleFind(_ action: GamepadAction) {
+        switch action {
+        case .navigateUp: if gameBananaFind.move(by: -1) { SoundEffectService.shared.play(.focus) }
+        case .navigateDown: if gameBananaFind.move(by: 1) { SoundEffectService.shared.play(.focus) }
+        case .confirm:
+            SoundEffectService.shared.play(.click)
+            gameBananaFind.activate(gameBananaFind.focus, using: gameBanana)
+        case .cancel, .menu:
+            SoundEffectService.shared.play(.focus)
+            gameBananaFind.close()
+        default: break
+        }
     }
 
     /// A More like this game: Spotlight opens with it selected (All games when its filter hides it).
@@ -259,6 +308,16 @@ extension GameDetailView {
             }
             let modifiers = event.modifierFlags.intersection([.command, .control, .option])
             guard modifiers.isEmpty else { return event }
+            if gameBananaFind.isOpen {
+                switch event.keyCode {
+                case 125: handle(.navigateDown)
+                case 126: handle(.navigateUp)
+                case 36, 49: handle(.confirm)
+                case 53: handle(.cancel)
+                default: return event
+                }
+                return nil
+            }
             if viewer != nil {
                 // The viewer owns the keyboard: arrows page, Esc closes, the rest is swallowed.
                 switch event.keyCode {

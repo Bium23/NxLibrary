@@ -145,13 +145,18 @@ struct DetailsMoreBand: View {
     }
 }
 
-/// Band 2: the game's mods (`ModStore`), one Selene glass tile (272 × 153) per mod with its state, then Manage mods.
-/// A click focuses a tile; a double click (or A) opens Game options → Mods, where mods are switched and ordered.
+/// Band 2: the game's mods. Left to right (`ModsBandLayout`): installed mods (`ModStore`, at most 5) with their state,
+/// Manage mods, the GameBanana mods that work (image, name, author, Installed / Update), then status tiles (Retry, the
+/// "Is this the right game?" candidates, Wrong game?…). The row slides so the focused tile stays on screen. A click
+/// focuses a tile; a double click (or A) opens it.
 struct DetailsModsBand: View {
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
 
     let mods: [LocalMod]
+    /// GameBanana records of installed mods, by GameBanana mod id.
+    let records: [Int: ModRecord]
+    @ObservedObject var gameBanana: GameBananaBandModel
     let focusedIndex: Int?
     let onFocus: (Int) -> Void
     let onOpen: (Int) -> Void
@@ -159,25 +164,39 @@ struct DetailsModsBand: View {
     static let width: CGFloat = 272
     static let height: CGFloat = 153
     static let gap: CGFloat = 22
-    /// Tiles shown before Manage mods; the panel lists every mod.
-    static let maxTiles = 5
+    /// Tiles fully on screen (1700 wide).
+    static let visible = 5
+
+    static func tiles(mods: [LocalMod], gameBanana: GameBananaBandModel) -> [ModsBandTile] {
+        ModsBandLayout.tiles(installed: mods.count, available: gameBanana.available.map(\.id), status: gameBanana.statusTiles)
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            DetailsBandTitle(text: title)
-            HStack(alignment: .top, spacing: canvas.u(Self.gap)) {
-                ForEach(Array(Self.shown(mods).enumerated()), id: \.element.folderName) { index, mod in
-                    tile(index: index, focused: focusedIndex == index) {
-                        modFace(mod)
-                    }
-                    .accessibilityLabel("\(mod.folderName), \(Self.state(mod))")
+        let tiles = Self.tiles(mods: mods, gameBanana: gameBanana)
+        let first = ModsBandLayout.scrollIndex(focused: focusedIndex, count: tiles.count, visible: Self.visible)
+        return VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .firstTextBaseline, spacing: canvas.u(18)) {
+                DetailsBandTitle(text: title)
+                if let line = gameBanana.statusLine {
+                    Text(line)
+                        .seleneFont(16, .medium)
+                        .foregroundColor(SeleneTheme.ink60)
                 }
-                let manage = Self.shown(mods).count
-                tile(index: manage, focused: focusedIndex == manage) {
-                    manageFace
+                Spacer(minLength: 0)
+                if gameBanana.phase != .idle {
+                    Text("Mod data provided by GameBanana")
+                        .seleneFont(14)
+                        .foregroundColor(SeleneTheme.ink60)
                 }
-                .accessibilityLabel("Manage mods")
             }
+            .frame(width: canvas.u(1700), alignment: .leading)
+            HStack(alignment: .top, spacing: canvas.u(Self.gap)) {
+                ForEach(Array(tiles.enumerated()), id: \.offset) { index, kind in
+                    tileView(kind, index: index, focused: focusedIndex == index)
+                }
+            }
+            .offset(x: -canvas.u(CGFloat(first) * (Self.width + Self.gap)))
+            .animation(reduceMotion ? nil : SeleneTheme.quick, value: first)
         }
     }
 
@@ -186,14 +205,30 @@ struct DetailsModsBand: View {
         return on == 0 ? "Mods" : "Mods · \(on) on"
     }
 
-    static func shown(_ mods: [LocalMod]) -> [LocalMod] { Array(mods.prefix(maxTiles)) }
-
-    /// Tiles the band holds: the mods shown plus Manage mods.
-    static func tileCount(_ mods: [LocalMod]) -> Int { shown(mods).count + 1 }
-
     static func state(_ mod: LocalMod) -> String { mod.romfs == nil ? "Not a mod" : mod.isOn ? "On" : "Off" }
 
-    private func modFace(_ mod: LocalMod) -> some View {
+    @ViewBuilder
+    private func tileView(_ kind: ModsBandTile, index: Int, focused: Bool) -> some View {
+        switch kind {
+        case .installed(let i):
+            let mod = mods[i]
+            tile(index: index, focused: focused) { installedFace(mod) }
+                .accessibilityLabel("\(mod.folderName), \(Self.state(mod))")
+        case .manage:
+            tile(index: index, focused: focused) { manageFace }
+                .accessibilityLabel(mods.isEmpty ? "Add mods" : "Manage mods")
+        case .available(let id):
+            if let mod = gameBanana.available.first(where: { $0.id == id }) {
+                tile(index: index, focused: focused, bleed: true) { availableFace(mod) }
+                    .accessibilityLabel("\(mod.name), by \(mod.author)\(chip(for: mod).map { ", \($0)" } ?? "")")
+            }
+        case .status(let action):
+            tile(index: index, focused: focused) { statusFace(action) }
+                .accessibilityLabel(statusText(action).title)
+        }
+    }
+
+    private func installedFace(_ mod: LocalMod) -> some View {
         VStack(alignment: .leading, spacing: canvas.u(8)) {
             MaterialIconView(.puzzle, size: 26)
                 .foregroundColor(mod.isOn ? SeleneTheme.focus : SeleneTheme.ink60)
@@ -216,21 +251,90 @@ struct DetailsModsBand: View {
             Text(mods.isEmpty ? "Add mods" : "Manage mods")
                 .seleneFont(19, .semibold)
                 .foregroundColor(SeleneTheme.ink)
-            Text(mods.isEmpty ? "File mods, no rebuild" : mods.count > Self.maxTiles ? "All \(mods.count) mods" : "Order, folder, Remove")
+            Text(mods.isEmpty ? "File mods, no rebuild" : mods.count > ModsBandLayout.maxInstalled ? "All \(mods.count) mods" : "Order, folder, Remove")
                 .seleneFont(15, .medium)
                 .foregroundColor(SeleneTheme.ink60)
         }
     }
 
-    private func tile<Face: View>(index: Int, focused: Bool, @ViewBuilder face: () -> Face) -> some View {
+    /// Installed / Update / the install in progress, for an available mod.
+    private func chip(for mod: AvailableMod) -> String? {
+        switch gameBanana.installs[mod.id] {
+        case .downloading(let fraction): return "Downloading \(Int(fraction * 100))%"
+        case .installing: return "Installing…"
+        case .failed: return "Didn't install"
+        case .done, nil: break
+        }
+        guard let record = records[mod.id] else { return nil }
+        return ModUpdateCheck.update(for: record, in: mod) == nil ? "Installed" : "Update"
+    }
+
+    private func availableFace(_ mod: AvailableMod) -> some View {
+        ZStack(alignment: .bottomLeading) {
+            GameBananaImageView(url: mod.thumbnailURL, maxPixelSize: 600)
+            LinearGradient(colors: [.clear, .black.opacity(0.78)], startPoint: .center, endPoint: .bottom)
+            VStack(alignment: .leading, spacing: canvas.u(2)) {
+                if let chip = chip(for: mod) {
+                    Text(chip)
+                        .seleneFont(13, .semibold)
+                        .foregroundColor(SeleneTheme.ink)
+                        .padding(.horizontal, canvas.u(10))
+                        .padding(.vertical, canvas.u(4))
+                        .background(Capsule().fill(SeleneTheme.glassSolid))
+                        .padding(.bottom, canvas.u(4))
+                }
+                Text(mod.name)
+                    .seleneFont(18, .semibold)
+                    .foregroundColor(SeleneTheme.ink)
+                    .lineLimit(1)
+                Text("by \(mod.author)")
+                    .seleneFont(14, .medium)
+                    .foregroundColor(SeleneTheme.ink75)
+                    .lineLimit(1)
+            }
+            .padding(canvas.u(16))
+        }
+    }
+
+    private func statusText(_ action: ModsBandAction) -> (icon: MaterialIcon, title: String, about: String) {
+        switch action {
+        case .retry: return (.sync, "Retry", "Ask GameBanana again")
+        case .openPage: return (.link, "Open on GameBanana", "See every mod for this game")
+        case .candidate(let id):
+            return (.store, gameBanana.candidate(id)?.name ?? "Game", "This is the game")
+        case .noneOfThese: return (.close, "None of these", "Pick the game by name")
+        case .findGame: return (.search, "Find the game", "Search GameBanana by name")
+        case .wrongGame: return (.search, "Wrong game?", gameBanana.matchedName.map { "GameBanana: \($0)" } ?? "Pick another game")
+        }
+    }
+
+    private func statusFace(_ action: ModsBandAction) -> some View {
+        let text = statusText(action)
+        return VStack(alignment: .leading, spacing: canvas.u(8)) {
+            MaterialIconView(text.icon, size: 26)
+                .foregroundColor(SeleneTheme.ink75)
+            Spacer(minLength: 0)
+            Text(text.title)
+                .seleneFont(19, .semibold)
+                .foregroundColor(SeleneTheme.ink)
+                .lineLimit(2)
+            Text(text.about)
+                .seleneFont(15, .medium)
+                .foregroundColor(SeleneTheme.ink60)
+                .lineLimit(1)
+        }
+    }
+
+    private func tile<Face: View>(index: Int, focused: Bool, bleed: Bool = false, @ViewBuilder face: () -> Face) -> some View {
         let w = canvas.u(Self.width), h = canvas.u(Self.height)
         let shape = RoundedRectangle(cornerRadius: canvas.u(14), style: .continuous)
         return ZStack {
             shape.fill(SeleneTheme.glass)
-            shape.stroke(SeleneTheme.ink15, lineWidth: canvas.u(1))
             face()
-                .padding(canvas.u(18))
+                .padding(bleed ? 0 : canvas.u(18))
                 .frame(width: w, height: h, alignment: .topLeading)
+                .clipShape(shape)
+            shape.stroke(SeleneTheme.ink15, lineWidth: canvas.u(1))
             SeleneTileRing(cornerRadius: canvas.u(21), active: focused)
                 .frame(width: w + canvas.u(14), height: h + canvas.u(14))
         }
@@ -243,5 +347,34 @@ struct DetailsModsBand: View {
         .simultaneousGesture(TapGesture().onEnded { onFocus(index) })
         .accessibilityElement(children: .ignore)
         .accessibilityAddTraits(focused ? [.isButton, .isSelected] : .isButton)
+    }
+}
+
+/// An image from GameBanana's CDN, through the shared cache; empty glass until it arrives.
+struct GameBananaImageView: View {
+    let url: URL?
+    var maxPixelSize: Int = 800
+    var contentMode: ContentMode = .fill
+    @State private var image: NSImage?
+
+    var body: some View {
+        ZStack {
+            SeleneTheme.glassSolid
+            if let image {
+                Image(nsImage: image)
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: contentMode)
+                    .transition(.opacity)
+            }
+        }
+        .clipped()
+        .task(id: url) {
+            image = nil
+            guard let url, let file = await GameBananaServices.shared.images.file(for: url),
+                  let decoded = await GameArtLoader.decode(at: file, maxPixelSize: maxPixelSize),
+                  !Task.isCancelled else { return }
+            withAnimation(.easeOut(duration: 0.25)) { image = decoded }
+        }
     }
 }

@@ -167,4 +167,23 @@ final class DetailsFocusTests: XCTestCase {
         onMods.settle(in: DetailsFocus.Bands(screenshots: 0, mods: 0, actions: 1))
         XCTAssertEqual(onMods.zone, DetailsFocus.topZone, "a vanished band gives way to the one above")
     }
+
+    func testModsBandCountsAvailableTiles() {
+        XCTAssertEqual(ModsBandLayout.tileCount(installed: 7, available: 12, statusTiles: 1), 19)
+        let tiles = ModsBandLayout.tiles(installed: 2, available: [40, 41], status: [.wrongGame])
+        XCTAssertEqual(tiles, [.installed(0), .installed(1), .manage, .available(40), .available(41), .status(.wrongGame)])
+        XCTAssertEqual(ModsBandLayout.tiles(installed: 9, available: [], status: []).count, 6)
+        let bands = DetailsFocus.Bands(mods: 19)
+        var focus = DetailsFocus()
+        focus.focus(zone: DetailsFocus.modsZone, index: 18, in: bands)
+        XCTAssertFalse(focus.right(in: bands))
+        XCTAssertEqual(focus.mod, 18)
+    }
+
+    func testModsBandScrollKeepsFocusVisible() {
+        XCTAssertEqual(ModsBandLayout.scrollIndex(focused: 2, count: 19, visible: 6), 0)
+        XCTAssertEqual(ModsBandLayout.scrollIndex(focused: 8, count: 19, visible: 6), 3)
+        XCTAssertEqual(ModsBandLayout.scrollIndex(focused: 18, count: 19, visible: 6), 13)
+        XCTAssertEqual(ModsBandLayout.scrollIndex(focused: nil, count: 19, visible: 6), 0)
+    }
 }
