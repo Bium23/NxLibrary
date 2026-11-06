@@ -51,6 +51,21 @@ final class CheatLocatorTests: XCTestCase {
         XCTAssertNil(CheatLocator.titleID(appURL: app, fallback: nil))
     }
 
+    /// An imported app has no build record: the engine commit its packer wrote (DMCommit) tells whether it has
+    /// cheats. The record wins when there is one; anything but a commit hash is refused (it goes to git).
+    func testEngineCommitFallsBackToInfoPlist() throws {
+        let commit = "b64a5ff09f0123456789abcdef0123456789abcd"
+        try writePlist(["DMCommit": commit])
+        XCTAssertEqual(CheatLocator.engineCommit(appURL: app, recorded: nil), commit)
+        XCTAssertEqual(CheatLocator.engineCommit(appURL: app, recorded: "ef9f9bb"), "ef9f9bb")
+        try writePlist(["CFBundleName": "Game"])
+        XCTAssertNil(CheatLocator.engineCommit(appURL: app, recorded: nil), "an older packer wrote none")
+        for invalid in ["", "--output=x", "main", "b64a5f", "zz4a5ff09f"] {
+            try writePlist(["DMCommit": invalid])
+            XCTAssertNil(CheatLocator.engineCommit(appURL: app, recorded: nil), invalid)
+        }
+    }
+
     func testFolderDefault() {
         XCTAssertEqual(CheatLocator.folder(titleID: tid, appURL: app, home: home)?.path,
                        support.appendingPathComponent("cheats").path)

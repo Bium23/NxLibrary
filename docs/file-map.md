@@ -210,6 +210,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/CheatLocator.swift](../Sources/NXLibraryCore/Models/CheatLocator.swift) | Risolve build ID, title ID e cartella cheats seguendo i file e l’ambiente del launcher. |
 | [Sources/NXLibraryCore/Models/CheatStatus.swift](../Sources/NXLibraryCore/Models/CheatStatus.swift) | Valuta il supporto del motore tramite ancestry e prepara stato della riga e indicatore attivo. |
 | [Sources/NXLibraryCore/Models/CheatCopy.swift](../Sources/NXLibraryCore/Models/CheatCopy.swift) | Centralizza testi di stato, rifiuto, importazione, sostituzione e rimozione dei cheats. |
+| [Sources/NXLibraryCore/Services/CheatDatabase.swift](../Sources/NXLibraryCore/Services/CheatDatabase.swift) | Indirizzo e conversione della lista switch-cheats-db: i blocchi della build esatta, nell'ordine del file. |
 | [Sources/NXLibraryCore/Services/CheatStore.swift](../Sources/NXLibraryCore/Services/CheatStore.swift) | Legge e modifica cheats, file enabled, master switch e metadati della build corrente. |
 | [Sources/NXLibraryCore/Services/ModStore.swift](../Sources/NXLibraryCore/Services/ModStore.swift) | Ordine, stato acceso/spento, conflitti, Cestino e riga `DM_ROMFS_OVERLAY` delle mod RomFS di un gioco. |
 | [Sources/NXLibraryCore/Services/ModFolderScanner.swift](../Sources/NXLibraryCore/Services/ModFolderScanner.swift) | Trova le voci della cartella mods (cartelle e file sparsi), il loro `romfs` e i file che contengono (senza quelli nascosti). |

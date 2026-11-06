@@ -17,6 +17,19 @@ public enum CheatLocator {
         return nil
     }
 
+    /// The engine commit the app was built with: the build record's, else the `DMCommit` its packer wrote into
+    /// Info.plist (an imported app has no record). Only a commit hash (7 to 40 hex digits) is taken: the value goes
+    /// to git. Nil when neither says.
+    public static func engineCommit(appURL: URL, recorded: String?) -> String? {
+        if let recorded { return recorded }
+        let plist = appURL.appendingPathComponent("Contents/Info.plist")
+        let info = (try? Data(contentsOf: plist))
+            .flatMap { try? PropertyListSerialization.propertyList(from: $0, format: nil) as? [String: Any] }
+        guard let commit = info?["DMCommit"] as? String, (7...40).contains(commit.count),
+              commit.allSatisfy(\.isHexDigit) else { return nil }
+        return commit
+    }
+
     /// DMTitleID from the app's Info.plist (what its launcher reads), else `fallback`; upper case, as the host names
     /// its flag files. A declared but invalid ID is refused, rather than writing
     /// into the fallback game's data folder.

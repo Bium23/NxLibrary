@@ -2,6 +2,11 @@ import Foundation
 
 /// The Cheats panel's words (spec: Installing, Where it shows), kept here so they are tested.
 public enum CheatCopy {
+    /// Under the header: what a cheat is, against a mod. Players look for cheats among GameBanana's mods, where the
+    /// cheat-like ones (unbreakable weapons, more items) are file mods and belong in Mods.
+    public static let about =
+        "Cheats change values while you play, for this version only. New items, looks or gameplay are in Mods."
+
     /// "Version 1.2.0 · build B424BE15…": the build ID cut to its first 8 hex digits.
     public static func header(version: String?, buildID: String?) -> String {
         let build = buildID.map { "build \($0.prefix(8))…" }

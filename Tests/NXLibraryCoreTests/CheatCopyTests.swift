@@ -52,4 +52,10 @@ final class CheatCopyTests: XCTestCase {
         XCTAssertEqual(CheatInstall.pick([.refused("r"), .otherTitle("T")]), .nothing(.otherTitle("T")))
         XCTAssertEqual(CheatInstall.pick([]), .nothing(nil))
     }
+
+    /// Under the header: what a cheat is, against a mod (players look for cheats among GameBanana's mods).
+    func testAboutTellsCheatsFromMods() {
+        XCTAssertEqual(CheatCopy.about,
+                       "Cheats change values while you play, for this version only. New items, looks or gameplay are in Mods.")
+    }
 }

@@ -11,6 +11,12 @@ struct CheatContext {
     let version: String?
 }
 
+/// Cheats from the community list for the running build, ready to install as an added file would be.
+struct CheatOffer: Equatable {
+    let data: Data
+    let file: CheatFile
+}
+
 /// Cheats: whether a game's app can use them, its files as the
 /// host reads them, and what to do with files the player adds. Writes go through `CheatStore`, only while the game is
 /// not running.
@@ -20,6 +26,37 @@ extension AppViewModel {
     private final class CheatCache {
         var ancestry: (path: String, value: EngineAncestry)?
         var states: [UUID: (fingerprint: [String], state: CheatState)] = [:]
+        /// The community list's answer per "<title ID>|<build ID>", for this launch; nil inside means it has none.
+        var offers: [String: CheatOffer?] = [:]
+    }
+
+    /// The community list's cheats for the running build, checked like an added file (`CheatInstall.decide`), or nil
+    /// when it has none, the request fails, or the file would not install. One request per game and launch, only
+    /// when the panel asks.
+    func cheatOffer(for context: CheatContext) async -> CheatOffer? {
+        guard context.status == .ready, let buildID = context.buildID, let titleID = context.titleID,
+              let url = CheatDatabase.url(titleID: titleID) else { return nil }
+        let key = titleID + "|" + buildID
+        if let known = Self.cheatCache.offers[key] { return known }
+        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 12)
+        request.setValue(GameBananaServices.shared.userAgent, forHTTPHeaderField: "User-Agent")
+        let session = URLSession(configuration: .ephemeral)
+        defer { session.finishTasksAndInvalidate() }
+        guard let (data, response) = try? await session.data(for: request) else { return nil }
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        // Only a definite answer is kept: a failure is asked again next time.
+        guard status == 200 || status == 404 else { return nil }
+        var offer: CheatOffer?
+        if status == 200, data.count <= CheatDatabase.maxBytes,
+           let text = CheatDatabase.cheatText(json: data, buildID: buildID) {
+            let bytes = Data(text.utf8)
+            if case .install(let file) = CheatInstall.decide(fileName: buildID + ".txt", data: bytes, titleIDInPath: nil,
+                                                             buildID: buildID, titleID: titleID) {
+                offer = CheatOffer(data: bytes, file: file)
+            }
+        }
+        Self.cheatCache.offers[key] = .some(offer)
+        return offer
     }
 
     private static let cheatCache = CheatCache()
@@ -36,7 +73,9 @@ extension AppViewModel {
         let buildID = CheatLocator.buildID(appURL: game.url)
         let titleID = CheatLocator.titleID(appURL: game.url, fallback: game.titleId)
         let ancestry = engineAncestry()
-        var status = CheatStatus.of(engineCommit: game.lastBuild?.engineCommit, buildID: buildID, titleID: titleID,
+        // An imported app has no build record: the commit its packer wrote says which engine it carries.
+        let engineCommit = CheatLocator.engineCommit(appURL: game.url, recorded: game.lastBuild?.engineCommit)
+        var status = CheatStatus.of(engineCommit: engineCommit, buildID: buildID, titleID: titleID,
                                     isAncestor: { ancestry.contains(CheatStatus.cheatsCommit, in: $0) })
         var store: CheatStore?
         if status == .ready, let buildID, let titleID {
