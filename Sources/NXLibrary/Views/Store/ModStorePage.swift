@@ -108,8 +108,8 @@ struct ModStoreSortBar: View {
             ForEach(Array(ModStoreSort.allCases.enumerated()), id: \.element) { index, choice in
                 let chosen = choice == sort
                 let focused = focusedIndex == index
-                HStack(spacing: canvas.u(10)) {
-                    MaterialIconView(choice.icon, size: 22)
+                HStack(alignment: .firstTextBaseline, spacing: canvas.u(10)) {
+                    MaterialIconView(choice.icon, size: 22).iconOnCaps(of: 18, .semibold)
                     Text(choice.title).seleneFont(18, .semibold)
                 }
                 .foregroundColor(chosen ? SeleneTheme.onFocus : SeleneTheme.ink)
@@ -238,8 +238,8 @@ struct ModStoreFeatured<Chip: View>: View {
     }
 
     private func stat(_ icon: MaterialIcon, _ value: String) -> some View {
-        HStack(spacing: canvas.u(6)) {
-            MaterialIconView(icon, size: 18)
+        HStack(alignment: .firstTextBaseline, spacing: canvas.u(6)) {
+            MaterialIconView(icon, size: 18).iconOnCaps(of: 16, .semibold)
             Text(value).seleneFont(16, .semibold)
         }
         .foregroundColor(SeleneTheme.ink82)
@@ -249,8 +249,11 @@ struct ModStoreFeatured<Chip: View>: View {
 // MARK: - Rows
 
 /// A titled row of mod tiles (336 × 189) that slides only as far as the focused tile needs, on the screenshot
-/// strip's one curve.
+/// strip's one curve. A small chevron right of the row says tiles are hidden past its edge.
 struct ModStoreRow: View {
+    /// A row's title, a little larger than a game page band's (21).
+    static let titleSize: CGFloat = 24
+
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
 
@@ -265,12 +268,14 @@ struct ModStoreRow: View {
 
     var body: some View {
         let scroll = ModStoreLayout.rowScroll(index: focusedIndex ?? scrollIndex)
+        let more = ModStoreLayout.moreToTheRight(count: section.entries.count, index: focusedIndex ?? scrollIndex)
         return VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: canvas.u(14)) {
                 if case .category(let category) = section.kind {
-                    MaterialIconView(category.icon, size: 22).foregroundColor(SeleneTheme.ink75)
+                    MaterialIconView(category.icon, size: 25).foregroundColor(SeleneTheme.ink75)
+                        .iconOnCaps(of: Self.titleSize, .semibold)
                 }
-                DetailsBandTitle(text: section.title)
+                DetailsBandTitle(text: section.title, size: Self.titleSize)
                 Text(section.entries.count == 1 ? "1 mod" : "\(section.entries.count) mods")
                     .seleneFont(16, .medium)
                     .foregroundColor(SeleneTheme.ink60)
@@ -289,6 +294,14 @@ struct ModStoreRow: View {
             .clipped()
             .padding(canvas.u(-14))
             .animation(reduceMotion ? nil : SpotlightScreenshotStrip.motion, value: focusedIndex ?? scrollIndex)
+            // Past the clip's right edge, in the margin: more tiles that way.
+            .overlay(alignment: .trailing) {
+                SpotlightRightHint()
+                    .offset(x: canvas.u(40))
+                    .opacity(more ? 1 : 0)
+                    .animation(.easeInOut(duration: 0.4), value: more)
+                    .allowsHitTesting(false)
+            }
         }
     }
 }

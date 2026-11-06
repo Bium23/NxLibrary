@@ -1,3 +1,4 @@
+import NXLibraryCore
 import SwiftUI
 
 /// Selene's active tile ring: a 3u ring with a rotating highlight and a pulsing glow.
@@ -15,11 +16,19 @@ struct SeleneTileRing: View {
                 if reduceMotion {
                     ring(angle: 0, glow: 0.35)
                 } else {
-                    TimelineView(.animation) { context in
-                        let t = context.date.timeIntervalSinceReferenceDate
-                        ring(angle: (t.truncatingRemainder(dividingBy: 5)) / 5 * 360,
-                             glow: Self.glowOpacity(at: t))
-                    }
+                    // Core Animation turns and breathes it (TileMotion), at the screen's rate and at no cost to
+                    // the app between frames.
+                    TileRingLayers(style: .init(
+                        cornerRadius: cornerRadius,
+                        focus: SeleneTheme.focus,
+                        glowLine: canvas.u(4),
+                        glowBlur: canvas.u(16),
+                        ringLine: canvas.u(3),
+                        hairline: max(0.5, canvas.u(1)),
+                        hairInset: canvas.u(1),
+                        margin: canvas.u(Self.glowMargin)))
+                        .padding(-canvas.u(Self.glowMargin))
+                        .allowsHitTesting(false)
                 }
             }
         }
@@ -29,16 +38,9 @@ struct SeleneTileRing: View {
     /// Room round the tile for the glow's blur (16u) to fade out in.
     static let glowMargin: CGFloat = 40
 
-    /// 0.2 <-> 0.55 over 1.8s, sine in-out, autoreverse.
-    static func glowOpacity(at t: TimeInterval) -> Double {
-        let p = (t.truncatingRemainder(dividingBy: 3.6)) / 1.8
-        let tri = p <= 1 ? p : 2 - p
-        return 0.2 + 0.35 * (0.5 - 0.5 * cos(.pi * tri))
-    }
-
-    /// Selene's ring: a solid focus border whose opacity mask (1 · 0.9 · 0.6 · 0.9 · 1)
-    /// turns once every 5 s, over a blurred glow. Every stop is the focus colour,
-    /// so no part of the ring ever reads dark.
+    /// Selene's ring, still (Reduce motion): a solid focus border whose opacity mask (1 · 0.9 · 0.6 · 0.9 · 1)
+    /// lies along `angle`, over a blurred glow. Every stop is the focus colour, so no part of the ring ever
+    /// reads dark. `TileRingLayers` draws the same ring and turns it.
     private func ring(angle: Double, glow: Double) -> some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         let radians = angle * .pi / 180
@@ -63,8 +65,8 @@ struct SeleneTileRing: View {
             shape.strokeBorder(Color.white.opacity(0.18), lineWidth: max(0.5, canvas.u(1)))
                 .padding(canvas.u(1))
         }
-        // Redrawn every frame: flattened on the GPU (Metal), not on the CPU. The
-        // margin keeps the glow's blur inside the flattened layer.
+        // Flattened on the GPU (Metal), not on the CPU. The margin keeps the glow's blur inside the
+        // flattened layer.
         .padding(canvas.u(Self.glowMargin))
         .drawingGroup()
         .padding(-canvas.u(Self.glowMargin))
@@ -72,10 +74,9 @@ struct SeleneTileRing: View {
     }
 }
 
-/// A diagonal light sweep across the tile: hold 0.6s, sweep until 2.4s, idle until 5s.
-/// The band runs along the top-left → bottom-right diagonal, entering past one
-/// corner and leaving past the other, so it never pops in or out. Selene's glint
-/// (Main.xaml Shine): a thin core at 0.18 white with faint 0.04 shoulders.
+/// A diagonal light sweep across the tile: hold 0.6s, sweep until 2.4s, idle until 5s (`TileMotion`).
+/// The band runs along the top-left → bottom-right diagonal, entering past one corner and leaving past the
+/// other, so it never pops in or out. Played by Core Animation (`TileShineLayers`).
 struct SeleneShine: View {
     @Environment(\.seleneReduceMotion) private var reduceMotion
 
@@ -84,45 +85,8 @@ struct SeleneShine: View {
 
     var body: some View {
         if active && !reduceMotion {
-            Sweep(cornerRadius: cornerRadius)
-        }
-    }
-
-    /// Half the band's width, in diagonal units (0 = top-left corner, 1 = bottom-right).
-    static let halfWidth = 0.3
-
-    /// The band's centre along the diagonal `t` seconds after the tile was selected.
-    static func centre(at t: TimeInterval) -> Double {
-        let cycle = t.truncatingRemainder(dividingBy: 5)
-        let raw = min(max((cycle - 0.6) / 1.8, 0), 1)
-        let eased = 0.5 - 0.5 * cos(.pi * raw)
-        return -halfWidth + eased * (1 + 2 * halfWidth)
-    }
-
-    private struct Sweep: View {
-        let cornerRadius: CGFloat
-        /// Each selection starts its own cycle, so the light always comes in from the corner.
-        @State private var start = Date()
-
-        var body: some View {
-            TimelineView(.animation) { context in
-                let c = SeleneShine.centre(at: context.date.timeIntervalSince(start))
-                let w = SeleneShine.halfWidth
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(LinearGradient(
-                        stops: [
-                            .init(color: .white.opacity(0), location: 0),
-                            .init(color: .white.opacity(0.04), location: 0.3),
-                            .init(color: .white.opacity(0.18), location: 0.5),
-                            .init(color: .white.opacity(0.04), location: 0.7),
-                            .init(color: .white.opacity(0), location: 1)
-                        ],
-                        startPoint: UnitPoint(x: c - w, y: c - w),
-                        endPoint: UnitPoint(x: c + w, y: c + w)))
-                    // Redrawn every frame: on the GPU, not the CPU.
-                    .drawingGroup()
-                    .allowsHitTesting(false)
-            }
+            TileShineLayers(cornerRadius: cornerRadius)
+                .allowsHitTesting(false)
         }
     }
 }

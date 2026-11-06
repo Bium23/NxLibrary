@@ -25,8 +25,6 @@ struct CheatsPanel: View {
     @State private var message: String?
     @State private var dropTargeted = false
     @State private var keyMonitor: Any?
-    /// The community list's cheats for this exact build, when it has them and none are installed.
-    @State private var offer: CheatOffer?
 
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
@@ -34,7 +32,6 @@ struct CheatsPanel: View {
     enum Row: Hashable {
         case rebuild
         case master
-        case download
         case cheat(String)
         case add
         case turnAllOff
@@ -94,8 +91,7 @@ struct CheatsPanel: View {
         if state.file != nil {
             lines += [.row(.add), .row(.turnAllOff), .row(.showInFinder), .row(.remove)]
         } else {
-            // Shown only when the list has cheats for this very build: otherwise the panel is as it was.
-            lines += (offer == nil ? [] : [.row(.download)]) + [.row(.add), .row(.showInFinder)]
+            lines += [.row(.add), .row(.showInFinder)]
         }
         if !state.otherBuilds.isEmpty {
             lines.append(.heading("Other versions"))
@@ -183,13 +179,6 @@ struct CheatsPanel: View {
         .animation(reduceMotion ? nil : SeleneTheme.quick, value: confirm)
         .onDrop(of: [.fileURL], isTargeted: $dropTargeted, perform: drop)
         .onAppear(perform: installKeyMonitor)
-        .task(id: context.buildID) {
-            guard let found = await viewModel.cheatOffer(for: context), cheatState?.file == nil else { return }
-            // The row arrives above Add: a focus below it keeps its row.
-            let at = rows.firstIndex(of: .add)
-            offer = found
-            if let at, focus >= at { focus += 1 }
-        }
         .onDisappear(perform: removeKeyMonitor)
         .onReceive(NotificationCenter.default.publisher(for: .nxGameOptionsGamepadAction)) { note in
             guard let action = note.object as? GamepadAction else { return }
@@ -298,11 +287,6 @@ struct CheatsPanel: View {
             let entry = entries[key]
             return (nil, entry.map(CheatCopy.title(of:)) ?? key, entry?.note,
                     cheatState?.enabled.contains(key) ?? false, false, writable)
-        case .download:
-            let count = offer?.file.summary.cheats ?? 0
-            return (.download, count == 1 ? "Download 1 cheat" : "Download \(count) cheats",
-                    "Made for this version, from the \(CheatDatabase.name) community list. Every cheat starts off.",
-                    nil, false, writable)
         case .add:
             return (.add, "Add cheats…", "A .txt cheat file, or a folder in SD-card layout. You can also drop them here.",
                     nil, false, writable)
@@ -359,9 +343,6 @@ struct CheatsPanel: View {
             var on = cheatState?.enabled ?? []
             if on.contains(key) { on.remove(key) } else { on.insert(key) }
             write(click: true) { try $0.setEnabled(on) }
-        case .download:
-            guard ensureWritable(), let offer else { return }
-            askConfirm(.install(data: offer.data, file: offer.file, unnamed: false, replacing: cheatState?.file != nil))
         case .add:
             guard ensureWritable() else { return }
             SoundEffectService.shared.play(.click)

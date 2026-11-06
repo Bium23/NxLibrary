@@ -7,10 +7,12 @@ struct DetailsBandTitle: View {
     @Environment(\.seleneCanvas) private var canvas
 
     let text: String
+    /// Canvas units; the store's rows are a little larger than the game page's bands.
+    var size: CGFloat = 21
 
     var body: some View {
         Text(text)
-            .seleneFont(21, .semibold)
+            .seleneFont(size, .semibold)
             .foregroundColor(SeleneTheme.ink)
             .padding(.top, canvas.u(2))
             .padding(.bottom, canvas.u(14))
@@ -163,6 +165,11 @@ struct DetailsModsBand: View {
 
     /// Selene DetailsStage's band tiles, as the screenshot strip draws them in Details.
     private static let style = SpotlightScreenshotStrip.Style.details
+    /// The decode size of a GameBanana mod's art on its tile (`GameBananaBandModel.prepareImages` decodes the
+    /// same, so a group of mods shows with its art).
+    static let thumbnailPixels = 600
+    /// GameBanana's mods fade in as a group (`GameBananaBandModel` shows two at most).
+    private static let arrival = Animation.easeOut(duration: 0.3)
     /// How much taller than one row of tiles the band is, for the pages that place the bands below it.
     static func extraHeight(tileCount: Int) -> CGFloat {
         CGFloat(max(ModsBandLayout.rows(count: tileCount) - 1, 0)) * (style.tileHeight + style.gap)
@@ -172,11 +179,20 @@ struct DetailsModsBand: View {
         ModsBandLayout.tiles(installed: mods.count, available: gameBanana.available.map(\.id), status: gameBanana.statusTiles)
     }
 
+    /// A tile and the identity it is drawn under: its own, or for a status tile also its place.
+    private struct Placed: Identifiable {
+        let tile: ModsBandTile
+        let id: String
+    }
+
     var body: some View {
-        let tiles = Self.tiles(mods: mods, gameBanana: gameBanana)
+        let tiles = Self.tiles(mods: mods, gameBanana: gameBanana).enumerated().map { index, tile -> Placed in
+            if case .status = tile { return Placed(tile: tile, id: "\(tile)@\(index)") }
+            return Placed(tile: tile, id: "\(tile)")
+        }
         let style = Self.style
-        let columns = Array(repeating: GridItem(.fixed(canvas.u(style.tileWidth)), spacing: canvas.u(style.gap),
-                                                alignment: .topLeading), count: ModsBandLayout.columns)
+        let columns = ModsBandLayout.columns, rows = ModsBandLayout.rows(count: tiles.count)
+        let pitchX = style.tileWidth + style.gap, pitchY = style.tileHeight + style.gap
         return VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: canvas.u(18)) {
                 DetailsBandTitle(text: title)
@@ -195,12 +211,21 @@ struct DetailsModsBand: View {
             .frame(width: canvas.u(1700), alignment: .leading)
             // A grid six tiles to a row that never slides: Left/Right stay in the row, Down walks the rows. Each
             // tile keeps its identity as GameBanana's mods arrive, so nothing redraws under the focus; grow and
-            // ring share the strip's one curve.
-            LazyVGrid(columns: columns, alignment: .leading, spacing: canvas.u(style.gap)) {
-                ForEach(Array(tiles.enumerated()), id: \.element) { index, kind in
-                    tileView(kind, index: index, focused: focusedIndex == index)
+            // ring share the strip's one curve. Every tile is made at once at its own place: a lazy grid made
+            // its tiles as the page glided in and moved each from a guessed place to its own, out of step.
+            // GameBanana's mods come in groups and fade in together; a status tile pushed along by them fades out
+            // and in at its new place instead of crossing the band.
+            ZStack(alignment: .topLeading) {
+                ForEach(Array(tiles.enumerated()), id: \.element.id) { index, kind in
+                    tileView(kind.tile, index: index, focused: focusedIndex == index)
+                        .offset(x: canvas.u(CGFloat(index % columns) * pitchX),
+                                y: canvas.u(CGFloat(index / columns) * pitchY))
+                        .transition(.opacity)
                 }
             }
+            .animation(reduceMotion ? nil : Self.arrival, value: tiles.map(\.id))
+            .frame(width: canvas.u(CGFloat(columns) * pitchX - style.gap),
+                   height: canvas.u(CGFloat(max(rows, 1)) * pitchY - style.gap), alignment: .topLeading)
             .padding(.top, canvas.u(14))
             .animation(reduceMotion ? nil : SpotlightScreenshotStrip.motion, value: focusedIndex)
         }
@@ -277,7 +302,7 @@ struct DetailsModsBand: View {
 
     private func availableFace(_ mod: AvailableMod) -> some View {
         ZStack(alignment: .bottomLeading) {
-            GameBananaImageView(url: mod.thumbnailURL, maxPixelSize: 600)
+            GameBananaImageView(url: mod.thumbnailURL, maxPixelSize: Self.thumbnailPixels)
             LinearGradient(colors: [.clear, .black.opacity(0.78)], startPoint: .center, endPoint: .bottom)
             VStack(alignment: .leading, spacing: canvas.u(2)) {
                 if let chip = chip(for: mod) {
@@ -390,6 +415,26 @@ struct GameBananaImageView: View {
                 guard let file = await GameBananaServices.shared.images.file(for: url),
                       let image = await GameArtLoader.decode(at: file, maxPixelSize: maxPixelSize) else { continue }
                 store(image, for: key(url, maxPixelSize))
+            }
+        }
+    }
+
+    /// Decodes `urls` now, side by side (the image cache limits the downloads), and returns once each is ready or
+    /// could not be read, so a view that shows them all at once never shows one arriving after the others.
+    static func prepare(_ urls: [URL], maxPixelSize: Int) async {
+        let missing = urls.filter { decoded.object(forKey: key($0, maxPixelSize)) == nil }
+        guard !missing.isEmpty else { return }
+        let images = GameBananaServices.shared.images
+        await withTaskGroup(of: (URL, NSImage)?.self) { group in
+            for url in missing {
+                group.addTask {
+                    guard let file = await images.file(for: url),
+                          let image = await GameArtLoader.decode(at: file, maxPixelSize: maxPixelSize) else { return nil }
+                    return (url, image)
+                }
+            }
+            for await result in group {
+                if let (url, image) = result { store(image, for: key(url, maxPixelSize)) }
             }
         }
     }

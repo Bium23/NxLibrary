@@ -151,7 +151,7 @@ Use **Find a game** for search, **Game Options** for title-specific actions, and
 
 For a title already in the library, Review opens with that game's saved options and offers **Rebuild** or **Save changes**.
 
-Sources stay in place; staged workspaces use symbolic links. New game apps install in the chosen **Game apps** folder. Review shows the actual destination, including any filename needed to avoid an unrelated app. Build stages, progress, estimated time and a live log remain available while the operation runs. Cleaning an older shader cache shows **Cleaning shader cache** instead of an ETA; the first cleanup can take longer on large caches or external drives. Closing the porting screen leaves the operation running; cancellation is a separate action.
+Sources stay in place; staged workspaces use symbolic links. New game apps install in the chosen **Game apps** folder. Builds run on the drive the app goes to: with the folder on an external APFS or Mac OS Extended drive, the extracted game, shader cache and new app stay on that drive in a hidden `.nxlibrary-build` folder, so the Mac's disk needs no space for the build and the app is moved into place, not copied. On an exFAT drive or a network share builds keep using the Mac's disk: exFAT keeps Mac file attributes in separate `._` files, which break a built app's signature. Review shows the actual destination, including any filename needed to avoid an unrelated app. Build stages, progress, estimated time and a live log remain available while the operation runs. The first build of a game after an engine update can first move its shader cache into the engine's new format: that shows **Updating shader cache** instead of an ETA and takes longer on a large cache or an external drive. Closing the porting screen leaves the operation running; cancellation is a separate action.
 
 A rebuild of a running game waits to replace its app until it closes. If compilation finishes but installation fails, **Retry** installs the preserved result without compiling again. If the destination folder disconnects, reconnect it before retrying: the ready build keeps its original destination. A library refresh preserves pending installations and failure information.
 
@@ -170,7 +170,7 @@ A rebuild of a running game waits to replace its app until it closes. If compila
 | **Settings → Games → Cloud saves** | Library-wide preference, subject to advanced game configuration overrides. | Reapplied before each launch, including when Off. |
 | **Settings → Look** | The library's presentation. | The app interface; game artwork and launch-screen style have their own controls. |
 
-Options include fullscreen, FPS target, docked mode, language, rumble, render scale, MetalFX spatial upscaling and Metal HUD. Some controls depend on the installed build's capabilities. A control being available does not guarantee that every game supports its effect.
+Options include fullscreen, FPS target, docked mode, language, rumble, render scale, MetalFX upscaling and Metal HUD. **MetalFX upscaling** enlarges the finished picture, HUD included, to your window or screen. **Game's upscaler**, offered only by games that upscale their own picture inside the frame (such as Donkey Kong Bananza), keeps the game's own upscaler or swaps it for MetalFX's, which takes much less GPU time; both can be on. Some controls depend on the installed build's capabilities. A control being available does not guarantee that every game supports its effect.
 
 Settings includes **Search** and **Changed**. Group resets retain the cloud-sync choice and selected sources folder. Descriptions explain the scope; information buttons provide additional detail.
 
@@ -266,7 +266,7 @@ Before reporting a problem, review copied diagnostics and remove anything person
 ### Compatibility and limitations
 
 - NX Library uses a manually pinned engine and checks its commit, working tree, CLI contract and Metal compiler before new builds. It does not follow upstream `main` automatically. **Settings → Engine → Newest engine** lets you choose `main` yourself before NX Library has tested it: an orange dot marks it, builds are recorded as untested, **Back to tested** returns to the pinned engine, and it is not offered when `main` needs a different Metal compiler.
-- The current engine is `4a0551e4` and certifies Metal `32023.922`. **Build anyway with an untested toolchain** requires explicit confirmation and marks the resulting build as untested. A successful launch does not turn it into a certified combination.
+- The current engine is `04df08d4` and certifies Metal `32023.922`. **Build anyway with an untested toolchain** requires explicit confirmation and marks the resulting build as untested. A successful launch does not turn it into a certified combination.
 - Game compatibility depends on nxnative, the game version and the toolchain.
 - Output follows the window/display; native 1440p/4K internal rendering is not supported. Render scale is 50–100% where the build supports it. MetalFX is spatial upscaling.
 - Builds run one at a time. iOS/IPA output, automatic engine updates and notarisation are not currently provided.

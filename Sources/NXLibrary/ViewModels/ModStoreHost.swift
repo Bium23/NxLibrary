@@ -21,8 +21,12 @@ final class ModStoreHost: ObservableObject {
     @Published private(set) var records: [String: [Int: ModRecord]] = [:]
     /// Working mods found and the games they are for, and whether more are being looked for: the card's numbers.
     @Published private(set) var counts: (mods: Int, games: Int, looking: Bool) = (0, 0, false)
-    /// Up to four mods' art for the card's cover, from the snapshots on disk until the store has looked.
+    /// Up to four mods' art for the card's cover (`ModStoreLayout.coverArt`), from the snapshots on disk until the
+    /// store has looked; the same art either way unless the store finds new mods.
     @Published private(set) var cover: [URL] = []
+    /// The cover being decoded before it is shown.
+    private var nextCover: [URL] = []
+    private var coverTask: Task<Void, Never>?
 
     private static let log = Logger(subsystem: "local.nxlibrary", category: "gamebanana")
     private var gamesByTitle: [String: PortedGame] = [:]
@@ -92,24 +96,36 @@ final class ModStoreHost: ObservableObject {
         catalog.open(list)
     }
 
-    /// The card's cover before the store has looked: the best mods with art in the snapshots on disk, read off
-    /// the main thread. No request.
-    func loadCover() {
-        guard cover.isEmpty else { return }
+    /// The card's cover before the store has looked: the art the store will pick, from the snapshots on disk of
+    /// `titleIDs` (your games), read off the main thread. No request.
+    func loadCover(titleIDs: Set<String>) {
+        guard cover.isEmpty, nextCover.isEmpty else { return }
         let snapshots = self.snapshots
         let matches = GameBananaServices.shared.matches
+        let wanted = Set(titleIDs.map { $0.uppercased() })
         Task { [weak self] in
             let urls = await Task.detached(priority: .utility) { () -> [URL] in
-                let mods = snapshots.loadAll(matches: matches).flatMap(\.mods).filter { !$0.images.isEmpty }
-                return Self.coverURLs(mods.sorted { $0.downloads > $1.downloads })
+                let games = snapshots.loadAll(matches: matches).filter { wanted.contains($0.titleID) }
+                    .map { ModCatalogGame(titleID: $0.titleID, name: $0.gameName, mods: $0.mods) }
+                return ModStoreLayout.coverArt(games: games)
             }.value
-            guard let self, self.cover.isEmpty, !urls.isEmpty else { return }
-            self.cover = urls
+            guard let self, self.cover.isEmpty else { return }
+            self.show(cover: urls)
         }
     }
 
-    nonisolated private static func coverURLs(_ mods: [AvailableMod]) -> [URL] {
-        Array(mods.compactMap { $0.images.first ?? $0.thumbnailURL }.prefix(4))
+    /// Shows `urls` on the card once all of them are decoded, so the mosaic changes in one crossfade.
+    private func show(cover urls: [URL]) {
+        guard !urls.isEmpty, urls != nextCover else { return }
+        coverTask?.cancel()
+        guard urls != cover else { nextCover = []; return }
+        nextCover = urls
+        coverTask = Task { [weak self] in
+            await GameBananaImageView.prepare(urls, maxPixelSize: ModsCardCover.pixelSize)
+            guard let self, !Task.isCancelled, self.nextCover == urls else { return }
+            self.cover = urls
+            self.nextCover = []
+        }
     }
 
     /// Another card or a game is selected: requests and downloads stop, the panel closes.
@@ -133,9 +149,7 @@ final class ModStoreHost: ObservableObject {
         let mods = catalog.games.reduce(0) { $0 + $1.mods.count }
         let nextCounts = (mods, catalog.games.count, catalog.refreshing || catalog.phase == .loading)
         if nextCounts != counts { counts = nextCounts }
-        let featured = sections.first { $0.kind == .featured }?.entries ?? []
-        let art = featured.compactMap { $0.mod.images.first ?? $0.mod.thumbnailURL }
-        if !art.isEmpty, Array(art.prefix(4)) != cover { cover = Array(art.prefix(4)) }
+        show(cover: ModStoreLayout.coverArt(games: catalog.games))
         reloadRecords(all: false)
         prewarm()
         Self.log.notice("store rebuild \(self.sections.count, privacy: .public) sections \(mods, privacy: .public) mods in \(Int(Date().timeIntervalSince(start) * 1000), privacy: .public) ms")

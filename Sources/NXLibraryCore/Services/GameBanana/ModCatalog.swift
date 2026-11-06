@@ -144,11 +144,13 @@ public enum ModStoreLayout {
     /// The screenshot strip's clip, so every row ends at the same edge.
     public static let clipWidth: CGFloat = 1788
 
+    /// A section's height. A row is its title (about 32), its tiles, and a 68 gap to the next title: room for the
+    /// focused tile's grow and ring.
     public static func height(_ kind: ModStoreSectionKind) -> CGFloat {
         switch kind {
         case .sort: return 110
         case .featured: return 470
-        case .popular, .category, .game: return tileHeight + 136
+        case .popular, .category, .game: return tileHeight + 100
         }
     }
 
@@ -163,6 +165,14 @@ public enum ModStoreLayout {
         guard let index, index > 0 else { return 0 }
         let right = CGFloat(index) * (tileWidth + gap) + tileWidth + 28
         return max(0, right - clipWidth)
+    }
+
+    /// Whether a row of `count` tiles, slid for tile `index`, has tiles hidden past the clip's right edge: the row
+    /// shows a small chevron there. The tiles start 14 inside the clip (room for the focus ring).
+    public static func moreToTheRight(count: Int, index: Int?) -> Bool {
+        guard count > 0 else { return false }
+        let right = 14 + CGFloat(count) * (tileWidth + gap) - gap - rowScroll(index: index)
+        return right > clipWidth
     }
 
     public static func sorted(_ entries: [ModCatalogEntry], by sort: ModStoreSort) -> [ModCatalogEntry] {
@@ -203,6 +213,15 @@ public enum ModStoreLayout {
                                             entries: Array(sorted(game.entries, by: sort).prefix(rowLimit))))
         }
         return sections.filter { $0.kind == .sort || !$0.entries.isEmpty }
+    }
+
+    /// The Mods card's face: up to four Featured mods' art by popularity. It ignores the store's sort and takes the
+    /// games in title ID order (a mod shared by two counts for the first), so the cover read from the snapshots at
+    /// launch is the one the open store finds: the card never changes art when the store opens.
+    public static func coverArt(games: [ModCatalogGame]) -> [URL] {
+        let ordered = games.sorted { $0.titleID < $1.titleID }
+        let featured = sections(games: ordered, sort: .popular).first { $0.kind == .featured }?.entries ?? []
+        return Array(featured.compactMap { $0.mod.images.first ?? $0.mod.thumbnailURL }.prefix(4))
     }
 
     /// Mods with art, each game's best first so the banner is varied, then the next best.

@@ -197,6 +197,9 @@ struct SpotlightGameInfoView: View {
             .strokeBorder(SeleneTheme.ink25, lineWidth: max(1, canvas.u(1))))
     }
 
+    /// The pills and stats' fade after a change (the genres below come in with them, `SpotlightInfoFollow`).
+    static let restMotion = Animation.easeOut(duration: 0.4).delay(0.42)
+
     /// Reduce motion keeps the fades and drops the slide.
     private func reveal() {
         var reset = Transaction()
@@ -208,11 +211,25 @@ struct SpotlightGameInfoView: View {
         }
         DispatchQueue.main.async {
             withAnimation(.easeOut(duration: 0.45).delay(0.3)) { shown = true }
-            withAnimation(.easeOut(duration: 0.4).delay(0.42)) { restShown = true }
+            withAnimation(Self.restMotion) { restShown = true }
             if !reduceMotion {
                 withAnimation(SeleneTheme.cubicOut(0.55).delay(0.3)) { slid = true }
             }
         }
+    }
+}
+
+/// Fades in with the game's pills and stats (`SpotlightGameInfoView.restMotion`): hidden as the game changes, then
+/// in with them. Give the view the game's `.id` so each change replays it.
+struct SpotlightInfoFollow: ViewModifier {
+    @State private var shown = false
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(shown ? 1 : 0)
+            .onAppear {
+                DispatchQueue.main.async { withAnimation(SpotlightGameInfoView.restMotion) { shown = true } }
+            }
     }
 }
 

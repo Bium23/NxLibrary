@@ -114,9 +114,9 @@ struct SettingsGamesSection: View {
                             info: "Simulates the Nintendo Switch docked TV profile (1080p target, higher clocks and memory limits). Disabling uses handheld profile (720p target, lower GPU load).",
                             isOn: $settings.settings.gameDefaults.isDockedMode)
 
-            SeleneToggleRow("MetalFX spatial upscaling",
-                            subtitle: "Spatial upscaling",
-                            info: "Uses Apple MetalFX Spatial Upscaling to upscale lower internal render targets to display resolution with edge sharpening, without raising GPU raster load.",
+            SeleneToggleRow("MetalFX upscaling",
+                            subtitle: "Sharper scaling of the whole picture to your screen",
+                            info: "Enlarges a game's finished picture, menus and HUD included, to your window or screen with Apple's MetalFX instead of smooth scaling: sharper edges and text, for a little more GPU time. A game whose own upscaler can use MetalFX offers that choice in its Game options, as Game's upscaler.",
                             isOn: $settings.settings.gameDefaults.enableMetalFXUpscale)
 
             SeleneToggleRow("Metal HUD",
@@ -197,7 +197,7 @@ struct SettingsGamesSection: View {
             .init(id: "docked", title: "Docked mode") {
                 settings.settings.gameDefaults.isDockedMode.toggle()
             },
-            .init(id: "metalfx", title: "MetalFX spatial upscaling") {
+            .init(id: "metalfx", title: "MetalFX upscaling") {
                 settings.settings.gameDefaults.enableMetalFXUpscale.toggle()
             },
             .init(id: "hud", title: "Metal HUD") {

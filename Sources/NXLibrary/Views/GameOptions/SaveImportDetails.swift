@@ -103,8 +103,8 @@ private struct SaveTransferArrow: View {
     }
 
     private func litGlyph(at elapsed: TimeInterval) -> some View {
-        let centre = SeleneShine.centre(at: elapsed)
-        let radius = SeleneShine.halfWidth
+        let centre = TileMotion.shineCentre(at: elapsed)
+        let radius = TileMotion.shineHalfWidth
         return glyph.foregroundStyle(LinearGradient(
             colors: [SeleneTheme.ink60, SeleneTheme.ink.opacity(0.80), SeleneTheme.ink60],
             startPoint: UnitPoint(x: 0.5, y: centre - radius),

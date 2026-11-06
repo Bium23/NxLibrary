@@ -114,6 +114,24 @@ struct SpotlightDescription: View {
     }
 }
 
+/// A small, faint chevron at a row's right end, a touch smaller than `SpotlightUpHint`: more tiles that way.
+struct SpotlightRightHint: View {
+    @Environment(\.seleneCanvas) private var canvas
+
+    var body: some View {
+        Path { path in
+            path.move(to: .zero)
+            path.addLine(to: CGPoint(x: canvas.u(7), y: canvas.u(11)))
+            path.addLine(to: CGPoint(x: 0, y: canvas.u(22)))
+        }
+        .stroke(SeleneTheme.ink.opacity(0.45),
+                style: StrokeStyle(lineWidth: max(1, canvas.u(2)), lineCap: .round, lineJoin: .round))
+        .frame(width: canvas.u(7), height: canvas.u(22))
+        .shadow(color: .black.opacity(0.4), radius: canvas.u(3))
+        .accessibilityHidden(true)
+    }
+}
+
 /// A small, faint chevron at the window's top centre: there is more above.
 struct SpotlightUpHint: View {
     @Environment(\.seleneCanvas) private var canvas

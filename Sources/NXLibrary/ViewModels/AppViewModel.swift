@@ -144,9 +144,11 @@ public final class AppViewModel: ObservableObject {
     // MARK: - Disk Capacity Pre-flight
     public func freeBytes(at url: URL) -> Int64? {
         let fm = FileManager.default
-        let target = fm.fileExists(atPath: url.path)
-            ? url
-            : url.deletingLastPathComponent()
+        // A folder not made yet (a build's staging folder) is on its nearest existing parent's volume.
+        var target = url.standardizedFileURL
+        while !fm.fileExists(atPath: target.path), target.path != "/" {
+            target = target.deletingLastPathComponent()
+        }
         var stat = statvfs()
         if statvfs(target.path, &stat) == 0 {
             return Int64(stat.f_bavail) * Int64(stat.f_frsize)
@@ -164,10 +166,6 @@ public final class AppViewModel: ObservableObject {
         freeBytes(at: selectedGameFolder
             ?? URL(fileURLWithPath: defaultInstallPath.isEmpty
                 ? NSHomeDirectory() : defaultInstallPath))
-    }
-
-    public var availableOutputDiskBytes: Int64? {
-        freeBytes(at: selectedBuildAppURL.deletingLastPathComponent())
     }
 
     var gameAppsFolder: URL {
@@ -190,9 +188,19 @@ public final class AppViewModel: ObservableObject {
     }
 
     /// The wizard reserves space for both the extracted cache and the temporary
-    /// app. Use the tighter of the source/cache volume and the output volume.
+    /// app: the tightest of the folders the build writes to (`BuildScratch`).
     public var availableBuildDiskBytes: Int64? {
-        [availableDiskBytes, availableOutputDiskBytes].compactMap { $0 }.min()
+        buildFolders(appFolder: selectedBuildAppURL.deletingLastPathComponent(),
+                     workspace: selectedLibraryGame?.workspacePath).compactMap(freeBytes(at:)).min()
+    }
+
+    /// The folders a build writes to: its workspace (a player's own one beside the sources is kept), its staged app
+    /// and the app's folder. They are on the app's drive when it can hold builds.
+    func buildFolders(appFolder: URL, workspace: String?) -> [URL] {
+        let existing = workspace.map { URL(fileURLWithPath: $0) }
+        let scratch = BuildScratch.choose(core: core, appFolder: appFolder, existingWorkspace: existing)
+        let own = existing.flatMap { BuildScratch.isManaged($0, core: core) ? nil : $0 }
+        return [own ?? scratch.workspaces, scratch.temp, appFolder]
     }
     
     public var selectedSources: [GameFileItem] {
@@ -432,7 +440,7 @@ public final class AppViewModel: ObservableObject {
         .resolve(runtime: .locate(), repo: URL(fileURLWithPath: nxnativePath))
     }
 
-    public let pinnedEngineCommit = "4a0551e4b9abc75ea736006e4dbd30fcac0d03a4"
+    public let pinnedEngineCommit = "04df08d429dc70f8665b0bfa4891057ea30d5d89"
     private let core = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/NXLibrary")
     lazy var libraryStore = LibraryStore(directory: core)
@@ -518,8 +526,10 @@ public final class AppViewModel: ObservableObject {
         
         NotificationService.shared.requestAuthorization()
         let held = PendingInstaller.keptFolders(libraryGames)
+        let staging = BuildScratch.tempFolders(
+            core: core, appFolders: [gameAppsFolder] + libraryGames.map { $0.url.deletingLastPathComponent() })
         DispatchQueue.global(qos: .utility).async { [weak self] in
-            self?.sweepStaleBuildTemp(keeping: held)
+            self?.sweepStaleBuildTemp(in: staging, keeping: held)
         }
         NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification,
@@ -935,12 +945,17 @@ public final class AppViewModel: ObservableObject {
     }
 
     /// `kept`: folders of builds that wait for their game to quit (standardized paths).
-    private func sweepStaleBuildTemp(keeping kept: Set<String>) {
-        let temp = core.appendingPathComponent("Temp")
+    private func sweepStaleBuildTemp(in folders: [URL], keeping kept: Set<String>) {
+        let cutoff = Date().addingTimeInterval(-24 * 60 * 60)
+        for temp in folders {
+            sweepStaleBuildTemp(temp, before: cutoff, keeping: kept)
+        }
+    }
+
+    private func sweepStaleBuildTemp(_ temp: URL, before cutoff: Date, keeping kept: Set<String>) {
         guard let items = try? FileManager.default.contentsOfDirectory(
             at: temp, includingPropertiesForKeys: [.contentModificationDateKey]
         ) else { return }
-        let cutoff = Date().addingTimeInterval(-24 * 60 * 60)
         for item in items {
             let date = (try? item.resourceValues(
                 forKeys: [.contentModificationDateKey]).contentModificationDate)
@@ -1568,11 +1583,10 @@ public final class AppViewModel: ObservableObject {
             return fm.fileExists(atPath: $0.url.path, isDirectory: &isDir) && !isDir.boolValue
         }
         let sourceBytes = existingSources.reduce(Int64(0)) { $0 + $1.sizeBytes }
-        let workspaceRoot = core.appendingPathComponent("workspaces").standardizedFileURL.path
         let workspaceBytes: Int64
         if let path = game.workspacePath {
             let workspace = URL(fileURLWithPath: path).standardizedFileURL
-            workspaceBytes = workspace.path.hasPrefix(workspaceRoot + "/")
+            workspaceBytes = BuildScratch.isManaged(workspace, core: core)
                 ? directorySize(workspace) : 0
         } else {
             workspaceBytes = 0
@@ -1638,10 +1652,9 @@ public final class AppViewModel: ObservableObject {
         }
 
         var removedWorkspace = false
-        let workspaceRoot = core.appendingPathComponent("workspaces").standardizedFileURL.path
         if let path = game.workspacePath {
             let workspace = URL(fileURLWithPath: path).standardizedFileURL
-            if workspace.path.hasPrefix(workspaceRoot + "/"),
+            if BuildScratch.isManaged(workspace, core: core),
                fm.fileExists(atPath: workspace.path) {
                 do {
                     try fm.removeItem(at: workspace)
@@ -1729,11 +1742,9 @@ public final class AppViewModel: ObservableObject {
             // Remove only the app-owned staged workspace. A folder-mode game's
             // workspace is the user's source folder and must never be touched.
             var removedWorkspace = false
-            let workspaceRoot = core.appendingPathComponent("workspaces")
-                .standardizedFileURL.path
             if let path = game.workspacePath {
                 let workspace = URL(fileURLWithPath: path).standardizedFileURL
-                if workspace.path.hasPrefix(workspaceRoot + "/"),
+                if BuildScratch.isManaged(workspace, core: core),
                    FileManager.default.fileExists(atPath: workspace.path) {
                     try? FileManager.default.removeItem(at: workspace)
                     removedWorkspace = !FileManager.default.fileExists(atPath: workspace.path)
@@ -2054,10 +2065,8 @@ public final class AppViewModel: ObservableObject {
         let required = SourceSelection.uniqueSize(game.sources) * 2 + 10_000_000_000
         let parent = finalAppURL(for: game).deletingLastPathComponent()
         guard GameAppDestination.folderProblem(at: parent) == nil else { return false }
-        if let free = freeBytes(at: parent), free < required { return false }
-        if let path = game.workspacePath,
-           let free = freeBytes(at: URL(fileURLWithPath: path)), free < required {
-            return false
+        for folder in buildFolders(appFolder: parent, workspace: game.workspacePath) {
+            if let free = freeBytes(at: folder), free < required { return false }
         }
         return canPassToolchainGate
     }
@@ -2255,7 +2264,9 @@ public final class AppViewModel: ObservableObject {
         )
         guard selectedGame.hasGame else { throw NXLibraryError.baseRequired }
         let mode: WorkspaceMode = folder.map { .folder($0) } ?? .staged
-        let workspace = try workspaceManager.makeWorkspace(for: selectedGame, mode: mode)
+        // Made where its build will run (`BuildScratch`), so the first build never moves it.
+        let root = BuildScratch.choose(core: core, appFolder: gameAppsFolder).workspaces
+        let workspace = try WorkspaceManager(root: root).makeWorkspace(for: selectedGame, mode: mode)
         let titleId = String(format: "%016llX", detected.baseTitleId)
         let updateVersion = selected.filter { $0.kind == .update }
             .compactMap { $0.version }.max().map(String.init)
@@ -2391,8 +2402,10 @@ public final class AppViewModel: ObservableObject {
                 && workspaceManager.brokenLinks(in: directory).isEmpty
                 && expectedNames.allSatisfy { existingNames.contains($0) }
         } ?? false
-        let managed = existingDirectory?.deletingLastPathComponent().resolvingSymlinksInPath()
-            == core.appendingPathComponent("workspaces").resolvingSymlinksInPath()
+        // On the app's drive when it can hold builds: the Mac's disk needs no room, the install is a rename.
+        let scratch = BuildScratch.choose(core: core, appFolder: finalApp.deletingLastPathComponent(),
+                                          existingWorkspace: existingDirectory)
+        let managed = existingDirectory.map { BuildScratch.isManaged($0, core: core) } ?? false
         if let directory = existingDirectory, existingLinksOK, !managed,
            target.sources.allSatisfy({ $0.layout == .package }) {
             let cache = target.buildCachePath.map(URL.init(fileURLWithPath:))
@@ -2401,7 +2414,14 @@ public final class AppViewModel: ObservableObject {
             workspace = Workspace(directory: directory, buildCache: cache, links: [])
         } else {
             let detected = try detectedGame(from: target)
-            workspace = try workspaceManager.makeWorkspace(for: detected, mode: .staged)
+            workspace = try WorkspaceManager(root: scratch.workspaces).makeWorkspace(for: detected, mode: .staged)
+            // A workspace NX Library left on another drive is only a cache now: that drive gets its room back.
+            // A game not built yet still points at its workspace, which then stays.
+            if let old = existingDirectory, managed,
+               old.resolvingSymlinksInPath() != workspace.directory.resolvingSymlinksInPath(),
+               !target.url.standardizedFileURL.path.hasPrefix(old.standardizedFileURL.path) {
+                DispatchQueue.global(qos: .utility).async { try? FileManager.default.removeItem(at: old) }
+            }
             target.workspacePath = workspace.directory.path
             target.buildCachePath = workspace.buildCache.path
         }
@@ -2417,13 +2437,18 @@ public final class AppViewModel: ObservableObject {
         }
 
         let requiredDisk = SourceSelection.uniqueSize(target.sources) * 2 + 10_000_000_000
-        for volume in [workspace.directory, finalApp.deletingLastPathComponent()] {
+        var measured = Set<UInt64>()
+        for volume in [workspace.directory, scratch.temp, finalApp.deletingLastPathComponent()] {
+            if let device = BuildScratch.Volume.of(volume)?.device, !measured.insert(device).inserted { continue }
             if let free = freeBytes(at: volume), free < requiredDisk {
                 let freeText = ByteCountFormatter.string(fromByteCount: free, countStyle: .file)
                 let requiredText = ByteCountFormatter.string(
                     fromByteCount: requiredDisk, countStyle: .file)
+                let why = scratch.appDriveUnsupported
+                    ? " The Game apps folder's drive can't hold build files (it needs APFS or Mac OS Extended), so the build uses this Mac's disk."
+                    : ""
                 throw NXLibraryError.environmentBlocked(
-                    "Not enough free space at \(volume.path): \(freeText) available, \(requiredText) needed.")
+                    "Not enough free space at \(volume.path): \(freeText) available, \(requiredText) needed.\(why)")
             }
         }
 
@@ -2435,7 +2460,7 @@ public final class AppViewModel: ObservableObject {
                 : "the nxnative venv Python is missing")
         }
 
-        let tempRoot = core.appendingPathComponent("Temp").appendingPathComponent(UUID().uuidString)
+        let tempRoot = scratch.temp.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempRoot, withIntermediateDirectories: true)
         let tempApp = tempRoot.appendingPathComponent(finalApp.lastPathComponent)
         let logURL = core.appendingPathComponent("Logs").appendingPathComponent("\(titleId).log")

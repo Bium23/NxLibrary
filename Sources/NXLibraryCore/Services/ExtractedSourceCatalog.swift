@@ -9,7 +9,7 @@ public struct ExtractedSourceCatalog {
     private let fm = FileManager.default
     public init(profiles: URL, provisional: Bool = false) { self.profiles = profiles; self.provisional = provisional }
 
-    /// The engine's `pack_dump.is_dump` (nxnative 4a0551e4): a base game's code with a RomFS beside it or in an
+    /// The engine's `pack_dump.is_dump` (nxnative 4a0551e4, unchanged through 04df08d4): a base game's code with a RomFS beside it or in an
     /// update, or an update with its code and RomFS and no base. The base is `base/`, or the folder itself when
     /// exefs/ and romfs/ are directly in it (`nup extract`, or the `base` folder chosen).
     public static func recognizes(_ folder: URL) -> Bool {

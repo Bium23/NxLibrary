@@ -5,6 +5,8 @@ import Foundation
 /// GameBanana's survive, and a mod without a GameBanana page or a file to install is dropped.
 public struct ModCatalogSnapshots: Sendable {
     public struct Snapshot: Equatable, Sendable {
+        /// The game's title ID, upper case.
+        public let titleID: String
         public let savedAt: Date
         public let gameName: String
         /// The GameBanana game the mods were found for: a snapshot of another one is not shown.
@@ -19,7 +21,8 @@ public struct ModCatalogSnapshots: Sendable {
     public func load(titleID: String) -> Snapshot? {
         guard let data = try? Data(contentsOf: file(titleID)),
               let stored = try? JSONDecoder().decode(StoredSnapshot.self, from: data), stored.version == 1 else { return nil }
-        return Snapshot(savedAt: stored.savedAt, gameName: stored.gameName, gameBananaID: stored.gameBananaID,
+        return Snapshot(titleID: titleID.uppercased(), savedAt: stored.savedAt, gameName: stored.gameName,
+                        gameBananaID: stored.gameBananaID,
                         mods: stored.mods.compactMap(\.mod))
     }
 

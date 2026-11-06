@@ -45,6 +45,20 @@ final class ModStoreLayoutTests: XCTestCase {
         XCTAssertEqual(ModStoreLayout.sorted(entries, by: .updated).map(\.id), [2, 3, 1])
     }
 
+    /// The Mods card's face: the Featured mods' art by popularity, whatever the store's sort and the order the games
+    /// come in, so the cover read from disk at launch is the one the open store finds, and it never changes under
+    /// the player when the store opens. A mod shared by two games counts for the first by title ID.
+    func testCoverArtIsTheSameWhateverTheSortOrTheGamesOrder() {
+        let shared = mod(1, downloads: 50)
+        let zelda = ModCatalogGame(titleID: "Z", name: "Zelda", mods: [shared, mod(2, downloads: 40), mod(3, downloads: 30)])
+        let mario = ModCatalogGame(titleID: "M", name: "Mario", mods: [shared, mod(4, downloads: 45),
+                                                                       mod(5, downloads: 99, image: false)])
+        let art = { (ids: [Int]) in ids.map { URL(string: "https://images.gamebanana.com/img/ss/mods/\($0).jpg")! } }
+        let cover = ModStoreLayout.coverArt(games: [zelda, mario])
+        XCTAssertEqual(cover, art([1, 2, 4, 3]), "each game's best first (mod 1 counts for M), only mods with art")
+        XCTAssertEqual(ModStoreLayout.coverArt(games: [mario, zelda]), cover)
+    }
+
     func testSectionsRunDownSortFeaturedPopularCategoriesThenEachGame() {
         let zelda = ModCatalogGame(titleID: "Z", name: "Zelda", mods: [
             mod(1, downloads: 50, category: "Skins"), mod(2, downloads: 40, category: "Music Packs"),
@@ -85,11 +99,31 @@ final class ModStoreLayoutTests: XCTestCase {
                        ModStoreLayout.height(.sort) + ModStoreLayout.height(.featured) + ModStoreLayout.height(.popular))
     }
 
+    /// A row is its title (about 32), its tiles and a 68 gap to the next row's title: room for the focused tile's
+    /// grow and ring, no more (it was 104, and the rows read as far apart).
+    func testRowsLeaveAShortGapToTheNextRow() {
+        for kind: ModStoreSectionKind in [.popular, .category(.graphics), .game("Z")] {
+            XCTAssertEqual(ModStoreLayout.height(kind), ModStoreLayout.tileHeight + 100)
+        }
+    }
+
     func testRowSlidesOnlyOnceTheFocusedTileReachesTheEdge() {
         let w = ModStoreLayout.tileWidth, g = ModStoreLayout.gap
         XCTAssertEqual(ModStoreLayout.rowScroll(index: nil), 0)
         XCTAssertEqual(ModStoreLayout.rowScroll(index: 4), 0)
         XCTAssertEqual(ModStoreLayout.rowScroll(index: 5), 5 * (w + g) + w + 28 - ModStoreLayout.clipWidth)
+    }
+
+    /// A row says there are more tiles past its right edge while some are hidden there: five fit, the sixth is
+    /// past the edge until the row has slid to the last.
+    func testARowShowsMoreToTheRightOnlyWhileTilesAreHiddenThere() {
+        XCTAssertFalse(ModStoreLayout.moreToTheRight(count: 0, index: nil))
+        XCTAssertFalse(ModStoreLayout.moreToTheRight(count: 5, index: nil))
+        XCTAssertTrue(ModStoreLayout.moreToTheRight(count: 6, index: nil))
+        XCTAssertTrue(ModStoreLayout.moreToTheRight(count: 12, index: 5))
+        XCTAssertTrue(ModStoreLayout.moreToTheRight(count: 12, index: 10))
+        XCTAssertFalse(ModStoreLayout.moreToTheRight(count: 12, index: 11))
+        XCTAssertFalse(ModStoreLayout.moreToTheRight(count: 6, index: 5))
     }
 }
 
@@ -173,6 +207,7 @@ final class ModCatalogSnapshotTests: XCTestCase {
                                 added: Date(timeIntervalSince1970: 4))
         try snapshots.save([good], gameName: "Zelda", titleID: "0100ABC", gameBananaID: 42, at: Date(timeIntervalSince1970: 100))
         let loaded = try XCTUnwrap(snapshots.load(titleID: "0100abc"))
+        XCTAssertEqual(loaded.titleID, "0100ABC", "the cover is matched to your games by title ID")
         XCTAssertEqual(loaded.savedAt, Date(timeIntervalSince1970: 100))
         XCTAssertEqual(loaded.gameName, "Zelda")
         XCTAssertEqual(loaded.gameBananaID, 42)

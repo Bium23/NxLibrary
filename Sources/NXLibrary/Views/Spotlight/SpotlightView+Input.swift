@@ -357,7 +357,15 @@ extension SpotlightView {
                   NSApp.modalWindow == nil,
                   !(window.firstResponder is NSText) else { return event }
             if event.type == .scrollWheel {
-                if modsHost.isPanelOpen || storeHost.isPanelOpen { return nil }
+                // An open mod panel takes the wheel: its description scrolls, the page beneath stays.
+                if let panel = [modsHost, storeHost.panel].first(where: \.isPanelOpen) {
+                    let dy = event.scrollingDeltaY
+                    if abs(dy) >= abs(event.scrollingDeltaX) {
+                        panel.scrollDetail(by: event.hasPreciseScrollingDeltas ? dy : dy * canvas.u(48),
+                                           precise: event.hasPreciseScrollingDeltas)
+                    }
+                    return nil
+                }
                 return selectedItem == .card(.mods) ? scrollStore(with: event) : scrollPage(with: event)
             }
             let modifiers = event.modifierFlags.intersection([.command, .control, .option])

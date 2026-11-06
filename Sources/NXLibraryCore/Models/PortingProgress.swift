@@ -18,6 +18,9 @@ public struct PortingProgress: Equatable {
     public static let shaderShare = 0.9
     /// The stages after the shaders when the engine has not counted them yet.
     public static let expectedFinishingStages = 3
+    /// The engine's line when it moves a game's compile cache from before its one-file cache into that file: once,
+    /// before the shaders of the first build after the engine update, with no count or ETA.
+    public static let shaderCacheWorkMessage = "moving the compile cache "
 
     public private(set) var phase: Phase = .preparing
     public private(set) var overall: Double = 0
@@ -29,7 +32,7 @@ public struct PortingProgress: Equatable {
     public private(set) var stepName = ""
     public private(set) var shaderETA: Double?
     /// Cache maintenance has no count or reliable ETA; show its activity instead.
-    public private(set) var isCleaningShaderCache = false
+    public private(set) var isUpdatingShaderCache = false
     /// Seconds the stages after the shaders took so far.
     public private(set) var finishingElapsed: Double = 0
 
@@ -42,7 +45,7 @@ public struct PortingProgress: Equatable {
         guard phase != .done, phase != .failed else { return }
         switch event {
         case .stage(let k, let n, let name, let stepTitle):
-            isCleaningShaderCache = false
+            isUpdatingShaderCache = false
             step = k
             count = n
             stageName = name
@@ -54,7 +57,7 @@ public struct PortingProgress: Equatable {
                 phase = .finishing
             }
         case .step(let title):
-            isCleaningShaderCache = false
+            isUpdatingShaderCache = false
             stepName = title
         case .progress(let fraction, let done, _, _, let eta):
             guard countsAsShaders(hasCount: done != nil) else { return }
@@ -72,18 +75,14 @@ public struct PortingProgress: Equatable {
                 raise(to: Self.shaderShare + (1 - Self.shaderShare) * Double(finishingEnded) / Double(stages))
             }
         case .say(let message):
-            if message.contains("removing the shader cache of other chain versions") {
-                isCleaningShaderCache = true
-            } else if message.contains("removed old shader cache entries:") {
-                isCleaningShaderCache = false
-            }
+            if message.contains(Self.shaderCacheWorkMessage) { isUpdatingShaderCache = true }
         case .log:
             break
         }
     }
 
     public mutating func finish(success: Bool) {
-        isCleaningShaderCache = false
+        isUpdatingShaderCache = false
         if success {
             overall = 1
             phase = .done

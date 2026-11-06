@@ -215,10 +215,21 @@ final class GameOptionsPresentationTests: XCTestCase {
 
     func testInfoTooltipsExistForLongExplanations() {
         let p = presentation()
-        for row: GameOptionsRow in [.fps60, .metalFX, .metalHUD, .consoleMode, .renderScale, .removeSources] {
+        for row: GameOptionsRow in [.fps60, .metalFX, .gameUpscaler, .metalHUD, .consoleMode, .renderScale,
+                                    .removeSources] {
             XCTAssertNotNil(p.info(row), "\(row)")
         }
         XCTAssertNil(p.info(.fullscreen))
+    }
+
+    /// Both upscalers can use MetalFX, so each says which step it is: the finished picture to the screen, or the
+    /// game's own upscaler inside its frame.
+    func testTheTwoUpscalersSayWhichStepTheyAre() {
+        let p = presentation()
+        XCTAssertEqual(p.about(.metalFX), "Sharper scaling of the whole picture to your screen")
+        XCTAssertEqual(p.about(.gameUpscaler), "The game's own 3D upscaler, or MetalFX instead")
+        XCTAssertTrue(p.info(.metalFX)?.contains("Game's upscaler") ?? false)
+        XCTAssertTrue(p.info(.gameUpscaler)?.contains("Both can be on") ?? false)
     }
 
     func testAboutCoversEveryRow() {

@@ -142,7 +142,7 @@ extension AddGameView {
                    $viewModel.pendingRuntimeConfig.enable60FPS),
             toggle("docked", "Docked mode", "Console profile",
                    $viewModel.pendingRuntimeConfig.isDockedMode),
-            toggle("metalFX", "MetalFX upscaling", "Spatial upscaling",
+            toggle("metalFX", "MetalFX upscaling", "Sharper scaling of the whole picture to your screen",
                    $viewModel.pendingRuntimeConfig.enableMetalFXUpscale),
             toggle("metalHUD", "Metal HUD", "Performance overlay",
                    $viewModel.pendingRuntimeConfig.enableMetalHUD),

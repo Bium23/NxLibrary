@@ -29,6 +29,11 @@ extension GameBananaBandModel {
     /// The band model on the app's shared GameBanana services.
     static func shared() -> GameBananaBandModel {
         let services = GameBananaServices.shared
-        return GameBananaBandModel(client: services.client, matches: services.matches, userAgent: services.userAgent)
+        let model = GameBananaBandModel(client: services.client, matches: services.matches, userAgent: services.userAgent)
+        // A group of mods shows with its art already decoded, at the size the band draws it.
+        model.prepareImages = { urls in
+            await GameBananaImageView.prepare(urls, maxPixelSize: DetailsModsBand.thumbnailPixels)
+        }
+        return model
     }
 }

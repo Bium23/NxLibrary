@@ -28,10 +28,16 @@ public final class GameBananaBandModel: ObservableObject {
     private static let log = Logger(subsystem: "local.nxlibrary", category: "gamebanana")
     @Published public private(set) var available: [AvailableMod] = []
     @Published public private(set) var installs: [Int: InstallState] = [:]
+    /// The file each mod's install is for, while it runs and once it has ended.
+    @Published public private(set) var installFiles: [Int: Int] = [:]
     @Published public private(set) var match: GameBananaChoice?
 
     /// Runs after an install changed the mods folder (the page re-reads its mods).
     public var onInstalled: (() -> Void)?
+    /// Decodes the art of mods about to show (the app's image cache), so a group of tiles shows whole.
+    public var prepareImages: (@MainActor ([URL]) async -> Void)?
+    /// How long a group of mods waits for its art, in seconds; slower art fades in once the mods show.
+    public var imageWait: Double = 1.2
 
     private let client: GameBananaClient
     private let matches: GameBananaMatchStore
@@ -90,6 +96,7 @@ public final class GameBananaBandModel: ObservableObject {
         startedFor = nil
         available = []
         installs = [:]
+        installFiles = [:]
         match = nil
         phase = .idle
     }
@@ -179,21 +186,60 @@ public final class GameBananaBandModel: ObservableObject {
         phase = .looking
         let finder = AvailableModsFinder(client: self.client, titleID: store.titleID)
         task = Task { [weak self] in
+            // The mods show in two groups at most, each with its art: a row's worth beside Add mods as soon as
+            // there is one, the rest once the search has ended. One at a time, each tile came in on its own and
+            // filled in later, and the band shifted under the player's eyes.
+            var waiting: [AvailableMod] = []
             do {
                 for try await mod in finder.stream(gameID: id) {
                     guard let self, !Task.isCancelled else { return }
-                    self.available.append(mod)
-                    self.available.sort { $0.rank < $1.rank }
+                    waiting.append(mod)
+                    if self.available.isEmpty, waiting.count >= Self.firstGroup {
+                        guard await self.show(waiting) else { return }
+                        waiting = []
+                    }
                 }
-                guard !Task.isCancelled, let self else { return }
+                guard let self, await self.show(waiting) else { return }
                 self.phase = self.available.isEmpty ? .noneWork(page) : .ready
             } catch {
-                guard !Task.isCancelled, let self else { return }
+                guard let self, await self.show(waiting) else { return }
                 if self.available.isEmpty {
                     self.phase = (error as? GameBananaError) == .offline ? .offline : .failed
                 } else {
                     self.phase = .ready
                 }
+            }
+        }
+    }
+
+    /// The first group: the first row beside Add mods.
+    static let firstGroup = 5
+
+    /// Shows `group` once its art is decoded (or `imageWait` has passed); false when the search was replaced
+    /// meanwhile, so another game's mods never show.
+    private func show(_ group: [AvailableMod]) async -> Bool {
+        guard !Task.isCancelled else { return false }
+        guard !group.isEmpty else { return true }
+        await readyArt(of: group)
+        guard !Task.isCancelled else { return false }
+        available += group.sorted { $0.rank < $1.rank }
+        return true
+    }
+
+    private func readyArt(of group: [AvailableMod]) async {
+        guard let prepare = prepareImages else { return }
+        let urls = group.compactMap(\.thumbnailURL)
+        guard !urls.isEmpty else { return }
+        let wait = UInt64(max(imageWait, 0) * 1_000_000_000)
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            let once = ResumeOnce(done)
+            Task { @MainActor in
+                await prepare(urls)
+                once.resume()
+            }
+            Task {
+                try? await Task.sleep(nanoseconds: wait)
+                once.resume()
             }
         }
     }
@@ -230,8 +276,22 @@ public final class GameBananaBandModel: ObservableObject {
 
     // MARK: - Installing
 
+    /// The install `fileID`'s row shows: the mod's install when it is for that file.
+    public func installState(mod modID: Int, file fileID: Int) -> InstallState? {
+        installFiles[modID] == fileID ? installs[modID] : nil
+    }
+
+    /// Whether one of the mod's files is downloading or installing: the mod takes one install at a time.
+    public func isInstalling(_ modID: Int) -> Bool {
+        switch installs[modID] {
+        case .downloading, .installing: return true
+        default: return false
+        }
+    }
+
     public func install(_ mod: AvailableMod, file: GameBananaFile) {
         guard let store, downloads[mod.id] == nil, installs[mod.id] != .installing else { return }
+        installFiles[mod.id] = file.id
         guard store.isWritable else {
             installs[mod.id] = .failed(ModInstallError.notAllowed.message)
             return
@@ -276,6 +336,7 @@ public final class GameBananaBandModel: ObservableObject {
         if cancelled.remove(mod.id) != nil {
             if case .success(let archive) = result { try? FileManager.default.removeItem(at: archive) }
             installs[mod.id] = nil
+            installFiles[mod.id] = nil
             return
         }
         switch result {
@@ -297,5 +358,21 @@ public final class GameBananaBandModel: ObservableObject {
                 self.onInstalled?()
             }
         }
+    }
+}
+
+/// Resumes a continuation the first time it is asked to: the art, or the end of the wait, whichever comes first.
+private final class ResumeOnce: @unchecked Sendable {
+    private let lock = NSLock()
+    private var continuation: CheckedContinuation<Void, Never>?
+
+    init(_ continuation: CheckedContinuation<Void, Never>) { self.continuation = continuation }
+
+    func resume() {
+        lock.lock()
+        let pending = continuation
+        continuation = nil
+        lock.unlock()
+        pending?.resume()
     }
 }

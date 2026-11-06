@@ -172,7 +172,7 @@ public struct SpotlightView: View {
         .overlay(model.selectedGame.map { ModsBandOverlay(host: modsHost, find: modsHost.find, game: $0) })
         .overlay(storeOverlay(model))
         .onAppear(perform: appear)
-        .onAppear { storeHost.loadCover() }
+        .onAppear { storeHost.loadCover(titleIDs: Set(storeGames.compactMap { viewModel.modStore(for: $0)?.titleID })) }
         .onAppear { mutate { $0.setPillLimit(selectedPillCount) } }
         .onChange(of: selectedPillCount) { count in mutate { $0.setPillLimit(count) } }
         .onDisappear {
@@ -354,6 +354,9 @@ public struct SpotlightView: View {
 
                 if !page.presentation.genres.isEmpty {
                     SpotlightGenreChips(genres: page.presentation.genres)
+                        // They leave and come back with the pills, not stay while the rest changes.
+                        .modifier(SpotlightInfoFollow())
+                        .id(game.id)
                         .padding(.top, canvas.u(20))
                         .spotlightBlock(.genres)
                 }
@@ -655,8 +658,12 @@ public struct SpotlightView: View {
 
     /// The store asks about every visible game, last played first.
     func openStore() {
-        let games = LibraryQuery(filter: .all).apply(to: viewModel.libraryGames, history: playSessions).filter { !$0.isHidden }
-        storeHost.open(games, viewModel: viewModel)
+        storeHost.open(storeGames, viewModel: viewModel)
+    }
+
+    /// Every visible game, last played first: the store's games, and the card's cover.
+    var storeGames: [PortedGame] {
+        LibraryQuery(filter: .all).apply(to: viewModel.libraryGames, history: playSessions).filter { !$0.isHidden }
     }
 
     /// Between the card's text and the store's sort bar.

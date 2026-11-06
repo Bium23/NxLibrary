@@ -32,7 +32,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
         case .frameRate: return "Frame rate"
         case .gameUpscaler: return "Game's upscaler"
         case .moreSettings: return "More settings"
-        case .metalFX: return "MetalFX"
+        case .metalFX: return "MetalFX upscaling"
         case .metalHUD: return "Metal HUD"
         case .consoleMode: return "Console mode"
         case .language: return "Game language"
@@ -256,9 +256,9 @@ public struct GameOptionsPresentation: Equatable {
         case .hidden: return "Hidden games stay out of your lists."
         case .fullscreen: return "Launch mode"
         case .fps60, .frameRate: return "Frame-rate target"
-        case .gameUpscaler: return "The game's own upscaler, or MetalFX"
+        case .gameUpscaler: return "The game's own 3D upscaler, or MetalFX instead"
         case .moreSettings: return "Other settings this build offers."
-        case .metalFX: return "Spatial upscaling"
+        case .metalFX: return "Sharper scaling of the whole picture to your screen"
         case .metalHUD: return "Performance overlay"
         case .consoleMode: return "Console profile"
         case .language: return "Game language"
@@ -286,7 +286,9 @@ public struct GameOptionsPresentation: Equatable {
         case .fps60:
             return "On targets 60 FPS; Off targets 30 FPS. Some games run too fast at 60 FPS."
         case .metalFX:
-            return "Applies Apple MetalFX spatial upscaling (DM_PRESENT_UPSCALE=metalfx). It sharpens the 3D viewport to match your Mac display without increasing internal render workload."
+            return "Enlarges the game's finished picture, menus and HUD included, to your window or screen with Apple's MetalFX instead of smooth scaling: sharper edges and text, for a little more GPU time. Nothing changes when the picture is already as large as the screen. Not the same as Game's upscaler. (DM_PRESENT_UPSCALE)"
+        case .gameUpscaler:
+            return "Some Switch 2 games, such as Donkey Kong Bananza, enlarge their 3D picture inside the frame with an upscaler of their own before drawing the HUD. Game's own keeps it; MetalFX does the same step with Apple's scaler in a fraction of the GPU time, with Apple's look instead of the game's. MetalFX upscaling is a later step: it enlarges the finished picture to your screen. Both can be on. (DM_UPSCALER)"
         case .metalHUD:
             return "Displays Apple's real-time Metal developer HUD (DM_METAL_HUD=1). Shows frame rate, frame pacing graphs, GPU time per frame in milliseconds, and memory allocation."
         case .consoleMode:

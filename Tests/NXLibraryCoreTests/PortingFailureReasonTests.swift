@@ -209,7 +209,8 @@ final class PortingFailureReasonTests: XCTestCase {
     }
 }
 
-/// The pinned engine still prints every message the table reads; a re-pin that rewords one fails here.
+/// The pinned engine still prints every message the table and the porting progress read; a re-pin that rewords one
+/// fails here.
 final class PortingFailureEngineTests: XCTestCase {
     func testFragmentsStillInPinnedEngine() throws {
         let explicitEngine = ProcessInfo.processInfo.environment["NX_TEST_ENGINE_REPO"]
@@ -237,6 +238,8 @@ final class PortingFailureEngineTests: XCTestCase {
             if row.id == "zbic.missing" && !found { continue }
             XCTAssertTrue(found, "\(row.id): \"\(fragment)\" is no longer in nxnative \(pin.prefix(7))")
         }
+        XCTAssertTrue(gitGrep(PortingProgress.shaderCacheWorkMessage, at: pin, in: engine),
+                      "progress: \"\(PortingProgress.shaderCacheWorkMessage)\" is no longer in nxnative \(pin.prefix(7))")
     }
 
     private func gitGrep(_ fragment: String, at commit: String, in repo: URL) -> Bool {

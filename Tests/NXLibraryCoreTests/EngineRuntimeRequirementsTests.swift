@@ -5,7 +5,12 @@ import XCTest
 /// (zbic in 0.1.3, found only by a player) fails here until runtime.lock has it or `notBundled` says why not.
 final class EngineRuntimeRequirementsTests: XCTestCase {
     /// Packages the README lists that the runtime leaves out on purpose, with the reason.
-    static let notBundled: [String: String] = [:]
+    static let notBundled: [String: String] = [
+        // tools.txt (04df08d4 on) pins the whole repository's tools, not only the build's.
+        "numpy": "only dm/tools/nso_fnmap.py, which carries addresses to a new game build by hand; no build step imports it",
+        "pillow": "only for looking at dumped frames while debugging; nothing in the engine imports PIL",
+        "texture2ddecoder": "only for decoding dumped textures while debugging; nothing in the engine imports it",
+    ]
 
     func testRuntimeLockHasEveryEnginePackage() throws {
         let explicitEngine = ProcessInfo.processInfo.environment["NX_TEST_ENGINE_REPO"]

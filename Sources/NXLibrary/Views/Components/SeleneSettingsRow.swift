@@ -1,26 +1,32 @@
 import SwiftUI
 import NXLibraryCore
 
+/// An info button: a click shows `text` beside it. Pass `isShowing` for a screen that also opens it from the
+/// keyboard or a controller.
 public struct SeleneInfoTip: View {
     public let text: String
-    @State private var isShowing = false
+    private let shown: Binding<Bool>?
+    @State private var shownHere = false
 
-    public init(_ text: String) {
+    public init(_ text: String, isShowing: Binding<Bool>? = nil) {
         self.text = text
+        self.shown = isShowing
     }
+
+    private var isShowing: Binding<Bool> { shown ?? $shownHere }
 
     public var body: some View {
         Button {
-            isShowing.toggle()
+            isShowing.wrappedValue.toggle()
         } label: {
             Image(systemName: "info.circle")
                 .seleneFont(15, .semibold)
-                .foregroundColor(isShowing ? SeleneTheme.glyph : SeleneTheme.ink60.opacity(0.85))
+                .foregroundColor(isShowing.wrappedValue ? SeleneTheme.glyph : SeleneTheme.ink60.opacity(0.85))
                 .padding(2)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .popover(isPresented: $isShowing, arrowEdge: .trailing) {
+        .popover(isPresented: isShowing, arrowEdge: .trailing) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(text)
                     .seleneFont(15)

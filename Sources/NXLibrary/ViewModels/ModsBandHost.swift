@@ -11,10 +11,21 @@ final class ModsBandHost: ObservableObject {
     @Published private(set) var localMods: [LocalMod]?
     /// GameBanana records of the installed mods, by GameBanana mod id.
     @Published private(set) var records: [Int: ModRecord] = [:]
-    /// The open mod detail panel.
-    @Published var detail: AvailableMod?
+    /// The open mod detail panel; another mod starts at the top of its description.
+    @Published var detail: AvailableMod? {
+        didSet {
+            guard detail?.id != oldValue?.id else { return }
+            detailScroll.reset()
+            detailScroll.rows = []
+        }
+    }
     @Published var detailFocus = 0
-    @Published var detailExpanded = false
+    /// Read more; Show less goes back to the top.
+    @Published var detailExpanded = false {
+        didSet { if !detailExpanded { detailScroll.reset() } }
+    }
+    /// The panel column's scroll. Its own object, so a scroll redraws the panel only, not the page under it.
+    let detailScroll = DetailScroll()
 
     let gameBanana = GameBananaBandModel.shared()
     let find = GameBananaFindModel()
@@ -129,8 +140,9 @@ final class ModsBandHost: ObservableObject {
             let rows = ModDetailPanel.rows(for: mod)
             switch action {
             case .navigateUp, .navigateDown:
-                let next = min(max(detailFocus + (action == .navigateUp ? -1 : 1), 0), rows.count - 1)
-                if next != detailFocus {
+                // What lies before the next row is read first, then the focus moves and the column shows the row.
+                if case .focus(let next) = detailScroll.step(down: action == .navigateDown, focus: detailFocus,
+                                                             count: rows.count) {
                     detailFocus = next
                     SoundEffectService.shared.play(.focus)
                 }
@@ -158,6 +170,14 @@ final class ModsBandHost: ObservableObject {
         }
     }
 
+    /// The wheel or trackpad over an open panel: it scrolls the mod's column when it is taller than the panel.
+    /// `step` is the content's movement (`scrollingDeltaY`, a mouse wheel's in points); the fingers move the column
+    /// with them, a mouse wheel glides it.
+    func scrollDetail(by step: CGFloat, precise: Bool) {
+        guard detail != nil else { return }
+        detailScroll.scroll(by: -step, animated: !precise)
+    }
+
     /// The keys an open panel takes (arrows, Return/Space, Esc); nil for keys it leaves to the app.
     static func panelAction(keyCode: UInt16) -> GamepadAction? {
         switch keyCode {
@@ -167,6 +187,52 @@ final class ModsBandHost: ObservableObject {
         case 53: return .cancel
         default: return nil
         }
+    }
+}
+
+/// A mod panel's column scrolled in the panel (`TextScroll`): the panel reports the column's and the window's
+/// heights and where its rows are, the wheel and the controller move it.
+@MainActor
+final class DetailScroll: ObservableObject {
+    @Published private(set) var state = TextScroll()
+    /// Each row's span in the column, in `ModDetailPanel.rows` order.
+    var rows: [ClosedRange<CGFloat>] = []
+
+    /// A mouse wheel notch or a controller step: critically damped, so quick notches carry on without a bounce.
+    static let glide = Animation.spring(response: 0.3, dampingFraction: 1)
+
+    func setLayout(content: CGFloat, visible: CGFloat) {
+        var next = state
+        next.setLayout(content: content, visible: visible)
+        if next != state { state = next }
+    }
+
+    @discardableResult
+    func scroll(by delta: CGFloat, animated: Bool) -> Bool {
+        var next = state
+        guard next.scroll(by: delta) else { return false }
+        if animated { withAnimation(Self.glide) { state = next } } else { state = next }
+        return true
+    }
+
+    /// Up or Down with the focus on row `focus` of `count` (`TextScroll.step`). Before the panel has reported
+    /// where its rows are, the focus just moves.
+    func step(down: Bool, focus: Int, count: Int) -> TextScroll.Step {
+        guard rows.count == count else {
+            let next = focus + (down ? 1 : -1)
+            return (0..<count).contains(next) ? .focus(next) : .none
+        }
+        var next = state
+        let step = next.step(down: down, focus: focus, rows: rows)
+        if next != state { withAnimation(Self.glide) { state = next } }
+        return step
+    }
+
+    func reset() {
+        guard state.offset != 0 else { return }
+        var next = state
+        next.reset()
+        state = next
     }
 }
 
@@ -180,7 +246,8 @@ struct ModsBandOverlay: View {
         Group {
             if let mod = host.detail {
                 ModDetailPanel(model: host.gameBanana, mod: mod, game: game, installed: host.records[mod.id],
-                               focus: $host.detailFocus, expanded: $host.detailExpanded, onClose: host.closeDetail)
+                               focus: $host.detailFocus, expanded: $host.detailExpanded, scroll: host.detailScroll,
+                               onClose: host.closeDetail)
                     .transition(.opacity)
             } else if find.isOpen {
                 GameBananaFindPanel(model: find, band: host.gameBanana, gameName: game.name)

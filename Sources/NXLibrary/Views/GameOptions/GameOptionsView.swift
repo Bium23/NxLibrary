@@ -45,6 +45,8 @@ struct GameOptionsView: View {
     /// A panel over the list has the input.
     private var panelOpen: Bool { artworkOpen || metadataOpen || cheatsOpen || modsOpen || savesOpen || moreOpen }
     @State private var confirmFocus: SeleneConfirmButton = .cancel
+    /// The row whose explanation is open beside its info button (a click on it, or Y on the focused row).
+    @State private var infoRow: GameOptionsRow?
     @State private var keyMonitor: Any?
     /// Row frames in the list's viewport, written while scrolling without redrawing.
     @State private var scrollBox = OptionsScrollBox()
@@ -125,7 +127,7 @@ struct GameOptionsView: View {
             VStack(spacing: 0) {
                 column(p)
                 // Where the screen underneath had its hints (which hide while this is open).
-                SeleneHintsBar(left: [HintItem(.b, "Back")], right: [HintItem(.a, "Select")],
+                SeleneHintsBar(left: [HintItem(.b, "Back")], right: rightHints(p),
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -302,7 +304,17 @@ struct GameOptionsView: View {
                         focused: focused == row,
                         destructive: row.isDestructive,
                         enabled: !p.isDimmed(row)) {
-            trailing(row)
+            HStack(spacing: canvas.u(12)) {
+                if let info = p.info(row) {
+                    SeleneInfoTip(info, isShowing: Binding(
+                        get: { infoRow == row },
+                        set: { show in
+                            if show { setFocus(row) }
+                            infoRow = show ? row : (infoRow == row ? nil : infoRow)
+                        }))
+                }
+                trailing(row)
+            }
         }
         .help(p.info(row) ?? "")
         .background(GeometryReader { geometry in
@@ -318,6 +330,18 @@ struct GameOptionsView: View {
         .accessibilityValue(accessibilityValue(row) ?? "")
         .accessibilityAddTraits(.isButton)
         .accessibilityAction { activate(row) }
+    }
+
+    /// Y opens the focused row's explanation, when it has one.
+    private func rightHints(_ p: GameOptionsPresentation) -> [HintItem] {
+        guard confirm == nil, let row = focusedRow, p.info(row) != nil else { return [HintItem(.a, "Select")] }
+        return [HintItem(.y, infoRow == row ? "Hide info" : "Info"), HintItem(.a, "Select")]
+    }
+
+    /// Y: the focused row's explanation, open or closed.
+    private func toggleInfo() {
+        guard confirm == nil, let row = focusedRow, presentation.info(row) != nil else { return }
+        infoRow = infoRow == row ? nil : row
     }
 
     /// The state a VoiceOver user hears for a switch or a value chip.
@@ -442,6 +466,7 @@ struct GameOptionsView: View {
     // MARK: - Focus
 
     private func setFocus(_ row: GameOptionsRow) {
+        if row != focusedRow { infoRow = nil }
         pickedRow = row
     }
 
@@ -452,6 +477,7 @@ struct GameOptionsView: View {
         focus.move(by: delta, count: rows.count)
         pickedRow = focus.row(in: rows)
         if focusedRow != previous {
+            infoRow = nil
             SoundEffectService.shared.play(.focus)
         }
     }
@@ -459,12 +485,14 @@ struct GameOptionsView: View {
     private func enterEditDetails() {
         // Pin the focus to the first row now; a Store page that arrives later goes above it without moving it.
         pickedRow = presentation.focusableRows(level: .editDetails, origin: origin).first
+        infoRow = nil
         level = .editDetails
         // The store link needs the store metadata; Details asks for it the same way.
         viewModel.loadStoreMetadata(for: current)
     }
 
     private func leaveEditDetails() {
+        infoRow = nil
         level = .main
         // Back on the main list, the focus returns to Edit details, where it was left.
         pickedRow = .editDetails
@@ -500,6 +528,7 @@ struct GameOptionsView: View {
             case 124: horizontal(by: 1)
             case 36, 76, 49: activateFocused()
             case 53: back()
+            case 16: toggleInfo()   // Y
             default: return event
             }
             return nil
@@ -558,6 +587,7 @@ struct GameOptionsView: View {
         case .navigateRight: horizontal(by: 1)
         case .confirm: activateFocused()
         case .cancel: back()
+        case .contextAction: toggleInfo()
         case .secondaryAction, .menu:
             if confirm != nil { dismissConfirm() } else { onClose() }
         default: break
@@ -583,9 +613,11 @@ struct GameOptionsView: View {
         adjust(row, by: delta)
     }
 
-    /// B: leave the dialog, then Edit details, then close.
+    /// B: close an open explanation, then leave the dialog, then Edit details, then close.
     private func back() {
-        if confirm != nil {
+        if infoRow != nil {
+            infoRow = nil
+        } else if confirm != nil {
             dismissConfirm()
         } else if level == .editDetails {
             leaveEditDetails()
@@ -596,6 +628,7 @@ struct GameOptionsView: View {
 
     /// A on the focused row (also Return and Space).
     private func activateFocused() {
+        infoRow = nil
         if confirm != nil {
             if confirmFocus == .confirm { runConfirm() } else { dismissConfirm() }
             return
@@ -606,6 +639,7 @@ struct GameOptionsView: View {
 
     private func activate(_ row: GameOptionsRow) {
         guard confirm == nil else { return }
+        infoRow = nil
         setFocus(row)
         perform(row)
     }

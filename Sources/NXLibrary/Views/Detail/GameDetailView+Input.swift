@@ -298,7 +298,16 @@ extension GameDetailView {
 
     /// The wheel moves between bands, except while the description is open: then it scrolls the text.
     private func handleWheel(_ event: NSEvent) -> NSEvent? {
-        guard !expanded, !modsHost.isPanelOpen else { return event }
+        if modsHost.isPanelOpen {
+            // The mod panel's description scrolls under the wheel; nothing reaches the page beneath.
+            let dy = event.scrollingDeltaY
+            if abs(dy) >= abs(event.scrollingDeltaX) {
+                modsHost.scrollDetail(by: event.hasPreciseScrollingDeltas ? dy : dy * canvas.u(48),
+                                      precise: event.hasPreciseScrollingDeltas)
+            }
+            return nil
+        }
+        guard !expanded else { return event }
         let dy = event.scrollingDeltaY
         guard abs(dy) > abs(event.scrollingDeltaX), event.momentumPhase.isEmpty else { return nil }
         let threshold: CGFloat = event.hasPreciseScrollingDeltas ? 6 : 1
