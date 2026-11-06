@@ -10,6 +10,7 @@ extension GameDetailView {
 
     func handle(_ action: GamepadAction) {
         if viewer != nil { return handleViewer(action) }
+        if let mod = modDetail { return handleModDetail(action, mod: mod) }
         if gameBananaFind.isOpen { return handleFind(action) }
         var moved = false
         switch action {
@@ -216,6 +217,8 @@ extension GameDetailView {
         case .available(let id):
             guard let mod = gameBanana.available.first(where: { $0.id == id }) else { return }
             SoundEffectService.shared.play(.click)
+            modDetailFocus = ModDetailPanel.rows(for: mod).firstIndex { if case .file = $0 { return true } else { return false } } ?? 0
+            modDetailExpanded = false
             modDetail = mod
         case .status(let action):
             SoundEffectService.shared.play(.click)
@@ -226,6 +229,31 @@ extension GameDetailView {
             case .noneOfThese: gameBanana.noneOfThese()
             case .findGame, .wrongGame: gameBananaFind.open(name: game.name, using: gameBanana)
             }
+        }
+    }
+
+    func closeModDetail() {
+        SoundEffectService.shared.play(.focus)
+        modDetail = nil
+    }
+
+    /// The mod detail panel owns the controller while it is open.
+    func handleModDetail(_ action: GamepadAction, mod: AvailableMod) {
+        let rows = ModDetailPanel.rows(for: mod)
+        switch action {
+        case .navigateUp, .navigateDown:
+            let next = min(max(modDetailFocus + (action == .navigateUp ? -1 : 1), 0), rows.count - 1)
+            if next != modDetailFocus {
+                modDetailFocus = next
+                SoundEffectService.shared.play(.focus)
+            }
+        case .confirm:
+            guard rows.indices.contains(modDetailFocus) else { return }
+            ModDetailPanel.activate(rows[modDetailFocus], mod: mod, installed: modRecords[mod.id], model: gameBanana,
+                                    expanded: $modDetailExpanded)
+        case .cancel, .menu:
+            closeModDetail()
+        default: break
         }
     }
 
@@ -308,7 +336,7 @@ extension GameDetailView {
             }
             let modifiers = event.modifierFlags.intersection([.command, .control, .option])
             guard modifiers.isEmpty else { return event }
-            if gameBananaFind.isOpen {
+            if modDetail != nil || gameBananaFind.isOpen {
                 switch event.keyCode {
                 case 125: handle(.navigateDown)
                 case 126: handle(.navigateUp)
@@ -350,7 +378,7 @@ extension GameDetailView {
 
     /// The wheel moves between bands, except while the description is open: then it scrolls the text.
     private func handleWheel(_ event: NSEvent) -> NSEvent? {
-        guard !expanded else { return event }
+        guard !expanded, modDetail == nil, !gameBananaFind.isOpen else { return event }
         let dy = event.scrollingDeltaY
         guard abs(dy) > abs(event.scrollingDeltaX), event.momentumPhase.isEmpty else { return nil }
         let threshold: CGFloat = event.hasPreciseScrollingDeltas ? 6 : 1

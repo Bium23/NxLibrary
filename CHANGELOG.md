@@ -7,6 +7,7 @@ User-visible changes to NX Library are recorded here. Entries are grouped by rel
 ### Added
 
 - **Mods.** Put file mods (a folder with `romfs` inside) into a game's mods folder, turn them on in the game's new **Mods** band or in **Game options → Mods**, and play: no rebuild. The order decides which mod wins when two change the same file, and **Remove** moves a mod to the Trash. Mods that patch code (`exefs`, such as 60 fps patches) don't work with the engine.
+- **Mods from GameBanana.** A game's **Mods** band also lists the GameBanana mods that work with the engine (file mods only). Open one to see its images, author and version, and press **Install**: it downloads into the game's mods folder and is on at the next launch. **Update** appears when the author replaces the file. When the game's GameBanana page isn't certain, the band asks once; **Wrong game?** picks another. Every mod links to its page on GameBanana.
 - **Game app icons follow your Icon choice.** A game whose app has no icon (Switch 2 games and dumps) shows the Icon you choose in **Change artwork** in Finder and the Dock. For a game with its own icon, a question after choosing lets you use yours on the Mac too. The icon stays after a rebuild, and **Automatic** brings back the game's own. Updating a large game's app takes about a minute.
 
 ### Changed

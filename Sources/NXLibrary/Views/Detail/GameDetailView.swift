@@ -46,6 +46,8 @@ struct GameDetailView: View {
     @StateObject var gameBananaFind = GameBananaFindModel()
     /// The open mod detail panel.
     @State var modDetail: AvailableMod?
+    @State var modDetailFocus = 0
+    @State var modDetailExpanded = false
 
     struct ViewerContext: Equatable {
         var titleID: String
@@ -152,6 +154,7 @@ struct GameDetailView: View {
         .overlay(viewerOverlay)
         .overlay(gameBananaOverlay)
         .animation(.easeOut(duration: 0.2), value: gameBananaFind.isOpen)
+        .animation(.easeOut(duration: 0.2), value: modDetail?.id)
         .animation(.easeOut(duration: 0.2), value: viewer != nil)
         .frame(width: canvas.size.width, height: canvas.size.height, alignment: .topLeading)
         .clipped()
@@ -161,6 +164,7 @@ struct GameDetailView: View {
         .onDisappear {
             gameBanana.stop()
             gameBananaFind.close()
+            modDetail = nil
             removeKeyMonitor()
             router.isScreenshotViewerOpen = false
         }
@@ -336,7 +340,11 @@ struct GameDetailView: View {
 
     @ViewBuilder
     private var gameBananaOverlay: some View {
-        if gameBananaFind.isOpen {
+        if let mod = modDetail {
+            ModDetailPanel(model: gameBanana, mod: mod, game: game, installed: modRecords[mod.id],
+                           focus: $modDetailFocus, expanded: $modDetailExpanded, onClose: closeModDetail)
+                .transition(.opacity)
+        } else if gameBananaFind.isOpen {
             GameBananaFindPanel(model: gameBananaFind, band: gameBanana, gameName: game.name)
                 .transition(.opacity)
         }
