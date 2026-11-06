@@ -2,7 +2,7 @@
 
 User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
-## Unreleased
+## 0.1.4 — 2026-11-06
 
 ### Added
 
@@ -15,7 +15,7 @@ User-visible changes to NX Library are recorded here. Entries are grouped by rel
 
 ### Changed
 
-- Updated the pinned nxnative engine to `04df08d4`. New game profiles: Kirby Air Riders and Ocarina of Time (Switch 2, from a NUP), ŌKAMI HD and Minecraft Dungeons II. Upstream also reports fixes for games such as Trails in the Sky 1st Chapter and Just Dance (a crash at launch), Super Mario Galaxy 2 (the picture shape of its cutscenes) and Super Smash Bros. Ultimate 13.0.5 (a build stopped on its offline pages). A game's shader cache and shader libraries are now one file each, so a build writes far fewer files. The Metal compiler is the same; every game translates its shaders again at its next build, and installed apps keep their engine until rebuilt.
+- Updated the pinned nxnative engine to `b2d46b86`. Ocarina of Time (Switch 2) no longer crashes at the first note of the ocarina and runs lighter in the village; a NUP or a dump with damaged files now stops the build with **Some game files are damaged** and **Port anyway**, instead of making a game that reloads an asset for ever (the check reads the files once, about 16 s for Ocarina of Time). Sonic Superstars gets a provisional profile. Since `04df08d4`: New game profiles: Kirby Air Riders and Ocarina of Time (Switch 2, from a NUP), ŌKAMI HD and Minecraft Dungeons II. Upstream also reports fixes for games such as Trails in the Sky 1st Chapter and Just Dance (a crash at launch), Super Mario Galaxy 2 (the picture shape of its cutscenes) and Super Smash Bros. Ultimate 13.0.5 (a build stopped on its offline pages). A game's shader cache and shader libraries are now one file each, so a build writes far fewer files. The Metal compiler is the same; every game translates its shaders again at its next build, and installed apps keep their engine until rebuilt.
 - The first build of a game after this update first moves its shader cache into the engine's new one-file format. The porting shows **Updating shader cache** meanwhile instead of a time estimate; on a large cache or an external drive it takes longer.
 - The intro shows only the moving background, without the app icon.
 - Game options tell the two upscalers apart: **MetalFX upscaling** enlarges the finished picture to your screen, while **Game's upscaler** (only in games with an upscaler of their own, such as Donkey Kong Bananza) keeps that upscaler or swaps it for MetalFX's, which is faster. Both can be on. Rows with an explanation show an info button beside them: click it, or press Y on the focused row.

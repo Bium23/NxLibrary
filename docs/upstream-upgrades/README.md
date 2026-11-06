@@ -71,4 +71,5 @@ This directory records the review that must happen before the pin changes, plus 
 - A newer commit is not automatically a tested commit. `4f24ce6` was chosen over `e09ff95` because the latter was a brand-new RomFS streaming feature without SMO validation.
 
 - [2026-11-05 — b64a5ff0 → 4a0551e4](2026-11-05-b64a5ff0-4a0551e4-review.md) (certified Wonder build, maintainer-confirmed visible launch; provisional profiles, build warnings, Home quit)
-- [2026-11-06 — 4a0551e4 → 04df08d4](2026-11-06-4a0551e4-04df08d4-review.md) (**candidate**: reviewed and tested; awaiting a certified build and a maintainer-confirmed visible launch)
+- [2026-11-06 — 4a0551e4 → 04df08d4](2026-11-06-4a0551e4-04df08d4-review.md) (Ocarina of Time build and play with mods confirmed by the maintainer)
+- [2026-11-06 — 04df08d4 → b2d46b86](2026-11-06-04df08d4-b2d46b86-review.md) (Ocarina of Time rebuild and launch confirmed by the maintainer; damaged NUP/dump files mapped to **Some game files are damaged**)

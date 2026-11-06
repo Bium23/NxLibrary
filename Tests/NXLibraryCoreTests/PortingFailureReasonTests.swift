@@ -14,6 +14,7 @@ final class PortingFailureReasonTests: XCTestCase {
         ("nsp.damaged", .damagedNSP, "[RED] 3 files fail the NCA's hash check (an incomplete copy or a broken download); copy or download it again, or pass --allow-damaged"),
         ("nsp.tables", .damagedNSP, "[RED] the NSP is damaged: a filesystem's own tables fail the NCA's hash check, so --allow-damaged cannot read it either: an incomplete copy or a broken download, which a SHA-256 of each NCA shows (its file name is the hash's first 16 bytes); copy or download it again"),
         ("nsp.truncated", .damagedNSP, "[RED] truncated PFS0 header: Example.nsp"),
+        ("files.format", .damagedNSP, "[RED] base: 3 file(s) whose bytes do not start as their names promise (a .zs file that is not a zstd stream), so the game files are damaged:\n  Model/a.zs (12,288 bytes, starts 00000000)\nPack again from a good copy of the game (--allow-damaged packs these files as they are)"),
         ("language.missing", .unknown, "[RED] the game has no ja (Japanese); its languages: en-US (American English), fr (French) (--language / LANGUAGE)"),
         ("arm32.program", .a32Program, "[RED] Mario Kart 8 Deluxe v0 (1.0.0) is a 32-bit ARM program, which nxnative does not run"),
         ("keys.missing", .keys, "[RED] no such file: /Users/x/prod.keys"),

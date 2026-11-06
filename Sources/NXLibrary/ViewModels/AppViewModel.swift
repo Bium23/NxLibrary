@@ -440,7 +440,7 @@ public final class AppViewModel: ObservableObject {
         .resolve(runtime: .locate(), repo: URL(fileURLWithPath: nxnativePath))
     }
 
-    public let pinnedEngineCommit = "04df08d429dc70f8665b0bfa4891057ea30d5d89"
+    public let pinnedEngineCommit = "b2d46b86d03f4b03afe11ea61c67cdf00d7a5345"
     private let core = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/NXLibrary")
     lazy var libraryStore = LibraryStore(directory: core)

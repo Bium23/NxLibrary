@@ -175,6 +175,9 @@ public enum PortingFailureClassifier {
         ("nsp.damaged", .damagedNSP, "files fail the NCA's hash check", "files fail the NCA's hash check"),
         ("nsp.tables", .damagedNSP, "own tables fail the NCA's hash check", "own tables fail the NCA's hash check"),
         ("nsp.truncated", .damagedNSP, "truncated PFS0 (header|file-name table)", "truncated PFS0 "),
+        // A NUP or a dump has no NCA hashes: a file whose first bytes are not its format's (b2d46b86 on).
+        ("files.format", .damagedNSP, "whose bytes do not start as their names promise",
+         "whose bytes do not start as their names promise"),
         ("language.missing", .unknown, #"the game has no [A-Za-z-]+ \([^)]+\); its languages"#, "); its languages: "),
         ("arm32.program", .a32Program, "is a 32-bit ARM program", "is a 32-bit ARM program"),
         ("keys.missing", .keys, #"no such file: [^"\n]*prod\.keys"#, "no such file: "),
