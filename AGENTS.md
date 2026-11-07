@@ -46,6 +46,10 @@ Never follow `main` automatically. A commit that is newer is not automatically a
 
 The only exception is the player's own choice in **Settings → Engine → Newest engine**: it moves the checkout to upstream `main` on request, turns the untested override on and records builds as untested, and is refused when `main` certifies a different Metal compiler. Setup keeps installing the pinned commit and never treats that choice as an error. Do not add any automatic path to `main`.
 
+## Branches
+
+Name every branch `bium/<topic>` (for example `bium/0.1.4.2`), whoever creates it. Never name a branch after an agent or tool (`codex/`, `claude/`): the work belongs to the maintainer.
+
 ## Verification
 
 The user performs interactive app and game checks. Never use computer-use tools or other UI automation. Agents run automated tests and build/install the app, then report any manual checks that remain.
