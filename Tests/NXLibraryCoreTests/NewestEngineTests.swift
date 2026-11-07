@@ -126,6 +126,16 @@ final class NewestEngineTests: XCTestCase {
                        "main has moved on: b7e3f0a.", "history rewritten: no count")
     }
 
+    func testTheControllerUpdatesWithAAndGoesBackToTestedWithY() {
+        let both = NewestEngine.controller([.update, .backToTested])
+        XCTAssertEqual(both?.primary, .update)
+        XCTAssertEqual(both?.secondary, .backToTested)
+        XCTAssertEqual(NewestEngine.controller([.backToTested])?.primary, .backToTested)
+        XCTAssertNil(NewestEngine.controller([.backToTested])?.secondary)
+        XCTAssertEqual(NewestEngine.controller([.useNewest])?.primary, .useNewest)
+        XCTAssertNil(NewestEngine.controller([]))
+    }
+
     // MARK: - Commit marks
 
     private func commits(_ shas: [String]) -> [UpstreamCommit] {

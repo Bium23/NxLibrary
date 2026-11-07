@@ -143,6 +143,14 @@ public enum NewestEngine {
         return movable ? [.update, .backToTested] : [.backToTested]
     }
 
+    /// The row's buttons on a controller: A takes the first (Update when main moved on, else Use newest or Back to
+    /// tested), Y the second (Back to tested beside Update). Nil when the row has no button.
+    public static func controller(_ actions: [NewestEngineAction])
+        -> (primary: NewestEngineAction, secondary: NewestEngineAction?)? {
+        guard let primary = actions.first else { return nil }
+        return (primary, actions.dropFirst().first)
+    }
+
     /// Tags for Settings → Engine's upstream list (newest first): the commit the newest engine is at is In use,
     /// those above it New. Nothing on the tested engine, or when the commit in use is not in the list.
     public static func marks(_ commits: [UpstreamCommit], inUse: String?) -> [String: UpstreamCommitMark] {

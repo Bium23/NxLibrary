@@ -24,7 +24,7 @@ User-visible changes to NX Library are recorded here. Entries are grouped by rel
 
 ### Fixed
 
-- **The newest engine can be updated in place.** While you use **Newest engine** (Settings → Engine) and nxnative main moves on, **Check** now offers **Update** beside **Back to tested**, saying how many commits newer main is. In the upstream list, the commit you are on is tagged **In use** in green and those above it **New** in orange. Before, the only way forward was back to the tested engine and then **Use newest** again. A main that needs another Metal compiler is still refused.
+- **The newest engine can be updated in place.** While you use **Newest engine** (Settings → Engine) and nxnative main moves on, **Check** now offers **Update** beside **Back to tested**, saying how many commits newer main is. With a controller, A updates and Y goes back to tested. In the upstream list, the commit you are on is tagged **In use** in green and those above it **New** in orange. Before, the only way forward was back to the tested engine and then **Use newest** again. A main that needs another Metal compiler is still refused.
 - **A mod you installed from GameBanana always shows in the game's Mods band,** with **Update** when its author replaced the file. Before, it vanished while GameBanana left it out of the game's list (as it can while an update waits for approval) or when it was past the band's first twelve mods.
 - A library file that can no longer be read is kept beside it as `library.json.damaged-…` instead of being written over by the next save when there was no backup.
 - When NX Library cannot save the library (a full disk, for example), it now says so instead of losing recent changes at the next start in silence.

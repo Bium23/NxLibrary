@@ -158,6 +158,9 @@ public struct SettingsView: View {
         } else {
             hints.append(HintItem(.a, "Select"))
         }
+        if focusArea == .rows, let row = focusedRow, row.isEnabled, let secondary = row.secondary {
+            hints.append(HintItem(.y, secondary.title) { activateSecondary() })
+        }
         return hints
     }
 
@@ -345,6 +348,9 @@ public struct SettingsView: View {
             case 7:                                     // X
                 if typing { return event }
                 action = .secondaryAction
+            case 16:                                    // Y
+                if typing { return event }
+                action = .contextAction
             default:
                 return event
             }
@@ -381,11 +387,20 @@ public struct SettingsView: View {
             handleBack()
         case .secondaryAction:
             resetSection()
+        case .contextAction:
+            activateSecondary()
         case .menu:
             router.isMenuPresented = true
         default:
             break
         }
+    }
+
+    /// Y on a row with a second button.
+    private func activateSecondary() {
+        guard focusArea == .rows, let row = focusedRow, row.isEnabled, let secondary = row.secondary else { return }
+        SoundEffectService.shared.play(.click)
+        secondary.activate()
     }
 
     private func handleBack() {

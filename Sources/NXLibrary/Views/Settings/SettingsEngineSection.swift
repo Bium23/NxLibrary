@@ -541,17 +541,13 @@ struct SettingsEngineSection: View {
                 viewModel.checkUpstreamChangelog()
             }
         ]
-        // The controller keeps the row's first action as before (Use newest, or Back to tested); Update is a
-        // secondary button of the same row, reachable with the pointer.
-        let newest = viewModel.newestEngineActions
-        if let primary = newest.contains(.backToTested) ? .backToTested : newest.first {
-            actions.append(.init(id: "newest", title: "Newest engine", isEnabled: viewModel.canSwitchEngine) {
-                newestAction(primary)
+        // Controller: A takes the row's first button (Update once main has moved on), Y the second (Back to tested).
+        if let pad = NewestEngine.controller(viewModel.newestEngineActions) {
+            let secondary = pad.secondary.map { action in (title: newestTitle(action), activate: { newestAction(action) }) }
+            actions.append(.init(id: "newest", title: "Newest engine", isEnabled: viewModel.canSwitchEngine,
+                                 secondary: secondary) {
+                newestAction(pad.primary)
             })
-            if newest.contains(.update) {
-                actions.append(.init(id: "newest-update", title: "Update", rowID: "Newest engine",
-                                     isEnabled: viewModel.canSwitchEngine) { newestAction(.update) })
-            }
         }
         if case .loaded = viewModel.upstreamState {
             actions.append(.init(id: "compare", title: "Compare") {
