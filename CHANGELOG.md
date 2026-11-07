@@ -2,6 +2,12 @@
 
 User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
+## 0.1.4.2 — unreleased
+
+### Fixed
+
+- **The session card fits after a short session.** A game played for under a minute showed "Less than a minute" twice, which pushed the card's words past its left edge. It now says **<1m**, like the other times (10m, 34h 5m).
+
 ## 0.1.4.1 — 2026-11-07
 
 ### Added
