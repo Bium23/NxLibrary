@@ -279,11 +279,82 @@ final class EngineUpgradeSourcesTests: XCTestCase {
         XCTAssertTrue(SourceSelection.supported([restored], titleSelection: true, extractedFolders: false))
     }
 
-    func testMetadataBridgeRunsWithTheUpstreamReaderContract() throws {
+    /// A base game the eShop serves at 1.1.0 is v65536 by its content meta (nxnative 5c4dc18f): built alone, that is the version to pack.
+    func testBaseGameAloneIsPackedAtItsOwnVersion() {
+        let file = URL(fileURLWithPath: "/tmp/base.nsz")
+        XCTAssertEqual(SourceSelection.versionForBuild([GameFileItem(url: file, kind: .base, versionString: "65536", sizeBytes: 1)]), "v65536")
+        XCTAssertEqual(SourceSelection.versionForBuild([GameFileItem(url: file, kind: .base, versionString: "v65536", sizeBytes: 1)]), "v65536")
+        XCTAssertEqual(SourceSelection.versionForBuild([GameFileItem(url: file, kind: .base, sizeBytes: 1)]), "v0")
+    }
+
+    private func readerFixture(_ script: String) throws -> (EnginePackageReader, URL) {
         let root = try temporaryFolder()
         let scripts = root.appendingPathComponent("scripts")
         try FileManager.default.createDirectory(at: scripts, withIntermediateDirectories: true)
-        let fixture = #"""
+        try Data(script.utf8).write(to: scripts.appendingPathComponent("build_ipa_from_nsp.py"))
+        let python = URL(fileURLWithPath: "/usr/bin/python3")
+        guard FileManager.default.isExecutableFile(atPath: python.path) else { throw XCTSkip("system Python unavailable") }
+        let toolchain = EngineToolchain(python: python, extraPath: [], isBundled: false)
+        let reader = EnginePackageReader(repo: root, toolchain: toolchain,
+            keys: root.appendingPathComponent("private-key-input"),
+            developerDir: URL(fileURLWithPath: "/Applications/Xcode.app/Contents/Developer"))
+        return (reader, root)
+    }
+
+    /// nxnative 5c4dc18f: one `package_reader` run reads every package's content metas; a package it cannot read is named with why.
+    func testMetadataBridgeReadsEveryPackageInOneRun() throws {
+        let (reader, root) = try readerFixture(#"""
+import contextlib
+def configure_dotnet(environment): pass
+@contextlib.contextmanager
+def package_reader(repo, keys, environment):
+    assert keys.name == 'private-key-input'
+    class Reader:
+        @staticmethod
+        def contents(paths):
+            print('probe progress must not reach the parser')
+            out = {}
+            for p in paths:
+                if p.name == 'merged.nsp': out[p] = [('Application', 0x0100000000000000, 0), ('Patch', 0x0100000000000800, 65536)]
+                elif p.name == 'base.nsz': out[p] = [('Application', 0x0100000000010000, 65536)]
+                else: out[p] = 'no content meta'
+            return out
+    yield Reader
+"""#)
+        let merged = root.appendingPathComponent("merged.nsp")
+        let base = root.appendingPathComponent("base [v0].nsz")
+        let renamed = root.appendingPathComponent("base.nsz")
+        let broken = root.appendingPathComponent("broken.nsp")
+        let readings = try reader.contents(of: [(merged, true), (renamed, true), (broken, false)])
+        XCTAssertEqual(readings[merged], .contents([PackageContent(kind: .base, titleId: 0x0100000000000000, version: 0),
+                                                    PackageContent(kind: .update, titleId: 0x0100000000000800, version: 65536)]))
+        XCTAssertEqual(readings[renamed], .contents([PackageContent(kind: .base, titleId: 0x0100000000010000, version: 65536)]))
+        XCTAssertEqual(readings[broken], .unreadable("no content meta"))
+        XCTAssertNil(readings[base])
+        XCTAssertFalse(FileManager.default.fileExists(atPath: root.appendingPathComponent("scripts/__pycache__").path))
+    }
+
+    /// Keys that cannot open the meta NCAs stop the whole run with the engine's line, which names the missing key (never a value).
+    func testMetadataBridgeReportsTheEnginesKeysMessage() throws {
+        let (reader, root) = try readerFixture(#"""
+import contextlib
+class BuildError(Exception): pass
+def configure_dotnet(environment): pass
+@contextlib.contextmanager
+def package_reader(repo, keys, environment):
+    class Reader:
+        @staticmethod
+        def contents(paths): raise BuildError('prod.keys has no key_area_key_application_12 (firmware 19.0.0)')
+    yield Reader
+"""#)
+        XCTAssertThrowsError(try reader.contents(of: [(root.appendingPathComponent("game.nsp"), false)])) { error in
+            XCTAssertEqual(error as? EngineSourceError, .unreadablePackages("prod.keys has no key_area_key_application_12 (firmware 19.0.0)"))
+        }
+    }
+
+    /// Engines before nxnative 5c4dc18f read one package at a time and only merged or unidentified ones.
+    func testMetadataBridgeRunsWithTheOlderReaderContract() throws {
+        let (reader, root) = try readerFixture(#"""
 import contextlib
 def is_merged(path): return path.name == 'merged.nsp'
 def configure_dotnet(environment): pass
@@ -295,16 +366,12 @@ def package_title_reader(repo, keys, environment):
             return [('Application', 0x0100000000000000, 0), ('Patch', 0x0100000000000800, 65536)]
     print('probe progress must not reach the parser')
     yield Reader()
-"""#
-        try Data(fixture.utf8).write(to: scripts.appendingPathComponent("build_ipa_from_nsp.py"))
-        let python = URL(fileURLWithPath: "/usr/bin/python3")
-        guard FileManager.default.isExecutableFile(atPath: python.path) else { throw XCTSkip("system Python unavailable") }
-        let toolchain = EngineToolchain(python: python, extraPath: [], isBundled: false)
-        let reader = EnginePackageReader(repo: root, toolchain: toolchain,
-            keys: root.appendingPathComponent("private-key-input"),
-            developerDir: URL(fileURLWithPath: "/Applications/Xcode.app/Contents/Developer"))
-        XCTAssertEqual(try reader.contents(of: root.appendingPathComponent("merged.nsp"), alreadyIdentified: true).count, 2)
-        XCTAssertEqual(try reader.contents(of: root.appendingPathComponent("plain.nsp"), alreadyIdentified: true), [])
-        XCTAssertFalse(FileManager.default.fileExists(atPath: scripts.appendingPathComponent("__pycache__").path))
+"""#)
+        let merged = root.appendingPathComponent("merged.nsp")
+        let plain = root.appendingPathComponent("plain.nsp")
+        let readings = try reader.contents(of: [(merged, true), (plain, true)])
+        XCTAssertEqual(readings[merged].map { if case .contents(let rows) = $0 { return rows.count } else { return -1 } }, 2)
+        XCTAssertEqual(readings[plain], .contents([]))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: root.appendingPathComponent("scripts/__pycache__").path))
     }
 }

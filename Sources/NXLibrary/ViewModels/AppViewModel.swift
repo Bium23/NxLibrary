@@ -440,7 +440,7 @@ public final class AppViewModel: ObservableObject {
         .resolve(runtime: .locate(), repo: URL(fileURLWithPath: nxnativePath))
     }
 
-    public let pinnedEngineCommit = "7fe9fc4df952577c13110f4e5cc7412b74e5c446"
+    public let pinnedEngineCommit = "e5f03403bfd2ca9c07b890f1cf33bd65230b5103"
     private let core = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/NXLibrary")
     lazy var libraryStore = LibraryStore(directory: core)
@@ -1875,9 +1875,16 @@ public final class AppViewModel: ObservableObject {
         var skipped: [String] = []
         if capabilities.titleSelection, let keys {
             let reader = EnginePackageReader(repo: repo, toolchain: toolchain, keys: keys, developerDir: developerDir)
+            let readings = try reader.contents(of: files.filter { !$0.hasDirectoryPath }.map {
+                (url: $0, alreadyIdentified: (try? catalog.inspect($0)) != nil)
+            })
             detected = try catalog.scan(files: files, skippingUnreadable: true,
                 onUnreadable: { url, _ in skipped.append(url.lastPathComponent) }) { file in
-                try reader.contents(of: file, alreadyIdentified: (try? catalog.inspect(file)) != nil)
+                switch readings[file] {
+                case .contents(let rows)?: return rows
+                case .unreadable(let why)?: throw EngineSourceError.unreadablePackage(why)
+                case nil: return []
+                }
             }
         } else {
             detected = try catalog.scan(files: files.filter { (try? catalog.inspect($0)) != nil })

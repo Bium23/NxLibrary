@@ -83,7 +83,12 @@ public enum SourceSelection {
 
     public static func versionForBuild(_ files: [GameFileItem]) -> String? {
         let updates = files.filter { $0.kind == .update }
-        guard !updates.isEmpty else { return "v0" }
+        // A base game alone is packed at its own version: v0 for most, v65536 for one the eShop serves at 1.1.0 (nxnative 5c4dc18f).
+        guard !updates.isEmpty else {
+            let base = files.first { $0.kind == .base }?.versionString
+            let digits = base.map { $0.hasPrefix("v") ? String($0.dropFirst()) : $0 }
+            return "v\(digits.flatMap(Int.init) ?? 0)"
+        }
         guard let raw = updates.first?.versionString else { return nil }
         let digits = raw.hasPrefix("v") ? String(raw.dropFirst()) : raw
         return Int(digits).map { "v\($0)" }

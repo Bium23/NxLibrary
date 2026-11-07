@@ -6,6 +6,7 @@ struct SettingsEngineSection: View {
     let onActions: ([SettingsRowAction]) -> Void
 
     @Environment(\.seleneFocusedRowID) private var focusedRowTitle
+    @Environment(\.seleneFocusedButton) private var focusedButton
     private var configurationLocked: Bool { viewModel.isBuilding || viewModel.isUpdatingApp }
 
     var body: some View {
@@ -283,11 +284,23 @@ struct SettingsEngineSection: View {
                         .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink60)
                 } else {
-                    ForEach(viewModel.newestEngineActions, id: \.self) { action in
+                    let actions = viewModel.newestEngineActions
+                    ForEach(Array(actions.enumerated()), id: \.element) { index, action in
+                        // With two buttons, the one Left and Right put the focus on carries the focus ring.
+                        let focused = actions.count > 1 && viewModel.canSwitchEngine
+                            && focusedRowTitle == "Newest engine" && focusedButton == index
                         Button(newestTitle(action)) { newestAction(action) }
                             .buttonStyle(.plain)
                             .seleneFont(15, .semibold)
                             .foregroundColor(viewModel.canSwitchEngine ? SeleneTheme.glyph : SeleneTheme.ink60)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .overlay {
+                                Capsule()
+                                    .strokeBorder(SeleneTheme.focus, lineWidth: 2)
+                                    .opacity(focused ? 1 : 0)
+                            }
+                            .animation(SeleneTheme.focusIn, value: focused)
                             .disabled(!viewModel.canSwitchEngine)
                     }
                 }
@@ -541,7 +554,8 @@ struct SettingsEngineSection: View {
                 viewModel.checkUpstreamChangelog()
             }
         ]
-        // Controller: A takes the row's first button (Update once main has moved on), Y the second (Back to tested).
+        // Keyboard and controller: the row's first button (Update once main has moved on) is in focus first; Right moves
+        // to the second (Back to tested), and A or Return presses the one in focus.
         if let pad = NewestEngine.controller(viewModel.newestEngineActions) {
             let secondary = pad.secondary.map { action in (title: newestTitle(action), activate: { newestAction(action) }) }
             actions.append(.init(id: "newest", title: "Newest engine", isEnabled: viewModel.canSwitchEngine,

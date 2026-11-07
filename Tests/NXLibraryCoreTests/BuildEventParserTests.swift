@@ -16,4 +16,10 @@ final class BuildEventParserTests: XCTestCase {
     func testNonJSONBecomesLog() {
         XCTAssertEqual(BuildEventParser.parse("hello"), .log("hello"))
     }
+
+    /// Both are followed by a `say` with the same news (nxnative docs/frontends.md): the raw JSON stays out of the log.
+    func testGameAndStaleShaderEventsAreNotLogged() {
+        XCTAssertNil(BuildEventParser.parse(#"{"ev":"game","title_id":"0100000000010000","name":"Game","version":"1.1.0","bundle_id":"org.nxnative.0100000000010000","out":"/tmp/Game.app","icon":null}"#))
+        XCTAssertNil(BuildEventParser.parse(#"{"ev":"shaders_stale","reason":"chain","old":["b-1"],"new":"b-2","count":3}"#))
+    }
 }
