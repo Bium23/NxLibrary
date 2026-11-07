@@ -51,7 +51,9 @@ public struct EngineToolchain: Equatable {
 
     public func environment(base: [String: String], developerDir: URL?) -> [String: String] {
         var env = base
-        let path = (extraPath + [Self.standardPath]).joined(separator: ":")
+        // Microsoft's dotnet-install script puts .NET in ~/.dotnet, which the engine also searches (its TOOL_PATHS).
+        let home = (base["HOME"] ?? NSHomeDirectory()) + "/.dotnet"
+        let path = (extraPath + [Self.standardPath, home]).joined(separator: ":")
         env["PATH"] = path + (base["PATH"].map { ":" + $0 } ?? "")
         if isBundled {
             // The app bundle is read-only and must not pick up the player's own packages.

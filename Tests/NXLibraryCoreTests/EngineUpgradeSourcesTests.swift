@@ -287,6 +287,35 @@ final class EngineUpgradeSourcesTests: XCTestCase {
         XCTAssertEqual(SourceSelection.versionForBuild([GameFileItem(url: file, kind: .base, sizeBytes: 1)]), "v0")
     }
 
+    /// A workspace NX Library staged holds only the selected files, so the engine's own choice (the newest there, by
+    /// content meta) is the selection: no `-p`, which a version stored from an older scan could get wrong.
+    func testStagedWorkspaceLeavesTheVersionToTheEngine() {
+        let file = URL(fileURLWithPath: "/tmp/update [v65536].nsz")
+        let base = GameFileItem(url: URL(fileURLWithPath: "/tmp/base.nsp"), kind: .base, sizeBytes: 1)
+        let update = GameFileItem(url: file, kind: .update, versionString: "65536", sizeBytes: 1)
+        XCTAssertNil(SourceSelection.packageVersion(for: [base, update], stagedSelection: true))
+        XCTAssertEqual(SourceSelection.packageVersion(for: [base, update], stagedSelection: false), "v65536")
+    }
+
+    /// A merged package brings every version it holds into the workspace: the selection must be named.
+    func testMergedPackageNamesTheVersionEvenWhenStaged() {
+        let file = URL(fileURLWithPath: "/tmp/merged.nsp")
+        var base = GameFileItem(url: file, kind: .base, sizeBytes: 1)
+        base.requiresTitleSelection = true
+        XCTAssertEqual(SourceSelection.packageVersion(for: [base], stagedSelection: true), "v0")
+    }
+
+    /// A NUP holds every version in one file, and a dump's folders are named by version: the selection is named.
+    func testContainersAndDumpsNameTheVersionEvenWhenStaged() {
+        let nup = URL(fileURLWithPath: "/tmp/game.nup")
+        let base = GameFileItem(url: nup, kind: .base, versionString: "0", sizeBytes: 1, sourceLayout: .container)
+        let update = GameFileItem(url: nup, kind: .update, versionString: "131072", sizeBytes: 1, sourceLayout: .container)
+        XCTAssertEqual(SourceSelection.packageVersion(for: [base], stagedSelection: true), "v0")
+        XCTAssertEqual(SourceSelection.packageVersion(for: [base, update], stagedSelection: true), "v131072")
+        let dump = GameFileItem(url: URL(fileURLWithPath: "/tmp/dump"), kind: .base, sizeBytes: 1, sourceLayout: .extracted)
+        XCTAssertEqual(SourceSelection.packageVersion(for: [dump], stagedSelection: true), "v0")
+    }
+
     private func readerFixture(_ script: String) throws -> (EnginePackageReader, URL) {
         let root = try temporaryFolder()
         let scripts = root.appendingPathComponent("scripts")

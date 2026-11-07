@@ -2494,7 +2494,8 @@ public final class AppViewModel: ObservableObject {
             bundleId: target.bundleId ?? "org.nxnative.\(titleId.lowercased())",
             language: loadRuntimeConfig(for: target).languageForBuild,
             titleId: engineSourceCapabilities.titleSelection ? titleId : nil,
-            packageVersion: engineSourceCapabilities.titleSelection ? SourceSelection.versionForBuild(target.sources) : nil,
+            packageVersion: engineSourceCapabilities.titleSelection
+                ? SourceSelection.packageVersion(for: target.sources, stagedSelection: !workspace.links.isEmpty) : nil,
             allowUntestedToolchain: allowUntestedToolchain,
             extraArguments: extraArguments
         )
