@@ -117,6 +117,8 @@ public enum SettingsCatalog {
             "One sync choice for all games, applied at next launch: Off, iCloud Drive or a folder you choose.") { $0.cloudSaves },
         row("cloudSavesPickedFolder", .games, "Cloud saves folder",
             "The chosen folder for save sync; choosing a folder enables it.") { $0.cloudSavesPickedFolder },
+        row("showsSessionCard", .games, "Session card",
+            "When you close a game, a card shows how long you played this time and in total.") { $0.showsSessionCard },
         action("hiddenGames", .games, "Hidden games",
                "Games you hid from Game options; Show puts one back in your lists."),
         row("gameDefaults.fullscreen", .games, "Fullscreen",

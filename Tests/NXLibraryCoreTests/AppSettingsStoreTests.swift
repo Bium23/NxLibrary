@@ -36,6 +36,19 @@ final class AppSettingsStoreTests: XCTestCase {
         XCTAssertTrue(AppSettingsStore(fileURL: url).settings.notifyPortingEnds)
     }
 
+    func testSessionCardDefaultsOnForOldFiles() throws {
+        let url = tempURL()
+        try Data("{}".utf8).write(to: url)
+        XCTAssertTrue(AppSettingsStore(fileURL: url).settings.showsSessionCard)
+    }
+
+    func testSessionCardChoiceSurvivesARoundTrip() throws {
+        var settings = AppSettings()
+        settings.showsSessionCard = false
+        let back = try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(settings))
+        XCTAssertFalse(back.showsSessionCard)
+    }
+
     func testCheckAppUpdatesDefaultsOnForOldFiles() throws {
         let url = tempURL()
         try Data("{}".utf8).write(to: url)

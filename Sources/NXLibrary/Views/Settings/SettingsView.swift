@@ -247,6 +247,7 @@ public struct SettingsView: View {
             next.launchStyle = defaults.launchStyle
             next.launchMotion = defaults.launchMotion
             next.launchShade = defaults.launchShade
+            next.showsSessionCard = defaults.showsSessionCard
             next.surprisePool = defaults.surprisePool
             let rumble = next.gameDefaults.rumble
             let gain = next.gameDefaults.rumbleGain

@@ -2,6 +2,13 @@
 
 User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
+## Unreleased
+
+### Added
+
+- **Session card.** When you close a game, a card in the top right says how long you played this time and in total, over the game's faint art with its logo, as in Selene. It waits until NX Library is in front, stays 8 seconds and takes no input. Sessions under 10 seconds show none. Switch: Settings → Games → **Session card** (on by default).
+- **Back to NX Library when a game closes.** A game you quit while playing it brings NX Library back to the front, in its own Space, instead of leaving you wherever macOS chooses. If you had moved to another app while the game ran, or another game is still open, NX Library stays where it is.
+
 ## 0.1.4.1 — unreleased
 
 ### Changed

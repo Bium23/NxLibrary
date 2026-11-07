@@ -101,4 +101,15 @@ final class PlaySessionStoreTests: XCTestCase {
         XCTAssertTrue(store.sessions.isEmpty)
         XCTAssertNotNil(store.loadError)
     }
+
+    func testEndByBundleIDReturnsTheSessionsItEnded() {
+        let store = store()
+        let game = game()
+        XCTAssertTrue(store.start(for: game))
+        now = now.addingTimeInterval(95)
+        let ended = store.end(bundleID: "org.nxnative.0100000000010000")
+        XCTAssertEqual(ended.map(\.gameID), [game.id])
+        XCTAssertEqual(ended.first?.duration ?? 0, 95, accuracy: 0.001)
+        XCTAssertTrue(store.end(bundleID: "org.nxnative.0100000000010000").isEmpty)
+    }
 }
