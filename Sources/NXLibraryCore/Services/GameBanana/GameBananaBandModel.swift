@@ -184,7 +184,8 @@ public final class GameBananaBandModel: ObservableObject {
         task?.cancel()
         available = []
         phase = .looking
-        let finder = AvailableModsFinder(client: self.client, titleID: store.titleID)
+        let finder = AvailableModsFinder(client: self.client, titleID: store.titleID,
+                                         installed: store.gameBananaRecords().keys.sorted())
         task = Task { [weak self] in
             // The mods show in two groups at most, each with its art: a row's worth beside Add mods as soon as
             // there is one, the rest once the search has ended. One at a time, each tile came in on its own and

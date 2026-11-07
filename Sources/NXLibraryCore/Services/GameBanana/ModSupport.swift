@@ -29,13 +29,43 @@ public enum ModSupport {
 
     public static func isVisible(_ profile: GameBananaModProfile) -> Bool {
         !profile.isObsolete && !profile.isPrivate && !profile.isWithheld && !profile.isTrashed
-            && profile.contentRatings.isEmpty
+            && profile.contentRatings.isEmpty && !ModRequirements.needsTool(profile.requirements)
     }
 
     private static func isCode(_ component: String) -> Bool {
         let name = component.lowercased()
         return name == "exefs" || name == "exefs_patches" || name == "main.npdm"
             || name.hasSuffix(".pchtxt") || name.hasSuffix(".ips")
+    }
+}
+
+/// What a mod's GameBanana Requirements mean here. They are free text, so only clear cases are acted on: a loader or
+/// a PC tool the engine cannot run hides the mod (it would install and then not work, or break the game, as exlaunch
+/// mods do); notes about a modded Switch or an emulator are left out; everything else (game versions, other mods) is
+/// shown in the mod's panel for the player to judge.
+public enum ModRequirements {
+    /// Loaders and tools: exlaunch-based loaders, Smash's Skyline/ARCropolis, mod managers and mergers that must run
+    /// on the game first, and ReShade, which hooks a PC emulator's renderer.
+    static let tools = ["exlaunch", "skyline", "arcropolis", "mod loader", "modloader", "mod manager", "tkmm",
+                        "recomp", "reshade"]
+    static let optionalWords = ["optional", "preferred", "recommended", "not required"]
+    static let platformWords = ["hacked", "modded", "emulator", "yuzu", "ryujinx", "atmosphere", "sdcard", "sd card",
+                                "cfw", "homebrew"]
+    static let platformNames: Set<String> = ["computer", "pc"]
+
+    public static func needsTool(_ requirements: [GameBananaRequirement]) -> Bool {
+        requirements.contains { requirement in
+            let name = requirement.name.lowercased()
+            return !requirement.isOptional && !optionalWords.contains(where: name.contains)
+                && tools.contains(where: name.contains)
+        }
+    }
+
+    public static func shown(_ requirements: [GameBananaRequirement]) -> [GameBananaRequirement] {
+        requirements.filter { requirement in
+            let name = requirement.name.lowercased()
+            return !platformNames.contains(name) && !platformWords.contains(where: name.contains)
+        }
     }
 }
 

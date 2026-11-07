@@ -148,6 +148,20 @@ final class LibraryStoreTests: XCTestCase {
         XCTAssertEqual(try store.load().games.count, 1)
     }
 
+    /// A library that cannot be read and has no backup is moved aside, never written over by the next save: the
+    /// games in it can still be recovered by hand (or by a newer NX Library that reads it).
+    func testUnreadableLibraryWithoutBackupIsKeptAside() throws {
+        let store = LibraryStore(directory: dir)
+        let damaged = Data(#"{"schemaVersion": 1, "games": [{"name": "#.utf8)
+        try damaged.write(to: store.fileURL)
+        XCTAssertEqual(try store.load().games.count, 0)
+        try store.save(LibraryFile())
+        let kept = try FileManager.default.contentsOfDirectory(atPath: dir.path)
+            .filter { $0.hasPrefix("library.json.damaged-") }
+        XCTAssertEqual(kept.count, 1)
+        XCTAssertEqual(try Data(contentsOf: dir.appendingPathComponent(kept[0])), damaged)
+    }
+
     func testLoadUsesBackupWhenMainIsMissing() throws {
         let store = LibraryStore(directory: dir)
         var game = PortedGame(name: "G", url: URL(fileURLWithPath: "/tmp/g.app"),

@@ -25,8 +25,9 @@ extension AppViewModel {
         keyCheck = nil
         Task.detached(priority: .userInitiated) { [weak self] in
             let outcome = KeyCheck.run(keysURL: keysURL, files: files)
+            guard let self else { return }
             await MainActor.run {
-                guard let self, self.keyCheckToken == token else { return }
+                guard self.keyCheckToken == token else { return }
                 self.keyCheck = outcome
             }
         }

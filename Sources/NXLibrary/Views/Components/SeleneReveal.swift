@@ -1,4 +1,5 @@
 import SwiftUI
+import NXLibraryCore
 
 /// Arrives a beat after its screen changes: holds `delay`, then fades in while
 /// rising `rise` Selene units. Give the view an `.id` per item so each change

@@ -440,7 +440,7 @@ public final class AppViewModel: ObservableObject {
         .resolve(runtime: .locate(), repo: URL(fileURLWithPath: nxnativePath))
     }
 
-    public let pinnedEngineCommit = "b2d46b86d03f4b03afe11ea61c67cdf00d7a5345"
+    public let pinnedEngineCommit = "7fe9fc4df952577c13110f4e5cc7412b74e5c446"
     private let core = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/NXLibrary")
     lazy var libraryStore = LibraryStore(directory: core)
@@ -1114,7 +1114,7 @@ public final class AppViewModel: ObservableObject {
                     library.games[index].status = GameResourceState.reconciledStatus(
                         for: library.games[index], appExists: appExists, sourcesAvailable: sourcesExist)
                 }
-                try? store.save(library)
+                do { try store.save(library) } catch { self.reportLibrarySaveFailure(error) }
                 self.libraryGames = library.games.sorted {
                     $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
                 }
@@ -1345,9 +1345,9 @@ public final class AppViewModel: ObservableObject {
         }
         launchProbeTask = Task { [weak self] in
             let visible = await LaunchReadinessProbe().waitUntilVisible(bundleID: bundleID)
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, let self else { return }
             await MainActor.run {
-                guard let self, self.launchOverlay?.game.id == game.id else { return }
+                guard self.launchOverlay?.game.id == game.id else { return }
                 if visible {
                     SoundEffectService.shared.play(.gameReady)
                 } else {
@@ -1497,11 +1497,20 @@ public final class AppViewModel: ObservableObject {
         return PortingProgress.finishingSeconds(inLog: text)
     }
 
+    /// A library that could not be written: what the player sees would be gone at the next start, so say so once
+    /// (in the log every time) instead of losing it in silence.
+    func reportLibrarySaveFailure(_ error: Error) {
+        let message = "NX Library could not save your library, so recent changes may be lost when it quits: "
+            + error.localizedDescription
+        logs.append(LogEntry(level: .error, message: message))
+        if alertMessage == nil { alertMessage = message }
+    }
+
     private func updateStoredStatus(_ status: GameStatus, for game: PortedGame) {
         guard var library = try? libraryStore.load(),
               let index = library.games.firstIndex(where: { $0.id == game.id }) else { return }
         library.games[index].status = status
-        try? libraryStore.save(library)
+        do { try libraryStore.save(library) } catch { reportLibrarySaveFailure(error) }
         libraryGames = library.games.sorted {
             $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
         }
@@ -2430,7 +2439,7 @@ public final class AppViewModel: ObservableObject {
            let index = library.games.firstIndex(where: { $0.id == target.id }) {
             library.games[index].workspacePath = target.workspacePath
             library.games[index].buildCachePath = target.buildCachePath
-            try? libraryStore.save(library)
+            do { try libraryStore.save(library) } catch { reportLibrarySaveFailure(error) }
             libraryGames = library.games.sorted {
                 $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
             }

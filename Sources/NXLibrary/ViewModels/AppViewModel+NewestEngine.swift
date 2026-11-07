@@ -32,11 +32,18 @@ extension AppViewModel {
         }
     }
 
+    /// The Newest engine row's buttons: Use newest, or Update beside Back to tested once main has moved on.
+    public var newestEngineActions: [NewestEngineAction] {
+        NewestEngine.actions(choice: newestEngineChoice, main: newestEngineOffer?.upstreamCommit,
+                             readiness: newestEngineReadiness)
+    }
+
     public var canSwitchEngine: Bool {
         isNxnativeValid && !isSwitchingEngine && !isBuilding && !isUpdatingApp
     }
 
-    /// Moves the engine to upstream main and turns the untested-toolchain override on.
+    /// Moves the engine to upstream main and turns the untested-toolchain override on. While the newest engine is
+    /// already in use this is Update: the checkout moves to the newer main and the override's origin is kept.
     public func useNewestEngine() {
         guard canSwitchEngine, let status = newestEngineOffer else { return }
         if case .needsNewerApp = newestEngineReadiness { return }
@@ -55,11 +62,13 @@ extension AppViewModel {
                 self.isSwitchingEngine = false
                 switch result {
                 case .success:
-                    let turnedOn = !self.allowUntestedToolchain || self.newestEngineChoice?.turnedOnOverride == true
+                    let previous = self.newestEngineChoice
+                    let turnedOn = !self.allowUntestedToolchain || previous?.turnedOnOverride == true
                     self.allowUntestedToolchain = true
                     self.newestEngineChoice = NewestEngineChoice(commit: commit, aheadBy: ahead, turnedOnOverride: turnedOn)
+                    let verb = previous.map { "updated from \($0.shortCommit) to" } ?? "switched to"
                     self.logs.append(LogEntry(level: .warning,
-                        message: "Engine switched to nxnative main \(commit.prefix(7)) (\(NewestEngineCopy.ahead(ahead))); builds are recorded as untested."))
+                        message: "Engine \(verb) nxnative main \(commit.prefix(7)) (\(NewestEngineCopy.ahead(ahead))); builds are recorded as untested."))
                 case .failure(let error):
                     if case NewestEngineError.needsNewerApp(let metal) = error {
                         self.newestEngineReadiness = .needsNewerApp(metal: metal)

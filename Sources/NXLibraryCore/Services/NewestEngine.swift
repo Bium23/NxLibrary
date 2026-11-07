@@ -30,6 +30,16 @@ public enum NewestEngineReadiness: Equatable, Sendable {
     case unknown
 }
 
+/// A button on Settings → Engine's Newest engine row.
+public enum NewestEngineAction: Equatable, Sendable {
+    case useNewest, update, backToTested
+}
+
+/// A tag beside an upstream commit while the newest engine is in use.
+public enum UpstreamCommitMark: Equatable, Sendable {
+    case inUse, new
+}
+
 /// The words every screen uses for the newest engine, so Settings and Setup say the same thing.
 public enum NewestEngineCopy {
     public static let note = "Newest nxnative, not yet tested by NX Library. It usually works, but something may not. "
@@ -51,6 +61,14 @@ public enum NewestEngineCopy {
     /// Setup's engine card while the newest engine is in use (the note is its description).
     public static func setupDetail(choice: NewestEngineChoice, tested: String) -> String {
         "At \(choice.shortCommit), \(ahead(choice.aheadBy)) of the tested \(tested.prefix(7)), chosen in Settings → Engine."
+    }
+
+    /// Settings → Engine, Newest engine row, while main is past the commit in use. `aheadBy` counts from the pin,
+    /// like the choice's own count; a rewritten main (not further ahead) gets no count.
+    public static func update(choice: NewestEngineChoice, main: String, aheadBy: Int) -> String {
+        let newer = aheadBy - choice.aheadBy
+        let count = newer > 0 ? ", \(newer) commit\(newer == 1 ? "" : "s") newer" : ""
+        return "main has moved on: \(main.prefix(7))\(count)."
     }
 
     public static let info = "Builds games with nxnative main instead of the engine this NX Library is tested with. "
@@ -111,6 +129,27 @@ public enum NewestEngine {
             return nil
         }
         return String(data: data, encoding: .utf8)
+    }
+
+    /// The Newest engine row's buttons. `main`: upstream main when it is ahead of the pin (nil when it is the pin or
+    /// was not checked). Update moves an existing choice to a newer main; a main that needs another Metal compiler
+    /// offers neither Use newest nor Update. Unknown readiness still offers them: the switch reads the lock first.
+    public static func actions(choice: NewestEngineChoice?, main: String?,
+                               readiness: NewestEngineReadiness?) -> [NewestEngineAction] {
+        var blocked = false
+        if case .needsNewerApp = readiness { blocked = true }
+        let movable = main != nil && main != choice?.commit && !blocked
+        guard choice != nil else { return movable ? [.useNewest] : [] }
+        return movable ? [.update, .backToTested] : [.backToTested]
+    }
+
+    /// Tags for Settings → Engine's upstream list (newest first): the commit the newest engine is at is In use,
+    /// those above it New. Nothing on the tested engine, or when the commit in use is not in the list.
+    public static func marks(_ commits: [UpstreamCommit], inUse: String?) -> [String: UpstreamCommitMark] {
+        guard let inUse, let index = commits.firstIndex(where: { $0.sha == inUse }) else { return [:] }
+        var marks: [String: UpstreamCommitMark] = [inUse: .inUse]
+        for commit in commits[..<index] { marks[commit.sha] = .new }
+        return marks
     }
 
     /// A choice holds while the checkout is still at its commit and the tested pin has not caught up with it.

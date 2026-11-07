@@ -16,5 +16,11 @@ cp -R "$APP" "$STAGE/NX Library.app"
 ln -s /Applications "$STAGE/Applications"
 
 mkdir -p "$ROOT/dist"
-hdiutil create -volname "NX Library" -srcfolder "$STAGE" -ov -format UDZO "$OUT" >/dev/null
+rm -f "$OUT"
+# macOS 26 deprecates `hdiutil create -volname`; `diskutil image` makes the same compressed image (APFS inside).
+if diskutil image create from --help >/dev/null 2>&1; then
+  diskutil image create from --format UDZO --volumeName "NX Library" "$STAGE" "$OUT" >/dev/null
+else
+  hdiutil create -volname "NX Library" -srcfolder "$STAGE" -ov -format UDZO "$OUT" >/dev/null
+fi
 echo "Built $OUT ($(du -h "$OUT" | awk '{print $1}'))"

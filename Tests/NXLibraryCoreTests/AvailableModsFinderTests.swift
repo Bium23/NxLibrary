@@ -13,9 +13,11 @@ final class AvailableModsFinderTests: XCTestCase {
 
     override func tearDownWithError() throws { try? FileManager.default.removeItem(at: dir) }
 
-    private func finder(want: Int = 12, maxScanned: Int = 60, perPage: Int = 20) -> AvailableModsFinder {
+    private func finder(want: Int = 12, maxScanned: Int = 60, perPage: Int = 20,
+                        installed: [Int] = []) -> AvailableModsFinder {
         let client = GameBananaClient(http: http, cacheFolder: dir.appendingPathComponent("cache"), userAgent: "test")
-        return AvailableModsFinder(client: client, titleID: tid, want: want, maxScanned: maxScanned, perPage: perPage)
+        return AvailableModsFinder(client: client, titleID: tid, want: want, maxScanned: maxScanned, perPage: perPage,
+                                   installed: installed)
     }
 
     private func summary(_ id: Int, rated: Bool = false) -> String {
@@ -28,7 +30,7 @@ final class AvailableModsFinderTests: XCTestCase {
     }
 
     /// A profile whose files are `(fileID, paths)`; each file's listing is served too.
-    private func profile(_ id: Int, files: [(Int, [String])]) {
+    private func profile(_ id: Int, files: [(Int, [String])], requirements: String = "[]") {
         let list = files.map { file in
             #"{"_idRow": \#(file.0), "_sFile": "f\#(file.0).zip", "_nFilesize": 10, "_tsDateAdded": \#(1_700_000_000 + file.0), "_sDownloadUrl": "https://gamebanana.com/dl/\#(file.0)", "_sMd5Checksum": "x"}"#
         }.joined(separator: ",")
@@ -36,7 +38,7 @@ final class AvailableModsFinderTests: XCTestCase {
         {"_idRow": \#(id), "_sName": "Mod \#(id)", "_sProfileUrl": "https://gamebanana.com/mods/\#(id)",
          "_sText": "Hello<br>world", "_aSubmitter": {"_sName": "Author \#(id)"},
          "_aPreviewMedia": {"_aImages": [{"_sBaseUrl": "https://images.gamebanana.com/img/ss/mods", "_sFile": "\#(id).jpg", "_sFile220": "220-\#(id).jpg"}]},
-         "_aFiles": [\#(list)]}
+         "_aRequirements": \#(requirements), "_aFiles": [\#(list)]}
         """#)
         for file in files {
             let paths = file.1.map { "\"\($0)\"" }.joined(separator: ",")
@@ -65,6 +67,48 @@ final class AvailableModsFinderTests: XCTestCase {
         XCTAssertEqual(mods[0].thumbnailURL, URL(string: "https://images.gamebanana.com/img/ss/mods/220-1.jpg"))
         XCTAssertEqual(mods.map(\.rank), [0, 3])
         XCTAssertEqual(http.count("Mod/3/ProfilePage"), 0)
+    }
+
+    /// A mod that needs a loader is never listed; one with other requirements is, and carries them for its panel.
+    func testModsNeedingALoaderAreLeftOutAndOthersCarryTheirRequirements() async throws {
+        page([1, 2], complete: true)
+        profile(1, files: [(11, ["romfs/a.bin"])], requirements: #"[["Trinity Mod Loader", "https://gamebanana.com/updates/1"]]"#)
+        profile(2, files: [(21, ["romfs/a.bin"])], requirements: #"[["Hacked switch", ""], ["Super Mario Odyssey v1.3", ""]]"#)
+        let mods = try await collect(finder())
+        XCTAssertEqual(mods.map(\.id), [2])
+        XCTAssertEqual(mods[0].requirements, [GameBananaRequirement(name: "Super Mario Odyssey v1.3", isOptional: false)])
+        XCTAssertEqual(http.count("itemid=11&"), 0, "a hidden mod's files are not even listed")
+    }
+
+    /// An installed mod GameBanana's list leaves out for a while (an update waiting for approval) is read from its
+    /// own page, so the player still sees it, and its Update. It comes after the listed mods.
+    func testAnInstalledModMissingFromTheListIsReadFromItsPage() async throws {
+        page([1], complete: true)
+        profile(1, files: [(11, ["romfs/a.bin"])])
+        profile(77, files: [(771, ["Pack/romfs/a.bin"])])
+        let mods = try await collect(finder(installed: [77]))
+        XCTAssertEqual(mods.map(\.id), [1, 77])
+        XCTAssertGreaterThan(mods[1].rank, mods[0].rank)
+        XCTAssertEqual(mods[1].files.map(\.id), [771])
+    }
+
+    /// An installed mod past the band's cut (twelve mods) is listed too, once.
+    func testAnInstalledModPastTheCutIsListedOnce() async throws {
+        page([1, 2], complete: true)
+        profile(1, files: [(11, ["romfs/a.bin"])])
+        profile(2, files: [(21, ["romfs/a.bin"])])
+        let mods = try await collect(finder(want: 1, installed: [1, 2]))
+        XCTAssertEqual(mods.map(\.id), [1, 2])
+    }
+
+    /// An installed mod that no longer works or is gone from GameBanana stays out, and the others still come.
+    func testAnInstalledModThatNoLongerWorksOrIsGoneStaysOut() async throws {
+        page([1], complete: true)
+        profile(1, files: [(11, ["romfs/a.bin"])])
+        profile(78, files: [(781, ["exefs/main.npdm"])])
+        http.serve("Mod/79/ProfilePage", "gone", status: 404)
+        let mods = try await collect(finder(installed: [78, 79]))
+        XCTAssertEqual(mods.map(\.id), [1])
     }
 
     func testStopsAtWant() async throws {

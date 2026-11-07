@@ -2,6 +2,23 @@
 
 User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
+## 0.1.4.1 — unreleased
+
+### Changed
+
+- **Mods that need a loader are left out.** Some GameBanana file mods list requirements on their page: a loader or a PC tool (exlaunch, Skyline, ARCropolis, TKMM, a mod manager, TotK Recomp, ReShade). The engine runs none of them, so such a mod would install and then not work, or break the game. NX Library now reads those requirements and doesn't list the mod. A tool the author only recommends doesn't hide it.
+- **A mod's panel shows its requirements,** such as the game version it was made for or another mod it needs, under its version line, so a mismatch shows before the download. Notes about a modded Switch or an emulator are left out.
+- The DMG is made with `diskutil image`, as macOS 26 asks.
+- Updated the pinned nxnative engine to `7fe9fc4d`. Ocarina of Time (Switch 2) loses the dotted rows across fog and light, the holes in the ground, Kokiri Forest's white blotches and the wrong colours of the Poe Sisters' and Phantom Ganon's paintings. Upstream also reports fixes for Donkey Kong Bananza's ambient occlusion, Mario Kart World's build, Super Smash Bros. Ultimate's first start, Hyrule Warriors: Age of Calamity's cutscenes, Tetris 99, Pokémon Friends, Splatoon Raiders and Cuphead 1.3.7, and a NUP is no longer unpacked again when it hasn't changed. The Metal compiler is the same; every game translates its shaders again at its next build, and installed apps keep their engine until rebuilt.
+
+### Fixed
+
+- **The newest engine can be updated in place.** While you use **Newest engine** (Settings → Engine) and nxnative main moves on, **Check** now offers **Update** beside **Back to tested**, saying how many commits newer main is. In the upstream list, the commit you are on is tagged **In use** in green and those above it **New** in orange. Before, the only way forward was back to the tested engine and then **Use newest** again. A main that needs another Metal compiler is still refused.
+- **A mod you installed from GameBanana always shows in the game's Mods band,** with **Update** when its author replaced the file. Before, it vanished while GameBanana left it out of the game's list (as it can while an update waits for approval) or when it was past the band's first twelve mods.
+- A library file that can no longer be read is kept beside it as `library.json.damaged-…` instead of being written over by the next save when there was no backup.
+- When NX Library cannot save the library (a full disk, for example), it now says so instead of losing recent changes at the next start in silence.
+- The private copy of `prod.keys` is created readable only by you from its first byte, not made private just after it is written.
+
 ## 0.1.4 — 2026-11-06
 
 ### Added
