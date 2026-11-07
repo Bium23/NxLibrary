@@ -38,6 +38,16 @@ NX-DEMO:END -->
 <p align="center"><strong>Your library, together.</strong><br>Games, artwork and activity in Spotlight.</p>
 <!-- NX-SCREENSHOTS:END -->
 
+### <img src="https://img.shields.io/badge/new-E8833A?style=flat" alt="New" height="20" align="absmiddle"> Latest highlights
+
+- **Mods in a few clicks.** A store of GameBanana mods that work with your games, by category and by game. Press **Install** and the mod is on at the next launch, with no rebuild. Mods you already have work too: drop them in, turn them on, choose their order.
+- **Ocarina of Time, as it should look.** The newest engine clears its fog, lighting and foliage glitches and restores its paintings' colours. Pikmin 4 runs at 60 fps, up to 120 on the Mac.
+- **A recap when you stop playing.** Quit a game and you are back in your library, with a card showing how long you played this time and in total.
+- **Your icon in the Dock.** The icon you pick for a game shows in Finder and the Dock too, and stays after a rebuild.
+- **Builds on your external drive.** Keep your games on an external drive and the whole build stays there, so the Mac's own disk needs no free space.
+
+Every release is in the [changelog](CHANGELOG.md).
+
 ## Overview
 
 NX Library is an independent SwiftUI frontend for the external [nxnative](https://github.com/seedds/nxnative) toolchain. It brings your installed game apps, local build workflow and game options into a modern Mac-native library inspired by [Selene](https://github.com/mattxslv/Selene).
@@ -48,6 +58,7 @@ NX Library is an independent SwiftUI frontend for the external [nxnative](https:
 | **Local builds** | Select your own sources, review updates and DLC, follow progress and retry a failed installation. |
 | **Game options** | Keep each title's launch settings, artwork and metadata together. |
 | **Saves** | Back up local progress, preview imports and restore a previous copy. |
+| **Mods** | Install GameBanana mods that work with the engine, or add your own, and choose what is on for the next launch. |
 | **Cheats** | Import matching cheat files and choose what is enabled for the next launch. |
 | **Personalisation** | Choose palettes, wallpapers, live backgrounds, interface sounds and controller prompts. |
 
@@ -55,11 +66,11 @@ Game files, keys and firmware are not provided. See [Legal and third-party notic
 
 ### Project status
 
-**0.1.3.3 alpha.** Download the packaged app from [Releases](https://github.com/Bium23/NxLibrary/releases/latest), or [build it from source](#building-from-source).
+**0.1.4.1 alpha.** Download the packaged app from [Releases](https://github.com/Bium23/NxLibrary/releases/latest), or [build it from source](#building-from-source).
 
 Automated checks cover the application code, publication inputs, compilation and development-app packaging. They do not certify game compatibility. Changes are recorded in the [changelog](CHANGELOG.md), and the current checks are available under [Actions](https://github.com/Bium23/NxLibrary/actions/workflows/ci.yml).
 
-The engine is pinned to `b64a5ff0`, with audio, memory and renderer fixes, updated game profiles and shader-build improvements, using Xcode 27.2 / Metal 32023.922. See the [engine upgrade notes](docs/upstream-upgrades/2026-11-03-65501fbb-b64a5ff0-review.md).
+The engine is pinned to `bd979ced`, with Ocarina of Time (Switch 2) fixes, Pikmin 4 at 60 fps, two identical USB controllers as two players and package reading by content, using Xcode 27.2 / Metal 32023.922. See the [engine upgrade notes](docs/upstream-upgrades/README.md).
 
 ## Getting started
 
@@ -138,6 +149,8 @@ If an installed app is moved or removed, its library entry stays with a blurred,
 
 Use **Find a game** for search, **Game Options** for title-specific actions, and the menu for themes, Settings and running-game controls. Hidden games can be restored under **Settings → Games → Hidden games**.
 
+When you quit a game, NX Library comes back to the front, unless you had moved to another app or another game is still open. A **session card** in the top right shows how long you played this time and in total; sessions under 10 seconds show none. Turn it off in **Settings → Games → Session card**.
+
 ![The quick menu open over Spotlight, with Theme selected](docs/media/quick-menu.webp)
 
 <p align="center"><strong>Quick access.</strong><br>Open the menu without leaving your library.</p>
@@ -207,9 +220,23 @@ Open **Game Options → Cheats**, then choose or drop a matching cheat file. NX 
 
 Changes apply at the next Play and are written only while the game is closed. An older or unrecognised engine build may require **Rebuild**. The engine's in-game panel, `⌘⇧C`, reads the same files.
 
+Cheats change values while you play, for one game version only. New items, looks or gameplay are mods.
+
+### Mods
+
+- **Mod store.** The **Mods** card in Spotlight opens a store of the GameBanana mods that work with your games: a featured banner, the most popular, a row per category and a row per game, sorted by Popular, Most liked, Newest or Recently updated. Hide the card in **Settings → Spotlight**.
+- **A game's Mods band.** Each game page lists its GameBanana mods and the ones you installed. Open a mod for its images, author, version and requirements, then press **Install**; **Update** appears when the author replaces the file. If the game's GameBanana page is uncertain, the band asks once, and **Wrong game?** picks another.
+- **Your own mods.** File mods (a folder with `romfs` inside) go into the game's mods folder. Turn them on in the band or in **Game Options → Mods**; the order decides which mod wins when two change the same file. **Remove** moves a mod to the Trash.
+
+Mods apply at the next launch, without a rebuild. The engine reads file mods only: mods that patch code (`exefs`, such as 60 fps patches) or need a loader or PC tool (exlaunch, Skyline, ARCropolis, mod managers) don't work, and the store leaves them out.
+
+![The mod store with a featured mod, sort choices and rows of popular mods and characters](docs/media/mod-store.webp)
+
+<p align="center"><strong>Mods for your games.</strong><br>Browse what works with the engine and install it in one step.</p>
+
 ### Artwork, themes and sound
 
-- **Game Options → Edit details** changes one game's artwork or metadata. Manual artwork choices take priority over automatic images.
+- **Game Options → Edit details** changes one game's artwork or metadata. Manual artwork choices take priority over automatic images. The Icon you choose in **Change artwork** also shows in Finder and the Dock for a game app without its own icon; for one with its own, NX Library asks first. **Automatic** brings back the game's icon.
 - **Menu → Theme** chooses palettes and wallpapers. Background choices include local images, muted looping videos and optional online sources; source credits appear in the picker.
 - **Settings → Look** controls wallpaper placement, sizing, brightness, game backgrounds, Reduce Motion and the Color/Monochrome app icon.
 - **Settings → Sound & music** controls interface cues and volume. Four interface sounds are bundled; additional sounds and wallpapers can be imported from a Selene theme folder you own.
@@ -265,17 +292,17 @@ Before reporting a problem, review copied diagnostics and remove anything person
 
 ### Compatibility and limitations
 
-- NX Library uses a manually pinned engine and checks its commit, working tree, CLI contract and Metal compiler before new builds. It does not follow upstream `main` automatically. **Settings → Engine → Newest engine** lets you choose `main` yourself before NX Library has tested it: an orange dot marks it, builds are recorded as untested, **Back to tested** returns to the pinned engine, and it is not offered when `main` needs a different Metal compiler.
+- NX Library uses a manually pinned engine and checks its commit, working tree, CLI contract and Metal compiler before new builds. It does not follow upstream `main` automatically. **Settings → Engine → Newest engine** lets you choose `main` yourself before NX Library has tested it: an orange dot marks it, builds are recorded as untested, **Update** moves to a newer `main` when there is one, **Back to tested** returns to the pinned engine, and it is not offered when `main` needs a different Metal compiler.
 - The current engine is `bd979ced` and certifies Metal `32023.922`. **Build anyway with an untested toolchain** requires explicit confirmation and marks the resulting build as untested. A successful launch does not turn it into a certified combination.
 - Game compatibility depends on nxnative, the game version and the toolchain.
 - Output follows the window/display; native 1440p/4K internal rendering is not supported. Render scale is 50–100% where the build supports it. MetalFX is spatial upscaling.
 - Builds run one at a time. iOS/IPA output, automatic engine updates and notarisation are not currently provided.
 
-The [upgrade note](docs/upstream-upgrades/2026-11-03-65501fbb-b64a5ff0-review.md) records the engine review and toolchain requirements.
+The [upgrade notes](docs/upstream-upgrades/README.md) record each engine review and its toolchain requirements.
 
 ### Data and cleanup
 
-App data lives in `~/Library/Application Support/NXLibrary/`. Local game data uses `~/Library/Application Support/nxnative/<title ID>/`. Backups are stored under `NXLibrary/SaveBackups/<title ID>/`.
+App data lives in `~/Library/Application Support/NXLibrary/`. Local game data uses `~/Library/Application Support/nxnative/<title ID>/`, with mods in its `mods` folder. Backups are stored under `NXLibrary/SaveBackups/<title ID>/`.
 
 Storage can clear caches and logs and open the shared backups folder. **Remove Sources & Build Cache deletes the selected original source files**, while retaining the installed app and saves. Read that confirmation carefully; it differs from clearing a cache.
 
@@ -284,7 +311,7 @@ Storage can clear caches and logs and open the shared backups folder. **Remove S
 - **Simpler Settings** — Keep everyday options easy to find, with advanced controls grouped within each category.
 - **In-app bug reporting** — Make it easier to report a problem directly from NX Library.
 - **Broader game discovery** — Discover and launch games from Steam, CrossOver and the Mac App Store, alongside nxnative apps.
-- **An in-app mod browser** — Browse, download and install game mods without leaving the app.
+- **Languages** — NX Library in more languages than English.
 - **Better controller support** — Refine controller settings and offer more flexible button mapping.
 - **Continued polish** — Fix bugs and improve navigation, feedback and visual details throughout the app.
 
