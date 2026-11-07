@@ -238,7 +238,8 @@ I percorsi sono relativi alla home dell’utente. `Application Support/NXLibrary
 |---|---|
 | `Application Support/NXLibrary/library.json` e `.bak` | Catalogo e ultima copia valida, gestiti da `LibraryStore`. |
 | `Application Support/NXLibrary/settings.json` | Impostazioni globali, gestite da `AppSettingsStore`. |
-| `Application Support/NXLibrary/play-sessions.json` | Sessioni e tempi di gioco, gestiti da `PlaySessionStore`. |
+| `Application Support/NXLibrary/play-sessions.json` | Sessioni e tempi di gioco, gestiti da `PlaySessionStore`. Array semplice delle ultime 200 sessioni, leggibile anche dalle versioni precedenti. |
+| `Application Support/NXLibrary/play-sessions-totals.json` | Tempo e ultima partita delle sessioni oltre le 200, per gioco: `totalDuration(for:)` e `lastPlayed(for:)` li sommano alle sessioni recenti. |
 | `Application Support/NXLibrary/keys/prod.keys` | Chiavi importate da `KeyStore`, con permessi `0600`. |
 | `Application Support/NXLibrary/app-sizes.json` | Cache dimensioni dei bundle. |
 | `Application Support/NXLibrary/workspaces/` e `Temp/` | Collegamenti alle sorgenti, workspace e app temporanee dei porting, quando l'app va sul volume del Mac (o su un volume che non accetta link simbolici). |
