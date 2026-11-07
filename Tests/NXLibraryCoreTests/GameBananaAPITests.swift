@@ -68,6 +68,23 @@ final class GameBananaAPITests: XCTestCase {
         XCTAssertEqual(clean.text, "")
     }
 
+    /// `_aRequirements` is a list of [name, link, label, colour, …]; the name and an optional label are kept.
+    func testProfileDecodesRequirements() throws {
+        let profile = try decode(GameBananaModProfile.self, """
+        {"_idRow": 1, "_sName": "Pack", "_aSubmitter": {"_sName": "Maker"},
+         "_aRequirements": [["Trinity Mod Loader", "https://gamebanana.com/updates/176846"],
+                            ["Quick Flurry Rush", "https://gamebanana.com/mods/549737", "Installed", "BlueColor", "Recommended", "GreyColor"],
+                            [], [7], ["  Game versions 1.1.0-1.4.3 ", ""]]}
+        """)
+        XCTAssertEqual(profile.requirements, [
+            GameBananaRequirement(name: "Trinity Mod Loader", isOptional: false),
+            GameBananaRequirement(name: "Quick Flurry Rush", isOptional: true),
+            GameBananaRequirement(name: "Game versions 1.1.0-1.4.3", isOptional: false),
+        ])
+        let none = try decode(GameBananaModProfile.self, #"{"_idRow": 2, "_aRequirements": {}}"#)
+        XCTAssertEqual(none.requirements, [])
+    }
+
     func testImageURLJoinsBaseAndFile() throws {
         let image = try decode(GameBananaImage.self, """
         {"_sBaseUrl": "https://images.gamebanana.com/img/ss/mods", "_sFile": "x.jpg", "_sFile220": "220-90_x.jpg", "_sFile530": "530-90_x.jpg"}

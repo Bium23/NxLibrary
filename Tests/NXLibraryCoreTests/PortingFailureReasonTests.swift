@@ -21,7 +21,7 @@ final class PortingFailureReasonTests: XCTestCase {
         ("keys.tooOld", .keysTooOld, "[RED] Example.nsp: prod.keys has no key_area_key_application_14 (master key 14, which came with firmware 21.0.0): the keys are older than the game; dump prod.keys again from a console on firmware 21.0.0 or later"),
         ("keys.ticket", .keys, "[RED] Example.nsp: no title key for rights ID 00000000000000000000000000000000: the package has no common ticket for it"),
         ("games.several", .severalGames, "[RED] more than one game in the folder, keep one game per folder: 0100000000010000, 0100000000020000"),
-        ("games.noTitleID", .noTitleID, "[RED] no NSP with a readable title ID in /Users/x/Games/Foo"),
+        ("games.noTitleID", .noTitleID, "[RED] no game package with a readable content meta in /Users/x/Games/Foo"),
         ("disk.low", .diskFull, "[RED] less than 40 GB free on the volume of /Users/x/work"),
         ("disk.full", .diskFull, "OSError: [Errno 28] No space left on device"),
         ("icloud.detritus", .cloudFolder, "x.app: resource fork, Finder information, or similar detritus not allowed"),
@@ -104,6 +104,8 @@ final class PortingFailureReasonTests: XCTestCase {
     }
 
     func testNoTitleIDDetailIsFolder() {
+        XCTAssertEqual(classify("[RED] no game package with a readable content meta in /Users/x/Foo").detail, "/Users/x/Foo")
+        // Engines before nxnative 5c4dc18f said it this way.
         XCTAssertEqual(classify("[RED] no NSP with a readable title ID in /Users/x/Foo").detail, "/Users/x/Foo")
     }
 

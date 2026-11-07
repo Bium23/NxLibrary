@@ -91,6 +91,71 @@ final class NewestEngineTests: XCTestCase {
         XCTAssertEqual(choice.shortCommit, "9c1d2e7")
     }
 
+    // MARK: - Row actions
+
+    private let newer = "b7e3f0a100000000000000000000000000000000"
+
+    func testWithoutAChoiceANewerMainOffersUseNewest() {
+        XCTAssertEqual(NewestEngine.actions(choice: nil, main: main, readiness: .usable), [.useNewest])
+        XCTAssertEqual(NewestEngine.actions(choice: nil, main: main, readiness: nil), [.useNewest], "lock still loading")
+        XCTAssertEqual(NewestEngine.actions(choice: nil, main: nil, readiness: nil), [], "main is the pin")
+        XCTAssertEqual(NewestEngine.actions(choice: nil, main: main, readiness: .needsNewerApp(metal: "32100.1")), [])
+    }
+
+    func testAChoiceBehindMainOffersUpdateBesideBackToTested() {
+        let choice = NewestEngineChoice(commit: main, aheadBy: 12, turnedOnOverride: true)
+        XCTAssertEqual(NewestEngine.actions(choice: choice, main: newer, readiness: .usable), [.update, .backToTested])
+        XCTAssertEqual(NewestEngine.actions(choice: choice, main: newer, readiness: nil), [.update, .backToTested])
+    }
+
+    func testAChoiceAtMainOrBeforeAnotherMetalOffersOnlyBackToTested() {
+        let choice = NewestEngineChoice(commit: main, aheadBy: 12, turnedOnOverride: true)
+        XCTAssertEqual(NewestEngine.actions(choice: choice, main: main, readiness: .usable), [.backToTested])
+        XCTAssertEqual(NewestEngine.actions(choice: choice, main: nil, readiness: nil), [.backToTested], "not checked")
+        XCTAssertEqual(NewestEngine.actions(choice: choice, main: newer, readiness: .needsNewerApp(metal: "32100.1")),
+                       [.backToTested])
+    }
+
+    func testTheUpdateSentenceCountsCommitsPastTheOneInUse() {
+        let choice = NewestEngineChoice(commit: main, aheadBy: 12, turnedOnOverride: true)
+        XCTAssertEqual(NewestEngineCopy.update(choice: choice, main: newer, aheadBy: 23),
+                       "main has moved on: b7e3f0a, 11 commits newer.")
+        XCTAssertEqual(NewestEngineCopy.update(choice: choice, main: newer, aheadBy: 13),
+                       "main has moved on: b7e3f0a, 1 commit newer.")
+        XCTAssertEqual(NewestEngineCopy.update(choice: choice, main: newer, aheadBy: 12),
+                       "main has moved on: b7e3f0a.", "history rewritten: no count")
+    }
+
+    func testTheControllerUpdatesWithAAndGoesBackToTestedWithY() {
+        let both = NewestEngine.controller([.update, .backToTested])
+        XCTAssertEqual(both?.primary, .update)
+        XCTAssertEqual(both?.secondary, .backToTested)
+        XCTAssertEqual(NewestEngine.controller([.backToTested])?.primary, .backToTested)
+        XCTAssertNil(NewestEngine.controller([.backToTested])?.secondary)
+        XCTAssertEqual(NewestEngine.controller([.useNewest])?.primary, .useNewest)
+        XCTAssertNil(NewestEngine.controller([]))
+    }
+
+    // MARK: - Commit marks
+
+    private func commits(_ shas: [String]) -> [UpstreamCommit] {
+        shas.map { UpstreamCommit(sha: $0, author: "seedds", date: "", subject: $0) }
+    }
+
+    func testCommitsAboveTheOneInUseAreNewAndItIsInUse() {
+        let list = commits(["c3", "c2", "c1", "c0"])
+        XCTAssertEqual(NewestEngine.marks(list, inUse: "c1"), ["c3": .new, "c2": .new, "c1": .inUse])
+    }
+
+    func testTheNewestCommitInUseHasNothingNewAbove() {
+        XCTAssertEqual(NewestEngine.marks(commits(["c3", "c2"]), inUse: "c3"), ["c3": .inUse])
+    }
+
+    func testNoMarksOnTheTestedEngineOrForACommitNotListed() {
+        XCTAssertEqual(NewestEngine.marks(commits(["c3", "c2"]), inUse: nil), [:], "tested engine")
+        XCTAssertEqual(NewestEngine.marks(commits(["c3", "c2"]), inUse: "zz"), [:], "history rewritten")
+    }
+
     // MARK: - Switching
 
     func testUseNewestFetchesReadsTheLockAndSwitches() throws {

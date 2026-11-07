@@ -81,9 +81,23 @@ public enum SourceSelection {
         files.contains { $0.layout == .package }
     }
 
+    /// The `-p` to pass. A workspace NX Library staged with only the selected packages leaves the engine's default (the
+    /// newest version there, by content meta) equal to the selection, and no `-p` keeps a version stored by an older scan
+    /// from being refused. The selection is named when the workspace holds other versions too: a merged package, a NUP
+    /// (every version in one file), a dump, or a folder used as it is.
+    public static func packageVersion(for files: [GameFileItem], stagedSelection: Bool) -> String? {
+        let onlySelected = stagedSelection && files.allSatisfy { $0.layout == .package && $0.requiresTitleSelection != true }
+        return onlySelected ? nil : versionForBuild(files)
+    }
+
     public static func versionForBuild(_ files: [GameFileItem]) -> String? {
         let updates = files.filter { $0.kind == .update }
-        guard !updates.isEmpty else { return "v0" }
+        // A base game alone is packed at its own version: v0 for most, v65536 for one the eShop serves at 1.1.0 (nxnative 5c4dc18f).
+        guard !updates.isEmpty else {
+            let base = files.first { $0.kind == .base }?.versionString
+            let digits = base.map { $0.hasPrefix("v") ? String($0.dropFirst()) : $0 }
+            return "v\(digits.flatMap(Int.init) ?? 0)"
+        }
         guard let raw = updates.first?.versionString else { return nil }
         let digits = raw.hasPrefix("v") ? String(raw.dropFirst()) : raw
         return Int(digits).map { "v\($0)" }

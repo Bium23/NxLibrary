@@ -70,4 +70,41 @@ final class ModSupportTests: XCTestCase {
         XCTAssertEqual(ModFolderName.make(from: String(repeating: "a", count: 200), modID: 1, existing: []).count, 80)
         XCTAssertEqual(ModFolderName.make(from: "Line\nbreak\u{2028}x", modID: 1, existing: []), "Line break x")
     }
+
+    // MARK: - Requirements
+
+    private func needs(_ name: String, optional: Bool = false) -> GameBananaRequirement {
+        GameBananaRequirement(name: name, isOptional: optional)
+    }
+
+    /// A loader or a PC tool the engine cannot run hides the mod: it would install and then not work, or break the game.
+    func testAModNeedingALoaderOrToolIsHidden() {
+        for name in ["Trinity Mod Loader", "exlaunch", "Skyline", "ARCropolis 3.0", "TKMM", "TotK Mod Manager",
+                     "TotK Recomp", "ReShade 5.8.0"] {
+            XCTAssertTrue(ModRequirements.needsTool([needs("Super Mario Odyssey v1.3"), needs(name)]), name)
+        }
+    }
+
+    /// A tool the author only recommends, a game version, another mod or the game itself never hides a mod.
+    func testOptionalToolsVersionsAndOtherModsDoNotHide() {
+        XCTAssertFalse(ModRequirements.needsTool([
+            needs("TotK Recomp (Preferred, since it creates the sizetable automaticcally)"),
+            needs("Trinity Mod Loader", optional: true),
+            needs("ReShade (optional)"),
+            needs("Game versions 1.1.0-1.4.3"),
+            needs("Quick Flurry Rush"),
+            needs("TOTK"),
+        ]))
+        XCTAssertFalse(ModRequirements.needsTool([]))
+    }
+
+    /// Notes about a modded Switch or an emulator say nothing to a Mac player and are left out of the panel.
+    func testPlatformNotesAreLeftOut() {
+        let shown = ModRequirements.shown([
+            needs("Hacked switch"), needs("Or emulator"), needs("Computer"), needs("Have yuzu downloaded"),
+            needs("Atmosphere or Ryujinx"), needs("Switch must be modded"), needs("Updated sdcard files for Nintendo Switch"),
+            needs("Super Mario Odyssey v1.3"), needs("Quick Flurry Rush", optional: true),
+        ])
+        XCTAssertEqual(shown, [needs("Super Mario Odyssey v1.3"), needs("Quick Flurry Rush", optional: true)])
+    }
 }

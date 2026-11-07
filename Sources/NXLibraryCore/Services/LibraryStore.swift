@@ -39,12 +39,23 @@ public final class LibraryStore {
         do {
             return try Self.decoder().decode(LibraryFile.self, from: Data(contentsOf: fileURL))
         } catch {
+            // Move the unreadable file aside so the next save cannot write over it; the backup (or an empty
+            // library) carries on, and the games in it can still be recovered by hand.
+            keepAside()
             if fm.fileExists(atPath: backupURL.path),
                let backup = try? Self.decoder().decode(LibraryFile.self, from: Data(contentsOf: backupURL)) {
                 return backup
             }
             return LibraryFile()
         }
+    }
+
+    /// `library.json.damaged-<date>-<id>`, beside the library.
+    private func keepAside() {
+        let stamp = ISO8601DateFormatter.string(from: Date(), timeZone: .current,
+                                                formatOptions: [.withYear, .withMonth, .withDay, .withTime])
+        let id = UUID().uuidString.prefix(4)
+        try? fm.moveItem(at: fileURL, to: directory.appendingPathComponent("library.json.damaged-\(stamp)-\(id)"))
     }
 
     public func save(_ library: LibraryFile) throws {

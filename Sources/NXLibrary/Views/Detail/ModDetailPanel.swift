@@ -123,6 +123,13 @@ struct ModDetailPanel: View {
                 Text(versionLine)
                     .seleneFont(16)
                     .foregroundColor(SeleneTheme.ink75)
+                if let requirementsLine {
+                    Text(requirementsLine)
+                        .seleneFont(16)
+                        .foregroundColor(SeleneTheme.ink75)
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 Text("\(mod.likes) likes · \(mod.downloads) downloads")
                     .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink60)
@@ -282,6 +289,13 @@ struct ModDetailPanel: View {
         var parts = [mod.version.isEmpty ? "Updated \(date)" : "Version \(mod.version) · Updated \(date)"]
         if let version = game.versionString, !version.isEmpty { parts.append("Your game: \(version)") }
         return parts.joined(separator: "   ")
+    }
+
+    /// The author's requirements (game versions, other mods), so a mismatch shows before the download.
+    private var requirementsLine: String? {
+        guard !mod.requirements.isEmpty else { return nil }
+        let names = mod.requirements.map { $0.isOptional ? "\($0.name) (recommended)" : $0.name }
+        return "Requires: " + names.joined(separator: " · ")
     }
 
     // MARK: - Rows

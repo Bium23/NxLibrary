@@ -39,6 +39,9 @@ public enum BuildEventParser {
                              elapsed: wire.elapsed, summary: wire.summary, warn: wire.warn ?? false)
         case "say":
             return wire.msg.map { .say($0) }
+        case "game", "shaders_stale":
+            // A `say` with the same news follows each (nxnative docs/frontends.md).
+            return nil
         default:
             return .log(trimmed)
         }

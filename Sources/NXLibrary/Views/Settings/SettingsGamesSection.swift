@@ -65,6 +65,11 @@ struct SettingsGamesSection: View {
                 settings.settings.launchShade = settings.settings.launchShade.stepped(step)
             }
 
+            SeleneToggleRow("Session card",
+                            subtitle: "Your playtime when a game closes",
+                            info: "When you close a game, a card shows how long you played this time and in total. Sessions under 10 seconds show none.",
+                            isOn: $settings.settings.showsSessionCard)
+
             SeleneCycleRow("Surprise me pool",
                            subtitle: "Which games Surprise me picks from.",
                            value: surprisePoolTitle) { step in
@@ -179,6 +184,9 @@ struct SettingsGamesSection: View {
             },
             .value("launchShade", "Launch screen shade") { step in
                 settings.settings.launchShade = settings.settings.launchShade.stepped(step)
+            },
+            .init(id: "showsSessionCard", title: "Session card") {
+                settings.settings.showsSessionCard.toggle()
             },
             .value("surprisePool", "Surprise me pool") { step in
                 settings.settings.surprisePool = settings.settings.surprisePool.stepped(step)

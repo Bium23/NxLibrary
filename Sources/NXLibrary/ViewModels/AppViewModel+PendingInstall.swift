@@ -48,7 +48,7 @@ extension AppViewModel {
             }
         }
         guard changed else { return }
-        try? libraryStore.save(library)
+        do { try libraryStore.save(library) } catch { reportLibrarySaveFailure(error) }
         loadLibrary()
     }
 

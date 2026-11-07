@@ -16,6 +16,8 @@ public struct SettingsView: View {
     @State private var showingControls = false
     @State private var focusArea: SettingsFocusArea = .sidebar
     @State private var rowFocus = FocusIndex()
+    /// The button in focus inside the focused row: 0 its own, 1 a second one (Back to tested beside Update).
+    @State private var rowButton = 0
     @State private var rowActions: [SettingsRowAction] = []
     @State private var keyMonitor: Any?
     @State private var resetNotice: String?
@@ -78,6 +80,7 @@ public struct SettingsView: View {
         .onChange(of: section) { _ in
             rowActions = []
             rowFocus = FocusIndex()
+            rowButton = 0
         }
         .onChange(of: initialSection) { value in
             section = value
@@ -128,10 +131,12 @@ public struct SettingsView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .environment(\.seleneFocusedRowID, focusArea == .rows ? focusedRow?.rowID : nil)
+                .environment(\.seleneFocusedButton, rowButton)
                 .padding(.bottom, canvas.u(60))
             }
             .scrollIndicators(.hidden)
             .onChange(of: rowFocus.index) { _ in
+                rowButton = 0
                 guard focusArea == .rows,
                       rowActions.indices.contains(rowFocus.index) else { return }
                 let id = "selene-row-\(rowActions[rowFocus.index].rowID)"
@@ -166,14 +171,14 @@ public struct SettingsView: View {
     }
 
     private func updateActions(_ actions: [SettingsRowAction]) {
-        // One focus slot per visible row. Secondary buttons in a row stay
-        // pointer-reachable; the controller uses the row's primary action.
+        // One focus slot per visible row; Left and Right move between a row's two buttons (rowButton).
         let focusedID = focusedRow?.id
         rowActions = SettingsRowAction.primaryActions(actions)
         if let focusedID, let index = rowActions.firstIndex(where: { $0.id == focusedID }) {
             rowFocus.index = index
         }
         rowFocus.move(by: 0, count: rowActions.count)
+        if rowButton >= (focusedRow?.buttonCount ?? 1) { rowButton = 0 }
         if rowActions.isEmpty, focusArea == .rows { focusArea = .sidebar }
     }
 
@@ -186,6 +191,7 @@ public struct SettingsView: View {
     private func enterRows() {
         guard focusArea == .sidebar, !rowActions.isEmpty else { return }
         focusArea = .rows
+        rowButton = 0
         SoundEffectService.shared.play(.focus)
     }
 
@@ -247,6 +253,7 @@ public struct SettingsView: View {
             next.launchStyle = defaults.launchStyle
             next.launchMotion = defaults.launchMotion
             next.launchShade = defaults.launchShade
+            next.showsSessionCard = defaults.showsSessionCard
             next.surprisePool = defaults.surprisePool
             let rumble = next.gameDefaults.rumble
             let gain = next.gameDefaults.rumbleGain
@@ -290,8 +297,17 @@ public struct SettingsView: View {
             if let cycle = focusedRow?.cycle, focusedRow?.isEnabled == true {
                 cycle(delta)
                 SoundEffectService.shared.play(.focus)
-            } else if delta < 0 {
+                return
+            }
+            let buttons = focusedRow?.isEnabled == true ? (focusedRow?.buttonCount ?? 1) : 1
+            switch SettingsRowAction.sideways(from: rowButton, by: delta, buttons: buttons) {
+            case .button(let index):
+                rowButton = index
+                SoundEffectService.shared.play(.focus)
+            case .leaveRows:
                 leaveRows()
+            case .stay:
+                break
             }
         }
     }
@@ -374,7 +390,7 @@ public struct SettingsView: View {
                 enterRows()
             } else if let row = focusedRow, row.isEnabled {
                 SoundEffectService.shared.play(.click)
-                row.activate()
+                row.press(button: rowButton)
             }
         case .cancel:
             handleBack()

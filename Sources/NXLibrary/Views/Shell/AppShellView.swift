@@ -10,6 +10,7 @@ public struct AppShellView: View {
     @StateObject private var playSessions = PlaySessionStore()
     @StateObject private var artwork = ArtworkStore()
     @StateObject private var runningGames = RunningGameMonitor()
+    @StateObject private var sessionCard = SessionCardPresenter()
     @StateObject private var updater = AppUpdater()
     @StateObject private var nativeMenus = NativeMenuCommands.shared
     @ObservedObject private var theme = ThemeStore.shared
@@ -216,6 +217,10 @@ public struct AppShellView: View {
         .background(FullscreenCursorView())
         .background(StartupWindowView(fullscreen: settings.settings.startInFullscreen))
         .focusedSceneValue(\.nxMenuAvailability, nativeMenuAvailability)
+        .overlay {
+            SessionCardLayer(presenter: sessionCard, games: viewModel.libraryGames,
+                             metadata: viewModel.storeMetadata, artwork: artwork)
+        }
         .overlay { launchLayer }
         .modifier(SoundCueHooks(router: router, viewModel: viewModel))
         // Inside the canvas root so the sheet inherits the window's canvas units.
@@ -262,6 +267,15 @@ public struct AppShellView: View {
         }
         .onChange(of: viewModel.libraryGames) { games in
             runningGames.setGames(games)
+        }
+        .onReceive(runningGames.$endedSession) { summary in
+            sessionCard.ended(summary, enabled: settings.settings.showsSessionCard)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            sessionCard.becameActive()
+        }
+        .onChange(of: settings.settings.showsSessionCard) { on in
+            if !on { sessionCard.clear() }
         }
         .onChange(of: showsUpdateOffer) { viewModel.isUpdateOfferOpen = $0 }
         .onChange(of: router.route) { route in

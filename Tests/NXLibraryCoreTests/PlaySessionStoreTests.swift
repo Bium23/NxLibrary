@@ -101,4 +101,78 @@ final class PlaySessionStoreTests: XCTestCase {
         XCTAssertTrue(store.sessions.isEmpty)
         XCTAssertNotNil(store.loadError)
     }
+
+    func testEndByBundleIDReturnsTheSessionsItEnded() {
+        let store = store()
+        let game = game()
+        XCTAssertTrue(store.start(for: game))
+        now = now.addingTimeInterval(95)
+        let ended = store.end(bundleID: "org.nxnative.0100000000010000")
+        XCTAssertEqual(ended.map(\.gameID), [game.id])
+        XCTAssertEqual(ended.first?.duration ?? 0, 95, accuracy: 0.001)
+        XCTAssertTrue(store.end(bundleID: "org.nxnative.0100000000010000").isEmpty)
+    }
+
+    private func play(_ game: PortedGame, for seconds: TimeInterval, in store: PlaySessionStore) {
+        XCTAssertTrue(store.start(for: game))
+        now = now.addingTimeInterval(seconds)
+        store.end(gameID: game.id)
+        now = now.addingTimeInterval(10)
+    }
+
+    func testTotalAndLastPlayedSurviveTrimming() {
+        let store = store()
+        let old = game("Old", titleId: "0100000000020000", bundleId: "org.nxnative.0100000000020000")
+        let busy = game("Busy")
+        let oldStart = now!
+        play(old, for: 3600, in: store)
+        for _ in 0..<250 { play(busy, for: 60, in: store) }
+
+        XCTAssertLessThanOrEqual(store.sessions.count, 200)
+        XCTAssertFalse(store.sessions.contains { $0.gameID == old.id })
+        XCTAssertEqual(store.totalDuration(for: old.id), 3600, accuracy: 0.001)
+        XCTAssertEqual(store.lastPlayed(for: old.id), oldStart)
+        XCTAssertEqual(store.totalDuration(for: busy.id), 250 * 60, accuracy: 0.001)
+
+        let reloaded = self.store()
+        XCTAssertNil(reloaded.loadError)
+        XCTAssertEqual(reloaded.totalDuration(for: old.id), 3600, accuracy: 0.001)
+        XCTAssertEqual(reloaded.lastPlayed(for: old.id), oldStart)
+        XCTAssertEqual(reloaded.totalDuration(for: busy.id), 250 * 60, accuracy: 0.001)
+    }
+
+    func testTrimmingKeepsRunningSession() {
+        let store = store()
+        let running = game("Running", titleId: "0100000000020000", bundleId: "org.nxnative.0100000000020000")
+        let busy = game("Busy")
+        XCTAssertTrue(store.start(for: running))
+        for _ in 0..<250 { play(busy, for: 60, in: store) }
+        XCTAssertTrue(store.isRunning(gameID: running.id))
+        store.end(gameID: running.id)
+        XCTAssertEqual(store.totalDuration(for: running.id), 250 * 70, accuracy: 0.001)
+    }
+
+    func testLoadsLegacyArrayFile() throws {
+        let game = game()
+        let session = PlaySession(gameID: game.id, titleID: "0100000000010000",
+                                  bundleID: game.bundleId, startedAt: now,
+                                  endedAt: now.addingTimeInterval(300),
+                                  lastHeartbeatAt: now.addingTimeInterval(300))
+        try JSONEncoder().encode([session]).write(to: url)
+        let store = store()
+        XCTAssertNil(store.loadError)
+        XCTAssertEqual(store.sessions, [session])
+        XCTAssertEqual(store.totalDuration(for: game.id), 300, accuracy: 0.001)
+        XCTAssertEqual(store.lastPlayed(for: game.id), now)
+    }
+    /// NX Library 0.1.4 and earlier read this file as a bare array; it must stay one
+    /// so switching between app versions keeps the history.
+    func testSessionsFileStaysReadableByOlderVersions() throws {
+        let store = store()
+        let busy = game("Busy")
+        for _ in 0..<205 { play(busy, for: 60, in: store) }
+        let data = try Data(contentsOf: url)
+        let decoded = try JSONDecoder().decode([PlaySession].self, from: data)
+        XCTAssertEqual(decoded, store.sessions)
+    }
 }

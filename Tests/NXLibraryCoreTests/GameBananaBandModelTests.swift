@@ -79,6 +79,27 @@ final class GameBananaBandModelTests: XCTestCase {
         XCTAssertEqual(model.available.map(\.id), [])
     }
 
+    /// A mod installed from GameBanana shows in the band even when GameBanana's list leaves it out.
+    func testAnInstalledModShowsEvenWhenTheListLeavesItOut() async throws {
+        try serveGameA()
+        http.serve("Mod/55/ProfilePage", #"""
+        {"_idRow": 55, "_sName": "Renamed UI", "_sProfileUrl": "https://gamebanana.com/mods/55", "_aSubmitter": {"_sName": "B"},
+         "_aFiles": [{"_idRow": 551, "_sFile": "ui.zip", "_nFilesize": 10, "_tsDateAdded": 1700000000,
+                      "_sDownloadUrl": "https://gamebanana.com/dl/551", "_sMd5Checksum": "x"}]}
+        """#)
+        http.serve("itemid=551&", #"[["UI/romfs/a.bin"]]"#)
+        let mods = store(gameA)
+        let staged = dir.appendingPathComponent("staged/romfs")
+        try FileManager.default.createDirectory(at: staged, withIntermediateDirectories: true)
+        try mods.adopt(staged: staged, folderName: "UI",
+                       record: ModRecord(folderName: "UI", isOn: false, gameBananaModID: 55, gameBananaFileID: 540),
+                       turnOn: false)
+        let model = band()
+        model.start(names: ["A"], store: mods)
+        await waitUntil { model.phase == .ready }
+        XCTAssertEqual(model.available.map(\.id), [1, 55])
+    }
+
     func testStopForgetsTheGamesMods() async throws {
         try serveGameA()
         let model = band()
