@@ -21,10 +21,13 @@ public struct AvailableMod: Equatable, Identifiable, Sendable {
     /// GameBanana's root category for the mod in its game ("Skins", "Maps"…); empty when unknown.
     public let category: String
     public let added: Date?
+    /// The author's requirements worth showing (game versions, other mods); never a loader, which hides the mod.
+    public let requirements: [GameBananaRequirement]
 
     public init(id: Int, rank: Int, name: String, author: String, avatarURL: URL?, images: [URL], thumbnailURL: URL?,
                 version: String, updated: Date, pageURL: URL, description: String, likes: Int, downloads: Int,
-                files: [GameBananaFile], category: String = "", added: Date? = nil) {
+                files: [GameBananaFile], category: String = "", added: Date? = nil,
+                requirements: [GameBananaRequirement] = []) {
         self.id = id
         self.rank = rank
         self.name = name
@@ -41,6 +44,7 @@ public struct AvailableMod: Equatable, Identifiable, Sendable {
         self.files = files
         self.category = category
         self.added = added
+        self.requirements = requirements
     }
 }
 
@@ -54,13 +58,18 @@ public struct AvailableModsFinder: Sendable {
     public let want: Int
     public let maxScanned: Int
     public let perPage: Int
+    /// GameBanana mods the player installed for this game: each one the list did not give (left out while an update
+    /// waits for approval, or past `want`) is read from its own page at the end, so it never vanishes from the band.
+    public let installed: [Int]
 
-    public init(client: GameBananaClient, titleID: String, want: Int = 12, maxScanned: Int = 60, perPage: Int = 20) {
+    public init(client: GameBananaClient, titleID: String, want: Int = 12, maxScanned: Int = 60, perPage: Int = 20,
+                installed: [Int] = []) {
         self.client = client
         self.titleID = titleID
         self.want = want
         self.maxScanned = maxScanned
         self.perPage = perPage
+        self.installed = installed
     }
 
     public func stream(gameID: Int) -> AsyncThrowingStream<AvailableMod, Error> {
@@ -78,6 +87,21 @@ public struct AvailableModsFinder: Sendable {
     }
 
     private func run(gameID: Int, yield: (AvailableMod) -> Void) async throws {
+        var shown: Set<Int> = []
+        let rank = try await scan(gameID: gameID) { mod in
+            shown.insert(mod.id)
+            yield(mod)
+        }
+        for (offset, id) in installed.enumerated() where !shown.contains(id) && !Task.isCancelled {
+            if let mod = try await check(modID: id, rank: rank + offset) {
+                shown.insert(id)
+                yield(mod)
+            }
+        }
+    }
+
+    /// The list, most downloaded first; returns the rank after the last mod it read.
+    private func scan(gameID: Int, yield: (AvailableMod) -> Void) async throws -> Int {
         var found = 0, scanned = 0, page = 1
         while found < want, scanned < maxScanned, !Task.isCancelled {
             let result = try await client.modPage(gameID: gameID, page: page, perPage: perPage)
@@ -98,6 +122,13 @@ public struct AvailableModsFinder: Sendable {
             if result.isComplete || result.records.isEmpty { break }
             page += 1
         }
+        return scanned
+    }
+
+    /// An installed mod read from its own page; nil when it is gone or no longer works.
+    private func check(modID: Int, rank: Int) async throws -> AvailableMod? {
+        let summary = GameBananaModSummary(id: modID, name: "")
+        do { return try await check(summary, rank: rank) } catch GameBananaError.unavailable { return nil }
     }
 
     private func check(_ summary: GameBananaModSummary, rank: Int) async throws -> AvailableMod? {
@@ -127,7 +158,8 @@ public struct AvailableModsFinder: Sendable {
             description: GameBananaAPI.plainText(fromHTML: profile.text),
             likes: max(profile.likes, summary.likes), downloads: profile.downloads,
             files: files.sorted { ($0.dateAdded ?? .distantPast) > ($1.dateAdded ?? .distantPast) },
-            category: summary.rootCategory, added: profile.dateAdded ?? summary.dateAdded)
+            category: summary.rootCategory, added: profile.dateAdded ?? summary.dateAdded,
+            requirements: ModRequirements.shown(profile.requirements))
     }
 }
 

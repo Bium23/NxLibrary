@@ -14,7 +14,7 @@ enum GameBananaBlur {
         cache.countLimit = 64
         return cache
     }()
-    nonisolated(unsafe) private static let context = CIContext(options: [.cacheIntermediates: false])
+    private static let context = CIContext(options: [.cacheIntermediates: false])
 
     private static func key(_ url: URL, _ radius: CGFloat) -> NSString { "\(Int(radius))|\(url.absoluteString)" as NSString }
 

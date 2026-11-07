@@ -165,6 +165,8 @@ public struct AppSettings: Codable, Equatable {
     public var settingsWallpaperID: String? = nil
     /// Spotlight and Collection keep the wallpaper instead of the focused game's art (the game page still shows it).
     public var keepWallpaperOnGames = false
+    /// A card with this session's and the total playtime when a game closes.
+    public var showsSessionCard = true
 
     public init(backgroundShade: BackgroundShade = .balanced,
                 readableText: Bool = true,
@@ -250,7 +252,7 @@ public struct AppSettings: Codable, Equatable {
         case introAnimation, viewButtonSwitches, interfaceSounds, soundVolume, quietLaunch
         case wallpaperID, backgroundSizing, animatedBackground, wallpaperBrightness, launchStyle, launchMotion, launchShade
         case notifyPortingEnds, checkAppUpdatesAtLaunch
-        case settingsWallpaperID, keepWallpaperOnGames
+        case settingsWallpaperID, keepWallpaperOnGames, showsSessionCard
     }
 
     public init(from decoder: Decoder) throws {
@@ -295,5 +297,6 @@ public struct AppSettings: Codable, Equatable {
         self.checkAppUpdatesAtLaunch = try container.decodeIfPresent(Bool.self, forKey: .checkAppUpdatesAtLaunch) ?? true
         self.settingsWallpaperID = try container.decodeIfPresent(String.self, forKey: .settingsWallpaperID)
         self.keepWallpaperOnGames = try container.decodeIfPresent(Bool.self, forKey: .keepWallpaperOnGames) ?? false
+        self.showsSessionCard = try container.decodeIfPresent(Bool.self, forKey: .showsSessionCard) ?? true
     }
 }

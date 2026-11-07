@@ -110,6 +110,8 @@ private struct StoredMod: Codable {
     let files: [StoredFile]
     let category: String
     let added: Date?
+    /// Missing in snapshots written before 0.1.4.1.
+    let requirements: [GameBananaRequirement]?
 
     init(_ mod: AvailableMod) {
         id = mod.id
@@ -128,6 +130,7 @@ private struct StoredMod: Codable {
         files = mod.files.map(StoredFile.init)
         category = mod.category
         added = mod.added
+        requirements = mod.requirements
     }
 
     var mod: AvailableMod? {
@@ -136,6 +139,7 @@ private struct StoredMod: Codable {
         return AvailableMod(id: id, rank: rank, name: name, author: author, avatarURL: trusted(avatarURL),
                             images: images.compactMap { trusted($0) }, thumbnailURL: trusted(thumbnailURL),
                             version: version, updated: updated, pageURL: page, description: description,
-                            likes: likes, downloads: downloads, files: files, category: category, added: added)
+                            likes: likes, downloads: downloads, files: files, category: category, added: added,
+                            requirements: requirements ?? [])
     }
 }

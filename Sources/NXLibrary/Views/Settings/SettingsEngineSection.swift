@@ -6,6 +6,7 @@ struct SettingsEngineSection: View {
     let onActions: ([SettingsRowAction]) -> Void
 
     @Environment(\.seleneFocusedRowID) private var focusedRowTitle
+    @Environment(\.seleneFocusedButton) private var focusedButton
     private var configurationLocked: Bool { viewModel.isBuilding || viewModel.isUpdatingApp }
 
     var body: some View {
@@ -278,12 +279,30 @@ struct SettingsEngineSection: View {
                         .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.untested)
                 }
-                if let title = newestButtonTitle {
-                    Button(title) { newestAction() }
-                        .buttonStyle(.plain)
+                if viewModel.isSwitchingEngine {
+                    Text("Switching…")
                         .seleneFont(15, .semibold)
-                        .foregroundColor(newestButtonEnabled ? SeleneTheme.glyph : SeleneTheme.ink60)
-                        .disabled(!newestButtonEnabled)
+                        .foregroundColor(SeleneTheme.ink60)
+                } else {
+                    let actions = viewModel.newestEngineActions
+                    ForEach(Array(actions.enumerated()), id: \.element) { index, action in
+                        // With two buttons, the one Left and Right put the focus on carries the focus ring.
+                        let focused = actions.count > 1 && viewModel.canSwitchEngine
+                            && focusedRowTitle == "Newest engine" && focusedButton == index
+                        Button(newestTitle(action)) { newestAction(action) }
+                            .buttonStyle(.plain)
+                            .seleneFont(15, .semibold)
+                            .foregroundColor(viewModel.canSwitchEngine ? SeleneTheme.glyph : SeleneTheme.ink60)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .overlay {
+                                Capsule()
+                                    .strokeBorder(SeleneTheme.focus, lineWidth: 2)
+                                    .opacity(focused ? 1 : 0)
+                            }
+                            .animation(SeleneTheme.focusIn, value: focused)
+                            .disabled(!viewModel.canSwitchEngine)
+                    }
                 }
             }
         }
@@ -297,8 +316,14 @@ struct SettingsEngineSection: View {
     private var newestSubtitle: String {
         if viewModel.isSwitchingEngine { return "Switching the engine…" }
         if let choice = viewModel.newestEngineChoice {
-            let base = "\(NewestEngineCopy.note) In use: \(choice.shortCommit), "
+            var base = "\(NewestEngineCopy.note) In use: \(choice.shortCommit), "
                 + "\(NewestEngineCopy.ahead(choice.aheadBy)) of the tested \(seleneShort(viewModel.pinnedEngineCommit))."
+            if viewModel.newestEngineActions.contains(.update), let offer = viewModel.newestEngineOffer {
+                base += " " + NewestEngineCopy.update(choice: choice, main: offer.upstreamCommit,
+                                                      aheadBy: offer.newCommitsCount)
+            } else if let metal = newestNeedsNewerApp {
+                base += " " + NewestEngineCopy.needsNewerApp(metal: metal)
+            }
             return viewModel.newestEngineProblem.map { "\(base) \($0)" } ?? base
         }
         if let metal = newestNeedsNewerApp { return NewestEngineCopy.needsNewerApp(metal: metal) }
@@ -307,20 +332,20 @@ struct SettingsEngineSection: View {
         return NewestEngineCopy.offer(commit: offer.upstreamCommit, aheadBy: offer.newCommitsCount)
     }
 
-    private var newestButtonTitle: String? {
-        if viewModel.isSwitchingEngine { return "Switching…" }
-        if viewModel.usesNewestEngine { return "Back to tested" }
-        return newestNeedsNewerApp == nil ? "Use newest" : nil
+    private func newestTitle(_ action: NewestEngineAction) -> String {
+        switch action {
+        case .useNewest: return "Use newest"
+        case .update: return "Update"
+        case .backToTested: return "Back to tested"
+        }
     }
 
-    private var newestButtonEnabled: Bool {
-        guard viewModel.canSwitchEngine else { return false }
-        return viewModel.usesNewestEngine || (viewModel.newestEngineOffer != nil && newestNeedsNewerApp == nil)
-    }
-
-    private func newestAction() {
-        guard newestButtonEnabled else { return }
-        if viewModel.usesNewestEngine { viewModel.useTestedEngine() } else { viewModel.useNewestEngine() }
+    private func newestAction(_ action: NewestEngineAction) {
+        guard viewModel.canSwitchEngine else { return }
+        switch action {
+        case .useNewest, .update: viewModel.useNewestEngine()
+        case .backToTested: viewModel.useTestedEngine()
+        }
     }
 
     private var upstreamButtonTitle: String {
@@ -328,12 +353,33 @@ struct SettingsEngineSection: View {
         return "Check"
     }
 
+    /// Ten commits, or down to the one in use when it is further down, so its tag is always on screen.
+    private func shownCommitCount(_ status: UpstreamStatus, marks: [String: UpstreamCommitMark]) -> Int {
+        guard let index = status.commits.firstIndex(where: { marks[$0.sha] == .inUse }) else { return 10 }
+        return max(10, index + 1)
+    }
+
+    /// In use (green) on the commit the newest engine is at, New (orange) on the commits above it.
+    private func commitMark(_ mark: UpstreamCommitMark) -> some View {
+        let color = mark == .inUse ? SeleneTheme.success : SeleneTheme.untested
+        return Text(mark == .inUse ? "In use" : "New")
+            .seleneFont(12, .bold)
+            .foregroundColor(color)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 2)
+            .background(color.opacity(0.16))
+            .clipShape(Capsule())
+            .padding(.bottom, 2)
+    }
+
     @ViewBuilder
     private func upstreamCommitsPanel(_ status: UpstreamStatus) -> some View {
         if !status.commits.isEmpty {
+            let marks = NewestEngine.marks(status.commits, inUse: viewModel.newestEngineChoice?.commit)
+            let shown = shownCommitCount(status, marks: marks)
             SelenePanel("Upstream Commits (\(status.newCommitsCount) newer)") {
                 VStack(alignment: .leading, spacing: 10) {
-                    ForEach(status.commits.prefix(10)) { commit in
+                    ForEach(status.commits.prefix(shown)) { commit in
                         HStack(alignment: .top, spacing: 10) {
                             Text(commit.shortSha)
                                 .seleneFont(14, .bold, design: .monospaced)
@@ -344,6 +390,9 @@ struct SettingsEngineSection: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
 
                             VStack(alignment: .leading, spacing: 2) {
+                                if let mark = marks[commit.sha] {
+                                    commitMark(mark)
+                                }
                                 Text(commit.subject)
                                     .seleneFont(15, .medium)
                                     .foregroundColor(SeleneTheme.ink)
@@ -366,15 +415,15 @@ struct SettingsEngineSection: View {
                             }
                             Spacer(minLength: 0)
                         }
-                        if commit.id != status.commits.prefix(10).last?.id {
+                        if commit.id != status.commits.prefix(shown).last?.id {
                             Divider()
                                 .background(SeleneTheme.ink15)
                         }
                     }
 
-                    if status.commits.count > 10 {
+                    if status.commits.count > shown {
                         HStack {
-                            Text("+ \(status.commits.count - 10) more commits upstream")
+                            Text("+ \(status.commits.count - shown) more commits upstream")
                                 .seleneFont(14, .medium)
                                 .foregroundColor(SeleneTheme.ink60)
                             Spacer()
@@ -505,9 +554,13 @@ struct SettingsEngineSection: View {
                 viewModel.checkUpstreamChangelog()
             }
         ]
-        if viewModel.usesNewestEngine || viewModel.newestEngineOffer != nil {
-            actions.append(.init(id: "newest", title: "Newest engine", isEnabled: newestButtonEnabled) {
-                newestAction()
+        // Keyboard and controller: the row's first button (Update once main has moved on) is in focus first; Right moves
+        // to the second (Back to tested), and A or Return presses the one in focus.
+        if let pad = NewestEngine.controller(viewModel.newestEngineActions) {
+            let secondary = pad.secondary.map { action in (title: newestTitle(action), activate: { newestAction(action) }) }
+            actions.append(.init(id: "newest", title: "Newest engine", isEnabled: viewModel.canSwitchEngine,
+                                 secondary: secondary) {
+                newestAction(pad.primary)
             })
         }
         if case .loaded = viewModel.upstreamState {

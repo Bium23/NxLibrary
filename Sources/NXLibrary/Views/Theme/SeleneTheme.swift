@@ -143,6 +143,18 @@ public extension EnvironmentValues {
     }
 }
 
+private struct SeleneFocusedButtonKey: EnvironmentKey {
+    static let defaultValue = 0
+}
+
+public extension EnvironmentValues {
+    /// Which button of the focused row has the focus, for a row with more than one (0 the first).
+    var seleneFocusedButton: Int {
+        get { self[SeleneFocusedButtonKey.self] }
+        set { self[SeleneFocusedButtonKey.self] = newValue }
+    }
+}
+
 private struct SeleneShowButtonHintsKey: EnvironmentKey {
     static let defaultValue = true
 }

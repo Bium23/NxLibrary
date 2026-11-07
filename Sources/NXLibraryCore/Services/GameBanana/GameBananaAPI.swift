@@ -312,6 +312,39 @@ public struct GameBananaFile: Decodable, Equatable, Sendable, Identifiable {
     }
 }
 
+/// One line of a mod's Requirements on GameBanana: free text by the author ("Trinity Mod Loader", "SMO v1.3"),
+/// optional when the author labels it Recommended or Optional.
+public struct GameBananaRequirement: Codable, Hashable, Sendable {
+    public let name: String
+    public let isOptional: Bool
+
+    public init(name: String, isOptional: Bool) {
+        self.name = name
+        self.isOptional = isOptional
+    }
+}
+
+/// `_aRequirements` holds `[name, link, label, colour, label, colour…]`; anything else in the list is skipped.
+private struct RequirementEntry: Decodable {
+    let requirement: GameBananaRequirement?
+
+    private struct Part: Decodable {
+        let text: String?
+        init(from decoder: Decoder) throws { text = try? decoder.singleValueContainer().decode(String.self) }
+    }
+
+    init(from decoder: Decoder) throws {
+        let parts = ((try? decoder.singleValueContainer().decode([Part].self)) ?? []).map(\.text)
+        guard let name = parts.first??.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty else {
+            requirement = nil
+            return
+        }
+        let labels = parts.dropFirst(2).compactMap { $0?.lowercased() }
+        requirement = GameBananaRequirement(name: name,
+                                            isOptional: labels.contains("recommended") || labels.contains("optional"))
+    }
+}
+
 public struct GameBananaModProfile: Decodable, Equatable, Sendable {
     public let id: Int
     public let name: String
@@ -330,12 +363,14 @@ public struct GameBananaModProfile: Decodable, Equatable, Sendable {
     public let downloads: Int
     public let dateAdded: Date?
     public let dateUpdated: Date?
+    public let requirements: [GameBananaRequirement]
 
     public init(id: Int, name: String, profileURL: URL? = nil, version: String = "", text: String = "",
                 isObsolete: Bool = false, isPrivate: Bool = false, isWithheld: Bool = false, isTrashed: Bool = false,
                 contentRatings: [String: String] = [:], images: [GameBananaImage] = [],
                 submitter: GameBananaSubmitter = GameBananaSubmitter(name: ""), files: [GameBananaFile] = [],
-                likes: Int = 0, downloads: Int = 0, dateAdded: Date? = nil, dateUpdated: Date? = nil) {
+                likes: Int = 0, downloads: Int = 0, dateAdded: Date? = nil, dateUpdated: Date? = nil,
+                requirements: [GameBananaRequirement] = []) {
         self.id = id
         self.name = name
         self.profileURL = profileURL
@@ -353,6 +388,7 @@ public struct GameBananaModProfile: Decodable, Equatable, Sendable {
         self.downloads = downloads
         self.dateAdded = dateAdded
         self.dateUpdated = dateUpdated
+        self.requirements = requirements
     }
 
     public init(from decoder: Decoder) throws {
@@ -362,6 +398,7 @@ public struct GameBananaModProfile: Decodable, Equatable, Sendable {
         profileURL = c.url("_sProfileUrl")
         version = c.value("_sVersion", "")
         text = c.value("_sText", "")
+        requirements = c.value("_aRequirements", [RequirementEntry]()).compactMap(\.requirement)
         isObsolete = c.value("_bIsObsolete", false)
         isPrivate = c.value("_bIsPrivate", false)
         isWithheld = c.value("_bIsWithheld", false)

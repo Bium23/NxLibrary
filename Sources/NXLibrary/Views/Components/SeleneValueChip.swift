@@ -1,4 +1,5 @@
 import SwiftUI
+import NXLibraryCore
 
 struct SeleneValueChip: View {
     @Environment(\.seleneCanvas) private var canvas

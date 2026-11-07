@@ -80,7 +80,13 @@ public final class KeyStore {
         let tmp = keyURL.deletingLastPathComponent()
             .appendingPathComponent(".prod.keys-\(UUID()).tmp")
         defer { try? fm.removeItem(at: tmp) }
-        try data.write(to: tmp, options: .atomic)
+        // Created private: the copy is never readable by others, not even between the write and a chmod.
+        let fd = open(tmp.path, O_WRONLY | O_CREAT | O_EXCL, 0o600)
+        guard fd >= 0 else { throw CocoaError(.fileWriteNoPermission, userInfo: [NSFilePathErrorKey: tmp.path]) }
+        let handle = FileHandle(fileDescriptor: fd, closeOnDealloc: true)
+        try handle.write(contentsOf: data)
+        try handle.synchronize()
+        try handle.close()
         try fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: tmp.path)
         try publish(tmp, keyURL)
         return summary

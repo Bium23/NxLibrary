@@ -86,7 +86,7 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
         case .keysTooOld: return "\(game) needs keys newer than the ones you imported."
         case .keysWrong: return "header_key does not open \(detail ?? "the game's files")."
         case .severalGames: return "Each porting needs one game; this folder holds files of several."
-        case .noTitleID: return "None of the files names a title ID the engine can read."
+        case .noTitleID: return "None of the files holds a game the engine can read."
         case .diskFull:
             if let gb = detail { return "The porting needs at least \(gb) GB free on the work volume." }
             return "The disk filled up during the porting."
@@ -185,7 +185,9 @@ public enum PortingFailureClassifier {
          "the keys are older than the game"),
         ("keys.ticket", .keys, "the package has no common ticket for it", "the package has no common ticket for it"),
         ("games.several", .severalGames, "more than one game in the folder", "more than one game in the folder"),
-        ("games.noTitleID", .noTitleID, "no NSP with a readable title ID in ", "no NSP with a readable title ID in "),
+        // nxnative 5c4dc18f reads every package's content meta; before it, "no NSP with a readable title ID in ".
+        ("games.noTitleID", .noTitleID, "no (NSP with a readable title ID|game package with a readable content meta) in ",
+         "no game package with a readable content meta in "),
         ("disk.low", .diskFull, "less than [0-9]+ GB free on the volume of", "GB free on the volume of"),
         ("disk.full", .diskFull, "No space left on device", nil),
         ("icloud.detritus", .cloudFolder, "resource fork, Finder information, or similar detritus not allowed", nil),
@@ -248,10 +250,10 @@ public enum PortingFailureClassifier {
             guard let r = log.range(of: "less than [0-9]+ GB free", options: .regularExpression) else { return nil }
             return log[r].split(separator: " ").dropFirst(2).first.map(String.init)
         case .noTitleID:
-            guard let r = log.range(of: #"no NSP with a readable title ID in [^"\n]+"#, options: .regularExpression)
-            else { return nil }
-            return String(log[r].dropFirst("no NSP with a readable title ID in ".count))
-                .trimmingCharacters(in: .whitespaces)
+            guard let r = log.range(of: #"no (NSP with a readable title ID|game package with a readable content meta) in [^"\n]+"#,
+                                    options: .regularExpression),
+                  let folder = log[r].range(of: " in ") else { return nil }
+            return String(log[r][folder.upperBound...]).trimmingCharacters(in: .whitespaces)
         default:
             return nil
         }

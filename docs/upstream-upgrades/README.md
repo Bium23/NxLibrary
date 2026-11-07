@@ -73,3 +73,6 @@ This directory records the review that must happen before the pin changes, plus 
 - [2026-11-05 — b64a5ff0 → 4a0551e4](2026-11-05-b64a5ff0-4a0551e4-review.md) (certified Wonder build, maintainer-confirmed visible launch; provisional profiles, build warnings, Home quit)
 - [2026-11-06 — 4a0551e4 → 04df08d4](2026-11-06-4a0551e4-04df08d4-review.md) (Ocarina of Time build and play with mods confirmed by the maintainer)
 - [2026-11-06 — 04df08d4 → b2d46b86](2026-11-06-04df08d4-b2d46b86-review.md) (Ocarina of Time rebuild and launch confirmed by the maintainer; damaged NUP/dump files mapped to **Some game files are damaged**)
+- [2026-11-07 — b2d46b86 → 7fe9fc4d](2026-11-07-b2d46b86-7fe9fc4d-review.md) (0.1.4.1: Ocarina of Time rebuild confirmed by the maintainer without the dotted rows; terrain holes and white blotches fixed upstream)
+- [2026-11-07 — 7fe9fc4d → e5f03403](2026-11-07-7fe9fc4d-e5f03403-review.md) (0.1.4.1: Ocarina of Time rebuild confirmed by the maintainer; packages read by their content metas, NSP with keys still to check by hand)
+- [2026-11-08 — e5f03403 → bd979ced](2026-11-08-e5f03403-bd979ced-review.md) (0.1.4.1 candidate: Ocarina's foliage no longer flashes white, Pikmin 4 at 60 fps; shaders translate again; awaiting the maintainer's rebuild)

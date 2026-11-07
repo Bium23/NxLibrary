@@ -2,10 +2,22 @@ import Foundation
 import Combine
 
 public final class PlaySessionStore: ObservableObject, PlayHistory {
+    /// Recent sessions, at most `maxSessions` (running sessions are never dropped).
     @Published public private(set) var sessions: [PlaySession] = []
+    /// Play time and last start of sessions trimmed from `sessions`, per game,
+    /// so totals and last-played survive trimming.
+    @Published public private(set) var carried: [UUID: CarriedPlaytime] = [:]
+    public static let maxSessions = 200
     public private(set) var loadError: String?
 
+    /// Recent sessions, a bare `[PlaySession]` array as in every earlier version,
+    /// so the released app and a development build can share it.
     public let fileURL: URL
+    /// Per-game carried totals, beside `fileURL` (`play-sessions-totals.json`).
+    public var totalsURL: URL {
+        fileURL.deletingLastPathComponent()
+            .appendingPathComponent(fileURL.deletingPathExtension().lastPathComponent + "-totals.json")
+    }
     private let fileManager: FileManager
     private let now: () -> Date
 
@@ -35,8 +47,8 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
             lastHeartbeatAt: date
         )
         sessions.append(session)
-        trim()
-        save()
+        let folded = trim()
+        save(totals: folded)
         return true
     }
 
@@ -57,17 +69,20 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
         if changed { save() }
     }
 
-    public func end(bundleID: String?) {
-        guard let bundleID else { return }
+    /// Ends the game's running sessions and returns them, ended.
+    @discardableResult
+    public func end(bundleID: String?) -> [PlaySession] {
+        guard let bundleID else { return [] }
         let date = now()
-        var changed = false
+        var ended: [PlaySession] = []
         for index in sessions.indices
         where sessions[index].bundleID == bundleID && sessions[index].isActive {
             sessions[index].endedAt = date
             sessions[index].lastHeartbeatAt = date
-            changed = true
+            ended.append(sessions[index])
         }
-        if changed { save() }
+        if !ended.isEmpty { save() }
+        return ended
     }
 
     public func reconcile(runningBundleIDs: Set<String>) {
@@ -90,37 +105,53 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
         let date = now()
         return sessions
             .filter { $0.gameID == gameID }
-            .reduce(0) { total, session in
+            .reduce(carried[gameID]?.duration ?? 0) { total, session in
                 total + max(0, (session.endedAt ?? date).timeIntervalSince(session.startedAt))
             }
     }
 
     public func lastPlayed(for gameID: UUID) -> Date? {
-        sessions.filter { $0.gameID == gameID }.map(\.startedAt).max()
+        let recent = sessions.filter { $0.gameID == gameID }.map(\.startedAt).max()
+        return [recent, carried[gameID]?.lastPlayed].compactMap { $0 }.max()
     }
 
     public func isRunning(gameID: UUID) -> Bool {
         sessions.contains { $0.gameID == gameID && $0.isActive }
     }
 
-    private func trim(maxCount: Int = 200) {
-        guard sessions.count > maxCount else { return }
-        sessions = Array(sessions.sorted { $0.startedAt > $1.startedAt }.prefix(maxCount))
+    /// Drops the oldest ended sessions beyond `maxCount`, folding each into `carried`.
+    /// Returns whether `carried` changed.
+    private func trim(maxCount: Int = PlaySessionStore.maxSessions) -> Bool {
+        let excess = sessions.count - maxCount
+        guard excess > 0 else { return false }
+        let dropped = sessions.filter { !$0.isActive }
+            .sorted { $0.startedAt < $1.startedAt }
+            .prefix(excess)
+        guard !dropped.isEmpty else { return false }
+        for session in dropped {
+            var entry = carried[session.gameID] ?? CarriedPlaytime(duration: 0, lastPlayed: session.startedAt)
+            entry.duration += session.duration ?? 0
+            entry.lastPlayed = max(entry.lastPlayed, session.startedAt)
+            carried[session.gameID] = entry
+        }
+        let droppedIDs = Set(dropped.map(\.id))
+        sessions.removeAll { droppedIDs.contains($0.id) }
+        return true
     }
 
-    private func save() {
+    /// Writes the sessions, then (when they changed) the carried totals. A crash in
+    /// between can lose the just-folded sessions' time, never count it twice.
+    private func save(totals: Bool = false) {
         do {
             try fileManager.createDirectory(
                 at: fileURL.deletingLastPathComponent(),
                 withIntermediateDirectories: true
             )
-            let data = try JSONEncoder().encode(sessions)
-            let temp = fileURL.appendingPathExtension("tmp")
-            try data.write(to: temp, options: .atomic)
-            if fileManager.fileExists(atPath: fileURL.path) {
-                _ = try fileManager.replaceItemAt(fileURL, withItemAt: temp)
-            } else {
-                try fileManager.moveItem(at: temp, to: fileURL)
+            try write(JSONEncoder().encode(sessions), to: fileURL)
+            if totals {
+                let entries = carried.map { CarriedEntry(gameID: $0.key, playtime: $0.value) }
+                    .sorted { $0.gameID.uuidString < $1.gameID.uuidString }
+                try write(JSONEncoder().encode(entries), to: totalsURL)
             }
             loadError = nil
         } catch {
@@ -128,15 +159,51 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
         }
     }
 
+    private func write(_ data: Data, to url: URL) throws {
+        let temp = url.appendingPathExtension("tmp")
+        try data.write(to: temp, options: .atomic)
+        if fileManager.fileExists(atPath: url.path) {
+            _ = try fileManager.replaceItemAt(url, withItemAt: temp)
+        } else {
+            try fileManager.moveItem(at: temp, to: url)
+        }
+    }
+
     private func load() {
-        guard fileManager.fileExists(atPath: fileURL.path) else { return }
+        if fileManager.fileExists(atPath: fileURL.path) {
+            do {
+                sessions = try JSONDecoder().decode([PlaySession].self, from: Data(contentsOf: fileURL))
+                loadError = nil
+            } catch {
+                sessions = []
+                loadError = error.localizedDescription
+            }
+        }
+        // No totals file: nothing was trimmed since carried totals began.
+        guard fileManager.fileExists(atPath: totalsURL.path) else { return }
         do {
-            let data = try Data(contentsOf: fileURL)
-            sessions = try JSONDecoder().decode([PlaySession].self, from: data)
-            loadError = nil
+            let entries = try JSONDecoder().decode([CarriedEntry].self, from: Data(contentsOf: totalsURL))
+            carried = Dictionary(entries.map { ($0.gameID, $0.playtime) },
+                                 uniquingKeysWith: { first, _ in first })
         } catch {
-            sessions = []
+            carried = [:]
             loadError = error.localizedDescription
         }
     }
+}
+
+/// Play time folded out of the recent-session list for one game.
+public struct CarriedPlaytime: Codable, Equatable {
+    public var duration: TimeInterval
+    public var lastPlayed: Date
+
+    public init(duration: TimeInterval, lastPlayed: Date) {
+        self.duration = duration
+        self.lastPlayed = lastPlayed
+    }
+}
+
+private struct CarriedEntry: Codable {
+    var gameID: UUID
+    var playtime: CarriedPlaytime
 }

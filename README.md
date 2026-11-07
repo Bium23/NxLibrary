@@ -266,7 +266,7 @@ Before reporting a problem, review copied diagnostics and remove anything person
 ### Compatibility and limitations
 
 - NX Library uses a manually pinned engine and checks its commit, working tree, CLI contract and Metal compiler before new builds. It does not follow upstream `main` automatically. **Settings → Engine → Newest engine** lets you choose `main` yourself before NX Library has tested it: an orange dot marks it, builds are recorded as untested, **Back to tested** returns to the pinned engine, and it is not offered when `main` needs a different Metal compiler.
-- The current engine is `b2d46b86` and certifies Metal `32023.922`. **Build anyway with an untested toolchain** requires explicit confirmation and marks the resulting build as untested. A successful launch does not turn it into a certified combination.
+- The current engine is `bd979ced` and certifies Metal `32023.922`. **Build anyway with an untested toolchain** requires explicit confirmation and marks the resulting build as untested. A successful launch does not turn it into a certified combination.
 - Game compatibility depends on nxnative, the game version and the toolchain.
 - Output follows the window/display; native 1440p/4K internal rendering is not supported. Render scale is 50–100% where the build supports it. MetalFX is spatial upscaling.
 - Builds run one at a time. iOS/IPA output, automatic engine updates and notarisation are not currently provided.

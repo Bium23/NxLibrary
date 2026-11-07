@@ -440,7 +440,7 @@ public final class AppViewModel: ObservableObject {
         .resolve(runtime: .locate(), repo: URL(fileURLWithPath: nxnativePath))
     }
 
-    public let pinnedEngineCommit = "b2d46b86d03f4b03afe11ea61c67cdf00d7a5345"
+    public let pinnedEngineCommit = "bd979ced3ae6bad60bf86429a71d172297d93471"
     private let core = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/NXLibrary")
     lazy var libraryStore = LibraryStore(directory: core)
@@ -1114,7 +1114,7 @@ public final class AppViewModel: ObservableObject {
                     library.games[index].status = GameResourceState.reconciledStatus(
                         for: library.games[index], appExists: appExists, sourcesAvailable: sourcesExist)
                 }
-                try? store.save(library)
+                do { try store.save(library) } catch { self.reportLibrarySaveFailure(error) }
                 self.libraryGames = library.games.sorted {
                     $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
                 }
@@ -1345,9 +1345,9 @@ public final class AppViewModel: ObservableObject {
         }
         launchProbeTask = Task { [weak self] in
             let visible = await LaunchReadinessProbe().waitUntilVisible(bundleID: bundleID)
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, let self else { return }
             await MainActor.run {
-                guard let self, self.launchOverlay?.game.id == game.id else { return }
+                guard self.launchOverlay?.game.id == game.id else { return }
                 if visible {
                     SoundEffectService.shared.play(.gameReady)
                 } else {
@@ -1497,11 +1497,20 @@ public final class AppViewModel: ObservableObject {
         return PortingProgress.finishingSeconds(inLog: text)
     }
 
+    /// A library that could not be written: what the player sees would be gone at the next start, so say so once
+    /// (in the log every time) instead of losing it in silence.
+    func reportLibrarySaveFailure(_ error: Error) {
+        let message = "NX Library could not save your library, so recent changes may be lost when it quits: "
+            + error.localizedDescription
+        logs.append(LogEntry(level: .error, message: message))
+        if alertMessage == nil { alertMessage = message }
+    }
+
     private func updateStoredStatus(_ status: GameStatus, for game: PortedGame) {
         guard var library = try? libraryStore.load(),
               let index = library.games.firstIndex(where: { $0.id == game.id }) else { return }
         library.games[index].status = status
-        try? libraryStore.save(library)
+        do { try libraryStore.save(library) } catch { reportLibrarySaveFailure(error) }
         libraryGames = library.games.sorted {
             $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
         }
@@ -1866,9 +1875,16 @@ public final class AppViewModel: ObservableObject {
         var skipped: [String] = []
         if capabilities.titleSelection, let keys {
             let reader = EnginePackageReader(repo: repo, toolchain: toolchain, keys: keys, developerDir: developerDir)
+            let readings = try reader.contents(of: files.filter { !$0.hasDirectoryPath }.map {
+                (url: $0, alreadyIdentified: (try? catalog.inspect($0)) != nil)
+            })
             detected = try catalog.scan(files: files, skippingUnreadable: true,
                 onUnreadable: { url, _ in skipped.append(url.lastPathComponent) }) { file in
-                try reader.contents(of: file, alreadyIdentified: (try? catalog.inspect(file)) != nil)
+                switch readings[file] {
+                case .contents(let rows)?: return rows
+                case .unreadable(let why)?: throw EngineSourceError.unreadablePackage(why)
+                case nil: return []
+                }
             }
         } else {
             detected = try catalog.scan(files: files.filter { (try? catalog.inspect($0)) != nil })
@@ -2430,7 +2446,7 @@ public final class AppViewModel: ObservableObject {
            let index = library.games.firstIndex(where: { $0.id == target.id }) {
             library.games[index].workspacePath = target.workspacePath
             library.games[index].buildCachePath = target.buildCachePath
-            try? libraryStore.save(library)
+            do { try libraryStore.save(library) } catch { reportLibrarySaveFailure(error) }
             libraryGames = library.games.sorted {
                 $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
             }
@@ -2478,7 +2494,8 @@ public final class AppViewModel: ObservableObject {
             bundleId: target.bundleId ?? "org.nxnative.\(titleId.lowercased())",
             language: loadRuntimeConfig(for: target).languageForBuild,
             titleId: engineSourceCapabilities.titleSelection ? titleId : nil,
-            packageVersion: engineSourceCapabilities.titleSelection ? SourceSelection.versionForBuild(target.sources) : nil,
+            packageVersion: engineSourceCapabilities.titleSelection
+                ? SourceSelection.packageVersion(for: target.sources, stagedSelection: !workspace.links.isEmpty) : nil,
             allowUntestedToolchain: allowUntestedToolchain,
             extraArguments: extraArguments
         )

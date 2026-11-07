@@ -62,7 +62,7 @@ final class EngineToolchainTests: XCTestCase {
 
         let env = toolchain.environment(base: ["PATH": "/x", "HOME": "/h"],
                                         developerDir: URL(fileURLWithPath: "/Applications/Xcode.app/Contents/Developer"))
-        XCTAssertEqual(env["PATH"], "/App/Contents/Resources/Runtime/bin:" + EngineToolchain.standardPath + ":/x")
+        XCTAssertEqual(env["PATH"], "/App/Contents/Resources/Runtime/bin:" + EngineToolchain.standardPath + ":/h/.dotnet:/x")
         XCTAssertEqual(env["PYTHONNOUSERSITE"], "1")
         XCTAssertEqual(env["PYTHONDONTWRITEBYTECODE"], "1")
         XCTAssertEqual(env["DEVELOPER_DIR"], "/Applications/Xcode.app/Contents/Developer")
@@ -71,10 +71,23 @@ final class EngineToolchainTests: XCTestCase {
 
     func testVenvEnvironmentHasNoPythonFlags() {
         let toolchain = EngineToolchain.resolve(runtime: nil, repo: URL(fileURLWithPath: "/r"))
-        let env = toolchain.environment(base: ["PATH": "/x"], developerDir: nil)
-        XCTAssertEqual(env["PATH"], EngineToolchain.standardPath + ":/x")
+        let env = toolchain.environment(base: ["PATH": "/x", "HOME": "/h"], developerDir: nil)
+        XCTAssertEqual(env["PATH"], EngineToolchain.standardPath + ":/h/.dotnet:/x")
         XCTAssertNil(env["PYTHONNOUSERSITE"])
         XCTAssertNil(env["PYTHONDONTWRITEBYTECODE"])
         XCTAssertNil(env["DEVELOPER_DIR"])
+    }
+
+    /// Microsoft's dotnet-install script puts .NET in ~/.dotnet, which the engine also searches (TOOL_PATHS): Setup and
+    /// the builds find it there, after the system's own .NET.
+    func testDotnetInTheHomeFolderIsFound() {
+        let toolchain = EngineToolchain.resolve(runtime: nil, repo: URL(fileURLWithPath: "/r"))
+        let path = toolchain.environment(base: ["PATH": "/x", "HOME": "/Users/p"], developerDir: nil)["PATH"] ?? ""
+        let folders = path.split(separator: ":").map(String.init)
+        let system = folders.firstIndex(of: "/usr/local/share/dotnet")
+        let home = folders.firstIndex(of: "/Users/p/.dotnet")
+        XCTAssertNotNil(home)
+        XCTAssertLessThan(system ?? .max, home ?? -1)
+        XCTAssertEqual(folders.last, "/x")
     }
 }

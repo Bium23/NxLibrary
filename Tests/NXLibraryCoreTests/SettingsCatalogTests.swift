@@ -33,6 +33,13 @@ final class SettingsCatalogTests: XCTestCase {
         XCTAssertEqual(SettingsCatalog.changed(in: settings).map(\.id), ["wallpaperBrightness"])
     }
 
+    func testSessionCardIsAGamesRowThatCountsAsChanged() {
+        XCTAssertEqual(SettingsCatalog.search("Session card").first { $0.id == "showsSessionCard" }?.group, .games)
+        var settings = AppSettings()
+        settings.showsSessionCard = false
+        XCTAssertEqual(SettingsCatalog.changed(in: settings).map(\.id), ["showsSessionCard"])
+    }
+
     func testSearchFindsHiddenGames() {
         let hits = SettingsCatalog.search("hidden")
         XCTAssertEqual(hits.first { $0.id == "hiddenGames" }?.group, .games)

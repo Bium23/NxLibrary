@@ -204,7 +204,8 @@ final class ModCatalogSnapshotTests: XCTestCase {
                                 thumbnailURL: URL(string: "https://images.gamebanana.com/t.jpg"), version: "1",
                                 updated: Date(timeIntervalSince1970: 7), pageURL: URL(string: "https://gamebanana.com/mods/1")!,
                                 description: "d", likes: 2, downloads: 3, files: [file], category: "Skins",
-                                added: Date(timeIntervalSince1970: 4))
+                                added: Date(timeIntervalSince1970: 4),
+                                requirements: [GameBananaRequirement(name: "SMO v1.3", isOptional: true)])
         try snapshots.save([good], gameName: "Zelda", titleID: "0100ABC", gameBananaID: 42, at: Date(timeIntervalSince1970: 100))
         let loaded = try XCTUnwrap(snapshots.load(titleID: "0100abc"))
         XCTAssertEqual(loaded.titleID, "0100ABC", "the cover is matched to your games by title ID")
@@ -215,6 +216,7 @@ final class ModCatalogSnapshotTests: XCTestCase {
         XCTAssertEqual(mod.files, [file])
         XCTAssertEqual(mod.category, "Skins")
         XCTAssertEqual(mod.added, Date(timeIntervalSince1970: 4))
+        XCTAssertEqual(mod.requirements, [GameBananaRequirement(name: "SMO v1.3", isOptional: true)])
         XCTAssertNil(mod.avatarURL, "only GameBanana links survive the disk")
         XCTAssertEqual(mod.images, [URL(string: "https://images.gamebanana.com/1.jpg")!])
         XCTAssertNil(snapshots.load(titleID: "0100FFF"))
