@@ -109,8 +109,7 @@ struct SwitchBoxArtCover: View {
         if let own = GameIconProvider.squareArt(for: game) {
             icon = own
         } else if let titleId = game.titleId,
-                  let url = await artwork.fetch(titleID: titleId, remoteURL: URL(string: "https://api.nlib.cc/nx/\(titleId)/icon"),
-                                                kind: .square) {
+                  let url = await artwork.automaticIcon(titleID: titleId, name: game.name) {
             icon = await GameArtLoader.decode(at: url, maxPixelSize: 512)
         }
         guard !Task.isCancelled, game.titleId != nil else { return }

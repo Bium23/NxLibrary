@@ -189,6 +189,7 @@ public enum PortingFailureClassifier {
         ("games.noTitleID", .noTitleID, "no (NSP with a readable title ID|game package with a readable content meta) in ",
          "no game package with a readable content meta in "),
         ("disk.low", .diskFull, "less than [0-9]+ GB free on the volume of", "GB free on the volume of"),
+        ("disk.app", .diskFull, #"the app needs [0-9.]+ GB on the volume of"#, "the app needs "),
         ("disk.full", .diskFull, "No space left on device", nil),
         ("icloud.detritus", .cloudFolder, "resource fork, Finder information, or similar detritus not allowed", nil),
     ]
@@ -247,8 +248,16 @@ public enum PortingFailureClassifier {
                                         options: .regularExpression) else { return nil }
             return String(message[range].dropFirst(prefix.count))
         case .diskFull:
-            guard let r = log.range(of: "less than [0-9]+ GB free", options: .regularExpression) else { return nil }
-            return log[r].split(separator: " ").dropFirst(2).first.map(String.init)
+            if let r = log.range(of: "less than [0-9]+ GB free", options: .regularExpression) {
+                return log[r].split(separator: " ").dropFirst(2).first.map(String.init)
+            }
+            if let r = log.range(of: #"the app needs [0-9.]+ GB on the volume of"#, options: .regularExpression) {
+                let parts = log[r].split(separator: " ")
+                if parts.count >= 4, let num = Double(parts[3]) {
+                    return String(Int(ceil(num + 1.0)))
+                }
+            }
+            return nil
         case .noTitleID:
             guard let r = log.range(of: #"no (NSP with a readable title ID|game package with a readable content meta) in [^"\n]+"#,
                                     options: .regularExpression),

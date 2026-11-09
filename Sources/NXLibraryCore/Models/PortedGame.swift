@@ -28,6 +28,9 @@ public struct PortedGame: Identifiable, Codable, Equatable {
     /// The player chose to show NX Library's Icon pick as the game app's icon in Finder and the Dock
     /// (`AppIconWriter`); written again after every build.
     public var usesPickedAppIcon = false
+    /// Explicit scope chosen in Change artwork: false means only in NX Library, even without an original app icon.
+    /// Nil preserves the behavior of libraries saved before 0.1.4.2 until the player makes a choice.
+    public var appIconOnMac: Bool? = nil
     /// The app's icon still has to be written or put back: the game was running. Done when it quits.
     public var appIconPending = false
 
@@ -77,7 +80,25 @@ public struct PortedGame: Identifiable, Codable, Equatable {
         portingFailureReason = try c.decodeIfPresent(PortingFailureReason.self, forKey: .portingFailureReason)
         pendingInstall = try c.decodeIfPresent(PendingInstall.self, forKey: .pendingInstall)
         usesPickedAppIcon = try c.decodeIfPresent(Bool.self, forKey: .usesPickedAppIcon) ?? false
+        appIconOnMac = try c.decodeIfPresent(Bool.self, forKey: .appIconOnMac)
         appIconPending = try c.decodeIfPresent(Bool.self, forKey: .appIconPending) ?? false
+    }
+
+    /// Shared by reconciliation and the icon writer, so an explicit launcher-only choice survives scans and builds.
+    public func wantsPickedAppIcon(hasPick: Bool, hasOriginalIcon: Bool) -> Bool {
+        hasPick && (appIconOnMac ?? (usesPickedAppIcon || !hasOriginalIcon))
+    }
+
+    /// Filling a genuinely missing app icon is allowed by default, but never after an explicit Only here choice.
+    public func wantsAutomaticAppIcon(hasPick: Bool, hasOriginalIcon: Bool) -> Bool {
+        !hasPick && !hasOriginalIcon && appIconOnMac != false
+    }
+
+    /// Selecting the image source does not change where the image is shown.
+    public mutating func useAutomaticAppIcon() {
+        if appIconOnMac == nil && usesPickedAppIcon { appIconOnMac = true }
+        usesPickedAppIcon = false
+        appIconPending = true
     }
 
     /// The bundle id the built app runs as: the stored one, else nxnative's default

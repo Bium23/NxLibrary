@@ -23,6 +23,7 @@ final class PortingFailureReasonTests: XCTestCase {
         ("games.several", .severalGames, "[RED] more than one game in the folder, keep one game per folder: 0100000000010000, 0100000000020000"),
         ("games.noTitleID", .noTitleID, "[RED] no game package with a readable content meta in /Users/x/Games/Foo"),
         ("disk.low", .diskFull, "[RED] less than 40 GB free on the volume of /Users/x/work"),
+        ("disk.app", .diskFull, "the app needs 12.4 GB on the volume of /Users/x/Temp (no APFS clones from the build there) and 13.1 GB are free"),
         ("disk.full", .diskFull, "OSError: [Errno 28] No space left on device"),
         ("icloud.detritus", .cloudFolder, "x.app: resource fork, Finder information, or similar detritus not allowed"),
     ]
@@ -101,6 +102,24 @@ final class PortingFailureReasonTests: XCTestCase {
 
     func testDiskFullDetailIsGB() {
         XCTAssertEqual(classify("[RED] less than 40 GB free on the volume of /x").detail, "40")
+    }
+
+    func testPackAppDiskFullDetailIsRoundedGB() {
+        let log = """
+        the app needs 12.4 GB on the volume of /Users/x/Temp (no APFS clones from the build there) and 13.1 GB are free
+        [RED] pack_app.py exit code 1
+        """
+        let reason = classify(log, keys: "/unreadable/prod.keys", readable: false)
+        XCTAssertEqual(reason.kind, .diskFull)
+        XCTAssertEqual(reason.detail, "14")
+        XCTAssertEqual(reason.what(game: "Ocarina of Time"), "The porting needs at least 14 GB free on the work volume.")
+        XCTAssertEqual(reason.action, .openStorage)
+    }
+
+    func testSourcesWithoutKeysDoNotFallBackToKeysOnUnrecognizedFailure() {
+        let log = "some unknown crash or error"
+        let reason = classify(log, keys: "")
+        XCTAssertEqual(reason.kind, .unknown)
     }
 
     func testNoTitleIDDetailIsFolder() {
@@ -248,7 +267,7 @@ final class PortingFailureEngineTests: XCTestCase {
     private func gitGrep(_ fragment: String, at commit: String, in repo: URL) -> Bool {
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/usr/bin/git")
-        p.arguments = ["-C", repo.path, "grep", "-q", "-F", fragment, commit, "--", "scripts", "dm/gfx/tools", "dm/tools"]
+        p.arguments = ["-C", repo.path, "grep", "-q", "-F", fragment, commit, "--", "scripts", "dm/gfx/tools", "dm/tools", "dm/mac"]
         p.standardOutput = FileHandle.nullDevice
         p.standardError = FileHandle.nullDevice
         do { try p.run() } catch { return false }

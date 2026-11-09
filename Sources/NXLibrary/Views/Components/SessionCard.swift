@@ -108,6 +108,8 @@ struct SessionCardView: View {
             }
             .padding(.leading, canvas.u(20))
             .padding(.trailing, canvas.u(18))
+            // Words wider than the card are cut at its right edge, never pushed past its left one.
+            .frame(width: canvas.u(640), alignment: .leading)
         }
         .frame(width: canvas.u(640), height: canvas.u(128))
         .background(Color(hex: ThemeStore.shared.palette.glass, opacity: 0.92))
@@ -117,7 +119,7 @@ struct SessionCardView: View {
         .shadow(color: .black.opacity(0.45), radius: canvas.u(18))
         .environment(\.seleneMinimumFont, 12)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Session ended, \(summary.gameName): \(summary.thisSession) this session, \(summary.total) total")
+        .accessibilityLabel("Session ended, \(summary.gameName): \(summary.thisSession.replacingOccurrences(of: "<1m", with: "under a minute")) this session, \(summary.total.replacingOccurrences(of: "<1m", with: "under a minute")) total")
         .task(id: summary.id) { await loadArt() }
     }
 

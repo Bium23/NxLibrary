@@ -185,6 +185,16 @@ final class AppUpdateTests: XCTestCase {
         XCTAssertNil(AppUpdate.neededXcode(r, installedXcode: "27.2.1"))
     }
 
+    /// The app reads the installed Xcode as `xcodebuild -version`'s first line, "Xcode 27.2": the word before
+    /// the number must not make a current Xcode look older (0.1.4 asked to update Xcode 27.2 to 27.2).
+    func testRequirementNotesReadXcodebuildsOwnLine() {
+        let r = AppUpdate.Requirements(minimumXcode: "27.2", engineCommit: nil)
+        XCTAssertNil(AppUpdate.neededXcode(r, installedXcode: "Xcode 27.2"))
+        XCTAssertNil(AppUpdate.neededXcode(r, installedXcode: "Xcode 27.3"))
+        XCTAssertEqual(AppUpdate.neededXcode(r, installedXcode: "Xcode 27.1"), "27.2")
+        XCTAssertEqual(AppUpdate.requirementNotes(r, installedXcode: "Xcode 27.2", currentEngine: "x"), [])
+    }
+
     /// scripts/release.sh reads these two values from the sources with sed; a reformat must not break it.
     func testReleaseScriptCanReadTheRequirements() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()

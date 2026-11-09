@@ -140,6 +140,13 @@ public struct LoadedArtwork: Equatable, Sendable {
     public let pixelWidth: Int
     public let pixelHeight: Int
 
+    public init(candidate: ArtworkCandidate, data: Data, pixelWidth: Int, pixelHeight: Int) {
+        self.candidate = candidate
+        self.data = data
+        self.pixelWidth = pixelWidth
+        self.pixelHeight = pixelHeight
+    }
+
     /// The size of the image a choice saves: the full file's when the source states it, not the preview's.
     public var resolution: String {
         if let width = candidate.width, let height = candidate.height, width > 0, height > 0 { return "\(width) × \(height)" }

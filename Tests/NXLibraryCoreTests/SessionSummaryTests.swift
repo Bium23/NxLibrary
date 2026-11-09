@@ -33,8 +33,9 @@ final class SessionSummaryTests: XCTestCase {
 
     func testUnderAMinuteSaysSo() throws {
         let summary = try XCTUnwrap(SessionSummary(session: session(lasting: 42), game: game, total: 42))
-        XCTAssertEqual(summary.thisSession, "Less than a minute")
-        XCTAssertEqual(summary.total, "Less than a minute")
+        // As short as the other figures ("10m", "34h 5m"): the card's row has room for two of them and their labels.
+        XCTAssertEqual(summary.thisSession, "<1m")
+        XCTAssertEqual(summary.total, "<1m")
     }
 
     func testSessionsShorterThanTenSecondsShowNoCard() {

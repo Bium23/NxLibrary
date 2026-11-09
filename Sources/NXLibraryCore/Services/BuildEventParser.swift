@@ -33,7 +33,7 @@ public enum BuildEventParser {
             return wire.step.map { .step($0) }
         case "progress":
             return .progress(fraction: wire.frac ?? 0, done: wire.done,
-                             total: wire.total, unit: wire.unit, eta: wire.eta)
+                             total: wire.total, unit: wire.unit, eta: wire.eta, elapsed: wire.elapsed)
         case "stage_end":
             return .stageEnd(name: wire.name ?? "", ok: wire.ok ?? true,
                              elapsed: wire.elapsed, summary: wire.summary, warn: wire.warn ?? false)

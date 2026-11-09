@@ -23,6 +23,6 @@ public struct SessionSummary: Equatable, Identifiable {
     }
 
     static func duration(_ interval: TimeInterval) -> String {
-        interval < 60 ? "Less than a minute" : LibraryPresentation.duration(interval)
+        interval < 60 ? "<1m" : LibraryPresentation.duration(interval)
     }
 }

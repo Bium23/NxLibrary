@@ -16,6 +16,7 @@ Le otto catture fornite dall'utente il 2 novembre 2026 sono state rinominate nel
 | `Color theme.png` | [color-themes.webp](color-themes.webp) | Artwork, themes and sound: scelta della palette. |
 | `Background Static Wallpaper.png` | [static-wallpapers.webp](static-wallpapers.webp) | Artwork, themes and sound: sfondi statici. |
 | `Background Wallpaper Live .png` | [live-wallpapers.webp](live-wallpapers.webp) | Artwork, themes and sound: sfondi animati. |
+| `Mods.png` (7 novembre 2026) | [mod-store.webp](mod-store.webp) | Mods: lo store con il banner Featured e le righe. |
 
 Le copie WebP sono larghe 1920 pixel, mantengono proporzioni e contenuto delle catture e usano il profilo colore sRGB. Occupano complessivamente circa 2,3 MB, rispetto ai circa 73 MB degli originali. I metadati personali non vengono trasferiti. Le didascalie e i testi alternativi sono in inglese; ciascuna immagine ha una propria riga per preservare la leggibilità.
 

@@ -9,7 +9,11 @@ final class BuildEventParserTests: XCTestCase {
         )
         XCTAssertEqual(
             BuildEventParser.parse(#"{"ev":"progress","frac":0.5,"done":1,"total":2,"unit":"GB","eta":10}"#),
-            .progress(fraction: 0.5, done: 1, total: 2, unit: "GB", eta: 10)
+            .progress(fraction: 0.5, done: 1, total: 2, unit: "GB", eta: 10, elapsed: nil)
+        )
+        XCTAssertEqual(
+            BuildEventParser.parse(#"{"ev":"progress","frac":0.5,"done":1,"total":2,"unit":"GB","eta":10,"elapsed":4.5}"#),
+            .progress(fraction: 0.5, done: 1, total: 2, unit: "GB", eta: 10, elapsed: 4.5)
         )
     }
 

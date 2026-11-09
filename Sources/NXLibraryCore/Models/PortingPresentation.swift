@@ -17,18 +17,41 @@ public enum PortingETA {
         switch progress.phase {
         case .shaders:
             guard let eta = progress.shaderETA else { return nil }
-            if let last = lastFinishingSeconds { return "About \(minutes(eta + last)) min left" }
-            return "Shaders: about \(minutes(eta)) min"
+            if let last = lastFinishingSeconds { return "About \(duration(eta + last)) left" }
+            return "Shaders: about \(duration(eta))"
         case .finishing:
+            if let eta = progress.finishingETA { return "Pipelines: about \(duration(eta))" }
             guard let last = lastFinishingSeconds else { return "Finishing up" }
-            return "About \(minutes(max(0, last - progress.finishingElapsed))) min left"
+            return "About \(duration(max(0, last - progress.finishingElapsed))) left"
         case .preparing, .done, .failed:
             return nil
         }
     }
 
+    /// Stage time in the Porting list: seconds under a minute, m:ss under an hour, h:mm:ss from an hour on.
+    public static func elapsed(_ seconds: Double) -> String {
+        let total = max(0, Int(seconds.rounded()))
+        if total < 60 { return "\(total) s" }
+        let hours = total / 3600
+        let minutes = (total % 3600) / 60
+        let secs = total % 60
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, secs)
+        }
+        return String(format: "%d:%02d", minutes, secs)
+    }
+
     static func minutes(_ seconds: Double) -> Int {
         max(1, Int((seconds / 60).rounded()))
+    }
+
+    static func duration(_ seconds: Double) -> String {
+        let total = minutes(seconds)
+        let hours = total / 60
+        let mins = total % 60
+        if hours == 0 { return "\(mins) min" }
+        if mins == 0 { return "\(hours) hr" }
+        return "\(hours) hr \(mins) min"
     }
 }
 

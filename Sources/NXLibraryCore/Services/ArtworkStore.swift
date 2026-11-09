@@ -42,6 +42,7 @@ public struct URLSessionArtworkClient: ArtworkHTTPClient {
 public final class ArtworkStore: ObservableObject {
     public let cacheDirectory: URL
     private let client: ArtworkHTTPClient
+    private let automaticIcons: AutomaticIconResolver
     private let fileManager: FileManager
 
     public init(cacheDirectory: URL = ArtworkStore.defaultDirectory(),
@@ -49,6 +50,7 @@ public final class ArtworkStore: ObservableObject {
                 fileManager: FileManager = .default) {
         self.cacheDirectory = cacheDirectory
         self.client = client
+        self.automaticIcons = AutomaticIconResolver(directory: cacheDirectory, client: client)
         self.fileManager = fileManager
     }
 
@@ -69,6 +71,17 @@ public final class ArtworkStore: ObservableObject {
         let fallback = dir.appendingPathComponent("\(kind.rawValue).\(fallbackExt)")
         if fileManager.fileExists(atPath: fallback.path) { return fallback }
         return nil
+    }
+
+    /// Automatic icons never replace the player's artwork pick. Callers keep picks and the game's own icon first.
+    public func automaticIcon(titleID: String, name: String) async -> URL? {
+        if let cached = cachedURL(titleID: titleID, kind: .square) { return cached }
+        return await automaticIcons.resolve(titleID: titleID, name: name)
+    }
+
+    public func automaticIconSource(titleID: String) -> String? {
+        try? String(contentsOf: cacheDirectory.appendingPathComponent(Self.folderName(for: titleID.uppercased()))
+            .appendingPathComponent("square-source.txt"), encoding: .utf8)
     }
 
     public func fetch(titleID: String, remoteURL: URL?, kind: ArtworkKind) async -> URL? {
