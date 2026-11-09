@@ -2745,7 +2745,7 @@ public final class AppViewModel: ObservableObject {
             } else {
                 let reason = PortingFailureClassifier.classify(
                     log: buildLogTail(result.logURL),
-                    keysPath: keyStore.keyURL.path,
+                    keysPath: SourceSelection.requiresKeys(game.sources) ? keyStore.keyURL.path : "",
                     sourcePaths: game.sources.map(\.url.path)
                 )
                 let message = reason.what(game: game.name)
