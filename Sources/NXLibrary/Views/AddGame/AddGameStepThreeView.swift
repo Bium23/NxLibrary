@@ -130,7 +130,7 @@ struct AddGameStepThreeView: View {
                     }
                     Spacer(minLength: canvas.u(12))
                     if let elapsed = stage.elapsedSeconds {
-                        Text(elapsedText(elapsed))
+                        Text(PortingETA.elapsed(elapsed))
                             .seleneFont(14, .regular, design: .monospaced)
                             .foregroundColor(SeleneTheme.ink60)
                     }
@@ -165,17 +165,6 @@ struct AddGameStepThreeView: View {
                 .seleneFont(14, .bold)
                 .foregroundColor(PortingLogBox.softGreen)
         }
-    }
-
-    private func elapsedText(_ seconds: Double) -> String {
-        let total = Int(seconds.rounded())
-        if total < 60 { return "\(total) s" }
-        return String(format: "%d:%02d", total / 60, total % 60)
-    }
-
-    private func formatted(_ seconds: Double) -> String {
-        let total = Int(seconds.rounded())
-        return String(format: "%02d:%02d", total / 60, total % 60)
     }
 
     // MARK: - Success

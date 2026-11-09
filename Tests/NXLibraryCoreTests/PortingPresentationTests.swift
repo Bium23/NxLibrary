@@ -56,6 +56,39 @@ final class PortingPresentationTests: XCTestCase {
         XCTAssertEqual(PortingETA.text(finishing, lastFinishingSeconds: nil), "Finishing up")
     }
 
+    func testETAFormatsHoursAndMinutesWhenOverAnHour() {
+        let oneHour = progress([.stage(k: 5, n: 7, name: "Mac shaders", step: nil), .step("compiling"),
+                                .progress(fraction: 0.1, done: nil, total: nil, unit: nil, eta: 3600)])
+        XCTAssertEqual(PortingETA.text(oneHour, lastFinishingSeconds: nil), "Shaders: about 1 hr")
+
+        let longShaders = progress([.stage(k: 5, n: 7, name: "Mac shaders", step: nil), .step("compiling"),
+                                    .progress(fraction: 0.5, done: nil, total: nil, unit: nil, eta: 15165)])
+        XCTAssertEqual(PortingETA.text(longShaders, lastFinishingSeconds: nil), "Shaders: about 4 hr 13 min")
+        XCTAssertEqual(PortingETA.text(longShaders, lastFinishingSeconds: 120), "About 4 hr 15 min left")
+
+        let longFinishing = progress([.stage(k: 5, n: 7, name: "Mac shaders", step: nil),
+                                      .stageEnd(name: "Mac shaders", ok: true, elapsed: 600, summary: nil),
+                                      .stage(k: 6, n: 7, name: "Mac host", step: nil)])
+        XCTAssertEqual(PortingETA.text(longFinishing, lastFinishingSeconds: 3600), "About 1 hr left")
+        XCTAssertEqual(PortingETA.text(longFinishing, lastFinishingSeconds: 3900), "About 1 hr 5 min left")
+    }
+
+    // MARK: - Stage Elapsed Time
+
+    func testElapsedFormatsSecondsMinutesAndHours() {
+        XCTAssertEqual(PortingETA.elapsed(0), "0 s")
+        XCTAssertEqual(PortingETA.elapsed(6), "6 s")
+        XCTAssertEqual(PortingETA.elapsed(59.4), "59 s")
+        XCTAssertEqual(PortingETA.elapsed(60), "1:00")
+        XCTAssertEqual(PortingETA.elapsed(61), "1:01")
+        XCTAssertEqual(PortingETA.elapsed(397), "6:37")
+        XCTAssertEqual(PortingETA.elapsed(3599), "59:59")
+        XCTAssertEqual(PortingETA.elapsed(3600), "1:00:00")
+        XCTAssertEqual(PortingETA.elapsed(3665), "1:01:05")
+        // 252 minutes 45 seconds (15165 s) -> 4 hours 12 minutes 45 seconds
+        XCTAssertEqual(PortingETA.elapsed(15165), "4:12:45")
+    }
+
     // MARK: - Tile look
 
     func testTileFollowsThePortingPhase() {
