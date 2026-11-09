@@ -2,11 +2,21 @@
 
 User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
-## 0.1.4.2 — unreleased
+## 0.1.4.2 — 2026-11-09
 
 ### Fixed
 
 - **The session card fits after a short session.** A game played for under a minute showed "Less than a minute" twice, which pushed the card's words past its left edge. It now says **<1m**, like the other times (10m, 34h 5m).
+- **The update dialog no longer asks to update an Xcode that is current.** It read the installed Xcode as "Xcode 27.2", took it for an older version, and said "New portings need Xcode 27.2; this Mac has Xcode 27.2". The warning now appears only when Xcode really is older. The update itself was never blocked.
+- **A full disk is no longer mistaken for missing keys.** A game that runs out of space while its Mac app is packed now offers **Open Storage**. Failures on NUP files and extracted dumps no longer blame keys they do not need. Based on [@eduardomozart’s #13](https://github.com/Bium23/NxLibrary/pull/13).
+- **Play waits for the game's icon.** If its app is being signed with a new icon, **Play** shows **Preparing** and starts it when ready. **Cancel** cancels the launch while letting the icon finish safely. A failed icon update does not launch the game.
+
+### Changed
+
+- **Updated nxnative to `79741184`.** Upstream reports fewer Ocarina of Time startup and first-draw stalls, lower memory use, lighting/fog/foliage fixes, improved frame pacing and safer pipeline reuse. Rebuilt games can offer Switch 2 controllers over Bluetooth in **Game options → More settings → Controls**, and supported profiles offer 120 fps through **Frame rate**. Cloud sync avoids overwriting saves changed after launch; other fixes cover controller rumble, H.264 movies, bracketed folder names and multi-program DLC. The Metal compiler remains **32023.922**. The next rebuild updates shader data as needed; existing game apps keep their engine until rebuilt. See the [full engine review](docs/upstream-upgrades/2026-11-09-bd979ced-79741184-review.md) for per-game support and validation limits.
+- **Choose where a game icon changes.** **Change artwork → Icon → Icon location** offers **Only here** or **Use on the Mac** for every game, including Switch 2 NUPs and dumps without an original icon. **Only here** keeps the image inside NX Library and restores the original app icon (or its absence). The choice survives restarts and rebuilds; existing libraries keep their previous behavior until you make a new choice.
+- **Automatic keeps your icon location choice.** It removes the personal image and uses the game's own icon, then available Title DB artwork. An app without an original icon can use the online image when its location choice allows it. Cached artwork works offline; if no replacement is found, the old personal image is removed and the original or standard macOS icon remains. The picker and finished build log explain when no icon is available. Missing artwork does not prevent Play.
+- **Long builds are easier to follow.** Stage times count up while a stage runs and show hours beyond one hour, as do time estimates. Counters include a percentage. **Pipeline archive** reports batches the engine has confirmed ready, including reused batches, and estimates the remaining compilation when it has a measured rate. An unsupported log format leaves the stage indeterminate. Based on [@eduardomozart’s #11](https://github.com/Bium23/NxLibrary/pull/11), with pipeline tracking revised to ignore old caches and in-flight compiler files.
 
 ## 0.1.4.1 — 2026-11-07
 

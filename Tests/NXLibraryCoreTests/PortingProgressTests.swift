@@ -170,6 +170,29 @@ final class PortingProgressTests: XCTestCase {
         let progress = run(beforeShaders + [.say("removing the shader cache of other chain versions")])
         XCTAssertNil(PortingETA.text(progress, lastFinishingSeconds: nil))
     }
+
+    func testPipelineArchiveProgressAdvancesOverallAndSetsFinishingETA() {
+        var progress = run(shaders + [
+            .stageEnd(name: "Mac shaders", ok: true, elapsed: 607, summary: nil),
+            .stage(k: 6, n: 8, name: "Mac host", step: "building"),
+            .stageEnd(name: "Mac host", ok: true, elapsed: 10, summary: nil),
+            .stage(k: 7, n: 8, name: "Pipeline archive", step: "applegpu_g13g")
+        ])
+        XCTAssertEqual(progress.phase, .finishing)
+        XCTAssertEqual(progress.overall, 0.9 + 0.1 / 3, accuracy: 1e-9) // 93.3%
+        XCTAssertNil(progress.finishingETA)
+
+        // Halfway through Pipeline archive
+        progress.apply(.progress(fraction: 0.5, done: 1000, total: 2000, unit: "pipelines", eta: 3600))
+        XCTAssertEqual(progress.finishingETA, 3600)
+        // overall should be 0.9 + 0.1 * (1 + 0.5) / 3 = 0.9 + 0.05 = 0.95 (95%)
+        XCTAssertEqual(progress.overall, 0.95, accuracy: 1e-9)
+
+        // Stage ends: clears finishingETA, overall becomes 0.9 + 0.1 * 2 / 3 = 0.9666...
+        progress.apply(.stageEnd(name: "Pipeline archive", ok: true, elapsed: 120, summary: nil))
+        XCTAssertNil(progress.finishingETA)
+        XCTAssertEqual(progress.overall, 0.9 + 0.2 / 3, accuracy: 1e-9)
+    }
 }
 
 final class BuildWarningTests: XCTestCase {

@@ -180,6 +180,9 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/TargetPlatform.swift](../Sources/NXLibraryCore/Models/TargetPlatform.swift) | Definisce il target mac-app e le sue etichette per l’interfaccia. |
 | [Sources/NXLibraryCore/Models/GameRuntimeConfig.swift](../Sources/NXLibraryCore/Models/GameRuntimeConfig.swift) | Persiste opzioni per titolo, prepara Review e lingua del rebuild, mappa DM_* e unisce env.txt. |
 | [Sources/NXLibraryCore/Models/LauncherSettings.swift](../Sources/NXLibraryCore/Models/LauncherSettings.swift) | Legge launcher.json e verifica i controlli supportati, con fallback per le build precedenti. |
+| [Sources/NXLibraryCore/Models/AppIconProgress.swift](../Sources/NXLibraryCore/Models/AppIconProgress.swift) | Stati e testi della preparazione icona, con esito informativo aggiunto al log della build conclusa. |
+| [Sources/NXLibraryCore/Models/IconLaunchWait.swift](../Sources/NXLibraryCore/Models/IconLaunchWait.swift) | Conserva una richiesta Play durante la firma dell'icona e la revoca su annullamento, errore o chiusura del dialogo. |
+| [Sources/NXLibraryCore/Services/PipelineArchiveProgress.swift](../Sources/NXLibraryCore/Services/PipelineArchiveProgress.swift) | Legge il log pipeline della build corrente e conta solo i gruppi confermati pronti dal motore. |
 | [Sources/NXLibraryCore/Models/PortingProgress.swift](../Sources/NXLibraryCore/Models/PortingProgress.swift) | Aggrega eventi del motore in fasi e percentuale complessiva per la UI. |
 | [Sources/NXLibraryCore/Models/PortingPresentation.swift](../Sources/NXLibraryCore/Models/PortingPresentation.swift) | Definisce fallimento persistito, ETA, aspetto della tile e pill del porting. |
 | [Sources/NXLibraryCore/Models/PortingFailureReason.swift](../Sources/NXLibraryCore/Models/PortingFailureReason.swift) | Classifica messaggi del motore e rifiuti preliminari in motivazioni e azioni spiegabili. |
@@ -255,6 +258,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | File | Responsabilità |
 |---|---|
 | [Sources/NXLibraryCore/Models/OnlineBackgrounds.swift](../Sources/NXLibraryCore/Models/OnlineBackgrounds.swift) | Modella sorgenti e risultati e interpreta le risposte dei provider di sfondi fissi e video. |
+| [Sources/NXLibraryCore/Services/AutomaticIconResolver.swift](../Sources/NXLibraryCore/Services/AutomaticIconResolver.swift) | Risolve icone automatiche con cache, abbinamento prudente e rispetto delle restrizioni del provider. |
 | [Sources/NXLibraryCore/Services/ArtworkStore.swift](../Sources/NXLibraryCore/Services/ArtworkStore.swift) | Scarica, ridimensiona e conserva immagini e screenshot nella cache per titolo e tipo. |
 | [Sources/NXLibraryCore/Services/AppIconWriter.swift](../Sources/NXLibraryCore/Services/AppIconWriter.swift) | Scrive l’icona scelta nell’app del gioco, conserva l’originale, rifirma e verifica, e annulla tutto in caso di errore. |
 | [Sources/NXLibraryCore/Services/ArtworkPicker.swift](../Sources/NXLibraryCore/Services/ArtworkPicker.swift) | Aggrega candidati per cover, sfondo, icona e logo e conserva le scelte manuali. |
@@ -456,6 +460,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/AppUpdatePresentationTests.swift](../Tests/NXLibraryCoreTests/AppUpdatePresentationTests.swift) | Verifica che i controlli manuali non permettano sostituzioni di copie di sviluppo, in sola lettura o con una versione uguale/più recente. |
 | [Tests/NXLibraryCoreTests/ArtworkPickerFocusTests.swift](../Tests/NXLibraryCoreTests/ArtworkPickerFocusTests.swift) | Spostamenti nella griglia dei candidati e passaggi fra slot di artwork. |
 | [Tests/NXLibraryCoreTests/ArtworkPickerTests.swift](../Tests/NXLibraryCoreTests/ArtworkPickerTests.swift) | Decodifica Title DB, candidati per slot e scelte manuali. |
+| [Tests/NXLibraryCoreTests/AutomaticIconTests.swift](../Tests/NXLibraryCoreTests/AutomaticIconTests.swift) | Priorità delle fonti, ambiguità, edizioni, cache offline, immagini invalide e opt-out del sito. |
 | [Tests/NXLibraryCoreTests/ArtworkStoreTests.swift](../Tests/NXLibraryCoreTests/ArtworkStoreTests.swift) | Cache, download, immagini trasparenti, ridimensionamento e fallback. |
 | [Tests/NXLibraryCoreTests/BoxArtServiceTests.swift](../Tests/NXLibraryCoreTests/BoxArtServiceTests.swift) | Matching GameTDB, regioni e durata delle ricerche senza risultato. |
 | [Tests/NXLibraryCoreTests/BuildCommandBuilderTests.swift](../Tests/NXLibraryCoreTests/BuildCommandBuilderTests.swift) | Contratto CLI, opzioni runtime/build e propagazione dell’override Metal. |
@@ -528,6 +533,10 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/PortingFailureReasonTests.swift](../Tests/NXLibraryCoreTests/PortingFailureReasonTests.swift) | Classificazione dei fallimenti e corrispondenza con i messaggi del pin, anche da un checkout separato scelto con NX_TEST_ENGINE_REPO. |
 | [Tests/NXLibraryCoreTests/PortingNoticeTests.swift](../Tests/NXLibraryCoreTests/PortingNoticeTests.swift) | Condizioni e testi delle notifiche di esito del porting. |
 | [Tests/NXLibraryCoreTests/PortingPresentationTests.swift](../Tests/NXLibraryCoreTests/PortingPresentationTests.swift) | ETA, tile, pill e rappresentazione dei fallimenti del porting. |
+| [Tests/NXLibraryCoreTests/AppIconPreferenceTests.swift](../Tests/NXLibraryCoreTests/AppIconPreferenceTests.swift) | Ambito dell’icona: scelta esplicita, vecchie librerie, scansioni, persistenza e rebuild. |
+| [Tests/NXLibraryCoreTests/AppIconProgressTests.swift](../Tests/NXLibraryCoreTests/AppIconProgressTests.swift) | Verifica che l'esito di un'icona mancante non sovrascriva il log o segnali una build fallita. |
+| [Tests/NXLibraryCoreTests/IconLaunchWaitTests.swift](../Tests/NXLibraryCoreTests/IconLaunchWaitTests.swift) | Attesa Play: successo, errore, annullamento, gioco diverso e nuova firma in coda. |
+| [Tests/NXLibraryCoreTests/PipelineArchiveProgressTests.swift](../Tests/NXLibraryCoreTests/PipelineArchiveProgressTests.swift) | Log obsoleti, righe incomplete, cache riusata, gruppi paralleli e GPU diverse. |
 | [Tests/NXLibraryCoreTests/PortingProgressTests.swift](../Tests/NXLibraryCoreTests/PortingProgressTests.swift) | Aggregazione delle fasi, avanzamento monotono e peso degli shader. |
 | [Tests/NXLibraryCoreTests/ProdKeysLocationsTests.swift](../Tests/NXLibraryCoreTests/ProdKeysLocationsTests.swift) | Selezione e validazione dei possibili percorsi delle chiavi. |
 | [Tests/NXLibraryCoreTests/RunningGamesTests.swift](../Tests/NXLibraryCoreTests/RunningGamesTests.swift) | Associazione bundle ID, applicazioni aperte e voci della libreria. |

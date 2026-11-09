@@ -26,6 +26,9 @@ extension AppViewModel {
                 case .installed:
                     logs.append(LogEntry(level: .success, message: "Installed the new build of \(name)."))
                     library.games[index].appIconPending = true
+                    if let path = library.games[index].lastBuild?.logPath, !path.isEmpty {
+                        appIconBuildLogs[library.games[index].id] = URL(fileURLWithPath: path)
+                    }
                     if gameWithInstallFailure?.id == library.games[index].id { gameWithInstallFailure = nil }
                     if canRetryReadyInstall, lastBuildGameID == library.games[index].id {
                         buildState = .succeeded

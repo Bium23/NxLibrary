@@ -150,4 +150,30 @@ final class NXNativeGameSettingsTests: XCTestCase {
         try s.resetAll()
         XCTAssertEqual(f.store.values[domain] ?? [:], [:])
     }
+
+    func test120FPSChoiceSurvivesOtherOptionsAndLaunchMigration() throws {
+        let f = try fixture()
+        let file = f.game.url.appendingPathComponent("Contents/Resources/dm/launcher.json")
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: file)) as? [String: Any])
+        var rows = try XCTUnwrap(json["settings"] as? [[String: Any]])
+        rows.append(["env": "DM_FPS_TARGET", "kind": "choice", "section": "Game", "label": "Frame rate",
+                     "default": "60", "options": [["30", "30 fps"], ["60", "60 fps"], ["120", "120 fps"]]])
+        json["settings"] = rows
+        try JSONSerialization.data(withJSONObject: json).write(to: file)
+
+        let s = try settings(f)
+        try s.set("DM_FPS_TARGET", to: "120")
+        let before = s.runtimeConfig() // Legacy typed defaults represent both 60 and 120 as enable60FPS.
+        var changed = before
+        changed.fullscreen = !before.fullscreen
+        try s.apply(changed, changedFrom: before)
+
+        let reopened = try settings(f)
+        try reopened.migrate() // The same migration used before launching a saved-choices game.
+        XCTAssertEqual(reopened.snapshot().value("DM_FPS_TARGET"), "120")
+        XCTAssertEqual(f.store.values[domain]?["DM_FPS_TARGET"], "120")
+        let fps = try XCTUnwrap(reopened.snapshot().setting("DM_FPS_TARGET"))
+        XCTAssertEqual(GameSettingValues.label(fps, "120"), "120 fps")
+        XCTAssertEqual(GameSettingValues.stepped(fps, from: "60", by: 1), "120")
+    }
 }

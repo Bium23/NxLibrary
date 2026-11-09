@@ -18,11 +18,21 @@ public final class AppViewModel: ObservableObject {
     /// Games whose app icon is being written (`AppViewModel+AppIcon`), and those asked again meanwhile.
     var appIconsInFlight = Set<UUID>()
     var appIconRerun = Set<UUID>()
+    /// Finished build logs waiting for their separate icon preparation result.
+    var appIconBuildLogs: [UUID: URL] = [:]
+    var iconLaunchWait = IconLaunchWait()
     /// The last app icon change per game, for Change artwork's status line.
     @Published var appIconProgress: [UUID: AppIconProgress] = [:]
     let saveGate = SaveOperationGate()
     let saveQueue = DispatchQueue(label: "local.nxlibrary.saves", qos: .userInitiated)
-    @Published var settingsNotice: SettingsNotice?
+    @Published var settingsNotice: SettingsNotice? {
+        didSet {
+            if let waitingGame = iconLaunchWait.gameID, settingsNotice?.id != iconLaunchWait.noticeID {
+                iconLaunchWait.cancel()
+                if launchingGameId == waitingGame { launchingGameId = nil }
+            }
+        }
+    }
     @Published var settingsNoticeFocus = 0
     /// A SteamGridDB API key is saved (Settings → Look → SteamGridDB), so Change artwork searches it.
     @Published var hasSteamGridDBKey = SteamGridDBKey().load() != nil
@@ -440,7 +450,7 @@ public final class AppViewModel: ObservableObject {
         .resolve(runtime: .locate(), repo: URL(fileURLWithPath: nxnativePath))
     }
 
-    public let pinnedEngineCommit = "bd979ced3ae6bad60bf86429a71d172297d93471"
+    public let pinnedEngineCommit = "79741184af1558fa1ada0f61741eeecbd615b3f6"
     private let core = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/NXLibrary")
     lazy var libraryStore = LibraryStore(directory: core)
@@ -461,6 +471,11 @@ public final class AppViewModel: ObservableObject {
     private var environmentCheckGeneration = UUID()
     private var buildStartedAt: Date?
     private var buildTempDirectory: URL?
+    private var stageElapsedTimer: Timer?
+    private var currentStageStartedAt: Date?
+    private var currentBuildCacheURL: URL?
+    private var pipelinePollGeneration = UUID()
+    private var isPollingPipelineArchive = false
     
     public init(settingsStore: AppSettingsStore = AppSettingsStore()) {
         self.settingsStore = settingsStore
@@ -1227,14 +1242,13 @@ public final class AppViewModel: ObservableObject {
             return
         }
         guard savesPermitPlay(game) else { return }
+        // Installing a waiting build can itself start an icon update: check after installation too.
+        let game = installingPendingBuild(of: game)
         // The app is being signed again with a new icon: starting it now could read a half-written bundle.
         guard !appIconsInFlight.contains(game.id) else {
-            alertMessage = "\(game.name)'s app icon is being updated. Play again in a moment."
-            SoundEffectService.shared.play(.error)
+            waitForAppIconBeforeLaunching(game)
             return
         }
-        // A build that waited for the game to quit goes in first.
-        let game = installingPendingBuild(of: game)
         if !FileManager.default.fileExists(atPath: game.url.path),
            game.isPlayableLocally || game.status == .appMissing {
             let reason = GameUnavailableReason.appMissing
@@ -2501,9 +2515,12 @@ public final class AppViewModel: ObservableObject {
         )
         lastPortingCommand = [command.executable.path] + command.arguments
 
+        stopStageElapsedTimer()
         buildStartedAt = Date()
         buildTempDirectory = tempRoot
         buildLogURL = logURL
+        currentBuildCacheURL = workspace.buildCache
+        isPollingPipelineArchive = false
         buildWizardStep = 3
         isBuilding = true
         isCancellingBuild = false
@@ -2557,6 +2574,7 @@ public final class AppViewModel: ObservableObject {
 
     public func cancelBuild() {
         guard isBuilding, let buildService else { return }
+        stopStageElapsedTimer()
         isCancellingBuild = true
         currentStageName = "Cancelling build..."
         logs.append(LogEntry(level: .warning, message: "Cancelling build..."))
@@ -2601,6 +2619,10 @@ public final class AppViewModel: ObservableObject {
         portingProgress?.apply(event)
         switch event {
         case .stage(let k, let n, let name, let step):
+            let now = Date()
+            pipelinePollGeneration = UUID()
+            isPollingPipelineArchive = false
+            currentStageStartedAt = now
             currentStageName = name
             stageIndex = k
             totalStages = n
@@ -2612,10 +2634,15 @@ public final class AppViewModel: ObservableObject {
             if let index = buildStages.firstIndex(where: { $0.id == k }) {
                 buildStages[index].isRunning = true
                 buildStages[index].step = step ?? ""
+                if buildStages[index].elapsedSeconds == nil {
+                    buildStages[index].elapsedSeconds = 0
+                }
             } else {
                 buildStages.append(BuildStageItem(id: k, name: name,
-                                                  step: step ?? "", isRunning: true))
+                                                  step: step ?? "", isRunning: true,
+                                                  elapsedSeconds: 0))
             }
+            startStageElapsedTimerIfNeeded()
             if let step, !step.isEmpty { currentStepName = step }
             logs.append(LogEntry(level: .step, message: "[\(k)/\(n)] \(name)"))
 
@@ -2626,13 +2653,19 @@ public final class AppViewModel: ObservableObject {
             }
             logs.append(LogEntry(level: .info, message: "↳ \(step)"))
 
-        case .progress(let fraction, let done, let total, let unit, let eta):
+        case .progress(let fraction, let done, let total, let unit, let eta, let elapsed):
             progressFraction = min(max(fraction, 0), 1)
             etaSeconds = eta
+            if let elapsed,
+               let index = buildStages.firstIndex(where: { $0.id == stageIndex && $0.isRunning }) {
+                buildStages[index].elapsedSeconds = elapsed
+                currentStageStartedAt = Date().addingTimeInterval(-elapsed)
+            }
             if let done, let total, total > 0 {
                 if let unit, !unit.isEmpty,
                    unit.lowercased() != "b", unit.lowercased() != "bytes" {
-                    currentStepName = "\(Self.formatAmount(done)) / \(Self.formatAmount(total)) \(unit)"
+                    let percent = Int((min(1, max(0, done / total)) * 100).rounded(.down))
+                    currentStepName = "\(Self.formatAmount(done)) / \(Self.formatAmount(total)) \(unit) (\(percent)%)"
                 } else {
                     let doneText = ByteCountFormatter.string(
                         fromByteCount: Int64(done), countStyle: .file)
@@ -2643,6 +2676,8 @@ public final class AppViewModel: ObservableObject {
             }
 
         case .stageEnd(let name, let ok, let elapsed, let summary, let warn):
+            pipelinePollGeneration = UUID()
+            isPollingPipelineArchive = false
             let warned = ok && warn
             if let index = buildStages.firstIndex(where: { $0.name == name })
                 ?? buildStages.firstIndex(where: { $0.isRunning }) {
@@ -2650,7 +2685,7 @@ public final class AppViewModel: ObservableObject {
                 buildStages[index].isCompleted = ok
                 buildStages[index].isFailed = !ok
                 buildStages[index].hasWarning = warned
-                buildStages[index].elapsedSeconds = elapsed
+                buildStages[index].elapsedSeconds = elapsed ?? buildStages[index].elapsedSeconds
                 buildStages[index].summary = summary
             }
             logs.append(LogEntry(
@@ -2669,8 +2704,54 @@ public final class AppViewModel: ObservableObject {
         }
     }
 
+    private func startStageElapsedTimerIfNeeded() {
+        guard !isCancellingBuild, stageElapsedTimer == nil else { return }
+        let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in self?.tickStageElapsed() }
+        stageElapsedTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
+    private func stopStageElapsedTimer() {
+        pipelinePollGeneration = UUID()
+        stageElapsedTimer?.invalidate()
+        stageElapsedTimer = nil
+        currentStageStartedAt = nil
+        isPollingPipelineArchive = false
+    }
+
+    private func tickStageElapsed() {
+        guard isBuilding, !isCancellingBuild, let started = currentStageStartedAt,
+              let index = buildStages.firstIndex(where: { $0.id == stageIndex && $0.isRunning }) else { return }
+        let now = Date()
+        let elapsed = max(0, now.timeIntervalSince(started))
+        buildStages[index].elapsedSeconds = elapsed
+
+        if currentStageName == PortingProgress.pipelineArchiveStageName,
+           let cacheURL = currentBuildCacheURL,
+           !isPollingPipelineArchive {
+            isPollingPipelineArchive = true
+            let logURL = cacheURL.appendingPathComponent("logs/pso_offline_mac.log")
+            let generation = pipelinePollGeneration
+            let architectures = buildStages[index].step.split(separator: " ").first?
+                .split(separator: ",").map { $0.hasPrefix("applegpu_") ? String($0) : "applegpu_" + $0 } ?? []
+            DispatchQueue.global(qos: .utility).async { [weak self] in
+                let event = PipelineArchiveProgress().poll(logURL: logURL, architectures: architectures,
+                                                           stageStartedAt: started, now: Date())
+                DispatchQueue.main.async {
+                    guard let self, self.pipelinePollGeneration == generation else { return }
+                    self.isPollingPipelineArchive = false
+                    if let event, self.isBuilding, !self.isCancellingBuild, self.currentStageName == PortingProgress.pipelineArchiveStageName {
+                        self.handleBuildEvent(event)
+                    }
+                }
+            }
+        }
+    }
+
     private func finishBuild(_ result: BuildResult, gameID: UUID,
                              finalApp: URL, tempDir: URL) {
+        stopStageElapsedTimer()
+        currentBuildCacheURL = nil
         portingProgress?.finish(success: result.success)
         isBuilding = false
         isCancellingBuild = false
@@ -2745,7 +2826,7 @@ public final class AppViewModel: ObservableObject {
             } else {
                 let reason = PortingFailureClassifier.classify(
                     log: buildLogTail(result.logURL),
-                    keysPath: keyStore.keyURL.path,
+                    keysPath: SourceSelection.requiresKeys(game.sources) ? keyStore.keyURL.path : "",
                     sourcePaths: game.sources.map(\.url.path)
                 )
                 let message = reason.what(game: game.name)
@@ -2779,6 +2860,7 @@ public final class AppViewModel: ObservableObject {
                 $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
             }
             if result.success && saved {
+                if result.heldApp == nil { appIconBuildLogs[gameID] = result.logURL }
                 loadLibrary()
                 syncPendingAppIcons()
             }

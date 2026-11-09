@@ -70,12 +70,32 @@ public struct AppIconWriter {
             && fileManager.fileExists(atPath: backups.appendingPathComponent(key).appendingPathComponent("original.icns").path)
     }
 
+    /// The game's image for Automatic previews, including the backup while a personal image is applied.
+    public func originalIconURL(_ app: URL, key: String) -> URL? {
+        if hasOwnIcon(app), let info = try? plist(app) { return iconFile(app, info: info) }
+        let saved = backups.appendingPathComponent(key).appendingPathComponent("original.icns")
+        return showsWrittenIcon(app) && fileManager.fileExists(atPath: saved.path) ? saved : nil
+    }
+
     /// The app shows an icon NX Library wrote.
     public func showsWrittenIcon(_ app: URL) -> Bool {
         (try? plist(app))?[Self.markKey] as? Bool == true
     }
 
     // MARK: - Writing
+
+    /// Reconcile a resolved image, including the absence of a replacement after removing a personal pick.
+    /// Missing artwork restores the original/generic icon instead of leaving the old pick behind.
+    @discardableResult
+    public func update(image: Data?, app: URL, key: String) throws -> Bool {
+        if let image {
+            try apply(image: image, to: app, key: key)
+            return true
+        }
+        guard showsWrittenIcon(app) else { return false }
+        try restore(app, key: key)
+        return true
+    }
 
     /// Writes `image` (any format ImageIO reads; square art) as the app's icon. Slow for a large game: signing
     /// hashes the whole bundle, so call it off the main thread.

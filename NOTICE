@@ -126,3 +126,11 @@ The full licence texts ship in Runtime/licenses/.
 
 The relinking approach in scripts/bundle_runtime.sh and scripts/relink_macho.py
 follows LumaNX's scripts/bundle_runtime.py (https://github.com/Xc1Ym/LumaNX, MIT).
+
+--------------------------------------------------------------------------------
+Optional online artwork source: Switch Icon Showdown
+https://www.switchiconshowdown.com/
+Images are fetched only at runtime when source access permits, attributed in the
+artwork picker, and are not distributed with NX Library. Artwork rights remain
+with their respective owners. The Swift resolver is an independent implementation;
+no source from the GPL-licensed Fritchii icon_search.cpp is included.

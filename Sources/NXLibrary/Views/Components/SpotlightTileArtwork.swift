@@ -68,12 +68,7 @@ struct SpotlightTileArtwork: View {
 
     private func loadIcon() async -> NSImage? {
         guard let titleID = game.titleId, !titleID.isEmpty else { return nil }
-        var url = artwork.cachedURL(titleID: titleID, kind: .square)
-        if url == nil {
-            url = await artwork.fetch(titleID: titleID, remoteURL: URL(string: "https://api.nlib.cc/nx/\(titleID)/icon"),
-                                      kind: .square)
-        }
-        guard let url else { return nil }
+        guard let url = await artwork.automaticIcon(titleID: titleID, name: game.name) else { return nil }
         return await GameArtLoader.decode(at: url, maxPixelSize: 512)
     }
 }

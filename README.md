@@ -41,9 +41,9 @@ NX-DEMO:END -->
 ### <img src="https://img.shields.io/badge/new-E8833A?style=flat" alt="New" height="20" align="absmiddle"> Latest highlights
 
 - **Mods in a few clicks.** A store of GameBanana mods that work with your games, by category and by game. Press **Install** and the mod is on at the next launch, with no rebuild. Mods you already have work too: drop them in, turn them on, choose their order.
-- **Ocarina of Time, as it should look.** The newest engine clears its fog, lighting and foliage glitches and restores its paintings' colours. Pikmin 4 runs at 60 fps, up to 120 on the Mac.
+- **A lighter, smoother Ocarina of Time.** The updated engine reduces repeated startup work and first-draw stalls, uses less memory and fixes lighting and fog. Supported games offer up to 120 fps after rebuilding.
 - **A recap when you stop playing.** Quit a game and you are back in your library, with a card showing how long you played this time and in total.
-- **Your icon in the Dock.** The icon you pick for a game shows in Finder and the Dock too, and stays after a rebuild.
+- **Your icon in the Dock.** Choose whether a game icon stays inside NX Library or also appears in Finder and the Dock, even after a rebuild.
 - **Builds on your external drive.** Keep your games on an external drive and the whole build stays there, so the Mac's own disk needs no free space.
 
 Every release is in the [changelog](CHANGELOG.md).
@@ -70,7 +70,7 @@ Game files, keys and firmware are not provided. See [Legal and third-party notic
 
 Automated checks cover the application code, publication inputs, compilation and development-app packaging. They do not certify game compatibility. Changes are recorded in the [changelog](CHANGELOG.md), and the current checks are available under [Actions](https://github.com/Bium23/NxLibrary/actions/workflows/ci.yml).
 
-The engine is pinned to `bd979ced`, with Ocarina of Time (Switch 2) fixes, Pikmin 4 at 60 fps, two identical USB controllers as two players and package reading by content, using Xcode 27.2 / Metal 32023.922. See the [engine upgrade notes](docs/upstream-upgrades/README.md).
+The engine is pinned to `79741184`, with Ocarina of Time startup/memory/rendering improvements, Switch 2 Bluetooth controller support in rebuilt games, updated frame-rate profiles and cloud-save race protection, using Xcode 27.2 / Metal 32023.922. See the [engine upgrade notes](docs/upstream-upgrades/README.md).
 
 ## Getting started
 
@@ -236,7 +236,7 @@ Mods apply at the next launch, without a rebuild. The engine reads file mods onl
 
 ### Artwork, themes and sound
 
-- **Game Options → Edit details** changes one game's artwork or metadata. Manual artwork choices take priority over automatic images. The Icon you choose in **Change artwork** also shows in Finder and the Dock for a game app without its own icon; for one with its own, NX Library asks first. **Automatic** brings back the game's icon.
+- **Game Options → Edit details** changes one game's artwork or metadata. Manual artwork choices take priority over automatic images. After choosing an Icon in **Change artwork**, choose **Only here** to keep it inside NX Library or **Use on the Mac** to show it in Finder and the Dock too. This choice is available for every game, including apps with no original icon, and survives restarts and rebuilds. **Only here** restores the original app icon (or its absence) if a custom one was already applied. **Automatic** removes the personal image and uses the game's own icon, then available online artwork, while keeping your location choice. On the Icon tab, **Icon location** changes **Only here** / **Use on the Mac** at any time, including with Automatic selected. If no image is found, the app keeps the standard macOS icon and remains playable; Change artwork explains that no icon is available. The finished build log records the separate icon result.
 - **Menu → Theme** chooses palettes and wallpapers. Background choices include local images, muted looping videos and optional online sources; source credits appear in the picker.
 - **Settings → Look** controls wallpaper placement, sizing, brightness, game backgrounds, Reduce Motion and the Color/Monochrome app icon.
 - **Settings → Sound & music** controls interface cues and volume. Four interface sounds are bundled; additional sounds and wallpapers can be imported from a Selene theme folder you own.
@@ -293,7 +293,7 @@ Before reporting a problem, review copied diagnostics and remove anything person
 ### Compatibility and limitations
 
 - NX Library uses a manually pinned engine and checks its commit, working tree, CLI contract and Metal compiler before new builds. It does not follow upstream `main` automatically. **Settings → Engine → Newest engine** lets you choose `main` yourself before NX Library has tested it: an orange dot marks it, builds are recorded as untested, **Update** moves to a newer `main` when there is one, **Back to tested** returns to the pinned engine, and it is not offered when `main` needs a different Metal compiler.
-- The current engine is `bd979ced` and certifies Metal `32023.922`. **Build anyway with an untested toolchain** requires explicit confirmation and marks the resulting build as untested. A successful launch does not turn it into a certified combination.
+- The current engine is `79741184` and certifies Metal `32023.922`. **Build anyway with an untested toolchain** requires explicit confirmation and marks the resulting build as untested. A successful launch does not turn it into a certified combination.
 - Game compatibility depends on nxnative, the game version and the toolchain.
 - Output follows the window/display; native 1440p/4K internal rendering is not supported. Render scale is 50–100% where the build supports it. MetalFX is spatial upscaling.
 - Builds run one at a time. iOS/IPA output, automatic engine updates and notarisation are not currently provided.

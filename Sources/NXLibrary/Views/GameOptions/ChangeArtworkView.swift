@@ -35,6 +35,8 @@ struct ChangeArtworkView: View {
     /// Everything the online sources have for this game, every slot, looked up once.
     @State private var online: [ArtworkCandidate]?
     @State private var pickPreview: NSImage?
+    @State private var automaticIconPreview: NSImage?
+    @State private var automaticIconChecked = false
     @State private var message: String?
     @State private var keyMonitor: Any?
 
@@ -51,8 +53,9 @@ struct ChangeArtworkView: View {
     @State private var browseItems: [ArtworkSlot: [Found]] = [:]
     @State private var browseLoading: Set<ArtworkSlot> = []
     @State private var downloading = false
-    /// After an Icon pick for a game whose app has an icon of its own: show the pick on the app too?
+    /// Image source and destination are independent; the same destination dialog is available for Automatic.
     @State private var askAppIcon = false
+    @State private var editingIconLocation = false
     @State private var appIconFocus: SeleneConfirmButton = .confirm
     /// The main grid's focus, restored on leaving a source.
     @State private var mainFocus = 0
@@ -68,7 +71,7 @@ struct ChangeArtworkView: View {
     }
 
     enum Tile: Equatable {
-        case automatic, yourPick, art(Found), browse(ArtworkBrowseSource), file
+        case automatic, yourPick, iconLocation, art(Found), browse(ArtworkBrowseSource), file
     }
 
     private var titleKey: String { game.titleId ?? game.uniqueKey }
@@ -84,7 +87,7 @@ struct ChangeArtworkView: View {
         if browsing != nil { return (browseItems[slot] ?? []).map(Tile.art) }
         // The sources to browse come right after Automatic (and Your pick), so a search is one move away and never
         // waits for the found images to load; From file… ends the grid.
-        return [.automatic] + (hasPick ? [.yourPick] : []) + ArtworkBrowseSource.allCases.map(Tile.browse)
+        return [.automatic] + (hasPick ? [.yourPick] : []) + (slot == .icon ? [.iconLocation] : []) + ArtworkBrowseSource.allCases.map(Tile.browse)
             + (found[slot] ?? []).map(Tile.art) + [.file]
     }
 
@@ -165,11 +168,12 @@ struct ChangeArtworkView: View {
             }
         }
         .task(id: "\(slot.rawValue)|\(picks.revision)") { await loadPickPreview() }
+        .task(id: "icon|\(slot.rawValue)|\(picks.revision)") { await loadAutomaticIcon() }
         .overlay {
             if askAppIcon {
                 ZStack {
                     SeleneTheme.scrim45.ignoresSafeArea()
-                    SeleneConfirmDialog(title: "Use it for the app too?",
+                    SeleneConfirmDialog(title: "Where should the icon appear?",
                                         message: appIconMessage,
                                         confirmTitle: "Use on the Mac",
                                         cancelTitle: "Only here",
@@ -185,7 +189,7 @@ struct ChangeArtworkView: View {
 
     private var appIconMessage: String {
         let running = RunningGameMonitor.runningApplication(for: game) != nil
-        return "\(game.name) shows it in Finder and the Dock, and keeps it after a rebuild. Automatic brings back the game's own icon."
+        return "Only here changes the image inside NX Library. Use on the Mac also shows it in Finder and the Dock. Automatic uses the game's own icon, then an online image if available. Changing the image keeps this location choice."
             + (running ? " It changes when the game quits." : " A large game takes about a minute.")
     }
 
@@ -195,15 +199,12 @@ struct ChangeArtworkView: View {
         viewModel.setUsesPickedAppIcon(use, for: game)
     }
 
-    /// An Icon pick changes the game app's icon too: at once when the app has none of its own, after asking otherwise.
+    /// Ask for every game, including NUPs, dumps and games not built yet.
     private func iconPicked() {
         guard slot == .icon else { return }
-        if viewModel.shouldAskAboutAppIcon(game) {
-            appIconFocus = .confirm
-            askAppIcon = true
-        } else {
-            viewModel.appIconPickChanged(for: game, removed: false)
-        }
+        editingIconLocation = false
+        appIconFocus = viewModel.usesIconOnMac(for: game) ? .confirm : .cancel
+        askAppIcon = true
     }
 
     private var rightHints: [HintItem] {
@@ -274,12 +275,19 @@ struct ChangeArtworkView: View {
 
     /// On the Icon tab, how the game app's own icon change stands: signing a large app takes about a minute.
     private var appIconStatus: String? {
-        guard slot == .icon, let progress = viewModel.appIconProgress[game.id] else { return nil }
-        switch progress {
-        case .updating: return "Updating the app icon in Finder and the Dock… about a minute for a large game"
-        case .updated: return "App icon updated in Finder and the Dock"
-        case .failed(let reason): return "The app icon was not changed: \(reason)"
+        guard slot == .icon else { return nil }
+        let progress = viewModel.appIconProgress[game.id]
+        if let progress {
+            switch progress {
+            case .searching, .updating, .failed: return progress.message
+            default: break
+            }
         }
+        if !hasPick {
+            if !automaticIconChecked { return AppIconProgress.searching.message }
+            if automaticIconPreview == nil { return AppIconProgress.unavailable.message }
+        }
+        return progress == .unavailable ? nil : progress?.message
     }
 
     private func browseStatus(_ source: ArtworkBrowseSource) -> String {
@@ -390,7 +398,10 @@ struct ChangeArtworkView: View {
     private func preview(_ tile: Tile, size: CGSize) -> some View {
         switch tile {
         case .automatic:
-            glyphFace(.restore)
+            if slot == .icon, let automaticIconPreview { image(automaticIconPreview) }
+            else { glyphFace(.restore) }
+        case .iconLocation:
+            glyphFace(.settings)
         case .file:
             glyphFace(.folder)
         case .browse:
@@ -423,11 +434,13 @@ struct ChangeArtworkView: View {
             switch slot {
             case .cover: return ("Automatic", "GameTDB, or a composed cover")
             case .background: return ("Automatic", "The game's own art, then Title DB")
-            case .icon: return ("Automatic", "The game's own icon")
+            case .icon: return ("Automatic", "The game's own icon, then Title DB")
             case .logo: return ("Automatic", "The store logo, then Steam")
             }
         case .yourPick:
             return ("Your pick", "Saved on this Mac")
+        case .iconLocation:
+            return ("Icon location", viewModel.usesIconOnMac(for: game) ? "Use on the Mac" : "Only here")
         case .art(let item):
             return (item.art.candidate.source, item.art.resolution)
         case .browse(let source):
@@ -470,6 +483,16 @@ struct ChangeArtworkView: View {
             list.append(item)
             list.sort { $0.order < $1.order }
             found[slot] = list
+        }
+        if slot == .icon, !Task.isCancelled,
+           let titleID = game.titleId,
+           let url = await AppViewModel.automaticIconArtwork.automaticIcon(titleID: titleID, name: game.name),
+           AppViewModel.automaticIconArtwork.automaticIconSource(titleID: titleID) == "Switch Icon Showdown",
+           let data = try? Data(contentsOf: url), let size = ArtworkCandidates.pixelSize(of: data),
+           let preview = await GameArtLoader.decode(at: url, maxPixelSize: 600), !Task.isCancelled {
+            let candidate = ArtworkCandidate(slot: .icon, source: "Switch Icon Showdown", url: url)
+            let art = LoadedArtwork(candidate: candidate, data: data, pixelWidth: size.width, pixelHeight: size.height)
+            found[slot, default: []].append(Found(order: candidates.count, art: art, preview: preview))
         }
         // Left for another tab before it finished: search again on return.
         if Task.isCancelled { found[slot] = nil }
@@ -535,6 +558,18 @@ struct ChangeArtworkView: View {
         pickPreview = await GameArtLoader.decode(at: url, maxPixelSize: 600)
     }
 
+    private func loadAutomaticIcon() async {
+        guard slot == .icon else { return }
+        automaticIconChecked = false
+        let url = await viewModel.automaticIconURL(for: game)
+        let preview: NSImage?
+        if let url { preview = await GameArtLoader.decode(at: url, maxPixelSize: 600) }
+        else { preview = nil }
+        guard !Task.isCancelled else { return }
+        automaticIconPreview = preview
+        automaticIconChecked = true
+    }
+
     nonisolated private static func thumbnail(_ data: Data) -> NSImage? {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
         let options: [CFString: Any] = [
@@ -552,10 +587,15 @@ struct ChangeArtworkView: View {
         message = nil
         switch tile {
         case .automatic:
-            guard hasPick else { return }
-            picks.remove(titleID: titleKey, slot: slot)
+            guard hasPick || slot == .icon else { return }
+            if hasPick { picks.remove(titleID: titleKey, slot: slot) }
             applied()
             if slot == .icon { viewModel.appIconPickChanged(for: game, removed: true) }
+        case .iconLocation:
+            editingIconLocation = true
+            appIconFocus = viewModel.usesIconOnMac(for: game) ? .confirm : .cancel
+            askAppIcon = true
+            SoundEffectService.shared.play(.click)
         case .yourPick:
             SoundEffectService.shared.play(.click)
         case .art(let item):
@@ -747,7 +787,11 @@ struct ChangeArtworkView: View {
                     SoundEffectService.shared.play(.focus)
                 }
             case .confirm: answerAppIcon(appIconFocus == .confirm)
-            case .cancel: answerAppIcon(false)
+            case .cancel:
+                askAppIcon = false
+                // Back dismisses the location question. A newly chosen image still follows the saved scope.
+                if !editingIconLocation { viewModel.appIconPickChanged(for: game, removed: false) }
+                SoundEffectService.shared.play(.focus)
             default: break
             }
             return

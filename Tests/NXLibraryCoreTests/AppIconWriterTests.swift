@@ -7,13 +7,15 @@ final class AppIconWriterTests: XCTestCase {
         var calls: [[String]] = []
         /// Exit status for each codesign call in turn; 0 once the list runs out.
         var codesignStatus: [Int32] = []
+        var iconOutputs: [Data] = []
 
         func run(_ executable: URL, _ arguments: [String], environment: [String: String]?,
                  currentDirectory: URL?) throws -> CommandResult {
             calls.append([executable.lastPathComponent] + arguments)
             switch executable.lastPathComponent {
             case "iconutil":
-                try Data("icns".utf8).write(to: URL(fileURLWithPath: arguments[4]))
+                let output = iconOutputs.isEmpty ? Data("icns".utf8) : iconOutputs.removeFirst()
+                try output.write(to: URL(fileURLWithPath: arguments[4]))
                 return CommandResult(status: 0, stdout: "", stderr: "")
             case "codesign":
                 let status = codesignStatus.isEmpty ? 0 : codesignStatus.removeFirst()
@@ -99,6 +101,30 @@ final class AppIconWriterTests: XCTestCase {
         XCTAssertEqual(try info(app)["CFBundleIdentifier"] as? String, "org.nxnative.test")
     }
 
+    func testMissingReplacementRemovesThePreviousPickAndKeepsAnIconlessAppUsable() throws {
+        let app = try makeApp()
+        try writer.apply(image: png, to: app, key: "game")
+        XCTAssertTrue(writer.showsWrittenIcon(app))
+        XCTAssertTrue(try writer.update(image: nil, app: app, key: "game"))
+        XCTAssertNil(icon(app))
+        XCTAssertNil(try info(app)["CFBundleIconFile"])
+        XCTAssertFalse(writer.showsWrittenIcon(app))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: app.appendingPathComponent("Contents/MacOS/nxnative").path))
+        XCTAssertFalse(try writer.update(image: nil, app: app, key: "game"))
+    }
+
+    func testAutomaticReadsTheOriginalInsteadOfTheAppliedPick() throws {
+        let app = try makeApp(icon: "original")
+        let before = try XCTUnwrap(writer.originalIconURL(app, key: "game"))
+        XCTAssertEqual(try Data(contentsOf: before), Data("original".utf8))
+        try writer.apply(image: png, to: app, key: "game")
+        let backedUp = try XCTUnwrap(writer.originalIconURL(app, key: "game"))
+        XCTAssertEqual(try Data(contentsOf: backedUp), Data("original".utf8))
+        XCTAssertNotEqual(backedUp, before)
+        XCTAssertTrue(try writer.update(image: nil, app: app, key: "game"))
+        XCTAssertEqual(icon(app), "original")
+    }
+
     func testOwnIconIsKeptAndRestored() throws {
         let app = try makeApp(icon: "original")
         XCTAssertTrue(writer.hasOwnIcon(app))
@@ -112,6 +138,33 @@ final class AppIconWriterTests: XCTestCase {
         XCTAssertEqual(icon(app), "original")
         XCTAssertEqual(try info(app)["CFBundleIconFile"] as? String, "AppIcon")
         XCTAssertTrue(writer.hasOwnIcon(app))
+    }
+
+    func testChangingFromAToBReplacesTheIconAndKeepsTheGamesOriginal() throws {
+        let app = try makeApp(icon: "game original")
+        runner.iconOutputs = [Data("icon A".utf8), Data("icon B".utf8)]
+        try writer.apply(image: png, to: app, key: "0100")
+        XCTAssertEqual(icon(app), "icon A")
+        try writer.apply(image: png, to: app, key: "0100")
+        XCTAssertEqual(icon(app), "icon B")
+        XCTAssertEqual(try String(contentsOf: root.appendingPathComponent("backups/0100/original.icns")), "game original")
+        try writer.restore(app, key: "0100")
+        XCTAssertEqual(icon(app), "game original", "Automatic must not restore A instead of the game's original")
+    }
+
+    func testAutomaticThenAnotherPickStillRestoresAbsenceForAnIconlessGame() throws {
+        let app = try makeApp()
+        runner.iconOutputs = [Data("icon A".utf8), Data("icon B".utf8)]
+        try writer.apply(image: png, to: app, key: "0400")
+        XCTAssertEqual(icon(app), "icon A")
+        try writer.restore(app, key: "0400")
+        XCTAssertNil(icon(app))
+        try writer.apply(image: png, to: app, key: "0400")
+        XCTAssertEqual(icon(app), "icon B")
+        try writer.restore(app, key: "0400")
+        XCTAssertNil(icon(app))
+        XCTAssertFalse(writer.showsWrittenIcon(app))
+        XCTAssertFalse(writer.hasOriginalIcon(app, key: "0400"))
     }
 
     func testRebuiltAppReplacesTheKeptOriginal() throws {
@@ -137,7 +190,7 @@ final class AppIconWriterTests: XCTestCase {
         XCTAssertEqual(try String(contentsOf: app.appendingPathComponent("Contents/MacOS/nxnative")), "launcher")
     }
 
-    func testOriginalIconDecidesWhetherToAsk() throws {
+    func testOriginalIconIsRememberedIncludingItsAbsence() throws {
         let own = try makeApp(icon: "original")
         XCTAssertTrue(writer.hasOriginalIcon(own, key: "0100"))
         try writer.apply(image: png, to: own, key: "0100")
