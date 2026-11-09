@@ -54,6 +54,12 @@ final class PortingPresentationTests: XCTestCase {
     func testETAWhileFinishingCountsDownTheLastTime() {
         XCTAssertEqual(PortingETA.text(finishing, lastFinishingSeconds: 150), "About 2 min left")
         XCTAssertEqual(PortingETA.text(finishing, lastFinishingSeconds: nil), "Finishing up")
+
+        // Live ETA during Pipeline archive takes precedence
+        var pipelineArchive = finishing
+        pipelineArchive.apply(.progress(fraction: 0.5, done: 1000, total: 2000, unit: "pipelines", eta: 5400))
+        XCTAssertEqual(PortingETA.text(pipelineArchive, lastFinishingSeconds: 150), "About 1 hr 30 min left")
+        XCTAssertEqual(PortingETA.text(pipelineArchive, lastFinishingSeconds: nil), "About 1 hr 30 min left")
     }
 
     func testETAFormatsHoursAndMinutesWhenOverAnHour() {

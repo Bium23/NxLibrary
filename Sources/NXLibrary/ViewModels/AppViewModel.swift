@@ -463,6 +463,9 @@ public final class AppViewModel: ObservableObject {
     private var buildTempDirectory: URL?
     private var stageElapsedTimer: Timer?
     private var currentStageStartedAt: Date?
+    private var currentBuildCacheURL: URL?
+    private let pipelineArchiveProgress = PipelineArchiveProgress()
+    private var isPollingPipelineArchive = false
     
     public init(settingsStore: AppSettingsStore = AppSettingsStore()) {
         self.settingsStore = settingsStore
@@ -2507,6 +2510,9 @@ public final class AppViewModel: ObservableObject {
         buildStartedAt = Date()
         buildTempDirectory = tempRoot
         buildLogURL = logURL
+        currentBuildCacheURL = workspace.buildCache
+        pipelineArchiveProgress.reset()
+        isPollingPipelineArchive = false
         buildWizardStep = 3
         isBuilding = true
         isCancellingBuild = false
@@ -2696,6 +2702,7 @@ public final class AppViewModel: ObservableObject {
         stageElapsedTimer?.invalidate()
         stageElapsedTimer = nil
         currentStageStartedAt = nil
+        isPollingPipelineArchive = false
     }
 
     private func tickStageElapsed() {
@@ -2704,11 +2711,31 @@ public final class AppViewModel: ObservableObject {
         let now = Date()
         let elapsed = max(0, now.timeIntervalSince(started))
         buildStages[index].elapsedSeconds = elapsed
+
+        if currentStageName == PortingProgress.pipelineArchiveStageName,
+           let cacheURL = currentBuildCacheURL,
+           !isPollingPipelineArchive {
+            isPollingPipelineArchive = true
+            let psoWorkDir = cacheURL.appendingPathComponent("pso/mac-work")
+            let progress = pipelineArchiveProgress
+            DispatchQueue.global(qos: .utility).async { [weak self] in
+                let event = progress.poll(psoWorkDirectory: psoWorkDir, stageStartedAt: started, now: Date())
+                DispatchQueue.main.async {
+                    guard let self else { return }
+                    self.isPollingPipelineArchive = false
+                    if let event, self.isBuilding, self.currentStageName == PortingProgress.pipelineArchiveStageName {
+                        self.handleBuildEvent(event)
+                    }
+                }
+            }
+        }
     }
 
     private func finishBuild(_ result: BuildResult, gameID: UUID,
                              finalApp: URL, tempDir: URL) {
         stopStageElapsedTimer()
+        currentBuildCacheURL = nil
+        pipelineArchiveProgress.reset()
         portingProgress?.finish(success: result.success)
         isBuilding = false
         isCancellingBuild = false

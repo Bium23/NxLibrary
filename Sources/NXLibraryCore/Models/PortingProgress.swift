@@ -15,6 +15,7 @@ public struct PortingProgress: Equatable {
     }
 
     public static let shaderStageName = "Mac shaders"
+    public static let pipelineArchiveStageName = "Pipeline archive"
     public static let shaderShare = 0.9
     /// The stages after the shaders when the engine has not counted them yet.
     public static let expectedFinishingStages = 3
@@ -31,6 +32,8 @@ public struct PortingProgress: Equatable {
     public private(set) var stageName = ""
     public private(set) var stepName = ""
     public private(set) var shaderETA: Double?
+    /// ETA during finishing stages (e.g. Pipeline archive).
+    public private(set) var finishingETA: Double?
     /// Cache maintenance has no count or reliable ETA; show its activity instead.
     public private(set) var isUpdatingShaderCache = false
     /// Seconds the stages after the shaders took so far.
@@ -46,6 +49,7 @@ public struct PortingProgress: Equatable {
         switch event {
         case .stage(let k, let n, let name, let stepTitle):
             isUpdatingShaderCache = false
+            finishingETA = nil
             step = k
             count = n
             stageName = name
@@ -60,11 +64,19 @@ public struct PortingProgress: Equatable {
             isUpdatingShaderCache = false
             stepName = title
         case .progress(let fraction, let done, _, _, let eta, _):
+            if phase == .finishing, stageName == Self.pipelineArchiveStageName, done != nil {
+                finishingETA = eta
+                let stages = max(Self.expectedFinishingStages, count - (shaderStep ?? count))
+                let clamped = min(max(fraction, 0), 0.99)
+                raise(to: Self.shaderShare + (1 - Self.shaderShare) * (Double(finishingEnded) + clamped) / Double(stages))
+                return
+            }
             guard countsAsShaders(hasCount: done != nil) else { return }
             phase = .shaders
             raise(to: Self.shaderShare * min(max(fraction, 0), 1))
             shaderETA = eta
         case .stageEnd(let name, let ok, let elapsed, _, _):
+            finishingETA = nil
             if name == Self.shaderStageName {
                 raise(to: Self.shaderShare)
                 phase = .finishing

@@ -20,6 +20,7 @@ public enum PortingETA {
             if let last = lastFinishingSeconds { return "About \(duration(eta + last)) left" }
             return "Shaders: about \(duration(eta))"
         case .finishing:
+            if let eta = progress.finishingETA { return "About \(duration(eta)) left" }
             guard let last = lastFinishingSeconds else { return "Finishing up" }
             return "About \(duration(max(0, last - progress.finishingElapsed))) left"
         case .preparing, .done, .failed:
