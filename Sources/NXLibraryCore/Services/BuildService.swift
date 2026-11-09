@@ -29,7 +29,7 @@ public struct BuildResult: Equatable {
 
 public final class BuildService {
     private let fm: FileManager
-    private let ioQueue = DispatchQueue(label: "local.nxlibrary.build.io")
+    private let ioQueue = DispatchQueue(label: L10n.text("local.nxlibrary.build.io"))
     private let stateLock = NSLock()
     private var process: Process?
     private var logHandle: FileHandle?

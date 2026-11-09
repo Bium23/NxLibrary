@@ -16,7 +16,7 @@ struct SettingsSearchSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: canvas.u(8)) {
-            TextField("Search settings", text: $query)
+            TextField(L10n.text("Search settings"), text: $query)
                 .textFieldStyle(.plain)
                 .seleneFont(19)
                 .foregroundColor(SeleneTheme.ink)
@@ -37,7 +37,7 @@ struct SettingsSearchSection: View {
                 .padding(.bottom, canvas.u(8))
 
             if !query.isEmpty && results.isEmpty {
-                Text("No settings match.")
+                Text(L10n.text("No settings match."))
                     .seleneFont(19)
                     .foregroundColor(SeleneTheme.ink60)
             }
@@ -82,7 +82,7 @@ struct SettingsChangedSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: canvas.u(8)) {
             if rows.isEmpty {
-                Text("Nothing changed yet.")
+                Text(L10n.text("Nothing changed yet."))
                     .seleneFont(19)
                     .foregroundColor(SeleneTheme.ink60)
             }
@@ -103,7 +103,7 @@ struct SettingsDescriptorList: View {
     let onOpenGroup: (SettingsSection) -> Void
     @Environment(\.seleneCanvas) private var canvas
 
-    static func title(_ row: SettingDescriptor) -> String { "\(row.group.title) · \(row.title)" }
+    static func title(_ row: SettingDescriptor) -> String { "\(row.group.title) · \(L10n.text(row.title))" }
 
     static func actions(_ rows: [SettingDescriptor],
                         onOpenGroup: @escaping (SettingsSection) -> Void) -> [SettingsRowAction] {

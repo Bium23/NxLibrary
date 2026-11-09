@@ -167,157 +167,157 @@ public enum SetupCheck {
     private static func item(_ id: SetupItemID, _ f: SetupFacts) -> SetupItem {
         switch id {
         case .xcode:
-            let about = "Apple's developer tools. Every game is compiled with them."
+            let about = L10n.text("Apple's developer tools. Every game is compiled with them.")
             switch f.xcodeStatus {
             case nil:
-                return SetupItem(id: id, title: "Xcode", state: .missing, chip: "NOT INSTALLED", about: about,
-                                 detail: "Get it from the App Store, then open it once.", actionTitle: "Get Xcode")
+                return SetupItem(id: id, title: L10n.text("Xcode"), state: .missing, chip: "NOT INSTALLED", about: about,
+                                 detail: L10n.text("Get it from the App Store, then open it once."), actionTitle: L10n.text("Get Xcode"))
             case 69?:
-                return SetupItem(id: id, title: "Xcode", state: .needsYou, chip: "OPEN XCODE ONCE", about: about,
-                                 detail: "Open Xcode and accept its licence; it then installs its components.",
-                                 actionTitle: "Open Xcode")
+                return SetupItem(id: id, title: L10n.text("Xcode"), state: .needsYou, chip: "OPEN XCODE ONCE", about: about,
+                                 detail: L10n.text("Open Xcode and accept its licence; it then installs its components."),
+                                 actionTitle: L10n.text("Open Xcode"))
             default:
                 let minimum = f.requirements.minimumXcode
                 if let version = f.xcodeVersion, VersionNumber.isOlder(version, than: minimum) {
-                    return SetupItem(id: id, title: "Xcode", state: .needsYou, chip: "UPDATE XCODE", about: about,
-                                     detail: "Xcode \(version) is installed; the engine needs \(minimum) or newer. Update it from the App Store.",
-                                     actionTitle: "Open App Store")
+                    return SetupItem(id: id, title: L10n.text("Xcode"), state: .needsYou, chip: "UPDATE XCODE", about: about,
+                                     detail: L10n.format("Xcode %@ is installed; the engine needs %@ or newer. Update it from the App Store.", [String(describing: (version)), String(describing: (minimum))]),
+                                     actionTitle: L10n.text("Open App Store"))
                 }
-                return ready(id, "Xcode", about, f.xcodeVersion.map { "Xcode \($0), installed and set up." } ?? "Installed and set up.")
+                return ready(id, "Xcode", about, f.xcodeVersion.map { L10n.format("Xcode %@, installed and set up.", [String(describing: ($0))]) } ?? L10n.text("Installed and set up."))
             }
         case .metal:
-            let about = "Compiles each game's shaders for this Mac's GPU."
+            let about = L10n.text("Compiles each game's shaders for this Mac's GPU.")
             guard let version = f.metalVersion else {
-                return SetupItem(id: id, title: "Metal compiler", state: .missing, chip: "NOT INSTALLED",
-                                 about: about, detail: "NX Library downloads it through Xcode.", actionTitle: "Install")
+                return SetupItem(id: id, title: L10n.text("Metal compiler"), state: .missing, chip: "NOT INSTALLED",
+                                 about: about, detail: L10n.text("NX Library downloads it through Xcode."), actionTitle: L10n.text("Install"))
             }
             if version == f.certifiedMetal {
-                return ready(id, "Metal compiler", about, "Version \(version), the one this engine is tested with.")
+                return ready(id, "Metal compiler", about, L10n.format("Version %@, the one this engine is tested with.", [String(describing: (version))]))
             }
             if f.allowUntested {
                 return ready(id, "Metal compiler", about,
-                             "Version \(version); the untested toolchain override is on, so builds may differ.")
+                             L10n.format("Version %@; the untested toolchain override is on, so builds may differ.", [String(describing: (version))]))
             }
             if f.requirements.metalDownload(for: f.certifiedMetal) != nil {
-                return SetupItem(id: id, title: "Metal compiler", state: .warning, chip: "NOT CERTIFIED", about: about,
-                                 detail: "Version \(version); the engine is tested with \(f.certifiedMetal). NX Library installs \(f.certifiedMetal) through Xcode.",
-                                 actionTitle: "Install \(f.certifiedMetal)")
+                return SetupItem(id: id, title: L10n.text("Metal compiler"), state: .warning, chip: "NOT CERTIFIED", about: about,
+                                 detail: L10n.format("Version %@; the engine is tested with %@. NX Library installs %@ through Xcode.", [String(describing: (version)), String(describing: (f.certifiedMetal)), String(describing: (f.certifiedMetal))]),
+                                 actionTitle: L10n.format("Install %@", [String(describing: (f.certifiedMetal))]))
             }
-            return SetupItem(id: id, title: "Metal compiler", state: .warning, chip: "WAITING FOR ENGINE", about: about,
-                             detail: "Version \(version) came with this Xcode; the engine is tested with \(f.certifiedMetal). New builds wait for an NX Library update tested with it. Games you built still play.",
+            return SetupItem(id: id, title: L10n.text("Metal compiler"), state: .warning, chip: "WAITING FOR ENGINE", about: about,
+                             detail: L10n.format("Version %@ came with this Xcode; the engine is tested with %@. New builds wait for an NX Library update tested with it. Games you built still play.", [String(describing: (version)), String(describing: (f.certifiedMetal))]),
                              actionTitle: nil)
         case .dotnet:
-            let about = "Builds the engine's tools that read each game's package."
+            let about = L10n.text("Builds the engine's tools that read each game's package.")
             if let installed = ToolchainRequirements.newestSDK(major: f.requirements.dotnetMajor, in: f.dotnetSDKs) {
                 if let latest = f.dotnetLatest, VersionNumber.isOlder(installed, than: latest) {
                     var card = ready(id, ".NET 10 SDK", about,
-                                     "\(installed) installed. Microsoft has \(latest); A installs it, and macOS asks for your password.")
+                                     L10n.format("%@ installed. Microsoft has %@; A installs it, and macOS asks for your password.", [String(describing: (installed)), String(describing: (latest))]))
                     card.actionTitle = "Update to \(latest)"
                     return card
                 }
                 return ready(id, ".NET 10 SDK", about, "\(installed) installed.")
             }
-            return SetupItem(id: id, title: ".NET 10 SDK", state: .missing, chip: "NOT INSTALLED", about: about,
-                             detail: "NX Library downloads Microsoft's installer; macOS asks for your password.",
-                             actionTitle: "Install")
+            return SetupItem(id: id, title: L10n.text(".NET 10 SDK"), state: .missing, chip: "NOT INSTALLED", about: about,
+                             detail: L10n.text("NX Library downloads Microsoft's installer; macOS asks for your password."),
+                             actionTitle: L10n.text("Install"))
         case .engine:
-            let about = "nxnative, used as it is upstream, at the commit this NX Library is tested with."
+            let about = L10n.text("nxnative, used as it is upstream, at the commit this NX Library is tested with.")
             let short = String(f.pinnedCommit.prefix(7))
             switch f.engine {
             case .missing:
-                return SetupItem(id: id, title: "nxnative engine", state: .missing, chip: "NOT INSTALLED", about: about,
-                                 detail: "NX Library clones it into \(f.engineFolder.path) at \(short).", actionTitle: "Clone")
+                return SetupItem(id: id, title: L10n.text("nxnative engine"), state: .missing, chip: "NOT INSTALLED", about: about,
+                                 detail: L10n.format("NX Library clones it into %@ at %@.", [String(describing: (f.engineFolder.path)), String(describing: (short))]), actionTitle: L10n.text("Clone"))
             case .notACheckout:
-                return SetupItem(id: id, title: "nxnative engine", state: .warning, chip: "NOT A CHECKOUT", about: about,
-                                 detail: "\(f.engineFolder.path) is not a git checkout of nxnative. Move it away, then check again.",
+                return SetupItem(id: id, title: L10n.text("nxnative engine"), state: .warning, chip: "NOT A CHECKOUT", about: about,
+                                 detail: L10n.format("%@ is not a git checkout of nxnative. Move it away, then check again.", [String(describing: (f.engineFolder.path))]),
                                  actionTitle: nil)
             case .checkout(_, true):
-                return SetupItem(id: id, title: "nxnative engine", state: .warning, chip: "LOCAL CHANGES", about: about,
-                                 detail: "\(f.engineFolder.path) has changed files. NX Library never touches them: put them aside, then check again.",
+                return SetupItem(id: id, title: L10n.text("nxnative engine"), state: .warning, chip: "LOCAL CHANGES", about: about,
+                                 detail: L10n.format("%@ has changed files. NX Library never touches them: put them aside, then check again.", [String(describing: (f.engineFolder.path))]),
                                  actionTitle: nil)
             case .checkout(let head, false) where head == f.newestEngine?.commit && head != f.pinnedCommit:
                 // The player's own choice: ready, never "other version", and A goes back to the tested engine.
-                var card = ready(id, "nxnative engine", NewestEngineCopy.note,
+                var card = ready(id, L10n.text("nxnative engine"), NewestEngineCopy.note,
                                  NewestEngineCopy.setupDetail(choice: f.newestEngine!, tested: f.pinnedCommit))
                 card.chip = "NEWEST ENGINE"
                 card.isUntested = true
-                card.actionTitle = "Back to tested"
+                card.actionTitle = L10n.text("Back to tested")
                 return card
             case .checkout(let head, false) where head != f.pinnedCommit:
                 // Warning either way: Setup reopens for it and Install all runs it.
                 if f.engineBehind == false {
-                    return SetupItem(id: id, title: "nxnative engine", state: .warning, chip: "OTHER VERSION", about: about,
-                                     detail: "The engine here is at \(head.prefix(7)), not the \(short) this NX Library is tested with. Switch moves it to \(short). Games you built keep playing.",
-                                     actionTitle: "Switch")
+                    return SetupItem(id: id, title: L10n.text("nxnative engine"), state: .warning, chip: "OTHER VERSION", about: about,
+                                     detail: L10n.format("The engine here is at %@, not the %@ this NX Library is tested with. Switch moves it to %@. Games you built keep playing.", [String(describing: (head.prefix(7))), String(describing: (short)), String(describing: (short))]),
+                                     actionTitle: L10n.text("Switch"))
                 }
-                return SetupItem(id: id, title: "nxnative engine", state: .warning, chip: "UPDATE READY", about: about,
-                                 detail: "This NX Library uses nxnative \(short); the engine here is at \(head.prefix(7)). Update downloads it and switches to it. Games you built keep playing.",
-                                 actionTitle: "Update")
+                return SetupItem(id: id, title: L10n.text("nxnative engine"), state: .warning, chip: "UPDATE READY", about: about,
+                                 detail: L10n.format("This NX Library uses nxnative %@; the engine here is at %@. Update downloads it and switches to it. Games you built keep playing.", [String(describing: (short)), String(describing: (head.prefix(7)))]),
+                                 actionTitle: L10n.text("Update"))
             case .checkout:
-                return ready(id, "nxnative engine", about, "At \(short) in \(f.engineFolder.path).")
+                return ready(id, L10n.text("nxnative engine"), about, "At \(short) in \(f.engineFolder.path).")
             }
         case .runtime:
-            let about = "Python 3.14 with its modules, zstd and glslang, inside NX Library."
+            let about = L10n.text("Python 3.14 with its modules, zstd and glslang, inside NX Library.")
             if let problem = f.runtimeProblem {
-                return SetupItem(id: id, title: "Python and tools", state: .failed, chip: "REINSTALL APP", about: about,
-                                 detail: "\(problem). Reinstall NX Library from its DMG.", actionTitle: nil)
+                return SetupItem(id: id, title: L10n.text("Python and tools"), state: .failed, chip: "REINSTALL APP", about: about,
+                                 detail: L10n.format("%@. Reinstall NX Library from its DMG.", [String(describing: (problem))]), actionTitle: nil)
             }
-            return SetupItem(id: id, title: "Python and tools", state: .ready, chip: "✓ INCLUDED", about: about,
-                             detail: "Nothing to install.", actionTitle: nil)
+            return SetupItem(id: id, title: L10n.text("Python and tools"), state: .ready, chip: "✓ INCLUDED", about: about,
+                             detail: L10n.text("Nothing to install."), actionTitle: nil)
         case .keys:
-            let about = "Your console's prod.keys, which unlock your own games. They stay on this Mac."
+            let about = L10n.text("Your console's prod.keys, which unlock your own games. They stay on this Mac.")
             if let keys = f.keys {
-                return SetupItem(id: id, title: "Keys", state: .ready, chip: "✓ IMPORTED", about: about,
-                                 detail: "Header key and \(keys.applicationKeyGenerations.count) application key generations.",
-                                 actionTitle: "Replace")
+                return SetupItem(id: id, title: L10n.text("Keys"), state: .ready, chip: "✓ IMPORTED", about: about,
+                                 detail: L10n.format("Header key and %@ application key generations.", [String(describing: (keys.applicationKeyGenerations.count))]),
+                                 actionTitle: L10n.text("Replace"))
             }
             if f.keysOptional {
-                return SetupItem(id: id, title: "Keys", state: .ready, chip: "OPTIONAL", about: about,
-                                 detail: "Needed for NSP/XCI packages. Extracted folders do not use keys.", actionTitle: "Choose file")
+                return SetupItem(id: id, title: L10n.text("Keys"), state: .ready, chip: "OPTIONAL", about: about,
+                                 detail: L10n.text("Needed for NSP/XCI packages. Extracted folders do not use keys."), actionTitle: L10n.text("Choose file"))
             }
-            return SetupItem(id: id, title: "Keys", state: .missing, chip: "NOT IMPORTED", about: about,
-                             detail: f.keysError ?? "Choose your prod.keys file.", actionTitle: "Choose file")
+            return SetupItem(id: id, title: L10n.text("Keys"), state: .missing, chip: "NOT IMPORTED", about: about,
+                             detail: f.keysError ?? L10n.text("Choose your prod.keys file."), actionTitle: L10n.text("Choose file"))
         case .library:
             let about = GameFoldersCopy.appsAbout
             if f.libraryNeedsConfirmation {
                 return SetupItem(id: id, title: GameFoldersCopy.appsTitle, state: .needsYou, chip: "CHOOSE FOLDER", about: about,
-                                 detail: f.libraryFolder.map { "Choose this folder or another: \($0.path)" }
-                                    ?? "Choose where to keep your game apps. An empty folder is fine.",
-                                 actionTitle: "Choose folder")
+                                 detail: f.libraryFolder.map { L10n.format("Choose this folder or another: %@", [String(describing: ($0.path))]) }
+                                    ?? L10n.text("Choose where to keep your game apps. An empty folder is fine."),
+                                 actionTitle: L10n.text("Choose folder"))
             }
             switch f.libraryReadable {
             case nil:
                 return SetupItem(id: id, title: GameFoldersCopy.appsTitle, state: .missing, chip: "NOT CHOSEN", about: about,
-                                 detail: "Choose the folder containing your game apps.", actionTitle: "Choose folder")
+                                 detail: L10n.text("Choose the folder containing your game apps."), actionTitle: L10n.text("Choose folder"))
             case false?:
                 return SetupItem(id: id, title: GameFoldersCopy.appsTitle, state: .warning, chip: "NOT READABLE", about: about,
-                                 detail: f.libraryFolder.map { "Cannot read \($0.path). Reconnect it or choose another." }
-                                    ?? "NX Library cannot read this folder. Reconnect it or choose another.", actionTitle: "Choose folder")
+                                 detail: f.libraryFolder.map { L10n.format("Cannot read %@. Reconnect it or choose another.", [String(describing: ($0.path))]) }
+                                    ?? L10n.text("NX Library cannot read this folder. Reconnect it or choose another."), actionTitle: L10n.text("Choose folder"))
             case true?:
                 if f.libraryWritable == false {
                     return SetupItem(id: id, title: GameFoldersCopy.appsTitle, state: .warning, chip: "READ ONLY", about: about,
-                                     detail: "Choose a writable folder for new builds. Existing apps still play.",
-                                     actionTitle: "Change")
+                                     detail: L10n.text("Choose a writable folder for new builds. Existing apps still play."),
+                                     actionTitle: L10n.text("Change"))
                 }
                 return SetupItem(id: id, title: GameFoldersCopy.appsTitle, state: .ready, chip: "✓ READY", about: about,
                                  detail: [GameFoldersCopy.appsContents, f.libraryFolder?.path].compactMap { $0 }.joined(separator: "\n"),
-                                 actionTitle: "Change")
+                                 actionTitle: L10n.text("Change"))
             }
         case .sources:
             let about = GameFoldersCopy.sourcesAbout(extractedFolders: f.extractedFoldersSupported)
             switch f.sourcesReadable {
             case nil:
                 return SetupItem(id: id, title: GameFoldersCopy.sourcesTitle, state: .ready, chip: "OPTIONAL", about: about,
-                                 detail: "Existing game apps play without sources. Choose later in Settings → Library.",
-                                 actionTitle: "Choose folder", isRequired: false)
+                                 detail: L10n.text("Existing game apps play without sources. Choose later in Settings → Library."),
+                                 actionTitle: L10n.text("Choose folder"), isRequired: false)
             case false?:
                 return SetupItem(id: id, title: GameFoldersCopy.sourcesTitle, state: .warning, chip: "FOLDER UNAVAILABLE", about: about,
-                                 detail: f.sourcesFolder.map { "Unavailable: \($0.path). Existing game apps still play." }
-                                    ?? "Reconnect this folder or choose another. Existing game apps still play.",
-                                 actionTitle: "Change", isRequired: false)
+                                 detail: f.sourcesFolder.map { L10n.format("Unavailable: %@. Existing game apps still play.", [String(describing: ($0.path))]) }
+                                    ?? L10n.text("Reconnect this folder or choose another. Existing game apps still play."),
+                                 actionTitle: L10n.text("Change"), isRequired: false)
             case true?:
                 return SetupItem(id: id, title: GameFoldersCopy.sourcesTitle, state: .ready, chip: "✓ CHOSEN", about: about,
-                                 detail: f.sourcesFolder?.path ?? "Ready to find game sources.", actionTitle: "Change", isRequired: false)
+                                 detail: f.sourcesFolder?.path ?? L10n.text("Ready to find game sources."), actionTitle: L10n.text("Change"), isRequired: false)
             }
         }
     }

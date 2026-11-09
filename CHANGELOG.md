@@ -2,6 +2,13 @@
 
 User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
+## Unreleased
+
+### Added
+
+- **Six interface languages and independent region preferences.** English, Italian, French, German, Spanish and Brazilian Portuguese, selected from the Mac automatically or in **Settings → Start-up → Language & region**. Dates, numbers and sizes use the selected region. Language is selected directly from a list; Regional formats explains its scope and previews dates, numbers and sizes. Game language stays separate. Known catalog genres translate locally without changing saved metadata. Supported Nlib descriptions are requested in the interface language, with cached descriptions reused across regions sharing a language and an explicitly labelled fallback when unavailable. Language changes preserve the visible page and reuse fresh metadata instead of repeating English searches; Switch 2 IDs are included in localized lookups. Translation resources and placeholders are checked in packaged apps.
+- **Storage by game.** Settings → Storage lists each game's app, build cache and logs, with the largest caches first, including hidden games. **Delete cache** removes only that game's build cache after confirmation, preserving the app, original game files, saves and logs. A shared cache is explained before deletion; unavailable folders are labelled rather than shown as empty. Cleanup runs without blocking the interface and waits until builds finish. File sizes include hidden files, shared paths count once in totals, and free space refers to the selected Game apps volume.
+
 ## 0.1.4.2 — 2026-11-09
 
 ### Fixed

@@ -34,6 +34,7 @@ extension ConnectedPad {
 }
 
 struct SeleneHintsBar: View {
+    @Environment(\.nxAppLocale) private var localization
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneShowButtonHints) private var showHints
 
@@ -98,8 +99,8 @@ struct SeleneHintsBar: View {
             }
             VStack(alignment: .leading, spacing: 0) {
                 ZStack(alignment: .leading) {
-                    ForEach(reserve, id: \.self) { Text($0).seleneFont(19).hidden() }
-                    Text(item.label)
+                    ForEach(reserve, id: \.self) { Text(L10n.text($0, context: localization)).seleneFont(19).hidden() }
+                    Text(L10n.text(item.label, context: localization))
                         .seleneFont(19)
                         .foregroundColor(SeleneTheme.ink90)
                 }

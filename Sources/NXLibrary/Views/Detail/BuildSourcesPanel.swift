@@ -46,8 +46,8 @@ struct BuildSourcesPanel: View {
         VStack(alignment: .leading, spacing: 0) {
             header
             status
-            Text(wide ? "Version \(presentation.version)  ·  \(presentation.size)  ·  \(appFileName)"
-                      : "Version \(presentation.version)  ·  \(presentation.size)")
+            Text(wide ? L10n.format("Version %@  ·  %@  ·  %@", [String(describing: (presentation.version)), String(describing: (presentation.size)), String(describing: (appFileName))])
+                      : L10n.format("Version %@  ·  %@", [String(describing: (presentation.version)), String(describing: (presentation.size))]))
                 .seleneFont(15)
                 .foregroundColor(SeleneTheme.ink60)
                 .lineLimit(1)
@@ -64,8 +64,8 @@ struct BuildSourcesPanel: View {
             }
             if presentation.sourcesDetached {
                 Text(presentation.canPlay
-                     ? "Game files are missing or not attached. Play is available; attach them to rebuild."
-                     : "Game files are missing or not attached. Attach them to build.")
+                     ? L10n.text("Game files are missing or not attached. Play is available; attach them to rebuild.")
+                     : L10n.text("Game files are missing or not attached. Attach them to build."))
                     .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink60)
                     .padding(.top, canvas.u(4))
@@ -79,13 +79,13 @@ struct BuildSourcesPanel: View {
 
     private var header: some View {
         HStack(spacing: canvas.u(8)) {
-            Text("Build & Sources")
+            Text(L10n.text("Build & Sources"))
                 .seleneFont(21, .semibold)
                 .foregroundColor(SeleneTheme.ink)
-            SeleneInfoTip("NX Library uses symlinks to your game ROM files to build the macOS native binary. Rebuilding uses your current engine pin and settings, and preserves your game saves. "
+            SeleneInfoTip(L10n.text("NX Library uses symlinks to your game ROM files to build the macOS native binary. Rebuilding uses your current engine pin and settings, and preserves your game saves. ")
                           + (presentation.sourcesDetached
-                             ? "The sources are detached: attach them again to rebuild."
-                             : "The original sources are attached. Rebuild writes a new app and keeps the previous one if it fails."))
+                             ? L10n.text("The sources are detached: attach them again to rebuild.")
+                             : L10n.text("The original sources are attached. Rebuild writes a new app and keeps the previous one if it fails.")))
         }
         .padding(.top, canvas.u(2))
         .padding(.bottom, canvas.u(14))
@@ -115,7 +115,7 @@ struct BuildSourcesPanel: View {
             Circle()
                 .fill(presentation.sourcesDetached ? SeleneTheme.untested : SeleneTheme.success)
                 .frame(width: canvas.u(9), height: canvas.u(9))
-            Text(presentation.sourcesDetached ? "Sources detached" : "Sources attached")
+            Text(presentation.sourcesDetached ? L10n.text("Sources detached") : L10n.text("Sources attached"))
                 .seleneFont(15, .medium)
                 .foregroundColor(presentation.sourcesDetached
                                  ? SeleneTheme.untested.opacity(0.9)
@@ -125,11 +125,11 @@ struct BuildSourcesPanel: View {
 
     /// The engine and the toolchain.
     @ViewBuilder private var engineStatus: some View {
-        Text("Engine \(presentation.engineCommitShort)")
+        Text(L10n.format("Engine %@", [String(describing: (presentation.engineCommitShort))]))
             .seleneFont(15, .semibold)
             .monospacedDigit()
             .foregroundColor(SeleneTheme.ink82)
-        Text(presentation.toolchainVerified ? "Certified" : "Untested toolchain")
+        Text(presentation.toolchainVerified ? L10n.text("Certified") : L10n.text("Untested toolchain"))
             .seleneFont(15, .medium)
             .foregroundColor(presentation.toolchainVerified
                              ? SeleneTheme.success.opacity(0.85)
@@ -138,7 +138,7 @@ struct BuildSourcesPanel: View {
 
     @ViewBuilder private var blockedStatus: some View {
         if buildBlocked {
-            Text(blockedHint.flatMap { $0.buildHint.isEmpty ? nil : $0.buildHint } ?? "Build blocked — Settings → Engine")
+            Text(blockedHint.flatMap { $0.buildHint.isEmpty ? nil : $0.buildHint } ?? L10n.text("Build blocked — Settings → Engine"))
                 .seleneFont(15, .semibold)
                 .foregroundColor(blockedHint?.tone == .info ? SeleneTheme.ink82 : SeleneTheme.untested)
         }
@@ -187,30 +187,30 @@ extension BuildSourcesRow {
     static func rows(for game: PortedGame, presentation p: GameDetailPresentation, buildBlocked: Bool,
                      viewModel: AppViewModel, rebuild: @escaping () -> Void) -> [BuildSourcesRow] {
         var rows: [BuildSourcesRow] = [
-            BuildSourcesRow(id: "attach", title: "Attach sources…") {
+            BuildSourcesRow(id: "attach", title: L10n.text("Attach sources…")) {
                 viewModel.locateSources(for: game)
             },
-            BuildSourcesRow(id: "rebuild", title: "Rebuild", enabled: p.canRebuild && !buildBlocked) {
+            BuildSourcesRow(id: "rebuild", title: L10n.text("Rebuild"), enabled: p.canRebuild && !buildBlocked) {
                 rebuild()
             },
-            BuildSourcesRow(id: "log", title: "Open log") {
+            BuildSourcesRow(id: "log", title: L10n.text("Open log")) {
                 viewModel.revealLog(for: game)
             },
-            BuildSourcesRow(id: "save", title: "Open save folder") {
+            BuildSourcesRow(id: "save", title: L10n.text("Open save folder")) {
                 viewModel.revealSaveFolder(URL(fileURLWithPath: p.savePath))
             },
-            BuildSourcesRow(id: "app", title: "Reveal app in Finder") {
+            BuildSourcesRow(id: "app", title: L10n.text("Reveal app in Finder")) {
                 viewModel.revealInFinder(url: game.url)
             }
         ]
         if let store = p.storeURL {
-            rows.append(BuildSourcesRow(id: "store", title: "Store page") { viewModel.openURL(store) })
+            rows.append(BuildSourcesRow(id: "store", title: L10n.text("Store page")) { viewModel.openURL(store) })
         }
         if let hltb = p.hltbURL {
-            rows.append(BuildSourcesRow(id: "hltb", title: "HowLongToBeat") { viewModel.openURL(hltb) })
+            rows.append(BuildSourcesRow(id: "hltb", title: L10n.text("HowLongToBeat")) { viewModel.openURL(hltb) })
         }
         if p.description.isEmpty, let search = viewModel.nintendoStoreSearchURL(for: game) {
-            rows.append(BuildSourcesRow(id: "search", title: "Search Nintendo Store") {
+            rows.append(BuildSourcesRow(id: "search", title: L10n.text("Search Nintendo Store")) {
                 viewModel.openURL(search)
             })
         }

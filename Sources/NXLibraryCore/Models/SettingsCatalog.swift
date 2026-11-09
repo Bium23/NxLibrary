@@ -36,6 +36,8 @@ public enum SettingsCatalog {
 
     public static let all: [SettingDescriptor] = [
         // Start-up
+        row("appLanguage", .startUp, "App language", "Menus, genres and available game descriptions. The games’ own language stays separate.") { $0.appLanguage },
+        row("appRegion", .startUp, "Regional formats", "Dates, numbers and sizes only. Game descriptions follow the app language.") { $0.appRegion },
         row("startOn", .startUp, "Start on",
             "The screen NX Library opens on: Spotlight, Collection, or where you left it.") { $0.startOn },
         row("restoreLastGame", .startUp, "Restore last game",
@@ -155,8 +157,8 @@ public enum SettingsCatalog {
             "A notification when a porting finishes while NX Library is in the background.") { $0.notifyPortingEnds },
 
         // Storage
-        action("storageUsage", .storage, "Storage usage", "Recalculate apps, caches, logs and free space."),
-        action("buildCaches", .storage, "Build caches", "Delete extracted build caches after the active porting."),
+        action("storageUsage", .storage, "Storage usage", "See per-game app, cache and log sizes and free disk space."),
+        action("buildCaches", .storage, "Build caches", "Delete a game's build cache or clear all caches after confirmation; rebuilds may take longer."),
         action("logs", .storage, "Logs", "Delete build and launch logs after confirmation."),
         action("metadataCache", .storage, "Metadata cache", "Clear cached store descriptions and links."),
         action("artworkCache", .storage, "Artwork cache", "Clear downloaded images; manual picks are kept."),
@@ -189,6 +191,8 @@ public enum SettingsCatalog {
         let options: String.CompareOptions = [.caseInsensitive, .diacriticInsensitive]
         return all.filter {
             $0.title.range(of: needle, options: options) != nil
+                || L10n.text($0.title).range(of: needle, options: options) != nil
+                || L10n.text($0.about).range(of: needle, options: options) != nil
                 || $0.about.range(of: needle, options: options) != nil
         }
     }

@@ -73,16 +73,16 @@ struct CheatsPanel: View {
             if let next = entry.section, next != section { lines.append(.heading(next)) }
             section = entry.section
             if let broken = entry.broken {
-                lines.append(.text(title: entry.name, about: "Not supported: \(broken).", chip: nil, dim: true))
+                lines.append(.text(title: entry.name, about: L10n.format("Not supported: %@.", [String(describing: (broken))]), chip: nil, dim: true))
                 continue
             }
             switch entry.kind {
             case .label:
                 lines.append(.text(title: entry.name, about: entry.note, chip: nil, dim: true))
             case .master:
-                lines.append(.text(title: entry.name, about: entry.note, chip: "Always on", dim: false))
+                lines.append(.text(title: entry.name, about: entry.note, chip: L10n.text("Always on"), dim: false))
             case .cheat where entry.once:
-                lines.append(.text(title: entry.name, about: "Runs once: use it in the game's Cheats panel (⌘⇧C).",
+                lines.append(.text(title: entry.name, about: L10n.text("Runs once: use it in the game's Cheats panel (⌘⇧C)."),
                                    chip: nil, dim: true))
             case .cheat:
                 lines.append(.row(.cheat(entry.name)))
@@ -94,7 +94,7 @@ struct CheatsPanel: View {
             lines += [.row(.add), .row(.showInFinder)]
         }
         if !state.otherBuilds.isEmpty {
-            lines.append(.heading("Other versions"))
+            lines.append(.heading(L10n.text("Other versions")))
             lines += state.otherBuilds.map { .row(.otherBuild($0)) }
         }
         return lines
@@ -106,7 +106,7 @@ struct CheatsPanel: View {
 
     private var notices: [String] {
         var notices: [String] = []
-        if case .needsRebuild(let why) = context.status { notices.append(why + " Rebuild to use cheats.") }
+        if case .needsRebuild(let why) = context.status { notices.append(why + L10n.text(" Rebuild to use cheats.")) }
         if running { notices.append(CheatCopy.running(gameName: game.name)) }
         else if cheatState?.safeModePending == true { notices.append(CheatCopy.safeMode) }
         return notices
@@ -129,7 +129,7 @@ struct CheatsPanel: View {
 
             VStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("CHEATS")
+                    Text(L10n.text("CHEATS"))
                         .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink60)
                         .padding(.leading, canvas.u(8))
@@ -158,7 +158,7 @@ struct CheatsPanel: View {
                 .padding(.bottom, canvas.u(20))
                 .contentShape(Rectangle())
 
-                SeleneHintsBar(left: [HintItem(.b, "Back", action: close)], right: [HintItem(.a, "Select")],
+                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back"), action: close)], right: [HintItem(.a, L10n.text("Select"))],
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -279,25 +279,25 @@ struct CheatsPanel: View {
         let writable = !running
         switch row {
         case .rebuild:
-            return (.build, "Rebuild", "Build a new app with this engine; the old app stays if the build fails.", nil, false, true)
+            return (.build, "Rebuild", L10n.text("Build a new app with this engine; the old app stays if the build fails."), nil, false, true)
         case .master:
-            return (.casino, "Cheats", "Off keeps every cheat from running, whatever is switched on.",
+            return (.casino, L10n.text("Cheats"), L10n.text("Off keeps every cheat from running, whatever is switched on."),
                     cheatState?.masterOn ?? true, false, writable)
         case .cheat(let key):
             let entry = entries[key]
             return (nil, entry.map(CheatCopy.title(of:)) ?? key, entry?.note,
                     cheatState?.enabled.contains(key) ?? false, false, writable)
         case .add:
-            return (.add, "Add cheats…", "A .txt cheat file, or a folder in SD-card layout. You can also drop them here.",
+            return (.add, L10n.text("Add cheats…"), L10n.text("A .txt cheat file, or a folder in SD-card layout. You can also drop them here."),
                     nil, false, writable)
         case .turnAllOff:
-            return (.power, "Turn all off", "Every cheat off; the Cheats switch stays as it is.", nil, false, writable)
+            return (.power, L10n.text("Turn all off"), L10n.text("Every cheat off; the Cheats switch stays as it is."), nil, false, writable)
         case .showInFinder:
-            return (.folder, "Show in Finder", "The folder the game reads its cheats from.", nil, false, true)
+            return (.folder, "Show in Finder", L10n.text("The folder the game reads its cheats from."), nil, false, true)
         case .remove:
-            return (.delete, "Remove cheats", "This version's cheat files go to the Trash.", nil, true, writable)
+            return (.delete, L10n.text("Remove cheats"), L10n.text("This version's cheat files go to the Trash."), nil, true, writable)
         case .otherBuild(let build):
-            return (.history, CheatCopy.otherBuild(build), "Select to move these files to the Trash.", nil, false, writable)
+            return (.history, CheatCopy.otherBuild(build), L10n.text("Select to move these files to the Trash."), nil, false, writable)
         }
     }
 
@@ -381,10 +381,10 @@ struct CheatsPanel: View {
             running = true
             SoundEffectService.shared.play(.error)
         } catch CheatStoreError.writeFailed(let reason) {
-            message = "The cheat files were not changed: \(reason)."
+            message = L10n.format("The cheat files were not changed: %@.", [String(describing: (reason))])
             SoundEffectService.shared.play(.error)
         } catch {
-            message = "The cheat files were not changed: \(error.localizedDescription)."
+            message = L10n.format("The cheat files were not changed: %@.", [String(describing: (error.localizedDescription))])
             SoundEffectService.shared.play(.error)
         }
         return false
@@ -404,8 +404,8 @@ struct CheatsPanel: View {
 
     private func addFromOpenPanel() {
         let panel = NSOpenPanel()
-        panel.title = "Add cheats for \(game.name)"
-        panel.prompt = "Add"
+        panel.title = L10n.format("Add cheats for %@", [String(describing: (game.name))])
+        panel.prompt = L10n.text("Add")
         panel.canChooseFiles = true
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = true
@@ -452,7 +452,7 @@ struct CheatsPanel: View {
             default: return
             }
             guard let data = try? Data(contentsOf: found[index].url) else {
-                refuse("NX Library could not read the file.")
+                refuse(L10n.text("NX Library could not read the file."))
                 return
             }
             askConfirm(.install(data: data, file: file, unnamed: unnamed, replacing: cheatState?.file != nil))

@@ -20,9 +20,11 @@ public struct PendingInstall: Codable, Equatable {
 
     /// The porting screen's stage line, title and message while the new app waits.
     public static let stageName = "Ready: installs when you quit the game"
-    public static let title = "Ready when you quit"
+    public static var title: String {
+        L10n.text("Ready when you quit")
+    }
     public static func message(gameName: String) -> String {
-        "\(gameName) is open, so the new app waits beside it and replaces it as soon as you quit the game."
+        L10n.format("%@ is open, so the new app waits beside it and replaces it as soon as you quit the game.", [String(describing: (gameName))])
     }
 }
 

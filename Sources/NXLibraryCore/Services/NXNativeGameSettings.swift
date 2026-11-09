@@ -29,8 +29,8 @@ public enum GameSettingsError: LocalizedError, Equatable {
 
     public var errorDescription: String? {
         switch self {
-        case .notOffered(let env): return "This build has no \(env) setting."
-        case .refused(let env, let value): return "This build does not take \(env)=\(value)."
+        case .notOffered(let env): return L10n.format("This build has no %@ setting.", [String(describing: (env))])
+        case .refused(let env, let value): return L10n.format("This build does not take %@=%@.", [String(describing: (env)), String(describing: (value))])
         }
     }
 }

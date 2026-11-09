@@ -18,7 +18,7 @@ final class SetupCheckModel: ObservableObject {
 
     private unowned let viewModel: AppViewModel
     private let runner = SystemCommandRunner()
-    private let queue = DispatchQueue(label: "nxlibrary.setup-check", qos: .userInitiated)
+    private let queue = DispatchQueue(label: L10n.text("nxlibrary.setup-check"), qos: .userInitiated)
     private var facts: SetupFacts?
     private var overrides: [SetupItemID: SetupOverride] = [:]
     private var timer: Timer?
@@ -168,7 +168,7 @@ final class SetupCheckModel: ObservableObject {
             panel.canChooseFiles = true
             panel.canChooseDirectories = false
             panel.allowsMultipleSelection = false
-            panel.prompt = "Import"
+            panel.prompt = L10n.text("Import")
             panel.message = "Choose your prod.keys file. It stays on this Mac."
             if panel.runModal() == .OK, let url = panel.url {
                 viewModel.importKeys(from: url)
@@ -261,7 +261,7 @@ final class SetupCheckModel: ObservableObject {
         let allowUntested = facts.allowUntested
         let pinned = Self.requirements.metalDownload(for: certified)
         let chip = "DOWNLOADING…"
-        setOverride(.metal, .working(chip, detail: "Asking Apple for Metal \(certified)…"))
+        setOverride(.metal, .working(chip, detail: L10n.format("Asking Apple for Metal %@…", [String(describing: (certified))])))
         let env = environment
         queue.async { [weak self] in
             guard let self else { return }
@@ -302,7 +302,7 @@ final class SetupCheckModel: ObservableObject {
         let commands = SetupActions.gitCommands(for: action, folder: facts.engineFolder, pinned: facts.pinnedCommit)
         guard !commands.isEmpty else { completion(false); return }
         let chip = action == .clone ? "CLONING…" : "UPDATING…"
-        setOverride(.engine, .working(chip, progress: 0, detail: "Connecting to GitHub…"))
+        setOverride(.engine, .working(chip, progress: 0, detail: L10n.text("Connecting to GitHub…")))
         let env = environment
         queue.async { [weak self] in
             guard let self else { return }
@@ -322,7 +322,7 @@ final class SetupCheckModel: ObservableObject {
 
     /// The newest engine's card: A returns to the tested engine, the same action as Settings → Engine.
     private func backToTestedEngine(_ completion: @escaping (Bool) -> Void) {
-        setOverride(.engine, .working("SWITCHING…", detail: "Returning to the tested engine…"))
+        setOverride(.engine, .working("SWITCHING…", detail: L10n.text("Returning to the tested engine…")))
         viewModel.useTestedEngine()
         waitForEngineSwitch(completion)
     }
@@ -345,12 +345,12 @@ final class SetupCheckModel: ObservableObject {
     private func installDotnet(_ completion: @escaping (Bool) -> Void) {
         let session = URLSession(configuration: .ephemeral, delegate: DotnetDownloadPolicy(), delegateQueue: nil)
         let chip = "DOWNLOADING…"
-        setOverride(.dotnet, .working(chip, detail: "Asking Microsoft for the newest .NET \(Self.requirements.dotnetMajor) SDK…"))
+        setOverride(.dotnet, .working(chip, detail: L10n.format("Asking Microsoft for the newest .NET %@ SDK…", [String(describing: (Self.requirements.dotnetMajor))])))
         let fail: (String) -> Void = { [weak self] message in
             session.finishTasksAndInvalidate()
             DispatchQueue.main.async {
                 self?.dotnetObservation = nil
-                self?.viewModel.logs.append(LogEntry(level: .error, message: ".NET SDK: \(message)"))
+                self?.viewModel.logs.append(LogEntry(level: .error, message: L10n.format(".NET SDK: %@", [String(describing: (message))])))
                 self?.setOverride(.dotnet, .failed(message))
                 completion(false)
             }
@@ -367,7 +367,7 @@ final class SetupCheckModel: ObservableObject {
                     try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
                     try? FileManager.default.removeItem(at: pkg)
                     try FileManager.default.moveItem(at: location, to: pkg)
-                    self?.report(.dotnet, "CHECKING…", InstallProgress(fraction: 1, label: "Checking Microsoft's hash…"))
+                    self?.report(.dotnet, "CHECKING…", InstallProgress(fraction: 1, label: L10n.text("Checking Microsoft's hash…")))
                     guard try DotnetRelease.verify(file: pkg, sha512: package.sha512) else {
                         try? FileManager.default.removeItem(at: pkg)
                         return fail("The download does not match Microsoft's published hash, so it was deleted.")
@@ -379,7 +379,7 @@ final class SetupCheckModel: ObservableObject {
                     self?.dotnetObservation = nil
                     // macOS Installer asks for the password; NX Library waits for the SDK to appear.
                     NSWorkspace.shared.open(pkg)
-                    self?.viewModel.logs.append(LogEntry(level: .info, message: ".NET \(package.version) SDK installer opened."))
+                    self?.viewModel.logs.append(LogEntry(level: .info, message: L10n.format(".NET %@ SDK installer opened.", [String(describing: (package.version))])))
                     self?.setOverride(.dotnet, .needsYou("FINISH IN INSTALLER"))
                     completion(true)
                 }

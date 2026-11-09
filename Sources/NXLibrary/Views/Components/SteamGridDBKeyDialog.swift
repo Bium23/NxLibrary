@@ -23,13 +23,13 @@ struct SteamGridDBKeyDialog: View {
         ZStack {
             SeleneTheme.scrim45.ignoresSafeArea().contentShape(Rectangle())
                 .onTapGesture { close(saved: false) }
-            SeleneConfirmDialog(title: "SteamGridDB key",
-                                message: "Paste the API key from Preferences → API in your SteamGridDB profile. It stays on this Mac.",
-                                confirmTitle: checking ? "Checking…" : "Save",
+            SeleneConfirmDialog(title: L10n.text("SteamGridDB key"),
+                                message: L10n.text("Paste the API key from Preferences → API in your SteamGridDB profile. It stays on this Mac."),
+                                confirmTitle: checking ? "Checking…" : L10n.text("Save"),
                                 confirmEnabled: !checking && SteamGridDBKey.normalized(draft) != nil,
                                 focus: $focus, onCancel: { close(saved: false) }, onConfirm: save) {
                 VStack(alignment: .leading, spacing: canvas.u(12)) {
-                    TextField("API key", text: $draft)
+                    TextField(L10n.text("API key"), text: $draft)
                         .textFieldStyle(.plain)
                         .font(.system(size: max(13, canvas.u(17)), design: .monospaced))
                         .focused($fieldFocused)
@@ -37,11 +37,11 @@ struct SteamGridDBKeyDialog: View {
                         .onExitCommand { close(saved: false) }
                         .disabled(checking)
                     HStack(spacing: canvas.u(6)) {
-                        Text(message ?? "Free with a SteamGridDB account.")
+                        Text(message ?? L10n.text("Free with a SteamGridDB account."))
                             .foregroundColor(message == nil ? SeleneTheme.ink60 : SeleneTheme.danger)
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 0)
-                        Button("Get a key") { NSWorkspace.shared.open(SteamGridDBArt.keyPage) }
+                        Button(L10n.text("Get a key")) { NSWorkspace.shared.open(SteamGridDBArt.keyPage) }
                             .buttonStyle(.plain)
                             .foregroundColor(SeleneTheme.focus)
                     }

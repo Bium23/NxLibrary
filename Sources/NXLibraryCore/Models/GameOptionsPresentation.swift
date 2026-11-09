@@ -23,36 +23,36 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
 
     public var title: String {
         switch self {
-        case .play: return "Play"
-        case .move: return "Move"
-        case .favorite: return "Favorite"
-        case .hidden: return "Hidden"
-        case .fullscreen: return "Fullscreen"
-        case .fps60: return "60 FPS"
-        case .frameRate: return "Frame rate"
-        case .gameUpscaler: return "Game's upscaler"
-        case .moreSettings: return "More settings"
-        case .metalFX: return "MetalFX upscaling"
-        case .metalHUD: return "Metal HUD"
-        case .consoleMode: return "Console mode"
-        case .language: return "Game language"
-        case .rumble: return "Rumble"
-        case .rumbleStrength: return "Rumble strength"
-        case .renderScale: return "3D render scale"
-        case .restoreDefaults: return "Use new game defaults"
-        case .cheats: return "Cheats"
-        case .mods: return "Mods"
-        case .rebuild: return "Rebuild"
-        case .showInFinder: return "Show in Finder"
-        case .openSaves: return "Saves"
-        case .editDetails: return "Edit details"
-        case .removeGame: return "Remove game"
-        case .changeArtwork: return "Change artwork"
-        case .changeMetadata: return "Change metadata"
-        case .storePage: return "Store page"
-        case .attachSources: return "Attach sources…"
-        case .openLog: return "Open log"
-        case .removeSources: return "Remove sources & build cache"
+        case .play: return L10n.text("Play")
+        case .move: return L10n.text("Move")
+        case .favorite: return L10n.text("Favorite")
+        case .hidden: return L10n.text("Hidden")
+        case .fullscreen: return L10n.text("Fullscreen")
+        case .fps60: return L10n.text("60 FPS")
+        case .frameRate: return L10n.text("Frame rate")
+        case .gameUpscaler: return L10n.text("Game's upscaler")
+        case .moreSettings: return L10n.text("More settings")
+        case .metalFX: return L10n.text("MetalFX upscaling")
+        case .metalHUD: return L10n.text("Metal HUD")
+        case .consoleMode: return L10n.text("Console mode")
+        case .language: return L10n.text("Game language")
+        case .rumble: return L10n.text("Rumble")
+        case .rumbleStrength: return L10n.text("Rumble strength")
+        case .renderScale: return L10n.text("3D render scale")
+        case .restoreDefaults: return L10n.text("Use new game defaults")
+        case .cheats: return L10n.text("Cheats")
+        case .mods: return L10n.text("Mods")
+        case .rebuild: return L10n.text("Rebuild")
+        case .showInFinder: return L10n.text("Show in Finder")
+        case .openSaves: return L10n.text("Saves")
+        case .editDetails: return L10n.text("Edit details")
+        case .removeGame: return L10n.text("Remove game")
+        case .changeArtwork: return L10n.text("Change artwork")
+        case .changeMetadata: return L10n.text("Change metadata")
+        case .storePage: return L10n.text("Store page")
+        case .attachSources: return L10n.text("Attach sources…")
+        case .openLog: return L10n.text("Open log")
+        case .removeSources: return L10n.text("Remove sources & build cache")
         }
     }
 
@@ -193,7 +193,7 @@ public struct GameOptionsPresentation: Equatable {
         self.gameName = gameName
         self.appPath = appPath
         self.canDeleteBundle = canDeleteBundle
-        self.resolutionNote = "Output follows the window/display. Render scale changes the internal 3D resolution only; native 1440p/4K is not available in this engine pin."
+        self.resolutionNote = L10n.text("Output follows the window/display. Render scale changes the internal 3D resolution only; native 1440p/4K is not available in this engine pin.")
     }
 
     // MARK: - Derived copy and state
@@ -204,28 +204,28 @@ public struct GameOptionsPresentation: Equatable {
 
     /// Says where to fix a dimmed Rebuild: the sources or the Metal gate.
     public var rebuildAbout: String {
-        if sourcesDetached { return "Game files are missing or not attached. Attach sources in Edit details." }
-        if toolchainBlocked { return toolchainHint.map { $0 + "." } ?? "Blocked by the Metal gate. See Settings → Engine." }
-        return "Build a new app; the old app stays if the build fails."
+        if sourcesDetached { return L10n.text("Game files are missing or not attached. Attach sources in Edit details.") }
+        if toolchainBlocked { return toolchainHint.map { $0 + "." } ?? L10n.text("Blocked by the Metal gate. See Settings → Engine.") }
+        return L10n.text("Build a new app; the old app stays if the build fails.")
     }
 
     public var attachAbout: String {
         sourcesDetached
-            ? "Game files are missing or not attached. Attach them to rebuild."
-            : "Sources attached. Rebuild without touching saves."
+            ? L10n.text("Game files are missing or not attached. Attach them to rebuild.")
+            : L10n.text("Sources attached. Rebuild without touching saves.")
     }
 
     public var removal: GameRemovalCopy {
         if canDeleteBundle {
             return GameRemovalCopy(
-                title: "Delete \(gameName)?",
+                title: L10n.format("Delete %@?", [String(describing: (gameName))]),
                 confirmTitle: "Delete",
-                message: "This deletes \(appPath). Sources, saves and the build cache are not deleted.")
+                message: L10n.format("This deletes %@. Sources, saves and the build cache are not deleted.", [String(describing: (appPath))]))
         }
         return GameRemovalCopy(
-            title: "Remove \(gameName)?",
+            title: L10n.format("Remove %@?", [String(describing: (gameName))]),
             confirmTitle: "Remove",
-            message: "This removes the library record only; \(appPath) stays on disk.")
+            message: L10n.format("This removes the library record only; %@ stays on disk.", [String(describing: (appPath))]))
     }
 
     /// A row that looks disabled. It still takes focus, and its action explains why it cannot run.
@@ -246,37 +246,37 @@ public struct GameOptionsPresentation: Equatable {
 
     /// The row's one-line description, when it has one.
     public func about(_ row: GameOptionsRow) -> String? {
-        if isFixed(row) { return "Set in env.txt" }
+        if isFixed(row) { return L10n.text("Set in env.txt") }
         switch row {
-        case .play: return "Launch the installed Mac app."
-        case .cheats: return "Install and switch this game's cheats."
-        case .mods: return "Turn this game's file mods on and off, and choose which one wins."
-        case .move: return "Change its place on Spotlight."
-        case .favorite: return "On your Favorites tab."
-        case .hidden: return "Hidden games stay out of your lists."
-        case .fullscreen: return "Launch mode"
-        case .fps60, .frameRate: return "Frame-rate target"
-        case .gameUpscaler: return "The game's own 3D upscaler, or MetalFX instead"
-        case .moreSettings: return "Other settings this build offers."
-        case .metalFX: return "Sharper scaling of the whole picture to your screen"
-        case .metalHUD: return "Performance overlay"
-        case .consoleMode: return "Console profile"
-        case .language: return "Game language"
-        case .rumble: return "Controller vibration"
-        case .rumbleStrength: return "Vibration strength"
-        case .renderScale: return "Internal resolution"
-        case .restoreDefaults: return "Copy current defaults"
+        case .play: return L10n.text("Launch the installed Mac app.")
+        case .cheats: return L10n.text("Install and switch this game's cheats.")
+        case .mods: return L10n.text("Turn this game's file mods on and off, and choose which one wins.")
+        case .move: return L10n.text("Change its place on Spotlight.")
+        case .favorite: return L10n.text("On your Favorites tab.")
+        case .hidden: return L10n.text("Hidden games stay out of your lists.")
+        case .fullscreen: return L10n.text("Launch mode")
+        case .fps60, .frameRate: return L10n.text("Frame-rate target")
+        case .gameUpscaler: return L10n.text("The game's own 3D upscaler, or MetalFX instead")
+        case .moreSettings: return L10n.text("Other settings this build offers.")
+        case .metalFX: return L10n.text("Sharper scaling of the whole picture to your screen")
+        case .metalHUD: return L10n.text("Performance overlay")
+        case .consoleMode: return L10n.text("Console profile")
+        case .language: return L10n.text("Game language")
+        case .rumble: return L10n.text("Controller vibration")
+        case .rumbleStrength: return L10n.text("Vibration strength")
+        case .renderScale: return L10n.text("Internal resolution")
+        case .restoreDefaults: return L10n.text("Copy current defaults")
         case .rebuild: return rebuildAbout
-        case .showInFinder: return "Reveal the app in Finder."
-        case .openSaves: return "Back up, import and restore progress."
-        case .editDetails: return "Artwork, metadata, store page, sources and the build log."
+        case .showInFinder: return L10n.text("Reveal the app in Finder.")
+        case .openSaves: return L10n.text("Back up, import and restore progress.")
+        case .editDetails: return L10n.text("Artwork, metadata, store page, sources and the build log.")
         case .removeGame: return removal.message
-        case .changeArtwork: return "Cover, background, icon and logo, from GameTDB, Title DB or a file."
-        case .changeMetadata: return "Description, genres, developer, publisher and release date."
-        case .storePage: return "Open the game's Nintendo store page."
+        case .changeArtwork: return L10n.text("Cover, background, icon and logo, from GameTDB, Title DB or a file.")
+        case .changeMetadata: return L10n.text("Description, genres, developer, publisher and release date.")
+        case .storePage: return L10n.text("Open the game's Nintendo store page.")
         case .attachSources: return attachAbout
-        case .openLog: return "Reveal the latest build log."
-        case .removeSources: return "Deletes only the source files named in this game and its app-owned workspace. The app and saves stay."
+        case .openLog: return L10n.text("Reveal the latest build log.")
+        case .removeSources: return L10n.text("Deletes only the source files named in this game and its app-owned workspace. The app and saves stay.")
         }
     }
 
@@ -284,21 +284,21 @@ public struct GameOptionsPresentation: Equatable {
     public func info(_ row: GameOptionsRow) -> String? {
         switch row {
         case .fps60:
-            return "On targets 60 FPS; Off targets 30 FPS. Some games run too fast at 60 FPS."
+            return L10n.text("On targets 60 FPS; Off targets 30 FPS. Some games run too fast at 60 FPS.")
         case .metalFX:
-            return "Enlarges the game's finished picture, menus and HUD included, to your window or screen with Apple's MetalFX instead of smooth scaling: sharper edges and text, for a little more GPU time. Nothing changes when the picture is already as large as the screen. Not the same as Game's upscaler. (DM_PRESENT_UPSCALE)"
+            return L10n.text("Enlarges the game's finished picture, menus and HUD included, to your window or screen with Apple's MetalFX instead of smooth scaling: sharper edges and text, for a little more GPU time. Nothing changes when the picture is already as large as the screen. Not the same as Game's upscaler. (DM_PRESENT_UPSCALE)")
         case .gameUpscaler:
-            return "Some Switch 2 games, such as Donkey Kong Bananza, enlarge their 3D picture inside the frame with an upscaler of their own before drawing the HUD. Game's own keeps it; MetalFX does the same step with Apple's scaler in a fraction of the GPU time, with Apple's look instead of the game's. MetalFX upscaling is a later step: it enlarges the finished picture to your screen. Both can be on. (DM_UPSCALER)"
+            return L10n.text("Some Switch 2 games, such as Donkey Kong Bananza, enlarge their 3D picture inside the frame with an upscaler of their own before drawing the HUD. Game's own keeps it; MetalFX does the same step with Apple's scaler in a fraction of the GPU time, with Apple's look instead of the game's. MetalFX upscaling is a later step: it enlarges the finished picture to your screen. Both can be on. (DM_UPSCALER)")
         case .metalHUD:
-            return "Displays Apple's real-time Metal developer HUD (DM_METAL_HUD=1). Shows frame rate, frame pacing graphs, GPU time per frame in milliseconds, and memory allocation."
+            return L10n.text("Displays Apple's real-time Metal developer HUD (DM_METAL_HUD=1). Shows frame rate, frame pacing graphs, GPU time per frame in milliseconds, and memory allocation.")
         case .consoleMode:
-            return "Docked uses the game's TV profile; Handheld uses its portable profile."
+            return L10n.text("Docked uses the game's TV profile; Handheld uses its portable profile.")
         case .renderScale:
-            return "Scales internal 3D scene resolution from 50% to 100% (DM_RENDER_SCALE). Decreasing internal resolution boosts framerates on demanding titles while UI overlays remain crisp."
+            return L10n.text("Scales internal 3D scene resolution from 50% to 100% (DM_RENDER_SCALE). Decreasing internal resolution boosts framerates on demanding titles while UI overlays remain crisp.")
         case .restoreDefaults:
-            return "Copies your defaults for new games once. Later changes to those defaults leave this game unchanged."
+            return L10n.text("Copies your defaults for new games once. Later changes to those defaults leave this game unchanged.")
         case .removeSources:
-            return "Frees disk space by deleting original NSP/XCI dump files and the compilation cache workspace. The installed game app and all your save files are completely safe."
+            return L10n.text("Frees disk space by deleting original NSP/XCI dump files and the compilation cache workspace. The installed game app and all your save files are completely safe.")
         default:
             return nil
         }
@@ -316,7 +316,7 @@ public struct GameOptionsPresentation: Equatable {
                     .filter { $0.settingKey.map(settings.visible) ?? false }
                     .map(GameOptionsEntry.row)
                 if !settings.isOffered("DM_RENDER_SCALE") {
-                    entries.append(.note(title: "Internal resolution", text: resolutionNote))
+                    entries.append(.note(title: L10n.text("Internal resolution"), text: resolutionNote))
                 }
                 if !settings.extraSettings.isEmpty { entries.append(.row(.moreSettings)) }
             } else {
@@ -325,7 +325,7 @@ public struct GameOptionsPresentation: Equatable {
                 if showRenderScale {
                     entries.append(.row(.renderScale))
                 } else {
-                    entries.append(.note(title: "Internal resolution", text: resolutionNote))
+                    entries.append(.note(title: L10n.text("Internal resolution"), text: resolutionNote))
                 }
             }
             entries += [.row(.restoreDefaults), .row(.rebuild), .row(.showInFinder),
@@ -436,7 +436,7 @@ public enum GameSettingValues {
     /// A choice's option label, On / Off for a toggle, a percentage for a range (as the engine's window shows it).
     public static func label(_ setting: LauncherSetting, _ value: String) -> String {
         switch setting.kind {
-        case "toggle": return value == setting.on ? "On" : "Off"
+        case "toggle": return value == setting.on ? L10n.text("On") : L10n.text("Off")
         case "range":
             guard let x = LauncherSetting.number(value) else { return value }
             return "\(Int((x * 100).rounded()))%"

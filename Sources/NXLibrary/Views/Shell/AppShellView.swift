@@ -14,6 +14,7 @@ public struct AppShellView: View {
     @StateObject private var updater = AppUpdater()
     @StateObject private var nativeMenus = NativeMenuCommands.shared
     @ObservedObject private var theme = ThemeStore.shared
+    @ObservedObject private var localization = AppLocalization.shared
     @State private var gestureKeyMonitor: Any?
     @State private var setupSourceEntryID: UUID?
     /// Dismisses the Close Game confirmation when its game quits by itself.
@@ -21,11 +22,18 @@ public struct AppShellView: View {
 
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
 
-    public init() {
-        let store = AppSettingsStore()
+    public init(settingsStore store: AppSettingsStore) {
         _settings = StateObject(wrappedValue: store)
         _viewModel = StateObject(wrappedValue: AppViewModel(settingsStore: store))
         _router = StateObject(wrappedValue: Self.startingRouter(saved: store.settings))
+    }
+
+    private func updateLocale() {
+        let previousLanguage = AppLocalization.shared.context.language
+        AppLocalization.shared.configure(settings.settings)
+        if previousLanguage != AppLocalization.shared.context.language {
+            viewModel.refreshLocalizedMetadata()
+        }
     }
 
     /// The router, already on the screen the Start on setting names.
@@ -255,9 +263,9 @@ public struct AppShellView: View {
             guard error != nil else { return }
             let writing = settings.errorKind == .writing
             viewModel.showSettingsNotice(
-                title: writing ? "Settings not saved" : "Settings unavailable",
-                message: writing ? "Your changes could not be saved. Try again."
-                    : "Defaults are in use. Your previous settings file has been kept.",
+                title: writing ? L10n.text("Settings not saved") : L10n.text("Settings unavailable"),
+                message: writing ? L10n.text("Your changes could not be saved. Try again.")
+                    : L10n.text("Defaults are in use. Your previous settings file has been kept."),
                 retry: writing ? { _ = settings.save() } : nil)
             viewModel.settingsNotice?.onDismiss = { settings.dismissError() }
         }
@@ -296,8 +304,12 @@ public struct AppShellView: View {
         }
     }
 
-    public var body: some View {
+    private var nativeGameCommands: some View {
         styled
+        .environment(\.locale, localization.context.formatLocale)
+        .environment(\.nxAppLocale, localization.context)
+        .onChange(of: settings.settings.appLanguage) { _ in updateLocale() }
+        .onChange(of: settings.settings.appRegion) { _ in updateLocale() }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryPlayFocused)) { _ in
             guard !router.isMenuPresented,
                   nativeMenuAvailability.play,
@@ -334,6 +346,10 @@ public struct AppShellView: View {
                 break
             }
         }
+    }
+
+    public var body: some View {
+        nativeGameCommands
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryCheckAppUpdates)) { _ in
             guard nativeMenuAvailability.general else { return }
             router.closeMenu()
@@ -497,17 +513,18 @@ public struct AppShellView: View {
         viewModel.router = router
         updater.blockedReason = { [weak viewModel, weak runningGames] in
             guard let viewModel else { return nil }
-            if viewModel.isBuilding { return "After the porting" }
-            if viewModel.launchingGameId != nil { return "After the game starts" }
-            if viewModel.saveGate.hasActiveOperations { return "After the save operation" }
+            if viewModel.isBuilding { return L10n.text("After the porting") }
+            if viewModel.isCleaningStorage { return L10n.text("After storage cleanup") }
+            if viewModel.launchingGameId != nil { return L10n.text("After the game starts") }
+            if viewModel.saveGate.hasActiveOperations { return L10n.text("After the save operation") }
             if let ids = runningGames?.runningGameIDs, let id = ids.first {
                 let name = viewModel.libraryGames.first { $0.id == id }?.name ?? "the game"
-                return "After you quit \(name)"
+                return L10n.format("After you quit %@", [String(describing: (name))])
             }
             return nil
         }
         updater.acquireInstallLease = { [weak viewModel, weak runningGames] in
-            guard let viewModel, !viewModel.isBuilding, viewModel.launchingGameId == nil,
+            guard let viewModel, !viewModel.isBuilding, !viewModel.isCleaningStorage, viewModel.launchingGameId == nil,
                   runningGames?.runningGameIDs.isEmpty == true,
                   let token = viewModel.saveGate.beginAppUpdate() else { return nil }
             let gate = viewModel.saveGate
@@ -628,7 +645,7 @@ public struct AppShellView: View {
     private func presentLegacyNotice() {
         guard let message = viewModel.alertMessage else { return }
         viewModel.alertMessage = nil
-        viewModel.showSettingsNotice(title: "NX Library", message: message)
+        viewModel.showSettingsNotice(title: L10n.text("NX Library"), message: message)
     }
 
     private func settingsNoticeInput(_ action: GamepadAction) {
@@ -647,10 +664,10 @@ public struct AppShellView: View {
         return ZStack {
             SeleneTheme.scrim45.ignoresSafeArea().contentShape(Rectangle())
                 .onTapGesture { viewModel.gameWithInstallFailure = nil }
-            SeleneConfirmDialog(title: "Installation failed",
-                                message: "The new build of \(game.name) has been kept."
-                                    + (currentExists ? "\nYour current app is still available." : "\nYou can retry installation."),
-                                confirmTitle: "Retry", cancelTitle: "Close",
+            SeleneConfirmDialog(title: L10n.text("Installation failed"),
+                                message: L10n.format("The new build of %@ has been kept.", [String(describing: (game.name))])
+                                    + (currentExists ? L10n.text("\nYour current app is still available.") : L10n.text("\nYou can retry installation.")),
+                                confirmTitle: "Retry", cancelTitle: L10n.text("Close"),
                                 focus: $viewModel.installFailureFocus,
                                 onCancel: { viewModel.gameWithInstallFailure = nil },
                                 onConfirm: { viewModel.retryFailedInstallation() })
@@ -684,8 +701,8 @@ public struct AppShellView: View {
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
                 .onTapGesture { viewModel.dismissCloseGame() }
-            SeleneConfirmDialog(title: "Close \(game.name)?",
-                                message: "Unsaved progress in the game will be lost.",
+            SeleneConfirmDialog(title: L10n.format("Close %@?", [String(describing: (game.name))]),
+                                message: L10n.text("Unsaved progress in the game will be lost."),
                                 confirmTitle: "Close",
                                 focus: $viewModel.closeGameFocus,
                                 onCancel: { viewModel.dismissCloseGame() },
@@ -723,8 +740,8 @@ public struct AppShellView: View {
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
                 .onTapGesture { viewModel.dismissRemoveGame() }
-            SeleneConfirmDialog(title: "Delete \(game.name)?",
-                                message: "It leaves the library. Your game files and the build cache stay on disk.",
+            SeleneConfirmDialog(title: L10n.format("Delete %@?", [String(describing: (game.name))]),
+                                message: L10n.text("It leaves the library. Your game files and the build cache stay on disk."),
                                 confirmTitle: "Delete",
                                 focus: $viewModel.removeGameFocus,
                                 onCancel: { viewModel.dismissRemoveGame() },
@@ -1011,7 +1028,7 @@ public struct AppShellView: View {
         do {
             try helper.run()
         } catch {
-            viewModel.alertMessage = "NX Library could not restart: \(error.localizedDescription)"
+            viewModel.alertMessage = L10n.format("NX Library could not restart: %@", [String(describing: (error.localizedDescription))])
             return
         }
         NSApplication.shared.terminate(nil)

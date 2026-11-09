@@ -66,6 +66,7 @@ struct SpotlightGenreChips: View {
 struct SpotlightDescription: View {
     @Environment(\.seleneCanvas) private var canvas
     let text: String
+    var languageNote: String? = nil
     let excerpt: DescriptionExcerpt
     let expanded: Bool
     let focused: Bool
@@ -75,15 +76,19 @@ struct SpotlightDescription: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            DetailsBandTitle(text: "About this game")
-            Text(text.isEmpty ? "No description for this game yet." : (expanded ? text : excerpt.text))
+            DetailsBandTitle(text: L10n.text("About this game"))
+            if let languageNote {
+                Text(languageNote).seleneFont(14).foregroundColor(SeleneTheme.ink60)
+                    .padding(.bottom, canvas.u(8))
+            }
+            Text(text.isEmpty ? L10n.text("No description for this game yet.") : (expanded ? text : excerpt.text))
                 .seleneFont(17)
                 .lineSpacing(canvas.u(3))
                 .foregroundColor(text.isEmpty ? SeleneTheme.ink60 : SeleneTheme.ink90)
                 .fixedSize(horizontal: false, vertical: true)
                 .multilineTextAlignment(.leading)
             if excerpt.truncated {
-                Button(expanded ? "Show less" : "Read more", action: onToggle)
+                Button(expanded ? L10n.text("Show less") : L10n.text("Read more"), action: onToggle)
                     .buttonStyle(.plain)
                     .seleneFont(15, .semibold)
                     .foregroundColor(SeleneTheme.ink)

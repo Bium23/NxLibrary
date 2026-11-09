@@ -5,13 +5,15 @@ struct SettingsStartUpSection: View {
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var settings: AppSettingsStore
     let onActions: ([SettingsRowAction]) -> Void
+    let onChooseLanguage: () -> Void
+    let onChooseRegion: () -> Void
     @Environment(\.seleneCanvas) private var canvas
 
     private var startOnTitle: String {
         switch settings.settings.startOn {
         case .spotlight: return "Spotlight"
         case .collection: return "Collection"
-        case .last: return "Where I left"
+        case .last: return L10n.text("Where I left")
         }
     }
 
@@ -24,6 +26,16 @@ struct SettingsStartUpSection: View {
 
     var body: some View {
         VStack(spacing: canvas.u(8)) {
+            SettingsSubheading(L10n.text("Language & region"))
+            SeleneButtonRow("App language",
+                            subtitle: "Menus, genres and available game descriptions. The games’ own language stays separate.",
+                            buttonTitle: settings.settings.appLanguage.nativeName, action: onChooseLanguage)
+            SeleneButtonRow("Regional formats", id: "Region",
+                            subtitle: "Dates, numbers and sizes only. Game descriptions follow the app language.",
+                            buttonTitle: settings.settings.appRegion.flatMap {
+                                L10n.context.formatLocale.localizedString(forRegionCode: $0)
+                            } ?? L10n.text("Automatic (Mac)"), action: onChooseRegion)
+
             SeleneCycleRow("Start on",
                            subtitle: "The screen NX Library opens on.",
                            value: startOnTitle) { step in
@@ -55,7 +67,7 @@ struct SettingsStartUpSection: View {
                             subtitle: "Plays a short opening with the boot sound when the app opens.",
                             isOn: $settings.settings.introAnimation)
 
-            SettingsSubheading("Setup")
+            SettingsSubheading(L10n.text("Setup"))
 
             SeleneButtonRow("Setup",
                             subtitle: "Open the Setup check: what NX Library needs and what is ready.",
@@ -71,15 +83,15 @@ struct SettingsStartUpSection: View {
             }
             .disabled(viewModel.isBuilding || viewModel.isUpdatingApp)
 
-            SelenePanel("Readiness",
-                        info: "Summarizes the 4 essential gates: valid prod.keys, cloned nxnative repository, Python build environment, and certified Metal compiler version.") {
+            SelenePanel(L10n.text("Readiness"),
+                        info: L10n.text("Summarizes the 4 essential gates: valid prod.keys, cloned nxnative repository, Python build environment, and certified Metal compiler version.")) {
                 HStack(spacing: 9) {
                     Circle()
                         .fill(readiness ? SeleneTheme.success : SeleneTheme.untested)
                         .frame(width: 8, height: 8)
-                    Text(viewModel.isCheckingEnvironment ? "Checking…"
-                         : viewModel.environmentStatus == nil && viewModel.setupCompleted ? "Not checked"
-                         : readiness ? "Ready to build and play" : "Setup needed or builds blocked")
+                    Text(viewModel.isCheckingEnvironment ? L10n.text("Checking…")
+                         : viewModel.environmentStatus == nil && viewModel.setupCompleted ? L10n.text("Not checked")
+                         : readiness ? L10n.text("Ready to build and play") : L10n.text("Setup needed or builds blocked"))
                         .seleneFont(16, .semibold)
                         .foregroundColor(SeleneTheme.ink)
                     Spacer()
@@ -94,19 +106,23 @@ struct SettingsStartUpSection: View {
         .onAppear(perform: publishActions)
         .onChange(of: viewModel.isBuilding) { _ in publishActions() }
         .onChange(of: viewModel.isUpdatingApp) { _ in publishActions() }
+        .onChange(of: settings.settings.appLanguage) { _ in publishActions() }
+        .onChange(of: settings.settings.appRegion) { _ in publishActions() }
     }
 
     private var readinessLine: String {
         let engine = seleneShort(viewModel.pinnedEngineCommit)
-        let metal = viewModel.installedMetalVersion ?? "Metal unknown"
-        let xcode = viewModel.environmentStatus?.xcodeVersion ?? "Xcode unknown"
-        let python = viewModel.environmentStatus?.pythonURL == nil ? "Python missing"
-            : viewModel.engineToolchain.isBundled ? "Python included" : "Python venv ready"
-        return "Engine \(engine) · \(metal) · \(xcode) · \(python)"
+        let metal = viewModel.installedMetalVersion ?? L10n.text("Metal unknown")
+        let xcode = viewModel.environmentStatus?.xcodeVersion ?? L10n.text("Xcode unknown")
+        let python = viewModel.environmentStatus?.pythonURL == nil ? L10n.text("Python missing")
+            : viewModel.engineToolchain.isBundled ? L10n.text("Python included") : L10n.text("Python venv ready")
+        return L10n.format("Engine %@ · %@ · %@ · %@", [String(describing: (engine)), String(describing: (metal)), String(describing: (xcode)), String(describing: (python))])
     }
 
     private func publishActions() {
         onActions([
+            .init(id: "appLanguage", title: "App language", activate: onChooseLanguage),
+            .init(id: "appRegion", title: L10n.text("Regional formats"), rowID: "Region", activate: onChooseRegion),
             .value("startOn", "Start on") { step in
                 settings.settings.startOn = settings.settings.startOn.stepped(step)
             },

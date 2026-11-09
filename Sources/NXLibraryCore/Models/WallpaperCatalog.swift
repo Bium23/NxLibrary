@@ -18,7 +18,7 @@ public struct Wallpaper: Equatable, Identifiable {
         let name = url.deletingPathExtension().lastPathComponent
         let words = name.split(separator: "-").drop { $0.allSatisfy(\.isNumber) }.joined(separator: " ")
         let themeName = theme == WallpaperCatalog.custom
-            ? "Your own" : theme.split(separator: "-").map { $0.capitalized }.joined(separator: " ")
+            ? L10n.text("Your own") : theme.split(separator: "-").map { $0.capitalized }.joined(separator: " ")
         return words.isEmpty ? themeName : "\(themeName) · \(words.prefix(1).uppercased())\(words.dropFirst())"
     }
 }

@@ -204,8 +204,8 @@ final class ModStoreHost: ObservableObject {
     func chip(for entry: ModCatalogEntry) -> String? {
         switch panel.gameBanana.installs[entry.id] {
         case .downloading(let fraction): return "Downloading \(Int(fraction * 100))%"
-        case .installing: return "Installing…"
-        case .failed: return "Didn't install"
+        case .installing: return L10n.text("Installing…")
+        case .failed: return L10n.text("Didn't install")
         case .done, nil: break
         }
         guard let record = records[entry.titleID]?[entry.id] else { return nil }

@@ -46,7 +46,7 @@ struct DetailsTopBlock: View {
                     .padding(.top, canvas.u(16))
             }
             if case .failed(let failure) = pillSet {
-                Text(failure == .cancelled ? "Porting cancelled" : "Porting failed")
+                Text(failure == .cancelled ? L10n.text("Porting cancelled") : L10n.text("Porting failed"))
                     .seleneFont(19, .semibold)
                     .foregroundColor(PortingPillCopy.softRed)
                     .padding(.leading, canvas.u(4))
@@ -125,9 +125,9 @@ struct DetailsTopBlock: View {
             Text(reason.detail).seleneFont(15).foregroundColor(SeleneTheme.ink60)
         case .normal:
             if !game.sources.isEmpty, !GameResourceState.sourcesAvailable(for: game) {
-                Text("Game files not found · Rebuild unavailable").seleneFont(15).foregroundColor(SeleneTheme.ink60)
+                Text(L10n.text("Game files not found · Rebuild unavailable")).seleneFont(15).foregroundColor(SeleneTheme.ink60)
             } else if !game.isPlayableLocally {
-                Text("Not built yet").seleneFont(15).foregroundColor(SeleneTheme.ink60)
+                Text(L10n.text("Not built yet")).seleneFont(15).foregroundColor(SeleneTheme.ink60)
             }
         }
     }
@@ -135,10 +135,10 @@ struct DetailsTopBlock: View {
     @ViewBuilder private var pills: some View {
         switch pillSet {
         case .porting:
-            SelenePillButton(title: "Porting", minWidth: 200, height: 52, horizontalPadding: 36,
+            SelenePillButton(title: L10n.text("Porting"), minWidth: 200, height: 52, horizontalPadding: 36,
                              focused: focusedPill == 0, waveDots: true) { onPill(0) }
                 .onHover { if $0 { onHoverPill(0) } }
-                .accessibilityLabel("Porting, show progress")
+                .accessibilityLabel(L10n.text("Porting, show progress"))
         case .failed:
             HStack(spacing: canvas.u(14)) {
                 ForEach(Array(PortingPillCopy.failedTitles.enumerated()), id: \.offset) { index, title in
@@ -158,7 +158,7 @@ struct DetailsTopBlock: View {
                              horizontalPadding: 36, focused: focusedPill == 0,
                              enabled: isRunning || (primaryEnabled && pillSet.unavailableReason == nil), action: onPrimary)
                 .onHover { if $0 { onHoverPill(0) } }
-            SelenePillButton(title: isRunning ? "Close Game" : "Options", minWidth: 200, height: 52,
+            SelenePillButton(title: isRunning ? L10n.text("Close Game") : L10n.text("Options"), minWidth: 200, height: 52,
                              horizontalPadding: 36, focused: focusedPill == 1,
                              action: onSecondary)
                 .onHover { if $0 { onHoverPill(1) } }
@@ -166,14 +166,14 @@ struct DetailsTopBlock: View {
                              iconSize: 20, minWidth: 52, height: 52, horizontalPadding: 0,
                              focused: focusedPill == 2, action: onFavorite)
                 .onHover { if $0 { onHoverPill(2) } }
-                .accessibilityLabel(game.isFavorite ? "Remove from favorites" : "Add to favorites")
+                .accessibilityLabel(game.isFavorite ? L10n.text("Remove from favorites") : L10n.text("Add to favorites"))
         }
     }
 
     private var primaryTitle: String {
-        if isRunning { return "Resume" }
-        if pillSet.unavailableReason != nil { return "Unavailable" }
-        return presentation.canPlay ? "Play" : "Build"
+        if isRunning { return L10n.text("Resume") }
+        if pillSet.unavailableReason != nil { return L10n.text("Unavailable") }
+        return presentation.canPlay ? L10n.text("Play") : "Build"
     }
 
     // MARK: - Stats
@@ -181,14 +181,14 @@ struct DetailsTopBlock: View {
     /// PLAYTIME · LAST PLAYED · RELEASED · CHEATS · PLATFORM, 28 either side of each rule.
     private var stats: some View {
         var items = [
-            SeleneStat.text("PLAYTIME", presentation.playtime),
-            SeleneStat.text("LAST PLAYED", presentation.lastPlayed)
+            SeleneStat.text(L10n.text("PLAYTIME"), presentation.playtime),
+            SeleneStat.text(L10n.text("LAST PLAYED"), presentation.lastPlayed)
         ]
         if let released = presentation.released {
-            items.append(SeleneStat.text("RELEASED", released))
+            items.append(SeleneStat.text(L10n.text("RELEASED"), released))
         }
         if cheatsOn {
-            items.append(SeleneStat.text("CHEATS", "On"))
+            items.append(SeleneStat.text(L10n.text("CHEATS"), L10n.text("On")))
         }
         items.append(SeleneStat.platform(presentation.console))
         return SeleneStatsRow(items: items, gap: 28)
@@ -221,10 +221,13 @@ struct DetailsTopBlock: View {
         let text = presentation.description
         VStack(alignment: .leading, spacing: canvas.u(6)) {
             if text.isEmpty {
-                Text("No description for this game yet.")
+                Text(L10n.text("No description for this game yet."))
                     .seleneFont(17)
                     .foregroundColor(SeleneTheme.ink60)
             } else {
+                if let note = presentation.descriptionLanguageNote {
+                    Text(note).seleneFont(14).foregroundColor(SeleneTheme.ink60)
+                }
                 if expanded {
                     ScrollView(.vertical, showsIndicators: false) {
                         descriptionText(text)
@@ -238,7 +241,7 @@ struct DetailsTopBlock: View {
                         .clipped()
                 }
                 if text.count > Self.readMoreThreshold {
-                    Button(expanded ? "Show less" : "Read more") { expanded.toggle() }
+                    Button(expanded ? L10n.text("Show less") : L10n.text("Read more")) { expanded.toggle() }
                         .buttonStyle(.plain)
                         .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.glyph)

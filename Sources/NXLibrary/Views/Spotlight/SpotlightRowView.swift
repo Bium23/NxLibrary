@@ -189,11 +189,11 @@ struct SpotlightRowView: View {
     private func emptyMessage(_ filter: LibraryFilter) -> some View {
         let (title, hint): (String, String) = {
             switch filter {
-            case .installed: return ("Nothing installed", "Build a game and it shows up here.")
-            case .recentlyPlayed: return ("Nothing played lately", "Games you play show up here.")
-            case .favorites: return ("No favorites yet", "Choose the heart on a game to add it to your favorites.")
-            case .notPlayed: return ("You've started everything", "Every game in your library has been played at least once.")
-            case .all: return ("No games yet", "Add a game to start your collection.")
+            case .installed: return (L10n.text("Nothing installed"), L10n.text("Build a game and it shows up here."))
+            case .recentlyPlayed: return (L10n.text("Nothing played lately"), L10n.text("Games you play show up here."))
+            case .favorites: return (L10n.text("No favorites yet"), L10n.text("Choose the heart on a game to add it to your favorites."))
+            case .notPlayed: return (L10n.text("You've started everything"), L10n.text("Every game in your library has been played at least once."))
+            case .all: return (L10n.text("No games yet"), L10n.text("Add a game to start your collection."))
             }
         }()
         return VStack(alignment: .leading, spacing: canvas.u(6)) {

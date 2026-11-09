@@ -32,7 +32,7 @@ struct MoreSettingsPanel: View {
             SeleneTheme.scrim65.ignoresSafeArea().contentShape(Rectangle()).onTapGesture { onClose() }
             VStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("MORE SETTINGS").seleneFont(15, .semibold).foregroundColor(SeleneTheme.ink60)
+                    Text(L10n.text("MORE SETTINGS")).seleneFont(15, .semibold).foregroundColor(SeleneTheme.ink60)
                         .padding(.leading, canvas.u(8))
                     Text(game.name).seleneFont(40).foregroundColor(SeleneTheme.ink).lineLimit(1)
                         .padding(.leading, canvas.u(6))
@@ -42,7 +42,7 @@ struct MoreSettingsPanel: View {
                 .frame(width: canvas.u(1040), alignment: .leading)
                 .frame(maxHeight: .infinity, alignment: .top)
                 .padding(.top, canvas.u(90)).padding(.bottom, canvas.u(20))
-                SeleneHintsBar(left: [HintItem(.b, "Back", action: onClose)], right: [HintItem(.a, "Select")],
+                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back"), action: onClose)], right: [HintItem(.a, L10n.text("Select"))],
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -87,15 +87,15 @@ struct MoreSettingsPanel: View {
     }
 
     private func about(_ setting: LauncherSetting) -> String {
-        if isFixed(setting) { return "Set in env.txt" }
-        if let note = setting.note, !note.isEmpty { return note }
-        return setting.section
+        if isFixed(setting) { return L10n.text("Set in env.txt") }
+        if let note = setting.note, !note.isEmpty { return L10n.text(note) }
+        return L10n.text(setting.section)
     }
 
     private func rowView(_ setting: LauncherSetting, focused: Bool) -> some View {
         let current = value(setting)
-        let label = GameSettingValues.label(setting, current)
-        return SeleneOptionRow(icon: nil, title: setting.label, about: about(setting), focused: focused,
+        let label = L10n.text(GameSettingValues.label(setting, current))
+        return SeleneOptionRow(icon: nil, title: L10n.text(setting.label), about: about(setting), focused: focused,
                                enabled: !isFixed(setting)) {
             if setting.kind == "toggle" {
                 SeleneSwitch(isOn: .constant(current == setting.on)).allowsHitTesting(false)
@@ -104,7 +104,7 @@ struct MoreSettingsPanel: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(setting.label)
+        .accessibilityLabel(L10n.text(setting.label))
         .accessibilityHint(about(setting))
         .accessibilityValue(label)
         .accessibilityAddTraits(.isButton)

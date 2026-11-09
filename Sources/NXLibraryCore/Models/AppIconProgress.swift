@@ -7,18 +7,18 @@ public enum AppIconProgress: Equatable {
 
     public var message: String {
         switch self {
-        case .searching: return "Looking for an icon…"
-        case .updating: return "Updating the app icon in Finder and the Dock… large games can take a minute"
-        case .updated: return "App icon updated in Finder and the Dock"
-        case .launcherOnly: return "Icon used only in NX Library"
-        case .original: return "Using the game's original app icon"
-        case .unavailable: return "No icon available. You can choose one."
-        case .failed(let reason): return "The app icon was not changed: \(reason)"
+        case .searching: return L10n.text("Looking for an icon…")
+        case .updating: return L10n.text("Updating the app icon in Finder and the Dock… large games can take a minute")
+        case .updated: return L10n.text("App icon updated in Finder and the Dock")
+        case .launcherOnly: return L10n.text("Icon used only in NX Library")
+        case .original: return L10n.text("Using the game's original app icon")
+        case .unavailable: return L10n.text("No icon available. You can choose one.")
+        case .failed(let reason): return L10n.format("The app icon was not changed: %@", [String(describing: (reason))])
         }
     }
 
     public var buildMessage: String {
-        if self == .unavailable { return "Game ready. No icon found; add one in Change artwork." }
+        if self == .unavailable { return L10n.text("Game ready. No icon found; add one in Change artwork.") }
         if case .failed = self { return "Game built. \(message)" }
         return "Game ready. \(message)"
     }

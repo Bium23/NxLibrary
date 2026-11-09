@@ -109,10 +109,10 @@ public enum LaunchBoxArt {
             (value(object, key) as? NSNumber).map(\.intValue).flatMap { $0 > 0 ? $0 : nil }
         }
         return array.compactMap { entry in
-            guard let object = entry as? [String: Any], let kind = text(object, "imageTypeName"),
-                  let preview = text(object, "imageFileName"), let full = text(object, "fullGameImageFileName"),
+            guard let object = entry as? [String: Any], let kind = text(object, L10n.text("imageTypeName")),
+                  let preview = text(object, L10n.text("imageFileName")), let full = text(object, L10n.text("fullGameImageFileName")),
                   safeName(preview), safeName(full) else { return nil }
-            return PayloadImage(kind: kind, region: text(object, "regionName"), preview: preview, full: full,
+            return PayloadImage(kind: kind, region: text(object, L10n.text("regionName")), preview: preview, full: full,
                                 width: number(object, "fullGameImageWidth"), height: number(object, "fullGameImageHeight"))
         }
     }

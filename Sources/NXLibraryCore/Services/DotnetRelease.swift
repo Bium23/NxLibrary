@@ -20,7 +20,7 @@ public enum DotnetRelease {
 
     public enum Failure: LocalizedError {
         case noPackage
-        public var errorDescription: String? { "Microsoft's release list has no .NET 10 SDK installer for this Mac." }
+        public var errorDescription: String? { L10n.text("Microsoft's release list has no .NET 10 SDK installer for this Mac.") }
     }
 
     private struct Metadata: Decodable {

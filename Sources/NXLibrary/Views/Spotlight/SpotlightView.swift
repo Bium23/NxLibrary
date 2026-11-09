@@ -437,8 +437,8 @@ public struct SpotlightView: View {
 
     static func poolLabel(_ pool: SurprisePool) -> String {
         switch pool {
-        case .installed: return "Installed games"
-        case .notPlayed: return "Games not played yet"
+        case .installed: return L10n.text("Installed games")
+        case .notPlayed: return L10n.text("Games not played yet")
         case .all: return "All games"
         }
     }
@@ -488,44 +488,44 @@ public struct SpotlightView: View {
 
     private func contextHints(_ model: Snapshot, _ state: SpotlightState) -> [HintItem] {
         if state.isLifted {
-            return [HintItem(nil, "◂ ▸  Move"), HintItem(.a, "Drop"), HintItem(.b, "Cancel")]
+            return [HintItem(nil, L10n.text("◂ ▸  Move")), HintItem(.a, L10n.text("Drop")), HintItem(.b, L10n.text("Cancel"))]
         }
         if cardMenu != nil {
-            return [HintItem(.a, "Select"), HintItem(.b, "Back")]
+            return [HintItem(.a, L10n.text("Select")), HintItem(.b, L10n.text("Back"))]
         }
         switch state.focus {
         case .pills:
-            return [HintItem(.b, "Back"), HintItem(.a, "Select")]
+            return [HintItem(.b, L10n.text("Back")), HintItem(.a, L10n.text("Select"))]
         case .strip:
-            return [HintItem(.b, "Back"), HintItem(.a, "View")]
+            return [HintItem(.b, L10n.text("Back")), HintItem(.a, L10n.text("View"))]
         case .mods, .about, .actions:
-            return [HintItem(.b, "Back"), HintItem(.a, "Select")]
+            return [HintItem(.b, L10n.text("Back")), HintItem(.a, L10n.text("Select"))]
         case .more:
-            return [HintItem(.b, "Back"), HintItem(.a, "Show")]
+            return [HintItem(.b, L10n.text("Back")), HintItem(.a, L10n.text("Show"))]
         case .topGames:
-            return [HintItem(.a, "Show")]
+            return [HintItem(.a, L10n.text("Show"))]
         case .store:
             // On the sort bar A sorts, and only when the focused order is not the one shown already.
-            guard storeHost.focus.kind == .sort else { return [HintItem(.b, "Back"), HintItem(.a, "View")] }
+            guard storeHost.focus.kind == .sort else { return [HintItem(.b, L10n.text("Back")), HintItem(.a, L10n.text("View"))] }
             let chosen = ModStoreSort.allCases.firstIndex(of: storeHost.sort) == storeHost.focus.index
-            return chosen ? [HintItem(.b, "Back")] : [HintItem(.b, "Back"), HintItem(.a, "Sort")]
+            return chosen ? [HintItem(.b, L10n.text("Back"))] : [HintItem(.b, L10n.text("Back")), HintItem(.a, L10n.text("Sort"))]
         case .row:
             switch model.selectedItem {
             case .card(let card):
-                let more = [HintItem(.y, "Card options")]
-                return card == .activity ? more : more + [HintItem(.a, card == .surprise ? "Pick" : card == .mods ? "Browse" : "Open")]
+                let more = [HintItem(.y, L10n.text("Card options"))]
+                return card == .activity ? more : more + [HintItem(.a, card == .surprise ? L10n.text("Pick") : card == .mods ? L10n.text("Browse") : L10n.text("Open"))]
             case .game:
                 guard let game = model.selectedGame else { return [] }
                 if viewModel.portingPills(game) == .porting {
-                    return [HintItem(.y, "Options"), HintItem(.a, "Porting")]
+                    return [HintItem(.y, L10n.text("Options")), HintItem(.a, L10n.text("Porting"))]
                 }
                 if viewModel.portingPills(game).unavailableReason != nil, !runningGames.isRunning(game) {
-                    return [HintItem(.y, "Options")]
+                    return [HintItem(.y, L10n.text("Options"))]
                 }
                 if game.isPlayableLocally {
-                    return [HintItem(.y, "Options"), HintItem(.a, "Play")]
+                    return [HintItem(.y, L10n.text("Options")), HintItem(.a, L10n.text("Play"))]
                 }
-                return [HintItem(.y, "Options"), HintItem(.a, "Build")]
+                return [HintItem(.y, L10n.text("Options")), HintItem(.a, L10n.text("Build"))]
             case nil:
                 return []
             }
@@ -897,7 +897,7 @@ public struct SpotlightView: View {
     private func pageBelow(_ game: PortedGame, page: SpotlightPageModel, state: SpotlightState) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top, spacing: 0) {
-                SpotlightDescription(text: page.presentation.description, excerpt: aboutExcerpt(page),
+                SpotlightDescription(text: page.presentation.description, languageNote: page.presentation.descriptionLanguageNote, excerpt: aboutExcerpt(page),
                                      expanded: aboutExpanded, focused: state.focus == .about,
                                      onToggle: { aboutExpanded.toggle() })
                     .spotlightBlock(.about)

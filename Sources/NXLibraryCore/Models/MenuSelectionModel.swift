@@ -7,13 +7,13 @@ public enum MenuAction: String, CaseIterable, Identifiable, Equatable {
 
     public var title: String {
         switch self {
-        case .addGame: return "Add Game"
-        case .refreshLibrary: return "Library refresh"
-        case .settings: return "Settings"
+        case .addGame: return L10n.text("Add Game")
+        case .refreshLibrary: return L10n.text("Library refresh")
+        case .settings: return L10n.text("Settings")
         case .theme: return "Theme"
         case .console: return "Console"
-        case .setupCheck: return "Setup check"
-        case .power: return "Power"
+        case .setupCheck: return L10n.text("Setup check")
+        case .power: return L10n.text("Power")
         }
     }
 
@@ -37,9 +37,9 @@ public enum PowerAction: String, CaseIterable, Identifiable, Equatable {
 
     public var title: String {
         switch self {
-        case .quit: return "Quit"
-        case .hide: return "Hide"
-        case .relaunch: return "Restart app"
+        case .quit: return L10n.text("Quit")
+        case .hide: return L10n.text("Hide")
+        case .relaunch: return L10n.text("Restart app")
         }
     }
 

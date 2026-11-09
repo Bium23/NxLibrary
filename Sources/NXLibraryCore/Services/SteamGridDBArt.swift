@@ -48,10 +48,10 @@ public enum SteamGridDBError: LocalizedError, Equatable {
 
     public var errorDescription: String? {
         switch self {
-        case .invalidKey: return "That is not a SteamGridDB API key. Copy it from Preferences → API in your SteamGridDB profile."
-        case .rejected: return "SteamGridDB did not accept that key. Check it in Preferences → API in your SteamGridDB profile."
-        case .unreachable: return "SteamGridDB could not be reached. Check the connection and try again."
-        case .notSaved: return "The key could not be saved on this Mac."
+        case .invalidKey: return L10n.text("That is not a SteamGridDB API key. Copy it from Preferences → API in your SteamGridDB profile.")
+        case .rejected: return L10n.text("SteamGridDB did not accept that key. Check it in Preferences → API in your SteamGridDB profile.")
+        case .unreachable: return L10n.text("SteamGridDB could not be reached. Check the connection and try again.")
+        case .notSaved: return L10n.text("The key could not be saved on this Mac.")
         }
     }
 }

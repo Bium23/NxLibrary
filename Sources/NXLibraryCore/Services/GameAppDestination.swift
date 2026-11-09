@@ -44,10 +44,10 @@ public enum GameAppDestination {
         guard folder.isFileURL, folder.standardizedFileURL.path != "/",
               fm.fileExists(atPath: folder.path, isDirectory: &isDirectory), isDirectory.boolValue,
               fm.isReadableFile(atPath: folder.path), fm.isExecutableFile(atPath: folder.path) else {
-            return "The Game apps folder is unavailable. Reconnect it or choose another in Settings → Library."
+            return L10n.text("The Game apps folder is unavailable. Reconnect it or choose another in Settings → Library.")
         }
         guard fm.isWritableFile(atPath: folder.path) else {
-            return "The app folder is read-only: \(folder.path). Allow writing here before building."
+            return L10n.format("The app folder is read-only: %@. Allow writing here before building.", [String(describing: (folder.path))])
         }
         return nil
     }

@@ -30,9 +30,9 @@ public enum CloudSaves: Codable, Equatable {
 
     public var title: String {
         switch self {
-        case .off: return "Off"
-        case .iCloudDrive: return "iCloud Drive"
-        case .folder: return "Folder"
+        case .off: return L10n.text("Off")
+        case .iCloudDrive: return L10n.text("iCloud Drive")
+        case .folder: return L10n.text("Folder")
         }
     }
 

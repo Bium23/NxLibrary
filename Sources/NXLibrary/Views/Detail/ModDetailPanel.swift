@@ -112,7 +112,7 @@ struct ModDetailPanel: View {
         let rows = Self.rows(for: mod)
         return VStack(alignment: .leading, spacing: canvas.u(12)) {
             Group {
-                Text("GAMEBANANA MOD")
+                Text(L10n.text("GAMEBANANA MOD"))
                     .seleneFont(15, .semibold)
                     .foregroundColor(SeleneTheme.ink60)
                 Text(mod.name)
@@ -130,7 +130,7 @@ struct ModDetailPanel: View {
                         .lineLimit(3)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                Text("\(mod.likes) likes · \(mod.downloads) downloads")
+                Text(L10n.format("%@ likes · %@ downloads", [String(describing: (mod.likes)), String(describing: (mod.downloads))]))
                     .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink60)
             }
@@ -144,7 +144,7 @@ struct ModDetailPanel: View {
                 .padding(.top, canvas.u(6))
             }
             VStack(alignment: .leading, spacing: canvas.u(8)) {
-                Text(mod.files.count == 1 ? "FILE" : "FILES")
+                Text(mod.files.count == 1 ? L10n.text("FILE") : L10n.text("FILES"))
                     .seleneFont(15, .semibold)
                     .foregroundColor(SeleneTheme.ink60)
                     .padding(.leading, canvas.u(14))
@@ -154,7 +154,7 @@ struct ModDetailPanel: View {
                 }
             }
             .padding(.top, canvas.u(22))
-            Text("Mod data provided by GameBanana")
+            Text(L10n.text("Mod data provided by GameBanana"))
                 .seleneFont(14)
                 .foregroundColor(SeleneTheme.ink60)
                 .padding(.top, canvas.u(6))
@@ -214,7 +214,7 @@ struct ModDetailPanel: View {
             )
             .background(alignment: .topLeading) {
                 // One line, to measure.
-                Text("Ag").seleneFont(16).hidden()
+                Text(L10n.text("Ag")).seleneFont(16).hidden()
                     .background(GeometryReader { proxy in
                         Color.clear.preference(key: LineHeightKey.self, value: proxy.size.height)
                     })
@@ -278,24 +278,24 @@ struct ModDetailPanel: View {
                     .frame(width: canvas.u(28), height: canvas.u(28))
                     .clipShape(Circle())
             }
-            Text("by \(mod.author)")
+            Text(L10n.format("by %@", [String(describing: (mod.author))]))
                 .seleneFont(18, .medium)
                 .foregroundColor(SeleneTheme.ink)
         }
     }
 
     private var versionLine: String {
-        let date = mod.updated.formatted(date: .abbreviated, time: .omitted)
-        var parts = [mod.version.isEmpty ? "Updated \(date)" : "Version \(mod.version) · Updated \(date)"]
-        if let version = game.versionString, !version.isEmpty { parts.append("Your game: \(version)") }
+        let date = mod.updated.formatted(.dateTime.day().month(.abbreviated).year().locale(L10n.context.formatLocale))
+        var parts = [mod.version.isEmpty ? L10n.format("Updated %@", [String(describing: (date))]) : L10n.format("Version %@ · Updated %@", [String(describing: (mod.version)), String(describing: (date))])]
+        if let version = game.versionString, !version.isEmpty { parts.append(L10n.format("Your game: %@", [String(describing: (version))])) }
         return parts.joined(separator: "   ")
     }
 
     /// The author's requirements (game versions, other mods), so a mismatch shows before the download.
     private var requirementsLine: String? {
         guard !mod.requirements.isEmpty else { return nil }
-        let names = mod.requirements.map { $0.isOptional ? "\($0.name) (recommended)" : $0.name }
-        return "Requires: " + names.joined(separator: " · ")
+        let names = mod.requirements.map { $0.isOptional ? L10n.format("%@ (recommended)", [String(describing: ($0.name))]) : $0.name }
+        return L10n.text("Requires: ") + names.joined(separator: " · ")
     }
 
     // MARK: - Rows
@@ -316,14 +316,14 @@ struct ModDetailPanel: View {
     private func describe(_ row: Row) -> RowText {
         switch row {
         case .readMore:
-            return RowText(icon: .chevron, title: expanded ? "Show less" : "Read more", action: nil,
+            return RowText(icon: .chevron, title: expanded ? L10n.text("Show less") : L10n.text("Read more"), action: nil,
                            compact: true, iconTurn: expanded ? -90 : 90)
         case .openPage:
-            return RowText(icon: .link, title: "Open on GameBanana", detail: "Every file, comments and credits")
+            return RowText(icon: .link, title: L10n.text("Open on GameBanana"), detail: L10n.text("Every file, comments and credits"))
         case .file(let id):
             guard let file = mod.files.first(where: { $0.id == id }) else { return RowText(icon: .puzzle, title: "") }
-            let size = ByteCountFormatter.string(fromByteCount: file.size, countStyle: .file)
-            let date = file.dateAdded.map { " · " + $0.formatted(date: .abbreviated, time: .omitted) } ?? ""
+            let size = file.size.formatted(.byteCount(style: .file).locale(L10n.context.formatLocale))
+            let date = file.dateAdded.map { " · " + $0.formatted(.dateTime.day().month(.abbreviated).year().locale(L10n.context.formatLocale)) } ?? ""
             var text = RowText(icon: .puzzle, title: file.name, detail: size + date)
             // Only the file being installed shows the install; the others wait for it to end.
             let state = model.installState(mod: mod.id, file: file.id)
@@ -333,7 +333,7 @@ struct ModDetailPanel: View {
                 text.progress = fraction
                 return text
             case .installing:
-                text.action = "Installing…"
+                text.action = L10n.text("Installing…")
                 text.enabled = false
                 return text
             case .failed(let message):

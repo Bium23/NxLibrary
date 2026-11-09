@@ -45,8 +45,8 @@ public struct InstallProgress: Equatable {
 
     public static func bytes(done: Int64, total: Int64) -> InstallProgress {
         let mb = { (value: Int64) in Int((Double(value) / 1_048_576).rounded()) }
-        guard total > 0 else { return InstallProgress(fraction: nil, label: "\(mb(done)) MB") }
-        return InstallProgress(fraction: min(1, Double(done) / Double(total)), label: "\(mb(done)) of \(mb(total)) MB")
+        guard total > 0 else { return InstallProgress(fraction: nil, label: L10n.format("%@ MB", [String(describing: (mb(done)))])) }
+        return InstallProgress(fraction: min(1, Double(done) / Double(total)), label: L10n.format("%@ of %@ MB", [String(describing: (mb(done))), String(describing: (mb(total)))]))
     }
 }
 

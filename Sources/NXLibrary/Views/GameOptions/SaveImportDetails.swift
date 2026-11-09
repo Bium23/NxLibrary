@@ -19,7 +19,7 @@ struct SaveImportDetails: View {
     private var content: some View {
         VStack(spacing: canvas.u(18)) {
             VStack(spacing: canvas.u(13)) {
-                endpoint("From", folder: source)
+                endpoint(L10n.text("From"), folder: source)
                 SaveTransferArrow()
                 endpoint("To", folder: destination)
             }
@@ -30,7 +30,7 @@ struct SaveImportDetails: View {
                 .fill(SeleneTheme.glassLight))
 
             VStack(spacing: canvas.u(8)) {
-                Text("Your current save is backed up before replacement.")
+                Text(L10n.text("Your current save is backed up before replacement."))
                     .seleneFont(17, .medium)
                     .foregroundColor(SeleneTheme.ink)
                 Text(SavePresentation.importWarning)

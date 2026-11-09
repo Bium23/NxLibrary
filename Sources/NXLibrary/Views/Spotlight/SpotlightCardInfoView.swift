@@ -21,7 +21,12 @@ struct SpotlightCardInfoView: View {
     var modCounts: (mods: Int, games: Int, looking: Bool)? = nil
 
     /// Monday first, whatever the locale (matches `Activity.summary`).
-    private static let dayLetters = ["M", "T", "W", "T", "F", "S", "S"]
+    private static var dayLetters: [String] {
+        let formatter = DateFormatter()
+        formatter.locale = L10n.context.formatLocale
+        let days = formatter.veryShortStandaloneWeekdaySymbols ?? ["S", "M", "T", "W", "T", "F", "S"]
+        return Array(days.dropFirst()) + [days[0]]
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -47,19 +52,19 @@ struct SpotlightCardInfoView: View {
         switch card {
         case .collection: return "Collection"
         case .surprise: return "Surprise me"
-        case .activity: return "Activity"
-        case .mods: return "Mods"
-        case .addGame: return "Add a game"
+        case .activity: return L10n.text("Activity")
+        case .mods: return L10n.text("Mods")
+        case .addGame: return L10n.text("Add a game")
         }
     }
 
     private var about: String {
         switch card {
-        case .collection: return "Every game in your library, in one row."
-        case .surprise: return "Can't decide? Pick a game for me."
-        case .activity: return "What you played this week."
-        case .mods: return "Mods that work with your games, from GameBanana."
-        case .addGame: return "Build a game from your own dumps."
+        case .collection: return L10n.text("Every game in your library, in one row.")
+        case .surprise: return L10n.text("Can't decide? Pick a game for me.")
+        case .activity: return L10n.text("What you played this week.")
+        case .mods: return L10n.text("Mods that work with your games, from GameBanana.")
+        case .addGame: return L10n.text("Build a game from your own dumps.")
         }
     }
 
@@ -69,7 +74,7 @@ struct SpotlightCardInfoView: View {
         case .surprise: return "Pick"
         // Activity and Mods have no button here: the hint in the corner says it once.
         case .activity, .mods: return nil
-        case .addGame: return "Add"
+        case .addGame: return L10n.text("Add")
         }
     }
 
@@ -78,12 +83,12 @@ struct SpotlightCardInfoView: View {
         switch card {
         case .collection:
             HStack(spacing: canvas.u(26)) {
-                stat("GAMES", "\(gameCount)")
+                stat(L10n.text("GAMES"), "\(gameCount)")
                 divider
-                stat("INSTALLED", "\(installedCount)")
+                stat(L10n.text("INSTALLED"), "\(installedCount)")
             }
         case .surprise:
-            stat("PICKS FROM", poolLabel)
+            stat(L10n.text("PICKS FROM"), poolLabel)
         case .activity:
             activityDetail
         case .mods:
@@ -91,10 +96,10 @@ struct SpotlightCardInfoView: View {
                 HStack(spacing: canvas.u(26)) {
                     stat("MODS", "\(counts.mods)")
                     divider
-                    stat("FOR", counts.games == 1 ? "1 game" : "\(counts.games) games")
+                    stat(L10n.text("FOR"), counts.games == 1 ? L10n.text("1 game") : L10n.format("%@ games", [String(describing: (counts.games))]))
                 }
             } else {
-                stat("MODS", modCounts?.looking == false ? "None yet" : "Looking…")
+                stat("MODS", modCounts?.looking == false ? L10n.text("None yet") : L10n.text("Looking…"))
             }
         case .addGame:
             EmptyView()
@@ -104,12 +109,12 @@ struct SpotlightCardInfoView: View {
     private var activityDetail: some View {
         VStack(alignment: .leading, spacing: canvas.u(18)) {
             HStack(alignment: .bottom, spacing: canvas.u(44)) {
-                stat("THIS WEEK", Self.duration(activity.thisWeek))
+                stat(L10n.text("THIS WEEK"), Self.duration(activity.thisWeek))
                 bars
             }
             if !topGames.isEmpty {
                 VStack(alignment: .leading, spacing: canvas.u(8)) {
-                    Text("MOST PLAYED").seleneFont(12, .semibold).foregroundColor(SeleneTheme.ink60)
+                    Text(L10n.text("MOST PLAYED")).seleneFont(12, .semibold).foregroundColor(SeleneTheme.ink60)
                     HStack(spacing: canvas.u(14)) {
                         ForEach(Array(topGames.enumerated()), id: \.element.id) { index, game in
                             topTile(game, focused: focusedTop == index)
@@ -125,6 +130,7 @@ struct SpotlightCardInfoView: View {
 
     private var bars: some View {
         let peak = max(activity.perDay.max() ?? 0, 1)
+        let days = Self.dayLetters
         return HStack(alignment: .bottom, spacing: canvas.u(10)) {
             ForEach(0..<7, id: \.self) { day in
                 let value = day < activity.perDay.count ? activity.perDay[day] : 0
@@ -132,7 +138,7 @@ struct SpotlightCardInfoView: View {
                     RoundedRectangle(cornerRadius: canvas.u(4), style: .continuous)
                         .fill(value > 0 ? SeleneTheme.focus : SeleneTheme.ink15)
                         .frame(width: canvas.u(22), height: canvas.u(value > 0 ? max(6, 56 * value / peak) : 4))
-                    Text(Self.dayLetters[day]).seleneFont(12, .semibold).foregroundColor(SeleneTheme.ink60)
+                    Text(days[day]).seleneFont(12, .semibold).foregroundColor(SeleneTheme.ink60)
                 }
             }
         }
@@ -155,7 +161,7 @@ struct SpotlightCardInfoView: View {
 
     private func stat(_ label: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: canvas.u(4)) {
-            Text(label).seleneFont(12, .semibold).foregroundColor(SeleneTheme.ink60)
+            Text(L10n.text(label)).seleneFont(12, .semibold).foregroundColor(SeleneTheme.ink60)
             Text(value).seleneFont(21, .semibold).foregroundColor(SeleneTheme.ink)
         }
     }
@@ -167,16 +173,16 @@ struct SpotlightCardInfoView: View {
     private func actionChip(_ label: String) -> some View {
         HStack(spacing: canvas.u(10)) {
             SelenePromptBadge(button: .a)
-            Text(label).seleneFont(19).foregroundColor(SeleneTheme.ink90)
+            Text(L10n.text(label)).seleneFont(19).foregroundColor(SeleneTheme.ink90)
         }
     }
 
     /// "0 min", "42 min", "3 h 20 min".
     static func duration(_ interval: TimeInterval) -> String {
         let minutes = Int(max(0, interval) / 60)
-        if minutes < 60 { return "\(minutes) min" }
+        if minutes < 60 { return L10n.format("%@ min", [String(describing: (minutes))]) }
         let rest = minutes % 60
-        return rest == 0 ? "\(minutes / 60) h" : "\(minutes / 60) h \(rest) min"
+        return rest == 0 ? "\(minutes / 60) h" : L10n.format("%@ h %@ min", [String(describing: (minutes / 60)), String(describing: (rest))])
     }
 }
 
@@ -184,10 +190,10 @@ struct SpotlightCardInfoView: View {
 struct SpotlightCardMenu: View {
     @Environment(\.seleneCanvas) private var canvas
 
-    static let rows: [(title: String, subtitle: String, icon: MaterialIcon)] = [
-        ("Move", "Change its place on Spotlight", .swap),
-        ("Hide card", "Bring it back in Settings", .hidden)
-    ]
+    static var rows: [(title: String, subtitle: String, icon: MaterialIcon)] { [
+        ("Move", L10n.text("Change its place on Spotlight"), .swap),
+        (L10n.text("Hide card"), L10n.text("Bring it back in Settings"), .hidden)
+    ] }
 
     let card: SpotlightCard
     let focusedIndex: Int
@@ -196,7 +202,7 @@ struct SpotlightCardMenu: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: canvas.u(14)) {
-            Text(card.title).seleneFont(28, .semibold).foregroundColor(SeleneTheme.ink)
+            Text(L10n.text(card.title)).seleneFont(28, .semibold).foregroundColor(SeleneTheme.ink)
             VStack(spacing: canvas.u(8)) {
                 ForEach(Array(Self.rows.enumerated()), id: \.offset) { index, row in
                     let focused = index == focusedIndex
@@ -238,7 +244,7 @@ struct SpotlightFilterPill: View {
 
     var body: some View {
         HStack(spacing: canvas.u(12)) {
-            Text("\(filter.rawValue) · \(count)")
+            Text("\(L10n.text(filter.rawValue)) · \(count)")
                 .seleneFont(17, .semibold)
                 .foregroundColor(SeleneTheme.ink)
             HStack(spacing: canvas.u(6)) {

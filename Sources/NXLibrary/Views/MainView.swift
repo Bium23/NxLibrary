@@ -1,6 +1,12 @@
 import SwiftUI
+import NXLibraryCore
 
 public struct MainView: View {
-    public init() {}
-    public var body: some View { AppShellView() }
+    private let settingsStore: AppSettingsStore
+
+    public init(settingsStore: AppSettingsStore) {
+        self.settingsStore = settingsStore
+    }
+
+    public var body: some View { AppShellView(settingsStore: settingsStore) }
 }

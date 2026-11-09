@@ -219,24 +219,24 @@ final class AppUpdater: ObservableObject {
     nonisolated private static func prepare(zip: URL, release: AppUpdate.Release, folder: URL,
                                            expectedID: String, runningOS: OperatingSystemVersion) -> Result<URL, PreparationError> {
         guard AppUpdate.checkDigest(zip, expected: release.digest) == .match else {
-            return .failure(.init(message: "The download did not match the release; nothing was changed."))
+            return .failure(.init(message: L10n.text("The download did not match the release; nothing was changed.")))
         }
         let unpacked = folder.appendingPathComponent("unpacked")
         guard let resources = Bundle.main.resourceURL,
               let runtime = BundledRuntime.locate(resourceURL: resources),
               run(runtime.python.path, ["-I", "-B", resources.appendingPathComponent("validate_update.py").path,
                                         zip.path, unpacked.path]) else {
-            return .failure(.init(message: "The update archive could not be verified; nothing was changed."))
+            return .failure(.init(message: L10n.text("The update archive could not be verified; nothing was changed.")))
         }
         let staged = unpacked.appendingPathComponent("NXLibrary.app")
         if let problem = AppUpdate.bundleProblem(staged, expectedID: expectedID, version: release.version, runningOS: runningOS) {
             if case .needsNewerMacOS(let minimum) = problem {
-                return .failure(.init(message: "NX Library \(release.version) needs macOS \(minimum) or later; nothing was changed."))
+                return .failure(.init(message: L10n.format("NX Library %@ needs macOS %@ or later; nothing was changed.", [String(describing: (release.version)), String(describing: (minimum))])))
             }
-            return .failure(.init(message: "The download is not a valid NX Library \(release.version); nothing was changed."))
+            return .failure(.init(message: L10n.format("The download is not a valid NX Library %@; nothing was changed.", [String(describing: (release.version))])))
         }
         guard AppUpdate.validCodeSignature(staged) else {
-            return .failure(.init(message: "The app signature could not be verified; nothing was changed."))
+            return .failure(.init(message: L10n.text("The app signature could not be verified; nothing was changed.")))
         }
         return .success(staged)
     }

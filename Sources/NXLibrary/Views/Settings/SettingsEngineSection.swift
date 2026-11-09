@@ -14,18 +14,18 @@ struct SettingsEngineSection: View {
             SeleneRow("Engine repository",
                       subtitle: "The upstream nxnative checkout used for builds. Updates stay manual.") {
                 HStack(spacing: 10) {
-                    Text(viewModel.nxnativePath.isEmpty ? "Not selected" : viewModel.nxnativePath)
+                    Text(viewModel.nxnativePath.isEmpty ? L10n.text("Not selected") : viewModel.nxnativePath)
                         .seleneFont(15, .medium)
                         .foregroundColor(SeleneTheme.ink.opacity(0.62))
                         .lineLimit(1)
                         .truncationMode(.middle)
                         .frame(maxWidth: 300, alignment: .trailing)
-                    Button("Change") { viewModel.selectNxnativeFolder() }
+                    Button(L10n.text("Change")) { viewModel.selectNxnativeFolder() }
                         .buttonStyle(.plain)
                         .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
                         .disabled(configurationLocked)
-                    Button("Reveal") {
+                    Button(L10n.text("Reveal")) {
                         viewModel.revealInFinder(url: URL(fileURLWithPath: viewModel.nxnativePath))
                     }
                     .buttonStyle(.plain)
@@ -38,8 +38,8 @@ struct SettingsEngineSection: View {
             SeleneValueRow("Pinned commit", value: seleneShort(viewModel.pinnedEngineCommit))
             SeleneValueRow("Current commit", value: seleneShort(viewModel.currentEngineCommit))
 
-            SelenePanel("Compatibility",
-                        info: "Audits the local engine commit, working tree cleanliness, installed Metal compiler, and required CLI flags against the certified toolchain lock.") {
+            SelenePanel(L10n.text("Compatibility"),
+                        info: L10n.text("Audits the local engine commit, working tree cleanliness, installed Metal compiler, and required CLI flags against the certified toolchain lock.")) {
                 HStack(spacing: 8) {
                     Circle()
                         .fill(statusColor)
@@ -48,7 +48,7 @@ struct SettingsEngineSection: View {
                         .seleneFont(15, .semibold)
                         .foregroundColor(statusColor)
                     Spacer()
-                    Button("Re-check") { viewModel.detectEnvironment() }
+                    Button(L10n.text("Re-check")) { viewModel.detectEnvironment() }
                         .buttonStyle(.plain)
                         .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
@@ -70,7 +70,7 @@ struct SettingsEngineSection: View {
                 } else {
                     HStack(spacing: 8) {
                         ProgressView().controlSize(.small)
-                        Text("Running the compatibility check...")
+                        Text(L10n.text("Running the compatibility check..."))
                             .seleneFont(15)
                             .foregroundColor(SeleneTheme.ink60)
                     }
@@ -79,14 +79,14 @@ struct SettingsEngineSection: View {
                 if let environment = viewModel.environmentStatus {
                     Divider().overlay(SeleneTheme.ink15)
                     buildRow("Xcode", ok: environment.xcodeVersion != nil,
-                             detail: environment.xcodeVersion ?? "not found")
+                             detail: environment.xcodeVersion ?? L10n.text("not found"))
                     buildRow("Metal compiler", ok: environment.metalVersion != nil,
-                             detail: environment.metalVersion ?? "not found")
-                    buildRow("Python and build tools", ok: environment.pythonURL != nil,
+                             detail: environment.metalVersion ?? L10n.text("not found"))
+                    buildRow(L10n.text("Python and build tools"), ok: environment.pythonURL != nil,
                              detail: runtimeDetail(environment))
                     buildRow(".NET 10 runtime", ok: !environment.issues.contains {
                         $0.lowercased().contains(".net")
-                    }, detail: "checked by the build command")
+                    }, detail: L10n.text("checked by the build command"))
                     ForEach(environment.tools) { tool in
                         buildRow(tool.name, ok: tool.ok, detail: tool.detail)
                     }
@@ -108,7 +108,7 @@ struct SettingsEngineSection: View {
                     .labelsHidden()
                     .toggleStyle(SeleneToggleStyle())
                     .disabled(!canChangeOverride)
-                    .accessibilityValue(viewModel.allowUntestedToolchain ? "On" : "Off")
+                    .accessibilityValue(viewModel.allowUntestedToolchain ? L10n.text("On") : L10n.text("Off"))
             }
 
             SeleneButtonRow("Upstream",
@@ -133,18 +133,18 @@ struct SettingsEngineSection: View {
                 }
             }
 
-            SelenePanel("prod.keys",
-                        info: "Nintendo Switch cryptographic keys required to decrypt game packages (NSP/XCI). NX Library stores a private copy with mode 0600 permissions; key values are never displayed or logged.") {
+            SelenePanel(L10n.text("prod.keys"),
+                        info: L10n.text("Nintendo Switch cryptographic keys required to decrypt game packages (NSP/XCI). NX Library stores a private copy with mode 0600 permissions; key values are never displayed or logged.")) {
                 HStack(spacing: 8) {
                     Image(systemName: viewModel.isProdKeysValid ? "checkmark.circle.fill" : "xmark.octagon.fill")
                         .seleneFont(15, .bold)
                         .foregroundColor(viewModel.isProdKeysValid ? SeleneTheme.success : SeleneTheme.danger)
-                    Text(viewModel.isProdKeysValid ? "Keys imported" : "No prod.keys imported")
+                    Text(viewModel.isProdKeysValid ? L10n.text("Keys imported") : L10n.text("No prod.keys imported"))
                         .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink)
                     Spacer()
                     Text(viewModel.isProdKeysValid && !viewModel.prodKeysPath.isEmpty
-                         ? viewModel.prodKeysPath : "Choose your file once")
+                         ? viewModel.prodKeysPath : L10n.text("Choose your file once"))
                         .seleneFont(13, .regular, design: .monospaced)
                         .foregroundColor(SeleneTheme.ink60)
                         .lineLimit(1)
@@ -152,20 +152,20 @@ struct SettingsEngineSection: View {
                 }
 
                 if let summary = viewModel.keySummary {
-                    Text("header_key present · \(summary.applicationKeyGenerations.count) application key generations")
+                    Text(L10n.format("header_key present · %@ application key generations", [String(describing: (summary.applicationKeyGenerations.count))]))
                         .seleneFont(13, .regular, design: .monospaced)
                         .foregroundColor(SeleneTheme.success)
                 }
 
                 HStack(spacing: 14) {
-                    Button(viewModel.isProdKeysValid ? "Replace Key..." : "Import Key...") {
+                    Button(viewModel.isProdKeysValid ? L10n.text("Replace Key...") : L10n.text("Import Key...")) {
                         viewModel.selectProdKeysFile()
                     }
                     .buttonStyle(.plain)
                     .seleneFont(14, .semibold)
                     .foregroundColor(SeleneTheme.glyph)
                     .disabled(configurationLocked)
-                    Button("Detect Ryujinx...") { viewModel.selectRyujinxFolder() }
+                    Button(L10n.text("Detect Ryujinx...")) { viewModel.selectRyujinxFolder() }
                         .buttonStyle(.plain)
                         .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
@@ -173,7 +173,7 @@ struct SettingsEngineSection: View {
                     Spacer()
                 }
 
-                Text("The original file is untouched. The stored copy is mode 0600 and key values are never shown or logged.")
+                Text(L10n.text("The original file is untouched. The stored copy is mode 0600 and key values are never shown or logged."))
                     .seleneFont(13)
                     .foregroundColor(SeleneTheme.ink60)
                     .fixedSize(horizontal: false, vertical: true)
@@ -195,9 +195,9 @@ struct SettingsEngineSection: View {
     }
 
     private func confirmOverride() {
-        viewModel.showSettingsNotice(title: "Enable untested toolchain?",
-            message: "The engine and compiler do not match the certified combination. Builds may fail or show incorrect graphics and will be marked as untested.",
-            actionTitle: "Enable", cancelTitle: "Cancel") {
+        viewModel.showSettingsNotice(title: L10n.text("Enable untested toolchain?"),
+            message: L10n.text("The engine and compiler do not match the certified combination. Builds may fail or show incorrect graphics and will be marked as untested."),
+            actionTitle: L10n.text("Enable"), cancelTitle: L10n.text("Cancel")) {
                 guard !configurationLocked else { return }
                 viewModel.allowUntestedToolchain = true
             }
@@ -223,21 +223,21 @@ struct SettingsEngineSection: View {
     }
 
     private var overrideSubtitle: String {
-        if viewModel.usesNewestEngine { return "On while you use the newest engine." }
+        if viewModel.usesNewestEngine { return L10n.text("On while you use the newest engine.") }
         guard let report = viewModel.compatibilityReport else {
-            return "Available when the compatibility gate blocks a build."
+            return L10n.text("Available when the compatibility gate blocks a build.")
         }
         if report.ok {
-            return "Not needed: the current toolchain is certified."
+            return L10n.text("Not needed: the current toolchain is certified.")
         }
         if viewModel.toolchainGateSummary?.tone == .info {
-            return "Recommended for your newer Metal compiler: builds are recorded as untested."
+            return L10n.text("Recommended for your newer Metal compiler: builds are recorded as untested.")
         }
-        return "Build anyway, recorded as untested. Corrupted graphics are a known risk."
+        return L10n.text("Build anyway, recorded as untested. Corrupted graphics are a known risk.")
     }
 
     private var statusText: String {
-        viewModel.toolchainGateSummary?.label ?? "Checking"
+        viewModel.toolchainGateSummary?.label ?? L10n.text("Checking")
     }
 
     private var statusColor: Color {
@@ -253,9 +253,9 @@ struct SettingsEngineSection: View {
     private var upstreamSubtitle: String {
         switch viewModel.upstreamState {
         case .idle:
-            return "See how this NX Library's engine compares with seedds/nxnative main."
+            return L10n.text("See how this NX Library's engine compares with seedds/nxnative main.")
         case .checking:
-            return "Asking GitHub for the latest commits..."
+            return L10n.text("Asking GitHub for the latest commits...")
         case .loaded(let status):
             return UpstreamCopy.subtitle(upToDate: status.isUpToDate, newCommits: status.newCommitsCount)
         case .failed(let message):
@@ -275,12 +275,12 @@ struct SettingsEngineSection: View {
                         .fill(SeleneTheme.untested)
                         .frame(width: 8, height: 8)
                         .accessibilityHidden(true)
-                    Text("In use")
+                    Text(L10n.text("In use"))
                         .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.untested)
                 }
                 if viewModel.isSwitchingEngine {
-                    Text("Switching…")
+                    Text(L10n.text("Switching…"))
                         .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink60)
                 } else {
@@ -314,10 +314,10 @@ struct SettingsEngineSection: View {
     }
 
     private var newestSubtitle: String {
-        if viewModel.isSwitchingEngine { return "Switching the engine…" }
+        if viewModel.isSwitchingEngine { return L10n.text("Switching the engine…") }
         if let choice = viewModel.newestEngineChoice {
-            var base = "\(NewestEngineCopy.note) In use: \(choice.shortCommit), "
-                + "\(NewestEngineCopy.ahead(choice.aheadBy)) of the tested \(seleneShort(viewModel.pinnedEngineCommit))."
+            var base = L10n.format("%@ In use: %@, ", [String(describing: (NewestEngineCopy.note)), String(describing: (choice.shortCommit))])
+                + L10n.format("%@ of the tested %@.", [String(describing: (NewestEngineCopy.ahead(choice.aheadBy))), String(describing: (seleneShort(viewModel.pinnedEngineCommit)))])
             if viewModel.newestEngineActions.contains(.update), let offer = viewModel.newestEngineOffer {
                 base += " " + NewestEngineCopy.update(choice: choice, main: offer.upstreamCommit,
                                                       aheadBy: offer.newCommitsCount)
@@ -334,7 +334,7 @@ struct SettingsEngineSection: View {
 
     private func newestTitle(_ action: NewestEngineAction) -> String {
         switch action {
-        case .useNewest: return "Use newest"
+        case .useNewest: return L10n.text("Use newest")
         case .update: return "Update"
         case .backToTested: return "Back to tested"
         }
@@ -349,8 +349,8 @@ struct SettingsEngineSection: View {
     }
 
     private var upstreamButtonTitle: String {
-        if case .checking = viewModel.upstreamState { return "Checking..." }
-        return "Check"
+        if case .checking = viewModel.upstreamState { return L10n.text("Checking...") }
+        return L10n.text("Check")
     }
 
     /// Ten commits, or down to the one in use when it is further down, so its tag is always on screen.
@@ -362,7 +362,7 @@ struct SettingsEngineSection: View {
     /// In use (green) on the commit the newest engine is at, New (orange) on the commits above it.
     private func commitMark(_ mark: UpstreamCommitMark) -> some View {
         let color = mark == .inUse ? SeleneTheme.success : SeleneTheme.untested
-        return Text(mark == .inUse ? "In use" : "New")
+        return Text(mark == .inUse ? "In use" : L10n.text("New"))
             .seleneFont(12, .bold)
             .foregroundColor(color)
             .padding(.horizontal, 7)
@@ -377,7 +377,7 @@ struct SettingsEngineSection: View {
         if !status.commits.isEmpty {
             let marks = NewestEngine.marks(status.commits, inUse: viewModel.newestEngineChoice?.commit)
             let shown = shownCommitCount(status, marks: marks)
-            SelenePanel("Upstream Commits (\(status.newCommitsCount) newer)") {
+            SelenePanel(L10n.format("Upstream Commits (%@ newer)", [String(describing: (status.newCommitsCount))])) {
                 VStack(alignment: .leading, spacing: 10) {
                     ForEach(status.commits.prefix(shown)) { commit in
                         HStack(alignment: .top, spacing: 10) {
@@ -423,11 +423,11 @@ struct SettingsEngineSection: View {
 
                     if status.commits.count > shown {
                         HStack {
-                            Text("+ \(status.commits.count - shown) more commits upstream")
+                            Text(L10n.format("+ %@ more commits upstream", [String(describing: (status.commits.count - shown))]))
                                 .seleneFont(14, .medium)
                                 .foregroundColor(SeleneTheme.ink60)
                             Spacer()
-                            Button("View all on GitHub") {
+                            Button(L10n.text("View all on GitHub")) {
                                 viewModel.openUpstreamCompare()
                             }
                             .buttonStyle(.plain)
@@ -454,7 +454,7 @@ struct SettingsEngineSection: View {
         if check.id == "metal" {
             let installed = viewModel.installedMetalVersion ?? "unknown"
             let required = viewModel.requiredMetalVersion ?? "unknown"
-            return "installed \(installed) · required \(required)"
+            return L10n.format("installed %@ · required %@", [String(describing: (installed)), String(describing: (required))])
         }
         return check.detail
     }
@@ -485,8 +485,8 @@ struct SettingsEngineSection: View {
 
     private func rowLook(status: CheckStatus, metal: MetalStanding?) -> (icon: String, color: Color, badge: String) {
         switch metal {
-        case .newer: return ("info.circle.fill", SeleneTheme.glyph, "NEWER")
-        case .older: return ("exclamationmark.triangle.fill", SeleneTheme.untested, "OLDER")
+        case .newer: return ("info.circle.fill", SeleneTheme.glyph, L10n.text("NEWER"))
+        case .older: return ("exclamationmark.triangle.fill", SeleneTheme.untested, L10n.text("OLDER"))
         default: return (icon(for: status), color(for: status), status.rawValue.uppercased())
         }
     }
@@ -494,9 +494,9 @@ struct SettingsEngineSection: View {
     private func runtimeDetail(_ environment: EnvironmentStatus) -> String {
         guard let python = environment.pythonURL else { return "missing" }
         if viewModel.engineToolchain.isBundled {
-            return BundledRuntime.locate()?.versionSummary() ?? "Included in NX Library"
+            return BundledRuntime.locate()?.versionSummary() ?? L10n.text("Included in NX Library")
         }
-        return "Developer build: \(python.path)"
+        return L10n.format("Developer build: %@", [String(describing: (python.path))])
     }
 
     private func buildRow(_ title: String, ok: Bool, detail: String) -> some View {

@@ -8,10 +8,10 @@ public enum ArtworkSlot: String, CaseIterable, Codable, Sendable {
 
     public var title: String {
         switch self {
-        case .cover: return "Cover"
-        case .background: return "Background"
-        case .icon: return "Icon"
-        case .logo: return "Logo"
+        case .cover: return L10n.text("Cover")
+        case .background: return L10n.text("Background")
+        case .icon: return L10n.text("Icon")
+        case .logo: return L10n.text("Logo")
         }
     }
 
@@ -181,12 +181,12 @@ public enum ArtworkCandidates {
             for (index, url) in (titleDB?.screenshots ?? []).enumerated() {
                 add("Title DB screenshot \(index + 1)", url)
             }
-            add("Nintendo store", storeHeader)
-            add("Nintendo store", storeImage)
+            add(L10n.text("Nintendo store"), storeHeader)
+            add(L10n.text("Nintendo store"), storeImage)
         case .icon:
             add("Title DB icon", titleDB?.icon)
         case .logo:
-            add("Nintendo store", storeLogo)
+            add(L10n.text("Nintendo store"), storeLogo)
         }
         // Everything found online (`OnlineArtwork`) after the Nintendo sources, in its order.
         for candidate in online where candidate.slot == slot && !list.contains(where: { $0.url == candidate.url }) {
@@ -237,7 +237,7 @@ public final class ArtworkPicks: ObservableObject {
 
     public enum Failure: LocalizedError {
         case notAnImage
-        public var errorDescription: String? { "That file is not an image NX Library can read." }
+        public var errorDescription: String? { L10n.text("That file is not an image NX Library can read.") }
     }
 
     public let directory: URL

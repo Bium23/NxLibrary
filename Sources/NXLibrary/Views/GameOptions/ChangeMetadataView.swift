@@ -65,7 +65,7 @@ struct ChangeMetadataView: View {
 
             VStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("CHANGE METADATA")
+                    Text(L10n.text("CHANGE METADATA"))
                         .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink60)
                         .padding(.leading, canvas.u(8))
@@ -76,7 +76,7 @@ struct ChangeMetadataView: View {
                         .padding(.leading, canvas.u(6))
                         .padding(.bottom, canvas.u(14))
                     tabs
-                    Text(searching ? "Looking on Title DB and GameTDB…" : " ")
+                    Text(searching ? L10n.text("Looking on Title DB and GameTDB…") : " ")
                         .seleneFont(14)
                         .foregroundColor(SeleneTheme.ink60)
                         .padding(.leading, canvas.u(10))
@@ -89,8 +89,8 @@ struct ChangeMetadataView: View {
                 .padding(.bottom, canvas.u(20))
                 .contentShape(Rectangle())
 
-                SeleneHintsBar(left: [HintItem(.b, "Back", action: close)],
-                               right: [HintItem(.lb, "Previous"), HintItem(.rb, "Next"), HintItem(.a, "Choose")],
+                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back"), action: close)],
+                               right: [HintItem(.lb, L10n.text("Previous")), HintItem(.rb, L10n.text("Next")), HintItem(.a, L10n.text("Choose"))],
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -172,14 +172,18 @@ struct ChangeMetadataView: View {
         switch row {
         case .automatic:
             let value = MetadataOptions.list(for: field, store: store, titleDB: nil, gameTDB: []).first?.value
-            return ("Automatic", value.map { "Nintendo store: \($0)" } ?? "Nothing from the store yet.")
+            return (L10n.text("Automatic"), value.map { L10n.format("Nintendo store: %@", [displayValue($0)]) } ?? L10n.text("Nothing from the store yet."))
         case .yourPick(let value):
-            return ("Your own", value)
+            return (L10n.text("Your own"), displayValue(value))
         case .option(let option):
-            return (option.source, option.value)
+            return (option.source, displayValue(option.value))
         case .write:
-            return ("Write your own…", "Type the \(field.title.lowercased()) yourself.")
+            return (L10n.text("Write your own…"), L10n.format("Type the %@ yourself.", [String(describing: (field.title.lowercased()))]))
         }
+    }
+
+    private func displayValue(_ value: String) -> String {
+        field == .genres ? GameGenre.list(value.components(separatedBy: ",")).joined(separator: ", ") : value
     }
 
     /// Long descriptions show in full only on the focused row.
@@ -231,7 +235,7 @@ struct ChangeMetadataView: View {
         ZStack {
             SeleneTheme.scrim45.ignoresSafeArea().contentShape(Rectangle())
                 .onTapGesture { editing = false }
-            SeleneConfirmDialog(title: field.title, message: game.name, confirmTitle: "Save",
+            SeleneConfirmDialog(title: field.title, message: game.name, confirmTitle: L10n.text("Save"),
                 focus: $editorFocus, onCancel: { editing = false }, onConfirm: saveDraft) {
                 VStack(alignment: .leading, spacing: canvas.u(12)) {
                     if field == .description {
@@ -245,9 +249,9 @@ struct ChangeMetadataView: View {
                             .focused($editorHasFocus)
                             .onSubmit(saveDraft)
                     }
-                    Text(field == .genres ? "Separate with commas."
-                        : field == .releaseDate ? "YYYY-MM-DD"
-                        : field == .description ? "⌘Return to save · Empty for Automatic" : "Empty for Automatic")
+                    Text(field == .genres ? L10n.text("Separate with commas.")
+                        : field == .releaseDate ? L10n.text("YYYY-MM-DD")
+                        : field == .description ? L10n.text("⌘Return to save · Empty for Automatic") : L10n.text("Empty for Automatic"))
                         .seleneFont(14)
                         .foregroundColor(SeleneTheme.ink60)
                 }

@@ -110,7 +110,7 @@ public final class NXNativeEnvironment {
             let result = run("/usr/bin/env", [tool, "--version"])
             let ok = result.status == 0
             tools.append(ToolStatus(id: tool, name: tool, ok: ok,
-                                    detail: ok ? "available" : "missing"))
+                                    detail: ok ? L10n.text("available") : L10n.text("missing")))
             if !ok { issues.append("\(tool) is missing") }
         }
 

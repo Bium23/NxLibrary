@@ -5,11 +5,11 @@ public enum SpotlightCard: String, Codable, CaseIterable {
 
     public var title: String {
         switch self {
-        case .collection: return "Collection"
-        case .surprise: return "Surprise me"
-        case .activity: return "Activity"
-        case .mods: return "Mods"
-        case .addGame: return "Add Game"
+        case .collection: return L10n.text("Collection")
+        case .surprise: return L10n.text("Surprise me")
+        case .activity: return L10n.text("Activity")
+        case .mods: return L10n.text("Mods")
+        case .addGame: return L10n.text("Add Game")
         }
     }
 

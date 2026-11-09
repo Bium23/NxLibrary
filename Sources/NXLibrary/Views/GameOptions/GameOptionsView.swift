@@ -91,7 +91,7 @@ struct GameOptionsView: View {
             sourcesDetached: !GameResourceState.sourcesAvailable(for: game),
             // Mirrors GameDetailView.toolchainBlocked: a known report that does not pass, without the override.
             toolchainBlocked: viewModel.isCheckingEnvironment || (viewModel.compatibilityReport != nil && !viewModel.canPassToolchainGate),
-            toolchainHint: viewModel.isCheckingEnvironment ? "Checking environment" : viewModel.toolchainGateSummary?.buildHint,
+            toolchainHint: viewModel.isCheckingEnvironment ? L10n.text("Checking environment") : viewModel.toolchainGateSummary?.buildHint,
             hasStorePage: viewModel.storeMetadata[game.id]?.storeURL != nil,
             gameName: game.name,
             appPath: game.url.path,
@@ -127,7 +127,7 @@ struct GameOptionsView: View {
             VStack(spacing: 0) {
                 column(p)
                 // Where the screen underneath had its hints (which hide while this is open).
-                SeleneHintsBar(left: [HintItem(.b, "Back")], right: rightHints(p),
+                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back"))], right: rightHints(p),
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -211,7 +211,7 @@ struct GameOptionsView: View {
         let entries = p.entries(level: level, origin: origin)
         let focused = focusedRow
         return VStack(alignment: .leading, spacing: 0) {
-            Text("GAME OPTIONS")
+            Text(L10n.text("GAME OPTIONS"))
                 .seleneFont(15, .semibold)
                 .foregroundColor(SeleneTheme.ink60)
                 .padding(.leading, canvas.u(8))
@@ -334,8 +334,8 @@ struct GameOptionsView: View {
 
     /// Y opens the focused row's explanation, when it has one.
     private func rightHints(_ p: GameOptionsPresentation) -> [HintItem] {
-        guard confirm == nil, let row = focusedRow, p.info(row) != nil else { return [HintItem(.a, "Select")] }
-        return [HintItem(.y, infoRow == row ? "Hide info" : "Info"), HintItem(.a, "Select")]
+        guard confirm == nil, let row = focusedRow, p.info(row) != nil else { return [HintItem(.a, L10n.text("Select"))] }
+        return [HintItem(.y, infoRow == row ? L10n.text("Hide info") : L10n.text("Info")), HintItem(.a, L10n.text("Select"))]
     }
 
     /// Y: the focused row's explanation, open or closed.
@@ -391,7 +391,7 @@ struct GameOptionsView: View {
     }
 
     private func choiceText(_ row: GameOptionsRow) -> String {
-        if let (setting, value) = settingValue(row) { return GameSettingValues.label(setting, value) }
+        if let (setting, value) = settingValue(row) { return L10n.text(GameSettingValues.label(setting, value)) }
         switch row {
         case .consoleMode:
             return GameOptionsValues.consoleModeLabel(docked: config.isDockedMode)
@@ -431,7 +431,7 @@ struct GameOptionsView: View {
             return (copy.title, copy.message, copy.confirmTitle)
         case .removeSources:
             let info = presentation.info(.removeSources) ?? ""
-            return ("Remove sources and build cache?",
+            return (L10n.text("Remove sources and build cache?"),
                     info + "\n\n" + viewModel.sourceRemovalSummary(for: current),
                     "Remove")
         }

@@ -61,7 +61,7 @@ struct ScreenshotViewer: View {
             }
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
-                SeleneHintsBar(left: [HintItem(.b, "Back")],
+                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back"))],
                                right: [HintItem(.lb, "‹"), HintItem(.rb, "›")],
                                bottom: 40, leftInset: 18)
             }
@@ -76,7 +76,7 @@ struct ScreenshotViewer: View {
             for neighbour in [current + 1, current - 1] { await load(neighbour) }
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Screenshot \(state.label)")
+        .accessibilityLabel(L10n.format("Screenshot %@", [String(describing: (state.label))]))
     }
 
     @MainActor

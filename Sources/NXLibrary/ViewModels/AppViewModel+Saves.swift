@@ -7,7 +7,7 @@ extension AppViewModel {
             try FileManager.default.createDirectory(at: saveBackupRoot, withIntermediateDirectories: true)
             NSWorkspace.shared.open(saveBackupRoot)
         } catch {
-            showSettingsNotice(title: "Folder unavailable", message: "The backup folder could not be opened.")
+            showSettingsNotice(title: L10n.text("Folder unavailable"), message: L10n.text("The backup folder could not be opened."))
         }
     }
 
@@ -87,9 +87,9 @@ extension AppViewModel {
                 let message = failure?.localizedDescription
                 DispatchQueue.main.async {
                     if let message {
-                        self.logs.append(LogEntry(level: .error, message: "Save recovery for \(game.name): \(message) Backups: \(self.saveBackupRoot.path)"))
+                        self.logs.append(LogEntry(level: .error, message: L10n.format("Save recovery for %@: %@ Backups: %@", [String(describing: (game.name)), String(describing: (message)), String(describing: (self.saveBackupRoot.path))])))
                     } else {
-                        self.logs.append(LogEntry(level: .info, message: "Save recovery completed for \(game.name)."))
+                        self.logs.append(LogEntry(level: .info, message: L10n.format("Save recovery completed for %@.", [String(describing: (game.name))])))
                         self.installPendingBuilds()
                     }
                 }

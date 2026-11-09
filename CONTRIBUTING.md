@@ -33,3 +33,9 @@ Record user-visible changes under **Unreleased** in [CHANGELOG.md](CHANGELOG.md)
 Keep the description focused on the resulting behaviour. Move entries into a
 dated version section when that release is actually published; unreleased work
 must not appear as an already available release.
+
+## Interface translations
+
+The shared source is `Sources/NXLibraryCore/Resources/Localizable.xcstrings`. It includes en, it, fr, de, es and pt-BR. Keep keys stable, preserve every typed placeholder, provide quantity variants, and leave product names, technical identifiers and user-provided content unchanged. Translation-only PRs should identify their language and whether a fluent speaker reviewed them.
+
+Run `python3 scripts/check_localizations.py` and the publication regressions after editing the catalog. A development build also checks its compiled resources. The initial translations await maintainer validation; no external translation-hosting service is required.

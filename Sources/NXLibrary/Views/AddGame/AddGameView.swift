@@ -61,10 +61,10 @@ public struct AddGameView: View {
             if confirmDiscard {
                 ZStack {
                     SeleneTheme.scrim45.ignoresSafeArea()
-                    SeleneConfirmDialog(title: "Discard selected sources?",
-                                        message: "The files on disk are not changed.",
-                                        confirmTitle: "Discard",
-                                        cancelTitle: "Keep editing",
+                    SeleneConfirmDialog(title: L10n.text("Discard selected sources?"),
+                                        message: L10n.text("The files on disk are not changed."),
+                                        confirmTitle: L10n.text("Discard"),
+                                        cancelTitle: L10n.text("Keep editing"),
                                         focus: $confirmFocus,
                                         onCancel: dismissDiscard,
                                         onConfirm: discardAndClose)
@@ -99,7 +99,7 @@ public struct AddGameView: View {
 
     private func column(_ rows: [AddGameRow], focused: AddGameRow?) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("ADD A GAME")
+            Text(L10n.text("ADD A GAME"))
                 .seleneFont(15, .semibold)
                 .tracking(1.2)
                 .foregroundColor(SeleneTheme.ink60)
@@ -159,7 +159,7 @@ public struct AddGameView: View {
         .padding(.bottom, canvas.u(24))
         .overlay(alignment: .top) {
             if dropTargeted {
-                Text("Drop to add these files")
+                Text(L10n.text("Drop to add these files"))
                     .seleneFont(15, .semibold)
                     .foregroundColor(SeleneTheme.onFocus)
                     .padding(.horizontal, canvas.u(18))
@@ -177,7 +177,7 @@ public struct AddGameView: View {
     private var stepTitle: String {
         switch viewModel.buildWizardStep {
         case 1: return "Choose a game"
-        case 2: return viewModel.selectedGame?.name ?? "Review"
+        case 2: return viewModel.selectedGame?.name ?? L10n.text("Review")
         default:
             if !viewModel.isBuilding, viewModel.buildError != nil, let reason = viewModel.portingFailureReason {
                 return reason.title
@@ -191,7 +191,7 @@ public struct AddGameView: View {
     private var stepLine: some View {
         let step = viewModel.buildWizardStep
         return HStack(spacing: canvas.u(10)) {
-            ForEach(Array(["Choose", "Review", "Porting"].enumerated()), id: \.offset) { index, title in
+            ForEach(Array(["Choose", L10n.text("Review"), "Porting"].enumerated()), id: \.offset) { index, title in
                 if index > 0 {
                     Circle().fill(SeleneTheme.ink25).frame(width: canvas.u(4), height: canvas.u(4))
                 }
@@ -201,7 +201,7 @@ public struct AddGameView: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Step \(step) of 3")
+        .accessibilityLabel(L10n.format("Step %@ of 3", [String(describing: (step))]))
     }
 
     // MARK: - Focus
@@ -293,7 +293,7 @@ public struct AddGameView: View {
         switch row.kind {
         case .toggle: return "Switch"
         case .choice: return "Change"
-        case .field: return editing == row.id ? "Done" : "Edit"
+        case .field: return editing == row.id ? "Done" : L10n.text("Edit")
         case .action: return row.title
         default: return "Select"
         }

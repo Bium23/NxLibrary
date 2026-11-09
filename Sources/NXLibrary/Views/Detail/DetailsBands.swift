@@ -11,7 +11,7 @@ struct DetailsBandTitle: View {
     var size: CGFloat = 21
 
     var body: some View {
-        Text(text)
+        Text(L10n.text(text))
             .seleneFont(size, .semibold)
             .foregroundColor(SeleneTheme.ink)
             .padding(.top, canvas.u(2))
@@ -38,7 +38,7 @@ struct DetailsScreenshotsBand: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if !urls.isEmpty || known {
-                DetailsBandTitle(text: source.map { "Screenshots · \($0)" } ?? "Screenshots")
+                DetailsBandTitle(text: source.map { L10n.format("Screenshots · %@", [String(describing: ($0))]) } ?? L10n.text("Screenshots"))
             }
             SpotlightScreenshotStrip(titleID: titleID, urls: urls, known: known,
                                      focusedIndex: focusedIndex, artwork: artwork,
@@ -60,16 +60,16 @@ struct DetailsActivityColumn: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            DetailsBandTitle(text: "Your activity")
+            DetailsBandTitle(text: L10n.text("Your activity"))
             VStack(alignment: .leading, spacing: canvas.u(14)) {
                 HStack(alignment: .top, spacing: canvas.u(24)) {
-                    cell("PLAY TIME", presentation.playtime)
+                    cell(L10n.text("PLAY TIME"), presentation.playtime)
                     cell("LAST PLAYED", presentation.lastPlayed)
                 }
                 HStack(alignment: .top, spacing: canvas.u(24)) {
-                    cell("THIS WEEK", presentation.thisWeek)
+                    cell(L10n.text("THIS WEEK"), presentation.thisWeek)
                     if let rank = presentation.rank {
-                        cell("RANK", rank)
+                        cell(L10n.text("RANK"), rank)
                     }
                 }
             }
@@ -79,7 +79,7 @@ struct DetailsActivityColumn: View {
 
     private func cell(_ label: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: canvas.u(2)) {
-            Text(label)
+            Text(L10n.text(label))
                 .seleneFont(12, .semibold)
                 .foregroundColor(SeleneTheme.ink60)
             Text(value)
@@ -115,7 +115,7 @@ struct DetailsMoreBand: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            DetailsBandTitle(text: "More like this")
+            DetailsBandTitle(text: L10n.text("More like this"))
             HStack(alignment: .top, spacing: canvas.u(Self.gap)) {
                 ForEach(Array(games.enumerated()), id: \.element.id) { index, game in
                     tile(game, index: index, focused: focusedIndex == index)
@@ -203,7 +203,7 @@ struct DetailsModsBand: View {
                 }
                 Spacer(minLength: 0)
                 if gameBanana.phase != .idle {
-                    Text("Mod data provided by GameBanana")
+                    Text(L10n.text("Mod data provided by GameBanana"))
                         .seleneFont(14)
                         .foregroundColor(SeleneTheme.ink60)
                 }
@@ -233,10 +233,10 @@ struct DetailsModsBand: View {
 
     private var title: String {
         let on = mods.filter(\.isOn).count
-        return on == 0 ? "Mods" : "Mods · \(on) on"
+        return on == 0 ? L10n.text("Mods") : L10n.format("Mods · %@ on", [String(describing: (on))])
     }
 
-    static func state(_ mod: LocalMod) -> String { mod.romfs == nil ? "Not a mod" : mod.isOn ? "On" : "Off" }
+    static func state(_ mod: LocalMod) -> String { mod.romfs == nil ? L10n.text("Not a mod") : mod.isOn ? "On" : "Off" }
 
     @ViewBuilder
     private func tileView(_ kind: ModsBandTile, index: Int, focused: Bool) -> some View {
@@ -247,11 +247,11 @@ struct DetailsModsBand: View {
                 .accessibilityLabel("\(mod.folderName), \(Self.state(mod))")
         case .manage:
             tile(index: index, focused: focused) { manageFace }
-                .accessibilityLabel(mods.isEmpty ? "Add mods" : "Manage mods")
+                .accessibilityLabel(mods.isEmpty ? L10n.text("Add mods") : L10n.text("Manage mods"))
         case .available(let id):
             if let mod = gameBanana.available.first(where: { $0.id == id }) {
                 tile(index: index, focused: focused, bleed: true) { availableFace(mod) }
-                    .accessibilityLabel("\(mod.name), by \(mod.author)\(chip(for: mod).map { ", \($0)" } ?? "")")
+                    .accessibilityLabel(L10n.format("%@, by %@%@", [String(describing: (mod.name)), String(describing: (mod.author)), String(describing: (chip(for: mod).map { ", \($0)" } ?? ""))]))
             }
         case .status(let action):
             tile(index: index, focused: focused) { statusFace(action) }
@@ -279,10 +279,10 @@ struct DetailsModsBand: View {
             MaterialIconView(mods.isEmpty ? .add : .settings, size: 26)
                 .foregroundColor(SeleneTheme.ink75)
             Spacer(minLength: 0)
-            Text(mods.isEmpty ? "Add mods" : "Manage mods")
+            Text(mods.isEmpty ? L10n.text("Add mods") : L10n.text("Manage mods"))
                 .seleneFont(19, .semibold)
                 .foregroundColor(SeleneTheme.ink)
-            Text(mods.isEmpty ? "File mods, no rebuild" : mods.count > ModsBandLayout.maxInstalled ? "All \(mods.count) mods" : "Order, folder, Remove")
+            Text(mods.isEmpty ? L10n.text("File mods, no rebuild") : mods.count > ModsBandLayout.maxInstalled ? L10n.format("All %@ mods", [String(describing: (mods.count))]) : L10n.text("Order, folder, Remove"))
                 .seleneFont(15, .medium)
                 .foregroundColor(SeleneTheme.ink60)
         }
@@ -291,9 +291,9 @@ struct DetailsModsBand: View {
     /// Installed / Update / the install in progress, for an available mod.
     private func chip(for mod: AvailableMod) -> String? {
         switch gameBanana.installs[mod.id] {
-        case .downloading(let fraction): return "Downloading \(Int(fraction * 100))%"
-        case .installing: return "Installing…"
-        case .failed: return "Didn't install"
+        case .downloading(let fraction): return L10n.format("Downloading %@%%", [String(describing: (Int(fraction * 100)))])
+        case .installing: return L10n.text("Installing…")
+        case .failed: return L10n.text("Didn't install")
         case .done, nil: break
         }
         guard let record = records[mod.id] else { return nil }
@@ -318,7 +318,7 @@ struct DetailsModsBand: View {
                     .seleneFont(18, .semibold)
                     .foregroundColor(SeleneTheme.ink)
                     .lineLimit(1)
-                Text("by \(mod.author)")
+                Text(L10n.format("by %@", [String(describing: (mod.author))]))
                     .seleneFont(14, .medium)
                     .foregroundColor(SeleneTheme.ink75)
                     .lineLimit(1)
@@ -329,13 +329,13 @@ struct DetailsModsBand: View {
 
     private func statusText(_ action: ModsBandAction) -> (icon: MaterialIcon, title: String, about: String) {
         switch action {
-        case .retry: return (.sync, "Retry", "Ask GameBanana again")
-        case .openPage: return (.link, "Open on GameBanana", "See every mod for this game")
+        case .retry: return (.sync, L10n.text("Retry"), L10n.text("Ask GameBanana again"))
+        case .openPage: return (.link, L10n.text("Open on GameBanana"), L10n.text("See every mod for this game"))
         case .candidate(let id):
-            return (.store, gameBanana.candidate(id)?.name ?? "Game", "This is the game")
-        case .noneOfThese: return (.close, "None of these", "Pick the game by name")
-        case .findGame: return (.search, "Find the game", "Search GameBanana by name")
-        case .wrongGame: return (.search, "Wrong game?", gameBanana.matchedName.map { "GameBanana: \($0)" } ?? "Pick another game")
+            return (.store, gameBanana.candidate(id)?.name ?? "Game", L10n.text("This is the game"))
+        case .noneOfThese: return (.close, L10n.text("None of these"), L10n.text("Pick the game by name"))
+        case .findGame: return (.search, L10n.text("Find the game"), L10n.text("Search GameBanana by name"))
+        case .wrongGame: return (.search, L10n.text("Wrong game?"), gameBanana.matchedName.map { L10n.format("GameBanana: %@", [String(describing: ($0))]) } ?? L10n.text("Pick another game"))
         }
     }
 

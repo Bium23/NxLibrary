@@ -6,6 +6,8 @@ public struct GameDetailPresentation: Equatable {
     public let console: String
     public let eyebrow: String
     public let description: String
+    public let descriptionIsEnglishFallback: Bool
+    public let descriptionLanguageNote: String?
     public let genres: [String]
     public let released: String?
     public let developerLine: String?
@@ -33,16 +35,18 @@ public struct GameDetailPresentation: Equatable {
                 totalPlaytime: TimeInterval, lastPlayed: Date?, now: Date = Date(),
                 sessions: [PlaySession] = [], libraryGames: [PortedGame] = [],
                 playtimeByGame: [UUID: TimeInterval] = [:],
-                calendar: Calendar = .current, locale: Locale = .current) {
+                calendar: Calendar = .current, locale: Locale = L10n.context.formatLocale) {
         title = game.name
         console = game.consoleName
         eyebrow = Self.eyebrow(from: metadata?.name ?? "")
         description = metadata?.description ?? ""
-        var seenGenres = Set<String>()
-        genres = (metadata?.genres ?? []).filter {
-            let g = $0.trimmingCharacters(in: .whitespacesAndNewlines)
-            return !g.isEmpty && g.caseInsensitiveCompare("Other") != .orderedSame && seenGenres.insert(g).inserted
-        }
+        descriptionIsEnglishFallback = L10n.context.metadataLanguage != "en" && metadata?.descriptionLanguage == "en" && !description.isEmpty
+        if let language = metadata?.descriptionLanguage, language != "custom",
+           language != L10n.context.metadataLanguage, !description.isEmpty {
+            let name = L10n.context.formatLocale.localizedString(forLanguageCode: language) ?? language
+            descriptionLanguageNote = L10n.format("Description in %@.", [name])
+        } else { descriptionLanguageNote = nil }
+        genres = GameGenre.list(metadata?.genres ?? [])
         released = Self.released(metadata?.releaseDate, locale: locale)
         developerLine = Self.credit(metadata)
         let week = Activity.summary(sessions: sessions.filter { $0.gameID == game.id }, now: now, calendar: calendar)
@@ -53,7 +57,7 @@ public struct GameDetailPresentation: Equatable {
         playtime = LibraryPresentation.duration(totalPlaytime)
         self.lastPlayed = LibraryPresentation.relative(lastPlayed, now: now)
         version = game.versionString ?? "—"
-        size = ByteCountFormatter.string(fromByteCount: game.sizeBytes, countStyle: .file)
+        size = game.sizeBytes.formatted(.byteCount(style: .file).locale(locale))
         engineCommitShort = game.toolchain.engineCommit.map { String($0.prefix(7)) } ?? "—"
         toolchainVerified = game.toolchain.verified
         toolchainNote = game.toolchain.note

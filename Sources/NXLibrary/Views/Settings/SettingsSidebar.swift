@@ -6,10 +6,11 @@ import NXLibraryCore
 struct SettingsSidebar: View {
     @Binding var selection: SettingsSection
     var isFocused: Bool = false
+    let context: AppLocale
     @Environment(\.seleneCanvas) private var canvas
 
     private var version: String {
-        "Version \(AppUpdate.versionLabel(Bundle.main.infoDictionary))"
+        L10n.format("Version %@", [AppUpdate.versionLabel(Bundle.main.infoDictionary)], context: context)
     }
 
     var body: some View {
@@ -48,7 +49,7 @@ struct SettingsSidebar: View {
                 .frame(width: canvas.u(48), height: canvas.u(48))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: canvas.u(2)) {
-                Text("NX Library")
+                Text(L10n.text("NX Library"))
                     .seleneFont(28, .semibold)
                     .foregroundColor(SeleneTheme.ink)
                 Text(version)
@@ -68,7 +69,7 @@ struct SettingsSidebar: View {
                 // Selene's section icons take the row's ink, like the title.
                 MaterialIconView(section.icon, size: 24)
                     .foregroundColor(lit ? SeleneTheme.onFocus : SeleneTheme.ink)
-                Text(section.title)
+                Text(section.title(in: context))
                     .seleneFont(21, .medium)
                     .foregroundColor(lit ? SeleneTheme.onFocus : SeleneTheme.ink)
                 Spacer(minLength: 0)
@@ -82,7 +83,7 @@ struct SettingsSidebar: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(section.title)
+        .accessibilityLabel(section.title(in: context))
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }

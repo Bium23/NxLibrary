@@ -52,7 +52,7 @@ public final class SoundEffectService: ObservableObject {
     /// Starting a player blocks for a few milliseconds (the audio server's
     /// handshake), so the players live and play on a queue of their own: a move
     /// never holds up the frame that draws it.
-    private let audio = DispatchQueue(label: "local.nxlibrary.sounds", qos: .userInteractive)
+    private let audio = DispatchQueue(label: L10n.text("local.nxlibrary.sounds"), qos: .userInteractive)
     private var players: [SoundCue: AVAudioPlayer] = [:]
     private var lastMove = Date.distantPast
     private let resolver = SoundCueResolver(

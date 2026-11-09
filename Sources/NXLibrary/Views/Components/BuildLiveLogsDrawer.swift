@@ -1,3 +1,4 @@
+import NXLibraryCore
 import SwiftUI
 
 public struct BuildLiveLogsDrawer: View {
@@ -10,11 +11,11 @@ public struct BuildLiveLogsDrawer: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Label("Live output", systemImage: "terminal")
+                Label(L10n.text("Live output"), systemImage: L10n.text("terminal"))
                     .seleneFont(15, .semibold)
                     .foregroundColor(SeleneTheme.ink90)
                 Spacer()
-                Text("\(viewModel.logs.count) lines")
+                Text(L10n.format("%@ lines", [String(describing: (viewModel.logs.count))]))
                     .seleneFont(13, .regular, design: .monospaced)
                     .foregroundColor(SeleneTheme.ink60)
             }
@@ -23,7 +24,7 @@ public struct BuildLiveLogsDrawer: View {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 3) {
                         if viewModel.logs.isEmpty {
-                            Text("Waiting for build output…")
+                            Text(L10n.text("Waiting for build output…"))
                                 .seleneFont(13, .regular, design: .monospaced)
                                 .foregroundColor(SeleneTheme.ink60)
                         }

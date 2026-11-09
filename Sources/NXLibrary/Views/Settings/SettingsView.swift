@@ -14,6 +14,7 @@ public struct SettingsView: View {
 
     @State private var section: SettingsSection
     @State private var showingControls = false
+    @State private var localePicker: LocalePickerMode?
     @State private var focusArea: SettingsFocusArea = .sidebar
     @State private var rowFocus = FocusIndex()
     /// The button in focus inside the focused row: 0 its own, 1 a second one (Back to tested beside Update).
@@ -35,6 +36,7 @@ public struct SettingsView: View {
     }
     /// A palette change redraws the whole screen; selection and focus live here and survive it.
     @ObservedObject private var theme = ThemeStore.shared
+    @Environment(\.nxAppLocale) private var localization
 
     public init(initialSection: SettingsSection,
                 viewModel: AppViewModel,
@@ -52,7 +54,7 @@ public struct SettingsView: View {
     public var body: some View {
         VStack(spacing: 0) {
             HStack(alignment: .top, spacing: canvas.u(24)) {
-                SettingsSidebar(selection: $section, isFocused: focusArea == .sidebar)
+                SettingsSidebar(selection: $section, isFocused: focusArea == .sidebar, context: localization)
                     .frame(width: canvas.u(400))
                 content
             }
@@ -64,7 +66,7 @@ public struct SettingsView: View {
         .id(theme.palette.id)
         .overlay(alignment: .bottom) {
             if let resetNotice {
-                SeleneSuccessNotice(title: "Group reset", message: resetNotice)
+                SeleneSuccessNotice(title: L10n.text("Group reset"), message: resetNotice)
                     .padding(.bottom, canvas.u(100))
                     .allowsHitTesting(false)
             }
@@ -106,6 +108,15 @@ public struct SettingsView: View {
                 }) { showingControls = false }
             }
         }
+        .overlay {
+            if let mode = localePicker {
+                LocalePicker(mode: mode, settings: settings, canHandleInput: {
+                    !router.isMenuPresented && !NativeMenuCommands.shared.isTracking
+                        && !viewModel.showSetupCheck && !viewModel.isUpdateOfferOpen
+                        && viewModel.settingsNotice == nil && NSApp.modalWindow == nil
+                }) { localePicker = nil }
+            }
+        }
         .environment(\.seleneMinimumFont, 12)
     }
 
@@ -123,6 +134,8 @@ public struct SettingsView: View {
                         settings: settings,
                         artwork: artwork,
                         onViewControls: { showingControls = true },
+                        onChooseLanguage: { localePicker = .language },
+                        onChooseRegion: { localePicker = .region },
                         onOpenConsole: { router.openConsole() },
                         onOpenGroup: openGroup,
                         onSearchSubmit: enterRows,
@@ -152,16 +165,16 @@ public struct SettingsView: View {
     }
 
     private var commandHints: [HintItem] {
-        var hints = [HintItem(.b, "Back") { handleBack() }]
+        var hints = [HintItem(.b, L10n.text("Back")) { handleBack() }]
         if canResetSection {
-            hints.append(HintItem(.x, "Reset group") { resetSection() })
+            hints.append(HintItem(.x, L10n.text("Reset group")) { resetSection() })
         }
         if focusArea == .sidebar {
-            hints.append(HintItem(.a, "Open") { enterRows() })
+            hints.append(HintItem(.a, L10n.text("Open")) { enterRows() })
         } else if focusedRow?.cycle != nil {
-            hints.append(HintItem(.a, "Change"))
+            hints.append(HintItem(.a, L10n.text("Change")))
         } else {
-            hints.append(HintItem(.a, "Select"))
+            hints.append(HintItem(.a, L10n.text("Select")))
         }
         return hints
     }
@@ -215,6 +228,8 @@ public struct SettingsView: View {
         var next = settings.settings
         switch section {
         case .startUp:
+            next.appLanguage = defaults.appLanguage
+            next.appRegion = defaults.appRegion
             next.startOn = defaults.startOn
             next.restoreLastGame = defaults.restoreLastGame
             next.startInFullscreen = defaults.startInFullscreen
@@ -249,7 +264,7 @@ public struct SettingsView: View {
             next.reduceMotion = defaults.reduceMotion
             viewModel.iconAppearanceMode = .auto
         case .games:
-            resetNotice = "Cloud sync kept"
+            resetNotice = L10n.text("Cloud sync kept")
             next.launchStyle = defaults.launchStyle
             next.launchMotion = defaults.launchMotion
             next.launchShade = defaults.launchShade
@@ -266,7 +281,7 @@ public struct SettingsView: View {
             next.gameDefaults.rumble = defaults.gameDefaults.rumble
             next.gameDefaults.rumbleGain = defaults.gameDefaults.rumbleGain
         case .library:
-            resetNotice = "Sources folder kept"
+            resetNotice = L10n.text("Sources folder kept")
             next.notifyPortingEnds = defaults.notifyPortingEnds
             viewModel.libraryFolder = URL(fileURLWithPath: viewModel.defaultInstallPath)
                 .appendingPathComponent("Applications")
@@ -321,7 +336,7 @@ public struct SettingsView: View {
                   !NativeMenuCommands.shared.isTracking,
                   !router.isMenuPresented,
                   !viewModel.showSetupCheck,
-                  !showingControls, !viewModel.isEditingSteamGridDBKey,
+                  !showingControls, localePicker == nil, !viewModel.isEditingSteamGridDBKey,
                   viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
                   viewModel.gameWithInstallFailure == nil,
                   let window = event.window,
@@ -376,6 +391,10 @@ public struct SettingsView: View {
     private func handleGamepad(_ action: GamepadAction) {
         // The key dialog takes the controller while it is open.
         if viewModel.isEditingSteamGridDBKey { return }
+        if localePicker != nil {
+            NotificationCenter.default.post(name: .nxLocalePickerGamepadAction, object: action)
+            return
+        }
         if showingControls {
             NotificationCenter.default.post(name: .nxControlsGamepadAction, object: action)
             return

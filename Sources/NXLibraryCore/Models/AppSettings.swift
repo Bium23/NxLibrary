@@ -4,7 +4,7 @@ public enum BackgroundShade: String, Codable, CaseIterable, Identifiable, Equata
     case light, balanced, deep
 
     public var id: String { rawValue }
-    public var label: String { rawValue.capitalized }
+    public var label: String { L10n.text(rawValue.capitalized) }
 
     public var heroScrimOpacity: Double {
         switch self {
@@ -36,9 +36,9 @@ public enum BackgroundSizing: String, Codable, CaseIterable, Identifiable, Equat
     public var id: String { rawValue }
     public var title: String {
         switch self {
-        case .fill: return "Fill"
-        case .fit: return "Fit"
-        case .stretch: return "Stretch"
+        case .fill: return L10n.text("Fill")
+        case .fit: return L10n.text("Fit")
+        case .stretch: return L10n.text("Stretch")
         }
     }
 }
@@ -52,9 +52,9 @@ public enum WallpaperBrightness: String, Codable, CaseIterable, Identifiable, Eq
     public var id: String { rawValue }
     public var title: String {
         switch self {
-        case .dim: return "Dim"
-        case .balanced: return "Bright on the right"
-        case .bright: return "Bright"
+        case .dim: return L10n.text("Dim")
+        case .balanced: return L10n.text("Bright on the right")
+        case .bright: return L10n.text("Bright")
         }
     }
 
@@ -85,10 +85,10 @@ public enum LaunchStyle: String, Codable, CaseIterable, Identifiable, Equatable 
     public var id: String { rawValue }
     public var title: String {
         switch self {
-        case .artAndLogo: return "Art and logo"
-        case .artOnly: return "Art only"
-        case .logoOnBlack: return "Logo on black"
-        case .minimal: return "Minimal"
+        case .artAndLogo: return L10n.text("Art and logo")
+        case .artOnly: return L10n.text("Art only")
+        case .logoOnBlack: return L10n.text("Logo on black")
+        case .minimal: return L10n.text("Minimal")
         }
     }
 }
@@ -100,14 +100,16 @@ public enum LaunchShade: String, Codable, CaseIterable, Identifiable, Equatable 
     public var id: String { rawValue }
     public var title: String {
         switch self {
-        case .none: return "None"
-        case .soft: return "Soft"
-        case .dark: return "Dark"
+        case .none: return L10n.text("None")
+        case .soft: return L10n.text("Soft")
+        case .dark: return L10n.text("Dark")
         }
     }
 }
 
 public struct AppSettings: Codable, Equatable {
+    public var appLanguage: AppLanguage = .automatic
+    public var appRegion: String? = nil
     public var backgroundShade: BackgroundShade
     public var readableText: Bool
     public var reduceMotion: Bool
@@ -243,6 +245,7 @@ public struct AppSettings: Codable, Equatable {
     }
 
     enum CodingKeys: String, CodingKey {
+        case appLanguage, appRegion
         case backgroundShade, readableText, reduceMotion, showButtonHints, showClock
         case restoreLastGame, checkEngineAtLaunch, refreshLibraryAtLaunch, lastSelectedGameID
         case startInFullscreen
@@ -257,6 +260,8 @@ public struct AppSettings: Codable, Equatable {
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        appLanguage = (try container.decodeIfPresent(String.self, forKey: .appLanguage)).flatMap(AppLanguage.init(rawValue:)) ?? .automatic
+        appRegion = AppLocale.validRegion(try container.decodeIfPresent(String.self, forKey: .appRegion))
         self.backgroundShade = try container.decodeIfPresent(BackgroundShade.self, forKey: .backgroundShade) ?? .balanced
         self.readableText = try container.decodeIfPresent(Bool.self, forKey: .readableText) ?? true
         self.reduceMotion = try container.decodeIfPresent(Bool.self, forKey: .reduceMotion) ?? false

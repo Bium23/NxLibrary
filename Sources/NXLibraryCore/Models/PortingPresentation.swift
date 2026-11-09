@@ -49,9 +49,9 @@ public enum PortingETA {
         let total = minutes(seconds)
         let hours = total / 60
         let mins = total % 60
-        if hours == 0 { return "\(mins) min" }
-        if mins == 0 { return "\(hours) hr" }
-        return "\(hours) hr \(mins) min"
+        if hours == 0 { return L10n.format("%@ min", [String(describing: (mins))]) }
+        if mins == 0 { return L10n.format("%@ hr", [String(describing: (hours))]) }
+        return L10n.format("%@ hr %@ min", [String(describing: (hours)), String(describing: (mins))])
     }
 }
 

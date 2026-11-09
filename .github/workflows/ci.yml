@@ -22,7 +22,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Publication inputs
-        run: python3 scripts/check_publication.py
+        run: |
+          python3 scripts/check_publication.py
+          python3 scripts/check_localizations.py
       - name: Publication check regressions
         run: python3 -m unittest discover -s Tests/PublicationChecks
       - name: Swift tests
@@ -45,6 +47,8 @@ jobs:
         with:
           persist-credentials: false
       - name: Publication inputs
-        run: python3 scripts/check_publication.py
+        run: |
+          python3 scripts/check_publication.py
+          python3 scripts/check_localizations.py
       - name: Publication check regressions
         run: python3 -m unittest discover -s Tests/PublicationChecks

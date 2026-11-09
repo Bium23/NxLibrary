@@ -36,10 +36,10 @@ struct SetupCheckView: View {
             SeleneBackdrop()
             VStack(spacing: 0) {
                 SetupStepIndicator(page: .requirements).padding(.bottom, canvas.u(18))
-                Text("Let's get NX Library ready")
+                Text(L10n.text("Let's get NX Library ready"))
                     .seleneFont(46, .semibold)
                     .foregroundColor(SeleneTheme.ink)
-                Text("Check what you need to build. Your games come next.")
+                Text(L10n.text("Check what you need to build. Your games come next."))
                     .seleneFont(19)
                     .foregroundColor(SeleneTheme.ink75)
                     .padding(.top, canvas.u(10))
@@ -51,7 +51,7 @@ struct SetupCheckView: View {
             .offset(y: canvas.u(-20))
             VStack {
                 Spacer(minLength: 0)
-                SeleneHintsBar(right: isFirstRun ? [HintItem(.a, "Select")] : [HintItem(.a, "Select"), HintItem(.b, "Back")],
+                SeleneHintsBar(right: isFirstRun ? [HintItem(.a, L10n.text("Select"))] : [HintItem(.a, L10n.text("Select")), HintItem(.b, L10n.text("Back"))],
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
         }
@@ -93,7 +93,7 @@ struct SetupCheckView: View {
             MaterialIconView(Self.icon(item.id), size: 26)
                 .foregroundColor(SeleneTheme.glyph)
                 .frame(height: canvas.u(30))
-            Text(item.title)
+            Text(L10n.text(item.title))
                 .seleneFont(18, .semibold)
                 .foregroundColor(SeleneTheme.ink)
                 .lineLimit(1)
@@ -155,7 +155,7 @@ struct SetupCheckView: View {
                 .frame(width: canvas.u(40))
             VStack(alignment: .leading, spacing: canvas.u(6)) {
                 HStack(spacing: canvas.u(12)) {
-                    Text(story.title).seleneFont(24, .semibold).foregroundColor(SeleneTheme.ink)
+                    Text(L10n.text(story.title)).seleneFont(24, .semibold).foregroundColor(SeleneTheme.ink)
                     Text(story.state.uppercased())
                         .seleneFont(13, .bold)
                         .foregroundColor(story.tone)
@@ -201,29 +201,29 @@ struct SetupCheckView: View {
         case .installAll:
             let names = missingNames
             if model.installAllRunning, let progress = model.installAllProgress {
-                return Story(icon: .sync, tone: SeleneTheme.glyph, title: "Install all", state: progress,
-                             about: names.isEmpty ? "Finishing…" : names.joined(separator: " · "),
-                             detail: "Each card shows how it is going.", action: nil)
+                return Story(icon: .sync, tone: SeleneTheme.glyph, title: L10n.text("Install all"), state: progress,
+                             about: names.isEmpty ? L10n.text("Finishing…") : names.joined(separator: " · "),
+                             detail: L10n.text("Each card shows how it is going."), action: nil)
             }
             if names.isEmpty {
-                return Story(icon: .check, tone: SeleneTheme.success, title: "Install all", state: "Done",
-                             about: "Everything NX Library can install by itself is installed.",
-                             detail: "Import your keys on their card if needed.", action: nil)
+                return Story(icon: .check, tone: SeleneTheme.success, title: L10n.text("Install all"), state: "Done",
+                             about: L10n.text("Everything NX Library can install by itself is installed."),
+                             detail: L10n.text("Import your keys on their card if needed."), action: nil)
             }
-            return Story(icon: .sync, tone: SeleneTheme.glyph, title: "Install all", state: "\(names.count) to go",
+            return Story(icon: .sync, tone: SeleneTheme.glyph, title: L10n.text("Install all"), state: L10n.format("%@ to go", [String(describing: (names.count))]),
                          about: names.joined(separator: " · "),
-                         detail: "Import your keys on their card if needed.", action: "Install all")
+                         detail: L10n.text("Import your keys on their card if needed."), action: "Install all")
         default:
             let required = items.filter(\.isRequired)
             let ready = required.filter { $0.state == .ready }.count
             let left = required.filter { $0.state != .ready }.map(\.title)
             if left.isEmpty {
-                return Story(icon: .check, tone: SeleneTheme.success, title: "All set", state: "Ready",
-                             about: "Everything NX Library needs is here.", detail: "", action: "Continue")
+                return Story(icon: .check, tone: SeleneTheme.success, title: L10n.text("All set"), state: L10n.text("Ready"),
+                             about: L10n.text("Everything NX Library needs is here."), detail: "", action: "Continue")
             }
-            return Story(icon: .checklist, tone: SeleneTheme.glyph, title: "\(ready) of \(required.count) ready",
-                         state: "\(left.count) left", about: "Still to do: \(left.joined(separator: ", ")).",
-                         detail: "Build setup can wait. Existing game apps still play.",
+            return Story(icon: .checklist, tone: SeleneTheme.glyph, title: L10n.format("%@ of %@ ready", [String(describing: (ready)), String(describing: (required.count))]),
+                         state: L10n.format("%@ left", [String(describing: (left.count))]), about: L10n.format("Still to do: %@.", [String(describing: (left.joined(separator: ", ")))]),
+                         detail: L10n.text("Build setup can wait. Existing game apps still play."),
                          action: "Continue")
         }
     }
@@ -236,7 +236,7 @@ struct SetupCheckView: View {
 
     private var buttons: some View {
         let count = model.missingAutomatic.count
-        let title = model.installAllProgress ?? (count > 0 ? "Install all (\(count))" : "All installed")
+        let title = model.installAllProgress ?? (count > 0 ? L10n.format("Install all (%@)", [String(describing: (count))]) : L10n.text("All installed"))
         return HStack(spacing: canvas.u(22)) {
             SelenePillButton(title: title, minWidth: 240, focused: focus == .installAll,
                              enabled: count > 0 && !model.installAllRunning) {
@@ -244,7 +244,7 @@ struct SetupCheckView: View {
             }
             .onHover { if $0 { move(to: .installAll) } }
             .opacity(model.installAllRunning ? 0.75 : 1)
-            SelenePillButton(title: "Continue", minWidth: 200, focused: focus == .carryOn) {
+            SelenePillButton(title: L10n.text("Continue"), minWidth: 200, focused: focus == .carryOn) {
                 move(to: .carryOn); activate()
             }
             .onHover { if $0 { move(to: .carryOn) } }

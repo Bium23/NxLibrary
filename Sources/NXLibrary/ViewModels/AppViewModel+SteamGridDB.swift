@@ -13,7 +13,7 @@ extension AppViewModel {
             return error.localizedDescription
         }
         hasSteamGridDBKey = true
-        logs.append(LogEntry(level: .info, message: "SteamGridDB key saved; Change artwork searches SteamGridDB."))
+        logs.append(LogEntry(level: .info, message: L10n.text("SteamGridDB key saved; Change artwork searches SteamGridDB.")))
         return nil
     }
 
@@ -22,7 +22,7 @@ extension AppViewModel {
             try SteamGridDBKey().remove()
             hasSteamGridDBKey = false
         } catch {
-            showSettingsNotice(title: "Key not removed", message: error.localizedDescription) { [weak self] in
+            showSettingsNotice(title: L10n.text("Key not removed"), message: error.localizedDescription) { [weak self] in
                 self?.removeSteamGridDBKey()
             }
         }

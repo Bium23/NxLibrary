@@ -26,7 +26,7 @@ struct ThemePreview: View {
         let h = w * 9 / 16
         let shape = RoundedRectangle(cornerRadius: canvas.u(16), style: .continuous)
         return VStack(alignment: .leading, spacing: canvas.u(10)) {
-            Text("PREVIEW")
+            Text(L10n.text("PREVIEW"))
                 .seleneFont(13, .semibold)
                 .foregroundColor(SeleneTheme.ink.opacity(0.55))
                 .padding(.leading, canvas.u(2))
@@ -72,8 +72,8 @@ struct ThemePreview: View {
         let tile = w * 0.085
         return VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: w * 0.02) {
-                Text("Spotlight").foregroundColor(ink)
-                Text("Collection").foregroundColor(ink.opacity(0.6))
+                Text(L10n.text("Spotlight")).foregroundColor(ink)
+                Text(L10n.text("Collection")).foregroundColor(ink.opacity(0.6))
             }
             .font(.system(size: w * 0.018, weight: .semibold))
             HStack(spacing: w * 0.016) {
@@ -96,18 +96,18 @@ struct ThemePreview: View {
                 }
             }
             .padding(.top, h * 0.12)
-            Text(games.first?.name ?? "Your games")
+            Text(games.first?.name ?? L10n.text("Your games"))
                 .font(.system(size: w * 0.034, weight: .semibold))
                 .foregroundColor(ink)
                 .lineLimit(1)
                 .padding(.top, h * 0.2)
             HStack(spacing: w * 0.012) {
-                Text("Play")
+                Text(L10n.text("Play"))
                     .foregroundColor(Color(hex: palette.onFocus))
                     .padding(.horizontal, w * 0.04)
                     .padding(.vertical, w * 0.01)
                     .background(Capsule().fill(focus))
-                Text("Details")
+                Text(L10n.text("Details"))
                     .foregroundColor(ink)
                     .padding(.horizontal, w * 0.032)
                     .padding(.vertical, w * 0.01)

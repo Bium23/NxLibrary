@@ -115,6 +115,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | File | Responsabilità |
 |---|---|
 | [Sources/NXLibraryCore/Models/PortedGame.swift](../Sources/NXLibraryCore/Models/PortedGame.swift) | Modello persistente del gioco con bundle, sorgenti, impostazioni, build e installazione in attesa. |
+| [Sources/NXLibraryCore/Models/GameStorageUsage.swift](../Sources/NXLibraryCore/Models/GameStorageUsage.swift) | Dimensioni per gioco e totali: distingue assenza e indisponibilità, segnala cache condivise e conserva identità stabili per il focus. |
 | [Sources/NXLibraryCore/Models/LibraryFile.swift](../Sources/NXLibraryCore/Models/LibraryFile.swift) | Contenitore versionato del catalogo della libreria. |
 | [Sources/NXLibraryCore/Models/GameStatus.swift](../Sources/NXLibraryCore/Models/GameStatus.swift) | Enumera disponibilità e stato del gioco rispetto ad app, sorgenti e porting. |
 | [Sources/NXLibraryCore/Models/GameResourceState.swift](../Sources/NXLibraryCore/Models/GameResourceState.swift) | Distingue app mancanti, sorgenti assenti e workspace non compilati, riconcilia gli stati e conserva Play per una build esistente. |
@@ -201,7 +202,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Services/BuildOutputInstaller.swift](../Sources/NXLibraryCore/Services/BuildOutputInstaller.swift) | Pubblica il bundle con rinomina o scambio atomico, prepara copie fra volumi e riconosce i tentativi già completati tramite ricevuta. |
 | [Sources/NXLibraryCore/Services/GameAppDestination.swift](../Sources/NXLibraryCore/Services/GameAppDestination.swift) | Risolve la destinazione condivisa da review e porting, conserva i percorsi dei rebuild, evita conflitti di nome e verifica la cartella di destinazione. |
 | [Sources/NXLibraryCore/Services/LaunchService.swift](../Sources/NXLibraryCore/Services/LaunchService.swift) | Scrive l’ambiente runtime e avvia il bundle del gioco tramite NSWorkspace. |
-| [Sources/NXLibraryCore/Services/StorageManager.swift](../Sources/NXLibraryCore/Services/StorageManager.swift) | Misura app, cache e log e ne gestisce la pulizia. I backup appartengono al flusso Saves. |
+| [Sources/NXLibraryCore/Services/StorageManager.swift](../Sources/NXLibraryCore/Services/StorageManager.swift) | Misura app, cache e log per gioco e totali senza duplicare percorsi condivisi; verifica cartelle e sorgenti prima della pulizia selettiva. I backup appartengono al flusso Saves. |
 | [Sources/NXLibraryCore/Services/DiagnosticsReport.swift](../Sources/NXLibraryCore/Services/DiagnosticsReport.swift) | Genera il rapporto diagnostico e rimuove percorso home e valori riconosciuti come chiavi. |
 | [Sources/NXLibraryCore/Services/AppUpdate.swift](../Sources/NXLibraryCore/Services/AppUpdate.swift) | Definisce repository, versioni, requisiti, limiti di download, digest, firma e regole di verifica e sostituzione dell’app NX Library. |
 | [Sources/NXLibraryCore/Models/AppUpdatePresentation.swift](../Sources/NXLibraryCore/Models/AppUpdatePresentation.swift) | Definisce gli stati dell’updater e il gate di installazione per versione e tipo di copia. |
@@ -562,7 +563,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/SpotlightPageTests.swift](../Tests/NXLibraryCoreTests/SpotlightPageTests.swift) | Estratti del testo e stati dello scorrimento della pagina del gioco. |
 | [Tests/NXLibraryCoreTests/SpotlightRowTests.swift](../Tests/NXLibraryCoreTests/SpotlightRowTests.swift) | Ordine, card, riordino delle tile e selezione Surprise. |
 | [Tests/NXLibraryCoreTests/SpotlightStateTests.swift](../Tests/NXLibraryCoreTests/SpotlightStateTests.swift) | Focus, selezione, filtri, azioni e spostamento delle tile Spotlight. |
-| [Tests/NXLibraryCoreTests/StorageManagerTests.swift](../Tests/NXLibraryCoreTests/StorageManagerTests.swift) | Misure e cancellazioni di cache e log. |
+| [Tests/NXLibraryCoreTests/StorageManagerTests.swift](../Tests/NXLibraryCoreTests/StorageManagerTests.swift) | Misure per gioco, cache condivise e nascoste, pulizia selettiva, protezione di app/sorgenti/symlink, file incoerenti e volumi/cartelle non disponibili. |
 | [Tests/NXLibraryCoreTests/ThemePickerTests.swift](../Tests/NXLibraryCoreTests/ThemePickerTests.swift) | Navigazione della griglia, tab e selezione degli sfondi. |
 | [Tests/NXLibraryCoreTests/ToolchainGateCopyTests.swift](../Tests/NXLibraryCoreTests/ToolchainGateCopyTests.swift) | Testi del gate per Metal certificato, precedente, successivo e altre cause di blocco. |
 | [Tests/NXLibraryCoreTests/ToolchainRequirementsTests.swift](../Tests/NXLibraryCoreTests/ToolchainRequirementsTests.swift) | Versioni minime e identificativi degli asset Metal da scaricare. |
@@ -646,3 +647,17 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 ## Aggiornare questo catalogo
 
 Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua riga e il totale iniziale. Quando cambia un flusso o una responsabilità, aggiornare anche la sezione corrispondente della guida tecnica. Le descrizioni dei test indicano l’ambito dei controlli, mentre l’esito di esecuzione appartiene ai rapporti di verifica.
+
+## Localizzazione (hotfix non pubblicato)
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Models/AppLocale.swift](../Sources/NXLibraryCore/Models/AppLocale.swift) | Sei lingue, risoluzione delle preferenze e regione indipendente; nomi e ricerca delle regioni. |
+| [Sources/NXLibraryCore/Models/GameGenre.swift](../Sources/NXLibraryCore/Models/GameGenre.swift) | Generi noti tradotti alla presentazione; dati originali e generi personali conservati. |
+| [Sources/NXLibrary/Views/Theme/AppLocaleEnvironment.swift](../Sources/NXLibrary/Views/Theme/AppLocaleEnvironment.swift) | Contesto della lingua reattivo per le viste; conserva identità, selezione e focus. |
+| [Sources/NXLibraryCore/Services/AppLocalization.swift](../Sources/NXLibraryCore/Services/AppLocalization.swift) | Contesto osservabile, lookup portabile delle risorse e interpolazioni/plurali. |
+| [Sources/NXLibraryCore/Resources/Localizable.xcstrings](../Sources/NXLibraryCore/Resources/Localizable.xcstrings) | Testi condivisi e traduzioni en/it/fr/de/es/pt-BR. |
+| [Sources/NXLibrary/Views/Settings/LocalePicker.swift](../Sources/NXLibrary/Views/Settings/LocalePicker.swift) | Scelta diretta della lingua e ricerca dei formati regionali, con focus tastiera/controller e codici stabili. |
+| [Tests/NXLibraryCoreTests/AppLocaleTests.swift](../Tests/NXLibraryCoreTests/AppLocaleTests.swift) | Preferenze, migrazione, formati, ricerca, identità e traduzioni native. |
+| [scripts/check_localizations.py](../scripts/check_localizations.py) | Verifica copertura, placeholder, plurali e risorse nel bundle installato. |
+| [Tests/PublicationChecks/test_localizations.py](../Tests/PublicationChecks/test_localizations.py) | Rifiuto di cataloghi incompleti e bundle senza risorse. |

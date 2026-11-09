@@ -155,6 +155,12 @@ When you quit a game, NX Library comes back to the front, unless you had moved t
 
 <p align="center"><strong>Quick access.</strong><br>Open the menu without leaving your library.</p>
 
+### Language and region
+
+The unreleased hotfix adds **English, Italiano, Français, Deutsch, Español and Português (Brasil)**. **Settings → Start-up → Language & region** follows the Mac automatically or lets you choose the app language and region separately. Changes apply immediately and are remembered. The **Regional formats** setting controls only date, number and size formats; **Game options → Language** continues to control each game independently.
+
+Choose a language directly from its list. Known catalog genres are translated locally, without changing the saved metadata. Descriptions from Nlib are requested in the app language when supported, with cached descriptions shared between regions using the same language. Switching language reuses available artwork and credits; when those are fresh, only the localized description is requested. English remains available when a translated description cannot be found; descriptions, mod text and release notes from external sources are not automatically translated. Personal names, metadata choices, artwork and game settings are preserved.
+
 ### Add or rebuild a game
 
 1. Open **Add game** and choose or drop a supported file or folder.
@@ -304,14 +310,16 @@ The [upgrade notes](docs/upstream-upgrades/README.md) record each engine review 
 
 App data lives in `~/Library/Application Support/NXLibrary/`. Local game data uses `~/Library/Application Support/nxnative/<title ID>/`, with mods in its `mods` folder. Backups are stored under `NXLibrary/SaveBackups/<title ID>/`.
 
-Storage can clear caches and logs and open the shared backups folder. **Remove Sources & Build Cache deletes the selected original source files**, while retaining the installed app and saves. Read that confirmation carefully; it differs from clearing a cache.
+**Settings → Storage → By game** shows app, build cache and log sizes for every library entry, including hidden games, with the largest caches first. **Delete cache** permanently removes only the chosen game's build cache after confirmation. Its app, original game files, saves and logs stay in place; the next rebuild may take longer. Shared caches are identified, and their confirmation explains the effect on the other entries. Connect unavailable drives or check folder access, then choose **Recalculate**. Sizes describe file contents; actual space recovered can differ, and shared folders count once in totals. This addition is unreleased; the maintainer confirmed it works in Dev.
+
+Storage can also clear all build caches or logs and open the shared backups folder. Cleanup runs without blocking navigation and is unavailable during a build or app update. **Remove Sources & Build Cache deletes the selected original source files**, while retaining the installed app and saves. Read that confirmation carefully; it differs from clearing a cache.
 
 ## Next steps
 
 - **Simpler Settings** — Keep everyday options easy to find, with advanced controls grouped within each category.
 - **In-app bug reporting** — Make it easier to report a problem directly from NX Library.
 - **Broader game discovery** — Discover and launch games from Steam, CrossOver and the Mac App Store, alongside nxnative apps.
-- **Languages** — NX Library in more languages than English.
+- **Community translations** — Review and extend the initial six interface languages.
 - **Better controller support** — Refine controller settings and offer more flexible button mapping.
 - **Continued polish** — Fix bugs and improve navigation, feedback and visual details throughout the app.
 

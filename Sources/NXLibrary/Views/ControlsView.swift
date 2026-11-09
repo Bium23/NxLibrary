@@ -26,29 +26,29 @@ public struct ControlsView: View {
         if inGame {
             // nxnative dm/host/front_mac.m: key_bit, on_key and push.
             return [
-                ("Left stick", "W · A · S · D"),
-                ("D-pad", "Arrow keys"),
+                (L10n.text("Left stick"), "W · A · S · D"),
+                (L10n.text("D-pad"), L10n.text("Arrow keys")),
                 ("A · B · X · Y", "J · K · U · I"),
                 ("L · R", "Q · E"),
                 ("ZL · ZR", "Z · C"),
-                ("Press left / right stick", "F · G"),
-                ("Plus · Minus", "Return · Tab"),
-                ("Shake", "Hold Space"),
-                ("Right stick", "Shift + Arrow keys · Controller"),
-                ("Touchscreen", "Click and drag · Handheld mode"),
-                ("Gamepad", "USB or Bluetooth · Button positions follow the engine's layout"),
-                ("Rumble", "Depends on the game, build and controller"),
+                (L10n.text("Press left / right stick"), "F · G"),
+                (L10n.text("Plus · Minus"), L10n.text("Return · Tab")),
+                (L10n.text("Shake"), L10n.text("Hold Space")),
+                (L10n.text("Right stick"), L10n.text("Shift + Arrow keys · Controller")),
+                (L10n.text("Touchscreen"), L10n.text("Click and drag · Handheld mode")),
+                ("Gamepad", L10n.text("USB or Bluetooth · Button positions follow the engine's layout")),
+                ("Rumble", L10n.text("Depends on the game, build and controller")),
                 // nxnative 48888df5 (home_quit.h): held for 2 s, a prompt; A quits as ⌘Q does, B or Home goes back.
-                ("Quit the game", "⌘Q · Hold Home for 2 s, then A, in games built with the current engine")
+                (L10n.text("Quit the game"), "⌘Q · Hold Home for 2 s, then A, in games built with the current engine")
             ]
         }
         return [
-            ("Move", "Arrows · D-pad or left stick"),
-            ("Select", "Return / Space · " + controller.activeBrand.confirmButtonName),
-            ("Back", "Escape · " + controller.activeBrand.cancelButtonName),
+            ("Move", L10n.text("Arrows · D-pad or left stick")),
+            ("Select", L10n.text("Return / Space · ") + controller.activeBrand.confirmButtonName),
+            ("Back", L10n.text("Escape · ") + controller.activeBrand.cancelButtonName),
             ("Menu", "⌘K · Menu / Start"),
             ("Find a game", "⌘F · Hold View"),
-            ("Move a tile", "Hold Confirm on a Spotlight tile")
+            (L10n.text("Move a tile"), L10n.text("Hold Confirm on a Spotlight tile"))
         ]
     }
 
@@ -57,19 +57,19 @@ public struct ControlsView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: canvas.u(12)) {
-                        Text("Controls")
+                        Text(L10n.text("Controls"))
                             .seleneFont(40)
                             .foregroundColor(SeleneTheme.ink)
-                        Text(inGame ? "Default game inputs. Older builds may differ." : "Navigate NX Library.")
+                        Text(inGame ? L10n.text("Default game inputs. Older builds may differ.") : L10n.text("Navigate NX Library."))
                             .seleneFont(19)
                             .foregroundColor(SeleneTheme.ink60)
                             .padding(.bottom, canvas.u(18))
                         SeleneSegmented(selection: $inGame, options: [(false, "Library"), (true, "In game")])
                             .padding(.bottom, canvas.u(18))
-                        SeleneOptionRow(icon: .gamepad, title: "Controller",
-                            about: controller.isGamepadConnected ? controller.activeControllerName : "Not connected",
+                        SeleneOptionRow(icon: .gamepad, title: L10n.text("Controller"),
+                            about: controller.isGamepadConnected ? controller.activeControllerName : L10n.text("Not connected"),
                             focused: focus == 0) {
-                            Button("Detect") { controller.refreshControllers() }
+                            Button(L10n.text("Detect")) { controller.refreshControllers() }
                                 .buttonStyle(.plain)
                                 .seleneFont(15, .semibold)
                                 .foregroundColor(SeleneTheme.glyph)
@@ -93,8 +93,8 @@ public struct ControlsView: View {
                 }
                 .onChange(of: inGame) { _ in focus = 0; proxy.scrollTo(0, anchor: .top) }
             }
-            SeleneHintsBar(left: [HintItem(.b, "Back", action: onClose)],
-                right: [HintItem(.lb, "Library") { inGame = false }, HintItem(.rb, "In game") { inGame = true }])
+            SeleneHintsBar(left: [HintItem(.b, L10n.text("Back"), action: onClose)],
+                right: [HintItem(.lb, L10n.text("Library")) { inGame = false }, HintItem(.rb, L10n.text("In game")) { inGame = true }])
         }
         .background(SeleneBackdrop())
         .environment(\.seleneMinimumFont, 12)

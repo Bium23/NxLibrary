@@ -22,7 +22,7 @@ struct ThemePickerView: View {
     @ObservedObject private var theme = ThemeStore.shared
     @State private var state = ThemePickerState(themeIndex: 0, backgroundIndex: 0)
     @State private var opened = false
-    @State private var errorTitle = "Couldn't add the picture"
+    @State private var errorTitle = L10n.text("Couldn't add the picture")
     @StateObject private var browser = OnlineBrowser()
     @StateObject private var transfer = OnlineTransfer()
     @State private var searchText = ""
@@ -67,7 +67,7 @@ struct ThemePickerView: View {
                 .frame(maxHeight: .infinity, alignment: .bottom)
                 .padding(.bottom, canvas.u(124))
 
-            SeleneHintsBar(left: [HintItem(.b, transfer.itemID != nil ? "Cancel" : "Back", action: back)], right: rightHints,
+            SeleneHintsBar(left: [HintItem(.b, transfer.itemID != nil ? L10n.text("Cancel") : L10n.text("Back"), action: back)], right: rightHints,
                            bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
                 .frame(maxHeight: .infinity, alignment: .bottom)
 
@@ -102,27 +102,27 @@ struct ThemePickerView: View {
     private var rightHints: [HintItem] {
         switch state.step {
         case .theme:
-            return [HintItem(.a, "Next", action: accept)]
+            return [HintItem(.a, L10n.text("Next"), action: accept)]
         case .background:
             if let browse = browser.state {
                 guard transfer.itemID == nil else { return [] }
                 if let item = browse.focusedItem {
                     let have = theme.wallpapers.contains { $0.id == OnlineDownload.wallpaperID(for: item) }
-                    return [HintItem(.x, "Open page", action: { NSWorkspace.shared.open(item.pageURL) }),
-                            HintItem(.a, have ? "Done" : "Download", action: accept)]
+                    return [HintItem(.x, L10n.text("Open page"), action: { NSWorkspace.shared.open(item.pageURL) }),
+                            HintItem(.a, have ? L10n.text("Done") : L10n.text("Download"), action: accept)]
                 }
-                return browse.category.isSearch ? [HintItem(.a, "Search", action: accept)] : []
+                return browse.category.isSearch ? [HintItem(.a, L10n.text("Search"), action: accept)] : []
             }
             var hints: [HintItem] = []
             if case .wallpaper(let id) = focusedBackground, let credit = theme.credits[id] {
-                hints.append(HintItem(.x, "Open page", action: { NSWorkspace.shared.open(credit.pageURL) }))
+                hints.append(HintItem(.x, L10n.text("Open page"), action: { NSWorkspace.shared.open(credit.pageURL) }))
             }
             if case .wallpaper(let id) = focusedBackground, ThemeStore.isRemovable(id) {
-                hints.append(HintItem(.y, "Remove", action: removeFocused))
+                hints.append(HintItem(.y, L10n.text("Remove"), action: removeFocused))
             }
             let verb: String
             switch focusedBackground {
-            case .add: verb = "Add"
+            case .add: verb = L10n.text("Add")
             case .online: verb = "Browse"
             default: verb = "Done"
             }
@@ -155,7 +155,7 @@ struct ThemePickerView: View {
     private var themeStep: some View {
         let palette = palettes[min(state.themeIndex, palettes.count - 1)]
         return ZStack(alignment: .top) {
-            header("Choose your theme", "Colors for all of NX Library. Move through them to see each one in the preview.")
+            header(L10n.text("Choose your theme"), L10n.text("Colors for all of NX Library. Move through them to see each one in the preview."))
             HStack(alignment: .top, spacing: canvas.u(60)) {
                 grid(count: palettes.count, columns: ThemePickerState.themeColumns) { index in
                     swatch(palettes[index], focused: index == state.themeIndex)
@@ -167,7 +167,7 @@ struct ThemePickerView: View {
                     chips(palette)
                         .padding(.top, canvas.u(18))
                         .padding(.leading, canvas.u(4))
-                    Text(palette.name + (palette.mode == .light ? "  ·  light" : ""))
+                    Text(palette.name + (palette.mode == .light ? L10n.text("  ·  light") : ""))
                         .seleneFont(26)
                         .foregroundColor(SeleneTheme.ink)
                         .padding(.top, canvas.u(12))
@@ -193,7 +193,7 @@ struct ThemePickerView: View {
                                        .init(color: background.opacity(0), location: 1)],
                                startPoint: .leading, endPoint: .trailing)
                 HStack {
-                    Text("Aa").seleneFont(22).foregroundColor(Color(hex: palette.ink))
+                    Text(L10n.text("Aa")).seleneFont(22).foregroundColor(Color(hex: palette.ink))
                     Spacer(minLength: 0)
                     Circle()
                         .fill(Color(hex: palette.glyph))
@@ -258,7 +258,7 @@ struct ThemePickerView: View {
             if let browse = browser.state {
                 header(browse.source.title, Self.about(browse.source))
             } else {
-                header("Choose your background", "Behind the menus and the home when no game is selected.")
+                header(L10n.text("Choose your background"), L10n.text("Behind the menus and the home when no game is selected."))
             }
             HStack(alignment: .top, spacing: canvas.u(50)) {
                 if let browse = browser.state {
@@ -337,7 +337,7 @@ struct ThemePickerView: View {
         HStack(spacing: canvas.u(8)) {
             SelenePromptBadge(button: .lb, height: 26).accessibilityHidden(true)
             ForEach(BackgroundTab.allCases, id: \.self) { tab in
-                Text(tab == .wallpapers ? "Wallpapers" : "Live")
+                Text(tab == .wallpapers ? L10n.text("Wallpapers") : L10n.text("Live"))
                     .seleneFont(17, .semibold)
                     .foregroundColor(tab == state.tab ? SeleneTheme.ink : SeleneTheme.ink60)
                     .padding(.horizontal, canvas.u(20))
@@ -355,10 +355,10 @@ struct ThemePickerView: View {
     /// The line under a source's name while browsing it.
     static func about(_ source: BackgroundSourceID) -> String {
         switch source {
-        case .wallhaven: return "Safe for work, 2K and up. Every picture belongs to its owner."
-        case .danbooru: return "General rating only, 2K and up. Every picture belongs to its artist."
-        case .motionbgs: return "Looping live wallpapers in 4K and HD. Every video belongs to its owner."
-        case .steam: return "Animated profile backgrounds, made by the games' studios for Steam."
+        case .wallhaven: return L10n.text("Safe for work, 2K and up. Every picture belongs to its owner.")
+        case .danbooru: return L10n.text("General rating only, 2K and up. Every picture belongs to its artist.")
+        case .motionbgs: return L10n.text("Looping live wallpapers in 4K and HD. Every video belongs to its owner.")
+        case .steam: return L10n.text("Animated profile backgrounds, made by the games' studios for Steam.")
         }
     }
 
@@ -375,7 +375,7 @@ struct ThemePickerView: View {
         if let browse = browser.state {
             guard let item = browse.focusedItem else { return nil }
             var parts = [item.source.title, item.title]
-            if let author = item.author { parts.append("art by \(author)") }
+            if let author = item.author { parts.append(L10n.format("art by %@", [String(describing: (author))])) }
             parts.append("\(item.width) × \(item.height)")
             return parts.joined(separator: " · ")
         }
@@ -411,12 +411,12 @@ struct ThemePickerView: View {
                 if state.tab == .live {
                     MoonlightBackdrop(accent: SeleneTheme.glyph, ink: SeleneTheme.ink, moving: false, asImage: true)
                 }
-                tileLabel(state.tab == .live ? "Moonlight" : "None")
+                tileLabel(state.tab == .live ? L10n.text("Moonlight") : "None")
             case .add:
                 SeleneTheme.glassSolid
                 VStack(spacing: canvas.u(6)) {
                     MaterialIconView(.add, size: 34).foregroundColor(SeleneTheme.ink)
-                    Text(state.tab == .live ? "Add your video…" : "Add your own…").seleneFont(15).foregroundColor(SeleneTheme.ink90)
+                    Text(state.tab == .live ? L10n.text("Add your video…") : L10n.text("Add your own…")).seleneFont(15).foregroundColor(SeleneTheme.ink90)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .wallpaper(let id):
@@ -452,7 +452,7 @@ struct ThemePickerView: View {
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label(choice))
-        .accessibilityValue(inUse ? "In use" : "")
+        .accessibilityValue(inUse ? L10n.text("In use") : "")
         .accessibilityAddTraits(focused ? [.isButton, .isSelected] : .isButton)
     }
 
@@ -462,7 +462,7 @@ struct ThemePickerView: View {
             VStack(spacing: canvas.u(6)) {
                 MaterialIconView(.language, size: 30).foregroundColor(SeleneTheme.ink)
                 Text(source.title).seleneFont(18, .semibold).foregroundColor(SeleneTheme.ink)
-                Text("Browse online").seleneFont(13).foregroundColor(SeleneTheme.ink60)
+                Text(L10n.text("Browse online")).seleneFont(13).foregroundColor(SeleneTheme.ink60)
             }
         }
     }
@@ -480,11 +480,11 @@ struct ThemePickerView: View {
 
     private func label(_ choice: ThemeBackgroundChoice) -> String {
         switch choice {
-        case .theme: return "Theme's own"
-        case .none: return state.tab == .live ? "Moonlight" : "None"
-        case .add: return state.tab == .live ? "Add your video" : "Add your own"
+        case .theme: return L10n.text("Theme's own")
+        case .none: return state.tab == .live ? L10n.text("Moonlight") : L10n.text("None")
+        case .add: return state.tab == .live ? L10n.text("Add your video") : L10n.text("Add your own")
         case .wallpaper(let id): return theme.wallpaperTitle(for: id)
-        case .online(let source): return "Browse \(source.title)"
+        case .online(let source): return L10n.format("Browse %@", [String(describing: (source.title))])
         }
     }
 
@@ -676,7 +676,7 @@ struct ThemePickerView: View {
                 theme.reloadWallpapers()
                 use(id)
             case .failure(let error):
-                errorTitle = "Couldn't download the wallpaper"
+                errorTitle = L10n.text("Couldn't download the wallpaper")
                 viewModel.showSettingsNotice(title: errorTitle, message: error.localizedDescription)
             }
         }
@@ -731,7 +731,7 @@ struct ThemePickerView: View {
     }
 
     private func placementDialog(_ pending: PendingWallpaper) -> some View {
-        let name = pending.id == WallpaperCatalog.none ? "No wallpaper"
+        let name = pending.id == WallpaperCatalog.none ? L10n.text("No wallpaper")
             : pending.id.flatMap { theme.credits[$0]?.title } ?? theme.wallpaperTitle(for: pending.id)
         return ZStack {
             SeleneTheme.scrim45
@@ -739,7 +739,7 @@ struct ThemePickerView: View {
                 .contentShape(Rectangle())
                 .onTapGesture { place(.notNow) }
             SeleneChoiceDialog(title: WallpaperPlacement.dialogTitle,
-                               message: "\(name). You can change both wallpapers any time in Settings → Look.",
+                               message: L10n.format("%@. You can change both wallpapers any time in Settings → Look.", [String(describing: (name))]),
                                choices: WallpaperPlacement.allCases.map(\.title), focus: $placementFocus) { index in
                 place(WallpaperPlacement.allCases[index])
             }
@@ -762,13 +762,13 @@ struct ThemePickerView: View {
         let live = state.tab == .live
         let panel = NSOpenPanel()
         panel.message = live
-            ? "Choose a video for your live background (MP4, MOV or M4V). NX Library keeps its own copy and plays it muted."
-            : "Choose a picture for your background. NX Library keeps its own copy."
+            ? L10n.text("Choose a video for your live background (MP4, MOV or M4V). NX Library keeps its own copy and plays it muted.")
+            : L10n.text("Choose a picture for your background. NX Library keeps its own copy.")
         panel.allowedContentTypes = live
             ? WallpaperCatalog.videoExtensions.compactMap { UTType(filenameExtension: $0) }
             : [.image]
         panel.allowsMultipleSelection = false
-        errorTitle = live ? "Couldn't add the video" : "Couldn't add the picture"
+        errorTitle = live ? L10n.text("Couldn't add the video") : L10n.text("Couldn't add the picture")
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
             let id = try theme.importWallpaper(from: url)
@@ -817,7 +817,7 @@ struct ThemePickerView: View {
             state.backgroundIndex = min(state.backgroundIndex, backgrounds.count - 1)
             SoundEffectService.shared.play(.click)
         } catch {
-            errorTitle = "Couldn't remove it"
+            errorTitle = L10n.text("Couldn't remove it")
             viewModel.showSettingsNotice(title: errorTitle, message: error.localizedDescription)
         }
     }
@@ -825,20 +825,20 @@ struct ThemePickerView: View {
     /// A calm question: what goes, where it goes, and that it can come back.
     private func removalDialog(_ id: String) -> some View {
         let video = theme.wallpaper(for: id)?.kind == .video
-        let thing = video ? "video" : "picture"
+        let removalTitle = video ? L10n.text("Remove this video?") : L10n.text("Remove this picture?")
         let downloaded = !id.hasPrefix(WallpaperCatalog.custom + "/")
         let name = theme.credits[id]?.title ?? theme.wallpaperTitle(for: id)
         var message = downloaded
-            ? "\(name) goes to the Trash, so you can bring it back from there, or download it again whenever you like."
-            : "NX Library's copy of \(name) goes to the Trash, so you can bring it back from there. Your original file stays where it is."
-        if settings.settings.wallpaperID == id { message += " Your theme's own background takes its place." }
+            ? L10n.format("%@ goes to the Trash, so you can bring it back from there, or download it again whenever you like.", [String(describing: (name))])
+            : L10n.format("NX Library's copy of %@ goes to the Trash, so you can bring it back from there. Your original file stays where it is.", [String(describing: (name))])
+        if settings.settings.wallpaperID == id { message += L10n.text(" Your theme’s own background takes its place.") }
         return ZStack {
             SeleneTheme.scrim45
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
                 .onTapGesture { keepIt() }
-            SeleneConfirmDialog(title: "Remove this \(thing)?", message: message, confirmTitle: "Remove",
-                                cancelTitle: "Keep it", focus: $removalFocus,
+            SeleneConfirmDialog(title: removalTitle, message: message, confirmTitle: "Remove",
+                                cancelTitle: L10n.text("Keep it"), focus: $removalFocus,
                                 onCancel: keepIt, onConfirm: confirmRemoval)
         }
     }

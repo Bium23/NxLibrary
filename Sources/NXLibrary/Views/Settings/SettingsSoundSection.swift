@@ -32,7 +32,7 @@ struct SettingsSoundSection: View {
                             info: "Movement and selection sounds stay quiet during launch. Game starting and Game ready still play.",
                             isOn: $settings.settings.quietLaunch)
 
-            SettingsSubheading("Theme assets")
+            SettingsSubheading(L10n.text("Theme assets"))
 
             SeleneButtonRow("Import sounds and wallpapers from Selene",
                             subtitle: importNote
@@ -65,15 +65,15 @@ struct SettingsSoundSection: View {
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
-        panel.prompt = "Import"
-        panel.message = "Choose your Selene folder (the one that contains theme/theme.yaml)."
+        panel.prompt = L10n.text("Import")
+        panel.message = L10n.text("Choose your Selene folder (the one that contains theme/theme.yaml).")
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
             let report = try SeleneImporter().importFrom(seleneRoot: url)
             SoundEffectService.shared.reloadSounds()
             NotificationCenter.default.post(name: .nxSeleneImportFinished, object: nil)
-            importNote = "Imported \(report.copied.count) files"
-                + (report.missing.isEmpty ? "." : "; \(report.missing.count) not found in that folder.")
+            importNote = L10n.format("Imported %@ files", [String(describing: (report.copied.count))])
+                + (report.missing.isEmpty ? "." : L10n.format("; %@ not found in that folder.", [String(describing: (report.missing.count))]))
             SoundEffectService.shared.play(.success)
         } catch {
             importNote = error.localizedDescription

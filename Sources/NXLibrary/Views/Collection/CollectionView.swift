@@ -135,19 +135,19 @@ public struct CollectionView: View {
         if viewModel.isScanningLibrary {
             EmptyView()
         } else if hasAnyGame {
-            Text("No games in \(filter.rawValue)")
+            Text(L10n.format("No games in %@", [L10n.text(filter.rawValue)]))
                 .seleneFont(34)
                 .foregroundColor(SeleneTheme.ink)
                 .shadow(color: .black.opacity(0.45), radius: canvas.u(6))
                 .allowsHitTesting(false)
         } else {
             VStack(spacing: canvas.u(14)) {
-                Text("Add your first game").seleneFont(34).foregroundColor(SeleneTheme.ink)
-                Text("Choose game files or find your existing apps.")
+                Text(L10n.text("Add your first game")).seleneFont(34).foregroundColor(SeleneTheme.ink)
+                Text(L10n.text("Choose game files or find your existing apps."))
                     .seleneFont(19).foregroundColor(SeleneTheme.ink60)
                 HStack(spacing: canvas.u(14)) {
-                    SelenePillButton(title: "Add game", focused: true) { router.openAddGame() }
-                    SelenePillButton(title: "Import existing builds", minWidth: 0, focused: false) {
+                    SelenePillButton(title: L10n.text("Add game"), focused: true) { router.openAddGame() }
+                    SelenePillButton(title: L10n.text("Import existing builds"), minWidth: 0, focused: false) {
                         viewModel.importExistingBuilds()
                     }
                 }
@@ -162,13 +162,13 @@ public struct CollectionView: View {
     private func contextHints(_ game: PortedGame?) -> [HintItem] {
         guard let game else {
             if viewModel.isScanningLibrary { return [] }
-            return hasAnyGame ? [HintItem(.rs, "Filter")] : [HintItem(.a, "Add game")]
+            return hasAnyGame ? [HintItem(.rs, L10n.text("Filter"))] : [HintItem(.a, L10n.text("Add game"))]
         }
-        let filterHint = HintItem(.rs, "Filter")
+        let filterHint = HintItem(.rs, L10n.text("Filter"))
         if game.isPlayableLocally {
-            return [HintItem(.a, "Play"), HintItem(.x, "Details"), HintItem(.y, "Game options"), filterHint]
+            return [HintItem(.a, L10n.text("Play")), HintItem(.x, L10n.text("Details")), HintItem(.y, L10n.text("Game options")), filterHint]
         }
-        return [HintItem(.a, "Details"), HintItem(.y, "Game options"), filterHint]
+        return [HintItem(.a, L10n.text("Details")), HintItem(.y, L10n.text("Game options")), filterHint]
     }
 
     // MARK: - Selection
@@ -253,7 +253,7 @@ struct CollectionInfoView: View {
                     .foregroundColor(SeleneTheme.ink60)
                     .padding(.top, canvas.u(6))
             } else if !game.isPlayableLocally, game.status != .building, game.portingFailure == nil {
-                Text("Not built yet")
+                Text(L10n.text("Not built yet"))
                     .seleneFont(17)
                     .foregroundColor(SeleneTheme.ink75)
                     .padding(.top, canvas.u(20))

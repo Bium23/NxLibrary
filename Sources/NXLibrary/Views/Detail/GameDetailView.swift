@@ -190,8 +190,8 @@ struct GameDetailView: View {
 
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
-                SeleneHintsBar(left: [HintItem(.b, "Back", action: { router.back() })],
-                               right: [HintItem(.y, "Options"), HintItem(.a, "Select")],
+                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back"), action: { router.back() })],
+                               right: [HintItem(.y, L10n.text("Options")), HintItem(.a, L10n.text("Select"))],
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
             .seleneOverlaidHints(router.overlayHasHints(viewModel))

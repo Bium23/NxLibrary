@@ -313,7 +313,7 @@ enum CheatDecoder {
     }
 
     static func length(_ p: ArraySlice<UInt32>) -> Result<Int, Refusal> {
-        guard let w = p.first else { return .failure(Refusal(reason: "truncated")) }
+        guard let w = p.first else { return .failure(Refusal(reason: L10n.text("truncated"))) }
         let n = p.count
         func refuse(_ r: String) -> Result<Int, Refusal> { .failure(Refusal(reason: r)) }
         func widthOK(_ t: UInt32) -> Bool { t == 1 || t == 2 || t == 4 || t == 8 }
