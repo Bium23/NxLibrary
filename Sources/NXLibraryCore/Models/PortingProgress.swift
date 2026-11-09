@@ -59,7 +59,7 @@ public struct PortingProgress: Equatable {
         case .step(let title):
             isUpdatingShaderCache = false
             stepName = title
-        case .progress(let fraction, let done, _, _, let eta):
+        case .progress(let fraction, let done, _, _, let eta, _):
             guard countsAsShaders(hasCount: done != nil) else { return }
             phase = .shaders
             raise(to: Self.shaderShare * min(max(fraction, 0), 1))

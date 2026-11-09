@@ -461,6 +461,8 @@ public final class AppViewModel: ObservableObject {
     private var environmentCheckGeneration = UUID()
     private var buildStartedAt: Date?
     private var buildTempDirectory: URL?
+    private var stageElapsedTimer: Timer?
+    private var currentStageStartedAt: Date?
     
     public init(settingsStore: AppSettingsStore = AppSettingsStore()) {
         self.settingsStore = settingsStore
@@ -2501,6 +2503,7 @@ public final class AppViewModel: ObservableObject {
         )
         lastPortingCommand = [command.executable.path] + command.arguments
 
+        stopStageElapsedTimer()
         buildStartedAt = Date()
         buildTempDirectory = tempRoot
         buildLogURL = logURL
@@ -2557,6 +2560,7 @@ public final class AppViewModel: ObservableObject {
 
     public func cancelBuild() {
         guard isBuilding, let buildService else { return }
+        stopStageElapsedTimer()
         isCancellingBuild = true
         currentStageName = "Cancelling build..."
         logs.append(LogEntry(level: .warning, message: "Cancelling build..."))
@@ -2601,6 +2605,8 @@ public final class AppViewModel: ObservableObject {
         portingProgress?.apply(event)
         switch event {
         case .stage(let k, let n, let name, let step):
+            let now = Date()
+            currentStageStartedAt = now
             currentStageName = name
             stageIndex = k
             totalStages = n
@@ -2612,10 +2618,15 @@ public final class AppViewModel: ObservableObject {
             if let index = buildStages.firstIndex(where: { $0.id == k }) {
                 buildStages[index].isRunning = true
                 buildStages[index].step = step ?? ""
+                if buildStages[index].elapsedSeconds == nil {
+                    buildStages[index].elapsedSeconds = 0
+                }
             } else {
                 buildStages.append(BuildStageItem(id: k, name: name,
-                                                  step: step ?? "", isRunning: true))
+                                                  step: step ?? "", isRunning: true,
+                                                  elapsedSeconds: 0))
             }
+            startStageElapsedTimerIfNeeded()
             if let step, !step.isEmpty { currentStepName = step }
             logs.append(LogEntry(level: .step, message: "[\(k)/\(n)] \(name)"))
 
@@ -2626,9 +2637,14 @@ public final class AppViewModel: ObservableObject {
             }
             logs.append(LogEntry(level: .info, message: "↳ \(step)"))
 
-        case .progress(let fraction, let done, let total, let unit, let eta):
+        case .progress(let fraction, let done, let total, let unit, let eta, let elapsed):
             progressFraction = min(max(fraction, 0), 1)
             etaSeconds = eta
+            if let elapsed,
+               let index = buildStages.firstIndex(where: { $0.id == stageIndex && $0.isRunning }) {
+                buildStages[index].elapsedSeconds = elapsed
+                currentStageStartedAt = Date().addingTimeInterval(-elapsed)
+            }
             if let done, let total, total > 0 {
                 if let unit, !unit.isEmpty,
                    unit.lowercased() != "b", unit.lowercased() != "bytes" {
@@ -2650,7 +2666,7 @@ public final class AppViewModel: ObservableObject {
                 buildStages[index].isCompleted = ok
                 buildStages[index].isFailed = !ok
                 buildStages[index].hasWarning = warned
-                buildStages[index].elapsedSeconds = elapsed
+                buildStages[index].elapsedSeconds = elapsed ?? buildStages[index].elapsedSeconds
                 buildStages[index].summary = summary
             }
             logs.append(LogEntry(
@@ -2669,8 +2685,30 @@ public final class AppViewModel: ObservableObject {
         }
     }
 
+    private func startStageElapsedTimerIfNeeded() {
+        guard stageElapsedTimer == nil else { return }
+        stageElapsedTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            self?.tickStageElapsed()
+        }
+    }
+
+    private func stopStageElapsedTimer() {
+        stageElapsedTimer?.invalidate()
+        stageElapsedTimer = nil
+        currentStageStartedAt = nil
+    }
+
+    private func tickStageElapsed() {
+        guard let started = currentStageStartedAt,
+              let index = buildStages.firstIndex(where: { $0.id == stageIndex && $0.isRunning }) else { return }
+        let now = Date()
+        let elapsed = max(0, now.timeIntervalSince(started))
+        buildStages[index].elapsedSeconds = elapsed
+    }
+
     private func finishBuild(_ result: BuildResult, gameID: UUID,
                              finalApp: URL, tempDir: URL) {
+        stopStageElapsedTimer()
         portingProgress?.finish(success: result.success)
         isBuilding = false
         isCancellingBuild = false
