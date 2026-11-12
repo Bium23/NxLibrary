@@ -7,8 +7,8 @@ public enum BuildInstallError: Error, LocalizedError {
     case replaceFailed(String)
     public var errorDescription: String? {
         switch self {
-        case .invalidApp(let p): return "The built app is invalid: \(p)"
-        case .replaceFailed(let m): return "Could not replace the app: \(m)"
+        case .invalidApp(let p): return L10n.format("The built app is invalid: %@", [String(describing: (p))])
+        case .replaceFailed(let m): return L10n.format("Could not replace the app: %@", [String(describing: (m))])
         }
     }
 }

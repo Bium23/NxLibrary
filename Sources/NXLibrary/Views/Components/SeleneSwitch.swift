@@ -22,7 +22,7 @@ struct SeleneSwitch: View {
         }
         .buttonStyle(.plain)
         .animation(SeleneTheme.quick, value: isOn)
-        .accessibilityValue(isOn ? "On" : "Off")
+        .accessibilityValue(isOn ? L10n.text("On") : L10n.text("Off"))
         .accessibilityAddTraits(.isButton)
     }
 }

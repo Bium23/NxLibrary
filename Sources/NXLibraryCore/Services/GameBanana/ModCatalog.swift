@@ -6,13 +6,13 @@ public enum ModCategory: String, CaseIterable, Codable, Sendable {
 
     public var title: String {
         switch self {
-        case .characters: return "Characters & skins"
-        case .worlds: return "Worlds & stages"
-        case .graphics: return "Graphics & effects"
-        case .sound: return "Music & sound"
-        case .interface: return "Interface & text"
-        case .gameplay: return "Gameplay"
-        case .more: return "More mods"
+        case .characters: return L10n.text("Characters & skins")
+        case .worlds: return L10n.text("Worlds & stages")
+        case .graphics: return L10n.text("Graphics & effects")
+        case .sound: return L10n.text("Music & sound")
+        case .interface: return L10n.text("Interface & text")
+        case .gameplay: return L10n.text("Gameplay")
+        case .more: return L10n.text("More mods")
         }
     }
 
@@ -57,10 +57,10 @@ public enum ModStoreSort: String, CaseIterable, Codable, Sendable {
 
     public var title: String {
         switch self {
-        case .popular: return "Popular"
-        case .liked: return "Most liked"
-        case .newest: return "Newest"
-        case .updated: return "Recently updated"
+        case .popular: return L10n.text("Popular")
+        case .liked: return L10n.text("Most liked")
+        case .newest: return L10n.text("Newest")
+        case .updated: return L10n.text("Recently updated")
         }
     }
 
@@ -193,13 +193,13 @@ public enum ModStoreLayout {
     }
 
     public static func sections(games: [ModCatalogGame], sort: ModStoreSort) -> [ModStoreSection] {
-        var sections = [ModStoreSection(kind: .sort, title: "Sort", entries: [])]
+        var sections = [ModStoreSection(kind: .sort, title: L10n.text("Sort"), entries: [])]
         var seen = Set<Int>()
         // A mod listed under two games (shared by both) appears once, under the first.
         let all = sorted(games.flatMap(\.entries).filter { seen.insert($0.id).inserted }, by: sort)
         guard !all.isEmpty else { return sections }
 
-        sections.append(ModStoreSection(kind: .featured, title: "Featured", entries: featured(all)))
+        sections.append(ModStoreSection(kind: .featured, title: L10n.text("Featured"), entries: featured(all)))
         sections.append(ModStoreSection(kind: .popular, title: sort.rowTitle, entries: Array(all.prefix(rowLimit))))
         for category in ModCategory.allCases {
             let entries = all.filter { $0.category == category }

@@ -10,7 +10,7 @@ This guide covers building NX Library itself. For app setup, game preparation an
 - Python 3 for the publication checks and packaging helpers.
 - Homebrew's `zstd` and `glslang`, at the versions recorded in [runtime.lock](../runtime.lock), when preparing the bundled runtime. The script checks installed versions; it does not install or silently upgrade them.
 
-Building the frontend alone does not need games or keys. Running the game's build workflow also needs the .NET 10 SDK, the pinned nxnative checkout and the user's own authorised sources and keys. Setup explains and prepares the supported prerequisites.
+Building the frontend alone does not need games or keys. Running the game's build workflow also needs the pinned nxnative checkout (its tools are native executables since 641636e2, so no .NET) and the user's own authorised sources and keys. Setup explains and prepares the supported prerequisites.
 
 ## Build a development app
 
@@ -56,6 +56,7 @@ Debug builds recognise `--show-setup` and `--preview-build` for manual inspectio
 
 ~~~sh
 python3 scripts/check_publication.py
+python3 scripts/check_localizations.py
 python3 -m unittest discover -s Tests/PublicationChecks
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 bash scripts/build_app.sh
@@ -141,3 +142,7 @@ These are distribution decisions. Do not bypass the dirty-tree check, change the
 | `docs/` | Current guides, audits, dated designs and engine-adoption evidence. |
 
 For component interactions, read the [architecture guide](architecture.md). For the role of every individual file, use the [file catalog](file-map.md). Screenshots and demo placement are described in the [media guide](media/README.md).
+
+### Localization resources
+
+SwiftPM processes the shared string catalog into `NXLibrary_NXLibraryCore.bundle`. `build_app.sh` requires and copies that bundle into `Contents/Resources`, declares the six supported app languages and validates the compiled strings/plurals before signing. `scripts/check_localizations.py --app <path.app>` verifies the same resources independently. Missing resources or placeholder mismatches fail packaging. Locale selection is independent from each game's DM_LANG setting.

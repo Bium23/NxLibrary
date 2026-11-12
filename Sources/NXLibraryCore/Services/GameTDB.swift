@@ -39,7 +39,7 @@ public enum GameTDB {
 
     public enum Failure: LocalizedError {
         case unreadable
-        public var errorDescription: String? { "GameTDB's database could not be read." }
+        public var errorDescription: String? { L10n.text("GameTDB's database could not be read.") }
     }
 
     public static func parse(_ data: Data) throws -> [GameTDBEntry] {

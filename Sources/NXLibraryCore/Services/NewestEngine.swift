@@ -42,38 +42,42 @@ public enum UpstreamCommitMark: Equatable, Sendable {
 
 /// The words every screen uses for the newest engine, so Settings and Setup say the same thing.
 public enum NewestEngineCopy {
-    public static let note = "Newest nxnative, not yet tested by NX Library. It usually works, but something may not. "
-        + "Its new features reach NX Library in a future version."
+    public static var note: String {
+        L10n.text("Newest nxnative, not yet tested by NX Library. It usually works, but something may not. ")
+        + L10n.text("Its new features reach NX Library in a future version.")
+    }
 
     public static func ahead(_ count: Int) -> String {
-        "\(count) commit\(count == 1 ? "" : "s") ahead"
+        L10n.count("%lld commits ahead", count, arguments: [])
     }
 
     /// Settings → Engine, Newest engine row, while the tested engine is in use.
     public static func offer(commit: String, aheadBy: Int) -> String {
-        "Build with nxnative main (\(commit.prefix(7)), \(ahead(aheadBy))) before NX Library has tested it."
+        L10n.format("Build with nxnative main (%@, %@) before NX Library has tested it.", [String(describing: (commit.prefix(7))), String(describing: (ahead(aheadBy)))])
     }
 
     public static func needsNewerApp(metal: String) -> String {
-        "The newest nxnative needs Metal \(metal), so it needs a newer NX Library."
+        L10n.format("The newest nxnative needs Metal %@, so it needs a newer NX Library.", [String(describing: (metal))])
     }
 
     /// Setup's engine card while the newest engine is in use (the note is its description).
     public static func setupDetail(choice: NewestEngineChoice, tested: String) -> String {
-        "At \(choice.shortCommit), \(ahead(choice.aheadBy)) of the tested \(tested.prefix(7)), chosen in Settings → Engine."
+        L10n.format("At %@, %@ of the tested %@, chosen in Settings → Engine.", [String(describing: (choice.shortCommit)), String(describing: (ahead(choice.aheadBy))), String(describing: (tested.prefix(7)))])
     }
 
     /// Settings → Engine, Newest engine row, while main is past the commit in use. `aheadBy` counts from the pin,
     /// like the choice's own count; a rewritten main (not further ahead) gets no count.
     public static func update(choice: NewestEngineChoice, main: String, aheadBy: Int) -> String {
         let newer = aheadBy - choice.aheadBy
-        let count = newer > 0 ? ", \(newer) commit\(newer == 1 ? "" : "s") newer" : ""
-        return "main has moved on: \(main.prefix(7))\(count)."
+        let count = newer > 0 ? L10n.count(", %lld commits newer", newer, arguments: []) : ""
+        return L10n.format("main has moved on: %@%@.", [String(describing: (main.prefix(7))), String(describing: (count))])
     }
 
-    public static let info = "Builds games with nxnative main instead of the engine this NX Library is tested with. "
-        + "Builds are recorded as untested and the untested-toolchain override stays on. "
-        + "Back to tested returns to the tested engine; games you built keep playing."
+    public static var info: String {
+        L10n.text("Builds games with nxnative main instead of the engine this NX Library is tested with. ")
+        + L10n.text("Builds are recorded as untested and the untested-toolchain override stays on. ")
+        + L10n.text("Back to tested returns to the tested engine; games you built keep playing.")
+    }
 }
 
 public enum NewestEngineError: Error, Equatable, LocalizedError {
@@ -85,13 +89,13 @@ public enum NewestEngineError: Error, Equatable, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .localChanges:
-            return "The engine folder has changed files. NX Library never touches them: put them aside, then try again."
+            return L10n.text("The engine folder has changed files. NX Library never touches them: put them aside, then try again.")
         case .downloadFailed:
-            return "The newest nxnative could not be downloaded. Check the connection, then try again."
+            return L10n.text("The newest nxnative could not be downloaded. Check the connection, then try again.")
         case .needsNewerApp(let metal):
             return NewestEngineCopy.needsNewerApp(metal: metal)
         case .switchFailed(let detail):
-            return "The engine could not be switched: \(detail)"
+            return L10n.format("The engine could not be switched: %@", [String(describing: (detail))])
         }
     }
 }
@@ -183,7 +187,7 @@ public struct NewestEngineSwitcher {
     private func git(_ args: [String]) -> CommandResult {
         (try? runner.run(URL(fileURLWithPath: "/usr/bin/git"), ["-C", repo.path] + args,
                          environment: environment, currentDirectory: nil))
-            ?? CommandResult(status: -1, stdout: "", stderr: "git could not run")
+            ?? CommandResult(status: -1, stdout: "", stderr: L10n.text("git could not run"))
     }
 
     private func requireClean() throws {
@@ -235,6 +239,6 @@ public struct NewestEngineSwitcher {
     }
 
     static func firstLine(_ text: String) -> String {
-        text.split(separator: "\n").first.map { String($0).trimmingCharacters(in: .whitespaces) } ?? "unknown error"
+        text.split(separator: "\n").first.map { String($0).trimmingCharacters(in: .whitespaces) } ?? L10n.text("unknown error")
     }
 }

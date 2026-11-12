@@ -45,7 +45,7 @@ struct SpotlightGameInfoView: View {
                         .padding(.top, canvas.u(24))
                 }
                 if case .failed(let failure) = pillSet {
-                    Text(failure == .cancelled ? "Porting cancelled" : "Porting failed")
+                    Text(failure == .cancelled ? L10n.text("Porting cancelled") : L10n.text("Porting failed"))
                         .seleneFont(19, .semibold)
                         .foregroundColor(PortingPillCopy.softRed)
                         .padding(.leading, canvas.u(4))
@@ -128,10 +128,10 @@ struct SpotlightGameInfoView: View {
             Text(reason.detail).seleneFont(15).foregroundColor(SeleneTheme.ink60)
         case .normal:
             if !game.sources.isEmpty, !GameResourceState.sourcesAvailable(for: game) {
-                Text("Game files not found · Rebuild unavailable")
+                Text(L10n.text("Game files not found · Rebuild unavailable"))
                     .seleneFont(15).foregroundColor(SeleneTheme.ink60)
             } else if !game.isPlayableLocally {
-                Text("Not built yet").seleneFont(15).foregroundColor(SeleneTheme.ink60)
+                Text(L10n.text("Not built yet")).seleneFont(15).foregroundColor(SeleneTheme.ink60)
             }
         }
     }
@@ -139,9 +139,9 @@ struct SpotlightGameInfoView: View {
     @ViewBuilder private var pills: some View {
         switch pillSet {
         case .porting:
-            pill(0, SelenePillButton(title: "Porting", height: 52, focused: focusedPill == 0,
+            pill(0, SelenePillButton(title: L10n.text("Porting"), height: 52, focused: focusedPill == 0,
                                      waveDots: true) { onPill(0) })
-                .accessibilityLabel("Porting, show progress")
+                .accessibilityLabel(L10n.text("Porting, show progress"))
         case .failed:
             HStack(spacing: canvas.u(14)) {
                 ForEach(Array(PortingPillCopy.failedTitles.enumerated()), id: \.offset) { index, title in
@@ -158,19 +158,19 @@ struct SpotlightGameInfoView: View {
         HStack(spacing: canvas.u(14)) {
             pill(0, SelenePillButton(title: primaryTitle, height: 52, focused: focusedPill == 0,
                                      enabled: isRunning || pillSet.unavailableReason == nil) { onPill(0) })
-            pill(1, SelenePillButton(title: isRunning ? "Close Game" : "Options", height: 52,
+            pill(1, SelenePillButton(title: isRunning ? L10n.text("Close Game") : L10n.text("Options"), height: 52,
                                      focused: focusedPill == 1) { onPill(1) })
             pill(2, SelenePillButton(title: nil, icon: game.isFavorite ? .favorite : .favoriteBorder,
                                      iconSize: 20, minWidth: 52, height: 52, horizontalPadding: 0,
                                      focused: focusedPill == 2) { onPill(2) })
-                .accessibilityLabel(game.isFavorite ? "Remove from favorites" : "Add to favorites")
+                .accessibilityLabel(game.isFavorite ? L10n.text("Remove from favorites") : L10n.text("Add to favorites"))
         }
     }
 
     private var primaryTitle: String {
-        if isRunning { return "Resume" }
-        if pillSet.unavailableReason != nil { return "Unavailable" }
-        return game.isPlayableLocally ? "Play" : "Build"
+        if isRunning { return L10n.text("Resume") }
+        if pillSet.unavailableReason != nil { return L10n.text("Unavailable") }
+        return game.isPlayableLocally ? L10n.text("Play") : "Build"
     }
 
     /// Selene's pill Button is 60 high around a 52 high capsule.
@@ -185,11 +185,11 @@ struct SpotlightGameInfoView: View {
             NowPlayingDot()
                 .frame(width: canvas.u(20), height: canvas.u(20))
                 .padding(.trailing, canvas.u(9))
-            Text("NOW PLAYING").seleneFont(14, .bold).foregroundColor(SeleneTheme.success)
+            Text(L10n.text("NOW PLAYING")).seleneFont(14, .bold).foregroundColor(SeleneTheme.success)
             Rectangle().fill(SeleneTheme.ink25)
                 .frame(width: max(1, canvas.u(1)), height: canvas.u(18))
                 .padding(.horizontal, canvas.u(14))
-            Text("Continue where you left off").seleneFont(17).foregroundColor(SeleneTheme.ink90)
+            Text(L10n.text("Continue where you left off")).seleneFont(17).foregroundColor(SeleneTheme.ink90)
         }
         .padding(EdgeInsets(top: canvas.u(6), leading: canvas.u(12), bottom: canvas.u(7), trailing: canvas.u(18)))
         .background(RoundedRectangle(cornerRadius: canvas.u(19), style: .continuous).fill(SeleneTheme.glassLight))
@@ -262,8 +262,8 @@ enum PortingPillCopy {
     static let softRed = Color(hex: 0xF2A0A0)
 
     static func lastFailure(_ failure: PortingFailure, reason: PortingFailureReason? = nil) -> String {
-        if failure == .cancelled { return "Last porting cancelled · Open log" }
-        return "\(reason?.title ?? "Last porting failed") · Open log"
+        if failure == .cancelled { return L10n.text("Last porting cancelled · Open log") }
+        return L10n.format("%@ · Open log", [String(describing: (reason?.title ?? L10n.text("Last porting failed")))])
     }
 }
 

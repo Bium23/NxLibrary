@@ -80,3 +80,4 @@ This directory records the review that must happen before the pin changes, plus 
 ## Maintainer-directed adoption
 
 - [2026-11-09 — bd979ced → 79741184](2026-11-09-bd979ced-79741184-review.md) (0.1.4.2: 71 commits; adopted at the maintainer's explicit request after automated review/gate checks; exact-hash real game build/launch remains unconfirmed).
+- [2026-11-12 — 79741184 → 8a5c5e7e](2026-11-12-79741184-8a5c5e7e-review.md) (0.1.4.3: 152 commits; adopted at the maintainer's explicit request; builds need no .NET; build stop and package probe adapted; real build/launch awaiting the maintainer)

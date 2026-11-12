@@ -33,14 +33,14 @@ public enum ButtonPrompts {
     public static func keyboardKey(_ button: PromptButton) -> KeyCap {
         switch button {
         case .a: return .symbol("return")
-        case .b: return .text("esc")
+        case .b: return .text(L10n.text("esc"))
         case .x: return .text("X")
         case .y: return .text("Y")
         case .lb: return .text("Q")
         case .rb, .rs: return .text("E")
-        case .lt: return .text("home")
-        case .rt: return .text("end")
-        case .view: return .text("tab")
+        case .lt: return .text(L10n.text("home"))
+        case .rt: return .text(L10n.text("end"))
+        case .view: return .text(L10n.text("tab"))
         case .menu: return .text("⌘K")
         }
     }
@@ -146,8 +146,8 @@ public enum ButtonPrompts {
         switch b {
         case .a: return "A"
         case .b: return "B"
-        case .x: return "X"
-        case .y: return "Y"
+        case .x: return L10n.text("X")
+        case .y: return L10n.text("Y")
         case .lb: return "L"
         case .rb: return "R"
         case .lt: return "ZL"
@@ -162,8 +162,8 @@ public enum ButtonPrompts {
         switch b {
         case .a: return "A"
         case .b: return "B"
-        case .x: return "X"
-        case .y: return "Y"
+        case .x: return L10n.text("X")
+        case .y: return L10n.text("Y")
         case .lb: return "LB"
         case .rb: return "RB"
         case .lt: return "LT"

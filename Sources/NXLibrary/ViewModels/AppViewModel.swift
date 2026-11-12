@@ -24,7 +24,7 @@ public final class AppViewModel: ObservableObject {
     /// The last app icon change per game, for Change artwork's status line.
     @Published var appIconProgress: [UUID: AppIconProgress] = [:]
     let saveGate = SaveOperationGate()
-    let saveQueue = DispatchQueue(label: "local.nxlibrary.saves", qos: .userInitiated)
+    let saveQueue = DispatchQueue(label: L10n.text("local.nxlibrary.saves"), qos: .userInitiated)
     @Published var settingsNotice: SettingsNotice? {
         didSet {
             if let waitingGame = iconLaunchWait.gameID, settingsNotice?.id != iconLaunchWait.noticeID {
@@ -235,7 +235,7 @@ public final class AppViewModel: ObservableObject {
     }
     
     public var formattedSelectedSourcesSize: String {
-        ByteCountFormatter.string(fromByteCount: selectedSourcesSizeBytes, countStyle: .file)
+        selectedSourcesSizeBytes.formatted(.byteCount(style: .file).locale(L10n.context.formatLocale))
     }
     
     /// The build keeps an extracted copy and writes a temporary app before the
@@ -257,10 +257,10 @@ public final class AppViewModel: ObservableObject {
     public var diskSpaceWarningMessage: String? {
         guard isDiskSpaceLow, let avail = availableBuildDiskBytes else { return nil }
         let needed = requiredBuildDiskBytes - avail
-        let availStr = ByteCountFormatter.string(fromByteCount: avail, countStyle: .file)
-        let requiredStr = ByteCountFormatter.string(fromByteCount: requiredBuildDiskBytes, countStyle: .file)
-        let neededStr = ByteCountFormatter.string(fromByteCount: needed, countStyle: .file)
-        return "Storage warning: this build needs ~\(requiredStr) free (twice the selected sources plus 10 GB), but only \(availStr) is available. Free at least \(neededStr) before adding it."
+        let availStr = Self.formatBytes(avail)
+        let requiredStr = Self.formatBytes(requiredBuildDiskBytes)
+        let neededStr = Self.formatBytes(needed)
+        return L10n.format("Storage warning: this build needs ~%@ free (twice the selected sources plus 10 GB), but only %@ is available. Free at least %@ before adding it.", [requiredStr, availStr, neededStr])
     }
     
     public var canAddSelectedGame: Bool {
@@ -320,8 +320,14 @@ public final class AppViewModel: ObservableObject {
     @Published public var storeMetadata: [UUID: NintendoStoreMetadata] = [:]
     @Published public var storeMetadataLoading: Set<UUID> = []
     @Published public var storeMetadataErrors: [UUID: String] = [:]
-    @Published public var storageUsage: StorageUsage? = nil
+    @Published public var storageSnapshot: StorageSnapshot? = nil
+    public var storageUsage: StorageUsage? { storageSnapshot?.total }
     @Published public var isCalculatingStorage: Bool = false
+    @Published public private(set) var isCleaningStorage = false
+    @Published public private(set) var storageCleanupMessage: String?
+    private var storageRefreshRequested = false
+
+    public var canCleanStorage: Bool { !isBuilding && !isCleaningStorage && !isCalculatingStorage && !isUpdatingApp }
     @Published public var showSetupCheck: Bool = false
     /// The Setup check's state and installs; lives with the app so an install survives closing the screen.
     lazy var setupModel = SetupCheckModel(viewModel: self)
@@ -450,7 +456,7 @@ public final class AppViewModel: ObservableObject {
         .resolve(runtime: .locate(), repo: URL(fileURLWithPath: nxnativePath))
     }
 
-    public let pinnedEngineCommit = "79741184af1558fa1ada0f61741eeecbd615b3f6"
+    public let pinnedEngineCommit = "8a5c5e7e1ee606c650fe1aef6959a83009b6a2fc"
     private let core = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/NXLibrary")
     lazy var libraryStore = LibraryStore(directory: core)
@@ -460,6 +466,8 @@ public final class AppViewModel: ObservableObject {
     private let launchService = LaunchService()
     private lazy var upstreamChecker = UpstreamChecker()
     private lazy var storeMetadataService = NintendoStoreMetadataService()
+    private var metadataLocaleGeneration = UUID()
+    private var localizedMetadataRefresh: Task<Void, Never>?
     private let upstreamCacheKey = "NXLibrary_UpstreamStatus"
     private lazy var storageManager = StorageManager()
     private let sourceCatalog = SourceCatalog()
@@ -622,7 +630,7 @@ public final class AppViewModel: ObservableObject {
                 isProdKeysValid = false
                 prodKeysSource = "Invalid stored copy"
                 logs.append(LogEntry(level: .error,
-                                     message: "Stored prod.keys is invalid: \(error.localizedDescription)"))
+                                     message: L10n.format("Stored prod.keys is invalid: %@", [String(describing: (error.localizedDescription))])))
             }
             return
         }
@@ -643,7 +651,7 @@ public final class AppViewModel: ObservableObject {
 
     public func importKeys(from url: URL) {
         guard !isBuilding, !isUpdatingApp else {
-            showSettingsNotice(title: "Porting in progress", message: "Change keys after the porting finishes.")
+            showSettingsNotice(title: L10n.text("Porting in progress"), message: L10n.text("Change keys after the porting finishes."))
             return
         }
         do {
@@ -657,18 +665,18 @@ public final class AppViewModel: ObservableObject {
             lastError = nil
             logs.append(LogEntry(
                 level: .success,
-                message: "prod.keys imported: header key present, \(summary.applicationKeyGenerations.count) application key generations."
+                message: L10n.format("prod.keys imported: header key present, %@ application key generations.", [String(describing: (summary.applicationKeyGenerations.count))])
             ))
         } catch {
             keySummary = try? keyStore.validate(at: keyStore.keyURL)
             isProdKeysValid = keySummary?.hasHeaderKey == true
             prodKeysPath = isProdKeysValid ? keyStore.keyURL.path : ""
             lastError = error.localizedDescription
-            showSettingsNotice(title: "Keys not changed", message: isProdKeysValid
-                ? "The key file could not be imported. Your previous copy is kept."
-                : "The key file could not be imported. Choose a valid prod.keys file.")
+            showSettingsNotice(title: L10n.text("Keys not changed"), message: isProdKeysValid
+                ? L10n.text("The key file could not be imported. Your previous copy is kept.")
+                : L10n.text("The key file could not be imported. Choose a valid prod.keys file."))
             logs.append(LogEntry(level: .error,
-                                 message: "Could not import prod.keys: \(error.localizedDescription)"))
+                                 message: L10n.format("Could not import prod.keys: %@", [String(describing: (error.localizedDescription))])))
         }
     }
 
@@ -721,7 +729,7 @@ public final class AppViewModel: ObservableObject {
                 if let report, !report.ok {
                     let blocked = report.checks.filter { $0.status == .block }
                         .map { "\($0.title): \($0.detail)" }.joined(separator: " | ")
-                    self.logs.append(LogEntry(level: .warning, message: "Toolchain gate: \(blocked)"))
+                    self.logs.append(LogEntry(level: .warning, message: L10n.format("Toolchain gate: %@", [String(describing: (blocked))])))
                 }
             }
         }
@@ -754,9 +762,11 @@ public final class AppViewModel: ObservableObject {
     }
 
     public func loadStoreMetadata(for game: PortedGame) {
+        let locale = L10n.context
+        let generation = metadataLocaleGeneration
         guard let titleId = game.titleId, !titleId.isEmpty else { return }
         if storeMetadataLoading.contains(game.id) { return }
-        if let existing = storeMetadata[game.id], storeMetadataService.isFresh(existing) {
+        if let existing = storeMetadata[game.id], storeMetadataService.isFresh(existing, locale: locale) {
             loadFallbackScreenshots(for: game)
             return
         }
@@ -767,13 +777,40 @@ public final class AppViewModel: ObservableObject {
         Task { @MainActor [weak self] in
             guard let self else { return }
             do {
-                let metadata = try await service.metadata(for: game)
+                let metadata = try await service.metadata(for: game, locale: locale)
+                guard self.metadataLocaleGeneration == generation else { return }
                 self.setStoreMetadata(metadata, for: game)
             } catch {
+                guard self.metadataLocaleGeneration == generation else { return }
                 self.storeMetadataErrors[game.id] = error.localizedDescription
             }
             self.storeMetadataLoading.remove(game.id)
             self.loadFallbackScreenshots(for: game)
+        }
+    }
+
+    /// A language change only resets presentation metadata, never the library, personal picks or game settings.
+    public func refreshLocalizedMetadata() {
+        metadataLocaleGeneration = UUID()
+        let generation = metadataLocaleGeneration
+        localizedMetadataRefresh?.cancel()
+        storeMetadataErrors.removeAll()
+        storeMetadataLoading.removeAll()
+        let games = libraryGames
+        let locale = L10n.context
+        let service = storeMetadataService
+        // Keep the visible description while another language loads. Disk reads do not block the UI.
+        localizedMetadataRefresh = Task { @MainActor [weak self] in
+            let entries = await Task.detached(priority: .userInitiated) {
+                games.compactMap { game -> (PortedGame, NintendoStoreMetadata)? in
+                    guard let titleID = game.titleId,
+                          let cached = service.cached(for: titleID, locale: locale) else { return nil }
+                    return (game, cached)
+                }
+            }.value
+            guard let self, !Task.isCancelled, self.metadataLocaleGeneration == generation else { return }
+            for (game, metadata) in entries { self.setStoreMetadata(metadata, for: game) }
+            if let game = self.currentFocusedGame { self.loadStoreMetadata(for: game) }
         }
     }
 
@@ -785,7 +822,7 @@ public final class AppViewModel: ObservableObject {
             guard storeMetadata[game.id] == nil,
                   let titleId = game.titleId,
                   !titleId.isEmpty,
-                  let metadata = storeMetadataService.cached(for: titleId) else { continue }
+                  let metadata = storeMetadataService.cached(for: titleId, locale: L10n.context) else { continue }
             setStoreMetadata(metadata, for: game)
         }
     }
@@ -942,7 +979,7 @@ public final class AppViewModel: ObservableObject {
             try GameAppDestination.prepareInitialFolder(gameAppsFolder,
                 hasExplicitChoice: UserDefaults.standard.string(forKey: StorageKeys.savedLibraryFolder) != nil)
         } catch {
-            logs.append(LogEntry(level: .warning, message: "Could not prepare the default Game apps folder: \(error.localizedDescription)"))
+            logs.append(LogEntry(level: .warning, message: L10n.format("Could not prepare the default Game apps folder: %@", [String(describing: (error.localizedDescription))])))
         }
     }
 
@@ -950,7 +987,7 @@ public final class AppViewModel: ObservableObject {
         UserDefaults.standard.set(gameAppsFolder.path, forKey: StorageKeys.savedLibraryFolder)
         firstRunSetup.finish()
         showSetupCheck = false
-        logs.append(LogEntry(level: .success, message: "Setup completed."))
+        logs.append(LogEntry(level: .success, message: L10n.text("Setup completed.")))
     }
 
     public func reopenSetup() {
@@ -982,55 +1019,87 @@ public final class AppViewModel: ObservableObject {
     }
 
     public func refreshStorageUsage() {
-        guard !isCalculatingStorage else { return }
+        guard !isCleaningStorage else { return }
+        guard !isCalculatingStorage else { storageRefreshRequested = true; return }
         isCalculatingStorage = true
         let manager = storageManager
         let games = libraryGames
+        let folder = gameAppsFolder
         DispatchQueue.global(qos: .utility).async { [weak self] in
-            let usage = manager.usage(games: games)
+            let snapshot = manager.snapshot(games: games, applicationsFolder: folder)
             DispatchQueue.main.async {
-                self?.storageUsage = usage
-                self?.isCalculatingStorage = false
+                guard let self else { return }
+                self.isCalculatingStorage = false
+                if self.storageRefreshRequested || self.libraryGames != games || self.gameAppsFolder != folder {
+                    self.storageRefreshRequested = false
+                    self.refreshStorageUsage()
+                } else {
+                    self.storageSnapshot = snapshot
+                }
             }
         }
     }
 
-    public func deleteCaches() {
-        guard !isBuilding else {
-            alertMessage = "Finish or cancel the active build before cleaning caches."
+    public func deleteCaches(for selected: PortedGame? = nil) {
+        guard canCleanStorage else {
+            showSettingsNotice(title: L10n.text("Cleanup unavailable"),
+                               message: L10n.text("Wait for the current build, storage operation or app update to finish."))
             return
         }
-        var removed = 0
-        for game in libraryGames {
-            do {
-                try storageManager.deleteCache(for: game)
-                removed += 1
-            } catch {
-                logs.append(LogEntry(level: .error,
-                                     message: "Could not delete the cache for \(game.name): \(error.localizedDescription)"))
+        if let selected {
+            guard let current = libraryGames.first(where: { $0.id == selected.id }),
+                  current.buildCachePath == selected.buildCachePath,
+                  current.workspacePath == selected.workspacePath else {
+                showSettingsNotice(title: L10n.text("Cache changed"), message: L10n.text("Recalculate storage and choose the game again. Nothing was deleted."))
+                refreshStorageUsage()
+                return
             }
+            cleanStorage(games: [current], caches: true)
+        } else {
+            cleanStorage(games: libraryGames, caches: true)
         }
-        logs.append(LogEntry(level: .info, message: "Cleaned build caches for \(removed) game\(removed == 1 ? "" : "s")."))
-        refreshStorageUsage()
     }
 
     public func deleteLogs() {
-        guard !isBuilding else {
-            alertMessage = "Finish or cancel the active build before deleting logs."
+        guard canCleanStorage else {
+            showSettingsNotice(title: L10n.text("Cleanup unavailable"),
+                               message: L10n.text("Wait for the current build, storage operation or app update to finish."))
             return
         }
-        var removed = 0
-        for game in libraryGames {
-            do {
-                try storageManager.deleteLogs(for: game)
-                removed += 1
-            } catch {
-                logs.append(LogEntry(level: .error,
-                                     message: "Could not delete the logs for \(game.name): \(error.localizedDescription)"))
+        cleanStorage(games: libraryGames, caches: false)
+    }
+
+    private func cleanStorage(games: [PortedGame], caches: Bool) {
+        isCleaningStorage = true
+        storageCleanupMessage = nil
+        let manager = storageManager
+        let protectedGames = libraryGames
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            var removed = 0
+            var failures: [String] = []
+            for game in games {
+                do {
+                    if caches {
+                        if try manager.deleteCache(for: game, protecting: protectedGames) { removed += 1 }
+                    } else {
+                        if try manager.deleteLogs(for: game) { removed += 1 }
+                    }
+                } catch { failures.append("\(game.name): \(error.localizedDescription)") }
+            }
+            let message = caches
+                ? (removed == 0 ? L10n.text("No build caches were deleted.") : L10n.count("Deleted %lld build caches. Future rebuilds may take longer.", removed, arguments: []))
+                : (removed == 0 ? L10n.text("No logs were deleted.") : L10n.count("Deleted logs for %lld games.", removed, arguments: []))
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.isCleaningStorage = false
+                self.storageCleanupMessage = message
+                self.logs.append(LogEntry(level: .info, message: message))
+                if !failures.isEmpty {
+                    self.showSettingsNotice(title: L10n.text("Some files were not deleted"), message: failures.joined(separator: "\n"))
+                }
+                self.refreshStorageUsage()
             }
         }
-        logs.append(LogEntry(level: .info, message: "Deleted logs for \(removed) game\(removed == 1 ? "" : "s")."))
-        refreshStorageUsage()
     }
 
     
@@ -1063,7 +1132,7 @@ public final class AppViewModel: ObservableObject {
             recoverSavesAtStartup()
         } catch {
             lastError = error.localizedDescription
-            logs.append(LogEntry(level: .error, message: "Could not read the library: \(error.localizedDescription)"))
+            logs.append(LogEntry(level: .error, message: L10n.format("Could not read the library: %@", [String(describing: (error.localizedDescription))])))
         }
     }
 
@@ -1108,7 +1177,7 @@ public final class AppViewModel: ObservableObject {
                 } catch {
                     self.lastError = error.localizedDescription
                     self.logs.append(LogEntry(level: .error,
-                                              message: "Could not update the library: \(error.localizedDescription)"))
+                                              message: L10n.format("Could not update the library: %@", [String(describing: (error.localizedDescription))])))
                 }
                 for index in library.games.indices {
                     let scannedApp = library.games[index].titleId
@@ -1205,7 +1274,7 @@ public final class AppViewModel: ObservableObject {
                     )
                     self.librarySelection.selectedGameID = updated.id
                     self.logs.append(LogEntry(level: .success,
-                        message: "Sources attached to \(game.name); rebuild is now available if the toolchain gate allows it."))
+                        message: L10n.format("Sources attached to %@; rebuild is now available if the toolchain gate allows it.", [String(describing: (game.name))])))
                 } catch {
                     self.alertMessage = error.localizedDescription
                     self.logs.append(LogEntry(level: .error, message: error.localizedDescription))
@@ -1261,7 +1330,7 @@ public final class AppViewModel: ObservableObject {
         guard game.isPlayableLocally else {
             let reason = GameResourceState.unavailableReason(for: game)
             let message = reason.map { $0.title + ". " + $0.detail }
-                ?? "This game is not built yet. Build it first."
+                ?? L10n.text("This game is not built yet. Build it first.")
             lastError = message
             alertMessage = message
             SoundEffectService.shared.play(.error)
@@ -1310,7 +1379,7 @@ public final class AppViewModel: ObservableObject {
             alertMessage = lastError
             SoundEffectService.shared.play(.error)
             logs.append(LogEntry(level: .error,
-                                 message: "Could not write the runtime environment: \(error.localizedDescription)"))
+                                 message: L10n.format("Could not write the runtime environment: %@", [String(describing: (error.localizedDescription))])))
             return
         }
 
@@ -1318,9 +1387,9 @@ public final class AppViewModel: ObservableObject {
             do {
                 try cloudSavesPreferences.applyBeforeLaunch(choice, domain: domain)
             } catch {
-                logs.append(LogEntry(level: .warning, message: "Cloud saves: \(error.localizedDescription)"))
-                showSettingsNotice(title: "Cloud unavailable",
-                                   message: "Cloud sync could not be updated for this launch. Check Games → Cloud saves.")
+                logs.append(LogEntry(level: .warning, message: L10n.format("Cloud saves: %@", [String(describing: (error.localizedDescription))])))
+                showSettingsNotice(title: L10n.text("Cloud unavailable"),
+                                   message: L10n.text("Cloud sync could not be updated for this launch. Check Games → Cloud saves."))
             }
         }
 
@@ -1332,7 +1401,7 @@ public final class AppViewModel: ObservableObject {
                 if success {
                     self.lastError = nil
                     self.playSessionStore?.start(for: game)
-                    self.logs.append(LogEntry(level: .success, message: "Launched game: \(game.name)"))
+                    self.logs.append(LogEntry(level: .success, message: L10n.format("Launched game: %@", [String(describing: (game.name))])))
                     self.watchLaunch(of: game)
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                         if self.launchingGameId == game.id { self.launchingGameId = nil }
@@ -1366,7 +1435,7 @@ public final class AppViewModel: ObservableObject {
                     SoundEffectService.shared.play(.gameReady)
                 } else {
                     self.logs.append(LogEntry(level: .warning,
-                                              message: "\(game.name) showed no window within 60 s; launch screen closed."))
+                                              message: L10n.format("%@ showed no window within 60 s; launch screen closed.", [String(describing: (game.name))])))
                 }
                 self.launchOverlay?.isReady = true
             }
@@ -1404,16 +1473,16 @@ public final class AppViewModel: ObservableObject {
             try cloudSavesPreferences.apply(choice, to: libraryGames.compactMap(\.effectiveBundleId))
         } catch {
             let message = (error as? CloudSavesPreferences.Failure) == .iCloudDriveOff
-                ? "Turn on iCloud Drive or choose a sync folder."
-                : "The sync folder is unavailable. Choose another folder."
-            showSettingsNotice(title: "Cloud unavailable", message: message)
+                ? L10n.text("Turn on iCloud Drive or choose a sync folder.")
+                : L10n.text("The sync folder is unavailable. Choose another folder.")
+            showSettingsNotice(title: L10n.text("Cloud unavailable"), message: message)
             SoundEffectService.shared.play(.error)
             logs.append(LogEntry(level: .error, message: error.localizedDescription))
             return
         }
         settingsStore.settings.cloudSaves = choice
         if case .folder(let path) = choice { settingsStore.settings.cloudSavesPickedFolder = path }
-        logs.append(LogEntry(level: .info, message: "Cloud saves: \(choice.folderURL()?.path ?? "off")"))
+        logs.append(LogEntry(level: .info, message: L10n.format("Cloud saves: %@", [String(describing: (choice.folderURL()?.path ?? "off"))])))
     }
 
     /// Picks a folder for cloud saves; Cancel keeps the current choice.
@@ -1514,7 +1583,7 @@ public final class AppViewModel: ObservableObject {
     /// A library that could not be written: what the player sees would be gone at the next start, so say so once
     /// (in the log every time) instead of losing it in silence.
     func reportLibrarySaveFailure(_ error: Error) {
-        let message = "NX Library could not save your library, so recent changes may be lost when it quits: "
+        let message = L10n.text("NX Library could not save your library, so recent changes may be lost when it quits: ")
             + error.localizedDescription
         logs.append(LogEntry(level: .error, message: message))
         if alertMessage == nil { alertMessage = message }
@@ -1568,8 +1637,8 @@ public final class AppViewModel: ObservableObject {
     }
 
     private func settingsNotSaved(_ game: PortedGame, _ error: Error) {
-        logs.append(LogEntry(level: .error, message: "Could not save settings for \(game.name): \(error.localizedDescription)"))
-        showSettingsNotice(title: "Options not saved", message: "Your game options could not be saved. Try again.")
+        logs.append(LogEntry(level: .error, message: L10n.format("Could not save settings for %@: %@", [String(describing: (game.name)), String(describing: (error.localizedDescription))])))
+        showSettingsNotice(title: L10n.text("Options not saved"), message: L10n.text("Your game options could not be saved. Try again."))
     }
 
     public func supportsSetting(_ env: String, for game: PortedGame) -> Bool {
@@ -1583,11 +1652,11 @@ public final class AppViewModel: ObservableObject {
     @discardableResult public func saveRuntimeConfig(_ config: GameRuntimeConfig, for game: PortedGame) -> Bool {
         do {
             try config.save(for: game)
-            logs.append(LogEntry(level: .success, message: "Saved settings for \(game.name)"))
+            logs.append(LogEntry(level: .success, message: L10n.format("Saved settings for %@", [String(describing: (game.name))])))
             return true
         } catch {
-            logs.append(LogEntry(level: .error, message: "Could not save settings for \(game.name): \(error.localizedDescription)"))
-            showSettingsNotice(title: "Options not saved", message: "Your game options could not be saved. Try again.") { [weak self] in
+            logs.append(LogEntry(level: .error, message: L10n.format("Could not save settings for %@: %@", [String(describing: (game.name)), String(describing: (error.localizedDescription))])))
+            showSettingsNotice(title: L10n.text("Options not saved"), message: L10n.text("Your game options could not be saved. Try again.")) { [weak self] in
                 self?.saveRuntimeConfig(config, for: game)
             }
             return false
@@ -1617,24 +1686,24 @@ public final class AppViewModel: ObservableObject {
 
         var parts: [String] = []
         if !existingSources.isEmpty {
-            parts.append("\(existingSources.count) original source file\(existingSources.count == 1 ? "" : "s") (\(Self.formatBytes(sourceBytes)))")
+            parts.append(L10n.count("%lld original source files (%@)", existingSources.count, arguments: [Self.formatBytes(sourceBytes)]))
         }
         if workspaceBytes > 0 {
-            parts.append("the build cache (\(Self.formatBytes(workspaceBytes)))")
+            parts.append(L10n.format("Build cache (%@)", [Self.formatBytes(workspaceBytes)]))
         }
-        let target = parts.isEmpty ? "the remaining build data" : parts.joined(separator: " and ")
-        return "This permanently deletes \(target). The installed app, saves and logs stay. Rebuilds will be disabled until you attach the sources again. This cannot be undone."
+        let target = parts.isEmpty ? L10n.text("Remaining build data") : parts.joined(separator: ", ")
+        return L10n.format("This permanently deletes: %@. The installed app, saves and logs stay. Rebuilds will be disabled until you attach the sources again. This cannot be undone.", [target])
     }
 
     public func removeSources(for game: PortedGame) {
         guard !isBuilding else {
-            alertMessage = "Wait for the current build to finish before removing sources."
+            alertMessage = L10n.text("Wait for the current build to finish before removing sources.")
             return
         }
         let fm = FileManager.default
         guard var library = try? libraryStore.load(),
               let index = library.games.firstIndex(where: { $0.id == game.id }) else {
-            alertMessage = "Could not load the library entry for \(game.name)."
+            alertMessage = L10n.format("Could not load the library entry for %@.", [game.name])
             return
         }
 
@@ -1649,18 +1718,18 @@ public final class AppViewModel: ObservableObject {
             var isDir: ObjCBool = false
             guard fm.fileExists(atPath: url.path, isDirectory: &isDir) else { continue }
             if isDir.boolValue {
-                failures.append("\(url.lastPathComponent) is a folder")
+                failures.append(L10n.format("%@ is a folder", [url.lastPathComponent]))
                 continue
             }
             if url.path.hasPrefix(appPath + "/") {
-                failures.append("\(url.lastPathComponent) is inside the app")
+                failures.append(L10n.format("%@ is inside the app", [url.lastPathComponent]))
                 continue
             }
             let shared = otherGames.contains { other in
                 other.sources.contains { $0.url.standardizedFileURL == url }
             }
             if shared {
-                failures.append("\(url.lastPathComponent) is also used by another library entry")
+                failures.append(L10n.format("%@ is also used by another library entry", [url.lastPathComponent]))
                 continue
             }
             do {
@@ -1683,7 +1752,7 @@ public final class AppViewModel: ObservableObject {
                     try fm.removeItem(at: workspace)
                     removedWorkspace = true
                 } catch {
-                    failures.append("build cache: \(error.localizedDescription)")
+                    failures.append(L10n.format("Build cache: %@", [error.localizedDescription]))
                 }
             }
         }
@@ -1708,7 +1777,7 @@ public final class AppViewModel: ObservableObject {
         do {
             try libraryStore.save(library)
         } catch {
-            alertMessage = "The sources were removed, but the library could not be saved: \(error.localizedDescription)"
+            alertMessage = L10n.format("The sources were removed, but the library could not be saved: %@", [error.localizedDescription])
             logs.append(LogEntry(level: .error, message: alertMessage!))
             return
         }
@@ -1716,16 +1785,17 @@ public final class AppViewModel: ObservableObject {
             $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
         }
 
-        let removed = "Removed \(removedCount) source file\(removedCount == 1 ? "" : "s") (\(Self.formatBytes(removedBytes)))\(removedWorkspace ? " and the build cache" : "")."
+        let removed = L10n.count("Removed %lld source files (%@).", removedCount, arguments: [Self.formatBytes(removedBytes)])
+            + (removedWorkspace ? " " + L10n.text("The build cache was also removed.") : "")
         if failures.isEmpty {
             logs.append(LogEntry(level: .success,
-                                 message: "\(removed) The installed app and saves were kept."))
-            alertMessage = "\(removed) The installed app and saves were kept. Rebuilds stay disabled until you attach the sources again."
+                                 message: L10n.format("%@ The installed app and saves were kept.", [String(describing: (removed))])))
+            alertMessage = L10n.format("%@ The installed app and saves were kept. Rebuilds stay disabled until you attach the sources again.", [removed])
         } else {
             let detail = failures.joined(separator: "; ")
             logs.append(LogEntry(level: .warning,
-                                 message: "\(removed) Some items were kept: \(detail)"))
-            alertMessage = "\(removed) Some items were kept: \(detail)"
+                                 message: L10n.format("%@ Some items were kept: %@", [String(describing: (removed)), String(describing: (detail))])))
+            alertMessage = L10n.format("%@ Some items were kept: %@", [removed, detail])
         }
     }
 
@@ -1752,7 +1822,7 @@ public final class AppViewModel: ObservableObject {
     }
 
     private static func formatBytes(_ bytes: Int64) -> String {
-        ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
+        bytes.formatted(.byteCount(style: .file).locale(L10n.context.formatLocale))
     }
 
     public func deletePortedGame(_ game: PortedGame) {
@@ -1782,13 +1852,13 @@ public final class AppViewModel: ObservableObject {
             }
             if deleteBundle {
                 logs.append(LogEntry(level: .warning,
-                    message: "Game app deleted: \(game.name)\(removedWorkspace ? "; staged workspace removed" : "")"))
+                    message: L10n.format("Game app deleted: %@%@", [String(describing: (game.name)), String(describing: (removedWorkspace ? "; staged workspace removed" : ""))])))
             } else {
                 logs.append(LogEntry(level: .warning,
-                    message: "Removed \(game.name) from the library; its source folders were left in place."))
+                    message: L10n.format("Removed %@ from the library; its source folders were left in place.", [String(describing: (game.name))])))
             }
         } catch {
-            let message = "Failed to delete game: \(error.localizedDescription)"
+            let message = L10n.format("Failed to delete game: %@", [String(describing: (error.localizedDescription))])
             alertMessage = message
             logs.append(LogEntry(level: .error, message: message))
         }
@@ -1850,7 +1920,7 @@ public final class AppViewModel: ObservableObject {
                     self.logs.append(LogEntry(level: .warning, message: self.scanError!))
                 } else {
                     self.logs.append(LogEntry(level: .info,
-                        message: "Detected \(games.count) game\(games.count == 1 ? "" : "s") in \(folder.lastPathComponent)."))
+                        message: L10n.count("Detected %lld games in %@.", games.count, arguments: [String(describing: (folder.lastPathComponent))])))
                 }
             }
         }
@@ -1867,7 +1937,7 @@ public final class AppViewModel: ObservableObject {
         let capabilities = EngineSourceCapabilities(repo: repo)
         if allowExtractedFolder && ExtractedSourceCatalog.recognizes(folder) {
             guard capabilities.extractedFolders else {
-                throw NXLibraryError.environmentBlocked("This engine does not support extracted folders.")
+                throw NXLibraryError.environmentBlocked(L10n.text("This engine does not support extracted folders."))
             }
             let catalog = ExtractedSourceCatalog(profiles: repo.appendingPathComponent("dm/games"),
                                                  provisional: capabilities.provisionalDumps)
@@ -1880,7 +1950,7 @@ public final class AppViewModel: ObservableObject {
         }
         if let nup = pickedNUPs.first ?? (allowExtractedFolder ? NUPSourceCatalog.container(in: folder) : nil) {
             guard capabilities.nupContainers else {
-                throw NXLibraryError.environmentBlocked("This engine does not support NUP files.")
+                throw NXLibraryError.environmentBlocked(L10n.text("This engine does not support NUP files."))
             }
             let reader = NUPSourceCatalog(repo: repo, toolchain: toolchain, developerDir: developerDir)
             return ScannedSources(games: [try reader.scan(nup: nup)])
@@ -2068,6 +2138,7 @@ public final class AppViewModel: ObservableObject {
     // MARK: - Build Actions
     public var canStartBuild: Bool {
         !isBuilding
+            && !isCleaningStorage
             && !isUpdatingApp
             && canAddSelectedGame
             && supportsSources(selectedSources)
@@ -2082,6 +2153,7 @@ public final class AppViewModel: ObservableObject {
 
     public func canBuild(_ game: PortedGame) -> Bool {
         guard !isBuilding,
+              !isCleaningStorage,
               !isUpdatingApp,
               (!SourceSelection.requiresKeys(game.sources) || isProdKeysValid),
               supportsSources(game.sources),
@@ -2220,7 +2292,7 @@ public final class AppViewModel: ObservableObject {
         progressFraction = 0
         etaSeconds = nil
         handleBuildEvent(.stage(k: 1, n: 8, name: "extract", step: "reading NSP"))
-        handleBuildEvent(.stageEnd(name: "extract", ok: true, elapsed: 1.2, summary: "done"))
+        handleBuildEvent(.stageEnd(name: "extract", ok: true, elapsed: 1.2, summary: L10n.text("done")))
         handleBuildEvent(.stage(k: 2, n: 8, name: "translate shaders", step: "metal"))
         handleBuildEvent(.progress(fraction: 0.34, done: 120, total: 350, unit: "MB", eta: 42))
         handleBuildEvent(.say("Sample event: this is the live build reducer."))
@@ -2271,7 +2343,7 @@ public final class AppViewModel: ObservableObject {
                 try pendingRuntimeConfig.save(for: game)
             }
             librarySelection.selectedGameID = game.id
-            logs.append(LogEntry(level: .success, message: "Added \(game.name) to the library."))
+            logs.append(LogEntry(level: .success, message: L10n.format("Added %@ to the library.", [String(describing: (game.name))])))
             if buildNow, canStartBuild {
                 startBuild(for: game)
             } else {
@@ -2340,9 +2412,10 @@ public final class AppViewModel: ObservableObject {
 
     private func beginBuild(for game: PortedGame, extraArguments: [String] = []) throws {
         guard !isBuilding else { throw NXLibraryError.buildAlreadyRunning }
-        guard !isUpdatingApp else { throw NXLibraryError.environmentBlocked("wait for the app update to finish") }
+        guard !isCleaningStorage else { throw NXLibraryError.environmentBlocked(L10n.text("wait for storage cleanup to finish")) }
+        guard !isUpdatingApp else { throw NXLibraryError.environmentBlocked(L10n.text("wait for the app update to finish")) }
         guard !appIconsInFlight.contains(game.id) else {
-            throw NXLibraryError.environmentBlocked("wait for the app icon update to finish")
+            throw NXLibraryError.environmentBlocked(L10n.text("wait for the app icon update to finish"))
         }
         var target = libraryGames.first(where: { $0.id == game.id }) ?? game
         guard let titleId = target.titleId,
@@ -2361,7 +2434,7 @@ public final class AppViewModel: ObservableObject {
         }
         let requiresKeys = SourceSelection.requiresKeys(target.sources)
         guard supportsSources(target.sources) else {
-            throw NXLibraryError.environmentBlocked("These sources need an engine with extracted-folder or multi-title support.")
+            throw NXLibraryError.environmentBlocked(L10n.text("These sources need an engine with extracted-folder or multi-title support."))
         }
         if requiresKeys {
             guard isProdKeysValid, FileManager.default.fileExists(atPath: keyStore.keyURL.path) else {
@@ -2374,11 +2447,11 @@ public final class AppViewModel: ObservableObject {
                 throw NXLibraryError.keyCheck(reason, game: target.name)
             }
         } else if !engineSourceCapabilities.extractedFolders {
-            throw NXLibraryError.environmentBlocked("This engine does not support extracted folders.")
+            throw NXLibraryError.environmentBlocked(L10n.text("This engine does not support extracted folders."))
         }
         guard isNxnativeValid else { throw NXLibraryError.engineMissing }
         guard let environmentStatus else {
-            throw NXLibraryError.environmentBlocked("the environment check is still running")
+            throw NXLibraryError.environmentBlocked(L10n.text("the environment check is still running"))
         }
         guard environmentStatus.canBuild else {
             throw NXLibraryError.environmentBlocked(environmentStatus.issues.joined(separator: "; "))
@@ -2471,14 +2544,13 @@ public final class AppViewModel: ObservableObject {
         for volume in [workspace.directory, scratch.temp, finalApp.deletingLastPathComponent()] {
             if let device = BuildScratch.Volume.of(volume)?.device, !measured.insert(device).inserted { continue }
             if let free = freeBytes(at: volume), free < requiredDisk {
-                let freeText = ByteCountFormatter.string(fromByteCount: free, countStyle: .file)
-                let requiredText = ByteCountFormatter.string(
-                    fromByteCount: requiredDisk, countStyle: .file)
+                let freeText = Self.formatBytes(free)
+                let requiredText = Self.formatBytes(requiredDisk)
                 let why = scratch.appDriveUnsupported
-                    ? " The Game apps folder's drive can't hold build files (it needs APFS or Mac OS Extended), so the build uses this Mac's disk."
+                    ? L10n.text(" The Game apps folder's drive can't hold build files (it needs APFS or Mac OS Extended), so the build uses this Mac's disk.")
                     : ""
                 throw NXLibraryError.environmentBlocked(
-                    "Not enough free space at \(volume.path): \(freeText) available, \(requiredText) needed.\(why)")
+                    L10n.format("Not enough free space at %@: %@ available, %@ needed.%@", [String(describing: (volume.path)), String(describing: (freeText)), String(describing: (requiredText)), String(describing: (why))]))
             }
         }
 
@@ -2486,8 +2558,8 @@ public final class AppViewModel: ObservableObject {
         let toolchain = engineToolchain
         guard FileManager.default.isExecutableFile(atPath: toolchain.python.path) else {
             throw NXLibraryError.environmentBlocked(toolchain.isBundled
-                ? "the bundled Python is missing; reinstall NX Library"
-                : "the nxnative venv Python is missing")
+                ? L10n.text("the bundled Python is missing; reinstall NX Library")
+                : L10n.text("the nxnative venv Python is missing"))
         }
 
         let tempRoot = scratch.temp.appendingPathComponent(UUID().uuidString)
@@ -2540,14 +2612,14 @@ public final class AppViewModel: ObservableObject {
         portingProgress = PortingProgress()
         frontGameID = target.id
         logs.append(LogEntry(level: .info,
-                             message: "Build started for \(target.name) (\(titleId))."))
+                             message: L10n.format("Build started for %@ (%@).", [String(describing: (target.name)), String(describing: (titleId))])))
         logs.append(LogEntry(level: .info,
-                             message: "Workspace: \(workspace.directory.path)"))
+                             message: L10n.format("Workspace: %@", [String(describing: (workspace.directory.path))])))
         logs.append(LogEntry(
             level: .info,
             message: report?.ok == true
-                ? "Toolchain gate: certified."
-                : "Toolchain gate: overridden; this build will be recorded as untested."
+                ? L10n.text("Toolchain gate: certified.")
+                : L10n.text("Toolchain gate: overridden; this build will be recorded as untested.")
         ))
 
         let service = BuildService()
@@ -2577,7 +2649,7 @@ public final class AppViewModel: ObservableObject {
         stopStageElapsedTimer()
         isCancellingBuild = true
         currentStageName = "Cancelling build..."
-        logs.append(LogEntry(level: .warning, message: "Cancelling build..."))
+        logs.append(LogEntry(level: .warning, message: L10n.text("Cancelling build...")))
         buildService.cancel()
     }
 
@@ -2667,10 +2739,8 @@ public final class AppViewModel: ObservableObject {
                     let percent = Int((min(1, max(0, done / total)) * 100).rounded(.down))
                     currentStepName = "\(Self.formatAmount(done)) / \(Self.formatAmount(total)) \(unit) (\(percent)%)"
                 } else {
-                    let doneText = ByteCountFormatter.string(
-                        fromByteCount: Int64(done), countStyle: .file)
-                    let totalText = ByteCountFormatter.string(
-                        fromByteCount: Int64(total), countStyle: .file)
+                    let doneText = Self.formatBytes(Int64(done))
+                    let totalText = Self.formatBytes(Int64(total))
                     currentStepName = "\(doneText) / \(totalText)"
                 }
             }
@@ -2808,8 +2878,8 @@ public final class AppViewModel: ObservableObject {
                     buildError = nil
                     lastError = nil
                     logs.append(LogEntry(level: .success, message: result.heldApp == nil
-                        ? "Build succeeded: \(finalApp.path)"
-                        : "Build succeeded while \(game.name) is open: it installs when the game quits."))
+                        ? L10n.format("Build succeeded: %@", [String(describing: (finalApp.path))])
+                        : L10n.format("Build succeeded while %@ is open: it installs when the game quits.", [String(describing: (game.name))])))
                     SoundEffectService.shared.play(.launch)
                     notifyPortingEnded(game, success: true, held: result.heldApp != nil)
                 }
@@ -2822,7 +2892,7 @@ public final class AppViewModel: ObservableObject {
                 buildError = nil
                 portingFailureReason = nil
                 lastError = "Build cancelled."
-                logs.append(LogEntry(level: .warning, message: "Build cancelled."))
+                logs.append(LogEntry(level: .warning, message: L10n.text("Build cancelled.")))
             } else {
                 let reason = PortingFailureClassifier.classify(
                     log: buildLogTail(result.logURL),
@@ -2838,7 +2908,7 @@ public final class AppViewModel: ObservableObject {
                 portingFailureReason = reason
                 lastError = message
                 logs.append(LogEntry(level: .error,
-                                     message: result.error ?? "Build failed (exit code \(result.exitCode))."))
+                                     message: result.error ?? L10n.format("Build failed (exit code %@).", [String(describing: (result.exitCode))])))
                 logs.append(LogEntry(level: .error, message: "\(reason.title). \(message) \(reason.next)"))
                 SoundEffectService.shared.play(.error)
                 notifyPortingEnded(game, success: false)
@@ -2853,7 +2923,7 @@ public final class AppViewModel: ObservableObject {
                 if game.pendingInstall != nil {
                     presentInstallFailure(for: game, error: error.localizedDescription)
                 } else {
-                    logs.append(LogEntry(level: .error, message: "Could not save the library: \(error.localizedDescription)"))
+                    logs.append(LogEntry(level: .error, message: L10n.format("Could not save the library: %@", [String(describing: (error.localizedDescription))])))
                 }
             }
             libraryGames = library.games.sorted {
@@ -2889,7 +2959,7 @@ public final class AppViewModel: ObservableObject {
 
     public func revealLog(for game: PortedGame) {
         guard let url = logURL(for: game) else {
-            logs.append(LogEntry(level: .warning, message: "No log path is known for \(game.name)."))
+            logs.append(LogEntry(level: .warning, message: L10n.format("No log path is known for %@.", [String(describing: (game.name))])))
             return
         }
         let directory = url.deletingLastPathComponent()
@@ -2899,7 +2969,7 @@ public final class AppViewModel: ObservableObject {
         } else {
             NSWorkspace.shared.activateFileViewerSelecting([directory])
             logs.append(LogEntry(level: .info,
-                                 message: "No log yet for \(game.name); opened the log folder."))
+                                 message: L10n.format("No log yet for %@; opened the log folder.", [String(describing: (game.name))])))
         }
     }
 

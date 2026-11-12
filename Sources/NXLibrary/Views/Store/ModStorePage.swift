@@ -69,7 +69,7 @@ struct ModStorePage: View {
                     Text(line).seleneFont(18, .medium).foregroundColor(SeleneTheme.ink75)
                 }
             }
-            Text("Mod data provided by GameBanana · only mods that work with NX Library are shown")
+            Text(L10n.text("Mod data provided by GameBanana · only mods that work with NX Library are shown"))
                 .seleneFont(14)
                 .foregroundColor(SeleneTheme.ink60)
         }
@@ -79,15 +79,15 @@ struct ModStorePage: View {
 
     private var statusLine: String? {
         switch catalog.phase {
-        case .offline: return "No connection. Mods you installed still work."
-        case .loading: return "Looking for mods that work with your games…"
+        case .offline: return L10n.text("No connection. Mods you installed still work.")
+        case .loading: return L10n.text("Looking for mods that work with your games…")
         case .idle: return nil
         case .ready:
             if catalog.games.isEmpty {
-                return catalog.refreshing ? "Looking for mods that work with your games…"
-                    : "No mods for your games work with NX Library yet."
+                return catalog.refreshing ? L10n.text("Looking for mods that work with your games…")
+                    : L10n.text("No mods for your games work with NX Library yet.")
             }
-            return catalog.refreshing ? "Looking for more mods…" : nil
+            return catalog.refreshing ? L10n.text("Looking for more mods…") : nil
         }
     }
 }
@@ -124,7 +124,7 @@ struct ModStoreSortBar: View {
                 .contentShape(Capsule())
                 .onTapGesture { onPick(index) }
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Sort by \(choice.title)")
+                .accessibilityLabel(L10n.format("Sort by %@", [String(describing: (choice.title))]))
                 .accessibilityAddTraits(chosen ? [.isButton, .isSelected] : .isButton)
             }
         }
@@ -166,7 +166,7 @@ struct ModStoreFeatured<Chip: View>: View {
         .contentShape(shape)
         .onTapGesture(perform: onOpen)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(entry.map { "Featured: \($0.mod.name), for \($0.gameName), by \($0.mod.author)" } ?? "Featured")
+        .accessibilityLabel(entry.map { L10n.format("Featured: %@, for %@, by %@", [String(describing: ($0.mod.name)), String(describing: ($0.gameName)), String(describing: ($0.mod.author))]) } ?? L10n.text("Featured"))
         .accessibilityAddTraits(.isButton)
     }
 
@@ -181,7 +181,7 @@ struct ModStoreFeatured<Chip: View>: View {
                            startPoint: .leading, endPoint: .trailing)
             HStack(alignment: .center, spacing: canvas.u(48)) {
                 VStack(alignment: .leading, spacing: canvas.u(12)) {
-                    Text("FEATURED · \(entry.gameName.uppercased())")
+                    Text(L10n.format("FEATURED · %@", [String(describing: (entry.gameName.uppercased()))]))
                         .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink75)
                         .lineLimit(1)
@@ -190,7 +190,7 @@ struct ModStoreFeatured<Chip: View>: View {
                         .foregroundColor(SeleneTheme.ink)
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text("by \(entry.mod.author)")
+                    Text(L10n.format("by %@", [String(describing: (entry.mod.author))]))
                         .seleneFont(19, .medium)
                         .foregroundColor(SeleneTheme.ink82)
                     HStack(spacing: canvas.u(22)) {
@@ -203,7 +203,7 @@ struct ModStoreFeatured<Chip: View>: View {
                         chip(entry)
                         HStack(spacing: canvas.u(8)) {
                             SelenePromptBadge(button: .a)
-                            Text("View").seleneFont(18).foregroundColor(SeleneTheme.ink90)
+                            Text(L10n.text("View")).seleneFont(18).foregroundColor(SeleneTheme.ink90)
                         }
                     }
                     .padding(.top, canvas.u(10))
@@ -276,7 +276,7 @@ struct ModStoreRow: View {
                         .iconOnCaps(of: Self.titleSize, .semibold)
                 }
                 DetailsBandTitle(text: section.title, size: Self.titleSize)
-                Text(section.entries.count == 1 ? "1 mod" : "\(section.entries.count) mods")
+                Text(section.entries.count == 1 ? L10n.text("1 mod") : L10n.format("%@ mods", [String(describing: (section.entries.count))]))
                     .seleneFont(16, .medium)
                     .foregroundColor(SeleneTheme.ink60)
             }
@@ -329,7 +329,7 @@ struct ModStoreTile: View {
                     .seleneFont(19, .semibold)
                     .foregroundColor(SeleneTheme.ink)
                     .lineLimit(1)
-                Text(showsGame ? entry.gameName : "by \(entry.mod.author)")
+                Text(showsGame ? entry.gameName : L10n.format("by %@", [String(describing: (entry.mod.author))]))
                     .seleneFont(14, .medium)
                     .foregroundColor(SeleneTheme.ink75)
                     .lineLimit(1)
@@ -349,7 +349,7 @@ struct ModStoreTile: View {
         .animation(reduceMotion ? nil : SpotlightScreenshotStrip.motion, value: focused)
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(entry.mod.name), for \(entry.gameName), by \(entry.mod.author)")
+        .accessibilityLabel(L10n.format("%@, for %@, by %@", [String(describing: (entry.mod.name)), String(describing: (entry.gameName)), String(describing: (entry.mod.author))]))
         .accessibilityAddTraits(focused ? [.isButton, .isSelected] : .isButton)
     }
 }

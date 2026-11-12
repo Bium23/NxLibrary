@@ -11,10 +11,10 @@ public enum SourceKind: String, Codable, Equatable {
 
     public var title: String {
         switch self {
-        case .base: return "Base Game"
-        case .update: return "Update"
+        case .base: return L10n.text("Base Game")
+        case .update: return L10n.text("Game update")
         case .dlc: return "DLC"
-        case .unknown: return "Switch File"
+        case .unknown: return L10n.text("Switch File")
         }
     }
 
@@ -70,6 +70,6 @@ public struct GameFileItem: Identifiable, Codable, Equatable {
 
     public var kind: SourceKind { type }
     public var formattedSize: String {
-        ByteCountFormatter.string(fromByteCount: sizeBytes, countStyle: .file)
+        sizeBytes.formatted(.byteCount(style: .file).locale(L10n.context.formatLocale))
     }
 }

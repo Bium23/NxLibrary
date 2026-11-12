@@ -34,12 +34,12 @@ struct SettingsSpotlightSection: View {
 
     var body: some View {
         VStack(spacing: canvas.u(8)) {
-            SettingsSubheading("Cards")
+            SettingsSubheading(L10n.text("Cards"))
             ForEach(SpotlightCard.allCases, id: \.self) { card in
                 SeleneToggleRow(card.title, isOn: cardBinding(card))
             }
 
-            SettingsSubheading("Row")
+            SettingsSubheading(L10n.text("Row"))
             SeleneCycleRow("Starting tab",
                            subtitle: "The filter Spotlight and Collection open on.",
                            value: settings.settings.startingTab) { stepTab($0) }

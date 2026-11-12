@@ -2,6 +2,19 @@ import XCTest
 @testable import NXLibraryCore
 
 final class GameDetailPresentationTests: XCTestCase {
+    func testKnownGenresTranslateInBothPresentationsWithoutChangingMetadata() {
+        let old = L10n.context
+        defer { L10n.setContext(old) }
+        L10n.setContext(AppLocale(language: .italian, region: "IT"))
+        let metadata = meta(genres: ["Adventure", "Action", "Role-Playing", "My custom genre"])
+        let detail = GameDetailPresentation(game: game("Game"), metadata: metadata, totalPlaytime: 0, lastPlayed: nil)
+        let library = LibraryPresentation(game: game("Game"), metadata: metadata, totalPlaytime: 0, lastPlayed: nil)
+        XCTAssertEqual(detail.genres, ["Avventura", "Azione", "Giochi di ruolo", "My custom genre"])
+        XCTAssertEqual(library.genres, ["Avventura", "Azione", "Giochi di ruolo"])
+        XCTAssertEqual(metadata.genres.first, "Adventure")
+        XCTAssertEqual(detail.descriptionLanguageNote, metadata.description.isEmpty ? nil : "Descrizione in inglese.")
+    }
+
     func testRebuildIsUnavailableWhenRecordedSourceFilesAreMissing() {
         var missing = PortedGame(name: "Synthetic", url: URL(fileURLWithPath: "/Applications/Synthetic.app"),
                                  platform: .macApp, sizeBytes: 0, modificationDate: .distantPast)

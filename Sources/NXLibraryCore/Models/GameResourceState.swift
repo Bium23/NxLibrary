@@ -6,15 +6,15 @@ public enum GameUnavailableReason: Equatable {
 
     public var title: String {
         switch self {
-        case .appMissing: return "App not found"
-        case .sourcesMissing: return "Game files not found"
+        case .appMissing: return L10n.text("App not found")
+        case .sourcesMissing: return L10n.text("Game files not found")
         }
     }
 
     public var detail: String {
         switch self {
-        case .appMissing: return "It may have been moved or removed."
-        case .sourcesMissing: return "They may have been moved or removed."
+        case .appMissing: return L10n.text("It may have been moved or removed.")
+        case .sourcesMissing: return L10n.text("They may have been moved or removed.")
         }
     }
 }

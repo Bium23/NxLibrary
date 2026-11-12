@@ -59,18 +59,18 @@ public enum UpstreamCheckerError: Error, Equatable, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .invalidBase:
-            return "The engine commit is not a valid hash."
+            return L10n.text("The engine commit is not a valid hash.")
         case .invalidURL:
-            return "Could not build the GitHub API URL."
+            return L10n.text("Could not build the GitHub API URL.")
         case .http(let status, let message):
-            return "GitHub returned status \(status)\(message.map { ": \($0)" } ?? ".")"
+            return L10n.format("GitHub returned status %@%@", [String(describing: (status)), String(describing: (message.map { ": \($0)" } ?? "."))])
         case .rateLimited(let reset):
             if let reset {
-                return "GitHub API rate limit reached. Try again after \(reset.formatted(date: .abbreviated, time: .shortened))."
+                return L10n.format("GitHub API rate limit reached. Try again after %@.", [String(describing: (reset.formatted(date: .abbreviated, time: .shortened)))])
             }
-            return "GitHub API rate limit reached. Try again later."
+            return L10n.text("GitHub API rate limit reached. Try again later.")
         case .decoding:
-            return "GitHub returned a response this app could not read."
+            return L10n.text("GitHub returned a response this app could not read.")
         }
     }
 }

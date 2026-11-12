@@ -41,7 +41,7 @@ struct SpotlightTopBar: View {
 
     private func tab(_ item: LibraryFilter) -> some View {
         let on = item == filter
-        return Text(item.rawValue)
+        return Text(L10n.text(item.rawValue))
             .seleneFont(19, on ? .semibold : .regular)
             .foregroundColor(on ? SeleneTheme.onFocus : SeleneTheme.ink.opacity(0.7))
             .padding(EdgeInsets(top: canvas.u(5), leading: canvas.u(18),

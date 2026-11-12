@@ -22,6 +22,9 @@ These principles apply in every session, including work based on research, commu
 - Every added feature requires human review and manual validation by the maintainer (the user). Automated tests, successful compilation and agent reviews support that decision; they do not replace it.
 - Complete the implementation and appropriate automated checks, then provide a concrete build and focused manual checks covering the intended behavior, relevant failure triggers and regressions. Until the user confirms the outcome, report the feature as **awaiting human validation**, not complete or release-ready. Preserve that status in handoffs so another session cannot assume approval.
 - Finish and evaluate the current feature before expanding its scope or starting unrelated additions. Any research backlog remains a set of proposals until deliberately selected for work.
+- For each substantial milestone, compare plausible approaches and record the chosen responsibilities, data contracts, tradeoffs and acceptance checks before implementation. Keep abstractions proportionate to verified needs; do not grow a central coordinator or invent a universal framework merely to finish a feature quickly.
+- Diagnose failures before patching them and fix the cause at the responsible layer. A workaround must have an explicit reason, limits and regression evidence; do not rely on incidental redraws, state resets or swallowed errors to make a flow appear to work.
+- Verify integration assumptions against current primary documentation and focused probes. Distinguish confirmed behavior from inference, preserve useful research/decision evidence, and bring consequential product or architecture choices back to the maintainer. Never claim maximum performance, scalability or accuracy without appropriate evidence.
 
 ## Upstream engine upgrade
 

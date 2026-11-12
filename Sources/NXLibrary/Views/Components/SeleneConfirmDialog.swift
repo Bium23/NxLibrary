@@ -26,7 +26,7 @@ struct SeleneConfirmDialog<Detail: View>: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text(title)
+            Text(L10n.text(title))
                 .seleneFont(34, .semibold)
                 .foregroundColor(SeleneTheme.ink)
                 .multilineTextAlignment(.center)
@@ -151,7 +151,7 @@ struct SeleneSuccessNotice: View {
                 .foregroundColor(SeleneTheme.ink75)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: canvas.u(6)) {
-                Text(title)
+                Text(L10n.text(title))
                     .seleneFont(28, .semibold)
                     .foregroundColor(SeleneTheme.ink)
                 if let message {
@@ -205,7 +205,7 @@ struct SeleneChoiceDialog: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text(title)
+            Text(L10n.text(title))
                 .seleneFont(34, .semibold)
                 .foregroundColor(SeleneTheme.ink)
                 .fixedSize(horizontal: false, vertical: true)

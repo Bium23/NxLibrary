@@ -49,8 +49,8 @@ struct FindGameView: View {
             VStack {
                 Spacer()
                 SeleneHintsBar(right: [
-                    HintItem(.b, "Close") { close() },
-                    HintItem(.a, "Select")
+                    HintItem(.b, L10n.text("Close")) { close() },
+                    HintItem(.a, L10n.text("Select"))
                 ], bottom: SeleneBottomScrim.hintsBottom)
             }
         }
@@ -70,7 +70,7 @@ struct FindGameView: View {
         HStack(spacing: canvas.u(14)) {
             MaterialIconView(.search, size: 24)
                 .foregroundColor(SeleneTheme.ink60)
-            TextField("Find a game", text: $query)
+            TextField(L10n.text("Find a game"), text: $query)
                 .textFieldStyle(.plain)
                 .seleneFont(19)
                 .foregroundColor(SeleneTheme.ink)
@@ -90,7 +90,7 @@ struct FindGameView: View {
     @ViewBuilder private var grid: some View {
         let games = results
         if !query.isEmpty && games.isEmpty {
-            Text("No games match.")
+            Text(L10n.text("No games match."))
                 .seleneFont(19)
                 .foregroundColor(SeleneTheme.ink60)
         } else {

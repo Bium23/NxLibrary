@@ -38,9 +38,9 @@ extension AppViewModel {
 
     /// Keep one cancellable Play request while the app is being signed; signing itself must finish safely.
     func waitForAppIconBeforeLaunching(_ game: PortedGame) {
-        showSettingsNotice(title: "Preparing \(game.name)",
-                           message: "Preparing the app icon. The game will start when it is ready. This can take a minute for a large game.",
-                           cancelTitle: "Cancel")
+        showSettingsNotice(title: L10n.format("Preparing %@", [String(describing: (game.name))]),
+                           message: L10n.text("Preparing the app icon. The game will start when it is ready. This can take a minute for a large game."),
+                           cancelTitle: L10n.text("Cancel"))
         guard let notice = settingsNotice else { return }
         iconLaunchWait.begin(gameID: game.id, noticeID: notice.id)
         launchingGameId = game.id
@@ -58,7 +58,7 @@ extension AppViewModel {
         if settingsNotice?.id == noticeID {
             settingsNotice = nil
             if case .failure(let error) = outcome {
-                showSettingsNotice(title: "Could not prepare the game", message: error.localizedDescription)
+                showSettingsNotice(title: L10n.text("Could not prepare the game"), message: error.localizedDescription)
             }
         }
         if let launchID, let current = libraryGames.first(where: { $0.id == launchID }) {
@@ -158,12 +158,12 @@ extension AppViewModel {
                         GameIconProvider.forget(game)
                         GameArtLoader.shared.forget(game)
                         ArtworkPicks.shared.touch()
-                        self.logs.append(LogEntry(level: .info, message: "Updated the app icon of \(game.name)."))
+                        self.logs.append(LogEntry(level: .info, message: L10n.format("Updated the app icon of %@.", [String(describing: (game.name))])))
                     }
                 case .failure(let error):
                     self.appIconProgress[game.id] = .failed(error.localizedDescription)
                     self.logs.append(LogEntry(level: .error,
-                                              message: "Could not change the app icon of \(game.name): \(error.localizedDescription)"))
+                                              message: L10n.format("Could not change the app icon of %@: %@", [String(describing: (game.name)), String(describing: (error.localizedDescription))])))
                 }
                 if !again, let buildLog, self.appIconBuildLogs[game.id] == buildLog,
                    let status = self.appIconProgress[game.id] {

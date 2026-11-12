@@ -7,11 +7,11 @@ public enum MetadataField: String, CaseIterable, Codable, Sendable {
 
     public var title: String {
         switch self {
-        case .description: return "Description"
-        case .genres: return "Genres"
-        case .developer: return "Developer"
-        case .publisher: return "Publisher"
-        case .releaseDate: return "Release date"
+        case .description: return L10n.text("Description")
+        case .genres: return L10n.text("Genres")
+        case .developer: return L10n.text("Developer")
+        case .publisher: return L10n.text("Publisher")
+        case .releaseDate: return L10n.text("Release date")
         }
     }
 }
@@ -115,7 +115,9 @@ public final class MetadataPicks: ObservableObject {
         var result = metadata
         for (key, value) in picks {
             switch MetadataField(rawValue: key) {
-            case .description: result.description = value
+            case .description:
+                result.description = value
+                result.descriptionLanguage = "custom"
             case .genres: result.genres = value.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
             case .developer: result.developers = [value]
             case .publisher: result.publishers = [value]

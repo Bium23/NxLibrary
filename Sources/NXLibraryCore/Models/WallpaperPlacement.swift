@@ -12,9 +12,9 @@ public enum WallpaperPlacement: CaseIterable, Sendable {
 
     public var title: String {
         switch self {
-        case .notNow: return "Not now"
-        case .settingsOnly: return "Settings only"
-        case .everywhere: return "App & Settings"
+        case .notNow: return L10n.text("Not now")
+        case .settingsOnly: return L10n.text("Settings only")
+        case .everywhere: return L10n.text("App & Settings")
         }
     }
 

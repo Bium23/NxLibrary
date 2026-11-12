@@ -13,7 +13,7 @@ public enum SavedChoicesError: LocalizedError, Equatable {
 
     public var errorDescription: String? {
         switch self {
-        case .notSaved(let domain): return "Could not save the choice in \(domain)."
+        case .notSaved(let domain): return L10n.format("Could not save the choice in %@.", [String(describing: (domain))])
         }
     }
 }

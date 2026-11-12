@@ -7,6 +7,8 @@ struct SettingsSectionContent: View {
     @ObservedObject var settings: AppSettingsStore
     @ObservedObject var artwork: ArtworkStore
     let onViewControls: () -> Void
+    let onChooseLanguage: () -> Void
+    let onChooseRegion: () -> Void
     let onOpenConsole: () -> Void
     let onOpenGroup: (SettingsSection) -> Void
     let onSearchSubmit: () -> Void
@@ -21,7 +23,7 @@ struct SettingsSectionContent: View {
             SettingsChangedSection(settings: settings, viewModel: viewModel,
                                    onOpenGroup: onOpenGroup, onActions: onActions)
         case .startUp:
-            SettingsStartUpSection(viewModel: viewModel, settings: settings, onActions: onActions)
+            SettingsStartUpSection(viewModel: viewModel, settings: settings, onActions: onActions, onChooseLanguage: onChooseLanguage, onChooseRegion: onChooseRegion)
         case .navigation:
             SettingsNavigationSection(settings: settings, onActions: onActions)
         case .spotlight:
@@ -67,7 +69,7 @@ struct SettingsSubheading: View {
 }
 
 func seleneBytes(_ bytes: Int64) -> String {
-    ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
+    bytes.formatted(.byteCount(style: .file).locale(L10n.context.formatLocale))
 }
 
 func seleneShort(_ commit: String?) -> String {

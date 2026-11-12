@@ -18,14 +18,14 @@ struct YourGamesSetupView: View {
         FirstRunSetup.libraryState(isScanning: viewModel.isScanningLibrary, gameCount: viewModel.libraryGames.count)
     }
     private var folderProblem: String? { GameAppDestination.folderProblem(at: viewModel.gameAppsFolder) }
-    private var title: String { libraryState == .empty ? "Add your first game" : "Your games" }
+    private var title: String { libraryState == .empty ? L10n.text("Add your first game") : L10n.text("Your games") }
     private var subtitle: String {
         switch libraryState {
-        case .scanning: return "Looking for existing game apps…"
-        case .empty: return "Choose a game file, or add one later."
+        case .scanning: return L10n.text("Looking for existing game apps…")
+        case .empty: return L10n.text("Choose a game file, or add one later.")
         case .ready:
             let count = viewModel.libraryGames.count
-            return "\(count) game\(count == 1 ? "" : "s") found."
+            return L10n.count("%lld games found.", count, arguments: [])
         }
     }
 
@@ -57,7 +57,7 @@ struct YourGamesSetupView: View {
                     enabled: folderProblem == nil, action: onChooseFiles)
                     .padding(.top, canvas.u(12))
 
-                SelenePillButton(title: "Choose a folder instead", icon: .folder, iconSize: 19,
+                SelenePillButton(title: L10n.text("Choose a folder instead"), icon: .folder, iconSize: 19,
                                  minWidth: 0, height: 44, horizontalPadding: 24,
                                  focused: focus == .folder, enabled: folderProblem == nil) {
                     activate(.folder)
@@ -73,9 +73,9 @@ struct YourGamesSetupView: View {
                 }
 
                 HStack(spacing: canvas.u(22)) {
-                    SelenePillButton(title: "Back", focused: focus == .back) { activate(.back) }
+                    SelenePillButton(title: L10n.text("Back"), focused: focus == .back) { activate(.back) }
                         .onHover { if $0 { move(to: .back) } }
-                    SelenePillButton(title: libraryState == .ready ? "Open library" : "Skip for now",
+                    SelenePillButton(title: libraryState == .ready ? L10n.text("Open library") : L10n.text("Skip for now"),
                                      minWidth: 220, focused: focus == .finish) { activate(.finish) }
                         .onHover { if $0 { move(to: .finish) } }
                 }
@@ -86,7 +86,7 @@ struct YourGamesSetupView: View {
 
             VStack {
                 Spacer(minLength: 0)
-                SeleneHintsBar(left: [HintItem(.b, "Back")], right: [HintItem(.a, "Select")],
+                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back"))], right: [HintItem(.a, L10n.text("Select"))],
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
         }
@@ -184,12 +184,12 @@ struct SetupStepIndicator: View {
 
     var body: some View {
         HStack(spacing: canvas.u(14)) {
-            step(1, "Get ready", active: page == .requirements)
+            step(1, L10n.text("Get ready"), active: page == .requirements)
             Capsule().fill(SeleneTheme.ink15).frame(width: canvas.u(38), height: canvas.u(1))
             step(2, "Your games", active: page == .games)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(page == .requirements ? "Step 1 of 2: Get ready" : "Step 2 of 2: Your games")
+        .accessibilityLabel(page == .requirements ? L10n.text("Step 1 of 2: Get ready") : L10n.text("Step 2 of 2: Your games"))
     }
 
     private func step(_ number: Int, _ title: String, active: Bool) -> some View {

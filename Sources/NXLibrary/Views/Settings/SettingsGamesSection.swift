@@ -38,7 +38,7 @@ struct SettingsGamesSection: View {
 
     private var pickedFolderSubtitle: String {
         let picked = settings.settings.cloudSavesPickedFolder
-        return picked.isEmpty ? "None chosen yet." : (picked as NSString).abbreviatingWithTildeInPath
+        return picked.isEmpty ? L10n.text("None chosen yet.") : (picked as NSString).abbreviatingWithTildeInPath
     }
 
     private func stepCloudSaves(_ step: Int) {
@@ -47,7 +47,7 @@ struct SettingsGamesSection: View {
 
     var body: some View {
         VStack(spacing: canvas.u(8)) {
-            SettingsSubheading("All games")
+            SettingsSubheading(L10n.text("All games"))
 
             SeleneCycleRow("Launch screen style",
                            subtitle: "Artwork layout",
@@ -76,7 +76,7 @@ struct SettingsGamesSection: View {
                 settings.settings.surprisePool = settings.settings.surprisePool.stepped(step)
             }
 
-            SettingsSubheading("Cloud saves")
+            SettingsSubheading(L10n.text("Cloud saves"))
 
             SeleneCycleRow("Cloud saves",
                            subtitle: "All games · Next launch",
@@ -87,10 +87,10 @@ struct SettingsGamesSection: View {
                             subtitle: pickedFolderSubtitle,
                             buttonTitle: "Choose…") { viewModel.chooseCloudSavesFolder() }
 
-            SettingsSubheading("Hidden games")
+            SettingsSubheading(L10n.text("Hidden games"))
 
             if hiddenGames.isEmpty {
-                Text("No hidden games. Hide one from its Game options; it comes back here.")
+                Text(L10n.text("No hidden games. Hide one from its Game options; it comes back here."))
                     .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink60)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -98,12 +98,12 @@ struct SettingsGamesSection: View {
             } else {
                 ForEach(hiddenGames) { game in
                     SeleneButtonRow(game.name, id: "hidden-\(game.id)",
-                                    subtitle: "Out of Spotlight, Collection, Surprise me and search.",
+                                    subtitle: "Out of Spotlight, Collection, Surprise me and search.", verbatimTitle: true,
                                     buttonTitle: "Show") { unhide(game) }
                 }
             }
 
-            SettingsSubheading("New games")
+            SettingsSubheading(L10n.text("New games"))
 
             SeleneToggleRow("Fullscreen",
                             subtitle: "Launch mode",
@@ -179,13 +179,13 @@ struct SettingsGamesSection: View {
             .value("launchStyle", "Launch screen style") { step in
                 settings.settings.launchStyle = settings.settings.launchStyle.stepped(step)
             },
-            .init(id: "launchMotion", title: "Launch screen motion") {
+            .init(id: "launchMotion", title: L10n.text("Launch screen motion"), rowID: "Launch screen motion") {
                 settings.settings.launchMotion.toggle()
             },
             .value("launchShade", "Launch screen shade") { step in
                 settings.settings.launchShade = settings.settings.launchShade.stepped(step)
             },
-            .init(id: "showsSessionCard", title: "Session card") {
+            .init(id: "showsSessionCard", title: L10n.text("Session card"), rowID: "Session card") {
                 settings.settings.showsSessionCard.toggle()
             },
             .value("surprisePool", "Surprise me pool") { step in
@@ -196,19 +196,19 @@ struct SettingsGamesSection: View {
 
     private var defaultActions: [SettingsRowAction] {
         [
-            .init(id: "fullscreen", title: "Fullscreen") {
+            .init(id: "fullscreen", title: L10n.text("Fullscreen"), rowID: "Fullscreen") {
                 settings.settings.gameDefaults.fullscreen.toggle()
             },
-            .init(id: "fps", title: "60 FPS") {
+            .init(id: "fps", title: L10n.text("60 FPS"), rowID: "60 FPS") {
                 settings.settings.gameDefaults.enable60FPS.toggle()
             },
-            .init(id: "docked", title: "Docked mode") {
+            .init(id: "docked", title: L10n.text("Docked mode"), rowID: "Docked mode") {
                 settings.settings.gameDefaults.isDockedMode.toggle()
             },
-            .init(id: "metalfx", title: "MetalFX upscaling") {
+            .init(id: "metalfx", title: L10n.text("MetalFX upscaling"), rowID: "MetalFX upscaling") {
                 settings.settings.gameDefaults.enableMetalFXUpscale.toggle()
             },
-            .init(id: "hud", title: "Metal HUD") {
+            .init(id: "hud", title: L10n.text("Metal HUD"), rowID: "Metal HUD") {
                 settings.settings.gameDefaults.enableMetalHUD.toggle()
             },
             .value("language", "Game language") { step in

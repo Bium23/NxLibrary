@@ -54,13 +54,13 @@ struct SettingsLookSection: View {
 
     var body: some View {
         VStack(spacing: canvas.u(8)) {
-            SettingsSubheading("Theme")
+            SettingsSubheading(L10n.text("Theme"))
 
             SeleneCycleRow("Color theme",
                            subtitle: "Interface colours",
                            value: themeName) { stepTheme($0) }
 
-            SettingsSubheading("Wallpaper")
+            SettingsSubheading(L10n.text("Wallpaper"))
 
             SeleneCycleRow("Wallpaper",
                            subtitle: "App background",
@@ -84,7 +84,7 @@ struct SettingsLookSection: View {
                             subtitle: "Wallpaper & moonlight",
                             isOn: $settings.settings.animatedBackground)
 
-            SettingsSubheading("Library screens")
+            SettingsSubheading(L10n.text("Library screens"))
 
             SeleneToggleRow("Game backgrounds",
                             subtitle: "Spotlight & Collection",
@@ -100,7 +100,7 @@ struct SettingsLookSection: View {
                             subtitle: "Text readability",
                             isOn: $settings.settings.readableText)
 
-            SettingsSubheading("Screen")
+            SettingsSubheading(L10n.text("Screen"))
 
             SeleneToggleRow("Clock",
                             subtitle: "Top bar",
@@ -114,7 +114,7 @@ struct SettingsLookSection: View {
                            subtitle: "Dock & app",
                            value: viewModel.iconAppearanceMode.label) { stepIcon($0) }
 
-            SettingsSubheading("Artwork")
+            SettingsSubheading(L10n.text("Artwork"))
 
             SeleneButtonRow("Box covers",
                             subtitle: "GameTDB covers",

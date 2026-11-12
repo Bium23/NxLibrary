@@ -119,7 +119,7 @@ struct ChangeArtworkView: View {
 
             VStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(browsing.map { "\($0.title.uppercased()) · BROWSE ONLINE" } ?? "CHANGE ARTWORK")
+                    Text(browsing.map { L10n.format("%@ · BROWSE ONLINE", [String(describing: ($0.title.uppercased()))]) } ?? L10n.text("CHANGE ARTWORK"))
                         .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink60)
                         .padding(.leading, canvas.u(8))
@@ -143,7 +143,7 @@ struct ChangeArtworkView: View {
                 .padding(.bottom, canvas.u(20))
                 .contentShape(Rectangle())
 
-                SeleneHintsBar(left: [HintItem(.b, "Back", action: back)], right: rightHints,
+                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back"), action: back)], right: rightHints,
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18,
                                rightReserve: [["Open page"], ["Previous"], ["Next"], ["Choose", "Search"]])
             }
@@ -173,10 +173,10 @@ struct ChangeArtworkView: View {
             if askAppIcon {
                 ZStack {
                     SeleneTheme.scrim45.ignoresSafeArea()
-                    SeleneConfirmDialog(title: "Where should the icon appear?",
+                    SeleneConfirmDialog(title: L10n.text("Where should the icon appear?"),
                                         message: appIconMessage,
-                                        confirmTitle: "Use on the Mac",
-                                        cancelTitle: "Only here",
+                                        confirmTitle: L10n.text("Use on the Mac"),
+                                        cancelTitle: L10n.text("Only here"),
                                         focus: $appIconFocus,
                                         onCancel: { answerAppIcon(false) },
                                         onConfirm: { answerAppIcon(true) })
@@ -189,8 +189,8 @@ struct ChangeArtworkView: View {
 
     private var appIconMessage: String {
         let running = RunningGameMonitor.runningApplication(for: game) != nil
-        return "Only here changes the image inside NX Library. Use on the Mac also shows it in Finder and the Dock. Automatic uses the game's own icon, then an online image if available. Changing the image keeps this location choice."
-            + (running ? " It changes when the game quits." : " A large game takes about a minute.")
+        return L10n.text("Only here changes the image inside NX Library. Use on the Mac also shows it in Finder and the Dock. Automatic uses the game's own icon, then an online image if available. Changing the image keeps this location choice.")
+            + (running ? L10n.text(" It changes when the game quits.") : L10n.text(" A large game takes about a minute."))
     }
 
     private func answerAppIcon(_ use: Bool) {
@@ -208,11 +208,11 @@ struct ChangeArtworkView: View {
     }
 
     private var rightHints: [HintItem] {
-        let move = [HintItem(.lb, "Previous"), HintItem(.rb, "Next")]
-        guard browsing != nil else { return move + [HintItem(.a, "Choose")] }
-        let page = browseResult?.page.map { url in HintItem(.x, "Open page", action: { NSWorkspace.shared.open(url) }) }
-        let accept = focus < 0 ? HintItem(.a, "Search", action: { fieldFocused = true })
-                               : HintItem(.a, "Choose", action: chooseFocused)
+        let move = [HintItem(.lb, L10n.text("Previous")), HintItem(.rb, L10n.text("Next"))]
+        guard browsing != nil else { return move + [HintItem(.a, L10n.text("Choose"))] }
+        let page = browseResult?.page.map { url in HintItem(.x, L10n.text("Open page"), action: { NSWorkspace.shared.open(url) }) }
+        let accept = focus < 0 ? HintItem(.a, L10n.text("Search"), action: { fieldFocused = true })
+                               : HintItem(.a, L10n.text("Choose"), action: chooseFocused)
         return (page.map { [$0] } ?? []) + move + (downloading ? [] : [accept])
     }
 
@@ -238,7 +238,7 @@ struct ChangeArtworkView: View {
         HStack(spacing: canvas.u(10)) {
             MaterialIconView(.search, size: 22).foregroundColor(SeleneTheme.ink60)
             TextField("", text: $browseDraft,
-                      prompt: Text("Search \(browsing?.title ?? "")").foregroundColor(SeleneTheme.ink60))
+                      prompt: Text(L10n.format("Search %@", [String(describing: (browsing?.title ?? ""))])).foregroundColor(SeleneTheme.ink60))
                 .textFieldStyle(.plain)
                 .seleneFont(18)
                 .foregroundColor(SeleneTheme.ink)
@@ -270,7 +270,7 @@ struct ChangeArtworkView: View {
 
     private var mainStatus: String {
         if let appIcon = appIconStatus { return appIcon }
-        return searching.contains(slot) ? "Searching…" : (found[slot]?.isEmpty ?? false) ? "No images found" : artworkLocation
+        return searching.contains(slot) ? L10n.text("Searching…") : (found[slot]?.isEmpty ?? false) ? L10n.text("No images found") : artworkLocation
     }
 
     /// On the Icon tab, how the game app's own icon change stands: signing a large app takes about a minute.
@@ -291,26 +291,26 @@ struct ChangeArtworkView: View {
     }
 
     private func browseStatus(_ source: ArtworkBrowseSource) -> String {
-        if downloading { return "Downloading the full image from \(source.title)…" }
-        guard let result = browseResult else { return "Searching \(source.title) for “\(browseQuery)”…" }
+        if downloading { return L10n.format("Downloading the full image from %@…", [String(describing: (source.title))]) }
+        guard let result = browseResult else { return L10n.format("Searching %@ for “%@”…", [String(describing: (source.title)), String(describing: (browseQuery))]) }
         guard result.page != nil else {
-            return "\(source.title) has no \(source == .launchBox ? "Switch game" : "game") called “\(browseQuery)”"
+            return L10n.format("%@ has no %@ called “%@”", [String(describing: (source.title)), String(describing: (source == .launchBox ? L10n.text("Switch game") : "game")), String(describing: (browseQuery))])
         }
-        if browseLoading.contains(slot) && (browseItems[slot] ?? []).isEmpty { return "Loading…" }
+        if browseLoading.contains(slot) && (browseItems[slot] ?? []).isEmpty { return L10n.text("Loading…") }
         if (browseItems[slot] ?? []).isEmpty {
-            return "\(source.title) has no \(slot.title.lowercased()) for “\(browseQuery)”"
+            return L10n.format("%@ has no %@ for “%@”", [String(describing: (source.title)), String(describing: (slot.title.lowercased())), String(describing: (browseQuery))])
         }
-        return "\(source.title) · “\(browseQuery)” · full size downloads when you choose"
+        return L10n.format("%@ · “%@” · full size downloads when you choose", [String(describing: (source.title)), String(describing: (browseQuery))])
     }
 
     private var artworkLocation: String {
         switch slot {
-        case .cover: return "Collection · Suggestions"
-        case .icon: return "Game tiles"
-        case .logo: return "Library · Launch"
+        case .cover: return L10n.text("Collection · Suggestions")
+        case .icon: return L10n.text("Game tiles")
+        case .logo: return L10n.text("Library · Launch")
         case .background:
             return viewModel.settingsStore?.settings.keepWallpaperOnGames == true
-                ? "Details · Launch · Home: wallpaper" : "Library · Launch"
+                ? L10n.text("Details · Launch · Home: wallpaper") : L10n.text("Library · Launch")
         }
     }
 
@@ -432,22 +432,22 @@ struct ChangeArtworkView: View {
         switch tile {
         case .automatic:
             switch slot {
-            case .cover: return ("Automatic", "GameTDB, or a composed cover")
-            case .background: return ("Automatic", "The game's own art, then Title DB")
-            case .icon: return ("Automatic", "The game's own icon, then Title DB")
-            case .logo: return ("Automatic", "The store logo, then Steam")
+            case .cover: return (L10n.text("Automatic"), L10n.text("GameTDB, or a composed cover"))
+            case .background: return (L10n.text("Automatic"), L10n.text("The game's own art, then Title DB"))
+            case .icon: return (L10n.text("Automatic"), L10n.text("The game's own icon, then Title DB"))
+            case .logo: return (L10n.text("Automatic"), L10n.text("The store logo, then Steam"))
             }
         case .yourPick:
-            return ("Your pick", "Saved on this Mac")
+            return (L10n.text("Your pick"), L10n.text("Saved on this Mac"))
         case .iconLocation:
-            return ("Icon location", viewModel.usesIconOnMac(for: game) ? "Use on the Mac" : "Only here")
+            return (L10n.text("Icon location"), viewModel.usesIconOnMac(for: game) ? L10n.text("Use on the Mac") : "Only here")
         case .art(let item):
             return (item.art.candidate.source, item.art.resolution)
         case .browse(let source):
             let keyless = source.needsKey && !viewModel.hasSteamGridDBKey
-            return (source.title, keyless ? "Browse online · add your key" : "Browse online")
+            return (source.title, keyless ? L10n.text("Browse online · add your key") : "Browse online")
         case .file:
-            return ("From file…", "PNG or JPEG")
+            return (L10n.text("From file…"), L10n.text("PNG or JPEG"))
         }
     }
 
@@ -625,7 +625,7 @@ struct ChangeArtworkView: View {
             downloading = false
             guard browsing == source else { return }
             guard let data else {
-                message = "The full image could not be downloaded from \(source.title). Try again."
+                message = L10n.format("The full image could not be downloaded from %@. Try again.", [String(describing: (source.title))])
                 SoundEffectService.shared.play(.error)
                 return
             }
@@ -658,10 +658,10 @@ struct ChangeArtworkView: View {
         panel.allowedContentTypes = [.png, .jpeg, .heic, .webP, .image]
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
-        panel.message = "Choose a \(slot.title.lowercased()) for \(game.name)."
+        panel.message = L10n.format("Choose a %@ for %@.", [String(describing: (slot.title.lowercased())), String(describing: (game.name))])
         guard panel.runModal() == .OK, let url = panel.url else { return }
         guard let data = try? Data(contentsOf: url) else {
-            message = "That file could not be read."
+            message = L10n.text("That file could not be read.")
             SoundEffectService.shared.play(.error)
             return
         }

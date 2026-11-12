@@ -24,6 +24,27 @@ final class SaveTransactionTests: XCTestCase {
         XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("obsolete")), "old")
         XCTAssertNoThrow(try tx.recover(location: location))
     }
+    /// nxnative e6048dea: a cut-short cloud pull leaves `save.pull`; the game's next start puts this Mac's save back,
+    /// so an import or restore before then is refused and changes nothing.
+    func testCloudPullJournalRefusesImportAndRestore() throws {
+        let h = try SaveTestHome(); defer { h.remove() }
+        let location = try h.location(); let store = SaveSnapshotStore(root: h.backups)
+        try h.write("mine", location.directory(.account).appendingPathComponent("data"))
+        let backup = try store.create(location: location, identity: h.identity, reason: .manual)
+        let source = h.base.appendingPathComponent("export")
+        try h.write("new", source.appendingPathComponent("data"))
+        let preview = try store.stageImport(source: source, slot: .account, location: location)
+        try h.write("journal", location.cloudPullJournal)
+        let tx = SaveTransaction(store: store, isRunning: { false })
+        XCTAssertThrowsError(try tx.importSave(preview, location: location, identity: h.identity)) {
+            XCTAssertEqual($0 as? SaveFailure, .cloudPullPending)
+        }
+        XCTAssertThrowsError(try tx.restore(backup, location: location, identity: h.identity)) {
+            XCTAssertEqual($0 as? SaveFailure, .cloudPullPending)
+        }
+        XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("data")), "mine")
+        XCTAssertEqual(try String(contentsOf: location.cloudPullJournal), "journal")
+    }
     func testRestoreRemovesSlotAbsentInSnapshot() throws {
         let h = try SaveTestHome(); defer { h.remove() }
         let location = try h.location(); let store = SaveSnapshotStore(root: h.backups)

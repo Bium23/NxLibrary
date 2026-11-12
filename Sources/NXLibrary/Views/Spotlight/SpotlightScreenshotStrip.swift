@@ -49,7 +49,7 @@ struct SpotlightScreenshotStrip: View {
     var body: some View {
         if shown.isEmpty {
             if known {
-                Text("No screenshots for this game")
+                Text(L10n.text("No screenshots for this game"))
                     .seleneFont(18)
                     .foregroundColor(SeleneTheme.ink60)
                     .shadow(color: .black.opacity(0.45), radius: canvas.u(4))
@@ -129,7 +129,7 @@ private struct ScreenshotTile: View {
         .scaleEffect(focused ? style.focusScale : 1)
         .animation(reduceMotion ? nil : SpotlightScreenshotStrip.motion, value: focused)
         .accessibilityElement()
-        .accessibilityLabel("Screenshot \(index + 1)")
+        .accessibilityLabel(L10n.format("Screenshot %@", [String(describing: (index + 1))]))
         .task(id: "\(titleID)|\(index)|\(url.absoluteString)") {
             image = nil
             guard let file = await artwork.screenshot(titleID: titleID, index: index, remoteURL: url),

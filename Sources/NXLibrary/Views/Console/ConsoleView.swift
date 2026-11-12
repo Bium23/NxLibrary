@@ -12,10 +12,10 @@ enum ConsoleFilter: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .all: return "All"
-        case .errors: return "Errors"
+        case .all: return L10n.text("All")
+        case .errors: return L10n.text("Errors")
         case .build: return "Build"
-        case .launch: return "Launch"
+        case .launch: return L10n.text("Launch")
         }
     }
 }
@@ -103,7 +103,7 @@ public struct ConsoleView: View {
             VStack(spacing: 0) {
                 column(logs)
                 if showsHints {
-                    SeleneHintsBar(left: [HintItem(.b, searching ? "Done" : "Back")],
+                    SeleneHintsBar(left: [HintItem(.b, searching ? L10n.text("Done") : L10n.text("Back"))],
                                    right: [HintItem(.a, aLabel)],
                                    bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
                         .opacity(confirmClear ? 0 : 1)
@@ -113,10 +113,10 @@ public struct ConsoleView: View {
             if confirmClear {
                 ZStack {
                     SeleneTheme.scrim45.ignoresSafeArea()
-                    SeleneConfirmDialog(title: "Clear the console?",
-                                        message: "The log file on disk is kept; only the lines shown here go.",
+                    SeleneConfirmDialog(title: L10n.text("Clear the console?"),
+                                        message: L10n.text("The log file on disk is kept; only the lines shown here go."),
                                         confirmTitle: "Clear",
-                                        cancelTitle: "Keep",
+                                        cancelTitle: L10n.text("Keep"),
                                         focus: $confirmFocus,
                                         onCancel: dismissClear,
                                         onConfirm: clear)
@@ -137,13 +137,13 @@ public struct ConsoleView: View {
 
     private func column(_ logs: [LogEntry]) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("CONSOLE")
+            Text(L10n.text("CONSOLE"))
                 .seleneFont(15, .semibold)
                 .tracking(1.2)
                 .foregroundColor(SeleneTheme.ink60)
                 .padding(.leading, canvas.u(8))
             HStack(alignment: .firstTextBaseline) {
-                Text("Build and launch output")
+                Text(L10n.text("Build and launch output"))
                     .seleneFont(40)
                     .foregroundColor(SeleneTheme.ink)
                     .lineLimit(1)
@@ -170,7 +170,7 @@ public struct ConsoleView: View {
 
     private func countLine(_ logs: [LogEntry]) -> String {
         let errors = viewModel.logs.filter { $0.level == .error }.count
-        let lines = logs.count == viewModel.logs.count ? "\(logs.count) lines" : "\(logs.count) of \(viewModel.logs.count) lines"
+        let lines = logs.count == viewModel.logs.count ? L10n.count("%lld lines", logs.count) : L10n.format("Visible lines: %@ / %@", [String(describing: logs.count), String(describing: viewModel.logs.count)])
         return errors == 0 ? lines : "\(lines) · \(errors) \(errors == 1 ? "error" : "errors")"
     }
 
@@ -178,7 +178,7 @@ public struct ConsoleView: View {
         HStack(spacing: canvas.u(6)) {
             ForEach(ConsoleFilter.allCases) { item in
                 pill(.filter(item)) {
-                    Text(item.title)
+                    Text(L10n.text(item.title))
                         .seleneFont(15, filter == item ? .semibold : .regular)
                         .foregroundColor(filter == item ? SeleneTheme.ink : SeleneTheme.ink60)
                 }
@@ -190,14 +190,14 @@ public struct ConsoleView: View {
                     MaterialIconView(.search, size: 16)
                         .foregroundColor(SeleneTheme.ink60)
                     if searching {
-                        TextField("Search", text: $searchText)
+                        TextField(L10n.text("Search"), text: $searchText)
                             .textFieldStyle(.plain)
                             .seleneFont(15)
                             .foregroundColor(SeleneTheme.ink)
                             .focused($searchFocused)
                             .onSubmit(endSearch)
                     } else {
-                        Text(searchText.isEmpty ? "Search" : searchText)
+                        Text(searchText.isEmpty ? L10n.text("Search") : searchText)
                             .seleneFont(15)
                             .foregroundColor(searchText.isEmpty ? SeleneTheme.ink60 : SeleneTheme.ink)
                             .lineLimit(1)
@@ -212,28 +212,28 @@ public struct ConsoleView: View {
                     Circle()
                         .fill(follow ? PortingLogBox.softGreen : SeleneTheme.ink25)
                         .frame(width: canvas.u(7), height: canvas.u(7))
-                    Text("Follow")
+                    Text(L10n.text("Follow"))
                         .seleneFont(15)
                         .foregroundColor(follow ? SeleneTheme.ink : SeleneTheme.ink60)
                 }
             }
             pill(.copy) {
-                Text(didCopy ? "Copied" : "Copy log")
+                Text(didCopy ? L10n.text("Copied") : L10n.text("Copy log"))
                     .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink)
             }
             pill(.diagnostics) {
-                Text(didCopyDiagnostics ? "Copied" : "Copy diagnostics")
+                Text(didCopyDiagnostics ? L10n.text("Copied") : L10n.text("Copy diagnostics"))
                     .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink)
             }
             pill(.reveal) {
-                Text("Show in Finder")
+                Text(L10n.text("Show in Finder"))
                     .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink)
             }
             pill(.clear) {
-                Text("Clear")
+                Text(L10n.text("Clear"))
                     .seleneFont(15)
                     .foregroundColor(PortingPillCopy.softRed)
             }
@@ -323,12 +323,12 @@ public struct ConsoleView: View {
         VStack(spacing: canvas.u(8)) {
             MaterialIconView(.terminal, size: 30)
                 .foregroundColor(SeleneTheme.ink25)
-            Text(viewModel.logs.isEmpty ? "Nothing yet" : "No lines match")
+            Text(viewModel.logs.isEmpty ? L10n.text("Nothing yet") : L10n.text("No lines match"))
                 .seleneFont(19, .medium)
                 .foregroundColor(SeleneTheme.ink82)
             Text(viewModel.logs.isEmpty
-                 ? "Portings and launches write here."
-                 : "Try another filter or search.")
+                 ? L10n.text("Portings and launches write here.")
+                 : L10n.text("Try another filter or search."))
                 .seleneFont(14)
                 .foregroundColor(SeleneTheme.ink60)
         }
@@ -397,7 +397,7 @@ public struct ConsoleView: View {
         switch focus {
         case .filter(let item): return item.title
         case .search: return searching ? "Done" : "Search"
-        case .follow: return follow ? "Stop following" : "Follow"
+        case .follow: return follow ? L10n.text("Stop following") : "Follow"
         case .copy: return "Copy log"
         case .diagnostics: return "Copy diagnostics"
         case .reveal: return "Show in Finder"
@@ -478,7 +478,7 @@ public struct ConsoleView: View {
         if let url = viewModel.buildLogURL,
            let build = try? String(contentsOf: url, encoding: .utf8) {
             let tail = build.split(separator: "\n", omittingEmptySubsequences: false).suffix(400)
-            text += "\n\n--- Build log: \(url.lastPathComponent) ---\n" + tail.joined(separator: "\n")
+            text += L10n.format("\n\n--- Build log: %@ ---\n", [String(describing: (url.lastPathComponent))]) + tail.joined(separator: "\n")
         }
         guard !text.isEmpty else { return SoundEffectService.shared.play(.error) }
         let pasteboard = NSPasteboard.general

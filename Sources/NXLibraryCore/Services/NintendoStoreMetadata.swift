@@ -17,6 +17,10 @@ public struct NintendoStoreMetadata: Codable, Equatable {
     public var screenshotURLs: [URL] = []
     /// Where `screenshotURLs` came from when not the store or Title DB ("LaunchBox"); shown, never saved.
     public var screenshotSource: String?
+    public var descriptionLanguage = "en"
+    public var localeKey: String? = nil
+    /// The last successful response for the requested description language, including an empty translation.
+    public var descriptionCheckedAt: Date?
 
     public init(titleId: String, name: String, description: String, developers: [String],
                 publishers: [String], genres: [String], releaseDate: String?, storeURL: URL,
@@ -40,11 +44,15 @@ public struct NintendoStoreMetadata: Codable, Equatable {
 
     private enum CodingKeys: String, CodingKey {
         case titleId, name, description, developers, publishers, genres, releaseDate
+        case descriptionLanguage, localeKey, descriptionCheckedAt
         case storeURL, imageURL, headerImageURL, logoURL, nsuid, fetchedAt, screenshotURLs
     }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        descriptionLanguage = try c.decodeIfPresent(String.self, forKey: .descriptionLanguage) ?? "en"
+        localeKey = try c.decodeIfPresent(String.self, forKey: .localeKey)
+        descriptionCheckedAt = try c.decodeIfPresent(Date.self, forKey: .descriptionCheckedAt)
         titleId = try c.decode(String.self, forKey: .titleId)
         name = try c.decode(String.self, forKey: .name)
         description = try c.decode(String.self, forKey: .description)
@@ -76,10 +84,10 @@ public enum NintendoStoreError: Error, Equatable, LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .notFound: return "No Nintendo Store entry was found for this game."
-        case .invalidURL: return "The Nintendo Store URL is invalid."
-        case .http(let status): return "Nintendo Store returned status \(status)."
-        case .decoding: return "Nintendo Store returned a response this app could not read."
+        case .notFound: return L10n.text("No Nintendo Store entry was found for this game.")
+        case .invalidURL: return L10n.text("The Nintendo Store URL is invalid.")
+        case .http(let status): return L10n.format("Nintendo Store returned status %@.", [String(describing: (status))])
+        case .decoding: return L10n.text("Nintendo Store returned a response this app could not read.")
         }
     }
 }
@@ -120,6 +128,7 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
     private let fileManager: FileManager
     private let refreshLock = NSLock()
     private var screenshotRefreshTried: Set<String> = []
+    private var descriptionRetryAfter: [String: Date] = [:]
 
     public init(
         client: NintendoStoreHTTPClient = URLSessionNintendoStoreClient(),
@@ -132,9 +141,26 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         self.fileManager = fileManager
     }
 
-    public func cached(for titleId: String) -> NintendoStoreMetadata? {
-        guard let data = try? Data(contentsOf: cacheURL(for: titleId)) else { return nil }
-        return try? JSONDecoder().decode(NintendoStoreMetadata.self, from: data)
+    public func cached(for titleId: String, locale: AppLocale = AppLocale(language: .english, region: "US")) -> NintendoStoreMetadata? {
+        func read(_ url: URL) -> NintendoStoreMetadata? {
+            guard let data = try? Data(contentsOf: url),
+                  let metadata = try? JSONDecoder().decode(NintendoStoreMetadata.self, from: data),
+                  metadata.titleId == titleId else { return nil }
+            return metadata
+        }
+        if let exact = read(cacheURL(for: titleId, locale: locale)) { return exact }
+        // The provider localizes descriptions by language, not by formatting region.
+        var alternatives: [NintendoStoreMetadata] = []
+        if locale.language == .english,
+           let legacy = read(cacheURL(for: titleId, locale: AppLocale(language: .english, region: "US"))) {
+            alternatives.append(legacy)
+        }
+        let root = cacheDirectory.appendingPathComponent("localized")
+        for folder in (try? fileManager.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)) ?? []
+            where folder.lastPathComponent.hasPrefix(locale.language.rawValue + "_") {
+            if let entry = read(folder.appendingPathComponent(Self.safeFileName(titleId) + ".json")) { alternatives.append(entry) }
+        }
+        return alternatives.max { $0.fetchedAt < $1.fetchedAt }
     }
 
     /// Whether `metadata` can be used without asking the network again: younger
@@ -142,12 +168,20 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
     /// A titledb-style title (16 characters, "0100" prefix) with no screenshots
     /// is re-fetched once per app session (per service instance); offline, that
     /// one attempt fails and the cached entry is used for the rest of the session.
-    public func isFresh(_ metadata: NintendoStoreMetadata, now: Date = Date()) -> Bool {
+    public func isFresh(_ metadata: NintendoStoreMetadata, now: Date = Date(), locale: AppLocale = AppLocale(language: .english, region: "US")) -> Bool {
+        guard (metadata.localeKey ?? "en_US").hasPrefix(locale.language.rawValue + "_") else { return false }
         guard now.timeIntervalSince(metadata.fetchedAt) < Self.ttl else { return false }
+        if locale.metadataLanguage != "en", metadata.descriptionLanguage != locale.metadataLanguage {
+            refreshLock.lock()
+            let retryAfter = descriptionRetryAfter[metadata.titleId + "/" + locale.metadataLanguage]
+            refreshLock.unlock()
+            guard metadata.descriptionCheckedAt.map({ now.timeIntervalSince($0) < 24 * 3600 }) == true
+                    || retryAfter.map({ now < $0 }) == true else { return false }
+        }
         guard metadata.screenshotURLs.isEmpty, Self.looksLikeTitleDBID(metadata.titleId) else { return true }
         refreshLock.lock()
         defer { refreshLock.unlock() }
-        return screenshotRefreshTried.contains(metadata.titleId)
+        return screenshotRefreshTried.contains(metadata.titleId + "/" + locale.metadataLanguage)
     }
 
     /// Synchronous so the lock is never held across a suspension point.
@@ -158,27 +192,79 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
     }
 
     private static func looksLikeTitleDBID(_ id: String) -> Bool {
-        id.count == 16 && id.hasPrefix("0100")
+        id.count == 16 && (id.hasPrefix("0100") || id.hasPrefix("0400")) && id.allSatisfy(\.isHexDigit)
     }
 
-    public func metadata(for game: PortedGame) async throws -> NintendoStoreMetadata {
+    public func metadata(for game: PortedGame, locale: AppLocale = AppLocale(language: .english, region: "US")) async throws -> NintendoStoreMetadata {
         let key = game.titleId ?? game.uniqueKey
-        if let cached = cached(for: key) {
-            if isFresh(cached) { return cached }
+        let previous = cached(for: key, locale: locale)
+        if let cached = cached(for: key, locale: locale) {
+            if isFresh(cached, locale: locale) { return cached }
             if cached.screenshotURLs.isEmpty, Self.looksLikeTitleDBID(cached.titleId) {
-                markScreenshotRefreshTried(cached.titleId)
+                markScreenshotRefreshTried(cached.titleId + "/" + locale.metadataLanguage)
             }
         }
 
+        // A language switch reuses fresh artwork and credits; only the description needs a request.
+        if locale.metadataLanguage != "en", var base = previous ?? cached(for: key),
+           Date().timeIntervalSince(base.fetchedAt) < Self.ttl {
+            let item = await fetchTitleDBItem(titleId: key, language: locale.metadataLanguage)
+            applyDescription(item, to: &base, locale: locale)
+            if let item { Self.fill(&base, from: item) }
+            markScreenshotRefreshTried(key + "/" + locale.metadataLanguage)
+            base.localeKey = locale.cacheKey
+            try? cache(base, for: key, locale: locale)
+            return base
+        }
+
         do {
-            let metadata = try await fetch(game: game, cacheKey: key)
-            try? cache(metadata, for: key)
+            var metadata: NintendoStoreMetadata
+            do { metadata = try await fetch(game: game, cacheKey: key) }
+            catch {
+                guard locale.metadataLanguage != "en",
+                      let localized = await fetchTitleDB(titleId: key, language: locale.metadataLanguage),
+                      !localized.description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw error }
+                metadata = localized
+                metadata.descriptionLanguage = locale.metadataLanguage
+                metadata.descriptionCheckedAt = Date()
+            }
+            if locale.metadataLanguage != "en", metadata.descriptionLanguage != locale.metadataLanguage {
+                let item = await fetchTitleDBItem(titleId: key, language: locale.metadataLanguage)
+                applyDescription(item, to: &metadata, locale: locale)
+            }
+            if metadata.descriptionLanguage != locale.metadataLanguage,
+               let previous, previous.descriptionLanguage == locale.metadataLanguage,
+               !previous.description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                metadata.description = previous.description
+                metadata.descriptionLanguage = previous.descriptionLanguage
+                metadata.fetchedAt = min(metadata.fetchedAt, previous.fetchedAt)
+            }
+            metadata.localeKey = locale.cacheKey
+            try? cache(metadata, for: key, locale: locale)
             return metadata
         } catch {
             // A stale cache is still better than an empty panel when Nintendo is
             // unreachable; the UI shows the fetched date.
-            if let cached = cached(for: key) { return cached }
+            if let cached = cached(for: key, locale: locale) { return cached }
+            if locale.cacheKey != "en_US", let english = cached(for: key) { return english }
             throw error
+        }
+    }
+
+    private func applyDescription(_ item: TitleDBItem?, to metadata: inout NintendoStoreMetadata, locale: AppLocale) {
+        if let item {
+            metadata.descriptionCheckedAt = Date()
+            if let text = item.description?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty,
+               text != metadata.description.trimmingCharacters(in: .whitespacesAndNewlines)
+                    || metadata.descriptionLanguage == locale.metadataLanguage {
+                metadata.description = text
+                metadata.descriptionLanguage = locale.metadataLanguage
+            }
+        } else {
+            // A transient network failure is retried soon; it is not persisted as a missing translation.
+            refreshLock.lock()
+            descriptionRetryAfter[metadata.titleId + "/" + locale.metadataLanguage] = Date().addingTimeInterval(60)
+            refreshLock.unlock()
         }
     }
 
@@ -314,9 +400,9 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         }
     }
 
-    private func fetchTitleDBItem(titleId: String) async -> TitleDBItem? {
-        guard titleId.count == 16, titleId.hasPrefix("0100"),
-              let url = URL(string: "https://api.nlib.cc/nx/\(titleId)?fields=name,publisher,description,banner,icon,screens,releaseDate,developer,category") else {
+    private func fetchTitleDBItem(titleId: String, language: String = "en") async -> TitleDBItem? {
+        guard Self.looksLikeTitleDBID(titleId),
+              let url = URL(string: "https://api.nlib.cc/nx/\(titleId)?fields=name,publisher,description,banner,icon,screens,releaseDate,developer,category&lang=\(language)") else {
             return nil
         }
         var request = URLRequest(url: url)
@@ -330,8 +416,8 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         }
     }
 
-    private func fetchTitleDB(titleId: String) async -> NintendoStoreMetadata? {
-        guard let item = await fetchTitleDBItem(titleId: titleId),
+    private func fetchTitleDB(titleId: String, language: String = "en") async -> NintendoStoreMetadata? {
+        guard let item = await fetchTitleDBItem(titleId: titleId, language: language),
               let name = item.name, !name.isEmpty else { return nil }
         return NintendoStoreMetadata(
             titleId: titleId,
@@ -553,14 +639,17 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         try? fileManager.removeItem(at: cacheDirectory)
     }
 
-    private func cacheURL(for titleId: String) -> URL {
-        cacheDirectory.appendingPathComponent(Self.safeFileName(titleId) + ".json")
+    private func cacheURL(for titleId: String, locale: AppLocale) -> URL {
+        let folder = locale.cacheKey == "en_US" ? cacheDirectory
+            : cacheDirectory.appendingPathComponent("localized/\(locale.cacheKey)")
+        return folder.appendingPathComponent(Self.safeFileName(titleId) + ".json")
     }
 
-    private func cache(_ metadata: NintendoStoreMetadata, for titleId: String) throws {
-        try fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+    private func cache(_ metadata: NintendoStoreMetadata, for titleId: String, locale: AppLocale) throws {
+        let url = cacheURL(for: titleId, locale: locale)
+        try fileManager.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         let data = try JSONEncoder().encode(metadata)
-        try data.write(to: cacheURL(for: titleId), options: .atomic)
+        try data.write(to: url, options: .atomic)
     }
 
     private static func safeFileName(_ value: String) -> String {

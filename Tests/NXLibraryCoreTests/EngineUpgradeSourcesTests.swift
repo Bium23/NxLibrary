@@ -381,6 +381,22 @@ def package_reader(repo, keys, environment):
         }
     }
 
+    /// nxnative 641636e2 commits nx_extract as a native executable and removes configure_dotnet: the probe still reads.
+    func testMetadataBridgeRunsWithoutDotnetConfiguration() throws {
+        let (reader, root) = try readerFixture(#"""
+import contextlib
+@contextlib.contextmanager
+def package_reader(repo, keys, environment):
+    class Reader:
+        @staticmethod
+        def contents(paths): return {p: [('Application', 0x0100000000010000, 0)] for p in paths}
+    yield Reader
+"""#)
+        let game = root.appendingPathComponent("game.nsp")
+        XCTAssertEqual(try reader.contents(of: [(game, false)])[game],
+                       .contents([PackageContent(kind: .base, titleId: 0x0100000000010000, version: 0)]))
+    }
+
     /// Engines before nxnative 5c4dc18f read one package at a time and only merged or unidentified ones.
     func testMetadataBridgeRunsWithTheOlderReaderContract() throws {
         let (reader, root) = try readerFixture(#"""

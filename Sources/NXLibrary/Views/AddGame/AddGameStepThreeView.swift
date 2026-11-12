@@ -58,7 +58,7 @@ struct AddGameStepThreeView: View {
         VStack(alignment: .leading, spacing: canvas.u(24)) {
             HStack(alignment: .top, spacing: canvas.u(36)) {
                 gameTile(caption: viewModel.portingETAText
-                    ?? (viewModel.currentStageName.isEmpty ? "Preparing" : viewModel.currentStageName))
+                    ?? (viewModel.currentStageName.isEmpty ? L10n.text("Preparing") : viewModel.currentStageName))
                 stageList
             }
             PortingLogBox(logs: viewModel.logs, expanded: $viewModel.showLiveLogsInBuild)
@@ -109,7 +109,7 @@ struct AddGameStepThreeView: View {
     private var stageList: some View {
         VStack(alignment: .leading, spacing: canvas.u(4)) {
             if viewModel.buildStages.isEmpty {
-                Text("Starting the porting…")
+                Text(L10n.text("Starting the porting…"))
                     .seleneFont(17)
                     .foregroundColor(SeleneTheme.ink60)
             }
@@ -181,7 +181,7 @@ struct AddGameStepThreeView: View {
                     .seleneFont(34)
                     .foregroundColor(SeleneTheme.success)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(heldGameName == nil ? "Ready to play" : PendingInstall.title)
+                    Text(heldGameName == nil ? L10n.text("Ready to play") : PendingInstall.title)
                         .seleneFont(34, .semibold)
                         .foregroundColor(SeleneTheme.ink)
                     Text(path)
@@ -194,7 +194,7 @@ struct AddGameStepThreeView: View {
             }
 
             Text(heldGameName.map(PendingInstall.message(gameName:))
-                 ?? "The app was installed atomically. Your library now points at the new build.")
+                 ?? L10n.text("The app was installed atomically. Your library now points at the new build."))
                 .seleneFont(14)
                 .foregroundColor(SeleneTheme.ink90)
 
@@ -226,8 +226,8 @@ struct AddGameStepThreeView: View {
                         .seleneFont(19)
                         .foregroundColor(SeleneTheme.ink90)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text(viewModel.canRetryReadyInstall ? "Your build has been kept. Retry installs it without porting again."
-                         : reason?.next ?? "The previous app was left untouched. The log has the failing command and output.")
+                    Text(viewModel.canRetryReadyInstall ? L10n.text("Your build has been kept. Retry installs it without porting again.")
+                         : reason?.next ?? L10n.text("The previous app was left untouched. The log has the failing command and output."))
                         .seleneFont(17)
                         .foregroundColor(SeleneTheme.ink60)
                         .fixedSize(horizontal: false, vertical: true)
@@ -249,10 +249,10 @@ struct AddGameStepThreeView: View {
                         .seleneFont(34)
                         .foregroundColor(SeleneTheme.untested)
                     VStack(alignment: .leading, spacing: 5) {
-                        Text("Porting cancelled")
+                        Text(L10n.text("Porting cancelled"))
                             .seleneFont(34, .semibold)
                             .foregroundColor(SeleneTheme.ink)
-                        Text("The previous app was left untouched. You can retry or go back to the review step.")
+                        Text(L10n.text("The previous app was left untouched. You can retry or go back to the review step."))
                             .seleneFont(15)
                             .foregroundColor(SeleneTheme.ink90)
                             .fixedSize(horizontal: false, vertical: true)
@@ -278,10 +278,10 @@ struct AddGameStepThreeView: View {
                     .seleneFont(34)
                     .foregroundColor(SeleneTheme.ink60)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("No build is active")
+                    Text(L10n.text("No build is active"))
                         .seleneFont(19, .semibold)
                         .foregroundColor(SeleneTheme.ink)
-                    Text("Go back to the review step and choose Add & Build to start a build.")
+                    Text(L10n.text("Go back to the review step and choose Add & Build to start a build."))
                         .seleneFont(15)
                         .foregroundColor(SeleneTheme.ink90)
                 }
@@ -296,25 +296,25 @@ struct AddGameStepThreeView: View {
         if viewModel.isBuilding {
             return [
                 StepAction(id: "log",
-                           title: viewModel.showLiveLogsInBuild ? "Hide Log" : "Show Log",
+                           title: viewModel.showLiveLogsInBuild ? L10n.text("Hide Log") : L10n.text("Show Log"),
                            systemImage: "terminal",
                            kind: .secondary,
                            isEnabled: true) {
                     viewModel.showLiveLogsInBuild.toggle()
                 },
                 StepAction(id: "cancel",
-                           title: viewModel.isCancellingBuild ? "Cancelling…" : "Cancel porting",
+                           title: viewModel.isCancellingBuild ? L10n.text("Cancelling…") : L10n.text("Cancel porting"),
                            systemImage: "stop.circle.fill",
                            kind: .destructive,
                            isEnabled: !viewModel.isCancellingBuild) {
                     viewModel.cancelBuild()
                 },
-                StepAction(id: "openLog", title: "Open log",
+                StepAction(id: "openLog", title: L10n.text("Open log"),
                            systemImage: "doc.text.magnifyingglass",
                            kind: .secondary, isEnabled: true) {
                     viewModel.openBuildLog()
                 },
-                StepAction(id: "console", title: "Open console",
+                StepAction(id: "console", title: L10n.text("Open console"),
                            systemImage: nil, kind: .quiet, isEnabled: true) {
                     NotificationCenter.default.post(name: .nxLibraryOpenConsole, object: nil)
                 }
@@ -323,28 +323,28 @@ struct AddGameStepThreeView: View {
 
         if let path = viewModel.buildSuccessPath {
             return [
-                StepAction(id: "play", title: "Play",
+                StepAction(id: "play", title: L10n.text("Play"),
                            systemImage: "play.fill", kind: .primary,
                            isEnabled: FileManager.default.fileExists(atPath: path)) {
                     play(path: path)
                 },
-                StepAction(id: "library", title: "Show in library",
+                StepAction(id: "library", title: L10n.text("Show in library"),
                            systemImage: "square.grid.2x2",
                            kind: .secondary, isEnabled: true) {
                     router.showLibrary()
                 },
-                StepAction(id: "another", title: "Port another game",
+                StepAction(id: "another", title: L10n.text("Port another game"),
                            systemImage: "plus", kind: .secondary, isEnabled: true) {
                     withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
                         viewModel.startNewAddGame()
                     }
                 },
-                StepAction(id: "openLog", title: "Open log",
+                StepAction(id: "openLog", title: L10n.text("Open log"),
                            systemImage: "doc.text.magnifyingglass",
                            kind: .secondary, isEnabled: true) {
                     viewModel.openBuildLog()
                 },
-                StepAction(id: "reveal", title: "Reveal in Finder",
+                StepAction(id: "reveal", title: L10n.text("Reveal in Finder"),
                            systemImage: "folder", kind: .secondary, isEnabled: true) {
                     viewModel.openOutputInFinder()
                 }
@@ -359,14 +359,14 @@ struct AddGameStepThreeView: View {
             }
             let leadsWithAction = !specs.isEmpty
             specs += [
-                StepAction(id: "openLog", title: "Open log",
+                StepAction(id: "openLog", title: L10n.text("Open log"),
                            systemImage: "doc.text.magnifyingglass",
                            kind: .secondary, isEnabled: true) {
                     viewModel.openBuildLog()
                 },
             ]
             if viewModel.buildError != nil {
-                specs.append(StepAction(id: "diagnostics", title: didCopyDiagnostics ? "Copied" : "Copy diagnostics",
+                specs.append(StepAction(id: "diagnostics", title: didCopyDiagnostics ? L10n.text("Copied") : L10n.text("Copy diagnostics"),
                                         systemImage: nil, kind: .secondary, isEnabled: true) {
                     viewModel.copyDiagnostics()
                     didCopyDiagnostics = true
@@ -374,19 +374,19 @@ struct AddGameStepThreeView: View {
                 })
             }
             specs += [
-                StepAction(id: "retry", title: viewModel.canRetryReadyInstall ? "Retry installation" : "Try again",
+                StepAction(id: "retry", title: viewModel.canRetryReadyInstall ? L10n.text("Retry installation") : L10n.text("Try again"),
                            systemImage: "arrow.clockwise", kind: leadsWithAction ? .secondary : .primary,
                            isEnabled: !viewModel.isBuilding) {
                     viewModel.retryLastBuild()
                 },
-                StepAction(id: "options", title: "Back to review",
+                StepAction(id: "options", title: L10n.text("Back to review"),
                            systemImage: "slider.horizontal.3",
                            kind: .secondary, isEnabled: true) {
                     withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
                         viewModel.goToWizardStep(2)
                     }
                 },
-                StepAction(id: "console", title: "Open console",
+                StepAction(id: "console", title: L10n.text("Open console"),
                            systemImage: nil, kind: .quiet, isEnabled: true) {
                     NotificationCenter.default.post(name: .nxLibraryOpenConsole, object: nil)
                 }
@@ -395,7 +395,7 @@ struct AddGameStepThreeView: View {
         }
 
         return [
-            StepAction(id: "review", title: "Back to review",
+            StepAction(id: "review", title: L10n.text("Back to review"),
                        systemImage: "arrow.left", kind: .secondary,
                        isEnabled: true) {
                 withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
@@ -410,19 +410,19 @@ struct AddGameStepThreeView: View {
         let perform = { viewModel.performFailureAction(action, router: router) }
         switch action {
         case .portAnyway:
-            return StepAction(id: "portAnyway", title: "Port anyway", systemImage: nil, kind: .primary,
+            return StepAction(id: "portAnyway", title: L10n.text("Port anyway"), systemImage: nil, kind: .primary,
                               isEnabled: !viewModel.isBuilding, perform: perform)
         case .openEngineSettings:
-            return StepAction(id: "engine", title: "Open Engine settings", systemImage: nil, kind: .primary,
+            return StepAction(id: "engine", title: L10n.text("Open Engine settings"), systemImage: nil, kind: .primary,
                               isEnabled: true, perform: perform)
         case .openSetup:
-            return StepAction(id: "setup", title: "Open Setup", systemImage: nil, kind: .primary,
+            return StepAction(id: "setup", title: L10n.text("Open Setup"), systemImage: nil, kind: .primary,
                               isEnabled: true, perform: perform)
         case .importKeys:
-            return StepAction(id: "keys", title: "Import prod.keys", systemImage: nil, kind: .primary,
+            return StepAction(id: "keys", title: L10n.text("Import prod.keys"), systemImage: nil, kind: .primary,
                               isEnabled: true, perform: perform)
         case .openStorage:
-            return StepAction(id: "storage", title: "Open Storage", systemImage: nil, kind: .primary,
+            return StepAction(id: "storage", title: L10n.text("Open Storage"), systemImage: nil, kind: .primary,
                               isEnabled: true, perform: perform)
         case .none:
             return nil
@@ -470,7 +470,7 @@ struct PortingLogBox: View {
                     Image(systemName: "chevron.right")
                         .seleneFont(12, .bold)
                         .rotationEffect(.degrees(expanded ? 90 : 0))
-                    Text("Log")
+                    Text(L10n.text("Log"))
                         .seleneFont(15, .semibold)
                     Spacer()
                     if let last = logs.last, !expanded {

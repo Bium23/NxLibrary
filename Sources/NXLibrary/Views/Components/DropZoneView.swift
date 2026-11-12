@@ -1,3 +1,4 @@
+import NXLibraryCore
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -28,10 +29,10 @@ public struct DropZoneView: View {
             }
 
             VStack(spacing: 4) {
-                Text(isTargeted ? "Drop to scan this folder" : "Drop your game files here")
+                Text(isTargeted ? L10n.text("Drop to scan this folder") : L10n.text("Drop your game files here"))
                     .seleneFont(19, .semibold)
                     .foregroundColor(SeleneTheme.ink)
-                Text("The base game is required. Updates and DLC are optional.")
+                Text(L10n.text("The base game is required. Updates and DLC are optional."))
                     .seleneFont(14)
                     .foregroundColor(SeleneTheme.ink60)
                     .multilineTextAlignment(.center)
@@ -43,7 +44,7 @@ public struct DropZoneView: View {
                 HStack(spacing: 7) {
                     Image(systemName: "folder.fill")
                         .seleneFont(13, .semibold)
-                    Text("Choose folder")
+                    Text(L10n.text("Choose folder"))
                         .seleneFont(15, .semibold)
                 }
                 .foregroundColor(SeleneTheme.scrim)
@@ -53,9 +54,9 @@ public struct DropZoneView: View {
                 .clipShape(Capsule())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Choose a game folder")
+            .accessibilityLabel(L10n.text("Choose a game folder"))
 
-            Text("NSP · XCI · NSZ · folders")
+            Text(L10n.text("NSP · XCI · NSZ · folders"))
                 .seleneFont(12, .semibold, design: .monospaced)
                 .tracking(0.4)
                 .foregroundColor(SeleneTheme.ink60.opacity(0.8))
@@ -71,11 +72,11 @@ public struct DropZoneView: View {
                         .lineLimit(1)
                         .truncationMode(.middle)
                     Spacer(minLength: 8)
-                    Button("Change…") { viewModel.selectGameFolder() }
+                    Button(L10n.text("Change…")) { viewModel.selectGameFolder() }
                         .buttonStyle(.plain)
                         .seleneFont(13, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
-                    Button("Clear") { viewModel.selectedGameFolder = nil }
+                    Button(L10n.text("Clear")) { viewModel.selectedGameFolder = nil }
                         .buttonStyle(.plain)
                         .seleneFont(13, .semibold)
                         .foregroundColor(SeleneTheme.ink60)

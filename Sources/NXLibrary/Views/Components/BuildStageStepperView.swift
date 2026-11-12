@@ -1,3 +1,4 @@
+import NXLibraryCore
 import SwiftUI
 
 public struct BuildStageStepperView: View {
@@ -10,7 +11,7 @@ public struct BuildStageStepperView: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Build stages")
+                Text(L10n.text("Build stages"))
                     .seleneFont(15, .semibold)
                     .foregroundColor(SeleneTheme.ink90)
                 Spacer()
@@ -61,7 +62,7 @@ public struct BuildStageStepperView: View {
             }
             .frame(width: 16)
 
-            Text("Stage \(stage.id): \(stage.name)")
+            Text(L10n.format("Stage %@: %@", [String(describing: (stage.id)), String(describing: (stage.name))]))
                 .seleneFont(15, stage.isRunning ? .semibold : .regular)
                 .foregroundColor(stage.isRunning ? SeleneTheme.ink
                                  : (stage.isCompleted ? SeleneTheme.ink90 : SeleneTheme.ink60))

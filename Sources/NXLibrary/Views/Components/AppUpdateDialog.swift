@@ -9,55 +9,55 @@ struct AppUpdateDialog: View {
 
     private var primaryTitle: String {
         switch updater.state {
-        case .available where updater.canInstallRelease: return "Update"
-        case .failed: return "Retry"
+        case .available where updater.canInstallRelease: return L10n.text("Update")
+        case .failed: return L10n.text("Retry")
         default: return "Close"
         }
     }
     private var title: String {
         switch updater.state {
-        case .checking: return "Checking for updates"
-        case .upToDate: return "You’re up to date"
-        case .available(let release): return "NX Library \(release.version)"
-        case .downloading: return "Downloading update"
-        case .verifying: return "Verifying update"
-        case .installing: return "Installing update"
-        case .failed: return "Update unavailable"
-        default: return "App updates"
+        case .checking: return L10n.text("Checking for updates")
+        case .upToDate: return L10n.text("You’re up to date")
+        case .available(let release): return L10n.format("NX Library %@", [String(describing: (release.version))])
+        case .downloading: return L10n.text("Downloading update")
+        case .verifying: return L10n.text("Verifying update")
+        case .installing: return L10n.text("Installing update")
+        case .failed: return L10n.text("Update unavailable")
+        default: return L10n.text("App updates")
         }
     }
     private var message: String {
         switch updater.state {
-        case .checking: return "Looking for a new release…"
-        case .upToDate: return "You have NX Library \(updater.currentVersion). No newer release is available."
+        case .checking: return L10n.text("Looking for a new release…")
+        case .upToDate: return L10n.format("You have NX Library %@. No newer release is available.", [String(describing: (updater.currentVersion))])
         case .available:
-            var lines = ["You have \(updater.currentVersion)."]
+            var lines = [L10n.format("You have %@.", [String(describing: (updater.currentVersion))])]
             if updater.installation == .developer {
-                lines.append("This development copy can check releases. Install a packaged release to use automatic updates.")
+                lines.append(L10n.text("This development copy can check releases. Install a packaged release to use automatic updates."))
             } else if updater.installation == .readOnly {
-                lines.append("Move NX Library to Applications before updating.")
+                lines.append(L10n.text("Move NX Library to Applications before updating."))
             } else if let reason = blockedReason {
-                lines.append("The update can install \(reason.prefix(1).lowercased() + reason.dropFirst()).")
-            } else { lines.append("NX Library restarts to finish.") }
+                lines.append(L10n.text(reason))
+            } else { lines.append(L10n.text("NX Library restarts to finish.")) }
             return (lines + requirementNotes).joined(separator: "\n\n")
-        case .downloading(let progress): return "\(Int((progress * 100).rounded()))% · Download continues if you close this dialog."
-        case .verifying: return "Checking the download before installing."
-        case .installing: return "NX Library will reopen automatically."
+        case .downloading(let progress): return L10n.format("%@%% · Download continues if you close this dialog.", [String(describing: (Int((progress * 100).rounded())))])
+        case .verifying: return L10n.text("Checking the download before installing.")
+        case .installing: return L10n.text("NX Library will reopen automatically.")
         case .failed(let message): return message
-        case .developer: return "This development copy can check releases but cannot replace itself."
-        case .readOnly: return "Move NX Library to Applications before updating."
-        default: return "Updates are currently unavailable."
+        case .developer: return L10n.text("This development copy can check releases but cannot replace itself.")
+        case .readOnly: return L10n.text("Move NX Library to Applications before updating.")
+        default: return L10n.text("Updates are currently unavailable.")
         }
     }
 
     var body: some View {
         SeleneConfirmDialog(title: title, message: message,
-            confirmTitle: primaryTitle, cancelTitle: updater.dialogHasSecondaryButton ? "Close" : nil,
-            confirmEnabled: primaryTitle != "Update" || blockedReason == nil,
+            confirmTitle: primaryTitle, cancelTitle: updater.dialogHasSecondaryButton ? L10n.text("Close") : nil,
+            confirmEnabled: primaryTitle != L10n.text("Update") || blockedReason == nil,
             focus: $updater.offerFocus, onCancel: updater.later, onConfirm: updater.confirmDialog) {
                 if case .checking = updater.state { ProgressView().padding(.top, 16) }
                 if let release = updater.dialogRelease, !release.notes.isEmpty {
-                    Text("Release notes · \(release.version)")
+                    Text(L10n.format("Release notes · %@", [String(describing: (release.version))]))
                         .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.ink60)
                         .padding(.top, 18)

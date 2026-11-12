@@ -29,7 +29,7 @@ public struct BuildResult: Equatable {
 
 public final class BuildService {
     private let fm: FileManager
-    private let ioQueue = DispatchQueue(label: "local.nxlibrary.build.io")
+    private let ioQueue = DispatchQueue(label: L10n.text("local.nxlibrary.build.io"))
     private let stateLock = NSLock()
     private var process: Process?
     private var logHandle: FileHandle?
@@ -39,8 +39,16 @@ public final class BuildService {
     private var eventHandler: ((BuildEvent) -> Void)?
     private var completion: ((BuildResult) -> Void)?
     private var sleepAssertion: IOPMAssertionID?
+    /// How long a stop waits before it kills what is left. Since nxnative 0b124486 every tool the build script
+    /// runs leads a session of its own, which a signal to the build's process group does not reach: on SIGTERM
+    /// the script stops that session itself, killing what is left of it after 5 s (dm/tools/proc_group.py GRACE),
+    /// then exits with 143. Killing the script before then would leave its tools running with no parent.
+    private let stopGrace: TimeInterval
 
-    public init(fileManager: FileManager = .default) { self.fm = fileManager }
+    public init(fileManager: FileManager = .default, stopGrace: TimeInterval = 8) {
+        self.fm = fileManager
+        self.stopGrace = stopGrace
+    }
 
     deinit {
         // A backstop for callers that drop the service without cancelling.
@@ -48,7 +56,7 @@ public final class BuildService {
         let running = process
         stateLock.unlock()
         if let running, running.isRunning {
-            killpg(running.processIdentifier, SIGKILL)
+            Self.kill(tree: running.processIdentifier)
         }
     }
 
@@ -159,20 +167,42 @@ public final class BuildService {
         stateLock.unlock()
         guard let process, process.isRunning else { return }
         killpg(process.processIdentifier, SIGTERM)
-        DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
-            if process.isRunning { killpg(process.processIdentifier, SIGKILL) }
+        DispatchQueue.global().asyncAfter(deadline: .now() + stopGrace) {
+            if process.isRunning { Self.kill(tree: process.processIdentifier) }
         }
     }
 
-    /// Synchronous backstop for app termination. The normal cancel path gives
-    /// the toolchain a grace period; shutting down cannot wait for it.
+    /// Synchronous stop for app termination: the same SIGTERM as a cancel, so the engine stops its tools, waiting at
+    /// most `stopGrace` (a build that stops normally ends in well under a second), then everything still running.
     public func terminateNow() {
         stateLock.lock()
         cancelled = true
         let process = self.process
         stateLock.unlock()
         guard let process, process.isRunning else { return }
-        killpg(process.processIdentifier, SIGKILL)
+        killpg(process.processIdentifier, SIGTERM)
+        let deadline = Date().addingTimeInterval(stopGrace)
+        while process.isRunning, Date() < deadline { usleep(50_000) }
+        if process.isRunning { Self.kill(tree: process.processIdentifier) }
+    }
+
+    /// SIGKILL to the build's process group and to every process descended from its leader, listed before any
+    /// is killed: a tool in a session of its own is still the script's child while the script runs.
+    static func kill(tree leader: pid_t) {
+        var found: [pid_t] = []
+        var pending = [leader]
+        while let parent = pending.popLast() {
+            let count = proc_listchildpids(parent, nil, 0)
+            guard count > 0 else { continue }
+            var children = [pid_t](repeating: 0, count: Int(count) + 32)
+            let listed = proc_listchildpids(parent, &children, Int32(children.count * MemoryLayout<pid_t>.size))
+            for child in children.prefix(max(0, Int(listed))) where child > 0 && !found.contains(child) {
+                found.append(child)
+                pending.append(child)
+            }
+        }
+        killpg(leader, SIGKILL)
+        for pid in found { Darwin.kill(pid, SIGKILL) }
     }
 
     private func consume(_ data: Data, isError: Bool) {

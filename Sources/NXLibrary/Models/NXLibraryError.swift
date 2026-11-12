@@ -19,27 +19,27 @@ public enum NXLibraryError: Error, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .baseRequired:
-            return "Select a base game. Updates and DLC alone cannot be built."
+            return L10n.text("Select a base game. Updates and DLC alone cannot be built.")
         case .missingSources:
-            return "The source files are missing. Attach or locate the original base, update and DLC files first."
+            return L10n.text("The source files are missing. Attach or locate the original base, update and DLC files first.")
         case .missingTitleId:
-            return "The game has no title ID. Choose a valid NSP, XCI, NSZ or XCZ source."
+            return L10n.text("The game has no title ID. Choose a valid NSP, XCI, NSZ or XCZ source.")
         case .missingKeys:
-            return "prod.keys is missing. Import it in Settings."
+            return L10n.text("prod.keys is missing. Import it in Settings.")
         case .engineMissing:
-            return "The nxnative checkout was not found. Choose it in Settings → Engine."
+            return L10n.text("The nxnative checkout was not found. Choose it in Settings → Engine.")
         case .environmentBlocked(let detail):
-            return "The build environment is incomplete: \(detail)"
+            return L10n.format("The build environment is incomplete: %@", [String(describing: (detail))])
         case .incompatibleToolchain(let detail):
-            return "The toolchain is not certified: \(detail)"
+            return L10n.format("The toolchain is not certified: %@", [String(describing: (detail))])
         case .buildAlreadyRunning:
-            return "A build is already running."
+            return L10n.text("A build is already running.")
         case .appMissing(let path):
-            return "The app bundle is missing: \(path)"
+            return L10n.format("The app bundle is missing: %@", [String(describing: (path))])
         case .launchFailed(let name):
-            return "macOS could not launch \(name)."
+            return L10n.format("macOS could not launch %@.", [String(describing: (name))])
         case .noSelectedGame:
-            return "Select a game first."
+            return L10n.text("Select a game first.")
         case .keyCheck(let reason, let game):
             return "\(reason.what(game: game)) \(reason.next)"
         }

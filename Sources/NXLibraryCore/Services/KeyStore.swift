@@ -17,9 +17,9 @@ public enum KeyStoreError: Error, LocalizedError {
     case invalidLine(Int)
     public var errorDescription: String? {
         switch self {
-        case .unreadable: return "The key file could not be read."
-        case .missingHeaderKey: return "The key file has no header_key."
-        case .invalidLine(let line): return "Invalid key line number \(line)."
+        case .unreadable: return L10n.text("The key file could not be read.")
+        case .missingHeaderKey: return L10n.text("The key file has no header_key.")
+        case .invalidLine(let line): return L10n.format("Invalid key line number %@.", [String(describing: (line))])
         }
     }
 }

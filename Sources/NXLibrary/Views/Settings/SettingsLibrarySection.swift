@@ -16,17 +16,17 @@ struct SettingsLibrarySection: View {
                       subtitle: GameFoldersCopy.appsContents,
                       info: "Choose where to keep your game apps. Put any existing nxnative games (.app) here. Changing folders does not move apps; rebuilds update them where they are.") {
                 HStack(spacing: 10) {
-                    Text(viewModel.libraryFolder?.path ?? "Not selected")
+                    Text(viewModel.libraryFolder?.path ?? L10n.text("Not selected"))
                         .seleneFont(15, .medium)
                         .foregroundColor(SeleneTheme.ink.opacity(0.62))
                         .lineLimit(1)
                         .truncationMode(.middle)
                         .frame(maxWidth: 320, alignment: .trailing)
-                    Button("Change") { viewModel.selectLibraryFolder() }
+                    Button(L10n.text("Change")) { viewModel.selectLibraryFolder() }
                         .buttonStyle(.plain)
                         .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
-                    Button("Reset") {
+                    Button(L10n.text("Reset")) {
                         viewModel.libraryFolder = URL(fileURLWithPath: viewModel.defaultInstallPath)
                             .appendingPathComponent("Applications")
                         viewModel.loadLibrary()
@@ -41,18 +41,18 @@ struct SettingsLibrarySection: View {
                       subtitle: GameFoldersCopy.sourcesAbout(extractedFolders: viewModel.engineSourceCapabilities.extractedFolders),
                       info: "Existing game apps play without their sources. Reset group keeps this folder. Clear removes the selection, keeping your files.") {
                 HStack(spacing: 10) {
-                    Text(viewModel.gameFilesFolder?.path ?? "Not selected · Optional")
+                    Text(viewModel.gameFilesFolder?.path ?? L10n.text("Not selected · Optional"))
                         .seleneFont(15, .medium)
                         .foregroundColor(SeleneTheme.ink.opacity(0.62))
                         .lineLimit(1)
                         .truncationMode(.middle)
                         .frame(maxWidth: 320, alignment: .trailing)
-                    Button("Choose") { viewModel.selectGameFolder() }
+                    Button(L10n.text("Choose")) { viewModel.selectGameFolder() }
                         .buttonStyle(.plain)
                         .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
                     if viewModel.gameFilesFolder != nil {
-                        Button("Clear") { viewModel.selectedGameFolder = nil }
+                        Button(L10n.text("Clear")) { viewModel.selectedGameFolder = nil }
                             .buttonStyle(.plain)
                             .seleneFont(14, .semibold)
                             .foregroundColor(SeleneTheme.danger)

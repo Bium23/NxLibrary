@@ -7,15 +7,15 @@ public enum ModInstallError: Error, Equatable {
 
     public var message: String {
         switch self {
-        case .notAllowed: return "Quit the game to install mods."
-        case .download: return "The download didn't finish."
-        case .damaged: return "The download was damaged. Try again."
-        case .unreadable: return "This archive can't be opened."
-        case .unsafe: return "This archive has files outside its folder, so it wasn't installed."
-        case .noRomFS: return "This file has no romfs folder, so it can't work."
-        case .noSpace: return "There isn't enough space to install this mod."
+        case .notAllowed: return L10n.text("Quit the game to install mods.")
+        case .download: return L10n.text("The download didn't finish.")
+        case .damaged: return L10n.text("The download was damaged. Try again.")
+        case .unreadable: return L10n.text("This archive can't be opened.")
+        case .unsafe: return L10n.text("This archive has files outside its folder, so it wasn't installed.")
+        case .noRomFS: return L10n.text("This file has no romfs folder, so it can't work.")
+        case .noSpace: return L10n.text("There isn't enough space to install this mod.")
         // The reason stays out of the sentence: the player gets plain words, not a system error.
-        case .writeFailed: return "The mod couldn't be copied into the game's folder. Try again."
+        case .writeFailed: return L10n.text("The mod couldn't be copied into the game's folder. Try again.")
         }
     }
 }
@@ -34,7 +34,7 @@ public enum ModInstallResult: Equatable {
 
     /// The sentence to show, if any.
     public var message: String? {
-        if case .installedOff = self { return "Installed, but too many mods are on. Turn one off first." }
+        if case .installedOff = self { return L10n.text("Installed, but too many mods are on. Turn one off first.") }
         return nil
     }
 }

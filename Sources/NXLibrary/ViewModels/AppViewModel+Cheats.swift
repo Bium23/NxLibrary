@@ -96,7 +96,7 @@ extension AppViewModel {
         }
         let size = (try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
         guard size <= CheatFile.maxBytes else { return .refused("The file is larger than 4 MB, so it is not a cheat file.") }
-        guard let data = try? Data(contentsOf: url) else { return .refused("NX Library could not read the file.") }
+        guard let data = try? Data(contentsOf: url) else { return .refused(L10n.text("NX Library could not read the file.")) }
         return CheatInstall.decide(fileName: url.lastPathComponent, data: data, titleIDInPath: titleIDInPath,
                                    buildID: buildID, titleID: titleID)
     }

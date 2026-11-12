@@ -5,7 +5,7 @@ final class PortingFailureReasonTests: XCTestCase {
     /// One real line per table row, as the pinned engine prints it ("[RED] " + its BuildError text).
     static let engineLines: [(id: String, kind: PortingFailureReason.Kind, line: String)] = [
         ("rosetta.intel", .rosetta, "[RED] this Python (/usr/local/bin/python3) is an Intel one running under Rosetta, and the tools it starts would run as Intel code too: run the script with an arm64 Python"),
-        ("translator.run", .translator, "[RED] the shader translator does not run (exit 1): it needs the .NET 10 runtime for this Mac's architecture"),
+        ("translator.run", .translator, "[RED] the shader translator does not run (exit code 1): /x/dmsh_xlate is the committed native executable; check out the repository again if it is missing or damaged"),
         ("translator.start", .translator, "[RED] the shader translator does not start ([Errno 2] No such file): /x/translator"),
         ("zbic.missing", .zbic, "[RED] main: ZBIC (zstd) segments need the zbic package (python3 -m pip install zbic)"),
         ("clt.selected", .cltSelected, "[RED] the selected developer folder is the Command Line Tools (/Library/Developer/CommandLineTools), which have no iOS SDK"),

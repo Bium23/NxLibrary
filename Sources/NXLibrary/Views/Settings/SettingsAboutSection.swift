@@ -12,29 +12,29 @@ struct SettingsAboutSection: View {
 
     private let credits: [(name: String, role: String, url: String)] = [
         ("seedds", "nxnative engine, NVN/Metal host and ARM64 rewriter", "https://github.com/seedds/nxnative"),
-        ("d2r-mobile", "Foundational native execution architecture", "https://github.com/jhaizhou-ops/d2r-mobile"),
-        ("Ryujinx Team", "Maxwell shader translator and SPIR-V generator", "https://github.com/Ryujinx/Ryujinx"),
-        ("Atmosphère NX", "Mesosphère kernel synchronization semantics", "https://github.com/Atmosphere-NX/Atmosphere"),
-        ("LibHac", "NSP reading and PFS/HFS layered filesystem", "https://github.com/Thealexbarney/LibHac"),
-        ("Khronos Group", "SPIRV-Cross Metal Shading Language compiler", "https://github.com/KhronosGroup/SPIRV-Cross"),
-        ("GameTDB", "Switch box covers", "https://www.gametdb.com"),
-        ("Title DB", "Game names, icons and banners", "https://github.com/blawar/titledb"),
-        ("LaunchBox Games Database", "Box covers, logos, backgrounds and square art in Change artwork", "https://gamesdb.launchbox-app.com"),
-        ("SteamGridDB", "Community covers, backgrounds, logos and icons, with your API key", "https://www.steamgriddb.com"),
-        ("NX2Apple", "Key check, failure explanations and diagnostics, adapted (MIT)", "https://github.com/LNPANDY/NX2Apple")
+        ("d2r-mobile", L10n.text("Foundational native execution architecture"), "https://github.com/jhaizhou-ops/d2r-mobile"),
+        ("Ryujinx Team", L10n.text("Maxwell shader translator and SPIR-V generator"), "https://github.com/Ryujinx/Ryujinx"),
+        ("Atmosphère NX", L10n.text("Mesosphère kernel synchronization semantics"), "https://github.com/Atmosphere-NX/Atmosphere"),
+        ("LibHac", L10n.text("NSP reading and PFS/HFS layered filesystem"), "https://github.com/Thealexbarney/LibHac"),
+        ("Khronos Group", L10n.text("SPIRV-Cross Metal Shading Language compiler"), "https://github.com/KhronosGroup/SPIRV-Cross"),
+        ("GameTDB", L10n.text("Switch box covers"), "https://www.gametdb.com"),
+        ("Title DB", L10n.text("Game names, icons and banners"), "https://github.com/blawar/titledb"),
+        ("LaunchBox Games Database", L10n.text("Box covers, logos, backgrounds and square art in Change artwork"), "https://gamesdb.launchbox-app.com"),
+        ("SteamGridDB", L10n.text("Community covers, backgrounds, logos and icons, with your API key"), "https://www.steamgriddb.com"),
+        ("NX2Apple", L10n.text("Key check, failure explanations and diagnostics, adapted (MIT)"), "https://github.com/LNPANDY/NX2Apple")
     ]
 
     var body: some View {
         VStack(spacing: 12) {
-            SelenePanel("NX Library") {
-                Text("A personal macOS front-end for building and launching your own Switch games with nxnative.")
+            SelenePanel(L10n.text("NX Library")) {
+                Text(L10n.text("A personal macOS front-end for building and launching your own Switch games with nxnative."))
                     .seleneFont(16)
                     .foregroundColor(SeleneTheme.ink90)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Version \(version) · Build \(buildDate) · Engine \(seleneShort(viewModel.pinnedEngineCommit))")
+                Text(L10n.format("Version %@ · Build %@ · Engine %@", [String(describing: (version)), String(describing: (buildDate)), String(describing: (seleneShort(viewModel.pinnedEngineCommit)))]))
                     .seleneFont(13, .regular, design: .monospaced)
                     .foregroundColor(SeleneTheme.ink60)
-                Text("Play time is tracked only for launches from NX Library. Not affiliated with Nintendo.")
+                Text(L10n.text("Play time is tracked only for launches from NX Library. Not affiliated with Nintendo."))
                     .seleneFont(13)
                     .foregroundColor(SeleneTheme.ink60)
                 updateRow
@@ -42,7 +42,7 @@ struct SettingsAboutSection: View {
                     copyDiagnostics()
                 } label: {
                     HStack(spacing: 4) {
-                        Text(didCopyDiagnostics ? "Copied" : "Copy diagnostics")
+                        Text(didCopyDiagnostics ? L10n.text("Copied") : L10n.text("Copy diagnostics"))
                         Image(systemName: didCopyDiagnostics ? "checkmark" : "doc.on.doc")
                     }
                     .seleneFont(14, .semibold)
@@ -52,10 +52,10 @@ struct SettingsAboutSection: View {
                 .padding(6)
                 .seleneRowFocus(focusedRowTitle == "Copy diagnostics")
                 .id("selene-row-Copy diagnostics")
-                .accessibilityHint("A report for an issue: versions, setup and the last porting. No keys.")
+                .accessibilityHint(L10n.text("A report for an issue: versions, setup and the last porting. No keys."))
             }
 
-            SelenePanel("Credits") {
+            SelenePanel(L10n.text("Credits")) {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                     ForEach(credits, id: \.name) { credit in
                         Button {
@@ -88,8 +88,8 @@ struct SettingsAboutSection: View {
                 }
             }
 
-            SelenePanel("Visual direction") {
-                Text("Inspired by Selene (MIT) by Matthew Silva.")
+            SelenePanel(L10n.text("Visual direction")) {
+                Text(L10n.text("Inspired by Selene (MIT) by Matthew Silva."))
                     .seleneFont(16, .semibold)
                     .foregroundColor(SeleneTheme.ink)
                 Button {
@@ -108,24 +108,24 @@ struct SettingsAboutSection: View {
                 .padding(6)
                 .seleneRowFocus(focusedRowTitle == "Selene")
                 .id("selene-row-Selene")
-                Text("Selene is a Playnite theme for Windows. No Selene name, logo, wallpaper, avatar or sound is used as NX Library branding; this is a visual adaptation in SwiftUI.")
+                Text(L10n.text("Selene is a Playnite theme for Windows. No Selene name, logo, wallpaper, avatar or sound is used as NX Library branding; this is a visual adaptation in SwiftUI."))
                     .seleneFont(13)
                     .foregroundColor(SeleneTheme.ink60)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            SelenePanel("Nintendo Store data") {
-                Text("Descriptions, genres and artwork are fetched from the public Nintendo Store catalog for personal use, cached locally for seven days, and never committed or redistributed.")
+            SelenePanel(L10n.text("Nintendo Store data")) {
+                Text(L10n.text("Descriptions, genres and artwork are fetched from the public Nintendo Store catalog for personal use, cached locally for seven days, and never committed or redistributed."))
                     .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink90)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("The app ships no keys, ROMs, game art or Nintendo UI assets.")
+                Text(L10n.text("The app ships no keys, ROMs, game art or Nintendo UI assets."))
                     .seleneFont(13)
                     .foregroundColor(SeleneTheme.ink60)
             }
 
-            SelenePanel("Licenses") {
-                Text("NX Library is personal software released under the MIT license. nxnative, Ryujinx, SPIR-V Cross, LibHac and the other dependencies retain their own licenses through the engine.")
+            SelenePanel(L10n.text("Licenses")) {
+                Text(L10n.text("NX Library is personal software released under the MIT license. nxnative, Ryujinx, SPIR-V Cross, LibHac and the other dependencies retain their own licenses through the engine."))
                     .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink90)
                     .fixedSize(horizontal: false, vertical: true)
@@ -134,7 +134,7 @@ struct SettingsAboutSection: View {
                     openProjectDocs()
                 } label: {
                     HStack(spacing: 4) {
-                        Text("Open project docs")
+                        Text(L10n.text("Open project docs"))
                         Image(systemName: "folder")
                     }
                     .seleneFont(14, .semibold)
@@ -145,7 +145,7 @@ struct SettingsAboutSection: View {
                 .seleneRowFocus(focusedRowTitle == "Open project docs")
                 .id("selene-row-Open project docs")
 
-                Text("This app is not affiliated with Nintendo.")
+                Text(L10n.text("This app is not affiliated with Nintendo."))
                     .seleneFont(13, .semibold)
                     .foregroundColor(SeleneTheme.ink60)
             }
@@ -153,6 +153,7 @@ struct SettingsAboutSection: View {
         .onAppear(perform: publishActions)
         .onChange(of: updater.state) { _ in publishActions() }
         .onChange(of: viewModel.isBuilding) { _ in publishActions() }
+        .onChange(of: viewModel.isCleaningStorage) { _ in publishActions() }
         .onChange(of: viewModel.hasActiveSaveOperations) { _ in publishActions() }
         .onChange(of: viewModel.isUpdatingApp) { _ in publishActions() }
         .onChange(of: viewModel.runningGameCount) { _ in publishActions() }
@@ -215,35 +216,35 @@ struct SettingsAboutSection: View {
     private var updateText: String {
         switch updater.state {
         case .hidden: return ""
-        case .developer: return "Development copy · manual checks only"
-        case .readOnly: return "Move NX Library to Applications to update"
-        case .idle: return "Updates not checked yet"
+        case .developer: return L10n.text("Development copy · manual checks only")
+        case .readOnly: return L10n.text("Move NX Library to Applications to update")
+        case .idle: return L10n.text("Updates not checked yet")
         case .checking: return "Checking for updates…"
-        case .upToDate: return "NX Library is up to date"
+        case .upToDate: return L10n.text("NX Library is up to date")
         case .available(let release):
             let xcode = AppUpdate.neededXcode(release.requirements, installedXcode: viewModel.environmentStatus?.xcodeVersion)
-                .map { " · new portings need Xcode \($0)" } ?? ""
-            return (updater.blockedReason().map { "\(release.version) is available · \($0)" } ?? "\(release.version) is available") + xcode
-        case .downloading(let fraction): return "Downloading \(Int((fraction * 100).rounded()))%"
-        case .verifying: return "Checking download…"
-        case .installing: return "Installing…"
+                .map { L10n.format(" · new portings need Xcode %@", [String(describing: ($0))]) } ?? ""
+            return (updater.blockedReason().map { L10n.format("%@ is available · %@", [String(describing: (release.version)), String(describing: ($0))]) } ?? L10n.format("%@ is available", [String(describing: (release.version))])) + xcode
+        case .downloading(let fraction): return L10n.format("Downloading %@%%", [String(describing: (Int((fraction * 100).rounded())))])
+        case .verifying: return L10n.text("Checking download…")
+        case .installing: return L10n.text("Installing…")
         case .failed(let message): return message
         }
     }
 
     private var updateActions: [UpdateAction] {
-        let checkNow = UpdateAction(title: "Check now") { updater.checkNow() }
+        let checkNow = UpdateAction(title: L10n.text("Check now")) { updater.checkNow() }
         switch updater.state {
         case .hidden, .checking, .downloading, .verifying, .installing:
             return []
         case .readOnly:
-            return [checkNow, UpdateAction(title: "Reveal in Finder") {
+            return [checkNow, UpdateAction(title: L10n.text("Reveal in Finder")) {
                 NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
             }]
         case .developer, .idle, .upToDate:
             return [checkNow]
         case .available:
-            return [UpdateAction(title: "View update") { updater.showDetails() }, checkNow]
+            return [UpdateAction(title: L10n.text("View update")) { updater.showDetails() }, checkNow]
         case .failed:
             return [checkNow]
         }
@@ -256,7 +257,7 @@ struct SettingsAboutSection: View {
     private var buildDate: String {
         let url = Bundle.main.executableURL ?? Bundle.main.bundleURL
         if let date = try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate {
-            return date.formatted(date: .abbreviated, time: .omitted)
+            return date.formatted(.dateTime.day().month(.abbreviated).year().locale(L10n.context.formatLocale))
         }
         return "local"
     }
@@ -267,7 +268,7 @@ struct SettingsAboutSection: View {
         if FileManager.default.fileExists(atPath: docs.path) {
             NSWorkspace.shared.open(docs)
         } else {
-            viewModel.showSettingsNotice(title: "Docs unavailable", message: "Project documentation is not installed on this Mac.")
+            viewModel.showSettingsNotice(title: L10n.text("Docs unavailable"), message: L10n.text("Project documentation is not installed on this Mac."))
         }
     }
 }

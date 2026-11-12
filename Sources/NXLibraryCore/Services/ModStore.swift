@@ -30,7 +30,7 @@ public struct ModConflict: Equatable, Sendable {
         self.lower = lower
     }
 
-    public var message: String { "\(upper) and \(lower) change the same files: the upper one wins." }
+    public var message: String { L10n.format("%@ and %@ change the same files: the upper one wins.", [String(describing: (upper)), String(describing: (lower))]) }
 }
 
 public enum ModStoreError: Error, Equatable {

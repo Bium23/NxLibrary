@@ -77,7 +77,7 @@ struct SessionCardView: View {
             }
             HStack(spacing: canvas.u(16)) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("Session ended")
+                    Text(L10n.text("Session ended"))
                         .seleneFont(15)
                         .foregroundColor(SeleneTheme.ink.opacity(0.62))
                     Text(summary.gameName)
@@ -88,11 +88,11 @@ struct SessionCardView: View {
                         .padding(.top, canvas.u(2))
                         .padding(.bottom, canvas.u(8))
                     HStack(alignment: .lastTextBaseline, spacing: canvas.u(12)) {
-                        figure(summary.thisSession, "this session")
+                        figure(summary.thisSession, L10n.text("this session"))
                         Text("·")
                             .seleneFont(18)
                             .foregroundColor(SeleneTheme.ink.opacity(0.45))
-                        figure(summary.total, "total")
+                        figure(summary.total, L10n.text("total"))
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -119,7 +119,7 @@ struct SessionCardView: View {
         .shadow(color: .black.opacity(0.45), radius: canvas.u(18))
         .environment(\.seleneMinimumFont, 12)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Session ended, \(summary.gameName): \(summary.thisSession.replacingOccurrences(of: "<1m", with: "under a minute")) this session, \(summary.total.replacingOccurrences(of: "<1m", with: "under a minute")) total")
+        .accessibilityLabel(L10n.format("Session ended, %@: %@ this session, %@ total", [String(describing: (summary.gameName)), String(describing: (summary.thisSession.replacingOccurrences(of: "<1m", with: L10n.text("under a minute")))), String(describing: (summary.total.replacingOccurrences(of: "<1m", with: L10n.text("under a minute"))))]))
         .task(id: summary.id) { await loadArt() }
     }
 
@@ -128,7 +128,7 @@ struct SessionCardView: View {
             Text(value)
                 .seleneFont(20, .semibold)
                 .foregroundColor(SeleneTheme.ink)
-            Text(label)
+            Text(L10n.text(label))
                 .seleneFont(15)
                 .foregroundColor(SeleneTheme.ink.opacity(0.6))
         }

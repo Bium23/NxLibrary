@@ -18,7 +18,7 @@ public struct LibraryPresentation: Equatable {
                 totalPlaytime: TimeInterval, lastPlayed: Date?, now: Date = Date()) {
         title = game.name
         eyebrow = metadata.map { Self.eyebrow(from: $0.name) } ?? ""
-        genres = Array((metadata?.genres ?? []).prefix(3))
+        genres = Array(GameGenre.list(metadata?.genres ?? []).prefix(3))
         publisher = metadata?.publishers.first
         releaseYear = metadata?.releaseYear
         playtime = Self.duration(totalPlaytime)
@@ -50,17 +50,17 @@ public struct LibraryPresentation: Equatable {
         let totalMinutes = Int(interval / 60)
         let hours = totalMinutes / 60
         let minutes = totalMinutes % 60
-        if hours == 0 { return "\(minutes)m" }
-        return "\(hours)h \(minutes)m"
+        if hours == 0 { return L10n.format("%@m", [minutes.formatted(.number.locale(L10n.context.formatLocale))]) }
+        return L10n.format("%@h %@m", [hours.formatted(.number.locale(L10n.context.formatLocale)), minutes.formatted(.number.locale(L10n.context.formatLocale))])
     }
 
     static func relative(_ date: Date?, now: Date) -> String {
-        guard let date else { return "Never" }
+        guard let date else { return L10n.text("Never") }
         let seconds = max(0, now.timeIntervalSince(date))
-        if seconds < 60 { return "Just now" }
-        if seconds < 3_600 { return "\(Int(seconds / 60))m ago" }
-        if seconds < 86_400 { return "\(Int(seconds / 3_600))h ago" }
-        if seconds < 604_800 { return "\(Int(seconds / 86_400))d ago" }
-        return date.formatted(date: .abbreviated, time: .omitted)
+        if seconds < 60 { return L10n.text("Just now") }
+        if seconds < 3_600 { return L10n.format("%@m ago", [String(describing: (Int(seconds / 60)))]) }
+        if seconds < 86_400 { return L10n.format("%@h ago", [String(describing: (Int(seconds / 3_600)))]) }
+        if seconds < 604_800 { return L10n.format("%@d ago", [String(describing: (Int(seconds / 86_400)))]) }
+        return date.formatted(.dateTime.day().month(.abbreviated).year().locale(L10n.context.formatLocale))
     }
 }

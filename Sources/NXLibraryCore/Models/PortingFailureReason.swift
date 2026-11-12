@@ -47,88 +47,88 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
 
     public var title: String {
         switch kind {
-        case .rosetta: return "The build ran as Intel code"
-        case .translator: return "The shader translator did not run"
-        case .zbic: return "A Python package is missing"
-        case .cltSelected: return "Xcode is not selected"
-        case .otherMetal: return "Your Metal compiler is not certified"
-        case .shaderRegression: return "Some shaders broke in this engine"
-        case .damagedNSP: return "Some game files are damaged"
-        case .a32Program: return "This game is not supported"
-        case .keys: return isMissingTicket ? "Game ticket missing" : "Your keys could not be read"
-        case .keysTooOld: return "Your keys are too old"
-        case .keysWrong: return "These keys do not open the game"
-        case .severalGames: return "The folder holds more than one game"
-        case .noTitleID: return "No game found in the files"
-        case .diskFull: return "Not enough disk space"
-        case .driveMissing: return "A drive is not connected"
-        case .cloudFolder: return "The library is in a cloud folder"
-        case .noProfile: return "This game is not supported yet"
-        case .unknown: return missingLanguage == nil ? "The porting stopped" : "The game does not have this language"
+        case .rosetta: return L10n.text("The build ran as Intel code")
+        case .translator: return L10n.text("The shader translator did not run")
+        case .zbic: return L10n.text("A Python package is missing")
+        case .cltSelected: return L10n.text("Xcode is not selected")
+        case .otherMetal: return L10n.text("Your Metal compiler is not certified")
+        case .shaderRegression: return L10n.text("Some shaders broke in this engine")
+        case .damagedNSP: return L10n.text("Some game files are damaged")
+        case .a32Program: return L10n.text("This game is not supported")
+        case .keys: return isMissingTicket ? L10n.text("Game ticket missing") : L10n.text("Your keys could not be read")
+        case .keysTooOld: return L10n.text("Your keys are too old")
+        case .keysWrong: return L10n.text("These keys do not open the game")
+        case .severalGames: return L10n.text("The folder holds more than one game")
+        case .noTitleID: return L10n.text("No game found in the files")
+        case .diskFull: return L10n.text("Not enough disk space")
+        case .driveMissing: return L10n.text("A drive is not connected")
+        case .cloudFolder: return L10n.text("The library is in a cloud folder")
+        case .noProfile: return L10n.text("This game is not supported yet")
+        case .unknown: return missingLanguage == nil ? L10n.text("The porting stopped") : L10n.text("The game does not have this language")
         }
     }
 
     public func what(game: String) -> String {
         switch kind {
-        case .rosetta: return "The porting started an Intel Python, so its tools ran under Rosetta."
-        case .translator: return "The shader translator needs the .NET 10 runtime for this Mac."
-        case .zbic: return "The engine needs the zbic package to read this game's code."
-        case .cltSelected: return "The selected developer folder is the Command Line Tools, which cannot build the app."
-        case .otherMetal: return "The shaders were tested with another Metal compiler than the one on this Mac."
-        case .shaderRegression: return "Shaders that translated before fail with the engine's current translator."
+        case .rosetta: return L10n.text("The porting started an Intel Python, so its tools ran under Rosetta.")
+        case .translator: return L10n.text("The engine's shader translator is missing or damaged.")
+        case .zbic: return L10n.text("The engine needs the zbic package to read this game's code.")
+        case .cltSelected: return L10n.text("The selected developer folder is the Command Line Tools, which cannot build the app.")
+        case .otherMetal: return L10n.text("The shaders were tested with another Metal compiler than the one on this Mac.")
+        case .shaderRegression: return L10n.text("Shaders that translated before fail with the engine's current translator.")
         case .damagedNSP: return isUnreadableDamage
-            ? "\(game)'s package is cut off or its own tables fail their hash check: an incomplete copy or a broken download."
-            : "Some files of \(game) fail their hash check: an incomplete copy or a broken download."
-        case .a32Program: return "\(game) is a 32-bit ARM program, and nxnative runs only 64-bit games."
+            ? L10n.format("%@'s package is cut off or its own tables fail their hash check: an incomplete copy or a broken download.", [String(describing: (game))])
+            : L10n.format("Some files of %@ fail their hash check: an incomplete copy or a broken download.", [String(describing: (game))])
+        case .a32Program: return L10n.format("%@ is a 32-bit ARM program, and nxnative runs only 64-bit games.", [String(describing: (game))])
         case .keys: return isMissingTicket
-            ? "The package has no common ticket needed to open \(game)."
-            : "prod.keys is missing, unreadable or has no header_key."
-        case .keysTooOld: return "\(game) needs keys newer than the ones you imported."
-        case .keysWrong: return "header_key does not open \(detail ?? "the game's files")."
-        case .severalGames: return "Each porting needs one game; this folder holds files of several."
-        case .noTitleID: return "None of the files holds a game the engine can read."
+            ? L10n.format("The package has no common ticket needed to open %@.", [String(describing: (game))])
+            : L10n.text("prod.keys is missing, unreadable or has no header_key.")
+        case .keysTooOld: return L10n.format("%@ needs keys newer than the ones you imported.", [String(describing: (game))])
+        case .keysWrong: return L10n.format("header_key does not open %@.", [String(describing: (detail ?? "the game's files"))])
+        case .severalGames: return L10n.text("Each porting needs one game; this folder holds files of several.")
+        case .noTitleID: return L10n.text("None of the files holds a game the engine can read.")
         case .diskFull:
-            if let gb = detail { return "The porting needs at least \(gb) GB free on the work volume." }
-            return "The disk filled up during the porting."
-        case .driveMissing: return "\(game)'s files are on \(detail ?? "a drive") that is not connected."
-        case .cloudFolder: return "Files in iCloud Drive or another synced folder carry data that code signing refuses."
+            if let gb = detail { return L10n.format("The porting needs at least %@ GB free on the work volume.", [String(describing: (gb))]) }
+            return L10n.text("The disk filled up during the porting.")
+        case .driveMissing: return L10n.format("%@'s files are on %@ that is not connected.", [String(describing: (game)), String(describing: (detail ?? L10n.text("a drive")))])
+        case .cloudFolder: return L10n.text("Files in iCloud Drive or another synced folder carry data that code signing refuses.")
         case .noProfile:
-            let at = detail.map { " (rewrite stopped at 0x\($0))" } ?? ""
-            return "\(game) has no verified nxnative game profile\(at); the pinned engine does not support it yet."
+            let at = detail.map { L10n.format(" (rewrite stopped at 0x%@)", [String(describing: ($0))]) } ?? ""
+            return L10n.format("%@ has no verified nxnative game profile%@; the pinned engine does not support it yet.", [String(describing: (game)), String(describing: (at))])
         case .unknown:
-            if let language = missingLanguage { return "\(game) has no \(language), the language set in its Game options." }
-            return "The engine stopped without a message NX Library recognises."
+            if let language = missingLanguage { return L10n.format("%@ has no %@, the language set in its Game options.", [String(describing: (game)), String(describing: (language))]) }
+            return L10n.text("The engine stopped without a message NX Library recognises.")
         }
     }
 
     public var next: String {
         switch kind {
-        case .rosetta: return "Reinstall NX Library so the porting uses its own arm64 Python."
-        case .translator: return "Open Setup and install the .NET 10 SDK."
-        case .zbic: return "Update NX Library: its built-in Python includes zbic from 0.1.3.2. Installing zbic with pip does not reach it."
-        case .cltSelected: return "Open Setup and select Xcode."
-        case .otherMetal: return "Install the certified compiler from Setup, or allow untested toolchains in Settings → Engine."
-        case .shaderRegression: return "Port anyway to keep the broken shaders out, or wait for an engine update."
+        case .rosetta: return L10n.text("Reinstall NX Library so the porting uses its own arm64 Python.")
+        case .translator: return L10n.text("Open Setup and check the nxnative engine card.")
+        case .zbic: return L10n.text("Update NX Library: its built-in Python includes zbic from 0.1.3.2. Installing zbic with pip does not reach it.")
+        case .cltSelected: return L10n.text("Open Setup and select Xcode.")
+        case .otherMetal: return L10n.text("Install the certified compiler from Setup, or allow untested toolchains in Settings → Engine.")
+        case .shaderRegression: return L10n.text("Port anyway to keep the broken shaders out, or wait for an engine update.")
         case .damagedNSP: return isUnreadableDamage
-            ? "Dump or download the game again."
-            : "Dump or download the game again, or port anyway with the damaged files as read."
-        case .a32Program: return "Nothing to fix here: this title cannot run."
+            ? L10n.text("Dump or download the game again.")
+            : L10n.text("Dump or download the game again, or port anyway with the damaged files as read.")
+        case .a32Program: return L10n.text("Nothing to fix here: this title cannot run.")
         case .keys: return isMissingTicket
-            ? "Export the complete game package again from your console, including its ticket."
-            : "Import prod.keys from your console again."
+            ? L10n.text("Export the complete game package again from your console, including its ticket.")
+            : L10n.text("Import prod.keys from your console again.")
         case .keysTooOld:
-            if let firmware = detail { return "Dump prod.keys again from a console on firmware \(firmware) or later." }
-            return "Dump prod.keys again from an up-to-date console."
-        case .keysWrong: return "Import prod.keys from the console these files were dumped with."
-        case .severalGames: return "Choose a folder with one game's base, update and DLC."
-        case .noTitleID: return "Check that the files are complete NSP, NSZ or XCI dumps."
-        case .diskFull: return "Free some space, then try again."
-        case .driveMissing: return "Connect \(detail ?? "the drive"), then try again."
-        case .cloudFolder: return "Move the library to a folder outside iCloud Drive."
-        case .noProfile: return "Watch for an engine update that adds this game."
+            if let firmware = detail { return L10n.format("Dump prod.keys again from a console on firmware %@ or later.", [String(describing: (firmware))]) }
+            return L10n.text("Dump prod.keys again from an up-to-date console.")
+        case .keysWrong: return L10n.text("Import prod.keys from the console these files were dumped with.")
+        case .severalGames: return L10n.text("Choose a folder with one game's base, update and DLC.")
+        case .noTitleID: return L10n.text("Check that the files are complete NSP, NSZ or XCI dumps.")
+        case .diskFull: return L10n.text("Free some space, then try again.")
+        case .driveMissing: return L10n.format("Connect %@, then try again.", [String(describing: (detail ?? L10n.text("the drive")))])
+        case .cloudFolder: return L10n.text("Move the library to a folder outside iCloud Drive.")
+        case .noProfile: return L10n.text("Watch for an engine update that adds this game.")
         case .unknown:
-            if missingLanguage != nil { return "In Game options, set Language to Game Default or to one of the game's languages, then port again." }
-            return "Open the log, or copy diagnostics for a bug report."
+            if missingLanguage != nil { return L10n.text("In Game options, set Language to Game Default or to one of the game's languages, then port again.") }
+            return L10n.text("Open the log, or copy diagnostics for a bug report.")
         }
     }
 

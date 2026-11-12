@@ -30,6 +30,138 @@ final class NintendoStoreMetadataTests: XCTestCase {
         return url
     }
 
+    func testWarmLanguageSwitchUsesOneLocalizedRequestInsteadOfEnglishSearches() async throws {
+        let client = FakeClient()
+        client.responses["ncom_game_en_us/query"] = Data(#"{"hits":[{"title":"Game","nsuid":"1","platform":"Nintendo Switch","description":"English description.","url":"/games/detail/game-switch/"}]}"#.utf8)
+        let service = NintendoStoreMetadataService(client: client, cacheDirectory: cacheDirectory())
+        let game = game(name: "Game", titleId: "0100000000010000")
+        _ = try await service.metadata(for: game)
+        client.requested = []
+        client.responses["lang=it"] = Data(#"{"description":"Descrizione italiana."}"#.utf8)
+        let result = try await service.metadata(for: game, locale: AppLocale(language: .italian, region: "IT"))
+        XCTAssertEqual(result.description, "Descrizione italiana.")
+        XCTAssertEqual(client.requested.count, 1)
+        XCTAssertTrue(client.requested.first?.contains("lang=it") == true)
+        client.requested = []
+        let otherRegion = try await service.metadata(for: game, locale: AppLocale(language: .italian, region: "CH"))
+        XCTAssertEqual(otherRegion.description, result.description)
+        XCTAssertTrue(client.requested.isEmpty, "Formatting region must not trigger another metadata request")
+    }
+
+    func testSwitch2RequestsTheSelectedDescriptionLanguage() async throws {
+        let client = FakeClient()
+        client.responses["ncom_game_en_us/query"] = Data(#"{"hits":[{"title":"Game","nsuid":"1","platform":"Nintendo Switch 2","description":"English description.","url":"/games/detail/game-switch-2/"}]}"#.utf8)
+        client.responses["lang=it"] = Data(#"{"description":"Descrizione italiana per Switch 2."}"#.utf8)
+        let service = NintendoStoreMetadataService(client: client, cacheDirectory: cacheDirectory())
+        let result = try await service.metadata(for: game(name: "Game", titleId: "0400000000010000"), locale: AppLocale(language: .italian, region: "IT"))
+        XCTAssertEqual(result.descriptionLanguage, "it")
+        XCTAssertEqual(result.description, "Descrizione italiana per Switch 2.")
+    }
+
+    func testOldEnglishFallbackIsRetriedButAnUnavailableTranslationDoesNotLoop() async throws {
+        let client = FakeClient()
+        let cache = cacheDirectory()
+        let game = game(name: "Game", titleId: "0400000000010000")
+        var metadata = NintendoStoreMetadata(titleId: game.titleId!, name: "Game", description: "English description.", developers: [], publishers: [], genres: ["Action"], releaseDate: nil, storeURL: URL(string: "https://example.com")!, imageURL: nil, headerImageURL: nil, nsuid: nil, fetchedAt: Date())
+        metadata.localeKey = "it_IT"
+        let file = cache.appendingPathComponent("localized/it_IT/0400000000010000.json")
+        try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try JSONEncoder().encode(metadata).write(to: file)
+        client.responses["lang=it"] = Data(#"{"description":""}"#.utf8)
+        let service = NintendoStoreMetadataService(client: client, cacheDirectory: cache)
+        let locale = AppLocale(language: .italian, region: "IT")
+        let result = try await service.metadata(for: game, locale: locale)
+        XCTAssertEqual(result.descriptionLanguage, "en")
+        XCTAssertEqual(result.description, metadata.description)
+        XCTAssertEqual(client.requested.count, 1)
+        _ = try await service.metadata(for: game, locale: locale)
+        XCTAssertEqual(client.requested.count, 1)
+    }
+
+    func testLocalizedDescriptionWinsOverEnglishStoreAndCachesByLocale() async throws {
+        let client = FakeClient()
+        client.responses["ncom_game_en_us/query"] = Data(#"{"hits":[{"title":"Game","nsuid":"1","platform":"Nintendo Switch","description":"An English description.","url":"/games/detail/game-switch/"}]}"#.utf8)
+        client.responses["lang=it"] = Data(#"{"id":"0100000000010000","description":"Una descrizione italiana."}"#.utf8)
+        client.responses["lang=de"] = Data(#"{"id":"0100000000010000","description":"Eine deutsche Beschreibung."}"#.utf8)
+        let cache = cacheDirectory()
+        let service = NintendoStoreMetadataService(client: client, cacheDirectory: cache)
+        let game = game(name: "Game", titleId: "0100000000010000")
+        let it = AppLocale(language: .italian, region: "CH")
+        let de = AppLocale(language: .german, region: "CH")
+        let italian = try await service.metadata(for: game, locale: it)
+        XCTAssertEqual(italian.description, "Una descrizione italiana.")
+        XCTAssertEqual(italian.descriptionLanguage, "it")
+        XCTAssertEqual(italian.name, "Game")
+        let german = try await service.metadata(for: game, locale: de)
+        XCTAssertEqual(german.description, "Eine deutsche Beschreibung.")
+        XCTAssertEqual(service.cached(for: game.titleId!, locale: it)?.description, "Una descrizione italiana.")
+        let offline = NintendoStoreMetadataService(client: FakeClient(), cacheDirectory: cache)
+        let restored = try await offline.metadata(for: game, locale: it)
+        XCTAssertEqual(restored.description, italian.description)
+        XCTAssertFalse(client.requested.contains { $0.contains("region=") })
+    }
+
+    func testMissingTranslationKeepsEnglishAndPortugueseUsesSupportedLanguageCode() async throws {
+        let client = FakeClient()
+        client.responses["ncom_game_en_us/query"] = Data(#"{"hits":[{"title":"Game","nsuid":"1","platform":"Nintendo Switch","description":"English is still useful.","url":"/games/detail/game-switch/"}]}"#.utf8)
+        client.responses["lang=pt"] = Data(#"{"description":""}"#.utf8)
+        let service = NintendoStoreMetadataService(client: client, cacheDirectory: cacheDirectory())
+        let metadata = try await service.metadata(for: game(name: "Game", titleId: "0100000000010000"), locale: AppLocale(language: .portugueseBrazil, region: "BR"))
+        XCTAssertEqual(metadata.description, "English is still useful.")
+        XCTAssertEqual(metadata.descriptionLanguage, "en")
+        XCTAssertTrue(client.requested.contains { $0.contains("lang=pt") })
+        XCTAssertFalse(client.requested.contains { $0.contains("lang=pt-BR") })
+    }
+
+    func testOfflineEnglishCacheCanServeAnotherRegionWithoutClaimingTranslation() async throws {
+        let client = FakeClient()
+        client.responses["ncom_game_en_us/query"] = Data(#"{"hits":[{"title":"Game","nsuid":"1","platform":"Nintendo Switch","description":"English cached text.","url":"/games/detail/game-switch/"}]}"#.utf8)
+        let cache = cacheDirectory()
+        let game = game(name: "Game", titleId: "0100000000010000")
+        _ = try await NintendoStoreMetadataService(client: client, cacheDirectory: cache).metadata(for: game)
+        let offline = NintendoStoreMetadataService(client: FakeClient(), cacheDirectory: cache)
+        for language in [AppLanguage.english, .italian] {
+            let result = try await offline.metadata(for: game, locale: AppLocale(language: language, region: "CH"))
+            XCTAssertEqual(result.description, "English cached text.")
+            XCTAssertEqual(result.descriptionLanguage, "en")
+        }
+    }
+
+    func testExpiredTranslationSurvivesPartialProviderFailure() async throws {
+        let client = FakeClient()
+        client.responses["ncom_game_en_us/query"] = Data(#"{"hits":[{"title":"Game","nsuid":"1","platform":"Nintendo Switch","description":"English description.","url":"/games/detail/game-switch/"}]}"#.utf8)
+        client.responses["lang=it"] = Data(#"{"name":"Game","description":"Descrizione italiana conservata."}"#.utf8)
+        let cache = cacheDirectory()
+        let service = NintendoStoreMetadataService(client: client, cacheDirectory: cache)
+        let game = game(name: "Game", titleId: "0100000000010000")
+        let locale = AppLocale(language: .italian, region: "CH")
+        var first = try await service.metadata(for: game, locale: locale)
+        first.fetchedAt = Date().addingTimeInterval(-9 * 24 * 3600)
+        let file = cache.appendingPathComponent("localized/it_CH/0100000000010000.json")
+        try JSONEncoder().encode(first).write(to: file)
+        client.responses.removeValue(forKey: "lang=it")
+        let refreshed = try await service.metadata(for: game, locale: locale)
+        XCTAssertEqual(refreshed.description, "Descrizione italiana conservata.")
+        XCTAssertEqual(refreshed.descriptionLanguage, "it")
+        XCTAssertEqual(service.cached(for: game.titleId!, locale: locale)?.description, first.description)
+    }
+
+    func testEmptyLocalizedResponseDoesNotHideEnglishCache() async throws {
+        let english = FakeClient()
+        english.responses["ncom_game_en_us/query"] = Data(#"{"hits":[{"title":"Game","nsuid":"1","platform":"Nintendo Switch","description":"Cached English description.","url":"/games/detail/game-switch/"}]}"#.utf8)
+        let cache = cacheDirectory()
+        let game = game(name: "Game", titleId: "0100000000010000")
+        _ = try await NintendoStoreMetadataService(client: english, cacheDirectory: cache).metadata(for: game)
+        let partial = FakeClient()
+        partial.responses["lang=it"] = Data(#"{"name":"Game","description":""}"#.utf8)
+        let service = NintendoStoreMetadataService(client: partial, cacheDirectory: cache)
+        let locale = AppLocale(language: .italian, region: "CH")
+        let result = try await service.metadata(for: game, locale: locale)
+        XCTAssertEqual(result.description, "Cached English description.")
+        XCTAssertEqual(result.descriptionLanguage, "en")
+        XCTAssertFalse(service.cached(for: game.titleId!, locale: locale)?.description.isEmpty ?? false)
+    }
+
     func testUsesTheLegacyCatalogWithoutFetchingTheProductPage() async throws {
         let client = FakeClient()
         client.responses["ncom_game_en_us/query"] = Data("""

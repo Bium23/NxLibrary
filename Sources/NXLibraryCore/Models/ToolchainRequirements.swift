@@ -5,24 +5,20 @@ import Foundation
 public struct ToolchainRequirements: Equatable {
     /// The oldest Xcode the engine's Metal toolchain runs with.
     public var minimumXcode: String
-    /// The .NET SDK major the engine's extractor builds with; any patch of it works.
-    public var dotnetMajor: Int
     /// The certified Metal compiler before an engine exists to name one in its lock.
     public var fallbackMetal: String
     /// Metal compiler version → Apple's MetalToolchain asset build, so NX Library can
     /// download exactly the compiler the engine certifies, not just the newest one.
     public var metalAssets: [String: String]
 
-    public init(minimumXcode: String, dotnetMajor: Int, fallbackMetal: String, metalAssets: [String: String]) {
+    public init(minimumXcode: String, fallbackMetal: String, metalAssets: [String: String]) {
         self.minimumXcode = minimumXcode
-        self.dotnetMajor = dotnetMajor
         self.fallbackMetal = fallbackMetal
         self.metalAssets = metalAssets
     }
 
     public static let current = ToolchainRequirements(
         minimumXcode: "27.2",
-        dotnetMajor: 10,
         fallbackMetal: "32023.922",
         metalAssets: ["32023.921": "27A266a", "32023.922": "27B47"])
 
@@ -38,13 +34,6 @@ public struct ToolchainRequirements: Equatable {
     public static func xcodeVersion(from text: String) -> String? {
         guard let line = text.split(separator: "\n").first, line.hasPrefix("Xcode ") else { return nil }
         return String(line.dropFirst("Xcode ".count)).trimmingCharacters(in: .whitespaces)
-    }
-
-    /// The newest SDK of `major` in `dotnet --list-sdks` output.
-    public static func newestSDK(major: Int, in lines: [String]) -> String? {
-        lines.compactMap { $0.split(separator: " ").first.map(String.init) }
-            .filter { $0.hasPrefix("\(major).") }
-            .max { VersionNumber.isOlder($0, than: $1) }
     }
 }
 

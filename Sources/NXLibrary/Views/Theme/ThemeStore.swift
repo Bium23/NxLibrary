@@ -89,7 +89,7 @@ public final class ThemeStore: ObservableObject {
 
     func settingsWallpaperTitle(for settingsID: String?) -> String {
         switch settingsID {
-        case nil: return "Same as app"
+        case nil: return L10n.text("Same as app")
         case WallpaperCatalog.themeOwn?: return wallpaperTitle(for: nil)
         case let id?: return wallpaperTitle(for: id)
         }
@@ -99,12 +99,12 @@ public final class ThemeStore: ObservableObject {
     func wallpaperTitle(for wallpaperID: String?) -> String {
         switch wallpaperID {
         case nil:
-            return wallpaper(for: nil).map { "Theme (\($0.title))" } ?? "Theme (none)"
+            return wallpaper(for: nil).map { L10n.format("Theme (%@)", [String(describing: ($0.title))]) } ?? L10n.text("Theme (none)")
         case WallpaperCatalog.none?:
             return "None"
         case let id?:
             if let credit = credits[id] { return "\(credit.title) · \(credit.source.title)" }
-            return wallpapers.first { $0.id == id }?.title ?? "Missing"
+            return wallpapers.first { $0.id == id }?.title ?? L10n.text("Missing")
         }
     }
 }

@@ -60,7 +60,7 @@ struct ModsPanel: View {
 
             VStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("MODS")
+                    Text(L10n.text("MODS"))
                         .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink60)
                         .padding(.leading, canvas.u(8))
@@ -83,7 +83,7 @@ struct ModsPanel: View {
                 .padding(.bottom, canvas.u(20))
                 .contentShape(Rectangle())
 
-                SeleneHintsBar(left: [HintItem(.b, "Back", action: close)], right: hints,
+                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back"), action: close)], right: hints,
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -111,9 +111,9 @@ struct ModsPanel: View {
     }
 
     private var hints: [HintItem] {
-        guard let mod = focusedMod else { return [HintItem(.a, "Select")] }
-        var items = [HintItem(nil, "◂ ▸  Move"), HintItem(.y, "Remove", action: askRemove)]
-        items.append(HintItem(.a, mod.romfs == nil ? "Select" : mod.isOn ? "Turn off" : "Turn on"))
+        guard let mod = focusedMod else { return [HintItem(.a, L10n.text("Select"))] }
+        var items = [HintItem(nil, L10n.text("◂ ▸  Move")), HintItem(.y, L10n.text("Remove"), action: askRemove)]
+        items.append(HintItem(.a, mod.romfs == nil ? L10n.text("Select") : mod.isOn ? L10n.text("Turn off") : L10n.text("Turn on")))
         return items
     }
 
@@ -148,7 +148,7 @@ struct ModsPanel: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: canvas.u(8)) {
                     if mods.isEmpty {
-                        SeleneOptionRow(icon: nil, title: "No mods yet", about: ModsCopy.empty, focused: false, enabled: false) {}
+                        SeleneOptionRow(icon: nil, title: L10n.text("No mods yet"), about: ModsCopy.empty, focused: false, enabled: false) {}
                     }
                     ForEach(Array(rows.enumerated()), id: \.element) { index, row in
                         rowView(row, focused: index == focus)
@@ -203,7 +203,7 @@ struct ModsPanel: View {
             if name.contains(":") { return (.puzzle, name, ModsCopy.colon, nil, false) }
             return (.puzzle, name, nil, mod.isOn, !running)
         case .openFolder:
-            return (.folder, "Open mods folder", "Put each mod in its own folder here.", nil, true)
+            return (.folder, L10n.text("Open mods folder"), L10n.text("Put each mod in its own folder here."), nil, true)
         }
     }
 
@@ -213,9 +213,9 @@ struct ModsPanel: View {
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
                 .onTapGesture { dismissConfirm() }
-            SeleneConfirmDialog(title: "Move \(name) to the Trash?",
-                                message: "The game stops loading it. You can put it back from the Trash.",
-                                confirmTitle: "Move to Trash", focus: $confirmFocus,
+            SeleneConfirmDialog(title: L10n.format("Move %@ to the Trash?", [String(describing: (name))]),
+                                message: L10n.text("The game stops loading it. You can put it back from the Trash."),
+                                confirmTitle: L10n.text("Move to Trash"), focus: $confirmFocus,
                                 onCancel: dismissConfirm, onConfirm: runRemove)
         }
     }
@@ -384,18 +384,28 @@ struct ModsPanel: View {
 enum ModsCopy {
     static func header(on: Int, total: Int) -> String {
         switch (on, total) {
-        case (_, 0): return "No mods in this game's folder"
-        case (0, _): return total == 1 ? "1 mod, off" : "\(total) mods, all off"
-        default: return "\(on) of \(total) on · the upper mod wins when two change the same file"
+        case (_, 0): return L10n.text("No mods in this game's folder")
+        case (0, _): return total == 1 ? "1 mod, off" : L10n.format("%@ mods, all off", [String(describing: (total))])
+        default: return L10n.format("%@ of %@ on · the upper mod wins when two change the same file", [String(describing: (on)), String(describing: (total))])
         }
     }
 
-    static func running(gameName: String) -> String { "\(gameName) is running. Quit it to change its mods." }
+    static func running(gameName: String) -> String { L10n.format("%@ is running. Quit it to change its mods.", [String(describing: (gameName))]) }
 
-    static let empty = "Open the mods folder and put each mod in its own folder, with a romfs folder inside."
-    static let notAMod = "Not a mod: needs a romfs folder."
-    static let notAFolder = "Not a mod: unzip it into its own folder first."
-    static let colon = "Rename this folder: its name can't contain ':'."
-    static let help = "Mods change the game's files only: mods that patch code (exefs, such as 60 fps patches) don't work. "
-        + "Changes apply at the next launch. If a mod changes nothing, rebuild the game."
+    static var empty: String {
+        L10n.text("Open the mods folder and put each mod in its own folder, with a romfs folder inside.")
+    }
+    static var notAMod: String {
+        L10n.text("Not a mod: needs a romfs folder.")
+    }
+    static var notAFolder: String {
+        L10n.text("Not a mod: unzip it into its own folder first.")
+    }
+    static var colon: String {
+        L10n.text("Rename this folder: its name can't contain ':'.")
+    }
+    static var help: String {
+        L10n.text("Mods change the game's files only: mods that patch code (exefs, such as 60 fps patches) don't work. ")
+        + L10n.text("Changes apply at the next launch. If a mod changes nothing, rebuild the game.")
+    }
 }

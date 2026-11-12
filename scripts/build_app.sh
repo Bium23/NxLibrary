@@ -43,6 +43,9 @@ APP="$STAGE/NXLibrary.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 cp "$BIN" "$APP/Contents/MacOS/NXLibrary"
+LOCALIZATION_BUNDLE="$ROOT/.build/$CONFIG/NXLibrary_NXLibraryCore.bundle"
+[ -d "$LOCALIZATION_BUNDLE" ] || { echo "error: compiled localization bundle missing" >&2; exit 1; }
+cp -R "$LOCALIZATION_BUNDLE" "$APP/Contents/Resources/"
 
 if [ -f "$ROOT/Resources/AppIcon.icns" ]; then
   cp "$ROOT/Resources/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
@@ -69,6 +72,9 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <plist version="1.0">
 <dict>
   <key>CFBundleDevelopmentRegion</key><string>en</string>
+  <key>CFBundleLocalizations</key><array>
+    <string>en</string><string>it</string><string>fr</string><string>de</string><string>es</string><string>pt-BR</string>
+  </array>
   <key>CFBundleDisplayName</key><string>$NAME</string>
   <key>CFBundleExecutable</key><string>NXLibrary</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
@@ -90,6 +96,7 @@ $RELEASE_KEY
 </plist>
 PLIST
 
+python3 "$ROOT/scripts/check_localizations.py" --app "$APP"
 codesign --force --deep --sign - "$APP"
 codesign --verify --deep --strict "$APP"
 swiftc -I "$ROOT/.build/$CONFIG" "$ROOT/scripts/install_built_app.swift" \

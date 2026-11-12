@@ -28,7 +28,7 @@ struct SelenePillButton: View {
                     MaterialIconView(icon, size: iconSize)
                 }
                 if let title {
-                    Text(title).seleneFont(21)
+                    Text(L10n.text(title)).seleneFont(21)
                 }
                 if waveDots {
                     WaveDots()

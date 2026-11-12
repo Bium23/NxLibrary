@@ -24,7 +24,7 @@ extension AppViewModel {
             do {
                 switch try PendingInstaller.install(&library.games[index]) {
                 case .installed:
-                    logs.append(LogEntry(level: .success, message: "Installed the new build of \(name)."))
+                    logs.append(LogEntry(level: .success, message: L10n.format("Installed the new build of %@.", [String(describing: (name))])))
                     library.games[index].appIconPending = true
                     if let path = library.games[index].lastBuild?.logPath, !path.isEmpty {
                         appIconBuildLogs[library.games[index].id] = URL(fileURLWithPath: path)
@@ -40,7 +40,7 @@ extension AppViewModel {
                     }
                 case .gone:
                     logs.append(LogEntry(level: .warning,
-                                         message: "The new build of \(name) that waited for the game to quit is gone. Port it again."))
+                                         message: L10n.format("The new build of %@ that waited for the game to quit is gone. Port it again.", [String(describing: (name))])))
                 case nil:
                     continue
                 }
@@ -56,7 +56,7 @@ extension AppViewModel {
     }
 
     func presentInstallFailure(for game: PortedGame, error: String) {
-        logs.append(LogEntry(level: .error, message: "Could not install the new build of \(game.name): \(error)"))
+        logs.append(LogEntry(level: .error, message: L10n.format("Could not install the new build of %@: %@", [String(describing: (game.name)), String(describing: (error))])))
         installFailureFocus = .cancel
         gameWithInstallFailure = game
     }

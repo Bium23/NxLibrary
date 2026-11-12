@@ -8,7 +8,7 @@ struct SettingsNavigationSection: View {
 
     private var buttonNamesTitle: String {
         switch settings.settings.buttonNames {
-        case .automatic: return "Automatic"
+        case .automatic: return L10n.text("Automatic")
         case .nintendo: return "Nintendo"
         case .xbox: return "Xbox"
         case .playstation: return "PlayStation"

@@ -10,16 +10,16 @@ struct SettingsControllersSection: View {
 
     var body: some View {
         VStack(spacing: 9) {
-            SettingsSubheading("Library controls")
+            SettingsSubheading(L10n.text("Library controls"))
             SeleneRow("Gamepad",
                       subtitle: controller.isGamepadConnected
                         ? controller.activeControllerName
                         : "Connect a controller and press Detect.") {
                 HStack(spacing: 10) {
-                    Text(controller.isGamepadConnected ? "Connected" : "Not connected")
+                    Text(controller.isGamepadConnected ? L10n.text("Connected") : L10n.text("Not connected"))
                         .seleneFont(13, .semibold)
                         .foregroundColor(controller.isGamepadConnected ? SeleneTheme.success : SeleneTheme.ink60)
-                    Button("Detect") { controller.refreshControllers() }
+                    Button(L10n.text("Detect")) { controller.refreshControllers() }
                         .buttonStyle(.plain)
                         .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
@@ -48,7 +48,7 @@ struct SettingsControllersSection: View {
                 }
             }
 
-            SettingsSubheading("New games")
+            SettingsSubheading(L10n.text("New games"))
 
             SeleneToggleRow("Rumble",
                             subtitle: "Controller vibration",

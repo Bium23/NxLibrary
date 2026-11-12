@@ -98,10 +98,7 @@ public final class NXNativeEnvironment {
         let metal = MetalVersion.parse(run("/usr/bin/xcrun", ["metal", "--version"]).stdout)
         if metal == nil { issues.append("Metal compiler not found") }
 
-        // The engine's script runs `dotnet build` itself, so it needs the SDK, not only the runtime.
-        let sdks = run("/usr/bin/env", ["dotnet", "--list-sdks"]).stdout
-        let dotnetOK = sdks.split(separator: "\n").contains { $0.hasPrefix("10.") }
-        if !dotnetOK { issues.append("the .NET 10 SDK is missing") }
+        // Since nxnative 641636e2 the shader translator and nx_extract are committed native executables: no .NET.
 
         // A Mac build needs no xcodegen, and SPIRV-Cross is the engine's own in-repo build.
         var tools: [ToolStatus] = []
@@ -110,7 +107,7 @@ public final class NXNativeEnvironment {
             let result = run("/usr/bin/env", [tool, "--version"])
             let ok = result.status == 0
             tools.append(ToolStatus(id: tool, name: tool, ok: ok,
-                                    detail: ok ? "available" : "missing"))
+                                    detail: ok ? L10n.text("available") : L10n.text("missing")))
             if !ok { issues.append("\(tool) is missing") }
         }
 

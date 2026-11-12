@@ -1,3 +1,4 @@
+import NXLibraryCore
 import SwiftUI
 
 extension Notification.Name {
@@ -5,6 +6,7 @@ extension Notification.Name {
     static let nxLibraryCheckAppUpdates = Notification.Name("NXLibraryCheckAppUpdates")
     static let nxLibraryOpenMenu = Notification.Name("NXLibraryOpenMenu")
     static let nxSettingsGamepadAction = Notification.Name("NXSettingsGamepadAction")
+    static let nxLocalePickerGamepadAction = Notification.Name("NXLocalePickerGamepadAction")
     static let nxAddGameGamepadAction = Notification.Name("NXAddGameGamepadAction")
     static let nxConsoleGamepadAction = Notification.Name("NXConsoleGamepadAction")
     static let nxDetailGamepadAction = Notification.Name("NXDetailGamepadAction")
@@ -25,56 +27,65 @@ extension Notification.Name {
 struct NXLibraryApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @FocusedValue(\.nxMenuAvailability) private var availability
+    @ObservedObject private var localization = AppLocalization.shared
+    private let settingsStore: AppSettingsStore
+
+    init() {
+        let store = AppSettingsStore()
+        settingsStore = store
+        // Publish the initial locale before SwiftUI starts constructing the window graph.
+        AppLocalization.shared.configure(store.settings)
+    }
 
     var body: some Scene {
         Window("NX Library", id: "main") {
-            MainView()
+            MainView(settingsStore: settingsStore)
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1440, height: 900)
         .commands {
             SidebarCommands()
             CommandGroup(replacing: .newItem) {
-                Button("Add Game…") { NativeMenuCommands.shared.post(.nxLibraryOpenAddGame) }
+                Button(L10n.text("Add Game…")) { NativeMenuCommands.shared.post(.nxLibraryOpenAddGame) }
                     .keyboardShortcut("n", modifiers: [.command])
                     .disabled(availability?.general != true)
             }
             CommandGroup(after: .appInfo) {
-                Button("Check for Updates…") { NativeMenuCommands.shared.post(.nxLibraryCheckAppUpdates) }
+                Button(L10n.text("Check for Updates…")) { NativeMenuCommands.shared.post(.nxLibraryCheckAppUpdates) }
                     .disabled(availability?.general != true)
             }
             CommandGroup(replacing: .appSettings) {
-                Button("Settings…") {
+                Button(L10n.text("Settings…")) {
                     NativeMenuCommands.shared.post(.nxLibraryOpenSettings)
                 }
                 .keyboardShortcut(",", modifiers: [.command])
                 .disabled(availability?.general != true)
             }
             CommandMenu("Game") {
-                Button("Add Game…") {
+                Button(L10n.text("Add Game…")) {
                     NativeMenuCommands.shared.post(.nxLibraryOpenAddGame)
                 }
                 .disabled(availability?.general != true)
                 Divider()
-                Button("Play Selected Game") {
+                Button(L10n.text("Play Selected Game")) {
                     NativeMenuCommands.shared.post(.nxLibraryPlayFocused)
                 }
                 .keyboardShortcut(.return, modifiers: [.command])
                 .disabled(availability?.play != true)
                 Divider()
-                Button("Game Details") {
+                Button(L10n.text("Game Details")) {
                     NativeMenuCommands.shared.post(.nxLibraryOpenDetails)
                 }
                 .keyboardShortcut("d", modifiers: [.command])
                 .disabled(availability?.details != true)
-                Button("Game Options…") {
+                Button(L10n.text("Game Options…")) {
                     NativeMenuCommands.shared.post(.nxLibraryOpenGameOptions)
                 }
                 .keyboardShortcut("o", modifiers: [.command])
                 .disabled(availability?.options != true)
             }
             CommandGroup(after: .sidebar) {
-                Button("Menu") {
+                Button(L10n.text("Menu")) {
                     NativeMenuCommands.shared.post(.nxLibraryOpenMenu)
                 }
                 .keyboardShortcut("k", modifiers: [.command])

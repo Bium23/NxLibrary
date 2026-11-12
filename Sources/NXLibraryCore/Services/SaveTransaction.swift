@@ -57,6 +57,7 @@ public final class SaveTransaction {
     private func replace(location: SaveLocation, identity: SaveIdentity, reason: SaveSnapshotReason,
                          desired: (SaveSlot) -> URL, revalidate: () throws -> Void) throws -> SaveSnapshot {
         guard !Self.needsRecovery(location: location) else { throw SaveFailure.recoveryRequired }
+        guard !SaveFiles.exists(location.cloudPullJournal) else { throw SaveFailure.cloudPullPending }
         try check(location)
         let previous = try SaveFiles.inventory(location)
         let id = UUID(); let stage = staging(id, location)

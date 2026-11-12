@@ -31,12 +31,12 @@ public enum EngineSourceError: Error, Equatable, LocalizedError {
     case unreadablePackage(String)
     public var errorDescription: String? {
         switch self {
-        case .invalidPackage: return "The package contents could not be read. Check the files and imported keys."
+        case .invalidPackage: return L10n.text("The package contents could not be read. Check the files and imported keys.")
         case .unreadablePackages(let detail): return "The packages could not be read: \(detail)"
         case .unreadablePackage(let detail): return "This package could not be read: \(detail)"
         case .invalidDump(let detail): return "The extracted folder is incomplete: \(detail)."
         case .invalidContainer(let detail): return "The NUP file could not be read: \(detail)."
-        case .containerNotAlone: return "Choose one NUP file on its own: it holds the whole game."
+        case .containerNotAlone: return L10n.text("Choose one NUP file on its own: it holds the whole game.")
         case .missingProfile(let title): return "The selected engine has no registered profile for \(title). With this engine, extracted folders and NUP files need a registered profile."
         }
     }
@@ -99,7 +99,8 @@ try:
     with contextlib.redirect_stdout(io.StringIO()):
         spec.loader.exec_module(engine)
         environment = dict(os.environ)
-        engine.configure_dotnet(environment)
+        if hasattr(engine, 'configure_dotnet'):   # engines before nxnative 641636e2 (.NET tools)
+            engine.configure_dotnet(environment)
         if hasattr(engine, 'package_reader'):
             with engine.package_reader(repo, keys, environment) as reader:
                 found = reader.contents([p for p, _ in packages])

@@ -66,15 +66,21 @@ extension AppViewModel {
                     let turnedOn = !self.allowUntestedToolchain || previous?.turnedOnOverride == true
                     self.allowUntestedToolchain = true
                     self.newestEngineChoice = NewestEngineChoice(commit: commit, aheadBy: ahead, turnedOnOverride: turnedOn)
-                    let verb = previous.map { "updated from \($0.shortCommit) to" } ?? "switched to"
-                    self.logs.append(LogEntry(level: .warning,
-                        message: "Engine \(verb) nxnative main \(commit.prefix(7)) (\(NewestEngineCopy.ahead(ahead))); builds are recorded as untested."))
+                    let message: String
+                    if let previous {
+                        message = L10n.format("Engine updated from %@ to nxnative main %@ (%@); builds are recorded as untested.",
+                                              [previous.shortCommit, String(commit.prefix(7)), NewestEngineCopy.ahead(ahead)])
+                    } else {
+                        message = L10n.format("Engine switched to nxnative main %@ (%@); builds are recorded as untested.",
+                                              [String(commit.prefix(7)), NewestEngineCopy.ahead(ahead)])
+                    }
+                    self.logs.append(LogEntry(level: .warning, message: message))
                 case .failure(let error):
                     if case NewestEngineError.needsNewerApp(let metal) = error {
                         self.newestEngineReadiness = .needsNewerApp(metal: metal)
                     }
                     self.newestEngineProblem = error.localizedDescription
-                    self.logs.append(LogEntry(level: .warning, message: "Newest engine: \(error.localizedDescription)"))
+                    self.logs.append(LogEntry(level: .warning, message: L10n.format("Newest engine: %@", [String(describing: (error.localizedDescription))])))
                 }
                 self.refreshCompatibility()
             }
@@ -96,10 +102,10 @@ extension AppViewModel {
                 switch result {
                 case .success:
                     self.forgetNewestEngine()
-                    self.logs.append(LogEntry(level: .info, message: "Engine back to the tested \(pinned.prefix(7))."))
+                    self.logs.append(LogEntry(level: .info, message: L10n.format("Engine back to the tested %@.", [String(describing: (pinned.prefix(7)))])))
                 case .failure(let error):
                     self.newestEngineProblem = error.localizedDescription
-                    self.logs.append(LogEntry(level: .warning, message: "Back to tested: \(error.localizedDescription)"))
+                    self.logs.append(LogEntry(level: .warning, message: L10n.format("Back to tested: %@", [String(describing: (error.localizedDescription))])))
                 }
                 self.refreshCompatibility()
             }

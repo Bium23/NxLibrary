@@ -248,12 +248,12 @@ public final class GameBananaBandModel: ObservableObject {
     /// The band's status line, under its title.
     public var statusLine: String? {
         switch phase {
-        case .looking: return "Looking for mods that work…"
-        case .ask: return "Is this the right game?"
-        case .noPage: return "No GameBanana page found"
-        case .noneWork: return "No mods for this game work with NX Library yet"
-        case .offline: return "No connection. Mods you installed still work."
-        case .failed: return "GameBanana didn't answer. Try again in a moment."
+        case .looking: return L10n.text("Looking for mods that work…")
+        case .ask: return L10n.text("Is this the right game?")
+        case .noPage: return L10n.text("No GameBanana page found")
+        case .noneWork: return L10n.text("No mods for this game work with NX Library yet")
+        case .offline: return L10n.text("No connection. Mods you installed still work.")
+        case .failed: return L10n.text("GameBanana didn't answer. Try again in a moment.")
         case .idle, .matching, .ready: return nil
         }
     }

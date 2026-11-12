@@ -17,7 +17,7 @@ struct SeleneStat: Identifiable {
         SeleneStat(label: label, value: .text(value))
     }
 
-    static func platform(_ console: String) -> SeleneStat { SeleneStat(label: "PLATFORM", value: .platform(console)) }
+    static func platform(_ console: String) -> SeleneStat { SeleneStat(label: L10n.text("PLATFORM"), value: .platform(console)) }
 }
 
 /// Selene's at-a-glance stats line, with a 1u rule between items. Spotlight and
@@ -33,12 +33,12 @@ struct SeleneStatsRow: View {
     /// PLAYTIME · LAST PLAYED · PLATFORM · RELEASED (Spotlight, Collection).
     init(presentation: LibraryPresentation) {
         var items = [
-            SeleneStat.text("PLAYTIME", presentation.playtime),
-            SeleneStat.text("LAST PLAYED", presentation.lastPlayed),
+            SeleneStat.text(L10n.text("PLAYTIME"), presentation.playtime),
+            SeleneStat.text(L10n.text("LAST PLAYED"), presentation.lastPlayed),
             SeleneStat.platform(presentation.console)
         ]
         if let year = presentation.releaseYear {
-            items.append(SeleneStat.text("RELEASED", year))
+            items.append(SeleneStat.text(L10n.text("RELEASED"), year))
         }
         self.items = items
     }
@@ -63,7 +63,7 @@ struct SeleneStatsRow: View {
     private func stat(_ item: SeleneStat) -> some View {
         VStack(alignment: .leading, spacing: canvas.u(2)) {
             // Line boxes of Selene's Segoe UI 12 / 21 (16 and 28), so the strip lands 34 below.
-            Text(item.label)
+            Text(L10n.text(item.label))
                 .seleneFont(12, .semibold)
                 .foregroundColor(SeleneTheme.ink60)
                 .frame(height: canvas.u(16), alignment: .leading)

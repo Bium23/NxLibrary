@@ -84,6 +84,7 @@ ditto --norsrc -c -k --keepParent "$APP" "$ZIP"
 "$APP/Contents/Resources/Runtime/python/bin/python3" -I -B \
   "$APP/Contents/Resources/validate_update.py" "$ZIP" "$OUT/.update-check"
 codesign --verify --deep --strict "$OUT/.update-check/NXLibrary.app"
+python3 "$ROOT/scripts/check_localizations.py" --app "$OUT/.update-check/NXLibrary.app"
 rm -rf "$OUT/.update-check"
 echo "Zip: $ZIP"
 echo "SHA-256: $(shasum -a 256 "$ZIP" | cut -d' ' -f1)"

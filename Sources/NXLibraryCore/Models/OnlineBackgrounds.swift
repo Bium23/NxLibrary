@@ -38,6 +38,7 @@ public struct BackgroundCategory: Equatable, Hashable, Sendable {
     public static let searchID = "search"
     public let id: String
     public let title: String
+    public var displayTitle: String { L10n.text(title) }
     public var isSearch: Bool { id == Self.searchID }
 
     public init(id: String, title: String) {

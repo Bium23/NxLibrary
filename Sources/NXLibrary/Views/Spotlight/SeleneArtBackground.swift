@@ -163,7 +163,7 @@ final class SeleneArtLayerView: NSView {
             }
         }
         CATransaction.commit()
-        Self.log.notice("art \(cg == nil ? "none" : "in", privacy: .public) layers \(self.stack.count) interrupted \(interrupted) \(String(key.prefix(8)), privacy: .public)")
+        Self.log.notice("art \(cg == nil ? L10n.text("none") : L10n.text("in"), privacy: .public) layers \(self.stack.count) interrupted \(interrupted) \(String(key.prefix(8)), privacy: .public)")
     }
 
     /// What `art` shows at `time`: its fade in flight, else its settled opacity.
