@@ -30,7 +30,6 @@ extension AppViewModel {
         i.metalCertified = ToolchainRequirements.current.metalAssets.keys.sorted().joined(separator: ", ")
         i.untestedOverride = allowUntestedToolchain
         let tools = environmentStatus?.tools ?? []
-        i.dotnet = tools.first { $0.name.localizedCaseInsensitiveContains(".NET") }?.detail
         i.python = engineToolchain.python.path
         i.setupRows = tools.map { ($0.name, $0.ok) }
         i.keysImported = FileManager.default.fileExists(atPath: keyStore.keyURL.path)

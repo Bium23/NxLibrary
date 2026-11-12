@@ -4767,6 +4767,47 @@
         }
       }
     },
+    "A cloud save download did not finish. Play the game once so it can put this Mac's save back, then try again.": {
+      "comment": "SaveLocation.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A cloud save download did not finish. Play the game once so it can put this Mac's save back, then try again."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un download del salvataggio dal cloud non è terminato. Avvia il gioco una volta perché rimetta a posto il salvataggio di questo Mac, poi riprova."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un téléchargement de la sauvegarde depuis le cloud ne s’est pas terminé. Lancez le jeu une fois pour qu’il remette en place la sauvegarde de ce Mac, puis réessayez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Download des Cloud-Spielstands wurde nicht abgeschlossen. Starte das Spiel einmal, damit es den Spielstand dieses Macs wiederherstellt, und versuche es dann erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una descarga de la partida guardada desde la nube no terminó. Inicia el juego una vez para que restaure la partida de este Mac y vuelve a intentarlo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um download do salvamento da nuvem não terminou. Abra o jogo uma vez para que ele restaure o salvamento deste Mac e tente de novo."
+          }
+        }
+      }
+    },
     "A drive is not connected": {
       "comment": "PortingFailureReason.swift",
       "localizations": {
@@ -41307,6 +41348,47 @@
         }
       }
     },
+    "Open Setup and check the nxnative engine card.": {
+      "comment": "PortingFailureReason.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Setup and check the nxnative engine card."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri Configurazione e controlla la scheda Motore nxnative."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrez Configuration et vérifiez la carte Moteur nxnative."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne die Einrichtung und prüfe die Karte nxnative-Engine."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Configuración inicial y revisa la tarjeta Motor nxnative."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abra Configuração e verifique o cartão Engine nxnative."
+          }
+        }
+      }
+    },
     "Open Setup and install the .NET 10 SDK.": {
       "comment": "PortingFailureReason.swift",
       "localizations": {
@@ -56010,6 +56092,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "A engine parou sem uma mensagem que o NX Library reconheça."
+          }
+        }
+      }
+    },
+    "The engine's shader translator is missing or damaged.": {
+      "comment": "PortingFailureReason.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The engine's shader translator is missing or damaged."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il traduttore degli shader del motore manca o è danneggiato."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le traducteur de shaders du moteur est absent ou endommagé."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Shader-Übersetzer der Engine fehlt oder ist beschädigt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta el traductor de shaders del motor o está dañado."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O tradutor de shaders da engine está ausente ou danificado."
           }
         }
       }

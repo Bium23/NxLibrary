@@ -84,9 +84,6 @@ struct SettingsEngineSection: View {
                              detail: environment.metalVersion ?? L10n.text("not found"))
                     buildRow(L10n.text("Python and build tools"), ok: environment.pythonURL != nil,
                              detail: runtimeDetail(environment))
-                    buildRow(".NET 10 runtime", ok: !environment.issues.contains {
-                        $0.lowercased().contains(".net")
-                    }, detail: L10n.text("checked by the build command"))
                     ForEach(environment.tools) { tool in
                         buildRow(tool.name, ok: tool.ok, detail: tool.detail)
                     }

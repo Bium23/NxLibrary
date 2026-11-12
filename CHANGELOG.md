@@ -2,12 +2,22 @@
 
 User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
-## Unreleased
+## 0.1.4.3 — 2026-11-12
 
 ### Added
 
 - **Six interface languages and independent region preferences.** English, Italian, French, German, Spanish and Brazilian Portuguese, selected from the Mac automatically or in **Settings → Start-up → Language & region**. Dates, numbers and sizes use the selected region. Language is selected directly from a list; Regional formats explains its scope and previews dates, numbers and sizes. Game language stays separate. Known catalog genres translate locally without changing saved metadata. Supported Nlib descriptions are requested in the interface language, with cached descriptions reused across regions sharing a language and an explicitly labelled fallback when unavailable. Language changes preserve the visible page and reuse fresh metadata instead of repeating English searches; Switch 2 IDs are included in localized lookups. Translation resources and placeholders are checked in packaged apps.
 - **Storage by game.** Settings → Storage lists each game's app, build cache and logs, with the largest caches first, including hidden games. **Delete cache** removes only that game's build cache after confirmation, preserving the app, original game files, saves and logs. A shared cache is explained before deletion; unavailable folders are labelled rather than shown as empty. Cleanup runs without blocking the interface and waits until builds finish. File sizes include hidden files, shared paths count once in totals, and free space refers to the selected Game apps volume.
+
+### Fixed
+
+- **Adding NSP, XCI, NSZ and XCZ files works with the newest engine.** With **Newest engine** at a recent nxnative, every package add stopped with an error about `configure_dotnet`, a function the engine removed. NX Library now reads packages with old and new engines alike.
+- **Cancelling or quitting during a build stops the engine's tools.** The engine now runs each tool in its own session. NX Library gives it time to stop them, then stops anything left, so quitting mid-build no longer leaves a shader build or `xcodebuild` running in the background.
+- **Saves are not replaced while a cloud download is unfinished.** If the engine's download of a cloud save was cut short, the next game start puts this Mac's save back. Import and restore wait for that start and say so.
+
+### Changed
+
+- **Updated nxnative to `8a5c5e7e`.** Building no longer needs .NET, so Setup has no .NET card and its downloader is gone. Upstream reports fixes for rendering, shaders, textures and memory across many games, including Ocarina of Time terrain and Star Fox scene changes, steadier movies and ProMotion full screen at 60 fps. Red Dead Redemption, TUNIC, both Ori games, Metroid Prime 4: Beyond, The Binding of Isaac: Rebirth, PRAGMATA, Diablo III, Diablo II: Resurrected and Nintendo Switch Sports Resort are newly playable. The Metal compiler remains **32023.922**. Every game translates its shaders again at its next build, and installed game apps keep their engine until rebuilt. NX Library starts games without the engine's own settings window, so the engine's new cloud-save question does not appear yet. See the [engine review](docs/upstream-upgrades/2026-11-12-79741184-8a5c5e7e-review.md).
 
 ## 0.1.4.2 — 2026-11-09
 

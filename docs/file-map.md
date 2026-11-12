@@ -142,7 +142,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Models/ToolchainRequirements.swift](../Sources/NXLibraryCore/Models/ToolchainRequirements.swift) | Centralizza requisiti Xcode, .NET e asset Metal e confronta versioni numeriche. |
+| [Sources/NXLibraryCore/Models/ToolchainRequirements.swift](../Sources/NXLibraryCore/Models/ToolchainRequirements.swift) | Centralizza requisiti Xcode e asset Metal e confronta versioni numeriche. |
 | [Sources/NXLibraryCore/Models/ToolchainInfo.swift](../Sources/NXLibraryCore/Models/ToolchainInfo.swift) | Registra provenienza e verifica della toolchain associata a un build. |
 | [Sources/NXLibraryCore/Models/ToolchainGateCopy.swift](../Sources/NXLibraryCore/Models/ToolchainGateCopy.swift) | Traduce il gate in testi distinguendo Metal certificato, precedente e successivo. |
 | [Sources/NXLibraryCore/Models/SetupCheck.swift](../Sources/NXLibraryCore/Models/SetupCheck.swift) | Converte fatti e override del Setup in schede, stati, azioni e condizioni di riapertura. |
@@ -150,7 +150,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/GameFoldersCopy.swift](../Sources/NXLibraryCore/Models/GameFoldersCopy.swift) | Condivide nomi delle cartelle, formati e descrizioni tra Setup, Settings e selettori dei percorsi. |
 | [Sources/NXLibraryCore/Models/SetupGrid.swift](../Sources/NXLibraryCore/Models/SetupGrid.swift) | Calcola disposizione, centratura e navigazione del focus nella griglia del Setup. |
 | [Sources/NXLibraryCore/Models/UpstreamCopy.swift](../Sources/NXLibraryCore/Models/UpstreamCopy.swift) | Prepara i testi del changelog upstream e dell’adozione degli aggiornamenti tramite NX Library. |
-| [Sources/NXLibraryCore/Services/NXNativeEnvironment.swift](../Sources/NXLibraryCore/Services/NXNativeEnvironment.swift) | Ispeziona strumenti, Python, Xcode, Metal e .NET e restituisce uno stato dell’ambiente. |
+| [Sources/NXLibraryCore/Services/NXNativeEnvironment.swift](../Sources/NXLibraryCore/Services/NXNativeEnvironment.swift) | Ispeziona strumenti, Python, Xcode e Metal e restituisce uno stato dell’ambiente. |
 | [Sources/NXLibraryCore/Services/EngineLocation.swift](../Sources/NXLibraryCore/Services/EngineLocation.swift) | Risolve checkout predefinito o scelto e produce i candidati per prod.keys. |
 | [Sources/NXLibraryCore/Services/EngineToolchain.swift](../Sources/NXLibraryCore/Services/EngineToolchain.swift) | Individua runtime incluso o venv del checkout e prepara ambiente e PATH dei processi. |
 | [Sources/NXLibraryCore/Services/EnginePackageReader.swift](../Sources/NXLibraryCore/Services/EnginePackageReader.swift) | Legge capacità delle sorgenti e content meta di tutti i pacchetti in un solo passaggio del lettore upstream (`package_reader`, o `package_title_reader` sugli engine precedenti a 5c4dc18f), validando identità e tipi senza esporre chiavi. |
@@ -165,7 +165,6 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Services/SetupProbe.swift](../Sources/NXLibraryCore/Services/SetupProbe.swift) | Raccoglie i fatti mostrati dal Setup usando comandi e controlli mirati. |
 | [Sources/NXLibraryCore/Services/SetupActions.swift](../Sources/NXLibraryCore/Services/SetupActions.swift) | Costruisce le operazioni Git ammesse per installare o allineare il motore al pin. |
 | [Sources/NXLibraryCore/Services/InstallProgress.swift](../Sources/NXLibraryCore/Services/InstallProgress.swift) | Interpreta avanzamento Git, percentuali, byte e righe parziali per le installazioni. |
-| [Sources/NXLibraryCore/Services/DotnetRelease.swift](../Sources/NXLibraryCore/Services/DotnetRelease.swift) | Seleziona il pacchetto SDK Microsoft dai metadati e ne verifica SHA-512. |
 | [Sources/NXLibraryCore/Services/KeyStore.swift](../Sources/NXLibraryCore/Services/KeyStore.swift) | Valida le chiavi, espone solo il riepilogo e pubblica atomicamente la copia gestita con permessi 0600. |
 | [Sources/NXLibraryCore/Services/KeyCheck.swift](../Sources/NXLibraryCore/Services/KeyCheck.swift) | Legge intestazioni NCA e ticket e verifica se le chiavi possono aprire le sorgenti selezionate. |
 | [Sources/NXLibraryCore/Services/CommandRunner.swift](../Sources/NXLibraryCore/Services/CommandRunner.swift) | Confine sostituibile per comandi e output, con esecuzione sincrona o streaming delle righe. |
@@ -493,7 +492,6 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/DetailsFocusTests.swift](../Tests/NXLibraryCoreTests/DetailsFocusTests.swift) | Spostamento nelle bande di Details, limiti e sezioni vuote. |
 | [Tests/NXLibraryCoreTests/DirectorySizeTests.swift](../Tests/NXLibraryCoreTests/DirectorySizeTests.swift) | Somma dei file regolari ignorando nascosti e collegamenti; cartella mancante a zero. |
 | [Tests/NXLibraryCoreTests/DiagnosticsReportTests.swift](../Tests/NXLibraryCoreTests/DiagnosticsReportTests.swift) | Rimozione di percorsi personali e chiavi e contenuto delle sezioni diagnostiche. |
-| [Tests/NXLibraryCoreTests/DotnetReleaseTests.swift](../Tests/NXLibraryCoreTests/DotnetReleaseTests.swift) | Selezione del pacchetto ARM64 e verifica del suo hash. |
 | [Tests/NXLibraryCoreTests/EngineLocationTests.swift](../Tests/NXLibraryCoreTests/EngineLocationTests.swift) | Percorso predefinito, cartella scelta e fallback quando scompare. |
 | [Tests/NXLibraryCoreTests/EngineToolchainTests.swift](../Tests/NXLibraryCoreTests/EngineToolchainTests.swift) | Rilevamento del runtime incluso e fallback a Python e strumenti del checkout. |
 | [Tests/NXLibraryCoreTests/EnvironmentTests.swift](../Tests/NXLibraryCoreTests/EnvironmentTests.swift) | Parsing di Metal e controlli dell’ambiente mediante runner sintetico. |

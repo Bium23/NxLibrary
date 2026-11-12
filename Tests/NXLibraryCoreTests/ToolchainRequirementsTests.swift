@@ -18,7 +18,7 @@ final class ToolchainRequirementsTests: XCTestCase {
     }
 
     func testMetalDownloadPinsTheCertifiedAsset() {
-        let requirements = ToolchainRequirements(minimumXcode: "27.1", dotnetMajor: 10, fallbackMetal: "32023.921",
+        let requirements = ToolchainRequirements(minimumXcode: "27.1", fallbackMetal: "32023.921",
                                                  metalAssets: ["32023.921": "27A266a"])
         XCTAssertEqual(requirements.metalDownload(for: "32023.921"),
                        ["-downloadComponent", "MetalToolchain", "-buildVersion", "27A266a"])
@@ -29,18 +29,10 @@ final class ToolchainRequirementsTests: XCTestCase {
     func testCurrentCoversItsOwnFallback() {
         let current = ToolchainRequirements.current
         XCTAssertNotNil(current.metalAssets[current.fallbackMetal])
-        XCTAssertEqual(current.dotnetMajor, 10)
     }
 
     func testXcodeVersionParse() {
         XCTAssertEqual(ToolchainRequirements.xcodeVersion(from: "Xcode 27.1\nBuild version 27A9275\n"), "27.1")
         XCTAssertNil(ToolchainRequirements.xcodeVersion(from: "xcode-select: error"))
-    }
-
-    func testNewestDotnetSDKForMajor() {
-        let lines = ["8.0.414 [/usr/local/share/dotnet/sdk]", "10.0.401 [/usr/local/share/dotnet/sdk]",
-                     "10.0.100 [/usr/local/share/dotnet/sdk]"]
-        XCTAssertEqual(ToolchainRequirements.newestSDK(major: 10, in: lines), "10.0.401")
-        XCTAssertNil(ToolchainRequirements.newestSDK(major: 10, in: ["8.0.414 [/x]"]))
     }
 }

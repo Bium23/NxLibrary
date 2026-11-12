@@ -12,7 +12,7 @@ final class DiagnosticsReportTests: XCTestCase {
         i.engineHead = "ee369f0 fix: something"
         i.home = "/Users/someone"
         i.xcodePath = "/Applications/Xcode.app/Contents/Developer"
-        i.setupRows = [("Xcode", true), (".NET SDK", false)]
+        i.setupRows = [("Xcode", true), ("zstd", false)]
         i.keysImported = true
         i.hasHeaderKey = true
         i.keyGenerations = 19
@@ -78,7 +78,8 @@ final class DiagnosticsReportTests: XCTestCase {
             XCTAssertTrue(report.contains(heading), heading)
         }
         XCTAssertTrue(report.contains("noProfile"))
-        XCTAssertTrue(report.contains(".NET SDK: missing"))
+        XCTAssertTrue(report.contains("zstd: missing"))
+        XCTAssertFalse(report.contains(".NET"))
     }
 
     func testNoGameSectionWithoutGame() {

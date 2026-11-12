@@ -10,7 +10,7 @@ This guide covers building NX Library itself. For app setup, game preparation an
 - Python 3 for the publication checks and packaging helpers.
 - Homebrew's `zstd` and `glslang`, at the versions recorded in [runtime.lock](../runtime.lock), when preparing the bundled runtime. The script checks installed versions; it does not install or silently upgrade them.
 
-Building the frontend alone does not need games or keys. Running the game's build workflow also needs the .NET 10 SDK, the pinned nxnative checkout and the user's own authorised sources and keys. Setup explains and prepares the supported prerequisites.
+Building the frontend alone does not need games or keys. Running the game's build workflow also needs the pinned nxnative checkout (its tools are native executables since 641636e2, so no .NET) and the user's own authorised sources and keys. Setup explains and prepares the supported prerequisites.
 
 ## Build a development app
 

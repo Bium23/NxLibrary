@@ -20,7 +20,6 @@ public enum DiagnosticsReport {
         public var metalFound: String? = nil
         public var metalCertified: String? = nil
         public var untestedOverride = false
-        public var dotnet: String? = nil
         public var python: String? = nil
         public var setupRows: [(name: String, ready: Bool)] = []
         public var keysImported = false
@@ -57,7 +56,6 @@ public enum DiagnosticsReport {
                   "- Xcode: \(value(i.xcodePath)) \(value(i.xcodeVersion))",
                   "- Metal compiler: \(value(i.metalFound)) (certified: \(value(i.metalCertified)))",
                   "- Untested-toolchain override: \(i.untestedOverride ? "on" : "off")",
-                  "- .NET SDK: \(value(i.dotnet))",
                   "- Python: \(value(i.python))", ""]
         lines += ["## Setup"] + i.setupRows.map { "- \($0.name): \($0.ready ? "ready" : "missing")" } + [""]
         lines += ["## Keys",

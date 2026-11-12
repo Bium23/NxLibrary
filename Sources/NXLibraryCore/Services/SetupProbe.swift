@@ -49,8 +49,6 @@ public struct SetupProbe {
             xcodeStatus: xcode.status,
             metalVersion: MetalVersion.parse(run("/usr/bin/xcrun", ["metal", "--version"]).stdout),
             certifiedMetal: certifiedMetal, allowUntested: allowUntested,
-            dotnetSDKs: run("/usr/bin/env", ["dotnet", "--list-sdks"]).stdout
-                .split(separator: "\n").map(String.init).filter { !$0.isEmpty },
             engine: engine, engineFolder: engineFolder, pinnedCommit: pinnedCommit,
             runtimeProblem: runtimeProblem(),
             keys: keys, keysError: keysError,

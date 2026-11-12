@@ -3,7 +3,7 @@ import Darwin
 
 public enum SaveFailure: LocalizedError, Equatable {
     case invalidTitleID, unsafePath, customSavePath, unreadableConfiguration
-    case cloudEnabled(String), running, busy, changed, emptyImport, invalidSnapshot, recoveryRequired
+    case cloudEnabled(String), running, busy, changed, emptyImport, invalidSnapshot, recoveryRequired, cloudPullPending
     case io(String)
     public var errorDescription: String? {
         switch self {
@@ -18,6 +18,7 @@ public enum SaveFailure: LocalizedError, Equatable {
         case .emptyImport: return L10n.text("Choose a folder containing this game's actual save files.")
         case .invalidSnapshot: return L10n.text("This backup is incomplete, changed, or belongs to another game.")
         case .recoveryRequired: return L10n.text("Save recovery is required before Play. Your backup has been kept.")
+        case .cloudPullPending: return L10n.text("A cloud save download did not finish. Play the game once so it can put this Mac's save back, then try again.")
         case .io(let message): return message
         }
     }
@@ -35,6 +36,9 @@ public struct SaveLocation: Equatable {
     public let titleID: String
     public let root: URL
     public func directory(_ slot: SaveSlot) -> URL { root.appendingPathComponent(slot == .account ? "save" : "save_device") }
+    /// nxnative's journal of a cloud-save pull (dm/host/save_sync.c, `<DM_SAVE>.pull`, nxnative e6048dea): while it is
+    /// there, the game's next start puts this device's save back, so nothing may replace the save folders first.
+    public var cloudPullJournal: URL { root.appendingPathComponent("save.pull") }
     public static func validID(_ value: String) -> Bool {
         value.utf8.count == 16 && value.utf8.allSatisfy { (48...57).contains($0) || (65...70).contains($0) || (97...102).contains($0) }
     }

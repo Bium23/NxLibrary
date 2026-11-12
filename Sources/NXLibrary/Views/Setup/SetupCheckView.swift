@@ -131,7 +131,6 @@ struct SetupCheckView: View {
         switch id {
         case .xcode: return .build
         case .metal: return .monitor
-        case .dotnet: return .terminal
         case .engine: return .rocket
         case .runtime: return .storage
         case .keys: return .key

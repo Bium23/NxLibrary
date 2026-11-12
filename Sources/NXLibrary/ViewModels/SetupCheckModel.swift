@@ -23,9 +23,6 @@ final class SetupCheckModel: ObservableObject {
     private var overrides: [SetupItemID: SetupOverride] = [:]
     private var timer: Timer?
     private var probing = false
-    private var dotnetPackage: DotnetPackage?
-    private var dotnetLookup = false
-    private var dotnetObservation: NSKeyValueObservation?
 
     init(viewModel: AppViewModel) {
         self.viewModel = viewModel
@@ -60,8 +57,7 @@ final class SetupCheckModel: ObservableObject {
     }
 
     private func apply(_ probed: SetupFacts) {
-        var facts = probed
-        facts.dotnetLatest = dotnetPackage?.version
+        let facts = probed
         self.facts = facts
         let base = SetupCheck.items(from: facts)
         // A card that is ready now ends what was waiting on it ("Finish in Installer",
@@ -79,7 +75,6 @@ final class SetupCheckModel: ObservableObject {
     }
 
     func startRechecking() {
-        lookUpDotnet()
         refresh()
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 4, repeats: true) { [weak self] _ in self?.refresh() }
@@ -88,21 +83,6 @@ final class SetupCheckModel: ObservableObject {
     func stopRechecking() {
         timer?.invalidate()
         timer = nil
-    }
-
-    /// Microsoft's newest SDK of the required major, once per session; offline it stays unknown.
-    private func lookUpDotnet() {
-        guard dotnetPackage == nil, !dotnetLookup else { return }
-        dotnetLookup = true
-        URLSession.shared.dataTask(with: DotnetRelease.metadataURL) { [weak self] data, _, _ in
-            let package = data.flatMap { try? DotnetRelease.latestSDKPackage(from: $0) }
-            DispatchQueue.main.async {
-                self?.dotnetLookup = false
-                guard let package, package.version.hasPrefix("\(Self.requirements.dotnetMajor).") else { return }
-                self?.dotnetPackage = package
-                self?.refresh()
-            }
-        }.resume()
     }
 
     func rememberStates() {
@@ -142,9 +122,9 @@ final class SetupCheckModel: ObservableObject {
 
     // MARK: - Actions
 
-    /// What Install all runs, in card order, updates included.
+    /// What Install all runs, in card order.
     var missingAutomatic: [SetupItemID] {
-        SetupCheck.automatic(items, includeUpdates: true)
+        SetupCheck.automatic(items)
     }
 
     func activate(_ id: SetupItemID) {
@@ -158,7 +138,7 @@ final class SetupCheckModel: ObservableObject {
                 let app = viewModel.resolvedDeveloperDir().deletingLastPathComponent().deletingLastPathComponent()
                 NSWorkspace.shared.open(app)
             }
-        case .metal, .dotnet, .engine:
+        case .metal, .engine:
             guard item.actionTitle != nil || item.state == .needsYou else { return }
             perform(id) { _ in }
         case .runtime:
@@ -219,7 +199,6 @@ final class SetupCheckModel: ObservableObject {
     private func perform(_ id: SetupItemID, completion: @escaping (Bool) -> Void) {
         switch id {
         case .metal: installMetal(completion)
-        case .dotnet: installDotnet(completion)
         case .engine: fetchEngine(completion)
         default: completion(false)
         }
@@ -340,62 +319,5 @@ final class SetupCheckModel: ObservableObject {
                 completion(true)
             }
         }
-    }
-
-    private func installDotnet(_ completion: @escaping (Bool) -> Void) {
-        let session = URLSession(configuration: .ephemeral, delegate: DotnetDownloadPolicy(), delegateQueue: nil)
-        let chip = "DOWNLOADING…"
-        setOverride(.dotnet, .working(chip, detail: L10n.format("Asking Microsoft for the newest .NET %@ SDK…", [String(describing: (Self.requirements.dotnetMajor))])))
-        let fail: (String) -> Void = { [weak self] message in
-            session.finishTasksAndInvalidate()
-            DispatchQueue.main.async {
-                self?.dotnetObservation = nil
-                self?.viewModel.logs.append(LogEntry(level: .error, message: L10n.format(".NET SDK: %@", [String(describing: (message))])))
-                self?.setOverride(.dotnet, .failed(message))
-                completion(false)
-            }
-        }
-        let download: (DotnetPackage) -> Void = { [weak self] package in
-            let task = session.downloadTask(with: package.url) { location, response, error in
-                defer { session.finishTasksAndInvalidate() }
-                guard let location, error == nil, let http = response as? HTTPURLResponse,
-                      http.statusCode == 200, let finalURL = http.url, DotnetRelease.trustedDownloadURL(finalURL)
-                else { return fail(error?.localizedDescription ?? "The download stopped.") }
-                let folder = FileManager.default.temporaryDirectory.appendingPathComponent("NXLibrary-dotnet")
-                let pkg = folder.appendingPathComponent(package.url.lastPathComponent)
-                do {
-                    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-                    try? FileManager.default.removeItem(at: pkg)
-                    try FileManager.default.moveItem(at: location, to: pkg)
-                    self?.report(.dotnet, "CHECKING…", InstallProgress(fraction: 1, label: L10n.text("Checking Microsoft's hash…")))
-                    guard try DotnetRelease.verify(file: pkg, sha512: package.sha512) else {
-                        try? FileManager.default.removeItem(at: pkg)
-                        return fail("The download does not match Microsoft's published hash, so it was deleted.")
-                    }
-                } catch {
-                    return fail(error.localizedDescription)
-                }
-                DispatchQueue.main.async {
-                    self?.dotnetObservation = nil
-                    // macOS Installer asks for the password; NX Library waits for the SDK to appear.
-                    NSWorkspace.shared.open(pkg)
-                    self?.viewModel.logs.append(LogEntry(level: .info, message: L10n.format(".NET %@ SDK installer opened.", [String(describing: (package.version))])))
-                    self?.setOverride(.dotnet, .needsYou("FINISH IN INSTALLER"))
-                    completion(true)
-                }
-            }
-            self?.dotnetObservation = task.progress.observe(\.fractionCompleted) { progress, _ in
-                self?.report(.dotnet, chip, InstallProgress.bytes(done: progress.completedUnitCount,
-                                                                  total: progress.totalUnitCount))
-            }
-            task.resume()
-        }
-        if let package = dotnetPackage { download(package); return }
-        session.dataTask(with: DotnetRelease.metadataURL) { data, response, error in
-            guard let data, error == nil, let http = response as? HTTPURLResponse,
-                  http.statusCode == 200, let finalURL = http.url, DotnetRelease.trustedDownloadURL(finalURL)
-            else { return fail(error?.localizedDescription ?? "No answer from Microsoft.") }
-            do { download(try DotnetRelease.latestSDKPackage(from: data)) } catch { fail(error.localizedDescription) }
-        }.resume()
     }
 }

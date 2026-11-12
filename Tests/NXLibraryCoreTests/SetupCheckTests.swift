@@ -17,7 +17,6 @@ final class SetupCheckTests: XCTestCase {
 
     private func facts() -> SetupFacts {
         SetupFacts(xcodeStatus: 0, metalVersion: "32023.921", certifiedMetal: "32023.921", allowUntested: false,
-                   dotnetSDKs: ["10.0.401 [/usr/local/share/dotnet/sdk]"],
                    engine: .checkout(head: pin, dirty: false), engineFolder: folder, pinnedCommit: pin,
                    runtimeProblem: nil,
                    keys: KeySummary(hasHeaderKey: true, applicationKeyGenerations: [0, 1, 2]), keysError: nil,
@@ -76,20 +75,10 @@ final class SetupCheckTests: XCTestCase {
         XCTAssertEqual(item(.metal).state, .ready)
     }
 
-    func testDotnet() {
-        XCTAssertEqual(item(.dotnet).state, .ready)
-        for sdks in [["9.0.1 [/usr/local/share/dotnet/sdk]"], []] {
-            let card = item(.dotnet) { $0.dotnetSDKs = sdks }
-            XCTAssertEqual(card.state, .missing)
-            XCTAssertEqual(card.chip, "NOT INSTALLED")
-            XCTAssertEqual(card.actionTitle, "Install")
-        }
-        XCTAssertNil(item(.dotnet).actionTitle)
-        XCTAssertTrue(item(.dotnet).detail.contains("10.0.401"))
-        let update = item(.dotnet) { $0.dotnetLatest = "10.0.404" }
-        XCTAssertEqual(update.state, .ready)
-        XCTAssertEqual(update.actionTitle, "Update to 10.0.404")
-        XCTAssertNil(item(.dotnet) { $0.dotnetLatest = "10.0.401" }.actionTitle)
+    /// nxnative 641636e2 commits its tools as native executables: Setup has no .NET card.
+    func testNoDotnetCard() {
+        XCTAssertNil(SetupItemID(rawValue: "dotnet"))
+        XCTAssertFalse(SetupCheck.items(from: facts()).contains { $0.title.contains(".NET") })
     }
 
     func testEngine() {
@@ -205,7 +194,7 @@ final class SetupCheckTests: XCTestCase {
             XCTAssertEqual(files.state, readable == nil ? .ready : .warning)
             XCTAssertTrue(cards.filter(\.isRequired).allSatisfy { $0.state == .ready })
             XCTAssertFalse(SetupCheck.shouldReopen(previous: [files.id: .ready], current: cards))
-            XCTAssertEqual(SetupCheck.automatic(cards, includeUpdates: true), [])
+            XCTAssertEqual(SetupCheck.automatic(cards), [])
         }
     }
 
@@ -220,9 +209,9 @@ final class SetupCheckTests: XCTestCase {
         XCTAssertEqual(items.first { $0.id == .xcode }!.state, .ready)
         XCTAssertNil(engine.progress)
 
-        f.dotnetSDKs = []
-        let downloading = SetupCheck.applying([.dotnet: .working("DOWNLOADING…", progress: 0.25, detail: "50 of 200 MB")],
-                                              to: SetupCheck.items(from: f)).first { $0.id == .dotnet }!
+        f.metalVersion = nil
+        let downloading = SetupCheck.applying([.metal: .working("DOWNLOADING…", progress: 0.25, detail: "50 of 200 MB")],
+                                              to: SetupCheck.items(from: f)).first { $0.id == .metal }!
         XCTAssertEqual(downloading.chip, "DOWNLOADING… 25%")
         XCTAssertEqual(downloading.progress, 0.25)
         XCTAssertEqual(downloading.detail, "50 of 200 MB")
@@ -230,29 +219,24 @@ final class SetupCheckTests: XCTestCase {
 
     func testAutomaticActions() {
         var f = facts()
-        XCTAssertEqual(SetupCheck.automatic(SetupCheck.items(from: f), includeUpdates: true), [])
-
-        f.dotnetLatest = "10.0.404"
-        XCTAssertEqual(SetupCheck.automatic(SetupCheck.items(from: f), includeUpdates: true), [.dotnet])
-        XCTAssertEqual(SetupCheck.automatic(SetupCheck.items(from: f), includeUpdates: false), [])
+        XCTAssertEqual(SetupCheck.automatic(SetupCheck.items(from: f)), [])
 
         f.metalVersion = "32023.917"
         f.engine = .missing
         f.keys = nil
-        XCTAssertEqual(SetupCheck.automatic(SetupCheck.items(from: f), includeUpdates: false), [.metal, .engine])
+        XCTAssertEqual(SetupCheck.automatic(SetupCheck.items(from: f)), [.metal, .engine])
         // Metal comes through Xcode: nothing to try until Xcode is ready.
         f.xcodeVersion = "26.4"
-        XCTAssertEqual(SetupCheck.automatic(SetupCheck.items(from: f), includeUpdates: false), [.engine])
+        XCTAssertEqual(SetupCheck.automatic(SetupCheck.items(from: f)), [.engine])
         f.xcodeVersion = nil
         f.xcodeStatus = nil
-        XCTAssertEqual(SetupCheck.automatic(SetupCheck.items(from: f), includeUpdates: false), [.engine])
+        XCTAssertEqual(SetupCheck.automatic(SetupCheck.items(from: f)), [.engine])
         f.xcodeStatus = 0
 
         f.certifiedMetal = "32024.5"
         f.engine = .checkout(head: "ee369f0", dirty: true)
-        f.dotnetSDKs = []
-        let items = SetupCheck.applying([.dotnet: .working("DOWNLOADING…")], to: SetupCheck.items(from: f))
-        XCTAssertEqual(SetupCheck.automatic(items, includeUpdates: true), [])
+        let items = SetupCheck.applying([.metal: .working("DOWNLOADING…")], to: SetupCheck.items(from: f))
+        XCTAssertEqual(SetupCheck.automatic(items), [])
     }
 
     func testShouldReopenOnlyOnRegression() {
@@ -395,7 +379,6 @@ final class SetupCheckTests: XCTestCase {
         let runner = FakeRunner()
         runner.responses["xcodebuild -version"] = CommandResult(status: 69, stdout: "", stderr: "license")
         runner.responses["metal --version"] = CommandResult(status: 0, stdout: "Apple metal version 32023.921 (metalfe-32023.921.6)\n", stderr: "")
-        runner.responses["dotnet --list-sdks"] = CommandResult(status: 0, stdout: "10.0.401 [/usr/local/share/dotnet/sdk]\n", stderr: "")
         runner.responses["rev-parse HEAD"] = CommandResult(status: 0, stdout: pin + "\n", stderr: "")
         runner.responses["status --porcelain"] = CommandResult(status: 0, stdout: " M dm/gfx/nvn/dmsh_chain.h\n?? x/_build/a\n", stderr: "")
 
@@ -410,7 +393,6 @@ final class SetupCheckTests: XCTestCase {
         XCTAssertEqual(facts.xcodeStatus, 69)
         XCTAssertNil(facts.xcodeVersion)
         XCTAssertEqual(facts.metalVersion, "32023.921")
-        XCTAssertEqual(facts.dotnetSDKs, ["10.0.401 [/usr/local/share/dotnet/sdk]"])
         XCTAssertNil(facts.keys)
         XCTAssertNil(facts.libraryReadable)
 

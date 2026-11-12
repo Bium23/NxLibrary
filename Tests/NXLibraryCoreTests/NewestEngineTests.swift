@@ -255,7 +255,6 @@ final class NewestEngineTests: XCTestCase {
 
     private func facts(head: String, choice: NewestEngineChoice?) -> SetupFacts {
         var facts = SetupFacts(xcodeStatus: 0, metalVersion: "32023.922", certifiedMetal: "32023.922", allowUntested: true,
-                               dotnetSDKs: ["10.0.401 [/usr/local/share/dotnet/sdk]"],
                                engine: .checkout(head: head, dirty: false), engineFolder: repo, pinnedCommit: pin,
                                runtimeProblem: nil, keys: nil, keysError: nil, libraryReadable: true,
                                engineBehind: false)

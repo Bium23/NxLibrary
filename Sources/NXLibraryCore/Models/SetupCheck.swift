@@ -3,7 +3,7 @@ import Foundation
 /// The Setup check's cards, in screen order: the player's folders first,
 /// then prerequisites for building games.
 public enum SetupItemID: String, CaseIterable, Codable {
-    case library, sources, xcode, metal, dotnet, engine, runtime, keys
+    case library, sources, xcode, metal, engine, runtime, keys
 }
 
 public enum SetupState: String, Codable, Equatable {
@@ -40,7 +40,6 @@ public struct SetupFacts: Equatable {
     public var metalVersion: String?
     public var certifiedMetal: String
     public var allowUntested: Bool
-    public var dotnetSDKs: [String]
     public var engine: EngineFacts
     public var engineFolder: URL
     public var pinnedCommit: String
@@ -62,8 +61,6 @@ public struct SetupFacts: Equatable {
     public var extractedFoldersSupported: Bool = false
     /// "27.1"; nil when xcodebuild did not say.
     public var xcodeVersion: String?
-    /// The newest SDK of the required major Microsoft publishes; nil until known.
-    public var dotnetLatest: String?
     public var requirements: ToolchainRequirements
     /// The checkout's HEAD is an ancestor of the pin (an NX Library update brought a newer engine); false when it
     /// is ahead or elsewhere; nil when git cannot tell (the pin is not fetched yet, so it is newer).
@@ -72,15 +69,14 @@ public struct SetupFacts: Equatable {
     public var newestEngine: NewestEngineChoice? = nil
 
     public init(xcodeStatus: Int32?, metalVersion: String?, certifiedMetal: String, allowUntested: Bool,
-                dotnetSDKs: [String], engine: EngineFacts, engineFolder: URL, pinnedCommit: String,
+                engine: EngineFacts, engineFolder: URL, pinnedCommit: String,
                 runtimeProblem: String?, keys: KeySummary?, keysError: String?, libraryReadable: Bool?,
-                xcodeVersion: String? = nil, dotnetLatest: String? = nil,
+                xcodeVersion: String? = nil,
                 requirements: ToolchainRequirements = .current, engineBehind: Bool? = nil) {
         self.xcodeStatus = xcodeStatus
         self.metalVersion = metalVersion
         self.certifiedMetal = certifiedMetal
         self.allowUntested = allowUntested
-        self.dotnetSDKs = dotnetSDKs
         self.engine = engine
         self.engineFolder = engineFolder
         self.pinnedCommit = pinnedCommit
@@ -89,7 +85,6 @@ public struct SetupFacts: Equatable {
         self.keysError = keysError
         self.libraryReadable = libraryReadable
         self.xcodeVersion = xcodeVersion
-        self.dotnetLatest = dotnetLatest
         self.requirements = requirements
         self.engineBehind = engineBehind
     }
@@ -135,9 +130,9 @@ public enum SetupCheck {
     }
 
     /// The cards NX Library fixes by itself, in card order: anything missing it can
-    /// install, the certified Metal compiler, the pinned engine commit, and (when
-    /// asked) a newer SDK of the .NET major the engine needs.
-    public static func automatic(_ items: [SetupItem], includeUpdates: Bool) -> [SetupItemID] {
+    /// install, the certified Metal compiler and the pinned engine commit. Since nxnative 641636e2 the
+    /// engine's tools are native executables, so there is no .NET to install or update.
+    public static func automatic(_ items: [SetupItem]) -> [SetupItemID] {
         let xcodeReady = items.first { $0.id == .xcode }?.state == .ready
         return items.compactMap { item in
             guard item.state != .working, item.actionTitle != nil else { return nil }
@@ -147,8 +142,6 @@ public enum SetupCheck {
                 return xcodeReady && (item.state == .missing || item.state == .warning) ? item.id : nil
             case .engine:
                 return item.state == .missing || item.state == .warning ? item.id : nil
-            case .dotnet:
-                return item.state == .missing || (includeUpdates && item.state == .ready) ? item.id : nil
             default:
                 return nil
             }
@@ -206,20 +199,6 @@ public enum SetupCheck {
             return SetupItem(id: id, title: L10n.text("Metal compiler"), state: .warning, chip: "WAITING FOR ENGINE", about: about,
                              detail: L10n.format("Version %@ came with this Xcode; the engine is tested with %@. New builds wait for an NX Library update tested with it. Games you built still play.", [String(describing: (version)), String(describing: (f.certifiedMetal))]),
                              actionTitle: nil)
-        case .dotnet:
-            let about = L10n.text("Builds the engine's tools that read each game's package.")
-            if let installed = ToolchainRequirements.newestSDK(major: f.requirements.dotnetMajor, in: f.dotnetSDKs) {
-                if let latest = f.dotnetLatest, VersionNumber.isOlder(installed, than: latest) {
-                    var card = ready(id, ".NET 10 SDK", about,
-                                     L10n.format("%@ installed. Microsoft has %@; A installs it, and macOS asks for your password.", [String(describing: (installed)), String(describing: (latest))]))
-                    card.actionTitle = "Update to \(latest)"
-                    return card
-                }
-                return ready(id, ".NET 10 SDK", about, "\(installed) installed.")
-            }
-            return SetupItem(id: id, title: L10n.text(".NET 10 SDK"), state: .missing, chip: "NOT INSTALLED", about: about,
-                             detail: L10n.text("NX Library downloads Microsoft's installer; macOS asks for your password."),
-                             actionTitle: L10n.text("Install"))
         case .engine:
             let about = L10n.text("nxnative, used as it is upstream, at the commit this NX Library is tested with.")
             let short = String(f.pinnedCommit.prefix(7))

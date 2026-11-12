@@ -307,6 +307,86 @@ final class BuildServiceTests: XCTestCase {
         XCTAssertEqual(kill(pid, 0), -1)
         XCTAssertEqual(errno, ESRCH)
     }
+
+    // MARK: - Tools in sessions of their own (nxnative 0b124486)
+
+    /// A build script that runs `sleep 60` in a session of its own, as nxnative's proc_group does, and writes its pid.
+    /// `stops`: on SIGTERM it stops the tool's group and exits 143, as the engine does; otherwise it ignores SIGTERM.
+    private func sessionToolBuild(stops: Bool) throws -> (BuildCommand, URL, URL) {
+        let python = URL(fileURLWithPath: "/usr/bin/python3")
+        guard FileManager.default.isExecutableFile(atPath: python.path) else { throw XCTSkip("system Python unavailable") }
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("NXSession-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let pidFile = root.appendingPathComponent("tool.pid")
+        let script = """
+        import os, signal, subprocess, sys, time
+        tool = subprocess.Popen(['/bin/sleep', '60'], start_new_session=True)
+        def stop(*_):
+            os.killpg(tool.pid, signal.SIGTERM); tool.wait(); sys.exit(143)
+        signal.signal(signal.SIGTERM, stop if \(stops ? "True" : "False") else signal.SIG_IGN)
+        open(sys.argv[1] + '.tmp', 'w').write(str(tool.pid)); os.rename(sys.argv[1] + '.tmp', sys.argv[1])
+        time.sleep(60)
+        """
+        let command = BuildCommand(executable: python, arguments: ["-I", "-c", script, pidFile.path],
+                                   environment: [:], workingDirectory: root)
+        return (command, root, pidFile)
+    }
+
+    private func start(_ service: BuildService, _ command: BuildCommand, root: URL, pidFile: URL,
+                       done: XCTestExpectation) throws -> pid_t {
+        service.start(command: command, logURL: root.appendingPathComponent("build.log"),
+                      tempApp: root.appendingPathComponent("Temp.app"), finalApp: root.appendingPathComponent("Final.app"),
+                      eventHandler: { _ in }, completion: { result in
+            XCTAssertTrue(result.cancelled)
+            done.fulfill()
+        })
+        let deadline = Date().addingTimeInterval(10)
+        while !FileManager.default.fileExists(atPath: pidFile.path), Date() < deadline { Thread.sleep(forTimeInterval: 0.05) }
+        return try XCTUnwrap(Int32(String(contentsOf: pidFile).trimmingCharacters(in: .whitespacesAndNewlines)))
+    }
+
+    private func assertGone(_ pid: pid_t, file: StaticString = #filePath, line: UInt = #line) {
+        let deadline = Date().addingTimeInterval(3)
+        while kill(pid, 0) == 0, Date() < deadline { Thread.sleep(forTimeInterval: 0.05) }
+        XCTAssertEqual(kill(pid, 0), -1, "the tool is still running", file: file, line: line)
+    }
+
+    /// Quitting NX Library mid-build sends the same SIGTERM as a cancel, so the engine stops its tools itself, at once.
+    func testQuitLetsTheEngineStopItsTools() throws {
+        let (command, root, pidFile) = try sessionToolBuild(stops: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let service = BuildService(stopGrace: 8)
+        let done = expectation(description: "stopped")
+        let tool = try start(service, command, root: root, pidFile: pidFile, done: done)
+        let began = Date()
+        service.terminateNow()
+        XCTAssertLessThan(Date().timeIntervalSince(began), 5)
+        wait(for: [done], timeout: 10)
+        assertGone(tool)
+    }
+
+    /// A script that does not stop in time is killed with its tools, including one in a session of its own.
+    func testQuitKillsToolsTheScriptLeft() throws {
+        let (command, root, pidFile) = try sessionToolBuild(stops: false)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let service = BuildService(stopGrace: 1)
+        let done = expectation(description: "killed")
+        let tool = try start(service, command, root: root, pidFile: pidFile, done: done)
+        service.terminateNow()
+        wait(for: [done], timeout: 10)
+        assertGone(tool)
+    }
+
+    func testCancelKillsToolsTheScriptLeft() throws {
+        let (command, root, pidFile) = try sessionToolBuild(stops: false)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let service = BuildService(stopGrace: 1)
+        let done = expectation(description: "cancelled")
+        let tool = try start(service, command, root: root, pidFile: pidFile, done: done)
+        service.cancel()
+        wait(for: [done], timeout: 10)
+        assertGone(tool)
+    }
 }
 
 private final class DenyInstallDirectory: FileManager, @unchecked Sendable {

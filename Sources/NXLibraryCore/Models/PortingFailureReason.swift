@@ -71,7 +71,7 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
     public func what(game: String) -> String {
         switch kind {
         case .rosetta: return L10n.text("The porting started an Intel Python, so its tools ran under Rosetta.")
-        case .translator: return L10n.text("The shader translator needs the .NET 10 runtime for this Mac.")
+        case .translator: return L10n.text("The engine's shader translator is missing or damaged.")
         case .zbic: return L10n.text("The engine needs the zbic package to read this game's code.")
         case .cltSelected: return L10n.text("The selected developer folder is the Command Line Tools, which cannot build the app.")
         case .otherMetal: return L10n.text("The shaders were tested with another Metal compiler than the one on this Mac.")
@@ -104,7 +104,7 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
     public var next: String {
         switch kind {
         case .rosetta: return L10n.text("Reinstall NX Library so the porting uses its own arm64 Python.")
-        case .translator: return L10n.text("Open Setup and install the .NET 10 SDK.")
+        case .translator: return L10n.text("Open Setup and check the nxnative engine card.")
         case .zbic: return L10n.text("Update NX Library: its built-in Python includes zbic from 0.1.3.2. Installing zbic with pip does not reach it.")
         case .cltSelected: return L10n.text("Open Setup and select Xcode.")
         case .otherMetal: return L10n.text("Install the certified compiler from Setup, or allow untested toolchains in Settings → Engine.")

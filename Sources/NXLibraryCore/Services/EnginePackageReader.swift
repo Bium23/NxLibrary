@@ -99,7 +99,8 @@ try:
     with contextlib.redirect_stdout(io.StringIO()):
         spec.loader.exec_module(engine)
         environment = dict(os.environ)
-        engine.configure_dotnet(environment)
+        if hasattr(engine, 'configure_dotnet'):   # engines before nxnative 641636e2 (.NET tools)
+            engine.configure_dotnet(environment)
         if hasattr(engine, 'package_reader'):
             with engine.package_reader(repo, keys, environment) as reader:
                 found = reader.contents([p for p, _ in packages])

@@ -66,11 +66,11 @@ Game files, keys and firmware are not provided. See [Legal and third-party notic
 
 ### Project status
 
-**0.1.4.2 alpha.** Download the packaged app from [Releases](https://github.com/Bium23/NxLibrary/releases/latest), or [build it from source](#building-from-source).
+**0.1.4.3 alpha.** Download the packaged app from [Releases](https://github.com/Bium23/NxLibrary/releases/latest), or [build it from source](#building-from-source).
 
 Automated checks cover the application code, publication inputs, compilation and development-app packaging. They do not certify game compatibility. Changes are recorded in the [changelog](CHANGELOG.md), and the current checks are available under [Actions](https://github.com/Bium23/NxLibrary/actions/workflows/ci.yml).
 
-The engine is pinned to `79741184`, with Ocarina of Time startup/memory/rendering improvements, Switch 2 Bluetooth controller support in rebuilt games, updated frame-rate profiles and cloud-save race protection, using Xcode 27.2 / Metal 32023.922. See the [engine upgrade notes](docs/upstream-upgrades/README.md).
+The engine is pinned to `8a5c5e7e`: builds no longer need .NET, rendering and shader fixes across many games, newly playable titles such as Red Dead Redemption, TUNIC, Metroid Prime 4: Beyond and PRAGMATA, and safer stopping of builds and cloud-save downloads, using Xcode 27.2 / Metal 32023.922. See the [engine upgrade notes](docs/upstream-upgrades/README.md).
 
 ## Getting started
 
@@ -80,7 +80,6 @@ The engine is pinned to `79741184`, with Ocarina of Time startup/memory/renderin
 |---|---|
 | **Mac** | Apple silicon, macOS 13 or later. |
 | **Xcode** | 27.2 or later, with the Metal compiler certified for the pinned engine. |
-| **.NET** | .NET 10 SDK, used by the engine's extractor. |
 | **Engine** | nxnative at the pinned commit. Setup can prepare the checkout; an existing folder can be chosen in **Settings → Engine**. |
 | **Your files** | Your own supported game sources and keys, with the rights and permissions needed to use them. |
 
@@ -117,7 +116,7 @@ Packaged releases check this repository for app updates; no GitHub account is ne
 
 Setup has two steps, **Get ready** and **Your games**.
 
-**Get ready** shows the engine, build tools and keys. **Install all** handles the supported steps: the engine checkout, the certified Metal compiler and the official .NET installer. Xcode itself comes from the App Store; its licence and any system prompts remain your responsibility. Choose **Continue** to proceed; incomplete build requirements can be finished later, and existing game apps remain playable.
+**Get ready** shows the engine, build tools and keys. **Install all** handles the supported steps: the engine checkout and the certified Metal compiler. The engine's tools are native, so .NET is no longer needed. Xcode itself comes from the App Store; its licence and any system prompts remain your responsibility. Choose **Continue** to proceed; incomplete build requirements can be finished later, and existing game apps remain playable.
 
 **Your games** shows **Game apps**: where to keep existing nxnative games (`.app`) and install new builds. It checks the selected folder before reporting an empty library. Use **Change** to choose another folder, **Choose game file** for NSP, XCI, NSZ or XCZ, or **Choose a folder instead** for a source folder, including supported extracted inputs. A single detected title opens the existing build review; multiple titles require a choice. Selecting sources never starts a build by itself. Cancelling the picker stays on this page.
 
@@ -299,7 +298,7 @@ Before reporting a problem, review copied diagnostics and remove anything person
 ### Compatibility and limitations
 
 - NX Library uses a manually pinned engine and checks its commit, working tree, CLI contract and Metal compiler before new builds. It does not follow upstream `main` automatically. **Settings → Engine → Newest engine** lets you choose `main` yourself before NX Library has tested it: an orange dot marks it, builds are recorded as untested, **Update** moves to a newer `main` when there is one, **Back to tested** returns to the pinned engine, and it is not offered when `main` needs a different Metal compiler.
-- The current engine is `79741184` and certifies Metal `32023.922`. **Build anyway with an untested toolchain** requires explicit confirmation and marks the resulting build as untested. A successful launch does not turn it into a certified combination.
+- The current engine is `8a5c5e7e` and certifies Metal `32023.922`. **Build anyway with an untested toolchain** requires explicit confirmation and marks the resulting build as untested. A successful launch does not turn it into a certified combination.
 - Game compatibility depends on nxnative, the game version and the toolchain.
 - Output follows the window/display; native 1440p/4K internal rendering is not supported. Render scale is 50–100% where the build supports it. MetalFX is spatial upscaling.
 - Builds run one at a time. iOS/IPA output, automatic engine updates and notarisation are not currently provided.

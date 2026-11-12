@@ -99,8 +99,8 @@ final class FirstRunSetupTests: XCTestCase {
             SetupItem(id: $0, title: $0.rawValue, state: .ready, chip: "", about: "", detail: "")
         }
         let requirements = SetupCheck.requirements(all)
-        XCTAssertEqual(requirements.map(\.id), [.xcode, .metal, .dotnet, .engine, .runtime, .keys])
-        XCTAssertEqual(SetupGrid.rowCounts(requirements.count, maxPerRow: 3), [3, 3])
+        XCTAssertEqual(requirements.map(\.id), [.xcode, .metal, .engine, .runtime, .keys])
+        XCTAssertEqual(SetupGrid.rowCounts(requirements.count, maxPerRow: 3), [3, 2])
     }
 
     func testUnavailableGameFolderDoesNotReopenTheTechnicalSetup() {
