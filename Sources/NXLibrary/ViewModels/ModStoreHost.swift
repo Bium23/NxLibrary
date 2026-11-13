@@ -38,8 +38,7 @@ final class ModStoreHost: ObservableObject {
 
     init() {
         let services = GameBananaServices.shared
-        let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("NXLibrary/gamebanana/store")
+        let caches = AppData.cacheRoot.appendingPathComponent("gamebanana/store")
         snapshots = ModCatalogSnapshots(folder: caches)
         catalog = ModStoreModel(client: services.client, matches: services.matches, snapshots: snapshots)
         // After the catalog has published its new value; held while the page moves.

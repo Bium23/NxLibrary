@@ -209,7 +209,7 @@ extension GameDetailView {
     func openViewer(at index: Int) {
         let urls = currentModel.screenshots
         guard !urls.isEmpty else { return }
-        viewer = ViewerContext(titleID: game.titleId ?? game.uniqueKey, urls: urls,
+        viewer = ViewerContext(titleID: viewModel.personalizationKey(for: game), urls: urls,
                                state: ScreenshotViewerState(count: urls.count, start: index))
         SoundEffectService.shared.play(.click)
     }

@@ -123,7 +123,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/TileMotion.swift](../Sources/NXLibraryCore/Models/TileMotion.swift) | Curve e campioni dei loop di ring, bagliore e riflesso della tile selezionata, sull'orologio condiviso. |
 | [Sources/NXLibraryCore/Models/TextScroll.swift](../Sources/NXLibraryCore/Models/TextScroll.swift) | Scorrimento della colonna del pannello della mod: altezza della descrizione dopo Read more, limiti, riga a fuoco mostrata intera e passo Su/Giù che legge prima della riga seguente. |
 | [Sources/NXLibraryCore/Models/AppSettings.swift](../Sources/NXLibraryCore/Models/AppSettings.swift) | Definisce impostazioni globali, default e decodifica compatibile dei campi aggiunti nel tempo. |
-| [Sources/NXLibraryCore/Models/LibraryFilter.swift](../Sources/NXLibraryCore/Models/LibraryFilter.swift) | Definisce filtri, PlayHistory e LibraryQuery per ricerca e ordinamento dei giochi. |
+| [Sources/NXLibraryCore/Models/LibraryFilter.swift](../Sources/NXLibraryCore/Models/LibraryFilter.swift) | Definisce filtri, PlayHistory e query condivisa per ricerca/ordine del catalogo misto, conservando l’API nxnative. |
 | [Sources/NXLibraryCore/Models/LibrarySelectionState.swift](../Sources/NXLibraryCore/Models/LibrarySelectionState.swift) | Mantiene selezione e spostamento nel risultato filtrato della Collection. |
 | [Sources/NXLibraryCore/Models/LibraryPresentation.swift](../Sources/NXLibraryCore/Models/LibraryPresentation.swift) | Formatta metadati e statistiche temporali per le schermate della libreria. |
 | [Sources/NXLibraryCore/Models/GameDetailPresentation.swift](../Sources/NXLibraryCore/Models/GameDetailPresentation.swift) | Prepara badge, disponibilità delle azioni, date e dati della pagina Details. |
@@ -294,7 +294,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/SettingsCatalog.swift](../Sources/NXLibraryCore/Models/SettingsCatalog.swift) | Descrive righe, ricerca e valori modificati, distinguendo i default dei nuovi giochi dalla vibrazione in Controllers. |
 | [Sources/NXLibraryCore/Models/SettingsSection.swift](../Sources/NXLibraryCore/Models/SettingsSection.swift) | Enumera gruppi, titoli e icone della schermata Settings. |
 | [Sources/NXLibraryCore/Models/SpotlightPage.swift](../Sources/NXLibraryCore/Models/SpotlightPage.swift) | Calcola estratti delle descrizioni e stati dello scorrimento della pagina Spotlight. |
-| [Sources/NXLibraryCore/Models/SpotlightRow.swift](../Sources/NXLibraryCore/Models/SpotlightRow.swift) | Costruisce la sequenza di card e giochi, riordino e selezione Surprise. |
+| [Sources/NXLibraryCore/Models/SpotlightRow.swift](../Sources/NXLibraryCore/Models/SpotlightRow.swift) | Costruisce la sequenza per UUID e salva riordini conservando giochi/fonti/card temporaneamente nascosti; Surprise mantiene il proprio contratto nxnative. |
 | [Sources/NXLibraryCore/Models/SpotlightRowGeometry.swift](../Sources/NXLibraryCore/Models/SpotlightRowGeometry.swift) | Posti delle tessere nella riga, camera unica che la fa scorrere e finestra delle tessere create; posto, scala e camera lungo lo scorrimento dalla posizione continua della selezione. |
 | [Sources/NXLibraryCore/Models/SpotlightState.swift](../Sources/NXLibraryCore/Models/SpotlightState.swift) | Gestisce selezione, focus, azioni e spostamento delle tile su Spotlight. |
 | [Sources/NXLibraryCore/Models/ThemePicker.swift](../Sources/NXLibraryCore/Models/ThemePicker.swift) | Gestisce griglia, tab Wallpapers/Live e scelte di sfondo nel selettore temi. |
@@ -659,3 +659,96 @@ Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua rig
 | [Tests/NXLibraryCoreTests/AppLocaleTests.swift](../Tests/NXLibraryCoreTests/AppLocaleTests.swift) | Preferenze, migrazione, formati, ricerca, identità e traduzioni native. |
 | [scripts/check_localizations.py](../scripts/check_localizations.py) | Verifica copertura, placeholder, plurali e risorse nel bundle installato. |
 | [Tests/PublicationChecks/test_localizations.py](../Tests/PublicationChecks/test_localizations.py) | Rifiuto di cataloghi incompleti e bundle senza risorse. |
+
+### Profilo di sviluppo del launcher
+
+| File | Responsabilità |
+|---|---|
+| [AppDataProfile.swift](../Sources/NXLibraryCore/Services/AppDataProfile.swift) | Policy di percorsi, cache, preferenze e staging del profilo. |
+| [DevelopmentProfileImporter.swift](../Sources/NXLibraryCore/Services/DevelopmentProfileImporter.swift) | Copia iniziale selettiva, hash, validazione e ripresa senza modificare la sorgente. |
+| [DevelopmentOperationStore.swift](../Sources/NXLibraryCore/Services/DevelopmentOperationStore.swift) | Autorizzazioni persistenti per le operazioni richieste nella Dev, distinte da quelle importate. |
+| [DevelopmentStartupView.swift](../Sources/NXLibrary/Views/Launch/DevelopmentStartupView.swift) | Avvio asincrono, errore recuperabile e costruzione della shell dopo l'importazione. |
+| [AppShellState.swift](../Sources/NXLibrary/Views/Shell/AppShellState.swift) | Prepara coordinatore, router, fonti, lingua e tema prima dell’inserimento della libreria nel grafo SwiftUI. |
+| [DevelopmentProfileTests.swift](../Tests/NXLibraryCoreTests/DevelopmentProfileTests.swift) | Copia, conservazione della sorgente, errori, sessioni, symlink e ripetizione. |
+| [DevelopmentProfileEffectTests.swift](../Tests/NXLibraryCoreTests/DevelopmentProfileEffectTests.swift) | Mod, staging e persistenza delle richieste esplicite. |
+| [test_profile_boundaries.py](../Tests/PublicationChecks/test_profile_boundaries.py) | Guardia contro percorsi/defaults del launcher non centralizzati. |
+| [check_app_profile.swift](../scripts/check_app_profile.swift) | Prova senza UI di identità, accesso reale alle preferenze e percorsi nel pacchetto prodotto dalla build; non importa né scrive dati. |
+
+### Rilevamento Steam — modulo in sviluppo
+
+| File | Responsabilità |
+|---|---|
+| [SteamKeyValues.swift](../Sources/NXLibraryCore/Services/Steam/SteamKeyValues.swift) | Lettura limitata del formato testuale con campi duplicati conservati e accesso non ambiguo; nessuna direttiva eseguita. |
+| [InstallationFileSnapshot.swift](../Sources/NXLibraryCore/Services/Steam/InstallationFileSnapshot.swift) | Letture limitate e non bloccanti di file regolari; verifica dell'identità prima della pubblicazione. |
+| [InstallationDirectorySnapshot.swift](../Sources/NXLibraryCore/Services/Steam/InstallationDirectorySnapshot.swift) | Lettura incrementale delle cartelle, budget anche sulle voci nascoste e annullamento durante l'enumerazione. |
+| [NativeMacApplication.swift](../Sources/NXLibraryCore/Services/Steam/NativeMacApplication.swift) | Evidenze del bundle Mac e degli header eseguibili, architetture e categoria dichiarata, senza avvio. |
+| [SteamLibrarySource.swift](../Sources/NXLibraryCore/Services/Steam/SteamLibrarySource.swift) | Snapshot delle librerie/manifest dichiarati, disponibilità, ambiguità, limiti e annullamento; non modifica il catalogo. |
+| [SteamKeyValuesTests.swift](../Tests/NXLibraryCoreTests/SteamKeyValuesTests.swift) | Formato, escape, Unicode, duplicati, input troncati e limiti del parser. |
+| [NativeMacApplicationTests.swift](../Tests/NXLibraryCoreTests/NativeMacApplicationTests.swift) | Fixture native, classificazione, traversal/link, metadata non regolari e header invalidi. |
+| [SteamLibrarySourceTests.swift](../Tests/NXLibraryCoreTests/SteamLibrarySourceTests.swift) | Più fonti, dischi assenti, identità, file cambiati, limiti e assenza di scritture. |
+| [SteamDiscoveryConsistencyTests.swift](../Tests/NXLibraryCoreTests/SteamDiscoveryConsistencyTests.swift) | Mutazioni reali di inventario e app durante scan, indice inizialmente assente, budget e propagazione dell'annullamento. |
+| [SteamTestSupport.swift](../Tests/NXLibraryCoreTests/SteamTestSupport.swift) | Genera solo metadati e header sintetici nelle directory temporanee dei test. |
+
+## Catalogo comune (attivazione nella Dev in attesa di validazione)
+
+| File | Responsabilità |
+|---|---|
+| [CatalogGame.swift](../Sources/NXLibraryCore/Models/CatalogGame.swift) | Record tipizzato nxnative/Steam, identità e personalizzazioni con namespace, osservazioni delle installazioni. |
+| [CatalogDocument.swift](../Sources/NXLibraryCore/Models/CatalogDocument.swift) | Schema, revisione, provenienza legacy, configurazione delle fonti e validazione delle identità. |
+| [CatalogGamePresentation.swift](../Sources/NXLibraryCore/Models/CatalogGamePresentation.swift) | Contratto comune per presentazione, operazioni supportate e target di avvio; nessuna operazione I/O. |
+| [CatalogStore.swift](../Sources/NXLibraryCore/Services/Catalog/CatalogStore.swift) | Conversione conservativa, letture limitate, revisioni attese e serializzazione degli scrittori. |
+| [CatalogPublication.swift](../Sources/NXLibraryCore/Services/Catalog/CatalogPublication.swift) | Staging verificato, creazione esclusiva e sostituzione atomica, con confine di errore controllabile. |
+| [SteamCatalogReconciler.swift](../Sources/NXLibraryCore/Services/Catalog/SteamCatalogReconciler.swift) | Ticket e fusione pura degli snapshot Steam, identità conservate e assenza trattata secondo completezza. |
+| [CatalogModelTests.swift](../Tests/NXLibraryCoreTests/CatalogModelTests.swift) | Conservazione del record precedente, proprietà comuni e separazione delle azioni per integrazione. |
+| [CatalogStoreTests.swift](../Tests/NXLibraryCoreTests/CatalogStoreTests.swift) | Conversione, backup, corruzione, versioni, input cambiati, scrittori concorrenti e guasti di pubblicazione. |
+| [SteamCatalogReconcilerTests.swift](../Tests/NXLibraryCoreTests/SteamCatalogReconcilerTests.swift) | Identità, aggiornamenti, installazioni ambigue, fonti assenti e scansioni obsolete/parziali. |
+| [CatalogTestSupport.swift](../Tests/NXLibraryCoreTests/CatalogTestSupport.swift) | Record legacy sintetico completo e scrittura di fixture; nessun contenuto di gioco. |
+
+| File | Responsabilità aggiunta per l'attivazione |
+|---|---|
+| [CatalogRepository.swift](../Sources/NXLibraryCore/Services/Catalog/CatalogRepository.swift) | Modifiche tipizzate sull'ultimo catalogo, senza replay di effetti esterni; risultati build limitati ai propri campi. |
+| [NXNativeLibraryMerge.swift](../Sources/NXLibraryCore/Services/NXNativeLibraryMerge.swift) | Unico merge nxnative condiviso tra archivio precedente e catalogo comune. |
+| [CatalogRecovery.swift](../Sources/NXLibraryCore/Models/CatalogRecovery.swift) | Offerta di recupero con impronte del principale/backup, rivalidata all'accettazione. |
+| [CatalogPersonalizations.swift](../Sources/NXLibraryCore/Models/CatalogPersonalizations.swift) | Lookup personali immutabili per identità e radici distinte per integrazione. |
+| [CatalogErrorCopy.swift](../Sources/NXLibraryCore/Services/Catalog/CatalogErrorCopy.swift) | Errori recuperabili del catalogo nelle sei lingue. |
+| [AppViewModel+Catalog.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Catalog.swift) | Rilettura, errori e retry del risultato di build senza libreria di ripiego. |
+| [CatalogPersonalizationsEnvironment.swift](../Sources/NXLibrary/Views/Theme/CatalogPersonalizationsEnvironment.swift) | Dipendenza SwiftUI esplicita per le chiavi personali stabili. |
+| [CatalogRepositoryTests.swift](../Tests/NXLibraryCoreTests/CatalogRepositoryTests.swift) | Modifiche concorrenti, confini per integrazione, campi build e conservazione di Steam/legacy. |
+| [CatalogRecoveryTests.swift](../Tests/NXLibraryCoreTests/CatalogRecoveryTests.swift) | Recupero esplicito, offerte obsolete, file conservati e importazione del catalogo Dev. |
+| [CatalogPersonalizationTests.swift](../Tests/NXLibraryCoreTests/CatalogPersonalizationTests.swift) | Rinomina senza perdita del lookup e isolamento di chiavi uguali tra fonti. |
+
+| [CatalogBuildRecoveries.swift](../Sources/NXLibraryCore/Models/CatalogBuildRecoveries.swift) | Generazioni di build non ancora salvate, selezione del retry e conferma della sola generazione persistita. |
+| [CatalogBuildRecoveryTests.swift](../Tests/NXLibraryCoreTests/CatalogBuildRecoveryTests.swift) | Vecchia build persistita e nuova conservata, sospensione automatica e conferme obsolete. |
+| [run_notices.py](../Tests/CatalogAppChecks/run_notices.py) | Esegue i metodi reali degli avvisi e del ponte legacy senza finestre, dopo swift test. |
+| [NoticeHost.swift](../Tests/CatalogAppChecks/NoticeHost.swift) | Host minimo per i controlli applicativi, con storage reale e dati sintetici temporanei. |
+
+
+## Fonti e libreria mista (Dev, in attesa di validazione)
+
+| File | Responsabilità |
+|---|---|
+| [CatalogSourcesModel.swift](../Sources/NXLibraryCore/Services/Catalog/CatalogSourcesModel.swift) | Opt-in, worker annullabile e stato Steam; pubblica solo documenti salvati dal repository. |
+| [CatalogLibraryProjection.swift](../Sources/NXLibraryCore/Models/CatalogLibraryProjection.swift) | Visibilità comune per fonti attive e giochi riconosciuti; nessuna scansione. |
+| [AppViewModel+Sources.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Sources.swift) | Proiezione visibile, selezione comune e modifiche personali tipizzate. |
+| [SettingsSourcesSection.swift](../Sources/NXLibrary/Views/Settings/SettingsSourcesSection.swift) | Attivazione, refresh/cancel, cartella Steam, revisione e recupero dei nascosti. |
+| [CatalogNativeArtwork.swift](../Sources/NXLibrary/Views/Catalog/CatalogNativeArtwork.swift) | Icona nativa in sola lettura e indicatore Steam; nessun artwork Nintendo. |
+| [CatalogSteamInfo.swift](../Sources/NXLibrary/Views/Catalog/CatalogSteamInfo.swift) | Intestazione condivisa nelle due librerie e azioni Details/preferito/nascondi. |
+| [CatalogSteamDetailsView.swift](../Sources/NXLibrary/Views/Catalog/CatalogSteamDetailsView.swift) | Informazioni sull’installazione e comandi pertinenti alla fonte; nessun Play in questa tappa. |
+| [CatalogSourcesRepositoryTests.swift](../Tests/NXLibraryCoreTests/CatalogSourcesRepositoryTests.swift) | Compatibilità generazioni, cambi fonte, preferenze concorrenti e adozione NX esplicita. |
+| [CatalogSourcesModelTests.swift](../Tests/NXLibraryCoreTests/CatalogSourcesModelTests.swift) | Opt-in, annullamento, risultati vecchi, cambio radice e recupero errori. |
+| [CatalogLibraryQueryTests.swift](../Tests/NXLibraryCoreTests/CatalogLibraryQueryTests.swift) | Visibilità, ricerca/filtri misti e selezione per UUID senza sessioni simulate. |
+
+
+## Metadati Steam (Dev, in attesa di validazione)
+
+| File | Responsabilità |
+|---|---|
+| [SteamMetadata.swift](../Sources/NXLibraryCore/Services/Steam/SteamMetadata.swift) | Dati store Steam tipizzati, lingua e URL immagini verificati. |
+| [SteamMetadataService.swift](../Sources/NXLibraryCore/Services/Steam/SteamMetadataService.swift) | Richieste limitate/coalescenti, cache per lingua, ripiego offline e immagini ridimensionate. |
+| [SteamArtwork.swift](../Sources/NXLibrary/Views/Catalog/SteamArtwork.swift) | Immagini e sfondi Steam, con precedenza alle scelte personali e annullamento dei risultati UI obsoleti. |
+| [SteamPersonalizations.swift](../Sources/NXLibrary/Views/Catalog/SteamPersonalizations.swift) | Preferenze Steam separate e pannello di modifica metadati/artwork. |
+| [SteamMetadataTests.swift](../Tests/NXLibraryCoreTests/SteamMetadataTests.swift) | Identità, lingue, offline, URL, concorrenza e pubblicazione dopo salvataggio riuscito. |
+
+| [SteamPersonalizationStore.swift](../Sources/NXLibraryCore/Services/Steam/SteamPersonalizationStore.swift) | Pubblicazione unica di metadati e riferimenti artwork; fallimenti e Automatic conservano le scelte coerenti. |
+
+| [run_backdrop.py](../Tests/CatalogAppChecks/run_backdrop.py) | Esegue il corpo reale di SteamBackdrop senza finestra né impostazioni implicite; regressione del crash all’avvio. |

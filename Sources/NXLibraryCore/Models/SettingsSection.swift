@@ -4,7 +4,7 @@ import Foundation
 /// computed lists; `about` is informational and has no catalog rows.
 public enum SettingsSection: String, CaseIterable, Identifiable, Equatable {
     case search, changed, startUp, navigation, spotlight, soundMusic
-    case look, games, controllers, library, storage, engine, about
+    case look, games, controllers, library, sources, storage, engine, about
 
     public var id: String { rawValue }
 
@@ -26,6 +26,7 @@ public enum SettingsSection: String, CaseIterable, Identifiable, Equatable {
         case .games: return "Games"
         case .controllers: return "Controllers"
         case .library: return "Library"
+        case .sources: return "Game sources"
         case .storage: return "Storage"
         case .engine: return "Engine"
         case .about: return "About"
@@ -44,6 +45,7 @@ public enum SettingsSection: String, CaseIterable, Identifiable, Equatable {
         case .games: return L10n.text("Launch screen, hidden games and defaults for new games.")
         case .controllers: return L10n.text("Library controls and new-game rumble.")
         case .library: return L10n.text("Folders, imports and artwork caches.")
+        case .sources: return L10n.text("Where NX Library finds your games.")
         case .storage: return L10n.text("Caches, logs, saves and the console.")
         case .engine: return L10n.text("Engine pin, toolchain gate and keys.")
         case .about: return L10n.text("Version, credits and licenses.")
@@ -63,6 +65,7 @@ public enum SettingsSection: String, CaseIterable, Identifiable, Equatable {
         case .games: return .play
         case .controllers: return .gamepad
         case .library: return .collections
+        case .sources: return .collections
         case .storage: return .storage
         case .engine: return .build
         case .about: return .info

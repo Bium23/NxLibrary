@@ -10,10 +10,11 @@ extension AppViewModel {
         guard let titleID = CheatLocator.titleID(appURL: game.url, fallback: game.titleId) else { return nil }
         let support = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support")
         return ModStore(supportFolder: support.appendingPathComponent("nxnative/\(titleID)"),
-                        recordsFile: support.appendingPathComponent("NXLibrary/mods/\(titleID).json"),
+                        recordsFile: AppData.supportRoot.appendingPathComponent("mods/\(titleID).json"),
                         titleID: titleID,
                         canWrite: { RunningGameMonitor.runningApplication(for: game) == nil },
-                        trash: { try FileManager.default.trashItem(at: $0, resultingItemURL: nil) })
+                        trash: { try FileManager.default.trashItem(at: $0, resultingItemURL: nil) },
+                        allowsAutomaticMaintenance: !AppData.profile.isDevelopment)
     }
 
     func modsRowValue(for game: PortedGame) -> String {

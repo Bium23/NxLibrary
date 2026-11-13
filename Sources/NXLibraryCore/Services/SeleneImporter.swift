@@ -70,8 +70,7 @@ public struct SeleneImporter {
                                     "activation", "CloseAdditionalView", "Alert"]
 
     public static var defaultDestination: URL {
-        URL(fileURLWithPath: NSHomeDirectory())
-            .appendingPathComponent("Library/Application Support/NXLibrary/SeleneImports")
+        AppData.supportRoot.appendingPathComponent("SeleneImports")
     }
 
     public let destination: URL

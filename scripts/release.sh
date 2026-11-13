@@ -73,6 +73,9 @@ mkdir -p "$OUT"
 
 NX_VERSION="$VERSION" NX_RELEASE=1 bash "$ROOT/scripts/build_app.sh" "$APP"
 codesign --verify --deep --strict "$APP"
+if /usr/libexec/PlistBuddy -c 'Print :NXLibraryDevelopmentProfile' "$APP/Contents/Info.plist" >/dev/null 2>&1; then
+  fail "a release must not select the development data profile"
+fi
 [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")" = "$VERSION" ] \
   || fail "the built app does not carry version $VERSION"
 [ "$(/usr/libexec/PlistBuddy -c 'Print :NXLibraryRelease' "$APP/Contents/Info.plist")" = "true" ] \

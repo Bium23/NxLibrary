@@ -39,7 +39,9 @@ struct SettingsSectionContent: View {
                                        onViewControls: onViewControls)
         case .library:
             SettingsLibrarySection(viewModel: viewModel, settings: settings,
-                                   artwork: artwork, onActions: onActions)
+                                   artwork: artwork, onManageSources: { onOpenGroup(.sources) }, onActions: onActions)
+        case .sources:
+            SettingsSourcesSection(viewModel: viewModel, onActions: onActions)
         case .storage:
             SettingsStorageSection(viewModel: viewModel, artwork: artwork,
                                    onActions: onActions, onOpenConsole: onOpenConsole)

@@ -6,18 +6,18 @@ import NXLibraryCore
 extension CollectionView {
     func handle(_ action: GamepadAction) {
         var moved = false
-        let all = viewModel.libraryGames
+        let all = viewModel.visibleCatalogGames
         switch action {
         case .navigateLeft, .navigateRight:
             let before = viewModel.librarySelection.selectedGameID
-            viewModel.librarySelection.move(by: action == .navigateLeft ? -1 : 1,
+            viewModel.librarySelection.moveCatalog(by: action == .navigateLeft ? -1 : 1,
                                             in: all, history: playSessions)
             moved = viewModel.librarySelection.selectedGameID != before
         case .navigateUp, .navigateDown:
             break
         case .jumpToStart, .jumpToEnd:
             let before = viewModel.librarySelection.selectedGameID
-            viewModel.librarySelection.jump(toEnd: action == .jumpToEnd, in: all, history: playSessions)
+            viewModel.librarySelection.jumpCatalog(toEnd: action == .jumpToEnd, in: all, history: playSessions)
             moved = viewModel.librarySelection.selectedGameID != before
         case .tabPrevious:
             setFilter(filter.shifted(by: -1))
@@ -26,15 +26,16 @@ extension CollectionView {
         case .rightStickPress:
             setFilter(filter.cycled())
         case .confirm:
-            if let game = selectedGame {
-                play(game)
+            if let record = selectedCatalogGame {
+                activateCatalog(record)
             } else if !hasAnyGame, !viewModel.isScanningLibrary {
                 SoundEffectService.shared.play(.click)
                 router.openAddGame()
             }
         case .secondaryAction:
-            if let game = selectedGame { router.showDetail(game.id) }
+            if let game = selectedCatalogGame { router.showDetail(game.id) }
         case .contextAction:
+            if selectedCatalogGame?.integration == .steam { router.openSettings(.sources); return }
             if let game = selectedGame { viewModel.openGameOptions(game, from: .collection) }
         case .cancel:
             router.showLibrary() // B goes home, like Selene's library.
@@ -48,6 +49,11 @@ extension CollectionView {
             router.openSettings(.startUp)
         }
         if moved { SoundEffectService.shared.play(.focus) }
+    }
+
+    func activateCatalog(_ record: CatalogGame) {
+        if let native = record.nxnativeGame { play(native) }
+        else { SoundEffectService.shared.play(.click); router.showDetail(record.id) }
     }
 
     /// A on a cover: plays, or opens Details when the game is not built (Spotlight's rule).

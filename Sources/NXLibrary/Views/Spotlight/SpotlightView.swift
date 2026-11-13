@@ -100,8 +100,15 @@ public struct SpotlightView: View {
         LibraryQuery(filter: filter).apply(to: viewModel.libraryGames, history: playSessions)
     }
 
+    var rowGames: [CatalogGame] {
+        LibraryQuery(filter: filter).applyCatalog(to: viewModel.visibleCatalogGames, history: playSessions)
+    }
+    var selectedCatalogGame: CatalogGame? {
+        guard case .game(let id) = selectedItem else { return nil }
+        return viewModel.visibleCatalogGames.first { $0.id == id }
+    }
     var items: [SpotlightItem] {
-        SpotlightRow.build(games: games,
+        SpotlightRow.build(gameIDs: rowGames.map(\.id),
                            enabledCards: settings.settings.visibleSpotlightCards,
                            order: viewModel.spotlight.lift?.order ?? settings.settings.spotlightOrder,
                            front: viewModel.frontGameID)
@@ -120,6 +127,8 @@ public struct SpotlightView: View {
         let gamesByID: [UUID: PortedGame]
         let selectedItem: SpotlightItem?
         let selectedGame: PortedGame?
+        let catalogGamesByID: [UUID: CatalogGame]
+        let selectedCatalogGame: CatalogGame?
     }
 
     private func snapshot() -> Snapshot {
@@ -128,7 +137,9 @@ public struct SpotlightView: View {
         let item = viewModel.spotlight.selectedItem(in: items)
         var game: PortedGame?
         if case .game(let id) = item { game = gamesByID[id] }
-        return Snapshot(items: items, gamesByID: gamesByID, selectedItem: item, selectedGame: game)
+        let catalog = Dictionary(viewModel.visibleCatalogGames.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        return Snapshot(items: items, gamesByID: gamesByID, selectedItem: item, selectedGame: game,
+                        catalogGamesByID: catalog, selectedCatalogGame: selectedCatalogGame)
     }
 
     /// One pill while the selected game ports, three otherwise.
@@ -161,7 +172,8 @@ public struct SpotlightView: View {
                 let shown = shownArt(model)
                 SeleneArtBackground(image: shown, imageKey: shown == nil ? "none" : art.key,
                                     shade: settings.settings.backgroundShade, crossfade: 0.8,
-                                    showsArt: !settings.settings.keepWallpaperOnGames, modsTint: modsBackdrop)
+                                    showsArt: !settings.settings.keepWallpaperOnGames && model.selectedCatalogGame?.integration != .steam, modsTint: modsBackdrop)
+                if let steam = selectedCatalogGame, steam.integration == .steam, !settings.settings.keepWallpaperOnGames { SteamBackdrop(game: steam, shade: settings.settings.backgroundShade, showsArt: !settings.settings.keepWallpaperOnGames) }
                 // Deeper in the page the art dims so the text reads.
                 Color.black.opacity(dimmed ? 0.4 : 0)
                     .allowsHitTesting(false)
@@ -183,7 +195,8 @@ public struct SpotlightView: View {
             pillTask?.cancel()
             mutate { $0.cancelLift() }
         }
-        .onChange(of: viewModel.libraryGames) { _ in gamesChanged() }
+        .onChange(of: viewModel.catalogGames) { _ in gamesChanged() }
+        .onChange(of: viewModel.catalogSourceConfigurations) { _ in gamesChanged() }
         .onChange(of: filter) { newFilter in
             reconcile()
             filterChanged(to: newFilter)
@@ -254,6 +267,7 @@ public struct SpotlightView: View {
                 SpotlightRowView(
                     items: items,
                     gamesByID: model.gamesByID,
+                    catalogGamesByID: model.catalogGamesByID,
                     selectedKey: state.selectedKey,
                     liftedKey: state.lift?.key,
                     isEmptyFilter: LibraryEmptyState.showsMessage(
@@ -277,7 +291,7 @@ public struct SpotlightView: View {
                 .opacity(rowShown ? 1 : 0)
                 .allowsHitTesting(rowShown)
 
-                SpotlightFilterPill(filter: pillFilter, count: games.count)
+                SpotlightFilterPill(filter: pillFilter, count: rowGames.count)
                     .offset(x: canvas.u(80), y: canvas.u(88))
                     // Opacity fades always run, reduce motion or not.
                     .opacity(pillVisible ? 1 : 0)
@@ -362,7 +376,7 @@ public struct SpotlightView: View {
                 }
 
                 SpotlightScreenshotStrip(
-                    titleID: game.titleId ?? game.uniqueKey,
+                    titleID: viewModel.personalizationKey(for: game),
                     urls: metadata?.screenshotURLs ?? [],
                     known: screenshotsKnown(game, metadata: metadata),
                     focusedIndex: state.focus == .strip ? state.stripIndex : nil,
@@ -399,6 +413,10 @@ public struct SpotlightView: View {
                     // Hidden while the row has focus: it rises in with the page.
                     .opacity(belowShown ? 1 : 0)
             }
+        } else if let game = model.selectedCatalogGame, game.integration == .steam {
+            CatalogSteamInfo(game: game, focused: state.focus == .pills ? state.pillIndex : nil) { index in
+                pressCatalogPill(index, game: game)
+            }.spotlightBlock(.head)
         } else if model.selectedItem == .card(.mods) {
             VStack(alignment: .leading, spacing: 0) {
                 SpotlightCardInfoView(
@@ -415,12 +433,12 @@ public struct SpotlightView: View {
         } else if case .card(let card) = model.selectedItem {
             let summary = card == .activity ? activitySummary : ActivitySummary()
             let top = summary.topGames.compactMap { model.gamesByID[$0] }.filter { !$0.isHidden }
-            let visible = viewModel.libraryGames.filter { !$0.isHidden }
+            let visible = viewModel.visibleCatalogGames
             // Selene's card panels sit 40 under the row, 10 lower than a game's.
             SpotlightCardInfoView(
                 card: card,
                 gameCount: visible.count,
-                installedCount: visible.filter(\.isPlayableLocally).count,
+                installedCount: LibraryQuery(filter: .installed).applyCatalog(to: visible, history: playSessions).count,
                 poolLabel: Self.poolLabel(settings.settings.surprisePool),
                 activity: summary,
                 topGames: top,
@@ -515,6 +533,9 @@ public struct SpotlightView: View {
                 let more = [HintItem(.y, L10n.text("Card options"))]
                 return card == .activity ? more : more + [HintItem(.a, card == .surprise ? L10n.text("Pick") : card == .mods ? L10n.text("Browse") : L10n.text("Open"))]
             case .game:
+                if model.selectedCatalogGame?.integration == .steam {
+                    return [HintItem(.y, L10n.text("Game sources")), HintItem(.a, L10n.text("Details"))]
+                }
                 guard let game = model.selectedGame else { return [] }
                 if viewModel.portingPills(game) == .porting {
                     return [HintItem(.y, L10n.text("Options")), HintItem(.a, L10n.text("Porting"))]
@@ -548,7 +569,7 @@ public struct SpotlightView: View {
             mutate { $0.startingTabApplied = true }
             viewModel.librarySelection.query.filter = LibraryFilter(startingTab: settings.settings.startingTab)
         }
-        hadGames = !viewModel.libraryGames.isEmpty
+        hadGames = !viewModel.visibleCatalogGames.isEmpty
         reconcile()
         selectionChanged()
         pillFilter = filter
@@ -592,7 +613,7 @@ public struct SpotlightView: View {
         viewModel.preloadCachedStoreMetadata()
         // The whole library, not the filtered row: a filter change never
         // counts as "the library arrived".
-        let hasGames = !viewModel.libraryGames.isEmpty
+        let hasGames = !viewModel.visibleCatalogGames.isEmpty
         // The library loads after the first frame: a card picked while it was
         // empty gives way to the restored (or first) game.
         if !hadGames, hasGames, case .card = selectedItem {
@@ -627,6 +648,7 @@ public struct SpotlightView: View {
         artRule.select(viewModel.spotlight.selectedKey, isGame: selectedGame != nil)
         reloadMods()
         startModsOnline(viewModel.spotlight.focus)
+        if let id = selectedCatalogGame?.id, settings.settings.lastSelectedGameID != id { settings.settings.lastSelectedGameID = id }
         guard let game = selectedGame else { return }
         if settings.settings.lastSelectedGameID != game.id {
             settings.settings.lastSelectedGameID = game.id
@@ -690,7 +712,7 @@ public struct SpotlightView: View {
 
     private func loadHero(_ game: PortedGame?) async {
         await art.loadHero(game: game, current: { selectedGame?.id },
-                           metadata: game.flatMap { viewModel.storeMetadata[$0.id] }, artwork: artwork,
+                           metadata: game.flatMap { viewModel.storeMetadata[$0.id] }, artwork: artwork, personalizations: viewModel.personalizations,
                            // The logo leads (0.3 s); the art turns after it.
                            settle: 420_000_000, keepsWithoutGame: true)
         // The game's art is in (or it has none): the gold gives way under it.
@@ -966,6 +988,6 @@ public struct SpotlightView: View {
 
     private func loadLogo(_ game: PortedGame?) async {
         await art.loadLogo(game: game, metadata: game.flatMap { viewModel.storeMetadata[$0.id]},
-                           artwork: artwork)
+                           artwork: artwork, personalizations: viewModel.personalizations)
     }
 }

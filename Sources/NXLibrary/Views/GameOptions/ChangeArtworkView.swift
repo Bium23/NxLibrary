@@ -74,7 +74,7 @@ struct ChangeArtworkView: View {
         case automatic, yourPick, iconLocation, art(Found), browse(ArtworkBrowseSource), file
     }
 
-    private var titleKey: String { game.titleId ?? game.uniqueKey }
+    private var titleKey: String { viewModel.personalizationKey(for: game) }
     private var hasPick: Bool { picks.url(titleID: titleKey, slot: slot) != nil }
     private var switch2: Bool { game.titleId?.hasPrefix("04") == true }
     private var gameNames: [String] {

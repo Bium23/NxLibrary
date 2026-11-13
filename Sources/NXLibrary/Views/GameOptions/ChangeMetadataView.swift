@@ -36,7 +36,7 @@ struct ChangeMetadataView: View {
         case write
     }
 
-    private var titleKey: String { game.titleId ?? game.uniqueKey }
+    private var titleKey: String { viewModel.personalizationKey(for: game) }
     private var pick: String? { picks.value(titleID: titleKey, field: field) }
     private var store: NintendoStoreMetadata? { viewModel.storeMetadataAsFetched(for: game) }
 

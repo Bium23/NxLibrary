@@ -56,7 +56,7 @@ public struct NXNativeGameSettings {
                                store: SavedChoicesStore = SystemSavedChoices(),
                                supportDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
                                    .appendingPathComponent("Library/Application Support/nxnative"),
-                               preferences: UserDefaults = .standard) -> NXNativeGameSettings? {
+                               preferences: UserDefaults = AppData.preferences) -> NXNativeGameSettings? {
         guard let titleId = game.titleId, !titleId.isEmpty else { return nil }
         let plist = game.url.appendingPathComponent("Contents/Info.plist")
         guard let data = try? Data(contentsOf: plist),

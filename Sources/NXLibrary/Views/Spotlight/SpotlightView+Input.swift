@@ -36,7 +36,7 @@ extension SpotlightView {
         case .navigateDown where selectedItem == .card(.mods) && viewModel.spotlight.focus == .row:
             enterStore()
         case .navigateDown:
-            let isGame = selectedGame != nil
+            let isGame = selectedCatalogGame != nil
             let isActivity = selectedItem == .card(.activity)
             mutate {
                 moved = $0.moveDown(selectedIsGame: isGame, screenshotCount: shots,
@@ -57,11 +57,13 @@ extension SpotlightView {
             if router.isSearchPresented { router.isSearchPresented = false }
             mutate { if $0.focus != .row { $0.focus = .row; moved = true } }
         case .secondaryAction:
+            if let game = selectedCatalogGame, game.integration == .steam { router.showDetail(game.id); return }
             // X scrolls to the game's page (the pills), like Down from the row.
             if selectedGame != nil {
                 mutate { if $0.focus == .row { moved = $0.showGameDetails() } }
             }
         case .contextAction:
+            if selectedCatalogGame?.integration == .steam { router.openSettings(.sources); return }
             if let game = selectedGame {
                 viewModel.openGameOptions(game, from: .spotlight)
             } else if case .card(let card) = selectedItem {
@@ -82,6 +84,15 @@ extension SpotlightView {
         if moved { SoundEffectService.shared.play(.focus) }
     }
 
+    func pressCatalogPill(_ index: Int, game: CatalogGame) {
+        switch index {
+        case 0: router.showDetail(game.id)
+        case 1: viewModel.setCatalogFavorite(game)
+        case 2: viewModel.setCatalogHidden(true, game: game)
+        default: break
+        }
+    }
+
     private func confirm() {
         let state = viewModel.spotlight
         switch state.focus {
@@ -89,6 +100,7 @@ extension SpotlightView {
             if let item = selectedItem { activate(item) }
         case .pills:
             if let game = selectedGame { pressPill(state.pillIndex, game: game) }
+            else if let game = selectedCatalogGame { pressCatalogPill(state.pillIndex, game: game) }
         case .strip:
             openViewer(at: state.stripIndex)
         case .about:
@@ -120,7 +132,7 @@ extension SpotlightView {
         let urls = Array((viewModel.storeMetadata[game.id]?.screenshotURLs ?? [])
             .prefix(SpotlightScreenshotStrip.maxCount))
         guard !urls.isEmpty else { return }
-        viewer = ViewerContext(titleID: game.titleId ?? game.uniqueKey, urls: urls,
+        viewer = ViewerContext(titleID: viewModel.personalizationKey(for: game), urls: urls,
                                state: ScreenshotViewerState(count: urls.count, start: index))
         SoundEffectService.shared.play(.click)
     }
@@ -162,12 +174,9 @@ extension SpotlightView {
             var order: [String]?
             mutate { order = $0.drop() }
             if let order {
-                // Under a filter, fold the visible order into the full one.
-                let full = SpotlightRow.build(
-                    games: LibraryQuery(filter: .all).apply(to: viewModel.libraryGames, history: playSessions),
-                    enabledCards: settings.settings.visibleSpotlightCards,
-                    order: settings.settings.spotlightOrder).map(\.key)
-                settings.settings.spotlightOrder = SpotlightRow.merging(visibleOrder: order, into: full)
+                settings.settings.spotlightOrder = SpotlightRow.saving(
+                    visibleOrder: order, gameIDs: viewModel.catalogGames.map(\.id),
+                    previousOrder: settings.settings.spotlightOrder)
             }
             SoundEffectService.shared.play(.click)
         case .cancel:
@@ -223,6 +232,9 @@ extension SpotlightView {
     func activate(_ item: SpotlightItem) {
         switch item {
         case .game(let id):
+            if viewModel.visibleCatalogGames.first(where: { $0.id == id })?.integration == .steam {
+                SoundEffectService.shared.play(.click); router.showDetail(id); return
+            }
             guard let game = viewModel.libraryGames.first(where: { $0.id == id }) else { return }
             if viewModel.portingPills(game) == .porting {
                 SoundEffectService.shared.play(.click)

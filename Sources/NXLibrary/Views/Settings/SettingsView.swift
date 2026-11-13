@@ -217,7 +217,7 @@ public struct SettingsView: View {
         switch section {
         case .startUp, .navigation, .spotlight, .soundMusic, .look, .games, .controllers, .library:
             return true
-        case .search, .changed, .engine, .storage, .about:
+        case .search, .changed, .sources, .engine, .storage, .about:
             return false
         }
     }
@@ -286,7 +286,7 @@ public struct SettingsView: View {
             viewModel.libraryFolder = URL(fileURLWithPath: viewModel.defaultInstallPath)
                 .appendingPathComponent("Applications")
             viewModel.loadLibrary()
-        case .search, .changed, .engine, .storage, .about:
+        case .search, .changed, .sources, .engine, .storage, .about:
             break
         }
         settings.settings = next

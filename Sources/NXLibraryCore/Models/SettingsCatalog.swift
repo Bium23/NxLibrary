@@ -35,6 +35,10 @@ public enum SettingsCatalog {
     }
 
     public static let all: [SettingDescriptor] = [
+        action("manageSources", .library, "Manage sources", "Choose where NX Library finds your games."),
+        action("steamSource", .sources, "Steam", "Find installed native Mac games in your Steam libraries."),
+        action("steamRefresh", .sources, "Refresh Steam", "Check enabled Steam libraries without changing your game files."),
+        action("steamFolder", .sources, "Steam folder", "Choose the Steam folder containing steamapps."),
         // Start-up
         row("appLanguage", .startUp, "App language", "Menus, genres and available game descriptions. The games’ own language stays separate.") { $0.appLanguage },
         row("appRegion", .startUp, "Regional formats", "Dates, numbers and sizes only. Game descriptions follow the app language.") { $0.appRegion },

@@ -172,10 +172,10 @@ struct GameDetailView: View {
             if let action = note.object as? GamepadAction { handle(action) }
         }
         .task(id: art.heroTaskKey(game, metadata: metadata)) {
-            await art.loadHero(game: game, current: { game.id }, metadata: metadata, artwork: artwork)
+            await art.loadHero(game: game, current: { game.id }, metadata: metadata, artwork: artwork, personalizations: viewModel.personalizations)
         }
         .task(id: art.logoTaskKey(game, metadata: metadata)) {
-            await art.loadLogo(game: game, metadata: metadata, artwork: artwork)
+            await art.loadLogo(game: game, metadata: metadata, artwork: artwork, personalizations: viewModel.personalizations)
         }
     }
 
@@ -239,7 +239,7 @@ struct GameDetailView: View {
 
             band(zone: DetailsFocus.screenshotsZone) {
                 DetailsScreenshotsBand(
-                    titleID: game.titleId ?? game.uniqueKey,
+                    titleID: viewModel.personalizationKey(for: game),
                     urls: model.screenshots,
                     source: metadata?.screenshotSource,
                     known: model.screenshotsKnown,

@@ -34,7 +34,7 @@ final class SeleneHeroArt: ObservableObject {
     /// `current` re-reads the screen's selected game after each await.
     /// `settle` is the pause before loading; Collection waits longer so its logo leads.
     func loadHero(game: PortedGame?, current: () -> UUID?, metadata: NintendoStoreMetadata?,
-                  artwork: ArtworkStore,
+                  artwork: ArtworkStore, personalizations: CatalogPersonalizations,
                   settle: UInt64 = 150_000_000, keepsWithoutGame: Bool = false) async {
         guard let game else {
             // Spotlight keeps the last game's art over a card, so coming back to that game needs no reload.
@@ -50,19 +50,19 @@ final class SeleneHeroArt: ObservableObject {
         try? await Task.sleep(nanoseconds: settle)
         guard !Task.isCancelled else { return }
         let loaded = await GameArtLoader.shared.hero(
-            for: game, metadata: metadata, artwork: artwork)
+            for: game, metadata: metadata, artwork: artwork, personalizations: personalizations)
         guard !Task.isCancelled, current() == game.id else { return }
         image = loaded
         key = loaded.map { loadedFor + "\(ObjectIdentifier($0).hashValue)" } ?? "none"
     }
 
     func loadLogo(game: PortedGame?, metadata: NintendoStoreMetadata?,
-                  artwork: ArtworkStore) async {
+                  artwork: ArtworkStore, personalizations: CatalogPersonalizations) async {
         guard let game, GameArtLoader.shared.cachedLogo(for: game) == nil else { return }
         try? await Task.sleep(nanoseconds: 150_000_000)
         guard !Task.isCancelled else { return }
         let loaded = await GameArtLoader.shared.logo(
-            for: game, metadata: metadata, artwork: artwork)
+            for: game, metadata: metadata, artwork: artwork, personalizations: personalizations)
         guard loaded != nil, !Task.isCancelled else { return }
         withAnimation(.easeOut(duration: 0.3)) { logoTick += 1 }
     }

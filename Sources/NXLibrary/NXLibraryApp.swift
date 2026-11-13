@@ -16,6 +16,7 @@ extension Notification.Name {
     static let nxSetupCheckGamepadAction = Notification.Name("NXSetupCheckGamepadAction")
     static let nxThemePickerGamepadAction = Notification.Name("NXThemePickerGamepadAction")
     static let nxLibraryOpenSettings = Notification.Name("NXLibraryOpenSettings")
+    static let nxLibraryRetryCatalogSave = Notification.Name("NXLibraryRetryCatalogSave")
     static let nxLibraryOpenConsole = Notification.Name("NXLibraryOpenConsole")
     static let nxLibraryOpenLibrary = Notification.Name("NXLibraryOpenLibrary")
     static let nxLibraryOpenAddGame = Notification.Name("NXLibraryOpenAddGame")
@@ -28,18 +29,9 @@ struct NXLibraryApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @FocusedValue(\.nxMenuAvailability) private var availability
     @ObservedObject private var localization = AppLocalization.shared
-    private let settingsStore: AppSettingsStore
-
-    init() {
-        let store = AppSettingsStore()
-        settingsStore = store
-        // Publish the initial locale before SwiftUI starts constructing the window graph.
-        AppLocalization.shared.configure(store.settings)
-    }
-
     var body: some Scene {
         Window("NX Library", id: "main") {
-            MainView(settingsStore: settingsStore)
+            DevelopmentStartupView()
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1440, height: 900)
@@ -49,6 +41,12 @@ struct NXLibraryApp: App {
                 Button(L10n.text("Add Game…")) { NativeMenuCommands.shared.post(.nxLibraryOpenAddGame) }
                     .keyboardShortcut("n", modifiers: [.command])
                     .disabled(availability?.general != true)
+            }
+            CommandGroup(after: .newItem) {
+                if availability?.catalogRecovery == true {
+                    Button(L10n.text("Retry saving library")) { NativeMenuCommands.shared.post(.nxLibraryRetryCatalogSave) }
+                        .keyboardShortcut("s", modifiers: [.command])
+                }
             }
             CommandGroup(after: .appInfo) {
                 Button(L10n.text("Check for Updates…")) { NativeMenuCommands.shared.post(.nxLibraryCheckAppUpdates) }

@@ -235,7 +235,7 @@ final class SettingsSectionTests: XCTestCase {
     func testAllSectionsArePresent() {
         XCTAssertEqual(SettingsSection.allCases.map(\.title), [
             "Search", "Changed", "Start-up", "Navigation", "Spotlight", "Sound & music",
-            "Look", "Games", "Controllers", "Library", "Storage", "Engine", "About"
+            "Look", "Games", "Controllers", "Library", "Game sources", "Storage", "Engine", "About"
         ])
         XCTAssertTrue(SettingsSection.allCases.allSatisfy { !$0.icon.rawValue.isEmpty })
     }

@@ -24,8 +24,7 @@ public final class AppSettingsStore: ObservableObject {
     }
 
     public static func defaultURL() -> URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/NXLibrary/settings.json")
+        AppData.supportRoot.appendingPathComponent("settings.json")
     }
 
     @discardableResult public func save() -> Bool {

@@ -22,9 +22,9 @@ bash scripts/build_app.sh
 codesign --verify --deep --strict "$HOME/Applications/NXLibrary Dev.app"
 ~~~
 
-The default destination is `~/Applications/NXLibrary Dev.app`, named **NX Library Dev**: the copy every change is tested in, kept apart from the released **NX Library** (`~/Applications/NX Library.app`, installed from GitHub and updated by itself), which a development build never replaces. Both use the bundle ID `local.nxlibrary`, so they share the library, keys and settings, and macOS runs only one at a time: quit one before opening the other. `build_app.sh` compiles the Release configuration, creates the bundle in staging, includes resources and notices, ad-hoc signs and verifies it, then installs it through the same atomic installer used by the application. It does not launch the app.
+The default destination is `~/Applications/NXLibrary Dev.app`, named **NX Library Dev**: the copy every change is tested in, kept apart from the released **NX Library** (`~/Applications/NX Library.app`, installed from GitHub and updated by itself), which a development build never replaces. On the launcher-development branch, Dev uses bundle ID `local.nxlibrary.development`, app data under `~/Library/Application Support/NXLibrary-Development`, a separate cache root and preference domain. At its first launch it prepares an independent, one-time copy of selected launcher data; games and build caches are not copied, and credential files are excluded. Close the previous launcher copy before that initial import. The held 0.1.4.3 branch retains its previously validated behavior. `build_app.sh` compiles the Release configuration, creates the bundle in staging, includes resources and notices, ad-hoc signs and verifies it, then installs it through the same atomic installer used by the application. It does not launch the app.
 
-A development copy carries the version in progress from the `VERSION` file at the repository root and shows it as "(development build)" in Settings; it has no release marker, so it never offers or installs app updates. `scripts/release.sh <version>` sets the released version itself and refuses to run unless `VERSION` already says that version. After a release, raise `VERSION` to the next version being worked on.
+A development copy carries the version in progress from the `VERSION` file at the repository root and shows it as "(Dev · Launcher)" on this development line in Settings; it has no release marker, so it never offers or installs app updates. `scripts/release.sh <version>` sets the released version itself and refuses to run unless `VERSION` already says that version. After a release, raise `VERSION` to the next version being worked on.
 
 An alternate destination can be supplied without replacing the installed development copy:
 
@@ -32,7 +32,7 @@ An alternate destination can be supplied without replacing the installed develop
 bash scripts/build_app.sh /tmp/NXLibrary-Review.app
 ~~~
 
-A plain development app uses bundle ID `local.nxlibrary`, defaults to version `0.1.0` and has no release marker. It never installs its own updates.
+A plain development app uses bundle ID `local.nxlibrary.development`, takes its version from `VERSION` and has no release marker. It never installs its own updates.
 
 ### Bundled runtime
 
@@ -59,6 +59,7 @@ python3 scripts/check_publication.py
 python3 scripts/check_localizations.py
 python3 -m unittest discover -s Tests/PublicationChecks
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_notices.py
 bash scripts/build_app.sh
 codesign --verify --deep --strict "$HOME/Applications/NXLibrary Dev.app"
 ~~~
@@ -146,3 +147,17 @@ For component interactions, read the [architecture guide](architecture.md). For 
 ### Localization resources
 
 SwiftPM processes the shared string catalog into `NXLibrary_NXLibraryCore.bundle`. `build_app.sh` requires and copies that bundle into `Contents/Resources`, declares the six supported app languages and validates the compiled strings/plurals before signing. `scripts/check_localizations.py --app <path.app>` verifies the same resources independently. Missing resources or placeholder mismatches fail packaging. Locale selection is independent from each game's DM_LANG setting.
+
+### Isolated launcher-development data
+
+`AppDataProfile` selects immutable roots from the explicit build marker, and `AppData` routes app-owned stores/default preferences through that policy. `DevelopmentStartupView` completes the background import before constructing app stores or the shell. A failure shows Retry/Close; it never opens a writable fallback on the release profile. The source is read directly, not through store load/recovery methods. A staged, hashed allowlist copy and preference import can resume after failure; a completed profile is never automatically reimported. Copied unfinished sessions end at their last recorded heartbeat.
+
+After the import, `AppShellState` creates the view model and initial router and applies the initial locale/theme on the main actor before publishing the ready shell. Views retain these prepared objects; they do not run model startup or mutate shared theme state as SwiftUI inserts the shell into an already-visible window. Startup logs record only phase boundaries, without library contents or preference values.
+
+The separate bundle IDs select separate standard preference domains. Do not open the app's own bundle ID with `UserDefaults(suiteName:)`: Foundation rejects that suite. Packaging runs `scripts/check_app_profile.swift` in a temporary headless app with the built Info.plist, exercising the real preferences accessor and profile roots without starting UI, running the importer or writing data. Ordinary unit-test hosts do not reproduce the packaged app's identity.
+
+The Dev does not automatically import credentials or restore saves, reconcile app icons, install copied pending builds, sync real mod overlays, or sweep shared external staging. Explicit Dev icon/build requests are recorded in `DevelopmentOperationStore` and can resume on restart. When automatic mod maintenance is disabled, browsing reads the actual overlay without rewriting it or cleaning another profile's staging.
+
+The isolation covers launcher data, not the physical game installations and their saves. Explicit Play, game settings, builds, save/mod actions and cleanup still refer to real resources. Do not describe this as a sandbox of all game effects. Release packaging excludes the development marker, and the updater rejects a release that also selects the development profile. Initial Dev import and native interaction remain awaiting maintainer validation.
+
+Launch the packaged Dev for app checks: an unmarked executable cannot silently choose the stable data profile. Build markers and bundle identity must agree before the startup transaction opens any app store.

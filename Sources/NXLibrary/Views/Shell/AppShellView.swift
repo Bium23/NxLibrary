@@ -12,6 +12,7 @@ public struct AppShellView: View {
     @StateObject private var runningGames = RunningGameMonitor()
     @StateObject private var sessionCard = SessionCardPresenter()
     @StateObject private var updater = AppUpdater()
+    @StateObject private var sources: CatalogSourcesModel
     @StateObject private var nativeMenus = NativeMenuCommands.shared
     @ObservedObject private var theme = ThemeStore.shared
     @ObservedObject private var localization = AppLocalization.shared
@@ -22,10 +23,11 @@ public struct AppShellView: View {
 
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
 
-    public init(settingsStore store: AppSettingsStore) {
-        _settings = StateObject(wrappedValue: store)
-        _viewModel = StateObject(wrappedValue: AppViewModel(settingsStore: store))
-        _router = StateObject(wrappedValue: Self.startingRouter(saved: store.settings))
+    @MainActor init(state: AppShellState) {
+        _sources = StateObject(wrappedValue: state.sources)
+        _settings = StateObject(wrappedValue: state.settings)
+        _viewModel = StateObject(wrappedValue: state.viewModel)
+        _router = StateObject(wrappedValue: state.router)
     }
 
     private func updateLocale() {
@@ -34,16 +36,6 @@ public struct AppShellView: View {
         if previousLanguage != AppLocalization.shared.context.language {
             viewModel.refreshLocalizedMetadata()
         }
-    }
-
-    /// The router, already on the screen the Start on setting names.
-    private static func startingRouter(saved: AppSettings) -> AppRouter {
-        // The palette is in place before the first frame.
-        ThemeStore.shared.apply(id: saved.colorThemeID)
-        let router = AppRouter()
-        router.setInitialRoute(AppRouter.initialRoute(for: saved.startOn, last: saved.lastHome))
-        router.isIntroShowing = saved.introAnimation
-        return router
     }
 
     private var backdropStyle: SeleneBackdropStyle {
@@ -90,7 +82,8 @@ public struct AppShellView: View {
             && NSApp.keyWindow?.attachedSheet == nil && NSApp.keyWindow?.isSheet != true
         let game = general && !router.isMenuPresented ? viewModel.currentFocusedGame : nil
         return NativeMenuAvailability(general: general, play: game?.isPlayableLocally == true,
-            details: isHomeRoute && game != nil, options: game != nil)
+            details: isHomeRoute && viewModel.currentFocusedCatalogGame != nil, options: game != nil,
+            catalogRecovery: general && !viewModel.isBuilding && !viewModel.catalogBuildRecoveries.isEmpty)
     }
 
     /// The launch screen sits over everything, menu included, until the game's window shows.
@@ -256,6 +249,8 @@ public struct AppShellView: View {
         .environment(\.seleneShowButtonHints, settings.settings.showButtonHints)
         .environment(\.seleneButtonNames, settings.settings.buttonNames)
         .environmentObject(updater)
+        .environmentObject(sources)
+        .onAppear { sources.startIfEnabled() }
         .preferredColorScheme(.dark)
         .frame(minWidth: 1100, minHeight: 700)
         .onAppear(perform: startRuntime)
@@ -308,6 +303,7 @@ public struct AppShellView: View {
         styled
         .environment(\.locale, localization.context.formatLocale)
         .environment(\.nxAppLocale, localization.context)
+        .environment(\.catalogPersonalizations, viewModel.personalizations)
         .onChange(of: settings.settings.appLanguage) { _ in updateLocale() }
         .onChange(of: settings.settings.appRegion) { _ in updateLocale() }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryPlayFocused)) { _ in
@@ -323,8 +319,8 @@ public struct AppShellView: View {
                   viewModel.gameForSettingsSheet == nil,
                   !isCloseGameOpen,
                   isHomeRoute,
-                  let game = viewModel.currentFocusedGame else { return }
-            if router.route == .library { viewModel.spotlight.showGameDetails() }
+                  let game = viewModel.currentFocusedCatalogGame else { return }
+            if router.route == .library, game.integration == .nxnative { viewModel.spotlight.showGameDetails() }
             else { router.showDetail(game.id) }
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenGameOptions)) { _ in
@@ -363,6 +359,10 @@ public struct AppShellView: View {
             guard !isCloseGameOpen, !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
             router.closeMenu()
             router.openSettings(.startUp)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .nxLibraryRetryCatalogSave)) { _ in
+            guard nativeMenuAvailability.catalogRecovery else { return }
+            viewModel.retrySavingBuildResults()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenConsole)) { _ in
             guard !isCloseGameOpen, !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
@@ -432,6 +432,9 @@ public struct AppShellView: View {
         .onChange(of: viewModel.alertMessage) { _ in
             presentLegacyNotice()
         }
+        .onChange(of: viewModel.settingsNotice?.id) { id in
+            if id == nil { presentLegacyNotice() }
+        }
     }
 
     /// The current screen; under Add game or the console, the screen they were opened from.
@@ -466,6 +469,8 @@ public struct AppShellView: View {
                     artwork: artwork,
                     game: game
                 )
+            } else if let game = viewModel.catalogGames.first(where: { $0.id == id && $0.integration == .steam }) {
+                CatalogSteamDetailsView(viewModel: viewModel, router: router, settings: settings, game: game)
             } else {
                 Color.clear
                     .onAppear { router.showLibrary() }
@@ -492,7 +497,7 @@ public struct AppShellView: View {
         SoundEffectService.shared.bind(to: settings)
         artwork.trimCache()
         viewModel.refreshBoxArtIndex()
-        if settings.settings.checkEngineAtLaunch { SetupCheckModel.checkAtLaunch(viewModel: viewModel) }
+        if settings.settings.checkEngineAtLaunch && !AppData.profile.isDevelopment { SetupCheckModel.checkAtLaunch(viewModel: viewModel) }
         runningGames.start(sessions: playSessions)
         runningGames.setGames(viewModel.libraryGames)
         viewModel.installPendingBuilds()
@@ -640,10 +645,11 @@ public struct AppShellView: View {
         viewModel.settingsNotice = nil
         notice?.onDismiss?()
         if choice == 1 { notice?.retry?() }
+        presentLegacyNotice()
     }
 
     private func presentLegacyNotice() {
-        guard let message = viewModel.alertMessage else { return }
+        guard viewModel.settingsNotice == nil, let message = viewModel.alertMessage else { return }
         viewModel.alertMessage = nil
         viewModel.showSettingsNotice(title: L10n.text("NX Library"), message: message)
     }
@@ -983,6 +989,10 @@ public struct AppShellView: View {
         case .refreshLibrary:
             router.closeMenu()
             viewModel.refreshLibrary()
+            if sources.configuration.isEnabled { sources.refresh() }
+        case .manageSources:
+            router.closeMenu()
+            router.openSettings(.sources)
         case .settings:
             router.closeMenu()
             router.openSettings(.startUp)

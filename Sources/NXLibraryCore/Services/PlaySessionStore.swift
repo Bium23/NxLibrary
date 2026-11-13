@@ -31,8 +31,7 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
     }
 
     public static func defaultURL() -> URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/NXLibrary/play-sessions.json")
+        AppData.supportRoot.appendingPathComponent("play-sessions.json")
     }
 
     @discardableResult

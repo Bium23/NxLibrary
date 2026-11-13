@@ -30,9 +30,9 @@ final class GameArtLoader {
 
     /// The player's pick, local hero files, the disk cache, then the store /
     /// titledb banner.
-    func hero(for game: PortedGame, metadata: NintendoStoreMetadata?, artwork: ArtworkStore) async -> NSImage? {
+    func hero(for game: PortedGame, metadata: NintendoStoreMetadata?, artwork: ArtworkStore, personalizations: CatalogPersonalizations) async -> NSImage? {
         if let cached = cachedHero(for: game) { return cached }
-        let titleKey = game.titleId ?? game.uniqueKey
+        let titleKey = personalizations.nxnativeKey(for: game)
         var image: NSImage?
 
         if let picked = ArtworkPicks.shared.url(titleID: titleKey, slot: .background) {
@@ -71,9 +71,9 @@ final class GameArtLoader {
     /// The player's pick, the disk cache, a local logo.png, the store logo then
     /// the online sources' logos in their order (Steam, GOG, TheGamesDB,
     /// Wikidata, Commons, the fan wikis).
-    func logo(for game: PortedGame, metadata: NintendoStoreMetadata?, artwork: ArtworkStore) async -> NSImage? {
+    func logo(for game: PortedGame, metadata: NintendoStoreMetadata?, artwork: ArtworkStore, personalizations: CatalogPersonalizations) async -> NSImage? {
         if let cached = cachedLogo(for: game) { return cached }
-        let titleKey = game.titleId ?? game.uniqueKey
+        let titleKey = personalizations.nxnativeKey(for: game)
         var image: NSImage?
 
         // Every read and decode runs off the main thread (`decodeLogo`); a

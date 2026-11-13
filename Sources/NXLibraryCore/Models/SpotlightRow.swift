@@ -53,10 +53,14 @@ public enum SpotlightRow {
                              enabledCards: [SpotlightCard],
                              order: [String],
                              front: UUID? = nil) -> [SpotlightItem] {
+        build(gameIDs: games.map(\.id), enabledCards: enabledCards, order: order, front: front)
+    }
+
+    public static func build(gameIDs: [UUID], enabledCards: [SpotlightCard], order: [String], front: UUID? = nil) -> [SpotlightItem] {
         let enabled = Set(enabledCards)
         let defaults: [SpotlightItem] =
             SpotlightCard.allCases.filter(enabled.contains).map { .card($0) }
-            + games.map { .game($0.id) }
+            + gameIDs.map { .game($0) }
 
         var rank: [String: Int] = [:]
         for (i, key) in order.enumerated() where rank[key] == nil { rank[key] = i }
@@ -106,6 +110,13 @@ public enum SpotlightRow {
             guard visibleSet.contains(key), let next = queue.popFirst() else { return key }
             return next
         }
+    }
+
+    /// Save a visible move without losing hidden/disabled games or cards.
+    /// `gameIDs` must include the whole catalog, not only its visible projection.
+    public static func saving(visibleOrder: [String], gameIDs: [UUID], previousOrder: [String]) -> [String] {
+        let full = build(gameIDs: gameIDs, enabledCards: SpotlightCard.allCases, order: previousOrder).map(\.key)
+        return merging(visibleOrder: visibleOrder, into: full)
     }
 
     /// Moves `item` by `delta` positions, clamped to the row's ends.

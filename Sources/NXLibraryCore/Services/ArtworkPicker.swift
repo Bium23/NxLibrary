@@ -244,8 +244,7 @@ public final class ArtworkPicks: ObservableObject {
     /// Bumps on every change, so screens reload their art.
     @Published public private(set) var revision = 0
 
-    public init(directory: URL = FileManager.default.homeDirectoryForCurrentUser
-                    .appendingPathComponent("Library/Application Support/NXLibrary/artwork-picks")) {
+    public init(directory: URL = AppData.supportRoot.appendingPathComponent("artwork-picks")) {
         self.directory = directory
     }
 

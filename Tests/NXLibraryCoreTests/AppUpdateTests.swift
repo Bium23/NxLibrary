@@ -240,6 +240,16 @@ final class AppUpdateTests: XCTestCase {
                                                version: "0.2.0", runningOS: os), .noInfo)
     }
 
+    func testDevelopmentDataMarkerCannotShipAsAnUpdate() throws {
+        let app = try makeApp("Mixed.app")
+        let file = app.appendingPathComponent("Contents/Info.plist")
+        var info = try XCTUnwrap(PropertyListSerialization.propertyList(from: Data(contentsOf: file), format: nil) as? [String: Any])
+        info["NXLibraryDevelopmentProfile"] = true
+        try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0).write(to: file)
+        XCTAssertEqual(AppUpdate.bundleProblem(app, expectedID: "local.nxlibrary", version: "0.2.0", runningOS: os), .notRelease)
+        XCTAssertEqual(AppUpdate.installability(app), .developer)
+    }
+
     func testBundleWithoutMarkerIsRefused() throws {
         let dev = try makeApp("Dev.app", release: false)
         XCTAssertEqual(AppUpdate.bundleProblem(dev, expectedID: "local.nxlibrary", version: "0.2.0", runningOS: os),

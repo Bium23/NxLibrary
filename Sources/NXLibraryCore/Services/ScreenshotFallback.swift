@@ -19,8 +19,7 @@ public struct ScreenshotFallbackStore: Sendable {
 
     public let directory: URL
 
-    public init(directory: URL = FileManager.default.homeDirectoryForCurrentUser
-                    .appendingPathComponent("Library/Application Support/NXLibrary/metadata/launchbox-screenshots")) {
+    public init(directory: URL = AppData.supportRoot.appendingPathComponent("metadata/launchbox-screenshots")) {
         self.directory = directory
     }
 

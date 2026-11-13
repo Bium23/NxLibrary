@@ -31,6 +31,40 @@ public struct LibraryPresentation: Equatable {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// Common display boundary; provider facts never become a fabricated NX game.
+    public init(game: CatalogGame, steamMetadata: SteamMetadata?,
+                nxnativeMetadata: NintendoStoreMetadata? = nil,
+                overrides: [MetadataField: String] = [:], totalPlaytime: TimeInterval,
+                lastPlayed: Date?, now: Date = Date()) {
+        if let native = game.nxnativeGame {
+            self = Self(game: native, metadata: nxnativeMetadata, totalPlaytime: totalPlaytime, lastPlayed: lastPlayed, now: now)
+            return
+        }
+        self = Self(steamRecord: game, metadata: steamMetadata, overrides: overrides,
+                    totalPlaytime: totalPlaytime, lastPlayed: lastPlayed, now: now)
+    }
+
+    private init(steamRecord game: CatalogGame, metadata steamMetadata: SteamMetadata?,
+                 overrides: [MetadataField: String], totalPlaytime: TimeInterval, lastPlayed: Date?, now: Date) {
+        // Reject facts accidentally delivered for another external identity.
+        let facts = steamMetadata.flatMap { $0.appID == game.steamGame?.appID ? $0 : nil }
+        title = game.name
+        eyebrow = Self.eyebrow(from: game.name)
+        let selectedGenres = overrides[.genres].map { $0.split(separator: ",").map(String.init) } ?? facts?.genres ?? []
+        genres = Array(GameGenre.list(selectedGenres).prefix(3))
+        publisher = overrides[.publisher] ?? facts?.publishers.first
+        let release = overrides[.releaseDate] ?? facts?.releaseDate ?? ""
+        if let range = release.range(of: #"\b(?:19|20)\d{2}\b"#, options: .regularExpression) {
+            releaseYear = String(release[range])
+        } else { releaseYear = nil }
+        playtime = Self.duration(totalPlaytime)
+        self.lastPlayed = Self.relative(lastPlayed, now: now)
+        platform = "Steam"
+        console = "Mac"
+        sourcesDetached = false
+        summary = overrides[.description] ?? facts?.description ?? ""
+    }
+
     private static func eyebrow(from name: String) -> String {
         let separators = [":", " – "]
         for separator in separators {
