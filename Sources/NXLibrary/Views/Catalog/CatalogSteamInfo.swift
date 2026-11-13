@@ -3,7 +3,7 @@ import AppKit
 import NXLibraryCore
 
 /// A Steam game's head in the same Selene layout as an nxnative one: the shared
-/// logo area, the Play/Options/favorite positions, the stats line and the genre
+/// logo area, the Play/Options/favorite positions, the stats line and (in Collection) the genre
 /// chips. Until Steam Play and common Options exist, the first two positions open
 /// Details and hide the game: what Steam games can already do, never an inert Play.
 struct CatalogSteamInfo: View {
@@ -20,7 +20,8 @@ struct CatalogSteamInfo: View {
     @Environment(\.nxAppLocale) private var localization
     @ObservedObject private var fields = SteamPersonalizations.shared.metadata
     @ObservedObject private var picks = SteamPersonalizations.shared.artwork
-    @State private var metadata: SteamMetadata?
+    @ObservedObject private var facts = SteamGameFacts.shared
+    private var metadata: SteamMetadata? { facts.metadata(for: game) }
     @State private var logo: NSImage?
     @State private var logoKey = ""
     @State private var shown = true
@@ -47,7 +48,8 @@ struct CatalogSteamInfo: View {
             }
             SeleneStatsRow(presentation: presentation)
                 .padding(.leading, canvas.u(collection ? 0 : 4)).padding(.top, canvas.u(collection ? 28 : 26))
-            if !presentation.genres.isEmpty {
+            // Spotlight places the genres in their own block under the head, as for nxnative games.
+            if collection, !presentation.genres.isEmpty {
                 SpotlightGenreChips(genres: presentation.genres).padding(.top, canvas.u(20))
             }
         }
@@ -58,10 +60,7 @@ struct CatalogSteamInfo: View {
         .onAppear { reveal() }
         .onChange(of: game.id) { _ in reveal() }
         .task(id: "\(game.id)|\(localization.language.rawValue)") {
-            metadata = nil
-            guard let id = game.steamGame?.appID else { return }
-            let result = await SteamMetadataService.shared.metadata(appID: id, language: SteamMetadata.language(localization.language))
-            guard !Task.isCancelled else { return }; metadata = result
+            await facts.load(game, language: localization.language)
         }
         .task(id: currentLogoKey) {
             let expected = currentLogoKey

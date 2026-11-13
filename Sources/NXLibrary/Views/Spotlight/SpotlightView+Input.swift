@@ -57,9 +57,8 @@ extension SpotlightView {
             if router.isSearchPresented { router.isSearchPresented = false }
             mutate { if $0.focus != .row { $0.focus = .row; moved = true } }
         case .secondaryAction:
-            if let game = selectedCatalogGame, game.integration == .steam { router.showDetail(game.id); return }
             // X scrolls to the game's page (the pills), like Down from the row.
-            if selectedGame != nil {
+            if selectedGame != nil || selectedCatalogGame?.integration == .steam {
                 mutate { if $0.focus == .row { moved = $0.showGameDetails() } }
             }
         case .contextAction:
@@ -129,11 +128,15 @@ extension SpotlightView {
     // MARK: - Screenshot viewer
 
     func openViewer(at index: Int) {
-        guard let game = selectedGame else { return }
-        let urls = Array((viewModel.storeMetadata[game.id]?.screenshotURLs ?? [])
-            .prefix(SpotlightScreenshotStrip.maxCount))
+        let titleID: String, all: [URL]
+        if let game = selectedGame {
+            titleID = viewModel.personalizationKey(for: game); all = viewModel.storeMetadata[game.id]?.screenshotURLs ?? []
+        } else if let game = selectedCatalogGame, game.integration == .steam {
+            titleID = game.personalizationReference.key; all = steamFacts.metadata(for: game)?.screenshots ?? []
+        } else { return }
+        let urls = Array(all.prefix(SpotlightScreenshotStrip.maxCount))
         guard !urls.isEmpty else { return }
-        viewer = ViewerContext(titleID: viewModel.personalizationKey(for: game), urls: urls,
+        viewer = ViewerContext(titleID: titleID, urls: urls,
                                state: ScreenshotViewerState(count: urls.count, start: index))
         SoundEffectService.shared.play(.click)
     }

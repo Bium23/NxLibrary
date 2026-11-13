@@ -144,9 +144,24 @@ struct BuildSourcesPanel: View {
         }
     }
 
-    /// Small tool buttons, three to a row (`SpotlightState.actionColumns`): squarer
-    /// and quieter than Play and Options above, so they read as secondary.
     private var grid: some View {
+        SeleneActionGrid(rows: rows, focusedRow: focusedRow, onHoverRow: onHoverRow, onPressRow: onPressRow)
+    }
+}
+
+/// Small tool buttons, three to a row (`SpotlightState.actionColumns`): squarer
+/// and quieter than Play and Options above, so they read as secondary. Shared by
+/// every source's page, so Left/Right and Up/Down move the same way (`DetailsFocus`).
+struct SeleneActionGrid: View {
+    @Environment(\.seleneCanvas) private var canvas
+    let rows: [BuildSourcesRow]
+    let focusedRow: Int?
+    let onHoverRow: (Int) -> Void
+    let onPressRow: (Int) -> Void
+    static let columns = SpotlightState.actionColumns
+    static let cellWidth: CGFloat = 168
+
+    var body: some View {
         VStack(alignment: .leading, spacing: canvas.u(8)) {
             ForEach(Array(stride(from: 0, to: rows.count, by: Self.columns)), id: \.self) { first in
                 HStack(spacing: canvas.u(8)) {

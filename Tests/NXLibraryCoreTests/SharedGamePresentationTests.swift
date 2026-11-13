@@ -51,4 +51,29 @@ final class SharedGamePresentationTests: XCTestCase {
         XCTAssertTrue(steam.isDisjoint(with: [.fullscreen, .frameRate, .consoleMode, .rebuild, .openSaves, .removeSources]))
         XCTAssertTrue(CatalogGameOptions.specificRows(for: .nxnative).contains(.rebuild))
     }
+
+    func testSteamPagePresentationClaimsNothingFromNxnative() throws {
+        let body = Data("""
+        {"10":{"success":true,"data":{"steam_appid":10,"short_description":"Store text","genres":[{"description":"Strategy"}],"developers":["Dev Studio"],"publishers":["Studio"],"release_date":{"date":"23 mag 2023"}}}}
+        """.utf8)
+        let facts = try SteamMetadata.decode(body, appID: 10, language: "italian")
+        let record = CatalogGame(steam: SteamCatalogGame(appID: 10, name: "Fixture"))
+        let other = CatalogGame(steam: SteamCatalogGame(appID: 20, name: "Other"))
+        let page = GameDetailPresentation(steamRecord: record, metadata: facts, overrides: [.publisher: "Mine"],
+                                          totalPlaytime: 60, lastPlayed: nil,
+                                          libraryGames: [record, other], playtimeByGame: [other.id: 120])
+        XCTAssertEqual(page.description, "Store text")
+        XCTAssertEqual(page.released, "23 mag 2023")
+        XCTAssertEqual(page.releaseYear, "2023")
+        XCTAssertEqual(page.developerLine, "Dev Studio")
+        XCTAssertEqual(page.publisher, "Mine")
+        XCTAssertEqual(page.rank, "#2 of 2")
+        XCTAssertEqual(page.storeURL?.absoluteString, "https://store.steampowered.com/app/10/")
+        XCTAssertFalse(page.canPlay); XCTAssertFalse(page.canRebuild); XCTAssertFalse(page.sourcesDetached)
+        XCTAssertEqual(page.savePath, ""); XCTAssertEqual(page.engineCommitShort, "—")
+        // Facts delivered for another game never reach this page.
+        let stray = GameDetailPresentation(steamRecord: other, metadata: facts, totalPlaytime: 0, lastPlayed: nil)
+        XCTAssertEqual(stray.description, "")
+        XCTAssertNil(stray.rank)
+    }
 }

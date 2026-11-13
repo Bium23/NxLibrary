@@ -27,6 +27,9 @@ public struct SpotlightView: View {
     @StateObject var art = SeleneHeroArt()
     /// Art the player picks redraws the hero and logo (their task keys carry its revision).
     @ObservedObject var picks = ArtworkPicks.shared
+    /// Steam store facts and personal fields, shared with the Steam head.
+    @ObservedObject var steamFacts = SteamGameFacts.shared
+    @ObservedObject var steamFields = SteamPersonalizations.shared.metadata
     @State var keyMonitor: Any?
     @State var hadGames = false
     /// The card Y menu: which card and the focused row.
@@ -148,6 +151,9 @@ public struct SpotlightView: View {
     }
 
     var screenshotCount: Int {
+        if let game = selectedCatalogGame, game.integration == .steam {
+            return min(steamFacts.metadata(for: game)?.screenshots.count ?? 0, SpotlightScreenshotStrip.maxCount)
+        }
         guard let game = selectedGame else { return 0 }
         let urls = viewModel.storeMetadata[game.id]?.screenshotURLs ?? []
         return min(urls.count, SpotlightScreenshotStrip.maxCount)
@@ -378,59 +384,47 @@ public struct SpotlightView: View {
                         .spotlightBlock(.genres)
                 }
 
-                SpotlightScreenshotStrip(
-                    titleID: viewModel.personalizationKey(for: game),
-                    urls: metadata?.screenshotURLs ?? [],
-                    known: screenshotsKnown(game, metadata: metadata),
-                    focusedIndex: state.focus == .strip ? state.stripIndex : nil,
-                    scrollIndex: state.stripIndex,
-                    artwork: artwork,
-                    onSelect: { index in
-                        guard !state.isLifted else { return }
-                        mutate { $0.focus = .strip; $0.stripIndex = index }
-                        openViewer(at: index)
-                    }
-                )
-                // On the row the screenshots dissolve downwards (Selene's home): the
-                // hints sit on the dark below them, and the fade says there is more below.
-                // Gradient stops do not animate, so the fade lifts by a solid layer
-                // fading in over it, along with the glide. The mask reaches past the
-                // strip's edges so the focus ring outside a tile shows.
-                .mask(ZStack {
-                    LinearGradient(stops: [
-                        .init(color: .black, location: 0),
-                        .init(color: .black, location: 0.3),
-                        .init(color: .black.opacity(0.35), location: 0.62),
-                        .init(color: .black.opacity(0), location: 0.86)
-                    ], startPoint: .top, endPoint: .bottom)
-                    Color.black.opacity(stripFull ? 1 : 0)
-                }
-                .padding(-canvas.u(16)))
-                // They arrive after the logo, not before it.
-                .seleneReveal(delay: 0.6)
-                .id(game.id)
-                .padding(.top, canvas.u(30))
-                .spotlightBlock(.strip)
+                screenshotStrip(id: game.id, titleID: viewModel.personalizationKey(for: game),
+                                urls: metadata?.screenshotURLs ?? [],
+                                known: screenshotsKnown(game, metadata: metadata), state: state)
 
                 pageBelow(game, page: page, state: state)
                     // Hidden while the row has focus: it rises in with the page.
                     .opacity(belowShown ? 1 : 0)
             }
         } else if let game = model.selectedCatalogGame, game.integration == .steam {
-            CatalogSteamInfo(game: game, totalPlaytime: playSessions.totalDuration(for: game.id),
-                             lastPlayed: playSessions.lastPlayed(for: game.id),
-                             focused: state.focus == .pills ? state.pillIndex : nil,
-                             onAction: { index in
-                                 guard !state.isLifted else { return }
-                                 mutate { $0.focus = .pills; $0.pillIndex = index }
-                                 pressCatalogPill(index, game: game)
-                             },
-                             onHover: { index in
-                                 guard !state.isLifted, state.focus == .pills, !isGliding else { return }
-                                 mutate { $0.pillIndex = index }
-                             })
-                .id(game.id)
-                .spotlightBlock(.head)
+            let page = steamPage(for: game)
+            VStack(alignment: .leading, spacing: 0) {
+                CatalogSteamInfo(game: game, totalPlaytime: playSessions.totalDuration(for: game.id),
+                                 lastPlayed: playSessions.lastPlayed(for: game.id),
+                                 focused: state.focus == .pills ? state.pillIndex : nil,
+                                 onAction: { index in
+                                     guard !state.isLifted else { return }
+                                     mutate { $0.focus = .pills; $0.pillIndex = index }
+                                     pressCatalogPill(index, game: game)
+                                 },
+                                 onHover: { index in
+                                     guard !state.isLifted, state.focus == .pills, !isGliding else { return }
+                                     mutate { $0.pillIndex = index }
+                                 })
+                    .id(game.id)
+                    .spotlightBlock(.head)
+
+                if !page.presentation.genres.isEmpty {
+                    SpotlightGenreChips(genres: page.presentation.genres)
+                        .modifier(SpotlightInfoFollow())
+                        .id(game.id)
+                        .padding(.top, canvas.u(20))
+                        .spotlightBlock(.genres)
+                }
+
+                screenshotStrip(id: game.id, titleID: game.personalizationReference.key,
+                                urls: steamFacts.metadata(for: game)?.screenshots ?? [],
+                                known: steamFacts.isKnown(game), state: state)
+
+                steamPageBelow(page, state: state)
+                    .opacity(belowShown ? 1 : 0)
+            }
         } else if model.selectedItem == .card(.mods) {
             VStack(alignment: .leading, spacing: 0) {
                 SpotlightCardInfoView(
@@ -899,7 +893,27 @@ public struct SpotlightView: View {
             || state.focus == .store
     }
 
-    var currentPage: SpotlightPageModel? { selectedGame.map(page(for:)) }
+    var currentPage: SpotlightPageModel? {
+        if let game = selectedGame { return page(for: game) }
+        return selectedCatalogGame.flatMap { $0.integration == .steam ? steamPage(for: $0) : nil }
+    }
+
+    func steamPage(for game: CatalogGame) -> SpotlightPageModel {
+        let visible = viewModel.visibleCatalogGames
+        let playtimes = Dictionary(visible.map { ($0.id, playSessions.totalDuration(for: $0.id)) },
+                                   uniquingKeysWith: { first, _ in first })
+        let key = game.personalizationReference.key
+        var overrides: [MetadataField: String] = [:]
+        for field in MetadataField.allCases { overrides[field] = steamFields.value(titleID: key, field: field) }
+        let presentation = GameDetailPresentation(
+            steamRecord: game, metadata: steamFacts.metadata(for: game), overrides: overrides,
+            totalPlaytime: playSessions.totalDuration(for: game.id),
+            lastPlayed: playSessions.lastPlayed(for: game.id),
+            sessions: playSessions.sessions, libraryGames: visible, playtimeByGame: playtimes)
+        return SpotlightPageModel(presentation: presentation,
+                                  rows: BuildSourcesRow.steamRows(for: game, presentation: presentation, viewModel: viewModel),
+                                  more: [], buildBlocked: false)
+    }
 
     func page(for game: PortedGame) -> SpotlightPageModel {
         let library = viewModel.libraryGames
@@ -930,18 +944,86 @@ public struct SpotlightView: View {
         if viewModel.isBuilding { router.openAddGame() }
     }
 
+    /// About this game with the activity column and the source's panel beside it: the same
+    /// geometry, focus blocks and excerpt for every source.
+    private func aboutAndColumn<Panel: View>(_ page: SpotlightPageModel, state: SpotlightState,
+                                             @ViewBuilder panel: () -> Panel) -> some View {
+        HStack(alignment: .top, spacing: 0) {
+            SpotlightDescription(text: page.presentation.description, languageNote: page.presentation.descriptionLanguageNote, excerpt: aboutExcerpt(page),
+                                 expanded: aboutExpanded, focused: state.focus == .about,
+                                 onToggle: { aboutExpanded.toggle() })
+                .spotlightBlock(.about)
+            Spacer(minLength: 0)
+            VStack(alignment: .leading, spacing: canvas.u(40)) {
+                DetailsActivityColumn(presentation: page.presentation)
+                panel()
+            }
+            .spotlightBlock(.column)
+        }
+        .frame(width: canvas.u(1700), alignment: .topLeading)
+        .padding(.top, canvas.u(44))
+        .spotlightBlock(.description)
+    }
+
+    /// A Steam game's page under the head: About, activity and its installation panel.
+    private func steamPageBelow(_ page: SpotlightPageModel, state: SpotlightState) -> some View {
+        aboutAndColumn(page, state: state) {
+            SteamInstallationPanel(
+                presentation: page.presentation, rows: page.rows,
+                focusedRow: state.focus == .actions ? state.actionIndex : nil,
+                onHoverRow: { index in
+                    guard state.focus == .actions, !isGliding else { return }
+                    mutate { $0.actionIndex = index }
+                },
+                onPressRow: { index in
+                    mutate { $0.focus = .actions; $0.actionIndex = index }
+                    if index < page.rows.count { page.rows[index].action() }
+                })
+        }
+    }
+
+    /// The screenshot strip under the head, for any source: the same tiles, fade and arrival.
+    private func screenshotStrip(id: UUID, titleID: String, urls: [URL], known: Bool, state: SpotlightState) -> some View {
+        SpotlightScreenshotStrip(
+            titleID: titleID,
+            urls: urls,
+            known: known,
+            focusedIndex: state.focus == .strip ? state.stripIndex : nil,
+            scrollIndex: state.stripIndex,
+            artwork: artwork,
+            onSelect: { index in
+                guard !state.isLifted else { return }
+                mutate { $0.focus = .strip; $0.stripIndex = index }
+                openViewer(at: index)
+            }
+        )
+        // On the row the screenshots dissolve downwards (Selene's home): the
+        // hints sit on the dark below them, and the fade says there is more below.
+        // Gradient stops do not animate, so the fade lifts by a solid layer
+        // fading in over it, along with the glide. The mask reaches past the
+        // strip's edges so the focus ring outside a tile shows.
+        .mask(ZStack {
+            LinearGradient(stops: [
+                .init(color: .black, location: 0),
+                .init(color: .black, location: 0.3),
+                .init(color: .black.opacity(0.35), location: 0.62),
+                .init(color: .black.opacity(0), location: 0.86)
+            ], startPoint: .top, endPoint: .bottom)
+            Color.black.opacity(stripFull ? 1 : 0)
+        }
+        .padding(-canvas.u(16)))
+        // They arrive after the logo, not before it.
+        .seleneReveal(delay: 0.6)
+        .id(id)
+        .padding(.top, canvas.u(30))
+        .spotlightBlock(.strip)
+    }
+
     /// Below the screenshots: About this game, with Your activity and Build &
     /// Sources in a column on its right (beside it however long it is), then More like this.
     private func pageBelow(_ game: PortedGame, page: SpotlightPageModel, state: SpotlightState) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .top, spacing: 0) {
-                SpotlightDescription(text: page.presentation.description, languageNote: page.presentation.descriptionLanguageNote, excerpt: aboutExcerpt(page),
-                                     expanded: aboutExpanded, focused: state.focus == .about,
-                                     onToggle: { aboutExpanded.toggle() })
-                    .spotlightBlock(.about)
-                Spacer(minLength: 0)
-                VStack(alignment: .leading, spacing: canvas.u(40)) {
-                    DetailsActivityColumn(presentation: page.presentation)
+            aboutAndColumn(page, state: state) {
                     BuildSourcesPanel(
                         presentation: page.presentation,
                         appFileName: game.url.lastPathComponent,
@@ -958,12 +1040,7 @@ public struct SpotlightView: View {
                             if index < page.rows.count { page.rows[index].action() }
                         },
                         width: BuildSourcesPanel.narrowWidth)
-                }
-                .spotlightBlock(.column)
             }
-            .frame(width: canvas.u(1700), alignment: .topLeading)
-            .padding(.top, canvas.u(44))
-            .spotlightBlock(.description)
 
             if let mods = modsHost.localMods, modsHost.game?.id == game.id {
                 DetailsModsBand(
