@@ -86,9 +86,10 @@ extension SpotlightView {
 
     func pressCatalogPill(_ index: Int, game: CatalogGame) {
         switch index {
+        // The positions of Play, Options and favorite: Details and Hide until Steam Play and Options exist.
         case 0: router.showDetail(game.id)
-        case 1: viewModel.setCatalogFavorite(game)
-        case 2: viewModel.setCatalogHidden(true, game: game)
+        case 1: viewModel.setCatalogHidden(true, game: game)
+        case 2: viewModel.setCatalogFavorite(game)
         default: break
         }
     }

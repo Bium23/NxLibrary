@@ -56,6 +56,29 @@ final class SeleneHeroArt: ObservableObject {
         key = loaded.map { loadedFor + "\(ObjectIdentifier($0).hashValue)" } ?? "none"
     }
 
+    func steamHeroTaskKey(_ game: CatalogGame?) -> String {
+        guard let game, game.integration == .steam else { return "none" }
+        return "steam-hero|\(game.id)|\(SteamPersonalizations.shared.artwork.revision)"
+    }
+
+    /// A Steam game's hero through the same image, key and crossfade as an nxnative one: the
+    /// player's pick, else the Steam library hero. No game (or an nxnative one) leaves the image to `loadHero`.
+    func loadSteamHero(game: CatalogGame?, current: () -> UUID?, settle: UInt64 = 150_000_000) async {
+        guard let game, game.integration == .steam else { return }
+        let picks = SteamPersonalizations.shared.artwork
+        let loadedFor = "\(game.id.uuidString)|s\(picks.revision)|"
+        if key.hasPrefix(loadedFor) { return }
+        try? await Task.sleep(nanoseconds: settle)
+        guard !Task.isCancelled else { return }
+        let request = SteamArtworkRequest(game: game, role: .hero)
+        var url = request.localURL(picks: picks)
+        if url == nil, let id = request.appID { url = await SteamMetadataService.shared.image(appID: id, slot: .background) }
+        let loaded = url.flatMap { NSImage(contentsOf: $0) }
+        guard !Task.isCancelled, current() == game.id else { return }
+        image = loaded
+        key = loaded.map { loadedFor + "\(ObjectIdentifier($0).hashValue)" } ?? "none"
+    }
+
     func loadLogo(game: PortedGame?, metadata: NintendoStoreMetadata?,
                   artwork: ArtworkStore, personalizations: CatalogPersonalizations) async {
         guard let game, GameArtLoader.shared.cachedLogo(for: game) == nil else { return }

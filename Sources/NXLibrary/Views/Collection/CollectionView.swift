@@ -64,8 +64,7 @@ public struct CollectionView: View {
             backdrop: {
                 SeleneArtBackground(image: art.image, imageKey: art.key,
                                     shade: settings.settings.backgroundShade,
-                                    showsArt: !settings.settings.keepWallpaperOnGames && selectedCatalogGame?.integration != .steam)
-                if let steam = selectedCatalogGame, steam.integration == .steam, !settings.settings.keepWallpaperOnGames { SteamBackdrop(game: steam, shade: settings.settings.backgroundShade, showsArt: !settings.settings.keepWallpaperOnGames) }
+                                    showsArt: !settings.settings.keepWallpaperOnGames)
             },
             stage: { stage(games: games, game: game) })
         .onAppear(perform: appear)
@@ -90,6 +89,7 @@ public struct CollectionView: View {
         .onChange(of: playSessions.sessions.count) { _ in reconcile() }
         .onChange(of: viewModel.isScanningLibrary) { _ in reconcile() }
         .task(id: art.heroTaskKey(game, metadata: game.flatMap { viewModel.storeMetadata[$0.id] })) { await loadHero(game) }
+        .task(id: art.steamHeroTaskKey(selectedCatalogGame)) { await art.loadSteamHero(game: selectedCatalogGame, current: { selectedCatalogGame?.id }) }
         .task(id: art.logoTaskKey(game, metadata: game.flatMap { viewModel.storeMetadata[$0.id] })) { await loadLogo(game) }
     }
 
@@ -109,14 +109,11 @@ public struct CollectionView: View {
                     .frame(width: canvas.u(1100), alignment: .topLeading)
                     .offset(x: canvas.u(80), y: canvas.u(110))
             } else if let record = selectedCatalogGame, record.integration == .steam {
-                CatalogSteamInfo(game: record) { index in
-                    switch index {
-                    case 0: router.showDetail(record.id)
-                    case 1: viewModel.setCatalogFavorite(record)
-                    case 2: viewModel.setCatalogHidden(true, game: record)
-                    default: break
-                    }
-                }.offset(x: canvas.u(80), y: canvas.u(110))
+                CatalogSteamInfo(game: record, totalPlaytime: playSessions.totalDuration(for: record.id),
+                                 lastPlayed: playSessions.lastPlayed(for: record.id), collection: true)
+                    .id(record.id)
+                    .frame(width: canvas.u(1100), alignment: .topLeading)
+                    .offset(x: canvas.u(80), y: canvas.u(110))
             }
 
             if games.isEmpty {

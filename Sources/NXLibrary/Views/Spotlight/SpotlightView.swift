@@ -172,8 +172,7 @@ public struct SpotlightView: View {
                 let shown = shownArt(model)
                 SeleneArtBackground(image: shown, imageKey: shown == nil ? "none" : art.key,
                                     shade: settings.settings.backgroundShade, crossfade: 0.8,
-                                    showsArt: !settings.settings.keepWallpaperOnGames && model.selectedCatalogGame?.integration != .steam, modsTint: modsBackdrop)
-                if let steam = selectedCatalogGame, steam.integration == .steam, !settings.settings.keepWallpaperOnGames { SteamBackdrop(game: steam, shade: settings.settings.backgroundShade, showsArt: !settings.settings.keepWallpaperOnGames) }
+                                    showsArt: !settings.settings.keepWallpaperOnGames, modsTint: modsBackdrop)
                 // Deeper in the page the art dims so the text reads.
                 Color.black.opacity(dimmed ? 0.4 : 0)
                     .allowsHitTesting(false)
@@ -236,6 +235,10 @@ public struct SpotlightView: View {
         }
         .onChange(of: playSessions.sessions.count) { _ in reconcile() }
         .task(id: art.heroTaskKey(model.selectedGame, metadata: model.selectedGame.flatMap { viewModel.storeMetadata[$0.id] })) { await loadHero(model.selectedGame) }
+        .task(id: art.steamHeroTaskKey(model.selectedCatalogGame)) {
+            await art.loadSteamHero(game: model.selectedCatalogGame, current: { selectedCatalogGame?.id }, settle: 420_000_000)
+            if model.selectedCatalogGame?.integration == .steam, !Task.isCancelled { modsBackdrop = false }
+        }
         .task(id: art.logoTaskKey(model.selectedGame, metadata: model.selectedGame.flatMap { viewModel.storeMetadata[$0.id] })) { await loadLogo(model.selectedGame) }
     }
 
@@ -414,9 +417,20 @@ public struct SpotlightView: View {
                     .opacity(belowShown ? 1 : 0)
             }
         } else if let game = model.selectedCatalogGame, game.integration == .steam {
-            CatalogSteamInfo(game: game, focused: state.focus == .pills ? state.pillIndex : nil) { index in
-                pressCatalogPill(index, game: game)
-            }.spotlightBlock(.head)
+            CatalogSteamInfo(game: game, totalPlaytime: playSessions.totalDuration(for: game.id),
+                             lastPlayed: playSessions.lastPlayed(for: game.id),
+                             focused: state.focus == .pills ? state.pillIndex : nil,
+                             onAction: { index in
+                                 guard !state.isLifted else { return }
+                                 mutate { $0.focus = .pills; $0.pillIndex = index }
+                                 pressCatalogPill(index, game: game)
+                             },
+                             onHover: { index in
+                                 guard !state.isLifted, state.focus == .pills, !isGliding else { return }
+                                 mutate { $0.pillIndex = index }
+                             })
+                .id(game.id)
+                .spotlightBlock(.head)
         } else if model.selectedItem == .card(.mods) {
             VStack(alignment: .leading, spacing: 0) {
                 SpotlightCardInfoView(
@@ -723,8 +737,9 @@ public struct SpotlightView: View {
     /// loads when browsing from game to game (never another game's art right after a card). The rule answers for
     /// the selection this render sees, so the art never drops out for the render before `onChange` runs.
     private func shownArt(_ model: Snapshot) -> NSImage? {
-        guard let game = model.selectedGame, let image = art.image else { return nil }
-        return art.key.hasPrefix(game.id.uuidString)
+        let id = model.selectedGame?.id ?? model.selectedCatalogGame.flatMap { $0.integration == .steam ? $0.id : nil }
+        guard let id, let image = art.image else { return nil }
+        return art.key.hasPrefix(id.uuidString)
             || artRule.keepsOtherArt(selection: viewModel.spotlight.selectedKey, isGame: true) ? image : nil
     }
 
