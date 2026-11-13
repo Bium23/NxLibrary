@@ -305,6 +305,12 @@ public final class AppViewModel: ObservableObject {
     /// Non-blocking scan details shown beside Library refresh, never an automatic launch dialog.
     @Published public var libraryScanWarnings: [String] = []
     @Published public var gameForSettingsSheet: PortedGame? = nil
+    /// The Steam game whose Options are open (`SteamOptionsView`); never open with `gameForSettingsSheet`.
+    @Published var steamOptionsGame: CatalogGame? = nil
+    /// Any game's Options are open: the screens underneath stop reading input.
+    var isGameOptionsOpen: Bool { gameForSettingsSheet != nil || steamOptionsGame != nil }
+    /// The game whose Options are open, for the panels' own key monitors.
+    var optionsGameID: UUID? { gameForSettingsSheet?.id ?? steamOptionsGame?.id }
     /// Where the open Game options came from; decides its rows (Move is Spotlight-only).
     @Published public var gameOptionsOrigin: GameOptionsOrigin = .collection
     /// Game options opens straight on its Mods panel (the Details page's Mods band).
@@ -1460,7 +1466,16 @@ public final class AppViewModel: ObservableObject {
     public func openGameOptions(_ game: PortedGame, from origin: GameOptionsOrigin, opensMods: Bool = false) {
         gameOptionsOrigin = origin
         gameOptionsOpensMods = opensMods
+        steamOptionsGame = nil
         gameForSettingsSheet = game
+    }
+
+    /// Opens a Steam game's Options, remembering the screen it was opened from.
+    func openSteamOptions(_ game: CatalogGame, from origin: GameOptionsOrigin) {
+        guard game.integration == .steam else { return }
+        gameOptionsOrigin = origin
+        gameForSettingsSheet = nil
+        steamOptionsGame = game
     }
 
     /// Flips the favorite heart and saves the library.

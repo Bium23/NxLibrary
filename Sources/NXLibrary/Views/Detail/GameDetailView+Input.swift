@@ -246,7 +246,7 @@ extension GameDetailView {
                   !NativeMenuCommands.shared.isTracking,
                   case .detail(let id) = router.route, id == game.id,
                   viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
-                  viewModel.gameForSettingsSheet == nil,
+                  !viewModel.isGameOptionsOpen,
                   viewModel.gameToClose == nil,
                   viewModel.gameToRemove == nil,
                   !viewModel.isUpdateOfferOpen,

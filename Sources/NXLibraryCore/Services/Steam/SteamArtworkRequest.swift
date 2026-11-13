@@ -25,6 +25,11 @@ public struct SteamArtworkRequest: Equatable {
     public func localURL(picks: SteamPersonalizationStore) -> URL? {
         if let picked = picks.url(titleID: game.personalizationReference.key, slot: slot),
            FileManager.default.fileExists(atPath: picked.path) { return picked }
+        return automaticLocalURL
+    }
+
+    /// What the role shows with no pick: the app's own icon for the square, nothing else on this Mac.
+    public var automaticLocalURL: URL? {
         guard role == .square, let application else { return nil }
         return Self.bundleIcon(of: application.url)
     }

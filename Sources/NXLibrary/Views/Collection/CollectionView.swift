@@ -173,7 +173,7 @@ public struct CollectionView: View {
     private func contextHints(_ game: PortedGame?) -> [HintItem] {
         if let steam = selectedCatalogGame, steam.integration == .steam {
             return SteamPlayCoordinator.shared.hint(for: steam)
-                + [HintItem(.x, L10n.text("Details")), HintItem(.y, L10n.text("Game sources")), HintItem(.rs, L10n.text("Filter"))]
+                + [HintItem(.y, L10n.text("Game options")), HintItem(.rs, L10n.text("Filter"))]
         }
         guard let game else {
             if viewModel.isScanningLibrary { return [] }

@@ -158,7 +158,7 @@ struct GameDetailView: View {
         .onChange(of: viewer != nil) { router.isScreenshotViewerOpen = $0 }
         .onChange(of: model.bands) { _ in settleFocus(model.bands) }
         // Game options (its Mods panel) closing, or NX Library coming back from Finder, re-reads the mods.
-        .onChange(of: viewModel.gameForSettingsSheet == nil) { closed in if closed { reloadMods() } }
+        .onChange(of: !viewModel.isGameOptionsOpen) { closed in if closed { reloadMods() } }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in reloadMods() }
         // The key monitor captures this view's value: reinstall it when the game changes.
         .onChange(of: game) { _ in

@@ -219,7 +219,7 @@ public struct SpotlightView: View {
             startModsOnline(focus)
         }
         // Game options (its Mods panel) closing, or NX Library coming back from Finder, re-reads the mods.
-        .onChange(of: viewModel.gameForSettingsSheet == nil) { closed in if closed { reloadMods() } }
+        .onChange(of: !viewModel.isGameOptionsOpen) { closed in if closed { reloadMods() } }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in reloadMods() }
         .onChange(of: blocks) { _ in syncPage() }
         // Inside the store the page glides section to section on a shorter curve.
@@ -544,7 +544,7 @@ public struct SpotlightView: View {
                 return card == .activity ? more : more + [HintItem(.a, card == .surprise ? L10n.text("Pick") : card == .mods ? L10n.text("Browse") : L10n.text("Open"))]
             case .game:
                 if let steam = model.selectedCatalogGame, steam.integration == .steam {
-                    return [HintItem(.y, L10n.text("Game sources"))] + SteamPlayCoordinator.shared.hint(for: steam)
+                    return [HintItem(.y, L10n.text("Options"))] + SteamPlayCoordinator.shared.hint(for: steam)
                 }
                 guard let game = model.selectedGame else { return [] }
                 if viewModel.portingPills(game) == .porting {

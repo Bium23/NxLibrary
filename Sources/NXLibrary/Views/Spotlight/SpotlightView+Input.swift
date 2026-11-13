@@ -62,7 +62,11 @@ extension SpotlightView {
                 mutate { if $0.focus == .row { moved = $0.showGameDetails() } }
             }
         case .contextAction:
-            if selectedCatalogGame?.integration == .steam { router.openSettings(.sources); return }
+            if let steam = selectedCatalogGame, steam.integration == .steam {
+                SoundEffectService.shared.play(.click)
+                viewModel.openSteamOptions(steam, from: .spotlight)
+                return
+            }
             if let game = selectedGame {
                 viewModel.openGameOptions(game, from: .spotlight)
             } else if case .card(let card) = selectedItem {
@@ -85,9 +89,9 @@ extension SpotlightView {
 
     func pressCatalogPill(_ index: Int, game: CatalogGame) {
         switch index {
-        // The positions of Play, Options and favorite: Hide stands in until common Options exist.
+        // The positions of Play, Options and favorite, as for an nxnative game.
         case 0: SoundEffectService.shared.play(.click); SteamPlayCoordinator.shared.press(game)
-        case 1: viewModel.setCatalogHidden(true, game: game)
+        case 1: SoundEffectService.shared.play(.click); viewModel.openSteamOptions(game, from: .spotlight)
         case 2: viewModel.setCatalogFavorite(game)
         default: break
         }
@@ -362,7 +366,7 @@ extension SpotlightView {
                   !router.isIntroShowing,
                   router.route == .library,
                   viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
-                  viewModel.gameForSettingsSheet == nil,
+                  !viewModel.isGameOptionsOpen,
                   viewModel.gameToClose == nil,
                   viewModel.gameToRemove == nil,
                   !viewModel.isUpdateOfferOpen,

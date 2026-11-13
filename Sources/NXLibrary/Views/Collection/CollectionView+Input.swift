@@ -33,9 +33,14 @@ extension CollectionView {
                 router.openAddGame()
             }
         case .secondaryAction:
-            if let game = selectedCatalogGame { router.showDetail(game.id) }
+            // A Steam game's details are its Spotlight page; Collection has no Details screen for it.
+            if let game = selectedCatalogGame, game.integration != .steam { router.showDetail(game.id) }
         case .contextAction:
-            if selectedCatalogGame?.integration == .steam { router.openSettings(.sources); return }
+            if let steam = selectedCatalogGame, steam.integration == .steam {
+                SoundEffectService.shared.play(.click)
+                viewModel.openSteamOptions(steam, from: .collection)
+                return
+            }
             if let game = selectedGame { viewModel.openGameOptions(game, from: .collection) }
         case .cancel:
             router.showLibrary() // B goes home, like Selene's library.
@@ -80,7 +85,7 @@ extension CollectionView {
                   !router.isIntroShowing,
                   router.route == .collection,
                   viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
-                  viewModel.gameForSettingsSheet == nil,
+                  !viewModel.isGameOptionsOpen,
                   viewModel.gameToClose == nil,
                   viewModel.gameToRemove == nil,
                   !viewModel.isUpdateOfferOpen,

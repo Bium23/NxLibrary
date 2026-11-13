@@ -51,7 +51,7 @@ extension AppRouter {
     /// so the screen's step aside instead of showing through.
     @MainActor
     func overlayHasHints(_ viewModel: AppViewModel) -> Bool {
-        isMenuPresented || isSearchPresented || viewModel.gameForSettingsSheet != nil || route.isOverlay
+        isMenuPresented || isSearchPresented || viewModel.isGameOptionsOpen || route.isOverlay
     }
 }
 

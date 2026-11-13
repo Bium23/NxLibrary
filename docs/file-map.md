@@ -732,8 +732,10 @@ Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua rig
 | [AppViewModel+Sources.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Sources.swift) | Proiezione visibile, selezione comune e modifiche personali tipizzate. |
 | [SettingsSourcesSection.swift](../Sources/NXLibrary/Views/Settings/SettingsSourcesSection.swift) | Attivazione, refresh/cancel, cartella Steam, revisione e recupero dei nascosti. |
 | [CatalogNativeArtwork.swift](../Sources/NXLibrary/Views/Catalog/CatalogNativeArtwork.swift) | Icona nativa in sola lettura e indicatore Steam; nessun artwork Nintendo. |
-| [CatalogSteamInfo.swift](../Sources/NXLibrary/Views/Catalog/CatalogSteamInfo.swift) | Intestazione condivisa nelle due librerie e azioni Details/preferito/nascondi. |
-| [CatalogSteamDetailsView.swift](../Sources/NXLibrary/Views/Catalog/CatalogSteamDetailsView.swift) | Informazioni sull’installazione e comandi pertinenti alla fonte; nessun Play in questa tappa. |
+| [CatalogSteamInfo.swift](../Sources/NXLibrary/Views/Catalog/CatalogSteamInfo.swift) | Intestazione condivisa nelle due librerie: Play/Riprendi/Annulla/Riprova, Opzioni e preferito, con la nota di stato. |
+| [SteamPlayCoordinator.swift](../Sources/NXLibrary/Services/SteamPlayCoordinator.swift) | Play tramite il client Steam verificato e sessioni reali dal processo dell’app installata. |
+| [SteamOptionsView.swift](../Sources/NXLibrary/Views/GameOptions/SteamOptionsView.swift) | Opzioni di un gioco Steam con l’aspetto e l’input di Game options: Play, Edit details, Move, preferito, nascosto, Finder. |
+| [PersonalizationSubject.swift](../Sources/NXLibrary/Views/GameOptions/PersonalizationSubject.swift) | Il gioco che Change artwork e Change metadata personalizzano: scelte nxnative o archivio personale Steam, senza icona Mac per Steam. |
 | [CatalogSourcesRepositoryTests.swift](../Tests/NXLibraryCoreTests/CatalogSourcesRepositoryTests.swift) | Compatibilità generazioni, cambi fonte, preferenze concorrenti e adozione NX esplicita. |
 | [CatalogSourcesModelTests.swift](../Tests/NXLibraryCoreTests/CatalogSourcesModelTests.swift) | Opt-in, annullamento, risultati vecchi, cambio radice e recupero errori. |
 | [CatalogLibraryQueryTests.swift](../Tests/NXLibraryCoreTests/CatalogLibraryQueryTests.swift) | Visibilità, ricerca/filtri misti e selezione per UUID senza sessioni simulate. |
@@ -746,7 +748,7 @@ Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua rig
 | [SteamMetadata.swift](../Sources/NXLibraryCore/Services/Steam/SteamMetadata.swift) | Dati store Steam tipizzati, lingua e URL immagini verificati. |
 | [SteamMetadataService.swift](../Sources/NXLibraryCore/Services/Steam/SteamMetadataService.swift) | Richieste limitate/coalescenti, cache per lingua, ripiego offline e immagini ridimensionate. |
 | [SteamArtwork.swift](../Sources/NXLibrary/Views/Catalog/SteamArtwork.swift) | Immagini e sfondi Steam, con precedenza alle scelte personali e annullamento dei risultati UI obsoleti. |
-| [SteamPersonalizations.swift](../Sources/NXLibrary/Views/Catalog/SteamPersonalizations.swift) | Preferenze Steam separate e pannello di modifica metadati/artwork. |
+| [SteamPersonalizations.swift](../Sources/NXLibrary/Views/Catalog/SteamPersonalizations.swift) | Archivio delle scelte personali Steam (metadati e artwork), modificate da Change artwork e Change metadata. |
 | [SteamMetadataTests.swift](../Tests/NXLibraryCoreTests/SteamMetadataTests.swift) | Identità, lingue, offline, URL, concorrenza e pubblicazione dopo salvataggio riuscito. |
 
 | [SteamPersonalizationStore.swift](../Sources/NXLibraryCore/Services/Steam/SteamPersonalizationStore.swift) | Pubblicazione unica di metadati e riferimenti artwork; fallimenti e Automatic conservano le scelte coerenti. |

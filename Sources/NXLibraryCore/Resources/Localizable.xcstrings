@@ -8232,6 +8232,47 @@
         }
       }
     },
+    "Artwork, metadata and the store page.": {
+      "comment": "CatalogGameOptions.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artwork, metadata and the store page."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Immagini, metadati e pagina dello store."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Illustrations, métadonnées et page du magasin."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bilder, Metadaten und Store-Seite."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imágenes, metadatos y página de la tienda."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imagens, metadados e página da loja."
+          }
+        }
+      }
+    },
     "Artwork, metadata, store page, sources and the build log.": {
       "comment": "GameOptionsPresentation.swift",
       "localizations": {
@@ -18396,6 +18437,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Capa, fundo, ícone e logotipo do GameTDB, do Title DB ou de um arquivo."
+          }
+        }
+      }
+    },
+    "Cover, background, icon and logo, from Steam, online sources or a file.": {
+      "comment": "CatalogGameOptions.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cover, background, icon and logo, from Steam, online sources or a file."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copertina, sfondo, icona e logo, da Steam, fonti online o un file."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jaquette, fond, icône et logo, depuis Steam, des sources en ligne ou un fichier."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cover, Hintergrund, Symbol und Logo, von Steam, Online-Quellen oder aus einer Datei."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portada, fondo, icono y logotipo, de Steam, fuentes en línea o un archivo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capa, fundo, ícone e logotipo, do Steam, de fontes online ou de um arquivo."
           }
         }
       }
@@ -43417,6 +43499,47 @@
         }
       }
     },
+    "Open the game’s Steam store page.": {
+      "comment": "CatalogGameOptions.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the game’s Steam store page."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri la pagina del gioco nello store di Steam."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir la page du jeu sur le magasin Steam."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne die Seite des Spiels im Steam-Shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre la página del juego en la tienda de Steam."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abra a página do jogo na loja Steam."
+          }
+        }
+      }
+    },
     "Open the log, or copy diagnostics for a bug report.": {
       "comment": "PortingFailureReason.swift",
       "localizations": {
@@ -51430,6 +51553,47 @@
         }
       }
     },
+    "Screen-shaped art, then Steam": {
+      "comment": "ChangeArtworkView.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen-shaped art, then Steam"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Immagini in formato schermo, poi Steam"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Images au format écran, puis Steam"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bilder im Bildschirmformat, dann Steam"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imágenes con forma de pantalla, luego Steam"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imagens no formato da tela, depois o Steam"
+          }
+        }
+      }
+    },
     "Screenshot %@": {
       "comment": "SpotlightScreenshotStrip.swift",
       "localizations": {
@@ -54915,6 +55079,47 @@
         }
       }
     },
+    "Start the game through Steam.": {
+      "comment": "CatalogGameOptions.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start the game through Steam."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvia il gioco tramite Steam."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lancer le jeu via Steam."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starte das Spiel über Steam."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicia el juego a través de Steam."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicie o jogo pelo Steam."
+          }
+        }
+      }
+    },
     "Start-up": {
       "comment": "SettingsSection.swift",
       "localizations": {
@@ -55407,6 +55612,47 @@
         }
       }
     },
+    "Steam: %@": {
+      "comment": "ChangeMetadataView.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam : %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam: %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam: %@"
+          }
+        }
+      }
+    },
     "SteamGridDB": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
@@ -55608,6 +55854,88 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chave do SteamGridDB salva; Alterar arte agora busca no SteamGridDB."
+          }
+        }
+      }
+    },
+    "Steam’s library cover": {
+      "comment": "ChangeArtworkView.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam’s library cover"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La copertina della libreria di Steam"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La jaquette de la bibliothèque Steam"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Bibliothekscover von Steam"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La portada de la biblioteca de Steam"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A capa da biblioteca do Steam"
+          }
+        }
+      }
+    },
+    "Steam’s logo": {
+      "comment": "ChangeArtworkView.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam’s logo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il logo di Steam"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le logo de Steam"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Logo von Steam"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El logotipo de Steam"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O logotipo do Steam"
           }
         }
       }
@@ -56920,6 +57248,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "A pasta de Apps de jogos está indisponível. Reconecte ou escolha outra em Ajustes → Biblioteca."
+          }
+        }
+      }
+    },
+    "The Mac app’s own icon": {
+      "comment": "ChangeArtworkView.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Mac app’s own icon"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’icona dell’app Mac"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’icône de l’app Mac"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das eigene Symbol der Mac-App"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El icono propio de la app de Mac"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O ícone do próprio app para Mac"
           }
         }
       }

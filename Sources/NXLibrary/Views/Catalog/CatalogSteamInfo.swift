@@ -6,7 +6,7 @@ import NXLibraryCore
 /// logo area, the Play/Options/favorite positions, the stats line and (in Collection) the genre
 /// chips. Play follows `SteamPlayCoordinator`: Resume while the game runs, Cancel while
 /// waiting for Steam, Try again after a failure, with a one-line note above the pills.
-/// Until common Options exist, the second position hides the game.
+/// Options opens `SteamOptionsView`.
 struct CatalogSteamInfo: View {
     let game: CatalogGame
     let totalPlaytime: TimeInterval
@@ -50,7 +50,7 @@ struct CatalogSteamInfo: View {
                     .padding(.top, canvas.u(20))
             }
             if !collection {
-                GamePrimaryActions(primaryTitle: primaryTitle, secondaryTitle: L10n.text("Hide"),
+                GamePrimaryActions(primaryTitle: primaryTitle,
                                    isFavorite: game.isFavorite, focused: focused,
                                    primaryEnabled: primaryEnabled,
                                    onAction: onAction, onHover: onHover)
