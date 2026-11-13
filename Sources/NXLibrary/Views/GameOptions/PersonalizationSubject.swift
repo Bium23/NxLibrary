@@ -28,33 +28,34 @@ struct PersonalizationSubject {
     var titleId: String? { ported?.titleId }
     var steamAppID: UInt32? { steam?.steamGame?.appID }
 
-    private var steamStore: SteamPersonalizationStore { SteamPersonalizations.shared.metadata }
+    private var steamArt: SteamPersonalizationStore { SteamPersonalizations.shared.artwork }
+    private var steamFields: SteamPersonalizationStore { SteamPersonalizations.shared.metadata }
 
     // MARK: Artwork picks
 
     func artworkURL(_ slot: ArtworkSlot) -> URL? {
-        steam != nil ? steamStore.url(titleID: key, slot: slot) : ArtworkPicks.shared.url(titleID: key, slot: slot)
+        steam != nil ? steamArt.url(titleID: key, slot: slot) : ArtworkPicks.shared.url(titleID: key, slot: slot)
     }
 
     func saveArtwork(_ data: Data, slot: ArtworkSlot) throws {
-        if steam != nil { try steamStore.save(fields: [:], images: [slot: data], automatic: [], titleID: key) }
+        if steam != nil { try steamArt.save(fields: [:], images: [slot: data], automatic: [], titleID: key) }
         else { _ = try ArtworkPicks.shared.save(data, titleID: key, slot: slot) }
     }
 
     func removeArtwork(_ slot: ArtworkSlot) throws {
-        if steam != nil { try steamStore.save(fields: [:], images: [:], automatic: [slot], titleID: key) }
+        if steam != nil { try steamArt.save(fields: [:], images: [:], automatic: [slot], titleID: key) }
         else { ArtworkPicks.shared.remove(titleID: key, slot: slot) }
     }
 
     // MARK: Metadata picks
 
     func metadataPick(_ field: MetadataField) -> String? {
-        steam != nil ? steamStore.value(titleID: key, field: field) : MetadataPicks.shared.value(titleID: key, field: field)
+        steam != nil ? steamFields.value(titleID: key, field: field) : MetadataPicks.shared.value(titleID: key, field: field)
     }
 
     /// Keeps the player's value, or (nil) goes back to the store's.
     func pickMetadata(_ value: String?, field: MetadataField, viewModel: AppViewModel) throws {
-        if steam != nil { try steamStore.save(fields: [field: value ?? ""], images: [:], automatic: [], titleID: key) }
+        if steam != nil { try steamFields.save(fields: [field: value ?? ""], images: [:], automatic: [], titleID: key) }
         else if let ported { viewModel.pickMetadata(value, field: field, for: ported) }
     }
 }

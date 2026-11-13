@@ -68,6 +68,10 @@ final class SteamPlayCoordinator: ObservableObject {
         tokens = []
         listObservation?.invalidate(); listObservation = nil
         timer?.invalidate(); timer = nil
+        // A later start re-reads the processes: `RunningGameMonitor.start` closes open Steam sessions
+        // at their last heartbeat, and a game still running must start a new one, not stay "running".
+        states = [:]
+        sessions = nil
     }
 
     /// The catalog changed. A game no longer in it keeps its session until its process ends.
@@ -86,6 +90,8 @@ final class SteamPlayCoordinator: ObservableObject {
     }
 
     func play(_ game: CatalogGame) {
+        // A game that quit since the last notification is not resumed: read the processes first.
+        refresh()
         let presentation = CatalogGamePresentation(game: game, sourceEnabled: steamEnabled)
         let client = Self.steamClientURL
         var state = states[game.id] ?? SteamPlayState()
@@ -122,6 +128,8 @@ final class SteamPlayCoordinator: ObservableObject {
     }
 
     private func refresh(heartbeat: Bool = false) {
+        // Before `start` there is no session store: a game seen now would turn "running" with no session.
+        guard sessions != nil else { return }
         let processes = NSWorkspace.shared.runningApplications.filter { !$0.isTerminated }.map {
             NativeProcessObservation(pid: $0.processIdentifier, bundleURL: $0.bundleURL, executableURL: $0.executableURL)
         }

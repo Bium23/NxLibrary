@@ -12,6 +12,9 @@ final class SteamGameFacts: ObservableObject {
     /// AppIDs whose answer (facts or none) is in for the current language.
     @Published private(set) var known: Set<UInt32> = []
     private var language = ""
+    /// When an AppID last came back without facts: asked again after a minute, not on every draw.
+    private var missedAt: [UInt32: Date] = [:]
+    private static let retryAfter: TimeInterval = 60
 
     func metadata(for game: CatalogGame) -> SteamMetadata? {
         game.steamGame.flatMap { facts[$0.appID] }
@@ -24,11 +27,13 @@ final class SteamGameFacts: ObservableObject {
     func load(_ game: CatalogGame, language app: AppLanguage) async {
         guard let appID = game.steamGame?.appID else { return }
         let language = SteamMetadata.language(app)
-        if language != self.language { self.language = language; facts = [:]; known = [] }
-        guard !known.contains(appID) else { return }
+        if language != self.language { self.language = language; facts = [:]; known = []; missedAt = [:] }
+        // An answer without facts (offline, store busy) is retried later; facts once found are kept.
+        let retry = facts[appID] == nil && missedAt[appID].map { Date().timeIntervalSince($0) > Self.retryAfter } == true
+        guard !known.contains(appID) || retry else { return }
         let result = await SteamMetadataService.shared.metadata(appID: appID, language: language)
         guard !Task.isCancelled, language == self.language else { return }
-        if let result { facts[appID] = result }
+        if let result { facts[appID] = result; missedAt[appID] = nil } else { missedAt[appID] = Date() }
         known.insert(appID)
     }
 }
