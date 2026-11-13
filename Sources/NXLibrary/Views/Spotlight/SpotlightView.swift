@@ -242,7 +242,7 @@ public struct SpotlightView: View {
         .onChange(of: playSessions.sessions.count) { _ in reconcile() }
         .task(id: art.heroTaskKey(model.selectedGame, metadata: model.selectedGame.flatMap { viewModel.storeMetadata[$0.id] })) { await loadHero(model.selectedGame) }
         .task(id: art.steamHeroTaskKey(model.selectedCatalogGame)) {
-            await art.loadSteamHero(game: model.selectedCatalogGame, current: { selectedCatalogGame?.id }, settle: 420_000_000)
+            await art.loadSteamHero(game: model.selectedCatalogGame, current: { selectedCatalogGame?.id }, artwork: artwork, settle: 420_000_000)
             if model.selectedCatalogGame?.integration == .steam, !Task.isCancelled { modsBackdrop = false }
         }
         .task(id: art.logoTaskKey(model.selectedGame, metadata: model.selectedGame.flatMap { viewModel.storeMetadata[$0.id] })) { await loadLogo(model.selectedGame) }

@@ -62,8 +62,11 @@ final class SeleneHeroArt: ObservableObject {
     }
 
     /// A Steam game's hero through the same image, key and crossfade as an nxnative one: the
-    /// player's pick, else the Steam library hero. No game (or an nxnative one) leaves the image to `loadHero`.
-    func loadSteamHero(game: CatalogGame?, current: () -> UUID?, settle: UInt64 = 150_000_000) async {
+    /// player's pick, else the automatic choice kept from last time, else a new one (`SteamBackdropChoice`:
+    /// screen-shaped store art, then the first screenshot, the library banner last). No game (or an
+    /// nxnative one) leaves the image to `loadHero`.
+    func loadSteamHero(game: CatalogGame?, current: () -> UUID?, artwork: ArtworkStore,
+                       settle: UInt64 = 150_000_000) async {
         guard let game, game.integration == .steam else { return }
         let picks = SteamPersonalizations.shared.artwork
         let loadedFor = "\(game.id.uuidString)|s\(picks.revision)|"
@@ -71,12 +74,27 @@ final class SeleneHeroArt: ObservableObject {
         try? await Task.sleep(nanoseconds: settle)
         guard !Task.isCancelled else { return }
         let request = SteamArtworkRequest(game: game, role: .hero)
-        var url = request.localURL(picks: picks)
-        if url == nil, let id = request.appID { url = await SteamMetadataService.shared.image(appID: id, slot: .background) }
-        let loaded = url.flatMap { NSImage(contentsOf: $0) }
+        let titleKey = game.personalizationReference.key
+        var url = request.localURL(picks: picks) ?? artwork.cachedURL(titleID: titleKey, kind: .hero)
+        if url == nil, let id = request.appID {
+            await SteamGameFacts.shared.load(game, language: L10n.context.language)
+            let shots = SteamGameFacts.shared.metadata(for: game)?.screenshots ?? []
+            let banner = SteamStoreArt.candidates(appID: Int(id), slot: .background).first?.url
+            let store = await SteamBackdropChoice.storeArt(names: [game.name])
+            let order = SteamBackdropChoice.ordered(storeArt: store, screenshots: shots, libraryHero: banner)
+            if let chosen = await SteamBackdropChoice.choose(order, data: { await SteamBackdropChoice.download($0) }), !Task.isCancelled {
+                url = await artwork.fetch(titleID: titleKey, remoteURL: chosen, kind: .hero)
+            }
+        }
+        guard !Task.isCancelled else { return }
+        let loaded: NSImage? = if let url { await Self.decodeBackdrop(at: url) } else { nil }
         guard !Task.isCancelled, current() == game.id else { return }
         image = loaded
         key = loaded.map { loadedFor + "\(ObjectIdentifier($0).hashValue)" } ?? "none"
+    }
+
+    private static func decodeBackdrop(at url: URL) async -> NSImage? {
+        await Task.detached(priority: .userInitiated) { NSImage(contentsOf: url) }.value
     }
 
     func loadLogo(game: PortedGame?, metadata: NintendoStoreMetadata?,
