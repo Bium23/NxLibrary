@@ -659,7 +659,8 @@ public struct SpotlightView: View {
     private func selectionChanged() {
         if selectedItem == .card(.mods) { openStore() } else { storeHost.close() }
         updateModsBackdrop()
-        artRule.select(viewModel.spotlight.selectedKey, isGame: selectedGame != nil)
+        // A Steam game is a game too: moving to or from it keeps the art until the next arrives, never the wallpaper.
+        artRule.select(viewModel.spotlight.selectedKey, isGame: selectedGame != nil || selectedCatalogGame?.integration == .steam)
         reloadMods()
         startModsOnline(viewModel.spotlight.focus)
         if let id = selectedCatalogGame?.id, settings.settings.lastSelectedGameID != id { settings.settings.lastSelectedGameID = id }

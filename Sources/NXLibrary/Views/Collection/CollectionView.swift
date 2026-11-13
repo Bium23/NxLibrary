@@ -227,8 +227,10 @@ public struct CollectionView: View {
     // MARK: - Art
 
     private func loadHero(_ game: PortedGame?) async {
+        // On a Steam game the nxnative art stays until the Steam hero replaces it, so the change is one crossfade.
         await art.loadHero(game: game, current: { selectedGame?.id },
-                           metadata: game.flatMap { viewModel.storeMetadata[$0.id] }, artwork: artwork, personalizations: viewModel.personalizations)
+                           metadata: game.flatMap { viewModel.storeMetadata[$0.id] }, artwork: artwork, personalizations: viewModel.personalizations,
+                           keepsWithoutGame: selectedCatalogGame?.integration == .steam)
     }
 
     private func loadLogo(_ game: PortedGame?) async {
