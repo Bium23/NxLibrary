@@ -4,8 +4,9 @@ import NXLibraryCore
 
 /// A Steam game's head in the same Selene layout as an nxnative one: the shared
 /// logo area, the Play/Options/favorite positions, the stats line and (in Collection) the genre
-/// chips. Until Steam Play and common Options exist, the first two positions open
-/// Details and hide the game: what Steam games can already do, never an inert Play.
+/// chips. Play follows `SteamPlayCoordinator`: Resume while the game runs, Cancel while
+/// waiting for Steam, Try again after a failure, with a one-line note above the pills.
+/// Until common Options exist, the second position hides the game.
 struct CatalogSteamInfo: View {
     let game: CatalogGame
     let totalPlaytime: TimeInterval
@@ -21,6 +22,7 @@ struct CatalogSteamInfo: View {
     @ObservedObject private var fields = SteamPersonalizations.shared.metadata
     @ObservedObject private var picks = SteamPersonalizations.shared.artwork
     @ObservedObject private var facts = SteamGameFacts.shared
+    @ObservedObject private var player = SteamPlayCoordinator.shared
     private var metadata: SteamMetadata? { facts.metadata(for: game) }
     @State private var logo: NSImage?
     @State private var logoKey = ""
@@ -40,9 +42,17 @@ struct CatalogSteamInfo: View {
         let presentation = presentation
         VStack(alignment: .leading, spacing: 0) {
             GameLogoArea(title: game.name, logo: logoKey == currentLogoKey ? logo : nil, collection: collection)
+            if let note = playNote {
+                Text(note)
+                    .seleneFont(19, .semibold)
+                    .foregroundColor(SeleneTheme.ink75)
+                    .padding(.leading, canvas.u(collection ? 0 : 4))
+                    .padding(.top, canvas.u(20))
+            }
             if !collection {
-                GamePrimaryActions(primaryTitle: L10n.text("Details"), secondaryTitle: L10n.text("Hide"),
+                GamePrimaryActions(primaryTitle: primaryTitle, secondaryTitle: L10n.text("Hide"),
                                    isFavorite: game.isFavorite, focused: focused,
+                                   primaryEnabled: primaryEnabled,
                                    onAction: onAction, onHover: onHover)
                     .padding(.leading, canvas.u(2)).padding(.top, canvas.u(18))
             }
@@ -69,6 +79,33 @@ struct CatalogSteamInfo: View {
             if url == nil, let id = request.appID { url = await SteamMetadataService.shared.image(appID: id, slot: .logo) }
             guard !Task.isCancelled else { return }
             logo = url.flatMap { NSImage(contentsOf: $0) }; logoKey = expected
+        }
+    }
+
+    private var phase: SteamPlayState.Phase { player.phase(of: game) }
+    private var primaryEnabled: Bool {
+        if case .idle = phase { return player.canPlay(game) }
+        return true
+    }
+
+    private var primaryTitle: String {
+        switch phase {
+        case .running: return L10n.text("Resume")
+        case .starting: return L10n.text("Cancel")
+        case .failed: return L10n.text("Try again")
+        case .idle: return player.canPlay(game) ? L10n.text("Play") : L10n.text("Unavailable")
+        }
+    }
+
+    private var playNote: String? {
+        switch phase {
+        case .starting: return L10n.text("Waiting for Steam to start the game…")
+        case .failed(.clientMissing): return L10n.text("Steam is not installed on this Mac.")
+        case .failed(.handoffRejected): return L10n.text("Steam did not receive the request. Try again.")
+        case .failed(.notStarted): return L10n.text("The game did not start. Check Steam, then try again.")
+        case .failed(.unavailable): return L10n.text("Refresh the Steam source or check the installation in Steam.")
+        case .idle: return player.canPlay(game) ? nil : L10n.text("Refresh the Steam source or check the installation in Steam.")
+        case .running: return nil
         }
     }
 

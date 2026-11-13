@@ -266,10 +266,17 @@ public struct AppShellView: View {
         }
         .onDisappear {
             runningGames.stop()
+            SteamPlayCoordinator.shared.stop()
             removeGestureKeyMonitor()
         }
         .onChange(of: viewModel.libraryGames) { games in
             runningGames.setGames(games)
+        }
+        .onChange(of: viewModel.catalogGames) { games in
+            SteamPlayCoordinator.shared.setGames(games, sources: viewModel.catalogSourceConfigurations)
+        }
+        .onChange(of: viewModel.catalogSourceConfigurations) { sources in
+            SteamPlayCoordinator.shared.setGames(viewModel.catalogGames, sources: sources)
         }
         .onReceive(runningGames.$endedSession) { summary in
             sessionCard.ended(summary, enabled: settings.settings.showsSessionCard)
@@ -500,6 +507,9 @@ public struct AppShellView: View {
         if settings.settings.checkEngineAtLaunch && !AppData.profile.isDevelopment { SetupCheckModel.checkAtLaunch(viewModel: viewModel) }
         runningGames.start(sessions: playSessions)
         runningGames.setGames(viewModel.libraryGames)
+        // After the nxnative reconcile, which closes a Steam session left by a restart at its last heartbeat.
+        SteamPlayCoordinator.shared.setGames(viewModel.catalogGames, sources: viewModel.catalogSourceConfigurations)
+        SteamPlayCoordinator.shared.start(sessions: playSessions)
         viewModel.installPendingBuilds()
         viewModel.syncPendingAppIcons()
         closeGameWatch = runningGames.$runningGameIDs.sink { [weak viewModel] ids in

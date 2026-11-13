@@ -18,6 +18,8 @@ public struct SpotlightView: View {
     @ObservedObject var router: AppRouter
     @ObservedObject var settings: AppSettingsStore
     @ObservedObject var playSessions: PlaySessionStore
+    /// Steam Play phases drive the A hint.
+    @ObservedObject var steamPlayer = SteamPlayCoordinator.shared
     @ObservedObject var runningGames: RunningGameMonitor
     @ObservedObject var artwork: ArtworkStore
 
@@ -541,8 +543,8 @@ public struct SpotlightView: View {
                 let more = [HintItem(.y, L10n.text("Card options"))]
                 return card == .activity ? more : more + [HintItem(.a, card == .surprise ? L10n.text("Pick") : card == .mods ? L10n.text("Browse") : L10n.text("Open"))]
             case .game:
-                if model.selectedCatalogGame?.integration == .steam {
-                    return [HintItem(.y, L10n.text("Game sources")), HintItem(.a, L10n.text("Details"))]
+                if let steam = model.selectedCatalogGame, steam.integration == .steam {
+                    return [HintItem(.y, L10n.text("Game sources"))] + SteamPlayCoordinator.shared.hint(for: steam)
                 }
                 guard let game = model.selectedGame else { return [] }
                 if viewModel.portingPills(game) == .porting {

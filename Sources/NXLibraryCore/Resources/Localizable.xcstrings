@@ -55243,6 +55243,47 @@
         }
       }
     },
+    "Steam did not receive the request. Try again.": {
+      "comment": "CatalogSteamInfo.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam did not receive the request. Try again."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam non ha ricevuto la richiesta. Riprova."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam n’a pas reçu la demande. Réessayez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam hat die Anfrage nicht erhalten. Versuche es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam no recibió la solicitud. Inténtalo de nuevo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Steam não recebeu a solicitação. Tente novamente."
+          }
+        }
+      }
+    },
     "Steam folder": {
       "comment": "Steam source management and native Mac library presentation.",
       "localizations": {
@@ -55321,6 +55362,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Não foi possível verificar os dados das instalações Steam. Sua biblioteca foi mantida."
+          }
+        }
+      }
+    },
+    "Steam is not installed on this Mac.": {
+      "comment": "CatalogSteamInfo.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam is not installed on this Mac."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam non è installato su questo Mac."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam n’est pas installé sur ce Mac."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam ist auf diesem Mac nicht installiert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam no está instalado en este Mac."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Steam não está instalado neste Mac."
           }
         }
       }
@@ -58806,6 +58888,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Não foi possível baixar a imagem completa de %@. Tente novamente."
+          }
+        }
+      }
+    },
+    "The game did not start. Check Steam, then try again.": {
+      "comment": "CatalogSteamInfo.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The game did not start. Check Steam, then try again."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il gioco non si è avviato. Controlla Steam, poi riprova."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le jeu n’a pas démarré. Vérifiez Steam, puis réessayez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Spiel wurde nicht gestartet. Prüfe Steam und versuche es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El juego no se inició. Revisa Steam y vuelve a intentarlo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O jogo não iniciou. Verifique o Steam e tente novamente."
           }
         }
       }
@@ -66514,6 +66637,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aguarde o término da compilação, da operação de armazenamento ou da atualização do app em andamento."
+          }
+        }
+      }
+    },
+    "Waiting for Steam to start the game…": {
+      "comment": "CatalogSteamInfo.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for Steam to start the game…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In attesa che Steam avvii il gioco…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En attente du lancement du jeu par Steam…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warte, bis Steam das Spiel startet …"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando a que Steam inicie el juego…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aguardando o Steam iniciar o jogo…"
           }
         }
       }

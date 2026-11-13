@@ -53,6 +53,7 @@ extension CollectionView {
 
     func activateCatalog(_ record: CatalogGame) {
         if let native = record.nxnativeGame { play(native) }
+        else if record.integration == .steam { SoundEffectService.shared.play(.click); SteamPlayCoordinator.shared.press(record) }
         else { SoundEffectService.shared.play(.click); router.showDetail(record.id) }
     }
 

@@ -51,6 +51,20 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
         return true
     }
 
+    /// A session for a game of another integration, which observes its own process. `sourceID` is the
+    /// qualified identity ("steam-570"), never a made-up Nintendo title ID. Without a bundle ID the
+    /// session is ended by its owner, and a restart closes it at its last heartbeat.
+    @discardableResult
+    public func start(gameID: UUID, sourceID: String, bundleID: String? = nil) -> Bool {
+        if isRunning(gameID: gameID) { return false }
+        let date = now()
+        sessions.append(PlaySession(gameID: gameID, titleID: sourceID, bundleID: bundleID,
+                                    startedAt: date, lastHeartbeatAt: date))
+        let folded = trim()
+        save(totals: folded)
+        return true
+    }
+
     public func heartbeat(for gameID: UUID) {
         guard let index = sessions.lastIndex(where: { $0.gameID == gameID && $0.isActive }) else { return }
         sessions[index].lastHeartbeatAt = now()

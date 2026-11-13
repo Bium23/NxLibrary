@@ -49,6 +49,28 @@ final class PlaySessionStoreTests: XCTestCase {
         XCTAssertEqual(store.sessions.count, 1)
     }
 
+    func testSteamSessionIsQualifiedAndOnlyItsOwnerEndsIt() {
+        let store = store()
+        let steamID = UUID()
+        let nx = game()
+        XCTAssertTrue(store.start(gameID: steamID, sourceID: "steam-570"))
+        XCTAssertFalse(store.start(gameID: steamID, sourceID: "steam-570"), "one running session per game")
+        XCTAssertTrue(store.start(for: nx))
+        now = now.addingTimeInterval(120)
+        // An nxnative app quitting ends its own session only.
+        XCTAssertEqual(store.end(bundleID: nx.bundleId).map(\.gameID), [nx.id])
+        XCTAssertTrue(store.isRunning(gameID: steamID))
+        store.heartbeat(for: steamID)
+        now = now.addingTimeInterval(60)
+        store.end(gameID: steamID)
+        XCTAssertEqual(store.totalDuration(for: steamID), 180, accuracy: 0.001)
+        XCTAssertEqual(store.sessions.first { $0.gameID == steamID }?.titleID, "steam-570")
+        XCTAssertNil(store.sessions.first { $0.gameID == steamID }?.bundleID)
+        // Reloaded from disk with the old decoder shape.
+        let reloaded = PlaySessionStore(fileURL: url, now: { [unowned self] in self.now })
+        XCTAssertEqual(reloaded.totalDuration(for: steamID), 180, accuracy: 0.001)
+    }
+
     func testDanglingSessionClosesAtHeartbeat() {
         let store = store()
         let game = game()

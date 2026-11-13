@@ -20,6 +20,8 @@ public struct CollectionView: View {
     @StateObject var art = SeleneHeroArt()
     /// Art the player picks redraws the hero and logo (their task keys carry its revision).
     @ObservedObject var picks = ArtworkPicks.shared
+    /// Steam Play phases drive the A hint.
+    @ObservedObject var steamPlayer = SteamPlayCoordinator.shared
     @State var keyMonitor: Any?
 
     public init(viewModel: AppViewModel, router: AppRouter, settings: AppSettingsStore,
@@ -169,8 +171,9 @@ public struct CollectionView: View {
     // MARK: - Hints
 
     private func contextHints(_ game: PortedGame?) -> [HintItem] {
-        if selectedCatalogGame?.integration == .steam {
-            return [HintItem(.a, L10n.text("Details")), HintItem(.y, L10n.text("Game sources")), HintItem(.rs, L10n.text("Filter"))]
+        if let steam = selectedCatalogGame, steam.integration == .steam {
+            return SteamPlayCoordinator.shared.hint(for: steam)
+                + [HintItem(.x, L10n.text("Details")), HintItem(.y, L10n.text("Game sources")), HintItem(.rs, L10n.text("Filter"))]
         }
         guard let game else {
             if viewModel.isScanningLibrary { return [] }

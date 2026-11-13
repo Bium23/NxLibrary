@@ -85,8 +85,8 @@ extension SpotlightView {
 
     func pressCatalogPill(_ index: Int, game: CatalogGame) {
         switch index {
-        // The positions of Play, Options and favorite: Details and Hide until Steam Play and Options exist.
-        case 0: router.showDetail(game.id)
+        // The positions of Play, Options and favorite: Hide stands in until common Options exist.
+        case 0: SoundEffectService.shared.play(.click); SteamPlayCoordinator.shared.press(game)
         case 1: viewModel.setCatalogHidden(true, game: game)
         case 2: viewModel.setCatalogFavorite(game)
         default: break
@@ -236,8 +236,8 @@ extension SpotlightView {
     func activate(_ item: SpotlightItem) {
         switch item {
         case .game(let id):
-            if viewModel.visibleCatalogGames.first(where: { $0.id == id })?.integration == .steam {
-                SoundEffectService.shared.play(.click); router.showDetail(id); return
+            if let steam = viewModel.visibleCatalogGames.first(where: { $0.id == id }), steam.integration == .steam {
+                SoundEffectService.shared.play(.click); SteamPlayCoordinator.shared.press(steam); return
             }
             guard let game = viewModel.libraryGames.first(where: { $0.id == id }) else { return }
             if viewModel.portingPills(game) == .porting {
