@@ -13,6 +13,7 @@ struct SteamArtwork: View {
     @Environment(\.seleneCanvas) private var canvas
     @ObservedObject private var picks = SteamPersonalizations.shared.artwork
     private var key: String { "\(game.id)|\(slot.rawValue)|\(remote?.absoluteString ?? "")|\(picks.revision)" }
+    private var role: LibraryArtworkRole { LibraryArtworkRole.allCases.first { $0.slot == slot } ?? .hero }
     var body: some View {
         ZStack {
             if let image, loadedKey == key {
@@ -27,10 +28,11 @@ struct SteamArtwork: View {
         .task(id: key) {
             let expected = key
             guard let id = game.steamGame?.appID else { return }
-            let personal = picks
-            let picked = remote == nil ? personal.url(titleID: game.personalizationReference.key, slot: slot) : nil
+            let request = SteamArtworkRequest(game: game, role: role)
             let url: URL?
-            if let picked { url = picked }
+            if remote == nil, let local = request.localURL(picks: picks) { url = local }
+            // A square never falls back to store art: that would be a cropped portrait cover.
+            else if role == .square { url = nil }
             else { url = await SteamMetadataService.shared.image(appID: id, slot: slot, remote: remote) }
             guard !Task.isCancelled else { return }
             image = url.flatMap { NSImage(contentsOf: $0) }; loadedKey = expected

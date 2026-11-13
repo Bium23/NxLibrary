@@ -145,7 +145,7 @@ struct SpotlightRowView: View {
                             .frame(width: side, height: side)
                             .clipShape(face)
                     } else if let game = catalogGamesByID[id] {
-                        CatalogNativeArtwork(game: game).frame(width: side, height: side).clipShape(face)
+                        CatalogNativeArtwork(game: game, role: .square).frame(width: side, height: side).clipShape(face)
                     }
                 case .card(.mods):
                     ModsCardCover(urls: modsCover, side: side)

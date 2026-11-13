@@ -38,7 +38,7 @@ struct CatalogSteamDetailsView: View {
             ScrollViewReader { proxy in
             ScrollView { LazyVStack(alignment: .leading, spacing: canvas.u(30)) {
                 HStack(alignment: .top, spacing: canvas.u(44)) {
-                    CatalogNativeArtwork(game: game).frame(width: canvas.u(240), height: canvas.u(240))
+                    CatalogNativeArtwork(game: game, role: .square).frame(width: canvas.u(240), height: canvas.u(240))
                         .clipShape(RoundedRectangle(cornerRadius: canvas.u(18)))
                     VStack(alignment: .leading, spacing: canvas.u(18)) {
                         SteamArtwork(game: game, slot: .logo).frame(width: canvas.u(340), height: canvas.u(80))

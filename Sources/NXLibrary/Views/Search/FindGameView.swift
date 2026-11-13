@@ -110,7 +110,7 @@ struct FindGameView: View {
         VStack(spacing: canvas.u(10)) {
             Group {
                 if let native = game.nxnativeGame { SpotlightTileArtwork(game: native, side: canvas.u(160), artwork: artwork) }
-                else { CatalogNativeArtwork(game: game) }
+                else { CatalogNativeArtwork(game: game, role: .square) }
             }
                 .frame(width: canvas.u(160), height: canvas.u(160))
                 .clipShape(RoundedRectangle(cornerRadius: canvas.u(12), style: .continuous))
