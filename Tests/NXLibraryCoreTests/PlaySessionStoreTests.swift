@@ -276,4 +276,36 @@ final class PlaySessionStoreTests: XCTestCase {
         store.setExternal([id: external(lastPlayed: 900)])
         XCTAssertEqual(store.lastPlayed(for: id), Date(timeIntervalSince1970: 1_100))
     }
+
+    // Sessions trimmed out of the recent list after Steam's value was seen still count until Steam moves on.
+    func testTrimmedSessionsAfterSinceStillCount() {
+        let store = store(), id = UUID()
+        store.setExternal([id: external(since: 0)])
+        for index in 0...PlaySessionStore.maxSessions {
+            let start = TimeInterval(10 + index * 10)
+            session(store, id, from: start, to: start + 5)
+        }
+        XCTAssertFalse(store.carried.isEmpty)
+        let sessionsTotal = TimeInterval(PlaySessionStore.maxSessions + 1) * 5
+        XCTAssertEqual(store.totalDuration(for: id), 3_600 + sessionsTotal, accuracy: 0.001)
+
+        let reloaded = PlaySessionStore(fileURL: url, now: { [unowned self] in self.now })
+        reloaded.setExternal([id: external(since: 0)])
+        XCTAssertEqual(reloaded.totalDuration(for: id), 3_600 + sessionsTotal, accuracy: 0.001)
+
+        store.setExternal([id: external(7_200, since: 5_000)])
+        XCTAssertEqual(store.totalDuration(for: id), 7_200, accuracy: 0.001, "Steam's new value covers them")
+    }
+
+    func testTrimmedStraddlingSessionCarriesOnlyItsPartAfterSince() {
+        let store = store(), id = UUID()
+        store.setExternal([id: external(since: 3)])
+        session(store, id, from: 0, to: 10)
+        for index in 0..<PlaySessionStore.maxSessions {
+            let start = TimeInterval(100 + index * 10)
+            session(store, id, from: start, to: start + 5)
+        }
+        XCTAssertEqual(store.carried[id]?.duration, 10)
+        XCTAssertEqual(store.totalDuration(for: id), 3_600 + 7 + TimeInterval(PlaySessionStore.maxSessions) * 5, accuracy: 0.001)
+    }
 }

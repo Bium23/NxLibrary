@@ -122,8 +122,8 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
     }
 
     /// With an external total: that total plus the part of this store's sessions after it was seen
-    /// (it already counts what came before). Carried time is older than every recent session, so it
-    /// is not added. Without one: carried time plus every session.
+    /// (it already counts what came before), including trimmed sessions' part after that same value.
+    /// Without one: carried time plus every session.
     public func totalDuration(for gameID: UUID) -> TimeInterval {
         let date = now()
         let own = sessions.filter { $0.gameID == gameID }
@@ -132,7 +132,8 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
                 total + max(0, (session.endedAt ?? date).timeIntervalSince(session.startedAt))
             }
         }
-        return own.reduce(base.duration) { total, session in
+        let trimmed = carried[gameID].flatMap { $0.externalSince == base.since ? $0.afterExternal : nil } ?? 0
+        return own.reduce(base.duration + trimmed) { total, session in
             let end = min(session.endedAt ?? date, date)
             return total + max(0, end.timeIntervalSince(max(session.startedAt, base.since)))
         }
@@ -160,6 +161,12 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
             var entry = carried[session.gameID] ?? CarriedPlaytime(duration: 0, lastPlayed: session.startedAt)
             entry.duration += session.duration ?? 0
             entry.lastPlayed = max(entry.lastPlayed, session.startedAt)
+            // The part after an external value was seen is not in that value yet: keep it, tied to that value.
+            if let base = external[session.gameID] {
+                if entry.externalSince != base.since { entry.externalSince = base.since; entry.afterExternal = 0 }
+                let end = session.endedAt ?? session.lastHeartbeatAt
+                entry.afterExternal += max(0, end.timeIntervalSince(max(session.startedAt, base.since)))
+            }
             carried[session.gameID] = entry
         }
         let droppedIDs = Set(dropped.map(\.id))
@@ -233,14 +240,28 @@ public struct ExternalPlaytime: Equatable, Sendable {
     }
 }
 
-/// Play time folded out of the recent-session list for one game.
+/// Play time folded out of the recent-session list for one game. `afterExternal` is the part of it after
+/// the external value seen at `externalSince` (Steam's), which that value does not count yet.
 public struct CarriedPlaytime: Codable, Equatable {
     public var duration: TimeInterval
     public var lastPlayed: Date
+    public var externalSince: Date?
+    public var afterExternal: TimeInterval
 
-    public init(duration: TimeInterval, lastPlayed: Date) {
+    public init(duration: TimeInterval, lastPlayed: Date, externalSince: Date? = nil, afterExternal: TimeInterval = 0) {
         self.duration = duration
         self.lastPlayed = lastPlayed
+        self.externalSince = externalSince
+        self.afterExternal = afterExternal
+    }
+
+    private enum CodingKeys: String, CodingKey { case duration, lastPlayed, externalSince, afterExternal }
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        duration = try c.decode(TimeInterval.self, forKey: .duration)
+        lastPlayed = try c.decode(Date.self, forKey: .lastPlayed)
+        externalSince = try c.decodeIfPresent(Date.self, forKey: .externalSince)
+        afterExternal = try c.decodeIfPresent(TimeInterval.self, forKey: .afterExternal) ?? 0
     }
 }
 
