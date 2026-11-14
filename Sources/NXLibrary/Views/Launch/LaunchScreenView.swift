@@ -2,18 +2,20 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
-public struct LaunchOverlayState: Equatable {
-    public let game: PortedGame
-    public var isReady = false
+/// The launch screen of a game Play started here, nxnative or Steam.
+struct LaunchOverlayState: Equatable {
+    let game: PlayedGame
+    var isReady = false
 
-    public init(game: PortedGame, isReady: Bool = false) {
+    init(game: PlayedGame, isReady: Bool = false) {
         self.game = game
         self.isReady = isReady
     }
 }
 
 /// Selene's launch screen: art and logo while the game starts, then fade to black and out
-/// once the game's window is on screen (`LaunchReadinessProbe`).
+/// once the game's window is on screen (`LaunchReadinessProbe`). A Steam game's screen also leaves when Steam is
+/// late or Play ends (`SteamPlayCoordinator.launchScreen`).
 struct LaunchScreenView: View {
     let state: LaunchOverlayState
     @ObservedObject var viewModel: AppViewModel
@@ -30,7 +32,7 @@ struct LaunchScreenView: View {
     @State private var leaving = false
     @State private var breathe = false
 
-    private var game: PortedGame { state.game }
+    private var game: PlayedGame { state.game }
 
     private var shadeOpacity: Double {
         switch settings.launchShade {

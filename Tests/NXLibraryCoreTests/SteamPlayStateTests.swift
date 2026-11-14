@@ -131,4 +131,25 @@ final class SteamBackgroundLaunchTests: XCTestCase {
         XCTAssertFalse(SteamBackgroundLaunch.keepsSteamAway(enabled: true, phase: .running(pid: 7), now: start))
         XCTAssertFalse(SteamBackgroundLaunch.mayNeedPlayer(enabled: true, phase: .idle, now: late))
     }
+
+    func testAColdSteamGetsMorePatience() {
+        XCTAssertEqual(SteamBackgroundLaunch.patience(steamWasRunning: true), 15)
+        XCTAssertEqual(SteamBackgroundLaunch.patience(steamWasRunning: false), 45)
+        let start = Date(timeIntervalSince1970: 1_000)
+        let waiting = SteamPlayState.Phase.starting(since: start, accepted: true)
+        let thirty = start.addingTimeInterval(30)
+        XCTAssertTrue(SteamBackgroundLaunch.keepsSteamAway(enabled: true, phase: waiting, now: thirty, patience: 45))
+        XCTAssertFalse(SteamBackgroundLaunch.mayNeedPlayer(enabled: true, phase: waiting, now: thirty, patience: 45))
+        XCTAssertTrue(SteamBackgroundLaunch.mayNeedPlayer(enabled: true, phase: waiting, now: thirty, patience: 15))
+    }
+
+    func testTheLaunchScreenWaitsOnlyForAGameOnItsWay() {
+        let start = Date(timeIntervalSince1970: 1_000)
+        let waiting = SteamPlayState.Phase.starting(since: start, accepted: false)
+        XCTAssertEqual(SteamBackgroundLaunch.launchScreen(phase: waiting, now: start.addingTimeInterval(10), patience: 15), .waiting)
+        XCTAssertEqual(SteamBackgroundLaunch.launchScreen(phase: waiting, now: start.addingTimeInterval(16), patience: 15), .late)
+        XCTAssertEqual(SteamBackgroundLaunch.launchScreen(phase: .running(pid: 7), now: start, patience: 15), .gameStarted)
+        XCTAssertEqual(SteamBackgroundLaunch.launchScreen(phase: .idle, now: start, patience: 15), .over)
+        XCTAssertEqual(SteamBackgroundLaunch.launchScreen(phase: .failed(.notStarted), now: start, patience: 15), .over)
+    }
 }

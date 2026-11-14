@@ -320,6 +320,23 @@ public struct AppShellView: View {
         .onReceive(SteamPlayCoordinator.shared.$endedSession) { summary in
             sessionCard.ended(summary, enabled: settings.settings.showsSessionCard)
         }
+        .onReceive(SteamPlayCoordinator.shared.$launchScreen) { screen in
+            // A Steam game's launch screen is the nxnative one: shown on Play, leaving when the coordinator says.
+            guard let screen else { return }
+            if viewModel.launchOverlay?.game.id == screen.gameID {
+                if screen.ready { viewModel.launchOverlay?.isReady = true }
+            } else if !screen.ready, viewModel.launchOverlay == nil, let game = playedGame(screen.gameID) {
+                viewModel.launchOverlay = LaunchOverlayState(game: game)
+                SoundEffectService.shared.play(.launch)
+            } else {
+                // Not on screen (another launch is) or already over: there is no wait to hold the front for.
+                SteamPlayCoordinator.shared.launchScreenClosed()
+            }
+        }
+        .onChange(of: viewModel.launchOverlay == nil) { closed in
+            // The screen faded or the player dismissed it: NX Library stops holding the front for that game.
+            if closed, SteamPlayCoordinator.shared.launchScreen != nil { SteamPlayCoordinator.shared.launchScreenClosed() }
+        }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             sessionCard.becameActive()
             SteamPlaytimeCoordinator.shared.refresh()

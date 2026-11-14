@@ -438,7 +438,7 @@ public final class AppViewModel: ObservableObject {
     @Published public private(set) var boxArtIndexVersion = 0
     @Published public var launchingGameId: UUID? = nil
     /// The launch screen: shown on Play, `isReady` once the game's window is up (or the probe gave up).
-    @Published public var launchOverlay: LaunchOverlayState? = nil {
+    @Published var launchOverlay: LaunchOverlayState? = nil {
         didSet {
             SoundEffectService.shared.isQuieted =
                 launchOverlay != nil && (settingsStore?.settings.quietLaunch ?? true)
@@ -1372,7 +1372,7 @@ public final class AppViewModel: ObservableObject {
             return
         }
         launchingGameId = game.id
-        launchOverlay = LaunchOverlayState(game: game)
+        launchOverlay = LaunchOverlayState(game: .nxnative(game))
         SoundEffectService.shared.play(.launch)
 
         // A saved-choices build reads the game's own store; only an older build takes env.txt and the environment.
