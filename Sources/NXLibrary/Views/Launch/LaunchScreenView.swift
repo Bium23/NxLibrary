@@ -90,11 +90,12 @@ struct LaunchScreenView: View {
             EmptyView()
         case .artAndLogo, .logoOnBlack:
             if let logo {
-                Image(nsImage: logo)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: canvas.u(720), maxHeight: canvas.u(320))
-                    .shadow(color: .black.opacity(0.5), radius: canvas.u(18))
+                // Fitted in 720 × 320 as before; the breathing view adds room for the shadow and the growth.
+                let size = LaunchLogo.fitted(logo.size, in: CGSize(width: canvas.u(720), height: canvas.u(320)))
+                let margin = LaunchLogo.margin(shadowRadius: canvas.u(18))
+                LaunchLogo(image: logo, shadowRadius: canvas.u(18), reduceMotion: reduceMotion)
+                    .frame(width: size.width + margin * 2, height: size.height + margin * 2)
+                    .accessibilityHidden(true)
             } else {
                 title
             }
