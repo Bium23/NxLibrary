@@ -63,7 +63,7 @@ final class SeleneHeroArt: ObservableObject {
 
     /// A Steam game's hero through the same image, key and crossfade as an nxnative one: the
     /// player's pick, else the automatic choice kept from last time, else a new one (`SteamBackdropChoice`:
-    /// screen-shaped store art, then the first screenshot, the library banner last). No game (or an
+    /// screen-shaped store art, LaunchBox's PC fan art, then the first screenshot, the library banner last). No game (or an
     /// nxnative one) leaves the image to `loadHero`.
     func loadSteamHero(game: CatalogGame?, current: () -> UUID?, artwork: ArtworkStore,
                        settle: UInt64 = 150_000_000) async {
@@ -82,7 +82,7 @@ final class SeleneHeroArt: ObservableObject {
             let banner = SteamStoreArt.candidates(appID: Int(id), slot: .background).first?.url
             let store = await SteamBackdropChoice.storeArt(names: [game.name])
             let order = SteamBackdropChoice.ordered(storeArt: store, screenshots: shots, libraryHero: banner)
-            if let chosen = await SteamBackdropChoice.choose(order, data: { await SteamBackdropChoice.download($0) }), !Task.isCancelled {
+            if let chosen = await SteamBackdropChoice.choose(order, fallback: banner, data: { await SteamBackdropChoice.download($0) }), !Task.isCancelled {
                 url = await artwork.fetch(titleID: titleKey, remoteURL: chosen, kind: .hero)
             }
         }

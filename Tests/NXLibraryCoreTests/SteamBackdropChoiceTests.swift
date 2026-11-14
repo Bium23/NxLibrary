@@ -28,18 +28,47 @@ final class SteamBackdropChoiceTests: XCTestCase {
         XCTAssertEqual(SteamBackdropChoice.ordered(storeArt: [], screenshots: [], libraryHero: hero), [hero])
     }
 
+    func testLaunchBoxComputerFanartComesAfterTheStoresAndBeforeScreenshots() {
+        let fanart = { (name: String, w: Int?, h: Int?) in
+            ArtworkCandidate(slot: .background, source: "LaunchBox · Fanart - Background", url: URL(string: "https://l/\(name)-preview")!,
+                             full: URL(string: "https://l/\(name)"), width: w, height: h)
+        }
+        let art = [
+            ArtworkCandidate(slot: .background, source: "LaunchBox · Screenshot - Gameplay", url: URL(string: "https://l/play")!,
+                             full: URL(string: "https://l/play-full"), width: 1920, height: 1080),
+            fanart("banner", 3840, 1240),
+            fanart("small", 1024, 576),
+            fanart("wide", 2560, 1440),
+            ArtworkCandidate(slot: .background, source: "GOG", url: URL(string: "https://g/galaxy")!)
+        ]
+        let order = SteamBackdropChoice.ordered(storeArt: art, screenshots: [shot], libraryHero: hero)
+        // The full file, not its preview; only a screen-shaped one; gameplay shots are not fan art.
+        XCTAssertEqual(order.map(\.absoluteString), ["https://g/galaxy", "https://l/wide", shot.absoluteString, hero.absoluteString])
+        let unsized = SteamBackdropChoice.ordered(storeArt: [fanart("unknown", nil, nil)], screenshots: [], libraryHero: nil)
+        XCTAssertEqual(unsized.map(\.absoluteString), ["https://l/unknown"], "a size the page does not state is checked when chosen")
+    }
+
     func testChoosesTheFirstScreenShapedImageAndFallsBackToTheBanner() async throws {
         let banner = try XCTUnwrap(Self.png(width: 1500, height: 484))
         let wide = try XCTUnwrap(Self.png(width: 1600, height: 900))
         var asked: [URL] = []
-        let chosen = await SteamBackdropChoice.choose([URL(string: "https://x/missing")!, hero, shot]) { url in
+        let chosen = await SteamBackdropChoice.choose([URL(string: "https://x/missing")!, hero, shot], fallback: hero) { url in
             asked.append(url)
             return url == hero ? banner : url == self.shot ? wide : nil
         }
         XCTAssertEqual(chosen, shot)
         XCTAssertEqual(asked.count, 3)
-        let fallback = await SteamBackdropChoice.choose([shot, hero]) { _ in banner }
+        let fallback = await SteamBackdropChoice.choose([shot, hero], fallback: hero) { _ in banner }
         XCTAssertEqual(fallback, hero)
+    }
+
+    func testWithoutAScreenShapedImageOrBannerTheFirstImageThatLoadsIsShown() async throws {
+        let small = try XCTUnwrap(Self.png(width: 1024, height: 576))
+        let missing = URL(string: "https://x/missing")!
+        let chosen = await SteamBackdropChoice.choose([missing, shot], fallback: nil) { $0 == self.shot ? small : nil }
+        XCTAssertEqual(chosen, shot, "never the last URL just for being last: one that loads")
+        let none = await SteamBackdropChoice.choose([missing], fallback: nil) { _ in nil }
+        XCTAssertNil(none)
     }
 
     private static func png(width: Int, height: Int) -> Data? {

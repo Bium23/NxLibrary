@@ -11,6 +11,8 @@ public enum LaunchBoxArt {
     public static let site = URL(string: "https://gamesdb.launchbox-app.com")!
     static let images = URL(string: "https://images.launchbox-app.com/")!
     static let gameplay = "Screenshot - Gameplay"
+    /// How a fan art candidate's source starts ("LaunchBox · Fanart - Background (region)").
+    public static let fanartSource = "LaunchBox · Fanart - Background"
     /// Screenshots Details shows when Title DB has none.
     public static let screenshotLimit = 6
 

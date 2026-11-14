@@ -21,30 +21,42 @@ public enum SteamBackdropChoice {
         func first(_ source: String) -> [URL] {
             storeArt.first { $0.slot == .background && $0.source == source }.map { [$0.url] } ?? []
         }
-        var urls = first("Xbox Store") + first("GOG") + first("TheGamesDB fan art")
+        // LaunchBox's fan art for the game's computer entry, at full size: only one whose stated size suits a
+        // screen (a size it does not state is checked by `choose`).
+        let fanart = storeArt.first { candidate in
+            guard candidate.slot == .background, candidate.source.hasPrefix(LaunchBoxArt.fanartSource) else { return false }
+            guard let width = candidate.width, let height = candidate.height else { return true }
+            return suits(width: width, height: height)
+        }.map { $0.full ?? $0.url }
+        var urls = first("Xbox Store") + first("GOG") + first("TheGamesDB fan art") + (fanart.map { [$0] } ?? [])
         urls += screenshots.prefix(1)
         if let libraryHero { urls.append(libraryHero) }
         var seen: Set<URL> = []
         return urls.filter { seen.insert($0).inserted }
     }
 
-    /// The first candidate whose image suits a full screen, or the last one (the library hero)
-    /// when none does. Nothing is kept here: the caller caches the choice.
-    public static func choose(_ urls: [URL], data: (URL) async -> Data?) async -> URL? {
+    /// The first candidate whose image suits a full screen. When none does: `fallback` (Steam's library
+    /// banner, shown cropped), else the first candidate that loaded at all. Nothing is kept here: the caller
+    /// caches the choice.
+    public static func choose(_ urls: [URL], fallback: URL?, data: (URL) async -> Data?) async -> URL? {
+        var loaded: URL?
         for url in urls {
             guard !Task.isCancelled else { return nil }
             guard let bytes = await data(url), let size = pixelSize(bytes) else { continue }
             if suits(width: size.width, height: size.height) { return url }
+            if loaded == nil { loaded = url }
         }
-        return urls.last
+        return fallback ?? loaded
     }
 
-    /// Store art for the name, from the sources that publish clean 16:9 heroes.
+    /// Store art for the name, from the sources that publish clean 16:9 heroes, and LaunchBox's fan art for
+    /// the game's Mac or Windows entry (never a console's).
     public static func storeArt(names: [String], client: ArtworkHTTPClient = URLSessionArtworkClient()) async -> [ArtworkCandidate] {
         async let xbox = XboxStoreArt.find(names: names, client: client)
         async let gog = GOGArt.find(names: names, client: client)
         async let gamesDB = TheGamesDBArt.find(names: names, client: client)
-        return await xbox + gog + gamesDB
+        async let launchBox = LaunchBoxArt.game(names: names, switch2: false, computer: true, client: client)
+        return await xbox + gog + gamesDB + (launchBox?.candidates ?? [])
     }
 
     /// Fetches a candidate for `choose`.
