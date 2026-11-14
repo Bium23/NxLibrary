@@ -43,14 +43,3 @@ struct SteamArtwork: View {
 }
 
 extension Notification.Name { static let steamPersonalizationChanged = Notification.Name("NXSteamPersonalizationChanged") }
-
-struct SteamBackdrop: View {
-    let game: CatalogGame
-    let shade: BackgroundShade
-    let showsArt: Bool
-    var body: some View {
-        Group { if showsArt { SteamArtwork(game: game, slot: .background)
-            .overlay(SeleneShades(shade: shade)) } }
-            .allowsHitTesting(false).accessibilityHidden(true)
-    }
-}

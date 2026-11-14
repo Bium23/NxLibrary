@@ -31,8 +31,8 @@ jobs:
         run: swift test
       - name: Catalog notice regressions without UI
         run: python3 Tests/CatalogAppChecks/run_notices.py
-      - name: Steam backdrop regression without UI
-        run: python3 Tests/CatalogAppChecks/run_backdrop.py
+      - name: Shared game header regression without UI
+        run: python3 Tests/CatalogAppChecks/run_game_header.py
       - name: Release compilation
         run: swift build -c release --product NXLibrary
       - name: Package and verify development app

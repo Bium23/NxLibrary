@@ -721,6 +721,7 @@ Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua rig
 | [CatalogBuildRecoveries.swift](../Sources/NXLibraryCore/Models/CatalogBuildRecoveries.swift) | Generazioni di build non ancora salvate, selezione del retry e conferma della sola generazione persistita. |
 | [CatalogBuildRecoveryTests.swift](../Tests/NXLibraryCoreTests/CatalogBuildRecoveryTests.swift) | Vecchia build persistita e nuova conservata, sospensione automatica e conferme obsolete. |
 | [run_notices.py](../Tests/CatalogAppChecks/run_notices.py) | Esegue i metodi reali degli avvisi e del ponte legacy senza finestre, dopo swift test. |
+| [run_game_header.py](../Tests/CatalogAppChecks/run_game_header.py) | Esegue i corpi reali di logo e azioni condivisi senza finestra né store applicativi, per entrambi i layout. |
 | [NoticeHost.swift](../Tests/CatalogAppChecks/NoticeHost.swift) | Host minimo per i controlli applicativi, con storage reale e dati sintetici temporanei. |
 
 
@@ -754,4 +755,3 @@ Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua rig
 
 | [SteamPersonalizationStore.swift](../Sources/NXLibraryCore/Services/Steam/SteamPersonalizationStore.swift) | Pubblicazione unica di metadati e riferimenti artwork; fallimenti e Automatic conservano le scelte coerenti. |
 
-| [run_backdrop.py](../Tests/CatalogAppChecks/run_backdrop.py) | Esegue il corpo reale di SteamBackdrop senza finestra né impostazioni implicite; regressione del crash all’avvio. |

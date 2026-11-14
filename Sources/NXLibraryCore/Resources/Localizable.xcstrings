@@ -8806,47 +8806,6 @@
         }
       }
     },
-    "Available on this Mac": {
-      "comment": "Steam source management and native Mac library presentation.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Available on this Mac"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Disponibile su questo Mac"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Disponible sur ce Mac"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auf diesem Mac verfügbar"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Disponible en este Mac"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Disponível neste Mac"
-          }
-        }
-      }
-    },
     "Available when the compatibility gate blocks a build.": {
       "comment": "SettingsEngineSection.swift:228",
       "localizations": {
@@ -14870,47 +14829,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Escolha esta pasta ou outra: %@"
-          }
-        }
-      }
-    },
-    "Choose where NX Library finds your games.": {
-      "comment": "Steam source management and native Mac library presentation.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose where NX Library finds your games."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scegli dove NX Library cerca i tuoi giochi."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choisissez où NX Library recherche vos jeux."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wähle, wo NX Library deine Spiele sucht."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Elige dónde busca NX Library tus juegos."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Escolha onde o NX Library encontra seus jogos."
           }
         }
       }
@@ -33251,46 +33169,6 @@
         }
       }
     },
-    "Leave blank to use Steam data.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Leave blank to use Steam data."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lascia vuoto per usare i dati di Steam."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Laissez vide pour utiliser les données Steam."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Leer lassen, um Steam-Daten zu verwenden."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Déjalo vacío para usar los datos de Steam."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Deixe em branco para usar os dados do Steam."
-          }
-        }
-      }
-    },
     "Left stick": {
       "comment": "ControlsView.swift:29",
       "localizations": {
@@ -36362,47 +36240,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mover um bloco"
-          }
-        }
-      }
-    },
-    "Move in row": {
-      "comment": "Steam source management and native Mac library presentation.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Move in row"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sposta nella fila"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Déplacer dans la rangée"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "In der Reihe verschieben"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mover en la fila"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mover na fileira"
           }
         }
       }
@@ -42762,46 +42599,6 @@
         }
       }
     },
-    "Open in Steam": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open in Steam"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apri su Steam"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ouvrir sur Steam"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auf Steam öffnen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Abrir en Steam"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Abrir no Steam"
-          }
-        }
-      }
-    },
     "Open library": {
       "comment": "YourGamesSetupView.swift",
       "localizations": {
@@ -44479,46 +44276,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Permite compilar jogos quando o conjunto de ferramentas difere da combinação certificada de engine e Metal exibida acima. Passa --allow-other-metal ao nxnative. As compilações são registradas como não verificadas."
-          }
-        }
-      }
-    },
-    "Personalize": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Personalize"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Personalizza"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Personnaliser"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Anpassen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Personalizar"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Personalizar"
           }
         }
       }
@@ -46650,47 +46407,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verificar novamente"
-          }
-        }
-      }
-    },
-    "Re-check the environment and build requirements.": {
-      "comment": "SettingsCatalog.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Re-check the environment and build requirements."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ricontrolla l’ambiente e i requisiti di compilazione."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Revérifier l’environnement et les prérequis de compilation."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Umgebung und Build-Voraussetzungen erneut prüfen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vuelve a comprobar el entorno y los requisitos de compilación."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verifique novamente o ambiente e os requisitos de compilação."
           }
         }
       }
@@ -53398,47 +53114,6 @@
         }
       }
     },
-    "Size reported by Steam: %@": {
-      "comment": "Steam source management and native Mac library presentation.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Size reported by Steam: %@"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dimensioni indicate da Steam: %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Taille indiquée par Steam : %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Von Steam gemeldete Größe: %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tamaño indicado por Steam: %@"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tamanho informado pelo Steam: %@"
-          }
-        }
-      }
-    },
     "Skip for now": {
       "comment": "YourGamesSetupView.swift",
       "localizations": {
@@ -54173,47 +53848,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sounds/%@.wav"
-          }
-        }
-      }
-    },
-    "Source unavailable": {
-      "comment": "Steam source management and native Mac library presentation.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Source unavailable"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fonte non disponibile"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Source indisponible"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quelle nicht verfügbar"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fuente no disponible"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fonte indisponível"
           }
         }
       }
@@ -64714,47 +64348,6 @@
         }
       }
     },
-    "Unfavorite": {
-      "comment": "Steam source management and native Mac library presentation.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unfavorite"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rimuovi dai preferiti"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Retirer des favoris"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aus Favoriten entfernen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quitar de favoritos"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Remover dos favoritos"
-          }
-        }
-      }
-    },
     "Unknown": {
       "comment": "Save safety and presentation; user content stays unchanged.",
       "localizations": {
@@ -67461,47 +67054,6 @@
         }
       }
     },
-    "Where NX Library finds your games.": {
-      "comment": "Steam source management and native Mac library presentation.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Where NX Library finds your games."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dove NX Library cerca i tuoi giochi."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Où NX Library recherche vos jeux."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wo NX Library deine Spiele findet."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dónde busca NX Library tus juegos."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Onde o NX Library encontra seus jogos."
-          }
-        }
-      }
-    },
     "Where should the icon appear?": {
       "comment": "ChangeArtworkView.swift",
       "localizations": {
@@ -69589,47 +69141,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "por %@"
-          }
-        }
-      }
-    },
-    "checked by the build command": {
-      "comment": "SettingsEngineSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "checked by the build command"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "verificato dal comando di compilazione"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "vérifié par la commande de compilation"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "wird vom Build-Befehl geprüft"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "se comprueba en el comando de compilación"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "verificado pelo comando de compilação"
           }
         }
       }
