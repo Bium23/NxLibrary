@@ -116,12 +116,6 @@ struct SettingsLookSection: View {
 
             SettingsSubheading(L10n.text("Artwork"))
 
-            SeleneButtonRow("Box covers",
-                            subtitle: "GameTDB covers",
-                            buttonTitle: "Open GameTDB") {
-                NSWorkspace.shared.open(GameTDB.siteURL)
-            }
-
             SeleneButtonRow("SteamGridDB",
                             subtitle: viewModel.hasSteamGridDBKey
                                 ? "Key saved · covers, backgrounds, logos and icons in Change artwork"
@@ -161,9 +155,6 @@ struct SettingsLookSection: View {
                 settings.settings.reduceMotion.toggle()
             },
             .value("icon", "App icon") { stepIcon($0) },
-            .init(id: "covers", title: "Box covers") {
-                NSWorkspace.shared.open(GameTDB.siteURL)
-            },
             .init(id: "SteamGridDB", title: "SteamGridDB") { steamGridDBAction() }
         ])
     }

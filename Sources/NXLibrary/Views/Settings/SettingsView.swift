@@ -247,8 +247,6 @@ public struct SettingsView: View {
             next.startOn = defaults.startOn
             next.restoreLastGame = defaults.restoreLastGame
             next.startInFullscreen = defaults.startInFullscreen
-            next.checkEngineAtLaunch = defaults.checkEngineAtLaunch
-            next.refreshLibraryAtLaunch = defaults.refreshLibraryAtLaunch
             next.checkAppUpdatesAtLaunch = defaults.checkAppUpdatesAtLaunch
             next.introAnimation = defaults.introAnimation
         case .navigation:
@@ -296,6 +294,7 @@ public struct SettingsView: View {
             next.gameDefaults.rumbleGain = defaults.gameDefaults.rumbleGain
         case .library:
             resetNotice = L10n.text("Sources folder kept")
+            next.refreshLibraryAtLaunch = defaults.refreshLibraryAtLaunch
             next.notifyPortingEnds = defaults.notifyPortingEnds
             viewModel.libraryFolder = URL(fileURLWithPath: viewModel.defaultInstallPath)
                 .appendingPathComponent("Applications")

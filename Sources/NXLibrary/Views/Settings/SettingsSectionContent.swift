@@ -24,7 +24,7 @@ struct SettingsSectionContent: View {
             SettingsChangedSection(settings: settings, viewModel: viewModel,
                                    onOpenGroup: onOpenGroup, onActions: onActions)
         case .startUp:
-            SettingsStartUpSection(viewModel: viewModel, settings: settings, onActions: onActions, onChooseLanguage: onChooseLanguage, onChooseRegion: onChooseRegion)
+            SettingsStartUpSection(settings: settings, onActions: onActions, onChooseLanguage: onChooseLanguage, onChooseRegion: onChooseRegion)
         case .navigation:
             SettingsNavigationSection(settings: settings, onActions: onActions)
         case .spotlight:
@@ -39,15 +39,14 @@ struct SettingsSectionContent: View {
             SettingsControllersSection(settings: settings, onActions: onActions,
                                        onViewControls: onViewControls)
         case .library:
-            SettingsLibrarySection(viewModel: viewModel, settings: settings,
-                                   artwork: artwork, onActions: onActions)
+            SettingsLibrarySection(viewModel: viewModel, settings: settings, onActions: onActions)
         case .sources:
             SettingsSourcesSection(viewModel: viewModel, settings: settings, onActions: onActions)
         case .storage:
             SettingsStorageSection(viewModel: viewModel, artwork: artwork,
                                    onActions: onActions, onOpenConsole: onOpenConsole)
         case .engine:
-            SettingsEngineSection(viewModel: viewModel, onActions: onActions)
+            SettingsEngineSection(viewModel: viewModel, settings: settings, onActions: onActions)
         case .about:
             SettingsAboutSection(viewModel: viewModel, onActions: onActions)
         }

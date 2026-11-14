@@ -1,14 +1,11 @@
 import SwiftUI
+import AppKit
 import NXLibraryCore
 
 struct SettingsLibrarySection: View {
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var settings: AppSettingsStore
-    @ObservedObject var artwork: ArtworkStore
     let onActions: ([SettingsRowAction]) -> Void
-
-    @State private var metadataBytes: Int64 = 0
-    @State private var artworkBytes: Int64 = 0
 
     var body: some View {
         VStack(spacing: 9) {
@@ -83,31 +80,19 @@ struct SettingsLibrarySection: View {
                 .padding(.vertical, 8)
             }
 
+            SeleneToggleRow("Refresh library at launch",
+                            subtitle: "Rescan the app library for new or removed builds.",
+                            isOn: $settings.settings.refreshLibraryAtLaunch)
+
             SeleneToggleRow("Notify when a porting ends",
                             subtitle: "A notification when a porting finishes while NX Library is in the background.",
                             isOn: $settings.settings.notifyPortingEnds)
 
-            SeleneValueRow("Metadata cache",
-                           subtitle: "Nintendo Store descriptions, genres and links.",
-                           info: "Locally cached game metadata such as title IDs, publisher names, release dates, and category tags fetched during library scans.",
-                           value: seleneBytes(metadataBytes),
-                           actionTitle: "Clear") {
-                viewModel.clearMetadataCache()
-                metadataBytes = viewModel.metadataCacheSize()
+            SeleneButtonRow("Box covers",
+                            subtitle: "GameTDB covers",
+                            buttonTitle: "Open GameTDB") {
+                NSWorkspace.shared.open(GameTDB.siteURL)
             }
-
-            SeleneValueRow("Artwork cache",
-                           subtitle: "Hero and cover art downloaded for this library.",
-                           info: "High-resolution game box art and hero wallpapers cached locally from the Nintendo Store catalog.",
-                           value: seleneBytes(artworkBytes),
-                           actionTitle: "Clear") {
-                artwork.clear()
-                artworkBytes = artwork.cacheSize()
-            }
-        }
-        .task {
-            metadataBytes = viewModel.metadataCacheSize()
-            artworkBytes = artwork.cacheSize()
         }
         .onAppear(perform: publishActions)
         .onChange(of: viewModel.isScanningLibrary) { _ in publishActions() }
@@ -124,16 +109,14 @@ struct SettingsLibrarySection: View {
             .init(id: "refresh", title: "Scan game apps", isEnabled: !viewModel.isScanningLibrary) {
                 viewModel.importExistingBuilds()
             },
+            .init(id: "refreshAtLaunch", title: "Refresh library at launch") {
+                settings.settings.refreshLibraryAtLaunch.toggle()
+            },
             .init(id: "notify", title: "Notify when a porting ends") {
                 settings.settings.notifyPortingEnds.toggle()
             },
-            .init(id: "metadataClear", title: "Metadata cache") {
-                viewModel.clearMetadataCache()
-                metadataBytes = viewModel.metadataCacheSize()
-            },
-            .init(id: "artworkClear", title: "Artwork cache") {
-                artwork.clear()
-                artworkBytes = artwork.cacheSize()
+            .init(id: "covers", title: "Box covers") {
+                NSWorkspace.shared.open(GameTDB.siteURL)
             }
         ])
     }

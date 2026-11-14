@@ -53,9 +53,9 @@ public enum SettingsCatalog {
             "Opens with the game you had selected last time.") { $0.restoreLastGame },
         row("startInFullscreen", .startUp, "Start in fullscreen",
             "Open NX Library in fullscreen. Applies at the next launch.") { $0.startInFullscreen },
-        row("checkEngineAtLaunch", .startUp, "Check engine at launch",
+        row("checkEngineAtLaunch", .engine, "Check engine at launch",
             "Checks the engine and toolchain each time NX Library starts.") { $0.checkEngineAtLaunch },
-        row("refreshLibraryAtLaunch", .startUp, "Refresh library at launch",
+        row("refreshLibraryAtLaunch", .library, "Refresh library at launch",
             "Scans your library folders for new or removed games at start.") { $0.refreshLibraryAtLaunch },
         row("checkAppUpdatesAtLaunch", .startUp, "Check for app updates",
             "Looks for a newer NX Library release at launch, at most once a day.") { $0.checkAppUpdatesAtLaunch },
@@ -112,7 +112,7 @@ public enum SettingsCatalog {
         row("reduceMotion", .look, "Reduce motion",
             "Replaces slides and zooms with fades.") { $0.reduceMotion },
         action("iconAppearance", .look, "App icon", "The icon appearance in the Dock."),
-        action("boxCovers", .look, "Box covers", "Open GameTDB for box covers."),
+        action("boxCovers", .library, "Box covers", "Open GameTDB for box covers."),
         action("steamGridDB", .look, "SteamGridDB", "Add your API key to find covers, backgrounds, logos and icons in Change artwork."),
 
         // Games
@@ -154,9 +154,9 @@ public enum SettingsCatalog {
         action("controllerDeadzone", .controllers, "Stick navigation deadzone",
                "Thumbstick threshold for library navigation; does not alter game input."),
         row("gameDefaults.rumble", .controllers, "Rumble",
-            "Default controller vibration for new games.") { $0.gameDefaults.rumble },
+            "Default controller vibration for new Switch games.") { $0.gameDefaults.rumble },
         row("gameDefaults.rumbleGain", .controllers, "Rumble strength",
-            "Default vibration strength for new games.") { $0.gameDefaults.rumbleGain },
+            "Default vibration strength for new Switch games.") { $0.gameDefaults.rumbleGain },
 
         // Library
         action("gameFolder", .library, GameFoldersCopy.sourcesTitle, "Game sources: NSP, XCI, NSZ and XCZ files, or Switch 2 NUP files and extracted folders, for builds. Optional for existing apps."),
@@ -182,14 +182,13 @@ public enum SettingsCatalog {
 
         // Engine
         action("engineFolder", .engine, "Engine repository", "The upstream checkout used for porting; updates stay manual."),
-        action("engineStatus", .engine, "Compatibility", "Engine commit, Metal compiler, toolchain gate and required flags."),
+        action("engineStatus", .engine, "Compatibility", "Engine commit, Metal compiler, build environment, toolchain gate and required flags."),
         action("toolchainOverride", .engine, "Untested toolchain override", "Explicitly allow unverified new portings."),
         action("upstream", .engine, "Upstream", "Check newer engine commits without installing them."),
         action("newestEngine", .engine, "Newest engine", "Build with nxnative main before NX Library has tested it, or go back to the tested engine."),
         action("compare", .engine, "Compare", "Open the commit comparison on GitHub."),
         action("keys", .engine, "prod.keys", "Import, replace or detect private keys."),
-        action("setup", .startUp, "Setup", "Open the setup checklist."),
-        action("environment", .startUp, "Environment", "Re-check the environment and build requirements."),
+        action("setup", .engine, "Setup", "Open the setup checklist."),
         action("diagnostics", .about, "Copy diagnostics", "Copy a scrubbed support report."),
         action("appUpdates", .about, "App updates", "Check now, update or read release notes."),
         action("projectDocs", .about, "Open project docs", "Open the project documentation."),

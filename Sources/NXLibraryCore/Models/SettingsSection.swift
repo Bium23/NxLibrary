@@ -40,17 +40,17 @@ public enum SettingsSection: String, CaseIterable, Identifiable, Equatable {
         switch self {
         case .search: return L10n.text("Find any setting by name or description.")
         case .changed: return L10n.text("Settings that differ from the defaults.")
-        case .startUp: return L10n.text("Startup, setup and readiness.")
+        case .startUp: return L10n.text("Language, the first screen and what runs at launch.")
         case .navigation: return L10n.text("Button hints, button names and the View button.")
         case .spotlight: return L10n.text("Which cards show on Spotlight and where it opens.")
         case .soundMusic: return L10n.text("Interface sounds, volume and the launch screen.")
         case .look: return L10n.text("How NX Library looks and moves.")
         case .games: return L10n.text("Launch screen, hidden games and defaults for new games.")
-        case .controllers: return L10n.text("Library controls and new-game rumble.")
-        case .library: return L10n.text("Folders, imports and artwork caches.")
+        case .controllers: return L10n.text("Library controls and rumble for new Switch games.")
+        case .library: return L10n.text("Folders, scans and box covers.")
         case .sources: return L10n.text("Steam libraries, refresh and how Play opens Steam.")
         case .storage: return L10n.text("Caches, logs, saves and the console.")
-        case .engine: return L10n.text("Engine pin, toolchain gate and keys.")
+        case .engine: return L10n.text("Engine pin, toolchain gate, keys and setup.")
         case .about: return L10n.text("Version, credits and licenses.")
         }
     }

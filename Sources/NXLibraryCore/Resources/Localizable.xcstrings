@@ -18728,43 +18728,43 @@
         }
       }
     },
-    "Default controller vibration for new games.": {
+    "Default controller vibration for new Switch games.": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Default controller vibration for new games."
+            "value": "Default controller vibration for new Switch games."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vibrazione predefinita del controller per i nuovi giochi."
+            "value": "Vibrazione predefinita del controller per i nuovi giochi Switch."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vibrations de la manette par défaut pour les nouveaux jeux."
+            "value": "Vibrations de la manette par défaut pour les nouveaux jeux Switch."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Standard-Controller-Vibration für neue Spiele."
+            "value": "Standard-Controller-Vibration für neue Switch-Spiele."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vibración predeterminada del mando para juegos nuevos."
+            "value": "Vibración predeterminada del mando para juegos nuevos de Switch."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vibração padrão do controle para novos jogos."
+            "value": "Vibração padrão do controle para novos jogos de Switch."
           }
         }
       }
@@ -18851,43 +18851,43 @@
         }
       }
     },
-    "Default vibration strength for new games.": {
+    "Default vibration strength for new Switch games.": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Default vibration strength for new games."
+            "value": "Default vibration strength for new Switch games."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Intensità predefinita della vibrazione per i nuovi giochi."
+            "value": "Intensità predefinita della vibrazione per i nuovi giochi Switch."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Intensité des vibrations par défaut pour les nouveaux jeux."
+            "value": "Intensité des vibrations par défaut pour les nouveaux jeux Switch."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Standard-Vibrationsstärke für neue Spiele."
+            "value": "Standard-Vibrationsstärke für neue Switch-Spiele."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Intensidad de vibración predeterminada para juegos nuevos."
+            "value": "Intensidad de vibración predeterminada para juegos nuevos de Switch."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Intensidade padrão da vibração para novos jogos."
+            "value": "Intensidade padrão da vibração para novos jogos de Switch."
           }
         }
       }
@@ -22141,47 +22141,6 @@
         }
       }
     },
-    "Engine %@ · %@ · %@ · %@": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Engine %@ · %@ · %@ · %@"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Motore %@ · %@ · %@ · %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Moteur %@ · %@ · %@ · %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Engine %@ · %@ · %@ · %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Motor %@ · %@ · %@ · %@"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Engine %@ · %@ · %@ · %@"
-          }
-        }
-      }
-    },
     "Engine back to the tested %@.": {
       "comment": "AppViewModel+NewestEngine.swift",
       "localizations": {
@@ -22264,84 +22223,84 @@
         }
       }
     },
-    "Engine commit, Metal compiler, toolchain gate and required flags.": {
+    "Engine commit, Metal compiler, build environment, toolchain gate and required flags.": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Engine commit, Metal compiler, toolchain gate and required flags."
+            "value": "Engine commit, Metal compiler, build environment, toolchain gate and required flags."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Commit del motore, compilatore Metal, controllo della toolchain e flag richiesti."
+            "value": "Commit del motore, compilatore Metal, ambiente di build, controllo della toolchain e flag richiesti."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Commit du moteur, compilateur Metal, contrôle de la chaîne d’outils et options requises."
+            "value": "Commit du moteur, compilateur Metal, environnement de compilation, contrôle de la chaîne d’outils et options requises."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Engine-Commit, Metal-Compiler, Toolchain-Prüfung und erforderliche Optionen."
+            "value": "Engine-Commit, Metal-Compiler, Build-Umgebung, Toolchain-Prüfung und erforderliche Optionen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Commit del motor, compilador Metal, control de la cadena de herramientas y opciones necesarias."
+            "value": "Commit del motor, compilador Metal, entorno de compilación, control de la cadena de herramientas y opciones necesarias."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Commit da engine, compilador Metal, verificação do conjunto de ferramentas e opções obrigatórias."
+            "value": "Commit da engine, compilador Metal, ambiente de build, verificação do conjunto de ferramentas e opções obrigatórias."
           }
         }
       }
     },
-    "Engine pin, toolchain gate and keys.": {
+    "Engine pin, toolchain gate, keys and setup.": {
       "comment": "SettingsSection.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Engine pin, toolchain gate and keys."
+            "value": "Engine pin, toolchain gate, keys and setup."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Versione fissata del motore, controllo della toolchain e chiavi."
+            "value": "Versione fissata del motore, controllo della toolchain, chiavi e configurazione."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Version épinglée du moteur, contrôle de la chaîne d’outils et clés."
+            "value": "Version épinglée du moteur, contrôle de la chaîne d’outils, clés et configuration."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Festgelegte Engine-Version, Toolchain-Prüfung und Schlüssel."
+            "value": "Festgelegte Engine-Version, Toolchain-Prüfung, Schlüssel und Einrichtung."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Versión fijada del motor, control de la cadena de herramientas y claves."
+            "value": "Versión fijada del motor, control de la cadena de herramientas, claves y configuración."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Versão fixada da engine, verificação do conjunto de ferramentas e chaves."
+            "value": "Versão fixada da engine, verificação do conjunto de ferramentas, chaves e configuração."
           }
         }
       }
@@ -22588,47 +22547,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Amplia a imagem final do jogo, incluindo menus e HUD, para sua janela ou tela usando o MetalFX da Apple em vez da ampliação suave: bordas e textos mais nítidos, com um pequeno aumento no tempo de GPU. Nada muda quando a imagem já tem o tamanho da tela. É diferente do Ampliador de imagem do jogo. (DM_PRESENT_UPSCALE)"
-          }
-        }
-      }
-    },
-    "Environment": {
-      "comment": "SettingsCatalog.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Environment"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ambiente"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Environnement"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Umgebung"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Entorno"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ambiente"
           }
         }
       }
@@ -24436,43 +24354,43 @@
         }
       }
     },
-    "Folders, imports and artwork caches.": {
+    "Folders, scans and box covers.": {
       "comment": "SettingsSection.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Folders, imports and artwork caches."
+            "value": "Folders, scans and box covers."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cartelle, importazioni e cache delle immagini."
+            "value": "Cartelle, scansioni e copertine."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dossiers, importations et caches d’illustrations."
+            "value": "Dossiers, analyses et jaquettes."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ordner, Importe und Artwork-Caches."
+            "value": "Ordner, Scans und Cover."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Carpetas, importaciones y cachés de imágenes."
+            "value": "Carpetas, búsquedas y carátulas."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pastas, importações e caches de artes."
+            "value": "Pastas, buscas e capas."
           }
         }
       }
@@ -32759,6 +32677,47 @@
         }
       }
     },
+    "Language, the first screen and what runs at launch.": {
+      "comment": "SettingsSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language, the first screen and what runs at launch."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lingua, schermata iniziale e cosa avviene all’apertura."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Langue, premier écran et ce qui se lance au démarrage."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprache, erster Bildschirm und was beim Start passiert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idioma, primera pantalla y lo que se ejecuta al abrir."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idioma, primeira tela e o que acontece ao abrir."
+          }
+        }
+      }
+    },
     "Largest build caches first. Sizes describe file contents; the space recovered can differ. Shared folders count once in totals.": {
       "comment": "SettingsStorageSection.swift",
       "localizations": {
@@ -33619,43 +33578,43 @@
         }
       }
     },
-    "Library controls and new-game rumble.": {
+    "Library controls and rumble for new Switch games.": {
       "comment": "SettingsSection.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Library controls and new-game rumble."
+            "value": "Library controls and rumble for new Switch games."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comandi della libreria e vibrazione dei nuovi giochi."
+            "value": "Comandi della libreria e vibrazione dei nuovi giochi Switch."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Commandes de la bibliothèque et vibrations des nouveaux jeux."
+            "value": "Commandes de la bibliothèque et vibrations des nouveaux jeux Switch."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bibliothekssteuerung und Vibration für neue Spiele."
+            "value": "Bibliothekssteuerung und Vibration für neue Switch-Spiele."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Controles de la biblioteca y vibración de juegos nuevos."
+            "value": "Controles de la biblioteca y vibración de juegos nuevos de Switch."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Controles da biblioteca e vibração para novos jogos."
+            "value": "Controles da biblioteca e vibração para novos jogos de Switch."
           }
         }
       }
@@ -34148,47 +34107,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Carregando…"
-          }
-        }
-      }
-    },
-    "Locally cached game metadata such as title IDs, publisher names, release dates, and category tags fetched during library scans.": {
-      "comment": "SettingsLibrarySection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Locally cached game metadata such as title IDs, publisher names, release dates, and category tags fetched during library scans."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metadati dei giochi conservati nella cache locale, come title ID, nomi degli editori, date di uscita e tag delle categorie, recuperati durante le scansioni della libreria."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Métadonnées de jeu mises en cache localement, telles que les title ID, les noms d’éditeur, les dates de sortie et les catégories, récupérées lors des analyses de la bibliothèque."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lokal zwischengespeicherte Spielmetadaten wie title IDs, Publisher-Namen, Veröffentlichungsdaten und Kategorien, die beim Durchsuchen der Bibliothek abgerufen werden."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metadatos de juegos guardados en la caché local, como title IDs, nombres de editoras, fechas de lanzamiento y etiquetas de categorías, obtenidos al analizar la biblioteca."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metadados de jogos em cache local, como title IDs, nomes de publicadoras, datas de lançamento e categorias, obtidos durante as buscas na biblioteca."
           }
         }
       }
@@ -35542,47 +35460,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Compilador Metal"
-          }
-        }
-      }
-    },
-    "Metal unknown": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal unknown"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal sconosciuto"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal inconnu"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal unbekannt"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal desconocido"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal desconhecido"
           }
         }
       }
@@ -38826,47 +38703,6 @@
         }
       }
     },
-    "Nintendo Store descriptions, genres and links.": {
-      "comment": "SettingsLibrarySection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nintendo Store descriptions, genres and links."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Descrizioni, generi e link del Nintendo Store."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Descriptions, genres et liens du Nintendo Store."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Beschreibungen, Genres und Links aus dem Nintendo Store."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Descripciones, géneros y enlaces de Nintendo Store."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Descrições, gêneros e links da Nintendo Store."
-          }
-        }
-      }
-    },
     "Nintendo Store returned a response this app could not read.": {
       "comment": "NintendoStoreMetadata.swift",
       "localizations": {
@@ -40831,47 +40667,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ainda não compilado"
-          }
-        }
-      }
-    },
-    "Not checked": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Not checked"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Non verificato"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Non vérifié"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nicht geprüft"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sin comprobar"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Não verificado"
           }
         }
       }
@@ -46490,88 +46285,6 @@
         }
       }
     },
-    "Python included": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python included"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python incluso"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python intégré"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python enthalten"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python incluido"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python incluído"
-          }
-        }
-      }
-    },
-    "Python missing": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python missing"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python non disponibile"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python manquant"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python fehlt"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Falta Python"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python ausente"
-          }
-        }
-      }
-    },
     "Python venv": {
       "comment": "CompatibilityChecker.swift",
       "localizations": {
@@ -46609,47 +46322,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "venv do Python"
-          }
-        }
-      }
-    },
-    "Python venv ready": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python venv ready"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Venv Python pronto"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Environnement venv Python prêt"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python-venv bereit"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Entorno virtual de Python listo"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "venv do Python pronto"
           }
         }
       }
@@ -47023,47 +46695,6 @@
         }
       }
     },
-    "Re-run the environment and compatibility checks.": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Re-run the environment and compatibility checks."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ripeti i controlli dell’ambiente e della compatibilità."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Relancer les vérifications de l’environnement et de la compatibilité."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Umgebungs- und Kompatibilitätsprüfung erneut ausführen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vuelve a ejecutar las comprobaciones del entorno y de compatibilidad."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Execute novamente as verificações de ambiente e compatibilidade."
-          }
-        }
-      }
-    },
     "Read more": {
       "comment": "SpotlightPageSections.swift",
       "localizations": {
@@ -47101,47 +46732,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ler mais"
-          }
-        }
-      }
-    },
-    "Readiness": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Readiness"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stato di preparazione"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "État de préparation"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bereitschaft"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Estado de preparación"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Prontidão"
           }
         }
       }
@@ -47224,47 +46814,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pronto"
-          }
-        }
-      }
-    },
-    "Ready to build and play": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ready to build and play"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pronto per compilare e giocare"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Prêt à compiler et à jouer"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bereit zum Erstellen und Spielen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Listo para compilar y jugar"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pronto para compilar e jogar"
           }
         }
       }
@@ -53234,47 +52783,6 @@
         }
       }
     },
-    "Setup needed or builds blocked": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Setup needed or builds blocked"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Configurazione necessaria o compilazioni bloccate"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Configuration requise ou compilations bloquées"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Einrichtung erforderlich oder Builds gesperrt"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Falta configurar o la compilación está bloqueada"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Configuração necessária ou compilações bloqueadas"
-          }
-        }
-      }
-    },
     "Several files could be these cheats: add the one you want.": {
       "comment": "CheatCopy.swift",
       "localizations": {
@@ -55530,47 +55038,6 @@
         }
       }
     },
-    "Startup, setup and readiness.": {
-      "comment": "SettingsSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Startup, setup and readiness."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Avvio, configurazione e stato di preparazione."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Démarrage, configuration et état de préparation."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start, Einrichtung und Bereitschaft."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Inicio, configuración y estado de preparación."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Inicialização, configuração e prontidão."
-          }
-        }
-      }
-    },
     "Steam": {
       "comment": "Steam source management and native Mac library presentation.",
       "localizations": {
@@ -56756,47 +56223,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esticar"
-          }
-        }
-      }
-    },
-    "Summarizes the 4 essential gates: valid prod.keys, cloned nxnative repository, Python build environment, and certified Metal compiler version.": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Summarizes the 4 essential gates: valid prod.keys, cloned nxnative repository, Python build environment, and certified Metal compiler version."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Riepiloga i 4 requisiti essenziali: prod.keys valido, repository nxnative clonato, ambiente di compilazione Python e versione certificata del compilatore Metal."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Résume les 4 contrôles essentiels : prod.keys valide, dépôt nxnative cloné, environnement de compilation Python et version du compilateur Metal certifiée."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fasst die 4 grundlegenden Voraussetzungen zusammen: gültige prod.keys, geklontes nxnative-Repository, Python-Build-Umgebung und zertifizierte Metal-Compiler-Version."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Resume los 4 requisitos esenciales: prod.keys válido, repositorio de nxnative clonado, entorno de compilación Python y versión del compilador Metal certificada."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Resume as 4 verificações essenciais: prod.keys válido, repositório nxnative clonado, ambiente Python de compilação e versão certificada do compilador Metal."
           }
         }
       }
@@ -66846,6 +66272,47 @@
         }
       }
     },
+    "Vibration in new Switch games": {
+      "comment": "SettingsControllersSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibration in new Switch games"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibrazione nei nuovi giochi Switch"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibrations dans les nouveaux jeux Switch"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibration in neuen Switch-Spielen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibración en juegos nuevos de Switch"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibração em novos jogos de Switch"
+          }
+        }
+      }
+    },
     "Vibration strength": {
       "comment": "GameOptionsPresentation.swift",
       "localizations": {
@@ -68810,47 +68277,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "O Xcode não está selecionado"
-          }
-        }
-      }
-    },
-    "Xcode unknown": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Xcode unknown"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Xcode sconosciuto"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Xcode inconnu"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Xcode unbekannt"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Xcode desconocido"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Xcode desconhecido"
           }
         }
       }
