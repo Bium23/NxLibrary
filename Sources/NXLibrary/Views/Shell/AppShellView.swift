@@ -543,6 +543,7 @@ public struct AppShellView: View {
         SteamPlaytimeCoordinator.shared.start(sessions: playSessions)
         // After the nxnative reconcile, which closes a Steam session left by a restart at its last heartbeat.
         SteamPlayCoordinator.shared.setGames(viewModel.catalogGames, sources: viewModel.catalogSourceConfigurations)
+        SteamPlayCoordinator.shared.nativeGames = runningGames
         SteamPlayCoordinator.shared.start(sessions: playSessions, settings: settings)
         viewModel.installPendingBuilds()
         viewModel.syncPendingAppIcons()
