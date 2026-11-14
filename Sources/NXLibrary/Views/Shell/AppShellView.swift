@@ -330,12 +330,15 @@ public struct AppShellView: View {
                 SoundEffectService.shared.play(.launch)
             } else {
                 // Not on screen (another launch is) or already over: there is no wait to hold the front for.
-                SteamPlayCoordinator.shared.launchScreenClosed()
+                SteamPlayCoordinator.shared.launchScreenClosed(screen.gameID)
             }
         }
-        .onChange(of: viewModel.launchOverlay == nil) { closed in
-            // The screen faded or the player dismissed it: NX Library stops holding the front for that game.
-            if closed, SteamPlayCoordinator.shared.launchScreen != nil { SteamPlayCoordinator.shared.launchScreenClosed() }
+        .onChange(of: viewModel.launchOverlay?.game.id) { shown in
+            // The screen faded, the player dismissed it or another game's took its place: NX Library stops holding
+            // the front for the Steam game.
+            if let screen = SteamPlayCoordinator.shared.launchScreen, shown != screen.gameID {
+                SteamPlayCoordinator.shared.launchScreenClosed(screen.gameID)
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             sessionCard.becameActive()
@@ -570,6 +573,7 @@ public struct AppShellView: View {
         // After the nxnative reconcile, which closes a Steam session left by a restart at its last heartbeat.
         SteamPlayCoordinator.shared.setGames(viewModel.catalogGames, sources: viewModel.catalogSourceConfigurations)
         SteamPlayCoordinator.shared.nativeGames = runningGames
+        SteamPlayCoordinator.shared.isLaunchScreenShowing = { [weak viewModel] in viewModel?.launchOverlay != nil }
         SteamPlayCoordinator.shared.start(sessions: playSessions, settings: settings)
         viewModel.installPendingBuilds()
         viewModel.syncPendingAppIcons()

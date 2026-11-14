@@ -1317,7 +1317,8 @@ public final class AppViewModel: ObservableObject {
     }
 
     public func launchGame(_ game: PortedGame) {
-        guard launchingGameId == nil else { return }
+        // One launch at a time: the launch screen covers the library, and input reaching it changes nothing.
+        guard launchingGameId == nil, launchOverlay == nil else { return }
         // A running game is brought forward, never started a second time.
         if let running = RunningGameMonitor.runningApplication(for: game) {
             RunningGameMonitor.activate(running)
