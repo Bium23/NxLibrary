@@ -8,6 +8,7 @@ struct SettingsSidebar: View {
     var isFocused: Bool = false
     let context: AppLocale
     @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.seleneReduceMotion) private var reduceMotion
 
     private var version: String {
         L10n.format("Version %@", [AppUpdate.versionLabel(Bundle.main.infoDictionary)], context: context)
@@ -17,10 +18,17 @@ struct SettingsSidebar: View {
         VStack(alignment: .leading, spacing: 0) {
             header
                 .padding(.bottom, canvas.u(26))
-            ScrollView {
-                groups
+            // The groups can be taller than the window: the selected section is always scrolled into view.
+            ScrollViewReader { proxy in
+                ScrollView {
+                    groups
+                }
+                .scrollIndicators(.hidden)
+                .onAppear { proxy.scrollTo(selection) }
+                .onChange(of: selection) { section in
+                    withAnimation(reduceMotion ? nil : SeleneTheme.quick) { proxy.scrollTo(section) }
+                }
             }
-            .scrollIndicators(.hidden)
         }
     }
 
@@ -37,7 +45,7 @@ struct SettingsSidebar: View {
                         .padding(.bottom, canvas.u(2))
                         .accessibilityAddTraits(.isHeader)
                 }
-                ForEach(group.sections) { section in groupRow(section) }
+                ForEach(group.sections) { section in groupRow(section).id(section) }
             }
         }
     }
