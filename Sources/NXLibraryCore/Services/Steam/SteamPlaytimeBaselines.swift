@@ -76,6 +76,11 @@ public struct SteamPlaytimeBaselines: Equatable, Sendable {
         try JSONEncoder().encode(file).write(to: fileURL, options: .atomic)
     }
 
+    /// When each catalog Steam game's value was seen, for `PlaySessionStore.setTrimReferences`.
+    public func references(for games: [CatalogGame]) -> [UUID: Date] {
+        external(for: games).mapValues(\.since)
+    }
+
     /// The catalog's Steam games with a baseline, by game UUID, for `PlaySessionStore.setExternal`.
     public func external(for games: [CatalogGame]) -> [UUID: ExternalPlaytime] {
         var result: [UUID: ExternalPlaytime] = [:]

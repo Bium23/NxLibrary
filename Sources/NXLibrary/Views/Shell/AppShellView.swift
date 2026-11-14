@@ -532,11 +532,12 @@ public struct AppShellView: View {
         if settings.settings.checkEngineAtLaunch && !AppData.profile.isDevelopment { SetupCheckModel.checkAtLaunch(viewModel: viewModel) }
         runningGames.start(sessions: playSessions)
         runningGames.setGames(viewModel.libraryGames)
+        // Steam's playtime first: a Steam game already running starts a session at once, and trimming needs Steam's last values.
+        SteamPlaytimeCoordinator.shared.setGames(viewModel.catalogGames, sources: viewModel.catalogSourceConfigurations)
+        SteamPlaytimeCoordinator.shared.start(sessions: playSessions)
         // After the nxnative reconcile, which closes a Steam session left by a restart at its last heartbeat.
         SteamPlayCoordinator.shared.setGames(viewModel.catalogGames, sources: viewModel.catalogSourceConfigurations)
         SteamPlayCoordinator.shared.start(sessions: playSessions, settings: settings)
-        SteamPlaytimeCoordinator.shared.setGames(viewModel.catalogGames, sources: viewModel.catalogSourceConfigurations)
-        SteamPlaytimeCoordinator.shared.start(sessions: playSessions)
         viewModel.installPendingBuilds()
         viewModel.syncPendingAppIcons()
         closeGameWatch = runningGames.$runningGameIDs.sink { [weak viewModel] ids in

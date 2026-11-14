@@ -25,7 +25,7 @@ final class SteamPlaytimeSyncTests: XCTestCase {
     }
     private func handle(_ sync: inout SteamPlaytimeSync, _ reading: SteamPlaytimeReading, games: [CatalogGame]? = nil,
                         shown: TimeInterval = 0, now: TimeInterval = 1_000) -> SteamPlaytimeSync.Result {
-        sync.handle(reading, games: games ?? [steam], shownTotal: { _ in shown }, now: date(now))
+        sync.handle(reading, games: games ?? [steam], shownTotal: { _, _ in shown }, now: date(now))
     }
 
     // MARK: - Reading Steam's files
@@ -124,5 +124,69 @@ final class SteamPlaytimeSyncTests: XCTestCase {
         _ = handle(&sync, .read(snapshot(), stamp()))
         sync.resetStamp()
         XCTAssertNil(sync.stamp)
+    }
+
+    func testFailedWithoutAnAccountStaysClearedAfterAnotherAccountWasSeen() {
+        var sync = SteamPlaytimeSync(baselines: SteamPlaytimeBaselines(fileURL: url))
+        _ = handle(&sync, .read(snapshot(account: 1), stamp()))
+        XCTAssertEqual(handle(&sync, .failed(accountID: 2)), .clear)
+        XCTAssertEqual(handle(&sync, .failed(accountID: nil)), .clear)
+    }
+
+    func testCarryIsMeasuredFromTheOldBaseline() {
+        var sync = SteamPlaytimeSync(baselines: SteamPlaytimeBaselines(fileURL: url))
+        _ = handle(&sync, .read(snapshot(minutes: 75), stamp()))
+        var asked: ExternalPlaytime?
+        let result = sync.handle(.read(snapshot(minutes: 76), stamp(2)), games: [steam],
+                                 shownTotal: { _, old in asked = old; return old.duration + 90 }, now: date(2_000))
+        XCTAssertEqual(asked, ExternalPlaytime(duration: 75 * 60, lastPlayed: nil, since: date(1_000)))
+        XCTAssertEqual(result, .publish([steam.id: ExternalPlaytime(duration: 76 * 60 + 30, lastPlayed: nil, since: date(2_000))], save: true))
+    }
+}
+
+final class SteamPlaytimeReadQueueTests: XCTestCase {
+    func testOneReadAtATime() {
+        var queue = SteamPlaytimeReadQueue()
+        let ticket = queue.request()
+        XCTAssertNotNil(ticket)
+        XCTAssertNil(queue.request())
+        XCTAssertNil(queue.request())
+        XCTAssertTrue(queue.isReading)
+    }
+
+    func testRequestsDuringAReadReadOnceMore() throws {
+        var queue = SteamPlaytimeReadQueue()
+        let ticket = try XCTUnwrap(queue.request())
+        _ = queue.request(); _ = queue.request()
+        XCTAssertEqual(queue.finish(ticket).apply, true)
+        let again = try XCTUnwrap(queue.request(), "the read after finishing starts")
+        XCTAssertEqual(queue.finish(again).readAgain, false, "one more read served every request")
+    }
+
+    func testFinishWithoutRequestsStops() throws {
+        var queue = SteamPlaytimeReadQueue()
+        let ticket = try XCTUnwrap(queue.request())
+        let result = queue.finish(ticket)
+        XCTAssertTrue(result.apply)
+        XCTAssertFalse(result.readAgain)
+        XCTAssertFalse(queue.isReading)
+    }
+
+    func testAnInvalidatedReadIsNotAppliedAndReadsAgain() throws {
+        var queue = SteamPlaytimeReadQueue()
+        let ticket = try XCTUnwrap(queue.request())
+        queue.invalidate()
+        let result = queue.finish(ticket)
+        XCTAssertFalse(result.apply)
+        XCTAssertTrue(result.readAgain)
+    }
+
+    func testStoppingDropsPendingRequests() throws {
+        var queue = SteamPlaytimeReadQueue()
+        let ticket = try XCTUnwrap(queue.request())
+        _ = queue.request()
+        queue.stop()
+        XCTAssertEqual(queue.finish(ticket).apply, false)
+        XCTAssertFalse(queue.isReading)
     }
 }

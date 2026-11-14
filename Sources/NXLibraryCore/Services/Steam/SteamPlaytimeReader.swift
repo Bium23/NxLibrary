@@ -34,19 +34,6 @@ public enum SteamPlaytimeReader {
         root.appendingPathComponent("userdata/\(account)/config/localconfig.vdf")
     }
 
-    /// The current account's `localconfig.vdf`, or nil when no account has signed in on this Mac.
-    public static func localConfigURL(root: URL) throws -> URL? {
-        try accountID(root: root).map { localConfigURL(root: root, account: $0) }
-    }
-
-    /// Nil without an account or its file; throws when a file cannot be read or parsed.
-    public static func read(root: URL) throws -> SteamPlaytimeSnapshot? {
-        guard let account = try accountID(root: root) else { return nil }
-        let config = localConfigURL(root: root, account: account)
-        guard FileManager.default.fileExists(atPath: config.path) else { return nil }
-        return try read(config: config, account: account)
-    }
-
     public static func read(config: URL, account: UInt32) throws -> SteamPlaytimeSnapshot {
         SteamPlaytimeSnapshot(accountID: account, entries: try entries(localConfig: text(at: config)))
     }

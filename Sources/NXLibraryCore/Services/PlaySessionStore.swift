@@ -9,6 +9,9 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
     @Published public private(set) var carried: [UUID: CarriedPlaytime] = [:]
     /// Another launcher's own total for a game (Steam's), with when it was seen. Not persisted here.
     @Published public private(set) var external: [UUID: ExternalPlaytime] = [:]
+    /// When each game's external value was seen, kept while its total is hidden (source off, another
+    /// account, launch), so trimming still keeps the part after it.
+    public private(set) var trimReferences: [UUID: Date] = [:]
     public static let maxSessions = 200
     public private(set) var loadError: String?
 
@@ -121,13 +124,20 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
         if values != external { external = values }
     }
 
+    public func setTrimReferences(_ values: [UUID: Date]) { trimReferences = values }
+
     /// With an external total: that total plus the part of this store's sessions after it was seen
     /// (it already counts what came before), including trimmed sessions' part after that same value.
     /// Without one: carried time plus every session.
     public func totalDuration(for gameID: UUID) -> TimeInterval {
+        totalDuration(for: gameID, with: external[gameID])
+    }
+
+    /// The total under a given external value (nil: none), whatever is published.
+    public func totalDuration(for gameID: UUID, with external: ExternalPlaytime?) -> TimeInterval {
         let date = now()
         let own = sessions.filter { $0.gameID == gameID }
-        guard let base = external[gameID] else {
+        guard let base = external else {
             return own.reduce(carried[gameID]?.duration ?? 0) { total, session in
                 total + max(0, (session.endedAt ?? date).timeIntervalSince(session.startedAt))
             }
@@ -162,10 +172,10 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
             entry.duration += session.duration ?? 0
             entry.lastPlayed = max(entry.lastPlayed, session.startedAt)
             // The part after an external value was seen is not in that value yet: keep it, tied to that value.
-            if let base = external[session.gameID] {
-                if entry.externalSince != base.since { entry.externalSince = base.since; entry.afterExternal = 0 }
+            if let since = external[session.gameID]?.since ?? trimReferences[session.gameID] {
+                if entry.externalSince != since { entry.externalSince = since; entry.afterExternal = 0 }
                 let end = session.endedAt ?? session.lastHeartbeatAt
-                entry.afterExternal += max(0, end.timeIntervalSince(max(session.startedAt, base.since)))
+                entry.afterExternal += max(0, end.timeIntervalSince(max(session.startedAt, since)))
             }
             carried[session.gameID] = entry
         }

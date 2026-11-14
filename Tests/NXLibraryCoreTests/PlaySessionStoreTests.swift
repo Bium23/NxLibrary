@@ -308,4 +308,35 @@ final class PlaySessionStoreTests: XCTestCase {
         XCTAssertEqual(store.carried[id]?.duration, 10)
         XCTAssertEqual(store.totalDuration(for: id), 3_600 + 7 + TimeInterval(PlaySessionStore.maxSessions) * 5, accuracy: 0.001)
     }
+
+    func testTotalWithAGivenExternalIgnoresThePublishedOne() {
+        let store = store(), id = UUID()
+        session(store, id, from: 1_100, to: 1_400)
+        store.setExternal([id: external(10)])
+        XCTAssertEqual(store.totalDuration(for: id, with: external()), 3_900, accuracy: 0.001)
+        XCTAssertEqual(store.totalDuration(for: id, with: nil), 300, accuracy: 0.001)
+    }
+
+    // While Steam's totals are hidden (source off, other account, launch), trimming still keeps its part.
+    func testTrimWhileTotalsAreHiddenKeepsThePartAfterTheKnownValue() {
+        let store = store(), id = UUID()
+        store.setTrimReferences([id: Date(timeIntervalSince1970: 0)])
+        store.setExternal([:])
+        for index in 0...PlaySessionStore.maxSessions {
+            let start = TimeInterval(10 + index * 10)
+            session(store, id, from: start, to: start + 5)
+        }
+        store.setExternal([id: external(since: 0)])
+        XCTAssertEqual(store.totalDuration(for: id), 3_600 + TimeInterval(PlaySessionStore.maxSessions + 1) * 5, accuracy: 0.001)
+    }
+
+    func testOlderTotalsFileWithoutExternalFieldsStillLoads() throws {
+        let id = UUID()
+        let json = #"[{"gameID":"\#(id.uuidString)","playtime":{"duration":120,"lastPlayed":0}}]"#
+        let probe = PlaySessionStore(fileURL: url, now: { [unowned self] in self.now })
+        try Data(json.utf8).write(to: probe.totalsURL)
+        let loaded = PlaySessionStore(fileURL: url, now: { [unowned self] in self.now })
+        XCTAssertNil(loaded.loadError)
+        XCTAssertEqual(loaded.carried[id], CarriedPlaytime(duration: 120, lastPlayed: Date(timeIntervalSinceReferenceDate: 0)))
+    }
 }

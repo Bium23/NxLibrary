@@ -4,8 +4,8 @@ import NXLibraryCore
 /// Steam's own playtime for the catalog's Steam games, handed to `PlaySessionStore` as external totals.
 /// Steam's file is read off the main thread (`SteamPlaytimeReading.take`) when the catalog or its sources
 /// change, when NX Library becomes active and after a Steam session ends, and parsed only when its
-/// modification date moved. One read runs at a time: a request during it is served by one more read at
-/// the end. What each reading does is `SteamPlaytimeSync`'s rule. Steam's files are never written.
+/// modification date moved. `SteamPlaytimeReadQueue` keeps one read at a time; `SteamPlaytimeSync` decides
+/// what each reading does. Baselines are written off the main thread, in order. Steam's files are never written.
 @MainActor
 final class SteamPlaytimeCoordinator {
     static let shared = SteamPlaytimeCoordinator()
@@ -15,21 +15,20 @@ final class SteamPlaytimeCoordinator {
     private var root: URL?
     private var sync = SteamPlaytimeSync(baselines: SteamPlaytimeBaselines(
         fileURL: AppData.supportRoot.appendingPathComponent("integrations/steam/playtime-baselines.json")))
-    /// Bumped when a reading in progress no longer applies (stopped, or another Steam folder).
-    private var generation = 0
-    private var reading = false
-    private var readAgain = false
+    private var queue = SteamPlaytimeReadQueue()
+    private let saving = DispatchQueue(label: "NXLibrary.SteamPlaytime.save", qos: .utility)
     private var followUp: Task<Void, Never>?
 
+    /// Before any Steam session can start, so trimming already knows each game's last value.
     func start(sessions: PlaySessionStore) {
         self.sessions = sessions
+        sessions.setTrimReferences(sync.baselines.references(for: games))
         refresh()
     }
 
     func stop() {
         sessions = nil
-        generation += 1
-        readAgain = false
+        queue.stop()
         followUp?.cancel(); followUp = nil
     }
 
@@ -40,8 +39,9 @@ final class SteamPlaytimeCoordinator {
         if folder != root {
             root = folder
             sync.resetStamp()
-            generation += 1
+            queue.invalidate()
         }
+        sessions?.setTrimReferences(sync.baselines.references(for: games))
         refresh()
     }
 
@@ -62,9 +62,7 @@ final class SteamPlaytimeCoordinator {
             sessions.setExternal([:])
             return
         }
-        if reading { readAgain = true; return }
-        reading = true
-        let ticket = generation
+        guard let ticket = queue.request() else { return }
         let known = sync.stamp
         Task.detached(priority: .utility) {
             let result = SteamPlaytimeReading.take(root: root, known: known)
@@ -73,21 +71,21 @@ final class SteamPlaytimeCoordinator {
     }
 
     private func finish(_ result: SteamPlaytimeReading, ticket: Int) {
-        reading = false
-        if ticket == generation, let sessions {
-            switch sync.handle(result, games: games, shownTotal: sessions.totalDuration(for:), now: Date()) {
+        let step = queue.finish(ticket)
+        if step.apply, let sessions {
+            let outcome = sync.handle(result, games: games, shownTotal: { sessions.totalDuration(for: $0, with: $1) }, now: Date())
+            switch outcome {
             case .clear:
                 sessions.setExternal([:])
             case .publish(let totals, let save):
-                if save { try? sync.baselines.save() }
+                if save {
+                    let baselines = sync.baselines
+                    saving.async { try? baselines.save() }
+                }
                 sessions.setExternal(totals)
             }
-        } else {
-            readAgain = sessions != nil
+            sessions.setTrimReferences(sync.baselines.references(for: games))
         }
-        if readAgain {
-            readAgain = false
-            refresh()
-        }
+        if step.readAgain { refresh() }
     }
 }
