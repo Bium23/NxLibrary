@@ -28,15 +28,17 @@ public extension Array where Element == KeyValuesEntry {
 
 /// The bounded text subset used by Steam's local indexes and manifests.
 /// Entries retain order and duplicates; querying an ambiguous field fails.
-/// Directives never cause filesystem access.
+/// Directives never cause filesystem access: a `#` key is refused, or with `rejectsDirectives`
+/// off (for files that only hold data, such as `localconfig.vdf`) read as an ordinary key.
 public struct KeyValuesDocument: Sendable {
     public let entries: [KeyValuesEntry]
 
-    public init(text: String, maximumDepth: Int = 32, maximumEntries: Int = 20_000) throws {
+    public init(text: String, maximumDepth: Int = 32, maximumEntries: Int = 20_000, rejectsDirectives: Bool = true) throws {
         guard text.utf8.count <= 8 * 1024 * 1024, maximumDepth >= 0, maximumEntries >= 0 else {
             throw KeyValuesError.limitExceeded
         }
-        var reader = Reader(bytes: Array(text.utf8), maximumDepth: maximumDepth, maximumEntries: maximumEntries)
+        var reader = Reader(bytes: Array(text.utf8), maximumDepth: maximumDepth, maximumEntries: maximumEntries,
+                            rejectsDirectives: rejectsDirectives)
         entries = try reader.object(depth: 0)
     }
 
@@ -49,13 +51,15 @@ private struct Reader {
     let bytes: [UInt8]
     let maximumDepth: Int
     let maximumEntries: Int
+    let rejectsDirectives: Bool
     private var offset = 0
     private var count = 0
 
-    init(bytes: [UInt8], maximumDepth: Int, maximumEntries: Int) {
+    init(bytes: [UInt8], maximumDepth: Int, maximumEntries: Int, rejectsDirectives: Bool) {
         self.bytes = bytes
         self.maximumDepth = maximumDepth
         self.maximumEntries = maximumEntries
+        self.rejectsDirectives = rejectsDirectives
         if bytes.starts(with: [0xef, 0xbb, 0xbf]) { offset = 3 }
     }
 
@@ -69,7 +73,7 @@ private struct Reader {
                 return entries
             }
             guard case .scalar(let key) = token, !key.isEmpty else { throw KeyValuesError.malformed }
-            guard !key.hasPrefix("#") else { throw KeyValuesError.unsupportedDirective(key) }
+            guard !rejectsDirectives || !key.hasPrefix("#") else { throw KeyValuesError.unsupportedDirective(key) }
             guard count < maximumEntries else { throw KeyValuesError.limitExceeded }
             count += 1
             let value: KeyValuesValue

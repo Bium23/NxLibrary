@@ -22,10 +22,12 @@ public enum SteamPlaytimeReader {
     static let maximumBytes = 8 * 1024 * 1024
     private static let steamID64Base: UInt64 = 76_561_197_960_265_728
 
-    /// The current account's `localconfig.vdf`, or nil when no account is signed in on this Mac.
-    public static func localConfigURL(root: URL) -> URL? {
+    /// The current account's `localconfig.vdf`, or nil when no account has signed in on this Mac.
+    /// An unreadable `loginusers.vdf` throws: Steam may be rewriting it, which is not "no account".
+    public static func localConfigURL(root: URL) throws -> URL? {
         let users = root.appendingPathComponent("config/loginusers.vdf")
-        guard let text = try? text(at: users), let account = try? accountID(loginUsers: text) else { return nil }
+        guard FileManager.default.fileExists(atPath: users.path),
+              let account = try accountID(loginUsers: text(at: users)) else { return nil }
         return root.appendingPathComponent("userdata/\(account)/config/localconfig.vdf")
     }
 
@@ -54,15 +56,18 @@ public enum SteamPlaytimeReader {
         return best?.account
     }
 
-    /// Every app with a numeric `Playtime`; a `LastPlayed` of 0 or none is no date.
+    /// Every app with a numeric `Playtime`; a `LastPlayed` of 0 or none is no date. A file without its
+    /// root (empty, or mid-rewrite) throws; an account that never played anything has no entries.
+    /// The file only holds data, so `#` keys are ordinary keys, and a repeated block on the path is
+    /// read from its first copy: nothing outside the two fields can fail the read.
     public static func entries(localConfig text: String) throws -> [UInt32: SteamPlaytimeEntry] {
-        let document = try KeyValuesDocument(text: text, maximumEntries: 500_000)
-        var node = try document.uniqueValue(for: "UserLocalConfigStore")
+        let document = try KeyValuesDocument(text: text, maximumEntries: 500_000, rejectsDirectives: false)
+        guard var node = first("UserLocalConfigStore", in: document.entries) else { throw KeyValuesError.malformed }
         for key in ["Software", "Valve", "Steam", "apps"] {
-            guard case .object(let children)? = node else { return [:] }
-            node = try children.uniqueValue(for: key)
+            guard case .object(let children) = node, let child = first(key, in: children) else { return [:] }
+            node = child
         }
-        guard case .object(let apps)? = node else { return [:] }
+        guard case .object(let apps) = node else { return [:] }
         var result: [UInt32: SteamPlaytimeEntry] = [:]
         for app in apps {
             guard let appID = UInt32(app.key), appID > 0, case .object(let fields) = app.value,
@@ -72,6 +77,10 @@ public enum SteamPlaytimeReader {
                                                lastPlayed: seconds > 0 ? Date(timeIntervalSince1970: seconds) : nil)
         }
         return result
+    }
+
+    private static func first(_ key: String, in entries: [KeyValuesEntry]) -> KeyValuesValue? {
+        entries.first { $0.key.caseInsensitiveCompare(key) == .orderedSame }?.value
     }
 
     private static func string(_ key: String, in fields: [KeyValuesEntry]) throws -> String? {

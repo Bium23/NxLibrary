@@ -69,9 +69,16 @@ final class SteamPlaytimeCoordinator {
     }
 
     private nonisolated static func read(root: URL, known: Stamp?) -> Reading {
-        guard let file = SteamPlaytimeReader.localConfigURL(root: root),
-              let modified = try? file.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
-        else { return .none }
+        // Only a Mac with no signed-in account, or an account without its file, means "no Steam totals".
+        // Anything unreadable fails, and the last good totals stay.
+        let file: URL
+        do {
+            guard let found = try SteamPlaytimeReader.localConfigURL(root: root) else { return .none }
+            file = found
+        } catch { return .failed }
+        guard FileManager.default.fileExists(atPath: file.path) else { return .none }
+        guard let modified = try? file.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
+        else { return .failed }
         let stamp = Stamp(file: file, modified: modified)
         if stamp == known { return .unchanged }
         do {

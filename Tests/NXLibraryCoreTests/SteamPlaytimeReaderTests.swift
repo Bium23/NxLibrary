@@ -59,14 +59,14 @@ final class SteamPlaytimeReaderTests: XCTestCase {
         let fixture = try SteamTestFixture.temporary(in: self)
         try write(Self.loginUsers([(Self.base + 42, true, 1)]), to: "config/loginusers.vdf", in: fixture.root)
         try write(Self.localConfig(apps: "\"440\" { \"Playtime\" \"9\" }"), to: "userdata/42/config/localconfig.vdf", in: fixture.root)
-        XCTAssertEqual(SteamPlaytimeReader.localConfigURL(root: fixture.root)?.lastPathComponent, "localconfig.vdf")
+        XCTAssertEqual(try SteamPlaytimeReader.localConfigURL(root: fixture.root)?.lastPathComponent, "localconfig.vdf")
         XCTAssertEqual(try SteamPlaytimeReader.read(root: fixture.root),
                        SteamPlaytimeSnapshot(accountID: 42, entries: [440: SteamPlaytimeEntry(minutes: 9, lastPlayed: nil)]))
     }
 
     func testNoAccountOrNoFileReturnsNil() throws {
         let fixture = try SteamTestFixture.temporary(in: self)
-        XCTAssertNil(SteamPlaytimeReader.localConfigURL(root: fixture.root))
+        XCTAssertNil(try SteamPlaytimeReader.localConfigURL(root: fixture.root))
         XCTAssertNil(try SteamPlaytimeReader.read(root: fixture.root))
         try write(Self.loginUsers([(Self.base + 42, true, 1)]), to: "config/loginusers.vdf", in: fixture.root)
         XCTAssertNil(try SteamPlaytimeReader.read(root: fixture.root))
@@ -80,6 +80,48 @@ final class SteamPlaytimeReaderTests: XCTestCase {
 
     func testMalformedConfigThrows() {
         XCTAssertThrowsError(try SteamPlaytimeReader.entries(localConfig: "\"UserLocalConfigStore\" { \"Software\" {"))
+    }
+
+    // A file Steam is rewriting must fail the read, never look like an account with no playtime.
+    func testEmptyOrRootlessConfigThrows() {
+        for text in ["", "  \n", "\"Other\" { }"] {
+            XCTAssertThrowsError(try SteamPlaytimeReader.entries(localConfig: text), text)
+        }
+    }
+
+    func testAnAccountWithNoAppsHasNoEntries() throws {
+        XCTAssertEqual(try SteamPlaytimeReader.entries(localConfig: "\"UserLocalConfigStore\" { }"), [:])
+    }
+
+    func testUnreadableLoginUsersFailsInsteadOfMeaningNoAccount() throws {
+        let fixture = try SteamTestFixture.temporary(in: self)
+        try write("\"users\" {", to: "config/loginusers.vdf", in: fixture.root)
+        XCTAssertThrowsError(try SteamPlaytimeReader.localConfigURL(root: fixture.root))
+        try write("\"users\" { }", to: "config/loginusers.vdf", in: fixture.root)
+        XCTAssertNil(try SteamPlaytimeReader.localConfigURL(root: fixture.root))
+    }
+
+    func testDuplicatePathKeysUseTheFirst() throws {
+        let text = """
+            "UserLocalConfigStore" {
+                "Software" { "Valve" { "Steam" { "apps" { "440" { "Playtime" "3" } } } } }
+                "software" { "Other" "x" }
+            }
+            """
+        XCTAssertEqual(try SteamPlaytimeReader.entries(localConfig: text)[440]?.minutes, 3)
+    }
+
+    func testHashKeysElsewhereDoNotFailTheRead() throws {
+        let text = Self.localConfig(apps: "\"440\" { \"Playtime\" \"2\" }", before: "\"WebStorage\" { \"#tag\" \"x\" }")
+        XCTAssertEqual(try SteamPlaytimeReader.entries(localConfig: text)[440]?.minutes, 2)
+    }
+
+    func testOversizedConfigThrows() throws {
+        let fixture = try SteamTestFixture.temporary(in: self)
+        try write(Self.loginUsers([(Self.base + 42, true, 1)]), to: "config/loginusers.vdf", in: fixture.root)
+        let filler = String(repeating: " ", count: SteamPlaytimeReader.maximumBytes + 1)
+        try write(Self.localConfig(apps: "") + filler, to: "userdata/42/config/localconfig.vdf", in: fixture.root)
+        XCTAssertThrowsError(try SteamPlaytimeReader.read(root: fixture.root))
     }
 
     private func write(_ text: String, to relative: String, in root: URL) throws {
