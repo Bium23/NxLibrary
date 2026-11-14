@@ -12,6 +12,8 @@ public struct SettingsView: View {
     @ObservedObject var router: AppRouter
     @ObservedObject var artwork: ArtworkStore
 
+    /// Opens the Search field when the player asks for it (`enterSection`).
+    @State private var searchFieldRequest = 0
     @State private var section: SettingsSection
     @State private var showingControls = false
     @State private var localePicker: LocalePickerMode?
@@ -139,6 +141,7 @@ public struct SettingsView: View {
                         onOpenConsole: { router.openConsole() },
                         onOpenGroup: openGroup,
                         onSearchSubmit: enterRows,
+                        searchFieldRequest: searchFieldRequest,
                         onActions: updateActions
                     )
                 }
@@ -170,7 +173,7 @@ public struct SettingsView: View {
             hints.append(HintItem(.x, L10n.text("Reset group")) { resetSection() })
         }
         if focusArea == .sidebar {
-            hints.append(HintItem(.a, L10n.text("Open")) { enterRows() })
+            hints.append(HintItem(.a, L10n.text("Open")) { enterSection() })
         } else if focusedRow?.cycle != nil {
             hints.append(HintItem(.a, L10n.text("Change")))
         } else {
@@ -199,6 +202,17 @@ public struct SettingsView: View {
         section = group
         focusArea = .sidebar
         SoundEffectService.shared.play(.click)
+    }
+
+    /// A or Right on the sidebar. Search opens its field; every other section enters its rows.
+    private func enterSection() {
+        guard focusArea == .sidebar else { return }
+        if section == .search {
+            searchFieldRequest += 1
+            SoundEffectService.shared.play(.focus)
+        } else {
+            enterRows()
+        }
     }
 
     private func enterRows() {
@@ -307,7 +321,7 @@ public struct SettingsView: View {
     private func moveSideways(_ delta: Int) {
         switch focusArea {
         case .sidebar:
-            if delta > 0 { enterRows() }
+            if delta > 0 { enterSection() }
         case .rows:
             if let cycle = focusedRow?.cycle, focusedRow?.isEnabled == true {
                 cycle(delta)
@@ -406,7 +420,7 @@ public struct SettingsView: View {
         case .navigateRight: moveSideways(1)
         case .confirm:
             if focusArea == .sidebar {
-                enterRows()
+                enterSection()
             } else if let row = focusedRow, row.isEnabled {
                 SoundEffectService.shared.play(.click)
                 row.press(button: rowButton)

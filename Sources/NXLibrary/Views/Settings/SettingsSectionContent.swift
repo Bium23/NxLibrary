@@ -12,13 +12,14 @@ struct SettingsSectionContent: View {
     let onOpenConsole: () -> Void
     let onOpenGroup: (SettingsSection) -> Void
     let onSearchSubmit: () -> Void
+    let searchFieldRequest: Int
     let onActions: ([SettingsRowAction]) -> Void
 
     var body: some View {
         switch section {
         case .search:
             SettingsSearchSection(settings: settings, onOpenGroup: onOpenGroup,
-                                  onSubmit: onSearchSubmit, onActions: onActions)
+                                  onSubmit: onSearchSubmit, fieldRequest: searchFieldRequest, onActions: onActions)
         case .changed:
             SettingsChangedSection(settings: settings, viewModel: viewModel,
                                    onOpenGroup: onOpenGroup, onActions: onActions)
