@@ -135,7 +135,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/CursorIdleState.swift](../Sources/NXLibraryCore/Models/CursorIdleState.swift) | Politica del ritardo di visibilità del puntatore e reset su mouse o perdita di eleggibilità. |
 | [Sources/NXLibraryCore/Services/AppSizeCache.swift](../Sources/NXLibraryCore/Services/AppSizeCache.swift) | Conserva dimensioni per percorso e data del bundle e decide lo stato vuoto della libreria. |
 | [Sources/NXLibraryCore/Services/AppSettingsStore.swift](../Sources/NXLibraryCore/Services/AppSettingsStore.swift) | Pubblica impostazioni ed errori, preserva i file illeggibili e salva settings.json tramite file temporaneo. |
-| [Sources/NXLibraryCore/Services/PlaySessionStore.swift](../Sources/NXLibraryCore/Services/PlaySessionStore.swift) | Registra avvio, heartbeat, fine e riconciliazione delle sessioni di gioco. |
+| [Sources/NXLibraryCore/Services/PlaySessionStore.swift](../Sources/NXLibraryCore/Services/PlaySessionStore.swift) | Registra avvio, heartbeat, fine e riconciliazione delle sessioni di gioco; unisce i totali esterni (Steam) con le sessioni successive. |
 | [Sources/NXLibraryCore/Navigation/AppRouter.swift](../Sources/NXLibraryCore/Navigation/AppRouter.swift) | Gestisce route, ritorno, menu, ricerca e richieste di selezione o spostamento su Spotlight. |
 
 ## Core · Setup, motore e chiavi
@@ -680,11 +680,15 @@ Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua rig
 |---|---|
 | [SteamBackgroundLaunch.swift](../Sources/NXLibraryCore/Services/Steam/SteamBackgroundLaunch.swift) | Regole di «Keep Steam in the background»: argomenti `-silent`, attesa nascosta di 15 s, ritorno di Steam. |
 | [SteamKeyValues.swift](../Sources/NXLibraryCore/Services/Steam/SteamKeyValues.swift) | Lettura limitata del formato testuale con campi duplicati conservati e accesso non ambiguo; nessuna direttiva eseguita. |
+| [SteamPlaytimeReader.swift](../Sources/NXLibraryCore/Services/Steam/SteamPlaytimeReader.swift) | Ore e ultima partita dell’account Steam più recente da `localconfig.vdf`; nient’altro del file esce dal tipo. |
+| [SteamPlaytimeBaselines.swift](../Sources/NXLibraryCore/Services/Steam/SteamPlaytimeBaselines.swift) | Totali Steam con il momento in cui sono stati visti; nuovo valore o account ripartono; mappa ai giochi del catalogo. |
 | [InstallationFileSnapshot.swift](../Sources/NXLibraryCore/Services/Steam/InstallationFileSnapshot.swift) | Letture limitate e non bloccanti di file regolari; verifica dell'identità prima della pubblicazione. |
 | [InstallationDirectorySnapshot.swift](../Sources/NXLibraryCore/Services/Steam/InstallationDirectorySnapshot.swift) | Lettura incrementale delle cartelle, budget anche sulle voci nascoste e annullamento durante l'enumerazione. |
 | [NativeMacApplication.swift](../Sources/NXLibraryCore/Services/Steam/NativeMacApplication.swift) | Evidenze del bundle Mac e degli header eseguibili, architetture e categoria dichiarata, senza avvio. |
 | [SteamLibrarySource.swift](../Sources/NXLibraryCore/Services/Steam/SteamLibrarySource.swift) | Snapshot delle librerie/manifest dichiarati, disponibilità, ambiguità, limiti e annullamento; non modifica il catalogo. |
 | [SteamKeyValuesTests.swift](../Tests/NXLibraryCoreTests/SteamKeyValuesTests.swift) | Formato, escape, Unicode, duplicati, input troncati e limiti del parser. |
+| [SteamPlaytimeReaderTests.swift](../Tests/NXLibraryCoreTests/SteamPlaytimeReaderTests.swift) | Campi letti, ultima partita a zero, scelta dell’account, file grandi o malformati. |
+| [SteamPlaytimeBaselinesTests.swift](../Tests/NXLibraryCoreTests/SteamPlaytimeBaselinesTests.swift) | Base mantenuta o ripartita, cambio account, salvataggio e mappatura sul catalogo. |
 | [NativeMacApplicationTests.swift](../Tests/NXLibraryCoreTests/NativeMacApplicationTests.swift) | Fixture native, classificazione, traversal/link, metadata non regolari e header invalidi. |
 | [SteamLibrarySourceTests.swift](../Tests/NXLibraryCoreTests/SteamLibrarySourceTests.swift) | Più fonti, dischi assenti, identità, file cambiati, limiti e assenza di scritture. |
 | [SteamDiscoveryConsistencyTests.swift](../Tests/NXLibraryCoreTests/SteamDiscoveryConsistencyTests.swift) | Mutazioni reali di inventario e app durante scan, indice inizialmente assente, budget e propagazione dell'annullamento. |
@@ -736,6 +740,7 @@ Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua rig
 | [CatalogNativeArtwork.swift](../Sources/NXLibrary/Views/Catalog/CatalogNativeArtwork.swift) | Icona nativa in sola lettura e indicatore Steam; nessun artwork Nintendo. |
 | [CatalogSteamInfo.swift](../Sources/NXLibrary/Views/Catalog/CatalogSteamInfo.swift) | Intestazione condivisa nelle due librerie: Play/Riprendi/Annulla/Riprova, Opzioni e preferito, con la nota di stato. |
 | [SteamPlayCoordinator.swift](../Sources/NXLibrary/Services/SteamPlayCoordinator.swift) | Play tramite il client Steam verificato e sessioni reali dal processo dell’app installata. |
+| [SteamPlaytimeCoordinator.swift](../Sources/NXLibrary/Services/SteamPlaytimeCoordinator.swift) | Legge le ore di Steam fuori dal thread principale solo quando il file cambia e le passa a `PlaySessionStore`. |
 | [SteamOptionsView.swift](../Sources/NXLibrary/Views/GameOptions/SteamOptionsView.swift) | Opzioni di un gioco Steam con l’aspetto e l’input di Game options: Play, Edit details, Move, preferito, nascosto, Finder. |
 | [PersonalizationSubject.swift](../Sources/NXLibrary/Views/GameOptions/PersonalizationSubject.swift) | Il gioco che Change artwork e Change metadata personalizzano: scelte nxnative o archivio personale Steam, senza icona Mac per Steam. |
 | [CatalogSourcesRepositoryTests.swift](../Tests/NXLibraryCoreTests/CatalogSourcesRepositoryTests.swift) | Compatibilità generazioni, cambi fonte, preferenze concorrenti e adozione NX esplicita. |
