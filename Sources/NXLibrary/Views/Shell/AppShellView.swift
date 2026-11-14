@@ -93,6 +93,12 @@ public struct AppShellView: View {
     }
 
     /// The launch screen sits over everything, menu included, until the game's window shows.
+    /// A game the session card or the launch screen names: a library build, else a Steam game of the catalog.
+    private func playedGame(_ id: UUID) -> PlayedGame? {
+        if let game = viewModel.libraryGames.first(where: { $0.id == id }) { return .nxnative(game) }
+        return viewModel.catalogGames.first { $0.id == id && $0.integration == .steam }.map(PlayedGame.steam)
+    }
+
     @ViewBuilder private var launchLayer: some View {
         if router.isIntroShowing {
             IntroView(settings: settings, reduceMotion: reduceMotion) { router.isIntroShowing = false }
@@ -240,7 +246,7 @@ public struct AppShellView: View {
         .background(StartupWindowView(fullscreen: settings.settings.startInFullscreen))
         .focusedSceneValue(\.nxMenuAvailability, nativeMenuAvailability)
         .overlay {
-            SessionCardLayer(presenter: sessionCard, games: viewModel.libraryGames,
+            SessionCardLayer(presenter: sessionCard, game: playedGame,
                              metadata: viewModel.storeMetadata, artwork: artwork)
         }
         .overlay { launchLayer }
@@ -309,6 +315,9 @@ public struct AppShellView: View {
             if order != settings.settings.spotlightOrder { settings.settings.spotlightOrder = order }
         }
         .onReceive(runningGames.$endedSession) { summary in
+            sessionCard.ended(summary, enabled: settings.settings.showsSessionCard)
+        }
+        .onReceive(SteamPlayCoordinator.shared.$endedSession) { summary in
             sessionCard.ended(summary, enabled: settings.settings.showsSessionCard)
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in

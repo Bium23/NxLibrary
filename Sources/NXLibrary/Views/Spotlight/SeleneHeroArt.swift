@@ -73,19 +73,7 @@ final class SeleneHeroArt: ObservableObject {
         if key.hasPrefix(loadedFor) { return }
         try? await Task.sleep(nanoseconds: settle)
         guard !Task.isCancelled else { return }
-        let request = SteamArtworkRequest(game: game, role: .hero)
-        let titleKey = game.personalizationReference.key
-        var url = request.localURL(picks: picks) ?? artwork.cachedURL(titleID: titleKey, kind: .hero)
-        if url == nil, let id = request.appID {
-            await SteamGameFacts.shared.load(game, language: L10n.context.language)
-            let shots = SteamGameFacts.shared.metadata(for: game)?.screenshots ?? []
-            let banner = SteamStoreArt.candidates(appID: Int(id), slot: .background).first?.url
-            let store = await SteamBackdropChoice.storeArt(names: [game.name])
-            let order = SteamBackdropChoice.ordered(storeArt: store, screenshots: shots, libraryHero: banner)
-            if let chosen = await SteamBackdropChoice.choose(order, fallback: banner, data: { await SteamBackdropChoice.download($0) }), !Task.isCancelled {
-                url = await artwork.fetch(titleID: titleKey, remoteURL: chosen, kind: .hero)
-            }
-        }
+        let url = await GameArtLoader.steamHeroURL(for: game, artwork: artwork)
         guard !Task.isCancelled else { return }
         // Decoded off the main thread like an nxnative hero; a lazily decoded file cost its first frame 40–60 ms.
         let loaded: NSImage? = if let url { await GameArtLoader.decodeHero(at: url) } else { nil }

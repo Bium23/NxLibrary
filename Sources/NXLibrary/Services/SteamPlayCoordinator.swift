@@ -25,6 +25,8 @@ final class SteamPlayCoordinator: ObservableObject {
     @Published private(set) var states: [UUID: SteamPlayState] = [:]
     /// Waits past `attentionDelay` of a background launch: Steam is back in view and may need the player.
     @Published private(set) var late: Set<UUID> = []
+    /// The latest Steam session that ended, for the session card (as `RunningGameMonitor.endedSession`).
+    @Published private(set) var endedSession: SessionSummary?
 
     private var games: [CatalogGame] = []
     private var steamEnabled = false
@@ -228,7 +230,12 @@ final class SteamPlayCoordinator: ObservableObject {
                 // The game may have come forward before its process was seen.
                 if NSWorkspace.shared.frontmostApplication?.processIdentifier == pid { returnFocus.gameCameForward(id) }
             case .ended:
-                sessions?.end(gameID: id)
+                for session in sessions?.end(gameID: id) ?? [] {
+                    guard let game, let sessions,
+                          let summary = SessionSummary(session: session, game: game,
+                                                       total: sessions.totalDuration(for: id)) else { continue }
+                    endedSession = summary
+                }
                 ended.append(id)
             case nil:
                 if heartbeat, case .running = state.phase { sessions?.heartbeat(for: id) }

@@ -13,11 +13,20 @@ public struct SessionSummary: Equatable, Identifiable {
     public let total: String
 
     public init?(session: PlaySession, game: PortedGame, total: TimeInterval) {
-        guard session.gameID == game.id, let length = session.duration,
+        self.init(session: session, gameID: game.id, gameName: game.name, total: total)
+    }
+
+    /// A catalog game's session: a Steam game's card reads like an nxnative one's.
+    public init?(session: PlaySession, game: CatalogGame, total: TimeInterval) {
+        self.init(session: session, gameID: game.id, gameName: game.name, total: total)
+    }
+
+    private init?(session: PlaySession, gameID: UUID, gameName: String, total: TimeInterval) {
+        guard session.gameID == gameID, let length = session.duration,
               length >= Self.minimumDuration else { return nil }
         id = session.id
-        gameID = game.id
-        gameName = game.name
+        self.gameID = gameID
+        self.gameName = gameName
         thisSession = Self.duration(length)
         self.total = Self.duration(max(total, length))
     }

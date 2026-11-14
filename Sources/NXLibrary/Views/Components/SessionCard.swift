@@ -54,7 +54,7 @@ struct SessionCardView: View {
     @Environment(\.catalogPersonalizations) private var personalizations
     @Environment(\.seleneCanvas) private var canvas
     let summary: SessionSummary
-    let game: PortedGame?
+    let game: PlayedGame?
     let metadata: NintendoStoreMetadata?
     let artwork: ArtworkStore
 
@@ -160,7 +160,8 @@ struct SessionCardLayer: View {
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
     @ObservedObject var presenter: SessionCardPresenter
-    let games: [PortedGame]
+    /// The ended session's game, nxnative or Steam.
+    let game: (UUID) -> PlayedGame?
     let metadata: [UUID: NintendoStoreMetadata]
     let artwork: ArtworkStore
 
@@ -168,7 +169,7 @@ struct SessionCardLayer: View {
         ZStack(alignment: .topTrailing) {
             if let summary = presenter.shown {
                 SessionCardView(summary: summary,
-                                game: games.first { $0.id == summary.gameID },
+                                game: game(summary.gameID),
                                 metadata: metadata[summary.gameID],
                                 artwork: artwork)
                     .id(summary.id)

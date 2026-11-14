@@ -136,6 +136,16 @@ final class PlaySessionStoreTests: XCTestCase {
         XCTAssertTrue(store.end(bundleID: "org.nxnative.0100000000010000").isEmpty)
     }
 
+    func testEndByGameIDReturnsTheSessionsItEnded() {
+        let store = store(), id = UUID()
+        XCTAssertTrue(store.start(gameID: id, sourceID: "steam-440"))
+        now = now.addingTimeInterval(120)
+        let ended = store.end(gameID: id)
+        XCTAssertEqual(ended.map(\.gameID), [id])
+        XCTAssertEqual(ended.first?.duration ?? 0, 120, accuracy: 0.001)
+        XCTAssertTrue(store.end(gameID: id).isEmpty)
+    }
+
     private func play(_ game: PortedGame, for seconds: TimeInterval, in store: PlaySessionStore) {
         XCTAssertTrue(store.start(for: game))
         now = now.addingTimeInterval(seconds)

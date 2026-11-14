@@ -11,12 +11,15 @@ final class GameArtLoader {
 
     private let heroes = NSCache<NSUUID, NSImage>()
     private let logos = NSCache<NSUUID, NSImage>()
+    /// Steam games' launch-screen and session-card art, by game, role and pick revision (`GameArtLoader+Played`).
+    let steamArt = NSCache<NSString, NSImage>()
     /// Games already looked up online this launch, found or not.
     private var searchedOnline: Set<UUID> = []
 
     private init() {
         heroes.countLimit = 24
         logos.countLimit = 64
+        steamArt.countLimit = 16
     }
 
     func cachedHero(for game: PortedGame) -> NSImage? { heroes.object(forKey: game.id as NSUUID) }
