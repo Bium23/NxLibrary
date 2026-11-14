@@ -8,7 +8,6 @@ struct SettingsSidebar: View {
     var isFocused: Bool = false
     let context: AppLocale
     @Environment(\.seleneCanvas) private var canvas
-    @Environment(\.seleneReduceMotion) private var reduceMotion
 
     private var version: String {
         L10n.format("Version %@", [AppUpdate.versionLabel(Bundle.main.infoDictionary)], context: context)
@@ -18,16 +17,16 @@ struct SettingsSidebar: View {
         VStack(alignment: .leading, spacing: 0) {
             header
                 .padding(.bottom, canvas.u(26))
-            // The groups can be taller than the window: the selected section is always scrolled into view.
+            // The groups can be taller than the window: the selected section is always scrolled into view,
+            // at once like a macOS sidebar. An animated scroll started in the same frame as the new section's
+            // content and stuttered.
             ScrollViewReader { proxy in
                 ScrollView {
                     groups
                 }
                 .scrollIndicators(.hidden)
                 .onAppear { proxy.scrollTo(selection) }
-                .onChange(of: selection) { section in
-                    withAnimation(reduceMotion ? nil : SeleneTheme.quick) { proxy.scrollTo(section) }
-                }
+                .onChange(of: selection) { section in proxy.scrollTo(section) }
             }
         }
     }
