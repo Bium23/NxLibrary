@@ -107,6 +107,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/Services/NotificationService.swift](../Sources/NXLibrary/Services/NotificationService.swift) | Invia notifiche dei porting e instrada i clic verso il titolo o l’errore interessato. |
 | [Sources/NXLibrary/Services/OnlineBackgroundService.swift](../Sources/NXLibrary/Services/OnlineBackgroundService.swift) | Carica pagine e miniature e scarica wallpaper o video conservando progressi e crediti. |
 | [Sources/NXLibrary/Services/RunningGameMonitor.swift](../Sources/NXLibrary/Services/RunningGameMonitor.swift) | Riconcilia applicazioni in esecuzione e libreria e offre Resume e chiusura del gioco. |
+| [Sources/NXLibrary/Services/LibraryWindow.swift](../Sources/NXLibrary/Services/LibraryWindow.swift) | Riporta davanti la finestra di NX Library dopo un gioco nxnative o Steam, mai sopra un gioco della libreria. |
 | [Sources/NXLibrary/Services/SoundEffectService.swift](../Sources/NXLibrary/Services/SoundEffectService.swift) | Riproduce i cue Selene e applica attivazione, volume e file importati. |
 | [Sources/NXLibrary/Services/SystemDetector.swift](../Sources/NXLibrary/Services/SystemDetector.swift) | Individua checkout nxnative, root personale e possibili percorsi delle chiavi. |
 
@@ -423,6 +424,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/Views/Components/SwitchBoxArtCover.swift](../Sources/NXLibrary/Views/Components/SwitchBoxArtCover.swift) | Carica e disegna la copertina Switch mantenendone le proporzioni. |
 | [Sources/NXLibrary/Views/Components/SteamGridDBKeyDialog.swift](../Sources/NXLibrary/Views/Components/SteamGridDBKeyDialog.swift) | Popup per incollare e verificare la chiave SteamGridDB da Settings → Look e da Change artwork. |
 | [Sources/NXLibrary/Views/Components/SwitchPlatformIcon.swift](../Sources/NXLibrary/Views/Components/SwitchPlatformIcon.swift) | Icona vettoriale della console Switch per la riga della piattaforma. |
+| [Sources/NXLibrary/Views/Components/SteamPlatformLogo.swift](../Sources/NXLibrary/Views/Components/SteamPlatformLogo.swift) | Logo ufficiale Steam per la piattaforma dei giochi Steam: da solo, almeno 50 pixel, spazio libero della manovella. |
 
 ## UI · temi, rendering e sfondi
 
@@ -559,7 +561,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/SourceCatalogTests.swift](../Tests/NXLibraryCoreTests/SourceCatalogTests.swift) | Fixture PFS0/CNMT e riconoscimento di base, aggiornamenti e DLC. |
 | [Tests/NXLibraryCoreTests/EngineUpgradeSourcesTests.swift](../Tests/NXLibraryCoreTests/EngineUpgradeSourcesTests.swift) | Copre cartelle estratte, pacchetti multipli, selezione, persistenza, bridge Python, file illeggibili e restaging senza perdita di cache o originali. |
 | [Tests/NXLibraryCoreTests/SpotlightPageTests.swift](../Tests/NXLibraryCoreTests/SpotlightPageTests.swift) | Estratti del testo e stati dello scorrimento della pagina del gioco. |
-| [Tests/NXLibraryCoreTests/SpotlightRowTests.swift](../Tests/NXLibraryCoreTests/SpotlightRowTests.swift) | Ordine, card, riordino delle tile e selezione Surprise. |
+| [Tests/NXLibraryCoreTests/SpotlightRowTests.swift](../Tests/NXLibraryCoreTests/SpotlightRowTests.swift) | Ordine, card, riordino delle tile, gioco avviato primo nell’ordine salvato e selezione Surprise. |
 | [Tests/NXLibraryCoreTests/SpotlightStateTests.swift](../Tests/NXLibraryCoreTests/SpotlightStateTests.swift) | Focus, selezione, filtri, azioni e spostamento delle tile Spotlight. |
 | [Tests/NXLibraryCoreTests/StorageManagerTests.swift](../Tests/NXLibraryCoreTests/StorageManagerTests.swift) | Misure per gioco, cache condivise e nascoste, pulizia selettiva, protezione di app/sorgenti/symlink, file incoerenti e volumi/cartelle non disponibili. |
 | [Tests/NXLibraryCoreTests/ThemePickerTests.swift](../Tests/NXLibraryCoreTests/ThemePickerTests.swift) | Navigazione della griglia, tab e selezione degli sfondi. |
@@ -604,6 +606,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Resources/Selene/Fonts/MaterialIcons-Regular.ttf](../Resources/Selene/Fonts/MaterialIcons-Regular.ttf) | Font dei glifi Material Icons disegnati dalla UI. |
 | [Resources/Selene/Fonts/MaterialIcons-LICENSE.txt](../Resources/Selene/Fonts/MaterialIcons-LICENSE.txt) | Licenza del font Material Icons incluso. |
 | [Resources/Selene/NOTICE.txt](../Resources/Selene/NOTICE.txt) | Attribuzioni delle risorse Selene incluse. |
+| [Resources/Brands/SteamLogo.png](../Resources/Brands/SteamLogo.png) | Logo Steam inverso dalle linee guida Valve, inalterato; attribuzione in `NOTICE`. |
 | [Resources/Selene/NOTICE-palettes.txt](../Resources/Selene/NOTICE-palettes.txt) | Attribuzioni delle palette incluse con esse. |
 | [Resources/Selene/Sounds/Boot.wav](../Resources/Selene/Sounds/Boot.wav) | Cue sonoro incluso per l’avvio. |
 | [Resources/Selene/Sounds/Key.wav](../Resources/Selene/Sounds/Key.wav) | Cue sonoro incluso per la pressione dei tasti. |
@@ -682,6 +685,7 @@ Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua rig
 | [SteamKeyValues.swift](../Sources/NXLibraryCore/Services/Steam/SteamKeyValues.swift) | Lettura limitata del formato testuale con campi duplicati conservati e accesso non ambiguo; nessuna direttiva eseguita. |
 | [SteamPlaytimeReader.swift](../Sources/NXLibraryCore/Services/Steam/SteamPlaytimeReader.swift) | Ore e ultima partita dell’account Steam più recente da `localconfig.vdf`; nient’altro del file esce dal tipo. |
 | [SteamPlaytimeBaselines.swift](../Sources/NXLibraryCore/Services/Steam/SteamPlaytimeBaselines.swift) | Totali Steam con il momento in cui sono stati visti; nuovo valore o account ripartono; mappa ai giochi del catalogo. |
+| [SteamReturnFocus.swift](../Sources/NXLibraryCore/Models/SteamReturnFocus.swift) | Quando un gioco Steam che esce riporta NX Library davanti: Play premuto qui, gioco in primo piano, nessun altro gioco aperto. |
 | [SteamPlaytimeSync.swift](../Sources/NXLibraryCore/Services/Steam/SteamPlaytimeSync.swift) | Una lettura dei file Steam e cosa fa (pubblica, conserva gli ultimi totali buoni dello stesso account o azzera); coda di una lettura alla volta. |
 | [InstallationFileSnapshot.swift](../Sources/NXLibraryCore/Services/Steam/InstallationFileSnapshot.swift) | Letture limitate e non bloccanti di file regolari; verifica dell'identità prima della pubblicazione. |
 | [InstallationDirectorySnapshot.swift](../Sources/NXLibraryCore/Services/Steam/InstallationDirectorySnapshot.swift) | Lettura incrementale delle cartelle, budget anche sulle voci nascoste e annullamento durante l'enumerazione. |
@@ -690,6 +694,7 @@ Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua rig
 | [SteamKeyValuesTests.swift](../Tests/NXLibraryCoreTests/SteamKeyValuesTests.swift) | Formato, escape, Unicode, duplicati, input troncati e limiti del parser. |
 | [SteamPlaytimeReaderTests.swift](../Tests/NXLibraryCoreTests/SteamPlaytimeReaderTests.swift) | Campi letti, ultima partita a zero, scelta dell’account, file grandi o malformati. |
 | [SteamPlaytimeBaselinesTests.swift](../Tests/NXLibraryCoreTests/SteamPlaytimeBaselinesTests.swift) | Base mantenuta o ripartita, minuto conservato, cambio account, salvataggio e mappatura sul catalogo. |
+| [SteamReturnFocusTests.swift](../Tests/NXLibraryCoreTests/SteamReturnFocusTests.swift) | Ritorno a NX Library solo per Play premuto qui, gioco davanti e nessun altro gioco aperto. |
 | [SteamPlaytimeSyncTests.swift](../Tests/NXLibraryCoreTests/SteamPlaytimeSyncTests.swift) | Letture con o senza account, file illeggibili, file invariato, regole di pubblicazione e coda delle letture. |
 | [NativeMacApplicationTests.swift](../Tests/NXLibraryCoreTests/NativeMacApplicationTests.swift) | Fixture native, classificazione, traversal/link, metadata non regolari e header invalidi. |
 | [SteamLibrarySourceTests.swift](../Tests/NXLibraryCoreTests/SteamLibrarySourceTests.swift) | Più fonti, dischi assenti, identità, file cambiati, limiti e assenza di scritture. |
