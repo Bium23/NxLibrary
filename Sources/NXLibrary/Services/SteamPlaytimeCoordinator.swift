@@ -1,25 +1,24 @@
 import Foundation
 import NXLibraryCore
 
-/// Steam's own playtime for the catalog's Steam games (`SteamPlaytimeReader`, `SteamPlaytimeBaselines`),
-/// handed to `PlaySessionStore` as external totals. Steam's file is read off the main thread when the
-/// catalog or its sources change, when NX Library becomes active and after a Steam session ends, and
-/// only when its modification date moved. A failed read keeps the last good totals. Steam's files are
-/// never written.
+/// Steam's own playtime for the catalog's Steam games, handed to `PlaySessionStore` as external totals.
+/// Steam's file is read off the main thread (`SteamPlaytimeReading.take`) when the catalog or its sources
+/// change, when NX Library becomes active and after a Steam session ends, and parsed only when its
+/// modification date moved. One read runs at a time: a request during it is served by one more read at
+/// the end. What each reading does is `SteamPlaytimeSync`'s rule. Steam's files are never written.
 @MainActor
 final class SteamPlaytimeCoordinator {
     static let shared = SteamPlaytimeCoordinator()
 
-    private struct Stamp: Equatable, Sendable { let file: URL; let modified: Date }
-    private enum Reading: Sendable { case unchanged, none, failed, read(SteamPlaytimeSnapshot, Stamp) }
-
     private var sessions: PlaySessionStore?
     private var games: [CatalogGame] = []
     private var root: URL?
-    private var baselines = SteamPlaytimeBaselines(
-        fileURL: AppData.supportRoot.appendingPathComponent("integrations/steam/playtime-baselines.json"))
-    private var lastRead: Stamp?
+    private var sync = SteamPlaytimeSync(baselines: SteamPlaytimeBaselines(
+        fileURL: AppData.supportRoot.appendingPathComponent("integrations/steam/playtime-baselines.json")))
+    /// Bumped when a reading in progress no longer applies (stopped, or another Steam folder).
     private var generation = 0
+    private var reading = false
+    private var readAgain = false
     private var followUp: Task<Void, Never>?
 
     func start(sessions: PlaySessionStore) {
@@ -30,15 +29,19 @@ final class SteamPlaytimeCoordinator {
     func stop() {
         sessions = nil
         generation += 1
+        readAgain = false
         followUp?.cancel(); followUp = nil
     }
 
     /// Steam games only, and the Steam source's folder while it is enabled.
     func setGames(_ all: [CatalogGame], sources: [CatalogSourceConfiguration]) {
         games = all.filter { $0.integration == .steam }
-        let source = sources.first { $0.integration == .steam && $0.isEnabled }
-        if source?.rootURL != root { lastRead = nil }
-        root = source?.rootURL
+        let folder = sources.first { $0.integration == .steam && $0.isEnabled }?.rootURL
+        if folder != root {
+            root = folder
+            sync.resetStamp()
+            generation += 1
+        }
         refresh()
     }
 
@@ -55,54 +58,36 @@ final class SteamPlaytimeCoordinator {
 
     func refresh() {
         guard let sessions else { return }
-        generation += 1
         guard let root else {
             sessions.setExternal([:])
             return
         }
+        if reading { readAgain = true; return }
+        reading = true
         let ticket = generation
-        let known = lastRead
+        let known = sync.stamp
         Task.detached(priority: .utility) {
-            let reading = Self.read(root: root, known: known)
-            await MainActor.run { [weak self] in self?.finish(reading, ticket: ticket) }
+            let result = SteamPlaytimeReading.take(root: root, known: known)
+            await MainActor.run { [weak self] in self?.finish(result, ticket: ticket) }
         }
     }
 
-    private nonisolated static func read(root: URL, known: Stamp?) -> Reading {
-        // Only a Mac with no signed-in account, or an account without its file, means "no Steam totals".
-        // Anything unreadable fails, and the last good totals stay.
-        let file: URL
-        do {
-            guard let found = try SteamPlaytimeReader.localConfigURL(root: root) else { return .none }
-            file = found
-        } catch { return .failed }
-        guard FileManager.default.fileExists(atPath: file.path) else { return .none }
-        guard let modified = try? file.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
-        else { return .failed }
-        let stamp = Stamp(file: file, modified: modified)
-        if stamp == known { return .unchanged }
-        do {
-            guard let snapshot = try SteamPlaytimeReader.read(root: root) else { return .none }
-            return .read(snapshot, stamp)
-        } catch {
-            return .failed
+    private func finish(_ result: SteamPlaytimeReading, ticket: Int) {
+        reading = false
+        if ticket == generation, let sessions {
+            switch sync.handle(result, games: games, shownTotal: sessions.totalDuration(for:), now: Date()) {
+            case .clear:
+                sessions.setExternal([:])
+            case .publish(let totals, let save):
+                if save { try? sync.baselines.save() }
+                sessions.setExternal(totals)
+            }
+        } else {
+            readAgain = sessions != nil
         }
-    }
-
-    private func finish(_ reading: Reading, ticket: Int) {
-        guard ticket == generation, let sessions else { return }
-        switch reading {
-        case .none:
-            lastRead = nil
-            sessions.setExternal([:])
-            return
-        case .read(let snapshot, let stamp):
-            if baselines.apply(snapshot, now: Date()) { try? baselines.save() }
-            lastRead = stamp
-        case .unchanged, .failed:
-            // A file Steam is rewriting may not parse: the last good totals stay, and the next refresh tries again.
-            break
+        if readAgain {
+            readAgain = false
+            refresh()
         }
-        sessions.setExternal(baselines.external(for: games))
     }
 }

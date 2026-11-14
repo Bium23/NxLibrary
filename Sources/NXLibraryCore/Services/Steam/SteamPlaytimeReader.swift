@@ -22,23 +22,33 @@ public enum SteamPlaytimeReader {
     static let maximumBytes = 8 * 1024 * 1024
     private static let steamID64Base: UInt64 = 76_561_197_960_265_728
 
-    /// The current account's `localconfig.vdf`, or nil when no account has signed in on this Mac.
+    /// The account signed in most recently on this Mac, or nil when none has.
     /// An unreadable `loginusers.vdf` throws: Steam may be rewriting it, which is not "no account".
-    public static func localConfigURL(root: URL) throws -> URL? {
+    public static func accountID(root: URL) throws -> UInt32? {
         let users = root.appendingPathComponent("config/loginusers.vdf")
-        guard FileManager.default.fileExists(atPath: users.path),
-              let account = try accountID(loginUsers: text(at: users)) else { return nil }
-        return root.appendingPathComponent("userdata/\(account)/config/localconfig.vdf")
+        guard FileManager.default.fileExists(atPath: users.path) else { return nil }
+        return try accountID(loginUsers: text(at: users))
     }
 
-    /// Nil without an account or its file; throws when the file cannot be read or parsed.
+    public static func localConfigURL(root: URL, account: UInt32) -> URL {
+        root.appendingPathComponent("userdata/\(account)/config/localconfig.vdf")
+    }
+
+    /// The current account's `localconfig.vdf`, or nil when no account has signed in on this Mac.
+    public static func localConfigURL(root: URL) throws -> URL? {
+        try accountID(root: root).map { localConfigURL(root: root, account: $0) }
+    }
+
+    /// Nil without an account or its file; throws when a file cannot be read or parsed.
     public static func read(root: URL) throws -> SteamPlaytimeSnapshot? {
-        let users = root.appendingPathComponent("config/loginusers.vdf")
-        guard FileManager.default.fileExists(atPath: users.path),
-              let account = try accountID(loginUsers: text(at: users)) else { return nil }
-        let config = root.appendingPathComponent("userdata/\(account)/config/localconfig.vdf")
+        guard let account = try accountID(root: root) else { return nil }
+        let config = localConfigURL(root: root, account: account)
         guard FileManager.default.fileExists(atPath: config.path) else { return nil }
-        return SteamPlaytimeSnapshot(accountID: account, entries: try entries(localConfig: text(at: config)))
+        return try read(config: config, account: account)
+    }
+
+    public static func read(config: URL, account: UInt32) throws -> SteamPlaytimeSnapshot {
+        SteamPlaytimeSnapshot(accountID: account, entries: try entries(localConfig: text(at: config)))
     }
 
     /// The account marked `MostRecent`, else the latest `timestamp`.
