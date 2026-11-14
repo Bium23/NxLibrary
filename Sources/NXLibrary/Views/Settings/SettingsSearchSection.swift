@@ -103,7 +103,7 @@ struct SettingsDescriptorList: View {
     let onOpenGroup: (SettingsSection) -> Void
     @Environment(\.seleneCanvas) private var canvas
 
-    static func title(_ row: SettingDescriptor) -> String { "\(row.group.title) · \(L10n.text(row.title))" }
+    static func title(_ row: SettingDescriptor) -> String { "\(row.group.place) · \(L10n.text(row.title))" }
 
     static func actions(_ rows: [SettingDescriptor],
                         onOpenGroup: @escaping (SettingsSection) -> Void) -> [SettingsRowAction] {

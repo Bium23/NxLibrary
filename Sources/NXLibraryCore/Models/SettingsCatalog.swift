@@ -34,13 +34,16 @@ public enum SettingsCatalog {
         SettingDescriptor(id: id, group: group, title: title, about: about)
     }
 
-    public static let all: [SettingDescriptor] = [
-        action("manageSources", .library, "Manage sources", "Choose where NX Library finds your games."),
-        action("steamSource", .sources, "Steam", "Find installed native Mac games in your Steam libraries."),
-        action("steamRefresh", .sources, "Refresh Steam", "Check enabled Steam libraries without changing your game files."),
-        action("steamFolder", .sources, "Steam folder", "Choose the Steam folder containing steamapps."),
-        row("steamInBackground", .sources, "Keep Steam in the background",
-            "Steam stays out of sight while a game starts, and comes back if it needs you.") { $0.steamInBackground },
+    /// In sidebar order (`SettingsSidebarGroup`), each section's rows as listed.
+    public static let all: [SettingDescriptor] = {
+        let order = SettingsSection.allCases
+        return listed.enumerated().sorted {
+            (order.firstIndex(of: $0.element.group) ?? order.count, $0.offset)
+                < (order.firstIndex(of: $1.element.group) ?? order.count, $1.offset)
+        }.map(\.element)
+    }()
+
+    private static let listed: [SettingDescriptor] = [
         // Start-up
         row("appLanguage", .startUp, "App language", "Menus, genres and available game descriptions. The games’ own language stays separate.") { $0.appLanguage },
         row("appRegion", .startUp, "Regional formats", "Dates, numbers and sizes only. Game descriptions follow the app language.") { $0.appRegion },
@@ -161,6 +164,12 @@ public enum SettingsCatalog {
         action("libraryRefresh", .library, "Scan game apps", "Find existing nxnative builds and refresh the library."),
         row("notifyPortingEnds", .library, "Notify when a porting ends",
             "A notification when a porting finishes while NX Library is in the background.") { $0.notifyPortingEnds },
+        // Steam
+        action("steamSource", .sources, "Steam", "Find installed native Mac games in your Steam libraries."),
+        action("steamRefresh", .sources, "Refresh Steam", "Check enabled Steam libraries without changing your game files."),
+        action("steamFolder", .sources, "Steam folder", "Choose the Steam folder containing steamapps."),
+        row("steamInBackground", .sources, "Keep Steam in the background",
+            "Steam stays out of sight while a game starts, and comes back if it needs you.") { $0.steamInBackground },
 
         // Storage
         action("storageUsage", .storage, "Storage usage", "See per-game app, cache and log sizes and free disk space."),

@@ -5,7 +5,6 @@ struct SettingsLibrarySection: View {
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var settings: AppSettingsStore
     @ObservedObject var artwork: ArtworkStore
-    let onManageSources: () -> Void
     let onActions: ([SettingsRowAction]) -> Void
 
     @State private var metadataBytes: Int64 = 0
@@ -13,7 +12,6 @@ struct SettingsLibrarySection: View {
 
     var body: some View {
         VStack(spacing: 9) {
-            SeleneButtonRow("Manage sources", subtitle: "Choose where NX Library finds your games.", buttonTitle: "Open", action: onManageSources)
             SeleneRow(GameFoldersCopy.appsTitle,
                       subtitle: GameFoldersCopy.appsContents,
                       info: "Choose where to keep your game apps. Put any existing nxnative games (.app) here. Changing folders does not move apps; rebuilds update them where they are.") {
@@ -117,7 +115,6 @@ struct SettingsLibrarySection: View {
 
     private func publishActions() {
         onActions([
-            .init(id: "manageSources", title: "Manage sources", activate: onManageSources),
             .init(id: "appsChange", title: GameFoldersCopy.appsTitle) {
                 viewModel.selectLibraryFolder()
             },

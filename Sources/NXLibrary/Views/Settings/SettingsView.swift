@@ -124,7 +124,7 @@ public struct SettingsView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: canvas.u(8)) {
-                    Text(section.title)
+                    Text(section.place)
                         .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink.opacity(0.55))
                         .padding(.bottom, canvas.u(6))

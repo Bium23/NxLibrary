@@ -39,6 +39,7 @@ struct SettingsSourcesSection: View {
             }.disabled(!sources.configuration.isEnabled)
             SeleneValueRow("Steam folder", subtitle: "Choose the Steam folder containing steamapps.",
                            value: (sources.configuration.rootURL ?? defaultRoot).path, actionTitle: "Change", action: chooseFolder)
+            SettingsSubheading("Play")
             SeleneToggleRow("Keep Steam in the background",
                             subtitle: "Steam stays out of sight while a game starts, and comes back if it needs you.",
                             info: "When Play opens Steam, it starts without its window. An open Steam is hidden until the game appears. If the game takes longer than 15 seconds, Steam comes back so you can answer it.",

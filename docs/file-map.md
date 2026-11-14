@@ -292,7 +292,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/SeleneCanvas.swift](../Sources/NXLibraryCore/Models/SeleneCanvas.swift) | Calcola scala uniforme, stage centrato e conversione delle unità del canvas 1920×1080. |
 | [Sources/NXLibraryCore/Models/SelenePalette.swift](../Sources/NXLibraryCore/Models/SelenePalette.swift) | Decodifica palette, ordine del selettore e fallback della palette predefinita. |
 | [Sources/NXLibraryCore/Models/SettingsCatalog.swift](../Sources/NXLibraryCore/Models/SettingsCatalog.swift) | Descrive righe, ricerca e valori modificati, distinguendo i default dei nuovi giochi dalla vibrazione in Controllers. |
-| [Sources/NXLibraryCore/Models/SettingsSection.swift](../Sources/NXLibraryCore/Models/SettingsSection.swift) | Enumera gruppi, titoli e icone della schermata Settings. |
+| [Sources/NXLibraryCore/Models/SettingsSection.swift](../Sources/NXLibraryCore/Models/SettingsSection.swift) | Sezioni di Settings con titoli e icone, e `SettingsSidebarGroup`: gruppi generali e di piattaforma in ordine di sidebar. |
 | [Sources/NXLibraryCore/Models/SpotlightPage.swift](../Sources/NXLibraryCore/Models/SpotlightPage.swift) | Calcola estratti delle descrizioni e stati dello scorrimento della pagina Spotlight. |
 | [Sources/NXLibraryCore/Models/SpotlightRow.swift](../Sources/NXLibraryCore/Models/SpotlightRow.swift) | Costruisce la sequenza per UUID e salva riordini conservando giochi/fonti/card temporaneamente nascosti; Surprise mantiene il proprio contratto nxnative. |
 | [Sources/NXLibraryCore/Models/SpotlightRowGeometry.swift](../Sources/NXLibraryCore/Models/SpotlightRowGeometry.swift) | Posti delle tessere nella riga, camera unica che la fa scorrere e finestra delle tessere create; posto, scala e camera lungo lo scorrimento dalla posizione continua della selezione. |
@@ -366,7 +366,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | File | Responsabilità |
 |---|---|
 | [Sources/NXLibrary/Views/Settings/SettingsView.swift](../Sources/NXLibrary/Views/Settings/SettingsView.swift) | Compone sidebar e gruppo attivo e coordina focus, input e reset delle impostazioni. |
-| [Sources/NXLibrary/Views/Settings/SettingsSidebar.swift](../Sources/NXLibrary/Views/Settings/SettingsSidebar.swift) | Disegna intestazione e lista dei gruppi della schermata Settings. |
+| [Sources/NXLibrary/Views/Settings/SettingsSidebar.swift](../Sources/NXLibrary/Views/Settings/SettingsSidebar.swift) | Disegna intestazione e sezioni sotto le intestazioni di gruppo (General, Switch, Steam, System). |
 | [Sources/NXLibrary/Views/Settings/SettingsSectionContent.swift](../Sources/NXLibrary/Views/Settings/SettingsSectionContent.swift) | Instrada il gruppo selezionato e fornisce sottotitoli e formattazioni condivise. |
 | [Sources/NXLibrary/Views/Settings/SettingsSearchSection.swift](../Sources/NXLibrary/Views/Settings/SettingsSearchSection.swift) | Presenta ricerca e Changed, con apertura del gruppo della riga selezionata. |
 | [Sources/NXLibrary/Views/Settings/SettingsStartUpSection.swift](../Sources/NXLibrary/Views/Settings/SettingsStartUpSection.swift) | Espone schermata iniziale, intro, Setup e controlli degli aggiornamenti all’avvio. |

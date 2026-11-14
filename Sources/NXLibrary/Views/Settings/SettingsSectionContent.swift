@@ -39,7 +39,7 @@ struct SettingsSectionContent: View {
                                        onViewControls: onViewControls)
         case .library:
             SettingsLibrarySection(viewModel: viewModel, settings: settings,
-                                   artwork: artwork, onManageSources: { onOpenGroup(.sources) }, onActions: onActions)
+                                   artwork: artwork, onActions: onActions)
         case .sources:
             SettingsSourcesSection(viewModel: viewModel, settings: settings, onActions: onActions)
         case .storage:
@@ -61,7 +61,7 @@ struct SettingsSubheading: View {
     init(_ title: String) { self.title = title }
 
     var body: some View {
-        Text(title)
+        Text(L10n.text(title))
             .seleneFont(17, .semibold)
             .foregroundColor(SeleneTheme.glyph)
             .padding(.top, canvas.u(18))
