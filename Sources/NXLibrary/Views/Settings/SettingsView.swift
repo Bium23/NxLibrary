@@ -384,7 +384,6 @@ public struct SettingsView: View {
                 if typing { return event }
                 action = .confirm
             case 53:
-                if typing { window.makeFirstResponder(nil) }
                 action = .cancel
             case 7:                                     // X
                 if typing { return event }
@@ -436,8 +435,12 @@ public struct SettingsView: View {
         }
     }
 
+    /// B or Esc: steps back one level. Typing in Search, it closes the field and stays on Search.
     private func handleBack() {
-        if focusArea == .rows {
+        if let window = NSApp.keyWindow, window.firstResponder is NSText {
+            window.makeFirstResponder(nil)
+            SoundEffectService.shared.play(.focus)
+        } else if focusArea == .rows {
             leaveRows()
         } else {
             router.back()
