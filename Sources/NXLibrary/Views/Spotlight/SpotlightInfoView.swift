@@ -36,7 +36,7 @@ struct SpotlightGameInfoView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             logoArea
-                .offset(x: slid ? 0 : canvas.u(-30))
+                .offset(x: slid ? 0 : canvas.u(Self.logoSlideDistance))
                 .opacity(shown ? 1 : 0)
             Group {
                 if isRunning {
@@ -172,6 +172,10 @@ struct SpotlightGameInfoView: View {
 
     /// The pills and stats' fade after a change (the genres below come in with them, `SpotlightInfoFollow`).
     static let restMotion = Animation.easeOut(duration: 0.4).delay(0.42)
+    /// The logo's fade and slide after a change. A Steam game's head uses the same three motions.
+    static let logoFade = Animation.easeOut(duration: 0.45).delay(0.3)
+    static let logoSlide = SeleneTheme.cubicOut(0.55).delay(0.3)
+    static let logoSlideDistance: CGFloat = -30
 
     /// Reduce motion keeps the fades and drops the slide.
     private func reveal() {
@@ -183,10 +187,10 @@ struct SpotlightGameInfoView: View {
             slid = reduceMotion
         }
         DispatchQueue.main.async {
-            withAnimation(.easeOut(duration: 0.45).delay(0.3)) { shown = true }
+            withAnimation(Self.logoFade) { shown = true }
             withAnimation(Self.restMotion) { restShown = true }
             if !reduceMotion {
-                withAnimation(SeleneTheme.cubicOut(0.55).delay(0.3)) { slid = true }
+                withAnimation(Self.logoSlide) { slid = true }
             }
         }
     }

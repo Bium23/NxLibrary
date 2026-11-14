@@ -285,13 +285,18 @@ struct CollectionInfoView: View {
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .opacity(shown ? 1 : 0)
-        .offset(x: slid ? 0 : canvas.u(-24))
+        .offset(x: slid ? 0 : canvas.u(Self.slideDistance))
         .onAppear { reveal() }
     }
 
     private var logoArea: some View {
         GameLogoArea(title: game.name, logo: logo, collection: true)
     }
+
+    /// The whole column's fade and slide after a change. A Steam game's column uses the same.
+    static let fade = Animation.linear(duration: 0.3).delay(0.12)
+    static let slide = SeleneTheme.cubicOut(0.3).delay(0.12)
+    static let slideDistance: CGFloat = -24
 
     /// The fade always runs; the slide is movement and drops under reduce motion.
     private func reveal() {
@@ -302,9 +307,9 @@ struct CollectionInfoView: View {
             slid = reduceMotion
         }
         DispatchQueue.main.async {
-            withAnimation(.linear(duration: 0.3).delay(0.12)) { shown = true }
+            withAnimation(Self.fade) { shown = true }
             if !reduceMotion {
-                withAnimation(SeleneTheme.cubicOut(0.3).delay(0.12)) { slid = true }
+                withAnimation(Self.slide) { slid = true }
             }
         }
     }

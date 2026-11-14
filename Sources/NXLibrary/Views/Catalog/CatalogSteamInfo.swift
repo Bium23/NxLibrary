@@ -23,10 +23,10 @@ struct CatalogSteamInfo: View {
     @ObservedObject private var picks = SteamPersonalizations.shared.artwork
     @ObservedObject private var facts = SteamGameFacts.shared
     @ObservedObject private var player = SteamPlayCoordinator.shared
+    @ObservedObject private var logos = SteamLogoCache.shared
     private var metadata: SteamMetadata? { facts.metadata(for: game) }
-    @State private var logo: NSImage?
-    @State private var logoKey = ""
     @State private var shown = true
+    @State private var restShown = true
     @State private var slid = true
 
     private var presentation: LibraryPresentation {
@@ -41,7 +41,31 @@ struct CatalogSteamInfo: View {
     var body: some View {
         let presentation = presentation
         VStack(alignment: .leading, spacing: 0) {
-            GameLogoArea(title: game.name, logo: logoKey == currentLogoKey ? logo : nil, collection: collection)
+            // Spotlight moves only the logo and fades the rest in after it; Collection moves the whole column
+            // (`SpotlightGameInfoView`, `CollectionInfoView`).
+            GameLogoArea(title: game.name, logo: logos.logo(for: currentLogoKey), collection: collection)
+                .offset(x: collection || slid ? 0 : canvas.u(SpotlightGameInfoView.logoSlideDistance))
+                .opacity(collection || shown ? 1 : 0)
+            rest(presentation)
+                .opacity(collection || restShown ? 1 : 0)
+        }
+        .frame(width: collection ? nil : canvas.u(900), alignment: .leading)
+        .frame(maxWidth: collection ? .infinity : nil, alignment: .topLeading)
+        .opacity(!collection || shown ? 1 : 0)
+        .offset(x: !collection || slid ? 0 : canvas.u(CollectionInfoView.slideDistance))
+        .onAppear { reveal() }
+        .onChange(of: game.id) { _ in reveal() }
+        .task(id: "\(game.id)|\(localization.language.rawValue)") {
+            await facts.load(game, language: localization.language)
+        }
+        .task(id: currentLogoKey) {
+            await logos.load(game, key: currentLogoKey, picks: picks)
+        }
+    }
+
+    @ViewBuilder
+    private func rest(_ presentation: LibraryPresentation) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
             if let note = playNote {
                 Text(note)
                     .seleneFont(19, .semibold)
@@ -62,23 +86,6 @@ struct CatalogSteamInfo: View {
             if collection, !presentation.genres.isEmpty {
                 SpotlightGenreChips(genres: presentation.genres).padding(.top, canvas.u(20))
             }
-        }
-        .frame(width: collection ? nil : canvas.u(900), alignment: .leading)
-        .frame(maxWidth: collection ? .infinity : nil, alignment: .topLeading)
-        .opacity(shown ? 1 : 0)
-        .offset(x: slid ? 0 : canvas.u(collection ? -24 : -30))
-        .onAppear { reveal() }
-        .onChange(of: game.id) { _ in reveal() }
-        .task(id: "\(game.id)|\(localization.language.rawValue)") {
-            await facts.load(game, language: localization.language)
-        }
-        .task(id: currentLogoKey) {
-            let expected = currentLogoKey
-            let request = SteamArtworkRequest(game: game, role: .logo)
-            var url = request.localURL(picks: picks)
-            if url == nil, let id = request.appID { url = await SteamMetadataService.shared.image(appID: id, slot: .logo) }
-            guard !Task.isCancelled else { return }
-            logo = url.flatMap { NSImage(contentsOf: $0) }; logoKey = expected
         }
     }
 
@@ -111,14 +118,50 @@ struct CatalogSteamInfo: View {
         }
     }
 
-    /// The same arrival as the nxnative head: a short hold, then fade and slide (no slide under reduce motion).
+    /// The nxnative head's arrival, motion for motion: in Spotlight the logo holds, then fades and slides while
+    /// the pills and stats fade in after it; in Collection the whole column fades and slides. Reduce motion
+    /// keeps the fades and drops the slides.
     private func reveal() {
         var reset = Transaction()
         reset.disablesAnimations = true
-        withTransaction(reset) { shown = false; slid = reduceMotion }
+        withTransaction(reset) { shown = false; restShown = false; slid = reduceMotion }
         DispatchQueue.main.async {
-            withAnimation(.easeOut(duration: collection ? 0.3 : 0.45).delay(collection ? 0.12 : 0.3)) { shown = true }
-            if !reduceMotion { withAnimation(SeleneTheme.cubicOut(collection ? 0.3 : 0.55).delay(collection ? 0.12 : 0.3)) { slid = true } }
+            if collection {
+                withAnimation(CollectionInfoView.fade) { shown = true; restShown = true }
+                if !reduceMotion { withAnimation(CollectionInfoView.slide) { slid = true } }
+            } else {
+                withAnimation(SpotlightGameInfoView.logoFade) { shown = true }
+                withAnimation(SpotlightGameInfoView.restMotion) { restShown = true }
+                if !reduceMotion { withAnimation(SpotlightGameInfoView.logoSlide) { slid = true } }
+            }
         }
+    }
+}
+
+/// Decoded Steam logos, kept like nxnative ones (`GameArtLoader`): a game seen before shows its logo from the
+/// first frame of its arrival, and a logo that lands later fades in over its title.
+@MainActor
+final class SteamLogoCache: ObservableObject {
+    static let shared = SteamLogoCache()
+    private let logos = NSCache<NSString, NSImage>()
+    /// Bumped (animated) when a logo lands, so heads reading it redraw.
+    @Published private var tick = 0
+
+    func logo(for key: String) -> NSImage? {
+        _ = tick
+        return logos.object(forKey: key as NSString)
+    }
+
+    /// `key` names the game and the player's picks revision, so a new pick loads again.
+    func load(_ game: CatalogGame, key: String, picks: SteamPersonalizationStore) async {
+        guard logos.object(forKey: key as NSString) == nil else { return }
+        let request = SteamArtworkRequest(game: game, role: .logo)
+        var url = request.localURL(picks: picks)
+        if url == nil, let id = request.appID { url = await SteamMetadataService.shared.image(appID: id, slot: .logo) }
+        guard !Task.isCancelled, let url else { return }
+        let image = await Task.detached(priority: .userInitiated) { NSImage(contentsOf: url) }.value
+        guard !Task.isCancelled, let image else { return }
+        logos.setObject(image, forKey: key as NSString)
+        withAnimation(.easeOut(duration: 0.3)) { tick += 1 }
     }
 }
