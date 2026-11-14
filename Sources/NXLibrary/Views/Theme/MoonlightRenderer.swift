@@ -199,6 +199,10 @@ struct MoonlightMetalView: NSViewRepresentable {
 /// rate while nothing else on screen moves, and it hands over each drawable when the screen
 /// can take it. A `CVDisplayLink` says neither: idle for ~10 s, the display slowed down and
 /// `nextDrawable` waited up to 80 ms (measured: 60 fps fell to ~30). macOS 13 keeps it.
+///
+/// On macOS 14 and later only the link draws, still frames included: while a `CAMetalDisplayLink` is attached the
+/// layer's drawables are its own and `nextDrawable` raises an exception (two crashes, 14 Nov 2026). A still frame
+/// (the motes stopping, a new size) runs the link for one frame, which then stops (`State.stillPending`).
 final class MoonlightLayerView: NSView {
     private let engine: MoonlightEngine
     private let metalLayer = CAMetalLayer()
@@ -224,6 +228,8 @@ final class MoonlightLayerView: NSView {
         /// Starts part way in, so the motes are already spread along the road.
         var clock: Double = 40
         var lastTick: CFTimeInterval?
+        /// A still frame waits for the link (macOS 14+): it runs for that frame, then stops.
+        var stillPending = false
     }
     private var state = State()
     private let lock = NSLock()
@@ -266,8 +272,20 @@ final class MoonlightLayerView: NSView {
         state.moving = moving
         if !moving { state.lastTick = nil }
         lock.unlock()
-        updateLink()
-        if !moving { renderFrame() }
+        if moving { updateLink() } else { drawStill() }
+    }
+
+    /// One still frame: from the link on macOS 14+ (the only one to take the layer's drawables), here before.
+    private func drawStill() {
+        if #available(macOS 14.0, *) {
+            lock.lock()
+            state.stillPending = true
+            lock.unlock()
+            updateLink()
+        } else {
+            updateLink()
+            renderFrame()
+        }
     }
 
     /// Gone (presence 0, no glide): the layer is hidden and draws nothing, so a moonlight kept ready over a
@@ -335,8 +353,7 @@ final class MoonlightLayerView: NSView {
         metalLayer.contentsScale = scale
         if metalLayer.drawableSize != size {
             metalLayer.drawableSize = size
-            // A running `CAMetalDisplayLink` owns the layer's drawables and draws the new size next.
-            if metalLink == nil { renderFrame() }
+            drawStill()
         }
     }
 
@@ -362,7 +379,8 @@ final class MoonlightLayerView: NSView {
     private func updateLink() {
         lock.lock()
         let now = CACurrentMediaTime()
-        let run = ((state.moving && !isAbsent(at: now)) || blending(at: now)) && state.visible && window != nil
+        let run = (((state.moving || state.stillPending) && !isAbsent(at: now)) || blending(at: now))
+            && state.visible && window != nil
         lock.unlock()
         updateVisibility()
         if #available(macOS 14.0, *) {
@@ -400,7 +418,7 @@ final class MoonlightLayerView: NSView {
         MoonlightRenderThread.shared.perform { link.add(to: .current, forMode: .default) }
     }
 
-    /// Stops the link before anything else asks the layer for a drawable (a still frame).
+    /// The layer's last frame stays on screen.
     private func stopMetalLink() {
         guard let handle = metalLink as? MoonlightLinkHandle else { return }
         metalLink = nil
@@ -436,9 +454,12 @@ final class MoonlightLayerView: NSView {
         let colors = Self.blended(state, at: now)
         let glideEnded = state.from != nil && !blending(at: now)
         if glideEnded { state.from = nil }
+        // The link's frame is the still frame it ran for.
+        let stillDrawn = drawable != nil && state.stillPending
+        if drawable != nil { state.stillPending = false }
         lock.unlock()
-        // The glide is over: a still layer's link stops on its last frame, a gone one hides.
-        if glideEnded { DispatchQueue.main.async { [weak self] in self?.updateLink() } }
+        // The glide or the still frame is over: a still layer's link stops on its last frame, a gone one hides.
+        if glideEnded || stillDrawn { DispatchQueue.main.async { [weak self] in self?.updateLink() } }
         let size = metalLayer.drawableSize
         guard size.width >= 1, size.height >= 1 else { return }
         let breath = Float(0.5 + 0.5 * sin(2 * .pi * clock / MoonlightEngine.breathPeriod))
