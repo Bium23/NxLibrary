@@ -127,6 +127,16 @@ final class DevelopmentProfileTests: XCTestCase {
         XCTAssertEqual(copied.first?.duration, 60)
         XCTAssertEqual(try Data(contentsOf: original), data)
     }
+    func testRootsAreFoldersWhetherOrNotTheyExistYet() {
+        let home = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        for development in [false, true] {
+            let profile = AppDataProfile(home: home, isDevelopment: development)
+            for root in [profile.stableSupportRoot, profile.supportRoot, profile.cacheRoot] {
+                XCTAssertTrue(root.hasDirectoryPath, root.path)
+                XCTAssertEqual(root.appendingPathComponent("settings.json").deletingLastPathComponent(), root)
+            }
+        }
+    }
     func testSharedAndScopedDefaultPathsAreConsistent() {
         XCTAssertEqual(AppSettingsStore.defaultURL().deletingLastPathComponent(), AppData.supportRoot)
         XCTAssertEqual(PlaySessionStore.defaultURL().deletingLastPathComponent(), AppData.supportRoot)

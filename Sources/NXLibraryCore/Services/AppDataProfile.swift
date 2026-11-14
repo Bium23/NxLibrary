@@ -8,11 +8,13 @@ public struct AppDataProfile: Sendable {
         self.home = home
         self.isDevelopment = isDevelopment
     }
-    public var stableSupportRoot: URL { home.appendingPathComponent("Library/Application Support/NXLibrary") }
+    /// Folders are built as folders (`isDirectory: true`), never by asking the disk, so a root is the same URL
+    /// before and after it is created: equal to `file.deletingLastPathComponent()` on a fresh Mac too.
+    public var stableSupportRoot: URL { home.appendingPathComponent("Library/Application Support/NXLibrary", isDirectory: true) }
     public var supportRoot: URL {
-        isDevelopment ? home.appendingPathComponent("Library/Application Support/NXLibrary-Development") : stableSupportRoot
+        isDevelopment ? home.appendingPathComponent("Library/Application Support/NXLibrary-Development", isDirectory: true) : stableSupportRoot
     }
-    public var cacheRoot: URL { home.appendingPathComponent("Library/Caches/" + (isDevelopment ? "NXLibrary-Development" : "NXLibrary")) }
+    public var cacheRoot: URL { home.appendingPathComponent("Library/Caches/" + (isDevelopment ? "NXLibrary-Development" : "NXLibrary"), isDirectory: true) }
     public func automaticStagingFolders(appFolders: [URL]) -> [URL] {
         BuildScratch.tempFolders(core: supportRoot, appFolders: isDevelopment ? [] : appFolders)
     }
