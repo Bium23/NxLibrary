@@ -102,8 +102,10 @@ final class SteamPlayCoordinator: ObservableObject {
             if let app = NSRunningApplication(processIdentifier: pid) { RunningGameMonitor.activate(app) }
         case .handOff(let url, let generation):
             guard let client else { return }
+            // Steam gets the request in the background: NX Library stays in front until the game's
+            // own window appears, instead of Steam's library flashing up in between.
             let configuration = NSWorkspace.OpenConfiguration()
-            configuration.activates = true
+            configuration.activates = false
             let id = game.id
             NSWorkspace.shared.open([url], withApplicationAt: client, configuration: configuration) { [weak self] _, error in
                 let accepted = error == nil

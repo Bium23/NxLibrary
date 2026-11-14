@@ -87,16 +87,12 @@ struct ChangeArtworkView: View {
         return [subject.name, metadata?.name, titleDB?.name].compactMap { $0 }
             .reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
     }
-    /// LaunchBox is searched among Switch games only.
-    private var browseSources: [ArtworkBrowseSource] {
-        subject.steam == nil ? ArtworkBrowseSource.allCases : ArtworkBrowseSource.allCases.filter { $0 != .launchBox }
-    }
 
     private var tiles: [Tile] {
         if browsing != nil { return (browseItems[slot] ?? []).map(Tile.art) }
         // The sources to browse come right after Automatic (and Your pick), so a search is one move away and never
         // waits for the found images to load; From file… ends the grid.
-        return [.automatic] + (hasPick ? [.yourPick] : []) + (slot == .icon && macApp != nil ? [.iconLocation] : []) + browseSources.map(Tile.browse)
+        return [.automatic] + (hasPick ? [.yourPick] : []) + (slot == .icon && macApp != nil ? [.iconLocation] : []) + ArtworkBrowseSource.allCases.map(Tile.browse)
             + (found[slot] ?? []).map(Tile.art) + [.file]
     }
 
@@ -303,7 +299,7 @@ struct ChangeArtworkView: View {
         if downloading { return L10n.format("Downloading the full image from %@…", [String(describing: (source.title))]) }
         guard let result = browseResult else { return L10n.format("Searching %@ for “%@”…", [String(describing: (source.title)), String(describing: (browseQuery))]) }
         guard result.page != nil else {
-            return L10n.format("%@ has no %@ called “%@”", [String(describing: (source.title)), String(describing: (source == .launchBox ? L10n.text("Switch game") : "game")), String(describing: (browseQuery))])
+            return L10n.format("%@ has no %@ called “%@”", [String(describing: (source.title)), String(describing: (source == .launchBox && subject.steam == nil ? L10n.text("Switch game") : "game")), String(describing: (browseQuery))])
         }
         if browseLoading.contains(slot) && (browseItems[slot] ?? []).isEmpty { return L10n.text("Loading…") }
         if (browseItems[slot] ?? []).isEmpty {
@@ -427,11 +423,16 @@ struct ChangeArtworkView: View {
         Image(nsImage: image)
             .resizable()
             .interpolation(.high)
-            .aspectRatio(contentMode: slot == .logo ? .fit : .fill)
+            .aspectRatio(contentMode: fits(image) ? .fit : .fill)
             .padding(slot == .logo ? canvas.u(18) : 0)
     }
 
-    private func glyphFace(_ icon: MaterialIcon) -> some View {
+    /// Logos, and banners much wider than the tile (Steam's library hero), show whole instead of cropped.
+    private func fits(_ image: NSImage) -> Bool {
+        slot == .logo || (slot == .background && image.size.width > image.size.height * 2.2)
+    }
+
+        private func glyphFace(_ icon: MaterialIcon) -> some View {
         MaterialIconView(icon, size: 44)
             .foregroundColor(SeleneTheme.ink60)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -492,24 +493,24 @@ struct ChangeArtworkView: View {
         }
         let metadata = viewModel.storeMetadata[subject.id]
         let names = gameNames
-        let candidates: [ArtworkCandidate]
+        var candidates: [ArtworkCandidate]
+        found[slot] = []
         if let steam = subject.steam, let appID = subject.steamAppID {
-            if online == nil { online = await OnlineArtwork.find(names: names) }
+            // Steam's own art for this AppID shows at once; the online sources take seconds and follow it.
             let screenshots = SteamGameFacts.shared.metadata(for: steam)?.screenshots ?? []
+            let own = ArtworkCandidates.steamList(for: slot, appID: appID, screenshots: screenshots)
+            await collect(own, slot: slot, from: 0)
+            guard !Task.isCancelled else { found[slot] = nil; return }
+            if online == nil { online = await OnlineArtwork.find(names: names) }
             candidates = ArtworkCandidates.steamList(for: slot, appID: appID, screenshots: screenshots, online: online ?? [])
+            await collect(Array(candidates.dropFirst(own.count)), slot: slot, from: own.count)
         } else {
             let entries = slot == .cover ? await viewModel.boxArt.pickerEntries(names: names) : []
             if online == nil { online = await OnlineArtwork.find(names: names) }
             candidates = ArtworkCandidates.list(for: slot, entries: entries, titleDB: titleDB,
                                                 storeHeader: metadata?.headerImageURL, storeImage: metadata?.imageURL,
                                                 storeLogo: metadata?.logoURL, online: online ?? [])
-        }
-        found[slot] = []
-        for await item in Self.previews(of: candidates) {
-            var list = found[slot] ?? []
-            list.append(item)
-            list.sort { $0.order < $1.order }
-            found[slot] = list
+            await collect(candidates, slot: slot, from: 0)
         }
         if slot == .icon, !Task.isCancelled,
            let titleID = subject.titleId,
@@ -523,6 +524,16 @@ struct ChangeArtworkView: View {
         }
         // Left for another tab before it finished: search again on return.
         if Task.isCancelled { found[slot] = nil }
+    }
+
+    /// Adds the candidates' previews to the slot as they arrive, in list order after `offset`.
+    private func collect(_ candidates: [ArtworkCandidate], slot: ArtworkSlot, from offset: Int) async {
+        for await item in Self.previews(of: candidates) {
+            var list = found[slot] ?? []
+            list.append(Found(order: item.order + offset, art: item.art, preview: item.preview))
+            list.sort { $0.order < $1.order }
+            found[slot] = list
+        }
     }
 
     /// Downloads each candidate's preview at once and yields those that are images, as they arrive.
@@ -558,7 +569,7 @@ struct ChangeArtworkView: View {
         let round = browseRound
         if browseResult == nil {
             let key = source.needsKey ? SteamGridDBKey().load() : nil
-            let result = await source.search(browseQuery, gameNames: gameNames, switch2: switch2, key: key)
+            let result = await source.search(browseQuery, gameNames: gameNames, switch2: switch2, computer: subject.steam != nil, key: key)
             guard round == browseRound, browsing == source, !Task.isCancelled else { return }
             browseResult = result
         }

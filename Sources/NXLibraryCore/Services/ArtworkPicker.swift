@@ -200,9 +200,12 @@ public enum ArtworkCandidates {
     /// Steam has no icon art: the Icon tab offers only online images and files.
     public static func steamList(for slot: ArtworkSlot, appID: UInt32, screenshots: [URL],
                                  online: [ArtworkCandidate] = []) -> [ArtworkCandidate] {
-        var list = appID > 0 ? SteamStoreArt.candidates(appID: Int(appID), slot: slot) : []
+        // Named for where Steam shows it, so the library hero is recognizable among the backgrounds.
+        var list = (appID > 0 ? SteamStoreArt.candidates(appID: Int(appID), slot: slot) : []).map {
+            ArtworkCandidate(slot: $0.slot, source: "Steam library", url: $0.url, fallback: $0.fallback)
+        }
         if slot == .background {
-            for shot in OnlineArtwork.screenshots(screenshots.map(\.absoluteString), source: "Steam screenshot")
+            for shot in OnlineArtwork.screenshots(screenshots.map(\.absoluteString), source: "Steam screenshot", stripQuery: true)
             where !list.contains(where: { $0.url == shot.url }) {
                 list.append(shot)
             }

@@ -38,7 +38,7 @@ final class SteamOptionsTests: XCTestCase {
                                                  online: [steamCover[0], other, ArtworkCandidate(slot: .logo, source: "x", url: shot)])
         XCTAssertEqual(covers.map(\.url), [steamCover[0].url, other.url])
         let backgrounds = ArtworkCandidates.steamList(for: .background, appID: 10, screenshots: [shot])
-        XCTAssertEqual(backgrounds.map(\.source), ["Steam", "Steam screenshot 1"])
+        XCTAssertEqual(backgrounds.map(\.source), ["Steam library", "Steam screenshot 1"])
         XCTAssertTrue(ArtworkCandidates.steamList(for: .icon, appID: 10, screenshots: [shot]).isEmpty)
         XCTAssertTrue(ArtworkCandidates.steamList(for: .cover, appID: 0, screenshots: []).isEmpty)
     }

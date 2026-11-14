@@ -45,13 +45,14 @@ public enum ArtworkBrowseSource: String, CaseIterable, Sendable {
 
     /// Searches the source. A name the player searches is taken loosely: the first Switch result (LaunchBox) or the
     /// first result (SteamGridDB) when no title matches it exactly.
-    public func search(_ query: String, gameNames: [String], switch2: Bool, key: String?,
+    /// `computer`: a native Mac game (Steam), looked for among LaunchBox's Mac and Windows entries.
+    public func search(_ query: String, gameNames: [String], switch2: Bool, computer: Bool = false, key: String?,
                        client: ArtworkHTTPClient = URLSessionArtworkClient()) async -> Found {
         let names = Self.names(for: query, gameNames: gameNames)
         guard !names.isEmpty else { return Found(page: nil, candidates: []) }
         switch self {
         case .launchBox:
-            let game = await LaunchBoxArt.game(names: names, switch2: switch2, loose: true, client: client)
+            let game = await LaunchBoxArt.game(names: names, switch2: switch2, computer: computer, loose: true, client: client)
             return Found(page: game?.page, candidates: game?.candidates ?? [])
         case .steamGridDB:
             guard let key else { return Found(page: nil, candidates: []) }
