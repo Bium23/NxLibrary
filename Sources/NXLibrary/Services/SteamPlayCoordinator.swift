@@ -38,6 +38,9 @@ final class SteamPlayCoordinator: ObservableObject {
     private var listObservation: NSKeyValueObservation?
     private var timer: Timer?
     private var returnFocus = SteamReturnFocus()
+    /// When the coordinator began watching: a game launched before then is not a new start for Spotlight.
+    private var watchingSince = Date.distantPast
+    private var hideAgain: Task<Void, Never>?
     /// The library's nxnative games, set by the shell: one that is open keeps NX Library from coming forward.
     weak var nativeGames: RunningGameMonitor?
 
@@ -77,6 +80,7 @@ final class SteamPlayCoordinator: ObservableObject {
         guard tokens.isEmpty else { return }
         self.sessions = sessions
         self.settings = settings
+        watchingSince = Date()
         let center = NSWorkspace.shared.notificationCenter
         // Launches and quits arrive through the `runningApplications` observation below, once each.
         // Steam brings itself forward when it gets steam://run; during a background launch it goes away again.
@@ -111,6 +115,7 @@ final class SteamPlayCoordinator: ObservableObject {
         states = [:]
         canonicalProcesses = [:]
         returnFocus = SteamReturnFocus()
+        hideAgain?.cancel(); hideAgain = nil
         sessions = nil
         settings = nil
         if backgrounds.values.contains(true) { Self.showSteam() }
@@ -147,6 +152,7 @@ final class SteamPlayCoordinator: ObservableObject {
         case .handOff(let url, let generation):
             guard let client else { return }
             returnFocus.playPressed(game.id)
+            hideAgain?.cancel(); hideAgain = nil
             // Steam gets the request in the background: NX Library stays in front until the game's
             // own window appears, instead of Steam's library flashing up in between.
             let configuration = NSWorkspace.OpenConfiguration()
@@ -205,6 +211,7 @@ final class SteamPlayCoordinator: ObservableObject {
         canonicalProcesses = canonicalProcesses.filter { resolved[$0.key] != nil }
         let now = Date()
         var next = states
+        var ended: [UUID] = []
         let followed = Set(games.map(\.id)).union(states.keys)
         for id in followed {
             let game = games.first { $0.id == id }
@@ -212,17 +219,17 @@ final class SteamPlayCoordinator: ObservableObject {
             var state = next[id] ?? SteamPlayState()
             switch state.observe(processes, application: app, now: now) {
             case .started(let pid):
-                if let appID = game?.steamGame?.appID { sessions?.start(gameID: id, sourceID: "steam-\(appID)") }
+                if let appID = game?.steamGame?.appID {
+                    // A game already running when NX Library began watching (a relaunch) keeps its Spotlight place.
+                    let launched = NSRunningApplication(processIdentifier: pid)?.launchDate
+                    let isNew = launched.map { $0 >= watchingSince } ?? true
+                    sessions?.start(gameID: id, sourceID: "steam-\(appID)", announces: isNew)
+                }
                 // The game may have come forward before its process was seen.
                 if NSWorkspace.shared.frontmostApplication?.processIdentifier == pid { returnFocus.gameCameForward(id) }
             case .ended:
                 sessions?.end(gameID: id)
-                SteamPlaytimeCoordinator.shared.sessionEnded()
-                let othersRunning = nativeGames?.runningGameIDs.isEmpty == false || next.contains { other in
-                    other.key != id && { if case .running = other.value.phase { return true }; return false }()
-                }
-                if returnFocus.gameEnded(id, othersRunning: othersRunning) { comeBack() }
-                if settings?.settings.steamInBackground == true, backgrounds[id] == false { Self.hideSteamAgain() }
+                ended.append(id)
             case nil:
                 if heartbeat, case .running = state.phase { sessions?.heartbeat(for: id) }
             }
@@ -230,10 +237,23 @@ final class SteamPlayCoordinator: ObservableObject {
             if state.phase == .idle, game == nil { next[id] = nil } else { next[id] = state }
         }
         if next != states { states = next }
+        // Quits are judged once every game's state is known, so two games quitting together see each other gone.
+        if !ended.isEmpty { SteamPlaytimeCoordinator.shared.sessionEnded() }
+        for id in ended { gameEnded(id) }
         followBackground()
     }
 
     // MARK: - Back to NX Library
+
+    /// NX Library comes back for a game played from it that was in front with no other library game open. A Steam
+    /// that was out of view before Play goes back out of view, unless the player had left the game (for Steam
+    /// itself, say).
+    private func gameEnded(_ id: UUID) {
+        let othersRunning = nativeGames?.runningGameIDs.isEmpty == false || hasRunningGame
+        let ending = returnFocus.gameEnded(id, othersRunning: othersRunning)
+        if ending.returnsToLibrary { comeBack() }
+        if ending.wasInFront, settings?.settings.steamInBackground == true, backgrounds[id] == false { hideSteamAgain() }
+    }
 
     /// A Steam game came to the front, or another app stayed in front a second later while it ran: the player left
     /// the game (an app macOS brings forward as a game quits does not count).
@@ -268,15 +288,17 @@ final class SteamPlayCoordinator: ObservableObject {
 
     /// A Steam that was out of view before Play goes back out of view once the game quits: now, and once more
     /// when Steam shows its own window a moment later. Steam putting itself in front as the game quits is Steam's
-    /// doing, not the player's, so it is hidden even then.
-    private static func hideSteamAgain() {
+    /// doing, not the player's, so it is hidden even then. A new Play or `stop` cancels the second look.
+    private func hideSteamAgain() {
         let hide = {
-            guard let steam = steamApplication, !steam.isHidden else { return }
+            guard let steam = Self.steamApplication, !steam.isHidden else { return }
             steam.hide()
         }
         hide()
-        Task { @MainActor in
+        hideAgain?.cancel()
+        hideAgain = Task { @MainActor in
             try? await Task.sleep(nanoseconds: 2_000_000_000)
+            guard !Task.isCancelled else { return }
             hide()
         }
     }

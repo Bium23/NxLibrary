@@ -341,6 +341,16 @@ final class PlaySessionStoreTests: XCTestCase {
         XCTAssertEqual(loaded.carried[id], CarriedPlaytime(duration: 120, lastPlayed: Date(timeIntervalSinceReferenceDate: 0)))
     }
 
+    func testAGameFoundAlreadyRunningIsNotAnnounced() {
+        let store = store(), id = UUID()
+        var started: [UUID] = []
+        let token = store.starts.sink { started.append($0) }
+        XCTAssertTrue(store.start(gameID: id, sourceID: "steam-440", announces: false))
+        XCTAssertTrue(store.isRunning(gameID: id))
+        XCTAssertEqual(started, [])
+        token.cancel()
+    }
+
     func testStartsAreAnnouncedOnce() {
         let store = store(), id = UUID()
         var started: [UUID] = []

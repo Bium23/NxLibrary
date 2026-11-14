@@ -24,9 +24,16 @@ public struct SteamReturnFocus: Equatable, Sendable {
     public var gameInFront: UUID? { inFront }
 
     /// The game quit. True when NX Library should come forward.
-    public mutating func gameEnded(_ gameID: UUID, othersRunning: Bool) -> Bool {
+    /// What a game's quit means: whether NX Library comes back, and whether the player was still in the game.
+    public struct Ending: Equatable, Sendable {
+        public let returnsToLibrary: Bool
+        public let wasInFront: Bool
+    }
+
+    public mutating func gameEnded(_ gameID: UUID, othersRunning: Bool) -> Ending {
         let wasInFront = inFront == gameID
         if wasInFront { inFront = nil }
-        return playedHere.remove(gameID) != nil && wasInFront && !othersRunning
+        let playedHere = playedHere.remove(gameID) != nil
+        return Ending(returnsToLibrary: playedHere && wasInFront && !othersRunning, wasInFront: wasInFront)
     }
 }

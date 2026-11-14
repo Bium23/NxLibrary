@@ -61,16 +61,17 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
 
     /// A session for a game of another integration, which observes its own process. `sourceID` is the
     /// qualified identity ("steam-570"), never a made-up Nintendo title ID. Without a bundle ID the
-    /// session is ended by its owner, and a restart closes it at its last heartbeat.
+    /// session is ended by its owner, and a restart closes it at its last heartbeat. A game found already
+    /// running when its owner starts watching is not a new start: `announces: false` keeps it off `starts`.
     @discardableResult
-    public func start(gameID: UUID, sourceID: String, bundleID: String? = nil) -> Bool {
+    public func start(gameID: UUID, sourceID: String, bundleID: String? = nil, announces: Bool = true) -> Bool {
         if isRunning(gameID: gameID) { return false }
         let date = now()
         sessions.append(PlaySession(gameID: gameID, titleID: sourceID, bundleID: bundleID,
                                     startedAt: date, lastHeartbeatAt: date))
         let folded = trim()
         save(totals: folded)
-        starts.send(gameID)
+        if announces { starts.send(gameID) }
         return true
     }
 

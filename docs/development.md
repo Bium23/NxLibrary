@@ -108,6 +108,8 @@ bash scripts/release.sh 0.1.2
 
 The script builds a release-marked app, verifies its version and signature, and produces a ZIP and DMG in `work/release/`. Without `--publish`, it does not push a tag or create a GitHub release. Version `0.1.0` is the first public alpha; use an unused version for later releases.
 
+Valve's attribution for the Steam logo carries the year Valve's page gives ("©2026 Valve Corporation…", https://partner.steamgames.com/doc/marketing/branding/attribution). In a new year, copy Valve's current wording for each language into `NOTICE` and the `Localizable.xcstrings` entry used by Settings › About before releasing.
+
 Publishing requires an explicit maintainer decision and the script's `--publish --notes <file>` options. Prepare reviewed notes from [CHANGELOG.md](../CHANGELOG.md), then date the version when it is actually published. The script adds engine/Xcode requirement metadata to release notes for the updater. Never publish automatically as part of an agent's verification.
 
 ### Distribution work still open

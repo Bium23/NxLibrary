@@ -10,13 +10,13 @@ final class SteamReturnFocusTests: XCTestCase {
         var focus = SteamReturnFocus()
         focus.playPressed(id)
         focus.gameCameForward(id)
-        XCTAssertTrue(focus.gameEnded(id, othersRunning: false))
+        XCTAssertTrue(focus.gameEnded(id, othersRunning: false).returnsToLibrary)
     }
 
     func testStartedFromSteamDoesNotComeBack() {
         var focus = SteamReturnFocus()
         focus.gameCameForward(id)
-        XCTAssertFalse(focus.gameEnded(id, othersRunning: false))
+        XCTAssertFalse(focus.gameEnded(id, othersRunning: false).returnsToLibrary)
     }
 
     func testLeavingTheGameForAnotherAppDoesNotComeBack() {
@@ -24,14 +24,14 @@ final class SteamReturnFocusTests: XCTestCase {
         focus.playPressed(id)
         focus.gameCameForward(id)
         focus.otherAppStayedForward(whileRunning: id)
-        XCTAssertFalse(focus.gameEnded(id, othersRunning: false))
+        XCTAssertFalse(focus.gameEnded(id, othersRunning: false).returnsToLibrary)
     }
 
     func testAnotherOpenGameKeepsNXLibraryBack() {
         var focus = SteamReturnFocus()
         focus.playPressed(id)
         focus.gameCameForward(id)
-        XCTAssertFalse(focus.gameEnded(id, othersRunning: true))
+        XCTAssertFalse(focus.gameEnded(id, othersRunning: true).returnsToLibrary)
     }
 
     func testAnAbandonedPlayDoesNotCountLater() {
@@ -39,15 +39,32 @@ final class SteamReturnFocusTests: XCTestCase {
         focus.playPressed(id)
         focus.playAbandoned(id)
         focus.gameCameForward(id)
-        XCTAssertFalse(focus.gameEnded(id, othersRunning: false))
+        XCTAssertFalse(focus.gameEnded(id, othersRunning: false).returnsToLibrary)
     }
 
     func testEachPlayCountsOnce() {
         var focus = SteamReturnFocus()
         focus.playPressed(id)
         focus.gameCameForward(id)
-        XCTAssertTrue(focus.gameEnded(id, othersRunning: false))
+        XCTAssertTrue(focus.gameEnded(id, othersRunning: false).returnsToLibrary)
         focus.gameCameForward(id)
-        XCTAssertFalse(focus.gameEnded(id, othersRunning: false), "a later start from Steam is not NX Library's")
+        XCTAssertFalse(focus.gameEnded(id, othersRunning: false).returnsToLibrary, "a later start from Steam is not NX Library's")
+    }
+
+    // MARK: - Whether the player was still in the game
+
+    func testAGameInFrontAtQuitWasBeingPlayed() {
+        var focus = SteamReturnFocus()
+        focus.playPressed(id)
+        focus.gameCameForward(id)
+        XCTAssertTrue(focus.gameEnded(id, othersRunning: true).wasInFront, "true even when NX Library stays back")
+    }
+
+    func testAGameLeftForAnotherAppWasNotInFront() {
+        var focus = SteamReturnFocus()
+        focus.playPressed(id)
+        focus.gameCameForward(id)
+        focus.otherAppStayedForward(whileRunning: id)
+        XCTAssertFalse(focus.gameEnded(id, othersRunning: false).wasInFront)
     }
 }

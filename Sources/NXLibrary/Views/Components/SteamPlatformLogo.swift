@@ -2,15 +2,14 @@ import AppKit
 import SwiftUI
 
 /// Valve's Steam logo, the inverse (white) artwork from the Steam brand guidelines, unaltered: it stands alone,
-/// with its ® mark, at least 50 pixels tall on screen and with clear space around it of the locomotive crank's
-/// diameter (the symbol's larger ring, about a third of the logo's height). Valve's attribution is in NOTICE and
-/// in Settings › About. Without the artwork in the bundle the platform is written out instead.
+/// with its ® mark, at least 50 pixels tall on screen; the caller leaves clear space around it of the locomotive
+/// crank's diameter (the symbol's larger ring, about a third of the logo's height). Valve's attribution is in
+/// NOTICE and in Settings › About. Without the artwork in the bundle the platform is written out instead, as a
+/// stat value.
 struct SteamPlatformLogo: View {
     static let platformName = "Steam"
     /// The guidelines' on-screen minimum, in pixels.
     static let minimumPixels: CGFloat = 50
-    /// The crank ring's diameter as a share of the logo's height.
-    static let clearSpaceRatio: CGFloat = 1.0 / 3
 
     @Environment(\.displayScale) private var displayScale
 
@@ -34,9 +33,9 @@ struct SteamPlatformLogo: View {
                     .frame(height: Self.height(height, displayScale: displayScale))
             } else {
                 Text(Self.platformName)
+                    .seleneFont(21, .semibold)
+                    .foregroundColor(SeleneTheme.ink)
             }
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(verbatim: Self.platformName))
     }
 }
