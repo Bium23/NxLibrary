@@ -294,7 +294,8 @@ struct CollectionInfoView: View {
     }
 
     /// The whole column's fade and slide after a change. A Steam game's column uses the same.
-    static let fade = Animation.linear(duration: 0.3).delay(0.12)
+    /// Quicker than Spotlight's head (a grid is browsed fast) but with its curve, easing out like `logoFade`.
+    static let fade = Animation.easeOut(duration: 0.3).delay(0.12)
     static let slide = SeleneTheme.cubicOut(0.3).delay(0.12)
     static let slideDistance: CGFloat = -24
 
