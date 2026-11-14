@@ -111,7 +111,7 @@ public struct GameRuntimeConfig: Codable, Equatable {
     }
 
     public static func load(for game: PortedGame) -> GameRuntimeConfig {
-        if let data = UserDefaults.standard.data(forKey: storageKey(for: game)),
+        if let data = AppData.preferences.data(forKey: storageKey(for: game)),
            let config = try? JSONDecoder().decode(GameRuntimeConfig.self, from: data) {
             return config
         }
@@ -134,7 +134,7 @@ public struct GameRuntimeConfig: Codable, Equatable {
     public func save(for game: PortedGame,
                      baseDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
                         .appendingPathComponent("Library/Application Support/nxnative"),
-                     preferences: UserDefaults = .standard) throws {
+                     preferences: UserDefaults = AppData.preferences) throws {
         let data = try JSONEncoder().encode(self)
         try applyToDisk(for: game, baseDirectory: baseDirectory)
         preferences.set(data, forKey: Self.storageKey(for: game))

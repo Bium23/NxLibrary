@@ -9,6 +9,7 @@ import NXLibraryCore
 /// generic icon. Crossfades when fetched art arrives.
 /// The caller applies the corner radius.
 struct SpotlightTileArtwork: View {
+    @Environment(\.catalogPersonalizations) private var personalizations
     let game: PortedGame
     /// Side length in points, already scaled by the caller.
     let side: CGFloat
@@ -48,7 +49,7 @@ struct SpotlightTileArtwork: View {
         .frame(width: side, height: side)
         .clipped()
         .task(id: "\(game.id)|\(picks.revision)") {
-            if let url = picks.url(titleID: game.titleId ?? game.uniqueKey, slot: .icon) {
+            if let url = picks.url(titleID: personalizations.nxnativeKey(for: game), slot: .icon) {
                 picked = await GameArtLoader.decode(at: url, maxPixelSize: 512)
                 return
             }

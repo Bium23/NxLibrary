@@ -34,7 +34,7 @@ final class SeleneHeroArt: ObservableObject {
     /// `current` re-reads the screen's selected game after each await.
     /// `settle` is the pause before loading; Collection waits longer so its logo leads.
     func loadHero(game: PortedGame?, current: () -> UUID?, metadata: NintendoStoreMetadata?,
-                  artwork: ArtworkStore,
+                  artwork: ArtworkStore, personalizations: CatalogPersonalizations,
                   settle: UInt64 = 150_000_000, keepsWithoutGame: Bool = false) async {
         guard let game else {
             // Spotlight keeps the last game's art over a card, so coming back to that game needs no reload.
@@ -50,19 +50,57 @@ final class SeleneHeroArt: ObservableObject {
         try? await Task.sleep(nanoseconds: settle)
         guard !Task.isCancelled else { return }
         let loaded = await GameArtLoader.shared.hero(
-            for: game, metadata: metadata, artwork: artwork)
+            for: game, metadata: metadata, artwork: artwork, personalizations: personalizations)
+        guard !Task.isCancelled, current() == game.id else { return }
+        image = loaded
+        key = loaded.map { loadedFor + "\(ObjectIdentifier($0).hashValue)" } ?? "none"
+    }
+
+    func steamHeroTaskKey(_ game: CatalogGame?) -> String {
+        guard let game, game.integration == .steam else { return "none" }
+        return "steam-hero|\(game.id)|\(SteamPersonalizations.shared.artwork.revision)"
+    }
+
+    /// A Steam game's hero through the same image, key and crossfade as an nxnative one: the
+    /// player's pick, else the automatic choice kept from last time, else a new one (`SteamBackdropChoice`:
+    /// screen-shaped store art, LaunchBox's PC fan art, then the first screenshot, the library banner last). No game (or an
+    /// nxnative one) leaves the image to `loadHero`.
+    func loadSteamHero(game: CatalogGame?, current: () -> UUID?, artwork: ArtworkStore,
+                       settle: UInt64 = 150_000_000) async {
+        guard let game, game.integration == .steam else { return }
+        let picks = SteamPersonalizations.shared.artwork
+        let loadedFor = "\(game.id.uuidString)|s\(picks.revision)|"
+        if key.hasPrefix(loadedFor) { return }
+        try? await Task.sleep(nanoseconds: settle)
+        guard !Task.isCancelled else { return }
+        let request = SteamArtworkRequest(game: game, role: .hero)
+        let titleKey = game.personalizationReference.key
+        var url = request.localURL(picks: picks) ?? artwork.cachedURL(titleID: titleKey, kind: .hero)
+        if url == nil, let id = request.appID {
+            await SteamGameFacts.shared.load(game, language: L10n.context.language)
+            let shots = SteamGameFacts.shared.metadata(for: game)?.screenshots ?? []
+            let banner = SteamStoreArt.candidates(appID: Int(id), slot: .background).first?.url
+            let store = await SteamBackdropChoice.storeArt(names: [game.name])
+            let order = SteamBackdropChoice.ordered(storeArt: store, screenshots: shots, libraryHero: banner)
+            if let chosen = await SteamBackdropChoice.choose(order, fallback: banner, data: { await SteamBackdropChoice.download($0) }), !Task.isCancelled {
+                url = await artwork.fetch(titleID: titleKey, remoteURL: chosen, kind: .hero)
+            }
+        }
+        guard !Task.isCancelled else { return }
+        // Decoded off the main thread like an nxnative hero; a lazily decoded file cost its first frame 40–60 ms.
+        let loaded: NSImage? = if let url { await GameArtLoader.decodeHero(at: url) } else { nil }
         guard !Task.isCancelled, current() == game.id else { return }
         image = loaded
         key = loaded.map { loadedFor + "\(ObjectIdentifier($0).hashValue)" } ?? "none"
     }
 
     func loadLogo(game: PortedGame?, metadata: NintendoStoreMetadata?,
-                  artwork: ArtworkStore) async {
+                  artwork: ArtworkStore, personalizations: CatalogPersonalizations) async {
         guard let game, GameArtLoader.shared.cachedLogo(for: game) == nil else { return }
         try? await Task.sleep(nanoseconds: 150_000_000)
         guard !Task.isCancelled else { return }
         let loaded = await GameArtLoader.shared.logo(
-            for: game, metadata: metadata, artwork: artwork)
+            for: game, metadata: metadata, artwork: artwork, personalizations: personalizations)
         guard loaded != nil, !Task.isCancelled else { return }
         withAnimation(.easeOut(duration: 0.3)) { logoTick += 1 }
     }

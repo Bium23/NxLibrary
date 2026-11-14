@@ -12,6 +12,7 @@ struct SpotlightRowView: View {
 
     let items: [SpotlightItem]
     let gamesByID: [UUID: PortedGame]
+    var catalogGamesByID: [UUID: CatalogGame] = [:]
     let selectedKey: String?
     /// The tile lifted for moving: raised 12u, its ring stays.
     var liftedKey: String? = nil
@@ -143,6 +144,8 @@ struct SpotlightRowView: View {
                             .portingLook(tileLook(game), cornerRadius: canvas.u(12))
                             .frame(width: side, height: side)
                             .clipShape(face)
+                    } else if let game = catalogGamesByID[id] {
+                        CatalogNativeArtwork(game: game, role: .square).frame(width: side, height: side).clipShape(face)
                     }
                 case .card(.mods):
                     ModsCardCover(urls: modsCover, side: side)
@@ -169,7 +172,7 @@ struct SpotlightRowView: View {
     private func title(of item: SpotlightItem) -> String {
         switch item {
         case .card(let card): return card.title
-        case .game(let id): return gamesByID[id]?.name ?? ""
+        case .game(let id): return gamesByID[id]?.name ?? catalogGamesByID[id]?.name ?? ""
         }
     }
 

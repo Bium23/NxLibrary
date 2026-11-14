@@ -3,6 +3,7 @@ import NXLibraryCore
 
 struct SettingsEngineSection: View {
     @ObservedObject var viewModel: AppViewModel
+    @ObservedObject var settings: AppSettingsStore
     let onActions: ([SettingsRowAction]) -> Void
 
     @Environment(\.seleneFocusedRowID) private var focusedRowTitle
@@ -98,6 +99,11 @@ struct SettingsEngineSection: View {
             }
             .seleneRowFocus(focusedRowTitle == "Compatibility", radius: SeleneTheme.cardRadius)
 
+            SeleneToggleRow("Check engine at launch",
+                            subtitle: "Verify the pinned engine commit and toolchain when the app starts.",
+                            info: "Checks the nxnative checkout against the certified engine commit and confirms your installed Metal compiler matches the lock file before builds are attempted.",
+                            isOn: $settings.settings.checkEngineAtLaunch)
+
             SeleneRow("Untested toolchain override",
                       subtitle: overrideSubtitle,
                       info: "Permits building games when the toolchain differs from the certified engine and Metal combination shown above. Passes --allow-other-metal to nxnative. Builds are recorded as unverified.") {
@@ -176,6 +182,13 @@ struct SettingsEngineSection: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             .seleneRowFocus(focusedRowTitle == "prod.keys", radius: SeleneTheme.cardRadius)
+
+            SeleneButtonRow("Setup",
+                            subtitle: "Open the Setup check: what NX Library needs and what is ready.",
+                            buttonTitle: "Open Setup") {
+                viewModel.reopenSetup()
+            }
+            .disabled(configurationLocked)
         }
         .onAppear {
             viewModel.prepareBuildEnvironmentIfNeeded()
@@ -539,6 +552,9 @@ struct SettingsEngineSection: View {
             .init(id: "recheck", title: "Compatibility", isEnabled: !configurationLocked) {
                 viewModel.detectEnvironment()
             },
+            .init(id: "engineAtLaunch", title: "Check engine at launch") {
+                settings.settings.checkEngineAtLaunch.toggle()
+            },
             .init(id: "override", title: "Untested toolchain override",
                   isEnabled: canChangeOverride) {
                 if viewModel.allowUntestedToolchain {
@@ -567,6 +583,9 @@ struct SettingsEngineSection: View {
         }
         actions.append(.init(id: "keys", title: "prod.keys", isEnabled: !configurationLocked) {
             viewModel.selectProdKeysFile()
+        })
+        actions.append(.init(id: "setup", title: "Setup", isEnabled: !configurationLocked) {
+            viewModel.reopenSetup()
         })
         onActions(actions)
     }

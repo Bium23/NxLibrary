@@ -86,6 +86,19 @@ final class LaunchBoxArtTests: XCTestCase {
         XCTAssertNil(LaunchBoxArt.pick(snes, names: ["Donkey Kong Bananza"], switch2: false, loose: true), "even typed")
     }
 
+    func testAMacGameTakesItsComputerEntryNeverAConsoleOne() {
+        let results = LaunchBoxArt.results(in: Self.card("3-ps", "The Witcher 3: Wild Hunt", "Sony Playstation 4")
+                                           + Self.card("2-sw", "The Witcher 3: Wild Hunt", "Nintendo Switch")
+                                           + Self.card("1-win", "The Witcher 3: Wild Hunt", "Windows"))
+        XCTAssertEqual(LaunchBoxArt.pick(results, names: ["The Witcher 3: Wild Hunt"], computer: true)?.path, "/games/details/1-win")
+        let both = LaunchBoxArt.results(in: Self.card("1-win", "Fixture", "Windows") + Self.card("4-mac", "Fixture", "Apple Mac OS"))
+        XCTAssertEqual(LaunchBoxArt.pick(both, names: ["Fixture"], computer: true)?.path, "/games/details/4-mac", "the Mac entry first")
+        let consoles = LaunchBoxArt.results(in: Self.card("2-sw", "Fixture", "Nintendo Switch"))
+        XCTAssertNil(LaunchBoxArt.pick(consoles, names: ["Fixture"], computer: true, loose: true))
+        XCTAssertEqual(LaunchBoxArt.pick(results, names: ["The Witcher 3: Wild Hunt"], switch2: false)?.path, "/games/details/2-sw",
+                       "a Switch game still takes the Switch entry")
+    }
+
     func testATypedNameTakesTheFirstSwitchResult() {
         let results = LaunchBoxArt.results(in: Self.card("2-y", "Mario Kart 64", "Nintendo 64")
                                            + Self.card("1-x", "Super Mario Odyssey", "Nintendo Switch"))

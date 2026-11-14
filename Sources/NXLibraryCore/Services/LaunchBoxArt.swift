@@ -11,6 +11,8 @@ public enum LaunchBoxArt {
     public static let site = URL(string: "https://gamesdb.launchbox-app.com")!
     static let images = URL(string: "https://images.launchbox-app.com/")!
     static let gameplay = "Screenshot - Gameplay"
+    /// How a fan art candidate's source starts ("LaunchBox · Fanart - Background (region)").
+    public static let fanartSource = "LaunchBox · Fanart - Background"
     /// Screenshots Details shows when Title DB has none.
     public static let screenshotLimit = 6
 
@@ -55,12 +57,22 @@ public enum LaunchBoxArt {
     /// `loose` (a name the player typed) falls back to the first Switch result when no title matches the name.
     public static func pick(_ results: [Result], names: [String], switch2: Bool, loose: Bool = false) -> Result? {
         let own = switch2 ? "Nintendo Switch 2" : "Nintendo Switch"
+        return pick(results, names: names, loose: loose, preferring: [{ $0 == own }, { $0.hasPrefix("Nintendo Switch") }])
+    }
+
+    /// The result that is this game on a computer, for a native Mac game (Steam): its Mac entry first, then
+    /// Windows, where LaunchBox keeps most PC art. A console entry is never taken.
+    public static func pick(_ results: [Result], names: [String], computer: Bool, loose: Bool = false) -> Result? {
+        pick(results, names: names, loose: loose, preferring: [{ $0 == "Apple Mac OS" }, { $0 == "Windows" }])
+    }
+
+    private static func pick(_ results: [Result], names: [String], loose: Bool,
+                             preferring platforms: [(String) -> Bool]) -> Result? {
         let named = results.filter { ArtworkNames.matches($0.title, names) }
-        if let found = named.first(where: { $0.platform == own }) ?? named.first(where: { $0.platform.hasPrefix("Nintendo Switch") }) {
-            return found
-        }
+        for wanted in platforms { if let found = named.first(where: { wanted($0.platform) }) { return found } }
         guard loose else { return nil }
-        return results.first { $0.platform == own } ?? results.first { $0.platform.hasPrefix("Nintendo Switch") }
+        for wanted in platforms { if let found = results.first(where: { wanted($0.platform) }) { return found } }
+        return nil
     }
 
     /// The images a game page's payload lists, each in its slot with its preview, full file and size, credited
@@ -129,12 +141,14 @@ public enum LaunchBoxArt {
     }
 
     /// Searches each name until one finds this game on a Switch, then reads its page.
-    public static func game(names: [String], switch2: Bool, loose: Bool = false,
+    /// `computer`: the game is a native Mac game (Steam), so its Mac or Windows entry is looked for, not Switch.
+    public static func game(names: [String], switch2: Bool, computer: Bool = false, loose: Bool = false,
                             client: ArtworkHTTPClient = URLSessionArtworkClient()) async -> Game? {
         for name in names {
             guard let url = searchURL(for: name), let data = await OnlineArtworkRequest.data(url, client: client),
                   let html = String(data: data, encoding: .utf8),
-                  let result = pick(results(in: html), names: names, switch2: switch2, loose: loose),
+                  let result = computer ? pick(results(in: html), names: names, computer: true, loose: loose)
+                                        : pick(results(in: html), names: names, switch2: switch2, loose: loose),
                   let page = URL(string: result.path, relativeTo: site)?.absoluteURL else { continue }
             guard let body = await OnlineArtworkRequest.data(page, client: client),
                   let text = String(data: body, encoding: .utf8) else { return nil }

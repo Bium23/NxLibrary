@@ -10,6 +10,8 @@ import NXLibraryCore
 /// Title DB, the Nintendo store and the online sources (`OnlineArtwork`: stores, databases,
 /// wikis, Wallhaven) offer, with its size in pixels, and From file….
 /// A choice is kept in `ArtworkPicks` and never overwritten by automatic art; Automatic takes it back.
+/// A Steam game (`PersonalizationSubject`) gets Steam's own art for its AppID instead of the Switch
+/// sources, keeps its choices in the Steam personal store and has no Mac app icon step.
 ///
 /// Browsing a source replaces the grid with that source's images for the open tab, as the Theme screen browses
 /// wallpaper sites: a search prefilled with the game's name, each image credited with its kind or author and its
@@ -20,10 +22,11 @@ import NXLibraryCore
 /// A click chooses.
 struct ChangeArtworkView: View {
     @ObservedObject var viewModel: AppViewModel
-    let game: PortedGame
+    let subject: PersonalizationSubject
     let onClose: () -> Void
 
     @ObservedObject private var picks = ArtworkPicks.shared
+    @ObservedObject private var steamPicks = SteamPersonalizations.shared.artwork
     @State private var slot: ArtworkSlot = .cover
     /// The focused tile; while browsing, -1 is the search field.
     @State private var focus = 0
@@ -74,12 +77,14 @@ struct ChangeArtworkView: View {
         case automatic, yourPick, iconLocation, art(Found), browse(ArtworkBrowseSource), file
     }
 
-    private var titleKey: String { game.titleId ?? game.uniqueKey }
-    private var hasPick: Bool { picks.url(titleID: titleKey, slot: slot) != nil }
-    private var switch2: Bool { game.titleId?.hasPrefix("04") == true }
+    private var hasPick: Bool { subject.artworkURL(slot) != nil }
+    private var pickRevision: Int { picks.revision &+ steamPicks.revision }
+    private var switch2: Bool { subject.titleId?.hasPrefix("04") == true }
+    /// The installed nxnative game: only it has a Mac app icon to change.
+    private var macApp: PortedGame? { subject.ported }
     private var gameNames: [String] {
-        let metadata = viewModel.storeMetadata[game.id]
-        return [game.name, metadata?.name, titleDB?.name].compactMap { $0 }
+        let metadata = viewModel.storeMetadata[subject.id]
+        return [subject.name, metadata?.name, titleDB?.name].compactMap { $0 }
             .reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
     }
 
@@ -87,7 +92,7 @@ struct ChangeArtworkView: View {
         if browsing != nil { return (browseItems[slot] ?? []).map(Tile.art) }
         // The sources to browse come right after Automatic (and Your pick), so a search is one move away and never
         // waits for the found images to load; From file… ends the grid.
-        return [.automatic] + (hasPick ? [.yourPick] : []) + (slot == .icon ? [.iconLocation] : []) + ArtworkBrowseSource.allCases.map(Tile.browse)
+        return [.automatic] + (hasPick ? [.yourPick] : []) + (slot == .icon && macApp != nil ? [.iconLocation] : []) + ArtworkBrowseSource.allCases.map(Tile.browse)
             + (found[slot] ?? []).map(Tile.art) + [.file]
     }
 
@@ -123,7 +128,7 @@ struct ChangeArtworkView: View {
                         .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink60)
                         .padding(.leading, canvas.u(8))
-                    Text(game.name)
+                    Text(subject.name)
                         .seleneFont(40)
                         .foregroundColor(SeleneTheme.ink)
                         .lineLimit(1)
@@ -167,8 +172,8 @@ struct ChangeArtworkView: View {
                 }
             }
         }
-        .task(id: "\(slot.rawValue)|\(picks.revision)") { await loadPickPreview() }
-        .task(id: "icon|\(slot.rawValue)|\(picks.revision)") { await loadAutomaticIcon() }
+        .task(id: "\(slot.rawValue)|\(pickRevision)") { await loadPickPreview() }
+        .task(id: "icon|\(slot.rawValue)|\(pickRevision)") { await loadAutomaticIcon() }
         .overlay {
             if askAppIcon {
                 ZStack {
@@ -188,7 +193,7 @@ struct ChangeArtworkView: View {
     }
 
     private var appIconMessage: String {
-        let running = RunningGameMonitor.runningApplication(for: game) != nil
+        let running = macApp.map { RunningGameMonitor.runningApplication(for: $0) != nil } ?? false
         return L10n.text("Only here changes the image inside NX Library. Use on the Mac also shows it in Finder and the Dock. Automatic uses the game's own icon, then an online image if available. Changing the image keeps this location choice.")
             + (running ? L10n.text(" It changes when the game quits.") : L10n.text(" A large game takes about a minute."))
     }
@@ -196,14 +201,14 @@ struct ChangeArtworkView: View {
     private func answerAppIcon(_ use: Bool) {
         SoundEffectService.shared.play(.click)
         askAppIcon = false
-        viewModel.setUsesPickedAppIcon(use, for: game)
+        if let macApp { viewModel.setUsesPickedAppIcon(use, for: macApp) }
     }
 
     /// Ask for every game, including NUPs, dumps and games not built yet.
     private func iconPicked() {
-        guard slot == .icon else { return }
+        guard slot == .icon, let macApp else { return }
         editingIconLocation = false
-        appIconFocus = viewModel.usesIconOnMac(for: game) ? .confirm : .cancel
+        appIconFocus = viewModel.usesIconOnMac(for: macApp) ? .confirm : .cancel
         askAppIcon = true
     }
 
@@ -275,8 +280,8 @@ struct ChangeArtworkView: View {
 
     /// On the Icon tab, how the game app's own icon change stands: signing a large app takes about a minute.
     private var appIconStatus: String? {
-        guard slot == .icon else { return nil }
-        let progress = viewModel.appIconProgress[game.id]
+        guard slot == .icon, macApp != nil else { return nil }
+        let progress = viewModel.appIconProgress[subject.id]
         if let progress {
             switch progress {
             case .searching, .updating, .failed: return progress.message
@@ -294,7 +299,7 @@ struct ChangeArtworkView: View {
         if downloading { return L10n.format("Downloading the full image from %@…", [String(describing: (source.title))]) }
         guard let result = browseResult else { return L10n.format("Searching %@ for “%@”…", [String(describing: (source.title)), String(describing: (browseQuery))]) }
         guard result.page != nil else {
-            return L10n.format("%@ has no %@ called “%@”", [String(describing: (source.title)), String(describing: (source == .launchBox ? L10n.text("Switch game") : "game")), String(describing: (browseQuery))])
+            return L10n.format("%@ has no %@ called “%@”", [String(describing: (source.title)), String(describing: (source == .launchBox && subject.steam == nil ? L10n.text("Switch game") : "game")), String(describing: (browseQuery))])
         }
         if browseLoading.contains(slot) && (browseItems[slot] ?? []).isEmpty { return L10n.text("Loading…") }
         if (browseItems[slot] ?? []).isEmpty {
@@ -418,11 +423,16 @@ struct ChangeArtworkView: View {
         Image(nsImage: image)
             .resizable()
             .interpolation(.high)
-            .aspectRatio(contentMode: slot == .logo ? .fit : .fill)
+            .aspectRatio(contentMode: fits(image) ? .fit : .fill)
             .padding(slot == .logo ? canvas.u(18) : 0)
     }
 
-    private func glyphFace(_ icon: MaterialIcon) -> some View {
+    /// Logos, and banners much wider than the tile (Steam's library hero), show whole instead of cropped.
+    private func fits(_ image: NSImage) -> Bool {
+        slot == .logo || (slot == .background && image.size.width > image.size.height * 2.2)
+    }
+
+        private func glyphFace(_ icon: MaterialIcon) -> some View {
         MaterialIconView(icon, size: 44)
             .foregroundColor(SeleneTheme.ink60)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -432,6 +442,7 @@ struct ChangeArtworkView: View {
         switch tile {
         case .automatic:
             switch slot {
+            case _ where subject.steam != nil: return (L10n.text("Automatic"), steamAutomatic)
             case .cover: return (L10n.text("Automatic"), L10n.text("GameTDB, or a composed cover"))
             case .background: return (L10n.text("Automatic"), L10n.text("The game's own art, then Title DB"))
             case .icon: return (L10n.text("Automatic"), L10n.text("The game's own icon, then Title DB"))
@@ -440,7 +451,7 @@ struct ChangeArtworkView: View {
         case .yourPick:
             return (L10n.text("Your pick"), L10n.text("Saved on this Mac"))
         case .iconLocation:
-            return (L10n.text("Icon location"), viewModel.usesIconOnMac(for: game) ? L10n.text("Use on the Mac") : "Only here")
+            return (L10n.text("Icon location"), macApp.map(viewModel.usesIconOnMac) == true ? L10n.text("Use on the Mac") : "Only here")
         case .art(let item):
             return (item.art.candidate.source, item.art.resolution)
         case .browse(let source):
@@ -448,6 +459,16 @@ struct ChangeArtworkView: View {
             return (source.title, keyless ? L10n.text("Browse online · add your key") : "Browse online")
         case .file:
             return (L10n.text("From file…"), L10n.text("PNG or JPEG"))
+        }
+    }
+
+    /// What Automatic shows for a Steam game in this tab.
+    private var steamAutomatic: String {
+        switch slot {
+        case .cover: return L10n.text("Steam’s library cover")
+        case .background: return L10n.text("Screen-shaped art, then Steam")
+        case .icon: return L10n.text("The Mac app’s own icon")
+        case .logo: return L10n.text("Steam’s logo")
         }
     }
 
@@ -466,27 +487,34 @@ struct ChangeArtworkView: View {
         guard found[slot] == nil, !searching.contains(slot) else { return }
         searching.insert(slot)
         defer { searching.remove(slot) }
-        if !titleDBLoaded, let titleId = game.titleId {
+        if !titleDBLoaded, let titleId = subject.titleId {
             titleDB = await TitleDBInfo.fetch(titleID: titleId)
             titleDBLoaded = true
         }
-        let metadata = viewModel.storeMetadata[game.id]
+        let metadata = viewModel.storeMetadata[subject.id]
         let names = gameNames
-        let entries = slot == .cover ? await viewModel.boxArt.pickerEntries(names: names) : []
-        if online == nil { online = await OnlineArtwork.find(names: names) }
-        let candidates = ArtworkCandidates.list(for: slot, entries: entries, titleDB: titleDB,
+        var candidates: [ArtworkCandidate]
+        found[slot] = []
+        if let steam = subject.steam, let appID = subject.steamAppID {
+            // Steam's own art for this AppID shows at once; the online sources take seconds and follow it.
+            let screenshots = SteamGameFacts.shared.metadata(for: steam)?.screenshots ?? []
+            let own = ArtworkCandidates.steamList(for: slot, appID: appID, screenshots: screenshots)
+            await collect(own, slot: slot, from: 0)
+            guard !Task.isCancelled else { found[slot] = nil; return }
+            if online == nil { online = await OnlineArtwork.find(names: names) }
+            candidates = ArtworkCandidates.steamList(for: slot, appID: appID, screenshots: screenshots, online: online ?? [])
+            await collect(Array(candidates.dropFirst(own.count)), slot: slot, from: own.count)
+        } else {
+            let entries = slot == .cover ? await viewModel.boxArt.pickerEntries(names: names) : []
+            if online == nil { online = await OnlineArtwork.find(names: names) }
+            candidates = ArtworkCandidates.list(for: slot, entries: entries, titleDB: titleDB,
                                                 storeHeader: metadata?.headerImageURL, storeImage: metadata?.imageURL,
                                                 storeLogo: metadata?.logoURL, online: online ?? [])
-        found[slot] = []
-        for await item in Self.previews(of: candidates) {
-            var list = found[slot] ?? []
-            list.append(item)
-            list.sort { $0.order < $1.order }
-            found[slot] = list
+            await collect(candidates, slot: slot, from: 0)
         }
         if slot == .icon, !Task.isCancelled,
-           let titleID = game.titleId,
-           let url = await AppViewModel.automaticIconArtwork.automaticIcon(titleID: titleID, name: game.name),
+           let titleID = subject.titleId,
+           let url = await AppViewModel.automaticIconArtwork.automaticIcon(titleID: titleID, name: subject.name),
            AppViewModel.automaticIconArtwork.automaticIconSource(titleID: titleID) == "Switch Icon Showdown",
            let data = try? Data(contentsOf: url), let size = ArtworkCandidates.pixelSize(of: data),
            let preview = await GameArtLoader.decode(at: url, maxPixelSize: 600), !Task.isCancelled {
@@ -496,6 +524,16 @@ struct ChangeArtworkView: View {
         }
         // Left for another tab before it finished: search again on return.
         if Task.isCancelled { found[slot] = nil }
+    }
+
+    /// Adds the candidates' previews to the slot as they arrive, in list order after `offset`.
+    private func collect(_ candidates: [ArtworkCandidate], slot: ArtworkSlot, from offset: Int) async {
+        for await item in Self.previews(of: candidates) {
+            var list = found[slot] ?? []
+            list.append(Found(order: item.order + offset, art: item.art, preview: item.preview))
+            list.sort { $0.order < $1.order }
+            found[slot] = list
+        }
     }
 
     /// Downloads each candidate's preview at once and yields those that are images, as they arrive.
@@ -531,7 +569,7 @@ struct ChangeArtworkView: View {
         let round = browseRound
         if browseResult == nil {
             let key = source.needsKey ? SteamGridDBKey().load() : nil
-            let result = await source.search(browseQuery, gameNames: gameNames, switch2: switch2, key: key)
+            let result = await source.search(browseQuery, gameNames: gameNames, switch2: switch2, computer: subject.steam != nil, key: key)
             guard round == browseRound, browsing == source, !Task.isCancelled else { return }
             browseResult = result
         }
@@ -551,7 +589,7 @@ struct ChangeArtworkView: View {
     }
 
     private func loadPickPreview() async {
-        guard let url = picks.url(titleID: titleKey, slot: slot) else {
+        guard let url = subject.artworkURL(slot) else {
             pickPreview = nil
             return
         }
@@ -561,7 +599,10 @@ struct ChangeArtworkView: View {
     private func loadAutomaticIcon() async {
         guard slot == .icon else { return }
         automaticIconChecked = false
-        let url = await viewModel.automaticIconURL(for: game)
+        let url: URL?
+        if let macApp { url = await viewModel.automaticIconURL(for: macApp) }
+        else if let steam = subject.steam { url = SteamArtworkRequest(game: steam, role: .square).automaticLocalURL }
+        else { url = nil }
         let preview: NSImage?
         if let url { preview = await GameArtLoader.decode(at: url, maxPixelSize: 600) }
         else { preview = nil }
@@ -588,12 +629,19 @@ struct ChangeArtworkView: View {
         switch tile {
         case .automatic:
             guard hasPick || slot == .icon else { return }
-            if hasPick { picks.remove(titleID: titleKey, slot: slot) }
+            if hasPick {
+                do { try subject.removeArtwork(slot) } catch {
+                    message = error.localizedDescription
+                    SoundEffectService.shared.play(.error)
+                    return
+                }
+            }
             applied()
-            if slot == .icon { viewModel.appIconPickChanged(for: game, removed: true) }
+            if slot == .icon, let macApp { viewModel.appIconPickChanged(for: macApp, removed: true) }
         case .iconLocation:
+            guard let macApp else { return }
             editingIconLocation = true
-            appIconFocus = viewModel.usesIconOnMac(for: game) ? .confirm : .cancel
+            appIconFocus = viewModel.usesIconOnMac(for: macApp) ? .confirm : .cancel
             askAppIcon = true
             SoundEffectService.shared.play(.click)
         case .yourPick:
@@ -636,7 +684,7 @@ struct ChangeArtworkView: View {
 
     private func save(_ data: Data) {
         do {
-            try picks.save(data, titleID: titleKey, slot: slot)
+            try subject.saveArtwork(data, slot: slot)
             applied()
             // The check moves to Your pick, second in the grid.
             focus = 1
@@ -649,7 +697,7 @@ struct ChangeArtworkView: View {
 
     /// Screens reload their art from the new revision; decoded copies of the old art go.
     private func applied() {
-        GameArtLoader.shared.forget(game)
+        if let macApp { GameArtLoader.shared.forget(macApp) }
         SoundEffectService.shared.play(.click)
     }
 
@@ -658,7 +706,7 @@ struct ChangeArtworkView: View {
         panel.allowedContentTypes = [.png, .jpeg, .heic, .webP, .image]
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
-        panel.message = L10n.format("Choose a %@ for %@.", [String(describing: (slot.title.lowercased())), String(describing: (game.name))])
+        panel.message = L10n.format("Choose a %@ for %@.", [String(describing: (slot.title.lowercased())), String(describing: (subject.name))])
         guard panel.runModal() == .OK, let url = panel.url else { return }
         guard let data = try? Data(contentsOf: url) else {
             message = L10n.text("That file could not be read.")
@@ -672,17 +720,17 @@ struct ChangeArtworkView: View {
 
     private func openBrowse(_ source: ArtworkBrowseSource) {
         browsing = source
-        browseDraft = game.name
-        browseQuery = game.name
+        browseDraft = subject.name
+        browseQuery = subject.name
         startBrowseSearch()
     }
 
     private func submitSearch() {
         let text = browseDraft.trimmingCharacters(in: .whitespacesAndNewlines)
-        if text.isEmpty { browseDraft = game.name }
+        if text.isEmpty { browseDraft = subject.name }
         fieldFocused = false
         SoundEffectService.shared.play(.click)
-        let query = text.isEmpty ? game.name : text
+        let query = text.isEmpty ? subject.name : text
         guard query != browseQuery || browseResult?.page == nil else {
             focus = tiles.isEmpty ? -1 : 0
             return
@@ -790,7 +838,7 @@ struct ChangeArtworkView: View {
             case .cancel:
                 askAppIcon = false
                 // Back dismisses the location question. A newly chosen image still follows the saved scope.
-                if !editingIconLocation { viewModel.appIconPickChanged(for: game, removed: false) }
+                if !editingIconLocation, let macApp { viewModel.appIconPickChanged(for: macApp, removed: false) }
                 SoundEffectService.shared.play(.focus)
             default: break
             }
@@ -815,7 +863,7 @@ struct ChangeArtworkView: View {
     private func installKeyMonitor() {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            guard viewModel.gameForSettingsSheet?.id == game.id, !viewModel.isEditingSteamGridDBKey,
+            guard viewModel.optionsGameID == subject.id, !viewModel.isEditingSteamGridDBKey,
                   let window = event.window, !window.isSheet, window.attachedSheet == nil,
                   NSApp.modalWindow == nil, !(window.firstResponder is NSText) else { return event }
             guard event.modifierFlags.intersection([.command, .control, .option]).isEmpty else { return event }

@@ -6,6 +6,9 @@ struct SettingsSearchSection: View {
     @ObservedObject var settings: AppSettingsStore
     let onOpenGroup: (SettingsSection) -> Void
     let onSubmit: () -> Void
+    /// Bumped when the player opens the field (A or Right from the sidebar). Selecting Search never
+    /// takes the keys by itself: Up/Down keep moving through the sidebar.
+    let fieldRequest: Int
     let onActions: ([SettingsRowAction]) -> Void
     @Environment(\.seleneCanvas) private var canvas
 
@@ -43,10 +46,8 @@ struct SettingsSearchSection: View {
             }
             SettingsDescriptorList(rows: results, onOpenGroup: onOpenGroup)
         }
-        .onAppear {
-            fieldFocused = true
-            publishActions()
-        }
+        .onAppear(perform: publishActions)
+        .onChange(of: fieldRequest) { _ in fieldFocused = true }
         .onChange(of: query) { _ in publishActions() }
     }
 
@@ -103,7 +104,7 @@ struct SettingsDescriptorList: View {
     let onOpenGroup: (SettingsSection) -> Void
     @Environment(\.seleneCanvas) private var canvas
 
-    static func title(_ row: SettingDescriptor) -> String { "\(row.group.title) · \(L10n.text(row.title))" }
+    static func title(_ row: SettingDescriptor) -> String { "\(row.group.place) · \(L10n.text(row.title))" }
 
     static func actions(_ rows: [SettingDescriptor],
                         onOpenGroup: @escaping (SettingsSection) -> Void) -> [SettingsRowAction] {

@@ -12,18 +12,19 @@ struct SettingsSectionContent: View {
     let onOpenConsole: () -> Void
     let onOpenGroup: (SettingsSection) -> Void
     let onSearchSubmit: () -> Void
+    let searchFieldRequest: Int
     let onActions: ([SettingsRowAction]) -> Void
 
     var body: some View {
         switch section {
         case .search:
             SettingsSearchSection(settings: settings, onOpenGroup: onOpenGroup,
-                                  onSubmit: onSearchSubmit, onActions: onActions)
+                                  onSubmit: onSearchSubmit, fieldRequest: searchFieldRequest, onActions: onActions)
         case .changed:
             SettingsChangedSection(settings: settings, viewModel: viewModel,
                                    onOpenGroup: onOpenGroup, onActions: onActions)
         case .startUp:
-            SettingsStartUpSection(viewModel: viewModel, settings: settings, onActions: onActions, onChooseLanguage: onChooseLanguage, onChooseRegion: onChooseRegion)
+            SettingsStartUpSection(settings: settings, onActions: onActions, onChooseLanguage: onChooseLanguage, onChooseRegion: onChooseRegion)
         case .navigation:
             SettingsNavigationSection(settings: settings, onActions: onActions)
         case .spotlight:
@@ -38,13 +39,14 @@ struct SettingsSectionContent: View {
             SettingsControllersSection(settings: settings, onActions: onActions,
                                        onViewControls: onViewControls)
         case .library:
-            SettingsLibrarySection(viewModel: viewModel, settings: settings,
-                                   artwork: artwork, onActions: onActions)
+            SettingsLibrarySection(viewModel: viewModel, settings: settings, onActions: onActions)
+        case .sources:
+            SettingsSourcesSection(viewModel: viewModel, settings: settings, onActions: onActions)
         case .storage:
             SettingsStorageSection(viewModel: viewModel, artwork: artwork,
                                    onActions: onActions, onOpenConsole: onOpenConsole)
         case .engine:
-            SettingsEngineSection(viewModel: viewModel, onActions: onActions)
+            SettingsEngineSection(viewModel: viewModel, settings: settings, onActions: onActions)
         case .about:
             SettingsAboutSection(viewModel: viewModel, onActions: onActions)
         }
@@ -59,7 +61,7 @@ struct SettingsSubheading: View {
     init(_ title: String) { self.title = title }
 
     var body: some View {
-        Text(title)
+        Text(L10n.text(title))
             .seleneFont(17, .semibold)
             .foregroundColor(SeleneTheme.glyph)
             .padding(.top, canvas.u(18))

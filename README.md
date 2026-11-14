@@ -130,7 +130,7 @@ Discovery includes subfolders of Game apps. It stays inside the chosen folders, 
 
 Import your `prod.keys` when prompted. NX Library keeps a private copy with mode `0600` and leaves the original file unchanged. Key values are not displayed or logged.
 
-Reopen both setup steps from **Settings → Start-up → Open Setup** whenever needed; this keeps your library and completion state. NX Library never runs `sudo`, accepts the Xcode licence for you or changes `xcode-select`.
+Reopen both setup steps from **Settings → Switch · Engine → Open Setup** whenever needed; this keeps your library and completion state. NX Library never runs `sudo`, accepts the Xcode licence for you or changes `xcode-select`.
 
 Already have a built nxnative game app? Use **Settings → Library → Scan game apps → Scan**. The same action finds existing builds and refreshes the library. Play remains available without the original sources; rebuilding requires attaching them again.
 

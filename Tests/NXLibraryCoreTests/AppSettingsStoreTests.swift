@@ -235,9 +235,31 @@ final class SettingsSectionTests: XCTestCase {
     func testAllSectionsArePresent() {
         XCTAssertEqual(SettingsSection.allCases.map(\.title), [
             "Search", "Changed", "Start-up", "Navigation", "Spotlight", "Sound & music",
-            "Look", "Games", "Controllers", "Library", "Storage", "Engine", "About"
+            "Look", "Controllers", "Library", "Games", "Engine", "Library", "Storage", "About"
         ])
         XCTAssertTrue(SettingsSection.allCases.allSatisfy { !$0.icon.rawValue.isEmpty })
+    }
+
+    func testSidebarGroupsKeepSwitchAndSteamApartInScreenOrder() {
+        XCTAssertEqual(SettingsSidebarGroup.all.map(\.title), [nil, "General", "Switch", "Steam", "System"])
+        XCTAssertEqual(SettingsSidebarGroup.all.map { $0.sections.map(\.rawValue) }, [
+            ["search", "changed"],
+            ["startUp", "navigation", "spotlight", "soundMusic", "look", "controllers"],
+            ["library", "games", "engine"],
+            ["sources"],
+            ["storage", "about"],
+        ])
+        // The sidebar's Up/Down follows the groups as drawn, and every section is in exactly one group.
+        XCTAssertEqual(SettingsSidebarGroup.all.flatMap(\.sections), SettingsSection.allCases)
+        XCTAssertEqual(SettingsSection.sources.group.title, "Steam")
+    }
+
+    func testPlatformSectionsAreNamedWithTheirPlatformWhereSearchListsThem() {
+        XCTAssertEqual(SettingsSection.sources.place, "Steam · Library")
+        XCTAssertEqual(SettingsSection.library.place, "Switch · Library")
+        XCTAssertEqual(SettingsSection.games.place, "Switch · Games")
+        XCTAssertEqual(SettingsSection.look.place, "Look")
+        XCTAssertEqual(SettingsSection.storage.place, "Storage")
     }
 
     func testStartScreenDefaultsAndDecode() throws {

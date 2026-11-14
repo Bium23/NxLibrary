@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
-/// Left column of Settings: app mark, name and version, then the groups (Selene `SettingsScreen.cs`).
+/// Left column of Settings: app mark, name and version, then the sections under their group headings.
 struct SettingsSidebar: View {
     @Binding var selection: SettingsSection
     var isFocused: Bool = false
@@ -17,26 +17,34 @@ struct SettingsSidebar: View {
         VStack(alignment: .leading, spacing: 0) {
             header
                 .padding(.bottom, canvas.u(26))
-            ScrollView {
-                groups
+            // The groups can be taller than the window: the selected section is always scrolled into view,
+            // at once like a macOS sidebar. An animated scroll started in the same frame as the new section's
+            // content and stuttered.
+            ScrollViewReader { proxy in
+                ScrollView {
+                    groups
+                }
+                .scrollIndicators(.hidden)
+                .onAppear { proxy.scrollTo(selection) }
+                .onChange(of: selection) { section in proxy.scrollTo(section) }
             }
-            .scrollIndicators(.hidden)
         }
     }
 
+    /// App-wide groups, then one per platform (`SettingsSidebarGroup`); a heading is a label, not a stop.
     private var groups: some View {
         VStack(alignment: .leading, spacing: canvas.u(6)) {
-            ForEach(SettingsSection.allCases) { section in
-                groupRow(section)
-                if section == .changed {
-                    Rectangle()
-                        .fill(SeleneTheme.ink.opacity(0.16))
-                        .frame(height: max(1, canvas.u(1)))
+            ForEach(SettingsSidebarGroup.all) { group in
+                if let heading = group.title(in: context) {
+                    Text(heading)
+                        .seleneFont(15, .semibold)
+                        .foregroundColor(SeleneTheme.ink60)
                         .padding(.leading, canvas.u(20))
-                        .padding(.top, canvas.u(8))
-                        .padding(.trailing, canvas.u(44))
-                        .padding(.bottom, canvas.u(14))
+                        .padding(.top, canvas.u(18))
+                        .padding(.bottom, canvas.u(2))
+                        .accessibilityAddTraits(.isHeader)
                 }
+                ForEach(group.sections) { section in groupRow(section).id(section) }
             }
         }
     }

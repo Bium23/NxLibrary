@@ -120,6 +120,21 @@ final class SpotlightRowTests: XCTestCase {
 }
 
 final class SpotlightRowMergeTests: XCTestCase {
+    func testSavingVisibleMoveRetainsDisabledHiddenAndCardPositions() {
+        let a = UUID(), steam = UUID(), hidden = UUID(), b = UUID()
+        let key: (UUID) -> String = { SpotlightItem.game($0).key }
+        let saved = [key(a), key(steam), key(hidden), key(b), SpotlightItem.card(.mods).key]
+        // Only A and B are visible; Steam is disabled, another game hidden,
+        // and Mods disabled. All still belong to the saved layout.
+        let changed = SpotlightRow.saving(visibleOrder: [key(b), key(a)],
+                                          gameIDs: [a, steam, hidden, b], previousOrder: saved)
+        let restored = SpotlightRow.build(gameIDs: [a, steam, hidden, b], enabledCards: [], order: changed)
+        XCTAssertEqual(restored, [.game(b), .game(steam), .game(hidden), .game(a)])
+        XCTAssertTrue(changed.contains(SpotlightItem.card(.mods).key))
+        let back = SpotlightRow.saving(visibleOrder: [key(a), key(b)], gameIDs: [a, steam, hidden, b], previousOrder: changed)
+        XCTAssertEqual(SpotlightRow.build(gameIDs: [a, steam, hidden, b], enabledCards: [], order: back),
+                       [.game(a), .game(steam), .game(hidden), .game(b)])
+    }
     func testFilteredMoveKeepsHiddenSlots() {
         // Saved A…E as D,A,B,C,E; Installed shows A,C,E; C moved first.
         let merged = SpotlightRow.merging(visibleOrder: ["C", "A", "E"],

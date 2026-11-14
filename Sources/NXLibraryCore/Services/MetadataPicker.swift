@@ -84,8 +84,7 @@ public final class MetadataPicks: ObservableObject {
 
     private var fileURL: URL { directory.appendingPathComponent("metadata-picks.json") }
 
-    public init(directory: URL = FileManager.default.homeDirectoryForCurrentUser
-                    .appendingPathComponent("Library/Application Support/NXLibrary")) {
+    public init(directory: URL = AppData.supportRoot) {
         self.directory = directory
         let url = directory.appendingPathComponent("metadata-picks.json")
         table = (try? Data(contentsOf: url))

@@ -73,7 +73,10 @@ struct SeleneStatsRow: View {
                     value(text)
                 case .platform(let console):
                     HStack(spacing: canvas.u(9)) {
-                        SwitchPlatformIcon()
+                        Group {
+                            if console == "Mac" { Image(systemName: "laptopcomputer").resizable().scaledToFit() }
+                            else { SwitchPlatformIcon() }
+                        }
                             .foregroundColor(SeleneTheme.ink)
                             .frame(width: canvas.u(27), height: canvas.u(27))
                         value(console)

@@ -6,20 +6,25 @@ import NXLibraryCore
 /// genres, developer, publisher, release date), Automatic (the store's value, as
 /// NX Library reads it), what Title DB and GameTDB offer instead, or the player's
 /// own text. A choice is kept in `MetadataPicks` and laid over the store's data.
+/// A Steam game's Automatic is the Steam store's text; it has no Switch databases to offer,
+/// and its choices go to the Steam personal store.
 ///
 /// Input: Up/Down move, L/R (Q/E, or Left/Right) change the field, A chooses,
 /// B (or Esc) returns to Game options. A click chooses.
 struct ChangeMetadataView: View {
     @ObservedObject var viewModel: AppViewModel
-    let game: PortedGame
+    let subject: PersonalizationSubject
     let onClose: () -> Void
 
     @ObservedObject private var picks = MetadataPicks.shared
+    @ObservedObject private var steamPicks = SteamPersonalizations.shared.metadata
+    @ObservedObject private var steamFacts = SteamGameFacts.shared
+    @State private var failure: String?
     @State private var field: MetadataField = .description
     @State private var focus = 0
     @State private var titleDB: TitleDBInfo?
     @State private var gameTDB: [GameTDBEntry] = []
-    @State private var searching = true
+    @State private var searching: Bool
     @State private var keyMonitor: Any?
     @State private var editing = false
     @State private var draft = ""
@@ -36,13 +41,30 @@ struct ChangeMetadataView: View {
         case write
     }
 
-    private var titleKey: String { game.titleId ?? game.uniqueKey }
-    private var pick: String? { picks.value(titleID: titleKey, field: field) }
-    private var store: NintendoStoreMetadata? { viewModel.storeMetadataAsFetched(for: game) }
+    init(viewModel: AppViewModel, subject: PersonalizationSubject, onClose: @escaping () -> Void) {
+        self.viewModel = viewModel
+        self.subject = subject
+        self.onClose = onClose
+        // Steam games have no Switch databases to search.
+        _searching = State(initialValue: subject.ported != nil)
+    }
+
+    private var pick: String? {
+        _ = picks.revision; _ = steamPicks.revision
+        return subject.metadataPick(field)
+    }
+    private var store: NintendoStoreMetadata? { subject.ported.flatMap(viewModel.storeMetadataAsFetched) }
+
+    /// What Automatic shows: the Nintendo or Steam store's value.
+    private var automaticValue: String? {
+        if let steam = subject.steam { return steamFacts.metadata(for: steam)?.value(field) }
+        return MetadataOptions.list(for: field, store: store, titleDB: nil, gameTDB: []).first?.value
+    }
 
     /// Automatic is the store's value, so the store's option is not listed again.
     private var options: [MetadataOption] {
-        MetadataOptions.list(for: field, store: store, titleDB: titleDB, gameTDB: gameTDB)
+        guard subject.ported != nil else { return [] }
+        return MetadataOptions.list(for: field, store: store, titleDB: titleDB, gameTDB: gameTDB)
             .filter { $0.source != "Nintendo store" }
     }
 
@@ -69,14 +91,14 @@ struct ChangeMetadataView: View {
                         .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink60)
                         .padding(.leading, canvas.u(8))
-                    Text(game.name)
+                    Text(subject.name)
                         .seleneFont(40)
                         .foregroundColor(SeleneTheme.ink)
                         .lineLimit(1)
                         .padding(.leading, canvas.u(6))
                         .padding(.bottom, canvas.u(14))
                     tabs
-                    Text(searching ? L10n.text("Looking on Title DB and GameTDB…") : " ")
+                    Text(failure ?? (searching ? L10n.text("Looking on Title DB and GameTDB…") : " "))
                         .seleneFont(14)
                         .foregroundColor(SeleneTheme.ink60)
                         .padding(.leading, canvas.u(10))
@@ -171,8 +193,8 @@ struct ChangeMetadataView: View {
     private func describe(_ row: Row) -> (title: String, value: String?) {
         switch row {
         case .automatic:
-            let value = MetadataOptions.list(for: field, store: store, titleDB: nil, gameTDB: []).first?.value
-            return (L10n.text("Automatic"), value.map { L10n.format("Nintendo store: %@", [displayValue($0)]) } ?? L10n.text("Nothing from the store yet."))
+            let format = subject.steam != nil ? "Steam: %@" : "Nintendo store: %@"
+            return (L10n.text("Automatic"), automaticValue.map { L10n.format(format, [displayValue($0)]) } ?? L10n.text("Nothing from the store yet."))
         case .yourPick(let value):
             return (L10n.text("Your own"), displayValue(value))
         case .option(let option):
@@ -204,9 +226,10 @@ struct ChangeMetadataView: View {
     // MARK: - Loading
 
     private func search() async {
+        guard subject.ported != nil else { return }
         defer { searching = false }
-        if let titleId = game.titleId { titleDB = await TitleDBInfo.fetch(titleID: titleId) }
-        let names = [game.name, store?.name, titleDB?.name].compactMap { $0 }
+        if let titleId = subject.titleId { titleDB = await TitleDBInfo.fetch(titleID: titleId) }
+        let names = [subject.name, store?.name, titleDB?.name].compactMap { $0 }
         // Only exact titles: a look-alike game's synopsis would be the wrong game's.
         let all = await viewModel.boxArt.pickerEntries(names: names)
         gameTDB = all.filter { entry in names.contains { GameTDB.normalize($0) == GameTDB.normalize(entry.title) } }
@@ -218,24 +241,33 @@ struct ChangeMetadataView: View {
         switch row {
         case .automatic:
             guard pick != nil else { return }
-            viewModel.pickMetadata(nil, field: field, for: game)
+            save(nil)
         case .yourPick:
             break
         case .option(let option):
-            viewModel.pickMetadata(option.value, field: field, for: game)
+            save(option.value)
         case .write:
-            draft = pick ?? MetadataOptions.list(for: field, store: store, titleDB: nil, gameTDB: []).first?.value ?? ""
+            draft = pick ?? automaticValue ?? ""
             editorFocus = .cancel
             editing = true
         }
         SoundEffectService.shared.play(.click)
     }
 
+    /// Keeps the value (nil: the store's), reporting a save that failed instead of showing it as chosen.
+    private func save(_ value: String?) {
+        do { try subject.pickMetadata(value, field: field, viewModel: viewModel); failure = nil }
+        catch {
+            failure = error.localizedDescription
+            SoundEffectService.shared.play(.error)
+        }
+    }
+
     private var editor: some View {
         ZStack {
             SeleneTheme.scrim45.ignoresSafeArea().contentShape(Rectangle())
                 .onTapGesture { editing = false }
-            SeleneConfirmDialog(title: field.title, message: game.name, confirmTitle: L10n.text("Save"),
+            SeleneConfirmDialog(title: field.title, message: subject.name, confirmTitle: L10n.text("Save"),
                 focus: $editorFocus, onCancel: { editing = false }, onConfirm: saveDraft) {
                 VStack(alignment: .leading, spacing: canvas.u(12)) {
                     if field == .description {
@@ -267,7 +299,7 @@ struct ChangeMetadataView: View {
 
     private func saveDraft() {
         let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        viewModel.pickMetadata(text.isEmpty ? nil : text, field: field, for: game)
+        save(text.isEmpty ? nil : text)
         editing = false
         SoundEffectService.shared.play(.click)
     }
@@ -331,7 +363,7 @@ struct ChangeMetadataView: View {
     private func installKeyMonitor() {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            guard viewModel.gameForSettingsSheet?.id == game.id, viewModel.settingsNotice == nil,
+            guard viewModel.optionsGameID == subject.id, viewModel.settingsNotice == nil,
                   let window = event.window, !window.isSheet, window.attachedSheet == nil,
                   NSApp.modalWindow == nil else { return event }
             if editing {

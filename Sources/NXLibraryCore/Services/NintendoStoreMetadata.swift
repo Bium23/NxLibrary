@@ -132,8 +132,7 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
 
     public init(
         client: NintendoStoreHTTPClient = URLSessionNintendoStoreClient(),
-        cacheDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/NXLibrary/metadata"),
+        cacheDirectory: URL = AppData.supportRoot.appendingPathComponent("metadata"),
         fileManager: FileManager = .default
     ) {
         self.client = client

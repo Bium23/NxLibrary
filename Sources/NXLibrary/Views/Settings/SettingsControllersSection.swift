@@ -51,7 +51,7 @@ struct SettingsControllersSection: View {
             SettingsSubheading(L10n.text("New games"))
 
             SeleneToggleRow("Rumble",
-                            subtitle: "Controller vibration",
+                            subtitle: "Vibration in new Switch games",
                             isOn: $settings.settings.gameDefaults.rumble)
 
             SeleneRow("Rumble strength",

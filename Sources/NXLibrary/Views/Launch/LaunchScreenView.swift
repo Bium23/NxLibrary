@@ -152,12 +152,12 @@ struct LaunchScreenView: View {
         let metadata = viewModel.storeMetadata[game.id]
         if hero == nil, showsArt {
             let loaded = await GameArtLoader.shared.hero(
-                for: game, metadata: metadata, artwork: artwork)
+                for: game, metadata: metadata, artwork: artwork, personalizations: viewModel.personalizations)
             withAnimation(.easeOut(duration: 0.3)) { hero = loaded }
         }
         if logo == nil, settings.launchStyle != .minimal, settings.launchStyle != .artOnly {
             let loaded = await GameArtLoader.shared.logo(
-                for: game, metadata: metadata, artwork: artwork)
+                for: game, metadata: metadata, artwork: artwork, personalizations: viewModel.personalizations)
             withAnimation(.easeOut(duration: 0.3)) { logo = loaded }
         }
     }

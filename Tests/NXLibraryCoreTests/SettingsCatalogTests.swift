@@ -21,6 +21,25 @@ final class SettingsCatalogTests: XCTestCase {
         XCTAssertTrue(changed.allSatisfy { $0.group == .controllers })
     }
 
+    func testSwitchOnlyRowsLiveInTheSwitchSections() {
+        let groups = Dictionary(uniqueKeysWithValues: SettingsCatalog.all.map { ($0.id, $0.group) })
+        XCTAssertEqual(groups["checkEngineAtLaunch"], .engine)
+        XCTAssertEqual(groups["setup"], .engine)
+        XCTAssertEqual(groups["refreshLibraryAtLaunch"], .library)
+        XCTAssertEqual(groups["boxCovers"], .library)
+        XCTAssertNil(groups["environment"], "Compatibility in Engine re-checks the environment")
+        XCTAssertFalse(SettingsCatalog.all.contains { $0.group == .startUp && !Self.generalStartUp.contains($0.id) })
+    }
+
+    func testEnvironmentIsFoundOnTheEnginePage() {
+        XCTAssertEqual(SettingsCatalog.search("environment").first { $0.id == "engineStatus" }?.group, .engine)
+    }
+
+    private static let generalStartUp: Set<String> = [
+        "appLanguage", "appRegion", "startOn", "restoreLastGame", "startInFullscreen",
+        "checkAppUpdatesAtLaunch", "introAnimation"
+    ]
+
     func testSearchMatchesAboutText() {
         let titles = SettingsCatalog.search("crops").map(\.title)
         XCTAssertTrue(titles.contains("Wallpaper sizing"))

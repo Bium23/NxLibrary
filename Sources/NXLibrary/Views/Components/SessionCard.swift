@@ -51,6 +51,7 @@ final class SessionCardPresenter: ObservableObject {
 /// Selene's session card: "Session ended", the game's name and this session · total on the left, the logo on the
 /// right, the game's art faint behind. 640 × 128 units, top right; it takes no input.
 struct SessionCardView: View {
+    @Environment(\.catalogPersonalizations) private var personalizations
     @Environment(\.seleneCanvas) private var canvas
     let summary: SessionSummary
     let game: PortedGame?
@@ -143,11 +144,11 @@ struct SessionCardView: View {
         hero = GameArtLoader.shared.cachedHero(for: game)
         logo = GameArtLoader.shared.cachedLogo(for: game)
         if hero == nil {
-            let loaded = await GameArtLoader.shared.hero(for: game, metadata: metadata, artwork: artwork)
+            let loaded = await GameArtLoader.shared.hero(for: game, metadata: metadata, artwork: artwork, personalizations: personalizations)
             withAnimation(.easeOut(duration: 0.3)) { hero = loaded }
         }
         if logo == nil {
-            let loaded = await GameArtLoader.shared.logo(for: game, metadata: metadata, artwork: artwork)
+            let loaded = await GameArtLoader.shared.logo(for: game, metadata: metadata, artwork: artwork, personalizations: personalizations)
             withAnimation(.easeOut(duration: 0.3)) { logo = loaded }
         }
     }

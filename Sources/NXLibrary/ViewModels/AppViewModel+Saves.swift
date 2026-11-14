@@ -12,7 +12,7 @@ extension AppViewModel {
     }
 
     var saveBackupRoot: URL {
-        FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/NXLibrary/SaveBackups")
+        AppData.supportRoot.appendingPathComponent("SaveBackups")
     }
     func saveContext(for game: PortedGame) throws -> SaveContext {
         guard let id = game.titleId else { throw SaveFailure.invalidTitleID }
@@ -71,6 +71,8 @@ extension AppViewModel {
     }
     /// Only app-owned journals for known games; no startup walk through save contents.
     func recoverSavesAtStartup() {
+        // Imported launcher records do not authorize repair of a real game save.
+        guard !AppData.profile.isDevelopment else { return }
         for game in libraryGames {
             guard let location = try? defaultSaveLocation(for: game), SaveTransaction.needsRecovery(location: location),
                   RunningGameMonitor.runningApplication(for: game) == nil,

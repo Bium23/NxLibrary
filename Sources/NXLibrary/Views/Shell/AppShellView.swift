@@ -12,6 +12,7 @@ public struct AppShellView: View {
     @StateObject private var runningGames = RunningGameMonitor()
     @StateObject private var sessionCard = SessionCardPresenter()
     @StateObject private var updater = AppUpdater()
+    @StateObject private var sources: CatalogSourcesModel
     @StateObject private var nativeMenus = NativeMenuCommands.shared
     @ObservedObject private var theme = ThemeStore.shared
     @ObservedObject private var localization = AppLocalization.shared
@@ -22,10 +23,11 @@ public struct AppShellView: View {
 
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
 
-    public init(settingsStore store: AppSettingsStore) {
-        _settings = StateObject(wrappedValue: store)
-        _viewModel = StateObject(wrappedValue: AppViewModel(settingsStore: store))
-        _router = StateObject(wrappedValue: Self.startingRouter(saved: store.settings))
+    @MainActor init(state: AppShellState) {
+        _sources = StateObject(wrappedValue: state.sources)
+        _settings = StateObject(wrappedValue: state.settings)
+        _viewModel = StateObject(wrappedValue: state.viewModel)
+        _router = StateObject(wrappedValue: state.router)
     }
 
     private func updateLocale() {
@@ -34,16 +36,6 @@ public struct AppShellView: View {
         if previousLanguage != AppLocalization.shared.context.language {
             viewModel.refreshLocalizedMetadata()
         }
-    }
-
-    /// The router, already on the screen the Start on setting names.
-    private static func startingRouter(saved: AppSettings) -> AppRouter {
-        // The palette is in place before the first frame.
-        ThemeStore.shared.apply(id: saved.colorThemeID)
-        let router = AppRouter()
-        router.setInitialRoute(AppRouter.initialRoute(for: saved.startOn, last: saved.lastHome))
-        router.isIntroShowing = saved.introAnimation
-        return router
     }
 
     private var backdropStyle: SeleneBackdropStyle {
@@ -86,11 +78,18 @@ public struct AppShellView: View {
     private var nativeMenuAvailability: NativeMenuAvailability {
         let general = !router.isIntroShowing && !viewModel.showSetupCheck
             && !isCloseGameOpen && !router.isScreenshotViewerOpen && !router.isSearchPresented
-            && viewModel.gameForSettingsSheet == nil && viewModel.launchOverlay == nil && NSApp.modalWindow == nil
+            && !viewModel.isGameOptionsOpen && viewModel.launchOverlay == nil && NSApp.modalWindow == nil
             && NSApp.keyWindow?.attachedSheet == nil && NSApp.keyWindow?.isSheet != true
         let game = general && !router.isMenuPresented ? viewModel.currentFocusedGame : nil
-        return NativeMenuAvailability(general: general, play: game?.isPlayableLocally == true,
-            details: isHomeRoute && game != nil, options: game != nil)
+        let focused = general && !router.isMenuPresented ? viewModel.currentFocusedCatalogGame : nil
+        let steam = focused?.integration == .steam ? focused : nil
+        // A Steam game's details are its Spotlight page; it has no separate Details screen.
+        let catalog = viewModel.currentFocusedCatalogGame
+        return NativeMenuAvailability(general: general,
+            play: game?.isPlayableLocally == true || steam.map(SteamPlayCoordinator.shared.canPlay) == true,
+            details: isHomeRoute && catalog != nil && (catalog?.integration != .steam || router.route == .library),
+            options: game != nil || steam != nil,
+            catalogRecovery: general && !viewModel.isBuilding && !viewModel.catalogBuildRecoveries.isEmpty)
     }
 
     /// The launch screen sits over everything, menu included, until the game's window shows.
@@ -115,8 +114,8 @@ public struct AppShellView: View {
             SeleneTheme.scrim.ignoresSafeArea()
             content
                 // Game options, Add game and the console blur the screen behind instead of darkening it.
-                .blur(radius: viewModel.gameForSettingsSheet == nil && !router.route.isOverlay ? 0 : 10)
-                .allowsHitTesting(!router.route.isOverlay && viewModel.gameForSettingsSheet == nil)
+                .blur(radius: !viewModel.isGameOptionsOpen && !router.route.isOverlay ? 0 : 10)
+                .allowsHitTesting(!router.route.isOverlay && !viewModel.isGameOptionsOpen)
             if router.route == .addGame {
                 AddGameView(viewModel: viewModel,
                             router: router,
@@ -215,6 +214,21 @@ public struct AppShellView: View {
                 .transition(overlayTransition)
                 .zIndex(2)
             }
+            if let game = viewModel.steamOptionsGame {
+                SteamOptionsView(
+                    viewModel: viewModel,
+                    game: game,
+                    origin: viewModel.gameOptionsOrigin,
+                    onClose: { viewModel.steamOptionsGame = nil },
+                    onMove: {
+                        viewModel.steamOptionsGame = nil
+                        router.requestSpotlightMove(SpotlightItem.game(game.id).key)
+                    }
+                )
+                .id(game.id)
+                .transition(overlayTransition)
+                .zIndex(2)
+            }
         }
     }
 
@@ -234,7 +248,7 @@ public struct AppShellView: View {
         // Inside the canvas root so the sheet inherits the window's canvas units.
         .seleneCanvasRoot()
         .animation(reduceMotion ? nil : SeleneTheme.screen,
-                   value: viewModel.gameForSettingsSheet?.id)
+                   value: viewModel.optionsGameID)
         .animation(reduceMotion ? nil : SeleneTheme.quick,
                    value: router.isMenuPresented)
         .animation(reduceMotion ? nil : SeleneTheme.screen, value: router.isThemePickerOpen)
@@ -256,6 +270,8 @@ public struct AppShellView: View {
         .environment(\.seleneShowButtonHints, settings.settings.showButtonHints)
         .environment(\.seleneButtonNames, settings.settings.buttonNames)
         .environmentObject(updater)
+        .environmentObject(sources)
+        .onAppear { sources.startIfEnabled() }
         .preferredColorScheme(.dark)
         .frame(minWidth: 1100, minHeight: 700)
         .onAppear(perform: startRuntime)
@@ -271,10 +287,17 @@ public struct AppShellView: View {
         }
         .onDisappear {
             runningGames.stop()
+            SteamPlayCoordinator.shared.stop()
             removeGestureKeyMonitor()
         }
         .onChange(of: viewModel.libraryGames) { games in
             runningGames.setGames(games)
+        }
+        .onChange(of: viewModel.catalogGames) { games in
+            SteamPlayCoordinator.shared.setGames(games, sources: viewModel.catalogSourceConfigurations)
+        }
+        .onChange(of: viewModel.catalogSourceConfigurations) { sources in
+            SteamPlayCoordinator.shared.setGames(viewModel.catalogGames, sources: sources)
         }
         .onReceive(runningGames.$endedSession) { summary in
             sessionCard.ended(summary, enabled: settings.settings.showsSessionCard)
@@ -308,35 +331,38 @@ public struct AppShellView: View {
         styled
         .environment(\.locale, localization.context.formatLocale)
         .environment(\.nxAppLocale, localization.context)
+        .environment(\.catalogPersonalizations, viewModel.personalizations)
         .onChange(of: settings.settings.appLanguage) { _ in updateLocale() }
         .onChange(of: settings.settings.appRegion) { _ in updateLocale() }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryPlayFocused)) { _ in
             guard !router.isMenuPresented,
                   nativeMenuAvailability.play,
-                  viewModel.gameForSettingsSheet == nil,
-                  !isCloseGameOpen,
-                  let game = viewModel.currentFocusedGame else { return }
-            viewModel.launchGame(game)
+                  !viewModel.isGameOptionsOpen,
+                  !isCloseGameOpen else { return }
+            if let steam = viewModel.currentFocusedCatalogGame, steam.integration == .steam {
+                SteamPlayCoordinator.shared.press(steam)
+            } else if let game = viewModel.currentFocusedGame {
+                viewModel.launchGame(game)
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenDetails)) { _ in
             guard !router.isMenuPresented,
-                  viewModel.gameForSettingsSheet == nil,
+                  !viewModel.isGameOptionsOpen,
                   !isCloseGameOpen,
                   isHomeRoute,
-                  let game = viewModel.currentFocusedGame else { return }
+                  let game = viewModel.currentFocusedCatalogGame else { return }
             if router.route == .library { viewModel.spotlight.showGameDetails() }
-            else { router.showDetail(game.id) }
+            else if game.integration != .steam { router.showDetail(game.id) }
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenGameOptions)) { _ in
             guard nativeMenuAvailability.options else { return }
             switch router.route {
-            case .library:
-                if let game = viewModel.currentFocusedGame {
-                    viewModel.openGameOptions(game, from: .spotlight)
-                }
-            case .collection:
-                if let game = viewModel.currentFocusedGame {
-                    viewModel.openGameOptions(game, from: .collection)
+            case .library, .collection:
+                let origin: GameOptionsOrigin = router.route == .library ? .spotlight : .collection
+                if let steam = viewModel.currentFocusedCatalogGame, steam.integration == .steam {
+                    viewModel.openSteamOptions(steam, from: origin)
+                } else if let game = viewModel.currentFocusedGame {
+                    viewModel.openGameOptions(game, from: origin)
                 }
             case .detail(let id):
                 if let game = viewModel.libraryGames.first(where: { $0.id == id }) {
@@ -356,21 +382,25 @@ public struct AppShellView: View {
             updater.checkNow()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenMenu)) { _ in
-            guard !isCloseGameOpen, viewModel.gameForSettingsSheet == nil, !router.isScreenshotViewerOpen else { return }
+            guard !isCloseGameOpen, !viewModel.isGameOptionsOpen, !router.isScreenshotViewerOpen else { return }
             router.isMenuPresented = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenSettings)) { _ in
-            guard !isCloseGameOpen, !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
+            guard !isCloseGameOpen, !router.isScreenshotViewerOpen, !viewModel.isGameOptionsOpen else { return }
             router.closeMenu()
             router.openSettings(.startUp)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .nxLibraryRetryCatalogSave)) { _ in
+            guard nativeMenuAvailability.catalogRecovery else { return }
+            viewModel.retrySavingBuildResults()
+        }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenConsole)) { _ in
-            guard !isCloseGameOpen, !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
+            guard !isCloseGameOpen, !router.isScreenshotViewerOpen, !viewModel.isGameOptionsOpen else { return }
             router.closeMenu()
             router.openConsole()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryPortingNoticeOpened)) { note in
-            guard !isCloseGameOpen, !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil,
+            guard !isCloseGameOpen, !router.isScreenshotViewerOpen, !viewModel.isGameOptionsOpen,
                   let id = (note.userInfo?["gameID"] as? String).flatMap(UUID.init(uuidString:)) else { return }
             router.closeMenu()
             if note.userInfo?["outcome"] as? String == "failed" {
@@ -387,13 +417,13 @@ public struct AppShellView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenLibrary)) { _ in
-            guard !isCloseGameOpen, !router.isScreenshotViewerOpen, viewModel.gameForSettingsSheet == nil else { return }
+            guard !isCloseGameOpen, !router.isScreenshotViewerOpen, !viewModel.isGameOptionsOpen else { return }
             router.closeMenu()
             router.showLibrary()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryOpenAddGame)) { _ in
             guard !isCloseGameOpen, !router.isMenuPresented, !router.isScreenshotViewerOpen,
-                  viewModel.gameForSettingsSheet == nil else { return }
+                  !viewModel.isGameOptionsOpen else { return }
             router.closeMenu()
             openFreshAddGame()
         }
@@ -410,7 +440,7 @@ public struct AppShellView: View {
                 viewModel.dismissRemoveGame()
             } else if showsUpdateOffer {
                 updater.later()
-            } else if viewModel.gameForSettingsSheet != nil {
+            } else if viewModel.isGameOptionsOpen {
                 // Game options steps back (dialog, then Edit details) or closes.
                 NotificationCenter.default.post(name: .nxGameOptionsGamepadAction, object: GamepadAction.cancel)
             } else if router.isMenuPresented {
@@ -431,6 +461,9 @@ public struct AppShellView: View {
         }
         .onChange(of: viewModel.alertMessage) { _ in
             presentLegacyNotice()
+        }
+        .onChange(of: viewModel.settingsNotice?.id) { id in
+            if id == nil { presentLegacyNotice() }
         }
     }
 
@@ -492,9 +525,12 @@ public struct AppShellView: View {
         SoundEffectService.shared.bind(to: settings)
         artwork.trimCache()
         viewModel.refreshBoxArtIndex()
-        if settings.settings.checkEngineAtLaunch { SetupCheckModel.checkAtLaunch(viewModel: viewModel) }
+        if settings.settings.checkEngineAtLaunch && !AppData.profile.isDevelopment { SetupCheckModel.checkAtLaunch(viewModel: viewModel) }
         runningGames.start(sessions: playSessions)
         runningGames.setGames(viewModel.libraryGames)
+        // After the nxnative reconcile, which closes a Steam session left by a restart at its last heartbeat.
+        SteamPlayCoordinator.shared.setGames(viewModel.catalogGames, sources: viewModel.catalogSourceConfigurations)
+        SteamPlayCoordinator.shared.start(sessions: playSessions, settings: settings)
         viewModel.installPendingBuilds()
         viewModel.syncPendingAppIcons()
         closeGameWatch = runningGames.$runningGameIDs.sink { [weak viewModel] ids in
@@ -573,7 +609,7 @@ public struct AppShellView: View {
                 menuInput(action)
                 return
             }
-            if viewModel.gameForSettingsSheet != nil {
+            if viewModel.isGameOptionsOpen {
                 NotificationCenter.default.post(name: .nxGameOptionsGamepadAction, object: action)
                 return
             }
@@ -640,10 +676,11 @@ public struct AppShellView: View {
         viewModel.settingsNotice = nil
         notice?.onDismiss?()
         if choice == 1 { notice?.retry?() }
+        presentLegacyNotice()
     }
 
     private func presentLegacyNotice() {
-        guard let message = viewModel.alertMessage else { return }
+        guard viewModel.settingsNotice == nil, let message = viewModel.alertMessage else { return }
         viewModel.alertMessage = nil
         viewModel.showSettingsNotice(title: L10n.text("NX Library"), message: message)
     }
@@ -983,6 +1020,10 @@ public struct AppShellView: View {
         case .refreshLibrary:
             router.closeMenu()
             viewModel.refreshLibrary()
+            if sources.configuration.isEnabled { sources.refresh() }
+        case .manageSources:
+            router.closeMenu()
+            router.openSettings(.sources)
         case .settings:
             router.closeMenu()
             router.openSettings(.startUp)
@@ -1079,7 +1120,7 @@ private struct SoundCueHooks: ViewModifier {
             .onChange(of: router.isMenuPresented) { open in
                 SoundEffectService.shared.play(open ? .openPanel : .back)
             }
-            .onChange(of: viewModel.gameForSettingsSheet?.id) { id in
+            .onChange(of: viewModel.optionsGameID) { id in
                 SoundEffectService.shared.play(id == nil ? .back : .openPanel)
             }
             .onChange(of: viewModel.gameToClose?.id) { id in

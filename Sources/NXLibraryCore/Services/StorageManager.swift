@@ -34,8 +34,7 @@ public final class StorageManager {
     private let fm: FileManager
 
     public init(
-        supportRoot: URL = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/NXLibrary"),
+        supportRoot: URL = AppData.supportRoot,
         applicationsRoot: URL = URL(fileURLWithPath: NSHomeDirectory())
             .appendingPathComponent("Applications"),
         logsRoot: URL = FileManager.default.homeDirectoryForCurrentUser

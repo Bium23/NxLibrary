@@ -77,64 +77,8 @@ public final class LibraryStore {
 
     public func merge(scanned: [PortedGame], replacingSources: Bool = false) throws -> LibraryFile {
         var library = try load()
-        for game in scanned {
-            if let index = library.games.firstIndex(where: { existing in
-                guard let target = game.titleId else { return existing.titleId == nil }
-                return existing.titleId?.caseInsensitiveCompare(target) == .orderedSame
-            }) {
-                let old = library.games[index]
-                // Scans refresh disk observations. Application-owned state survives a scan.
-                var merged = old
-                merged.name = game.name
-                merged.url = game.url
-                merged.platform = game.platform
-                merged.sizeBytes = game.sizeBytes
-                merged.modificationDate = game.modificationDate
-                merged.bundleId = game.bundleId
-                merged.titleId = game.titleId
-                merged.versionString = game.versionString
-                merged.status = game.status
-                merged.toolchain = game.toolchain
-                merged.lastBuild = game.lastBuild
-                let explicitSources = replacingSources && !game.sources.isEmpty
-                if explicitSources || old.sources.isEmpty {
-                    merged.sources = game.sources
-                } else {
-                    let oldSourcesExist = old.sources.allSatisfy {
-                        fm.fileExists(atPath: $0.url.path)
-                    }
-                    merged.sources = (oldSourcesExist || game.sources.isEmpty)
-                        ? old.sources : game.sources
-                }
-                merged.workspacePath = explicitSources ? game.workspacePath ?? old.workspacePath : old.workspacePath ?? game.workspacePath
-                merged.buildCachePath = explicitSources ? game.buildCachePath ?? old.buildCachePath : old.buildCachePath ?? game.buildCachePath
-                if (old.status == .built || old.status == .builtSourcesMissing
-                    || old.status == .needsRebuild),
-                   old.url.pathExtension.lowercased() == "app",
-                   fm.fileExists(atPath: old.url.path) {
-                    merged.url = old.url
-                    merged.sizeBytes = old.sizeBytes
-                    merged.bundleId = old.bundleId ?? merged.bundleId
-                    merged.versionString = old.versionString ?? merged.versionString
-                }
-                if old.status == .built || old.status == .builtSourcesMissing
-                    || old.status == .needsRebuild {
-                    if merged.sources.isEmpty {
-                        merged.status = game.status == .built ? .built : .builtSourcesMissing
-                    } else {
-                        let sourcesExist = merged.sources.allSatisfy {
-                            fm.fileExists(atPath: $0.url.path)
-                        }
-                        merged.status = sourcesExist ? .built : .builtSourcesMissing
-                    }
-                    merged.toolchain = old.toolchain
-                    merged.lastBuild = old.lastBuild
-                }
-                library.games[index] = merged
-            } else {
-                library.games.append(game)
-            }
-        }
+        library.games = NXNativeLibraryMerge.merge(scanned: scanned, into: library.games,
+                                                    replacingSources: replacingSources, fileManager: fm)
         try save(library)
         return library
     }

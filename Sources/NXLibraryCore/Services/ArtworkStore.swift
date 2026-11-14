@@ -55,8 +55,7 @@ public final class ArtworkStore: ObservableObject {
     }
 
     public static func defaultDirectory() -> URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/NXLibrary/artwork")
+        AppData.supportRoot.appendingPathComponent("artwork")
     }
 
     public func cachedURL(titleID: String, kind: ArtworkKind) -> URL? {

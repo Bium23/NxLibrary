@@ -151,7 +151,7 @@ struct SeleneBackdrop: View {
 /// theme's accent falling from the top left onto a pool of light on the floor,
 /// breathing; from the pool a band of thousands of motes rises to the right, far
 /// ones fine and sharp, near ones blurred into bokeh. Drawn by Metal
-/// (`MoonlightEngine`, `MoonlightShaders`; the field is `MoonlightField`), 30 fps
+/// (`MoonlightEngine`, `MoonlightShaders`; the field is `MoonlightField`), 60 fps
 /// or one still frame. Without Metal, the beam and pool hold still in SwiftUI.
 struct MoonlightBackdrop: View {
     let accent: Color

@@ -136,13 +136,13 @@ struct GameOptionsView: View {
             .allowsHitTesting(!panelOpen)
 
             if artworkOpen {
-                ChangeArtworkView(viewModel: viewModel, game: current) { artworkOpen = false }
+                ChangeArtworkView(viewModel: viewModel, subject: PersonalizationSubject(current, viewModel: viewModel)) { artworkOpen = false }
                     .transition(.opacity)
                     .zIndex(2)
             }
 
             if metadataOpen {
-                ChangeMetadataView(viewModel: viewModel, game: current) { metadataOpen = false }
+                ChangeMetadataView(viewModel: viewModel, subject: PersonalizationSubject(current, viewModel: viewModel)) { metadataOpen = false }
                     .transition(.opacity)
                     .zIndex(2)
             }

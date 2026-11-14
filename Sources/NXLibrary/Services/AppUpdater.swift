@@ -22,7 +22,7 @@ final class AppUpdater: ObservableObject {
 
     private let repository: String?
     private let runningVersion: String
-    private let defaults = UserDefaults.standard
+    private let defaults = AppData.preferences
     private var downloadSession: URLSession?
     private var lastRelease: AppUpdate.Release?
     private var shouldOfferResult = false
@@ -276,8 +276,7 @@ final class AppUpdater: ObservableObject {
     }
 
     private static func workFolder() -> URL {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("NXLibrary/Temp/Update")
+        AppData.supportRoot.appendingPathComponent("Temp/Update")
     }
 
     nonisolated private static func run(_ tool: String, _ arguments: [String]) -> Bool {

@@ -28,10 +28,12 @@ public enum AppUpdate {
     /// of the version in progress, so it never reads like a published release.
     public static func versionLabel(_ info: [String: Any]?) -> String {
         let short = info?["CFBundleShortVersionString"] as? String ?? "?"
-        return info?[releaseMarker] as? Bool == true ? short : "\(short) (development build)"
+        if info?[releaseMarker] as? Bool == true { return short }
+        if info?["NXLibraryDevelopmentProfile"] as? Bool == true { return "\(short) (Dev · Launcher)" }
+        return "\(short) (development build)"
     }
 
-    public static func repository(defaults: UserDefaults = .standard) -> String? {
+    public static func repository(defaults: UserDefaults = AppData.preferences) -> String? {
         if let value = defaults.string(forKey: repositoryOverrideKey)?.trimmingCharacters(in: .whitespaces),
            value.range(of: #"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"#, options: .regularExpression) != nil {
             return value
@@ -236,7 +238,7 @@ public enum AppUpdate {
               FileManager.default.isExecutableFile(atPath: app.appendingPathComponent("Contents/MacOS/" + exe).path)
         else { return .noExecutable }
         guard info["CFBundleShortVersionString"] as? String == version else { return .wrongVersion }
-        guard info[releaseMarker] as? Bool == true else { return .notRelease }
+        guard info[releaseMarker] as? Bool == true, info["NXLibraryDevelopmentProfile"] as? Bool != true else { return .notRelease }
         if let text = info["LSMinimumSystemVersion"] as? String, let minimum = numbers(text) {
             let running = [runningOS.majorVersion, runningOS.minorVersion, runningOS.patchVersion]
             let padded = minimum + Array(repeating: 0, count: max(0, 3 - minimum.count))
@@ -256,7 +258,7 @@ public enum AppUpdate {
     }
 
     public static func installability(_ bundle: URL) -> Installability {
-        guard bundle.pathExtension == "app", info(bundle)?[releaseMarker] as? Bool == true else { return .developer }
+        guard bundle.pathExtension == "app", let metadata = info(bundle), metadata[releaseMarker] as? Bool == true, metadata["NXLibraryDevelopmentProfile"] as? Bool != true else { return .developer }
         let standardized = bundle.standardizedFileURL
         if standardized.path.contains("/AppTranslocation/") { return .readOnly }
         if !FileManager.default.isWritableFile(atPath: standardized.deletingLastPathComponent().path) { return .readOnly }

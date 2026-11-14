@@ -10,7 +10,7 @@ struct CollectionCoverRow: View {
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
 
-    let games: [PortedGame]
+    let games: [CatalogGame]
     let selectedID: UUID?
     let artwork: ArtworkStore
     let boxArt: BoxArtService
@@ -21,8 +21,8 @@ struct CollectionCoverRow: View {
     let needsMetadata: (PortedGame) -> Void
     /// The porting look of a game's cover (`PortingTileLook`).
     var tileLook: (PortedGame) -> PortingTileLook = { _ in .normal }
-    let onSelect: (PortedGame) -> Void
-    let onActivate: (PortedGame) -> Void
+    let onSelect: (CatalogGame) -> Void
+    let onActivate: (CatalogGame) -> Void
 
     /// The first cover lines up with Spotlight's 80 margin (Selene's list had 14).
     private static let startInset: CGFloat = 80
@@ -59,19 +59,25 @@ struct CollectionCoverRow: View {
                                            tilesAcross: Int((canvas.size.width / pitch).rounded(.up)))
     }
 
-    private func cover(_ game: PortedGame, selected: Bool) -> some View {
+    private func cover(_ game: CatalogGame, selected: Bool) -> some View {
         let w = canvas.u(CollectionRow.coverWidth), h = canvas.u(CollectionRow.coverHeight)
         let face = RoundedRectangle(cornerRadius: canvas.u(12), style: .continuous)
         return ZStack {
-            SwitchBoxArtCover(game: game, width: w, height: h, officialName: officialName(game),
+            Group {
+                if let native = game.nxnativeGame {
+            SwitchBoxArtCover(game: native, width: w, height: h, officialName: officialName(native),
                               boxArt: boxArt, artwork: artwork, indexVersion: boxArtIndexVersion)
-                .portingLook(tileLook(game), cornerRadius: canvas.u(12))
+                .portingLook(tileLook(native), cornerRadius: canvas.u(12))
                 .frame(width: w, height: h)
                 .clipShape(face)
                 // One picture that grows and slides whole: a drawn cover's title, a lock or build progress would
                 // otherwise snap to the pixel grid on their own at every step and shake against the cover.
                 .drawingGroup()
                 .shadow(color: .black.opacity(0.55), radius: canvas.u(9))
+                } else {
+                    CatalogNativeArtwork(game: game).frame(width: w, height: h).clipShape(face)
+                }
+            }
             SeleneShine(cornerRadius: canvas.u(12), active: selected)
                 .frame(width: w, height: h)
             SeleneTileRing(cornerRadius: canvas.u(18), active: selected)
@@ -86,6 +92,6 @@ struct CollectionCoverRow: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(game.name)
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
-        .task(id: game.id) { needsMetadata(game) }
+        .task(id: game.id) { if let native = game.nxnativeGame { needsMetadata(native) } }
     }
 }

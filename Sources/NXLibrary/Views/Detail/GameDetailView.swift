@@ -158,7 +158,7 @@ struct GameDetailView: View {
         .onChange(of: viewer != nil) { router.isScreenshotViewerOpen = $0 }
         .onChange(of: model.bands) { _ in settleFocus(model.bands) }
         // Game options (its Mods panel) closing, or NX Library coming back from Finder, re-reads the mods.
-        .onChange(of: viewModel.gameForSettingsSheet == nil) { closed in if closed { reloadMods() } }
+        .onChange(of: !viewModel.isGameOptionsOpen) { closed in if closed { reloadMods() } }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in reloadMods() }
         // The key monitor captures this view's value: reinstall it when the game changes.
         .onChange(of: game) { _ in
@@ -172,10 +172,10 @@ struct GameDetailView: View {
             if let action = note.object as? GamepadAction { handle(action) }
         }
         .task(id: art.heroTaskKey(game, metadata: metadata)) {
-            await art.loadHero(game: game, current: { game.id }, metadata: metadata, artwork: artwork)
+            await art.loadHero(game: game, current: { game.id }, metadata: metadata, artwork: artwork, personalizations: viewModel.personalizations)
         }
         .task(id: art.logoTaskKey(game, metadata: metadata)) {
-            await art.loadLogo(game: game, metadata: metadata, artwork: artwork)
+            await art.loadLogo(game: game, metadata: metadata, artwork: artwork, personalizations: viewModel.personalizations)
         }
     }
 
@@ -239,7 +239,7 @@ struct GameDetailView: View {
 
             band(zone: DetailsFocus.screenshotsZone) {
                 DetailsScreenshotsBand(
-                    titleID: game.titleId ?? game.uniqueKey,
+                    titleID: viewModel.personalizationKey(for: game),
                     urls: model.screenshots,
                     source: metadata?.screenshotSource,
                     known: model.screenshotsKnown,

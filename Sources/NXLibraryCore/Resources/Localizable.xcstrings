@@ -3240,6 +3240,232 @@
         }
       }
     },
+    "%lld Steam games need review": {
+      "comment": "Steam source discovery count.",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Steam game needs review"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Steam games need review"
+                }
+              }
+            }
+          }
+        },
+        "it": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld gioco Steam da controllare"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld giochi Steam da controllare"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld jeu Steam à vérifier"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld jeux Steam à vérifier"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Steam-Spiel muss geprüft werden"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Steam-Spiele müssen geprüft werden"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld juego de Steam requiere revisión"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld juegos de Steam requieren revisión"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld jogo Steam requer revisão"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld jogos Steam requerem revisão"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Steam installations found": {
+      "comment": "Steam source discovery count.",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Steam installation found"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Steam installations found"
+                }
+              }
+            }
+          }
+        },
+        "it": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld installazione Steam trovata"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld installazioni Steam trovate"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld installation Steam trouvée"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld installations Steam trouvées"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Steam-Installation gefunden"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Steam-Installationen gefunden"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld instalación de Steam encontrada"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld instalaciones de Steam encontradas"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld instalação Steam encontrada"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld instalações Steam encontradas"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld commits ahead": {
       "comment": "Quantity-sensitive UI message; preserve %lld count and other placeholders.",
       "localizations": {
@@ -7022,6 +7248,47 @@
         }
       }
     },
+    "Another version changed your previous library. Both versions have been kept. Close the other copy and review the library folder.": {
+      "comment": "Catalog activation and recovery",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another version changed your previous library. Both versions have been kept. Close the other copy and review the library folder."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un’altra versione ha modificato la libreria precedente. Entrambe le versioni sono state conservate. Chiudi l’altra copia e controlla la cartella della libreria."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une autre version a modifié votre ancienne bibliothèque. Les deux versions ont été conservées. Fermez l’autre copie et examinez le dossier de la bibliothèque."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine andere Version hat deine bisherige Bibliothek geändert. Beide Versionen wurden aufbewahrt. Schließe die andere Kopie und prüfe den Bibliotheksordner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otra versión ha modificado tu biblioteca anterior. Se han conservado ambas versiones. Cierra la otra copia y revisa la carpeta de la biblioteca."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outra versão alterou sua biblioteca anterior. Ambas as versões foram preservadas. Feche a outra cópia e verifique a pasta da biblioteca."
+          }
+        }
+      }
+    },
     "App": {
       "comment": "AddGameView+Rows.swift",
       "localizations": {
@@ -7961,6 +8228,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Disposição da arte"
+          }
+        }
+      }
+    },
+    "Artwork, metadata and the store page.": {
+      "comment": "CatalogGameOptions.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artwork, metadata and the store page."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Immagini, metadati e pagina dello store."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Illustrations, métadonnées et page du magasin."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bilder, Metadaten und Store-Seite."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imágenes, metadatos y página de la tienda."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imagens, metadados e página da loja."
           }
         }
       }
@@ -12475,6 +12783,47 @@
         }
       }
     },
+    "Check enabled Steam libraries without changing your game files.": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check enabled Steam libraries without changing your game files."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controlla le librerie Steam attive senza modificare i file dei giochi."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifiez les bibliothèques Steam activées sans modifier les fichiers des jeux."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prüfe aktive Steam-Bibliotheken, ohne Spieldateien zu ändern."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa las bibliotecas de Steam activas sin cambiar los archivos de tus juegos."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifique as bibliotecas Steam ativas sem alterar os arquivos dos jogos."
+          }
+        }
+      }
+    },
     "Check engine at launch": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
@@ -12803,6 +13152,47 @@
         }
       }
     },
+    "Check these installations in Steam, then refresh this source. Only recognized native Mac games appear in the library.": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check these installations in Steam, then refresh this source. Only recognized native Mac games appear in the library."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controlla queste installazioni in Steam, poi aggiorna la fonte. Nella libreria compaiono solo i giochi Mac nativi riconosciuti."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifiez ces installations dans Steam, puis actualisez cette source. Seuls les jeux Mac natifs reconnus apparaissent dans la bibliothèque."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prüfe diese Installationen in Steam und aktualisiere dann diese Quelle. Nur erkannte native Mac-Spiele erscheinen in der Bibliothek."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa estas instalaciones en Steam y después actualiza esta fuente. Solo aparecen en la biblioteca los juegos nativos de Mac reconocidos."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifique estas instalações no Steam e atualize esta fonte. Apenas jogos nativos para Mac reconhecidos aparecem na biblioteca."
+          }
+        }
+      }
+    },
     "Check what you need to build. Your games come next.": {
       "comment": "SetupCheckView.swift",
       "localizations": {
@@ -12922,6 +13312,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verificando o hash da Microsoft…"
+          }
+        }
+      }
+    },
+    "Checking Steam libraries…": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking Steam libraries…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controllo delle librerie Steam…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérification des bibliothèques Steam…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam-Bibliotheken werden geprüft…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisando bibliotecas de Steam…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificando bibliotecas Steam…"
           }
         }
       }
@@ -14238,6 +14669,47 @@
         }
       }
     },
+    "Choose the Steam folder containing steamapps.": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the Steam folder containing steamapps."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli la cartella Steam che contiene steamapps."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez le dossier Steam contenant steamapps."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle den Steam-Ordner, der steamapps enthält."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige la carpeta de Steam que contiene steamapps."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolha a pasta do Steam que contém steamapps."
+          }
+        }
+      }
+    },
     "Choose the folder containing your game apps.": {
       "comment": "SetupCheck.swift",
       "localizations": {
@@ -15341,6 +15813,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Encerre o jogo antes de gerenciar seus dados salvos. Mantenha-o fechado até o término desta operação."
+          }
+        }
+      }
+    },
+    "Close the other NX Library copy, then try again. Your original library has not been changed.": {
+      "comment": "Development profile bootstrap; do not expose credential values.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close the other NX Library copy, then try again. Your original library has not been changed."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chiudi l’altra copia di NX Library e riprova. La libreria originale non è stata modificata."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermez l’autre copie de NX Library, puis réessayez. Votre bibliothèque d’origine n’a pas été modifiée."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schließe die andere Kopie von NX Library und versuche es erneut. Deine Originalbibliothek wurde nicht verändert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cierra la otra copia de NX Library e inténtalo de nuevo. Tu biblioteca original no se ha modificado."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feche a outra cópia do NX Library e tente novamente. Sua biblioteca original não foi alterada."
           }
         }
       }
@@ -17846,6 +18359,47 @@
         }
       }
     },
+    "Cover, background, icon and logo, from Steam, online sources or a file.": {
+      "comment": "CatalogGameOptions.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cover, background, icon and logo, from Steam, online sources or a file."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copertina, sfondo, icona e logo, da Steam, fonti online o un file."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jaquette, fond, icône et logo, depuis Steam, des sources en ligne ou un fichier."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cover, Hintergrund, Symbol und Logo, von Steam, Online-Quellen oder aus einer Datei."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portada, fondo, icono y logotipo, de Steam, fuentes en línea o un archivo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capa, fundo, ícone e logotipo, do Steam, de fontes online ou de um arquivo."
+          }
+        }
+      }
+    },
     "Credits": {
       "comment": "SettingsAboutSection.swift",
       "localizations": {
@@ -18092,43 +18646,43 @@
         }
       }
     },
-    "Default controller vibration for new games.": {
+    "Default controller vibration for new Switch games.": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Default controller vibration for new games."
+            "value": "Default controller vibration for new Switch games."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vibrazione predefinita del controller per i nuovi giochi."
+            "value": "Vibrazione predefinita del controller per i nuovi giochi Switch."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vibrations de la manette par défaut pour les nouveaux jeux."
+            "value": "Vibrations de la manette par défaut pour les nouveaux jeux Switch."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Standard-Controller-Vibration für neue Spiele."
+            "value": "Standard-Controller-Vibration für neue Switch-Spiele."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vibración predeterminada del mando para juegos nuevos."
+            "value": "Vibración predeterminada del mando para juegos nuevos de Switch."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vibração padrão do controle para novos jogos."
+            "value": "Vibração padrão do controle para novos jogos de Switch."
           }
         }
       }
@@ -18215,43 +18769,43 @@
         }
       }
     },
-    "Default vibration strength for new games.": {
+    "Default vibration strength for new Switch games.": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Default vibration strength for new games."
+            "value": "Default vibration strength for new Switch games."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Intensità predefinita della vibrazione per i nuovi giochi."
+            "value": "Intensità predefinita della vibrazione per i nuovi giochi Switch."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Intensité des vibrations par défaut pour les nouveaux jeux."
+            "value": "Intensité des vibrations par défaut pour les nouveaux jeux Switch."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Standard-Vibrationsstärke für neue Spiele."
+            "value": "Standard-Vibrationsstärke für neue Switch-Spiele."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Intensidad de vibración predeterminada para juegos nuevos."
+            "value": "Intensidad de vibración predeterminada para juegos nuevos de Switch."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Intensidade padrão da vibração para novos jogos."
+            "value": "Intensidade padrão da vibração para novos jogos de Switch."
           }
         }
       }
@@ -19742,6 +20296,47 @@
         }
       }
     },
+    "Development library unavailable": {
+      "comment": "Development profile bootstrap; do not expose credential values.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Development library unavailable"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Libreria di sviluppo non disponibile"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bibliothèque de développement indisponible"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entwicklungsbibliothek nicht verfügbar"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biblioteca de desarrollo no disponible"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biblioteca de desenvolvimento indisponível"
+          }
+        }
+      }
+    },
     "Device save": {
       "comment": "Save safety and presentation; user content stays unchanged.",
       "localizations": {
@@ -21218,6 +21813,47 @@
         }
       }
     },
+    "Enable Steam to find its installed Mac games.": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable Steam to find its installed Mac games."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attiva Steam per trovare i suoi giochi Mac installati."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activez Steam pour trouver ses jeux Mac installés."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiviere Steam, um seine installierten Mac-Spiele zu finden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activa Steam para encontrar sus juegos de Mac instalados."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ative o Steam para encontrar seus jogos de Mac instalados."
+          }
+        }
+      }
+    },
     "Enable untested toolchain?": {
       "comment": "SettingsEngineSection.swift",
       "localizations": {
@@ -21423,47 +22059,6 @@
         }
       }
     },
-    "Engine %@ · %@ · %@ · %@": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Engine %@ · %@ · %@ · %@"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Motore %@ · %@ · %@ · %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Moteur %@ · %@ · %@ · %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Engine %@ · %@ · %@ · %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Motor %@ · %@ · %@ · %@"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Engine %@ · %@ · %@ · %@"
-          }
-        }
-      }
-    },
     "Engine back to the tested %@.": {
       "comment": "AppViewModel+NewestEngine.swift",
       "localizations": {
@@ -21546,84 +22141,84 @@
         }
       }
     },
-    "Engine commit, Metal compiler, toolchain gate and required flags.": {
+    "Engine commit, Metal compiler, build environment, toolchain gate and required flags.": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Engine commit, Metal compiler, toolchain gate and required flags."
+            "value": "Engine commit, Metal compiler, build environment, toolchain gate and required flags."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Commit del motore, compilatore Metal, controllo della toolchain e flag richiesti."
+            "value": "Commit del motore, compilatore Metal, ambiente di build, controllo della toolchain e flag richiesti."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Commit du moteur, compilateur Metal, contrôle de la chaîne d’outils et options requises."
+            "value": "Commit du moteur, compilateur Metal, environnement de compilation, contrôle de la chaîne d’outils et options requises."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Engine-Commit, Metal-Compiler, Toolchain-Prüfung und erforderliche Optionen."
+            "value": "Engine-Commit, Metal-Compiler, Build-Umgebung, Toolchain-Prüfung und erforderliche Optionen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Commit del motor, compilador Metal, control de la cadena de herramientas y opciones necesarias."
+            "value": "Commit del motor, compilador Metal, entorno de compilación, control de la cadena de herramientas y opciones necesarias."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Commit da engine, compilador Metal, verificação do conjunto de ferramentas e opções obrigatórias."
+            "value": "Commit da engine, compilador Metal, ambiente de build, verificação do conjunto de ferramentas e opções obrigatórias."
           }
         }
       }
     },
-    "Engine pin, toolchain gate and keys.": {
+    "Engine pin, toolchain gate, keys and setup.": {
       "comment": "SettingsSection.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Engine pin, toolchain gate and keys."
+            "value": "Engine pin, toolchain gate, keys and setup."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Versione fissata del motore, controllo della toolchain e chiavi."
+            "value": "Versione fissata del motore, controllo della toolchain, chiavi e configurazione."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Version épinglée du moteur, contrôle de la chaîne d’outils et clés."
+            "value": "Version épinglée du moteur, contrôle de la chaîne d’outils, clés et configuration."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Festgelegte Engine-Version, Toolchain-Prüfung und Schlüssel."
+            "value": "Festgelegte Engine-Version, Toolchain-Prüfung, Schlüssel und Einrichtung."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Versión fijada del motor, control de la cadena de herramientas y claves."
+            "value": "Versión fijada del motor, control de la cadena de herramientas, claves y configuración."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Versão fixada da engine, verificação do conjunto de ferramentas e chaves."
+            "value": "Versão fixada da engine, verificação do conjunto de ferramentas, chaves e configuração."
           }
         }
       }
@@ -21870,47 +22465,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Amplia a imagem final do jogo, incluindo menus e HUD, para sua janela ou tela usando o MetalFX da Apple em vez da ampliação suave: bordas e textos mais nítidos, com um pequeno aumento no tempo de GPU. Nada muda quando a imagem já tem o tamanho da tela. É diferente do Ampliador de imagem do jogo. (DM_PRESENT_UPSCALE)"
-          }
-        }
-      }
-    },
-    "Environment": {
-      "comment": "SettingsCatalog.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Environment"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ambiente"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Environnement"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Umgebung"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Entorno"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ambiente"
           }
         }
       }
@@ -23472,6 +24026,47 @@
         }
       }
     },
+    "Find installed native Mac games in your Steam libraries.": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find installed native Mac games in your Steam libraries."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trova i giochi Mac nativi installati nelle tue librerie Steam."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recherchez les jeux Mac natifs installés dans vos bibliothèques Steam."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finde installierte native Mac-Spiele in deinen Steam-Bibliotheken."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encuentra los juegos nativos de Mac instalados en tus bibliotecas de Steam."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encontre jogos nativos para Mac instalados nas suas bibliotecas Steam."
+          }
+        }
+      }
+    },
     "Find the game": {
       "comment": "DetailsBands.swift",
       "localizations": {
@@ -23677,43 +24272,43 @@
         }
       }
     },
-    "Folders, imports and artwork caches.": {
+    "Folders, scans and box covers.": {
       "comment": "SettingsSection.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Folders, imports and artwork caches."
+            "value": "Folders, scans and box covers."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cartelle, importazioni e cache delle immagini."
+            "value": "Cartelle, scansioni e copertine."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dossiers, importations et caches d’illustrations."
+            "value": "Dossiers, analyses et jaquettes."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ordner, Importe und Artwork-Caches."
+            "value": "Ordner, Scans und Cover."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Carpetas, importaciones y cachés de imágenes."
+            "value": "Carpetas, búsquedas y carátulas."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pastas, importações e caches de artes."
+            "value": "Pastas, buscas e capas."
           }
         }
       }
@@ -26506,6 +27101,47 @@
         }
       }
     },
+    "Game sources": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Game sources"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fonti"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sources de jeux"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spielequellen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuentes de juegos"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fontes de jogos"
+          }
+        }
+      }
+    },
     "Game sources: NSP, XCI, NSZ and XCZ files, or Switch 2 NUP files and extracted folders, for builds. Optional for existing apps.": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
@@ -27937,6 +28573,88 @@
           "stringUnit": {
             "state": "translated",
             "value": "Oculto"
+          }
+        }
+      }
+    },
+    "Hidden Steam games": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden Steam games"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giochi Steam nascosti"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeux Steam masqués"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgeblendete Steam-Spiele"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Juegos de Steam ocultos"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jogos Steam ocultos"
+          }
+        }
+      }
+    },
+    "Hidden from the library": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden from the library"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nascosto nella libreria"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masqué dans la bibliothèque"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In der Bibliothek ausgeblendet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oculto en la biblioteca"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oculto na biblioteca"
           }
         }
       }
@@ -30155,6 +30873,47 @@
         }
       }
     },
+    "Installation": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installation"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installazione"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installation"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instalación"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instalação"
+          }
+        }
+      }
+    },
     "Installation failed": {
       "comment": "AppShellView.swift",
       "localizations": {
@@ -30192,6 +30951,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Falha na instalação"
+          }
+        }
+      }
+    },
+    "Installation not detected": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installation not detected"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installazione non rilevata"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installation non détectée"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installation nicht gefunden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instalación no detectada"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instalação não detectada"
           }
         }
       }
@@ -31098,6 +31898,47 @@
         }
       }
     },
+    "Keep Steam in the background": {
+      "comment": "SettingsSourcesSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep Steam in the background"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tieni Steam in secondo piano"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Garder Steam en arrière-plan"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam im Hintergrund halten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantener Steam en segundo plano"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manter o Steam em segundo plano"
+          }
+        }
+      }
+    },
     "Keep a copy of your current progress.": {
       "comment": "SavesPanel.swift",
       "localizations": {
@@ -31750,6 +32591,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Idioma e região"
+          }
+        }
+      }
+    },
+    "Language, the first screen and what runs at launch.": {
+      "comment": "SettingsSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language, the first screen and what runs at launch."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lingua, schermata iniziale e cosa avviene all’apertura."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Langue, premier écran et ce qui se lance au démarrage."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprache, erster Bildschirm und was beim Start passiert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idioma, primera pantalla y lo que se ejecuta al abrir."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idioma, primeira tela e o que acontece ao abrir."
           }
         }
       }
@@ -32574,43 +33456,43 @@
         }
       }
     },
-    "Library controls and new-game rumble.": {
+    "Library controls and rumble for new Switch games.": {
       "comment": "SettingsSection.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Library controls and new-game rumble."
+            "value": "Library controls and rumble for new Switch games."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comandi della libreria e vibrazione dei nuovi giochi."
+            "value": "Comandi della libreria e vibrazione dei nuovi giochi Switch."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Commandes de la bibliothèque et vibrations des nouveaux jeux."
+            "value": "Commandes de la bibliothèque et vibrations des nouveaux jeux Switch."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bibliothekssteuerung und Vibration für neue Spiele."
+            "value": "Bibliothekssteuerung und Vibration für neue Switch-Spiele."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Controles de la biblioteca y vibración de juegos nuevos."
+            "value": "Controles de la biblioteca y vibración de juegos nuevos de Switch."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Controles da biblioteca e vibração para novos jogos."
+            "value": "Controles da biblioteca e vibração para novos jogos de Switch."
           }
         }
       }
@@ -32652,6 +33534,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Navegação na biblioteca"
+          }
+        }
+      }
+    },
+    "Library not saved": {
+      "comment": "Catalog activation and recovery",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Library not saved"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Libreria non salvata"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bibliothèque non enregistrée"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bibliothek nicht gespeichert"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biblioteca sin guardar"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biblioteca não salva"
           }
         }
       }
@@ -32775,6 +33698,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sombra da biblioteca"
+          }
+        }
+      }
+    },
+    "Library unavailable": {
+      "comment": "Catalog activation and recovery",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Library unavailable"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Libreria non disponibile"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bibliothèque indisponible"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bibliothek nicht verfügbar"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biblioteca no disponible"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biblioteca indisponível"
           }
         }
       }
@@ -33021,47 +33985,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Carregando…"
-          }
-        }
-      }
-    },
-    "Locally cached game metadata such as title IDs, publisher names, release dates, and category tags fetched during library scans.": {
-      "comment": "SettingsLibrarySection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Locally cached game metadata such as title IDs, publisher names, release dates, and category tags fetched during library scans."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metadati dei giochi conservati nella cache locale, come title ID, nomi degli editori, date di uscita e tag delle categorie, recuperati durante le scansioni della libreria."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Métadonnées de jeu mises en cache localement, telles que les title ID, les noms d’éditeur, les dates de sortie et les catégories, récupérées lors des analyses de la bibliothèque."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lokal zwischengespeicherte Spielmetadaten wie title IDs, Publisher-Namen, Veröffentlichungsdaten und Kategorien, die beim Durchsuchen der Bibliothek abgerufen werden."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metadatos de juegos guardados en la caché local, como title IDs, nombres de editoras, fechas de lanzamiento y etiquetas de categorías, obtenidos al analizar la biblioteca."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metadados de jogos em cache local, como title IDs, nomes de publicadoras, datas de lançamento e categorias, obtidos durante as buscas na biblioteca."
           }
         }
       }
@@ -33886,6 +34809,47 @@
         }
       }
     },
+    "Mac game": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac game"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gioco Mac"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeu Mac"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac-Spiel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Juego de Mac"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jogo de Mac"
+          }
+        }
+      }
+    },
     "Manage mods": {
       "comment": "DetailsBands.swift",
       "localizations": {
@@ -33923,6 +34887,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gerenciar mods"
+          }
+        }
+      }
+    },
+    "Manage sources": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage sources"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestisci fonti"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gérer les sources"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quellen verwalten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestionar fuentes"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerenciar fontes"
           }
         }
       }
@@ -34333,47 +35338,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Compilador Metal"
-          }
-        }
-      }
-    },
-    "Metal unknown": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal unknown"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal sconosciuto"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal inconnu"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal unbekannt"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal desconocido"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal desconhecido"
           }
         }
       }
@@ -36592,6 +37556,47 @@
         }
       }
     },
+    "Needs review": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs review"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da controllare"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À vérifier"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prüfung erforderlich"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requiere revisión"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requer revisão"
+          }
+        }
+      }
+    },
     "Never": {
       "comment": "LibraryPresentation.swift",
       "localizations": {
@@ -37531,47 +38536,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Descrições e links da Nintendo Store."
-          }
-        }
-      }
-    },
-    "Nintendo Store descriptions, genres and links.": {
-      "comment": "SettingsLibrarySection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nintendo Store descriptions, genres and links."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Descrizioni, generi e link del Nintendo Store."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Descriptions, genres et liens du Nintendo Store."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Beschreibungen, Genres und Links aus dem Nintendo Store."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Descripciones, géneros y enlaces de Nintendo Store."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Descrições, gêneros e links da Nintendo Store."
           }
         }
       }
@@ -39540,47 +40504,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ainda não compilado"
-          }
-        }
-      }
-    },
-    "Not checked": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Not checked"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Non verificato"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Non vérifié"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nicht geprüft"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sin comprobar"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Não verificado"
           }
         }
       }
@@ -41717,6 +42640,47 @@
         }
       }
     },
+    "Open library folder": {
+      "comment": "Catalog activation and recovery",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open library folder"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri cartella della libreria"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir le dossier de la bibliothèque"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bibliotheksordner öffnen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir carpeta de la biblioteca"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir pasta da biblioteca"
+          }
+        }
+      }
+    },
     "Open log": {
       "comment": "GameOptionsPresentation.swift",
       "localizations": {
@@ -42164,6 +43128,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abra a página do jogo na loja da Nintendo."
+          }
+        }
+      }
+    },
+    "Open the game’s Steam store page.": {
+      "comment": "CatalogGameOptions.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the game’s Steam store page."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri la pagina del gioco nello store di Steam."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir la page du jeu sur le magasin Steam."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne die Seite des Spiels im Steam-Shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre la página del juego en la tienda de Steam."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abra a página do jogo na loja Steam."
           }
         }
       }
@@ -44422,6 +45427,47 @@
         }
       }
     },
+    "Preparing a separate copy of your launcher data. Games stay in their current locations.": {
+      "comment": "Development profile bootstrap; do not expose credential values.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing a separate copy of your launcher data. Games stay in their current locations."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparazione di una copia separata dei dati del launcher. I giochi restano nei loro percorsi attuali."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préparation d’une copie séparée des données du lanceur. Les jeux restent à leur emplacement actuel."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine separate Kopie der Launcher-Daten wird vorbereitet. Die Spiele bleiben an ihren bisherigen Speicherorten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando una copia separada de los datos del launcher. Los juegos permanecen en sus ubicaciones actuales."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando uma cópia separada dos dados do launcher. Os jogos permanecem nos locais atuais."
+          }
+        }
+      }
+    },
     "Preparing the app icon. The game will start when it is ready. This can take a minute for a large game.": {
       "comment": "AppViewModel+AppIcon.swift",
       "localizations": {
@@ -44459,6 +45505,88 @@
           "stringUnit": {
             "state": "translated",
             "value": "Preparando o ícone do app. O jogo será iniciado assim que estiver pronto. Isso pode levar um minuto para jogos grandes."
+          }
+        }
+      }
+    },
+    "Preparing your development library": {
+      "comment": "Development profile bootstrap; do not expose credential values.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing your development library"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparazione della libreria di sviluppo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préparation de votre bibliothèque de développement"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entwicklungsbibliothek wird vorbereitet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando tu biblioteca de desarrollo"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando sua biblioteca de desenvolvimento"
+          }
+        }
+      }
+    },
+    "Preparing your library": {
+      "comment": "Catalog activation and recovery",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing your library"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparazione della libreria"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préparation de votre bibliothèque"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Bibliothek wird vorbereitet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando tu biblioteca"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando sua biblioteca"
           }
         }
       }
@@ -44914,88 +46042,6 @@
         }
       }
     },
-    "Python included": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python included"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python incluso"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python intégré"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python enthalten"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python incluido"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python incluído"
-          }
-        }
-      }
-    },
-    "Python missing": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python missing"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python non disponibile"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python manquant"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python fehlt"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Falta Python"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python ausente"
-          }
-        }
-      }
-    },
     "Python venv": {
       "comment": "CompatibilityChecker.swift",
       "localizations": {
@@ -45033,47 +46079,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "venv do Python"
-          }
-        }
-      }
-    },
-    "Python venv ready": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python venv ready"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Venv Python pronto"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Environnement venv Python prêt"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Python-venv bereit"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Entorno virtual de Python listo"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "venv do Python pronto"
           }
         }
       }
@@ -45406,88 +46411,6 @@
         }
       }
     },
-    "Re-check the environment and build requirements.": {
-      "comment": "SettingsCatalog.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Re-check the environment and build requirements."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ricontrolla l’ambiente e i requisiti di compilazione."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Revérifier l’environnement et les prérequis de compilation."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Umgebung und Build-Voraussetzungen erneut prüfen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vuelve a comprobar el entorno y los requisitos de compilación."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verifique novamente o ambiente e os requisitos de compilação."
-          }
-        }
-      }
-    },
-    "Re-run the environment and compatibility checks.": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Re-run the environment and compatibility checks."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ripeti i controlli dell’ambiente e della compatibilità."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Relancer les vérifications de l’environnement et de la compatibilité."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Umgebungs- und Kompatibilitätsprüfung erneut ausführen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vuelve a ejecutar las comprobaciones del entorno y de compatibilidad."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Execute novamente as verificações de ambiente e compatibilidade."
-          }
-        }
-      }
-    },
     "Read more": {
       "comment": "SpotlightPageSections.swift",
       "localizations": {
@@ -45525,47 +46448,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ler mais"
-          }
-        }
-      }
-    },
-    "Readiness": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Readiness"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stato di preparazione"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "État de préparation"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bereitschaft"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Estado de preparación"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Prontidão"
           }
         }
       }
@@ -45652,43 +46534,43 @@
         }
       }
     },
-    "Ready to build and play": {
-      "comment": "SettingsStartUpSection.swift",
+    "Ready to check Steam.": {
+      "comment": "Steam source management and native Mac library presentation.",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ready to build and play"
+            "value": "Ready to check Steam."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pronto per compilare e giocare"
+            "value": "Pronto per controllare Steam."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prêt à compiler et à jouer"
+            "value": "Prêt à vérifier Steam."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bereit zum Erstellen und Spielen"
+            "value": "Bereit, Steam zu prüfen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Listo para compilar y jugar"
+            "value": "Listo para revisar Steam."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pronto para compilar e jogar"
+            "value": "Pronto para verificar o Steam."
           }
         }
       }
@@ -46267,6 +47149,47 @@
         }
       }
     },
+    "Refresh Steam": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh Steam"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiorna Steam"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualiser Steam"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam aktualisieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar Steam"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atualizar Steam"
+          }
+        }
+      }
+    },
     "Refresh library at launch": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
@@ -46304,6 +47227,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Atualizar biblioteca ao iniciar"
+          }
+        }
+      }
+    },
+    "Refresh the Steam source or check the installation in Steam.": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh the Steam source or check the installation in Steam."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiorna la fonte Steam o controlla l’installazione in Steam."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualisez la source Steam ou vérifiez l’installation dans Steam."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisiere die Steam-Quelle oder prüfe die Installation in Steam."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualiza la fuente de Steam o revisa la instalación en Steam."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atualize a fonte Steam ou verifique a instalação no Steam."
           }
         }
       }
@@ -47773,6 +48737,119 @@
         }
       }
     },
+    "Restore backup (%lld games)": {
+      "comment": "Explicit restore of the offered catalog backup; original damaged file is retained.",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Restore backup (%lld game)"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Restore backup (%lld games)"
+                }
+              }
+            }
+          }
+        },
+        "it": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Ripristina backup (%lld gioco)"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Ripristina backup (%lld giochi)"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Restaurer la sauvegarde (%lld jeu)"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Restaurer la sauvegarde (%lld jeux)"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Sicherung wiederherstellen (%lld Spiel)"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Sicherung wiederherstellen (%lld Spiele)"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Restaurar copia (%lld juego)"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Restaurar copia (%lld juegos)"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Restaurar backup (%lld jogo)"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Restaurar backup (%lld jogos)"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Restore last game": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
@@ -48097,6 +49174,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tentar recuperar novamente"
+          }
+        }
+      }
+    },
+    "Retry saving library": {
+      "comment": "Available while a finished build outcome is waiting for its catalog save.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry saving library"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riprova a salvare la libreria"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réessayer d’enregistrer la bibliothèque"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bibliothek erneut speichern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar guardar la biblioteca"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tentar salvar a biblioteca novamente"
           }
         }
       }
@@ -48507,6 +49625,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisão"
+          }
+        }
+      }
+    },
+    "Review installations": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review installations"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controlla le installazioni"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifier les installations"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installationen prüfen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar instalaciones"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar instalações"
           }
         }
       }
@@ -49536,6 +50695,47 @@
         }
       }
     },
+    "Scan stopped. Refresh when you are ready.": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan stopped. Refresh when you are ready."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scansione interrotta. Aggiorna quando vuoi."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analyse arrêtée. Actualisez quand vous le souhaitez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suche angehalten. Aktualisiere, wenn du bereit bist."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exploración detenida. Actualiza cuando quieras."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busca interrompida. Atualize quando quiser."
+          }
+        }
+      }
+    },
     "Scanning game apps…": {
       "comment": "SettingsLibrarySection.swift",
       "localizations": {
@@ -49655,6 +50855,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tela"
+          }
+        }
+      }
+    },
+    "Screen-shaped art, then Steam": {
+      "comment": "ChangeArtworkView.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen-shaped art, then Steam"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Immagini in formato schermo, poi Steam"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Images au format écran, puis Steam"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bilder im Bildschirmformat, dann Steam"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imágenes con forma de pantalla, luego Steam"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imagens no formato da tela, depois o Steam"
           }
         }
       }
@@ -50725,6 +51966,170 @@
         }
       }
     },
+    "Settings group: General": {
+      "comment": "SettingsSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generali"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Général"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allgemein"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geral"
+          }
+        }
+      }
+    },
+    "Settings group: Steam": {
+      "comment": "SettingsSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam"
+          }
+        }
+      }
+    },
+    "Settings group: Switch": {
+      "comment": "SettingsSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch"
+          }
+        }
+      }
+    },
+    "Settings group: System": {
+      "comment": "SettingsSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistema"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Système"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistema"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistema"
+          }
+        }
+      }
+    },
     "Settings not saved": {
       "comment": "AppShellView.swift",
       "localizations": {
@@ -51090,47 +52495,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Configuração concluída."
-          }
-        }
-      }
-    },
-    "Setup needed or builds blocked": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Setup needed or builds blocked"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Configurazione necessaria o compilazioni bloccate"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Configuration requise ou compilations bloquées"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Einrichtung erforderlich oder Builds gesperrt"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Falta configurar o la compilación está bloqueada"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Configuração necessária ou compilações bloqueadas"
           }
         }
       }
@@ -52160,6 +53524,88 @@
         }
       }
     },
+    "Some installations could not be checked. Your library has been kept.": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some installations could not be checked. Your library has been kept."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile controllare alcune installazioni. La tua libreria è stata conservata."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certaines installations n’ont pas pu être vérifiées. Votre bibliothèque a été conservée."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einige Installationen konnten nicht geprüft werden. Deine Bibliothek bleibt erhalten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron revisar algunas instalaciones. Tu biblioteca se ha conservado."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algumas instalações não puderam ser verificadas. Sua biblioteca foi mantida."
+          }
+        }
+      }
+    },
+    "Some launcher data could not be read. The original data has not been changed.": {
+      "comment": "Development profile bootstrap; do not expose credential values.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some launcher data could not be read. The original data has not been changed."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile leggere alcuni dati del launcher. I dati originali non sono stati modificati."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certaines données du lanceur n’ont pas pu être lues. Les données d’origine n’ont pas été modifiées."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einige Launcher-Daten konnten nicht gelesen werden. Die Originaldaten wurden nicht verändert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron leer algunos datos del launcher. Los datos originales no se han modificado."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível ler alguns dados do launcher. Os dados originais não foram alterados."
+          }
+        }
+      }
+    },
     "Some shaders broke in this engine": {
       "comment": "PortingFailureReason.swift",
       "localizations": {
@@ -52980,6 +54426,47 @@
         }
       }
     },
+    "Start the game through Steam.": {
+      "comment": "CatalogGameOptions.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start the game through Steam."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvia il gioco tramite Steam."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lancer le jeu via Steam."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starte das Spiel über Steam."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicia el juego a través de Steam."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicie o jogo pelo Steam."
+          }
+        }
+      }
+    },
     "Start-up": {
       "comment": "SettingsSection.swift",
       "localizations": {
@@ -53185,43 +54672,412 @@
         }
       }
     },
-    "Startup, setup and readiness.": {
-      "comment": "SettingsSection.swift",
+    "Steam": {
+      "comment": "Steam source management and native Mac library presentation.",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Startup, setup and readiness."
+            "value": "Steam"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Avvio, configurazione e stato di preparazione."
+            "value": "Steam"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Démarrage, configuration et état de préparation."
+            "value": "Steam"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Start, Einrichtung und Bereitschaft."
+            "value": "Steam"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Inicio, configuración y estado de preparación."
+            "value": "Steam"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Inicialização, configuração e prontidão."
+            "value": "Steam"
+          }
+        }
+      }
+    },
+    "Steam could not be refreshed. Your library has been kept.": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam could not be refreshed. Your library has been kept."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile aggiornare Steam. La tua libreria è stata conservata."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam n’a pas pu être actualisé. Votre bibliothèque a été conservée."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam konnte nicht aktualisiert werden. Deine Bibliothek bleibt erhalten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo actualizar Steam. Tu biblioteca se ha conservado."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível atualizar o Steam. Sua biblioteca foi mantida."
+          }
+        }
+      }
+    },
+    "Steam did not receive the request. Try again.": {
+      "comment": "CatalogSteamInfo.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam did not receive the request. Try again."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam non ha ricevuto la richiesta. Riprova."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam n’a pas reçu la demande. Réessayez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam hat die Anfrage nicht erhalten. Versuche es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam no recibió la solicitud. Inténtalo de nuevo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Steam não recebeu a solicitação. Tente novamente."
+          }
+        }
+      }
+    },
+    "Steam folder": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam folder"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cartella Steam"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dossier Steam"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam-Ordner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carpeta de Steam"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pasta do Steam"
+          }
+        }
+      }
+    },
+    "Steam installation data could not be verified. Your library has been kept.": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam installation data could not be verified. Your library has been kept."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile verificare i dati delle installazioni Steam. La tua libreria è stata conservata."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les données des installations Steam n’ont pas pu être vérifiées. Votre bibliothèque a été conservée."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Steam-Installationsdaten konnten nicht geprüft werden. Deine Bibliothek bleibt erhalten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron verificar los datos de las instalaciones de Steam. Tu biblioteca se ha conservado."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível verificar os dados das instalações Steam. Sua biblioteca foi mantida."
+          }
+        }
+      }
+    },
+    "Steam is not installed on this Mac.": {
+      "comment": "CatalogSteamInfo.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam is not installed on this Mac."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam non è installato su questo Mac."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam n’est pas installé sur ce Mac."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam ist auf diesem Mac nicht installiert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam no está instalado en este Mac."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Steam não está instalado neste Mac."
+          }
+        }
+      }
+    },
+    "Steam libraries, refresh and how Play opens Steam.": {
+      "comment": "SettingsSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam libraries, refresh and how Play opens Steam."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Librerie Steam, aggiornamento e come Gioca apre Steam."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bibliothèques Steam, actualisation et ouverture de Steam par Jouer."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam-Bibliotheken, Aktualisieren und wie „Spielen“ Steam öffnet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bibliotecas de Steam, actualización y cómo Jugar abre Steam."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bibliotecas do Steam, atualização e como Jogar abre o Steam."
+          }
+        }
+      }
+    },
+    "Steam may need you. Check Steam, the game starts after.": {
+      "comment": "CatalogSteamInfo.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam may need you. Check Steam, the game starts after."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam potrebbe aver bisogno di te. Controlla Steam, poi il gioco si avvia."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam a peut-être besoin de vous. Vérifiez Steam, le jeu démarrera ensuite."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam braucht dich vielleicht. Sieh in Steam nach, danach startet das Spiel."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puede que Steam te necesite. Revisa Steam y luego se iniciará el juego."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Steam pode precisar de você. Confira o Steam; depois o jogo inicia."
+          }
+        }
+      }
+    },
+    "Steam stays out of sight while a game starts, and comes back if it needs you.": {
+      "comment": "SettingsSourcesSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam stays out of sight while a game starts, and comes back if it needs you."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam resta nascosto mentre il gioco si avvia e torna se ha bisogno di te."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam reste caché pendant le lancement d’un jeu et revient s’il a besoin de vous."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam bleibt beim Spielstart verborgen und kommt zurück, wenn es dich braucht."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam permanece oculto mientras se inicia un juego y vuelve si te necesita."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Steam fica oculto enquanto um jogo inicia e volta se precisar de você."
+          }
+        }
+      }
+    },
+    "Steam: %@": {
+      "comment": "ChangeMetadataView.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam : %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam: %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam: %@"
           }
         }
       }
@@ -53427,6 +55283,88 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chave do SteamGridDB salva; Alterar arte agora busca no SteamGridDB."
+          }
+        }
+      }
+    },
+    "Steam’s library cover": {
+      "comment": "ChangeArtworkView.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam’s library cover"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La copertina della libreria di Steam"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La jaquette de la bibliothèque Steam"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Bibliothekscover von Steam"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La portada de la biblioteca de Steam"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A capa da biblioteca do Steam"
+          }
+        }
+      }
+    },
+    "Steam’s logo": {
+      "comment": "ChangeArtworkView.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam’s logo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il logo di Steam"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le logo de Steam"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Logo von Steam"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El logotipo de Steam"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O logotipo do Steam"
           }
         }
       }
@@ -53919,47 +55857,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esticar"
-          }
-        }
-      }
-    },
-    "Summarizes the 4 essential gates: valid prod.keys, cloned nxnative repository, Python build environment, and certified Metal compiler version.": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Summarizes the 4 essential gates: valid prod.keys, cloned nxnative repository, Python build environment, and certified Metal compiler version."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Riepiloga i 4 requisiti essenziali: prod.keys valido, repository nxnative clonato, ambiente di compilazione Python e versione certificata del compilatore Metal."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Résume les 4 contrôles essentiels : prod.keys valide, dépôt nxnative cloné, environnement de compilation Python et version du compilateur Metal certifiée."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fasst die 4 grundlegenden Voraussetzungen zusammen: gültige prod.keys, geklontes nxnative-Repository, Python-Build-Umgebung und zertifizierte Metal-Compiler-Version."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Resume los 4 requisitos esenciales: prod.keys válido, repositorio de nxnative clonado, entorno de compilación Python y versión del compilador Metal certificada."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Resume as 4 verificações essenciais: prod.keys válido, repositório nxnative clonado, ambiente Python de compilação e versão certificada do compilador Metal."
           }
         }
       }
@@ -54620,6 +56517,47 @@
         }
       }
     },
+    "That game is no longer in the library. Refresh it and try again.": {
+      "comment": "Catalog activation and recovery",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That game is no longer in the library. Refresh it and try again."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il gioco non è più nella libreria. Aggiornala e riprova."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce jeu n’est plus dans la bibliothèque. Actualisez-la et réessayez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Spiel ist nicht mehr in der Bibliothek. Aktualisiere sie und versuche es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ese juego ya no está en la biblioteca. Actualízala y vuelve a intentarlo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esse jogo não está mais na biblioteca. Atualize-a e tente novamente."
+          }
+        }
+      }
+    },
     "That is not a SteamGridDB API key. Copy it from Preferences → API in your SteamGridDB profile.": {
       "comment": "SteamGridDBArt.swift",
       "localizations": {
@@ -54702,6 +56640,47 @@
         }
       }
     },
+    "The Mac app’s own icon": {
+      "comment": "ChangeArtworkView.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Mac app’s own icon"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’icona dell’app Mac"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’icône de l’app Mac"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das eigene Symbol der Mac-App"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El icono propio de la app de Mac"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O ícone do próprio app para Mac"
+          }
+        }
+      }
+    },
     "The Nintendo Store URL is invalid.": {
       "comment": "NintendoStoreMetadata.swift",
       "localizations": {
@@ -54739,6 +56718,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "O URL da Nintendo Store é inválido."
+          }
+        }
+      }
+    },
+    "The Steam library changed while it was being checked. Refresh it again.": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Steam library changed while it was being checked. Refresh it again."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La libreria Steam è cambiata durante il controllo. Aggiornala di nuovo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La bibliothèque Steam a changé pendant la vérification. Actualisez-la à nouveau."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Steam-Bibliothek hat sich während der Prüfung geändert. Aktualisiere sie erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La biblioteca de Steam cambió durante la revisión. Actualízala de nuevo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A biblioteca Steam mudou durante a verificação. Atualize-a novamente."
           }
         }
       }
@@ -55317,6 +57337,47 @@
         }
       }
     },
+    "The build result is kept for this session. Free space if needed, then retry saving before closing NX Library.": {
+      "comment": "Catalog activation and recovery",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The build result is kept for this session. Free space if needed, then retry saving before closing NX Library."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il risultato della build viene conservato per questa sessione. Libera spazio se necessario, poi ritenta il salvataggio prima di chiudere NX Library."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le résultat de la compilation est conservé pour cette session. Libérez de l’espace si nécessaire, puis réessayez d’enregistrer avant de fermer NX Library."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Build-Ergebnis bleibt für diese Sitzung erhalten. Gib bei Bedarf Speicherplatz frei und versuche das Speichern erneut, bevor du NX Library schließt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resultado de la compilación se conserva durante esta sesión. Libera espacio si es necesario y vuelve a guardarlo antes de cerrar NX Library."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O resultado da compilação será mantido nesta sessão. Libere espaço se necessário e tente salvar novamente antes de fechar o NX Library."
+          }
+        }
+      }
+    },
     "The built app is invalid: %@": {
       "comment": "BuildOutputInstaller.swift",
       "localizations": {
@@ -55559,6 +57620,129 @@
           "stringUnit": {
             "state": "translated",
             "value": "O controle conectado e o mapeamento dos seus botões."
+          }
+        }
+      }
+    },
+    "The development data folder already exists without a completed import. It has been preserved.": {
+      "comment": "Development profile bootstrap; do not expose credential values.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The development data folder already exists without a completed import. It has been preserved."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cartella dei dati di sviluppo esiste già, ma l’importazione non è completa. È stata conservata."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le dossier des données de développement existe déjà, mais l’importation est incomplète. Il a été conservé."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Entwicklungsdatenordner ist bereits vorhanden, aber der Import ist nicht abgeschlossen. Er wurde beibehalten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La carpeta de datos de desarrollo ya existe, pero la importación no está completa. Se ha conservado."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A pasta de dados de desenvolvimento já existe, mas a importação não foi concluída. Ela foi mantida."
+          }
+        }
+      }
+    },
+    "The development preferences could not be saved. Try again.": {
+      "comment": "Development profile bootstrap; do not expose credential values.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The development preferences could not be saved. Try again."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile salvare le preferenze di sviluppo. Riprova."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les préférences de développement n’ont pas pu être enregistrées. Réessayez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Entwicklungseinstellungen konnten nicht gespeichert werden. Versuche es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron guardar las preferencias de desarrollo. Inténtalo de nuevo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível salvar as preferências de desenvolvimento. Tente novamente."
+          }
+        }
+      }
+    },
+    "The development profile configuration is invalid.": {
+      "comment": "Development profile bootstrap; do not expose credential values.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The development profile configuration is invalid."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La configurazione del profilo di sviluppo non è valida."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La configuration du profil de développement est invalide."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Konfiguration des Entwicklungsprofils ist ungültig."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La configuración del perfil de desarrollo no es válida."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A configuração do perfil de desenvolvimento é inválida."
           }
         }
       }
@@ -56465,6 +58649,47 @@
         }
       }
     },
+    "The game did not start. Check Steam, then try again.": {
+      "comment": "CatalogSteamInfo.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The game did not start. Check Steam, then try again."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il gioco non si è avviato. Controlla Steam, poi riprova."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le jeu n’a pas démarré. Vérifiez Steam, puis réessayez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Spiel wurde nicht gestartet. Prüfe Steam und versuche es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El juego no se inició. Revisa Steam y vuelve a intentarlo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O jogo não iniciou. Verifique o Steam e tente novamente."
+          }
+        }
+      }
+    },
     "The game does not have this language": {
       "comment": "PortingFailureReason.swift",
       "localizations": {
@@ -57244,6 +59469,293 @@
         }
       }
     },
+    "The latest save could not be confirmed. Reload the library before trying again.": {
+      "comment": "Catalog activation and recovery",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The latest save could not be confirmed. Reload the library before trying again."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile confermare l’ultimo salvataggio. Ricarica la libreria prima di riprovare."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le dernier enregistrement n’a pas pu être confirmé. Rechargez la bibliothèque avant de réessayer."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das letzte Speichern konnte nicht bestätigt werden. Lade die Bibliothek neu, bevor du es erneut versuchst."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo confirmar el último guardado. Vuelve a cargar la biblioteca antes de intentarlo de nuevo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível confirmar o último salvamento. Recarregue a biblioteca antes de tentar novamente."
+          }
+        }
+      }
+    },
+    "The launcher file %@ could not be read. The original data has not been changed.": {
+      "comment": "Development profile bootstrap; do not expose credential values.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The launcher file %@ could not be read. The original data has not been changed."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile leggere il file del launcher %@. I dati originali non sono stati modificati."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le fichier du lanceur %@ n’a pas pu être lu. Les données d’origine n’ont pas été modifiées."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Launcher-Datei %@ konnte nicht gelesen werden. Die Originaldaten wurden nicht verändert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer el archivo del launcher %@. Los datos originales no se han modificado."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível ler o arquivo do launcher %@. Os dados originais não foram alterados."
+          }
+        }
+      }
+    },
+    "The library changed. Reload it and try again.": {
+      "comment": "Catalog activation and recovery",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The library changed. Reload it and try again."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La libreria è cambiata. Ricaricala e riprova."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La bibliothèque a changé. Rechargez-la et réessayez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Bibliothek hat sich geändert. Lade sie neu und versuche es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La biblioteca ha cambiado. Vuelve a cargarla e inténtalo de nuevo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A biblioteca mudou. Recarregue-a e tente novamente."
+          }
+        }
+      }
+    },
+    "The library contains conflicting or unsupported records. Its files have been kept.": {
+      "comment": "Catalog activation and recovery",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The library contains conflicting or unsupported records. Its files have been kept."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La libreria contiene dati in conflitto o non supportati. I file sono stati conservati."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La bibliothèque contient des données en conflit ou non prises en charge. Ses fichiers ont été conservés."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Bibliothek enthält widersprüchliche oder nicht unterstützte Einträge. Die Dateien wurden aufbewahrt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La biblioteca contiene datos en conflicto o no compatibles. Sus archivos se han conservado."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A biblioteca contém dados conflitantes ou não compatíveis. Os arquivos foram preservados."
+          }
+        }
+      }
+    },
+    "The library copy contains a symbolic link or an unsupported file. The original data has not been changed.": {
+      "comment": "Development profile bootstrap; do not expose credential values.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The library copy contains a symbolic link or an unsupported file. The original data has not been changed."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La copia della libreria contiene un collegamento simbolico o un file non supportato. I dati originali non sono stati modificati."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La copie de la bibliothèque contient un lien symbolique ou un fichier non pris en charge. Les données d’origine n’ont pas été modifiées."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Bibliothekskopie enthält einen symbolischen Link oder eine nicht unterstützte Datei. Die Originaldaten wurden nicht verändert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La copia de la biblioteca contiene un enlace simbólico o un archivo no compatible. Los datos originales no se han modificado."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A cópia da biblioteca contém um link simbólico ou um arquivo não compatível. Os dados originais não foram alterados."
+          }
+        }
+      }
+    },
+    "The library folder could not be used safely. Its files have been kept.": {
+      "comment": "Catalog activation and recovery",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The library folder could not be used safely. Its files have been kept."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile usare la cartella della libreria in modo sicuro. I file sono stati conservati."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d’utiliser le dossier de la bibliothèque en toute sécurité. Ses fichiers ont été conservés."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Bibliotheksordner konnte nicht sicher verwendet werden. Die Dateien wurden aufbewahrt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo usar la carpeta de la biblioteca de forma segura. Sus archivos se han conservado."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível usar a pasta da biblioteca com segurança. Os arquivos foram preservados."
+          }
+        }
+      }
+    },
+    "The library is busy. Try again shortly.": {
+      "comment": "Catalog activation and recovery",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The library is busy. Try again shortly."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La libreria è occupata. Riprova tra poco."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La bibliothèque est occupée. Réessayez dans un instant."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Bibliothek ist beschäftigt. Versuche es gleich erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La biblioteca está ocupada. Vuelve a intentarlo en un momento."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A biblioteca está ocupada. Tente novamente em instantes."
+          }
+        }
+      }
+    },
     "The library is in a cloud folder": {
       "comment": "PortingFailureReason.swift",
       "localizations": {
@@ -57732,6 +60244,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "O arquivo original não é alterado. A cópia armazenada tem permissões 0600, e os valores das chaves nunca são exibidos nem registrados em logs."
+          }
+        }
+      }
+    },
+    "The original library changed during the copy. Close the other launcher copy and try again.": {
+      "comment": "Development profile bootstrap; do not expose credential values.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The original library changed during the copy. Close the other launcher copy and try again."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La libreria originale è cambiata durante la copia. Chiudi l’altra copia del launcher e riprova."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La bibliothèque d’origine a changé pendant la copie. Fermez l’autre copie du lanceur et réessayez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Originalbibliothek wurde während des Kopierens geändert. Schließe die andere Launcher-Kopie und versuche es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La biblioteca original cambió durante la copia. Cierra la otra copia del launcher e inténtalo de nuevo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A biblioteca original mudou durante a cópia. Feche a outra cópia do launcher e tente novamente."
           }
         }
       }
@@ -58675,6 +61228,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Os shaders foram testados com um compilador Metal diferente do instalado neste Mac."
+          }
+        }
+      }
+    },
+    "The source changed during the scan. Refresh it again.": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The source changed during the scan. Refresh it again."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fonte è cambiata durante la scansione. Aggiornala di nuovo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La source a changé pendant l’analyse. Actualisez-la à nouveau."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Quelle hat sich während der Suche geändert. Aktualisiere sie erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fuente cambió durante la exploración. Actualízala de nuevo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A fonte mudou durante a busca. Atualize-a novamente."
           }
         }
       }
@@ -59745,6 +62339,47 @@
         }
       }
     },
+    "This action is not available for this game.": {
+      "comment": "Catalog activation and recovery",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This action is not available for this game."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa azione non è disponibile per il gioco."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette action n’est pas disponible pour ce jeu."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Aktion ist für dieses Spiel nicht verfügbar."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta acción no está disponible para este juego."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta ação não está disponível para este jogo."
+          }
+        }
+      }
+    },
     "This app is not affiliated with Nintendo.": {
       "comment": "SettingsAboutSection.swift",
       "localizations": {
@@ -60684,6 +63319,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este local de dados salvos contém um link ou um caminho inseguro. Gerencie-o no Finder."
+          }
+        }
+      }
+    },
+    "This source is disabled. Enable it in Game sources.": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This source is disabled. Enable it in Game sources."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa fonte è disattivata. Attivala in Fonti."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette source est désactivée. Activez-la dans Sources de jeux."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Quelle ist deaktiviert. Aktiviere sie unter Spielequellen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta fuente está desactivada. Actívala en Fuentes de juegos."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta fonte está desativada. Ative-a em Fontes de jogos."
           }
         }
       }
@@ -63189,6 +65865,47 @@
         }
       }
     },
+    "Vibration in new Switch games": {
+      "comment": "SettingsControllersSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibration in new Switch games"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibrazione nei nuovi giochi Switch"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibrations dans les nouveaux jeux Switch"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibration in neuen Switch-Spielen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibración en juegos nuevos de Switch"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibração em novos jogos de Switch"
+          }
+        }
+      }
+    },
     "Vibration strength": {
       "comment": "GameOptionsPresentation.swift",
       "localizations": {
@@ -63681,6 +66398,47 @@
         }
       }
     },
+    "Waiting for Steam to start the game…": {
+      "comment": "CatalogSteamInfo.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for Steam to start the game…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In attesa che Steam avvii il gioco…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En attente du lancement du jeu par Steam…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warte, bis Steam das Spiel startet …"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando a que Steam inicie el juego…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aguardando o Steam iniciar o jogo…"
+          }
+        }
+      }
+    },
     "Waiting for build output…": {
       "comment": "BuildLiveLogsDrawer.swift",
       "localizations": {
@@ -64128,6 +66886,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "O que você jogou nesta semana."
+          }
+        }
+      }
+    },
+    "When Play opens Steam, it starts without its window. An open Steam is hidden until the game appears. If the game takes longer than 15 seconds, Steam comes back so you can answer it.": {
+      "comment": "SettingsSourcesSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When Play opens Steam, it starts without its window. An open Steam is hidden until the game appears. If the game takes longer than 15 seconds, Steam comes back so you can answer it."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quando Gioca apre Steam, si avvia senza finestra. Uno Steam già aperto viene nascosto finché non compare il gioco. Se il gioco impiega più di 15 secondi, Steam torna così puoi rispondergli."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quand Jouer ouvre Steam, il démarre sans sa fenêtre. Un Steam déjà ouvert est masqué jusqu’à l’apparition du jeu. Si le jeu met plus de 15 secondes, Steam revient pour que vous puissiez lui répondre."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn „Spielen“ Steam öffnet, startet es ohne Fenster. Ein offenes Steam wird ausgeblendet, bis das Spiel erscheint. Dauert das Spiel länger als 15 Sekunden, kommt Steam zurück, damit du antworten kannst."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando Jugar abre Steam, se inicia sin su ventana. Un Steam abierto se oculta hasta que aparece el juego. Si el juego tarda más de 15 segundos, Steam vuelve para que puedas responderle."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quando Jogar abre o Steam, ele inicia sem a janela. Um Steam aberto fica oculto até o jogo aparecer. Se o jogo levar mais de 15 segundos, o Steam volta para você responder."
           }
         }
       }
@@ -65034,47 +67833,6 @@
         }
       }
     },
-    "Xcode unknown": {
-      "comment": "SettingsStartUpSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Xcode unknown"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Xcode sconosciuto"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Xcode inconnu"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Xcode unbekannt"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Xcode desconocido"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Xcode desconhecido"
-          }
-        }
-      }
-    },
     "Y": {
       "comment": "ButtonPrompts.swift:38",
       "localizations": {
@@ -65399,6 +68157,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Seu compilador Metal não é certificado"
+          }
+        }
+      }
+    },
+    "Your Steam files stay where they are. Disabling this source keeps its games and personal choices.": {
+      "comment": "Steam source management and native Mac library presentation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your Steam files stay where they are. Disabling this source keeps its games and personal choices."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I file di Steam restano al loro posto. Disattivando questa fonte, i giochi e le tue scelte vengono conservati."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos fichiers Steam restent à leur place. Désactiver cette source conserve ses jeux et vos choix personnels."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Steam-Dateien bleiben an ihrem Platz. Beim Deaktivieren dieser Quelle bleiben ihre Spiele und deine Einstellungen erhalten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus archivos de Steam permanecen donde están. Al desactivar esta fuente se conservan sus juegos y tus preferencias."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seus arquivos Steam ficam onde estão. Desativar esta fonte mantém seus jogos e suas preferências."
           }
         }
       }
@@ -65813,6 +68612,88 @@
         }
       }
     },
+    "Your library could not be read. Its files have been kept. Open the library folder, then try again.": {
+      "comment": "Catalog activation and recovery",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your library could not be read. Its files have been kept. Open the library folder, then try again."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile leggere la libreria. I file sono stati conservati. Apri la cartella della libreria, poi riprova."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de lire votre bibliothèque. Ses fichiers ont été conservés. Ouvrez le dossier de la bibliothèque, puis réessayez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Bibliothek konnte nicht gelesen werden. Die Dateien wurden aufbewahrt. Öffne den Bibliotheksordner und versuche es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer tu biblioteca. Sus archivos se han conservado. Abre la carpeta de la biblioteca y vuelve a intentarlo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível ler sua biblioteca. Os arquivos foram preservados. Abra a pasta da biblioteca e tente novamente."
+          }
+        }
+      }
+    },
+    "Your library could not be read. Restore its backup or open the library folder to review the files.": {
+      "comment": "Catalog activation and recovery",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your library could not be read. Restore its backup or open the library folder to review the files."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile leggere la libreria. Ripristina il backup oppure apri la cartella della libreria per controllare i file."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de lire votre bibliothèque. Restaurez sa sauvegarde ou ouvrez son dossier pour examiner les fichiers."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Bibliothek konnte nicht gelesen werden. Stelle die Sicherung wieder her oder öffne den Bibliotheksordner, um die Dateien zu prüfen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer tu biblioteca. Restaura su copia de seguridad o abre la carpeta de la biblioteca para revisar los archivos."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível ler sua biblioteca. Restaure o backup ou abra a pasta da biblioteca para verificar os arquivos."
+          }
+        }
+      }
+    },
     "Your own": {
       "comment": "WallpaperCatalog.swift",
       "localizations": {
@@ -66018,6 +68899,47 @@
         }
       }
     },
+    "Your previous library could not be read. The original files have been kept.": {
+      "comment": "Catalog activation and recovery",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your previous library could not be read. The original files have been kept."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile leggere la libreria precedente. I file originali sono stati conservati."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de lire votre ancienne bibliothèque. Les fichiers originaux ont été conservés."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine bisherige Bibliothek konnte nicht gelesen werden. Die Originaldateien wurden aufbewahrt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer tu biblioteca anterior. Se han conservado los archivos originales."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível ler sua biblioteca anterior. Os arquivos originais foram preservados."
+          }
+        }
+      }
+    },
     "You’re up to date": {
       "comment": "AppUpdateDialog.swift",
       "localizations": {
@@ -66219,47 +69141,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "por %@"
-          }
-        }
-      }
-    },
-    "checked by the build command": {
-      "comment": "SettingsEngineSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "checked by the build command"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "verificato dal comando di compilazione"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "vérifié par la commande de compilation"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "wird vom Build-Befehl geprüft"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "se comprueba en el comando de compilación"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "verificado pelo comando de compilação"
           }
         }
       }

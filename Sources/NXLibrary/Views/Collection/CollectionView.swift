@@ -20,6 +20,8 @@ public struct CollectionView: View {
     @StateObject var art = SeleneHeroArt()
     /// Art the player picks redraws the hero and logo (their task keys carry its revision).
     @ObservedObject var picks = ArtworkPicks.shared
+    /// Steam Play phases drive the A hint.
+    @ObservedObject var steamPlayer = SteamPlayCoordinator.shared
     @State var keyMonitor: Any?
 
     public init(viewModel: AppViewModel, router: AppRouter, settings: AppSettingsStore,
@@ -36,18 +38,19 @@ public struct CollectionView: View {
     /// The filter is shared with Spotlight.
     var filter: LibraryFilter { viewModel.librarySelection.query.filter }
 
-    var games: [PortedGame] {
-        viewModel.librarySelection.query.apply(to: viewModel.libraryGames, history: playSessions)
+    var games: [CatalogGame] {
+        viewModel.librarySelection.query.applyCatalog(to: viewModel.visibleCatalogGames, history: playSessions)
     }
 
-    var hasAnyGame: Bool { viewModel.libraryGames.contains { !$0.isHidden } }
+    var hasAnyGame: Bool { !viewModel.visibleCatalogGames.isEmpty }
 
-    func selectedGame(in games: [PortedGame]) -> PortedGame? {
+    func selectedGame(in games: [CatalogGame]) -> PortedGame? {
         guard let id = viewModel.librarySelection.selectedGameID else { return nil }
-        return games.first { $0.id == id }
+        return games.first { $0.id == id }?.nxnativeGame
     }
 
     var selectedGame: PortedGame? { selectedGame(in: games) }
+    var selectedCatalogGame: CatalogGame? { games.first { $0.id == viewModel.librarySelection.selectedGameID } }
 
     // MARK: - Body
 
@@ -68,10 +71,11 @@ public struct CollectionView: View {
             stage: { stage(games: games, game: game) })
         .onAppear(perform: appear)
         .onDisappear(perform: removeKeyMonitor)
-        .onChange(of: viewModel.libraryGames) { _ in
+        .onChange(of: viewModel.catalogGames) { _ in
             viewModel.preloadCachedStoreMetadata()
             reconcile()
         }
+        .onChange(of: viewModel.catalogSourceConfigurations) { _ in reconcile() }
         .onChange(of: filter) { _ in reconcile() }
         .onChange(of: viewModel.librarySelection.selectedGameID) { _ in selectionChanged() }
         .onReceive(NotificationCenter.default.publisher(for: .nxCollectionGamepadAction)) { note in
@@ -87,10 +91,11 @@ public struct CollectionView: View {
         .onChange(of: playSessions.sessions.count) { _ in reconcile() }
         .onChange(of: viewModel.isScanningLibrary) { _ in reconcile() }
         .task(id: art.heroTaskKey(game, metadata: game.flatMap { viewModel.storeMetadata[$0.id] })) { await loadHero(game) }
+        .task(id: art.steamHeroTaskKey(selectedCatalogGame)) { await art.loadSteamHero(game: selectedCatalogGame, current: { selectedCatalogGame?.id }, artwork: artwork) }
         .task(id: art.logoTaskKey(game, metadata: game.flatMap { viewModel.storeMetadata[$0.id] })) { await loadLogo(game) }
     }
 
-    private func stage(games: [PortedGame], game: PortedGame?) -> some View {
+    private func stage(games: [CatalogGame], game: PortedGame?) -> some View {
         ZStack(alignment: .topLeading) {
             SpotlightTopBar(filter: filter, showClock: settings.settings.showClock,
                             onSelect: { setFilter($0) })
@@ -103,6 +108,12 @@ public struct CollectionView: View {
                                        lastPlayed: playSessions.lastPlayed(for: game.id)))
                     .id(game.id)
                     // Spotlight's left margin; the logo starts just under the top bar.
+                    .frame(width: canvas.u(1100), alignment: .topLeading)
+                    .offset(x: canvas.u(80), y: canvas.u(110))
+            } else if let record = selectedCatalogGame, record.integration == .steam {
+                CatalogSteamInfo(game: record, totalPlaytime: playSessions.totalDuration(for: record.id),
+                                 lastPlayed: playSessions.lastPlayed(for: record.id), collection: true)
+                    .id(record.id)
                     .frame(width: canvas.u(1100), alignment: .topLeading)
                     .offset(x: canvas.u(80), y: canvas.u(110))
             }
@@ -121,7 +132,7 @@ public struct CollectionView: View {
                     needsMetadata: { viewModel.loadStoreMetadata(for: $0) },
                     tileLook: viewModel.portingTileLook,
                     onSelect: { select($0.id) },
-                    onActivate: { select($0.id); play($0) })
+                    onActivate: { record in select(record.id); activateCatalog(record) })
                     .offset(y: canvas.u(576))
             }
         }
@@ -160,6 +171,10 @@ public struct CollectionView: View {
     // MARK: - Hints
 
     private func contextHints(_ game: PortedGame?) -> [HintItem] {
+        if let steam = selectedCatalogGame, steam.integration == .steam {
+            return SteamPlayCoordinator.shared.hint(for: steam)
+                + [HintItem(.y, L10n.text("Game options")), HintItem(.rs, L10n.text("Filter"))]
+        }
         guard let game else {
             if viewModel.isScanningLibrary { return [] }
             return hasAnyGame ? [HintItem(.rs, L10n.text("Filter"))] : [HintItem(.a, L10n.text("Add game"))]
@@ -189,7 +204,7 @@ public struct CollectionView: View {
     /// Keeps the selection inside the filtered list, in the same frame as any change to it.
     func reconcile() {
         var state = viewModel.librarySelection
-        state.reconcile(with: viewModel.libraryGames, history: playSessions,
+        state.reconcileCatalog(with: viewModel.visibleCatalogGames, history: playSessions,
                         preferredGameID: settings.settings.restoreLastGame ? settings.settings.lastSelectedGameID : nil)
         if state != viewModel.librarySelection { viewModel.librarySelection = state }
     }
@@ -206,6 +221,7 @@ public struct CollectionView: View {
     }
 
     private func selectionChanged() {
+        if let id = selectedCatalogGame?.id, settings.settings.lastSelectedGameID != id { settings.settings.lastSelectedGameID = id }
         guard let game = selectedGame else { return }
         if settings.settings.lastSelectedGameID != game.id { settings.settings.lastSelectedGameID = game.id }
         viewModel.loadStoreMetadata(for: game)
@@ -214,13 +230,15 @@ public struct CollectionView: View {
     // MARK: - Art
 
     private func loadHero(_ game: PortedGame?) async {
+        // On a Steam game the nxnative art stays until the Steam hero replaces it, so the change is one crossfade.
         await art.loadHero(game: game, current: { selectedGame?.id },
-                           metadata: game.flatMap { viewModel.storeMetadata[$0.id] }, artwork: artwork)
+                           metadata: game.flatMap { viewModel.storeMetadata[$0.id] }, artwork: artwork, personalizations: viewModel.personalizations,
+                           keepsWithoutGame: selectedCatalogGame?.integration == .steam)
     }
 
     private func loadLogo(_ game: PortedGame?) async {
         await art.loadLogo(game: game, metadata: game.flatMap { viewModel.storeMetadata[$0.id] },
-                           artwork: artwork)
+                           artwork: artwork, personalizations: viewModel.personalizations)
     }
 }
 
@@ -267,35 +285,19 @@ struct CollectionInfoView: View {
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .opacity(shown ? 1 : 0)
-        .offset(x: slid ? 0 : canvas.u(-24))
+        .offset(x: slid ? 0 : canvas.u(Self.slideDistance))
         .onAppear { reveal() }
     }
 
     private var logoArea: some View {
-        ZStack(alignment: .bottomLeading) {
-            if let logo {
-                Image(nsImage: logo)
-                    .resizable()
-                    .interpolation(.high)
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: canvas.u(700), maxHeight: canvas.u(240), alignment: .bottomLeading)
-                    .shadow(color: .black.opacity(0.35), radius: canvas.u(8))
-            } else {
-                Text(game.name)
-                    .seleneFont(56)
-                    .foregroundColor(SeleneTheme.ink)
-                    .multilineTextAlignment(.leading)
-                    .lineLimit(3)
-                    .frame(maxHeight: canvas.u(220))
-                    .shadow(color: .black.opacity(0.45), radius: canvas.u(6))
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(height: canvas.u(250), alignment: .bottomLeading)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(game.name)
-        .accessibilityAddTraits(.isHeader)
+        GameLogoArea(title: game.name, logo: logo, collection: true)
     }
+
+    /// The whole column's fade and slide after a change. A Steam game's column uses the same.
+    /// Quicker than Spotlight's head (a grid is browsed fast) but with its curve, easing out like `logoFade`.
+    static let fade = Animation.easeOut(duration: 0.3).delay(0.12)
+    static let slide = SeleneTheme.cubicOut(0.3).delay(0.12)
+    static let slideDistance: CGFloat = -24
 
     /// The fade always runs; the slide is movement and drops under reduce motion.
     private func reveal() {
@@ -306,9 +308,9 @@ struct CollectionInfoView: View {
             slid = reduceMotion
         }
         DispatchQueue.main.async {
-            withAnimation(.linear(duration: 0.3).delay(0.12)) { shown = true }
+            withAnimation(Self.fade) { shown = true }
             if !reduceMotion {
-                withAnimation(SeleneTheme.cubicOut(0.3).delay(0.12)) { slid = true }
+                withAnimation(Self.slide) { slid = true }
             }
         }
     }

@@ -31,8 +31,7 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
     }
 
     public static func defaultURL() -> URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/NXLibrary/play-sessions.json")
+        AppData.supportRoot.appendingPathComponent("play-sessions.json")
     }
 
     @discardableResult
@@ -47,6 +46,20 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
             lastHeartbeatAt: date
         )
         sessions.append(session)
+        let folded = trim()
+        save(totals: folded)
+        return true
+    }
+
+    /// A session for a game of another integration, which observes its own process. `sourceID` is the
+    /// qualified identity ("steam-570"), never a made-up Nintendo title ID. Without a bundle ID the
+    /// session is ended by its owner, and a restart closes it at its last heartbeat.
+    @discardableResult
+    public func start(gameID: UUID, sourceID: String, bundleID: String? = nil) -> Bool {
+        if isRunning(gameID: gameID) { return false }
+        let date = now()
+        sessions.append(PlaySession(gameID: gameID, titleID: sourceID, bundleID: bundleID,
+                                    startedAt: date, lastHeartbeatAt: date))
         let folded = trim()
         save(totals: folded)
         return true

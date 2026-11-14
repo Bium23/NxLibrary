@@ -195,6 +195,27 @@ public enum ArtworkCandidates {
         return list
     }
 
+    /// A Steam game's images for `slot`: Steam's own art for the exact AppID first, its store
+    /// screenshots as backgrounds, then everything found online (`OnlineArtwork`), without repeats.
+    /// Steam has no icon art: the Icon tab offers only online images and files.
+    public static func steamList(for slot: ArtworkSlot, appID: UInt32, screenshots: [URL],
+                                 online: [ArtworkCandidate] = []) -> [ArtworkCandidate] {
+        // Named for where Steam shows it, so the library hero is recognizable among the backgrounds.
+        var list = (appID > 0 ? SteamStoreArt.candidates(appID: Int(appID), slot: slot) : []).map {
+            ArtworkCandidate(slot: $0.slot, source: "Steam library", url: $0.url, fallback: $0.fallback)
+        }
+        if slot == .background {
+            for shot in OnlineArtwork.screenshots(screenshots.map(\.absoluteString), source: "Steam screenshot", stripQuery: true)
+            where !list.contains(where: { $0.url == shot.url }) {
+                list.append(shot)
+            }
+        }
+        for candidate in online where candidate.slot == slot && !list.contains(where: { $0.url == candidate.url }) {
+            list.append(candidate)
+        }
+        return list
+    }
+
     /// Downloads a candidate (or its fallback) and reads its size; nil when both are missing or not images.
     public static func load(_ candidate: ArtworkCandidate,
                             client: ArtworkHTTPClient = URLSessionArtworkClient()) async -> LoadedArtwork? {
@@ -244,8 +265,7 @@ public final class ArtworkPicks: ObservableObject {
     /// Bumps on every change, so screens reload their art.
     @Published public private(set) var revision = 0
 
-    public init(directory: URL = FileManager.default.homeDirectoryForCurrentUser
-                    .appendingPathComponent("Library/Application Support/NXLibrary/artwork-picks")) {
+    public init(directory: URL = AppData.supportRoot.appendingPathComponent("artwork-picks")) {
         self.directory = directory
     }
 

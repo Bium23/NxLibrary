@@ -40,8 +40,7 @@ public struct AppIconWriter {
     private let iconutil: URL
     private let xattr: URL
 
-    public init(backups: URL = FileManager.default.homeDirectoryForCurrentUser
-                    .appendingPathComponent("Library/Application Support/NXLibrary/app-icons"),
+    public init(backups: URL = AppData.supportRoot.appendingPathComponent("app-icons"),
                 runner: CommandRunning = SystemCommandRunner(), fileManager: FileManager = .default,
                 codesign: URL = URL(fileURLWithPath: "/usr/bin/codesign"),
                 iconutil: URL = URL(fileURLWithPath: "/usr/bin/iconutil"),

@@ -86,11 +86,11 @@ final class SetupCheckModel: ObservableObject {
     }
 
     func rememberStates() {
-        var states = UserDefaults.standard.dictionary(forKey: Self.lastStatesKey) as? [String: String] ?? [:]
+        var states = AppData.preferences.dictionary(forKey: Self.lastStatesKey) as? [String: String] ?? [:]
         for item in items where item.state != .working {
             states[item.id.rawValue] = item.state.rawValue
         }
-        UserDefaults.standard.set(states, forKey: Self.lastStatesKey)
+        AppData.preferences.set(states, forKey: Self.lastStatesKey)
     }
 
     /// At launch, after setup: opens the Setup check when something that was ready
@@ -104,7 +104,7 @@ final class SetupCheckModel: ObservableObject {
             DispatchQueue.main.async {
                 guard !viewModel.isBuilding, !viewModel.isUpdatingApp,
                       viewModel.nxnativePath == enginePath else { return }
-                let stored = UserDefaults.standard.dictionary(forKey: lastStatesKey) as? [String: String] ?? [:]
+                let stored = AppData.preferences.dictionary(forKey: lastStatesKey) as? [String: String] ?? [:]
                 var previous: [SetupItemID: SetupState] = [:]
                 for (key, value) in stored {
                     if let id = SetupItemID(rawValue: key), let state = SetupState(rawValue: value) { previous[id] = state }
@@ -112,7 +112,7 @@ final class SetupCheckModel: ObservableObject {
                 if SetupCheck.shouldReopen(previous: previous, current: current) {
                     viewModel.showSetupCheck = true
                 } else {
-                    UserDefaults.standard.set(
+                    AppData.preferences.set(
                         Dictionary(uniqueKeysWithValues: current.map { ($0.id.rawValue, $0.state.rawValue) }),
                         forKey: lastStatesKey)
                 }
