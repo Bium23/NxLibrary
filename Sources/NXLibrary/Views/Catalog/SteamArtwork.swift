@@ -35,10 +35,27 @@ struct SteamArtwork: View {
             else if role == .square { url = nil }
             else { url = await SteamMetadataService.shared.image(appID: id, slot: slot, remote: remote) }
             guard !Task.isCancelled else { return }
-            image = url.flatMap { NSImage(contentsOf: $0) }; loadedKey = expected
+            // Decoded off the main thread at the size its nxnative twin uses: a lazily decoded file cost the
+            // first frame that drew it 40–60 ms.
+            let decoded: NSImage? = if let url { await GameArtLoader.decode(at: url, maxPixelSize: slot.decodedSize) } else { nil }
+            guard !Task.isCancelled else { return }
+            image = decoded; loadedKey = expected
         }
 
         .accessibilityLabel(game.name)
+    }
+}
+
+private extension ArtworkSlot {
+    /// The nxnative sizes: tiles' icons 512 px (`SpotlightTileArtwork`), box covers 900 (`SwitchBoxArtCover`),
+    /// logos and heroes as `GameArtLoader`.
+    var decodedSize: Int {
+        switch self {
+        case .icon: return 512
+        case .cover: return 900
+        case .logo: return 1600
+        case .background: return 2560
+        }
     }
 }
 

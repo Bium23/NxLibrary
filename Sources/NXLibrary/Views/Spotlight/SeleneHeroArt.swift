@@ -87,14 +87,11 @@ final class SeleneHeroArt: ObservableObject {
             }
         }
         guard !Task.isCancelled else { return }
-        let loaded: NSImage? = if let url { await Self.decodeBackdrop(at: url) } else { nil }
+        // Decoded off the main thread like an nxnative hero; a lazily decoded file cost its first frame 40–60 ms.
+        let loaded: NSImage? = if let url { await GameArtLoader.decodeHero(at: url) } else { nil }
         guard !Task.isCancelled, current() == game.id else { return }
         image = loaded
         key = loaded.map { loadedFor + "\(ObjectIdentifier($0).hashValue)" } ?? "none"
-    }
-
-    private static func decodeBackdrop(at url: URL) async -> NSImage? {
-        await Task.detached(priority: .userInitiated) { NSImage(contentsOf: url) }.value
     }
 
     func loadLogo(game: PortedGame?, metadata: NintendoStoreMetadata?,

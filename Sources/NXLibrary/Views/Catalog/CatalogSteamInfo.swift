@@ -159,7 +159,8 @@ final class SteamLogoCache: ObservableObject {
         var url = request.localURL(picks: picks)
         if url == nil, let id = request.appID { url = await SteamMetadataService.shared.image(appID: id, slot: .logo) }
         guard !Task.isCancelled, let url else { return }
-        let image = await Task.detached(priority: .userInitiated) { NSImage(contentsOf: url) }.value
+        // Decoded off the main thread like an nxnative logo: a lazily decoded file cost the frame that drew it.
+        let image = await GameArtLoader.decodeLogo(at: url)
         guard !Task.isCancelled, let image else { return }
         logos.setObject(image, forKey: key as NSString)
         withAnimation(.easeOut(duration: 0.3)) { tick += 1 }
