@@ -60,28 +60,7 @@ struct SeleneStatsRow: View {
         .shadow(color: .black.opacity(0.45), radius: canvas.u(4))
     }
 
-    @ViewBuilder
     private func stat(_ item: SeleneStat) -> some View {
-        if case .platform(let console) = item.value, console == SteamPlatformLogo.platformName {
-            steamStat(item.label)
-        } else {
-            labelled(item)
-        }
-    }
-
-    /// Valve's logo stands alone, without the label over it, centred in the height of the other stats' label and
-    /// value lines (16 + 2 + 28), so the row is as tall for a Steam game as for any other. It is as tall as a
-    /// value line or the guidelines' on-screen minimum; the 9 units left above and below are the crank's clear
-    /// space at that size, and nothing else in the row comes nearer.
-    private func steamStat(_ label: String) -> some View {
-        SteamPlatformLogo(height: SteamPlatformLogo.height(canvas.u(28), displayScale: displayScale))
-            .frame(height: canvas.u(46))
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text(L10n.text(label)))
-            .accessibilityValue(Text(verbatim: SteamPlatformLogo.platformName))
-    }
-
-    private func labelled(_ item: SeleneStat) -> some View {
         VStack(alignment: .leading, spacing: canvas.u(2)) {
             // Line boxes of Selene's Segoe UI 12 / 21 (16 and 28), so the strip lands 34 below.
             Text(L10n.text(item.label))
@@ -92,6 +71,8 @@ struct SeleneStatsRow: View {
                 switch item.value {
                 case .text(let text):
                     value(text)
+                case .platform(let console) where console == SteamPlatformLogo.platformName:
+                    steamLogo
                 case .platform(let console):
                     HStack(spacing: canvas.u(9)) {
                         SwitchPlatformIcon()
@@ -104,6 +85,14 @@ struct SeleneStatsRow: View {
             .frame(minHeight: canvas.u(28))
         }
         .accessibilityElement(children: .combine)
+    }
+
+    /// Valve's logo alone in the value's place: as tall as the value line, or the guidelines' on-screen minimum.
+    /// A taller logo spreads evenly above and below the line without moving the row, which stays as tall as for
+    /// any other game. The label above sits closer than the crank's clear space: the label was the player's choice.
+    private var steamLogo: some View {
+        SteamPlatformLogo(height: SteamPlatformLogo.height(canvas.u(28), displayScale: displayScale))
+            .frame(height: canvas.u(28), alignment: .leading)
     }
 
     private func value(_ text: String) -> some View {
