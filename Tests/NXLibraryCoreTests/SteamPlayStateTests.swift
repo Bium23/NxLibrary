@@ -74,6 +74,23 @@ final class SteamPlayStateTests: XCTestCase {
         XCTAssertNil(state.observe([.init(pid: 42, bundleURL: steamClient.bundleURL, executableURL: steamClient.executableURL)],
                                    application: app, now: t0))
     }
+
+    func testARunningSessionFollowsTheProcessItSawStartNotTheInstallationNow() {
+        var state = SteamPlayState()
+        XCTAssertEqual(state.observe([game], application: app, now: t0), .started(pid: 42))
+        // The installation disappears from the catalog (a refresh): the game keeps playing.
+        XCTAssertNil(state.observe([game], application: nil, now: t0.addingTimeInterval(60)))
+        // The catalog now names the app at a new path: one session, not ended and started again.
+        let moved = CatalogNativeApplication(NativeMacApplication(
+            url: URL(fileURLWithPath: "/Volumes/Games/Game.app"),
+            executableURL: URL(fileURLWithPath: "/Volumes/Games/Game.app/Contents/MacOS/Game"),
+            bundleIdentifier: "com.example.game", name: "Game", architectures: [.arm64], isDeclaredGame: true, fileObservations: []))
+        XCTAssertNil(state.observe([game], application: moved, now: t0.addingTimeInterval(120)))
+        XCTAssertEqual(state.phase, .running(pid: 42))
+        // With no installation to compare, the pid reused by another program still ends it.
+        XCTAssertEqual(state.observe([steamClient, .init(pid: 42, bundleURL: steamClient.bundleURL, executableURL: nil)],
+                                     application: nil, now: t0.addingTimeInterval(180)), .ended(pid: 42))
+    }
 }
 
 final class SteamBackgroundLaunchTests: XCTestCase {

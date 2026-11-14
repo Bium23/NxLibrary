@@ -53,6 +53,9 @@ public struct SteamPlayState: Equatable, Sendable {
 
     public private(set) var phase: Phase = .idle
     public private(set) var generation = 0
+    /// The app the running session saw start: it lasts while that process lives, whatever the catalog
+    /// says about the installation since (removed in a refresh, or now named at another path).
+    private var runningBundle: URL?
 
     public init() {}
 
@@ -95,13 +98,17 @@ public struct SteamPlayState: Equatable, Sendable {
     public mutating func observe(_ processes: [NativeProcessObservation], application: CatalogNativeApplication?,
                                  now: Date) -> Change? {
         if case .running(let pid) = phase {
-            // Same pid and still this app: a pid the system reused for another program is not the game.
-            if processes.contains(where: { process in process.pid == pid && (application.map { Self.matches(process, $0) } ?? true) }) { return nil }
+            // Same pid and still the app it started as: a pid the system reused for another program is not the game.
+            if processes.contains(where: { process in
+                process.pid == pid && (runningBundle.map { bundle in process.bundleURL.map { Self.same($0, bundle) } ?? false } ?? true)
+            }) { return nil }
             phase = .idle
+            runningBundle = nil
             return .ended(pid: pid)
         }
         if let application, let match = processes.first(where: { Self.matches($0, application) }) {
             phase = .running(pid: match.pid)
+            runningBundle = match.bundleURL
             return .started(pid: match.pid)
         }
         if case .starting(let since, _) = phase, now.timeIntervalSince(since) > Self.startDeadline {
