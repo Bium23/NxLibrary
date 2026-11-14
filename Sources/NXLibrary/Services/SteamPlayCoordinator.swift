@@ -194,6 +194,7 @@ final class SteamPlayCoordinator: ObservableObject {
                 if let appID = game?.steamGame?.appID { sessions?.start(gameID: id, sourceID: "steam-\(appID)") }
             case .ended:
                 sessions?.end(gameID: id)
+                SteamPlaytimeCoordinator.shared.sessionEnded()
             case nil:
                 if heartbeat, case .running = state.phase { sessions?.heartbeat(for: id) }
             }

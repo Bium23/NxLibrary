@@ -288,6 +288,7 @@ public struct AppShellView: View {
         .onDisappear {
             runningGames.stop()
             SteamPlayCoordinator.shared.stop()
+            SteamPlaytimeCoordinator.shared.stop()
             removeGestureKeyMonitor()
         }
         .onChange(of: viewModel.libraryGames) { games in
@@ -295,15 +296,18 @@ public struct AppShellView: View {
         }
         .onChange(of: viewModel.catalogGames) { games in
             SteamPlayCoordinator.shared.setGames(games, sources: viewModel.catalogSourceConfigurations)
+            SteamPlaytimeCoordinator.shared.setGames(games, sources: viewModel.catalogSourceConfigurations)
         }
         .onChange(of: viewModel.catalogSourceConfigurations) { sources in
             SteamPlayCoordinator.shared.setGames(viewModel.catalogGames, sources: sources)
+            SteamPlaytimeCoordinator.shared.setGames(viewModel.catalogGames, sources: sources)
         }
         .onReceive(runningGames.$endedSession) { summary in
             sessionCard.ended(summary, enabled: settings.settings.showsSessionCard)
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             sessionCard.becameActive()
+            SteamPlaytimeCoordinator.shared.refresh()
         }
         .onChange(of: settings.settings.showsSessionCard) { on in
             if !on { sessionCard.clear() }
@@ -531,6 +535,8 @@ public struct AppShellView: View {
         // After the nxnative reconcile, which closes a Steam session left by a restart at its last heartbeat.
         SteamPlayCoordinator.shared.setGames(viewModel.catalogGames, sources: viewModel.catalogSourceConfigurations)
         SteamPlayCoordinator.shared.start(sessions: playSessions, settings: settings)
+        SteamPlaytimeCoordinator.shared.setGames(viewModel.catalogGames, sources: viewModel.catalogSourceConfigurations)
+        SteamPlaytimeCoordinator.shared.start(sessions: playSessions)
         viewModel.installPendingBuilds()
         viewModel.syncPendingAppIcons()
         closeGameWatch = runningGames.$runningGameIDs.sink { [weak viewModel] ids in
