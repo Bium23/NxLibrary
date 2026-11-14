@@ -92,21 +92,31 @@ public struct AppShellView: View {
             catalogRecovery: general && !viewModel.isBuilding && !viewModel.catalogBuildRecoveries.isEmpty)
     }
 
-    /// The launch screen sits over everything, menu included, until the game's window shows.
     /// A game the session card or the launch screen names: a library build, else a Steam game of the catalog.
     private func playedGame(_ id: UUID) -> PlayedGame? {
         if let game = viewModel.libraryGames.first(where: { $0.id == id }) { return .nxnative(game) }
         return viewModel.catalogGames.first { $0.id == id && $0.integration == .steam }.map(PlayedGame.steam)
     }
 
-    @ViewBuilder private var launchLayer: some View {
+    @ViewBuilder private var introLayer: some View {
         if router.isIntroShowing {
             IntroView(settings: settings, reduceMotion: reduceMotion) { router.isIntroShowing = false }
-        } else if let state = viewModel.launchOverlay {
+        }
+    }
+
+    /// The launch screen, in its own window over every app and Space (`LaunchCoverWindow`). Its window has its own
+    /// SwiftUI root: the canvas and the locale are given to it here.
+    private var launchCover: some View {
+        LaunchCoverWindow(state: router.isIntroShowing ? nil : viewModel.launchOverlay) { state in
             LaunchScreenView(state: state, viewModel: viewModel, artwork: artwork,
                              settings: settings.settings, reduceMotion: reduceMotion)
                 .id(state.game.id)
+                .seleneCanvasRoot()
+                .environment(\.locale, localization.context.formatLocale)
+                .environment(\.nxAppLocale, localization.context)
         }
+        .frame(width: 0, height: 0)
+        .accessibilityHidden(true)
     }
 
     /// Game options, Add game and the console open and close alike: a fade with a slight scale.
@@ -249,7 +259,8 @@ public struct AppShellView: View {
             SessionCardLayer(presenter: sessionCard, game: playedGame,
                              metadata: viewModel.storeMetadata, artwork: artwork)
         }
-        .overlay { launchLayer }
+        .overlay { introLayer }
+        .background { launchCover }
         .modifier(SoundCueHooks(router: router, viewModel: viewModel))
         // Inside the canvas root so the sheet inherits the window's canvas units.
         .seleneCanvasRoot()

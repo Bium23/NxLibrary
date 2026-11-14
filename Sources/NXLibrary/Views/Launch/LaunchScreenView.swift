@@ -13,8 +13,9 @@ struct LaunchOverlayState: Equatable {
     }
 }
 
-/// Selene's launch screen: art and logo while the game starts, then fade to black and out
-/// once the game's window is on screen (`LaunchReadinessProbe`). A Steam game's screen also leaves when Steam is
+/// Selene's launch screen: art drifting closer and the logo coming in once (`LaunchMotion`) while the game starts,
+/// then fade to black and out once the game's window is on screen (`LaunchReadinessProbe`). Shown in its own
+/// window over every app (`LaunchCoverWindow`). A Steam game's screen also leaves when Steam is
 /// late or Play ends (`SteamPlayCoordinator.launchScreen`).
 struct LaunchScreenView: View {
     let state: LaunchOverlayState
@@ -27,12 +28,15 @@ struct LaunchScreenView: View {
     @State private var hero: NSImage?
     @State private var logo: NSImage?
     @State private var shown = false
-    @State private var drift = false
+    /// When the screen appeared, for the logo's entrance after the screen's fade.
+    @State private var appearedAt: CFTimeInterval = 0
     @State private var blackout = false
     @State private var leaving = false
-    @State private var breathe = false
 
     private var game: PlayedGame { state.game }
+
+    /// The longest the screen stays: past a Steam cold start (45 s), the game's start and the 60 s window probe.
+    static let ceiling: TimeInterval = 120
 
     private var shadeOpacity: Double {
         switch settings.launchShade {
@@ -67,17 +71,18 @@ struct LaunchScreenView: View {
             if ready { finish() }
         }
         .task(id: game.id) { await loadArt() }
+        .task(id: game.id) {
+            // The screen covers every app: whatever happens to the launch, it never stays up for good.
+            try? await Task.sleep(nanoseconds: UInt64(Self.ceiling * 1_000_000_000))
+            if !Task.isCancelled { finish() }
+        }
     }
 
     private var art: some View {
         GeometryReader { geo in
             if let hero {
-                Image(nsImage: hero)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+                LaunchArt(image: hero, moves: settings.launchMotion && !reduceMotion)
                     .frame(width: geo.size.width, height: geo.size.height)
-                    .scaleEffect(drift ? 1.06 : 1.0)
-                    .clipped()
                     .transition(.opacity)
             }
             Color.black.opacity(shadeOpacity)
@@ -90,10 +95,12 @@ struct LaunchScreenView: View {
             EmptyView()
         case .artAndLogo, .logoOnBlack:
             if let logo {
-                // Fitted in 720 × 320 as before; the breathing view adds room for the shadow and the growth.
-                let size = LaunchLogo.fitted(logo.size, in: CGSize(width: canvas.u(720), height: canvas.u(320)))
+                // Selene's size: at most half the width and 38% of the height; the view adds room for the shadow.
+                let size = LaunchLogo.fitted(logo.size, in: CGSize(width: canvas.u(960), height: canvas.u(410)))
                 let margin = LaunchLogo.margin(shadowRadius: canvas.u(18))
-                LaunchLogo(image: logo, shadowRadius: canvas.u(18), reduceMotion: reduceMotion)
+                LaunchLogo(image: logo, shadowRadius: canvas.u(18), rise: canvas.u(LaunchMotion.riseDistance),
+                           startsAt: appearedAt + LaunchMotion.screenFade + LaunchMotion.logoDelay,
+                           reduceMotion: reduceMotion)
                     .frame(width: size.width + margin * 2, height: size.height + margin * 2)
                     .accessibilityHidden(true)
             } else {
@@ -113,28 +120,18 @@ struct LaunchScreenView: View {
     }
 
     private var mark: some View {
-        Image(nsImage: NSApplication.shared.applicationIconImage)
-            .resizable()
-            .interpolation(.high)
+        LaunchMark(image: NSApplication.shared.applicationIconImage, reduceMotion: reduceMotion)
             .frame(width: canvas.u(56), height: canvas.u(56))
-            .opacity(breathe ? 1 : 0.45)
             .padding(.trailing, canvas.u(64))
             .padding(.bottom, canvas.u(56))
             .accessibilityHidden(true)
     }
 
     private func appear() {
+        appearedAt = CACurrentMediaTime()
         hero = GameArtLoader.shared.cachedHero(for: game)
         logo = GameArtLoader.shared.cachedLogo(for: game)
-        withAnimation(.easeOut(duration: 0.25)) { shown = true }
-        if settings.launchMotion && !reduceMotion {
-            withAnimation(.linear(duration: 20)) { drift = true }
-        }
-        if !reduceMotion {
-            withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) { breathe = true }
-        } else {
-            breathe = true
-        }
+        withAnimation(.easeOut(duration: LaunchMotion.screenFade)) { shown = true }
     }
 
     private func finish() {
@@ -161,7 +158,8 @@ struct LaunchScreenView: View {
         if logo == nil, settings.launchStyle != .minimal, settings.launchStyle != .artOnly {
             let loaded = await GameArtLoader.shared.logo(
                 for: game, metadata: metadata, artwork: artwork, personalizations: viewModel.personalizations)
-            withAnimation(.easeOut(duration: 0.3)) { logo = loaded }
+            // The logo comes in by itself (`LaunchLogo`).
+            logo = loaded
         }
     }
 }

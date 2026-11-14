@@ -8,10 +8,12 @@ import NXLibraryCore
 /// installation's own app starts a session, its exit ends it, Steam staying open does not count.
 /// The catalog is not written here; only `PlaySessionStore` is.
 ///
-/// Play shows the launch screen (`launchScreen`) and keeps NX Library in front while the game is on its way, as
-/// for an nxnative game: Steam coming forward is sent back behind it. The screen leaves once the game's window is
-/// up (the game is brought forward), when Play ends, or past the wait's patience (`SteamBackgroundLaunch`: 15 s
-/// with Steam open, 45 s when Play starts it), when Steam is brought forward and the head says to check it.
+/// Play shows the launch screen (`launchScreen`) while the game is on its way, as for an nxnative game. The screen
+/// has its own window over every app (`LaunchCoverWindow`), so Steam coming forward, or macOS changing Space,
+/// happens behind it and NX Library never takes the front back. The screen leaves once the game's window is up (the
+/// game is brought forward), when Play ends, as soon as Steam's log says the launch waits on a question for the
+/// player (`SteamLaunchQuestionWatch`), or past the wait's patience (`SteamBackgroundLaunch`: 15 s with Steam open,
+/// 45 s when Play starts it); in those last two cases Steam is brought forward and the head says to check it.
 ///
 /// With "Keep Steam in the background", a Steam that Play starts opens with `-silent -nofriendsui`, and an open
 /// Steam is hidden while the game is on its way; once Play is over, Steam comes back only if it was in view
@@ -61,8 +63,16 @@ final class SteamPlayCoordinator: ObservableObject {
     weak var nativeGames: RunningGameMonitor?
     /// Whether a launch screen (any game's) is on screen, set by the shell: Play waits until it has gone.
     var isLaunchScreenShowing: () -> Bool = { false }
-    /// The app last brought to the front: Steam is sent back only when it took the front from NX Library.
-    private var frontPID: Int32?
+    /// Steam's folder while the Steam source is enabled: its log says when a launch waits on the player.
+    private var steamRoot: URL?
+    /// The game Play last handed to Steam, read in Steam's log for a question while it is on its way
+    /// (`questionTimer`), off the main thread and one look at a time.
+    private var questionWatch: (gameID: UUID, watch: SteamLaunchQuestionWatch)?
+    private var questionTimer: Timer?
+    private var questionLooking = false
+    /// Bumps with each new watch, so a look still reading for an older one is dropped.
+    private var questionGeneration = 0
+    private static let questionLook: TimeInterval = 0.5
 
     /// A Steam game's own app is running.
     var hasRunningGame: Bool { states.values.contains { if case .running = $0.phase { return true }; return false } }
@@ -103,7 +113,6 @@ final class SteamPlayCoordinator: ObservableObject {
         self.sessions = sessions
         self.settings = settings
         watchingSince = Date()
-        frontPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
         let center = NSWorkspace.shared.notificationCenter
         // Launches and quits arrive through the `runningApplications` observation below, once each.
         // Steam brings itself forward when it gets steam://run; during a background launch it goes away again.
@@ -113,7 +122,8 @@ final class SteamPlayCoordinator: ObservableObject {
                 let pid = app?.processIdentifier
                 let isSteam = app?.bundleIdentifier == Self.steamBundleID
                 Task { @MainActor in
-                    if isSteam { self?.followBackground() }
+                    // Steam may be coming forward to ask something: look in its log at once.
+                    if isSteam { self?.lookForQuestion(); self?.followBackground() }
                     if name == NSWorkspace.didActivateApplicationNotification { self?.activated(pid: pid, isSteam: isSteam) }
                 }
             }
@@ -140,11 +150,11 @@ final class SteamPlayCoordinator: ObservableObject {
         returnFocus = SteamReturnFocus()
         hideAgain?.cancel(); hideAgain = nil
         readiness?.cancel(); readiness = nil
+        stopWatchingQuestions()
         // A screen still up leaves the usual way before the wait is forgotten.
         if launchScreen?.ready == false { launchScreen?.ready = true }
         launchScreen = nil
         patience = [:]
-        frontPID = nil
         sessions = nil
         settings = nil
         if backgrounds.values.contains(true) { Self.showSteam() }
@@ -156,6 +166,7 @@ final class SteamPlayCoordinator: ObservableObject {
     func setGames(_ all: [CatalogGame], sources: [CatalogSourceConfiguration]) {
         games = all.filter { $0.integration == .steam }
         steamEnabled = sources.contains { $0.integration == .steam && $0.isEnabled }
+        steamRoot = sources.first { $0.integration == .steam && $0.isEnabled }?.rootURL
         refresh()
     }
 
@@ -196,6 +207,7 @@ final class SteamPlayCoordinator: ObservableObject {
             patience[id] = wait
             readiness?.cancel(); readiness = nil
             launchScreen = LaunchScreen(gameID: id)
+            watchQuestions(for: game)
             Timer.scheduledTimer(withTimeInterval: wait + 0.5, repeats: false) { [weak self] _ in
                 Task { @MainActor in self?.followBackground() }
             }
@@ -295,19 +307,8 @@ final class SteamPlayCoordinator: ObservableObject {
 
     /// A Steam game came to the front, or another app stayed in front a second later while it ran: the player left
     /// the game (an app macOS brings forward as a game quits does not count). Steam coming forward while the launch
-    /// screen waits goes back behind NX Library.
+    /// screen waits is left alone: the screen's own window stays over it.
     private func activated(pid: Int32?, isSteam: Bool) {
-        let previous = frontPID
-        frontPID = pid
-        // Only when Steam took the front from NX Library: a player who went to another app is left there. The second
-        // look `comeForward` takes is skipped once the wait is over (Steam may just have been handed the front).
-        if isSteam, isWaitingOnLaunchScreen, previous == ProcessInfo.processInfo.processIdentifier {
-            LibraryWindow.comeForward { [weak self] app in
-                guard let self else { return true }
-                return self.isRunningGame(pid: app.processIdentifier) || !self.isWaitingOnLaunchScreen
-            }
-            return
-        }
         if let pid, let id = states.first(where: { $0.value.phase == .running(pid: pid) })?.key {
             returnFocus.gameCameForward(id)
             return
@@ -360,22 +361,71 @@ final class SteamPlayCoordinator: ObservableObject {
 
     // MARK: - Launch screen
 
-    /// The launch screen is up and its game still on its way.
-    private var isWaitingOnLaunchScreen: Bool {
-        guard let screen = launchScreen, !screen.ready else { return false }
-        return SteamBackgroundLaunch.launchScreen(phase: phase(ofID: screen.gameID), now: Date(),
-                                                  patience: patience[screen.gameID] ?? SteamBackgroundLaunch.attentionDelay) == .waiting
-    }
-
-    /// The launch screen for `gameID` closed (it faded, the player dismissed it, or it never showed): NX Library
-    /// stops holding the front. Applied after the current publish: a value set while `launchScreen` is being
-    /// published is overwritten by it.
+    /// The launch screen for `gameID` closed (it faded, the player dismissed it, or it never showed). One the player
+    /// dismissed while the game was still on its way may have covered a Space change to Steam: NX Library comes
+    /// forward, unless a game is in front. Applied after the current publish: a value set while `launchScreen` is
+    /// being published is overwritten by it.
     func launchScreenClosed(_ gameID: UUID) {
         DispatchQueue.main.async { [weak self] in
-            guard let self, self.launchScreen?.gameID == gameID else { return }
+            guard let self, let screen = self.launchScreen, screen.gameID == gameID else { return }
             self.launchScreen = nil
             self.readiness?.cancel(); self.readiness = nil
+            if !screen.ready, !NSApp.isActive || NSApp.mainWindow?.isOnActiveSpace == false { self.comeBack() }
         }
+    }
+
+    /// Reads Steam's log for a question about `game`'s launch for as long as it is on its way, launch screen or not.
+    private func watchQuestions(for game: CatalogGame) {
+        stopWatchingQuestions()
+        guard let appID = game.steamGame?.appID, let steamRoot else { return }
+        questionWatch = (game.id, SteamLaunchQuestionWatch(appID: appID, steamRoot: steamRoot))
+        questionTimer = Timer.scheduledTimer(withTimeInterval: Self.questionLook, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.lookForQuestion() }
+        }
+        lookForQuestion()
+    }
+
+    private func stopWatchingQuestions() {
+        questionTimer?.invalidate(); questionTimer = nil
+        questionWatch = nil
+        questionGeneration += 1
+    }
+
+    /// Reads Steam's log off the main thread (the first look takes up to a megabyte).
+    private func lookForQuestion() {
+        guard let watching = questionWatch else { return }
+        guard case .starting = phase(ofID: watching.gameID) else { return stopWatchingQuestions() }
+        guard !questionLooking else { return }
+        questionLooking = true
+        let generation = questionGeneration
+        Task.detached(priority: .userInitiated) { [weak self] in
+            var watch = watching.watch
+            let asks = watch.look(now: Date())
+            await self?.looked(watch, asks: asks, generation: generation)
+        }
+    }
+
+    /// Steam waits on the player for the game on its way: Steam is handed the wait at once.
+    private func looked(_ watch: SteamLaunchQuestionWatch, asks: Bool, generation: Int) {
+        questionLooking = false
+        guard generation == questionGeneration, let gameID = questionWatch?.gameID else { return }
+        questionWatch = (gameID, watch)
+        guard asks, case .starting = phase(ofID: gameID) else { return }
+        stopWatchingQuestions()
+        handToSteam(gameID)
+    }
+
+    /// Steam may need the player for this wait: it stops being kept away, is shown, and the head says to check it.
+    /// While the game's launch screen waits, Steam is also brought forward and the screen leaves; a player who
+    /// dismissed the screen is left where they are.
+    private func handToSteam(_ id: UUID) {
+        late.insert(id)
+        backgrounds[id] = nil
+        Self.showSteam()
+        guard var screen = launchScreen, screen.gameID == id, !screen.ready else { return }
+        if let steam = Self.steamApplication { RunningGameMonitor.activate(steam) }
+        screen.ready = true
+        launchScreen = screen
     }
 
     /// Moves the launch screen on: the game started (it leaves once the window is up), Steam is late (Steam is
@@ -392,9 +442,8 @@ final class SteamPlayCoordinator: ObservableObject {
             if case .running(let pid) = phase { watchWindow(of: id, pid: pid) }
             return
         case .late:
-            late.insert(id)
-            Self.showSteam()
-            if NSApp.isActive, let steam = Self.steamApplication { RunningGameMonitor.activate(steam) }
+            handToSteam(id)
+            return
         case .over:
             break
         }
