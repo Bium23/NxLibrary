@@ -33,7 +33,7 @@ public actor SteamMetadataService {
     }
 
     public init(directory: URL = AppData.supportRoot.appendingPathComponent("integrations/steam/enrichment"),
-                transport: @escaping Transport = SteamMetadataService.download) {
+                transport: @escaping Transport = { try await SteamMetadataService.download($0) }) {
         self.directory = directory; self.transport = transport
     }
     public static func download(_ url: URL) async throws -> Data {

@@ -15,7 +15,7 @@ import NXLibraryCore
 @MainActor
 final class SteamPlayCoordinator: ObservableObject {
     static let shared = SteamPlayCoordinator()
-    static let steamBundleID = "com.valvesoftware.steam"
+    nonisolated static let steamBundleID = "com.valvesoftware.steam"
     private static let tick: TimeInterval = 30
 
     @Published private(set) var states: [UUID: SteamPlayState] = [:]

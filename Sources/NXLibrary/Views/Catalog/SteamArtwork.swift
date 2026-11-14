@@ -58,5 +58,3 @@ private extension ArtworkSlot {
         }
     }
 }
-
-extension Notification.Name { static let steamPersonalizationChanged = Notification.Name("NXSteamPersonalizationChanged") }
