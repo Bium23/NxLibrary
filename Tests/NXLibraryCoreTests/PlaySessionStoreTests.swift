@@ -197,4 +197,83 @@ final class PlaySessionStoreTests: XCTestCase {
         let decoded = try JSONDecoder().decode([PlaySession].self, from: data)
         XCTAssertEqual(decoded, store.sessions)
     }
+
+    // MARK: - Steam's own playtime as a baseline
+
+    private func session(_ store: PlaySessionStore, _ id: UUID, from start: TimeInterval, to end: TimeInterval?) {
+        now = Date(timeIntervalSince1970: start)
+        store.start(gameID: id, sourceID: "steam-440")
+        guard let end else { return }
+        now = Date(timeIntervalSince1970: end)
+        store.end(gameID: id)
+    }
+
+    private func external(_ duration: TimeInterval = 3_600, lastPlayed: TimeInterval? = nil,
+                          since: TimeInterval = 1_000) -> ExternalPlaytime {
+        ExternalPlaytime(duration: duration, lastPlayed: lastPlayed.map { Date(timeIntervalSince1970: $0) },
+                         since: Date(timeIntervalSince1970: since))
+    }
+
+    func testNoExternalKeepsTodaysTotals() {
+        let store = store(), id = UUID()
+        session(store, id, from: 1_100, to: 1_400)
+        store.setExternal([:])
+        XCTAssertEqual(store.totalDuration(for: id), 300, accuracy: 0.001)
+        XCTAssertEqual(store.lastPlayed(for: id), Date(timeIntervalSince1970: 1_100))
+    }
+
+    func testExternalAloneIsItsTotal() {
+        let store = store(), id = UUID()
+        store.setExternal([id: external()])
+        XCTAssertEqual(store.totalDuration(for: id), 3_600, accuracy: 0.001)
+        XCTAssertNil(store.lastPlayed(for: id))
+    }
+
+    func testSessionsAfterSinceAreAdded() {
+        let store = store(), id = UUID()
+        session(store, id, from: 1_100, to: 1_400)
+        store.setExternal([id: external()])
+        XCTAssertEqual(store.totalDuration(for: id), 3_900, accuracy: 0.001)
+    }
+
+    func testSessionsBeforeSinceAreNotAdded() {
+        let store = store(), id = UUID()
+        session(store, id, from: 500, to: 900)
+        store.setExternal([id: external()])
+        XCTAssertEqual(store.totalDuration(for: id), 3_600, accuracy: 0.001)
+    }
+
+    func testStraddlingSessionCountsOnlyAfterSince() {
+        let store = store(), id = UUID()
+        session(store, id, from: 800, to: 1_300)
+        store.setExternal([id: external()])
+        XCTAssertEqual(store.totalDuration(for: id), 3_900, accuracy: 0.001)
+
+        let running = UUID()
+        session(store, running, from: 800, to: nil)
+        now = Date(timeIntervalSince1970: 1_300)
+        store.setExternal([running: external()])
+        XCTAssertEqual(store.totalDuration(for: running), 3_900, accuracy: 0.001)
+    }
+
+    func testCarriedTimeIsIgnoredWithExternal() {
+        let store = store(), id = UUID()
+        for index in 0...PlaySessionStore.maxSessions {
+            let start = TimeInterval(index * 10)
+            session(store, id, from: start, to: start + 5)
+        }
+        XCTAssertFalse(store.carried.isEmpty)
+        now = Date(timeIntervalSince1970: 3_000)
+        store.setExternal([id: external(since: 2_002)])
+        XCTAssertEqual(store.totalDuration(for: id), 3_603, accuracy: 0.001)
+    }
+
+    func testLastPlayedIsTheLaterOfBoth() {
+        let store = store(), id = UUID()
+        session(store, id, from: 1_100, to: 1_400)
+        store.setExternal([id: external(lastPlayed: 2_000)])
+        XCTAssertEqual(store.lastPlayed(for: id), Date(timeIntervalSince1970: 2_000))
+        store.setExternal([id: external(lastPlayed: 900)])
+        XCTAssertEqual(store.lastPlayed(for: id), Date(timeIntervalSince1970: 1_100))
+    }
 }

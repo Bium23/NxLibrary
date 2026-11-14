@@ -7,6 +7,8 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
     /// Play time and last start of sessions trimmed from `sessions`, per game,
     /// so totals and last-played survive trimming.
     @Published public private(set) var carried: [UUID: CarriedPlaytime] = [:]
+    /// Another launcher's own total for a game (Steam's), with when it was seen. Not persisted here.
+    @Published public private(set) var external: [UUID: ExternalPlaytime] = [:]
     public static let maxSessions = 200
     public private(set) var loadError: String?
 
@@ -114,18 +116,31 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
         if changed { save() }
     }
 
+    /// Sets the external totals; publishes only a change.
+    public func setExternal(_ values: [UUID: ExternalPlaytime]) {
+        if values != external { external = values }
+    }
+
+    /// With an external total: that total plus the part of this store's sessions after it was seen
+    /// (it already counts what came before). Carried time is older than every recent session, so it
+    /// is not added. Without one: carried time plus every session.
     public func totalDuration(for gameID: UUID) -> TimeInterval {
         let date = now()
-        return sessions
-            .filter { $0.gameID == gameID }
-            .reduce(carried[gameID]?.duration ?? 0) { total, session in
+        let own = sessions.filter { $0.gameID == gameID }
+        guard let base = external[gameID] else {
+            return own.reduce(carried[gameID]?.duration ?? 0) { total, session in
                 total + max(0, (session.endedAt ?? date).timeIntervalSince(session.startedAt))
             }
+        }
+        return own.reduce(base.duration) { total, session in
+            let end = min(session.endedAt ?? date, date)
+            return total + max(0, end.timeIntervalSince(max(session.startedAt, base.since)))
+        }
     }
 
     public func lastPlayed(for gameID: UUID) -> Date? {
         let recent = sessions.filter { $0.gameID == gameID }.map(\.startedAt).max()
-        return [recent, carried[gameID]?.lastPlayed].compactMap { $0 }.max()
+        return [recent, carried[gameID]?.lastPlayed, external[gameID]?.lastPlayed].compactMap { $0 }.max()
     }
 
     public func isRunning(gameID: UUID) -> Bool {
@@ -202,6 +217,19 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
             carried = [:]
             loadError = error.localizedDescription
         }
+    }
+}
+
+/// A game's total as another launcher keeps it, and when NX Library first saw that value.
+public struct ExternalPlaytime: Equatable, Sendable {
+    public let duration: TimeInterval
+    public let lastPlayed: Date?
+    public let since: Date
+
+    public init(duration: TimeInterval, lastPlayed: Date?, since: Date) {
+        self.duration = duration
+        self.lastPlayed = lastPlayed
+        self.since = since
     }
 }
 
