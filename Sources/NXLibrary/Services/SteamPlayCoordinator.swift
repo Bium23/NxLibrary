@@ -7,6 +7,11 @@ import NXLibraryCore
 /// read on launches, quits and the app list changing, and every 30 s for waits and heartbeats: the
 /// installation's own app starts a session, its exit ends it, Steam staying open does not count.
 /// The catalog is not written here; only `PlaySessionStore` is.
+///
+/// With "Keep Steam in the background" (`SteamBackgroundLaunch`), a Steam that Play starts opens
+/// with `-silent -nofriendsui`, and an open Steam is hidden while the game is on its way. Past
+/// `attentionDelay` Steam is shown again and the head says to check it; once Play is over,
+/// Steam comes back only if it was in view before.
 @MainActor
 final class SteamPlayCoordinator: ObservableObject {
     static let shared = SteamPlayCoordinator()
@@ -14,10 +19,15 @@ final class SteamPlayCoordinator: ObservableObject {
     private static let tick: TimeInterval = 30
 
     @Published private(set) var states: [UUID: SteamPlayState] = [:]
+    /// Waits past `attentionDelay` of a background launch: Steam is back in view and may need the player.
+    @Published private(set) var late: Set<UUID> = []
 
     private var games: [CatalogGame] = []
     private var steamEnabled = false
     private var sessions: PlaySessionStore?
+    private var settings: AppSettingsStore?
+    /// Background launches in progress, with whether Steam was in view before Play.
+    private var backgrounds: [UUID: Bool] = [:]
     private var tokens: [NSObjectProtocol] = []
     private var listObservation: NSKeyValueObservation?
     private var timer: Timer?
@@ -44,13 +54,25 @@ final class SteamPlayCoordinator: ObservableObject {
         if case .starting = phase(of: game) { cancel(game) } else { play(game) }
     }
 
-    func start(sessions: PlaySessionStore) {
+    /// Steam is coming back for the player: the game is late and Steam may be asking for something.
+    func mayNeedSteam(_ game: CatalogGame) -> Bool { late.contains(game.id) }
+
+    func start(sessions: PlaySessionStore, settings: AppSettingsStore) {
         guard tokens.isEmpty else { return }
         self.sessions = sessions
+        self.settings = settings
         let center = NSWorkspace.shared.notificationCenter
         tokens = [NSWorkspace.didLaunchApplicationNotification, NSWorkspace.didTerminateApplicationNotification].map {
             center.addObserver(forName: $0, object: nil, queue: .main) { [weak self] _ in
                 Task { @MainActor in self?.refresh() }
+            }
+        }
+        // Steam brings itself forward when it gets steam://run; during a background launch it goes away again.
+        tokens += [NSWorkspace.didActivateApplicationNotification, NSWorkspace.didUnhideApplicationNotification].map {
+            center.addObserver(forName: $0, object: nil, queue: .main) { [weak self] note in
+                let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+                guard app?.bundleIdentifier == Self.steamBundleID else { return }
+                Task { @MainActor in self?.followBackground() }
             }
         }
         listObservation = NSWorkspace.shared.observe(\.runningApplications) { [weak self] _, _ in
@@ -72,6 +94,10 @@ final class SteamPlayCoordinator: ObservableObject {
         // at their last heartbeat, and a game still running must start a new one, not stay "running".
         states = [:]
         sessions = nil
+        settings = nil
+        if backgrounds.values.contains(true) { Self.showSteam() }
+        backgrounds = [:]
+        late = []
     }
 
     /// The catalog changed. A game no longer in it keeps its session until its process ends.
@@ -107,6 +133,18 @@ final class SteamPlayCoordinator: ObservableObject {
             let configuration = NSWorkspace.OpenConfiguration()
             configuration.activates = false
             let id = game.id
+            let background = settings?.settings.steamInBackground ?? false
+            let steam = Self.steamApplication
+            // Launch arguments reach only a Steam that this request starts.
+            configuration.arguments = SteamBackgroundLaunch.arguments(enabled: background, steamRunning: steam != nil)
+            late.remove(id)
+            if background {
+                backgrounds[id] = backgrounds[id] ?? (steam.map { !$0.isHidden } ?? false)
+                Timer.scheduledTimer(withTimeInterval: SteamBackgroundLaunch.attentionDelay + 0.5, repeats: false) { [weak self] _ in
+                    Task { @MainActor in self?.followBackground() }
+                }
+                followBackground()
+            }
             NSWorkspace.shared.open([url], withApplicationAt: client, configuration: configuration) { [weak self] _, error in
                 let accepted = error == nil
                 Task { @MainActor in self?.finishHandOff(id, accepted: accepted, generation: generation) }
@@ -120,6 +158,7 @@ final class SteamPlayCoordinator: ObservableObject {
     func cancel(_ game: CatalogGame) {
         guard var state = states[game.id] else { return }
         state.cancel(); states[game.id] = state
+        followBackground()
     }
 
     private func finishHandOff(_ id: UUID, accepted: Bool, generation: Int) {
@@ -153,5 +192,46 @@ final class SteamPlayCoordinator: ObservableObject {
             if state.phase == .idle, game == nil { next[id] = nil } else { next[id] = state }
         }
         if next != states { states = next }
+        followBackground()
+    }
+
+    // MARK: - Keep Steam in the background
+
+    private static var steamApplication: NSRunningApplication? {
+        NSRunningApplication.runningApplications(withBundleIdentifier: steamBundleID).first { !$0.isTerminated }
+    }
+
+    private static func showSteam() {
+        // Shown, not brought forward: NX Library or the game keeps the focus.
+        if let steam = steamApplication, steam.isHidden { steam.unhide() }
+    }
+
+    /// Hides Steam while a background launch is on its way; shows it again when the game is late,
+    /// and once Play is over if it was in view before.
+    private func followBackground(now: Date = Date()) {
+        var keepAway = false
+        for (id, wasVisible) in backgrounds {
+            let phase = states[id]?.phase ?? .idle
+            switch phase {
+            case .starting:
+                if SteamBackgroundLaunch.mayNeedPlayer(enabled: true, phase: phase, now: now) {
+                    backgrounds[id] = nil
+                    late.insert(id)
+                    Self.showSteam()
+                } else if SteamBackgroundLaunch.keepsSteamAway(enabled: true, phase: phase, now: now) {
+                    keepAway = true
+                }
+            case .running:
+                break
+            case .idle, .failed:
+                backgrounds[id] = nil
+                if wasVisible { Self.showSteam() }
+            }
+        }
+        let waiting = Set(states.compactMap { id, state -> UUID? in
+            if case .starting = state.phase { return id } else { return nil }
+        })
+        if !late.isSubset(of: waiting) { late.formIntersection(waiting) }
+        if keepAway, let steam = Self.steamApplication, !steam.isHidden { steam.hide() }
     }
 }

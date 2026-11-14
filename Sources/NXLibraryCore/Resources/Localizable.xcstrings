@@ -32062,6 +32062,47 @@
         }
       }
     },
+    "Keep Steam in the background": {
+      "comment": "SettingsSourcesSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep Steam in the background"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tieni Steam in secondo piano"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Garder Steam en arrière-plan"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam im Hintergrund halten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantener Steam en segundo plano"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manter o Steam em segundo plano"
+          }
+        }
+      }
+    },
     "Keep a copy of your current progress.": {
       "comment": "SavesPanel.swift",
       "localizations": {
@@ -55612,6 +55653,88 @@
         }
       }
     },
+    "Steam may need you. Check Steam, the game starts after.": {
+      "comment": "CatalogSteamInfo.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam may need you. Check Steam, the game starts after."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam potrebbe aver bisogno di te. Controlla Steam, poi il gioco si avvia."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam a peut-être besoin de vous. Vérifiez Steam, le jeu démarrera ensuite."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam braucht dich vielleicht. Sieh in Steam nach, danach startet das Spiel."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puede que Steam te necesite. Revisa Steam y luego se iniciará el juego."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Steam pode precisar de você. Confira o Steam; depois o jogo inicia."
+          }
+        }
+      }
+    },
+    "Steam stays out of sight while a game starts, and comes back if it needs you.": {
+      "comment": "SettingsSourcesSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam stays out of sight while a game starts, and comes back if it needs you."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam resta nascosto mentre il gioco si avvia e torna se ha bisogno di te."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam reste caché pendant le lancement d’un jeu et revient s’il a besoin de vous."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam bleibt beim Spielstart verborgen und kommt zurück, wenn es dich braucht."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam permanece oculto mientras se inicia un juego y vuelve si te necesita."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Steam fica oculto enquanto um jogo inicia e volta se precisar de você."
+          }
+        }
+      }
+    },
     "Steam: %@": {
       "comment": "ChangeMetadataView.swift",
       "localizations": {
@@ -67498,6 +67621,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "O que você jogou nesta semana."
+          }
+        }
+      }
+    },
+    "When Play opens Steam, it starts without its window. An open Steam is hidden until the game appears. If the game takes longer than 15 seconds, Steam comes back so you can answer it.": {
+      "comment": "SettingsSourcesSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When Play opens Steam, it starts without its window. An open Steam is hidden until the game appears. If the game takes longer than 15 seconds, Steam comes back so you can answer it."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quando Gioca apre Steam, si avvia senza finestra. Uno Steam già aperto viene nascosto finché non compare il gioco. Se il gioco impiega più di 15 secondi, Steam torna così puoi rispondergli."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quand Jouer ouvre Steam, il démarre sans sa fenêtre. Un Steam déjà ouvert est masqué jusqu’à l’apparition du jeu. Si le jeu met plus de 15 secondes, Steam revient pour que vous puissiez lui répondre."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn „Spielen“ Steam öffnet, startet es ohne Fenster. Ein offenes Steam wird ausgeblendet, bis das Spiel erscheint. Dauert das Spiel länger als 15 Sekunden, kommt Steam zurück, damit du antworten kannst."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando Jugar abre Steam, se inicia sin su ventana. Un Steam abierto se oculta hasta que aparece el juego. Si el juego tarda más de 15 segundos, Steam vuelve para que puedas responderle."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quando Jogar abre o Steam, ele inicia sem a janela. Um Steam aberto fica oculto até o jogo aparecer. Se o jogo levar mais de 15 segundos, o Steam volta para você responder."
           }
         }
       }

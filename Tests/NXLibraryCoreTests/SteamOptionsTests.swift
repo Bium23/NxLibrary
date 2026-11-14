@@ -43,3 +43,22 @@ final class SteamOptionsTests: XCTestCase {
         XCTAssertTrue(ArtworkCandidates.steamList(for: .cover, appID: 0, screenshots: []).isEmpty)
     }
 }
+
+final class SteamLaunchSettingTests: XCTestCase {
+    func testSteamStaysInTheBackgroundByDefaultAndOldFilesKeepIt() throws {
+        XCTAssertTrue(AppSettings().steamInBackground)
+        let old = try JSONDecoder().decode(AppSettings.self, from: Data("{}".utf8))
+        XCTAssertTrue(old.steamInBackground)
+        var off = AppSettings(); off.steamInBackground = false
+        let back = try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(off))
+        XCTAssertFalse(back.steamInBackground)
+    }
+
+    func testTheSettingIsListedWithSteamAndMarkedChangedWhenOff() throws {
+        let row = try XCTUnwrap(SettingsCatalog.all.first { $0.id == "steamInBackground" })
+        XCTAssertEqual(row.group, .sources)
+        var off = AppSettings(); off.steamInBackground = false
+        XCTAssertTrue(row.isChanged(off))
+        XCTAssertFalse(row.isChanged(AppSettings()))
+    }
+}

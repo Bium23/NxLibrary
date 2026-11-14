@@ -5,6 +5,7 @@ import NXLibraryCore
 @MainActor
 struct SettingsSourcesSection: View {
     @ObservedObject var viewModel: AppViewModel
+    @ObservedObject var settings: AppSettingsStore
     @EnvironmentObject private var sources: CatalogSourcesModel
     @Environment(\.nxAppLocale) private var localization
     let onActions: ([SettingsRowAction]) -> Void
@@ -38,6 +39,10 @@ struct SettingsSourcesSection: View {
             }.disabled(!sources.configuration.isEnabled)
             SeleneValueRow("Steam folder", subtitle: "Choose the Steam folder containing steamapps.",
                            value: (sources.configuration.rootURL ?? defaultRoot).path, actionTitle: "Change", action: chooseFolder)
+            SeleneToggleRow("Keep Steam in the background",
+                            subtitle: "Steam stays out of sight while a game starts, and comes back if it needs you.",
+                            info: "When Play opens Steam, it starts without its window. An open Steam is hidden until the game appears. If the game takes longer than 15 seconds, Steam comes back so you can answer it.",
+                            isOn: $settings.settings.steamInBackground)
             if let error = sources.errorMessage {
                 Text(error).seleneFont(14).foregroundColor(SeleneTheme.danger)
                     .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading).padding(24)
@@ -96,7 +101,8 @@ struct SettingsSourcesSection: View {
             .init(id: "steamRefresh", title: "Refresh Steam", isEnabled: sources.configuration.isEnabled) {
                 if sources.status == .scanning { sources.cancel() } else { sources.refresh() }
             },
-            .init(id: "steamFolder", title: "Steam folder", activate: chooseFolder)
+            .init(id: "steamFolder", title: "Steam folder", activate: chooseFolder),
+            .init(id: "steamInBackground", title: "Keep Steam in the background") { settings.settings.steamInBackground.toggle() }
         ]
         rows += review.map { game in .init(id: "review-\(game.id)", title: game.name, rowID: "review-\(game.id)") { reveal(game) } }
         rows += hidden.map { game in .init(id: "hidden-\(game.id)", title: game.name, rowID: "hidden-\(game.id)") { viewModel.setCatalogHidden(false, game: game) } }

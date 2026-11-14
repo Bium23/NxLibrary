@@ -75,3 +75,24 @@ final class SteamPlayStateTests: XCTestCase {
                                    application: app, now: t0))
     }
 }
+
+final class SteamBackgroundLaunchTests: XCTestCase {
+    func testSilentArgumentsOnlyWhenPlayStartsSteamAndTheSettingIsOn() {
+        XCTAssertEqual(SteamBackgroundLaunch.arguments(enabled: true, steamRunning: false), ["-silent", "-nofriendsui"])
+        XCTAssertEqual(SteamBackgroundLaunch.arguments(enabled: true, steamRunning: true), [])
+        XCTAssertEqual(SteamBackgroundLaunch.arguments(enabled: false, steamRunning: false), [])
+    }
+
+    func testSteamIsKeptAwayOnlyWhileWaitingThenComesBackIfTheGameIsLate() {
+        let start = Date(timeIntervalSince1970: 1_000)
+        let waiting = SteamPlayState.Phase.starting(since: start, accepted: true)
+        XCTAssertTrue(SteamBackgroundLaunch.keepsSteamAway(enabled: true, phase: waiting, now: start.addingTimeInterval(5)))
+        XCTAssertFalse(SteamBackgroundLaunch.keepsSteamAway(enabled: false, phase: waiting, now: start.addingTimeInterval(5)))
+        let late = start.addingTimeInterval(SteamBackgroundLaunch.attentionDelay + 1)
+        XCTAssertFalse(SteamBackgroundLaunch.keepsSteamAway(enabled: true, phase: waiting, now: late))
+        XCTAssertTrue(SteamBackgroundLaunch.mayNeedPlayer(enabled: true, phase: waiting, now: late))
+        XCTAssertFalse(SteamBackgroundLaunch.mayNeedPlayer(enabled: true, phase: waiting, now: start.addingTimeInterval(5)))
+        XCTAssertFalse(SteamBackgroundLaunch.keepsSteamAway(enabled: true, phase: .running(pid: 7), now: start))
+        XCTAssertFalse(SteamBackgroundLaunch.mayNeedPlayer(enabled: true, phase: .idle, now: late))
+    }
+}

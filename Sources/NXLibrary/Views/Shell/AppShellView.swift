@@ -530,7 +530,7 @@ public struct AppShellView: View {
         runningGames.setGames(viewModel.libraryGames)
         // After the nxnative reconcile, which closes a Steam session left by a restart at its last heartbeat.
         SteamPlayCoordinator.shared.setGames(viewModel.catalogGames, sources: viewModel.catalogSourceConfigurations)
-        SteamPlayCoordinator.shared.start(sessions: playSessions)
+        SteamPlayCoordinator.shared.start(sessions: playSessions, settings: settings)
         viewModel.installPendingBuilds()
         viewModel.syncPendingAppIcons()
         closeGameWatch = runningGames.$runningGameIDs.sink { [weak viewModel] ids in

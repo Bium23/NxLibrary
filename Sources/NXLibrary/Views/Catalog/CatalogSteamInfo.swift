@@ -99,7 +99,9 @@ struct CatalogSteamInfo: View {
 
     private var playNote: String? {
         switch phase {
-        case .starting: return L10n.text("Waiting for Steam to start the game…")
+        case .starting:
+            return player.mayNeedSteam(game) ? L10n.text("Steam may need you. Check Steam, the game starts after.")
+                                             : L10n.text("Waiting for Steam to start the game…")
         case .failed(.clientMissing): return L10n.text("Steam is not installed on this Mac.")
         case .failed(.handoffRejected): return L10n.text("Steam did not receive the request. Try again.")
         case .failed(.notStarted): return L10n.text("The game did not start. Check Steam, then try again.")

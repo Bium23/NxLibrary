@@ -678,6 +678,7 @@ Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua rig
 
 | File | Responsabilità |
 |---|---|
+| [SteamBackgroundLaunch.swift](../Sources/NXLibraryCore/Services/Steam/SteamBackgroundLaunch.swift) | Regole di «Keep Steam in the background»: argomenti `-silent`, attesa nascosta di 15 s, ritorno di Steam. |
 | [SteamKeyValues.swift](../Sources/NXLibraryCore/Services/Steam/SteamKeyValues.swift) | Lettura limitata del formato testuale con campi duplicati conservati e accesso non ambiguo; nessuna direttiva eseguita. |
 | [InstallationFileSnapshot.swift](../Sources/NXLibraryCore/Services/Steam/InstallationFileSnapshot.swift) | Letture limitate e non bloccanti di file regolari; verifica dell'identità prima della pubblicazione. |
 | [InstallationDirectorySnapshot.swift](../Sources/NXLibraryCore/Services/Steam/InstallationDirectorySnapshot.swift) | Lettura incrementale delle cartelle, budget anche sulle voci nascoste e annullamento durante l'enumerazione. |

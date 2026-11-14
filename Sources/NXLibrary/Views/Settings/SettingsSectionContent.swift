@@ -41,7 +41,7 @@ struct SettingsSectionContent: View {
             SettingsLibrarySection(viewModel: viewModel, settings: settings,
                                    artwork: artwork, onManageSources: { onOpenGroup(.sources) }, onActions: onActions)
         case .sources:
-            SettingsSourcesSection(viewModel: viewModel, onActions: onActions)
+            SettingsSourcesSection(viewModel: viewModel, settings: settings, onActions: onActions)
         case .storage:
             SettingsStorageSection(viewModel: viewModel, artwork: artwork,
                                    onActions: onActions, onOpenConsole: onOpenConsole)
