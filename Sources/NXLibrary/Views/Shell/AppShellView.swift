@@ -302,6 +302,12 @@ public struct AppShellView: View {
             SteamPlayCoordinator.shared.setGames(viewModel.catalogGames, sources: sources)
             SteamPlaytimeCoordinator.shared.setGames(viewModel.catalogGames, sources: sources)
         }
+        .onReceive(playSessions.starts) { gameID in
+            // A game that starts leads the Spotlight row, as on a console's home; a move in progress is left alone.
+            guard viewModel.spotlight.lift == nil else { return }
+            let order = SpotlightRow.playing(gameID, previousOrder: settings.settings.spotlightOrder)
+            if order != settings.settings.spotlightOrder { settings.settings.spotlightOrder = order }
+        }
         .onReceive(runningGames.$endedSession) { summary in
             sessionCard.ended(summary, enabled: settings.settings.showsSessionCard)
         }

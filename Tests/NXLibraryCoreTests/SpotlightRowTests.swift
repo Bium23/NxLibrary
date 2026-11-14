@@ -154,3 +154,34 @@ final class SpotlightRowMergeTests: XCTestCase {
     }
 }
 
+
+/// A game that starts becomes the first game of the row, the rest of a saved order staying as it was.
+final class SpotlightRowPlayedTests: XCTestCase {
+    private let a = UUID(), b = UUID(), c = UUID(), d = UUID()
+    private func key(_ id: UUID) -> String { SpotlightItem.game(id).key }
+    private var cards: [String] { SpotlightCard.allCases.map { SpotlightItem.card($0).key } }
+
+    func testPlayedGameBecomesTheFirstGame() {
+        let order = SpotlightRow.playing(c, previousOrder: cards + [key(a), key(b), key(c)])
+        XCTAssertEqual(SpotlightRow.build(gameIDs: [a, b, c], enabledCards: [], order: order), [.game(c), .game(a), .game(b)])
+        XCTAssertEqual(order, cards + [key(c), key(a), key(b)])
+    }
+
+    func testCardsPlacedAmongGamesStayWhereTheyAre() {
+        let mods = SpotlightItem.card(.mods).key
+        XCTAssertEqual(SpotlightRow.playing(b, previousOrder: [key(a), mods, key(b)]), [key(b), key(a), mods])
+    }
+
+    func testAGameNotInTheSavedOrderIsPlacedFirst() {
+        XCTAssertEqual(SpotlightRow.playing(d, previousOrder: cards + [key(a), key(b)]), cards + [key(d), key(a), key(b)])
+    }
+
+    func testNoSavedOrderStaysEmptyBecauseRecencyAlreadyLeads() {
+        XCTAssertEqual(SpotlightRow.playing(a, previousOrder: []), [])
+    }
+
+    func testTheFirstGameStaysPut() {
+        let order = cards + [key(a), key(b)]
+        XCTAssertEqual(SpotlightRow.playing(a, previousOrder: order), order)
+    }
+}

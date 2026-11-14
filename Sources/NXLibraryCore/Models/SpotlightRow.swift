@@ -119,6 +119,18 @@ public enum SpotlightRow {
         return merging(visibleOrder: visibleOrder, into: full)
     }
 
+    /// A game started: it becomes the first game of a saved order, which otherwise stays as it was
+    /// (cards keep their places). Without a saved order nothing is saved: the row already leads with
+    /// the most recently played game.
+    public static func playing(_ gameID: UUID, previousOrder: [String]) -> [String] {
+        guard !previousOrder.isEmpty else { return [] }
+        let key = SpotlightItem.game(gameID).key
+        var order = previousOrder.filter { $0 != key }
+        let firstGame = order.firstIndex { $0.hasPrefix("game:") } ?? order.endIndex
+        order.insert(key, at: firstGame)
+        return order
+    }
+
     /// Moves `item` by `delta` positions, clamped to the row's ends.
     /// Returns `items` unchanged if the item is absent.
     public static func moving(_ item: SpotlightItem, by delta: Int,

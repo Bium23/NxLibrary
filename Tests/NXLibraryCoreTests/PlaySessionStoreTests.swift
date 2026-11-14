@@ -1,4 +1,5 @@
 import XCTest
+import Combine
 @testable import NXLibraryCore
 
 final class PlaySessionStoreTests: XCTestCase {
@@ -338,5 +339,17 @@ final class PlaySessionStoreTests: XCTestCase {
         let loaded = PlaySessionStore(fileURL: url, now: { [unowned self] in self.now })
         XCTAssertNil(loaded.loadError)
         XCTAssertEqual(loaded.carried[id], CarriedPlaytime(duration: 120, lastPlayed: Date(timeIntervalSinceReferenceDate: 0)))
+    }
+
+    func testStartsAreAnnouncedOnce() {
+        let store = store(), id = UUID()
+        var started: [UUID] = []
+        let token = store.starts.sink { started.append($0) }
+        store.start(gameID: id, sourceID: "steam-440")
+        store.start(gameID: id, sourceID: "steam-440")
+        let nx = game()
+        store.start(for: nx)
+        XCTAssertEqual(started, [id, nx.id])
+        token.cancel()
     }
 }

@@ -13,6 +13,8 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
     /// account, launch), so trimming still keeps the part after it.
     public private(set) var trimReferences: [UUID: Date] = [:]
     public static let maxSessions = 200
+    /// Each game whose session just started (not a duplicate start).
+    public let starts = PassthroughSubject<UUID, Never>()
     public private(set) var loadError: String?
 
     /// Recent sessions, a bare `[PlaySession]` array as in every earlier version,
@@ -53,6 +55,7 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
         sessions.append(session)
         let folded = trim()
         save(totals: folded)
+        starts.send(game.id)
         return true
     }
 
@@ -67,6 +70,7 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
                                     startedAt: date, lastHeartbeatAt: date))
         let folded = trim()
         save(totals: folded)
+        starts.send(gameID)
         return true
     }
 
