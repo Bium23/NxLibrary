@@ -12,7 +12,7 @@ extension GameDetailPresentation {
         let appID = game.steamGame?.appID
         let facts = metadata.flatMap { $0.appID == appID ? $0 : nil }
         title = game.name
-        console = "Mac"
+        console = "Steam"
         eyebrow = ""
         description = overrides[.description] ?? facts?.description ?? ""
         descriptionIsEnglishFallback = false

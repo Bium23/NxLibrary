@@ -13,7 +13,7 @@ final class SharedGamePresentationTests: XCTestCase {
                                          totalPlaytime: 7200, lastPlayed: nil)
         XCTAssertEqual(result.title, "Fixture")
         XCTAssertEqual(result.platform, "Steam")
-        XCTAssertEqual(result.console, "Mac")
+        XCTAssertEqual(result.console, "Steam")
         XCTAssertEqual(result.summary, "Personal")
         XCTAssertEqual(result.publisher, "Studio")
         XCTAssertEqual(result.releaseYear, "2023")
@@ -67,6 +67,7 @@ final class SharedGamePresentationTests: XCTestCase {
         let page = GameDetailPresentation(steamRecord: record, metadata: facts, overrides: [.publisher: "Mine"],
                                           totalPlaytime: 60, lastPlayed: nil,
                                           libraryGames: [record, other], playtimeByGame: [other.id: 120])
+        XCTAssertEqual(page.console, "Steam")
         XCTAssertEqual(page.description, "Store text")
         XCTAssertEqual(page.released, "23 mag 2023")
         XCTAssertEqual(page.releaseYear, "2023")

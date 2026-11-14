@@ -148,6 +148,14 @@ struct SettingsAboutSection: View {
                 Text(L10n.text("This app is not affiliated with Nintendo."))
                     .seleneFont(13, .semibold)
                     .foregroundColor(SeleneTheme.ink60)
+                Text(L10n.text("This app is not affiliated with Valve."))
+                    .seleneFont(13, .semibold)
+                    .foregroundColor(SeleneTheme.ink60)
+                // Valve's attribution for the Steam logo, in Valve's own wording for each language.
+                Text(L10n.text("©2026 Valve Corporation. Steam and the Steam logo are trademarks and/or registered trademarks of Valve Corporation in the U.S. and/or other countries."))
+                    .seleneFont(13)
+                    .foregroundColor(SeleneTheme.ink60)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .onAppear(perform: publishActions)

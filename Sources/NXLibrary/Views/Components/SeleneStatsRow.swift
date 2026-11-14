@@ -1,7 +1,7 @@
 import SwiftUI
 import NXLibraryCore
 
-/// One stat in the row: a label over a value, or the platform (icon and name).
+/// One stat in the row: a label over a value, or the platform (icon and name; Steam's logo alone).
 struct SeleneStat: Identifiable {
     enum Value {
         case text(String)
@@ -25,6 +25,7 @@ struct SeleneStat: Identifiable {
 /// passes its own items and a 28 gap. The caller places it.
 struct SeleneStatsRow: View {
     @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.displayScale) private var displayScale
 
     let items: [SeleneStat]
     /// Space either side of each rule, in Selene units.
@@ -71,12 +72,11 @@ struct SeleneStatsRow: View {
                 switch item.value {
                 case .text(let text):
                     value(text)
+                case .platform(let console) where console == SteamPlatformLogo.platformName:
+                    steamLogo
                 case .platform(let console):
                     HStack(spacing: canvas.u(9)) {
-                        Group {
-                            if console == "Mac" { Image(systemName: "laptopcomputer").resizable().scaledToFit() }
-                            else { SwitchPlatformIcon() }
-                        }
+                        SwitchPlatformIcon()
                             .foregroundColor(SeleneTheme.ink)
                             .frame(width: canvas.u(27), height: canvas.u(27))
                         value(console)
@@ -86,6 +86,15 @@ struct SeleneStatsRow: View {
             .frame(minHeight: canvas.u(28))
         }
         .accessibilityElement(children: .combine)
+    }
+
+    /// Valve's logo stands alone in the value's place, at the value line's height or the guidelines' minimum.
+    /// The label's line box and spacing already leave about 5 units above it; the rest of the crank's clear
+    /// space is added, so no text comes closer.
+    private var steamLogo: some View {
+        let height = SteamPlatformLogo.height(canvas.u(28), displayScale: displayScale)
+        return SteamPlatformLogo(height: height)
+            .padding(.top, max(0, height * SteamPlatformLogo.clearSpaceRatio - canvas.u(5)))
     }
 
     private func value(_ text: String) -> some View {

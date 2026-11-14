@@ -62421,6 +62421,47 @@
         }
       }
     },
+    "This app is not affiliated with Valve.": {
+      "comment": "SettingsAboutSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This app is not affiliated with Valve."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa app non è affiliata a Valve."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette app n’est pas affiliée à Valve."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese App steht in keiner Verbindung zu Valve."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta app no está afiliada a Valve."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este app não tem afiliação com a Valve."
+          }
+        }
+      }
+    },
     "This archive can't be opened.": {
       "comment": "ModInstaller.swift",
       "localizations": {
@@ -71673,6 +71714,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "aguarde o término da atualização do app"
+          }
+        }
+      }
+    },
+    "©2026 Valve Corporation. Steam and the Steam logo are trademarks and/or registered trademarks of Valve Corporation in the U.S. and/or other countries.": {
+      "comment": "SettingsAboutSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "©2026 Valve Corporation. Steam and the Steam logo are trademarks and/or registered trademarks of Valve Corporation in the U.S. and/or other countries."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "©2026 Valve Corporation. Steam e il logo Steam sono marchi e/o marchi registrati appartenenti a Valve Corporation negli Stati Uniti e/o in altri Paesi."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "©2026 Valve Corporation. Steam et le logo Steam sont des marques déposées et/ou des marques enregistrées par Valve Corporation aux É.U. et/ou dans d'autres pays."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "©2026 Valve Corporation. Steam und das Steam Logo sind Marken und/oder eingetragene Warenzeichen von Valve Corporation in den USA und/oder anderen Ländern."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "©2026 Valve Corporation. Steam y el logotipo de Steam son marcas comerciales o marcas registradas de Valve Corporation en EE. UU. y otros países."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "©2026 Valve Corporation. Steam e o logotipo Steam são marcas e/ou marcas registradas da Valve Corporation nos EUA e/ou em outros países."
           }
         }
       }

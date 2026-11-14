@@ -60,7 +60,7 @@ public struct LibraryPresentation: Equatable {
         playtime = Self.duration(totalPlaytime)
         self.lastPlayed = Self.relative(lastPlayed, now: now)
         platform = "Steam"
-        console = "Mac"
+        console = "Steam"
         sourcesDetached = false
         summary = overrides[.description] ?? facts?.description ?? ""
     }
