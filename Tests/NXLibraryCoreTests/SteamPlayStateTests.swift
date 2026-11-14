@@ -13,6 +13,25 @@ final class SteamPlayStateTests: XCTestCase {
     private let steamClient = NativeProcessObservation(pid: 7, bundleURL: URL(fileURLWithPath: "/Applications/Steam.app"),
                                                        executableURL: URL(fileURLWithPath: "/Applications/Steam.app/Contents/MacOS/steam_osx"))
 
+    func testAnInstallationReachedThroughASymlinkMatchesTheRunningApp() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let real = root.appendingPathComponent("Drive/common/Game")
+        try FileManager.default.createDirectory(at: real.appendingPathComponent("Game.app/Contents/MacOS"), withIntermediateDirectories: true)
+        try Data().write(to: real.appendingPathComponent("Game.app/Contents/MacOS/Game"))
+        try FileManager.default.createSymbolicLink(at: root.appendingPathComponent("steamapps"), withDestinationURL: root.appendingPathComponent("Drive"))
+        let linked = root.appendingPathComponent("steamapps/common/Game/Game.app")
+        let installed = CatalogNativeApplication(NativeMacApplication(
+            url: linked, executableURL: linked.appendingPathComponent("Contents/MacOS/Game"),
+            bundleIdentifier: "com.example.game", name: "Game", architectures: [.arm64], isDeclaredGame: true, fileObservations: []))
+        // The system names the real path; the caller hands it over in canonical form.
+        let running = NativeProcessObservation(pid: 42, bundleURL: real.appendingPathComponent("Game.app"),
+                                               executableURL: real.appendingPathComponent("Game.app/Contents/MacOS/Game")).canonical()
+        var state = SteamPlayState()
+        XCTAssertEqual(state.observe([running], application: installed, now: t0), .started(pid: 42))
+        XCTAssertNil(state.observe([running], application: installed, now: t0.addingTimeInterval(30)), "still the same game")
+    }
+
     func testHandOffStartsNoSessionUntilTheGameItselfRuns() {
         var state = SteamPlayState()
         XCTAssertEqual(state.requestPlay(target: .steam(appID: 570), clientAvailable: true, now: t0),

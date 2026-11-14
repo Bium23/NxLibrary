@@ -8,6 +8,13 @@ public struct NativeProcessObservation: Equatable, Sendable {
     public init(pid: Int32, bundleURL: URL?, executableURL: URL?) {
         self.pid = pid; self.bundleURL = bundleURL; self.executableURL = executableURL
     }
+
+    /// The same process with its paths resolved (symlinks, `..`), the form `SteamPlayState` compares.
+    /// A process's paths don't change while it lives, so callers resolve each pid once.
+    public func canonical() -> NativeProcessObservation {
+        NativeProcessObservation(pid: pid, bundleURL: bundleURL.map(SteamPlayState.canonical),
+                                 executableURL: executableURL.map(SteamPlayState.canonical))
+    }
 }
 
 public enum SteamPlayFailure: Equatable, Sendable {
@@ -93,8 +100,8 @@ public struct SteamPlayState: Equatable, Sendable {
         }
     }
 
-    /// Reads the process list. A running session ends when its process is gone; otherwise the
-    /// installation's own app, once seen, starts one. Waiting too long fails without a session.
+    /// Reads the process list, given in `canonical()` form. A running session ends when its process is
+    /// gone; otherwise the installation's own app, once seen, starts one. Waiting too long fails without a session.
     public mutating func observe(_ processes: [NativeProcessObservation], application: CatalogNativeApplication?,
                                  now: Date) -> Change? {
         if case .running(let pid) = phase {
@@ -106,7 +113,8 @@ public struct SteamPlayState: Equatable, Sendable {
             runningBundle = nil
             return .ended(pid: pid)
         }
-        if let application, let match = processes.first(where: { Self.matches($0, application) }) {
+        // The installation's paths are resolved once here, not once per process.
+        if let target = application.map(Target.init), let match = processes.first(where: target.matches) {
             phase = .running(pid: match.pid)
             runningBundle = match.bundleURL
             return .started(pid: match.pid)
@@ -119,13 +127,29 @@ public struct SteamPlayState: Equatable, Sendable {
 
     /// The process is this installation's app: the same bundle, and its executable when the
     /// system names one. Steam itself, helpers and another copy of the game never match.
+    /// `process` is in `canonical()` form; the application is resolved here.
     public static func matches(_ process: NativeProcessObservation, _ application: CatalogNativeApplication) -> Bool {
-        guard let bundle = process.bundleURL, same(bundle, application.url) else { return false }
-        guard let executable = process.executableURL else { return true }
-        return same(executable, application.executableURL)
+        Target(application).matches(process)
     }
 
-    static func same(_ a: URL, _ b: URL) -> Bool {
-        a.resolvingSymlinksInPath().standardizedFileURL.path == b.resolvingSymlinksInPath().standardizedFileURL.path
+    /// An installation's app with its paths resolved, for comparing against canonical processes.
+    private struct Target {
+        let bundle: String
+        let executable: String
+        init(_ application: CatalogNativeApplication) {
+            bundle = SteamPlayState.canonical(application.url).path
+            executable = SteamPlayState.canonical(application.executableURL).path
+        }
+        func matches(_ process: NativeProcessObservation) -> Bool {
+            guard let url = process.bundleURL, url.standardizedFileURL.path == bundle else { return false }
+            guard let executableURL = process.executableURL else { return true }
+            return executableURL.standardizedFileURL.path == executable
+        }
     }
+
+    /// Symlinks and `..` resolved: two names for one app compare equal.
+    public static func canonical(_ url: URL) -> URL { url.resolvingSymlinksInPath().standardizedFileURL }
+
+    /// Both URLs are canonical already: no filesystem access.
+    static func same(_ a: URL, _ b: URL) -> Bool { a.standardizedFileURL.path == b.standardizedFileURL.path }
 }

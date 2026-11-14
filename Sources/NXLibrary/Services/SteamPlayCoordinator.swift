@@ -29,6 +29,8 @@ final class SteamPlayCoordinator: ObservableObject {
     /// Background launches in progress, with whether Steam was in view before Play.
     private var backgrounds: [UUID: Bool] = [:]
     private var tokens: [NSObjectProtocol] = []
+    /// Each running app's paths as the system gives them and resolved, by pid: resolved once while it lives.
+    private var canonicalProcesses: [Int32: (observed: NativeProcessObservation, canonical: NativeProcessObservation)] = [:]
     private var listObservation: NSKeyValueObservation?
     private var timer: Timer?
 
@@ -62,13 +64,9 @@ final class SteamPlayCoordinator: ObservableObject {
         self.sessions = sessions
         self.settings = settings
         let center = NSWorkspace.shared.notificationCenter
-        tokens = [NSWorkspace.didLaunchApplicationNotification, NSWorkspace.didTerminateApplicationNotification].map {
-            center.addObserver(forName: $0, object: nil, queue: .main) { [weak self] _ in
-                Task { @MainActor in self?.refresh() }
-            }
-        }
+        // Launches and quits arrive through the `runningApplications` observation below, once each.
         // Steam brings itself forward when it gets steam://run; during a background launch it goes away again.
-        tokens += [NSWorkspace.didActivateApplicationNotification, NSWorkspace.didUnhideApplicationNotification].map {
+        tokens = [NSWorkspace.didActivateApplicationNotification, NSWorkspace.didUnhideApplicationNotification].map {
             center.addObserver(forName: $0, object: nil, queue: .main) { [weak self] note in
                 let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
                 guard app?.bundleIdentifier == Self.steamBundleID else { return }
@@ -93,6 +91,7 @@ final class SteamPlayCoordinator: ObservableObject {
         // A later start re-reads the processes: `RunningGameMonitor.start` closes open Steam sessions
         // at their last heartbeat, and a game still running must start a new one, not stay "running".
         states = [:]
+        canonicalProcesses = [:]
         sessions = nil
         settings = nil
         if backgrounds.values.contains(true) { Self.showSteam() }
@@ -171,9 +170,18 @@ final class SteamPlayCoordinator: ObservableObject {
     private func refresh(heartbeat: Bool = false) {
         // Before `start` there is no session store: a game seen now would turn "running" with no session.
         guard sessions != nil else { return }
-        let processes = NSWorkspace.shared.runningApplications.filter { !$0.isTerminated }.map {
-            NativeProcessObservation(pid: $0.processIdentifier, bundleURL: $0.bundleURL, executableURL: $0.executableURL)
+        // The list drops an app when it quits (no `isTerminated` round trip to LaunchServices per app), and a pid's
+        // paths are resolved once while it lives.
+        var resolved: [Int32: NativeProcessObservation] = [:]
+        let processes = NSWorkspace.shared.runningApplications.map { app -> NativeProcessObservation in
+            let pid = app.processIdentifier
+            let observed = NativeProcessObservation(pid: pid, bundleURL: app.bundleURL, executableURL: app.executableURL)
+            let process = canonicalProcesses[pid].flatMap { $0.observed == observed ? $0.canonical : nil } ?? observed.canonical()
+            canonicalProcesses[pid] = (observed, process)
+            resolved[pid] = process
+            return process
         }
+        canonicalProcesses = canonicalProcesses.filter { resolved[$0.key] != nil }
         let now = Date()
         var next = states
         let followed = Set(games.map(\.id)).union(states.keys)

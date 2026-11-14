@@ -47,9 +47,14 @@ final class SharedGamePresentationTests: XCTestCase {
                        CatalogGameOptions.commonRows(for: .nxnative, origin: .spotlight))
         XCTAssertTrue(CatalogGameOptions.commonRows(for: .steam, origin: .spotlight).contains(.move))
         XCTAssertFalse(CatalogGameOptions.commonRows(for: .steam, origin: .collection).contains(.move))
-        let steam = Set(CatalogGameOptions.specificRows(for: .steam))
-        XCTAssertTrue(steam.isDisjoint(with: [.fullscreen, .frameRate, .consoleMode, .rebuild, .openSaves, .removeSources]))
-        XCTAssertTrue(CatalogGameOptions.specificRows(for: .nxnative).contains(.rebuild))
+        let options = SteamOptionsPresentation(canPlay: true, hasApp: true)
+        let steam = Set([GameOptionsLevel.main, .editDetails].flatMap { level in
+            options.entries(level: level, origin: .spotlight).compactMap { entry -> GameOptionsRow? in
+                if case .row(let row) = entry { return row } else { return nil }
+            }
+        })
+        XCTAssertTrue(steam.isDisjoint(with: [.fullscreen, .frameRate, .consoleMode, .rebuild, .openSaves, .removeSources,
+                                              .cheats, .mods, .attachSources, .openLog]))
     }
 
     func testSteamPagePresentationClaimsNothingFromNxnative() throws {

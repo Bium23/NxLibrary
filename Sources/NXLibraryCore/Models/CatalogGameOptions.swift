@@ -1,7 +1,7 @@
 import Foundation
 
-/// Shared library operations are ordered once. Integration handlers still enforce
-/// CatalogGamePresentation capabilities before performing an operation.
+/// Shared library operations are ordered once. What a game's source can do is fixed by its record's
+/// payload: `CatalogRepository` and `CatalogGame` refuse an nxnative change on a Steam game (`wrongIntegration`).
 public enum CatalogGameOptions {
     /// The main list's rows every source offers, in the order nxnative's Game options shows them.
     /// The store page sits in Edit details for every source.
@@ -10,12 +10,6 @@ public enum CatalogGameOptions {
         if origin == .spotlight { rows.append(.move) }
         rows += [.favorite, .hidden, .showInFinder]
         return rows
-    }
-    public static func specificRows(for integration: CatalogIntegration) -> [GameOptionsRow] {
-        switch integration {
-        case .steam: return []
-        case .nxnative: return [.cheats, .mods, .openSaves, .rebuild, .attachSources, .openLog, .removeSources]
-        }
     }
 }
 

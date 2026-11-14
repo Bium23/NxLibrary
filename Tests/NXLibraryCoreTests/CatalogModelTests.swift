@@ -60,13 +60,10 @@ final class CatalogModelTests: XCTestCase {
     func testSteamDoesNotSupportEngineOrDestructiveOperations() throws {
         let game = CatalogGame(steam: SteamCatalogGame(appID: 10, name: "Steam game"))
         let shown = CatalogGamePresentation(game: game, sourceEnabled: true)
-        for operation: CatalogGameOperation in [.build, .writeRuntimeSettings, .manageSaves, .manageMods, .manageCheats,
-                                               .writeAppIcon, .deleteInstalledFiles, .manageBuildInputs] {
-            XCTAssertThrowsError(try shown.requireSupported(operation))
+        var record = game
+        XCTAssertThrowsError(try record.updateNXNative(CatalogTestSupport.completeLegacyGame())) { error in
+            XCTAssertEqual(error as? CatalogModelError, .wrongIntegration)
         }
-        XCTAssertNoThrow(try shown.requireSupported(.customizeArtwork))
-        XCTAssertNoThrow(try shown.requireSupported(.favorite))
-        XCTAssertNoThrow(try shown.requireSupported(.openSourceClient))
         XCTAssertNil(shown.launchTarget)
         XCTAssertFalse(shown.isListedNormally)
     }

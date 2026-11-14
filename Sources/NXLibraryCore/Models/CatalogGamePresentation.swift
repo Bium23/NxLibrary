@@ -1,10 +1,5 @@
 import Foundation
 
-public enum CatalogGameOperation: String, Hashable, CaseIterable, Sendable {
-    case play, favorite, hide, customizeMetadata, customizeArtwork, revealInstallation, openSourceClient
-    case build, writeRuntimeSettings, manageSaves, manageMods, manageCheats, writeAppIcon, deleteInstalledFiles, manageBuildInputs
-}
-
 public enum CatalogLaunchTarget: Equatable, Sendable { case nxnative(appURL: URL), steam(appID: UInt32) }
 
 public enum CatalogInstallationSize: Equatable, Sendable { case cached(Int64), steamReported(Int64), unknown }
@@ -32,7 +27,6 @@ public struct CatalogGamePresentation {
     public let requiresReview: Bool
     public let installations: [CatalogInstallationPresentation]
     public let launchTarget: CatalogLaunchTarget?
-    public let supportedOperations: Set<CatalogGameOperation>
 
     public init(game: CatalogGame, sourceEnabled: Bool) {
         id = game.id
@@ -41,11 +35,8 @@ public struct CatalogGamePresentation {
         personalizationReference = game.personalizationReference
         isFavorite = game.isFavorite
         isHidden = game.isHidden
-        let common: Set<CatalogGameOperation> = [.play, .favorite, .hide, .customizeMetadata, .customizeArtwork, .revealInstallation]
         switch game.payload {
         case .nxnative(let legacy):
-            supportedOperations = common.union([.build, .writeRuntimeSettings, .manageSaves, .manageMods, .manageCheats,
-                                                .writeAppIcon, .deleteInstalledFiles, .manageBuildInputs])
             requiresReview = false
             isListedNormally = sourceEnabled && !legacy.isHidden
             launchTarget = sourceEnabled && legacy.isPlayableLocally ? .nxnative(appURL: legacy.url) : nil
@@ -56,7 +47,6 @@ public struct CatalogGamePresentation {
                       size: .cached(legacy.sizeBytes))
             ] : []
         case .steam(let steam):
-            supportedOperations = common.union([.openSourceClient])
             requiresReview = !steam.hasBeenRecognized || steam.needsInstallationReview || steam.installations.contains { $0.availability == .requiresReview }
                 || steam.installations.filter { $0.availability == .available }.count > 1
             isListedNormally = sourceEnabled && !steam.isHidden && steam.hasBeenRecognized
@@ -70,9 +60,5 @@ public struct CatalogGamePresentation {
                              size: installation.reportedSizeBytes.map(CatalogInstallationSize.steamReported) ?? .unknown)
             }
         }
-    }
-
-    public func requireSupported(_ operation: CatalogGameOperation) throws {
-        guard supportedOperations.contains(operation) else { throw CatalogModelError.wrongIntegration }
     }
 }
