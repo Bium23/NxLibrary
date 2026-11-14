@@ -1,13 +1,27 @@
 import Foundation
 
-/// Steam's total for one game and when NX Library first saw that value.
+/// Steam's total for one game and when NX Library first saw that value. `carry` is time NX Library had
+/// already shown beyond Steam's new whole minutes (at most `maximumCarry`), so a rising value never
+/// makes the total step back.
 public struct SteamPlaytimeBaseline: Codable, Equatable, Sendable {
+    public static let maximumCarry: TimeInterval = 60
     public let appID: UInt32
     public let minutes: Int
     public let lastPlayed: Date?
     public let seenAt: Date
-    public init(appID: UInt32, minutes: Int, lastPlayed: Date?, seenAt: Date) {
-        self.appID = appID; self.minutes = minutes; self.lastPlayed = lastPlayed; self.seenAt = seenAt
+    public let carry: TimeInterval
+    public init(appID: UInt32, minutes: Int, lastPlayed: Date?, seenAt: Date, carry: TimeInterval = 0) {
+        self.appID = appID; self.minutes = minutes; self.lastPlayed = lastPlayed; self.seenAt = seenAt; self.carry = carry
+    }
+
+    private enum CodingKeys: String, CodingKey { case appID, minutes, lastPlayed, seenAt, carry }
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        appID = try c.decode(UInt32.self, forKey: .appID)
+        minutes = try c.decode(Int.self, forKey: .minutes)
+        lastPlayed = try c.decodeIfPresent(Date.self, forKey: .lastPlayed)
+        seenAt = try c.decode(Date.self, forKey: .seenAt)
+        carry = try c.decodeIfPresent(TimeInterval.self, forKey: .carry) ?? 0
     }
 }
 
@@ -30,14 +44,23 @@ public struct SteamPlaytimeBaselines: Equatable, Sendable {
         byAppID = Dictionary(file.baselines.map { ($0.appID, $0) }, uniquingKeysWith: { first, _ in first })
     }
 
-    /// Takes a new reading. Returns whether anything changed.
+    /// Takes a new reading. `previousTotals` are the totals shown until now, by AppID: when Steam's value
+    /// rises, what they showed beyond it (up to a minute) is carried. Returns whether anything changed.
     @discardableResult
-    public mutating func apply(_ snapshot: SteamPlaytimeSnapshot, now: Date) -> Bool {
+    public mutating func apply(_ snapshot: SteamPlaytimeSnapshot, now: Date,
+                               previousTotals: [UInt32: TimeInterval] = [:]) -> Bool {
         let previous = snapshot.accountID == accountID ? byAppID : [:]
         var next: [UInt32: SteamPlaytimeBaseline] = [:]
         for (appID, entry) in snapshot.entries {
-            let seenAt = previous[appID].flatMap { $0.minutes == entry.minutes ? $0.seenAt : nil } ?? now
-            next[appID] = SteamPlaytimeBaseline(appID: appID, minutes: entry.minutes, lastPlayed: entry.lastPlayed, seenAt: seenAt)
+            let old = previous[appID]
+            var seenAt = now, carry: TimeInterval = 0
+            if let old, old.minutes == entry.minutes {
+                seenAt = old.seenAt; carry = old.carry
+            } else if let old, entry.minutes > old.minutes, let shown = previousTotals[appID] {
+                carry = min(SteamPlaytimeBaseline.maximumCarry, max(0, shown - TimeInterval(entry.minutes) * 60))
+            }
+            next[appID] = SteamPlaytimeBaseline(appID: appID, minutes: entry.minutes, lastPlayed: entry.lastPlayed,
+                                                seenAt: seenAt, carry: carry)
         }
         let changed = snapshot.accountID != accountID || next != byAppID
         accountID = snapshot.accountID
@@ -58,7 +81,7 @@ public struct SteamPlaytimeBaselines: Equatable, Sendable {
         var result: [UUID: ExternalPlaytime] = [:]
         for game in games {
             guard let appID = game.steamGame?.appID, let baseline = byAppID[appID] else { continue }
-            result[game.id] = ExternalPlaytime(duration: TimeInterval(baseline.minutes) * 60,
+            result[game.id] = ExternalPlaytime(duration: TimeInterval(baseline.minutes) * 60 + baseline.carry,
                                                lastPlayed: baseline.lastPlayed, since: baseline.seenAt)
         }
         return result

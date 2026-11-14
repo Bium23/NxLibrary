@@ -89,4 +89,38 @@ final class SteamPlaytimeBaselinesTests: XCTestCase {
         XCTAssertEqual(baselines.external(for: [steam, switchGame]),
                        [steam.id: ExternalPlaytime(duration: 75 * 60, lastPlayed: date(500), since: date(1_000))])
     }
+
+    // Steam keeps whole minutes: when its value rises, up to a minute NX Library already showed is kept.
+    func testRisingMinutesKeepUpToAMinuteAlreadyShown() {
+        var baselines = SteamPlaytimeBaselines(fileURL: url)
+        baselines.apply(snapshot([440: (75, nil)]), now: date(1_000))
+        baselines.apply(snapshot([440: (76, nil)]), now: date(2_000), previousTotals: [440: 75 * 60 + 90])
+        XCTAssertEqual(baselines.byAppID[440]?.carry, 30)
+        let steam = CatalogGame(steam: SteamCatalogGame(appID: 440, name: "Steam game"))
+        XCTAssertEqual(baselines.external(for: [steam])[steam.id]?.duration, 76 * 60 + 30)
+
+        baselines.apply(snapshot([440: (77, nil)]), now: date(3_000), previousTotals: [440: 76 * 60 + 500])
+        XCTAssertEqual(baselines.byAppID[440]?.carry, 60, "a bigger gap is Steam's call")
+    }
+
+    func testCarryStaysWithTheSameMinutesAndResetsOtherwise() {
+        var baselines = SteamPlaytimeBaselines(fileURL: url)
+        baselines.apply(snapshot([440: (75, nil)]), now: date(1_000))
+        baselines.apply(snapshot([440: (76, nil)]), now: date(2_000), previousTotals: [440: 75 * 60 + 90])
+        baselines.apply(snapshot([440: (76, 1_500)]), now: date(2_500), previousTotals: [440: 99_999])
+        XCTAssertEqual(baselines.byAppID[440]?.carry, 30)
+        baselines.apply(snapshot([440: (10, nil)]), now: date(3_000), previousTotals: [440: 76 * 60 + 30])
+        XCTAssertEqual(baselines.byAppID[440]?.carry, 0, "a lower value is Steam's reset")
+        baselines.apply(snapshot([440: (11, nil)]), now: date(4_000), previousTotals: [440: 11 * 60 + 30])
+        baselines.apply(snapshot(account: 2, [440: (12, nil)]), now: date(5_000), previousTotals: [440: 12 * 60 + 30])
+        XCTAssertEqual(baselines.byAppID[440]?.carry, 0, "another account starts over")
+    }
+
+    func testFilesWithoutCarryStillLoad() throws {
+        let json = #"{"accountID":1,"baselines":[{"appID":440,"minutes":75,"seenAt":1000}]}"#
+        try Data(json.utf8).write(to: url)
+        let baselines = SteamPlaytimeBaselines(fileURL: url)
+        XCTAssertEqual(baselines.byAppID[440]?.carry, 0)
+        XCTAssertEqual(baselines.byAppID[440]?.minutes, 75)
+    }
 }
