@@ -166,24 +166,24 @@ struct PortingArtLook: ViewModifier {
         }
     }
 
+    /// How far above the tile's centre the download mark sits, as a fraction of the side: the mark and its word
+    /// are centred together. The breathing light (`PortingDownloadGlow`), drawn outside the tile's flattened
+    /// picture, is centred on the same point.
+    static let downloadMarkLift: CGFloat = 0.05
+
     private func downloadMark(side: CGFloat) -> some View {
-        VStack(spacing: side * 0.03) {
-            ZStack {
-                // A soft light breathing behind the mark: the download is under way.
-                DownloadGlowLayers(still: reduceMotion)
-                    .frame(width: side * 0.46, height: side * 0.46)
-                    .allowsHitTesting(false)
-                MaterialIconView(.download, size: side * 0.22)
-                    .foregroundColor(.white.opacity(0.92))
-                    .shadow(color: .black.opacity(0.45), radius: side * 0.03)
-            }
-            .frame(width: side * 0.22, height: side * 0.22)
+        ZStack {
+            MaterialIconView(.download, size: side * 0.22)
+                .foregroundColor(.white.opacity(0.92))
+                .shadow(color: .black.opacity(0.45), radius: side * 0.03)
+                .offset(y: -side * Self.downloadMarkLift)
             Text(L10n.text("Downloading"))
                 .font(.system(size: side * 0.06, weight: .medium))
                 .foregroundColor(.white.opacity(0.85))
                 .lineLimit(1)
                 .frame(width: side * 0.84)
                 .shadow(color: .black.opacity(0.55), radius: side * 0.04)
+                .offset(y: side * (0.11 + 0.035 + 0.03 - Self.downloadMarkLift))
         }
     }
 
@@ -218,5 +218,28 @@ struct PortingArtLook: ViewModifier {
 extension View {
     func portingLook(_ look: PortingTileLook, cornerRadius: CGFloat) -> some View {
         modifier(PortingArtLook(look: look, cornerRadius: cornerRadius))
+    }
+}
+
+/// The soft light breathing behind a downloading game's mark. A Core Animation view cannot be drawn inside a tile
+/// flattened with `drawingGroup` (SwiftUI shows a placeholder instead), so the tile places this over its face,
+/// outside the flattened picture, as it does its shine. Nothing for any other look.
+struct PortingDownloadGlow: View {
+    let look: PortingTileLook
+    let width: CGFloat
+    let height: CGFloat
+
+    @Environment(\.seleneReduceMotion) private var reduceMotion
+
+    var body: some View {
+        if look == .downloading {
+            let side = min(width, height)
+            DownloadGlowLayers(still: reduceMotion)
+                .frame(width: side * 0.46, height: side * 0.46)
+                .offset(y: -side * PortingArtLook.downloadMarkLift)
+                .frame(width: width, height: height)
+                .allowsHitTesting(false)
+                .transition(.opacity)
+        }
     }
 }

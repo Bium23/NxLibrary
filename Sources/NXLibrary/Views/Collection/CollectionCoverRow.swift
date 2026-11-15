@@ -80,6 +80,9 @@ struct CollectionCoverRow: View {
                         .clipShape(face)
                 }
             }
+            if game.nxnativeGame == nil {
+                PortingDownloadGlow(look: PortingTileLook.make(catalog: game), width: w, height: h)
+            }
             SeleneShine(cornerRadius: canvas.u(12), active: selected)
                 .frame(width: w, height: h)
             SeleneTileRing(cornerRadius: canvas.u(18), active: selected)
