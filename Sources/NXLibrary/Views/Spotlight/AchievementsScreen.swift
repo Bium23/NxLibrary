@@ -10,6 +10,8 @@ struct AchievementsScreen: View {
     @Environment(\.seleneReduceMotion) private var reduceMotion
     @ObservedObject private var logos = SteamLogoCache.shared
     @ObservedObject private var picks = SteamPersonalizations.shared.artwork
+    /// Whether the list has rows above or below what shows: the edge fades and the chevrons follow it.
+    @State private var edges = ListEdges()
 
     let game: CatalogGame
     let summary: AchievementSummary
@@ -24,6 +26,8 @@ struct AchievementsScreen: View {
     static let columnWidth: CGFloat = 838
     static let gap: CGFloat = 24
     static let rowHeight: CGFloat = 104
+    /// The list's last row can rise above the hints bar; the bottom fade covers this much.
+    static let bottomRoom: CGFloat = 150
 
     enum Outcome { case ignored, moved, filtered, close }
 
@@ -74,11 +78,14 @@ struct AchievementsScreen: View {
         ZStack {
             Rectangle().fill(SeleneTheme.baseGradient)
             if let art {
-                Image(nsImage: art)
-                    .resizable()
-                    .interpolation(.high)
-                    .aspectRatio(contentMode: .fill)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // The art fills the screen's frame and is cut to it: an `.aspectRatio(.fill)` image under a
+                // `.frame(maxWidth: .infinity)` made the frame as wide as the filled art, which widened the
+                // whole screen past the window's edges (most in full screen) and pushed it off-centre.
+                Color.clear
+                    .overlay(Image(nsImage: art)
+                        .resizable()
+                        .interpolation(.high)
+                        .aspectRatio(contentMode: .fill))
                     .clipped()
             }
             LinearGradient(colors: [.black.opacity(0.92), .black.opacity(0.65)], startPoint: .leading, endPoint: .trailing)
@@ -185,9 +192,34 @@ struct AchievementsScreen: View {
                     // Room for the focus ring and, at the end, for the hints bar.
                     .padding(.vertical, canvas.u(6))
                     .padding(.horizontal, canvas.u(4))
-                    .padding(.bottom, canvas.u(120))
+                    .padding(.bottom, canvas.u(Self.bottomRoom))
+                    .background(GeometryReader { content in
+                        Color.clear.preference(key: ListContentKey.self, value: content.frame(in: .named(Self.listSpace)))
+                    })
                 }
             }
+            .coordinateSpace(name: Self.listSpace)
+            .background(GeometryReader { viewport in
+                Color.clear.preference(key: ListViewportKey.self, value: viewport.size.height)
+            })
+            .onPreferenceChange(ListContentKey.self) { frame in edges.content = frame }
+            .onPreferenceChange(ListViewportKey.self) { height in edges.viewport = height }
+            // The rows fade out under the hints bar, and at the top once the list has scrolled: no row sits
+            // under a button. The chevrons say there is more.
+            .mask(listMask)
+            .overlay(alignment: .top) {
+                SpotlightUpHint()
+                    .padding(.top, canvas.u(4))
+                    .opacity(edges.above(slack: 1) ? 1 : 0)
+            }
+            .overlay(alignment: .bottom) {
+                SpotlightUpHint()
+                    .rotationEffect(.degrees(180))
+                    .padding(.bottom, canvas.u(Self.bottomRoom - 40))
+                    .opacity(edges.below(slack: canvas.u(Self.bottomRoom)) ? 1 : 0)
+            }
+            .animation(.easeInOut(duration: 0.3), value: edges.above(slack: 1))
+            .animation(.easeInOut(duration: 0.3), value: edges.below(slack: canvas.u(Self.bottomRoom)))
             .frame(width: canvas.u(Self.columnWidth * 2 + Self.gap + 8))
             .onChange(of: state.index) { _ in scroll(proxy, rows) }
             .onChange(of: state.filter) { _ in
@@ -196,10 +228,27 @@ struct AchievementsScreen: View {
         }
     }
 
+    private static let listSpace = "achievementsList"
+
+    /// Opaque in the middle; the top fades only once rows have scrolled past it, the bottom always fades to
+    /// nothing where the hints bar sits.
+    private var listMask: some View {
+        VStack(spacing: 0) {
+            LinearGradient(colors: [.black.opacity(edges.above(slack: 1) ? 0 : 1), .black],
+                           startPoint: .top, endPoint: .bottom)
+                .frame(height: canvas.u(40))
+            Color.black
+            LinearGradient(colors: [.black, .black.opacity(0)], startPoint: .top, endPoint: .bottom)
+                .frame(height: canvas.u(Self.bottomRoom))
+        }
+    }
+
     private func scroll(_ proxy: ScrollViewProxy, _ rows: [AchievementRow]) {
         guard rows.indices.contains(state.index) else { return }
         let id = rows[state.index].id
-        if reduceMotion { proxy.scrollTo(id) } else { withAnimation(SeleneTheme.standard) { proxy.scrollTo(id) } }
+        // Centred, so the focused row never sits in the faded top or bottom edge (the ends clamp).
+        if reduceMotion { proxy.scrollTo(id, anchor: .center) }
+        else { withAnimation(SeleneTheme.standard) { proxy.scrollTo(id, anchor: .center) } }
     }
 
     /// The filter LB (-1) or RB (+1) picks from `filter`, wrapping as the controller does.
@@ -293,4 +342,25 @@ private struct AchievementsScreenRow: View {
     static func date(_ date: Date) -> String {
         date.formatted(.dateTime.day().month(.abbreviated).year().locale(L10n.context.formatLocale))
     }
+}
+
+/// Where the list's content sits in its viewport, for the edge fades and chevrons.
+private struct ListEdges: Equatable {
+    var content: CGRect = .zero
+    var viewport: CGFloat = 0
+
+    /// Rows hidden above the top edge.
+    func above(slack: CGFloat) -> Bool { content.minY < -slack }
+    /// Rows hidden below: the content's end, less the room left for the hints bar, past the bottom edge.
+    func below(slack: CGFloat) -> Bool { viewport > 0 && content.maxY - slack > viewport + 1 }
+}
+
+private struct ListContentKey: PreferenceKey {
+    static var defaultValue: CGRect = .zero
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) { value = nextValue() }
+}
+
+private struct ListViewportKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
