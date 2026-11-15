@@ -5,7 +5,7 @@ public enum AchievementFilter: CaseIterable, Sendable {
     case all, unlocked, locked, rarest
 }
 
-/// One achievement as the tile and the screen show it. A hidden achievement still locked is masked.
+/// One achievement as the card and the screen show it. A hidden achievement still locked is masked.
 public struct AchievementRow: Equatable, Identifiable, Sendable {
     /// Steam's API name.
     public let id: String
@@ -23,7 +23,7 @@ public struct AchievementRow: Equatable, Identifiable, Sendable {
     public static let rareBelow = 10.0
 }
 
-/// A game's achievements for the summary tile and the Achievements screen, from `SteamAchievementReader` and
+/// A game's achievements for the page's card and the Achievements screen, from `SteamAchievementReader` and
 /// Steam's public rarity. Pure: the views only render it.
 public struct AchievementSummary: Equatable, Sendable {
     public let total: Int

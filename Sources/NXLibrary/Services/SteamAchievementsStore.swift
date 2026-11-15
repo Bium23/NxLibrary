@@ -1,7 +1,7 @@
 import Foundation
 import NXLibraryCore
 
-/// The achievements of the Steam games shown, for the summary tile and the Achievements screen.
+/// The achievements of the Steam games shown, for the page's card and the Achievements screen.
 /// Steam's cache is read off the main thread (`SteamAchievementReader.read`) when a game is selected,
 /// when the Achievements screen opens and after a Steam session ends; Steam's public rarity follows
 /// (`SteamMetadataService.achievementPercents`). Nothing is written to Steam's files, logged or kept

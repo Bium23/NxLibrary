@@ -33,7 +33,8 @@ extension SpotlightView {
                 moved = state.focus == .row
                     ? state.move(by: delta, in: items)
                     : state.moveSideways(by: delta, screenshotCount: shots, topGameCount: tops,
-                                         actionCount: actions, moreCount: more, readMore: readMore, modsCount: mods)
+                                         actionCount: actions, moreCount: more, readMore: readMore, modsCount: mods,
+                                         hasAchievements: hasAchievements)
             }
         case .navigateDown where selectedItem == .card(.mods) && viewModel.spotlight.focus == .row:
             enterStore()

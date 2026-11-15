@@ -14,9 +14,9 @@ struct SpotlightPageModel {
 
 /// The blocks of Spotlight's game column, top to bottom.
 enum SpotlightPageBlock: Hashable {
-    /// `description` is the summary tiles (`tiles`, their gap below included) over About this game
-    /// with the column beside it; `about` and `column` are its two sides.
-    case head, genres, strip, mods, description, tiles, about, column, more
+    /// `description` is About this game with the column beside it; `about` and
+    /// `column` are its two sides.
+    case head, genres, strip, mods, description, about, column, more
 }
 
 /// Each block's height, top padding included. Heights, unlike positions, do

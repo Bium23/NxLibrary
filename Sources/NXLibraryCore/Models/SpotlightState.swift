@@ -16,7 +16,8 @@ public enum SpotlightFocusArea: Hashable {
     case topGames
     /// The Mods card's store, below the card; `ModStoreFocus` moves inside it.
     case store
-    /// The Achievements summary tile, above About this game and Build & Sources.
+    /// A Steam game's achievements card, at the top of the column right of About this game, above the
+    /// source's panel.
     case achievements
 }
 
@@ -247,7 +248,8 @@ public struct SpotlightState: Equatable {
         case .strip: focus = .pills
         case .achievements: focus = aboveTiles
         case .about:
-            focus = aboveActions
+            // The card sits beside About, not above it.
+            focus = aboveTiles
         case .actions:
             if actionIndex >= Self.actionColumns {
                 actionIndex -= Self.actionColumns
@@ -283,18 +285,27 @@ public struct SpotlightState: Equatable {
     }
 
     /// Left/Right inside the pills, the strip, Build & Sources or More like this.
-    /// Left of Build & Sources' first column is Read more, when `readMore`.
+    /// Left of Build & Sources' first column, and of the achievements card, is Read more, when `readMore`.
     @discardableResult
     public mutating func moveSideways(by delta: Int, screenshotCount: Int, topGameCount: Int = 0,
                                       actionCount: Int = 0, moreCount: Int = 0, readMore: Bool = false,
-                                      modsCount: Int = 0) -> Bool {
+                                      modsCount: Int = 0, hasAchievements: Bool = false) -> Bool {
         switch focus {
+        case .achievements:
+            guard delta < 0, readMore else { return false }
+            focus = .about
+            return true
         case .mods:
             guard let next = ModsBandLayout.beside(modsIndex, by: delta, count: modsCount) else { return false }
             modsIndex = next
             return true
         case .about:
-            guard delta > 0, actionCount > 0 else { return false }
+            guard delta > 0 else { return false }
+            if hasAchievements {
+                focus = .achievements
+                return true
+            }
+            guard actionCount > 0 else { return false }
             focus = .actions
             actionIndex -= actionIndex % Self.actionColumns
             return true
@@ -314,7 +325,7 @@ public struct SpotlightState: Equatable {
             let next = min(max(moreIndex + delta, 0), moreCount - 1)
             defer { moreIndex = next }
             return next != moreIndex
-        case .row, .store, .achievements:
+        case .row, .store:
             return false
         case .pills:
             let next = min(max(pillIndex + delta, 0), pillLimit - 1)

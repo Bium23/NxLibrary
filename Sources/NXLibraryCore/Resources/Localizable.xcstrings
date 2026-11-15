@@ -3322,47 +3322,6 @@
         }
       }
     },
-    "%d%%": {
-      "comment": "A whole percentage, e.g. 34%.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d%%"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d%%"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d %%"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d %%"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d %%"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d%%"
-          }
-        }
-      }
-    },
     "%d%% complete": {
       "comment": "Share of a game's achievements unlocked.",
       "localizations": {
@@ -5481,47 +5440,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Um movimento lento da arte enquanto o jogo inicia."
-          }
-        }
-      }
-    },
-    "ACHIEVEMENTS": {
-      "comment": "Label of the achievements tile on a game's page.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ACHIEVEMENTS"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OBIETTIVI"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SUCCÈS"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ERFOLGE"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "LOGROS"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CONQUISTAS"
           }
         }
       }
@@ -44362,47 +44280,6 @@
         }
       }
     },
-    "PLAY TIME": {
-      "comment": "DetailsBands.swift:66",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PLAY TIME"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "TEMPO DI GIOCO"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "TEMPS DE JEU"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SPIELZEIT"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "TIEMPO DE JUEGO"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "TEMPO DE JOGO"
-          }
-        }
-      }
-    },
     "PLAYTIME": {
       "comment": "DetailsTopBlock.swift",
       "localizations": {
@@ -46776,47 +46653,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Encerre o jogo para instalar mods."
-          }
-        }
-      }
-    },
-    "RANK": {
-      "comment": "DetailsBands.swift:72",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "RANK"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "POSIZIONE"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "RANG"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "RANG"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "POSICIÓN"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "POSIÇÃO"
           }
         }
       }
@@ -68854,47 +68690,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Seus arquivos Steam ficam onde estão. Desativar esta fonte mantém seus jogos e suas preferências."
-          }
-        }
-      }
-    },
-    "Your activity": {
-      "comment": "DetailsBands.swift:63",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your activity"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La tua attività"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Votre activité"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Deine Aktivität"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tu actividad"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sua atividade"
           }
         }
       }
