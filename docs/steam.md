@@ -145,7 +145,8 @@ sopra l’ordine salvato con Move, e ci resta fino all’uscita anche a download
 `SpotlightRow.leaders`). Al riavvio torna all’ordine normale.
 
 **Pagina.** Gli stessi pezzi Selene dei giochi nxnative (`GameLogoArea`, `GamePrimaryActions`, `SeleneStatsRow`,
-`SeleneHeroArt`), poi screenshot, About, la card Achievements e `SteamInstallationPanel`. La piattaforma è il logo
+`SeleneHeroArt`), poi screenshot, About, la card Achievements e il pannello Details condiviso (`DetailsPanel`: Developer, Publisher,
+Size on disk, Installed in «Steam · <volume>»; in download solo Developer e Publisher; mai il build ID). La piattaforma è il logo
 ufficiale Valve (`SteamPlatformLogo`), con l’attribuzione in Settings › About e in `NOTICE`.
 
 | Situazione | Primo pulsante | Nota sopra i pulsanti |

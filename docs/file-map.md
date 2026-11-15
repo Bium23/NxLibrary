@@ -282,7 +282,8 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 |---|---|
 | [Sources/NXLibraryCore/Models/ButtonPrompts.swift](../Sources/NXLibraryCore/Models/ButtonPrompts.swift) | Traduce azioni in simboli o etichette per tastiera e controller Switch, Xbox e PlayStation. |
 | [Sources/NXLibraryCore/Models/CollectionRow.swift](../Sources/NXLibraryCore/Models/CollectionRow.swift) | Definisce proporzioni delle copertine e geometria della riga Collection. |
-| [Sources/NXLibraryCore/Models/DetailsFocus.swift](../Sources/NXLibraryCore/Models/DetailsFocus.swift) | Gestisce zone e spostamenti del focus nelle azioni e nelle bande di Details. |
+| [Sources/NXLibraryCore/Models/DetailsFacts.swift](../Sources/NXLibraryCore/Models/DetailsFacts.swift) | Sceglie le righe del pannello Details per Switch e Steam: solo i valori presenti, niente di tecnico. |
+| [Sources/NXLibraryCore/Models/DetailsFocus.swift](../Sources/NXLibraryCore/Models/DetailsFocus.swift) | Gestisce zone e spostamenti del focus nei link e nelle bande di Details. |
 | [Sources/NXLibraryCore/Models/FocusIndex.swift](../Sources/NXLibraryCore/Models/FocusIndex.swift) | Mantiene un indice di focus entro i limiti di una lista. |
 | [Sources/NXLibraryCore/Models/SettingsRowAction.swift](../Sources/NXLibraryCore/Models/SettingsRowAction.swift) | Identifica azioni e righe Settings, mantenendo una sola azione primaria per riga senza accorpare giochi omonimi. |
 | [Sources/NXLibraryCore/Models/GameOptionsPresentation.swift](../Sources/NXLibraryCore/Models/GameOptionsPresentation.swift) | Definisce righe, livelli, etichette, scelte runtime e focus di Game Options. |
@@ -323,7 +324,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/Views/Spotlight/SpotlightTopBar.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightTopBar.swift) | Disegna filtri, prompt dei dorsali e orologio condivisi con Collection. |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightInfoView.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightInfoView.swift) | Mostra logo, Play/Options/Favorite, statistiche e stato di porting del gioco selezionato. |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightCardInfoView.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightCardInfoView.swift) | Mostra informazioni e azioni delle card Collection, Surprise, Activity e Add Game. |
-| [Sources/NXLibrary/Views/Spotlight/SpotlightPageSections.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightPageSections.swift) | Prepara generi, descrizione, Build & Sources e giochi correlati della pagina inferiore. |
+| [Sources/NXLibrary/Views/Spotlight/SpotlightPageSections.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightPageSections.swift) | Prepara generi, descrizione, pannello Details e giochi correlati della pagina inferiore. |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightScreenshotStrip.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightScreenshotStrip.swift) | Disegna la striscia di screenshot con focus e stile adattabile alle schermate. |
 | [Sources/NXLibrary/Views/Spotlight/SeleneArtBackground.swift](../Sources/NXLibrary/Views/Spotlight/SeleneArtBackground.swift) | Compone wallpaper, sfondo del gioco, transizioni e maschere Selene; l'arte è un `CALayer` che dissolve nel render server (`SeleneArtLayer`). |
 | [Sources/NXLibrary/Views/Spotlight/SeleneHeroArt.swift](../Sources/NXLibrary/Views/Spotlight/SeleneHeroArt.swift) | Coordina il caricamento differito di hero e logo del gioco selezionato. |
@@ -342,7 +343,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/Views/Detail/DetailsBackground.swift](../Sources/NXLibrary/Views/Detail/DetailsBackground.swift) | Compone hero e maschere dello sfondo dedicato alla pagina Details. |
 | [Sources/NXLibrary/Views/Detail/DetailsTopBlock.swift](../Sources/NXLibrary/Views/Detail/DetailsTopBlock.swift) | Mostra logo, crediti, azioni, statistiche, generi e descrizione del gioco. |
 | [Sources/NXLibrary/Views/Detail/DetailsBands.swift](../Sources/NXLibrary/Views/Detail/DetailsBands.swift) | Disegna bande screenshot, mod e giochi correlati con i relativi titoli. |
-| [Sources/NXLibrary/Views/Detail/BuildSourcesPanel.swift](../Sources/NXLibrary/Views/Detail/BuildSourcesPanel.swift) | Prepara e disegna le azioni di app, sorgenti, rebuild, log e cartelle. |
+| [Sources/NXLibrary/Views/Detail/DetailsPanel.swift](../Sources/NXLibrary/Views/Detail/DetailsPanel.swift) | Pannello Details uguale per ogni fonte: righe con icona e link (Reveal in Finder, Store page, HowLongToBeat) in `SeleneActionGrid`. |
 
 ## UI · Game Options, cheats e salvataggi
 
@@ -718,7 +719,7 @@ Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua rig
 | [AchievementSummary.swift](../Sources/NXLibraryCore/Models/AchievementSummary.swift) | Riepilogo puro per la tile e la schermata: conteggi, percentuale, icone recenti, il più raro sbloccato, filtri e ordini; maschera i nascosti ancora bloccati. |
 | [AchievementsScreenState.swift](../Sources/NXLibraryCore/Models/AchievementsScreenState.swift) | Filtro e selezione della schermata Achievements: due colonne, bordi fermi, LB/RB che girano i filtri. |
 | [SteamAchievementsStore.swift](../Sources/NXLibrary/Services/SteamAchievementsStore.swift) | Legge gli achievement fuori dal thread principale (selezione, apertura della schermata e, per il gioco selezionato, fine di una sessione Steam: subito e dopo un minuto), uno per AppID alla volta; tiene gli ultimi 16 giochi e aggiunge la rarità quando arriva. |
-| [DetailsAchievementsCard.swift](../Sources/NXLibrary/Views/Detail/DetailsAchievementsCard.swift) | Card Achievements in cima alla colonna destra della pagina, sopra il pannello della fonte; prende il focus e apre la schermata. |
+| [DetailsAchievementsCard.swift](../Sources/NXLibrary/Views/Detail/DetailsAchievementsCard.swift) | Card Achievements in cima alla colonna destra della pagina, sopra il pannello Details; prende il focus e apre la schermata. |
 | [AchievementIcon.swift](../Sources/NXLibrary/Views/Detail/AchievementIcon.swift) | Icona di un achievement dalla cache di `SteamMetadataService`, decodificata fuori dal thread principale, con un riquadro neutro finché manca. |
 | [AchievementsScreen.swift](../Sources/NXLibrary/Views/Spotlight/AchievementsScreen.swift) | Schermata Achievements sopra l’arte del gioco: logo, progresso, filtri e lista in due colonne; vista pura, l’input passa da `AchievementsScreen.handle`. |
 | [SteamBinaryKeyValuesTests.swift](../Tests/NXLibraryCoreTests/SteamBinaryKeyValuesTests.swift) | Tipi, annidamento, fine dei dati, input troncati, tipi ignoti e limiti del parser binario. |
