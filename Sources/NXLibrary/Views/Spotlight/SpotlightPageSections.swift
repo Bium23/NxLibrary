@@ -71,7 +71,7 @@ struct SpotlightGenreChips: View {
 
 /// The store description under the screenshots, at least as tall as the
 /// column beside it (`excerpt`), with Read more for the rest. Read more takes
-/// controller focus left of Build & Sources.
+/// controller focus left of Details.
 struct SpotlightDescription: View {
     @Environment(\.seleneCanvas) private var canvas
     let text: String

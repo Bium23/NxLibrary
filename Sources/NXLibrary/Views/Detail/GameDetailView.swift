@@ -10,7 +10,7 @@ final class DetailsModelCache {
 
 /// The Details page (spec §5.4, Selene GameDetails + DetailsStage). The top
 /// block sits on the stage; Down glides the page up into the bands, which
-/// are Screenshots (720), Build & Sources, Mods (for a game
+/// are Screenshots (720), Details, Mods (for a game
 /// with a title ID) and More like this, one band pitch (230) apart. A band below the one in focus peeks in, blurred, until
 /// it is focused. Input lives in GameDetailView+Input.swift.
 struct GameDetailView: View {
@@ -195,7 +195,7 @@ struct GameDetailView: View {
     }
 
     /// Selene's band pitch (230), and 100 more for the tall last band so its covers clear the hints. The Mods band,
-    /// when there is one, sits between Build & Sources and More like this and pushes More like this one pitch down,
+    /// when there is one, sits between Details and More like this and pushes More like this one pitch down,
     /// plus one tile row for each row of its grid after the first; focused, it rises by those rows too, so its last
     /// row rests where a one-row band would.
     var pageShift: CGFloat {

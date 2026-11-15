@@ -103,7 +103,7 @@ struct DetailsMoreBand: View {
     }
 }
 
-/// The game's mods, between Build & Sources and More like this. Left to right (`ModsBandLayout`): installed mods (`ModStore`, at most 5) with their state,
+/// The game's mods, between Details and More like this. Left to right (`ModsBandLayout`): installed mods (`ModStore`, at most 5) with their state,
 /// Manage mods, the GameBanana mods that work (image, name, author, Installed / Update), then status tiles (Retry, the
 /// "Is this the right game?" candidates, Wrong game?…). The row slides so the focused tile stays on screen. A click
 /// focuses a tile; a double click (or A) opens it.

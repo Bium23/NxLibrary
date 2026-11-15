@@ -55,7 +55,7 @@ extension DetailsLink {
 /// A game's Details in the page's right column, the same for every source (maintainer's choice,
 /// 15 Nov 2026): what a player cares about as label → value rows with small grey icons, in the
 /// achievements' light outlined panel, and the links under it. Rows without a value are not shown;
-/// with none at all only the title and the links remain. No build, engine or sources state: that is
+/// with none at all only the title and the links remain, and with no links either nothing does. No build, engine or sources state: that is
 /// Options' business, and problems that stop the player show in Play's own note.
 struct DetailsPanel: View {
     @Environment(\.seleneCanvas) private var canvas
@@ -80,6 +80,11 @@ struct DetailsPanel: View {
     private var wide: Bool { width >= 800 }
 
     var body: some View {
+        // With nothing to show, no title alone on the page.
+        if !facts.isEmpty || !links.isEmpty { content }
+    }
+
+    private var content: some View {
         VStack(alignment: .leading, spacing: 0) {
             DetailsBandTitle(text: "Details")
             if !facts.isEmpty {

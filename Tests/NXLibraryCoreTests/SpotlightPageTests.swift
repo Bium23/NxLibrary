@@ -57,7 +57,7 @@ final class SpotlightPageTests: XCTestCase {
     func testShortPageNeverScrollsPastItsEnd() {
         let rest = SpotlightPageScroll.resting(first: -324, aboutTop: 700, moreTop: 1000, pageBottom: 1300,
                                                top: 150, viewport: 1000, bottomInset: 130)
-        XCTAssertEqual(rest.actions, -430, "the page's end limits Build & Sources too")
+        XCTAssertEqual(rest.actions, -430, "the page's end limits Details too")
         XCTAssertEqual(rest.more, -430)
     }
 

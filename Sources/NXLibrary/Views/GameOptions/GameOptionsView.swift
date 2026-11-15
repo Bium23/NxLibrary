@@ -93,7 +93,8 @@ struct GameOptionsView: View {
             toolchainBlocked: viewModel.isCheckingEnvironment || (viewModel.compatibilityReport != nil && !viewModel.canPassToolchainGate),
             toolchainHint: viewModel.isCheckingEnvironment ? L10n.text("Checking environment") : viewModel.toolchainGateSummary?.buildHint,
             hasStorePage: viewModel.storeMetadata[game.id]?.storeURL != nil,
-            offersStoreSearch: (viewModel.storeMetadata[game.id]?.description ?? "").isEmpty,
+            offersStoreSearch: (viewModel.storeMetadata[game.id]?.description ?? "").isEmpty
+                && viewModel.nintendoStoreSearchURL(for: game) != nil,
             gameName: game.name,
             appPath: game.url.path,
             canDeleteBundle: game.canDeleteAppBundle(),

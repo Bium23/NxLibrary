@@ -1,12 +1,12 @@
 import Foundation
 
 /// Where controller focus sits on Spotlight. Below the pills the screen is one
-/// page that scrolls up: screenshots, About this game beside Build & Sources, More like this.
+/// page that scrolls up: screenshots, About this game beside Details, More like this.
 public enum SpotlightFocusArea: Hashable {
     case row, pills, strip
-    /// About this game's Read more, left of Build & Sources.
+    /// About this game's Read more, left of Details.
     case about
-    /// Build & Sources' actions, `SpotlightState.actionColumns` to a row.
+    /// The Details links, `SpotlightState.actionColumns` to a row.
     case actions
     /// More like this.
     case more
@@ -36,7 +36,7 @@ public struct SpotlightState: Equatable {
     public static let anchorSlot = 2
     /// Play, Options, Favorite.
     public static let pillCount = 3
-    /// Build & Sources lays its actions out as small buttons, three to a row.
+    /// The Details links are small buttons, three to a row.
     public static let actionColumns = 3
 
     public var selectedKey: String?
@@ -154,7 +154,7 @@ public struct SpotlightState: Equatable {
         modsIndex = 0
     }
 
-    /// Down: row → pills (games only) → strip → Achievements (when shown) → Build & Sources (row by row) →
+    /// Down: row → pills (games only) → strip → Achievements (when shown) → Details (row by row) →
     /// Mods (row by row) → More like this, skipping whatever is empty.
     @discardableResult
     public mutating func moveDown(selectedIsGame: Bool, screenshotCount: Int,
@@ -235,7 +235,7 @@ public struct SpotlightState: Equatable {
         return true
     }
 
-    /// Up: More like this → Mods (row by row) → Build & Sources (row by row) → Achievements (when shown) →
+    /// Up: More like this → Mods (row by row) → Details (row by row) → Achievements (when shown) →
     /// strip → pills → row.
     @discardableResult
     public mutating func moveUp(screenshotCount: Int = 1, actionCount: Int = 0, modsCount: Int = 0,
@@ -274,7 +274,7 @@ public struct SpotlightState: Equatable {
         return true
     }
 
-    /// Up into Build & Sources lands on its last row's first action.
+    /// Up into the Details links lands on its last row's first link.
     private mutating func enterLastActionRow(actionCount: Int, otherwise: SpotlightFocusArea) {
         guard actionCount > 0 else {
             focus = otherwise
@@ -284,8 +284,8 @@ public struct SpotlightState: Equatable {
         actionIndex = ((actionCount - 1) / Self.actionColumns) * Self.actionColumns
     }
 
-    /// Left/Right inside the pills, the strip, Build & Sources or More like this.
-    /// Left of Build & Sources' first column, and of the achievements card, is Read more, when `readMore`.
+    /// Left/Right inside the pills, the strip, Details or More like this.
+    /// Left of the Details links' first column, and of the achievements card, is Read more, when `readMore`.
     @discardableResult
     public mutating func moveSideways(by delta: Int, screenshotCount: Int, topGameCount: Int = 0,
                                       actionCount: Int = 0, moreCount: Int = 0, readMore: Bool = false,

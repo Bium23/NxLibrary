@@ -98,7 +98,7 @@ extension GameDetailView {
         viewModel.toggleFavorite(game)
     }
 
-    /// Hover moves the action focus only while Build & Sources is in focus.
+    /// Hover moves the action focus only while Details is in focus.
     func hoverRow(_ index: Int) {
         guard focus.zone == DetailsFocus.actionsZone, focus.action != index else { return }
         var next = focus
@@ -106,7 +106,7 @@ extension GameDetailView {
         if next != focus { focus = next }
     }
 
-    /// Press on a row: when Build & Sources is in focus it runs the row (the
+    /// Press on a row: when Details is in focus it runs the row (the
     /// row's own path explains a refusal, e.g. the Metal gate); otherwise the
     /// press first brings that band into focus.
     func pressRow(_ index: Int) {

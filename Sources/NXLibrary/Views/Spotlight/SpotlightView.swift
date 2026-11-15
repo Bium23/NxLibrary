@@ -10,7 +10,7 @@ import NXLibraryCore
 /// reach the window edges.
 ///
 /// Below the stats the screen is one page: genres, screenshots, the
-/// description with Build & Sources beside it, More like this. Down
+/// description with Details beside it, More like this. Down
 /// from the row shifts everything up (the row and the bar fade away, the logo
 /// rises to the top) and keeps going section by section; Up comes back.
 public struct SpotlightView: View {
@@ -809,7 +809,7 @@ public struct SpotlightView: View {
 
     /// The page's scroll for the focus, in points. The pills and the strip
     /// share the first shift (the strip only moves further if it would sit
-    /// under the hints); Build & Sources brings About this game and the column
+    /// under the hints); Details brings About this game and the column
     /// beside it up to 150 by their titles; More like this rises until the
     /// page's end sits above the hints, never further (`SpotlightPageScroll`).
     /// Positions add up the blocks' heights from the column's top at 420.
