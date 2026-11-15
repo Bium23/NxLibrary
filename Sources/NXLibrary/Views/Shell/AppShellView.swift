@@ -17,6 +17,8 @@ public struct AppShellView: View {
     @ObservedObject private var theme = ThemeStore.shared
     @ObservedObject private var localization = AppLocalization.shared
     @State private var gestureKeyMonitor: Any?
+    /// Rescans the Steam source when Steam rewrites a manifest (a download finishing, a game installed or removed).
+    @State private var steamWatcher = SteamManifestWatcher()
     @State private var setupSourceEntryID: UUID?
     /// Dismisses the Close Game confirmation when its game quits by itself.
     @State private var closeGameWatch: AnyCancellable?
@@ -288,7 +290,11 @@ public struct AppShellView: View {
         .environment(\.seleneButtonNames, settings.settings.buttonNames)
         .environmentObject(updater)
         .environmentObject(sources)
-        .onAppear { sources.startIfEnabled() }
+        .onAppear {
+            steamWatcher.onChange = { [weak sources] in sources?.steamFilesChanged() }
+            sources.startIfEnabled()
+        }
+        .onReceive(sources.$libraryRoots) { roots in steamWatcher.watch(roots, root: sources.configuration.rootURL) }
         .preferredColorScheme(.dark)
         .frame(minWidth: 1100, minHeight: 700)
         .onAppear(perform: startRuntime)
@@ -307,6 +313,7 @@ public struct AppShellView: View {
             SteamPlayCoordinator.shared.stop()
             SteamPlaytimeCoordinator.shared.stop()
             SteamAchievementsStore.shared.stop()
+            steamWatcher.stop()
             removeGestureKeyMonitor()
         }
         .onChange(of: viewModel.libraryGames) { games in

@@ -143,7 +143,83 @@ final class CatalogSourcesModelTests: XCTestCase {
         XCTAssertEqual(model.observedGameCount, 1)
         XCTAssertEqual(model.reviewCount, 0)
     }
+
+    // MARK: - Rescans when Steam rewrites a manifest
+
+    private func settled(_ model: CatalogSourcesModel) async {
+        for _ in 0..<200 where model.status == .scanning || model.status == .idle { try? await Task.sleep(nanoseconds: 10_000_000) }
+    }
+    private func watching(delay: TimeInterval = 0, extraLibraries: [URL] = []) async throws -> (CatalogSourcesModel, SourceCallCounter, URL) {
+        let (f, repository, initial) = try prepared()
+        let calls = SourceCallCounter()
+        var scan = snapshot(f.root)
+        if !extraLibraries.isEmpty {
+            scan = .init(libraries: ([f.root] + extraLibraries).map { .init(root: $0, isReadable: true, isComplete: true) },
+                         games: scan.games, issues: [])
+        }
+        let model = CatalogSourcesModel(repository: repository, initialConfiguration: initial,
+                                        scanner: { _, _ in calls.increment(); if delay > 0 { Thread.sleep(forTimeInterval: delay) }; return scan },
+                                        rescanQuiet: 0.05, rescanSpacing: 0.2) { _ in }
+        model.configure(enabled: true, root: f.root)
+        await settled(model)
+        return (model, calls, f.root)
+    }
+
+    func testLibraryRootsFollowTheCommittedScan() async throws {
+        let external = URL(fileURLWithPath: "/tmp/catalog-external-library")
+        let (model, _, root) = try await watching(extraLibraries: [external])
+        XCTAssertEqual(model.libraryRoots, [root, external])
+    }
+
+    func testBurstOfChangesRescansOnce() async throws {
+        let (model, calls, _) = try await watching()
+        XCTAssertEqual(calls.value, 1)
+        for _ in 0..<5 { model.steamFilesChanged(); try await Task.sleep(nanoseconds: 10_000_000) }
+        try await Task.sleep(nanoseconds: 600_000_000)
+        await settled(model)
+        XCTAssertEqual(calls.value, 2)
+    }
+
+    func testChangeDuringScanRescansOnceAfterIt() async throws {
+        let (model, calls, _) = try await watching(delay: 0.3)
+        XCTAssertEqual(calls.value, 1)
+        model.refresh()
+        try await Task.sleep(nanoseconds: 30_000_000)
+        XCTAssertEqual(model.status, .scanning)
+        for _ in 0..<3 { model.steamFilesChanged() }
+        try await Task.sleep(nanoseconds: 1_200_000_000)
+        await settled(model)
+        XCTAssertEqual(calls.value, 3)
+    }
+
+    func testRescansAreSpacedApart() async throws {
+        let (model, calls, _) = try await watching()
+        // Past the spacing of the first scan, a change rescans after the quiet time alone.
+        try await Task.sleep(nanoseconds: 250_000_000)
+        model.steamFilesChanged()
+        try await Task.sleep(nanoseconds: 100_000_000)
+        await settled(model)
+        XCTAssertEqual(calls.value, 2)
+        model.steamFilesChanged()
+        // Quiet time has passed, but the last scan started less than the spacing ago.
+        try await Task.sleep(nanoseconds: 80_000_000)
+        XCTAssertEqual(calls.value, 2)
+        try await Task.sleep(nanoseconds: 400_000_000)
+        await settled(model)
+        XCTAssertEqual(calls.value, 3)
+    }
+
+    func testDisablingDropsAPendingRescanAndClearsLibraries() async throws {
+        let (model, calls, root) = try await watching()
+        XCTAssertEqual(model.libraryRoots, [root])
+        model.steamFilesChanged()
+        model.configure(enabled: false, root: root)
+        XCTAssertEqual(model.libraryRoots, [])
+        try await Task.sleep(nanoseconds: 500_000_000)
+        XCTAssertEqual(calls.value, 1)
+    }
 }
+
 
 private final class SourceCallCounter: @unchecked Sendable {
     private let lock = NSLock()
