@@ -298,7 +298,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/SpotlightPage.swift](../Sources/NXLibraryCore/Models/SpotlightPage.swift) | Calcola estratti delle descrizioni e stati dello scorrimento della pagina Spotlight. |
 | [Sources/NXLibraryCore/Models/SpotlightRow.swift](../Sources/NXLibraryCore/Models/SpotlightRow.swift) | Costruisce la sequenza per UUID e salva riordini conservando giochi/fonti/card temporaneamente nascosti; Surprise mantiene il proprio contratto nxnative. |
 | [Sources/NXLibraryCore/Models/SpotlightRowGeometry.swift](../Sources/NXLibraryCore/Models/SpotlightRowGeometry.swift) | Posti delle tessere nella riga, camera unica che la fa scorrere e finestra delle tessere create; posto, scala e camera lungo lo scorrimento dalla posizione continua della selezione. |
-| [Sources/NXLibraryCore/Models/SpotlightState.swift](../Sources/NXLibraryCore/Models/SpotlightState.swift) | Gestisce selezione, focus, azioni e spostamento delle tile su Spotlight. |
+| [Sources/NXLibraryCore/Models/SpotlightState.swift](../Sources/NXLibraryCore/Models/SpotlightState.swift) | Gestisce selezione, focus (anche la tile Achievements), azioni e spostamento delle tile su Spotlight. |
 | [Sources/NXLibraryCore/Models/ThemePicker.swift](../Sources/NXLibraryCore/Models/ThemePicker.swift) | Gestisce griglia, tab Wallpapers/Live e scelte di sfondo nel selettore temi. |
 | [Sources/NXLibraryCore/Models/WallpaperCatalog.swift](../Sources/NXLibraryCore/Models/WallpaperCatalog.swift) | Elenca wallpaper e video, gruppi, nomi e file delle risorse incluse o importate. |
 | [Sources/NXLibraryCore/Models/WallpaperPlacement.swift](../Sources/NXLibraryCore/Models/WallpaperPlacement.swift) | Decide dove applicare uno sfondo scelto fra schermi principali e Settings. |
@@ -341,7 +341,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/Views/Detail/GameDetailView+Input.swift](../Sources/NXLibrary/Views/Detail/GameDetailView+Input.swift) | Gestisce azioni, screenshot, navigazione e passaggio ai giochi correlati da Details. |
 | [Sources/NXLibrary/Views/Detail/DetailsBackground.swift](../Sources/NXLibrary/Views/Detail/DetailsBackground.swift) | Compone hero e maschere dello sfondo dedicato alla pagina Details. |
 | [Sources/NXLibrary/Views/Detail/DetailsTopBlock.swift](../Sources/NXLibrary/Views/Detail/DetailsTopBlock.swift) | Mostra logo, crediti, azioni, statistiche, generi e descrizione del gioco. |
-| [Sources/NXLibrary/Views/Detail/DetailsBands.swift](../Sources/NXLibrary/Views/Detail/DetailsBands.swift) | Disegna bande screenshot, mod, attività e giochi correlati con i relativi titoli. |
+| [Sources/NXLibrary/Views/Detail/DetailsBands.swift](../Sources/NXLibrary/Views/Detail/DetailsBands.swift) | Disegna bande screenshot, mod e giochi correlati con i relativi titoli. |
 | [Sources/NXLibrary/Views/Detail/BuildSourcesPanel.swift](../Sources/NXLibrary/Views/Detail/BuildSourcesPanel.swift) | Prepara e disegna le azioni di app, sorgenti, rebuild, log e cartelle. |
 
 ## UI · Game Options, cheats e salvataggi
@@ -706,6 +706,25 @@ Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua rig
 | [SteamLibrarySourceTests.swift](../Tests/NXLibraryCoreTests/SteamLibrarySourceTests.swift) | Più fonti, dischi assenti, identità, file cambiati, limiti e assenza di scritture. |
 | [SteamDiscoveryConsistencyTests.swift](../Tests/NXLibraryCoreTests/SteamDiscoveryConsistencyTests.swift) | Mutazioni reali di inventario e app durante scan, indice inizialmente assente, budget e propagazione dell'annullamento. |
 | [SteamTestSupport.swift](../Tests/NXLibraryCoreTests/SteamTestSupport.swift) | Genera solo metadati e header sintetici nelle directory temporanee dei test. |
+
+## Achievements Steam (in attesa di validazione umana)
+
+| File | Responsabilità |
+|---|---|
+| [SteamBinaryKeyValues.swift](../Sources/NXLibraryCore/Services/Steam/SteamBinaryKeyValues.swift) | Lettura limitata del formato KeyValues binario di Steam (`appcache/stats`): tipi noti, profondità, voci e dimensione; qualunque altro byte è un errore. |
+| [SteamAchievementReader.swift](../Sources/NXLibraryCore/Services/Steam/SteamAchievementReader.swift) | Achievement di un gioco per l’account corrente: schema (nomi nella lingua dell’app, poi inglese; nascosti; icone) e soli `AchievementTimes` del file delle statistiche; nessun file, account o statistiche: nessun dato. |
+| [SteamAchievementRarity.swift](../Sources/NXLibraryCore/Services/Steam/SteamAchievementRarity.swift) | Rarità pubblica (`GetGlobalAchievementPercentagesForApp`, senza chiave) e indirizzi delle icone sul CDN di Steam, solo per nomi di file semplici. |
+| [AchievementSummary.swift](../Sources/NXLibraryCore/Models/AchievementSummary.swift) | Riepilogo puro per la tile e la schermata: conteggi, percentuale, icone recenti, il più raro sbloccato, filtri e ordini; maschera i nascosti ancora bloccati. |
+| [AchievementsScreenState.swift](../Sources/NXLibraryCore/Models/AchievementsScreenState.swift) | Filtro e selezione della schermata Achievements: due colonne, bordi fermi, LB/RB che girano i filtri. |
+| [SteamAchievementsStore.swift](../Sources/NXLibrary/Services/SteamAchievementsStore.swift) | Legge gli achievement fuori dal thread principale (selezione, apertura della schermata, fine di una sessione Steam: subito e dopo un minuto), uno per AppID alla volta, e aggiunge la rarità quando arriva. |
+| [DetailsSummaryTiles.swift](../Sources/NXLibrary/Views/Detail/DetailsSummaryTiles.swift) | Tile di riepilogo (Play time, Achievements, Last played) in riga su Spotlight o in colonna su Details; solo la tile Achievements prende il focus. |
+| [AchievementIcon.swift](../Sources/NXLibrary/Views/Detail/AchievementIcon.swift) | Icona di un achievement dalla cache di `SteamMetadataService`, decodificata fuori dal thread principale, con un riquadro neutro finché manca. |
+| [AchievementsScreen.swift](../Sources/NXLibrary/Views/Spotlight/AchievementsScreen.swift) | Schermata Achievements sopra l’arte del gioco: logo, progresso, filtri e lista in due colonne; vista pura, l’input passa da `AchievementsScreen.handle`. |
+| [SteamBinaryKeyValuesTests.swift](../Tests/NXLibraryCoreTests/SteamBinaryKeyValuesTests.swift) | Tipi, annidamento, fine dei dati, input troncati, tipi ignoti e limiti del parser binario. |
+| [SteamAchievementReaderTests.swift](../Tests/NXLibraryCoreTests/SteamAchievementReaderTests.swift) | Percorsi, account e file mancanti, lingue con ripiego, nascosti, icone vuote, ordine numerico e file corrotti. |
+| [SteamAchievementRarityTests.swift](../Tests/NXLibraryCoreTests/SteamAchievementRarityTests.swift) | Percentuali numeriche o testuali, host e percorso ammessi, cache di un giorno, cache vecchia offline, icone in cache e file che non sono immagini. |
+| [AchievementSummaryTests.swift](../Tests/NXLibraryCoreTests/AchievementSummaryTests.swift) | Conteggi, ordini dei filtri, rarità sconosciute in fondo, soglia del raro, maschera dei nascosti e icone recenti. |
+| [AchievementsScreenStateTests.swift](../Tests/NXLibraryCoreTests/AchievementsScreenStateTests.swift) | Movimento in due colonne, bordi, liste vuote, cambio filtro e liste che si accorciano. |
 
 ## Catalogo comune (attivazione nella Dev in attesa di validazione)
 

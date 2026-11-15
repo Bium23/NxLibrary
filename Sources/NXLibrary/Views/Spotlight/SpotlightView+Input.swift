@@ -6,6 +6,7 @@ import NXLibraryCore
 extension SpotlightView {
     func handle(_ action: GamepadAction) {
         if viewer != nil { return handleViewer(action) }
+        if achievementsScreen != nil { return handleAchievements(action) }
         if viewModel.spotlight.isLifted { return handleLifted(action) }
         if cardMenu != nil { return handleCardMenu(action) }
         if modsHost.isPanelOpen { return modsHost.handlePanel(action) }
@@ -142,10 +143,39 @@ extension SpotlightView {
         achievementsStore.load(appID: appID, language: SteamMetadata.language(L10n.context.language))
     }
 
+    /// Opens on All, and reads Steam's files again for unlocks made since the page opened.
     func openAchievements() {
-        guard selectedAchievements != nil else { return }
+        guard let summary = selectedAchievements, achievementsScreen == nil else { return }
+        achievementsScreen = AchievementsScreenState(count: summary.rows(.all).count)
         SoundEffectService.shared.play(.click)
         loadAchievements()
+    }
+
+    /// Closing returns Spotlight's focus to the tile.
+    func closeAchievements() {
+        guard achievementsScreen != nil else { return }
+        achievementsScreen = nil
+        if selectedAchievements != nil { mutate { $0.focus = .achievements } }
+        SoundEffectService.shared.play(.focus)
+    }
+
+    private func handleAchievements(_ action: GamepadAction) {
+        guard var screen = achievementsScreen, let summary = selectedAchievements else {
+            achievementsScreen = nil
+            return
+        }
+        switch AchievementsScreen.handle(action, state: &screen, summary: summary) {
+        case .moved:
+            achievementsScreen = screen
+            SoundEffectService.shared.play(.focus)
+        case .filtered:
+            achievementsScreen = screen
+            SoundEffectService.shared.play(.tabSwitch)
+        case .close:
+            closeAchievements()
+        case .ignored:
+            break
+        }
     }
 
     // MARK: - Screenshot viewer
@@ -396,6 +426,8 @@ extension SpotlightView {
                   NSApp.modalWindow == nil,
                   !(window.firstResponder is NSText) else { return event }
             if event.type == .scrollWheel {
+                // The Achievements screen's list scrolls itself; the page beneath stays.
+                if achievementsScreen != nil { return event }
                 // An open mod panel takes the wheel: its description scrolls, the page beneath stays.
                 if let panel = [modsHost, storeHost.panel].first(where: \.isPanelOpen) {
                     let dy = event.scrollingDeltaY

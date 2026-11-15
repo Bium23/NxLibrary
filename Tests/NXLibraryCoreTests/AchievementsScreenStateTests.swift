@@ -54,12 +54,23 @@ final class AchievementsScreenStateTests: XCTestCase {
 
     func testShiftFilterWraps() {
         var state = AchievementsScreenState(count: 3)
-        state.shiftFilter(by: -1, count: 3)
+        state.shiftFilter(by: -1) { _ in 3 }
         XCTAssertEqual(state.filter, .rarest)
-        state.shiftFilter(by: 1, count: 3)
+        state.shiftFilter(by: 1) { _ in 3 }
         XCTAssertEqual(state.filter, .all)
-        state.shiftFilter(by: 1, count: 1)
+        state.shiftFilter(by: 1) { $0 == .unlocked ? 1 : 3 }
         XCTAssertEqual(state.filter, .unlocked)
         XCTAssertEqual(state.count, 1)
+    }
+
+    func testFewerRowsKeepTheIndexInside() {
+        var state = AchievementsScreenState(count: 6)
+        state.index = 5
+        state.setCount(3)
+        XCTAssertEqual(state.index, 2)
+        state.setCount(0)
+        XCTAssertEqual(state.index, 0)
+        state.setCount(4)
+        XCTAssertEqual(state.index, 0)
     }
 }

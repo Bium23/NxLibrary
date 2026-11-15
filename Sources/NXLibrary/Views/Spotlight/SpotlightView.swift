@@ -39,6 +39,8 @@ public struct SpotlightView: View {
     @State var cardMenu: CardMenuState?
     /// The open screenshot viewer (the game's titleID, its urls and the paging state).
     @State var viewer: ViewerContext?
+    /// The open Achievements screen's selection; the game is the selected Steam game.
+    @State var achievementsScreen: AchievementsScreenState?
     /// The filter pill: shown while the filter is not All, and for 1.2 s after switching to All.
     @State var pillFilter: LibraryFilter = .all
     @State var pillVisible = false
@@ -174,7 +176,7 @@ public struct SpotlightView: View {
                                             onMenu: { router.isMenuPresented = true }),
             rightHints: contextHints(model, state),
             rightReserve: hintReserve(state),
-            hintsHidden: router.overlayHasHints(viewModel),
+            hintsHidden: router.overlayHasHints(viewModel) || achievementsScreen != nil,
             backdrop: {
                 // On a card no art; on the Mods card the moonlight glides to gold (and stays gold until the next
                 // game's art has arrived, so leaving the card is one change, not gold → blue → art).
@@ -189,6 +191,8 @@ public struct SpotlightView: View {
             stage: { stage(model, state: state) })
         .overlay(viewerOverlay)
         .animation(.easeOut(duration: 0.2), value: viewer != nil)
+        .overlay(achievementsOverlay(model))
+        .animation(SeleneTheme.screen, value: achievementsScreen != nil)
         .overlay(model.selectedGame.map { ModsBandOverlay(host: modsHost, find: modsHost.find, game: $0) })
         .overlay(storeOverlay(model))
         .onAppear(perform: appear)
@@ -197,12 +201,23 @@ public struct SpotlightView: View {
         .onChange(of: selectedPillCount) { count in mutate { $0.setPillLimit(count) } }
         // A re-read can remove the tile (the files went away): the focus leaves it for the screenshots.
         .onChange(of: selectedAchievements == nil) { gone in
-            guard gone, viewModel.spotlight.focus == .achievements else { return }
+            guard gone else { return }
+            achievementsScreen = nil
+            guard viewModel.spotlight.focus == .achievements else { return }
             mutate { $0.focus = screenshotCount > 0 ? .strip : .pills }
         }
+        // A re-read while the screen is open: the selection stays inside the list.
+        .onChange(of: selectedAchievements) { summary in
+            guard let summary, var screen = achievementsScreen else { return }
+            screen.setCount(summary.rows(screen.filter).count)
+            if screen != achievementsScreen { achievementsScreen = screen }
+        }
+        // Another game, or the row: the screen belongs to the game it opened on.
+        .onChange(of: viewModel.spotlight.selectedKey) { _ in achievementsScreen = nil }
         .onDisappear {
             removeKeyMonitor()
             router.isScreenshotViewerOpen = false
+            achievementsScreen = nil
             modsHost.stop()
             storeHost.close()
             pillTask?.cancel()
@@ -231,7 +246,8 @@ public struct SpotlightView: View {
         // Inside the store the page glides section to section on a shorter curve.
         .onChange(of: storeHost.focus) { _ in syncPage(glide: Self.storeGlide) }
         .onChange(of: storeHost.sections.map(\.kind)) { _ in syncPage(glide: Self.storeGlide) }
-        .onChange(of: viewer != nil) { router.isScreenshotViewerOpen = $0 }
+        // The viewer and the Achievements screen both keep the shell's own buttons away.
+        .onChange(of: viewer != nil || achievementsScreen != nil) { router.isScreenshotViewerOpen = $0 }
         .onChange(of: router.pendingSpotlightMove) { _ in consumePendingMove() }
         .onReceive(NotificationCenter.default.publisher(for: .nxFindGameSelect)) { note in
             guard let id = note.object as? UUID else { return }
@@ -268,6 +284,25 @@ public struct SpotlightView: View {
         if let viewer {
             ScreenshotViewer(titleID: viewer.titleID, urls: viewer.urls, state: viewer.state,
                              artwork: artwork, onClose: closeViewer)
+                .transition(.opacity)
+        }
+    }
+
+    @ViewBuilder
+    private func achievementsOverlay(_ model: Snapshot) -> some View {
+        if let screen = achievementsScreen, let game = model.selectedCatalogGame, let summary = selectedAchievements {
+            AchievementsScreen(game: game, summary: summary, state: screen, art: shownArt(model),
+                               onFilter: { filter in
+                                   guard filter != screen.filter else { return }
+                                   achievementsScreen?.setFilter(filter, count: summary.rows(filter).count)
+                                   SoundEffectService.shared.play(.tabSwitch)
+                               },
+                               onFocus: { index in
+                                   guard index != screen.index else { return }
+                                   achievementsScreen?.index = index
+                                   SoundEffectService.shared.play(.focus)
+                               },
+                               onClose: closeAchievements)
                 .transition(.opacity)
         }
     }

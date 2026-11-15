@@ -2461,6 +2461,47 @@
         }
       }
     },
+    "%@ of players": {
+      "comment": "Share of Steam players who have an achievement, e.g. 4.5% of players.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ of players"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ dei giocatori"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ des joueurs"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ der Spieler"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ de los jugadores"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ dos jogadores"
+          }
+        }
+      }
+    },
     "%@ of the tested %@.": {
       "comment": "SettingsEngineSection.swift:320",
       "localizations": {
@@ -3240,6 +3281,47 @@
         }
       }
     },
+    "%d of %d": {
+      "comment": "Achievements unlocked of the total, e.g. 17 of 50.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d of %d"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d su %d"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d sur %d"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d von %d"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d de %d"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d de %d"
+          }
+        }
+      }
+    },
     "%d%%": {
       "comment": "A whole percentage, e.g. 34%.",
       "localizations": {
@@ -3277,6 +3359,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "%d%%"
+          }
+        }
+      }
+    },
+    "%d%% complete": {
+      "comment": "Share of a game's achievements unlocked.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d%% complete"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completato al %d%%"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminé à %d %%"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d %% abgeschlossen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d %% completado"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d%% concluído"
           }
         }
       }
@@ -5645,6 +5768,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abstrato"
+          }
+        }
+      }
+    },
+    "Achievements": {
+      "comment": "Title of a Steam game's Achievements screen.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Achievements"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obiettivi"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Succès"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erfolge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logros"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conquistas"
           }
         }
       }
@@ -34194,6 +34358,47 @@
         }
       }
     },
+    "Locked": {
+      "comment": "Achievements filter: locked ones.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locked"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloccati"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verrouillés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesperrt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloqueados"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloqueadas"
+          }
+        }
+      }
+    },
     "Log": {
       "comment": "AddGameStepThreeView.swift",
       "localizations": {
@@ -39032,6 +39237,47 @@
         }
       }
     },
+    "No achievements here yet.": {
+      "comment": "An Achievements filter with nothing in it.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No achievements here yet."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ancora nessun obiettivo qui."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun succès ici pour l'instant."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hier noch keine Erfolge."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay logros aquí."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhuma conquista aqui ainda."
+          }
+        }
+      }
+    },
     "No backups": {
       "comment": "SavesPanel.swift",
       "localizations": {
@@ -41160,6 +41406,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ainda não testado com esta engine"
+          }
+        }
+      }
+    },
+    "Not unlocked": {
+      "comment": "An achievement's status before it is unlocked.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not unlocked"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non sbloccato"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non débloqué"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht freigeschaltet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No desbloqueado"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não desbloqueada"
           }
         }
       }
@@ -46571,6 +46858,88 @@
           "stringUnit": {
             "state": "translated",
             "value": "LANÇAMENTO"
+          }
+        }
+      }
+    },
+    "Rarest": {
+      "comment": "Achievements filter: every achievement, rarest first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rarest"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Più rari"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les plus rares"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Am seltensten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más raros"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mais raras"
+          }
+        }
+      }
+    },
+    "Rarest: %@ (%@)": {
+      "comment": "The unlocked achievement the fewest players have: its name and the share of players, e.g. Rarest: Legend (2.1%).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rarest: %@ (%@)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Più raro: %@ (%@)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le plus rare : %@ (%@)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Am seltensten: %@ (%@)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El más raro: %@ (%@)"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mais rara: %@ (%@)"
           }
         }
       }
@@ -64631,6 +65000,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Desconhecida"
+          }
+        }
+      }
+    },
+    "Unlocked": {
+      "comment": "Achievements filter: unlocked ones.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlocked"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sbloccati"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Débloqués"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freigeschaltet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloqueados"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloqueadas"
           }
         }
       }

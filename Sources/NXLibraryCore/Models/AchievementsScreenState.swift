@@ -38,11 +38,17 @@ public struct AchievementsScreenState: Equatable {
         index = 0
     }
 
-    /// LB/RB: the filter beside the current one, wrapping around.
-    public mutating func shiftFilter(by delta: Int, count: Int) {
+    /// LB/RB: the filter beside the current one, wrapping around; `count` gives each filter's tiles.
+    public mutating func shiftFilter(by delta: Int, count: (AchievementFilter) -> Int) {
         let all = AchievementFilter.allCases
         let current = all.firstIndex(of: filter) ?? 0
-        let next = ((current + delta) % all.count + all.count) % all.count
-        setFilter(all[next], count: count)
+        let next = all[((current + delta) % all.count + all.count) % all.count]
+        setFilter(next, count: count(next))
+    }
+
+    /// The list changed under the same filter (a re-read): the selection stays inside it.
+    public mutating func setCount(_ count: Int) {
+        self.count = max(0, count)
+        index = min(index, max(self.count - 1, 0))
     }
 }
