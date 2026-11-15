@@ -74,8 +74,13 @@ final class AchievementTierTests: XCTestCase {
         XCTAssertEqual(summary.lastUnlockedAt, Date(timeIntervalSince1970: 20))
     }
 
-    func testDisplayNamesAreTheArcaneNames() {
-        XCTAssertEqual(AchievementTier.allCases.map(\.displayName), ["Arcane", "Radiant", "Aether", "Ember"])
+    func testDisplayNamesAreTheClassicOnes() {
+        let english = AppLocale(language: .english, region: "US")
+        XCTAssertEqual(AchievementTier.allCases.map { $0.displayName(context: english) },
+                       ["Platinum", "Gold", "Silver", "Bronze"])
+        let italian = AppLocale(language: .italian, region: "IT")
+        XCTAssertEqual(AchievementTier.allCases.map { $0.displayName(context: italian) },
+                       ["Platino", "Oro", "Argento", "Bronzo"])
     }
 
     func testEveryTierHasArt() throws {

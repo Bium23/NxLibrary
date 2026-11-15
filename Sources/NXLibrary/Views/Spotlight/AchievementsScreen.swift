@@ -133,8 +133,8 @@ struct AchievementsScreen: View {
         }
     }
 
-    /// The completion as a large percentage underlined by its bar; Arcane, Radiant, Aether, Ember beside it with
-    /// unlocked/total under each, as PS5 trophies, dimmed while not earned (only Arcane until Steam's rarity
+    /// The completion as a large percentage underlined by its bar; Platinum, Gold, Silver, Bronze beside it with
+    /// unlocked/total under each, as PS5 trophies, dimmed while not earned (only Platinum until Steam's rarity
     /// arrives); under both, the count and the newest unlock.
     private var progress: some View {
         let counts = summary.tierCounts
@@ -164,10 +164,12 @@ struct AchievementsScreen: View {
                              + Text(" / \(count.total)").foregroundColor(SeleneTheme.ink60))
                                 .seleneFont(15, .semibold)
                                 .monospacedDigit()
-                                .lineLimit(1)
+                                // Its own width, never a share of the crystal's: squeezed, "0 / 13" read "0…".
+                                .fixedSize()
                         }
+                        .fixedSize()
                         .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(L10n.format("%1$@, %2$d of %3$d", [tier.displayName, count.unlocked, count.total]))
+                        .accessibilityLabel(L10n.format("%1$@, %2$d of %3$d", [tier.displayName(), count.unlocked, count.total]))
                     }
                 }
             }
@@ -266,7 +268,7 @@ private struct AchievementsScreenRow: View {
                 if let tier = row.tier, let percent = row.percent {
                     HStack(spacing: canvas.u(6)) {
                         TierCrystal(tier: tier, size: 24, dimmed: !unlocked)
-                        Text(tier.displayName)
+                        Text(tier.displayName())
                             .foregroundColor(unlocked ? SeleneTheme.ink : SeleneTheme.ink75)
                         Text("· \(AchievementsScreen.percent(percent))")
                             .foregroundColor(SeleneTheme.ink60)

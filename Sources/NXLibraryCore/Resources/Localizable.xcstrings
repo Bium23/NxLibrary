@@ -6838,47 +6838,6 @@
         }
       }
     },
-    "Aether": {
-      "comment": "Achievement tier name (a crystal), a proper name: the same text in every language.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aether"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aether"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aether"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aether"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aether"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aether"
-          }
-        }
-      }
-    },
     "After storage cleanup": {
       "comment": "AppShellView.swift:515",
       "localizations": {
@@ -8187,47 +8146,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Apps, caches de compilação e logs de cada jogo, incluindo jogos ocultos."
-          }
-        }
-      }
-    },
-    "Arcane": {
-      "comment": "Achievement tier name (a crystal), a proper name: the same text in every language.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arcane"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arcane"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arcane"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arcane"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arcane"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arcane"
           }
         }
       }
@@ -10196,6 +10114,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Traga de volta nos Ajustes"
+          }
+        }
+      }
+    },
+    "Bronze": {
+      "comment": "Achievement tier (a crystal), as PlayStation trophy tiers.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bronze"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bronzo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bronze"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bronze"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bronce"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bronze"
           }
         }
       }
@@ -22059,47 +22018,6 @@
         }
       }
     },
-    "Ember": {
-      "comment": "Achievement tier name (a crystal), a proper name: the same text in every language.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ember"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ember"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ember"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ember"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ember"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ember"
-          }
-        }
-      }
-    },
     "Empty for Automatic": {
       "comment": "ChangeMetadataView.swift",
       "localizations": {
@@ -28614,6 +28532,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Volte à etapa de revisão e escolha Adicionar e compilar para iniciar uma compilação."
+          }
+        }
+      }
+    },
+    "Gold": {
+      "comment": "Achievement tier (a crystal), as PlayStation trophy tiers.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gold"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oro"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Or"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gold"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oro"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouro"
           }
         }
       }
@@ -44854,6 +44813,47 @@
         }
       }
     },
+    "Platinum": {
+      "comment": "Achievement tier (a crystal), as PlayStation trophy tiers.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Platinum"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Platino"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Platine"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Platin"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Platino"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Platina"
+          }
+        }
+      }
+    },
     "Play": {
       "localizations": {
         "en": {
@@ -46612,47 +46612,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "LANÇAMENTO"
-          }
-        }
-      }
-    },
-    "Radiant": {
-      "comment": "Achievement tier name (a crystal), a proper name: the same text in every language.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Radiant"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Radiant"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Radiant"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Radiant"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Radiant"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Radiant"
           }
         }
       }
@@ -53397,6 +53356,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mostra a hora na barra superior."
+          }
+        }
+      }
+    },
+    "Silver": {
+      "comment": "Achievement tier (a crystal), as PlayStation trophy tiers.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silver"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Argento"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Argent"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silber"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plata"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prata"
           }
         }
       }

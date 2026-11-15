@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
-/// A tier's crystal (Arcane, Radiant, Aether, Ember), from the prerendered art in Core's resources. Dimmed:
+/// A tier's crystal (Platinum, Gold, Silver, Bronze), from the prerendered art in Core's resources. Dimmed:
 /// a tier not earned yet, or a locked achievement's tier — gray and faint, so the lit ones read first.
 /// Draws nothing if the art is missing.
 struct TierCrystal: View {

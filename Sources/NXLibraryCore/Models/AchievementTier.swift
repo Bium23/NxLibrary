@@ -1,8 +1,8 @@
 import Foundation
 
-/// A tier crystal, as PS5 trophies: one Arcane per game for unlocking everything, and Radiant, Aether or Ember
-/// for each achievement from how many Steam players have it. The cases keep the art's materials; players see
-/// `displayName`. Declared rarest first: the Achievements screen's board shows them in this order.
+/// A tier crystal, as PS5 trophies: one Platinum per game for unlocking everything, and Gold, Silver or Bronze
+/// for each achievement from how many Steam players have it. Declared rarest first: the Achievements screen's
+/// board shows them in this order.
 public enum AchievementTier: CaseIterable, Sendable {
     case platinum, gold, silver, bronze
 
@@ -14,7 +14,7 @@ public enum AchievementTier: CaseIterable, Sendable {
     /// An achievement's tier from Steam's global rarity (0–100); nil while unknown. Never platinum.
     public static func forPercent(_ percent: Double?) -> AchievementTier? {
         guard let raw = percent else { return nil }
-        // The screen shows one decimal: 9.96 reads "10.0%", so it must not be Radiant.
+        // The screen shows one decimal: 9.96 reads "10.0%", so it must not be Gold.
         let percent = (raw * 10).rounded() / 10
         if percent < goldBelow { return .gold }
         if percent < silverBelow { return .silver }
@@ -27,13 +27,13 @@ public enum AchievementTier: CaseIterable, Sendable {
         L10n.resources()?.url(forResource: "crystal-\(self)", withExtension: "png")
     }
 
-    /// The tier's name: a proper name, the same in every language.
-    public var displayName: String {
+    /// The tier's name in the app's language (or `context`'s): Platinum, Gold, Silver, Bronze.
+    public func displayName(context: AppLocale? = nil) -> String {
         switch self {
-        case .platinum: return L10n.text("Arcane")
-        case .gold: return L10n.text("Radiant")
-        case .silver: return L10n.text("Aether")
-        case .bronze: return L10n.text("Ember")
+        case .platinum: return L10n.text("Platinum", context: context)
+        case .gold: return L10n.text("Gold", context: context)
+        case .silver: return L10n.text("Silver", context: context)
+        case .bronze: return L10n.text("Bronze", context: context)
         }
     }
 }
