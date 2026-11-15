@@ -5,9 +5,13 @@ import NXLibraryCore
 /// About this game: "17/50" with the completion beside it, the last three unlocked icons on the right and a thin
 /// bar under them, in a light, nearly transparent panel with a thin outline, the surface of the panel's buttons
 /// without their dark fill (maintainer's choice, 15 Nov 2026). Focused, Selene's ring sits on the panel's edge.
-/// Shown only when the game has achievements and Steam's files read. A or a click opens the Achievements screen.
+/// Shown only when the game has achievements and Steam's files read. A or a click opens the Achievements screen;
+/// a chevron on the right edge and a slightly lighter panel under the pointer say so, where Details (not a button)
+/// has neither.
 struct DetailsAchievementsCard: View {
     @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var hovered = false
 
     let summary: AchievementSummary
     let appID: UInt32
@@ -41,6 +45,10 @@ struct DetailsAchievementsCard: View {
                             AchievementIcon(appID: appID, file: icon, size: 44, dimmed: summary.unlocked == 0)
                         }
                     }
+                    Image(systemName: "chevron.right")
+                        .seleneFont(15, .semibold)
+                        .foregroundColor(hovered ? SeleneTheme.ink75 : SeleneTheme.ink60)
+                        .accessibilityHidden(true)
                 }
                 AchievementProgressBar(fraction: summary.total > 0 ? Double(summary.unlocked) / Double(summary.total) : 0,
                                        height: 5, track: SeleneTheme.ink25)
@@ -50,9 +58,12 @@ struct DetailsAchievementsCard: View {
             .frame(width: canvas.u(Self.width), alignment: .leading)
             // Nearly transparent: the art's blur shows through, lightly tinted, under the buttons' thin outline.
             .background(.ultraThinMaterial, in: shape)
-            .background(shape.fill(SeleneTheme.ink.opacity(0.04)))
-            .overlay(shape.strokeBorder(SeleneTheme.ink15, lineWidth: max(1, canvas.u(1))))
+            .background(shape.fill(SeleneTheme.ink.opacity(hovered ? 0.08 : 0.04)))
+            .overlay(shape.strokeBorder(hovered ? SeleneTheme.ink25 : SeleneTheme.ink15, lineWidth: max(1, canvas.u(1))))
             .contentShape(shape)
+            .onHover { inside in
+                withAnimation(reduceMotion ? nil : SeleneTheme.quick) { hovered = inside }
+            }
             .seleneRowFocus(focused, radius: canvas.u(Self.radius))
             .onTapGesture(perform: onOpen)
             .accessibilityElement(children: .ignore)
