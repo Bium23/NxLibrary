@@ -70,14 +70,6 @@ final class AchievementSummaryTests: XCTestCase {
         XCTAssertEqual(some.recentIcons, ["E.jpg", "B.jpg", "D.jpg"])
     }
 
-    func testRareBelowTenPercent() {
-        let summary = AchievementSummary(achievements: [a("A"), a("B"), a("C")], percents: ["A": 9.9, "B": 10.0])
-        let rows = Dictionary(uniqueKeysWithValues: summary.rows(.all).map { ($0.id, $0) })
-        XCTAssertTrue(rows["A"]!.isRare)
-        XCTAssertFalse(rows["B"]!.isRare)
-        XCTAssertFalse(rows["C"]!.isRare, "unknown rarity is not rare")
-    }
-
     func testRarestUnlocked() {
         let summary = AchievementSummary(achievements: [a("A", at: 1), a("B", at: 2), a("C")], percents: ["A": 30, "B": 4, "C": 1])
         XCTAssertEqual(summary.rarestUnlocked?.id, "B")

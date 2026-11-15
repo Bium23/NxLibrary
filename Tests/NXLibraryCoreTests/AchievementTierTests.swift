@@ -1,0 +1,72 @@
+import XCTest
+@testable import NXLibraryCore
+
+final class AchievementTierTests: XCTestCase {
+    private func a(_ api: String, at: TimeInterval? = nil) -> SteamAchievement {
+        SteamAchievement(apiName: api, name: "N-\(api)", description: "D-\(api)", hidden: false,
+                         icon: nil, grayIcon: nil, unlockedAt: at.map { Date(timeIntervalSince1970: $0) })
+    }
+
+    func testThresholds() {
+        XCTAssertEqual(AchievementTier.forPercent(0), .gold)
+        XCTAssertEqual(AchievementTier.forPercent(9.99), .gold)
+        XCTAssertEqual(AchievementTier.forPercent(10), .silver)
+        XCTAssertEqual(AchievementTier.forPercent(29.99), .silver)
+        XCTAssertEqual(AchievementTier.forPercent(30), .bronze)
+        XCTAssertEqual(AchievementTier.forPercent(100), .bronze)
+        XCTAssertNil(AchievementTier.forPercent(nil))
+    }
+
+    func testBoardOrderIsRarestFirst() {
+        XCTAssertEqual(AchievementTier.allCases, [.platinum, .gold, .silver, .bronze])
+    }
+
+    func testRowTierFollowsPercent() {
+        let summary = AchievementSummary(achievements: [a("G"), a("X")], percents: ["G": 4])
+        let rows = Dictionary(uniqueKeysWithValues: summary.rows(.all).map { ($0.id, $0) })
+        XCTAssertEqual(rows["G"]?.tier, .gold)
+        XCTAssertNil(rows["X"]?.tier)
+    }
+
+    func testCountsPerTier() {
+        let summary = AchievementSummary(achievements: [a("U1", at: 1), a("L1"), a("U2", at: 2), a("L2")],
+                                         percents: ["U1": 5, "L1": 5, "U2": 20, "L2": 50])
+        XCTAssertEqual(summary.tierCounts[.gold], TierCount(unlocked: 1, total: 2))
+        XCTAssertEqual(summary.tierCounts[.silver], TierCount(unlocked: 1, total: 1))
+        XCTAssertEqual(summary.tierCounts[.bronze], TierCount(unlocked: 0, total: 1))
+        XCTAssertEqual(summary.tierCounts[.platinum], TierCount(unlocked: 0, total: 1))
+        XCTAssertTrue(summary.hasRarity)
+    }
+
+    func testPlatinumOnlyAtHundredPercent() {
+        let summary = AchievementSummary(achievements: [a("A", at: 1), a("B", at: 2)], percents: ["A": 50])
+        XCTAssertEqual(summary.tierCounts[.platinum], TierCount(unlocked: 1, total: 1))
+    }
+
+    func testNoAchievementsNoPlatinum() {
+        let summary = AchievementSummary(achievements: [], percents: [:])
+        for tier in AchievementTier.allCases {
+            XCTAssertEqual(summary.tierCounts[tier], TierCount(unlocked: 0, total: 0), "\(tier)")
+        }
+        XCTAssertNil(summary.lastUnlockedAt)
+    }
+
+    func testUnknownRarityHasNoTierAndNoCounts() {
+        let summary = AchievementSummary(achievements: [a("A", at: 1), a("B")], percents: [:])
+        XCTAssertTrue(summary.rows(.all).allSatisfy { $0.tier == nil })
+        for tier in [AchievementTier.gold, .silver, .bronze] {
+            XCTAssertEqual(summary.tierCounts[tier], TierCount(unlocked: 0, total: 0), "\(tier)")
+        }
+        XCTAssertEqual(summary.tierCounts[.platinum], TierCount(unlocked: 0, total: 1))
+        XCTAssertFalse(summary.hasRarity)
+    }
+
+    func testLastUnlockedIsNewest() {
+        let summary = AchievementSummary(achievements: [a("A", at: 10), a("B", at: 20), a("C")], percents: [:])
+        XCTAssertEqual(summary.lastUnlockedAt, Date(timeIntervalSince1970: 20))
+    }
+
+    func testDisplayNamesAreTheArcaneNames() {
+        XCTAssertEqual(AchievementTier.allCases.map(\.displayName), ["Arcane", "Radiant", "Aether", "Ember"])
+    }
+}

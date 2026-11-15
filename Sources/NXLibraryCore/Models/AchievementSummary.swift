@@ -18,9 +18,8 @@ public struct AchievementRow: Equatable, Identifiable, Sendable {
     public let percent: Double?
     public let isMasked: Bool
 
-    /// Fewer than one player in ten has it.
-    public var isRare: Bool { percent.map { $0 < Self.rareBelow } ?? false }
-    public static let rareBelow = 10.0
+    /// Its crystal from its rarity; nil while the rarity is unknown.
+    public var tier: AchievementTier? { AchievementTier.forPercent(percent) }
 }
 
 /// A game's achievements for the page's card and the Achievements screen, from `SteamAchievementReader` and
@@ -53,6 +52,25 @@ public struct AchievementSummary: Equatable, Sendable {
     public var recentIcons: [String] {
         Array((unlockedRows.isEmpty ? lockedRows : unlockedRows).compactMap(\.icon).prefix(3))
     }
+
+    /// Unlocked and total per tier. Arcane is one per game, lit when everything is unlocked (0/0 without
+    /// achievements); the others count the achievements whose rarity is known.
+    public var tierCounts: [AchievementTier: TierCount] {
+        var counts: [AchievementTier: TierCount] = [
+            .platinum: TierCount(unlocked: total > 0 && unlocked == total ? 1 : 0, total: total > 0 ? 1 : 0),
+        ]
+        for tier in [AchievementTier.gold, .silver, .bronze] {
+            counts[tier] = TierCount(unlocked: unlockedRows.filter { $0.tier == tier }.count,
+                                     total: (unlockedRows + lockedRows).filter { $0.tier == tier }.count)
+        }
+        return counts
+    }
+
+    /// Whether Steam's rarity has arrived for any achievement.
+    public var hasRarity: Bool { (unlockedRows + lockedRows).contains { $0.percent != nil } }
+
+    /// When the newest unlock happened.
+    public var lastUnlockedAt: Date? { unlockedRows.first?.unlockedAt }
 
     /// The unlocked achievement the fewest players have, when its rarity is known.
     public var rarestUnlocked: AchievementRow? {

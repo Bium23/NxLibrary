@@ -216,7 +216,7 @@ private struct AchievementsScreenRow: View {
                     }
                     if let percent = row.percent {
                         Text(L10n.format("%@ of players", [AchievementsScreen.percent(percent)]))
-                            .foregroundColor(row.isRare ? SeleneTheme.rare : SeleneTheme.ink60)
+                            .foregroundColor(row.tier == .gold ? SeleneTheme.rare : SeleneTheme.ink60)
                     }
                 }
                 .seleneFont(13, .semibold)
