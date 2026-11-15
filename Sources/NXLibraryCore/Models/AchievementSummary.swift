@@ -72,6 +72,12 @@ public struct AchievementSummary: Equatable, Sendable {
     /// When the newest unlock happened.
     public var lastUnlockedAt: Date? { unlockedRows.first?.unlockedAt }
 
+    /// The Achievements screen's Recently unlocked strip: the newest unlocked icons first, at most `limit`;
+    /// none before the first unlock.
+    public func recentUnlockedIcons(limit: Int) -> [String] {
+        Array(unlockedRows.compactMap(\.icon).prefix(limit))
+    }
+
     /// The unlocked achievement the fewest players have, when its rarity is known.
     public var rarestUnlocked: AchievementRow? {
         unlockedRows.filter { $0.percent != nil }.min { $0.percent! < $1.percent! }

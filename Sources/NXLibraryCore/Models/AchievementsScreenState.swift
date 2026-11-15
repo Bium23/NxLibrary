@@ -1,12 +1,12 @@
 import Foundation
 
-/// Selection on the Achievements screen: a filter and a tile in a two-column list, clamped to its edges.
+/// Selection on the Achievements screen: a filter and a row in a one-column list, clamped to its edges.
 /// It keeps the rows' ids so a list that changes under it (the rarity arriving, an unlock) keeps the same
 /// achievement in focus.
 public struct AchievementsScreenState: Equatable {
     public enum MoveDirection: Sendable { case up, down, left, right }
 
-    public static let columns = 2
+    public static let columns = 1
 
     public private(set) var filter: AchievementFilter = .all
     public var index = 0

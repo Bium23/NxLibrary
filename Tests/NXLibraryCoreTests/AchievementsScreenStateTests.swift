@@ -4,38 +4,25 @@ import XCTest
 final class AchievementsScreenStateTests: XCTestCase {
     private func ids(_ count: Int) -> [String] { (0..<count).map { "A\($0)" } }
 
-    func testMovesInTwoColumns() {
-        var state = AchievementsScreenState(ids: ids(5))
-        XCTAssertTrue(state.move(.right))
+    func testMovesInOneColumn() {
+        var state = AchievementsScreenState(ids: ids(3))
+        XCTAssertTrue(state.move(.down))
         XCTAssertEqual(state.index, 1)
         XCTAssertTrue(state.move(.down))
-        XCTAssertEqual(state.index, 3)
-        state.index = 2
-        XCTAssertTrue(state.move(.down))
-        XCTAssertEqual(state.index, 4)
-        state.index = 3
-        XCTAssertFalse(state.move(.down), "no row below the second column's last tile")
-        XCTAssertEqual(state.index, 3)
+        XCTAssertEqual(state.index, 2)
+        XCTAssertFalse(state.move(.down), "no row below the last")
         XCTAssertTrue(state.move(.up))
         XCTAssertEqual(state.index, 1)
+        state.index = 0
         XCTAssertFalse(state.move(.up))
     }
 
-    func testLeftAtFirstColumnStays() {
+    func testLeftRightNeverMove() {
         var state = AchievementsScreenState(ids: ids(4))
-        state.index = 2
+        state.index = 1
         XCTAssertFalse(state.move(.left))
-        XCTAssertEqual(state.index, 2)
-        state.index = 3
         XCTAssertFalse(state.move(.right))
-        XCTAssertEqual(state.index, 3)
-    }
-
-    func testRightOnAShortLastRowStays() {
-        var state = AchievementsScreenState(ids: ids(3))
-        state.index = 2
-        XCTAssertFalse(state.move(.right))
-        XCTAssertEqual(state.index, 2)
+        XCTAssertEqual(state.index, 1)
     }
 
     func testEmptyListDoesNotMove() {

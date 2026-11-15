@@ -70,6 +70,18 @@ final class AchievementSummaryTests: XCTestCase {
         XCTAssertEqual(some.recentIcons, ["E.jpg", "B.jpg", "D.jpg"])
     }
 
+    func testRecentUnlockedIconsNewestFirstCapped() {
+        let list = (0..<15).map { a("U\($0)", at: TimeInterval($0 + 1)) } + [a("L")]
+        let summary = AchievementSummary(achievements: list, percents: [:])
+        XCTAssertEqual(summary.recentUnlockedIcons(limit: 12).count, 12)
+        XCTAssertEqual(summary.recentUnlockedIcons(limit: 3), ["U14.jpg", "U13.jpg", "U12.jpg"])
+    }
+
+    func testRecentUnlockedIconsEmptyBeforeAnyUnlock() {
+        let summary = AchievementSummary(achievements: [a("A"), a("B")], percents: [:])
+        XCTAssertTrue(summary.recentUnlockedIcons(limit: 12).isEmpty, "locked gray icons are not 'recently unlocked'")
+    }
+
     func testRarestUnlocked() {
         let summary = AchievementSummary(achievements: [a("A", at: 1), a("B", at: 2), a("C")], percents: ["A": 30, "B": 4, "C": 1])
         XCTAssertEqual(summary.rarestUnlocked?.id, "B")
