@@ -16,8 +16,9 @@ struct DetailsAchievementsCard: View {
 
     private var active: Bool { hovered || focused }
     private var fanned: Bool { active && !reduceMotion }
-    /// Soft and a little lively, for the fan; without motion only the fade remains.
-    private var reveal: Animation { reduceMotion ? SeleneTheme.quick : .spring(response: 0.38, dampingFraction: 0.72) }
+    /// Slow and soft, and never past its target: a spring overshot, and quick Up/Down presses added up its
+    /// speed until the icons left the panel. Interrupted, a curve only blends towards the new end.
+    private var reveal: Animation { reduceMotion ? SeleneTheme.quick : .timingCurve(0.22, 1, 0.36, 1, duration: 0.45) }
 
     let summary: AchievementSummary
     let appID: UInt32
@@ -85,14 +86,14 @@ extension DetailsAchievementsCard {
     private var icons: some View {
         let count = summary.recentIcons.count
         let middle = Double(max(count - 1, 0)) / 2
-        return HStack(spacing: canvas.u(fanned ? 14 : 8)) {
+        return HStack(spacing: canvas.u(fanned ? 12 : 8)) {
             ForEach(Array(summary.recentIcons.enumerated()), id: \.offset) { index, icon in
                 let side = Double(index) - middle
                 AchievementIcon(appID: appID, file: icon, size: 44, dimmed: summary.unlocked == 0)
                     .opacity(active ? 1 : 0.88)
-                    .scaleEffect(fanned ? 1.06 : 1)
-                    .rotationEffect(.degrees(fanned ? side * 7 : 0), anchor: .bottom)
-                    .offset(y: fanned ? canvas.u(CGFloat(abs(side)) * 3) : 0)
+                    .scaleEffect(fanned ? 1.04 : 1)
+                    .rotationEffect(.degrees(fanned ? side * 5 : 0), anchor: .bottom)
+                    .offset(y: fanned ? canvas.u(CGFloat(abs(side)) * 2) : 0)
                     .zIndex(-abs(side))
             }
         }
