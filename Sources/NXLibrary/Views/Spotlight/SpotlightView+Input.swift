@@ -358,17 +358,19 @@ extension SpotlightView {
         }
     }
 
+    /// Play, or Build for a game not built yet (as on the Details page); the page has no build button any more.
     private func play(_ game: PortedGame) {
-        guard GameResourceState.unavailableReason(for: game) == nil else {
-            SoundEffectService.shared.play(.error)
-            return
-        }
-        if game.isPlayableLocally {
+        let step = GamePrimaryStep.decide(unavailable: GameResourceState.unavailableReason(for: game) != nil,
+                                          playable: game.isPlayableLocally,
+                                          sourcesAvailable: GameResourceState.sourcesAvailable(for: game))
+        switch step {
+        case .play:
             viewModel.launchGame(game)
-        } else {
-            // Not built yet: scroll down to Build & Sources.
-            let canBuild = GameResourceState.sourcesAvailable(for: game)
-            mutate { $0.focus = .actions; $0.actionIndex = canBuild ? 1 : 0 }
+        case .build:
+            viewModel.startBuild(for: game)
+            if viewModel.isBuilding { router.openAddGame() }
+        case .refuse:
+            SoundEffectService.shared.play(.error)
         }
     }
 

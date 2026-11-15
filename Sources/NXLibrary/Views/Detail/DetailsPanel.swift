@@ -28,16 +28,27 @@ extension DetailsLink {
         return links
     }
 
-    /// The app's folder by its Finder name ("Applications"); never the path.
+    /// The app's folder by its Finder name ("Applications"); never the path. Read once per folder.
+    @MainActor
     static func folderName(of app: URL) -> String? {
-        let name = FileManager.default.displayName(atPath: app.deletingLastPathComponent().path)
+        folderNames.name(for: app.deletingLastPathComponent())
+    }
+
+    /// The Steam library's volume by its localized name ("Macintosh HD"). Read once per library.
+    @MainActor
+    static func volumeName(of game: CatalogGame) -> String? {
+        guard let library = game.steamGame?.installations.first(where: { $0.availability == .available })?.libraryURL
+        else { return nil }
+        return volumeNames.name(for: library)
+    }
+
+    @MainActor private static let folderNames = DisplayNameCache { folder in
+        let name = FileManager.default.displayName(atPath: folder.path)
         return name.isEmpty ? nil : name
     }
 
-    /// The Steam library's volume by its localized name ("Macintosh HD").
-    static func volumeName(of game: CatalogGame) -> String? {
-        let library = game.steamGame?.installations.first { $0.availability == .available }?.libraryURL
-        return (try? library?.resourceValues(forKeys: [.volumeLocalizedNameKey]))?.volumeLocalizedName
+    @MainActor private static let volumeNames = DisplayNameCache { library in
+        (try? library.resourceValues(forKeys: [.volumeLocalizedNameKey]))?.volumeLocalizedName
     }
 }
 
