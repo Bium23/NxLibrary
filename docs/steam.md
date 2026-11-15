@@ -207,7 +207,9 @@ rarità pubblica (`GetGlobalAchievementPercentagesForApp`, senza chiave, in cach
 offline) e le icone dal CDN di Steam. `SteamAchievementsStore` legge alla selezione del gioco, all’apertura della
 schermata e a fine sessione; tiene in memoria gli ultimi 16 giochi.
 
-Card nella colonna a destra di About (`DetailsAchievementsCard`: «17/50», percentuale, barra, ultime icone); A apre
+In cima alla colonna a destra di About, aperto sull’immagine senza riquadro come Installation
+(`DetailsAchievementsCard`: «17/50» con la percentuale accanto, le ultime tre icone a destra, una barra sottile
+sotto; selezionato, l’anello Selene lo incornicia un po’ fuori dal testo); A apre
 `AchievementsScreen` (filtri con LB/RB, nascosti mascherati, raro sotto il 10%: regole in `AchievementSummary`), B
 torna alla card. La card prende il focus fra gli screenshot e il pannello della fonte, accanto a Read more
 (Sinistra/Destra). «Your activity» non c’è: ore e ultima partita sono già nella testata. Schema: nomi e descrizioni
@@ -247,7 +249,8 @@ Sotto `Application Support/NXLibrary` (Dev: `NXLibrary-Development`):
 - Download: bianco e nero pieno (non colori sbiaditi), simbolo che pulsa senza alone, cerchio sottile, pulsante
   «Downloading» come «Porting», nessuna nota sopra i pulsanti, gioco in testa alla riga fino all’uscita.
 - Nessuna etichetta «Steam» sulle tile.
-- Pagina: «Your activity» tolta, card Achievements in cima alla colonna destra.
+- Pagina: «Your activity» tolta, Achievements in cima alla colonna destra, aperto senza riquadro (opzione A di tre,
+  15 nov 2026).
 - Logo Steam inalterato al posto del valore sotto PLATFORM, con lo spazio libero ridotto sopra.
 - Ore: base di Steam più le sessioni successive.
 
