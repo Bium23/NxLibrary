@@ -7,21 +7,17 @@ import NXLibraryCore
 /// `AchievementsScreen.handle`. Present it as an overlay inside the canvas root so the canvas scaling applies.
 struct AchievementsScreen: View {
     @Environment(\.seleneCanvas) private var canvas
-    @Environment(\.seleneReduceMotion) private var reduceMotion
     @ObservedObject private var logos = SteamLogoCache.shared
     @ObservedObject private var picks = SteamPersonalizations.shared.artwork
-    /// Whether the list has rows above or below what shows: the edge fades and the chevrons follow it.
-    /// Changes only when a chevron appears or goes, not on every frame of a scroll.
-    @State private var more = ListMore()
-    /// Where the list's content sits, every frame: a reference, so writing it redraws nothing.
-    @State private var metrics = ListMetrics()
+    @ObservedObject var model: AchievementsScreenModel
 
     let game: CatalogGame
     let summary: AchievementSummary
-    let state: AchievementsScreenState
     /// The page's art, as on Spotlight behind it.
     let art: NSImage?
     let onFilter: (AchievementFilter) -> Void
+    /// LB (-1) or RB (+1), as the controller does.
+    let onShiftFilter: (Int) -> Void
     let onFocus: (Int) -> Void
     let onClose: () -> Void
 
@@ -35,23 +31,10 @@ struct AchievementsScreen: View {
     static let topFade: CGFloat = 40
     static let bottomFade: CGFloat = 100
     static let rowSpacing: CGFloat = 16
+    /// Room for the focus ring around the rows.
+    static let ring: CGFloat = 6
 
-    enum Outcome { case ignored, moved, filtered, close }
-
-    /// The arrows move through the list, LB/RB switch the filter, B closes; the host swallows the rest.
-    static func handle(_ action: GamepadAction, state: inout AchievementsScreenState, summary: AchievementSummary) -> Outcome {
-        switch action {
-        case .navigateLeft: return state.move(.left) ? .moved : .ignored
-        case .navigateRight: return state.move(.right) ? .moved : .ignored
-        case .navigateUp: return state.move(.up) ? .moved : .ignored
-        case .navigateDown: return state.move(.down) ? .moved : .ignored
-        case .tabPrevious, .tabNext:
-            state.shiftFilter(by: action == .tabPrevious ? -1 : 1) { summary.rows($0).map(\.id) }
-            return .filtered
-        case .cancel: return .close
-        default: return .ignored
-        }
-    }
+    private var state: AchievementsScreenState { model.state }
 
     var body: some View {
         let rows = summary.rows(state.filter)
@@ -62,15 +45,16 @@ struct AchievementsScreen: View {
                     .padding(.top, canvas.u(70))
                 pills
                     .padding(.top, canvas.u(30))
-                list(rows)
+                AchievementsList(scroll: model.scroll, model: model, rows: rows, focused: state.index,
+                                 appID: game.steamGame?.appID ?? 0, onFocus: onFocus)
                     .padding(.top, canvas.u(28))
             }
             .padding(.leading, canvas.u(Self.side))
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
                 SeleneHintsBar(left: [HintItem(.b, L10n.text("Back")) { onClose() }],
-                               right: [HintItem(.lb, L10n.text("Previous")) { onFilter(Self.filter(after: state.filter, by: -1)) },
-                                       HintItem(.rb, L10n.text("Next")) { onFilter(Self.filter(after: state.filter, by: 1)) }],
+                               right: [HintItem(.lb, L10n.text("Previous")) { onShiftFilter(-1) },
+                                       HintItem(.rb, L10n.text("Next")) { onShiftFilter(1) }],
                                bottom: 40, leftInset: 18)
             }
         }
@@ -176,118 +160,6 @@ struct AchievementsScreen: View {
         .animation(SeleneTheme.quick, value: state.filter)
     }
 
-    private func list(_ rows: [AchievementRow]) -> some View {
-        ScrollViewReader { proxy in
-            ScrollView(.vertical, showsIndicators: false) {
-                if rows.isEmpty {
-                    Text(L10n.text("No achievements here yet."))
-                        .seleneFont(17)
-                        .foregroundColor(SeleneTheme.ink60)
-                        .padding(.top, canvas.u(20))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    LazyVGrid(columns: Array(repeating: GridItem(.fixed(canvas.u(Self.columnWidth)), spacing: canvas.u(Self.gap),
-                                                                 alignment: .leading),
-                                             count: AchievementsScreenState.columns),
-                              alignment: .leading, spacing: canvas.u(Self.rowSpacing)) {
-                        ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
-                            AchievementsScreenRow(row: row, appID: game.steamGame?.appID ?? 0, focused: index == state.index)
-                                .id(row.id)
-                                .onTapGesture { onFocus(index) }
-                        }
-                    }
-                    // Room for the focus ring and, at the end, for the hints bar.
-                    .padding(.vertical, canvas.u(6))
-                    .padding(.horizontal, canvas.u(4))
-                    .padding(.bottom, canvas.u(Self.bottomRoom))
-                    .background(GeometryReader { content in
-                        Color.clear.preference(key: ListContentKey.self, value: content.frame(in: .named(Self.listSpace)))
-                    })
-                }
-            }
-            .coordinateSpace(name: Self.listSpace)
-            .background(GeometryReader { viewport in
-                Color.clear.preference(key: ListViewportKey.self, value: viewport.size.height)
-            })
-            .onPreferenceChange(ListContentKey.self) { frame in
-                metrics.content = frame
-                updateMore()
-            }
-            .onPreferenceChange(ListViewportKey.self) { height in
-                metrics.viewport = height
-                updateMore()
-            }
-            // The rows fade out under the hints bar, and at the top once the list has scrolled: no row sits
-            // under a button. The chevrons say there is more.
-            .mask(listMask)
-            .overlay(alignment: .top) {
-                SpotlightUpHint()
-                    .padding(.top, canvas.u(4))
-                    .opacity(more.above ? 1 : 0)
-            }
-            .overlay(alignment: .bottom) {
-                SpotlightUpHint()
-                    .rotationEffect(.degrees(180))
-                    .padding(.bottom, canvas.u(Self.bottomFade - 8))
-                    .opacity(more.below ? 1 : 0)
-            }
-            .frame(width: canvas.u(Self.columnWidth * 2 + Self.gap + 8))
-            .onChange(of: state.index) { _ in scroll(proxy, rows) }
-            .onChange(of: state.filter) { _ in
-                if let first = rows.first { proxy.scrollTo(first.id, anchor: .top) }
-            }
-        }
-    }
-
-    private static let listSpace = "achievementsList"
-
-    /// Opaque in the middle; the top fades only once rows have scrolled past it, the bottom always fades to
-    /// nothing where the hints bar sits.
-    private var listMask: some View {
-        VStack(spacing: 0) {
-            LinearGradient(colors: [.black.opacity(more.above ? 0 : 1), .black],
-                           startPoint: .top, endPoint: .bottom)
-                .frame(height: canvas.u(Self.topFade))
-            Color.black
-            // To a trace, not to nothing: the bottom stays lit, not a dark band.
-            LinearGradient(colors: [.black, .black.opacity(0.15)], startPoint: .top, endPoint: .bottom)
-                .frame(height: canvas.u(Self.bottomFade))
-        }
-    }
-
-    /// Sets `more` only when a chevron appears or goes, so a scroll does not redraw the screen every frame.
-    private func updateMore() {
-        let next = ListMore(above: metrics.content.minY < -1,
-                            below: metrics.viewport > 0
-                                && metrics.content.maxY - canvas.u(Self.bottomRoom) > metrics.viewport + 1)
-        guard next != more else { return }
-        withAnimation(.easeInOut(duration: 0.3)) { more = next }
-    }
-
-    /// Scrolls only when the focused row leaves the band between the fades, and then just enough
-    /// (`ListScrollBand`): inside the band the list stays still.
-    private func scroll(_ proxy: ScrollViewProxy, _ rows: [AchievementRow]) {
-        guard rows.indices.contains(state.index) else { return }
-        let id = rows[state.index].id
-        let line = CGFloat(state.index / AchievementsScreenState.columns)
-        let rowTop = metrics.content.minY + canvas.u(6) + line * canvas.u(Self.rowHeight + Self.rowSpacing)
-        guard let anchor = ListScrollBand.anchor(rowTop: rowTop, rowHeight: canvas.u(Self.rowHeight),
-                                                 viewport: metrics.viewport,
-                                                 safeTop: canvas.u(Self.topFade),
-                                                 safeBottom: metrics.viewport - canvas.u(Self.bottomRoom))
-        else { return }
-        let point = UnitPoint(x: 0.5, y: anchor)
-        if reduceMotion { proxy.scrollTo(id, anchor: point) }
-        else { withAnimation(.timingCurve(0.25, 0.1, 0.25, 1, duration: 0.32)) { proxy.scrollTo(id, anchor: point) } }
-    }
-
-    /// The filter LB (-1) or RB (+1) picks from `filter`, wrapping as the controller does.
-    static func filter(after filter: AchievementFilter, by step: Int) -> AchievementFilter {
-        let all = AchievementFilter.allCases
-        let index = all.firstIndex(of: filter) ?? 0
-        return all[(index + step + all.count) % all.count]
-    }
-
     static func title(_ filter: AchievementFilter) -> String {
         switch filter {
         case .all: return L10n.text("All")
@@ -373,24 +245,110 @@ private struct AchievementsScreenRow: View {
     }
 }
 
-/// Rows hidden above or below the list's edges (the bottom less the room kept for the hints bar).
-private struct ListMore: Equatable {
-    var above = false
-    var below = false
-}
+/// The two-column list, moved by its own offset (`ListScroll`) instead of a scroll view: the wheel and the
+/// arrows glide the same offset, and only the lines in view (and a window's worth either side, for a glide)
+/// are drawn. Observes the scroll alone, so a scroll frame redraws the list, not the screen.
+private struct AchievementsList: View {
+    @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.seleneReduceMotion) private var reduceMotion
+    @ObservedObject var scroll: ListScroll
+    /// Not observed: the list only reports its size to it.
+    let model: AchievementsScreenModel
+    let rows: [AchievementRow]
+    let focused: Int
+    let appID: UInt32
+    let onFocus: (Int) -> Void
 
-/// The list's content frame in its viewport and the viewport's height, written on every scroll frame.
-private final class ListMetrics {
-    var content: CGRect = .zero
-    var viewport: CGFloat = 0
-}
+    private typealias Screen = AchievementsScreen
 
-private struct ListContentKey: PreferenceKey {
-    static var defaultValue: CGRect = .zero
-    static func reduce(value: inout CGRect, nextValue: () -> CGRect) { value = nextValue() }
-}
+    private var layout: GridListLayout {
+        GridListLayout(columns: AchievementsScreenState.columns, rowHeight: canvas.u(Screen.rowHeight),
+                       spacing: canvas.u(Screen.rowSpacing), topPad: canvas.u(Screen.ring),
+                       bottomRoom: canvas.u(Screen.bottomRoom))
+    }
 
-private struct ListViewportKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
+    private var width: CGFloat { canvas.u(Screen.columnWidth * 2 + Screen.gap + Screen.ring * 2) }
+
+    var body: some View {
+        GeometryReader { proxy in
+            let height = proxy.size.height
+            Group {
+                if rows.isEmpty {
+                    Text(L10n.text("No achievements here yet."))
+                        .seleneFont(17)
+                        .foregroundColor(SeleneTheme.ink60)
+                        .padding(.top, canvas.u(20))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                } else {
+                    content(height: height)
+                }
+            }
+            .onAppear { report(height) }
+            .onChange(of: height) { report($0) }
+            .onChange(of: canvas.scale) { _ in report(height) }
+            .onChange(of: reduceMotion) { _ in report(height) }
+        }
+        .frame(width: width)
+    }
+
+    private func content(height: CGFloat) -> some View {
+        let layout = layout
+        let offset = scroll.state.offset
+        let lines = layout.visibleLines(count: rows.count, offset: offset, visible: height, buffer: height)
+        let indices = lines.map { ($0.lowerBound * layout.columns)..<min(($0.upperBound + 1) * layout.columns, rows.count) }
+            ?? 0..<0
+        let pitch = canvas.u(Screen.columnWidth + Screen.gap)
+        return ZStack(alignment: .topLeading) {
+            ForEach(indices, id: \.self) { index in
+                let top = layout.top(of: index)
+                // Only rows inside the window take a click: one scrolled under the pills still sits there.
+                let inView = top + layout.rowHeight > offset && top < offset + height
+                AchievementsScreenRow(row: rows[index], appID: appID, focused: index == focused)
+                    .id(rows[index].id)
+                    .offset(x: canvas.u(Screen.ring) + CGFloat(index % layout.columns) * pitch, y: top)
+                    .onTapGesture { onFocus(index) }
+                    .allowsHitTesting(inView)
+                    .transition(.identity)
+            }
+        }
+        .frame(width: width, height: height, alignment: .topLeading)
+        .offset(y: -offset)
+        .frame(width: width, height: height, alignment: .topLeading)
+        .clipped()
+        // The rows fade out under the hints bar, and at the top once the list has scrolled: no row sits under
+        // a button. The chevrons say there is more.
+        .mask(mask(atTop: scroll.state.atTop))
+        .overlay(alignment: .top) {
+            SpotlightUpHint()
+                .padding(.top, canvas.u(4))
+                .opacity(scroll.state.atTop ? 0 : 1)
+                .animation(.easeInOut(duration: 0.3), value: scroll.state.atTop)
+        }
+        .overlay(alignment: .bottom) {
+            SpotlightUpHint()
+                .rotationEffect(.degrees(180))
+                .padding(.bottom, canvas.u(Screen.bottomFade - 8))
+                .opacity(scroll.state.atBottom ? 0 : 1)
+                .animation(.easeInOut(duration: 0.3), value: scroll.state.atBottom)
+        }
+    }
+
+    /// Opaque in the middle; the top fades only once rows have scrolled past it, the bottom always fades to a
+    /// trace where the hints bar sits (the bottom stays lit, not a dark band).
+    private func mask(atTop: Bool) -> some View {
+        VStack(spacing: 0) {
+            LinearGradient(colors: [.black.opacity(atTop ? 1 : 0), .black], startPoint: .top, endPoint: .bottom)
+                .frame(height: canvas.u(Screen.topFade))
+                .animation(.easeInOut(duration: 0.3), value: atTop)
+            Color.black
+            LinearGradient(colors: [.black, .black.opacity(0.15)], startPoint: .top, endPoint: .bottom)
+                .frame(height: canvas.u(Screen.bottomFade))
+        }
+    }
+
+    /// The focused row keeps the top fade and a little more above it, and the bottom room below.
+    private func report(_ height: CGFloat) {
+        model.setLayout(layout, visible: height, above: canvas.u(Screen.topFade + 12),
+                        below: canvas.u(Screen.bottomRoom), animates: !reduceMotion)
+    }
 }

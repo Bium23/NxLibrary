@@ -721,12 +721,16 @@ Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua rig
 | [SteamAchievementsStore.swift](../Sources/NXLibrary/Services/SteamAchievementsStore.swift) | Legge gli achievement fuori dal thread principale (selezione, apertura della schermata e, per il gioco selezionato, fine di una sessione Steam: subito e dopo un minuto), uno per AppID alla volta; tiene gli ultimi 16 giochi e aggiunge la rarità quando arriva. |
 | [DetailsAchievementsCard.swift](../Sources/NXLibrary/Views/Detail/DetailsAchievementsCard.swift) | Card Achievements in cima alla colonna destra della pagina, sopra il pannello Details; prende il focus e apre la schermata. |
 | [AchievementIcon.swift](../Sources/NXLibrary/Views/Detail/AchievementIcon.swift) | Icona di un achievement dalla cache di `SteamMetadataService`, decodificata fuori dal thread principale, con un riquadro neutro finché manca. |
-| [AchievementsScreen.swift](../Sources/NXLibrary/Views/Spotlight/AchievementsScreen.swift) | Schermata Achievements sopra l’arte del gioco: logo, progresso, filtri e lista in due colonne; vista pura, l’input passa da `AchievementsScreen.handle`. |
+| [AchievementsScreen.swift](../Sources/NXLibrary/Views/Spotlight/AchievementsScreen.swift) | Schermata Achievements sopra l’arte del gioco: logo, progresso, filtri e lista in due colonne mossa da un offset proprio (niente ScrollView), disegnando solo le righe in vista. |
+| [AchievementsScreenModel.swift](../Sources/NXLibrary/ViewModels/AchievementsScreenModel.swift) | Schermata Achievements aperta: selezione, filtro, input e scorrimento della lista; un riferimento, così un passo non ridisegna la Spotlight sotto. Dopo la rotella la prima freccia porta il fuoco alla riga in vista più vicina. |
+| [ListScroll.swift](../Sources/NXLibrary/ViewModels/ListScroll.swift) | Offset di una lista (`TextScroll`) con la planata del pannello delle mod: rotella, trackpad e frecce muovono lo stesso valore. |
+| [GridListLayout.swift](../Sources/NXLibraryCore/Models/GridListLayout.swift) | Geometria di una lista a colonne di righe uguali: altezza, posizione di ogni riga, linee da disegnare, riga da mostrare e riga in vista più vicina. |
 | [SteamBinaryKeyValuesTests.swift](../Tests/NXLibraryCoreTests/SteamBinaryKeyValuesTests.swift) | Tipi, annidamento, fine dei dati, input troncati, tipi ignoti e limiti del parser binario. |
 | [SteamAchievementReaderTests.swift](../Tests/NXLibraryCoreTests/SteamAchievementReaderTests.swift) | Percorsi, account e file mancanti, lingue con ripiego, nascosti, icone vuote, ordine numerico e file corrotti. |
 | [SteamAchievementRarityTests.swift](../Tests/NXLibraryCoreTests/SteamAchievementRarityTests.swift) | Percentuali numeriche o testuali, host e percorso ammessi, cache di un giorno, cache vecchia offline, icone in cache e file che non sono immagini. |
 | [AchievementSummaryTests.swift](../Tests/NXLibraryCoreTests/AchievementSummaryTests.swift) | Conteggi, ordini dei filtri, rarità sconosciute in fondo, soglia del raro, maschera dei nascosti e icone recenti. |
 | [AchievementsScreenStateTests.swift](../Tests/NXLibraryCoreTests/AchievementsScreenStateTests.swift) | Movimento in due colonne, bordi, liste vuote, cambio filtro e liste che si accorciano. |
+| [GridListLayoutTests.swift](../Tests/NXLibraryCoreTests/GridListLayoutTests.swift) | Linee, altezza, posizione delle righe, spazio da mostrare, linee visibili e riga in vista più vicina dopo la rotella. |
 
 ## Download Steam (in attesa di validazione umana)
 

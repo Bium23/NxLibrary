@@ -148,7 +148,7 @@ extension SpotlightView {
     /// Opens on All, and reads Steam's files again for unlocks made since the page opened.
     func openAchievements() {
         guard let summary = selectedAchievements, achievementsScreen == nil else { return }
-        achievementsScreen = AchievementsScreenState(ids: summary.rows(.all).map(\.id))
+        achievementsScreen = AchievementsScreenModel(ids: summary.rows(.all).map(\.id))
         SoundEffectService.shared.play(.click)
         loadAchievements()
     }
@@ -162,21 +162,15 @@ extension SpotlightView {
     }
 
     private func handleAchievements(_ action: GamepadAction) {
-        guard var screen = achievementsScreen, let summary = selectedAchievements else {
+        guard let screen = achievementsScreen, let summary = selectedAchievements else {
             achievementsScreen = nil
             return
         }
-        switch AchievementsScreen.handle(action, state: &screen, summary: summary) {
-        case .moved:
-            achievementsScreen = screen
-            SoundEffectService.shared.play(.focus)
-        case .filtered:
-            achievementsScreen = screen
-            SoundEffectService.shared.play(.tabSwitch)
-        case .close:
-            closeAchievements()
-        case .ignored:
-            break
+        switch screen.handle(action, summary: summary) {
+        case .moved: SoundEffectService.shared.play(.focus)
+        case .filtered: SoundEffectService.shared.play(.tabSwitch)
+        case .close: closeAchievements()
+        case .ignored: break
         }
     }
 
@@ -430,8 +424,16 @@ extension SpotlightView {
                   NSApp.modalWindow == nil,
                   !(window.firstResponder is NSText) else { return event }
             if event.type == .scrollWheel {
-                // The Achievements screen's list scrolls itself; the page beneath stays.
-                if achievementsScreen != nil { return event }
+                // The Achievements screen's list takes the wheel on its own offset, like a mod panel's
+                // description: a notch glides, a trackpad follows the fingers; the page beneath stays.
+                if let screen = achievementsScreen {
+                    let dy = event.scrollingDeltaY
+                    if abs(dy) >= abs(event.scrollingDeltaX) {
+                        let precise = event.hasPreciseScrollingDeltas
+                        screen.scroll.scroll(by: -(precise ? dy : dy * canvas.u(48)), animated: !precise && !reduceMotion)
+                    }
+                    return nil
+                }
                 // An open mod panel takes the wheel: its description scrolls, the page beneath stays.
                 if let panel = [modsHost, storeHost.panel].first(where: \.isPanelOpen) {
                     let dy = event.scrollingDeltaY

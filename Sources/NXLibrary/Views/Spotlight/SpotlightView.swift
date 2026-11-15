@@ -40,7 +40,7 @@ public struct SpotlightView: View {
     /// The open screenshot viewer (the game's titleID, its urls and the paging state).
     @State var viewer: ViewerContext?
     /// The open Achievements screen's selection; the game is the selected Steam game.
-    @State var achievementsScreen: AchievementsScreenState?
+    @State var achievementsScreen: AchievementsScreenModel?
     /// The filter pill: shown while the filter is not All, and for 1.2 s after switching to All.
     @State var pillFilter: LibraryFilter = .all
     @State var pillVisible = false
@@ -212,9 +212,8 @@ public struct SpotlightView: View {
         }
         // A re-read while the screen is open: the selection stays inside the list.
         .onChange(of: selectedAchievements) { summary in
-            guard let summary, var screen = achievementsScreen else { return }
-            screen.setIDs(summary.rows(screen.filter).map(\.id))
-            if screen != achievementsScreen { achievementsScreen = screen }
+            guard let summary, let screen = achievementsScreen else { return }
+            screen.setIDs(summary.rows(screen.state.filter).map(\.id))
         }
         // Another game, or the row: the screen belongs to the game it opened on.
         .onChange(of: viewModel.spotlight.selectedKey) { _ in achievementsScreen = nil }
@@ -295,15 +294,19 @@ public struct SpotlightView: View {
     @ViewBuilder
     private func achievementsOverlay(_ model: Snapshot) -> some View {
         if let screen = achievementsScreen, let game = model.selectedCatalogGame, let summary = selectedAchievements {
-            AchievementsScreen(game: game, summary: summary, state: screen, art: shownArt(model),
+            AchievementsScreen(model: screen, game: game, summary: summary, art: shownArt(model),
                                onFilter: { filter in
-                                   guard filter != screen.filter else { return }
-                                   achievementsScreen?.setFilter(filter, ids: summary.rows(filter).map(\.id))
+                                   guard filter != screen.state.filter else { return }
+                                   screen.setFilter(filter, summary: summary)
+                                   SoundEffectService.shared.play(.tabSwitch)
+                               },
+                               onShiftFilter: { delta in
+                                   screen.shiftFilter(by: delta, summary: summary)
                                    SoundEffectService.shared.play(.tabSwitch)
                                },
                                onFocus: { index in
-                                   guard index != screen.index else { return }
-                                   achievementsScreen?.index = index
+                                   guard index != screen.state.index else { return }
+                                   screen.focus(index)
                                    SoundEffectService.shared.play(.focus)
                                },
                                onClose: closeAchievements)
