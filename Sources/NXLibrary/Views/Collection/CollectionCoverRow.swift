@@ -75,8 +75,7 @@ struct CollectionCoverRow: View {
                 .drawingGroup()
                 .shadow(color: .black.opacity(0.55), radius: canvas.u(9))
                 } else {
-                    CatalogNativeArtwork(game: game)
-                        .portingLook(PortingTileLook.make(catalog: game), cornerRadius: canvas.u(12))
+                    CatalogNativeArtwork(game: game, look: PortingTileLook.make(catalog: game))
                         .frame(width: w, height: h)
                         .clipShape(face)
                 }

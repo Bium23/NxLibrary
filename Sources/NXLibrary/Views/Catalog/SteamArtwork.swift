@@ -29,6 +29,10 @@ struct SteamArtwork: View {
             } else if slot == .cover || slot == .icon {
                 if let appIcon {
                     Image(nsImage: appIcon).resizable().scaledToFit().padding(canvas.u(16))
+                } else if installedApp == nil, slot == .icon {
+                    // No app yet (Steam still installing it): the store art is on its way; a generic controller
+                    // under the download mark only looked broken.
+                    Color.clear
                 } else { Image(systemName: "gamecontroller.fill").resizable().scaledToFit().padding(canvas.u(30)) }
             } else { Color.clear }
         }
@@ -42,8 +46,11 @@ struct SteamArtwork: View {
             let request = SteamArtworkRequest(game: game, role: role)
             let url: URL?
             if remote == nil, let local = request.localURL(picks: picks) { url = local }
-            // A square never falls back to store art: that would be a cropped portrait cover.
-            else if role == .square { url = nil }
+            // A square with an app never falls back to store art (that would be a cropped portrait cover); with no
+            // app yet it takes the store's wide key art (`SteamArtworkRequest.storeSlot`).
+            else if remote == nil, let store = request.storeSlot, store != slot {
+                url = await SteamMetadataService.shared.image(appID: id, slot: store)
+            } else if remote == nil, request.storeSlot == nil { url = nil }
             else { url = await SteamMetadataService.shared.image(appID: id, slot: slot, remote: remote) }
             guard !Task.isCancelled else { return }
             // Decoded off the main thread at the size its nxnative twin uses: a lazily decoded file cost the

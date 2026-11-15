@@ -159,6 +159,14 @@ struct PortingArtLook: ViewModifier {
 
     /// Steam is still installing the game: the glyph where the lock sits, the word under it in small type.
     private func downloading(side: CGFloat) -> some View {
+        ZStack {
+            // A soft shade, as under the porting steps, so the white reads on light art too.
+            Color.black.opacity(0.32)
+            downloadMark(side: side)
+        }
+    }
+
+    private func downloadMark(side: CGFloat) -> some View {
         VStack(spacing: side * 0.03) {
             MaterialIconView(.download, size: side * 0.22)
                 .foregroundColor(.white.opacity(0.88))
