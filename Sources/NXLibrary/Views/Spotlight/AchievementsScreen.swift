@@ -57,8 +57,9 @@ struct AchievementsScreen: View {
             .padding(.leading, canvas.u(Self.side))
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
-                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back"))],
-                               right: [HintItem(.lb, "‹"), HintItem(.rb, "›")],
+                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back")) { onClose() }],
+                               right: [HintItem(.lb, L10n.text("Previous")) { onFilter(Self.filter(after: state.filter, by: -1)) },
+                                       HintItem(.rb, L10n.text("Next")) { onFilter(Self.filter(after: state.filter, by: 1)) }],
                                bottom: 40, leftInset: 18)
             }
         }
@@ -107,45 +108,54 @@ struct AchievementsScreen: View {
             .shadow(color: .black.opacity(0.4), radius: canvas.u(6))
             .accessibilityLabel(game.name)
 
+            // The page's card, larger: the title, "17/50" with the completion beside it, the bar, the rarest.
             Text(L10n.text("Achievements"))
-                .seleneFont(34, .semibold)
-                .foregroundColor(SeleneTheme.ink)
+                .seleneFont(21, .semibold)
+                .foregroundColor(SeleneTheme.ink82)
                 .padding(.top, canvas.u(10))
                 .accessibilityAddTraits(.isHeader)
-            Text(subtitle)
-                .seleneFont(17)
-                .foregroundColor(SeleneTheme.ink82)
-                .lineLimit(1)
-            HStack(spacing: canvas.u(18)) {
-                AchievementProgressBar(fraction: summary.total > 0 ? Double(summary.unlocked) / Double(summary.total) : 0)
-                    .frame(width: canvas.u(620))
+            HStack(alignment: .firstTextBaseline, spacing: canvas.u(18)) {
+                (Text("\(summary.unlocked)").foregroundColor(SeleneTheme.ink)
+                 + Text("/\(summary.total)").foregroundColor(SeleneTheme.ink60))
+                    .seleneFont(48, .semibold)
+                    .monospacedDigit()
                 Text(L10n.format("%d%% complete", [summary.percentComplete]))
-                    .seleneFont(15, .semibold)
-                    .foregroundColor(SeleneTheme.ink82)
+                    .seleneFont(19, .semibold)
+                    .foregroundColor(SeleneTheme.ink75)
                     .monospacedDigit()
             }
+            .lineLimit(1)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(L10n.format("Achievements: %d of %d", [summary.unlocked, summary.total]))
+            AchievementProgressBar(fraction: summary.total > 0 ? Double(summary.unlocked) / Double(summary.total) : 0,
+                                   height: 6, track: SeleneTheme.ink25)
+                .frame(width: canvas.u(620))
+            if let rarest = summary.rarestUnlocked, let percent = rarest.percent {
+                Text(L10n.format("Rarest: %@ (%@)", [rarest.name, Self.percent(percent)]))
+                    .seleneFont(15)
+                    .foregroundColor(SeleneTheme.ink60)
+                    .lineLimit(1)
+            }
         }
-    }
-
-    private var subtitle: String {
-        let counts = L10n.format("%d of %d", [summary.unlocked, summary.total])
-        guard let rarest = summary.rarestUnlocked, let percent = rarest.percent else { return counts }
-        return counts + " · " + L10n.format("Rarest: %@ (%@)", [rarest.name, Self.percent(percent)])
     }
 
     private var pills: some View {
         HStack(spacing: canvas.u(12)) {
             ForEach(AchievementFilter.allCases, id: \.self) { filter in
                 let selected = filter == state.filter
+                let count = summary.rows(filter).count
                 Button { onFilter(filter) } label: {
-                    Text(Self.title(filter))
+                    (Text(Self.title(filter))
+                     + Text("  \(count)").foregroundColor(selected ? SeleneTheme.onFocus.opacity(0.7) : SeleneTheme.ink60))
                         .seleneFont(16, .semibold)
+                        .monospacedDigit()
                         .foregroundColor(selected ? SeleneTheme.onFocus : SeleneTheme.ink90)
                         .padding(.horizontal, canvas.u(20))
                         .padding(.vertical, canvas.u(8))
                         .background(Capsule().fill(selected ? SeleneTheme.focus : SeleneTheme.ink15))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("\(Self.title(filter)), \(count)")
                 .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }
@@ -192,6 +202,13 @@ struct AchievementsScreen: View {
         if reduceMotion { proxy.scrollTo(id) } else { withAnimation(SeleneTheme.standard) { proxy.scrollTo(id) } }
     }
 
+    /// The filter LB (-1) or RB (+1) picks from `filter`, wrapping as the controller does.
+    static func filter(after filter: AchievementFilter, by step: Int) -> AchievementFilter {
+        let all = AchievementFilter.allCases
+        let index = all.firstIndex(of: filter) ?? 0
+        return all[(index + step + all.count) % all.count]
+    }
+
     static func title(_ filter: AchievementFilter) -> String {
         switch filter {
         case .all: return L10n.text("All")
@@ -210,13 +227,16 @@ struct AchievementsScreen: View {
 /// One achievement: icon, name, description, unlock date (or Not unlocked) and how many players have it.
 private struct AchievementsScreenRow: View {
     @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.seleneReduceMotion) private var reduceMotion
+    @State private var hovered = false
 
     let row: AchievementRow
     let appID: UInt32
     let focused: Bool
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: canvas.u(16), style: .continuous)
+        let radius = canvas.u(SeleneTheme.contentRadius)
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         let unlocked = row.unlockedAt != nil
         HStack(spacing: canvas.u(18)) {
             AchievementIcon(appID: appID, file: row.icon, size: 64, dimmed: !unlocked)
@@ -228,11 +248,22 @@ private struct AchievementsScreenRow: View {
                 Text(row.description)
                     .seleneFont(14)
                     .foregroundColor(SeleneTheme.ink60)
-                    .lineLimit(1)
+                    .lineLimit(2)
                     .truncationMode(.tail)
+                    .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: canvas.u(14)) {
-                    Text(row.unlockedAt.map(Self.date) ?? L10n.text("Not unlocked"))
-                        .foregroundColor(SeleneTheme.ink60)
+                    if let date = row.unlockedAt {
+                        Label {
+                            Text(Self.date(date))
+                        } icon: {
+                            Image(systemName: "checkmark.circle.fill")
+                        }
+                        .labelStyle(.titleAndIcon)
+                        .foregroundColor(SeleneTheme.ink82)
+                    } else {
+                        Text(L10n.text("Not unlocked"))
+                            .foregroundColor(SeleneTheme.ink.opacity(0.45))
+                    }
                     if let percent = row.percent {
                         Text(L10n.format("%@ of players", [AchievementsScreen.percent(percent)]))
                             .foregroundColor(row.isRare ? SeleneTheme.rare : SeleneTheme.ink60)
@@ -245,9 +276,15 @@ private struct AchievementsScreenRow: View {
         }
         .padding(.horizontal, canvas.u(18))
         .frame(width: canvas.u(AchievementsScreen.columnWidth), height: canvas.u(AchievementsScreen.rowHeight), alignment: .leading)
-        .background(shape.fill(Color.white.opacity(focused ? 0.12 : 0.05)))
-        .seleneRowFocus(focused, radius: canvas.u(16))
+        // The page's card surface: lightly tinted, a thin outline, a little lighter focused or under the pointer.
+        .background(shape.fill(SeleneTheme.ink.opacity(focused ? 0.10 : hovered ? 0.08 : 0.05)))
+        .overlay(shape.strokeBorder(hovered || focused ? SeleneTheme.ink25 : SeleneTheme.ink15,
+                                    lineWidth: max(1, canvas.u(1))))
+        .seleneRowFocus(focused, radius: radius)
         .contentShape(shape)
+        .onHover { inside in
+            withAnimation(reduceMotion ? nil : SeleneTheme.quick) { hovered = inside }
+        }
         .animation(SeleneTheme.quick, value: focused)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(focused ? .isSelected : [])
