@@ -28618,6 +28618,47 @@
         }
       }
     },
+    "Hidden achievement": {
+      "comment": "AchievementSummary.swift: a hidden achievement still locked",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden achievement"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obiettivo nascosto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Succès caché"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verborgener Erfolg"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logro oculto"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conquista oculta"
+          }
+        }
+      }
+    },
     "Hidden from the library": {
       "comment": "Steam source management and native Mac library presentation.",
       "localizations": {
@@ -32058,6 +32099,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Manter"
+          }
+        }
+      }
+    },
+    "Keep playing to reveal it.": {
+      "comment": "AchievementSummary.swift: a hidden achievement's description",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep playing to reveal it."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continua a giocare per scoprirlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuez à jouer pour le découvrir."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spiel weiter, um ihn freizulegen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sigue jugando para descubrirlo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue jogando para revelá-la."
           }
         }
       }

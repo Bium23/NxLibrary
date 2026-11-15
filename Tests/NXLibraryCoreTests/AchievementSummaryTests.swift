@@ -1,0 +1,78 @@
+import XCTest
+@testable import NXLibraryCore
+
+final class AchievementSummaryTests: XCTestCase {
+    private func a(_ api: String, at: TimeInterval? = nil, hidden: Bool = false) -> SteamAchievement {
+        SteamAchievement(apiName: api, name: "N-\(api)", description: "D-\(api)", hidden: hidden,
+                         icon: "\(api).jpg", grayIcon: "\(api)-g.jpg", unlockedAt: at.map { Date(timeIntervalSince1970: $0) })
+    }
+
+    func testCountsAndPercentage() {
+        let list = (0..<50).map { a("A\($0)", at: $0 < 17 ? TimeInterval($0 + 1) : nil) }
+        let summary = AchievementSummary(achievements: list, percents: [:])
+        XCTAssertEqual(summary.total, 50)
+        XCTAssertEqual(summary.unlocked, 17)
+        XCTAssertEqual(summary.percentComplete, 34)
+    }
+
+    func testEmptyIsZeroPercent() {
+        XCTAssertEqual(AchievementSummary(achievements: [], percents: [:]).percentComplete, 0)
+    }
+
+    func testAllOrdersUnlockedNewestThenLockedMostCommon() {
+        let summary = AchievementSummary(achievements: [a("L1"), a("U1", at: 10), a("L2"), a("U2", at: 20)],
+                                         percents: ["L1": 5, "L2": 50, "U1": 1, "U2": 2])
+        XCTAssertEqual(summary.rows(.all).map(\.id), ["U2", "U1", "L2", "L1"])
+    }
+
+    func testUnknownRarityGoesLast() {
+        let summary = AchievementSummary(achievements: [a("X"), a("Y"), a("Z")], percents: ["Z": 3])
+        XCTAssertEqual(summary.rows(.locked).map(\.id), ["Z", "X", "Y"])
+        XCTAssertEqual(summary.rows(.rarest).map(\.id), ["Z", "X", "Y"])
+    }
+
+    func testFiltersSplitUnlockedAndLocked() {
+        let summary = AchievementSummary(achievements: [a("L"), a("U", at: 1)], percents: [:])
+        XCTAssertEqual(summary.rows(.unlocked).map(\.id), ["U"])
+        XCTAssertEqual(summary.rows(.locked).map(\.id), ["L"])
+    }
+
+    func testRarestIsAscendingRarity() {
+        let summary = AchievementSummary(achievements: [a("A", at: 1), a("B"), a("C")], percents: ["A": 40, "B": 2, "C": 90])
+        XCTAssertEqual(summary.rows(.rarest).map(\.id), ["B", "A", "C"])
+    }
+
+    func testHiddenLockedIsMaskedAndUnlockedHiddenIsNot() {
+        let summary = AchievementSummary(achievements: [a("H", hidden: true), a("V", at: 1, hidden: true)], percents: [:])
+        let locked = summary.rows(.locked)[0]
+        XCTAssertTrue(locked.isMasked)
+        XCTAssertEqual(locked.name, L10n.text("Hidden achievement"))
+        XCTAssertEqual(locked.description, L10n.text("Keep playing to reveal it."))
+        XCTAssertEqual(locked.icon, "H-g.jpg")
+        let unlocked = summary.rows(.unlocked)[0]
+        XCTAssertFalse(unlocked.isMasked)
+        XCTAssertEqual(unlocked.name, "N-V")
+        XCTAssertEqual(unlocked.icon, "V.jpg")
+    }
+
+    func testRecentIconsFallBackToLockedGray() {
+        let none = AchievementSummary(achievements: [a("A"), a("B"), a("C"), a("D")], percents: [:])
+        XCTAssertEqual(none.recentIcons, ["A-g.jpg", "B-g.jpg", "C-g.jpg"])
+        let some = AchievementSummary(achievements: [a("A", at: 1), a("B", at: 3), a("C"), a("D", at: 2), a("E", at: 4)], percents: [:])
+        XCTAssertEqual(some.recentIcons, ["E.jpg", "B.jpg", "D.jpg"])
+    }
+
+    func testRareBelowTenPercent() {
+        let summary = AchievementSummary(achievements: [a("A"), a("B"), a("C")], percents: ["A": 9.9, "B": 10.0])
+        let rows = Dictionary(uniqueKeysWithValues: summary.rows(.all).map { ($0.id, $0) })
+        XCTAssertTrue(rows["A"]!.isRare)
+        XCTAssertFalse(rows["B"]!.isRare)
+        XCTAssertFalse(rows["C"]!.isRare, "unknown rarity is not rare")
+    }
+
+    func testRarestUnlocked() {
+        let summary = AchievementSummary(achievements: [a("A", at: 1), a("B", at: 2), a("C")], percents: ["A": 30, "B": 4, "C": 1])
+        XCTAssertEqual(summary.rarestUnlocked?.id, "B")
+        XCTAssertNil(AchievementSummary(achievements: [a("A", at: 1)], percents: [:]).rarestUnlocked)
+    }
+}
