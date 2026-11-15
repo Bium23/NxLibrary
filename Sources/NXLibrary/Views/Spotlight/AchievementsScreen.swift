@@ -41,8 +41,14 @@ struct AchievementsScreen: View {
         ZStack(alignment: .topLeading) {
             backdrop
             VStack(alignment: .leading, spacing: 0) {
-                header
-                    .padding(.top, canvas.u(70))
+                // The progress on the left; the tier crystals on the right, level with the list's right edge.
+                HStack(alignment: .top, spacing: 0) {
+                    header
+                    Spacer(minLength: canvas.u(40))
+                    tierBoard
+                }
+                .frame(width: canvas.u(Self.columnWidth * 2 + Self.gap + Self.ring))
+                .padding(.top, canvas.u(70))
                 pills
                     .padding(.top, canvas.u(30))
                 AchievementsList(scroll: model.scroll, model: model, rows: rows, focused: state.index,
@@ -137,6 +143,37 @@ struct AchievementsScreen: View {
         }
     }
 
+    /// Arcane, Radiant, Aether, Ember with unlocked/total under each, as PS5 trophies; a tier not earned yet is
+    /// dimmed. Only Arcane until Steam's rarity arrives: the others come from it.
+    private var tierBoard: some View {
+        let counts = summary.tierCounts
+        let tiers = summary.hasRarity ? AchievementTier.allCases : [.platinum]
+        return VStack(alignment: .trailing, spacing: canvas.u(12)) {
+            HStack(alignment: .top, spacing: canvas.u(22)) {
+                ForEach(tiers, id: \.self) { tier in
+                    let count = counts[tier] ?? TierCount(unlocked: 0, total: 0)
+                    VStack(spacing: canvas.u(4)) {
+                        TierCrystal(tier: tier, size: 60, dimmed: count.unlocked == 0)
+                        (Text("\(count.unlocked)").foregroundColor(SeleneTheme.ink)
+                         + Text(" / \(count.total)").foregroundColor(SeleneTheme.ink60))
+                            .seleneFont(15, .semibold)
+                            .monospacedDigit()
+                            .lineLimit(1)
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(L10n.format("%1$@, %2$d of %3$d", [tier.displayName, count.unlocked, count.total]))
+                }
+            }
+            if let last = summary.lastUnlockedAt {
+                Text(L10n.format("Last unlocked %@", [AchievementsScreenRow.date(last)]))
+                    .seleneFont(14)
+                    .foregroundColor(SeleneTheme.ink60)
+                    .lineLimit(1)
+            }
+        }
+        .fixedSize()
+    }
+
     private var pills: some View {
         HStack(spacing: canvas.u(12)) {
             ForEach(AchievementFilter.allCases, id: \.self) { filter in
@@ -175,7 +212,8 @@ struct AchievementsScreen: View {
     }
 }
 
-/// One achievement: icon, name, description, unlock date (or Not unlocked) and how many players have it.
+/// One achievement: icon, name and description; on the right its tier crystal with how many players have it,
+/// and the unlock date (or Not unlocked).
 private struct AchievementsScreenRow: View {
     @Environment(\.seleneCanvas) private var canvas
     @State private var hovered = false
@@ -201,28 +239,36 @@ private struct AchievementsScreenRow: View {
                     .lineLimit(2)
                     .truncationMode(.tail)
                     .fixedSize(horizontal: false, vertical: true)
-                HStack(spacing: canvas.u(14)) {
-                    if let date = row.unlockedAt {
-                        Label {
-                            Text(Self.date(date))
-                        } icon: {
-                            Image(systemName: "checkmark.circle.fill")
-                        }
-                        .labelStyle(.titleAndIcon)
-                        .foregroundColor(SeleneTheme.ink82)
-                    } else {
-                        Text(L10n.text("Not unlocked"))
-                            .foregroundColor(SeleneTheme.ink.opacity(0.45))
-                    }
-                    if let percent = row.percent {
-                        Text(L10n.format("%@ of players", [AchievementsScreen.percent(percent)]))
-                            .foregroundColor(row.tier == .gold ? SeleneTheme.rare : SeleneTheme.ink60)
+            }
+            Spacer(minLength: canvas.u(16))
+            // The tier with its crystal and how many players have it, the date under it.
+            VStack(alignment: .trailing, spacing: canvas.u(6)) {
+                if let tier = row.tier, let percent = row.percent {
+                    HStack(spacing: canvas.u(6)) {
+                        TierCrystal(tier: tier, size: 24, dimmed: !unlocked)
+                        Text(tier.displayName)
+                            .foregroundColor(unlocked ? SeleneTheme.ink : SeleneTheme.ink75)
+                        Text("· \(AchievementsScreen.percent(percent))")
+                            .foregroundColor(SeleneTheme.ink60)
+                            .monospacedDigit()
                     }
                 }
-                .seleneFont(13, .semibold)
-                .lineLimit(1)
+                if let date = row.unlockedAt {
+                    Label {
+                        Text(Self.date(date))
+                    } icon: {
+                        Image(systemName: "checkmark.circle.fill")
+                    }
+                    .labelStyle(.titleAndIcon)
+                    .foregroundColor(SeleneTheme.ink82)
+                } else {
+                    Text(L10n.text("Not unlocked"))
+                        .foregroundColor(SeleneTheme.ink.opacity(0.45))
+                }
             }
-            Spacer(minLength: 0)
+            .seleneFont(13, .semibold)
+            .lineLimit(1)
+            .fixedSize()
         }
         .padding(.horizontal, canvas.u(18))
         .frame(width: canvas.u(AchievementsScreen.columnWidth), height: canvas.u(AchievementsScreen.rowHeight), alignment: .leading)

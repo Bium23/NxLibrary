@@ -28,8 +28,6 @@ public enum SeleneTheme {
     public static var success: Color { Color(hex: palette.success) }
     public static let danger = Color(hex: 0xFF6B6B)
     public static let untested = Color(hex: 0xE8B65C)
-    /// A rare achievement (fewer than one player in ten has it).
-    public static let rare = Color(hex: 0xF3C96B)
     public static var focusGlow: Color { focus.opacity(0.35) }
     public static var focusGlowStrong: Color { focus.opacity(0.55) }
 

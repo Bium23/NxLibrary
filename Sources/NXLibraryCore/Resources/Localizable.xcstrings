@@ -739,6 +739,47 @@
         }
       }
     },
+    "%1$@, %2$d of %3$d": {
+      "comment": "VoiceOver: a tier crystal's count, e.g. \"Radiant, 4 of 6\".",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$d of %3$d"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$d su %3$d"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$d sur %3$d"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$d von %3$d"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$d de %3$d"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$d de %3$d"
+          }
+        }
+      }
+    },
     "%@ (recommended)": {
       "comment": "ModDetailPanel.swift:297",
       "localizations": {
@@ -2457,47 +2498,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ de %@ prontos"
-          }
-        }
-      }
-    },
-    "%@ of players": {
-      "comment": "Share of Steam players who have an achievement, e.g. 4.5% of players.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ of players"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ dei giocatori"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ des joueurs"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ der Spieler"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ de los jugadores"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ dos jogadores"
           }
         }
       }
@@ -6756,6 +6756,47 @@
         }
       }
     },
+    "Aether": {
+      "comment": "Achievement tier name (a crystal), a proper name: the same text in every language.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aether"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aether"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aether"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aether"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aether"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aether"
+          }
+        }
+      }
+    },
     "After storage cleanup": {
       "comment": "AppShellView.swift:515",
       "localizations": {
@@ -8064,6 +8105,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Apps, caches de compilação e logs de cada jogo, incluindo jogos ocultos."
+          }
+        }
+      }
+    },
+    "Arcane": {
+      "comment": "Achievement tier name (a crystal), a proper name: the same text in every language.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcane"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcane"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcane"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcane"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcane"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcane"
           }
         }
       }
@@ -21895,6 +21977,47 @@
         }
       }
     },
+    "Ember": {
+      "comment": "Achievement tier name (a crystal), a proper name: the same text in every language.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ember"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ember"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ember"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ember"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ember"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ember"
+          }
+        }
+      }
+    },
     "Empty for Automatic": {
       "comment": "ChangeMetadataView.swift",
       "localizations": {
@@ -32878,6 +33001,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "A última compilação falhou"
+          }
+        }
+      }
+    },
+    "Last unlocked %@": {
+      "comment": "Achievements screen, under the tier crystals: date of the newest unlock.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last unlocked %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ultimo sblocco: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dernier déblocage : %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zuletzt freigeschaltet: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Último desbloqueo: %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Último desbloqueio: %@"
           }
         }
       }
@@ -46407,6 +46571,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "LANÇAMENTO"
+          }
+        }
+      }
+    },
+    "Radiant": {
+      "comment": "Achievement tier name (a crystal), a proper name: the same text in every language.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radiant"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radiant"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radiant"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radiant"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radiant"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radiant"
           }
         }
       }
