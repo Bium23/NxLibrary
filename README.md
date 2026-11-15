@@ -335,6 +335,7 @@ More to come as NX Library evolves.
 | [Security](SECURITY.md) | Private vulnerability reporting and handling sensitive files. |
 | [Technical guide](docs/architecture.md) | Current architecture and feature flows, in Italian. |
 | [File catalog](docs/file-map.md) | Responsibility of every project file, in Italian. |
+| [Steam](docs/steam.md) | Steam integration: files read, game states, launch, playtime, achievements, limits; in Italian. |
 | [Engine upgrade notes](docs/upstream-upgrades/README.md) | Pin changes and their evidence. |
 
 ## Credits and licences

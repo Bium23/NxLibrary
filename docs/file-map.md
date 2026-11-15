@@ -636,6 +636,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | File | Responsabilità |
 |---|---|
 | [docs/architecture.md](../docs/architecture.md) | Spiega architettura corrente, confini dei componenti, flussi, dati su disco e verifiche. |
+| [docs/steam.md](../docs/steam.md) | Riferimento unico dell’integrazione Steam: file letti, stati, osservazione, libreria, Play, ore, achievement, scelte e limiti. |
 | [docs/development.md](../docs/development.md) | Documenta prerequisiti, runtime, build, debug, verifiche, CI e preparazione delle release. |
 | [docs/file-map.md](../docs/file-map.md) | Catalogo corrente delle responsabilità di tutti i file versionati, suddiviso per area. |
 | [docs/upstream-upgrades/2026-10-27-06b7b3e-4f24ce6.md](../docs/upstream-upgrades/2026-10-27-06b7b3e-4f24ce6.md) | Registro della revisione del delta, scelte di adozione e verifiche per questo upgrade del motore. |
