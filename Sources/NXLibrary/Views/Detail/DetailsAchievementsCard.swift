@@ -3,8 +3,9 @@ import NXLibraryCore
 
 /// A Steam game's achievements at the top of the page's right column, above the source's panel and beside
 /// About this game: "17/50" with the completion beside it, the last three unlocked icons on the right and a thin
-/// bar under them. Open on the art like About and Installation, with no box of its own (maintainer's choice,
-/// 15 Nov 2026); focused, Selene's ring frames it a little outside its text, as it frames a screenshot. Shown
+/// bar under them. No box of its own: a soft shade fading out at its edges keeps it legible on the art
+/// (maintainer's choice, 15 Nov 2026); focused, Selene's ring frames it a little outside its text, as it frames a
+/// screenshot. Shown
 /// only when the game has achievements and Steam's files read. A or a click opens the Achievements screen.
 struct DetailsAchievementsCard: View {
     @Environment(\.seleneCanvas) private var canvas
@@ -55,6 +56,13 @@ struct DetailsAchievementsCard: View {
             .frame(width: canvas.u(Self.width), alignment: .leading)
             .padding(.horizontal, canvas.u(Self.ringMargin))
             .padding(.vertical, canvas.u(Self.ringMarginVertical))
+            // A soft shade that fades out at its edges, in the hero scrim's language: no box, but the block
+            // reads on light art (maintainer's choice, 15 Nov 2026).
+            .background(
+                shape.fill(SeleneTheme.scrim.opacity(0.4))
+                    .blur(radius: canvas.u(18))
+                    .allowsHitTesting(false)
+            )
             .contentShape(shape)
             .seleneRowFocus(focused, radius: canvas.u(Self.radius))
             .padding(.horizontal, -canvas.u(Self.ringMargin))

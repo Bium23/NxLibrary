@@ -207,7 +207,8 @@ rarità pubblica (`GetGlobalAchievementPercentagesForApp`, senza chiave, in cach
 offline) e le icone dal CDN di Steam. `SteamAchievementsStore` legge alla selezione del gioco, all’apertura della
 schermata e a fine sessione; tiene in memoria gli ultimi 16 giochi.
 
-In cima alla colonna a destra di About, aperto sull’immagine senza riquadro come Installation
+In cima alla colonna a destra di About, senza riquadro: un’ombra scura morbida che sfuma ai bordi lo rende leggibile
+sull’immagine
 (`DetailsAchievementsCard`: «17/50» con la percentuale accanto, le ultime tre icone a destra, una barra sottile
 sotto; selezionato, l’anello Selene lo incornicia un po’ fuori dal testo); A apre
 `AchievementsScreen` (filtri con LB/RB, nascosti mascherati, raro sotto il 10%: regole in `AchievementSummary`), B
@@ -249,8 +250,8 @@ Sotto `Application Support/NXLibrary` (Dev: `NXLibrary-Development`):
 - Download: bianco e nero pieno (non colori sbiaditi), simbolo che pulsa senza alone, cerchio sottile, pulsante
   «Downloading» come «Porting», nessuna nota sopra i pulsanti, gioco in testa alla riga fino all’uscita.
 - Nessuna etichetta «Steam» sulle tile.
-- Pagina: «Your activity» tolta, Achievements in cima alla colonna destra, aperto senza riquadro (opzione A di tre,
-  15 nov 2026).
+- Pagina: «Your activity» tolta, Achievements in cima alla colonna destra, senza riquadro ma su un’ombra che sfuma
+  (opzione A di tre, poi l’ombra, 15 nov 2026).
 - Logo Steam inalterato al posto del valore sotto PLATFORM, con lo spazio libero ridotto sopra.
 - Ore: base di Steam più le sessioni successive.
 
