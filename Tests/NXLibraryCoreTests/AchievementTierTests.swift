@@ -1,4 +1,5 @@
 import XCTest
+import ImageIO
 @testable import NXLibraryCore
 
 final class AchievementTierTests: XCTestCase {
@@ -68,5 +69,15 @@ final class AchievementTierTests: XCTestCase {
 
     func testDisplayNamesAreTheArcaneNames() {
         XCTAssertEqual(AchievementTier.allCases.map(\.displayName), ["Arcane", "Radiant", "Aether", "Ember"])
+    }
+
+    func testEveryTierHasArt() throws {
+        for tier in AchievementTier.allCases {
+            let url = try XCTUnwrap(tier.imageURL, "\(tier)")
+            let source = try XCTUnwrap(CGImageSourceCreateWithURL(url as CFURL, nil), "\(tier)")
+            let props = try XCTUnwrap(CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any])
+            XCTAssertGreaterThanOrEqual(props[kCGImagePropertyPixelWidth] as? Int ?? 0, 256, "\(tier)")
+            XCTAssertGreaterThanOrEqual(props[kCGImagePropertyPixelHeight] as? Int ?? 0, 256, "\(tier)")
+        }
     }
 }

@@ -19,6 +19,12 @@ public enum AchievementTier: CaseIterable, Sendable {
         return .bronze
     }
 
+    /// The tier's crystal: a prerendered 256 px PNG (`.superpowers/arcane`, recipe v2, tight crop) in Core's
+    /// resources, found as the translations are (the installed app's bundle first); nil only if it is missing.
+    public var imageURL: URL? {
+        L10n.resources()?.url(forResource: "crystal-\(self)", withExtension: "png")
+    }
+
     /// The tier's name: a proper name, the same in every language.
     public var displayName: String {
         switch self {
