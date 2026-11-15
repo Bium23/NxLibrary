@@ -29,7 +29,10 @@ struct SelenePillButton: View {
                     MaterialIconView(icon, size: iconSize)
                 }
                 if let title {
+                    // A pill's title stays on one line: the pill grows instead.
                     Text(L10n.text(title, context: localization)).seleneFont(21)
+                        .lineLimit(1)
+                        .fixedSize()
                 }
                 if waveDots {
                     WaveDots()

@@ -167,9 +167,12 @@ struct PortingArtLook: ViewModifier {
         }
     }
 
-    /// How far above the tile's centre the download mark sits, as a fraction of the side: the mark and its word
-    /// are centred together.
-    static let downloadMarkLift: CGFloat = 0.05
+    /// The download mark and its word, as fractions of the side, centred together on the tile: the circle (its
+    /// symbol's point size; the drawn ring is about as wide) sits this far above the centre, the word's middle this
+    /// far below, a small gap between them.
+    static let downloadMarkSize: CGFloat = 0.18
+    static let downloadMarkLift: CGFloat = 0.055
+    static let downloadWordDrop: CGFloat = 0.1
 
     private func downloadMark(side: CGFloat) -> some View {
         Text(L10n.text("Downloading"))
@@ -178,7 +181,7 @@ struct PortingArtLook: ViewModifier {
             .lineLimit(1)
             .frame(width: side * 0.84)
             .shadow(color: .black.opacity(0.55), radius: side * 0.04)
-            .offset(y: side * (0.11 + 0.035 + 0.03 - Self.downloadMarkLift))
+            .offset(y: side * Self.downloadWordDrop)
     }
 
     /// Soft pastels, never vivid; the blue kept faint: pink, peach, butter, mint, mist, lavender.
@@ -228,7 +231,7 @@ struct PortingDownloadMark: View {
     var body: some View {
         if look == .downloading {
             let side = min(width, height)
-            DownloadMarkLayers(size: side * 0.17, still: reduceMotion)
+            DownloadMarkLayers(size: side * PortingArtLook.downloadMarkSize, still: reduceMotion)
                 .frame(width: side * 0.3, height: side * 0.3)
                 .offset(y: -side * PortingArtLook.downloadMarkLift)
                 .frame(width: width, height: height)

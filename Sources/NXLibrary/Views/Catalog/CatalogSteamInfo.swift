@@ -96,7 +96,8 @@ struct CatalogSteamInfo: View {
         return true
     }
 
-    /// Steam is still installing the game: "Downloading on Steam" in place of Play, which opens Steam's Downloads.
+    /// Steam is still installing the game: "Downloading" with the dots, as a Switch game's "Porting", in place of
+    /// Play; it opens Steam's Downloads.
     private var downloading: Bool { player.isDownloading(game) }
 
     /// The pill says the download is under way, with the porting pill's dots, only while it can open Steam.
@@ -111,7 +112,7 @@ struct CatalogSteamInfo: View {
         case .starting: return L10n.text("Cancel")
         case .failed: return L10n.text("Try again")
         case .idle:
-            if downloading { return L10n.text("Downloading on Steam") }
+            if downloading { return L10n.text("Downloading") }
             return player.canPlay(game) ? L10n.text("Play") : L10n.text("Unavailable")
         }
     }
