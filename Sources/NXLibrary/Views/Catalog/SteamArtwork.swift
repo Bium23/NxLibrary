@@ -46,11 +46,12 @@ struct SteamArtwork: View {
             let request = SteamArtworkRequest(game: game, role: role)
             let url: URL?
             if remote == nil, let local = request.localURL(picks: picks) { url = local }
-            // A square with an app never falls back to store art (that would be a cropped portrait cover); with no
-            // app yet it takes the store's wide key art (`SteamArtworkRequest.storeSlot`).
-            else if remote == nil, let store = request.storeSlot, store != slot {
-                url = await SteamMetadataService.shared.image(appID: id, slot: store)
-            } else if remote == nil, request.storeSlot == nil { url = nil }
+            // A square is always an icon, never store art cropped to a square: with no app yet (Steam still
+            // installing the game), LaunchBox's Square, else nothing.
+            else if remote == nil, request.wantsAutomaticIcon {
+                url = await AppViewModel.automaticIconArtwork.automaticSteamIcon(titleID: game.personalizationReference.key,
+                                                                                names: [game.name])
+            } else if role == .square { url = nil }
             else { url = await SteamMetadataService.shared.image(appID: id, slot: slot, remote: remote) }
             guard !Task.isCancelled else { return }
             // Decoded off the main thread at the size its nxnative twin uses: a lazily decoded file cost the

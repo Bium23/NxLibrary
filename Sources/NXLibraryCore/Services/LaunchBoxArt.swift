@@ -94,6 +94,12 @@ public enum LaunchBoxArt {
         return list
     }
 
+    /// The game's Square, at full size: the icon of a game that has no app of its own yet (a Steam game still
+    /// installing). Never another kind cropped to a square.
+    public static func square(in candidates: [ArtworkCandidate]) -> URL? {
+        candidates.first { $0.slot == .icon && $0.source.hasPrefix("LaunchBox · Square") }.map { $0.full ?? $0.url }
+    }
+
     struct PayloadImage: Equatable {
         let kind: String
         let region: String?

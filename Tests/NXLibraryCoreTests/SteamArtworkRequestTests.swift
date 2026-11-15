@@ -70,24 +70,18 @@ final class SteamArtworkRequestTests: XCTestCase {
         return image.tiffRepresentation.flatMap { NSBitmapImageRep(data: $0)?.representation(using: .png, properties: [:]) }
     }
 
-    func testSquareWithoutAnInstalledAppUsesTheStoreHero() {
+    func testOnlyASquareWithoutAnAppWantsAnAutomaticIcon() {
         var steam = SteamCatalogGame(appID: 3321460, name: "Downloading")
         steam.installations = [.init(libraryURL: URL(fileURLWithPath: "/tmp/steam"),
                                      contentURL: URL(fileURLWithPath: "/tmp/steam/steamapps/common/G"),
                                      availability: .unavailable, isDownloading: true)]
-        let game = CatalogGame(steam: steam)
-        // No app yet, so no icon: the store's wide key art, cropped to the square, not a generic controller.
-        XCTAssertEqual(SteamArtworkRequest(game: game, role: .square).storeSlot, .background)
-        XCTAssertEqual(SteamArtworkRequest(game: game, role: .cover).storeSlot, .cover)
-        XCTAssertEqual(SteamArtworkRequest(game: game, role: .hero).storeSlot, .background)
-    }
-
-    func testSquareWithAnInstalledAppNeverAsksTheStore() {
+        let downloading = CatalogGame(steam: steam)
+        XCTAssertTrue(SteamArtworkRequest(game: downloading, role: .square).wantsAutomaticIcon)
+        XCTAssertFalse(SteamArtworkRequest(game: downloading, role: .cover).wantsAutomaticIcon)
         let root = URL(fileURLWithPath: "/tmp/steam-fixture"), app = root.appendingPathComponent("Fixture.app")
         let observed = NativeMacApplication(url: app, executableURL: app.appendingPathComponent("Contents/MacOS/main"), bundleIdentifier: "fixture",
                                             name: "Fixture", architectures: [.arm64], isDeclaredGame: true, fileObservations: [])
-        var steam = SteamCatalogGame(appID: 10, name: "Installed")
         steam.installations = [.init(libraryURL: root, contentURL: root, applications: [CatalogNativeApplication(observed)], availability: .available)]
-        XCTAssertNil(SteamArtworkRequest(game: CatalogGame(steam: steam), role: .square).storeSlot)
+        XCTAssertFalse(SteamArtworkRequest(game: CatalogGame(steam: steam), role: .square).wantsAutomaticIcon)
     }
 }

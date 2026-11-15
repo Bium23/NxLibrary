@@ -2,6 +2,7 @@ import Foundation
 import AppKit
 import ImageIO
 import Combine
+import os
 
 public enum ArtworkKind: String, Codable {
     case hero, logo, square
@@ -44,6 +45,8 @@ public final class ArtworkStore: ObservableObject {
     private let client: ArtworkHTTPClient
     private let automaticIcons: AutomaticIconResolver
     private let fileManager: FileManager
+    /// Steam games LaunchBox had no Square for, this session: not searched again until the next launch.
+    private let steamIconMisses = OSAllocatedUnfairLock(initialState: Set<String>())
 
     public init(cacheDirectory: URL = ArtworkStore.defaultDirectory(),
                 client: ArtworkHTTPClient = URLSessionArtworkClient(),
@@ -76,6 +79,22 @@ public final class ArtworkStore: ObservableObject {
     public func automaticIcon(titleID: String, name: String) async -> URL? {
         if let cached = cachedURL(titleID: titleID, kind: .square) { return cached }
         return await automaticIcons.resolve(titleID: titleID, name: name)
+    }
+
+    /// The icon of a Steam game with no app of its own (Steam still installing it): LaunchBox's Square for its
+    /// Mac or Windows entry, matched by name as for its backgrounds, kept as the game's square. Nil when LaunchBox
+    /// has none: the tile stays neutral rather than show another image cropped to a square. The player's pick
+    /// and the app's own icon come first, in the caller.
+    public func automaticSteamIcon(titleID: String, names: [String]) async -> URL? {
+        if let cached = cachedURL(titleID: titleID, kind: .square) { return cached }
+        guard !steamIconMisses.withLock({ $0.contains(titleID) }) else { return nil }
+        let game = await LaunchBoxArt.game(names: names, switch2: false, computer: true, client: client)
+        guard let square = game.flatMap({ LaunchBoxArt.square(in: $0.candidates) }),
+              let url = await fetch(titleID: titleID, remoteURL: square, kind: .square) else {
+            steamIconMisses.withLock { _ = $0.insert(titleID) }
+            return nil
+        }
+        return url
     }
 
     public func automaticIconSource(titleID: String) -> String? {

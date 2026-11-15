@@ -21,13 +21,9 @@ public struct SteamArtworkRequest: Equatable {
         game.steamGame?.installations.first { $0.availability == .available }?.primaryApplication
     }
 
-    /// What to ask the Steam store for when nothing on this Mac fills the role. A square with an installed app
-    /// shows the app's icon and never the store (a cropped portrait cover); with no app yet (Steam still
-    /// installing it) it takes the wide key art, cropped to the square, rather than a generic controller.
-    public var storeSlot: ArtworkSlot? {
-        guard role == .square else { return slot }
-        return application == nil ? .background : nil
-    }
+    /// A square with no app to take the icon from (Steam still installing the game): it asks for an automatic
+    /// icon (`ArtworkStore.automaticSteamIcon`, LaunchBox's Square), never another image cropped to a square.
+    public var wantsAutomaticIcon: Bool { role == .square && application == nil }
 
     /// A file on this Mac for the role: the player's pick, else (square only) the app's own icon.
     public func localURL(picks: SteamPersonalizationStore) -> URL? {
