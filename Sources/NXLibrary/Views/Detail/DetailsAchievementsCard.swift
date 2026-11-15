@@ -6,12 +6,18 @@ import NXLibraryCore
 /// bar under them, in a light, nearly transparent panel with a thin outline, the surface of the panel's buttons
 /// without their dark fill (maintainer's choice, 15 Nov 2026). Focused, Selene's ring sits on the panel's edge.
 /// Shown only when the game has achievements and Steam's files read. A or a click opens the Achievements screen;
-/// a chevron on the right edge and a slightly lighter panel under the pointer say so, where Details (not a button)
-/// has neither.
+/// under the pointer or the controller's focus it says so (maintainer's choice, 15 Nov 2026): the completion gives way
+/// to "View all", the three icons fan out and brighten, and the panel lightens. Details, not a button, does none of it.
+/// With Reduce motion the text and light change without movement.
 struct DetailsAchievementsCard: View {
     @Environment(\.seleneCanvas) private var canvas
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.seleneReduceMotion) private var reduceMotion
     @State private var hovered = false
+
+    private var active: Bool { hovered || focused }
+    private var fanned: Bool { active && !reduceMotion }
+    /// Soft and a little lively, for the fan; without motion only the fade remains.
+    private var reveal: Animation { reduceMotion ? SeleneTheme.quick : .spring(response: 0.38, dampingFraction: 0.72) }
 
     let summary: AchievementSummary
     let appID: UInt32
@@ -33,22 +39,22 @@ struct DetailsAchievementsCard: View {
                          + Text("/\(summary.total)").foregroundColor(SeleneTheme.ink60))
                             .seleneFont(30, .semibold)
                             .monospacedDigit()
-                        Text(L10n.format("%d%% complete", [summary.percentComplete]))
-                            .seleneFont(15, .semibold)
-                            .foregroundColor(SeleneTheme.ink75)
-                            .monospacedDigit()
+                        ZStack(alignment: .leading) {
+                            Text(L10n.format("%d%% complete", [summary.percentComplete]))
+                                .foregroundColor(SeleneTheme.ink75)
+                                .monospacedDigit()
+                                .opacity(active ? 0 : 1)
+                                .offset(y: fanned ? -canvas.u(5) : 0)
+                            Text(L10n.text("View all"))
+                                .foregroundColor(SeleneTheme.ink)
+                                .opacity(active ? 1 : 0)
+                                .offset(y: active || reduceMotion ? 0 : canvas.u(5))
+                        }
+                        .seleneFont(15, .semibold)
                     }
                     .lineLimit(1)
                     Spacer(minLength: 0)
-                    HStack(spacing: canvas.u(8)) {
-                        ForEach(Array(summary.recentIcons.enumerated()), id: \.offset) { _, icon in
-                            AchievementIcon(appID: appID, file: icon, size: 44, dimmed: summary.unlocked == 0)
-                        }
-                    }
-                    Image(systemName: "chevron.right")
-                        .seleneFont(15, .semibold)
-                        .foregroundColor(hovered ? SeleneTheme.ink75 : SeleneTheme.ink60)
-                        .accessibilityHidden(true)
+                    icons
                 }
                 AchievementProgressBar(fraction: summary.total > 0 ? Double(summary.unlocked) / Double(summary.total) : 0,
                                        height: 5, track: SeleneTheme.ink25)
@@ -58,18 +64,37 @@ struct DetailsAchievementsCard: View {
             .frame(width: canvas.u(Self.width), alignment: .leading)
             // Nearly transparent: the art's blur shows through, lightly tinted, under the buttons' thin outline.
             .background(.ultraThinMaterial, in: shape)
-            .background(shape.fill(SeleneTheme.ink.opacity(hovered ? 0.08 : 0.04)))
-            .overlay(shape.strokeBorder(hovered ? SeleneTheme.ink25 : SeleneTheme.ink15, lineWidth: max(1, canvas.u(1))))
+            .background(shape.fill(SeleneTheme.ink.opacity(active ? 0.08 : 0.04)))
+            .overlay(shape.strokeBorder(active ? SeleneTheme.ink25 : SeleneTheme.ink15, lineWidth: max(1, canvas.u(1))))
             .contentShape(shape)
-            .onHover { inside in
-                withAnimation(reduceMotion ? nil : SeleneTheme.quick) { hovered = inside }
-            }
+            .onHover { hovered = $0 }
+            .animation(reveal, value: active)
             .seleneRowFocus(focused, radius: canvas.u(Self.radius))
             .onTapGesture(perform: onOpen)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(L10n.format("Achievements: %d of %d", [summary.unlocked, summary.total]))
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { onOpen() }
+        }
+    }
+}
+
+extension DetailsAchievementsCard {
+    /// The last three unlocked icons. Active, they fan out like a held hand of cards: the outer ones tilt
+    /// and drop a little, the gaps open, and all three brighten.
+    private var icons: some View {
+        let count = summary.recentIcons.count
+        let middle = Double(max(count - 1, 0)) / 2
+        return HStack(spacing: canvas.u(fanned ? 14 : 8)) {
+            ForEach(Array(summary.recentIcons.enumerated()), id: \.offset) { index, icon in
+                let side = Double(index) - middle
+                AchievementIcon(appID: appID, file: icon, size: 44, dimmed: summary.unlocked == 0)
+                    .opacity(active ? 1 : 0.88)
+                    .scaleEffect(fanned ? 1.06 : 1)
+                    .rotationEffect(.degrees(fanned ? side * 7 : 0), anchor: .bottom)
+                    .offset(y: fanned ? canvas.u(CGFloat(abs(side)) * 3) : 0)
+                    .zIndex(-abs(side))
+            }
         }
     }
 }

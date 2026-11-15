@@ -65988,6 +65988,47 @@
         }
       }
     },
+    "View all": {
+      "comment": "DetailsAchievementsCard.swift: replaces the completion while the card is hovered or focused; opens the Achievements screen",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View all"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vedi tutti"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout afficher"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle anzeigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver todos"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver todos"
+          }
+        }
+      }
+    },
     "View all on GitHub": {
       "comment": "SettingsEngineSection.swift",
       "localizations": {
