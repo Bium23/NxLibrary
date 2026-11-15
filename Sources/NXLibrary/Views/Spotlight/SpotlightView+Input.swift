@@ -146,7 +146,7 @@ extension SpotlightView {
     /// Opens on All, and reads Steam's files again for unlocks made since the page opened.
     func openAchievements() {
         guard let summary = selectedAchievements, achievementsScreen == nil else { return }
-        achievementsScreen = AchievementsScreenState(count: summary.rows(.all).count)
+        achievementsScreen = AchievementsScreenState(ids: summary.rows(.all).map(\.id))
         SoundEffectService.shared.play(.click)
         loadAchievements()
     }

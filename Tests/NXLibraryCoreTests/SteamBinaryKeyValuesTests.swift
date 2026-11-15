@@ -74,9 +74,16 @@ final class SteamBinaryKeyValuesTests: XCTestCase {
         }
     }
 
-    func testTopLevelEndsAtEndOrTerminator() throws {
+    func testTopLevelNeedsItsTerminator() throws {
         XCTAssertEqual(try SteamBinaryKeyValues.parse(BinaryKV.data([("a", "1")], end: true)).count, 1)
-        XCTAssertEqual(try SteamBinaryKeyValues.parse(BinaryKV.data([("a", "1")], end: false)).count, 1)
+        // Cut just before the last byte (Steam writing the file): not a shorter file, a broken one.
+        XCTAssertThrowsError(try SteamBinaryKeyValues.parse(BinaryKV.data([("a", "1")], end: false))) {
+            XCTAssertEqual($0 as? KeyValuesError, .malformed)
+        }
+    }
+
+    func testEmptyDataThrows() {
+        XCTAssertThrowsError(try SteamBinaryKeyValues.parse(Data())) { XCTAssertEqual($0 as? KeyValuesError, .malformed) }
     }
 
     func testAnUnclosedSubtreeThrows() {

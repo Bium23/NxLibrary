@@ -209,7 +209,7 @@ public struct SpotlightView: View {
         // A re-read while the screen is open: the selection stays inside the list.
         .onChange(of: selectedAchievements) { summary in
             guard let summary, var screen = achievementsScreen else { return }
-            screen.setCount(summary.rows(screen.filter).count)
+            screen.setIDs(summary.rows(screen.filter).map(\.id))
             if screen != achievementsScreen { achievementsScreen = screen }
         }
         // Another game, or the row: the screen belongs to the game it opened on.
@@ -294,7 +294,7 @@ public struct SpotlightView: View {
             AchievementsScreen(game: game, summary: summary, state: screen, art: shownArt(model),
                                onFilter: { filter in
                                    guard filter != screen.filter else { return }
-                                   achievementsScreen?.setFilter(filter, count: summary.rows(filter).count)
+                                   achievementsScreen?.setFilter(filter, ids: summary.rows(filter).map(\.id))
                                    SoundEffectService.shared.play(.tabSwitch)
                                },
                                onFocus: { index in

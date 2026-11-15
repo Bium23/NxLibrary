@@ -55,6 +55,14 @@ final class AchievementSummaryTests: XCTestCase {
         XCTAssertEqual(unlocked.icon, "V.jpg")
     }
 
+    func testHiddenLockedWithoutGrayIconShowsNoIcon() {
+        let hidden = SteamAchievement(apiName: "H", name: "N", description: "D", hidden: true,
+                                      icon: "color.jpg", grayIcon: nil, unlockedAt: nil)
+        let summary = AchievementSummary(achievements: [hidden], percents: [:])
+        XCTAssertNil(summary.rows(.locked)[0].icon, "the color icon would give the secret away")
+        XCTAssertTrue(summary.recentIcons.isEmpty)
+    }
+
     func testRecentIconsFallBackToLockedGray() {
         let none = AchievementSummary(achievements: [a("A"), a("B"), a("C"), a("D")], percents: [:])
         XCTAssertEqual(none.recentIcons, ["A-g.jpg", "B-g.jpg", "C-g.jpg"])

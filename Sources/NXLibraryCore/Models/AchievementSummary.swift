@@ -87,7 +87,9 @@ public struct AchievementSummary: Equatable, Sendable {
             id: achievement.apiName,
             name: masked ? L10n.text("Hidden achievement") : achievement.name,
             description: masked ? L10n.text("Keep playing to reveal it.") : achievement.description,
-            icon: unlocked ? (achievement.icon ?? achievement.grayIcon) : (achievement.grayIcon ?? achievement.icon),
+            // A masked row never falls back to the color icon: it would give the secret away.
+            icon: unlocked ? (achievement.icon ?? achievement.grayIcon)
+                : masked ? achievement.grayIcon : (achievement.grayIcon ?? achievement.icon),
             unlockedAt: achievement.unlockedAt,
             percent: percent,
             isMasked: masked)

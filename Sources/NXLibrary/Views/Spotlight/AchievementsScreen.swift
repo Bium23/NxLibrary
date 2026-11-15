@@ -35,7 +35,7 @@ struct AchievementsScreen: View {
         case .navigateUp: return state.move(.up) ? .moved : .ignored
         case .navigateDown: return state.move(.down) ? .moved : .ignored
         case .tabPrevious, .tabNext:
-            state.shiftFilter(by: action == .tabPrevious ? -1 : 1) { summary.rows($0).count }
+            state.shiftFilter(by: action == .tabPrevious ? -1 : 1) { summary.rows($0).map(\.id) }
             return .filtered
         case .cancel: return .close
         default: return .ignored

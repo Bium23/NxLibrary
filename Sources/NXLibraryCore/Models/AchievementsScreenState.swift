@@ -1,6 +1,8 @@
 import Foundation
 
 /// Selection on the Achievements screen: a filter and a tile in a two-column list, clamped to its edges.
+/// It keeps the rows' ids so a list that changes under it (the rarity arriving, an unlock) keeps the same
+/// achievement in focus.
 public struct AchievementsScreenState: Equatable {
     public enum MoveDirection: Sendable { case up, down, left, right }
 
@@ -8,12 +10,16 @@ public struct AchievementsScreenState: Equatable {
 
     public private(set) var filter: AchievementFilter = .all
     public var index = 0
-    /// Tiles in the current filter.
-    public private(set) var count: Int
+    /// The current filter's rows, by `AchievementRow.id`.
+    public private(set) var ids: [String]
 
-    public init(count: Int) {
-        self.count = max(0, count)
+    public init(ids: [String]) {
+        self.ids = ids
     }
+
+    public var count: Int { ids.count }
+
+    public var focusedID: String? { ids.indices.contains(index) ? ids[index] : nil }
 
     /// Moves within the list; returns whether the selection moved.
     @discardableResult
@@ -32,23 +38,25 @@ public struct AchievementsScreenState: Equatable {
     }
 
     /// A new filter starts at its first tile.
-    public mutating func setFilter(_ filter: AchievementFilter, count: Int) {
+    public mutating func setFilter(_ filter: AchievementFilter, ids: [String]) {
         self.filter = filter
-        self.count = max(0, count)
+        self.ids = ids
         index = 0
     }
 
-    /// LB/RB: the filter beside the current one, wrapping around; `count` gives each filter's tiles.
-    public mutating func shiftFilter(by delta: Int, count: (AchievementFilter) -> Int) {
+    /// LB/RB: the filter beside the current one, wrapping around; `ids` gives each filter's rows.
+    public mutating func shiftFilter(by delta: Int, ids: (AchievementFilter) -> [String]) {
         let all = AchievementFilter.allCases
         let current = all.firstIndex(of: filter) ?? 0
         let next = all[((current + delta) % all.count + all.count) % all.count]
-        setFilter(next, count: count(next))
+        setFilter(next, ids: ids(next))
     }
 
-    /// The list changed under the same filter (a re-read): the selection stays inside it.
-    public mutating func setCount(_ count: Int) {
-        self.count = max(0, count)
-        index = min(index, max(self.count - 1, 0))
+    /// The list changed under the same filter: the focused achievement keeps the focus where it went;
+    /// gone from the list, its place does, inside the list.
+    public mutating func setIDs(_ ids: [String]) {
+        let focused = focusedID
+        self.ids = ids
+        index = focused.flatMap { ids.firstIndex(of: $0) } ?? min(index, max(ids.count - 1, 0))
     }
 }

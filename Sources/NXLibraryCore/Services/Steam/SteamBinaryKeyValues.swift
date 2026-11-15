@@ -2,8 +2,8 @@ import Foundation
 
 /// Steam's binary KeyValues (the `appcache/stats/*.bin` files), read into the same entries as the text format.
 /// Each entry is a type byte, a NUL-terminated key and a value: 0 a subtree ending at 8, 1 a NUL-terminated string,
-/// 2, 4 and 6 an int32, 3 a float32, 7 a uint64, all little-endian. Numbers become their decimal text. The top level
-/// ends at 8 or at the end of the data. Anything else, or data that ends inside an entry, is malformed.
+/// 2, 4 and 6 an int32, 3 a float32, 7 a uint64, all little-endian. Numbers become their decimal text. Every level,
+/// the top one too, ends at 8 (Steam's files do). Anything else, or data that ends before that, is malformed.
 public enum SteamBinaryKeyValues {
     public static let maximumBytes = 8 * 1024 * 1024
 
@@ -24,11 +24,9 @@ public enum SteamBinaryKeyValues {
             guard depth <= maximumDepth else { throw KeyValuesError.limitExceeded }
             var entries: [KeyValuesEntry] = []
             while true {
-                guard offset < bytes.count else {
-                    // Only the top level may end with the data.
-                    if depth == 0 { return entries }
-                    throw KeyValuesError.malformed
-                }
+                // Every level, the top one too, ends with its terminator: data that stops before it is a file
+                // cut while Steam wrote it, never a shorter file (an empty stats file would read as no unlocks).
+                guard offset < bytes.count else { throw KeyValuesError.malformed }
                 let type = bytes[offset]
                 offset += 1
                 if type == 8 { return entries }
