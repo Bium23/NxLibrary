@@ -118,10 +118,12 @@ public struct SpotlightView: View {
         return viewModel.visibleCatalogGames.first { $0.id == id }
     }
     var items: [SpotlightItem] {
-        SpotlightRow.build(gameIDs: rowGames.map(\.id),
-                           enabledCards: settings.settings.visibleSpotlightCards,
-                           order: viewModel.spotlight.lift?.order ?? settings.settings.spotlightOrder,
-                           front: viewModel.frontGameID)
+        let ids = rowGames.map(\.id)
+        return SpotlightRow.build(gameIDs: ids,
+                                  enabledCards: settings.settings.visibleSpotlightCards,
+                                  order: viewModel.spotlight.lift?.order ?? settings.settings.spotlightOrder,
+                                  front: SpotlightRow.leaders(porting: viewModel.frontGameID,
+                                                              downloads: viewModel.sessionDownloads.ids, row: ids))
     }
 
     var selectedItem: SpotlightItem? { viewModel.spotlight.selectedItem(in: items) }

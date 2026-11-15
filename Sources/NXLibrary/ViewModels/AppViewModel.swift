@@ -398,6 +398,8 @@ public final class AppViewModel: ObservableObject {
     @Published public var portingProgress: PortingProgress? = nil
     /// The game ported last in this session leads Spotlight's row until quit.
     @Published public var frontGameID: UUID? = nil
+    /// The Steam games seen downloading this session lead the row after it, until quit.
+    @Published public private(set) var sessionDownloads = SessionDownloads()
     /// Spotlight's Delete on a failed porting asks first.
     @Published public var gameToRemove: PortedGame? = nil
     @Published var removeGameFocus: SeleneConfirmButton = .cancel
@@ -1141,6 +1143,9 @@ public final class AppViewModel: ObservableObject {
 
     func applyCatalog(_ document: CatalogDocument) {
         catalogGames = document.games
+        // Published only when a game is new, so a rescan that changes nothing redraws nothing for it.
+        var downloads = sessionDownloads
+        if downloads.note(document.games) { sessionDownloads = downloads }
         catalogSourceConfigurations = document.sources
         personalizations = CatalogPersonalizations(document: document)
         libraryGames = document.nxnativeGames.sorted {

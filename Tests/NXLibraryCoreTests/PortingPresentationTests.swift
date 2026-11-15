@@ -182,18 +182,51 @@ final class PortingPresentationTests: XCTestCase {
             game.id = index == 0 ? a : b
             return game
         }
-        let row = SpotlightRow.build(games: games, enabledCards: [.collection, .addGame], order: [], front: b)
+        let row = SpotlightRow.build(games: games, enabledCards: [.collection, .addGame], order: [], front: [b])
         XCTAssertEqual(row, [.card(.collection), .card(.addGame), .game(b), .game(a)])
         // The player moved Add game to the end: the porting game still follows it.
         let moved = SpotlightRow.build(games: games, enabledCards: [.collection, .addGame],
                                        order: ["card:collection", "game:\(a.uuidString)", "game:\(b.uuidString)", "card:addGame"],
-                                       front: b)
+                                       front: [b])
         XCTAssertEqual(moved, [.card(.collection), .game(a), .card(.addGame), .game(b)])
         // Without the card: first among the games.
-        let noCard = SpotlightRow.build(games: games, enabledCards: [.collection], order: [], front: b)
+        let noCard = SpotlightRow.build(games: games, enabledCards: [.collection], order: [], front: [b])
         XCTAssertEqual(noCard, [.card(.collection), .game(b), .game(a)])
-        XCTAssertEqual(SpotlightRow.build(games: games, enabledCards: [.collection], order: [], front: UUID()),
+        XCTAssertEqual(SpotlightRow.build(games: games, enabledCards: [.collection], order: [], front: [UUID()]),
                        SpotlightRow.build(games: games, enabledCards: [.collection], order: []))
+    }
+
+    /// The porting game leads, then the games Steam downloads this session, in the row's order.
+    func testPortingThenDownloadsLeadTheRow() {
+        let a = UUID(), b = UUID(), c = UUID(), d = UUID()
+        let row = SpotlightRow.build(gameIDs: [a, b, c, d], enabledCards: [.collection, .addGame], order: [],
+                                     front: [d, b])
+        XCTAssertEqual(row, [.card(.collection), .card(.addGame), .game(d), .game(b), .game(a), .game(c)])
+        XCTAssertEqual(SpotlightRow.leaders(porting: d, downloads: [c, a, d], row: [a, b, c, d]), [d, a, c])
+        XCTAssertEqual(SpotlightRow.leaders(porting: nil, downloads: [c], row: [a, b, c, d]), [c])
+        XCTAssertEqual(SpotlightRow.leaders(porting: nil, downloads: [], row: [a, b]), [])
+        // A game no longer in the row (filtered out, or the download removed) leads nothing.
+        XCTAssertEqual(SpotlightRow.leaders(porting: UUID(), downloads: [UUID()], row: [a, b]), [])
+    }
+
+    /// A game seen downloading stays remembered for the session, also once Steam has finished it.
+    func testSessionDownloadsRememberEveryGameSeenDownloading() {
+        func steam(_ appID: UInt32, downloading: Bool, id: UUID = UUID()) -> CatalogGame {
+            var game = SteamCatalogGame(id: id, appID: appID, name: "G\(appID)")
+            game.installations = [.init(libraryURL: URL(fileURLWithPath: "/tmp/steam"),
+                                        contentURL: URL(fileURLWithPath: "/tmp/steam/steamapps/common/G\(appID)"),
+                                        availability: downloading ? .unavailable : .available,
+                                        isDownloading: downloading)]
+            return CatalogGame(steam: game)
+        }
+        let downloading = steam(1, downloading: true), installed = steam(2, downloading: false)
+        var session = SessionDownloads()
+        XCTAssertTrue(session.note([downloading, installed]))
+        XCTAssertEqual(session.ids, [downloading.id])
+        XCTAssertFalse(session.note([downloading, installed]))
+        let finished = steam(1, downloading: false, id: downloading.id)
+        XCTAssertFalse(session.note([finished, installed]))
+        XCTAssertEqual(session.ids, [downloading.id])
     }
 
     func testPillMovesStopAtTheLimit() {
