@@ -67,10 +67,6 @@ public enum PortingTileLook: Equatable {
     /// A Steam game Steam is still installing: black and white, the download glyph and "Downloading".
     case downloading
 
-    /// How much colour leaves the art where it is grey: all of it, except while Steam downloads the game, when
-    /// faded colours stay just visible so the icon is still recognisable (maintainer's choice, 15 Nov 2026).
-    public var colourDrained: Double { self == .downloading ? 0.8 : 1 }
-
     /// A catalog game's tile outside porting: downloading while Steam installs it.
     public static func make(catalog game: CatalogGame) -> PortingTileLook {
         game.steamGame?.isDownloading == true ? .downloading : .normal
