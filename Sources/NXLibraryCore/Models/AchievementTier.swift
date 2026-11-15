@@ -13,7 +13,9 @@ public enum AchievementTier: CaseIterable, Sendable {
 
     /// An achievement's tier from Steam's global rarity (0–100); nil while unknown. Never platinum.
     public static func forPercent(_ percent: Double?) -> AchievementTier? {
-        guard let percent else { return nil }
+        guard let raw = percent else { return nil }
+        // The screen shows one decimal: 9.96 reads "10.0%", so it must not be Radiant.
+        let percent = (raw * 10).rounded() / 10
         if percent < goldBelow { return .gold }
         if percent < silverBelow { return .silver }
         return .bronze

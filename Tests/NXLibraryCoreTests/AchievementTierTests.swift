@@ -10,12 +10,19 @@ final class AchievementTierTests: XCTestCase {
 
     func testThresholds() {
         XCTAssertEqual(AchievementTier.forPercent(0), .gold)
-        XCTAssertEqual(AchievementTier.forPercent(9.99), .gold)
+        XCTAssertEqual(AchievementTier.forPercent(9.94), .gold)
         XCTAssertEqual(AchievementTier.forPercent(10), .silver)
-        XCTAssertEqual(AchievementTier.forPercent(29.99), .silver)
+        XCTAssertEqual(AchievementTier.forPercent(29.94), .silver)
         XCTAssertEqual(AchievementTier.forPercent(30), .bronze)
         XCTAssertEqual(AchievementTier.forPercent(100), .bronze)
         XCTAssertNil(AchievementTier.forPercent(nil))
+    }
+
+    /// The screen prints one decimal: the tier follows the number the player reads.
+    func testTierFollowsTheShownPercent() {
+        XCTAssertEqual(AchievementTier.forPercent(9.96), .silver, "shown as 10.0%")
+        XCTAssertEqual(AchievementTier.forPercent(9.94), .gold, "shown as 9.9%")
+        XCTAssertEqual(AchievementTier.forPercent(29.96), .bronze, "shown as 30.0%")
     }
 
     func testBoardOrderIsRarestFirst() {
