@@ -3,6 +3,7 @@ import AppKit
 import NXLibraryCore
 
 struct AddGameStepThreeView: View {
+    @ObservedObject private var gameIcons = GameIconProvider.shared
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var router: AppRouter
     var artwork: ArtworkStore? = nil
@@ -74,7 +75,7 @@ struct AddGameStepThreeView: View {
                     if let artwork {
                         SpotlightTileArtwork(game: game, side: side, artwork: artwork, ownIconFirst: true)
                     } else {
-                        Image(nsImage: GameIconProvider.squareArt(for: game) ?? GameIconProvider.icon(for: game))
+                        Image(nsImage: gameIcons.squareArt(for: game) ?? gameIcons.icon(for: game))
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                     }

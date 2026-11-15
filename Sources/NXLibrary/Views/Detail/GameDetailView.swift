@@ -14,6 +14,7 @@ final class DetailsModelCache {
 /// with a title ID) and More like this, one band pitch (230) apart. A band below the one in focus peeks in, blurred, until
 /// it is focused. Input lives in GameDetailView+Input.swift.
 struct GameDetailView: View {
+    @ObservedObject private var gameIcons = GameIconProvider.shared
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var router: AppRouter
     @ObservedObject var settings: AppSettingsStore
@@ -134,7 +135,7 @@ struct GameDetailView: View {
         cache.model = model
         return ZStack(alignment: .topLeading) {
             DetailsBackground(image: art.image, imageKey: art.key,
-                              fallback: GameIconProvider.icon(for: game),
+                              fallback: gameIcons.icon(for: game),
                               shade: settings.settings.backgroundShade)
             SeleneBottomScrim()
             stage(model)
