@@ -726,6 +726,15 @@ Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua rig
 | [AchievementSummaryTests.swift](../Tests/NXLibraryCoreTests/AchievementSummaryTests.swift) | Conteggi, ordini dei filtri, rarità sconosciute in fondo, soglia del raro, maschera dei nascosti e icone recenti. |
 | [AchievementsScreenStateTests.swift](../Tests/NXLibraryCoreTests/AchievementsScreenStateTests.swift) | Movimento in due colonne, bordi, liste vuote, cambio filtro e liste che si accorciano. |
 
+## Download Steam (in attesa di validazione umana)
+
+| File | Responsabilità |
+|---|---|
+| [SteamManifestWatcher.swift](../Sources/NXLibraryCore/Services/Steam/SteamManifestWatcher.swift) | Uno stream FSEvents sulle cartelle `steamapps` delle librerie dell’ultima scansione; segnala solo i manifest `appmanifest_<AppID>.acf` e l’indice `libraryfolders.vdf` della radice, una volta per gruppo di eventi. |
+| [SteamManifestWatcherTests.swift](../Tests/NXLibraryCoreTests/SteamManifestWatcherTests.swift) | Percorsi che contano (manifest, indice della radice) e quelli scartati (download, giochi, file temporanei, altre cartelle). |
+
+Il resto vive nei file esistenti: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downloading`, cartella non letta), `SteamCatalogInstallation.isDownloading` e `SteamCatalogGame.isDownloading`/`needsReview`, `CatalogGamePresentation.isDownloading`, `PortingTileLook.downloading` con `PortingArtLook`, `SteamPlayCoordinator.openDownloads` e `CatalogSteamInfo`, il ritmo delle riscansioni in `CatalogSourcesModel.steamFilesChanged`.
+
 ## Catalogo comune (attivazione nella Dev in attesa di validazione)
 
 | File | Responsabilità |
