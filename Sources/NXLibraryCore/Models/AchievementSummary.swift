@@ -78,11 +78,6 @@ public struct AchievementSummary: Equatable, Sendable {
         Array(unlockedRows.compactMap(\.icon).prefix(limit))
     }
 
-    /// The unlocked achievement the fewest players have, when its rarity is known.
-    public var rarestUnlocked: AchievementRow? {
-        unlockedRows.filter { $0.percent != nil }.min { $0.percent! < $1.percent! }
-    }
-
     public func rows(_ filter: AchievementFilter) -> [AchievementRow] {
         switch filter {
         case .all: return unlockedRows + lockedRows

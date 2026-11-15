@@ -2,7 +2,8 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
-/// A Steam game's achievements, over the game's art (darker): logo, progress, filters and a two-column list.
+/// A Steam game's achievements, over the game's art (darker), laid out like Selene's: the logo and the recently
+/// unlocked icons on the left, the progress and the tier crystals on the right, filters, a one-column list.
 /// A pure view like `ScreenshotViewer`: Spotlight owns `AchievementsScreenState` and routes input through
 /// `AchievementsScreen.handle`. Present it as an overlay inside the canvas root so the canvas scaling applies.
 struct AchievementsScreen: View {
@@ -22,9 +23,11 @@ struct AchievementsScreen: View {
     let onClose: () -> Void
 
     static let side: CGFloat = 110
-    static let columnWidth: CGFloat = 838
-    static let gap: CGFloat = 24
-    static let rowHeight: CGFloat = 104
+    /// The list's one column, as wide as the two columns and their gap it replaced.
+    static let listWidth: CGFloat = 1700
+    static let rowHeight: CGFloat = 96
+    /// The Recently unlocked strip's length.
+    static let recentLimit = 12
     /// The list's last row can rise this far above the bottom edge: clear of the fade and the hints bar.
     static let bottomRoom: CGFloat = 130
     /// The fades at the list's edges.
@@ -41,13 +44,13 @@ struct AchievementsScreen: View {
         ZStack(alignment: .topLeading) {
             backdrop
             VStack(alignment: .leading, spacing: 0) {
-                // The progress on the left; the tier crystals on the right, level with the list's right edge.
+                // The game on the left; the progress on the right, level with the list's right edge.
                 HStack(alignment: .top, spacing: 0) {
                     header
                     Spacer(minLength: canvas.u(40))
-                    tierBoard
+                    progress
                 }
-                .frame(width: canvas.u(Self.columnWidth * 2 + Self.gap + Self.ring))
+                .frame(width: canvas.u(Self.listWidth + Self.ring))
                 .padding(.top, canvas.u(70))
                 pills
                     .padding(.top, canvas.u(30))
@@ -93,8 +96,10 @@ struct AchievementsScreen: View {
         .onTapGesture {}
     }
 
+    /// The logo, then the newest unlocked icons (look only, no focus stop); no strip before the first unlock.
     private var header: some View {
-        VStack(alignment: .leading, spacing: canvas.u(14)) {
+        let recent = summary.recentUnlockedIcons(limit: Self.recentLimit)
+        return VStack(alignment: .leading, spacing: canvas.u(24)) {
             Group {
                 if let logo = logos.logo(for: "\(game.id)|\(picks.revision)") {
                     Image(nsImage: logo)
@@ -112,66 +117,81 @@ struct AchievementsScreen: View {
             .shadow(color: .black.opacity(0.4), radius: canvas.u(6))
             .accessibilityLabel(game.name)
 
-            // The page's card, larger: the title, "17/50" with the completion beside it, the bar, the rarest.
-            Text(L10n.text("Achievements"))
-                .seleneFont(21, .semibold)
-                .foregroundColor(SeleneTheme.ink82)
-                .padding(.top, canvas.u(10))
-                .accessibilityAddTraits(.isHeader)
-            HStack(alignment: .firstTextBaseline, spacing: canvas.u(18)) {
-                (Text("\(summary.unlocked)").foregroundColor(SeleneTheme.ink)
-                 + Text("/\(summary.total)").foregroundColor(SeleneTheme.ink60))
-                    .seleneFont(48, .semibold)
-                    .monospacedDigit()
-                Text(L10n.format("%d%% complete", [summary.percentComplete]))
-                    .seleneFont(19, .semibold)
-                    .foregroundColor(SeleneTheme.ink75)
-                    .monospacedDigit()
-            }
-            .lineLimit(1)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(L10n.format("Achievements: %d of %d", [summary.unlocked, summary.total]))
-            AchievementProgressBar(fraction: summary.total > 0 ? Double(summary.unlocked) / Double(summary.total) : 0,
-                                   height: 6, track: SeleneTheme.ink25)
-                .frame(width: canvas.u(620))
-            if let rarest = summary.rarestUnlocked, let percent = rarest.percent {
-                Text(L10n.format("Rarest: %@ (%@)", [rarest.name, Self.percent(percent)]))
-                    .seleneFont(15)
-                    .foregroundColor(SeleneTheme.ink60)
-                    .lineLimit(1)
+            if !recent.isEmpty {
+                VStack(alignment: .leading, spacing: canvas.u(12)) {
+                    Text(L10n.text("Recently unlocked"))
+                        .seleneFont(19, .semibold)
+                        .foregroundColor(SeleneTheme.ink90)
+                        .accessibilityAddTraits(.isHeader)
+                    HStack(spacing: canvas.u(14)) {
+                        ForEach(Array(recent.enumerated()), id: \.offset) { _, icon in
+                            AchievementIcon(appID: game.steamGame?.appID ?? 0, file: icon, size: 72)
+                        }
+                    }
+                }
             }
         }
     }
 
-    /// Arcane, Radiant, Aether, Ember with unlocked/total under each, as PS5 trophies; a tier not earned yet is
-    /// dimmed. Only Arcane until Steam's rarity arrives: the others come from it.
-    private var tierBoard: some View {
+    /// The completion as a large percentage underlined by its bar; Arcane, Radiant, Aether, Ember beside it with
+    /// unlocked/total under each, as PS5 trophies, dimmed while not earned (only Arcane until Steam's rarity
+    /// arrives); under both, the count and the newest unlock.
+    private var progress: some View {
         let counts = summary.tierCounts
         let tiers = summary.hasRarity ? AchievementTier.allCases : [.platinum]
-        return VStack(alignment: .trailing, spacing: canvas.u(12)) {
-            HStack(alignment: .top, spacing: canvas.u(22)) {
-                ForEach(tiers, id: \.self) { tier in
-                    let count = counts[tier] ?? TierCount(unlocked: 0, total: 0)
-                    VStack(spacing: canvas.u(4)) {
-                        TierCrystal(tier: tier, size: 60, dimmed: count.unlocked == 0)
-                        (Text("\(count.unlocked)").foregroundColor(SeleneTheme.ink)
-                         + Text(" / \(count.total)").foregroundColor(SeleneTheme.ink60))
-                            .seleneFont(15, .semibold)
-                            .monospacedDigit()
-                            .lineLimit(1)
+        let fraction = summary.total > 0 ? Double(summary.unlocked) / Double(summary.total) : 0
+        return VStack(alignment: .trailing, spacing: canvas.u(14)) {
+            HStack(alignment: .center, spacing: canvas.u(40)) {
+                Text(Self.wholePercent(summary.percentComplete))
+                    .seleneFont(64, .semibold)
+                    .monospacedDigit()
+                    .foregroundColor(SeleneTheme.ink)
+                    .lineLimit(1)
+                    .padding(.bottom, canvas.u(16))
+                    // The bar as wide as the number it underlines.
+                    .overlay(alignment: .bottom) {
+                        AchievementProgressBar(fraction: fraction, height: 5, track: SeleneTheme.ink25)
+                            .frame(height: canvas.u(5))
                     }
                     .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(L10n.format("%1$@, %2$d of %3$d", [tier.displayName, count.unlocked, count.total]))
+                    .accessibilityLabel(L10n.format("Achievements: %d of %d", [summary.unlocked, summary.total]))
+                HStack(alignment: .top, spacing: canvas.u(22)) {
+                    ForEach(tiers, id: \.self) { tier in
+                        let count = counts[tier] ?? TierCount(unlocked: 0, total: 0)
+                        VStack(spacing: canvas.u(4)) {
+                            TierCrystal(tier: tier, size: 60, dimmed: count.unlocked == 0)
+                            (Text("\(count.unlocked)").foregroundColor(SeleneTheme.ink)
+                             + Text(" / \(count.total)").foregroundColor(SeleneTheme.ink60))
+                                .seleneFont(15, .semibold)
+                                .monospacedDigit()
+                                .lineLimit(1)
+                        }
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(L10n.format("%1$@, %2$d of %3$d", [tier.displayName, count.unlocked, count.total]))
+                    }
                 }
             }
-            if let last = summary.lastUnlockedAt {
-                Text(L10n.format("Last unlocked %@", [AchievementsScreenRow.date(last)]))
-                    .seleneFont(14)
-                    .foregroundColor(SeleneTheme.ink60)
-                    .lineLimit(1)
-            }
+            Text(countLine)
+                .seleneFont(15)
+                .foregroundColor(SeleneTheme.ink60)
+                .monospacedDigit()
+                .lineLimit(1)
         }
         .fixedSize()
+    }
+
+    /// "17 of 50 unlocked · last on 31 Jul 2026"; the count alone before the first unlock.
+    private var countLine: String {
+        if let last = summary.lastUnlockedAt {
+            return L10n.format("%1$d of %2$d unlocked · last on %3$@",
+                               [summary.unlocked, summary.total, AchievementsScreenRow.date(last)])
+        }
+        return L10n.format("%1$d of %2$d unlocked", [summary.unlocked, summary.total])
+    }
+
+    /// 34 → "34%" in the app's locale ("34 %" in French).
+    static func wholePercent(_ value: Int) -> String {
+        (Double(value) / 100).formatted(.percent.precision(.fractionLength(0)).locale(L10n.context.formatLocale))
     }
 
     private var pills: some View {
@@ -271,7 +291,7 @@ private struct AchievementsScreenRow: View {
             .fixedSize()
         }
         .padding(.horizontal, canvas.u(18))
-        .frame(width: canvas.u(AchievementsScreen.columnWidth), height: canvas.u(AchievementsScreen.rowHeight), alignment: .leading)
+        .frame(width: canvas.u(AchievementsScreen.listWidth), height: canvas.u(AchievementsScreen.rowHeight), alignment: .leading)
         // The page's card surface: lightly tinted, a thin outline, a little lighter focused or under the pointer.
         .background(shape.fill(SeleneTheme.ink.opacity(focused ? 0.10 : hovered ? 0.08 : 0.05)))
         .overlay(shape.strokeBorder(hovered || focused ? SeleneTheme.ink25 : SeleneTheme.ink15,
@@ -291,7 +311,7 @@ private struct AchievementsScreenRow: View {
     }
 }
 
-/// The two-column list, moved by its own offset (`ListScroll`) instead of a scroll view: the wheel and the
+/// The one-column list, moved by its own offset (`ListScroll`) instead of a scroll view: the wheel and the
 /// arrows glide the same offset, and only the lines in view (and a window's worth either side, for a glide)
 /// are drawn. Observes the scroll alone, so a scroll frame redraws the list, not the screen.
 private struct AchievementsList: View {
@@ -313,7 +333,7 @@ private struct AchievementsList: View {
                        bottomRoom: canvas.u(Screen.bottomRoom))
     }
 
-    private var width: CGFloat { canvas.u(Screen.columnWidth * 2 + Screen.gap + Screen.ring * 2) }
+    private var width: CGFloat { canvas.u(Screen.listWidth + Screen.ring * 2) }
 
     var body: some View {
         GeometryReader { proxy in
@@ -343,7 +363,7 @@ private struct AchievementsList: View {
         let lines = layout.visibleLines(count: rows.count, offset: offset, visible: height, buffer: height)
         let indices = lines.map { ($0.lowerBound * layout.columns)..<min(($0.upperBound + 1) * layout.columns, rows.count) }
             ?? 0..<0
-        let pitch = canvas.u(Screen.columnWidth + Screen.gap)
+        let pitch = canvas.u(Screen.listWidth)
         return ZStack(alignment: .topLeading) {
             ForEach(indices, id: \.self) { index in
                 let top = layout.top(of: index)

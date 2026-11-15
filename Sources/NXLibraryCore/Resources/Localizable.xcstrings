@@ -780,6 +780,88 @@
         }
       }
     },
+    "%1$d of %2$d unlocked": {
+      "comment": "Achievements screen, under the tier crystals, before any unlock: e.g. \"0 of 50 unlocked\".",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d of %2$d unlocked"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d su %2$d sbloccati"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d sur %2$d débloqués"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d von %2$d freigeschaltet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d de %2$d desbloqueados"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d de %2$d desbloqueadas"
+          }
+        }
+      }
+    },
+    "%1$d of %2$d unlocked · last on %3$@": {
+      "comment": "Achievements screen, under the tier crystals: count and date of the newest unlock, e.g. \"17 of 50 unlocked · last on 31 Jul 2026\".",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d of %2$d unlocked · last on %3$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d su %2$d sbloccati · l’ultimo il %3$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d sur %2$d débloqués · le dernier le %3$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d von %2$d freigeschaltet · zuletzt am %3$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d de %2$d desbloqueados · el último el %3$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d de %2$d desbloqueadas · a última em %3$@"
+          }
+        }
+      }
+    },
     "%@ (recommended)": {
       "comment": "ModDetailPanel.swift:297",
       "localizations": {
@@ -33005,47 +33087,6 @@
         }
       }
     },
-    "Last unlocked %@": {
-      "comment": "Achievements screen, under the tier crystals: date of the newest unlock.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Last unlocked %@"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ultimo sblocco: %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dernier déblocage : %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zuletzt freigeschaltet: %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Último desbloqueo: %@"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Último desbloqueio: %@"
-          }
-        }
-      }
-    },
     "Latest": {
       "comment": "App-owned presentation copy; preserve data identifiers separately.",
       "localizations": {
@@ -46657,47 +46698,6 @@
         }
       }
     },
-    "Rarest: %@ (%@)": {
-      "comment": "The unlocked achievement the fewest players have: its name and the share of players, e.g. Rarest: Legend (2.1%).",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rarest: %@ (%@)"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Più raro: %@ (%@)"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le plus rare : %@ (%@)"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Am seltensten: %@ (%@)"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "El más raro: %@ (%@)"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mais rara: %@ (%@)"
-          }
-        }
-      }
-    },
     "Re-check": {
       "comment": "SettingsStartUpSection.swift",
       "localizations": {
@@ -47186,6 +47186,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Jogados recentemente"
+          }
+        }
+      }
+    },
+    "Recently unlocked": {
+      "comment": "Achievements screen: title of the strip of the newest unlocked achievement icons.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recently unlocked"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sbloccati di recente"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Débloqués récemment"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kürzlich freigeschaltet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloqueados recientemente"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloqueadas recentemente"
           }
         }
       }
