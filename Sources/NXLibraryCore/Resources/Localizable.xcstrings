@@ -55246,6 +55246,47 @@
         }
       }
     },
+    "Steam downloads": {
+      "comment": "First pill and A hint of a Steam game Steam is still installing: opens Steam on its Downloads page.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam downloads"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download di Steam"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Téléchargements Steam"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam-Downloads"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descargas de Steam"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloads da Steam"
+          }
+        }
+      }
+    },
     "Steam folder": {
       "comment": "Steam source management and native Mac library presentation.",
       "localizations": {
@@ -55283,6 +55324,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pasta do Steam"
+          }
+        }
+      }
+    },
+    "Steam hasn't finished installing this game.": {
+      "comment": "Note above the pills of a Steam game Steam is still installing.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam hasn't finished installing this game."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam non ha ancora finito di installare questo gioco."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam n’a pas fini d’installer ce jeu."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam hat dieses Spiel noch nicht fertig installiert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam aún no ha terminado de instalar este juego."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Steam ainda não terminou de instalar este jogo."
           }
         }
       }

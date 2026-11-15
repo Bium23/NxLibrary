@@ -66,7 +66,10 @@ public struct SteamPlayState: Equatable, Sendable {
 
     public init() {}
 
-    /// The only URL NX Library sends: built from a validated numeric AppID, nothing else.
+    /// Steam's Downloads page, for a game Steam is still installing. With `launchURL`, the only URLs NX Library sends.
+    public static let downloadsURL = URL(string: "steam://open/downloads")!
+
+    /// Built from a validated numeric AppID, nothing else.
     public static func launchURL(appID: UInt32) -> URL? {
         appID > 0 ? URL(string: "steam://run/\(appID)") : nil
     }

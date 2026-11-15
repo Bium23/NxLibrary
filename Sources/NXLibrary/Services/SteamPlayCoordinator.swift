@@ -88,13 +88,27 @@ final class SteamPlayCoordinator: ObservableObject {
         CatalogGamePresentation(game: game, sourceEnabled: steamEnabled).launchTarget != nil
     }
 
+    /// Steam is still installing it: the first pill and A open Steam's Downloads instead of Play.
+    func isDownloading(_ game: CatalogGame) -> Bool {
+        CatalogGamePresentation(game: game, sourceEnabled: steamEnabled).isDownloading
+    }
+
+    /// Opens Steam on its Downloads page; nothing without Valve's client.
+    func openDownloads() {
+        guard let client = Self.steamClientURL else { return }
+        NSWorkspace.shared.open([SteamPlayState.downloadsURL], withApplicationAt: client,
+                                configuration: NSWorkspace.OpenConfiguration())
+    }
+
     /// The A hint for a Steam game, matching the Play pill; none while Play cannot do anything.
     func hint(for game: CatalogGame) -> [HintItem] {
         switch phase(of: game) {
         case .running: return [HintItem(.a, L10n.text("Resume"))]
         case .starting: return [HintItem(.a, L10n.text("Cancel"))]
         case .failed: return [HintItem(.a, L10n.text("Try again"))]
-        case .idle: return canPlay(game) ? [HintItem(.a, L10n.text("Play"))] : []
+        case .idle:
+            if isDownloading(game) { return Self.steamClientURL != nil ? [HintItem(.a, L10n.text("Steam downloads"))] : [] }
+            return canPlay(game) ? [HintItem(.a, L10n.text("Play"))] : []
         }
     }
 
@@ -102,6 +116,7 @@ final class SteamPlayCoordinator: ObservableObject {
     func press(_ game: CatalogGame) {
         // One launch at a time: the launch screen covers the library, and input reaching it changes nothing.
         guard !isLaunchScreenShowing() else { return }
+        if case .idle = phase(of: game), isDownloading(game) { openDownloads(); return }
         if case .starting = phase(of: game) { cancel(game) } else { play(game) }
     }
 

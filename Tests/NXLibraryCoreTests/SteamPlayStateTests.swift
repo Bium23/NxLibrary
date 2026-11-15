@@ -152,4 +152,8 @@ final class SteamBackgroundLaunchTests: XCTestCase {
         XCTAssertEqual(SteamBackgroundLaunch.launchScreen(phase: .idle, now: start, patience: 15), .over)
         XCTAssertEqual(SteamBackgroundLaunch.launchScreen(phase: .failed(.notStarted), now: start, patience: 15), .over)
     }
+
+    func testDownloadsURLOpensSteamDownloads() {
+        XCTAssertEqual(SteamPlayState.downloadsURL.absoluteString, "steam://open/downloads")
+    }
 }

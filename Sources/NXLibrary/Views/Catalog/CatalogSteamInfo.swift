@@ -91,16 +91,21 @@ struct CatalogSteamInfo: View {
 
     private var phase: SteamPlayState.Phase { player.phase(of: game) }
     private var primaryEnabled: Bool {
-        if case .idle = phase { return player.canPlay(game) }
+        if case .idle = phase { return downloading ? SteamPlayCoordinator.steamClientURL != nil : player.canPlay(game) }
         return true
     }
+
+    /// Steam is still installing the game: Steam downloads in place of Play.
+    private var downloading: Bool { player.isDownloading(game) }
 
     private var primaryTitle: String {
         switch phase {
         case .running: return L10n.text("Resume")
         case .starting: return L10n.text("Cancel")
         case .failed: return L10n.text("Try again")
-        case .idle: return player.canPlay(game) ? L10n.text("Play") : L10n.text("Unavailable")
+        case .idle:
+            if downloading { return L10n.text("Steam downloads") }
+            return player.canPlay(game) ? L10n.text("Play") : L10n.text("Unavailable")
         }
     }
 
@@ -113,7 +118,12 @@ struct CatalogSteamInfo: View {
         case .failed(.handoffRejected): return L10n.text("Steam did not receive the request. Try again.")
         case .failed(.notStarted): return L10n.text("The game did not start. Check Steam, then try again.")
         case .failed(.unavailable): return L10n.text("Refresh the Steam source or check the installation in Steam.")
-        case .idle: return player.canPlay(game) ? nil : L10n.text("Refresh the Steam source or check the installation in Steam.")
+        case .idle:
+            if downloading {
+                return SteamPlayCoordinator.steamClientURL != nil ? L10n.text("Steam hasn't finished installing this game.")
+                                                                  : L10n.text("Steam is not installed on this Mac.")
+            }
+            return player.canPlay(game) ? nil : L10n.text("Refresh the Steam source or check the installation in Steam.")
         case .running: return nil
         }
     }
