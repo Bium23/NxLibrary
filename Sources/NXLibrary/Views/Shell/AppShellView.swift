@@ -306,6 +306,7 @@ public struct AppShellView: View {
             runningGames.stop()
             SteamPlayCoordinator.shared.stop()
             SteamPlaytimeCoordinator.shared.stop()
+            SteamAchievementsStore.shared.stop()
             removeGestureKeyMonitor()
         }
         .onChange(of: viewModel.libraryGames) { games in
@@ -318,6 +319,7 @@ public struct AppShellView: View {
         .onChange(of: viewModel.catalogSourceConfigurations) { sources in
             SteamPlayCoordinator.shared.setGames(viewModel.catalogGames, sources: sources)
             SteamPlaytimeCoordinator.shared.setGames(viewModel.catalogGames, sources: sources)
+            SteamAchievementsStore.shared.setSources(sources)
         }
         .onReceive(playSessions.starts) { gameID in
             // A game that starts leads the Spotlight row, as on a console's home; a move in progress is left alone.
@@ -581,6 +583,7 @@ public struct AppShellView: View {
         // Steam's playtime first: a Steam game already running starts a session at once, and trimming needs Steam's last values.
         SteamPlaytimeCoordinator.shared.setGames(viewModel.catalogGames, sources: viewModel.catalogSourceConfigurations)
         SteamPlaytimeCoordinator.shared.start(sessions: playSessions)
+        SteamAchievementsStore.shared.setSources(viewModel.catalogSourceConfigurations)
         // After the nxnative reconcile, which closes a Steam session left by a restart at its last heartbeat.
         SteamPlayCoordinator.shared.setGames(viewModel.catalogGames, sources: viewModel.catalogSourceConfigurations)
         SteamPlayCoordinator.shared.nativeGames = runningGames

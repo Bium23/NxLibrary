@@ -288,7 +288,10 @@ final class SteamPlayCoordinator: ObservableObject {
         }
         if next != states { states = next }
         // Quits are judged once every game's state is known, so two games quitting together see each other gone.
-        if !ended.isEmpty { SteamPlaytimeCoordinator.shared.sessionEnded() }
+        if !ended.isEmpty {
+            SteamPlaytimeCoordinator.shared.sessionEnded()
+            SteamAchievementsStore.shared.sessionEnded()
+        }
         for id in ended { gameEnded(id) }
         followBackground()
     }
