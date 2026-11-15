@@ -29,8 +29,19 @@ public final class SteamManifestWatcher {
         self.root = rootPath
         let folders = paths.map { $0 + "/steamapps" }.filter { FileManager.default.fileExists(atPath: $0) }
         guard !folders.isEmpty else { return }
+        // The stream holds the watcher until it is released in `stop`, so a callback already queued on the main
+        // queue never reaches a freed watcher.
         var context = FSEventStreamContext(version: 0, info: Unmanaged.passUnretained(self).toOpaque(),
-                                           retain: nil, release: nil, copyDescription: nil)
+                                           retain: { info in
+                                               guard let info else { return nil }
+                                               _ = Unmanaged<SteamManifestWatcher>.fromOpaque(info).retain()
+                                               return info
+                                           },
+                                           release: { info in
+                                               guard let info else { return }
+                                               Unmanaged<SteamManifestWatcher>.fromOpaque(info).release()
+                                           },
+                                           copyDescription: nil)
         let flags = FSEventStreamCreateFlags(kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagUseCFTypes
                                              | kFSEventStreamCreateFlagNoDefer)
         guard let stream = FSEventStreamCreate(nil, Self.callback, &context, folders as CFArray,
@@ -51,6 +62,18 @@ public final class SteamManifestWatcher {
         stream = nil; watched = []; libraries = []; root = nil
     }
 
+    /// An event that may change the library. With `dropped` (the system lost events under `path` and asks for a
+    /// rescan of it), only a drop at a `steamapps` folder or above counts: one inside `downloading/` or `common/`
+    /// says nothing about the manifests, and a long download could otherwise rescan every batch.
+    public nonisolated static func isRelevant(_ path: String, dropped: Bool, libraries: [String], root: String?) -> Bool {
+        guard dropped else { return isRelevant(path, libraries: libraries, root: root) }
+        let folder = path.hasSuffix("/") ? String(path.dropLast()) : path
+        return libraries.contains { library in
+            let steamapps = library + "/steamapps"
+            return steamapps == folder || steamapps.hasPrefix(folder + "/")
+        }
+    }
+
     /// `<library>/steamapps/appmanifest_<digits>.acf`, or the root's `steamapps/libraryfolders.vdf`.
     public nonisolated static func isRelevant(_ path: String, libraries: [String], root: String?) -> Bool {
         if let root, path == root + "/steamapps/libraryfolders.vdf" { return true }
@@ -66,10 +89,11 @@ public final class SteamManifestWatcher {
     }
 
     private func received(_ paths: [String], flags: [FSEventStreamEventFlags]) {
-        // Events dropped by the system: anything may have changed.
-        let dropped = flags.contains { $0 & FSEventStreamEventFlags(kFSEventStreamEventFlagMustScanSubDirs) != 0 }
-        guard dropped || paths.contains(where: { Self.isRelevant($0, libraries: libraries, root: root) }) else { return }
-        onChange?()
+        let mustScan = FSEventStreamEventFlags(kFSEventStreamEventFlagMustScanSubDirs)
+        let changed = zip(paths, flags).contains { path, flag in
+            Self.isRelevant(path, dropped: flag & mustScan != 0, libraries: libraries, root: root)
+        }
+        if changed { onChange?() }
     }
 
     private static let callback: FSEventStreamCallback = { _, info, count, eventPaths, eventFlags, _ in
