@@ -9,6 +9,7 @@ import NXLibraryCore
 /// generic icon. Crossfades when fetched art arrives.
 /// The caller applies the corner radius.
 struct SpotlightTileArtwork: View {
+    @ObservedObject private var gameIcons = GameIconProvider.shared
     let game: PortedGame
     /// Side length in points, already scaled by the caller.
     let side: CGFloat
@@ -29,7 +30,7 @@ struct SpotlightTileArtwork: View {
                     .resizable()
                     .interpolation(.high)
                     .aspectRatio(contentMode: .fill)
-            } else if ownIconFirst, let own = GameIconProvider.squareArt(for: game) {
+            } else if ownIconFirst, let own = gameIcons.squareArt(for: game) {
                 Image(nsImage: own)
                     .resizable()
                     .interpolation(.high)
@@ -40,7 +41,7 @@ struct SpotlightTileArtwork: View {
                     .aspectRatio(contentMode: .fill)
                     .transition(.opacity)
             } else {
-                Image(nsImage: GameIconProvider.icon(for: game))
+                Image(nsImage: gameIcons.icon(for: game))
                     .resizable()
                     .aspectRatio(contentMode: .fill)
             }
@@ -53,7 +54,7 @@ struct SpotlightTileArtwork: View {
                 return
             }
             picked = nil
-            guard !ownIconFirst || GameIconProvider.squareArt(for: game) == nil else { return }
+            guard !ownIconFirst || gameIcons.squareArt(for: game) == nil else { return }
             let key = game.id.uuidString as NSString
             if let memo = TileArtMemo.shared.object(forKey: key) {
                 better = memo

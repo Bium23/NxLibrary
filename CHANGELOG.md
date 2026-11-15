@@ -2,6 +2,10 @@
 
 User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
+## Unreleased
+
+- Game icons load in the background and are cached locally between launches, so opening the collection can show a placeholder while a network game folder is slow or unavailable.
+
 ## 0.1.4.3 — 2026-11-12
 
 ### Added

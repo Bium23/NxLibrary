@@ -155,7 +155,7 @@ extension AppViewModel {
                     self.appIconProgress[game.id] = again ? .updating : status
                     if changed {
                         Self.refreshIcon(of: app)
-                        GameIconProvider.forget(game)
+                        GameIconProvider.shared.forget(game)
                         GameArtLoader.shared.forget(game)
                         ArtworkPicks.shared.touch()
                         self.logs.append(LogEntry(level: .info, message: L10n.format("Updated the app icon of %@.", [String(describing: (game.name))])))

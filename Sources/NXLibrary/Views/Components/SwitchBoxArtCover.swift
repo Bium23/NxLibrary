@@ -8,6 +8,7 @@ import NXLibraryCore
 /// is found, or when GameTDB has none, a composed cover: the blurred Title DB
 /// banner, the game's icon and its name. The caller applies the corner radius.
 struct SwitchBoxArtCover: View {
+    @ObservedObject private var gameIcons = GameIconProvider.shared
     let game: PortedGame
     let width: CGFloat
     let height: CGFloat
@@ -56,7 +57,7 @@ struct SwitchBoxArtCover: View {
             }
             LinearGradient(colors: [.black.opacity(0.05), .black.opacity(0.6)], startPoint: .top, endPoint: .bottom)
             VStack(spacing: height * 0.05) {
-                Image(nsImage: icon ?? GameIconProvider.icon(for: game))
+                Image(nsImage: gameIcons.squareArt(for: game) ?? icon ?? gameIcons.icon(for: game))
                     .resizable()
                     .interpolation(.high)
                     .aspectRatio(contentMode: .fill)
@@ -106,7 +107,7 @@ struct SwitchBoxArtCover: View {
 
     /// The banner and Title DB icon for the composed cover (both cached on disk).
     private func loadComposedArt() async {
-        if let own = GameIconProvider.squareArt(for: game) {
+        if let own = gameIcons.squareArt(for: game) {
             icon = own
         } else if let titleId = game.titleId,
                   let url = await artwork.automaticIcon(titleID: titleId, name: game.name) {

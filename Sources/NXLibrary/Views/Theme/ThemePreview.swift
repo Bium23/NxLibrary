@@ -6,6 +6,7 @@ import NXLibraryCore
 /// a palette that need not be active yet, over its wallpaper or, without one,
 /// its own moonlight backdrop. Tiles show the library's own square art.
 struct ThemePreview: View {
+    @ObservedObject private var gameIcons = GameIconProvider.shared
     @Environment(\.seleneCanvas) private var canvas
     let palette: SelenePalette
     let wallpaperURL: URL?
@@ -18,7 +19,6 @@ struct ThemePreview: View {
     var shade: BackgroundShade = .balanced
 
     @Environment(\.seleneBackdropStyle) private var style
-    @State private var art: [NSImage] = []
     @State private var videoReady = false
 
     var body: some View {
@@ -59,9 +59,6 @@ struct ThemePreview: View {
             .animation(.easeOut(duration: 0.25), value: palette.id)
             .animation(.easeOut(duration: 0.25), value: wallpaperURL)
         }
-        .task(id: games.map(\.id)) {
-            art = games.prefix(6).map { GameIconProvider.squareArt(for: $0) ?? GameIconProvider.icon(for: $0) }
-        }
         .accessibilityHidden(true)
     }
 
@@ -80,8 +77,8 @@ struct ThemePreview: View {
                 ForEach(0..<6, id: \.self) { index in
                     ZStack {
                         glass
-                        if index < art.count {
-                            Image(nsImage: art[index]).resizable().interpolation(.high).aspectRatio(contentMode: .fill)
+                        if index < games.count {
+                            Image(nsImage: gameIcons.icon(for: games[index])).resizable().interpolation(.high).aspectRatio(contentMode: .fill)
                         }
                     }
                     .frame(width: tile, height: tile)
