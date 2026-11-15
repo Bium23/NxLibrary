@@ -75,7 +75,10 @@ struct CollectionCoverRow: View {
                 .drawingGroup()
                 .shadow(color: .black.opacity(0.55), radius: canvas.u(9))
                 } else {
-                    CatalogNativeArtwork(game: game).frame(width: w, height: h).clipShape(face)
+                    CatalogNativeArtwork(game: game)
+                        .portingLook(PortingTileLook.make(catalog: game), cornerRadius: canvas.u(12))
+                        .frame(width: w, height: h)
+                        .clipShape(face)
                 }
             }
             SeleneShine(cornerRadius: canvas.u(12), active: selected)

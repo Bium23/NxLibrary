@@ -64,6 +64,13 @@ public enum PortingTileLook: Equatable {
     case filling(Double)
     /// No app can be played: black and white with a lock.
     case locked
+    /// A Steam game Steam is still installing: black and white, the download glyph and "Downloading".
+    case downloading
+
+    /// A catalog game's tile outside porting: downloading while Steam installs it.
+    public static func make(catalog game: CatalogGame) -> PortingTileLook {
+        game.steamGame?.isDownloading == true ? .downloading : .normal
+    }
 
     public static func make(game: PortedGame, portingGameID: UUID?, progress: PortingProgress?) -> PortingTileLook {
         if game.id == portingGameID, let progress {

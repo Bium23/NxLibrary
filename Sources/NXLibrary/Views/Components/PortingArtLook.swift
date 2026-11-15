@@ -6,7 +6,8 @@ import NXLibraryCore
 /// the shaders compile, a thin "k/n" bar with the stage and its step in small type
 /// sits on the softly blurred art; then the percentage fades in, small, with a slow
 /// pastel sheen. A failed porting with no app keeps the art black and white,
-/// lightly blurred, under a lock.
+/// lightly blurred, under a lock; a Steam game still installing looks the same under
+/// the download glyph and "Downloading".
 ///
 /// The art is drawn once: a grey layer in `.saturation` blend takes the colour out
 /// above the fill line. The sheen moves only while compiling, and stands still
@@ -49,7 +50,7 @@ struct PortingArtLook: ViewModifier {
     private var fill: Double {
         switch look {
         case .normal: return 1
-        case .preparing, .locked: return 0
+        case .preparing, .locked, .downloading: return 0
         case .filling(let value): return min(max(value, 0), 1)
         }
     }
@@ -58,13 +59,13 @@ struct PortingArtLook: ViewModifier {
     private var blur: CGFloat {
         switch look {
         case .preparing: return 0.02
-        case .locked: return 0.012
+        case .locked, .downloading: return 0.012
         case .normal, .filling: return 0
         }
     }
 
     /// What sits on the art; animating between them is the slow dissolve.
-    private enum Stage: Equatable { case none, steps, percent, lock }
+    private enum Stage: Equatable { case none, steps, percent, lock, download }
 
     private var stage: Stage {
         switch look {
@@ -72,6 +73,7 @@ struct PortingArtLook: ViewModifier {
         case .preparing: return .steps
         case .filling: return .percent
         case .locked: return .lock
+        case .downloading: return .download
         }
     }
 
@@ -106,6 +108,10 @@ struct PortingArtLook: ViewModifier {
                     MaterialIconView(.lock, size: side * 0.22)
                         .foregroundColor(.white.opacity(0.88))
                         .shadow(color: .black.opacity(0.55), radius: side * 0.04)
+                        .transition(.opacity)
+                }
+                if stage == .download {
+                    downloading(side: side)
                         .transition(.opacity)
                 }
             }
@@ -149,6 +155,20 @@ struct PortingArtLook: ViewModifier {
             }
             .shadow(color: .black.opacity(0.45), radius: side * 0.02)
         }
+    }
+
+    /// Steam is still installing the game: the glyph where the lock sits, the word under it in small type.
+    private func downloading(side: CGFloat) -> some View {
+        VStack(spacing: side * 0.03) {
+            MaterialIconView(.download, size: side * 0.22)
+                .foregroundColor(.white.opacity(0.88))
+            Text(L10n.text("Downloading"))
+                .font(.system(size: side * 0.06, weight: .medium))
+                .foregroundColor(.white.opacity(0.85))
+                .lineLimit(1)
+                .frame(width: side * 0.84)
+        }
+        .shadow(color: .black.opacity(0.55), radius: side * 0.04)
     }
 
     /// Soft pastels, never vivid; the blue kept faint: pink, peach, butter, mint, mist, lavender.

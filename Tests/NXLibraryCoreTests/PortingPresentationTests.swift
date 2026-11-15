@@ -211,4 +211,14 @@ final class PortingPresentationTests: XCTestCase {
     func testLockIcon() {
         XCTAssertEqual(MaterialIcon.lock.rawValue, "\u{E897}")
     }
+
+    func testCatalogTileLookIsDownloadingOnlyWhileSteamDownloads() {
+        let library = URL(fileURLWithPath: "/tmp/steam"), content = URL(fileURLWithPath: "/tmp/steam/steamapps/common/G")
+        var steam = SteamCatalogGame(appID: 10, name: "Steam game")
+        steam.installations = [.init(libraryURL: library, contentURL: content, availability: .unavailable, isDownloading: true)]
+        XCTAssertEqual(PortingTileLook.make(catalog: CatalogGame(steam: steam)), .downloading)
+        steam.installations = [.init(libraryURL: library, contentURL: content, availability: .available)]
+        XCTAssertEqual(PortingTileLook.make(catalog: CatalogGame(steam: steam)), .normal)
+        XCTAssertEqual(PortingTileLook.make(catalog: CatalogGame(nxnative: CatalogTestSupport.completeLegacyGame())), .normal)
+    }
 }
