@@ -14,7 +14,10 @@ struct DetailsAchievementsCard: View {
     @Environment(\.seleneReduceMotion) private var reduceMotion
     @State private var hovered = false
 
-    private var active: Bool { hovered || focused }
+    /// What the card shows: set from hover and focus inside its own animation, so only the fan, the text swap
+    /// and the light animate. An `.animation` on the card also caught the page's glide that comes with a focus
+    /// change, and the text and icons trailed the panel out of it.
+    @State private var active = false
     private var fanned: Bool { active && !reduceMotion }
     /// Slow and soft, and never past its target: a spring overshot, and quick Up/Down presses added up its
     /// speed until the icons left the panel. Interrupted, a curve only blends towards the new end.
@@ -69,7 +72,10 @@ struct DetailsAchievementsCard: View {
             .overlay(shape.strokeBorder(active ? SeleneTheme.ink25 : SeleneTheme.ink15, lineWidth: max(1, canvas.u(1))))
             .contentShape(shape)
             .onHover { hovered = $0 }
-            .animation(reveal, value: active)
+            .onAppear { active = hovered || focused }
+            .onChange(of: hovered || focused) { wanted in
+                withAnimation(reveal) { active = wanted }
+            }
             .seleneRowFocus(focused, radius: canvas.u(Self.radius))
             .onTapGesture(perform: onOpen)
             .accessibilityElement(children: .ignore)
