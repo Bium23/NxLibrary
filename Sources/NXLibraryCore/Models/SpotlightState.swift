@@ -16,6 +16,8 @@ public enum SpotlightFocusArea: Hashable {
     case topGames
     /// The Mods card's store, below the card; `ModStoreFocus` moves inside it.
     case store
+    /// The Achievements summary tile, above About this game and Build & Sources.
+    case achievements
 }
 
 /// A tile lifted off the row to be moved. `order` is the working order (item
@@ -151,12 +153,13 @@ public struct SpotlightState: Equatable {
         modsIndex = 0
     }
 
-    /// Down: row → pills (games only) → strip → Build & Sources (row by row) → Mods (row by row) →
-    /// More like this, skipping whatever is empty.
+    /// Down: row → pills (games only) → strip → Achievements (when shown) → Build & Sources (row by row) →
+    /// Mods (row by row) → More like this, skipping whatever is empty.
     @discardableResult
     public mutating func moveDown(selectedIsGame: Bool, screenshotCount: Int,
                                   selectedIsActivity: Bool = false, topGameCount: Int = 0,
-                                  actionCount: Int = 0, moreCount: Int = 0, modsCount: Int = 0) -> Bool {
+                                  actionCount: Int = 0, moreCount: Int = 0, modsCount: Int = 0,
+                                  hasAchievements: Bool = false) -> Bool {
         switch focus {
         case .row:
             if selectedIsActivity {
@@ -176,8 +179,12 @@ public struct SpotlightState: Equatable {
                 stripIndex = min(stripIndex, screenshotCount - 1)
                 return true
             }
+            if hasAchievements { focus = .achievements; return true }
             return enterActions(actionCount: actionCount, moreCount: moreCount, modsCount: modsCount)
         case .strip:
+            if hasAchievements { focus = .achievements; return true }
+            return enterActions(actionCount: actionCount, moreCount: moreCount, modsCount: modsCount)
+        case .achievements:
             return enterActions(actionCount: actionCount, moreCount: moreCount, modsCount: modsCount)
         case .actions:
             if let below = Self.actionBelow(actionIndex, count: actionCount) {
@@ -227,14 +234,18 @@ public struct SpotlightState: Equatable {
         return true
     }
 
-    /// Up: More like this → Mods (row by row) → Build & Sources (row by row) → strip → pills → row.
+    /// Up: More like this → Mods (row by row) → Build & Sources (row by row) → Achievements (when shown) →
+    /// strip → pills → row.
     @discardableResult
-    public mutating func moveUp(screenshotCount: Int = 1, actionCount: Int = 0, modsCount: Int = 0) -> Bool {
-        let aboveActions: SpotlightFocusArea = screenshotCount > 0 ? .strip : .pills
+    public mutating func moveUp(screenshotCount: Int = 1, actionCount: Int = 0, modsCount: Int = 0,
+                                hasAchievements: Bool = false) -> Bool {
+        let aboveTiles: SpotlightFocusArea = screenshotCount > 0 ? .strip : .pills
+        let aboveActions: SpotlightFocusArea = hasAchievements ? .achievements : aboveTiles
         switch focus {
         case .row: return false
         case .pills, .topGames, .store: focus = .row
         case .strip: focus = .pills
+        case .achievements: focus = aboveTiles
         case .about:
             focus = aboveActions
         case .actions:
@@ -303,7 +314,7 @@ public struct SpotlightState: Equatable {
             let next = min(max(moreIndex + delta, 0), moreCount - 1)
             defer { moreIndex = next }
             return next != moreIndex
-        case .row, .store:
+        case .row, .store, .achievements:
             return false
         case .pills:
             let next = min(max(pillIndex + delta, 0), pillLimit - 1)

@@ -126,6 +126,8 @@ extension SpotlightView {
             if state.topGameIndex < ids.count { selectGame(ids[state.topGameIndex]) }
         case .store:
             break // The store takes A itself (`handleStore`).
+        case .achievements:
+            break // Opens the Achievements screen once it exists.
         }
     }
 

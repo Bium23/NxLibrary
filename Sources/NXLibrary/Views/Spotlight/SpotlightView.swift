@@ -508,7 +508,7 @@ public struct SpotlightView: View {
         if state.isLifted || cardMenu != nil { return [] }
         switch state.focus {
         case .row: return [[], ["Play", "Build", "Pick", "Open"]]
-        case .pills, .strip, .mods, .about, .actions, .more: return [[], ["Select", "View", "Show"]]
+        case .pills, .strip, .mods, .about, .actions, .more, .achievements: return [[], ["Select", "View", "Show", "Open"]]
         case .store: return [[], ["Sort", "View"]]
         case .topGames: return []
         }
@@ -530,6 +530,8 @@ public struct SpotlightView: View {
             return [HintItem(.b, L10n.text("Back")), HintItem(.a, L10n.text("Select"))]
         case .more:
             return [HintItem(.b, L10n.text("Back")), HintItem(.a, L10n.text("Show"))]
+        case .achievements:
+            return [HintItem(.b, L10n.text("Back")), HintItem(.a, L10n.text("Open"))]
         case .topGames:
             return [HintItem(.a, L10n.text("Show"))]
         case .store:
@@ -785,7 +787,7 @@ public struct SpotlightView: View {
         case .strip:
             // Keep the strip clear of the hints on the window's bottom edge.
             return min(first, canvas.size.height - canvas.u(130) - stripBottom)
-        case .about, .actions, .mods, .more:
+        case .about, .actions, .mods, .more, .achievements:
             // The bands report a height only when they are shown.
             let more = h(.more) > 0
             let pageBottom = stripBottom + h(.description) + h(.mods) + (more ? h(.more) : 0)
@@ -793,7 +795,7 @@ public struct SpotlightView: View {
                 first: first, aboutTop: aboutTop, moreTop: more ? moreTop : nil, pageBottom: pageBottom,
                 top: canvas.u(150), viewport: canvas.size.height, bottomInset: canvas.u(130))
             switch area {
-            case .actions: return rest.actions
+            case .actions, .achievements: return rest.actions
             case .more: return rest.more
             case .mods:
                 // The band's title rises to the top line, as More like this does, unless the page ends first.
