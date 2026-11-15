@@ -63,7 +63,9 @@ final class LaunchCoverPanel: NSPanel {
         super.init(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         // Over the Dock and the menu bar (on the desktop Space Steam may take the screen to).
         level = .statusBar
-        // Every Space, full-screen ones included, and left in place by Mission Control.
+        // Every Space, full-screen ones included, and left in place by Mission Control. When a game opens full screen
+        // the screen rides along into the game's Space and covers it until the game draws, instead of the desktop
+        // picture showing there: the maintainer's choice over a screen that stays on NX Library's Space.
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         // A panel hides when its app is not active by default; NX Library rarely is while a game starts.
         hidesOnDeactivate = false
