@@ -10,7 +10,7 @@ final class DetailsModelCache {
 
 /// The Details page (spec §5.4, Selene GameDetails + DetailsStage). The top
 /// block sits on the stage; Down glides the page up into the bands, which
-/// are Screenshots (720), Build & Sources with Your activity, Mods (for a game
+/// are Screenshots (720), Build & Sources with the summary tiles, Mods (for a game
 /// with a title ID) and More like this, one band pitch (230) apart. A band below the one in focus peeks in, blurred, until
 /// it is focused. Input lives in GameDetailView+Input.swift.
 struct GameDetailView: View {
@@ -281,7 +281,8 @@ struct GameDetailView: View {
                         onHoverRow: { hoverRow($0) },
                         onPressRow: { pressRow($0) })
                     Spacer(minLength: 0)
-                    DetailsActivityColumn(presentation: model.presentation)
+                    DetailsSummaryTiles(presentation: model.presentation, achievements: nil, appID: nil,
+                                        focused: false, axis: .vertical, onOpen: {})
                 }
                 .frame(width: canvas.u(1700), alignment: .topLeading)
             }

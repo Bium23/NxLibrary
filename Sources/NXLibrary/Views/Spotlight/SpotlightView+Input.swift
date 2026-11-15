@@ -22,6 +22,7 @@ extension SpotlightView {
         let actions = page?.rows.count ?? 0
         let more = page?.more.count ?? 0
         let readMore = page.map { aboutExcerpt($0).truncated } ?? false
+        let hasAchievements = selectedAchievements != nil
         let mods = selectedGame.flatMap { modsHost.game?.id == $0.id ? modsHost.tiles.count : nil } ?? 0
         var moved = false
         switch action {
@@ -41,10 +42,12 @@ extension SpotlightView {
             mutate {
                 moved = $0.moveDown(selectedIsGame: isGame, screenshotCount: shots,
                                     selectedIsActivity: isActivity, topGameCount: tops,
-                                    actionCount: actions, moreCount: more, modsCount: mods)
+                                    actionCount: actions, moreCount: more, modsCount: mods,
+                                    hasAchievements: hasAchievements)
             }
         case .navigateUp:
-            mutate { moved = $0.moveUp(screenshotCount: shots, actionCount: actions, modsCount: mods) }
+            mutate { moved = $0.moveUp(screenshotCount: shots, actionCount: actions, modsCount: mods,
+                                       hasAchievements: hasAchievements) }
         case .tabPrevious:
             setFilter(filter.shifted(by: -1))
         case .tabNext:
@@ -127,8 +130,22 @@ extension SpotlightView {
         case .store:
             break // The store takes A itself (`handleStore`).
         case .achievements:
-            break // Opens the Achievements screen once it exists.
+            openAchievements()
         }
+    }
+
+    // MARK: - Achievements
+
+    /// Reads the selected Steam game's achievements (again), in the app's language.
+    func loadAchievements() {
+        guard let appID = selectedCatalogGame?.steamGame?.appID else { return }
+        achievementsStore.load(appID: appID, language: SteamMetadata.language(L10n.context.language))
+    }
+
+    func openAchievements() {
+        guard selectedAchievements != nil else { return }
+        SoundEffectService.shared.play(.click)
+        loadAchievements()
     }
 
     // MARK: - Screenshot viewer

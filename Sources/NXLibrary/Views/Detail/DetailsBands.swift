@@ -48,50 +48,6 @@ struct DetailsScreenshotsBand: View {
     }
 }
 
-/// Your activity, the right column of band 2 (Selene's SeleneDetailsBand2b):
-/// play time and last played over this week and the rank among your games.
-/// The rank is hidden until the game has play time.
-struct DetailsActivityColumn: View {
-    @Environment(\.seleneCanvas) private var canvas
-
-    let presentation: GameDetailPresentation
-
-    static let width: CGFloat = 510
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            DetailsBandTitle(text: L10n.text("Your activity"))
-            VStack(alignment: .leading, spacing: canvas.u(14)) {
-                HStack(alignment: .top, spacing: canvas.u(24)) {
-                    cell(L10n.text("PLAY TIME"), presentation.playtime)
-                    cell("LAST PLAYED", presentation.lastPlayed)
-                }
-                HStack(alignment: .top, spacing: canvas.u(24)) {
-                    cell(L10n.text("THIS WEEK"), presentation.thisWeek)
-                    if let rank = presentation.rank {
-                        cell(L10n.text("RANK"), rank)
-                    }
-                }
-            }
-        }
-        .frame(width: canvas.u(Self.width), alignment: .topLeading)
-    }
-
-    private func cell(_ label: String, _ value: String) -> some View {
-        VStack(alignment: .leading, spacing: canvas.u(2)) {
-            Text(L10n.text(label))
-                .seleneFont(12, .semibold)
-                .foregroundColor(SeleneTheme.ink60)
-            Text(value)
-                .seleneFont(21, .semibold)
-                .foregroundColor(SeleneTheme.ink)
-                .lineLimit(1)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
-    }
-}
-
 /// Band 3: more games from your own library (`MoreLikeThis`), Switch box
 /// covers of 173 × 280 (`SwitchBoxArtCover`). A click focuses, a double
 /// click opens the game on Spotlight.

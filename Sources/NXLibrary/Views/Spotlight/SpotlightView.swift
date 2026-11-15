@@ -10,7 +10,7 @@ import NXLibraryCore
 /// reach the window edges.
 ///
 /// Below the stats the screen is one page: genres, screenshots, the
-/// description with Your activity and Build & Sources beside it, More like this. Down
+/// summary tiles over the description with Build & Sources beside it, More like this. Down
 /// from the row shifts everything up (the row and the bar fade away, the logo
 /// rises to the top) and keeps going section by section; Up comes back.
 public struct SpotlightView: View {
@@ -31,6 +31,7 @@ public struct SpotlightView: View {
     @ObservedObject var picks = ArtworkPicks.shared
     /// Steam store facts and personal fields, shared with the Steam head.
     @ObservedObject var steamFacts = SteamGameFacts.shared
+    @ObservedObject var achievementsStore = SteamAchievementsStore.shared
     @ObservedObject var steamFields = SteamPersonalizations.shared.metadata
     @State var keyMonitor: Any?
     @State var hadGames = false
@@ -194,6 +195,11 @@ public struct SpotlightView: View {
         .onAppear { storeHost.loadCover(titleIDs: Set(storeGames.compactMap { viewModel.modStore(for: $0)?.titleID })) }
         .onAppear { mutate { $0.setPillLimit(selectedPillCount) } }
         .onChange(of: selectedPillCount) { count in mutate { $0.setPillLimit(count) } }
+        // A re-read can remove the tile (the files went away): the focus leaves it for the screenshots.
+        .onChange(of: selectedAchievements == nil) { gone in
+            guard gone, viewModel.spotlight.focus == .achievements else { return }
+            mutate { $0.focus = screenshotCount > 0 ? .strip : .pills }
+        }
         .onDisappear {
             removeKeyMonitor()
             router.isScreenshotViewerOpen = false
@@ -662,6 +668,7 @@ public struct SpotlightView: View {
         reloadMods()
         startModsOnline(viewModel.spotlight.focus)
         if let id = selectedCatalogGame?.id, settings.settings.lastSelectedGameID != id { settings.settings.lastSelectedGameID = id }
+        loadAchievements()
         guard let game = selectedGame else { return }
         if settings.settings.lastSelectedGameID != game.id {
             settings.settings.lastSelectedGameID = game.id
@@ -806,7 +813,7 @@ public struct SpotlightView: View {
                     bottomInset: canvas.u(130)).more
             default:
                 // Read more (or Show less, under the whole text) comes into view.
-                return SpotlightPageScroll.revealing(rest.actions, bottom: aboutTop + h(.about),
+                return SpotlightPageScroll.revealing(rest.actions, bottom: aboutTop + h(.tiles) + h(.about),
                                                      viewport: canvas.size.height, bottomInset: canvas.u(130))
             }
         }
@@ -894,7 +901,7 @@ public struct SpotlightView: View {
     /// Past the screenshots the art dims behind the text.
     func isDeep(_ state: SpotlightState) -> Bool {
         state.focus == .about || state.focus == .actions || state.focus == .mods || state.focus == .more
-            || state.focus == .store
+            || state.focus == .store || state.focus == .achievements
     }
 
     var currentPage: SpotlightPageModel? {
@@ -948,28 +955,46 @@ public struct SpotlightView: View {
         if viewModel.isBuilding { router.openAddGame() }
     }
 
-    /// About this game with the activity column and the source's panel beside it: the same
+    /// The summary tiles, then About this game with the source's panel beside it: the same
     /// geometry, focus blocks and excerpt for every source.
     private func aboutAndColumn<Panel: View>(_ page: SpotlightPageModel, state: SpotlightState,
                                              @ViewBuilder panel: () -> Panel) -> some View {
-        HStack(alignment: .top, spacing: 0) {
-            SpotlightDescription(text: page.presentation.description, languageNote: page.presentation.descriptionLanguageNote, excerpt: aboutExcerpt(page),
-                                 expanded: aboutExpanded, focused: state.focus == .about,
-                                 onToggle: { aboutExpanded.toggle() })
-                .spotlightBlock(.about)
-            Spacer(minLength: 0)
-            VStack(alignment: .leading, spacing: canvas.u(40)) {
-                DetailsActivityColumn(presentation: page.presentation)
+        VStack(alignment: .leading, spacing: 0) {
+            DetailsSummaryTiles(presentation: page.presentation, achievements: selectedAchievements,
+                                appID: selectedCatalogGame?.steamGame?.appID, focused: state.focus == .achievements,
+                                onOpen: {
+                                    guard !state.isLifted else { return }
+                                    mutate { $0.focus = .achievements }
+                                    openAchievements()
+                                })
+                .padding(.bottom, canvas.u(Self.tilesGap))
+                .spotlightBlock(.tiles)
+            HStack(alignment: .top, spacing: 0) {
+                SpotlightDescription(text: page.presentation.description, languageNote: page.presentation.descriptionLanguageNote, excerpt: aboutExcerpt(page),
+                                     expanded: aboutExpanded, focused: state.focus == .about,
+                                     onToggle: { aboutExpanded.toggle() })
+                    .spotlightBlock(.about)
+                Spacer(minLength: 0)
                 panel()
+                    .spotlightBlock(.column)
             }
-            .spotlightBlock(.column)
         }
-        .frame(width: canvas.u(1700), alignment: .topLeading)
+        .frame(width: canvas.u(DetailsSummaryTiles.rowWidth), alignment: .topLeading)
         .padding(.top, canvas.u(44))
         .spotlightBlock(.description)
     }
 
-    /// A Steam game's page under the head: About, activity and its installation panel.
+    /// Between the summary tiles and About this game.
+    static let tilesGap: CGFloat = 40
+
+    /// The selected Steam game's achievements, when it has some and Steam's files read.
+    var selectedAchievements: AchievementSummary? {
+        guard let appID = selectedCatalogGame?.steamGame?.appID,
+              let summary = achievementsStore.summaries[appID], summary.total > 0 else { return nil }
+        return summary
+    }
+
+    /// A Steam game's page under the head: the summary tiles, About and its installation panel.
     private func steamPageBelow(_ page: SpotlightPageModel, state: SpotlightState) -> some View {
         aboutAndColumn(page, state: state) {
             SteamInstallationPanel(
@@ -1023,8 +1048,8 @@ public struct SpotlightView: View {
         .spotlightBlock(.strip)
     }
 
-    /// Below the screenshots: About this game, with Your activity and Build &
-    /// Sources in a column on its right (beside it however long it is), then More like this.
+    /// Below the screenshots: the summary tiles, About this game with Build & Sources in a
+    /// column on its right (beside it however long it is), then More like this.
     private func pageBelow(_ game: PortedGame, page: SpotlightPageModel, state: SpotlightState) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             aboutAndColumn(page, state: state) {
