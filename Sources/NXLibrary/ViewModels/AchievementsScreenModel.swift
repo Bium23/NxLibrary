@@ -20,11 +20,23 @@ final class AchievementsScreenModel: ObservableObject {
         state = AchievementsScreenState(ids: ids)
     }
 
-    enum Outcome { case ignored, moved, filtered, close }
+    enum Outcome { case ignored, moved, filtered, opened, closedDetail, close }
 
-    /// The arrows move through the list, LB/RB switch the filter, B closes; the host swallows the rest.
+    /// The arrows move through the list, LB/RB switch the filter, A opens the focused achievement, B closes;
+    /// with the detail open, the arrows step it through the list and A or B close it. The host swallows the rest.
     func handle(_ action: GamepadAction, summary: AchievementSummary) -> Outcome {
+        if state.isDetailOpen {
+            switch action {
+            case .navigateUp, .navigateLeft: return move(.up) ? .moved : .ignored
+            case .navigateDown, .navigateRight: return move(.down) ? .moved : .ignored
+            case .confirm, .cancel:
+                closeDetail()
+                return .closedDetail
+            default: return .ignored
+            }
+        }
         switch action {
+        case .confirm: return openDetail() ? .opened : .ignored
         case .navigateLeft: return move(.left) ? .moved : .ignored
         case .navigateRight: return move(.right) ? .moved : .ignored
         case .navigateUp: return move(.up) ? .moved : .ignored
@@ -65,8 +77,24 @@ final class AchievementsScreenModel: ObservableObject {
         return true
     }
 
-    /// The wheel or the trackpad (positive shows more below).
+    /// The focused achievement's detail, over the list.
+    @discardableResult
+    func openDetail() -> Bool {
+        var next = state
+        guard next.openDetail() else { return false }
+        state = next
+        return true
+    }
+
+    func closeDetail() {
+        var next = state
+        next.closeDetail()
+        state = next
+    }
+
+    /// The wheel or the trackpad (positive shows more below); the list stays still under an open detail.
     func wheel(by delta: CGFloat, animated: Bool) {
+        guard !state.isDetailOpen else { return }
         if scroll.scroll(by: delta, animated: animated) { wheeled = true }
     }
 

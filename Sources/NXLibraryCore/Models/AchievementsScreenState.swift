@@ -2,7 +2,8 @@ import Foundation
 
 /// Selection on the Achievements screen: a filter and a row in a one-column list, clamped to its edges.
 /// It keeps the rows' ids so a list that changes under it (the rarity arriving, an unlock) keeps the same
-/// achievement in focus.
+/// achievement in focus. A opens the focused achievement's detail over the list; moving while it is open steps
+/// the detail through the list.
 public struct AchievementsScreenState: Equatable {
     public enum MoveDirection: Sendable { case up, down, left, right }
 
@@ -12,6 +13,8 @@ public struct AchievementsScreenState: Equatable {
     public var index = 0
     /// The current filter's rows, by `AchievementRow.id`.
     public private(set) var ids: [String]
+    /// The focused achievement's detail is over the list.
+    public private(set) var isDetailOpen = false
 
     public init(ids: [String]) {
         self.ids = ids
@@ -37,8 +40,20 @@ public struct AchievementsScreenState: Equatable {
         return next != index
     }
 
-    /// A new filter starts at its first tile.
+    /// Opens the focused achievement's detail; returns false when the list is empty.
+    @discardableResult
+    public mutating func openDetail() -> Bool {
+        isDetailOpen = focusedID != nil
+        return isDetailOpen
+    }
+
+    public mutating func closeDetail() {
+        isDetailOpen = false
+    }
+
+    /// A new filter starts at its first tile, with the detail closed.
     public mutating func setFilter(_ filter: AchievementFilter, ids: [String]) {
+        isDetailOpen = false
         self.filter = filter
         self.ids = ids
         index = 0
@@ -53,10 +68,12 @@ public struct AchievementsScreenState: Equatable {
     }
 
     /// The list changed under the same filter: the focused achievement keeps the focus where it went;
-    /// gone from the list, its place does, inside the list.
+    /// gone from the list, its place does, inside the list, and an open detail closes rather than show another.
     public mutating func setIDs(_ ids: [String]) {
         let focused = focusedID
+        let kept = focused.flatMap { ids.firstIndex(of: $0) }
         self.ids = ids
-        index = focused.flatMap { ids.firstIndex(of: $0) } ?? min(index, max(ids.count - 1, 0))
+        index = kept ?? min(index, max(ids.count - 1, 0))
+        if kept == nil { isDetailOpen = false }
     }
 }

@@ -2584,6 +2584,47 @@
         }
       }
     },
+    "%@ of players": {
+      "comment": "Achievement detail: how many Steam players have it, e.g. \"4.5% of players\".",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ of players"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ dei giocatori"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ des joueurs"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ der Spieler"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ de los jugadores"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ dos jogadores"
+          }
+        }
+      }
+    },
     "%@ of the tested %@.": {
       "comment": "SettingsEngineSection.swift:320",
       "localizations": {
@@ -64713,6 +64754,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Desbloqueadas"
+          }
+        }
+      }
+    },
+    "Unlocked on %@": {
+      "comment": "Achievement detail: the unlock date, e.g. \"Unlocked on 31 Jul 2026\".",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlocked on %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sbloccato il %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Débloqué le %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freigeschaltet am %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloqueado el %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloqueado em %@"
           }
         }
       }

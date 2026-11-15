@@ -305,8 +305,17 @@ public struct SpotlightView: View {
                                    SoundEffectService.shared.play(.tabSwitch)
                                },
                                onFocus: { index in
-                                   guard index != screen.state.index else { return }
+                                   // A click on the focused row opens it, as A does.
+                                   guard index != screen.state.index else {
+                                       if screen.openDetail() { SoundEffectService.shared.play(.click) }
+                                       return
+                                   }
                                    screen.focus(index)
+                                   SoundEffectService.shared.play(.focus)
+                               },
+                               onOpen: { if screen.openDetail() { SoundEffectService.shared.play(.click) } },
+                               onCloseDetail: {
+                                   screen.closeDetail()
                                    SoundEffectService.shared.play(.focus)
                                },
                                onClose: closeAchievements)

@@ -88,8 +88,8 @@ final class AchievementTierTests: XCTestCase {
             let url = try XCTUnwrap(tier.imageURL, "\(tier)")
             let source = try XCTUnwrap(CGImageSourceCreateWithURL(url as CFURL, nil), "\(tier)")
             let props = try XCTUnwrap(CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any])
-            XCTAssertGreaterThanOrEqual(props[kCGImagePropertyPixelWidth] as? Int ?? 0, 256, "\(tier)")
-            XCTAssertGreaterThanOrEqual(props[kCGImagePropertyPixelHeight] as? Int ?? 0, 256, "\(tier)")
+            XCTAssertGreaterThanOrEqual(props[kCGImagePropertyPixelWidth] as? Int ?? 0, 512, "\(tier)")
+            XCTAssertGreaterThanOrEqual(props[kCGImagePropertyPixelHeight] as? Int ?? 0, 512, "\(tier)")
         }
     }
 }

@@ -21,6 +21,9 @@ struct AchievementsScreen: View {
     /// LB (-1) or RB (+1), as the controller does.
     let onShiftFilter: (Int) -> Void
     let onFocus: (Int) -> Void
+    /// A, the hint or a click on the focused row: the focused achievement's detail.
+    let onOpen: () -> Void
+    let onCloseDetail: () -> Void
     let onClose: () -> Void
 
     static let side: CGFloat = 110
@@ -60,12 +63,20 @@ struct AchievementsScreen: View {
                     .padding(.top, canvas.u(28))
             }
             .padding(.leading, canvas.u(Self.side))
+            if state.isDetailOpen, let id = state.focusedID, let row = rows.first(where: { $0.id == id }) {
+                AchievementDetail(row: row, appID: game.steamGame?.appID ?? 0, onClose: onCloseDetail)
+                    .transition(.opacity)
+            }
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
-                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back")) { onClose() }], right: [],
+                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back")) {
+                                   if state.isDetailOpen { onCloseDetail() } else { onClose() }
+                               }],
+                               right: state.isDetailOpen || rows.isEmpty ? [] : [HintItem(.a, L10n.text("Open")) { onOpen() }],
                                bottom: 40, leftInset: 18)
             }
         }
+        .animation(SeleneTheme.quick, value: state.isDetailOpen)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(L10n.text("Achievements"))
@@ -194,7 +205,7 @@ struct AchievementsScreen: View {
     private var countLine: String {
         if let last = summary.lastUnlockedAt {
             return L10n.format("%1$d of %2$d unlocked · last on %3$@",
-                               [summary.unlocked, summary.total, AchievementsScreenRow.date(last)])
+                               [summary.unlocked, summary.total, Self.date(last)])
         }
         return L10n.format("%1$d of %2$d unlocked", [summary.unlocked, summary.total])
     }
@@ -247,6 +258,11 @@ struct AchievementsScreen: View {
         }
     }
 
+    /// "31 Jul 2026" in the app's locale.
+    static func date(_ date: Date) -> String {
+        date.formatted(.dateTime.day().month(.abbreviated).year().locale(L10n.context.formatLocale))
+    }
+
     /// 4.5 → "4.5%" in the app's locale ("4,5 %" in French).
     static func percent(_ value: Double) -> String {
         (value / 100).formatted(.percent.precision(.fractionLength(1)).locale(L10n.context.formatLocale))
@@ -296,7 +312,7 @@ private struct AchievementsScreenRow: View {
                 }
                 if let date = row.unlockedAt {
                     Label {
-                        Text(Self.date(date))
+                        Text(AchievementsScreen.date(date))
                     } icon: {
                         Image(systemName: "checkmark.circle.fill")
                     }
@@ -325,10 +341,6 @@ private struct AchievementsScreenRow: View {
         .animation(SeleneTheme.quick, value: focused)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(focused ? .isSelected : [])
-    }
-
-    static func date(_ date: Date) -> String {
-        date.formatted(.dateTime.day().month(.abbreviated).year().locale(L10n.context.formatLocale))
     }
 }
 
