@@ -18,6 +18,9 @@ struct DetailsAchievementsCard: View {
     static let width = BuildSourcesPanel.narrowWidth
     /// How far the focus ring sits outside the content, so the text stays aligned with the column.
     private static let ringMargin: CGFloat = 16
+    private static let ringMarginVertical: CGFloat = 12
+    /// The block sits this much lower under its title than Installation's text does, so the ring clears the title.
+    private static let titleClearance: CGFloat = 10
     private static let radius: CGFloat = 16
 
     var body: some View {
@@ -32,8 +35,8 @@ struct DetailsAchievementsCard: View {
                             .seleneFont(30, .semibold)
                             .monospacedDigit()
                         Text(L10n.format("%d%% complete", [summary.percentComplete]))
-                            .seleneFont(15, .medium)
-                            .foregroundColor(SeleneTheme.ink60)
+                            .seleneFont(15, .semibold)
+                            .foregroundColor(SeleneTheme.ink75)
                             .monospacedDigit()
                     }
                     .lineLimit(1)
@@ -45,13 +48,18 @@ struct DetailsAchievementsCard: View {
                     }
                 }
                 AchievementProgressBar(fraction: summary.total > 0 ? Double(summary.unlocked) / Double(summary.total) : 0,
-                                       height: 4)
+                                       height: 5, track: SeleneTheme.ink25)
             }
+            // Open on the art: the stats row's shadow keeps it legible on light backgrounds.
+            .shadow(color: .black.opacity(0.45), radius: canvas.u(4))
             .frame(width: canvas.u(Self.width), alignment: .leading)
-            .padding(canvas.u(Self.ringMargin))
+            .padding(.horizontal, canvas.u(Self.ringMargin))
+            .padding(.vertical, canvas.u(Self.ringMarginVertical))
             .contentShape(shape)
             .seleneRowFocus(focused, radius: canvas.u(Self.radius))
-            .padding(-canvas.u(Self.ringMargin))
+            .padding(.horizontal, -canvas.u(Self.ringMargin))
+            .padding(.vertical, -canvas.u(Self.ringMarginVertical))
+            .padding(.top, canvas.u(Self.titleClearance))
             .onTapGesture(perform: onOpen)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(L10n.format("Achievements: %d of %d", [summary.unlocked, summary.total]))
@@ -67,11 +75,12 @@ struct AchievementProgressBar: View {
     let fraction: Double
     /// Canvas units: the page's open block uses a finer bar than the screen.
     var height: CGFloat = 6
+    var track: Color = SeleneTheme.ink15
 
     var body: some View {
         GeometryReader { proxy in
             ZStack(alignment: .leading) {
-                Capsule().fill(SeleneTheme.ink15)
+                Capsule().fill(track)
                 Capsule().fill(SeleneTheme.focus)
                     .frame(width: proxy.size.width * min(max(fraction, 0), 1))
             }
