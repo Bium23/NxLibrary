@@ -29,6 +29,10 @@ public actor SteamMetadataService {
     }()
     public static func allowed(_ url: URL) -> Bool {
         guard url.scheme == "https", url.user == nil, url.password == nil, url.port == nil || url.port == 443 else { return false }
+        // `URL.path` drops the trailing slash; the components keep it.
+        if url.host == SteamAchievementRarity.host {
+            return URLComponents(url: url, resolvingAgainstBaseURL: false)?.path == SteamAchievementRarity.path
+        }
         return url.host == "store.steampowered.com" || SteamMetadata.safeImage(url) != nil
     }
 
@@ -43,7 +47,7 @@ public actor SteamMetadataService {
         let (bytes, response) = try await session.bytes(for: request)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode),
               let final = http.url, allowed(final) else { throw URLError(.badServerResponse) }
-        let limit = url.host == "store.steampowered.com" ? 2_097_152 : 12_582_912
+        let limit = url.host == "store.steampowered.com" || url.host == SteamAchievementRarity.host ? 2_097_152 : 12_582_912
         if response.expectedContentLength > limit { throw URLError(.dataLengthExceedsMaximum) }
         var data = Data()
         for try await byte in bytes {
@@ -98,6 +102,43 @@ public actor SteamMetadataService {
             return result
         } catch { return valid }
     }
+    /// How many of Steam's players have each achievement (`SteamAchievementRarity`), by API name, kept for a day.
+    /// Offline or on a bad answer, the last percentages known, or nil.
+    public func achievementPercents(appID: UInt32) async -> [String: Double]? {
+        guard appID > 0 else { return nil }
+        let file = directory.appendingPathComponent("\(appID)/achievement-percents.json")
+        let cached = (try? InstallationFileSnapshot.read(at: file, maximumBytes: 2_097_152).data)
+            .flatMap { try? JSONDecoder().decode(SteamAchievementPercentsCache.self, from: $0) }
+        if let cached, Date().timeIntervalSince(cached.fetchedAt) < SteamAchievementRarity.freshFor { return cached.percents }
+        let url = SteamAchievementRarity.url(appID: appID)
+        do {
+            let bytes = try await fetch(url)
+            try Task.checkCancellation()
+            let percents: [String: Double]
+            do { percents = try SteamAchievementRarity.decode(bytes) }
+            catch { failedAt[url] = Date(); throw error }
+            try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try JSONEncoder().encode(SteamAchievementPercentsCache(fetchedAt: Date(), percents: percents)).write(to: file, options: .atomic)
+            return percents
+        } catch { return cached?.percents }
+    }
+
+    /// An achievement's icon from Steam's CDN, kept on disk as long as it reads as an image.
+    public func achievementIcon(appID: UInt32, file name: String) async -> URL? {
+        guard appID > 0, !Task.isCancelled, let url = SteamAchievementRarity.iconURL(appID: appID, file: name) else { return nil }
+        let file = directory.appendingPathComponent("\(appID)/achievements/\(name)")
+        let limit = 2_097_152
+        if let data = try? InstallationFileSnapshot.read(at: file, maximumBytes: limit).data,
+           ArtworkStore.downsample(data, maxPixelSize: 256) != nil { return file }
+        guard let data = try? await fetch(url), !Task.isCancelled else { return nil }
+        guard data.count <= limit, ArtworkStore.downsample(data, maxPixelSize: 256) != nil else { failedAt[url] = Date(); return nil }
+        do {
+            try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try data.write(to: file, options: .atomic)
+            return file
+        } catch { return nil }
+    }
+
     public func image(appID: UInt32, slot: ArtworkSlot, remote: URL? = nil) async -> URL? {
         guard appID > 0, !Task.isCancelled else { return nil }
         // Screenshots use their full URL in the cache key; no basename collisions.
