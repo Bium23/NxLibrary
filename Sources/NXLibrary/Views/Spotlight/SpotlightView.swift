@@ -65,6 +65,8 @@ public struct SpotlightView: View {
     @State var wheelSettle: Task<Void, Never>?
     /// About this game shows its whole text (Read more); closes with the game.
     @State var aboutExpanded = false
+    /// About this game shows Read more, as last drawn (`SpotlightReadMoreKey`).
+    @State var aboutReadMore = false
     /// The selected game's Mods band (installed mods, GameBanana's, their panels); shared with Details.
     @StateObject var modsHost = ModsBandHost()
     /// The Mods card's store, below the card.
@@ -354,6 +356,9 @@ public struct SpotlightView: View {
             }
             .onPreferenceChange(SpotlightBlockKey.self) { heights in
                 if !Self.sameLayout(heights, blocks) { blocks = heights }
+            }
+            .onPreferenceChange(SpotlightReadMoreKey.self) { shown in
+                if shown != aboutReadMore { aboutReadMore = shown }
             }
             // One page: the focus scrolls it; the glide is movement, so reduce motion jumps.
             .offset(y: scroll)
@@ -995,10 +1000,12 @@ public struct SpotlightView: View {
     private func aboutAndColumn<Panel: View>(_ page: SpotlightPageModel, state: SpotlightState,
                                              @ViewBuilder panel: () -> Panel) -> some View {
         HStack(alignment: .top, spacing: 0) {
-            SpotlightDescription(text: page.presentation.description, languageNote: page.presentation.descriptionLanguageNote, excerpt: aboutExcerpt(page),
+            let excerpt = aboutExcerpt(page)
+            SpotlightDescription(text: page.presentation.description, languageNote: page.presentation.descriptionLanguageNote, excerpt: excerpt,
                                  expanded: aboutExpanded, focused: state.focus == .about,
                                  onToggle: { aboutExpanded.toggle() })
                 .spotlightBlock(.about)
+                .preference(key: SpotlightReadMoreKey.self, value: excerpt.truncated)
             Spacer(minLength: 0)
             VStack(alignment: .leading, spacing: canvas.u(40)) {
                 if let summary = selectedAchievements, let appID = selectedCatalogGame?.steamGame?.appID {

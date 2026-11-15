@@ -28,6 +28,14 @@ struct SpotlightBlockKey: PreferenceKey {
     }
 }
 
+/// Whether About this game shows Read more, as drawn. Input reads this rather than cutting the text again:
+/// the keyboard reaches Spotlight through a copy of the view made when the monitor was installed, whose
+/// canvas can be an earlier window size, so its own cut could disagree with the one on screen.
+struct SpotlightReadMoreKey: PreferenceKey {
+    static var defaultValue = false
+    static func reduce(value: inout Bool, nextValue: () -> Bool) { value = value || nextValue() }
+}
+
 extension View {
     /// Reports this view's height (apply after its top padding) under `block`.
     func spotlightBlock(_ block: SpotlightPageBlock) -> some View {

@@ -22,7 +22,8 @@ extension SpotlightView {
         let page = currentPage
         let actions = page?.rows.count ?? 0
         let more = page?.more.count ?? 0
-        let readMore = page.map { aboutExcerpt($0).truncated } ?? false
+        // As drawn: this copy's canvas may be an older window size than the page's (`SpotlightReadMoreKey`).
+        let readMore = page != nil && aboutReadMore
         let hasAchievements = selectedAchievements != nil
         let mods = selectedGame.flatMap { modsHost.game?.id == $0.id ? modsHost.tiles.count : nil } ?? 0
         var moved = false
