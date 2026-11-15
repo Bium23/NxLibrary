@@ -20,7 +20,7 @@ extension SpotlightView {
         let shots = screenshotCount
         let tops = topGameCount
         let page = currentPage
-        let actions = page?.rows.count ?? 0
+        let actions = page?.links.count ?? 0
         let more = page?.more.count ?? 0
         // As drawn: this copy's canvas may be an older window size than the page's (`SpotlightReadMoreKey`).
         let readMore = page != nil && aboutReadMore
@@ -117,7 +117,7 @@ extension SpotlightView {
             aboutExpanded.toggle()
             SoundEffectService.shared.play(.click)
         case .actions:
-            let rows = currentPage?.rows ?? []
+            let rows = currentPage?.links ?? []
             guard state.actionIndex < rows.count else { return }
             rows[state.actionIndex].action()
         case .more:
@@ -561,7 +561,7 @@ extension SpotlightView {
         // The row is reached only by the glide, never by settling.
         var areas: [SpotlightFocusArea] = [.pills]
         if screenshotCount > 0 { areas.append(.strip) }
-        if !page.rows.isEmpty { areas.append(.actions) }
+        if !page.links.isEmpty { areas.append(.actions) }
         if modsHost.localMods != nil { areas.append(.mods) }
         if !page.more.isEmpty { areas.append(.more) }
         let current = scroll

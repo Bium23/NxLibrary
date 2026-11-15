@@ -3,10 +3,11 @@ import AppKit
 import NXLibraryCore
 
 /// What Spotlight's page needs below the stats: the game's details,
-/// Build & Sources' actions and More like this.
+/// the Details panel's rows and links, and More like this.
 struct SpotlightPageModel {
     let presentation: GameDetailPresentation
-    let rows: [BuildSourcesRow]
+    let facts: [DetailsFact]
+    let links: [DetailsLink]
     let more: [PortedGame]
     /// The Metal gate refuses new builds.
     let buildBlocked: Bool

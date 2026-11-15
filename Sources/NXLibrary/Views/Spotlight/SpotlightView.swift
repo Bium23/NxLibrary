@@ -963,8 +963,12 @@ public struct SpotlightView: View {
             totalPlaytime: playSessions.totalDuration(for: game.id),
             lastPlayed: playSessions.lastPlayed(for: game.id),
             sessions: playSessions.sessions, libraryGames: visible, playtimeByGame: playtimes)
-        return SpotlightPageModel(presentation: presentation,
-                                  rows: BuildSourcesRow.steamRows(for: game, presentation: presentation, viewModel: viewModel),
+        let facts = DetailsFacts.steamGame(game, metadata: steamFacts.metadata(for: game), overrides: overrides,
+                                           volumeName: DetailsLink.volumeName(of: game))
+        let app = presentation.appPath.isEmpty ? nil : URL(fileURLWithPath: presentation.appPath)
+        return SpotlightPageModel(presentation: presentation, facts: facts,
+                                  links: DetailsLink.links(app: app, store: presentation.storeURL,
+                                                           hltb: presentation.hltbURL, viewModel: viewModel),
                                   more: [], buildBlocked: false)
     }
 
@@ -978,23 +982,15 @@ public struct SpotlightView: View {
             lastPlayed: playSessions.lastPlayed(for: game.id),
             sessions: playSessions.sessions, libraryGames: library, playtimeByGame: playtimes)
         let blocked = viewModel.compatibilityReport != nil && !viewModel.canPassToolchainGate
-        let rows = BuildSourcesRow.rows(for: game, presentation: presentation, buildBlocked: blocked,
-                                        viewModel: viewModel, rebuild: { rebuild(game, canRebuild: presentation.canRebuild) })
+        let facts = DetailsFacts.switchGame(game, metadata: viewModel.storeMetadata[game.id],
+                                            folderName: DetailsLink.folderName(of: game.url))
+        let links = DetailsLink.links(app: game.url, store: presentation.storeURL, hltb: presentation.hltbURL,
+                                      viewModel: viewModel)
         let ids = MoreLikeThis.pick(for: game, in: library,
                                     metadata: { viewModel.storeMetadata[$0] }, limit: 6)
         let byID = Dictionary(library.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        return SpotlightPageModel(presentation: presentation, rows: rows,
+        return SpotlightPageModel(presentation: presentation, facts: facts, links: links,
                                   more: ids.compactMap { byID[$0] }, buildBlocked: blocked)
-    }
-
-    private func rebuild(_ game: PortedGame, canRebuild: Bool) {
-        guard canRebuild else {
-            SoundEffectService.shared.play(.error)
-            return
-        }
-        SoundEffectService.shared.play(.click)
-        viewModel.startBuild(for: game)
-        if viewModel.isBuilding { router.openAddGame() }
     }
 
     /// About this game with the column beside it (a Steam game's achievements, then the source's panel):
@@ -1034,20 +1030,25 @@ public struct SpotlightView: View {
         return summary
     }
 
-    /// A Steam game's page under the head: About, its achievements and its installation panel.
+    /// The Details panel in the column beside About this game, the same for every source.
+    private func detailsPanel(_ page: SpotlightPageModel, state: SpotlightState) -> some View {
+        DetailsPanel(
+            facts: page.facts, links: page.links,
+            focusedLink: state.focus == .actions ? state.actionIndex : nil,
+            onHoverLink: { index in
+                guard state.focus == .actions, !isGliding else { return }
+                mutate { $0.actionIndex = index }
+            },
+            onPressLink: { index in
+                mutate { $0.focus = .actions; $0.actionIndex = index }
+                if index < page.links.count { page.links[index].action() }
+            })
+    }
+
+    /// A Steam game's page under the head: About, its achievements and its Details.
     private func steamPageBelow(_ page: SpotlightPageModel, state: SpotlightState) -> some View {
         aboutAndColumn(page, state: state) {
-            SteamInstallationPanel(
-                presentation: page.presentation, rows: page.rows,
-                focusedRow: state.focus == .actions ? state.actionIndex : nil,
-                onHoverRow: { index in
-                    guard state.focus == .actions, !isGliding else { return }
-                    mutate { $0.actionIndex = index }
-                },
-                onPressRow: { index in
-                    mutate { $0.focus = .actions; $0.actionIndex = index }
-                    if index < page.rows.count { page.rows[index].action() }
-                })
+            detailsPanel(page, state: state)
         }
     }
 
@@ -1088,27 +1089,12 @@ public struct SpotlightView: View {
         .spotlightBlock(.strip)
     }
 
-    /// Below the screenshots: About this game, with Build & Sources in a column on its right
+    /// Below the screenshots: About this game, with Details in a column on its right
     /// (beside it however long it is), then More like this.
     private func pageBelow(_ game: PortedGame, page: SpotlightPageModel, state: SpotlightState) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             aboutAndColumn(page, state: state) {
-                    BuildSourcesPanel(
-                        presentation: page.presentation,
-                        appFileName: game.url.lastPathComponent,
-                        buildBlocked: page.buildBlocked && page.presentation.canRebuild,
-                        blockedHint: viewModel.toolchainGateSummary,
-                        rows: page.rows,
-                        focusedRow: state.focus == .actions ? state.actionIndex : nil,
-                        onHoverRow: { index in
-                            guard state.focus == .actions, !isGliding else { return }
-                            mutate { $0.actionIndex = index }
-                        },
-                        onPressRow: { index in
-                            mutate { $0.focus = .actions; $0.actionIndex = index }
-                            if index < page.rows.count { page.rows[index].action() }
-                        },
-                        width: BuildSourcesPanel.narrowWidth)
+                detailsPanel(page, state: state)
             }
 
             if let mods = modsHost.localMods, modsHost.game?.id == game.id {

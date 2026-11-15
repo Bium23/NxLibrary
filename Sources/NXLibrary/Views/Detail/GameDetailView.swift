@@ -51,7 +51,8 @@ struct GameDetailView: View {
     /// Everything one render needs, computed once per body.
     struct Model {
         let presentation: GameDetailPresentation
-        let rows: [BuildSourcesRow]
+        let facts: [DetailsFact]
+        let links: [DetailsLink]
         let screenshots: [URL]
         let screenshotsKnown: Bool
         let more: [PortedGame]
@@ -71,13 +72,14 @@ struct GameDetailView: View {
         let urls = Array((metadata?.screenshotURLs ?? []).prefix(SpotlightScreenshotStrip.maxCount))
         let more = moreGames
         let blocked = toolchainBlocked
-        let rows = actionRows(p, buildBlocked: blocked)
-        return Model(presentation: p, rows: rows, screenshots: urls,
+        let links = DetailsLink.links(app: game.url, store: p.storeURL, hltb: p.hltbURL, viewModel: viewModel)
+        let facts = DetailsFacts.switchGame(game, metadata: metadata, folderName: DetailsLink.folderName(of: game.url))
+        return Model(presentation: p, facts: facts, links: links, screenshots: urls,
                      screenshotsKnown: screenshotsKnown,
                      more: more,
                      mods: modsHost.localMods,
                      bands: DetailsFocus.Bands(screenshots: urls.count, mods: modsHost.tiles.count,
-                                               actions: rows.count, more: more.count),
+                                               actions: links.count, more: more.count),
                      buildBlocked: blocked,
                      primaryEnabled: p.canPlay || (p.canRebuild && !blocked))
     }
@@ -119,12 +121,6 @@ struct GameDetailView: View {
         if viewModel.storeMetadataLoading.contains(game.id) || viewModel.screenshotLookups.contains(game.id) { return false }
         guard let titleId = game.titleId, !titleId.isEmpty else { return true }
         return metadata != nil || viewModel.storeMetadataErrors[game.id] != nil
-    }
-
-    /// Build & Sources' actions, in grid order.
-    func actionRows(_ p: GameDetailPresentation, buildBlocked: Bool) -> [BuildSourcesRow] {
-        BuildSourcesRow.rows(for: game, presentation: p, buildBlocked: buildBlocked,
-                             viewModel: viewModel, rebuild: { rebuild() })
     }
 
     // MARK: - Body
@@ -271,15 +267,13 @@ struct GameDetailView: View {
 
             band(zone: DetailsFocus.actionsZone) {
                 HStack(alignment: .top, spacing: 0) {
-                    BuildSourcesPanel(
-                        presentation: model.presentation,
-                        appFileName: game.url.lastPathComponent,
-                        buildBlocked: model.buildBlocked && model.presentation.canRebuild,
-                        blockedHint: viewModel.toolchainGateSummary,
-                        rows: model.rows,
-                        focusedRow: focus.zone == DetailsFocus.actionsZone ? focus.action : nil,
-                        onHoverRow: { hoverRow($0) },
-                        onPressRow: { pressRow($0) })
+                    DetailsPanel(
+                        facts: model.facts,
+                        links: model.links,
+                        focusedLink: focus.zone == DetailsFocus.actionsZone ? focus.action : nil,
+                        onHoverLink: { hoverRow($0) },
+                        onPressLink: { pressRow($0) },
+                        width: DetailsPanel.wideWidth)
                     Spacer(minLength: 0)
                 }
                 .frame(width: canvas.u(1700), alignment: .topLeading)

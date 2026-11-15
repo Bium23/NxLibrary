@@ -14,8 +14,8 @@ struct DetailsAchievementsCard: View {
     let focused: Bool
     let onOpen: () -> Void
 
-    /// The column's width (`BuildSourcesPanel.narrowWidth`).
-    static let width = BuildSourcesPanel.narrowWidth
+    /// The column's width (`DetailsPanel.narrowWidth`).
+    static let width = DetailsPanel.narrowWidth
     private static let radius: CGFloat = SeleneTheme.contentRadius
 
     var body: some View {

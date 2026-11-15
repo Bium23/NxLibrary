@@ -10323,47 +10323,6 @@
         }
       }
     },
-    "Build & Sources": {
-      "comment": "BuildSourcesPanel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Build & Sources"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compilazione e sorgenti"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compilation et sources"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Build & Quellen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compilación y archivos de origen"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compilação e arquivos de origem"
-          }
-        }
-      }
-    },
     "Build a game and it shows up here.": {
       "comment": "SpotlightRowView.swift:192",
       "localizations": {
@@ -22223,47 +22182,6 @@
         }
       }
     },
-    "Engine %@": {
-      "comment": "BuildSourcesPanel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Engine %@"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Motore %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Moteur %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Engine %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Motor %@"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Engine %@"
-          }
-        }
-      }
-    },
     "Engine %@ nxnative main %@ (%@); builds are recorded as untested.": {
       "comment": "AppViewModel+NewestEngine.swift",
       "localizations": {
@@ -25953,47 +25871,6 @@
         }
       }
     },
-    "Game files are missing or not attached. Attach them to build.": {
-      "comment": "BuildSourcesPanel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Game files are missing or not attached. Attach them to build."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I file del gioco non sono disponibili o non sono collegati. Collegali per compilare."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les fichiers du jeu sont introuvables ou non associés. Associez-les pour compiler."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spieldateien fehlen oder sind nicht zugeordnet. Ordne sie zu, um die App zu erstellen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Los archivos del juego faltan o no están vinculados. Vincúlalos para compilar."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Os arquivos do jogo não foram encontrados ou não estão vinculados. Vincule-os para compilar."
-          }
-        }
-      }
-    },
     "Game files are missing or not attached. Attach them to rebuild.": {
       "comment": "GameOptionsPresentation.swift",
       "localizations": {
@@ -26031,47 +25908,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Os arquivos do jogo não foram encontrados ou não estão vinculados. Vincule-os para recompilar."
-          }
-        }
-      }
-    },
-    "Game files are missing or not attached. Play is available; attach them to rebuild.": {
-      "comment": "BuildSourcesPanel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Game files are missing or not attached. Play is available; attach them to rebuild."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I file del gioco non sono disponibili o non sono collegati. Puoi giocare; collegali per ricompilare."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les fichiers du jeu sont introuvables ou non associés. Vous pouvez jouer ; associez-les pour recompiler."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spieldateien fehlen oder sind nicht zugeordnet. Spielen ist möglich; ordne die Dateien zu, um die App erneut zu erstellen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Los archivos del juego faltan o no están vinculados. Puedes jugar; vincúlalos para recompilar."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Os arquivos do jogo não foram encontrados ou não estão vinculados. Você pode jogar; vincule-os para recompilar."
           }
         }
       }
@@ -29644,7 +29480,7 @@
       }
     },
     "HowLongToBeat": {
-      "comment": "BuildSourcesPanel.swift",
+      "comment": "Details panel and Options",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -31201,47 +31037,6 @@
         }
       }
     },
-    "Installation": {
-      "comment": "Steam source management and native Mac library presentation.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Installation"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Installazione"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Installation"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Installation"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Instalación"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Instalação"
-          }
-        }
-      }
-    },
     "Installation failed": {
       "comment": "AppShellView.swift",
       "localizations": {
@@ -31279,47 +31074,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Falha na instalação"
-          }
-        }
-      }
-    },
-    "Installation not detected": {
-      "comment": "Steam source management and native Mac library presentation.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Installation not detected"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Installazione non rilevata"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Installation non détectée"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Installation nicht gefunden"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Instalación no detectada"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Instalação não detectada"
           }
         }
       }
@@ -35260,47 +35014,6 @@
         }
       }
     },
-    "Mac game": {
-      "comment": "Steam source management and native Mac library presentation.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mac game"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gioco Mac"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jeu Mac"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mac-Spiel"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Juego de Mac"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jogo de Mac"
-          }
-        }
-      }
-    },
     "Manage mods": {
       "comment": "DetailsBands.swift",
       "localizations": {
@@ -37716,47 +37429,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "O NX Library será reiniciado para concluir."
-          }
-        }
-      }
-    },
-    "NX Library uses symlinks to your game ROM files to build the macOS native binary. Rebuilding uses your current engine pin and settings, and preserves your game saves. ": {
-      "comment": "BuildSourcesPanel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NX Library uses symlinks to your game ROM files to build the macOS native binary. Rebuilding uses your current engine pin and settings, and preserves your game saves. "
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NX Library usa collegamenti simbolici ai file ROM dei tuoi giochi per compilare il binario nativo per macOS. La ricompilazione usa la versione del motore attualmente fissata e le impostazioni correnti, e conserva i salvataggi. "
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NX Library utilise des liens symboliques vers vos fichiers ROM de jeu pour compiler le binaire natif macOS. La recompilation utilise votre version de moteur épinglée et vos réglages actuels, et préserve vos sauvegardes de jeu. "
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NX Library verwendet symbolische Links zu deinen Spiel-ROM-Dateien, um die native macOS-App zu erstellen. Beim erneuten Erstellen werden die aktuell festgelegte Engine-Version und deine Einstellungen verwendet. Deine Spielstände bleiben erhalten. "
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NX Library usa enlaces simbólicos a los archivos ROM de tus juegos para compilar el binario nativo de macOS. Al recompilar, se usan la versión fijada del motor y los ajustes actuales, y se conservan las partidas guardadas. "
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O NX Library usa links simbólicos para os arquivos ROM dos seus jogos para compilar o binário nativo para macOS. A recompilação usa a versão fixada atual da engine e seus ajustes, preservando os dados salvos do jogo. "
           }
         }
       }
@@ -43419,47 +43091,6 @@
         }
       }
     },
-    "Open save folder": {
-      "comment": "BuildSourcesPanel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open save folder"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apri cartella dei salvataggi"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ouvrir le dossier des sauvegardes"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spielstandordner öffnen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Abrir carpeta de partidas"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Abrir pasta de dados salvos"
-          }
-        }
-      }
-    },
     "Open the Setup check: what NX Library needs and what is ready.": {
       "comment": "SettingsStartUpSection.swift",
       "localizations": {
@@ -47232,7 +46863,7 @@
       }
     },
     "Rebuild": {
-      "comment": "BuildSourcesPanel.swift",
+      "comment": "Details panel and Options",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -49912,47 +49543,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mostrar"
-          }
-        }
-      }
-    },
-    "Reveal app in Finder": {
-      "comment": "BuildSourcesPanel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reveal app in Finder"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mostra app nel Finder"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Afficher l’app dans le Finder"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "App im Finder zeigen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mostrar app en el Finder"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mostrar app no Finder"
           }
         }
       }
@@ -54467,47 +54057,6 @@
         }
       }
     },
-    "Sources attached": {
-      "comment": "BuildSourcesPanel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sources attached"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sorgenti collegate"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sources associées"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quellen zugeordnet"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Archivos de origen vinculados"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arquivos de origem vinculados"
-          }
-        }
-      }
-    },
     "Sources attached to %@; rebuild is now available if the toolchain gate allows it.": {
       "comment": "AppViewModel.swift",
       "localizations": {
@@ -54586,47 +54135,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Arquivos de origem vinculados. Recompile sem alterar os dados salvos."
-          }
-        }
-      }
-    },
-    "Sources detached": {
-      "comment": "BuildSourcesPanel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sources detached"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sorgenti scollegate"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sources dissociées"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quellen getrennt"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Archivos de origen desvinculados"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arquivos de origem desvinculados"
           }
         }
       }
@@ -60904,47 +60412,6 @@
         }
       }
     },
-    "The original sources are attached. Rebuild writes a new app and keeps the previous one if it fails.": {
-      "comment": "BuildSourcesPanel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The original sources are attached. Rebuild writes a new app and keeps the previous one if it fails."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le sorgenti originali sono collegate. La ricompilazione crea una nuova app e conserva quella precedente in caso di errore."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les sources d’origine sont associées. La recompilation crée une nouvelle app et conserve la précédente en cas d’échec."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die ursprünglichen Quellen sind zugeordnet. Beim erneuten Erstellen wird eine neue App geschrieben; schlägt dies fehl, bleibt die bisherige erhalten."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Los archivos de origen originales están vinculados. Al recompilar, se crea una nueva app y se conserva la anterior si hay un fallo."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Os arquivos de origem originais estão vinculados. A recompilação cria um novo app e mantém o anterior em caso de falha."
-          }
-        }
-      }
-    },
     "The package contents could not be read. Check the files and imported keys.": {
       "comment": "EnginePackageReader.swift:34",
       "localizations": {
@@ -61925,47 +61392,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Os arquivos de origem não foram encontrados. Primeiro, vincule ou localize os arquivos originais do jogo base, das atualizações e dos DLCs."
-          }
-        }
-      }
-    },
-    "The sources are detached: attach them again to rebuild.": {
-      "comment": "BuildSourcesPanel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The sources are detached: attach them again to rebuild."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le sorgenti sono scollegate: collegale di nuovo per ricompilare."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les sources sont dissociées : associez-les à nouveau pour recompiler."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Quellen sind getrennt: Ordne sie erneut zu, um die App erneut zu erstellen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Los archivos de origen están desvinculados: vuelve a vincularlos para recompilar."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Os arquivos de origem estão desvinculados: vincule-os novamente para recompilar."
           }
         }
       }
@@ -65127,47 +64553,6 @@
         }
       }
     },
-    "Untested toolchain": {
-      "comment": "BuildSourcesPanel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Untested toolchain"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toolchain non testata"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chaîne d’outils non testée"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ungetestete Toolchain"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cadena de herramientas no probada"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Conjunto de ferramentas não testado"
-          }
-        }
-      }
-    },
     "Untested toolchain override": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
@@ -66230,88 +65615,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Versão %@"
-          }
-        }
-      }
-    },
-    "Version %@  ·  %@": {
-      "comment": "BuildSourcesPanel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version %@  ·  %@"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Versione %@  ·  %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version %@  ·  %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version %@  ·  %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Versión %@  ·  %@"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Versão %@  ·  %@"
-          }
-        }
-      }
-    },
-    "Version %@  ·  %@  ·  %@": {
-      "comment": "BuildSourcesPanel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version %@  ·  %@  ·  %@"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Versione %@  ·  %@  ·  %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version %@  ·  %@  ·  %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version %@  ·  %@  ·  %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Versión %@  ·  %@  ·  %@"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Versão %@  ·  %@  ·  %@"
           }
         }
       }

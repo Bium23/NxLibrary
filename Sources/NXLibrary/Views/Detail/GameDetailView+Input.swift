@@ -115,7 +115,7 @@ extension GameDetailView {
             return
         }
         hoverRow(index)
-        let rows = currentModel.rows
+        let rows = currentModel.links
         guard index < rows.count else { return }
         rows[index].action()
     }
@@ -130,8 +130,8 @@ extension GameDetailView {
         case DetailsFocus.modsZone:
             activateModsTile(focus.mod)
         case DetailsFocus.actionsZone:
-            guard focus.action < model.rows.count else { return }
-            model.rows[focus.action].action()
+            guard focus.action < model.links.count else { return }
+            model.links[focus.action].action()
         case DetailsFocus.moreZone:
             guard focus.more < model.more.count else { return }
             selectOnSpotlight(model.more[focus.more])
