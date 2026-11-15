@@ -13,6 +13,8 @@ final class AchievementsScreenModel: ObservableObject {
     private var above: CGFloat = 0
     private var below: CGFloat = 0
     private var animates = true
+    /// The wheel moved the list since the last arrow or click: only then can the focus be out of view.
+    private var wheeled = false
 
     init(ids: [String]) {
         state = AchievementsScreenState(ids: ids)
@@ -49,7 +51,9 @@ final class AchievementsScreenModel: ObservableObject {
     @discardableResult
     func move(_ direction: AchievementsScreenState.MoveDirection) -> Bool {
         var next = state
-        if let layout, let nearest = layout.nearestVisible(index: next.index, count: next.count,
+        let afterWheel = wheeled
+        wheeled = false
+        if afterWheel, let layout, let nearest = layout.nearestVisible(index: next.index, count: next.count,
                                                            offset: scroll.state.offset, visible: scroll.state.visible,
                                                            above: above, below: below) {
             next.index = nearest
@@ -61,8 +65,14 @@ final class AchievementsScreenModel: ObservableObject {
         return true
     }
 
+    /// The wheel or the trackpad (positive shows more below).
+    func wheel(by delta: CGFloat, animated: Bool) {
+        if scroll.scroll(by: delta, animated: animated) { wheeled = true }
+    }
+
     /// A click on a row.
     func focus(_ index: Int) {
+        wheeled = false
         guard index != state.index, (0..<state.count).contains(index) else { return }
         var next = state
         next.index = index
@@ -93,6 +103,7 @@ final class AchievementsScreenModel: ObservableObject {
 
     /// A new filter opens at its top, at once: a glide across a different list would show rows that are gone.
     private func filterChanged(_ next: AchievementsScreenState) {
+        wheeled = false
         state = next
         scroll.reset()
         relayout()

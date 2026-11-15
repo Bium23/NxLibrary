@@ -49,19 +49,20 @@ public struct GridListLayout: Equatable, Sendable {
     }
 
     /// After the wheel, the focused row may be out of view: the nearest line shown whole between the margins,
-    /// in the same column (the line's last row when it is short), or nil when the focus is in view or no line
-    /// fits.
+    /// in the same column (the line's last row when it is short). Nil while the focused row is in view (its
+    /// middle inside the window, margins or not: a row at the very top stays focused) or when no line fits.
     public func nearestVisible(index: Int, count: Int, offset: CGFloat, visible: CGFloat,
                                above: CGFloat, below: CGFloat) -> Int? {
         let lines = lines(count: count)
         guard count > 0, lines > 0 else { return nil }
-        let bandTop = offset + above, bandBottom = offset + visible - below
-        func whole(_ line: Int) -> Bool { top(line: line) >= bandTop && top(line: line) + rowHeight <= bandBottom }
         let line = min(max(index, 0), count - 1) / columns
-        if whole(line) { return nil }
+        let middle = top(line: line) + rowHeight / 2
+        if middle >= offset, middle <= offset + visible { return nil }
+        // A point of slack: an offset left by a reveal against a margin is not exact.
+        let bandTop = offset + above - 1, bandBottom = offset + visible - below + 1
+        func whole(_ line: Int) -> Bool { top(line: line) >= bandTop && top(line: line) + rowHeight <= bandBottom }
         let shown = (0..<lines).filter(whole)
         guard let nearest = shown.min(by: { abs($0 - line) < abs($1 - line) }) else { return nil }
-        let column = index % columns
-        return min(nearest * columns + column, count - 1)
+        return min(nearest * columns + index % columns, count - 1)
     }
 }

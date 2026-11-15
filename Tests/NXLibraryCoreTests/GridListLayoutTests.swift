@@ -39,4 +39,13 @@ final class GridListLayoutTests: XCTestCase {
         // No line fits whole between the margins: the focus stays and the next move reveals it.
         XCTAssertNil(layout.nearestVisible(index: 0, count: 20, offset: 900, visible: 150, above: 40, below: 130))
     }
+
+    func testAFocusInViewUnderTheMarginsKeepsTheFocus() {
+        // The first row at the top (6...106) sits under the top margin but in view: Up must not move the focus down.
+        XCTAssertNil(layout.nearestVisible(index: 0, count: 20, offset: 0, visible: 400, above: 52, below: 130))
+        // A row revealed against the margin, with rounding left in the offset, is in view too.
+        XCTAssertNil(layout.nearestVisible(index: 6, count: 20, offset: 366 - 52 + 0.0001, visible: 400, above: 52, below: 130))
+        // Half under the bottom fade, still in view.
+        XCTAssertNil(layout.nearestVisible(index: 8, count: 20, offset: 0, visible: 600, above: 52, below: 130))
+    }
 }

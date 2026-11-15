@@ -430,7 +430,7 @@ extension SpotlightView {
                     let dy = event.scrollingDeltaY
                     if abs(dy) >= abs(event.scrollingDeltaX) {
                         let precise = event.hasPreciseScrollingDeltas
-                        screen.scroll.scroll(by: -(precise ? dy : dy * canvas.u(48)), animated: !precise && !reduceMotion)
+                        screen.wheel(by: -(precise ? dy : dy * canvas.u(48)), animated: !precise && !reduceMotion)
                     }
                     return nil
                 }

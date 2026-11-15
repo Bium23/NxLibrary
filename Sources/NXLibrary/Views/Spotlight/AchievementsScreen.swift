@@ -316,21 +316,8 @@ private struct AchievementsList: View {
         .frame(width: width, height: height, alignment: .topLeading)
         .clipped()
         // The rows fade out under the hints bar, and at the top once the list has scrolled: no row sits under
-        // a button. The chevrons say there is more.
+        // a button. No chevrons (maintainer's choice): the fades alone say there is more.
         .mask(mask(atTop: scroll.state.atTop))
-        .overlay(alignment: .top) {
-            SpotlightUpHint()
-                .padding(.top, canvas.u(4))
-                .opacity(scroll.state.atTop ? 0 : 1)
-                .animation(.easeInOut(duration: 0.3), value: scroll.state.atTop)
-        }
-        .overlay(alignment: .bottom) {
-            SpotlightUpHint()
-                .rotationEffect(.degrees(180))
-                .padding(.bottom, canvas.u(Screen.bottomFade - 8))
-                .opacity(scroll.state.atBottom ? 0 : 1)
-                .animation(.easeInOut(duration: 0.3), value: scroll.state.atBottom)
-        }
     }
 
     /// Opaque in the middle; the top fades only once rows have scrolled past it, the bottom always fades to a
