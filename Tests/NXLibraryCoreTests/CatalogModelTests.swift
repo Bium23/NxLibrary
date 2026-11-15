@@ -89,4 +89,35 @@ final class CatalogModelTests: XCTestCase {
         let data = try JSONSerialization.data(withJSONObject: json)
         XCTAssertThrowsError(try JSONDecoder().decode(CatalogGame.self, from: data))
     }
+
+    func testDownloadingSteamGameIsListedWithoutLaunchOrReview() throws {
+        var steam = SteamCatalogGame(appID: 10, name: "Downloading")
+        steam.installations = [.init(libraryURL: URL(fileURLWithPath: "/tmp/steam"),
+                                     contentURL: URL(fileURLWithPath: "/tmp/steam/steamapps/common/G"),
+                                     availability: .unavailable, isDownloading: true)]
+        let shown = CatalogGamePresentation(game: CatalogGame(steam: steam), sourceEnabled: true)
+        XCTAssertTrue(shown.isListedNormally)
+        XCTAssertTrue(shown.isDownloading)
+        XCTAssertFalse(shown.requiresReview)
+        XCTAssertNil(shown.launchTarget)
+        let disabled = CatalogGamePresentation(game: CatalogGame(steam: steam), sourceEnabled: false)
+        XCTAssertFalse(disabled.isListedNormally)
+        XCTAssertFalse(disabled.isDownloading)
+        steam.isHidden = true
+        let hidden = CatalogGamePresentation(game: CatalogGame(steam: steam), sourceEnabled: true)
+        XCTAssertFalse(hidden.isListedNormally)
+        XCTAssertFalse(hidden.isDownloading)
+    }
+
+    func testInstallationWithoutDownloadingKeyDecodesAsNotDownloading() throws {
+        let installation = SteamCatalogInstallation(libraryURL: URL(fileURLWithPath: "/tmp/steam"),
+                                                    contentURL: URL(fileURLWithPath: "/tmp/steam/steamapps/common/G"),
+                                                    availability: .available, isDownloading: true)
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(installation)) as? [String: Any])
+        XCTAssertEqual(object["isDownloading"] as? Bool, true)
+        object["isDownloading"] = nil
+        let old = try JSONDecoder().decode(SteamCatalogInstallation.self, from: JSONSerialization.data(withJSONObject: object))
+        XCTAssertFalse(old.isDownloading)
+        XCTAssertEqual(old.availability, .available)
+    }
 }

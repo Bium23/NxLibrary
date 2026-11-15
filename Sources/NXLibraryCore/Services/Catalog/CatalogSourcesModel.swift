@@ -72,7 +72,7 @@ public final class CatalogSourcesModel: ObservableObject {
                 self.observedGameCount = Set(snapshot.games.map(\.appID)).count
                 let seen = Set(snapshot.games.map(\.appID))
                 self.reviewCount = document.games.compactMap(\.steamGame).filter {
-                    seen.contains($0.appID) && (!$0.hasBeenRecognized || $0.needsInstallationReview)
+                    seen.contains($0.appID) && $0.needsReview
                 }.count
                 self.issues = snapshot.issues
                 self.status = snapshot.isComplete ? .ready : .partial

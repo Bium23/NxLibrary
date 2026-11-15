@@ -126,6 +126,23 @@ final class CatalogSourcesModelTests: XCTestCase {
         XCTAssertEqual(model.issues.count, 1)
         withExtendedLifetime(observation) {}
     }
+
+    func testDownloadingGameIsNotCountedForReview() async throws {
+        let (f, repository, initial) = try prepared()
+        let done = expectation(description: "committed")
+        let content = f.root.appendingPathComponent("steamapps/common/Game")
+        let scan = SteamLibrarySnapshot(libraries: [.init(root: f.root, isReadable: true, isComplete: true)],
+                                        games: [.init(appID: 10, name: "Steam game", installationURL: content, libraryURL: f.root,
+                                                      reportedSizeBytes: 0, buildID: nil, nativeApps: [], state: .downloading)],
+                                        issues: [])
+        let model = CatalogSourcesModel(repository: repository, initialConfiguration: initial, scanner: { _, _ in scan }) { doc in
+            if doc.games.contains(where: { $0.steamGame != nil }) { done.fulfill() }
+        }
+        model.configure(enabled: true, root: f.root)
+        await fulfillment(of: [done], timeout: 3)
+        XCTAssertEqual(model.observedGameCount, 1)
+        XCTAssertEqual(model.reviewCount, 0)
+    }
 }
 
 private final class SourceCallCounter: @unchecked Sendable {

@@ -13,7 +13,7 @@ struct SettingsSourcesSection: View {
     private var defaultRoot: URL { AppData.profile.home.appendingPathComponent("Library/Application Support/Steam") }
     private var hidden: [CatalogGame] { viewModel.catalogGames.filter { $0.integration == .steam && $0.isHidden } }
     private var review: [CatalogGame] {
-        viewModel.catalogGames.filter { !$0.isHidden && $0.steamGame.map { !$0.hasBeenRecognized || $0.needsInstallationReview } == true }
+        viewModel.catalogGames.filter { !$0.isHidden && $0.steamGame?.needsReview == true }
     }
     private var statusText: String {
         switch sources.status {

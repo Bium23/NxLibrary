@@ -49,10 +49,14 @@ public struct SteamCatalogInstallation: Codable, Equatable, Identifiable, Sendab
     public var reportedSizeBytes: Int64?
     public var buildID: String?
     public var lastObservedAt: Date
+    /// Steam has not finished installing it (no FullyInstalled flag); `availability` stays `.unavailable`.
+    /// A separate key, not an availability case, so a catalog written now still loads in an older NX Library.
+    public var isDownloading: Bool
 
     public init(id: UUID = UUID(), libraryURL: URL, contentURL: URL, applications: [CatalogNativeApplication] = [],
                 availability: CatalogInstallationAvailability = .requiresReview, reportedSizeBytes: Int64? = nil,
-                buildID: String? = nil, lastObservedAt: Date = Date()) {
+                buildID: String? = nil, lastObservedAt: Date = Date(), isDownloading: Bool = false) {
+        self.isDownloading = isDownloading
         self.id = id
         self.libraryURL = libraryURL
         self.contentURL = contentURL
@@ -66,6 +70,24 @@ public struct SteamCatalogInstallation: Codable, Equatable, Identifiable, Sendab
     public var primaryApplication: CatalogNativeApplication? {
         let games = applications.filter(\.isDeclaredGame)
         return games.count == 1 ? games[0] : nil
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, libraryURL, contentURL, applications, availability, reportedSizeBytes, buildID, lastObservedAt, isDownloading
+    }
+
+    /// Catalogs written before downloads were tracked have no `isDownloading`: not downloading.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        libraryURL = try c.decode(URL.self, forKey: .libraryURL)
+        contentURL = try c.decode(URL.self, forKey: .contentURL)
+        applications = try c.decode([CatalogNativeApplication].self, forKey: .applications)
+        availability = try c.decode(CatalogInstallationAvailability.self, forKey: .availability)
+        reportedSizeBytes = try c.decodeIfPresent(Int64.self, forKey: .reportedSizeBytes)
+        buildID = try c.decodeIfPresent(String.self, forKey: .buildID)
+        lastObservedAt = try c.decode(Date.self, forKey: .lastObservedAt)
+        isDownloading = try c.decodeIfPresent(Bool.self, forKey: .isDownloading) ?? false
     }
 }
 
@@ -81,6 +103,16 @@ public struct SteamCatalogGame: Codable, Equatable, Identifiable, Sendable {
     public var installations: [SteamCatalogInstallation] = []
 
     public init(id: UUID = UUID(), appID: UInt32, name: String) { self.id = id; self.appID = appID; self.name = name }
+
+    /// Steam is installing it: of the installations still detected, the only one is downloading. An old folder no
+    /// longer detected (a game removed and installed again elsewhere) does not hide the download.
+    public var isDownloading: Bool {
+        let detected = installations.filter { $0.availability != .notDetected }
+        return detected.count == 1 && detected[0].isDownloading
+    }
+
+    /// For Settings → Steam's "to review": never recognized or ambiguous, and not simply still downloading.
+    public var needsReview: Bool { !isDownloading && (!hasBeenRecognized || needsInstallationReview) }
 }
 
 /// One catalog entry, with one owner for each field. The old record remains a

@@ -92,7 +92,8 @@ public enum SteamCatalogReconciler {
                 let installIndex = installs[key]
                 let installation = SteamCatalogInstallation(id: installIndex.map { game.installations[$0].id } ?? UUID(),
                     libraryURL: key.library, contentURL: key.content, applications: apps, availability: availability,
-                    reportedSizeBytes: observed.reportedSizeBytes, buildID: observed.buildID, lastObservedAt: observedAt)
+                    reportedSizeBytes: observed.reportedSizeBytes, buildID: observed.buildID, lastObservedAt: observedAt,
+                    isDownloading: observations.count == 1 && observed.state == .downloading)
                 if let installIndex { game.installations[installIndex] = installation }
                 else { installs[key] = game.installations.count; game.installations.append(installation) }
             }

@@ -25,6 +25,8 @@ public struct CatalogGamePresentation {
     public let isHidden: Bool
     public let isListedNormally: Bool
     public let requiresReview: Bool
+    /// A Steam game Steam is still installing: listed, never launched, not to review.
+    public let isDownloading: Bool
     public let installations: [CatalogInstallationPresentation]
     public let launchTarget: CatalogLaunchTarget?
 
@@ -38,6 +40,7 @@ public struct CatalogGamePresentation {
         switch game.payload {
         case .nxnative(let legacy):
             requiresReview = false
+            isDownloading = false
             isListedNormally = sourceEnabled && !legacy.isHidden
             launchTarget = sourceEnabled && legacy.isPlayableLocally ? .nxnative(appURL: legacy.url) : nil
             installations = legacy.url.pathExtension.lowercased() == "app" ? [
@@ -47,9 +50,11 @@ public struct CatalogGamePresentation {
                       size: .cached(legacy.sizeBytes))
             ] : []
         case .steam(let steam):
-            requiresReview = !steam.hasBeenRecognized || steam.needsInstallationReview || steam.installations.contains { $0.availability == .requiresReview }
-                || steam.installations.filter { $0.availability == .available }.count > 1
-            isListedNormally = sourceEnabled && !steam.isHidden && steam.hasBeenRecognized
+            requiresReview = !steam.isDownloading && (!steam.hasBeenRecognized || steam.needsInstallationReview
+                || steam.installations.contains { $0.availability == .requiresReview }
+                || steam.installations.filter { $0.availability == .available }.count > 1)
+            isDownloading = sourceEnabled && !steam.isHidden && steam.isDownloading
+            isListedNormally = sourceEnabled && !steam.isHidden && (steam.hasBeenRecognized || steam.isDownloading)
             let available = steam.installations.filter { $0.availability == .available && $0.primaryApplication != nil }
             launchTarget = sourceEnabled && steam.appID > 0 && steam.hasBeenRecognized && available.count == 1 && !requiresReview ? .steam(appID: steam.appID) : nil
             installations = steam.installations.map { installation in

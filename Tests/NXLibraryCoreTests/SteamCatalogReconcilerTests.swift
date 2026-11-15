@@ -197,4 +197,44 @@ final class SteamCatalogReconcilerTests: XCTestCase {
         XCTAssertEqual(resolved.games[1].id, duplicate.games[1].id)
     }
 
+    private func downloading(directory: String = "Game") -> SteamGameObservation {
+        .init(appID: 10, name: "Same name", installationURL: root.appendingPathComponent("steamapps/common/" + directory),
+              libraryURL: root, reportedSizeBytes: 0, buildID: "42", nativeApps: [], state: .downloading)
+    }
+
+    func testDownloadingObservationIsListedButNeitherRecognizedNorReviewed() throws {
+        let result = try apply(snapshot([downloading()]), to: catalog())
+        let steam = try XCTUnwrap(result.games[1].steamGame)
+        XCTAssertEqual(steam.installations.first?.availability, .unavailable)
+        XCTAssertEqual(steam.installations.first?.isDownloading, true)
+        XCTAssertTrue(steam.isDownloading)
+        XCTAssertFalse(steam.hasBeenRecognized)
+        XCTAssertFalse(steam.needsInstallationReview)
+        XCTAssertFalse(steam.needsReview)
+    }
+
+    func testFinishedDownloadBecomesRecognizedAndClearsFlag() throws {
+        let first = try apply(snapshot([downloading()]), to: catalog())
+        let result = try apply(snapshot([observation(directory: "Game")]), to: first)
+        let steam = try XCTUnwrap(result.games[1].steamGame)
+        XCTAssertEqual(steam.installations.count, 1)
+        XCTAssertEqual(steam.installations[0].id, first.games[1].steamGame?.installations[0].id)
+        XCTAssertFalse(steam.installations[0].isDownloading)
+        XCTAssertFalse(steam.isDownloading)
+        XCTAssertTrue(steam.hasBeenRecognized)
+        XCTAssertEqual(CatalogGamePresentation(game: result.games[1], sourceEnabled: true).launchTarget, .steam(appID: 10))
+    }
+
+    func testRecognizedGameReinstalledShowsDownloading() throws {
+        let installed = try apply(snapshot([observation(directory: "Game")]), to: catalog())
+        let result = try apply(snapshot([downloading(directory: "Again")]), to: installed)
+        let steam = try XCTUnwrap(result.games[1].steamGame)
+        XCTAssertEqual(steam.installations.map(\.availability), [.notDetected, .unavailable])
+        XCTAssertTrue(steam.isDownloading)
+        let shown = CatalogGamePresentation(game: result.games[1], sourceEnabled: true)
+        XCTAssertTrue(shown.isDownloading)
+        XCTAssertTrue(shown.isListedNormally)
+        XCTAssertFalse(shown.requiresReview)
+        XCTAssertNil(shown.launchTarget)
+    }
 }
