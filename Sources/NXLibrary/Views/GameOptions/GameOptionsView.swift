@@ -93,6 +93,7 @@ struct GameOptionsView: View {
             toolchainBlocked: viewModel.isCheckingEnvironment || (viewModel.compatibilityReport != nil && !viewModel.canPassToolchainGate),
             toolchainHint: viewModel.isCheckingEnvironment ? L10n.text("Checking environment") : viewModel.toolchainGateSummary?.buildHint,
             hasStorePage: viewModel.storeMetadata[game.id]?.storeURL != nil,
+            offersStoreSearch: (viewModel.storeMetadata[game.id]?.description ?? "").isEmpty,
             gameName: game.name,
             appPath: game.url.path,
             canDeleteBundle: game.canDeleteAppBundle(),
@@ -789,6 +790,10 @@ struct GameOptionsView: View {
             metadataOpen = true
         case .storePage:
             guard let url = viewModel.storeMetadata[game.id]?.storeURL else { return }
+            SoundEffectService.shared.play(.click)
+            viewModel.openURL(url)
+        case .searchStore:
+            guard let url = viewModel.nintendoStoreSearchURL(for: current) else { return }
             SoundEffectService.shared.play(.click)
             viewModel.openURL(url)
         case .attachSources:

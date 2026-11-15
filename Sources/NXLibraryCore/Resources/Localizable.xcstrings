@@ -24354,6 +24354,47 @@
         }
       }
     },
+    "Find this game on the Nintendo store.": {
+      "comment": "GameOptionsPresentation.swift: Search Nintendo Store row",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find this game on the Nintendo store."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca questo gioco nel Nintendo Store."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher ce jeu sur le Nintendo Store."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Spiel im Nintendo Store suchen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busca este juego en la tienda de Nintendo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Procure este jogo na loja da Nintendo."
+          }
+        }
+      }
+    },
     "Finishing…": {
       "comment": "SetupCheckView.swift",
       "localizations": {
@@ -51639,7 +51680,7 @@
       }
     },
     "Search Nintendo Store": {
-      "comment": "BuildSourcesPanel.swift",
+      "comment": "GameOptionsPresentation.swift",
       "localizations": {
         "en": {
           "stringUnit": {
