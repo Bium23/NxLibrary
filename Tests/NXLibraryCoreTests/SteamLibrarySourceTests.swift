@@ -249,4 +249,37 @@ final class SteamLibrarySourceTests: XCTestCase {
         XCTAssertThrowsError(try snapshot.verifyUnchanged())
         XCTAssertEqual(try String(contentsOf: file), "changed")
     }
+
+    func testManifestWithoutFullyInstalledIsDownloadingAndNotWalked() throws {
+        let f = try SteamTestFixture.temporary(in: self)
+        let root = try f.library()
+        try f.manifest(in: root, stateFlags: "1026")
+        // A partial bundle Steam is still writing: it must not be read or raise an issue.
+        try f.app(at: "Steam/steamapps/common/First/Game.app")
+        let result = try SteamLibrarySource(root: root).scan()
+        XCTAssertEqual(result.games.map(\.state), [.downloading])
+        XCTAssertEqual(result.games.first?.nativeApps, [])
+        XCTAssertTrue(result.issues.isEmpty)
+    }
+
+    func testFullyInstalledBitWinsOverUpdateBits() throws {
+        for flags in ["6", "1030"] {
+            let f = try SteamTestFixture.temporary(in: self)
+            let root = try f.library()
+            try f.manifest(in: root, stateFlags: flags)
+            try f.app(at: "Steam/steamapps/common/First/Game.app")
+            XCTAssertEqual(try SteamLibrarySource(root: root).scan().games.map(\.state), [.nativeReady], flags)
+        }
+    }
+
+    func testMissingOrGarbageStateFlagsKeepTodayBehaviour() throws {
+        for flags in [nil, "abc"] as [String?] {
+            let f = try SteamTestFixture.temporary(in: self)
+            let root = try f.library()
+            try f.manifest(in: root, stateFlags: flags)
+            try f.manifest(in: root, id: "20", name: "Empty", directory: "Empty", stateFlags: flags)
+            try f.app(at: "Steam/steamapps/common/First/Game.app")
+            XCTAssertEqual(try SteamLibrarySource(root: root).scan().games.map(\.state), [.nativeReady, .unavailable])
+        }
+    }
 }

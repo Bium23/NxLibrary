@@ -86,7 +86,7 @@ public enum SteamCatalogReconciler {
                 let apps = observed.nativeApps.map(CatalogNativeApplication.init)
                 let ready = observed.state == .nativeReady && apps.filter(\.isDeclaredGame).count == 1
                 let availability: CatalogInstallationAvailability = observations.count > 1 ? .requiresReview
-                    : (ready ? .available : (observed.state == .unavailable ? .unavailable : .requiresReview))
+                    : (ready ? .available : ([.unavailable, .downloading].contains(observed.state) ? .unavailable : .requiresReview))
                 if availability == .requiresReview { observedAmbiguity = true }
                 if ready && observations.count == 1 { game.hasBeenRecognized = true }
                 let installIndex = installs[key]

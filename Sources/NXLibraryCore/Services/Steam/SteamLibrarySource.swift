@@ -28,7 +28,9 @@ public struct SteamLibraryObservation: Equatable, Sendable {
 }
 
 public struct SteamGameObservation: Equatable, Sendable {
-    public enum State: Equatable, Sendable { case nativeReady, requiresReview, unavailable }
+    /// `downloading`: Steam has not marked the game fully installed yet (StateFlags without bit 4); its folder is
+    /// not read, since Steam is still writing it.
+    public enum State: Equatable, Sendable { case nativeReady, requiresReview, unavailable, downloading }
     public let appID: UInt32
     public let name: String
     public let installationURL: URL
@@ -205,13 +207,19 @@ private struct Scan {
             guard NativeMacApplication.isWithin(common, root: library), NativeMacApplication.isWithin(install, root: common), install.path != common.path else {
                 issue(.unsafePath, at: file, appID: id); return
             }
+            let size = try Self.string("SizeOnDisk", in: fields).flatMap(Self.nonnegativeSize)
+            let build = try Self.string("buildid", in: fields)
+            // Bit 4 is FullyInstalled. Missing or unreadable flags keep the folder check alone, as before.
+            if let flags = try Self.string("StateFlags", in: fields).flatMap({ UInt64($0) }), flags & 4 == 0 {
+                games.append(.init(appID: id, name: name, installationURL: install, libraryURL: library,
+                                   reportedSizeBytes: size, buildID: build, nativeApps: [], state: .downloading))
+                return
+            }
             let before = issues.count
             let apps = try nativeApps(in: install, appID: id)
             let mainApps = apps.filter(\.isDeclaredGame)
             let state: SteamGameObservation.State = mainApps.count == 1 && issues.count == before ? .nativeReady
                 : (apps.isEmpty && issues.count == before ? .unavailable : .requiresReview)
-            let size = try Self.string("SizeOnDisk", in: fields).flatMap(Self.nonnegativeSize)
-            let build = try Self.string("buildid", in: fields)
             games.append(.init(appID: id, name: name, installationURL: install, libraryURL: library,
                                reportedSizeBytes: size, buildID: build, nativeApps: apps, state: state))
         } catch is CancellationError { throw CancellationError() }

@@ -50,9 +50,10 @@ struct SteamTestFixture: Sendable {
 
     @discardableResult
     func manifest(in library: URL, id: String = "10", name: String = "First game", directory: String = "First",
-                  filenameID: String? = nil, size: String = "100", extra: String = "") throws -> URL {
+                  filenameID: String? = nil, size: String = "100", stateFlags: String? = "4", extra: String = "") throws -> URL {
         let file = library.appendingPathComponent("steamapps/appmanifest_\(filenameID ?? id).acf")
-        let text = "\"AppState\" { \"appid\" \(Self.quote(id)) \"name\" \(Self.quote(name)) \"installdir\" \(Self.quote(directory)) \"SizeOnDisk\" \(Self.quote(size)) \"buildid\" \"42\" \"StateFlags\" \"4\" \(extra) }"
+        let flags = stateFlags.map { "\"StateFlags\" \(Self.quote($0))" } ?? ""
+        let text = "\"AppState\" { \"appid\" \(Self.quote(id)) \"name\" \(Self.quote(name)) \"installdir\" \(Self.quote(directory)) \"SizeOnDisk\" \(Self.quote(size)) \"buildid\" \"42\" \(flags) \(extra) }"
         try Data(text.utf8).write(to: file)
         return file
     }
