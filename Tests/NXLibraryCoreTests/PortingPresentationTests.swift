@@ -221,4 +221,12 @@ final class PortingPresentationTests: XCTestCase {
         XCTAssertEqual(PortingTileLook.make(catalog: CatalogGame(steam: steam)), .normal)
         XCTAssertEqual(PortingTileLook.make(catalog: CatalogGame(nxnative: CatalogTestSupport.completeLegacyGame())), .normal)
     }
+
+    func testOnlyADownloadKeepsAHintOfColour() {
+        XCTAssertEqual(PortingTileLook.downloading.colourDrained, 0.8, accuracy: 1e-9)
+        XCTAssertEqual(PortingTileLook.locked.colourDrained, 1)
+        XCTAssertEqual(PortingTileLook.preparing(step: 1, count: 7, title: "", detail: "").colourDrained, 1)
+        XCTAssertEqual(PortingTileLook.filling(0.5).colourDrained, 1)
+        XCTAssertEqual(PortingTileLook.normal.colourDrained, 1)
+    }
 }

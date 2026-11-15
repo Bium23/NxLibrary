@@ -6,8 +6,8 @@ import NXLibraryCore
 /// the shaders compile, a thin "k/n" bar with the stage and its step in small type
 /// sits on the softly blurred art; then the percentage fades in, small, with a slow
 /// pastel sheen. A failed porting with no app keeps the art black and white,
-/// lightly blurred, under a lock; a Steam game still installing looks the same under
-/// the download glyph and "Downloading".
+/// lightly blurred, under a lock; a Steam game still installing keeps a hint of its
+/// faded colours under the download glyph and "Downloading".
 ///
 /// The art is drawn once: a grey layer in `.saturation` blend takes the colour out
 /// above the fill line. The sheen moves only while compiling, and stands still
@@ -29,6 +29,8 @@ struct PortingArtLook: ViewModifier {
                     Rectangle()
                         .fill(Color(white: 0.5))
                         .frame(height: geo.size.height * (1 - fill))
+                        // Partly see-through, the grey drains only part of the colour (a download's faded art).
+                        .opacity(look.colourDrained)
                         .blendMode(.saturation)
                 }
                 .compositingGroup()
