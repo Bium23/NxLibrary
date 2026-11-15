@@ -19056,6 +19056,47 @@
         }
       }
     },
+    "Default order": {
+      "comment": "Achievements screen: the list order (Y), as the game lists them.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default order"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordine predefinito"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordre par défaut"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standardreihenfolge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orden predeterminado"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordem padrão"
+          }
+        }
+      }
+    },
     "Default vibration strength for new Switch games.": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
@@ -36326,6 +36367,47 @@
         }
       }
     },
+    "Most common first": {
+      "comment": "Achievements screen: the list order (Y), most players first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Most common first"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima i più comuni"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les plus courants d’abord"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Häufigste zuerst"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más comunes primero"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mais comuns primeiro"
+          }
+        }
+      }
+    },
     "Most liked": {
       "comment": "ModCatalog.swift",
       "localizations": {
@@ -43911,6 +43993,47 @@
         }
       }
     },
+    "Order: %@": {
+      "comment": "Achievements screen, VoiceOver: the current list order, e.g. \"Order: Rarest first\".",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Order: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordine: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordre : %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reihenfolge: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orden: %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordem: %@"
+          }
+        }
+      }
+    },
     "Other settings this build offers.": {
       "comment": "GameOptionsPresentation.swift",
       "localizations": {
@@ -46657,43 +46780,43 @@
         }
       }
     },
-    "Rarest": {
-      "comment": "Achievements filter: every achievement, rarest first.",
+    "Rarest first": {
+      "comment": "Achievements screen: the list order (Y), fewest players first.",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rarest"
+            "value": "Rarest first"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Più rari"
+            "value": "Prima i più rari"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les plus rares"
+            "value": "Les plus rares d’abord"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Am seltensten"
+            "value": "Seltenste zuerst"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Más raros"
+            "value": "Más raros primero"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mais raras"
+            "value": "Mais raras primeiro"
           }
         }
       }

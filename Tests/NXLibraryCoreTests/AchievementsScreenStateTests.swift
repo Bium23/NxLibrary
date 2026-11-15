@@ -44,7 +44,7 @@ final class AchievementsScreenStateTests: XCTestCase {
     func testShiftFilterWraps() {
         var state = AchievementsScreenState(ids: ids(3))
         state.shiftFilter(by: -1) { _ in self.ids(3) }
-        XCTAssertEqual(state.filter, .rarest)
+        XCTAssertEqual(state.filter, .locked)
         state.shiftFilter(by: 1) { _ in self.ids(3) }
         XCTAssertEqual(state.filter, .all)
         state.shiftFilter(by: 1) { self.ids($0 == .unlocked ? 1 : 3) }
@@ -123,6 +123,41 @@ final class AchievementsScreenStateTests: XCTestCase {
         XCTAssertTrue(state.isDetailOpen)
         XCTAssertEqual(state.focusedID, "A1")
         state.setIDs(["A0", "A2"])
+        XCTAssertFalse(state.isDetailOpen)
+    }
+
+    // MARK: - Order (Y)
+
+    func testOrderCyclesAndStartsAtTheTop() {
+        var state = AchievementsScreenState(ids: ids(4))
+        XCTAssertEqual(state.order, .default)
+        state.index = 3
+        state.cycleOrder { _ in self.ids(4) }
+        XCTAssertEqual(state.order, .rarest)
+        XCTAssertEqual(state.index, 0)
+        state.cycleOrder { _ in self.ids(4) }
+        XCTAssertEqual(state.order, .commonest)
+        state.cycleOrder { _ in self.ids(4) }
+        XCTAssertEqual(state.order, .default, "wraps")
+    }
+
+    func testOrderPassesItselfForTheRows() {
+        var state = AchievementsScreenState(ids: ids(2))
+        state.cycleOrder { $0 == .rarest ? ["R"] : [] }
+        XCTAssertEqual(state.ids, ["R"])
+    }
+
+    func testFilterKeepsTheOrder() {
+        var state = AchievementsScreenState(ids: ids(3))
+        state.cycleOrder { _ in self.ids(3) }
+        state.setFilter(.locked, ids: ids(1))
+        XCTAssertEqual(state.order, .rarest)
+    }
+
+    func testOrderClosesTheDetail() {
+        var state = AchievementsScreenState(ids: ids(3))
+        state.openDetail()
+        state.cycleOrder { _ in self.ids(3) }
         XCTAssertFalse(state.isDetailOpen)
     }
 }

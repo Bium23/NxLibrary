@@ -1,6 +1,6 @@
 import Foundation
 
-/// Selection on the Achievements screen: a filter and a row in a one-column list, clamped to its edges.
+/// Selection on the Achievements screen: a filter, an order and a row in a one-column list, clamped to its edges.
 /// It keeps the rows' ids so a list that changes under it (the rarity arriving, an unlock) keeps the same
 /// achievement in focus. A opens the focused achievement's detail over the list; moving while it is open steps
 /// the detail through the list.
@@ -10,6 +10,7 @@ public struct AchievementsScreenState: Equatable {
     public static let columns = 1
 
     public private(set) var filter: AchievementFilter = .all
+    public private(set) var order: AchievementOrder = .default
     public var index = 0
     /// The current filter's rows, by `AchievementRow.id`.
     public private(set) var ids: [String]
@@ -56,6 +57,15 @@ public struct AchievementsScreenState: Equatable {
         isDetailOpen = false
         self.filter = filter
         self.ids = ids
+        index = 0
+    }
+
+    /// Y: the next order, wrapping around, from the top of the list; `ids` gives the rows in that order.
+    public mutating func cycleOrder(ids: (AchievementOrder) -> [String]) {
+        let all = AchievementOrder.allCases
+        order = all[((all.firstIndex(of: order) ?? 0) + 1) % all.count]
+        isDetailOpen = false
+        self.ids = ids(order)
         index = 0
     }
 

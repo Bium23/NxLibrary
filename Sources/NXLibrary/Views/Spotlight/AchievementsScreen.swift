@@ -20,6 +20,8 @@ struct AchievementsScreen: View {
     let onFilter: (AchievementFilter) -> Void
     /// LB (-1) or RB (+1), as the controller does.
     let onShiftFilter: (Int) -> Void
+    /// Y or a click on the order: the next order.
+    let onCycleOrder: () -> Void
     let onFocus: (Int) -> Void
     /// A, the hint or a click on the focused row: the focused achievement's detail.
     let onOpen: () -> Void
@@ -33,10 +35,12 @@ struct AchievementsScreen: View {
     /// The Recently unlocked strip's length.
     static let recentLimit = 12
     /// The list's last row can rise this far above the bottom edge: clear of the fade and the hints bar.
-    static let bottomRoom: CGFloat = 130
+    static let bottomRoom: CGFloat = 176
     /// The fades at the list's edges.
     static let topFade: CGFloat = 40
-    static let bottomFade: CGFloat = 100
+    static let bottomFade: CGFloat = 110
+    /// The hints bar's band at the bottom (its 40 inset and the 30 badges): no row shows there.
+    static let hintsBand: CGFloat = 66
     static let rowSpacing: CGFloat = 16
     /// Room for the focus ring around the rows.
     static let ring: CGFloat = 6
@@ -44,7 +48,7 @@ struct AchievementsScreen: View {
     private var state: AchievementsScreenState { model.state }
 
     var body: some View {
-        let rows = summary.rows(state.filter)
+        let rows = summary.rows(state.filter, order: state.order)
         ZStack(alignment: .topLeading) {
             backdrop
             VStack(alignment: .leading, spacing: 0) {
@@ -56,8 +60,13 @@ struct AchievementsScreen: View {
                 }
                 .frame(width: canvas.u(Self.listWidth + Self.ring))
                 .padding(.top, canvas.u(70))
-                pills
-                    .padding(.top, canvas.u(30))
+                HStack(spacing: 0) {
+                    pills
+                    Spacer(minLength: canvas.u(24))
+                    orderControl
+                }
+                .frame(width: canvas.u(Self.listWidth + Self.ring))
+                .padding(.top, canvas.u(30))
                 AchievementsList(scroll: model.scroll, model: model, rows: rows, focused: state.index,
                                  appID: game.steamGame?.appID ?? 0, onFocus: onFocus)
                     .padding(.top, canvas.u(28))
@@ -99,6 +108,12 @@ struct AchievementsScreen: View {
                     .clipped()
             }
             LinearGradient(colors: [.black.opacity(0.8), .black.opacity(0.5)], startPoint: .leading, endPoint: .trailing)
+            // A little more shade at the bottom, under the hints.
+            VStack(spacing: 0) {
+                Spacer(minLength: 0)
+                LinearGradient(colors: [.black.opacity(0), .black.opacity(0.45)], startPoint: .top, endPoint: .bottom)
+                    .frame(height: canvas.u(240))
+            }
         }
         .ignoresSafeArea()
         // Swallows clicks so the page underneath never takes them.
@@ -254,7 +269,30 @@ struct AchievementsScreen: View {
         case .all: return L10n.text("All")
         case .unlocked: return L10n.text("Unlocked")
         case .locked: return L10n.text("Locked")
-        case .rarest: return L10n.text("Rarest")
+        }
+    }
+
+    /// The list's order at the right of the filters, as Selene's: Y and its name; a click moves to the next.
+    private var orderControl: some View {
+        Button(action: onCycleOrder) {
+            HStack(spacing: canvas.u(10)) {
+                SelenePromptBadge(button: .y, height: 30)
+                Text(Self.title(state.order))
+                    .seleneFont(16, .semibold)
+                    .foregroundColor(SeleneTheme.ink90)
+                    .fixedSize()
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(L10n.format("Order: %@", [Self.title(state.order)]))
+    }
+
+    static func title(_ order: AchievementOrder) -> String {
+        switch order {
+        case .default: return L10n.text("Default order")
+        case .rarest: return L10n.text("Rarest first")
+        case .commonest: return L10n.text("Most common first")
         }
     }
 
@@ -414,21 +452,23 @@ private struct AchievementsList: View {
         .offset(y: -offset)
         .frame(width: width, height: height, alignment: .topLeading)
         .clipped()
-        // The rows fade out under the hints bar, and at the top once the list has scrolled: no row sits under
-        // a button. No chevrons (maintainer's choice): the fades alone say there is more.
+        // The rows fade out above the hints bar, gone before its buttons, and at the top once the list has
+        // scrolled: no row sits under a button. No chevrons (maintainer's choice): the fades alone say there is more.
         .mask(mask(atTop: scroll.state.atTop))
     }
 
-    /// Opaque in the middle; the top fades only once rows have scrolled past it, the bottom always fades to a
-    /// trace where the hints bar sits (the bottom stays lit, not a dark band).
+    /// Opaque in the middle; the top fades only once rows have scrolled past it; the bottom always fades out,
+    /// to nothing by the hints bar's band (at 0.15 the rows showed through the buttons).
     private func mask(atTop: Bool) -> some View {
         VStack(spacing: 0) {
             LinearGradient(colors: [.black.opacity(atTop ? 1 : 0), .black], startPoint: .top, endPoint: .bottom)
                 .frame(height: canvas.u(Screen.topFade))
                 .animation(.easeInOut(duration: 0.3), value: atTop)
             Color.black
-            LinearGradient(colors: [.black, .black.opacity(0.15)], startPoint: .top, endPoint: .bottom)
+            LinearGradient(colors: [.black, .black.opacity(0)], startPoint: .top, endPoint: .bottom)
                 .frame(height: canvas.u(Screen.bottomFade))
+            Color.clear
+                .frame(height: canvas.u(Screen.hintsBand))
         }
     }
 

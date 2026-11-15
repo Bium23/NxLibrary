@@ -1,8 +1,14 @@
 import Foundation
 
-/// The Achievements screen's filters.
+/// The Achievements screen's filters (LB/RB).
 public enum AchievementFilter: CaseIterable, Sendable {
-    case all, unlocked, locked, rarest
+    case all, unlocked, locked
+}
+
+/// The order of the screen's list (Y), inside the filter. Default: unlocked newest first, then locked most
+/// common first. By rarity, the achievements whose rarity is unknown come last; ties keep the default order.
+public enum AchievementOrder: CaseIterable, Sendable {
+    case `default`, rarest, commonest
 }
 
 /// One achievement as the card and the screen show it. A hidden achievement still locked is masked.
@@ -78,16 +84,24 @@ public struct AchievementSummary: Equatable, Sendable {
         Array(unlockedRows.compactMap(\.icon).prefix(limit))
     }
 
-    public func rows(_ filter: AchievementFilter) -> [AchievementRow] {
+    public func rows(_ filter: AchievementFilter, order: AchievementOrder = .default) -> [AchievementRow] {
+        let rows: [AchievementRow]
         switch filter {
-        case .all: return unlockedRows + lockedRows
-        case .unlocked: return unlockedRows
-        case .locked: return lockedRows
-        case .rarest:
-            let all = unlockedRows + lockedRows
-            let known = all.filter { $0.percent != nil }.sorted { $0.percent! < $1.percent! }
-            return known + all.filter { $0.percent == nil }
+        case .all: rows = unlockedRows + lockedRows
+        case .unlocked: rows = unlockedRows
+        case .locked: rows = lockedRows
         }
+        guard order != .default else { return rows }
+        let rarestFirst = order == .rarest
+        // The default position breaks ties, so a re-read never shuffles them.
+        let known: [(position: Int, percent: Double, row: AchievementRow)] = rows.enumerated().compactMap { item in
+            item.element.percent.map { (item.offset, $0, item.element) }
+        }
+        let sorted = known.sorted { a, b in
+            if a.percent == b.percent { return a.position < b.position }
+            return rarestFirst ? a.percent < b.percent : a.percent > b.percent
+        }
+        return sorted.map(\.row) + rows.filter { $0.percent == nil }
     }
 
     private static func commoner(_ a: Double?, _ ai: Int, than b: Double?, _ bi: Int) -> Bool {

@@ -168,7 +168,7 @@ extension SpotlightView {
         }
         switch screen.handle(action, summary: summary) {
         case .moved: SoundEffectService.shared.play(.focus)
-        case .filtered: SoundEffectService.shared.play(.tabSwitch)
+        case .filtered, .ordered: SoundEffectService.shared.play(.tabSwitch)
         case .opened: SoundEffectService.shared.play(.click)
         case .closedDetail: SoundEffectService.shared.play(.focus)
         case .close: closeAchievements()

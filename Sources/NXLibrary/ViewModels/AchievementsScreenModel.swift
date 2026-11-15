@@ -20,9 +20,9 @@ final class AchievementsScreenModel: ObservableObject {
         state = AchievementsScreenState(ids: ids)
     }
 
-    enum Outcome { case ignored, moved, filtered, opened, closedDetail, close }
+    enum Outcome { case ignored, moved, filtered, ordered, opened, closedDetail, close }
 
-    /// The arrows move through the list, LB/RB switch the filter, A opens the focused achievement, B closes;
+    /// The arrows move through the list, LB/RB switch the filter, Y the order, A opens the focused achievement, B closes;
     /// with the detail open, the arrows step it through the list and A or B close it. The host swallows the rest.
     func handle(_ action: GamepadAction, summary: AchievementSummary) -> Outcome {
         if state.isDetailOpen {
@@ -37,6 +37,9 @@ final class AchievementsScreenModel: ObservableObject {
         }
         switch action {
         case .confirm: return openDetail() ? .opened : .ignored
+        case .contextAction:
+            cycleOrder(summary: summary)
+            return .ordered
         case .navigateLeft: return move(.left) ? .moved : .ignored
         case .navigateRight: return move(.right) ? .moved : .ignored
         case .navigateUp: return move(.up) ? .moved : .ignored
@@ -110,13 +113,22 @@ final class AchievementsScreenModel: ObservableObject {
 
     func setFilter(_ filter: AchievementFilter, summary: AchievementSummary) {
         var next = state
-        next.setFilter(filter, ids: summary.rows(filter).map(\.id))
+        next.setFilter(filter, ids: summary.rows(filter, order: next.order).map(\.id))
         filterChanged(next)
     }
 
     func shiftFilter(by delta: Int, summary: AchievementSummary) {
         var next = state
-        next.shiftFilter(by: delta) { summary.rows($0).map(\.id) }
+        let order = next.order
+        next.shiftFilter(by: delta) { summary.rows($0, order: order).map(\.id) }
+        filterChanged(next)
+    }
+
+    /// Y: the next order, from the top.
+    func cycleOrder(summary: AchievementSummary) {
+        var next = state
+        let filter = next.filter
+        next.cycleOrder { summary.rows(filter, order: $0).map(\.id) }
         filterChanged(next)
     }
 
@@ -129,7 +141,7 @@ final class AchievementsScreenModel: ObservableObject {
         relayout()
     }
 
-    /// A new filter opens at its top, at once: a glide across a different list would show rows that are gone.
+    /// A new filter or order opens at its top, at once: a glide across a different list would show rows that are gone.
     private func filterChanged(_ next: AchievementsScreenState) {
         wheeled = false
         state = next

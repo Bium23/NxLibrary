@@ -28,7 +28,8 @@ final class AchievementSummaryTests: XCTestCase {
     func testUnknownRarityGoesLast() {
         let summary = AchievementSummary(achievements: [a("X"), a("Y"), a("Z")], percents: ["Z": 3])
         XCTAssertEqual(summary.rows(.locked).map(\.id), ["Z", "X", "Y"])
-        XCTAssertEqual(summary.rows(.rarest).map(\.id), ["Z", "X", "Y"])
+        XCTAssertEqual(summary.rows(.all, order: .rarest).map(\.id), ["Z", "X", "Y"])
+        XCTAssertEqual(summary.rows(.all, order: .commonest).map(\.id), ["Z", "X", "Y"])
     }
 
     func testFiltersSplitUnlockedAndLocked() {
@@ -37,9 +38,36 @@ final class AchievementSummaryTests: XCTestCase {
         XCTAssertEqual(summary.rows(.locked).map(\.id), ["L"])
     }
 
-    func testRarestIsAscendingRarity() {
+    func testRarestFirstIsAscendingRarity() {
         let summary = AchievementSummary(achievements: [a("A", at: 1), a("B"), a("C")], percents: ["A": 40, "B": 2, "C": 90])
-        XCTAssertEqual(summary.rows(.rarest).map(\.id), ["B", "A", "C"])
+        XCTAssertEqual(summary.rows(.all, order: .rarest).map(\.id), ["B", "A", "C"])
+    }
+
+    func testMostCommonFirstIsDescendingRarity() {
+        let summary = AchievementSummary(achievements: [a("A", at: 1), a("B"), a("C")], percents: ["A": 40, "B": 2, "C": 90])
+        XCTAssertEqual(summary.rows(.all, order: .commonest).map(\.id), ["C", "A", "B"])
+    }
+
+    /// An order sorts inside the filter: Unlocked stays the unlocked ones.
+    func testOrderAppliesWithinTheFilter() {
+        let summary = AchievementSummary(achievements: [a("U1", at: 1), a("U2", at: 2), a("L")],
+                                         percents: ["U1": 3, "U2": 60, "L": 1])
+        XCTAssertEqual(summary.rows(.unlocked, order: .rarest).map(\.id), ["U1", "U2"])
+        XCTAssertEqual(summary.rows(.unlocked, order: .commonest).map(\.id), ["U2", "U1"])
+        XCTAssertEqual(summary.rows(.unlocked).map(\.id), ["U2", "U1"], "default: newest first")
+    }
+
+    /// Equal rarity keeps the default order, so a re-read never shuffles ties.
+    func testTiesKeepTheDefaultOrder() {
+        let summary = AchievementSummary(achievements: [a("A", at: 1), a("B", at: 2), a("C")],
+                                         percents: ["A": 10, "B": 10, "C": 10])
+        XCTAssertEqual(summary.rows(.all, order: .rarest).map(\.id), ["B", "A", "C"])
+        XCTAssertEqual(summary.rows(.all, order: .commonest).map(\.id), ["B", "A", "C"])
+    }
+
+    func testFiltersAreAllUnlockedLocked() {
+        XCTAssertEqual(AchievementFilter.allCases, [.all, .unlocked, .locked])
+        XCTAssertEqual(AchievementOrder.allCases, [.default, .rarest, .commonest])
     }
 
     func testHiddenLockedIsMaskedAndUnlockedHiddenIsNot() {
