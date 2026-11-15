@@ -3,7 +3,8 @@ import AppKit
 import NXLibraryCore
 
 /// A Steam game's achievements, over the game's art (darker), laid out like Selene's: the logo and the recently
-/// unlocked icons on the left, the progress and the tier crystals on the right, filters, a one-column list.
+/// unlocked icons on the left, the progress and the tier crystals on the right, filters between LB and RB, a
+/// one-column list.
 /// A pure view like `ScreenshotViewer`: Spotlight owns `AchievementsScreenState` and routes input through
 /// `AchievementsScreen.handle`. Present it as an overlay inside the canvas root so the canvas scaling applies.
 struct AchievementsScreen: View {
@@ -61,9 +62,7 @@ struct AchievementsScreen: View {
             .padding(.leading, canvas.u(Self.side))
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
-                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back")) { onClose() }],
-                               right: [HintItem(.lb, L10n.text("Previous")) { onShiftFilter(-1) },
-                                       HintItem(.rb, L10n.text("Next")) { onShiftFilter(1) }],
+                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back")) { onClose() }], right: [],
                                bottom: 40, leftInset: 18)
             }
         }
@@ -133,53 +132,62 @@ struct AchievementsScreen: View {
         }
     }
 
-    /// The completion as a large percentage underlined by its bar; Platinum, Gold, Silver, Bronze beside it with
+    /// The completion as one gauge, read top to bottom: the large percentage, its bar, the count and the newest
+    /// unlock, all left-aligned and as wide as the widest of them. Beside it Platinum, Gold, Silver, Bronze with
     /// unlocked/total under each, as PS5 trophies, dimmed while not earned (only Platinum until Steam's rarity
-    /// arrives); under both, the count and the newest unlock.
+    /// arrives).
     private var progress: some View {
-        let counts = summary.tierCounts
-        let tiers = summary.hasRarity ? AchievementTier.allCases : [.platinum]
-        let fraction = summary.total > 0 ? Double(summary.unlocked) / Double(summary.total) : 0
-        return VStack(alignment: .trailing, spacing: canvas.u(14)) {
-            HStack(alignment: .center, spacing: canvas.u(40)) {
-                Text(Self.wholePercent(summary.percentComplete))
-                    .seleneFont(64, .semibold)
-                    .monospacedDigit()
-                    .foregroundColor(SeleneTheme.ink)
-                    .lineLimit(1)
-                    .padding(.bottom, canvas.u(16))
-                    // The bar as wide as the number it underlines.
-                    .overlay(alignment: .bottom) {
-                        AchievementProgressBar(fraction: fraction, height: 5, track: SeleneTheme.ink25)
-                            .frame(height: canvas.u(5))
-                    }
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(L10n.format("Achievements: %d of %d", [summary.unlocked, summary.total]))
-                HStack(alignment: .top, spacing: canvas.u(22)) {
-                    ForEach(tiers, id: \.self) { tier in
-                        let count = counts[tier] ?? TierCount(unlocked: 0, total: 0)
-                        VStack(spacing: canvas.u(4)) {
-                            TierCrystal(tier: tier, size: 60, dimmed: count.unlocked == 0)
-                            (Text("\(count.unlocked)").foregroundColor(SeleneTheme.ink)
-                             + Text(" / \(count.total)").foregroundColor(SeleneTheme.ink60))
-                                .seleneFont(15, .semibold)
-                                .monospacedDigit()
-                                // Its own width, never a share of the crystal's: squeezed, "0 / 13" read "0…".
-                                .fixedSize()
-                        }
-                        .fixedSize()
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(L10n.format("%1$@, %2$d of %3$d", [tier.displayName(), count.unlocked, count.total]))
-                    }
-                }
-            }
-            Text(countLine)
-                .seleneFont(15)
-                .foregroundColor(SeleneTheme.ink60)
-                .monospacedDigit()
-                .lineLimit(1)
+        HStack(alignment: .center, spacing: canvas.u(48)) {
+            gauge
+            board
         }
         .fixedSize()
+    }
+
+    private var gauge: some View {
+        let fraction = summary.total > 0 ? Double(summary.unlocked) / Double(summary.total) : 0
+        return VStack(alignment: .leading, spacing: 0) {
+            Text(Self.wholePercent(summary.percentComplete))
+                .seleneFont(64, .semibold)
+                .monospacedDigit()
+                .foregroundColor(SeleneTheme.ink)
+                .lineLimit(1)
+            // Fills the gauge's width (the widest line's), which `fixedSize` settles first.
+            AchievementProgressBar(fraction: fraction, height: 5, track: SeleneTheme.ink25)
+                .frame(maxWidth: .infinity)
+                .padding(.top, canvas.u(6))
+            Text(countLine)
+                .seleneFont(16)
+                .foregroundColor(SeleneTheme.ink75)
+                .monospacedDigit()
+                .lineLimit(1)
+                .padding(.top, canvas.u(12))
+        }
+        .fixedSize()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(L10n.format("Achievements: %d of %d", [summary.unlocked, summary.total]))
+    }
+
+    private var board: some View {
+        let counts = summary.tierCounts
+        let tiers = summary.hasRarity ? AchievementTier.allCases : [.platinum]
+        return HStack(alignment: .top, spacing: canvas.u(26)) {
+            ForEach(tiers, id: \.self) { tier in
+                let count = counts[tier] ?? TierCount(unlocked: 0, total: 0)
+                VStack(spacing: canvas.u(6)) {
+                    TierCrystal(tier: tier, size: 64, dimmed: count.unlocked == 0)
+                    (Text("\(count.unlocked)").foregroundColor(SeleneTheme.ink)
+                     + Text(" / \(count.total)").foregroundColor(SeleneTheme.ink75))
+                        .seleneFont(18, .semibold)
+                        .monospacedDigit()
+                        // Its own width, never a share of the crystal's: squeezed, "0 / 13" read "0…".
+                        .fixedSize()
+                }
+                .fixedSize()
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(L10n.format("%1$@, %2$d of %3$d", [tier.displayName(), count.unlocked, count.total]))
+            }
+        }
     }
 
     /// "17 of 50 unlocked · last on 31 Jul 2026"; the count alone before the first unlock.
@@ -196,8 +204,10 @@ struct AchievementsScreen: View {
         (Double(value) / 100).formatted(.percent.precision(.fractionLength(0)).locale(L10n.context.formatLocale))
     }
 
+    /// The filters between the shoulder badges, as on Selene: LB and RB step through them (and take a click).
     private var pills: some View {
         HStack(spacing: canvas.u(12)) {
+            shoulder(.lb, L10n.text("Previous"), step: -1)
             ForEach(AchievementFilter.allCases, id: \.self) { filter in
                 let selected = filter == state.filter
                 let count = summary.rows(filter).count
@@ -215,8 +225,17 @@ struct AchievementsScreen: View {
                 .accessibilityLabel("\(Self.title(filter)), \(count)")
                 .accessibilityAddTraits(selected ? .isSelected : [])
             }
+            shoulder(.rb, L10n.text("Next"), step: 1)
         }
         .animation(SeleneTheme.quick, value: state.filter)
+    }
+
+    private func shoulder(_ button: PromptButton, _ label: String, step: Int) -> some View {
+        Button { onShiftFilter(step) } label: {
+            SelenePromptBadge(button: button, height: 30)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
     }
 
     static func title(_ filter: AchievementFilter) -> String {
