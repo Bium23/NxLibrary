@@ -270,65 +270,93 @@ final class TileShineLayerView: TileMotionLayerView {
     }
 }
 
-/// The soft light behind a downloading Steam game's mark, breathing (`TileMotion.downloadGlow`) in the render
-/// server like the selected tile's glow: smooth at the screen's rate, nothing for the app between frames. Every
-/// downloading tile follows the same clock, so several breathe together. Still at mid strength with Reduce motion.
-struct DownloadGlowLayers: NSViewRepresentable {
+/// A downloading Steam game's mark (a thin arrow in a circle) pulsing in brightness (`TileMotion.downloadMarkOpacity`)
+/// in the render server like the selected tile's glow: smooth at the screen's rate, nothing for the app between
+/// frames. Every downloading tile follows the same clock, so several pulse together. Full and still with Reduce motion.
+struct DownloadMarkLayers: NSViewRepresentable {
+    /// The symbol's point size.
+    let size: CGFloat
     let still: Bool
 
-    func makeNSView(context: Context) -> DownloadGlowLayerView { DownloadGlowLayerView(still: still) }
+    func makeNSView(context: Context) -> DownloadMarkLayerView { DownloadMarkLayerView(size: size, still: still) }
 
-    func updateNSView(_ view: DownloadGlowLayerView, context: Context) { view.still = still }
+    func updateNSView(_ view: DownloadMarkLayerView, context: Context) {
+        view.size = size
+        view.still = still
+    }
 }
 
-final class DownloadGlowLayerView: TileMotionLayerView {
+final class DownloadMarkLayerView: TileMotionLayerView {
+    var size: CGFloat { didSet { if size != oldValue { needsLayout = true } } }
     var still: Bool {
         didSet {
             guard still != oldValue else { return }
-            light.removeAllAnimations()
-            Self.withoutActions { rest() }
+            mark.removeAllAnimations()
+            Self.withoutActions { mark.opacity = 1 }
             startLoops()
         }
     }
 
-    private let light = CAGradientLayer()
+    private let mark = CALayer()
+    /// The point size and scale the symbol was last drawn at.
+    private var drawn: (size: CGFloat, scale: CGFloat)?
 
-    init(still: Bool) {
+    init(size: CGFloat, still: Bool) {
+        self.size = size
         self.still = still
         super.init()
-        light.type = .radial
-        light.colors = [NSColor.white.withAlphaComponent(0.9).cgColor, NSColor.white.withAlphaComponent(0.35).cgColor,
-                        NSColor.white.withAlphaComponent(0).cgColor]
-        light.locations = [0, 0.4, 1]
-        light.startPoint = CGPoint(x: 0.5, y: 0.5)
-        light.endPoint = CGPoint(x: 1, y: 1)
-        root.addSublayer(light)
-        rest()
+        // The shadow the lock and the word wear, so the white reads on light art too.
+        mark.shadowColor = NSColor.black.cgColor
+        mark.shadowOpacity = 0.45
+        mark.shadowOffset = .zero
+        root.addSublayer(mark)
     }
 
     required init?(coder: NSCoder) { nil }
 
-    /// Between two breaths: what Reduce motion shows, and where a loop starts from.
-    private func rest() {
-        light.opacity = Float(TileMotion.downloadGlow(at: TileMotion.downloadPeriod / 4).opacity)
+    override func arrange(scale: CGFloat) {
+        // A selected tile grows a little: drawn a third finer than the screen, the symbol stays sharp when it does.
+        let detail = scale * 1.35
+        if drawn?.size != size || drawn?.scale != detail, let image = Self.symbol(size: size) {
+            mark.contents = Self.bitmap(image, scale: detail)
+            mark.bounds = CGRect(origin: .zero, size: image.size)
+            mark.contentsScale = detail
+            mark.shadowRadius = size * 0.14
+            drawn = (size, detail)
+        }
+        mark.position = CGPoint(x: bounds.midX, y: bounds.midY)
     }
 
-    override func arrange(scale: CGFloat) {
-        light.bounds = CGRect(origin: .zero, size: bounds.size)
-        light.position = CGPoint(x: bounds.midX, y: bounds.midY)
-        light.contentsScale = scale
+    /// The symbol drawn once, at `scale` pixels per point.
+    private static func bitmap(_ image: NSImage, scale: CGFloat) -> CGImage? {
+        let width = Int((image.size.width * scale).rounded(.up)), height = Int((image.size.height * scale).rounded(.up))
+        guard width > 0, height > 0,
+              let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        context.scaleBy(x: scale, y: scale)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: false)
+        image.draw(in: CGRect(origin: .zero, size: image.size))
+        NSGraphicsContext.restoreGraphicsState()
+        return context.makeImage()
+    }
+
+    private static func symbol(size: CGFloat) -> NSImage? {
+        guard size > 0 else { return nil }
+        let config = NSImage.SymbolConfiguration(pointSize: size, weight: .light)
+            .applying(.init(paletteColors: [NSColor.white.withAlphaComponent(0.92)]))
+        return NSImage(systemSymbolName: "arrow.down.circle", accessibilityDescription: nil)?
+            .withSymbolConfiguration(config)
     }
 
     override func startLoops() {
-        guard !still, window != nil, light.animation(forKey: "breath") == nil else { return }
+        guard !still, window != nil, mark.animation(forKey: "pulse") == nil else { return }
         let now = Date().timeIntervalSinceReferenceDate
-        let phase = TileMotion.phase(period: TileMotion.downloadPeriod, at: now)
-        let breath = TileMotion.loop(period: TileMotion.downloadPeriod, steps: 84) { TileMotion.downloadGlow(at: $0) }
-        light.add(Self.loop("opacity", values: breath.values.map { NSNumber(value: $0.opacity) },
-                            keyTimes: breath.keyTimes, period: TileMotion.downloadPeriod, phase: phase),
-                  forKey: "breath")
-        light.add(Self.loop("transform.scale", values: breath.values.map { NSNumber(value: $0.scale) },
-                            keyTimes: breath.keyTimes, period: TileMotion.downloadPeriod, phase: phase),
-                  forKey: "breath.scale")
+        let pulse = TileMotion.loop(period: TileMotion.downloadPeriod, steps: 84) { TileMotion.downloadMarkOpacity(at: $0) }
+        mark.add(Self.loop("opacity", values: pulse.values.map { NSNumber(value: $0) }, keyTimes: pulse.keyTimes,
+                           period: TileMotion.downloadPeriod,
+                           phase: TileMotion.phase(period: TileMotion.downloadPeriod, at: now)),
+                 forKey: "pulse")
     }
 }

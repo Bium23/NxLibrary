@@ -77,6 +77,7 @@ struct CatalogSteamInfo: View {
                 GamePrimaryActions(primaryTitle: primaryTitle,
                                    isFavorite: game.isFavorite, focused: focused,
                                    primaryEnabled: primaryEnabled,
+                                   primaryWaveDots: primaryWaveDots,
                                    onAction: onAction, onHover: onHover)
                     .padding(.leading, canvas.u(2)).padding(.top, canvas.u(18))
             }
@@ -95,8 +96,14 @@ struct CatalogSteamInfo: View {
         return true
     }
 
-    /// Steam is still installing the game: Steam downloads in place of Play.
+    /// Steam is still installing the game: "Downloading on Steam" in place of Play, which opens Steam's Downloads.
     private var downloading: Bool { player.isDownloading(game) }
+
+    /// The pill says the download is under way, with the porting pill's dots, only while it can open Steam.
+    private var primaryWaveDots: Bool {
+        guard case .idle = phase, downloading else { return false }
+        return SteamPlayCoordinator.steamClientURL != nil
+    }
 
     private var primaryTitle: String {
         switch phase {
@@ -104,7 +111,7 @@ struct CatalogSteamInfo: View {
         case .starting: return L10n.text("Cancel")
         case .failed: return L10n.text("Try again")
         case .idle:
-            if downloading { return L10n.text("Steam downloads") }
+            if downloading { return L10n.text("Downloading on Steam") }
             return player.canPlay(game) ? L10n.text("Play") : L10n.text("Unavailable")
         }
     }
@@ -119,9 +126,9 @@ struct CatalogSteamInfo: View {
         case .failed(.notStarted): return L10n.text("The game did not start. Check Steam, then try again.")
         case .failed(.unavailable): return L10n.text("Refresh the Steam source or check the installation in Steam.")
         case .idle:
+            // The pill and the tile already say it; only a missing Steam needs a word.
             if downloading {
-                return SteamPlayCoordinator.steamClientURL != nil ? L10n.text("Steam hasn't finished installing this game.")
-                                                                  : L10n.text("Steam is not installed on this Mac.")
+                return SteamPlayCoordinator.steamClientURL != nil ? nil : L10n.text("Steam is not installed on this Mac.")
             }
             return player.canPlay(game) ? nil : L10n.text("Refresh the Steam source or check the installation in Steam.")
         case .running: return nil

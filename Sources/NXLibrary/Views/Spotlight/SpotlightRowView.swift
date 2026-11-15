@@ -165,9 +165,9 @@ struct SpotlightRowView: View {
             // snapped to the pixel grid on their own, so they shook against their tile in a quick run of presses.
             // The shine is a Core Animation layer and stays outside.
             .drawingGroup()
-            // So is a download's breathing light.
+            // So is a download's pulsing mark.
             if case .game(let id) = item, gamesByID[id] == nil, let game = catalogGamesByID[id] {
-                PortingDownloadGlow(look: PortingTileLook.make(catalog: game), width: side, height: side)
+                PortingDownloadMark(look: PortingTileLook.make(catalog: game), width: side, height: side)
             }
             SeleneShine(cornerRadius: canvas.u(12), active: selected)
         }

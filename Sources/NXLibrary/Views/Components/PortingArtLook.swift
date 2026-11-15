@@ -6,8 +6,8 @@ import NXLibraryCore
 /// the shaders compile, a thin "k/n" bar with the stage and its step in small type
 /// sits on the softly blurred art; then the percentage fades in, small, with a slow
 /// pastel sheen. A failed porting with no app keeps the art black and white,
-/// lightly blurred, under a lock; a Steam game still installing looks the same under
-/// the download glyph and "Downloading".
+/// lightly blurred, under a lock; a Steam game still installing looks the same with
+/// "Downloading" under a thin download mark that pulses (`PortingDownloadMark`).
 ///
 /// The art is drawn once: a grey layer in `.saturation` blend takes the colour out
 /// above the fill line. The sheen moves only while compiling, and stands still
@@ -157,7 +157,8 @@ struct PortingArtLook: ViewModifier {
         }
     }
 
-    /// Steam is still installing the game: the glyph where the lock sits, the word under it in small type.
+    /// Steam is still installing the game: the word in small type under the mark, which the tile draws outside its
+    /// flattened picture (`PortingDownloadMark`) so it can pulse.
     private func downloading(side: CGFloat) -> some View {
         ZStack {
             // A soft shade, as under the porting steps, so the white reads on light art too.
@@ -167,24 +168,17 @@ struct PortingArtLook: ViewModifier {
     }
 
     /// How far above the tile's centre the download mark sits, as a fraction of the side: the mark and its word
-    /// are centred together. The breathing light (`PortingDownloadGlow`), drawn outside the tile's flattened
-    /// picture, is centred on the same point.
+    /// are centred together.
     static let downloadMarkLift: CGFloat = 0.05
 
     private func downloadMark(side: CGFloat) -> some View {
-        ZStack {
-            MaterialIconView(.download, size: side * 0.22)
-                .foregroundColor(.white.opacity(0.92))
-                .shadow(color: .black.opacity(0.45), radius: side * 0.03)
-                .offset(y: -side * Self.downloadMarkLift)
-            Text(L10n.text("Downloading"))
-                .font(.system(size: side * 0.06, weight: .medium))
-                .foregroundColor(.white.opacity(0.85))
-                .lineLimit(1)
-                .frame(width: side * 0.84)
-                .shadow(color: .black.opacity(0.55), radius: side * 0.04)
-                .offset(y: side * (0.11 + 0.035 + 0.03 - Self.downloadMarkLift))
-        }
+        Text(L10n.text("Downloading"))
+            .font(.system(size: side * 0.06, weight: .medium))
+            .foregroundColor(.white.opacity(0.85))
+            .lineLimit(1)
+            .frame(width: side * 0.84)
+            .shadow(color: .black.opacity(0.55), radius: side * 0.04)
+            .offset(y: side * (0.11 + 0.035 + 0.03 - Self.downloadMarkLift))
     }
 
     /// Soft pastels, never vivid; the blue kept faint: pink, peach, butter, mint, mist, lavender.
@@ -221,10 +215,10 @@ extension View {
     }
 }
 
-/// The soft light breathing behind a downloading game's mark. A Core Animation view cannot be drawn inside a tile
-/// flattened with `drawingGroup` (SwiftUI shows a placeholder instead), so the tile places this over its face,
-/// outside the flattened picture, as it does its shine. Nothing for any other look.
-struct PortingDownloadGlow: View {
+/// A downloading game's mark, pulsing in brightness over the word "Downloading". A Core Animation view cannot be
+/// drawn inside a tile flattened with `drawingGroup` (SwiftUI shows a placeholder instead), so the tile places
+/// this over its face, outside the flattened picture, as it does its shine. Nothing for any other look.
+struct PortingDownloadMark: View {
     let look: PortingTileLook
     let width: CGFloat
     let height: CGFloat
@@ -234,8 +228,8 @@ struct PortingDownloadGlow: View {
     var body: some View {
         if look == .downloading {
             let side = min(width, height)
-            DownloadGlowLayers(still: reduceMotion)
-                .frame(width: side * 0.46, height: side * 0.46)
+            DownloadMarkLayers(size: side * 0.17, still: reduceMotion)
+                .frame(width: side * 0.3, height: side * 0.3)
                 .offset(y: -side * PortingArtLook.downloadMarkLift)
                 .frame(width: width, height: height)
                 .allowsHitTesting(false)

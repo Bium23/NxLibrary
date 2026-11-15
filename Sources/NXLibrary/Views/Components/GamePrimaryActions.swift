@@ -8,13 +8,15 @@ struct GamePrimaryActions: View {
     let isFavorite: Bool
     let focused: Int?
     var primaryEnabled = true
+    /// The wave dots after the first title, as the porting pill shows them (a Steam game still downloading).
+    var primaryWaveDots = false
     let onAction: (Int) -> Void
     var onHover: (Int) -> Void = { _ in }
     @Environment(\.seleneCanvas) private var canvas
     var body: some View {
         HStack(spacing: canvas.u(14)) {
             pill(0, SelenePillButton(title: primaryTitle, height: 52, focused: focused == 0,
-                                    enabled: primaryEnabled) { onAction(0) })
+                                    enabled: primaryEnabled, waveDots: primaryWaveDots) { onAction(0) })
             pill(1, SelenePillButton(title: secondaryTitle, height: 52, focused: focused == 1) { onAction(1) })
             pill(2, SelenePillButton(title: nil, icon: isFavorite ? .favorite : .favoriteBorder,
                                     iconSize: 20, minWidth: 52, height: 52, horizontalPadding: 0,
