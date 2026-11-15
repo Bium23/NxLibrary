@@ -74,4 +74,18 @@ final class TileMotionTests: XCTestCase {
         XCTAssertEqual(TileMotion.phase(period: 5, at: 812.5), 2.5, accuracy: 1e-9)
         XCTAssertEqual(TileMotion.phase(period: 3.6, at: 7.2), 0, accuracy: 1e-9)
     }
+
+    func testDownloadGlowBreathesSlowlyBetweenFaintAndBright() {
+        XCTAssertEqual(TileMotion.downloadPeriod, 2.8)
+        let low = TileMotion.downloadGlow(at: 0), high = TileMotion.downloadGlow(at: 1.4)
+        XCTAssertEqual(low.opacity, 0.15, accuracy: 1e-9)
+        XCTAssertEqual(low.scale, 0.85, accuracy: 1e-9)
+        XCTAssertEqual(high.opacity, 0.6, accuracy: 1e-9)
+        XCTAssertEqual(high.scale, 1.05, accuracy: 1e-9)
+        XCTAssertEqual(TileMotion.downloadGlow(at: 2.8).opacity, low.opacity, accuracy: 1e-9)
+        let loop = TileMotion.loop(period: TileMotion.downloadPeriod, steps: 84) { TileMotion.downloadGlow(at: $0).opacity }
+        let largest = zip(loop.values, loop.values.dropFirst()).map { abs($1 - $0) }.max()!
+        XCTAssertLessThan(largest, 0.05)
+        XCTAssertEqual(loop.values.first!, loop.values.last!, accuracy: 1e-3)
+    }
 }

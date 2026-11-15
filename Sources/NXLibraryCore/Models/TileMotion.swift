@@ -5,6 +5,17 @@ import Foundation
 /// Played by Core Animation, the loops cost the app nothing between frames; redrawn by SwiftUI at the screen's
 /// rate, they kept a quarter of a core busy on a still screen.
 public enum TileMotion {
+    /// The download mark's glow breathes once in this time (1.4 s each way): slow, like the ring's glow.
+    public static let downloadPeriod: Double = 2.8
+
+    /// The soft light behind a downloading game's mark: faint and a little small, then bright and full, sine in-out.
+    public static func downloadGlow(at t: Double) -> (opacity: Double, scale: Double) {
+        let p = t.truncatingRemainder(dividingBy: downloadPeriod) / (downloadPeriod / 2)
+        let tri = p <= 1 ? p : 2 - p
+        let eased = 0.5 - 0.5 * cos(.pi * tri)
+        return (0.15 + 0.45 * eased, 0.85 + 0.2 * eased)
+    }
+
     /// The ring's gradient turns once in this time.
     public static let ringPeriod: Double = 5
     /// The glow rises and falls once in this time (1.8 s each way).

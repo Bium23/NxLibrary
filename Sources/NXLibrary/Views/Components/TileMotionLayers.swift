@@ -269,3 +269,66 @@ final class TileShineLayerView: TileMotionLayerView {
                  forKey: "sweep.end")
     }
 }
+
+/// The soft light behind a downloading Steam game's mark, breathing (`TileMotion.downloadGlow`) in the render
+/// server like the selected tile's glow: smooth at the screen's rate, nothing for the app between frames. Every
+/// downloading tile follows the same clock, so several breathe together. Still at mid strength with Reduce motion.
+struct DownloadGlowLayers: NSViewRepresentable {
+    let still: Bool
+
+    func makeNSView(context: Context) -> DownloadGlowLayerView { DownloadGlowLayerView(still: still) }
+
+    func updateNSView(_ view: DownloadGlowLayerView, context: Context) { view.still = still }
+}
+
+final class DownloadGlowLayerView: TileMotionLayerView {
+    var still: Bool {
+        didSet {
+            guard still != oldValue else { return }
+            light.removeAllAnimations()
+            Self.withoutActions { rest() }
+            startLoops()
+        }
+    }
+
+    private let light = CAGradientLayer()
+
+    init(still: Bool) {
+        self.still = still
+        super.init()
+        light.type = .radial
+        light.colors = [NSColor.white.withAlphaComponent(0.9).cgColor, NSColor.white.withAlphaComponent(0.35).cgColor,
+                        NSColor.white.withAlphaComponent(0).cgColor]
+        light.locations = [0, 0.4, 1]
+        light.startPoint = CGPoint(x: 0.5, y: 0.5)
+        light.endPoint = CGPoint(x: 1, y: 1)
+        root.addSublayer(light)
+        rest()
+    }
+
+    required init?(coder: NSCoder) { nil }
+
+    /// Between two breaths: what Reduce motion shows, and where a loop starts from.
+    private func rest() {
+        light.opacity = Float(TileMotion.downloadGlow(at: TileMotion.downloadPeriod / 4).opacity)
+    }
+
+    override func arrange(scale: CGFloat) {
+        light.bounds = CGRect(origin: .zero, size: bounds.size)
+        light.position = CGPoint(x: bounds.midX, y: bounds.midY)
+        light.contentsScale = scale
+    }
+
+    override func startLoops() {
+        guard !still, window != nil, light.animation(forKey: "breath") == nil else { return }
+        let now = Date().timeIntervalSinceReferenceDate
+        let phase = TileMotion.phase(period: TileMotion.downloadPeriod, at: now)
+        let breath = TileMotion.loop(period: TileMotion.downloadPeriod, steps: 84) { TileMotion.downloadGlow(at: $0) }
+        light.add(Self.loop("opacity", values: breath.values.map { NSNumber(value: $0.opacity) },
+                            keyTimes: breath.keyTimes, period: TileMotion.downloadPeriod, phase: phase),
+                  forKey: "breath")
+        light.add(Self.loop("transform.scale", values: breath.values.map { NSNumber(value: $0.scale) },
+                            keyTimes: breath.keyTimes, period: TileMotion.downloadPeriod, phase: phase),
+                  forKey: "breath.scale")
+    }
+}

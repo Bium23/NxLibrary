@@ -168,15 +168,23 @@ struct PortingArtLook: ViewModifier {
 
     private func downloadMark(side: CGFloat) -> some View {
         VStack(spacing: side * 0.03) {
-            MaterialIconView(.download, size: side * 0.22)
-                .foregroundColor(.white.opacity(0.88))
+            ZStack {
+                // A soft light breathing behind the mark: the download is under way.
+                DownloadGlowLayers(still: reduceMotion)
+                    .frame(width: side * 0.46, height: side * 0.46)
+                    .allowsHitTesting(false)
+                MaterialIconView(.download, size: side * 0.22)
+                    .foregroundColor(.white.opacity(0.92))
+                    .shadow(color: .black.opacity(0.45), radius: side * 0.03)
+            }
+            .frame(width: side * 0.22, height: side * 0.22)
             Text(L10n.text("Downloading"))
                 .font(.system(size: side * 0.06, weight: .medium))
                 .foregroundColor(.white.opacity(0.85))
                 .lineLimit(1)
                 .frame(width: side * 0.84)
+                .shadow(color: .black.opacity(0.55), radius: side * 0.04)
         }
-        .shadow(color: .black.opacity(0.55), radius: side * 0.04)
     }
 
     /// Soft pastels, never vivid; the blue kept faint: pink, peach, butter, mint, mist, lavender.
