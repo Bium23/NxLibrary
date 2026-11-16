@@ -15,6 +15,7 @@ The documentation is how the next session understands the structure. Keep it exa
 - **Present tense only.** `architecture.md`, `conventions.md`, `flows.md` and area documents describe what the code does now. Put history in `CHANGELOG.md`, dated notes (`docs/upstream-upgrades/`, `docs/reviews/`) or git. Keep the *why* of a choice next to it in one sentence. Move measurements and probe evidence to a dated note in `docs/reviews/` and link it.
 - **One validation list.** Validation status lives only in `docs/validation.md`. A row becomes validated only on the maintainer's confirmation.
 - **No appended sections.** New features go into the section of their area, never into a dated section at the end of a guide or of the file map. If an area grows a document of its own, add it to the reading order above.
+- **Designs and plans stay private.** Design notes, plans, research, product ideas and future intentions live in `docs/private/` (git-ignored) and are never moved into the repository. Public documents state current behavior and the one-sentence *why*; they never name private files or reveal planned features, sources, product or business ideas.
 - **Readable docs.** Use short paragraphs, lists and tables; avoid single lines of thousands of characters. Name real types and files. Verify every claim against the code before writing it.
 
 ## Non-negotiables

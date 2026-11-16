@@ -38,7 +38,7 @@ Esempio completo: Steam, documentato in [steam.md](steam.md).
 - Un'assenza non è una cancellazione. Un disco scollegato, una scansione parziale o un titolo ambiguo conservano la voce, gli UUID e le scelte personali.
 - I file di altre applicazioni si leggono e non si scrivono mai. Le letture protette passano da `InstallationFileSnapshot` e `InstallationDirectorySnapshot`.
 - La fonte è facoltativa: se è spenta non si legge nulla e il resto si comporta come prima.
-- **Regola di prodotto** (vedi `docs/private/arcane-base-and-switch-module-2026-11-17.md`): la funzione sta nell'app, il formato sta nella fonte. Salvataggi, mod e cheat sono una sola schermata ciascuno; la fonte dice dove sono i file e come si leggono.
+- **La funzione sta nell'app, il formato sta nella fonte.** Salvataggi, mod e cheat sono una sola schermata ciascuno; la fonte dice dove sono i file e come si leggono.
 
 ## 3. Una schermata o un pannello Selene
 
