@@ -78,12 +78,8 @@ struct AchievementDetail: View {
             .padding(.top, canvas.u(56))
             .padding(.bottom, canvas.u(48))
             .frame(width: canvas.u(Self.width))
-            // A light veil, mostly see-through, over the screen softly blurred behind, instead of the dark blue
-            // glass; the material at full strength read too heavy (maintainer's checks, 16 Nov 2026).
-            .background(shape.fill(SeleneTheme.ink.opacity(0.05)))
-            .background(shape.fill(.ultraThinMaterial).opacity(0.5))
-            .environment(\.colorScheme, .dark)
-            .overlay(shape.strokeBorder(SeleneTheme.ink.opacity(0.16), lineWidth: max(1, canvas.u(1))))
+            .background(shape.fill(SeleneTheme.glassCard))
+            .overlay(shape.strokeBorder(SeleneTheme.ink15, lineWidth: max(1, canvas.u(1))))
             .shadow(color: .black.opacity(0.45), radius: canvas.u(30), y: canvas.u(10))
             // A click on the card stays on the card.
             .contentShape(shape)
