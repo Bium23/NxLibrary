@@ -11,6 +11,7 @@ public actor CriticRatingService {
         let query: CriticRatingQuery
         let rating: CriticRating?
         let fetchedAt: Date
+        let resolverVersion: Int?
     }
     private struct Flight {
         let id: UUID
@@ -58,7 +59,8 @@ public actor CriticRatingService {
         let file = directory.appendingPathComponent(key + ".json")
         let cached = (try? InstallationFileSnapshot.read(at: file, maximumBytes: 65_536).data)
             .flatMap { try? JSONDecoder().decode(Cache.self, from: $0) }
-            .flatMap { $0.query == query && ($0.rating?.isValid ?? true) ? $0 : nil }
+            .flatMap { $0.query == query && ($0.rating?.isValid ?? true)
+                && ($0.rating != nil || $0.resolverVersion == 2) ? $0 : nil }
         func result(_ cache: Cache?, stale: Bool) -> CriticRatingResult {
             CriticRatingResult(rating: cache?.rating, fetchedAt: cache?.fetchedAt, isStale: stale && cache != nil)
         }
@@ -68,16 +70,23 @@ public actor CriticRatingService {
         guard Date() >= backoffUntil else { return result(cached, stale: true) }
         do {
             try Task.checkCancellation()
-            guard let searchURL = WikidataRatings.searchURL(name: query.name) else { return result(cached, stale: true) }
-            let search = try await fetch(searchURL)
-            let ids = try WikidataRatings.ids(in: search, name: query.name)
+            var ids: [String] = []
+            if let appID = query.steamAppID, let url = WikidataRatings.steamSearchURL(appID: appID) {
+                ids = try WikidataRatings.steamIDs(in: await fetch(url))
+            }
+            let bySteamID = !ids.isEmpty
+            if ids.isEmpty {
+                guard let searchURL = WikidataRatings.searchURL(name: query.name) else { return result(cached, stale: true) }
+                let search = try await fetch(searchURL)
+                ids = try WikidataRatings.ids(in: search, name: query.name)
+            }
             var rating: CriticRating?
             if let url = WikidataRatings.entitiesURL(ids: ids) {
                 let data = try await fetch(url)
-                rating = try WikidataRatings.rating(in: data, ids: ids, query: query)
+                rating = try WikidataRatings.rating(in: data, ids: ids, query: query, requireSteamID: bySteamID)
             }
             try Task.checkCancellation()
-            let value = Cache(query: query, rating: rating, fetchedAt: now)
+            let value = Cache(query: query, rating: rating, fetchedAt: now, resolverVersion: 2)
             // An unwritable cache does not discard a valid network answer.
             if let encoded = try? JSONEncoder().encode(value), encoded.count <= 65_536 {
                 do {

@@ -12,7 +12,26 @@ public enum WikidataRatings {
     }
     public static func searchURL(name: String) -> URL? {
         guard !name.isEmpty, name.count <= 300 else { return nil }
-        return url(["action": "wbsearchentities", "search": name, "language": "en", "type": "item", "limit": "5"])
+        // Store trademarks prevent wbsearchentities from finding an otherwise exact title.
+        // Keep edition/sequel words: those carry identity, unlike the trademark marks.
+        let clean = ["™", "®", "©"].reduce(name) { $0.replacingOccurrences(of: $1, with: "") }
+            .split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        guard !clean.isEmpty else { return nil }
+        return url(["action": "wbsearchentities", "search": clean, "language": "en", "type": "item", "limit": "5"])
+    }
+    public static func steamSearchURL(appID: UInt32) -> URL? {
+        guard appID > 0 else { return nil }
+        return url(["action": "query", "list": "search", "srsearch": "haswbstatement:P1733=\(appID)",
+                    "srnamespace": "0", "srlimit": "5", "srprop": ""])
+    }
+    public static func steamIDs(in data: Data) throws -> [String] {
+        let root = try object(data)
+        guard let query = root["query"] as? [String: Any], let search = query["search"] as? [[String: Any]]
+        else { throw URLError(.cannotParseResponse) }
+        return Array(Set(search.compactMap { item -> String? in
+            guard let id = item["title"] as? String, isItemID(id), item["ns"] as? Int == 0 else { return nil }
+            return id
+        })).sorted()
     }
     public static func entitiesURL(ids: [String]) -> URL? {
         guard !ids.isEmpty, ids.count <= 5, ids.allSatisfy(isItemID) else { return nil }
@@ -31,11 +50,15 @@ public enum WikidataRatings {
         guard !target.isEmpty else { return [] }
         return Array(Set(search.compactMap { item -> String? in
             guard let id = item["id"] as? String, isItemID(id) else { return nil }
-            let names = [item["label"] as? String].compactMap { $0 } + (item["aliases"] as? [String] ?? [])
+            var names = [item["label"] as? String].compactMap { $0 } + (item["aliases"] as? [String] ?? [])
+            if let match = item["match"] as? [String: String], match["type"] == "alias", let text = match["text"] {
+                names.append(text)
+            }
             return names.contains { normalized($0) == target } ? id : nil
         })).sorted()
     }
-    public static func rating(in data: Data, ids: [String], query: CriticRatingQuery) throws -> CriticRating? {
+    public static func rating(in data: Data, ids: [String], query: CriticRatingQuery,
+                              requireSteamID: Bool = false) throws -> CriticRating? {
         let root = try object(data)
         guard let entities = root["entities"] as? [String: [String: Any]],
               ids.allSatisfy({ entities[$0] != nil }) else { throw URLError(.cannotParseResponse) }
@@ -44,7 +67,7 @@ public enum WikidataRatings {
                   claimItems(claims["P31"] ?? []).contains("Q7889") else { return false }
             let steam = (claims["P1733"] ?? []).filter { ($0["rank"] as? String) != "deprecated" }
                 .compactMap { ($0["mainsnak"] as? [String: Any]).flatMap(value) as? String }
-            if let expected = query.steamAppID, !steam.isEmpty { return steam.contains(String(expected)) }
+            if let expected = query.steamAppID, requireSteamID || !steam.isEmpty { return steam.contains(String(expected)) }
             return true
         }
         guard matched.count == 1, let id = matched.first,

@@ -414,3 +414,10 @@ per un voto, un giorno per un'assenza verificata; offline conserva il dato con l
 data. La data di scaricamento resta distinta da quella del voto. Cambiare gioco annulla
 il lettore e impedisce la pubblicazione di un risultato precedente. Nessuna scrittura
 del catalogo, dei dati Steam o dei giochi; i provider con credenziali rimangono rinviati.
+
+La verifica nella libreria reale ha individuato due difetti di ricerca: i simboli ™/®/©
+nei nomi dello store davano risultati vuoti, e un nome Steam personalizzato non identificava
+il titolo. Le query ora tolgono soltanto quei simboli, conservando sequel/edizioni; Steam
+prova prima P1733 (ID pubblico esatto), verificato di nuovo nelle dichiarazioni dell'entità.
+Il ripiego per nome usa anche il campo `match` degli alias. Le assenze salvate dal vecchio
+resolver vengono ricontrollate, senza eliminare voti validi o modificare la libreria.

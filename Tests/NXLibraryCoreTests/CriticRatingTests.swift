@@ -69,7 +69,70 @@ final class CriticRatingTests: XCTestCase {
         XCTAssertEqual(try WikidataRatings.ids(in: data, name: "Fixture"), ["Q10", "Q13"])
         XCTAssertThrowsError(try WikidataRatings.ids(in: Data("{}".utf8), name: "Fixture"))
     }
+
+    func testSearchRemovesStoreTrademarkSymbolsWithoutRemovingEditionWords() throws {
+        let url = try XCTUnwrap(WikidataRatings.searchURL(name: "Fixture™: Test® Deluxe Edition"))
+        let params = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
+        XCTAssertEqual(params?.first { $0.name == "search" }?.value, "Fixture: Test Deluxe Edition")
+    }
+
+    func testSearchReadsTheRealAliasMatchField() throws {
+        let data = Data("""
+        {"search":[{"id":"Q10","label":"Official name","match":{"type":"alias","text":"Fixture"}},
+        {"id":"Q11","label":"Other","match":{"type":"description","text":"Fixture"}}]}
+        """.utf8)
+        XCTAssertEqual(try WikidataRatings.ids(in: data, name: "Fixture"), ["Q10"])
+    }
+
+    func testSteamIdentifierFindsARenamedGameWithoutGuessingItsTitle() async throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let body = try payload([score()])
+        let service = CriticRatingService(directory: dir, transport: { url in
+            let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+            if items.contains(where: { $0.name == "srsearch" && $0.value == "haswbstatement:P1733=42" }) {
+                return Data("{\"query\":{\"search\":[{\"title\":\"Q10\",\"ns\":0}]}}".utf8)
+            }
+            if url.query?.contains("wbgetentities") == true { return body }
+            return Data("{\"search\":[]}".utf8)
+        })
+        let result = await service.load(CriticRatingQuery(name: "My renamed title", platform: .mac, steamAppID: 42))
+        XCTAssertEqual(result.rating?.score, 78)
+    }
+
+    func testOldMissingCacheIsRetriedAfterResolverFix() async throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let query = CriticRatingQuery(name: "Fixture™", platform: .switch)
+        let old = CriticRatingService(directory: dir, transport: { _ in Data("{\"search\":[]}".utf8) })
+        _ = await old.load(query)
+        let file = try XCTUnwrap(FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil).first)
+        var cache = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: file)) as? [String: Any])
+        cache.removeValue(forKey: "resolverVersion")
+        try JSONSerialization.data(withJSONObject: cache).write(to: file)
+        let body = try payload([score()])
+        let fixed = CriticRatingService(directory: dir, transport: { url in
+            url.query?.contains("wbgetentities") == true ? body : Data("{\"search\":[{\"id\":\"Q10\",\"label\":\"Fixture\"}]}".utf8)
+        })
+        let result = await fixed.load(query)
+        XCTAssertEqual(result.rating?.score, 78)
+    }
+
+    func testSteamIndexCandidatesMustStillCarryTheRequestedIdentifier() throws {
+        var root = try XCTUnwrap(JSONSerialization.jsonObject(with: payload([score()])) as? [String: Any])
+        var entities = try XCTUnwrap(root["entities"] as? [String: [String: Any]])
+        var entity = try XCTUnwrap(entities["Q10"])
+        var claims = try XCTUnwrap(entity["claims"] as? [String: Any])
+        claims.removeValue(forKey: "P1733")
+        entity["claims"] = claims; entities["Q10"] = entity; root["entities"] = entities
+        let body = try JSONSerialization.data(withJSONObject: root)
+        XCTAssertNil(try WikidataRatings.rating(in: body, ids: ["Q10"], query: query, requireSteamID: true))
+        XCTAssertNotNil(try WikidataRatings.rating(in: body, ids: ["Q10"], query: query))
+        let search = Data("{\"query\":{\"search\":[{\"title\":\"Q10\",\"ns\":0},{\"title\":\"Property:P1733\",\"ns\":120}]}}".utf8)
+        XCTAssertEqual(try WikidataRatings.steamIDs(in: search), ["Q10"])
+    }
     func testCacheAndOfflineFallbackKeepTheOriginalValue() async throws {
+        let query = CriticRatingQuery(name: "Fixture", platform: .switch)
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: dir) }
         let body = try payload([score()])
@@ -88,6 +151,7 @@ final class CriticRatingTests: XCTestCase {
         XCTAssertNil(other.rating)
     }
     func testMissingAnswersAreCachedAndConcurrentReadersShareRequests() async throws {
+        let query = CriticRatingQuery(name: "Fixture", platform: .switch)
         actor Calls { var value = 0; func bump() { value += 1 } }
         let calls = Calls(), dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: dir) }
@@ -158,7 +222,7 @@ final class CriticRatingTests: XCTestCase {
             await activity.stop()
             return Data("{\"search\":[]}".utf8)
         })
-        async let a = service.load(query)
+        async let a = service.load(CriticRatingQuery(name: "Fixture", platform: .switch))
         async let b = service.load(CriticRatingQuery(name: "Other", platform: .switch))
         _ = await (a, b)
         let maximum = await activity.maximum
