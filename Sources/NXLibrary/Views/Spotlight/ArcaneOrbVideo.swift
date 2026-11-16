@@ -40,6 +40,7 @@ final class ArcaneOrbView: NSView {
     private var observers: [NSObjectProtocol] = []
     private var state: (active: Bool, moves: Bool)?
     private var playing = false
+    private var revealing = false
 
     /// The card's reveal: slow and soft, never past its target; with Reduce motion, Selene's quick change.
     private static let reveal = CAMediaTimingFunction(controlPoints: 0.22, 1, 0.36, 1)
@@ -72,11 +73,10 @@ final class ArcaneOrbView: NSView {
         player.actionAtItemEnd = .advance
         let item = AVPlayerItem(asset: AVURLAsset(url: url))
         looper = AVPlayerLooper(player: player, templateItem: item)
-        player.seek(to: Self.resume, toleranceBefore: .zero, toleranceAfter: .zero)
 
         readyObservation = playerLayer.observe(\.isReadyForDisplay, options: [.initial, .new]) { [weak self] layer, _ in
             guard layer.isReadyForDisplay else { return }
-            DispatchQueue.main.async { self?.reveal() }
+            DispatchQueue.main.async { self?.resumeThenReveal() }
         }
         let center = NotificationCenter.default
         for name in [NSApplication.didResignActiveNotification, NSApplication.didBecomeActiveNotification] {
@@ -136,6 +136,18 @@ final class ArcaneOrbView: NSView {
         animation.duration = duration
         animation.timingFunction = Self.reveal
         orb.add(animation, forKey: keyPath)
+    }
+
+    /// Once the first frame is ready, move to where the orb last stopped (exactly, a seek before then may be
+    /// dropped), then fade it in: the jump from the first frame is never seen.
+    private func resumeThenReveal() {
+        guard !revealing else { return }
+        revealing = true
+        let target = Self.resume
+        guard target > .zero else { return reveal() }
+        player.seek(to: target, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
+            DispatchQueue.main.async { self?.reveal() }
+        }
     }
 
     private func reveal() {
