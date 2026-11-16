@@ -37,7 +37,7 @@ public enum OnlineArtwork {
     static let screenshotLimit = 4
 
     /// Asks every source that has art for `slot` (all of them for nil) at once.
-    public static func find(names: [String], slot: ArtworkSlot? = nil,
+    public static func find(names: [String], slot: ArtworkSlot? = nil, platform: CriticRatingQuery.Platform = .switch,
                             client: ArtworkHTTPClient = URLSessionArtworkClient()) async -> [ArtworkCandidate] {
         func wants(_ slots: Set<ArtworkSlot>) -> Bool { slot.map(slots.contains) ?? true }
         async let wikidata = wants([.logo, .cover, .background]) ? WikidataArt.find(names: names, client: client)
@@ -47,7 +47,7 @@ public enum OnlineArtwork {
         async let xbox = wants([.cover, .background, .icon]) ? XboxStoreArt.find(names: names, client: client) : []
         async let gog = wants([.logo, .cover, .background]) ? GOGArt.find(names: names, client: client) : []
         async let europe = wants([.background, .icon]) ? NintendoEuropeArt.find(names: names, client: client) : []
-        async let gamesDB = wants([.logo, .cover, .background]) ? TheGamesDBArt.find(names: names, client: client) : []
+        async let gamesDB = wants([.logo, .cover, .background]) ? TheGamesDBArt.find(names: names, platform: platform, client: client) : []
         async let commons = wants([.logo]) ? MediaWikiLogos.commons.candidates(names: names, client: client) : []
         async let wikis = wants([.logo]) ? fanWikiLogos(names: names, client: client) : []
         async let wallhaven = wants([.background]) ? WallhavenGameArt.find(names: names, client: client) : []
@@ -331,16 +331,12 @@ public enum WikidataArt {
 }
 
 /// TheGamesDB, the community database: clear logos, box fronts, fan art and
-/// screenshots for Switch games, read from its public pages.
+/// screenshots for the requested game platform, read from its public pages.
 public enum TheGamesDBArt {
-    static let switchPlatform = "4971"
-
-    public static func searchURL(for name: String) -> URL? {
-        let term = SteamStoreArt.plain(name)
-        guard !term.isEmpty else { return nil }
-        var components = URLComponents(string: "https://thegamesdb.net/search.php")!
-        components.queryItems = [.init(name: "name", value: term), .init(name: "platform_id[]", value: switchPlatform)]
-        return components.url
+    public static func searchURL(for name: String, platform: CriticRatingQuery.Platform = .switch) -> URL? {
+        let query = CriticRatingQuery(name: name, platform: platform)
+        guard !IGDBRatings.clean(name).isEmpty, let preferred = MetadataDatabase.theGamesDB.platforms(for: query).first else { return nil }
+        return DatabaseMetadataParser.gamesDBSearch(query: query, platform: preferred)
     }
 
     /// The first result card whose title is the game's.
@@ -378,12 +374,26 @@ public enum TheGamesDBArt {
             + OnlineArtwork.screenshots(byKind["screenshot"] ?? [], source: "TheGamesDB screenshot")
     }
 
-    public static func find(names: [String], client: ArtworkHTTPClient) async -> [ArtworkCandidate] {
-        guard let name = names.first, let url = searchURL(for: name),
-              let data = await OnlineArtworkRequest.data(url, client: client),
-              let id = gameID(in: String(decoding: data, as: UTF8.self), matching: names),
-              let page = await OnlineArtworkRequest.data(gameURL(id: id), client: client) else { return [] }
-        return candidates(in: String(decoding: page, as: UTF8.self), id: id)
+    public static func find(names: [String], platform: CriticRatingQuery.Platform = .switch, client: ArtworkHTTPClient) async -> [ArtworkCandidate] {
+        guard let name = names.first else { return [] }
+        let query = CriticRatingQuery(name: name, platform: platform)
+        for platformName in MetadataDatabase.theGamesDB.platforms(for: query) {
+            guard !Task.isCancelled, let url = DatabaseMetadataParser.gamesDBSearch(query: query, platform: platformName),
+                  let data = await OnlineArtworkRequest.data(url, client: client) else { continue }
+            let html = String(decoding: data, as: UTF8.self)
+            let matches = Set(names.flatMap { alias in
+                DatabaseMetadataParser.gamesDBCandidates(in: html, query: CriticRatingQuery(name: alias, platform: platform), platform: platformName)
+            })
+            guard matches.count <= 1 else { return [] }
+            guard let match = matches.first else { continue }
+            guard !Task.isCancelled, let data = await OnlineArtworkRequest.data(match.url, client: client) else { return [] }
+            let page = String(decoding: data, as: UTF8.self)
+            let verified = DatabaseMetadataParser.theGamesDB(in: page, query: CriticRatingQuery(name: match.title, platform: platform), page: match.url)
+            guard verified.preview?.platform == platformName,
+                  let id = URLComponents(url: match.url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "id" })?.value.flatMap(Int.init) else { return [] }
+            return candidates(in: page, id: id)
+        }
+        return []
     }
 
     private static func decodeEntities(_ text: String) -> String {

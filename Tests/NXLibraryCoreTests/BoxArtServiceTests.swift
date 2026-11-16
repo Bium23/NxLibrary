@@ -82,17 +82,20 @@ final class BoxArtServiceTests: XCTestCase {
 
     func testTheGamesDBCoverWhenGameTDBHasNone() async throws {
         let client = RoutedClient()
-        let search = TheGamesDBArt.searchURL(for: "Donkey Kong Bananza")!.absoluteString
+        let search = TheGamesDBArt.searchURL(for: "Donkey Kong Bananza", platform: .switch2)!.absoluteString
         client.routes[search] = Data("""
         <a href="./game.php?id=132468"><div class="card"><img src="x"><div class="card-footer bg-secondary">
-          <p>Donkey Kong Bananza</p><p class="text-muted">Nintendo Switch</p></div></div></a>
+          <p>Donkey Kong Bananza</p><p class="text-muted">Nintendo Switch 2</p></div></div></a>
         """.utf8)
         client.routes[TheGamesDBArt.gameURL(id: 132468).absoluteString] = Data("""
+        <h1>Donkey Kong Bananza</h1><p>Platform: <a href="/platform.php?id=5021">Nintendo Switch 2</a></p>
         <a href="https://cdn.thegamesdb.net/images/original/boxart/front/132468-1.jpg"></a>
         """.utf8)
         client.routes["https://cdn.thegamesdb.net/images/original/boxart/front/132468-1.jpg"] = jpeg(width: 500, height: 500)
         let (boxArt, artwork, index) = try service(client)
         try index.save([zelda])
+        let oldKey = ["tgdb", "040074A01BF12000", GameTDB.normalize("Donkey Kong Bananza")].joined(separator: "|")
+        try JSONEncoder().encode([oldKey: Date()]).write(to: index.directory.appendingPathComponent("boxart-misses.json"))
 
         let url = await boxArt.boxArt(titleID: "040074A01BF12000", names: ["Donkey Kong Bananza"])
         XCTAssertNotNil(url)

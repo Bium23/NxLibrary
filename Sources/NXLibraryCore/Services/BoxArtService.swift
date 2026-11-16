@@ -33,15 +33,17 @@ public actor BoxArtService {
     public func boxArt(titleID: String, names: [String]) async -> URL? {
         if let cached = artwork.cachedURL(titleID: titleID, kind: .boxart) { return cached }
         guard let entries = loadEntries() else { return nil }
-        // "tgdb": misses recorded before the TheGamesDB fallback are tried again.
-        let missKey = (["tgdb", titleID] + names.map(GameTDB.normalize)).joined(separator: "|")
+        let platform: CriticRatingQuery.Platform = titleID.hasPrefix("04") ? .switch2 : .switch
+        // Retry Switch 2 misses recorded when this fallback searched the original Switch catalog.
+        let resolver = platform == .switch2 ? "tgdb-switch2" : "tgdb"
+        let missKey = ([resolver, titleID] + names.map(GameTDB.normalize)).joined(separator: "|")
         if let missed = missTable()[missKey], now().timeIntervalSince(missed) < Self.missRetry { return nil }
 
         let match = names.lazy.compactMap { GameTDB.exactMatch(for: $0, in: entries) }.first
         for url in match.map({ GameTDB.coverURLs(id: $0.id) }) ?? [] {
             if let found = await artwork.fetch(titleID: titleID, remoteURL: url, kind: .boxart) { return found }
         }
-        let covers = await TheGamesDBArt.find(names: names, client: client).filter { $0.slot == .cover }
+        let covers = await TheGamesDBArt.find(names: names, platform: platform, client: client).filter { $0.slot == .cover }
         for candidate in covers {
             if let found = await artwork.fetch(titleID: titleID, remoteURL: candidate.url, kind: .boxart) { return found }
         }

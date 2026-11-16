@@ -204,6 +204,31 @@ final class MoreArtworkSourcesTests: XCTestCase {
         XCTAssertTrue(list.allSatisfy { $0.source.hasPrefix("TheGamesDB") })
     }
 
+    func testTheGamesDBSearchUsesTheGamesPlatformInsteadOfAlwaysSwitch() throws {
+        for (platform, expected) in [(CriticRatingQuery.Platform.mac, "37"), (.switch, "4971"), (.switch2, "5021")] {
+            let url = try XCTUnwrap(TheGamesDBArt.searchURL(for: "Fixture", platform: platform))
+            let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
+            XCTAssertEqual(items?.first { $0.name == "platform_id[]" }?.value, expected)
+        }
+    }
+
+    func testTheGamesDBArtworkForMacUsesVerifiedPCFallbackInsteadOfConsole() async throws {
+        let client = RoutedClient(), query = CriticRatingQuery(name: "Fixture", platform: .mac)
+        let mac = try XCTUnwrap(DatabaseMetadataParser.gamesDBSearch(query: query, platform: "Mac OS"))
+        let pc = try XCTUnwrap(DatabaseMetadataParser.gamesDBSearch(query: query, platform: "PC"))
+        client.routes[mac.absoluteString] = Data("<p>TheGamesDB: no results</p>".utf8)
+        client.routes[pc.absoluteString] = Data("""
+        <a href="game.php?id=10"><div class="card-footer"><p>Fixture</p><p class="text-muted">PC</p></div></a>
+        """.utf8)
+        client.routes[TheGamesDBArt.gameURL(id: 10).absoluteString] = Data("""
+        <h1>Fixture</h1><p>Platform: <a href="/platform.php?id=1">PC</a></p>
+        <img src="https://cdn.thegamesdb.net/images/original/boxart/front/10-1.jpg">
+        """.utf8)
+        let found = await TheGamesDBArt.find(names: ["Fixture"], platform: .mac, client: client)
+        XCTAssertEqual(found.map(\.slot), [.cover])
+        XCTAssertEqual(found.first?.url.absoluteString, "https://cdn.thegamesdb.net/images/original/boxart/front/10-1.jpg")
+    }
+
     // MARK: - Fan wikis
 
     func testFanWikisAreSearchedLikeCommons() {

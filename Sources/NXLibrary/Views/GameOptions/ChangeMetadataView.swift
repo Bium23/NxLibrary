@@ -4,7 +4,7 @@ import NXLibraryCore
 
 /// Game options → Edit details → Change metadata: field by field (description,
 /// genres, developer, publisher, release date), Automatic (the store's value, as
-/// NX Library reads it), what Title DB, GameTDB and optional IGDB offer instead, or the player's
+/// NX Library reads it), platform-appropriate public databases and optional IGDB, or the player's
 /// own text. A choice is kept in `MetadataPicks` and laid over the store's data.
 /// A Steam game's Automatic is the Steam store's text; it has no Switch databases to offer,
 /// and its choices go to the Steam personal store.
@@ -23,6 +23,9 @@ struct ChangeMetadataView: View {
     @State private var igdbResult: IGDBMetadataResult?
     @State private var igdbSearching = false
     @State private var igdbAttempt = 0
+    @State private var databaseResults: [MetadataDatabase: DatabaseMetadataResult] = [:]
+    @State private var databaseSearching: Set<MetadataDatabase> = []
+    @State private var databaseAttempts: [MetadataDatabase: Int] = [:]
     @State private var failure: String?
     @State private var field: MetadataField = .description
     @State private var focus = 0
@@ -41,15 +44,31 @@ struct ChangeMetadataView: View {
     enum Row: Equatable {
         case automatic
         case yourPick(String)
-        case option(MetadataOption)
-        case retryIGDB
+        case source(Source, Int)
+        case retry(Source)
         case write
+    }
+    enum Source: CaseIterable, Hashable {
+        case titleDB, gameTDB, igdb, launchBox, theGamesDB
+        var name: String {
+            switch self {
+            case .titleDB: return "Title DB"
+            case .gameTDB: return "GameTDB"
+            case .igdb: return "IGDB"
+            case .launchBox: return "LaunchBox"
+            case .theGamesDB: return "TheGamesDB"
+            }
+        }
+        var database: MetadataDatabase? {
+            switch self { case .launchBox: return .launchBox; case .theGamesDB: return .theGamesDB; default: return nil }
+        }
     }
     private struct IGDBLookup: Hashable {
         let query: CriticRatingQuery
         let revision: UUID
         let attempt: Int
     }
+    private struct DatabaseLookup: Hashable { let query: CriticRatingQuery; let attempt: Int }
 
     init(viewModel: AppViewModel, subject: PersonalizationSubject, onClose: @escaping () -> Void) {
         self.viewModel = viewModel
@@ -68,6 +87,13 @@ struct ChangeMetadataView: View {
         if let game = subject.ported { return CriticRatingQuery(game: game, name: store?.name) }
         return CriticRatingQuery(name: subject.steam?.steamGame?.name ?? subject.name, platform: .mac, steamAppID: subject.steamAppID)
     }
+    private var databaseQuery: CriticRatingQuery {
+        let query = igdbQuery
+        return CriticRatingQuery(name: igdbResult?.metadata?.name ?? query.name, platform: query.platform, steamAppID: query.steamAppID)
+    }
+    private var sources: [Source] {
+        igdbQuery.platform == .mac ? [.igdb, .launchBox, .theGamesDB] : Source.allCases
+    }
 
     /// What Automatic shows: the Nintendo or Steam store's value.
     private var automaticValue: String? {
@@ -75,23 +101,29 @@ struct ChangeMetadataView: View {
         return MetadataOptions.list(for: field, store: store, titleDB: nil, gameTDB: []).first?.value
     }
 
-    /// Automatic is the store's value, so the store's option is not listed again.
-    private var options: [MetadataOption] {
-        var result = subject.ported == nil ? [] : MetadataOptions.list(for: field, store: store, titleDB: titleDB, gameTDB: gameTDB)
-            .filter { $0.source != "Nintendo store" }
-        if let option = igdbResult?.metadata?.option(for: field),
-           !result.contains(where: { $0.value.caseInsensitiveCompare(option.value) == .orderedSame }) {
-            result.append(option)
+    private func options(_ source: Source) -> [MetadataOption] {
+        switch source {
+        case .titleDB: return MetadataOptions.list(for: field, store: nil, titleDB: titleDB, gameTDB: [])
+        case .gameTDB: return MetadataOptions.list(for: field, store: nil, titleDB: nil, gameTDB: gameTDB)
+        case .igdb: return igdbResult?.metadata?.option(for: field).map { [$0] } ?? []
+        case .launchBox, .theGamesDB:
+            guard let database = source.database else { return [] }
+            return databaseResults[database]?.preview?.option(for: field).map { [$0] } ?? []
         }
-        return result
+    }
+    private func option(_ row: Row) -> MetadataOption? {
+        guard case .source(let source, let index) = row else { return nil }
+        let values = options(source)
+        return values.indices.contains(index) ? values[index] : nil
     }
 
     private var rows: [Row] {
-        let options = self.options
         var rows: [Row] = [.automatic]
-        if let pick, !options.contains(where: { $0.value == pick }) { rows.append(.yourPick(pick)) }
-        rows += options.map(Row.option)
-        if igdbResult?.issue == .unavailable || (igdbSearching && igdbAttempt > 0) { rows.append(.retryIGDB) }
+        if let pick { rows.append(.yourPick(pick)) }
+        for source in sources {
+            rows += (0..<max(1, options(source).count)).map { .source(source, $0) }
+            if (canRetry(source) && !options(source).isEmpty) || (isSearching(source) && attempts(source) > 0) { rows.append(.retry(source)) }
+        }
         return rows + [.write]
     }
 
@@ -134,7 +166,7 @@ struct ChangeMetadataView: View {
                 .contentShape(Rectangle())
 
                 SeleneHintsBar(left: [HintItem(.b, L10n.text("Back"), action: close)],
-                               right: [HintItem(.lb, L10n.text("Previous")), HintItem(.rb, L10n.text("Next")), HintItem(.a, L10n.text("Choose"))],
+                               right: rightHints,
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -149,6 +181,23 @@ struct ChangeMetadataView: View {
         }
         .task { await search() }
         .task(id: IGDBLookup(query: igdbQuery, revision: igdb.revision, attempt: igdbAttempt)) { await searchIGDB() }
+        .task(id: DatabaseLookup(query: databaseQuery, attempt: databaseAttempts[.launchBox, default: 0])) { await searchDatabase(.launchBox) }
+        .task(id: DatabaseLookup(query: databaseQuery, attempt: databaseAttempts[.theGamesDB, default: 0])) { await searchDatabase(.theGamesDB) }
+    }
+
+    private var rightHints: [HintItem] {
+        var hints = [HintItem(.lb, L10n.text("Previous")), HintItem(.rb, L10n.text("Next"))]
+        if rows.indices.contains(focus), enabled(rows[focus]) {
+            let row = rows[focus]
+            let retrying: Bool
+            switch row {
+            case .retry: retrying = true
+            case .source(let source, _): retrying = option(row) == nil && canRetry(source)
+            default: retrying = false
+            }
+            hints.append(HintItem(.a, L10n.text(retrying ? "Retry" : "Choose")))
+        }
+        return hints
     }
 
     private var tabs: some View {
@@ -195,7 +244,7 @@ struct ChangeMetadataView: View {
     private func rowView(_ row: Row, focused: Bool) -> some View {
         let text = describe(row)
         return SeleneOptionRow(icon: icon(row), title: text.title, about: excerpt(text.value, full: focused),
-                               focused: focused, enabled: row != .retryIGDB || !igdbSearching) {
+                               focused: focused, enabled: enabled(row)) {
             if isCurrent(row) {
                 MaterialIconView(.check, size: 26).foregroundColor(SeleneTheme.focus)
             }
@@ -207,9 +256,9 @@ struct ChangeMetadataView: View {
 
     private func icon(_ row: Row) -> MaterialIcon? {
         switch row {
-        case .automatic, .retryIGDB: return .restore
+        case .automatic, .retry: return .restore
         case .yourPick, .write: return .edit
-        case .option: return .info
+        case .source: return .info
         }
     }
 
@@ -219,11 +268,18 @@ struct ChangeMetadataView: View {
             let format = subject.steam != nil ? "Steam: %@" : "Nintendo store: %@"
             return (L10n.text("Automatic"), automaticValue.map { L10n.format(format, [displayValue($0)]) } ?? L10n.text("Nothing from the store yet."))
         case .yourPick(let value):
-            return (L10n.text("Your own"), displayValue(value))
-        case .option(let option):
-            return (option.source, displayValue(option.value))
-        case .retryIGDB:
-            return (L10n.text("Retry IGDB"), L10n.text("Other sources and your saved choices remain available."))
+            return (L10n.text("Your choice"), displayValue(value))
+        case .source(let source, _):
+            if let option = option(row) {
+                let same = automaticValue?.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare(option.value) == .orderedSame
+                var value = same ? L10n.text("Same as Automatic") : displayValue(option.value)
+                if isStale(source) { value = L10n.text("Saved copy") + " · " + value }
+                return (option.source, value)
+            }
+            let platform = source.database.flatMap { databaseResults[$0]?.preview?.platform }
+            return (platform.map { "\(source.name) · \($0)" } ?? source.name, sourceMessage(source))
+        case .retry(let source):
+            return (L10n.format("Retry %@", [source.name]), L10n.text("Other sources and your saved choices remain available."))
         case .write:
             return (L10n.text("Write your own…"), L10n.format("Type the %@ yourself.", [String(describing: (field.title.lowercased()))]))
         }
@@ -243,8 +299,8 @@ struct ChangeMetadataView: View {
         switch row {
         case .automatic: return pick == nil
         case .yourPick: return true
-        case .option(let option): return option.value == pick
-        case .write, .retryIGDB: return false
+        case .source: return false // The stored value is shown once in Your choice; sources are alternatives.
+        case .write, .retry: return false
         }
     }
 
@@ -268,22 +324,54 @@ struct ChangeMetadataView: View {
     }
 
     private var sourceStatus: String {
-        if searching || igdbSearching { return L10n.text("Looking for metadata…") }
-        if igdbResult?.isStale == true { return L10n.text("Saved IGDB information · refresh unavailable") }
-        if let issue = igdbResult?.issue {
-            switch issue {
-            case .notFound: return L10n.text("No matching IGDB game for this platform.")
-            case .ambiguous: return L10n.text("Multiple IGDB matches · no game chosen automatically.")
-            case .unavailable: return L10n.text("IGDB unavailable · other sources remain available.")
-            case .cancelled: return " "
-            }
+        if searching || igdbSearching || !databaseSearching.isEmpty { return L10n.text("Looking for metadata…") }
+        return field == .description ? L10n.text("Descriptions are shown in the source’s original language.")
+            : L10n.text("Choose a source for each field.")
+    }
+    private func isSearching(_ source: Source) -> Bool {
+        if let database = source.database { return databaseSearching.contains(database) }
+        return source == .igdb ? igdbSearching : searching
+    }
+    private func isStale(_ source: Source) -> Bool {
+        if let database = source.database { return databaseResults[database]?.isStale == true }
+        return source == .igdb && igdbResult?.isStale == true
+    }
+    private func attempts(_ source: Source) -> Int {
+        source.database.map { databaseAttempts[$0, default: 0] } ?? (source == .igdb ? igdbAttempt : 0)
+    }
+    private func canRetry(_ source: Source) -> Bool {
+        guard !isSearching(source) else { return false }
+        if let database = source.database { return databaseResults[database]?.issue == .unavailable }
+        return source == .igdb && igdbResult?.issue == .unavailable
+    }
+    private func enabled(_ row: Row) -> Bool {
+        switch row {
+        case .source(let source, _): return option(row) != nil || canRetry(source)
+        case .retry(let source): return !isSearching(source)
+        default: return true
         }
-        if let metadata = igdbResult?.metadata {
-            if metadata.option(for: field) == nil { return L10n.text("IGDB has no value for this field.") }
-            return field == .description ? L10n.text("IGDB descriptions are shown in their original language.")
-                : L10n.format("IGDB: %@", [metadata.name])
+    }
+    private func sourceMessage(_ source: Source) -> String {
+        if isSearching(source) { return L10n.text("Looking for metadata…") }
+        if canRetry(source) { return L10n.text("Unavailable · choose this row to retry.") }
+        if let database = source.database {
+            guard let result = databaseResults[database] else { return L10n.text("Loading…") }
+            if result.issue == .ambiguous { return L10n.text("No unique match for this edition.") }
+            if result.issue == .notFound { return L10n.text("No matching game for this platform.") }
+        } else if source == .igdb {
+            if !igdb.isConfigured { return L10n.text("IGDB is optional · connect it in Settings → API services.") }
+            if igdbResult == nil { return L10n.text("Loading…") }
+            if igdbResult?.issue == .ambiguous { return L10n.text("No unique match for this edition.") }
+            if igdbResult?.issue == .notFound { return L10n.text("No matching game for this platform.") }
         }
-        return igdb.isConfigured ? " " : L10n.text("IGDB is optional · connect it in Settings → API services.")
+        return L10n.text("No data for this field.")
+    }
+    private func searchDatabase(_ database: MetadataDatabase) async {
+        let query = databaseQuery
+        preservingFocus { databaseResults[database] = nil; databaseSearching.insert(database) }
+        let result = await DatabaseMetadataService.shared(database).load(query, forceRefresh: databaseAttempts[database, default: 0] > 0)
+        guard !Task.isCancelled, query == databaseQuery else { return }
+        preservingFocus { databaseResults[database] = result; databaseSearching.remove(database) }
     }
 
     private func searchIGDB() async {
@@ -297,17 +385,17 @@ struct ChangeMetadataView: View {
     }
 
     /// Source results must not move the user's selection to a different action.
-    private func preservingFocus(_ update: () -> Void) {
+    private func preservingFocus(_ update: () throws -> Void) rethrows {
         let before = rows
         let selected = before.indices.contains(focus) ? before[focus] : nil
-        update()
+        try update()
         let after = rows
         if let selected, let index = after.firstIndex(of: selected) { focus = index }
         else if case .yourPick(let value) = selected,
-                let index = after.firstIndex(where: { if case .option(let option) = $0 { return option.value == value }; return false }) {
+                let index = after.firstIndex(where: { option($0)?.value == value }) {
             focus = index
-        } else if selected == .retryIGDB,
-                  let index = after.firstIndex(where: { if case .option(let option) = $0 { return option.source == "IGDB" }; return false }) {
+        } else if case .retry(let source) = selected,
+                  let index = after.firstIndex(of: .source(source, 0)) {
             focus = index
         } else { focus = 0 }
     }
@@ -321,12 +409,13 @@ struct ChangeMetadataView: View {
             save(nil)
         case .yourPick:
             break
-        case .option(let option):
-            save(option.value)
-        case .retryIGDB:
-            guard !igdbSearching else { return }
-            igdbSearching = true
-            igdbAttempt += 1
+        case .source(let source, _):
+            if let option = option(row) { save(option.value) }
+            else if canRetry(source) { retry(source) }
+            else { return }
+        case .retry(let source):
+            guard !isSearching(source) else { return }
+            retry(source)
         case .write:
             draft = pick ?? automaticValue ?? ""
             editorFocus = .cancel
@@ -335,9 +424,18 @@ struct ChangeMetadataView: View {
         SoundEffectService.shared.play(.click)
     }
 
+    private func retry(_ source: Source) {
+        if let database = source.database {
+            databaseSearching.insert(database); databaseAttempts[database, default: 0] += 1
+        } else if source == .igdb { igdbSearching = true; igdbAttempt += 1 }
+    }
+
     /// Keeps the value (nil: the store's), reporting a save that failed instead of showing it as chosen.
     private func save(_ value: String?) {
-        do { try subject.pickMetadata(value, field: field, viewModel: viewModel); failure = nil }
+        do {
+            try preservingFocus { try subject.pickMetadata(value, field: field, viewModel: viewModel) }
+            failure = nil
+        }
         catch {
             failure = error.localizedDescription
             SoundEffectService.shared.play(.error)

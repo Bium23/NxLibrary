@@ -541,3 +541,74 @@ condivisi. La verifica umana rimane necessaria: aprire un gioco nxnative e uno S
 leggere e scegliere una proposta, cambiare campo con Q/E o controller, provare Automatic
 e testo personale, riaprire per controllare la persistenza, verificare offline/retry e
 chiusura durante il caricamento. Stato: **in attesa di validazione umana**.
+
+#### Fonti pubbliche dei metadati — ambito approvato, 16 novembre 2026
+
+Il maintainer ha approvato LaunchBox e TheGamesDB come alternative nel medesimo
+selettore per i giochi già gestiti. La ricerca usa titolo/edizione e piattaforma,
+non il negozio: lo Steam ID rimane un aiuto dove supportato, non un prerequisito.
+GameTDB e il collegamento Title DB corrente restano fonti Nintendo; non sono
+aggiunte importazioni o modalità di avvio GOG/Wine/CrossOver in questo intervento.
+
+Scelta: leggere su richiesta una ricerca e una scheda pubblica per database, con
+parser separati e cache di sole proposte; non scaricare l'intero Metadata.zip né
+duplicare un catalogo immagini. Le sonde delle pagine pubbliche hanno misurato circa
+74 KB per una scheda LaunchBox e 15 KB per una TheGamesDB, senza scaricare immagini.
+Il formato corrente LaunchBox espone gameKey/name/platform e campi indicizzati nel
+payload Nuxt; TheGamesDB espone titolo, piattaforma e campi etichettati. I parser
+devono verificare anche la scheda finale, rifiutare ambiguità e non eliminare parole
+di edizione. Mac è preferito a PC/Windows; una proposta alternativa PC è dichiarata
+e non fornisce una falsa data Mac. Le righe delle fonti restano visibili e stabili,
+con stati assente/uguale ad Automatico/errore e retry accessibile, senza scrivere
+scelte personali durante il caricamento. Cache, dimensioni, durata, annullamento e
+numero di richieste sono verificati con test e sonde: nessuna promessa di massima
+prestazione deriva dalla sola compilazione. Implementato; controlli automatici e confezionamento Dev descritti sotto.
+Validazione umana ancora necessaria.
+
+`DatabaseMetadataService` conserva due istanze esplicite (LaunchBox/TheGamesDB),
+ognuna con cache separata per la query pubblica e massimo quattro ricerche attive.
+Lettori della stessa query condividono il lavoro; uscire dall'ultimo lettore annulla
+la richiesta e non salva un'assenza. Le pagine sono limitate a 2 MiB, le cache a
+256 KiB per proposta; host/percorsi sono vincolati, cookie e redirect sono disabilitati,
+errori HTTP/corpi inattesi non diventano metadati. Dati validi durano sette giorni,
+assenze/ambiguità un giorno; un errore conserva una proposta precedente come copia
+salvata e non crea una cache negativa. Retry forza un nuovo tentativo e non cambia i
+valori personali. La cache resta dentro metadata ed è inclusa nei conteggi e nella
+pulizia ricorsiva esistente delle informazioni del negozio.
+
+La sonda reale ha individuato un redirect LaunchBox da ricerca con maiuscole al
+percorso minuscolo: `LaunchBoxArt.searchURL` ora genera direttamente la forma canonica,
+evita il 301 e permette il client vincolato anche per i metadati. La prova, con cache
+isolata e titoli pubblici di fixture, ha restituito cinque campi per Donkey Kong
+Bananza (Switch 2) e quattro per Hollow Knight (PC come alternativa Mac, senza data
+PC). In quella singola esecuzione la prima lettura ha impiegato circa 1,595 s e
+0,510 s; le riletture locali circa 0,420 ms e 0,275 ms. Non sono misure di frame rate
+né garanzie sulla latenza dei servizi. Il probe temporaneo non è incluso nei test
+normali; i test riproducibili verificano invece due richieste per una ricerca
+LaunchBox, zero richieste cambiando campo/rileggendo una cache fresca, coalescenza,
+annullamento, retry e risposte sovradimensionate o di destinazione inattesa.
+
+Le righe del picker hanno identità per fonte/alternativa, non per testo scaricato:
+caricamento, disponibilità e cambio di campo non ricreano una lista di soli risultati
+arrivati. Sono dichiarati campo assente, risultato ambiguo, valore uguale ad Automatico,
+copia salvata e fonte non disponibile. Le righe senza azione non mostrano A Choose;
+un errore permette Retry dal controller. IGDB resta opzionale; un suo nome canonico
+verificato può affinare la ricerca pubblica, senza inviare account, percorsi o attività.
+Ogni fonte aggiorna solo le proprie righe e la risposta è ignorata se la query cambia.
+
+`OnlineArtwork.find` ora riceve la piattaforma della richiesta. TheGamesDB cerca Mac OS
+(37), poi PC (1), oppure Switch (4971)/Switch 2 (5021), identificativi verificati sulle
+pagine ufficiali delle piattaforme. La scheda finale deve confermare titolo e piattaforma
+prima di proporre immagini; non si prende il primo omonimo. Le altre fonti artwork
+mantengono il comportamento esistente. LaunchBox e TheGamesDB sono attribuiti anche in
+About. Verifiche manuali pendenti: source picker su Switch 2 e Steam, dato scelto e
+persistenza, Automatico/testo personale, righe uguali/assenti, controller, chiusura durante
+ricerca, offline/retry e immagini TheGamesDB per Mac/PC. Stato: **in attesa di validazione umana**.
+
+Il valore adottato resta una copia personale, non un abbonamento a una fonte: il
+picker lo mostra una sola volta in “La tua scelta”, con la spunta. Le righe delle
+fonti restano alternative e non mostrano più spunte multiple quando condividono lo
+stesso testo. Salvataggio e rimozione preservano il focus per identità della riga.
+Le piattaforme delle proposte pubbliche rimangono visibili anche nei campi assenti.
+Le vecchie assenze di copertina Switch 2 vengono riprovate con un'identità del
+resolver distinta, preservando le immagini già salvate e le assenze Switch valide.

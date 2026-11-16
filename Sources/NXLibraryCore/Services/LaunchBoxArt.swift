@@ -30,7 +30,8 @@ public enum LaunchBoxArt {
     public static func searchURL(for name: String) -> URL? {
         var allowed = CharacterSet.urlPathAllowed
         allowed.remove(charactersIn: "/?#")
-        let term = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        // LaunchBox redirects mixed-case searches; construct its canonical path directly.
+        let term = name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !term.isEmpty, let path = term.addingPercentEncoding(withAllowedCharacters: allowed) else { return nil }
         return URL(string: "/games/results/\(path)", relativeTo: site)?.absoluteURL
     }

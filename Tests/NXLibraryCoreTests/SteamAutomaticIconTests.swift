@@ -15,7 +15,7 @@ final class SteamAutomaticIconTests: XCTestCase {
         }
     }
 
-    private static let search = "https://gamesdb.launchbox-app.com/games/results/Crimson%20Desert%20Enhanced"
+    private static let search = "https://gamesdb.launchbox-app.com/games/results/crimson%20desert%20enhanced"
     private static let details = "https://gamesdb.launchbox-app.com/games/details/436343-crimson-desert-enhanced"
     private static let square = "https://images.launchbox-app.com/square-full.png"
 

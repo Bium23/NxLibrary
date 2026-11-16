@@ -501,12 +501,12 @@ struct ChangeArtworkView: View {
             let own = ArtworkCandidates.steamList(for: slot, appID: appID, screenshots: screenshots)
             await collect(own, slot: slot, from: 0)
             guard !Task.isCancelled else { found[slot] = nil; return }
-            if online == nil { online = await OnlineArtwork.find(names: names) }
+            if online == nil { online = await OnlineArtwork.find(names: names, platform: .mac) }
             candidates = ArtworkCandidates.steamList(for: slot, appID: appID, screenshots: screenshots, online: online ?? [])
             await collect(Array(candidates.dropFirst(own.count)), slot: slot, from: own.count)
         } else {
             let entries = slot == .cover ? await viewModel.boxArt.pickerEntries(names: names) : []
-            if online == nil { online = await OnlineArtwork.find(names: names) }
+            if online == nil { online = await OnlineArtwork.find(names: names, platform: switch2 ? .switch2 : .switch) }
             candidates = ArtworkCandidates.list(for: slot, entries: entries, titleDB: titleDB,
                                                 storeHeader: metadata?.headerImageURL, storeImage: metadata?.imageURL,
                                                 storeLogo: metadata?.logoURL, online: online ?? [])

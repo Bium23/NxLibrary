@@ -62,13 +62,13 @@ final class LaunchBoxArtTests: XCTestCase {
         return page(fixed + shots + [("Fanart - Background", "World", "fanart.jpg", "fanart-full.jpg", 1920, 1080), ("Square", "World", "r2_square.jpg", "r2_square-full.jpg", 950, 950)])
     }
 
-    static let search = "https://gamesdb.launchbox-app.com/games/results/Donkey%20Kong%20Bananza"
+    static let search = "https://gamesdb.launchbox-app.com/games/results/donkey%20kong%20bananza"
     static let details = "https://gamesdb.launchbox-app.com/games/details/424483-donkey-kong-bananza"
 
     func testSearchURLKeepsTheNameInThePath() {
         XCTAssertEqual(LaunchBoxArt.searchURL(for: "Donkey Kong Bananza")?.absoluteString, Self.search)
         XCTAssertEqual(LaunchBoxArt.searchURL(for: "Fate/Samurai")?.absoluteString,
-                       "https://gamesdb.launchbox-app.com/games/results/Fate%2FSamurai")
+                       "https://gamesdb.launchbox-app.com/games/results/fate%2Fsamurai")
         XCTAssertNil(LaunchBoxArt.searchURL(for: "  "))
     }
 

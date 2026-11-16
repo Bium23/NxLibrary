@@ -168,6 +168,8 @@ Optional **Settings → API services → IGDB** accepts your own Twitch applicat
 
 The same optional connection adds **IGDB** proposals to **Game options → Edit details → Change metadata**, for Switch, Switch 2 and Steam games. Preview descriptions, genres, developers, publishers and platform-specific release dates, then choose each field individually. Automatic and your manual choices remain available; fetching never replaces them. IGDB descriptions keep their original language. Saved proposals remain usable offline, with a retry when refresh is unavailable. This metadata flow is awaiting maintainer validation.
 
+**LaunchBox** and **TheGamesDB** also provide optional metadata proposals without an API key, using the game title and platform rather than its shop. The picker keeps source rows visible, explains missing/ambiguous data and values equal to Automatic, and offers retry after failures. Native Mac entries take priority; PC alternatives are labelled and do not supply a Windows release date as a Mac date. These lookups fetch text pages only, cache all fields together and retain saved proposals offline. TheGamesDB artwork searches now follow Mac, Switch or Switch 2 as appropriate. These additions await maintainer validation.
+
 Use the dialog's **Developer portal** and **Setup guide** links to create your credentials. IGDB documents free non-commercial API access; commercial use requires its partnership process. This optional integration is awaiting maintainer validation with real credentials.
 
 ### Add or rebuild a game
