@@ -28,7 +28,7 @@ public enum AchievementTier: CaseIterable, Sendable {
         L10n.resources()?.url(forResource: "crystal-\(self)", withExtension: "png")
     }
 
-    /// Arcane's looping video (the maintainer's `1.mp4`, 16 Nov 2026): 384 px HEVC with alpha, 180 frames at
+    /// Arcane's looping video (the maintainer's `2.mp4`, chosen over `1.mp4` on 16 Nov 2026): 384 px HEVC with alpha, 180 frames at
     /// 24 fps, made by `.superpowers/arcane/video/make.py` and `encode.sh`; nil for the other tiers, which stay still.
     public var videoURL: URL? {
         self == .arcane ? L10n.resources()?.url(forResource: "crystal-arcane", withExtension: "mov") : nil
