@@ -56,11 +56,17 @@ struct AchievementsScreen: View {
             backdrop
             VStack(alignment: .leading, spacing: 0) {
                 // The game on the left; the progress on the right, level with the list's right edge.
-                // The medallion sits centred on the game's column (logo and Recently unlocked); the gauge, at its top.
-                HStack(alignment: summary.isComplete ? .center : .top, spacing: 0) {
-                    header
-                    Spacer(minLength: canvas.u(40))
-                    progress
+                Group {
+                    if summary.isComplete {
+                        // The medallion sits centred on the game's column (logo and Recently unlocked).
+                        HStack(alignment: .center, spacing: 0) {
+                            header
+                            Spacer(minLength: canvas.u(40))
+                            medallion
+                        }
+                    } else {
+                        bands
+                    }
                 }
                 .frame(width: canvas.u(Self.listWidth + Self.ring))
                 .padding(.top, canvas.u(70))
@@ -123,91 +129,118 @@ struct AchievementsScreen: View {
     private var header: some View {
         let recent = summary.recentUnlockedIcons(limit: Self.recentLimit)
         return VStack(alignment: .leading, spacing: canvas.u(24)) {
-            Group {
-                if let logo = logos.logo(for: "\(game.id)|\(picks.revision)") {
-                    Image(nsImage: logo)
-                        .resizable()
-                        .interpolation(.high)
-                        .aspectRatio(contentMode: .fit)
-                        .frame(maxWidth: canvas.u(520), maxHeight: canvas.u(130), alignment: .leading)
-                } else {
-                    Text(game.name)
-                        .seleneFont(40, .semibold)
-                        .foregroundColor(SeleneTheme.ink)
-                        .lineLimit(1)
-                }
-            }
-            .shadow(color: .black.opacity(0.4), radius: canvas.u(6))
-            .accessibilityLabel(game.name)
-
+            logo
             if !recent.isEmpty {
                 VStack(alignment: .leading, spacing: canvas.u(12)) {
-                    Text(L10n.text("Recently unlocked"))
-                        .seleneFont(19, .semibold)
-                        .foregroundColor(SeleneTheme.ink90)
-                        .accessibilityAddTraits(.isHeader)
-                    HStack(spacing: canvas.u(14)) {
-                        ForEach(Array(recent.enumerated()), id: \.offset) { _, icon in
-                            AchievementIcon(appID: game.steamGame?.appID ?? 0, file: icon, size: 72)
-                        }
-                    }
+                    recentTitle
+                    recentStrip(recent)
                 }
             }
         }
     }
 
-    /// The completion as one gauge, read top to bottom: the large percentage, its bar, the count and the newest
-    /// unlock, all left-aligned and as wide as the widest of them. Beside it Arcane, Gold, Silver, Bronze with
-    /// unlocked/total under each, as PS5 trophies, dimmed while not earned (only Arcane until Steam's rarity
-    /// arrives). Arcane earned, the medallion instead.
-    @ViewBuilder
-    private var progress: some View {
-        if summary.isComplete {
-            medallion
-        } else {
-            HStack(alignment: .center, spacing: canvas.u(48)) {
-                gauge
-                board
+    private var logo: some View {
+        Group {
+            if let logo = logos.logo(for: "\(game.id)|\(picks.revision)") {
+                Image(nsImage: logo)
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: canvas.u(520), maxHeight: canvas.u(130), alignment: .leading)
+            } else {
+                Text(game.name)
+                    .seleneFont(40, .semibold)
+                    .foregroundColor(SeleneTheme.ink)
+                    .lineLimit(1)
             }
-            .fixedSize()
+        }
+        .shadow(color: .black.opacity(0.4), radius: canvas.u(6))
+        .accessibilityLabel(game.name)
+    }
+
+    private var recentTitle: some View {
+        Text(L10n.text("Recently unlocked"))
+            .seleneFont(19, .semibold)
+            .foregroundColor(SeleneTheme.ink90)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    private func recentStrip(_ recent: [String]) -> some View {
+        HStack(spacing: canvas.u(14)) {
+            ForEach(Array(recent.enumerated()), id: \.offset) { _, icon in
+                AchievementIcon(appID: game.steamGame?.appID ?? 0, file: icon, size: 72)
+            }
         }
     }
 
-    private var gauge: some View {
+    /// Not complete (maintainer's choice, variant 1, 16 Nov 2026): the progress mirrors the game's column band by
+    /// band, so the two sides read as one. Level with the logo, the large percentage over its bar; level with
+    /// "Recently unlocked", the count and the newest unlock; level with the icons, Arcane, Gold, Silver and Bronze
+    /// with unlocked/total beside each (only Arcane until Steam's rarity arrives). Before the first unlock the left
+    /// has only the logo and the right keeps its three bands.
+    private var bands: some View {
+        let recent = summary.recentUnlockedIcons(limit: Self.recentLimit)
+        return Grid(alignment: .leading, horizontalSpacing: 0, verticalSpacing: 0) {
+            GridRow(alignment: .center) {
+                logo
+                Spacer(minLength: canvas.u(40))
+                percentage
+                    // As wide as the column the lines below set: the bar spans it.
+                    .gridCellUnsizedAxes(.horizontal)
+            }
+            GridRow(alignment: .firstTextBaseline) {
+                Group {
+                    if recent.isEmpty { Color.clear.frame(width: 0, height: 0) } else { recentTitle }
+                }
+                .padding(.top, canvas.u(24))
+                Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
+                Text(countLine)
+                    .seleneFont(16)
+                    .foregroundColor(SeleneTheme.ink75)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .fixedSize()
+                    .padding(.top, canvas.u(24))
+            }
+            GridRow(alignment: .center) {
+                Group {
+                    if recent.isEmpty { Color.clear.frame(width: 0, height: 0) } else { recentStrip(recent) }
+                }
+                .padding(.top, canvas.u(12))
+                Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
+                tierChips(summary.hasRarity ? AchievementTier.allCases : [.arcane], size: 56, font: 18, spacing: 30)
+                    .frame(minHeight: canvas.u(72))
+                    .padding(.top, canvas.u(12))
+            }
+        }
+    }
+
+    /// "7%" over a thin bar as wide as the column.
+    private var percentage: some View {
         let fraction = summary.total > 0 ? Double(summary.unlocked) / Double(summary.total) : 0
-        return VStack(alignment: .leading, spacing: 0) {
+        return VStack(alignment: .leading, spacing: canvas.u(6)) {
             Text(Self.wholePercent(summary.percentComplete))
                 .seleneFont(64, .semibold)
                 .monospacedDigit()
                 .foregroundColor(SeleneTheme.ink)
                 .lineLimit(1)
-            // Fills the gauge's width (the widest line's), which `fixedSize` settles first.
             AchievementProgressBar(fraction: fraction, height: 5, track: SeleneTheme.ink25)
                 .frame(maxWidth: .infinity)
-                .padding(.top, canvas.u(6))
-            Text(countLine)
-                .seleneFont(16)
-                .foregroundColor(SeleneTheme.ink75)
-                .monospacedDigit()
-                .lineLimit(1)
-                .padding(.top, canvas.u(12))
         }
-        .fixedSize()
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(L10n.format("Achievements: %d of %d", [summary.unlocked, summary.total]))
     }
 
-    private var board: some View {
+    /// Crystals with "unlocked / total" beside each, dimmed (a trace of their colour) while not earned.
+    private func tierChips(_ tiers: [AchievementTier], size: CGFloat, font: CGFloat, spacing: CGFloat) -> some View {
         let counts = summary.tierCounts
-        let tiers = summary.hasRarity ? AchievementTier.allCases : [.arcane]
-        return HStack(alignment: .top, spacing: canvas.u(26)) {
+        return HStack(spacing: canvas.u(spacing)) {
             ForEach(tiers, id: \.self) { tier in
                 let count = counts[tier] ?? TierCount(unlocked: 0, total: 0)
-                VStack(spacing: canvas.u(6)) {
-                    TierCrystal(tier: tier, size: 64, dimmed: count.unlocked == 0)
-                    countText(count, size: 18)
+                HStack(spacing: canvas.u(6)) {
+                    TierCrystal(tier: tier, size: size, dimmed: count.unlocked == 0)
+                    countText(count, size: font)
                 }
-                .fixedSize()
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(L10n.format("%1$@, %2$d of %3$d", [tier.displayName(), count.unlocked, count.total]))
             }
@@ -233,18 +266,7 @@ struct AchievementsScreen: View {
                 .lineLimit(1)
                 .padding(.top, canvas.u(4))
             if summary.hasRarity {
-                let counts = summary.tierCounts
-                HStack(spacing: canvas.u(24)) {
-                    ForEach([AchievementTier.gold, .silver, .bronze], id: \.self) { tier in
-                        let count = counts[tier] ?? TierCount(unlocked: 0, total: 0)
-                        HStack(spacing: canvas.u(6)) {
-                            TierCrystal(tier: tier, size: 28, dimmed: count.unlocked == 0)
-                            countText(count, size: 16)
-                        }
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(L10n.format("%1$@, %2$d of %3$d", [tier.displayName(), count.unlocked, count.total]))
-                    }
-                }
+                tierChips([.gold, .silver, .bronze], size: 28, font: 16, spacing: 24)
                 .padding(.top, canvas.u(16))
             }
         }

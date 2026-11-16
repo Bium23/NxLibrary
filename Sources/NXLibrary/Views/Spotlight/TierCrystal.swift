@@ -20,8 +20,10 @@ struct TierCrystal: View {
                     .resizable()
                     .interpolation(.high)
                     .aspectRatio(contentMode: .fit)
-                    .saturation(dimmed ? 0 : 1)
-                    .opacity(dimmed ? 0.35 : 1)
+                    // Not earned: a trace of its colour, so gold, silver and bronze still tell apart (in black and
+                    // white the three read alike; maintainer's choice, 16 Nov 2026).
+                    .saturation(dimmed ? 0.35 : 1)
+                    .opacity(dimmed ? 0.55 : 1)
             } else {
                 Color.clear
             }

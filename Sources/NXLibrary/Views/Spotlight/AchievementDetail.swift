@@ -78,8 +78,12 @@ struct AchievementDetail: View {
             .padding(.top, canvas.u(56))
             .padding(.bottom, canvas.u(48))
             .frame(width: canvas.u(Self.width))
-            .background(shape.fill(SeleneTheme.glassCard))
-            .overlay(shape.strokeBorder(SeleneTheme.ink15, lineWidth: max(1, canvas.u(1))))
+            // The surface of the list's rows and the page's card, a light veil over the screen blurred behind,
+            // instead of the dark blue glass (maintainer's choice, 16 Nov 2026).
+            .background(shape.fill(SeleneTheme.ink.opacity(0.08)))
+            .background(.ultraThinMaterial, in: shape)
+            .environment(\.colorScheme, .dark)
+            .overlay(shape.strokeBorder(SeleneTheme.ink.opacity(0.18), lineWidth: max(1, canvas.u(1))))
             .shadow(color: .black.opacity(0.45), radius: canvas.u(30), y: canvas.u(10))
             // A click on the card stays on the card.
             .contentShape(shape)
