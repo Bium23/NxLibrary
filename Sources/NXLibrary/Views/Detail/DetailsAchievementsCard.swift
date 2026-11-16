@@ -70,10 +70,9 @@ struct DetailsAchievementsCard: View {
             .padding(.horizontal, canvas.u(18))
             .padding(.vertical, canvas.u(16))
             .frame(width: canvas.u(Self.width), alignment: .leading)
-            // Nearly transparent: the art's blur shows through, lightly tinted, under the buttons' thin outline.
-            .background(.ultraThinMaterial, in: shape)
-            .background(shape.fill(SeleneTheme.ink.opacity(active ? 0.08 : 0.04)))
-            .overlay(shape.strokeBorder(active ? SeleneTheme.ink25 : SeleneTheme.ink15, lineWidth: max(1, canvas.u(1))))
+            // Match the option 3 mockup: a transparent tint, without a second layer of material blur.
+            .background(shape.fill(SeleneTheme.ink.opacity(active ? 0.10 : 0.05)))
+            .overlay(shape.strokeBorder(SeleneTheme.ink.opacity(active ? 0.32 : 0.16), lineWidth: max(1, canvas.u(1))))
             .contentShape(shape)
             .onHover { hovered = $0 }
             .onAppear { active = hovered || focused }
