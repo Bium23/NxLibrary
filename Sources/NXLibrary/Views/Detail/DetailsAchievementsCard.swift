@@ -130,11 +130,20 @@ extension DetailsAchievementsCard {
     /// The best crystal earned (`AchievementSummary.bestTier`), large at the card's left (maintainer's choice,
     /// 16 Nov 2026): black and white at rest, fully opaque so it doesn't read as a locked tier, in colour when the
     /// card is hovered or focused, with the fan. The Arcane orb a size up: it fills less of its square.
+    /// Arcane is the maintainer's looping video (16 Nov 2026), which greys, lights, scales and plays itself in
+    /// Core Animation; without it (a damaged bundle) the still orb does the same in SwiftUI.
+    @ViewBuilder
     private func crystal(_ tier: AchievementTier) -> some View {
-        TierCrystal(tier: tier, size: tier == .arcane ? 76 : 64)
-            .saturation(active ? 1 : 0)
-            .opacity(active ? 1 : 0.88)
-            .scaleEffect(fanned ? 1.06 : 1)
+        if let video = tier.videoURL {
+            ArcaneOrbVideo(url: video, active: active, moves: moves)
+                .frame(width: canvas.u(76), height: canvas.u(76))
+                .accessibilityHidden(true)
+        } else {
+            TierCrystal(tier: tier, size: tier == .arcane ? 76 : 64)
+                .saturation(active ? 1 : 0)
+                .opacity(active ? 1 : 0.88)
+                .scaleEffect(fanned ? 1.06 : 1)
+        }
     }
 
     /// The last three unlocked icons. Active, they fan out like a held hand of cards: the outer ones tilt

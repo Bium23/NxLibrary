@@ -1,4 +1,5 @@
 import XCTest
+import AVFoundation
 import ImageIO
 @testable import NXLibraryCore
 
@@ -116,6 +117,22 @@ final class AchievementTierTests: XCTestCase {
 
     /// 1024 px: the detail shows the crystal about 540 px tall on a Retina screen; 512 px art was upscaled there
     /// and looked soft.
+    func testOnlyArcaneHasALoopingAlphaVideo() async throws {
+        for tier in [AchievementTier.gold, .silver, .bronze] { XCTAssertNil(tier.videoURL, "\(tier)") }
+        let url = try XCTUnwrap(AchievementTier.arcane.videoURL)
+        let asset = AVURLAsset(url: url)
+        let tracks = try await asset.loadTracks(withMediaType: .video)
+        let track = try XCTUnwrap(tracks.first)
+        let formats = try await track.load(.formatDescriptions)
+        let format = try XCTUnwrap(formats.first)
+        XCTAssertEqual(CMFormatDescriptionGetExtension(format, extensionKey: kCMFormatDescriptionExtension_ContainsAlphaChannel) as? Bool, true)
+        XCTAssertEqual(CMFormatDescriptionGetMediaSubType(format), kCMVideoCodecType_HEVC) // hvc1: decoded by the media engine
+        let size = try await track.load(.naturalSize)
+        XCTAssertEqual(size, CGSize(width: 384, height: 384))
+        let seconds = try await asset.load(.duration).seconds
+        XCTAssertGreaterThanOrEqual(seconds, 7); XCTAssertLessThanOrEqual(seconds, 8)
+    }
+
     func testEveryTierHasArt() throws {
         for tier in AchievementTier.allCases {
             let url = try XCTUnwrap(tier.imageURL, "\(tier)")
