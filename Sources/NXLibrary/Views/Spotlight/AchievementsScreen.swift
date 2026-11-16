@@ -60,13 +60,7 @@ struct AchievementsScreen: View {
                 }
                 .frame(width: canvas.u(Self.listWidth + Self.ring))
                 .padding(.top, canvas.u(70))
-                HStack(spacing: 0) {
-                    pills
-                    Spacer(minLength: canvas.u(24))
-                    orderControl
-                }
-                .frame(width: canvas.u(Self.listWidth + Self.ring))
-                .padding(.top, canvas.u(30))
+                pills.padding(.top, canvas.u(30))
                 AchievementsList(scroll: model.scroll, model: model, rows: rows, focused: state.index,
                                  appID: game.steamGame?.appID ?? 0, onFocus: onFocus)
                     .padding(.top, canvas.u(28))
@@ -81,8 +75,8 @@ struct AchievementsScreen: View {
                 SeleneHintsBar(left: [HintItem(.b, L10n.text("Back")) {
                                    if state.isDetailOpen { onCloseDetail() } else { onClose() }
                                }],
-                               right: state.isDetailOpen || rows.isEmpty ? [] : [HintItem(.a, L10n.text("Open")) { onOpen() }],
-                               bottom: 40, leftInset: 18)
+                               right: state.isDetailOpen ? [] : listHints(hasRows: !rows.isEmpty),
+                               bottom: 40, leftInset: 18, badgeHeight: 22)
             }
         }
         .animation(SeleneTheme.quick, value: state.isDetailOpen)
@@ -258,7 +252,9 @@ struct AchievementsScreen: View {
 
     private func shoulder(_ button: PromptButton, _ label: String, step: Int) -> some View {
         Button { onShiftFilter(step) } label: {
-            SelenePromptBadge(button: button, height: 30)
+            SelenePromptBadge(button: button, height: 22)
+                .frame(minWidth: canvas.u(30), minHeight: canvas.u(36))
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
@@ -272,20 +268,11 @@ struct AchievementsScreen: View {
         }
     }
 
-    /// The list's order at the right of the filters, as Selene's: Y and its name; a click moves to the next.
-    private var orderControl: some View {
-        Button(action: onCycleOrder) {
-            HStack(spacing: canvas.u(10)) {
-                SelenePromptBadge(button: .y, height: 30)
-                Text(Self.title(state.order))
-                    .seleneFont(16, .semibold)
-                    .foregroundColor(SeleneTheme.ink90)
-                    .fixedSize()
-            }
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(L10n.format("Order: %@", [Self.title(state.order)]))
+    /// Order and Open share the bottom-right hints. Keep Order available even when the filter is empty.
+    private func listHints(hasRows: Bool) -> [HintItem] {
+        var hints = [HintItem(.y, Self.title(state.order)) { onCycleOrder() }]
+        if hasRows { hints.append(HintItem(.a, L10n.text("Open")) { onOpen() }) }
+        return hints
     }
 
     static func title(_ order: AchievementOrder) -> String {

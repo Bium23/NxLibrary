@@ -44,6 +44,8 @@ struct SeleneHintsBar: View {
     var bottom: CGFloat = 48
     /// Extra inset before the left group (Spotlight's prompts carry Selene's 18 margin).
     var leftInset: CGFloat = 0
+    /// Prompt size in canvas units; compact screens can use smaller badges without changing other screens.
+    var badgeHeight: CGFloat = 30
     /// Labels each right slot can show on this screen, left to right. A slot is
     /// as wide as its longest label, and a missing item keeps its slot, so the
     /// prompts never shift as the focus moves.
@@ -93,7 +95,7 @@ struct SeleneHintsBar: View {
     private func content(_ item: HintItem, reserve: [String] = []) -> some View {
         HStack(spacing: canvas.u(8)) {
             if let button = item.button {
-                SelenePromptBadge(button: button)
+                SelenePromptBadge(button: button, height: badgeHeight)
             } else if let glyph = item.glyph {
                 badge { MaterialIconView(glyph, size: 18) }
             }
