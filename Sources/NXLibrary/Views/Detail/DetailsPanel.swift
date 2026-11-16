@@ -53,8 +53,9 @@ extension DetailsLink {
 }
 
 /// A game's Details in the page's right column, the same for every source (maintainer's choice,
-/// 15 Nov 2026): what a player cares about as label → value rows with small grey icons, in the
-/// achievements' light outlined panel, and the links under it. Rows without a value are not shown;
+/// 15 Nov 2026): what a player cares about as label → value rows with small grey icons, and the links under them.
+/// The rows sit on the page with a hairline between them, no panel (maintainer's choice "3", 16 Nov 2026): only
+/// what can be pressed — the achievements card and the links — has a surface. Rows without a value are not shown;
 /// with none at all only the title and the links remain, and with no links either nothing does. No build, engine or sources state: that is
 /// Options' business, and problems that stop the player show in Play's own note.
 struct DetailsPanel: View {
@@ -73,8 +74,6 @@ struct DetailsPanel: View {
     static let narrowWidth: CGFloat = 520
     /// The Switch Details page's band: the rows in two columns.
     static let wideWidth: CGFloat = 1100
-    private static let radius: CGFloat = SeleneTheme.contentRadius
-    private static let padding: CGFloat = 18
     private static let columnGap: CGFloat = 40
 
     private var wide: Bool { width >= 800 }
@@ -96,27 +95,26 @@ struct DetailsPanel: View {
     }
 
     private var panel: some View {
-        let shape = RoundedRectangle(cornerRadius: canvas.u(Self.radius), style: .continuous)
         let split = wide ? (facts.count + 1) / 2 : facts.count
-        let columnWidth = wide ? (width - Self.padding * 2 - Self.columnGap) / 2 : width - Self.padding * 2
+        let columnWidth = wide ? (width - Self.columnGap) / 2 : width
         return HStack(alignment: .top, spacing: canvas.u(Self.columnGap)) {
             column(Array(facts.prefix(split)), width: columnWidth)
             if wide { column(Array(facts.dropFirst(split)), width: columnWidth) }
         }
-        .padding(.horizontal, canvas.u(Self.padding))
-        .padding(.vertical, canvas.u(16))
         .frame(width: canvas.u(width), alignment: .leading)
-        // The achievements' surface: the art's blur shows through, lightly tinted, under a thin outline.
-        .background(.ultraThinMaterial, in: shape)
-        .background(shape.fill(SeleneTheme.ink.opacity(0.04)))
-        .overlay(shape.strokeBorder(SeleneTheme.ink15, lineWidth: max(1, canvas.u(1))))
         .accessibilityElement(children: .contain)
         .accessibilityLabel(L10n.text("Details"))
     }
 
+    /// The rows with a hairline between them, none above the first or under the last.
     private func column(_ facts: [DetailsFact], width: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: canvas.u(14)) {
-            ForEach(facts) { row($0) }
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(facts.enumerated()), id: \.element.id) { index, fact in
+                if index > 0 {
+                    Rectangle().fill(SeleneTheme.ink15).frame(height: max(1, canvas.u(1)))
+                }
+                row(fact).padding(.vertical, canvas.u(9))
+            }
         }
         .frame(width: canvas.u(width), alignment: .topLeading)
     }
