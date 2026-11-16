@@ -118,7 +118,4 @@ public actor IGDBRatingService {
     private func api(_ endpoint: String, body: String, credentials: IGDBCredentials, renewToken: Bool = false) async throws -> Data {
         try await client.request(endpoint, body: body, credentials: credentials, renewToken: renewToken)
     }
-    public static func download(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
-        try await IGDBClient.download(request)
-    }
 }

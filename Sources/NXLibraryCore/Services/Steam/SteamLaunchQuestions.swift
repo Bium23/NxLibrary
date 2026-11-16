@@ -10,22 +10,17 @@ public struct SteamLaunchQuestions: Equatable, Sendable {
 
     /// Games whose launch waits on a question, with when NX Library first read it.
     private var pending: [UInt32: Date] = [:]
-    /// The start of a line whose end has not been written yet.
-    private var remainder = ""
 
     public init() {}
 
-    /// Reads more of the log, in order. `now` is when it was read.
+    /// Reads complete log lines, in order (`SteamConsoleLog` keeps unfinished lines). `now` is when read.
     public mutating func read(_ text: String, now: Date) {
-        var lines = (remainder + text).split(separator: "\n", omittingEmptySubsequences: false)
-        remainder = String(lines.removeLast())
-        for line in lines { take(line, now: now) }
+        for line in text.split(separator: "\n") { take(line, now: now) }
     }
 
     /// Steam started a new log: what the old one said no longer holds.
     public mutating func reset() {
         pending = [:]
-        remainder = ""
     }
 
     /// Steam has been waiting on the player for this game's launch for at least `grace`.

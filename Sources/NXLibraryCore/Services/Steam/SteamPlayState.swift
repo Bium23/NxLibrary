@@ -36,8 +36,8 @@ public enum SteamPlayFailure: Equatable, Sendable {
 public struct SteamPlayState: Equatable, Sendable {
     public enum Phase: Equatable, Sendable {
         case idle
-        /// Waiting for the game's app; `accepted` once the system handed the request to Steam.
-        case starting(since: Date, accepted: Bool)
+        /// Waiting for the game's app; a rejected hand-off changes this to `.failed`.
+        case starting(since: Date)
         case running(pid: Int32)
         case failed(SteamPlayFailure)
     }
@@ -85,14 +85,14 @@ public struct SteamPlayState: Equatable, Sendable {
         }
         guard clientAvailable else { phase = .failed(.clientMissing); return .refuse(.clientMissing) }
         generation += 1
-        phase = .starting(since: now, accepted: false)
+        phase = .starting(since: now)
         return .handOff(url, generation: generation)
     }
 
     /// The system's answer to the hand-off. Only the current request's answer counts.
     public mutating func handoffFinished(accepted: Bool, generation: Int) {
-        guard generation == self.generation, case .starting(let since, _) = phase else { return }
-        phase = accepted ? .starting(since: since, accepted: true) : .failed(.handoffRejected)
+        guard generation == self.generation, case .starting = phase else { return }
+        if !accepted { phase = .failed(.handoffRejected) }
     }
 
     /// The player gave up waiting, or dismissed a failure.
@@ -122,17 +122,10 @@ public struct SteamPlayState: Equatable, Sendable {
             runningBundle = match.bundleURL
             return .started(pid: match.pid)
         }
-        if case .starting(let since, _) = phase, now.timeIntervalSince(since) > Self.startDeadline {
+        if case .starting(let since) = phase, now.timeIntervalSince(since) > Self.startDeadline {
             phase = .failed(.notStarted)
         }
         return nil
-    }
-
-    /// The process is this installation's app: the same bundle, and its executable when the
-    /// system names one. Steam itself, helpers and another copy of the game never match.
-    /// `process` is in `canonical()` form; the application is resolved here.
-    public static func matches(_ process: NativeProcessObservation, _ application: CatalogNativeApplication) -> Bool {
-        Target(application).matches(process)
     }
 
     /// An installation's app with its paths resolved, for comparing against canonical processes.

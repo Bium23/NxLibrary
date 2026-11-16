@@ -162,7 +162,7 @@ final class CatalogSourcesModelTests: XCTestCase {
         model.configure(enabled: true, root: root)
         await settled(model)
         XCTAssertEqual(model.status, .ready)
-        try f.library("Later")
+        _ = try f.library("Later")
         model.refresh()
         await settled(model)
         XCTAssertEqual(model.status, .ready)
@@ -178,11 +178,12 @@ final class CatalogSourcesModelTests: XCTestCase {
     private func watching(delay: TimeInterval = 0, extraLibraries: [URL] = []) async throws -> (CatalogSourcesModel, SourceCallCounter, URL) {
         let (f, repository, initial) = try prepared()
         let calls = SourceCallCounter()
-        var scan = snapshot(f.root)
+        let base = snapshot(f.root)
+        let scan: SteamLibrarySnapshot
         if !extraLibraries.isEmpty {
             scan = .init(libraries: ([f.root] + extraLibraries).map { .init(root: $0, isReadable: true, isComplete: true) },
-                         games: scan.games, issues: [])
-        }
+                         games: base.games, issues: [])
+        } else { scan = base }
         let model = CatalogSourcesModel(repository: repository, initialConfiguration: initial,
                                         scanner: { _, _ in calls.increment(); if delay > 0 { Thread.sleep(forTimeInterval: delay) }; return scan },
                                         rescanQuiet: 0.05, rescanSpacing: 0.2) { _ in }

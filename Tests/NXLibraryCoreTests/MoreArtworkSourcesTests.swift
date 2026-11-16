@@ -164,13 +164,6 @@ final class MoreArtworkSourcesTests: XCTestCase {
 
     // MARK: - TheGamesDB
 
-    private let gamesDBSearch = """
-    <a href="./game.php?id=105796"><div class="card"><img src="x"><div class="card-footer bg-secondary">
-      <p>Hollow Knight: Silksong</p><p class="text-muted">Nintendo Switch</p></div></div></a>
-    <a href="./game.php?id=56105"><div class="card"><img src="x"><div class="card-footer bg-secondary">
-      <p>Hollow Knight</p><p>NTSC</p><p class="text-muted">Nintendo Switch</p></div></div></a>
-    """
-
     private let gamesDBGame = """
     <a href="https://cdn.thegamesdb.net/images/original/boxart/front/56105-1.jpg"><img src="https://cdn.thegamesdb.net/images/thumb/boxart/front/56105-1.jpg"></a>
     <a href="https://cdn.thegamesdb.net/images/original/clearlogo/56105-1.png">logo</a>
@@ -184,15 +177,6 @@ final class MoreArtworkSourcesTests: XCTestCase {
     <a href="https://cdn.thegamesdb.net/images/original/clearlogo/99999-1.png">another game</a>
     """
 
-    func testTheGamesDBSearchesSwitchGamesAndTakesTheSameName() {
-        let url = TheGamesDBArt.searchURL(for: "Hollow Knight™")
-        XCTAssertEqual(query(url)["name"], "Hollow Knight")
-        XCTAssertEqual(query(url)["platform_id[]"], "4971", "Nintendo Switch")
-        XCTAssertEqual(TheGamesDBArt.gameID(in: gamesDBSearch, matching: ["Hollow Knight"]), 56105)
-        XCTAssertNil(TheGamesDBArt.gameID(in: gamesDBSearch, matching: ["Celeste"]))
-        XCTAssertEqual(TheGamesDBArt.gameURL(id: 56105).absoluteString, "https://thegamesdb.net/game.php?id=56105")
-    }
-
     func testTheGamesDBGivesItsClearLogoCoverFanartAndScreenshots() {
         let list = TheGamesDBArt.candidates(in: gamesDBGame, id: 56105)
         let base = "https://cdn.thegamesdb.net/images/original/"
@@ -202,14 +186,6 @@ final class MoreArtworkSourcesTests: XCTestCase {
                                                base + "screenshot/56105-2.jpg", base + "screenshot/56105-3.jpg",
                                                base + "screenshot/56105-4.jpg"])
         XCTAssertTrue(list.allSatisfy { $0.source.hasPrefix("TheGamesDB") })
-    }
-
-    func testTheGamesDBSearchUsesTheGamesPlatformInsteadOfAlwaysSwitch() throws {
-        for (platform, expected) in [(CriticRatingQuery.Platform.mac, "37"), (.switch, "4971"), (.switch2, "5021")] {
-            let url = try XCTUnwrap(TheGamesDBArt.searchURL(for: "Fixture", platform: platform))
-            let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
-            XCTAssertEqual(items?.first { $0.name == "platform_id[]" }?.value, expected)
-        }
     }
 
     func testTheGamesDBArtworkForMacUsesVerifiedPCFallbackInsteadOfConsole() async throws {

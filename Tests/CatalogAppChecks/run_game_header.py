@@ -16,7 +16,7 @@ enum SeleneTheme { static let ink = Color.white }
 struct SelenePillButton: View {
  let title: String?; var icon: MaterialIcon? = nil; var iconSize: CGFloat = 26
  var minWidth: CGFloat = 180; var height: CGFloat = 60; var horizontalPadding: CGFloat = 36
- let focused: Bool; var enabled: Bool = true; let action: () -> Void
+ let focused: Bool; var enabled: Bool = true; var waveDots = false; let action: () -> Void
  var body: some View { Color.clear }
 }
 '''+actual+'''

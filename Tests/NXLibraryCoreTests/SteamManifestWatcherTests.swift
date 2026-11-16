@@ -40,7 +40,7 @@ final class SteamManifestWatcherTests: XCTestCase {
         let watcher = SteamManifestWatcher { changed.fulfill() }
         defer { watcher.stop() }
         watcher.watch([library], root: library)
-        try f.library("Later")
+        _ = try f.library("Later")
         watcher.watch([library], root: library)
         try f.manifest(in: library)
         await fulfillment(of: [changed], timeout: 6)
@@ -55,7 +55,7 @@ final class SteamManifestWatcherTests: XCTestCase {
         let watcher = SteamManifestWatcher { changed.fulfill() }
         defer { watcher.stop() }
         watcher.watch([root, library], root: root)
-        try f.library("Later")
+        _ = try f.library("Later")
         watcher.watch([root, library], root: root)
         try f.manifest(in: library)
         await fulfillment(of: [changed], timeout: 6)

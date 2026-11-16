@@ -2,6 +2,18 @@
 
 User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
+## Unreleased — development review
+
+These corrections are implemented in NX Library Dev and **awaiting human validation**.
+
+### Fixed
+
+- Scrolling a game page can keep focus on its achievements card; Game Details is disabled while another panel owns input.
+- Achievement requests made before Steam is configured are retried when its source becomes available.
+- Automatic logo searches use the game's Switch or Switch 2 platform.
+- Steam libraries that return after a scan join file watching on the next scan, even when their paths have not changed. Event paths under `/var` and `/tmp` are recognized consistently.
+- Steam achievement and playtime readers reject unsafe or changing files through the shared bounded reader.
+
 ## 0.1.4.3 — 2026-11-12
 
 ### Added

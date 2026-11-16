@@ -333,25 +333,6 @@ public enum WikidataArt {
 /// TheGamesDB, the community database: clear logos, box fronts, fan art and
 /// screenshots for the requested game platform, read from its public pages.
 public enum TheGamesDBArt {
-    public static func searchURL(for name: String, platform: CriticRatingQuery.Platform = .switch) -> URL? {
-        let query = CriticRatingQuery(name: name, platform: platform)
-        guard !IGDBRatings.clean(name).isEmpty, let preferred = MetadataDatabase.theGamesDB.platforms(for: query).first else { return nil }
-        return DatabaseMetadataParser.gamesDBSearch(query: query, platform: preferred)
-    }
-
-    /// The first result card whose title is the game's.
-    public static func gameID(in html: String, matching names: [String]) -> Int? {
-        for card in html.components(separatedBy: "game.php?id=").dropFirst() {
-            let id = Int(card.prefix { $0.isNumber })
-            guard let id, let footer = card.range(of: "card-footer"),
-                  let open = card.range(of: "<p>", range: footer.upperBound..<card.endIndex),
-                  let close = card.range(of: "</p>", range: open.upperBound..<card.endIndex) else { continue }
-            let title = decodeEntities(String(card[open.upperBound..<close.lowerBound]))
-            if ArtworkNames.matches(title, names) { return id }
-        }
-        return nil
-    }
-
     public static func gameURL(id: Int) -> URL {
         URL(string: "https://thegamesdb.net/game.php?id=\(id)")!
     }

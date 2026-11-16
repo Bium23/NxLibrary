@@ -23,7 +23,6 @@ final class CatalogModelTests: XCTestCase {
         XCTAssertEqual(game.personalizationKey, "fixture.bundle")
         let steam = CatalogGame(steam: SteamCatalogGame(appID: 10, name: "Same name"))
         XCTAssertNotEqual(game.personalizationReference.namespace, steam.personalizationReference.namespace)
-        XCTAssertNotEqual(game.providerIdentity, steam.providerIdentity)
         XCTAssertNil(steam.nxnativeGame)
     }
 

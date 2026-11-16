@@ -45,17 +45,6 @@ final class SteamLaunchQuestionsTests: XCTestCase {
         XCTAssertTrue(questions.isAsking(appID: 2141910, now: date(1)))
     }
 
-    func testALineSplitAcrossReadsIsReadWhole() {
-        var questions = SteamLaunchQuestions()
-        let text = waiting()
-        let cut = text.index(text.startIndex, offsetBy: 40)
-        questions.read(String(text[..<cut]), now: date(0))
-        XCTAssertFalse(questions.isAsking(appID: 2141910, now: date(5)), "half a line says nothing")
-        questions.read(String(text[cut...]), now: date(1))
-        XCTAssertFalse(questions.isAsking(appID: 2141910, now: date(1.5)))
-        XCTAssertTrue(questions.isAsking(appID: 2141910, now: date(2)))
-    }
-
     func testOtherLinesAreIgnored() {
         var questions = SteamLaunchQuestions()
         questions.read("[2026-11-14 18:13:38] ExecuteSteamURL: \"steam://run/2141910\"\n"

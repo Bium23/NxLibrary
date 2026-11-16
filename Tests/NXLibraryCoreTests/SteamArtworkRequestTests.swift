@@ -19,7 +19,6 @@ final class SteamArtworkRequestTests: XCTestCase {
         let game = CatalogGame(steam: steam), picks = SteamPersonalizationStore(directory: root.appendingPathComponent("picks"))
         XCTAssertEqual(SteamArtworkRequest(game: game, role: .square).localURL(picks: picks), icon)
         XCTAssertNil(SteamArtworkRequest(game: game, role: .cover).localURL(picks: picks))
-        XCTAssertNotEqual(SteamArtworkRequest(game: game, role: .square).key, SteamArtworkRequest(game: game, role: .cover).key)
         // A malicious icon path is not a request to read outside the bundle.
         try PropertyListSerialization.data(fromPropertyList: ["CFBundleIconFile":"../../outside"], format: .xml, options: 0).write(to: app.appendingPathComponent("Contents/Info.plist"))
         XCTAssertNil(SteamArtworkRequest(game: game, role: .square).localURL(picks: picks))

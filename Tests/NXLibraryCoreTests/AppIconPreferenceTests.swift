@@ -65,11 +65,12 @@ final class AppIconPreferenceTests: XCTestCase {
     func testLibraryRescanPreservesOnlyHereRatherThanTakingScannedDefaults() throws {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: dir) }
-        let store = LibraryStore(directory: dir)
+        let store = CatalogRepository(store: CatalogStore(directory: dir))
+        try store.configureSource(.nxnative, enabled: true, root: nil)
         var saved = game()
         saved.appIconOnMac = false
-        try store.save(LibraryFile(games: [saved]))
-        let merged = try XCTUnwrap(try store.merge(scanned: [game()]).games.first)
+        try store.updateNXNativeGames { $0 = [saved] }
+        let merged = try XCTUnwrap(try store.mergeNXNative(scanned: [game()]).nxnativeGames.first)
         XCTAssertEqual(merged.appIconOnMac, false)
         XCTAssertFalse(merged.wantsPickedAppIcon(hasPick: true, hasOriginalIcon: false))
     }

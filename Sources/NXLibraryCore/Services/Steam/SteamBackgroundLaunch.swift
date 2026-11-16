@@ -22,16 +22,16 @@ public enum SteamBackgroundLaunch {
     }
 
     /// Steam is hidden only while this game is on its way and not yet late.
-    public static func keepsSteamAway(enabled: Bool, phase: SteamPlayState.Phase, now: Date,
+    public static func keepsSteamAway(phase: SteamPlayState.Phase, now: Date,
                                       patience: TimeInterval = attentionDelay) -> Bool {
-        guard enabled, case .starting(let since, _) = phase else { return false }
+        guard case .starting(let since) = phase else { return false }
         return now.timeIntervalSince(since) <= patience
     }
 
     /// The game is late: Steam is back in view and the head says to check it.
-    public static func mayNeedPlayer(enabled: Bool, phase: SteamPlayState.Phase, now: Date,
+    public static func mayNeedPlayer(phase: SteamPlayState.Phase, now: Date,
                                      patience: TimeInterval = attentionDelay) -> Bool {
-        guard enabled, case .starting(let since, _) = phase else { return false }
+        guard case .starting(let since) = phase else { return false }
         return now.timeIntervalSince(since) > patience
     }
 
@@ -49,7 +49,7 @@ public enum SteamBackgroundLaunch {
 
     public static func launchScreen(phase: SteamPlayState.Phase, now: Date, patience: TimeInterval) -> LaunchScreen {
         switch phase {
-        case .starting(let since, _): return now.timeIntervalSince(since) > patience ? .late : .waiting
+        case .starting(let since): return now.timeIntervalSince(since) > patience ? .late : .waiting
         case .running: return .gameStarted
         case .idle, .failed: return .over
         }

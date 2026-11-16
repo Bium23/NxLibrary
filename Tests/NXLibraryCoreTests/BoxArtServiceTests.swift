@@ -82,7 +82,7 @@ final class BoxArtServiceTests: XCTestCase {
 
     func testTheGamesDBCoverWhenGameTDBHasNone() async throws {
         let client = RoutedClient()
-        let search = TheGamesDBArt.searchURL(for: "Donkey Kong Bananza", platform: .switch2)!.absoluteString
+        let search = "https://thegamesdb.net/search.php?name=Donkey%20Kong%20Bananza&platform_id%5B%5D=5021"
         client.routes[search] = Data("""
         <a href="./game.php?id=132468"><div class="card"><img src="x"><div class="card-footer bg-secondary">
           <p>Donkey Kong Bananza</p><p class="text-muted">Nintendo Switch 2</p></div></div></a>

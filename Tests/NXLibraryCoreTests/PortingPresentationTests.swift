@@ -177,23 +177,18 @@ final class PortingPresentationTests: XCTestCase {
     /// The porting game is the first game: right after the Add game card, never before the cards.
     func testThePortingGameSitsRightAfterAddGame() {
         let a = UUID(), b = UUID()
-        let games = [game(app: true), game(app: false)].enumerated().map { index, game -> PortedGame in
-            var game = game
-            game.id = index == 0 ? a : b
-            return game
-        }
-        let row = SpotlightRow.build(games: games, enabledCards: [.collection, .addGame], order: [], front: [b])
+        let row = SpotlightRow.build(gameIDs: [a, b], enabledCards: [.collection, .addGame], order: [], front: [b])
         XCTAssertEqual(row, [.card(.collection), .card(.addGame), .game(b), .game(a)])
         // The player moved Add game to the end: the porting game still follows it.
-        let moved = SpotlightRow.build(games: games, enabledCards: [.collection, .addGame],
+        let moved = SpotlightRow.build(gameIDs: [a, b], enabledCards: [.collection, .addGame],
                                        order: ["card:collection", "game:\(a.uuidString)", "game:\(b.uuidString)", "card:addGame"],
                                        front: [b])
         XCTAssertEqual(moved, [.card(.collection), .game(a), .card(.addGame), .game(b)])
         // Without the card: first among the games.
-        let noCard = SpotlightRow.build(games: games, enabledCards: [.collection], order: [], front: [b])
+        let noCard = SpotlightRow.build(gameIDs: [a, b], enabledCards: [.collection], order: [], front: [b])
         XCTAssertEqual(noCard, [.card(.collection), .game(b), .game(a)])
-        XCTAssertEqual(SpotlightRow.build(games: games, enabledCards: [.collection], order: [], front: [UUID()]),
-                       SpotlightRow.build(games: games, enabledCards: [.collection], order: []))
+        XCTAssertEqual(SpotlightRow.build(gameIDs: [a, b], enabledCards: [.collection], order: [], front: [UUID()]),
+                       SpotlightRow.build(gameIDs: [a, b], enabledCards: [.collection], order: []))
     }
 
     /// The porting game leads, then the games Steam downloads this session, in the row's order.

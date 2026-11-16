@@ -5,7 +5,7 @@ import Foundation
 public enum CatalogGameOptions {
     /// The main list's rows every source offers, in the order nxnative's Game options shows them.
     /// The store page sits in Edit details for every source.
-    public static func commonRows(for integration: CatalogIntegration, origin: GameOptionsOrigin) -> [GameOptionsRow] {
+    public static func commonRows(origin: GameOptionsOrigin) -> [GameOptionsRow] {
         var rows: [GameOptionsRow] = [.play, .editDetails]
         if origin == .spotlight { rows.append(.move) }
         rows += [.favorite, .hidden, .showInFinder]
@@ -29,7 +29,7 @@ public struct SteamOptionsPresentation: Equatable, Sendable {
     public func entries(level: GameOptionsLevel, origin: GameOptionsOrigin) -> [GameOptionsEntry] {
         switch level {
         case .main:
-            return CatalogGameOptions.commonRows(for: .steam, origin: origin).map(GameOptionsEntry.row)
+            return CatalogGameOptions.commonRows(origin: origin).map(GameOptionsEntry.row)
         case .editDetails:
             return [.heading("Edit details"), .row(.changeArtwork), .row(.changeMetadata), .row(.storePage)]
         }

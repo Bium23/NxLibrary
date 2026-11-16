@@ -31,7 +31,7 @@ final class SpotlightRowTests: XCTestCase {
 
     func testCardsThenGames() {
         let a = game("a"), b = game("b")
-        let row = SpotlightRow.build(games: [a, b],
+        let row = SpotlightRow.build(gameIDs: [a, b].map(\.id),
                                      enabledCards: [.surprise, .activity, .addGame],
                                      order: [])
         XCTAssertEqual(row, [.card(.surprise), .card(.activity), .card(.addGame), .game(a.id), .game(b.id)])
@@ -39,7 +39,7 @@ final class SpotlightRowTests: XCTestCase {
 
     func testDisabledCardsDropped() {
         let a = game("a")
-        let row = SpotlightRow.build(games: [a], enabledCards: [.addGame, .collection], order: [])
+        let row = SpotlightRow.build(gameIDs: [a].map(\.id), enabledCards: [.addGame, .collection], order: [])
         XCTAssertEqual(row, [.card(.collection), .card(.addGame), .game(a.id)])
     }
 
@@ -48,21 +48,21 @@ final class SpotlightRowTests: XCTestCase {
         let order = [SpotlightItem.game(b.id).key, SpotlightItem.card(.activity).key,
                      SpotlightItem.game(a.id).key, SpotlightItem.card(.surprise).key,
                      "game:\(UUID().uuidString)"]
-        let row = SpotlightRow.build(games: [a, b], enabledCards: [.surprise, .activity], order: order)
+        let row = SpotlightRow.build(gameIDs: [a, b].map(\.id), enabledCards: [.surprise, .activity], order: order)
         XCTAssertEqual(row, [.game(b.id), .card(.activity), .game(a.id), .card(.surprise)])
     }
 
     func testNewGameNotInOrderAppendsAfterOrdered() {
         let a = game("a"), b = game("b"), c = game("c")
         let order = [SpotlightItem.game(a.id).key, SpotlightItem.game(b.id).key]
-        let row = SpotlightRow.build(games: [a, b, c], enabledCards: [.surprise], order: order)
+        let row = SpotlightRow.build(gameIDs: [a, b, c].map(\.id), enabledCards: [.surprise], order: order)
         XCTAssertEqual(row, [.card(.surprise), .game(a.id), .game(b.id), .game(c.id)])
     }
 
     func testNewGameFollowsItsDefaultPredecessor() {
         let a = game("a"), b = game("b"), c = game("c")
         let order = [SpotlightItem.game(b.id).key, SpotlightItem.game(a.id).key]
-        let row = SpotlightRow.build(games: [a, b, c], enabledCards: [], order: order)
+        let row = SpotlightRow.build(gameIDs: [a, b, c].map(\.id), enabledCards: [], order: order)
         // c followed b in the default sequence, so it stays right after b.
         XCTAssertEqual(row, [.game(b.id), .game(c.id), .game(a.id)])
     }
@@ -79,7 +79,7 @@ final class SpotlightRowTests: XCTestCase {
     }
 
     func testEmptyGamesStillReturnsCards() {
-        let row = SpotlightRow.build(games: [], enabledCards: [.surprise, .addGame], order: [])
+        let row = SpotlightRow.build(gameIDs: [], enabledCards: [.surprise, .addGame], order: [])
         XCTAssertEqual(row, [.card(.surprise), .card(.addGame)])
     }
 

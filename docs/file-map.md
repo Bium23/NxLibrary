@@ -1,6 +1,6 @@
 # NX Library — catalogo dei file
 
-Aggiornato il 16 novembre 2026. Copertura di **651 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il setup in due passaggi con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 16 novembre 2026. Copertura di **665 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il setup in due passaggi con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -48,6 +48,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Package.swift](../Package.swift) | Dichiara i target SwiftPM, le loro dipendenze e il deployment macOS minimo. |
 | [README.md](../README.md) | Presenta l'app con logo e badge, guida d'uso, requisiti, risoluzione dei problemi, crediti e note legali. |
 | [runtime.lock](../runtime.lock) | Fissa versioni, download e hash del runtime Python e degli strumenti inclusi nel bundle. |
+| [VERSION](../VERSION) | Versione in sviluppo usata dal packaging e verificata dalla procedura di release. |
 
 ## Ingresso e shell dell’app
 
@@ -132,7 +133,6 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/PlaySession.swift](../Sources/NXLibraryCore/Models/PlaySession.swift) | Descrive una sessione persistibile con gioco e riferimenti temporali. |
 | [Sources/NXLibraryCore/Models/ActivitySummary.swift](../Sources/NXLibraryCore/Models/ActivitySummary.swift) | Aggrega sessioni, giorni e tempi della settimana per la scheda Activity. |
 | [Sources/NXLibraryCore/Models/MoreLikeThis.swift](../Sources/NXLibraryCore/Models/MoreLikeThis.swift) | Ordina i giochi correlati usando generi, sviluppatore e publisher. |
-| [Sources/NXLibraryCore/Services/LibraryStore.swift](../Sources/NXLibraryCore/Services/LibraryStore.swift) | Salva il catalogo con recupero; conserva lo stato nelle scansioni e sostituisce le sorgenti solo per una selezione esplicita. |
 | [Sources/NXLibraryCore/Services/ImportService.swift](../Sources/NXLibraryCore/Services/ImportService.swift) | Scansiona bundle nxnative e ne ricava identità, versione, percorso e dimensioni. |
 | [Sources/NXLibraryCore/Models/CursorIdleState.swift](../Sources/NXLibraryCore/Models/CursorIdleState.swift) | Politica del ritardo di visibilità del puntatore e reset su mouse o perdita di eleggibilità. |
 | [Sources/NXLibraryCore/Services/AppSizeCache.swift](../Sources/NXLibraryCore/Services/AppSizeCache.swift) | Conserva dimensioni per percorso e data del bundle e decide lo stato vuoto della libreria. |
@@ -544,7 +544,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/LaunchBoxArtTests.swift](../Tests/NXLibraryCoreTests/LaunchBoxArtTests.swift) | Risultati di ricerca, scelta della voce Switch/Switch 2, payload Nuxt con file pieni e screenshot. |
 | [Tests/NXLibraryCoreTests/LibraryPresentationTests.swift](../Tests/NXLibraryCoreTests/LibraryPresentationTests.swift) | Formattazione dei metadati e delle statistiche della libreria. |
 | [Tests/NXLibraryCoreTests/LibraryQueryTests.swift](../Tests/NXLibraryCoreTests/LibraryQueryTests.swift) | Filtri, ricerca, ordinamento e rapporto con la cronologia di gioco. |
-| [Tests/NXLibraryCoreTests/LibraryStoreTests.swift](../Tests/NXLibraryCoreTests/LibraryStoreTests.swift) | Persistenza, merge, recupero e conservazione di installazioni in attesa ed errori dopo scansioni ripetute. |
+| [Tests/NXLibraryCoreTests/NXNativeCatalogPersistenceTests.swift](../Tests/NXLibraryCoreTests/NXNativeCatalogPersistenceTests.swift) | Persistenza e merge nxnative attraverso il repository attuale: sorgenti, impostazioni, preferiti, installazioni in attesa e dettagli degli errori. Recupero e conversione legacy sono verificati da CatalogStoreTests. |
 | [Tests/NXLibraryCoreTests/MaterialIconTests.swift](../Tests/NXLibraryCoreTests/MaterialIconTests.swift) | Integrità dei glifi e del font delle icone. |
 | [Tests/NXLibraryCoreTests/MetadataPickerTests.swift](../Tests/NXLibraryCoreTests/MetadataPickerTests.swift) | Alternative per campo, override persistiti e applicazione ai metadati del gioco. |
 | [Tests/NXLibraryCoreTests/MoonlightFieldTests.swift](../Tests/NXLibraryCoreTests/MoonlightFieldTests.swift) | Generazione deterministica e limiti dei dati delle particelle. |
@@ -641,6 +641,11 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 |---|---|
 | [Resources/IconArtwork.png](../Resources/IconArtwork.png) | Master quadrato originale dell’icona, fornito dall’utente e creato con AI. |
 | [Resources/IconArtwork.md](../Resources/IconArtwork.md) | Provenienza dichiarata, brief e riproduzione delle varianti tramite il generatore. |
+| [crystal-arcane.png](../Sources/NXLibraryCore/Resources/crystal-arcane.png) | Immagine ferma del trofeo Arcane, anche come ripiego del video. |
+| [crystal-arcane.mov](../Sources/NXLibraryCore/Resources/crystal-arcane.mov) | Animazione con alpha del trofeo Arcane. |
+| [crystal-gold.png](../Sources/NXLibraryCore/Resources/crystal-gold.png) | Immagine del trofeo Oro. |
+| [crystal-silver.png](../Sources/NXLibraryCore/Resources/crystal-silver.png) | Immagine del trofeo Argento. |
+| [crystal-bronze.png](../Sources/NXLibraryCore/Resources/crystal-bronze.png) | Immagine del trofeo Bronzo. |
 
 | File | Responsabilità |
 |---|---|
@@ -666,6 +671,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [docs/media/README.md](../docs/media/README.md) | Registra provenienza e posizione degli screenshot, ottimizzazione delle copie e inserimento del video futuro. |
 | [docs/media/spotlight.webp](../docs/media/spotlight.webp) | Presenta Spotlight e la libreria nell'apertura del README. |
 | [docs/media/game-details.webp](../docs/media/game-details.webp) | Mostra dettagli, attività e informazioni di build di un gioco. |
+| [docs/media/mod-store.webp](../docs/media/mod-store.webp) | Presenta lo store delle mod nel README. |
 | [docs/media/quick-menu.webp](../docs/media/quick-menu.webp) | Illustra il menu rapido sopra la libreria. |
 | [docs/media/porting-progress.webp](../docs/media/porting-progress.webp) | Mostra l'avanzamento di un porting dalla schermata Spotlight. |
 | [docs/media/settings.webp](../docs/media/settings.webp) | Illustra le categorie di Settings e il pannello Start-up. |
@@ -679,6 +685,14 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 |---|---|
 | [docs/architecture.md](../docs/architecture.md) | Spiega architettura corrente, confini dei componenti, flussi, dati su disco e verifiche. |
 | [docs/steam.md](../docs/steam.md) | Riferimento unico dell’integrazione Steam: file letti, stati, osservazione, libreria, Play, ore, achievement, scelte e limiti. |
+| [2026-11-09-hotfix-0.1.4.2.md](../docs/reviews/2026-11-09-hotfix-0.1.4.2.md) | Ambito della release 0.1.4.2, autorizzazione del maintainer e verifiche ancora non confermate. |
+| [04df08d4 → b2d46b86](../docs/upstream-upgrades/2026-11-06-04df08d4-b2d46b86-review.md) | Revisione del delta engine del 6 novembre e compatibilità della toolchain. |
+| [b2d46b86 → 7fe9fc4d](../docs/upstream-upgrades/2026-11-07-b2d46b86-7fe9fc4d-review.md) | Revisione engine del 7 novembre, shader e requisiti. |
+| [7fe9fc4d → e5f03403](../docs/upstream-upgrades/2026-11-07-7fe9fc4d-e5f03403-review.md) | Revisione engine del 7 novembre, eventi di progresso e prompt dei controller. |
+| [e5f03403 → bd979ced](../docs/upstream-upgrades/2026-11-08-e5f03403-bd979ced-review.md) | Revisione engine dell’8 novembre e nuova catena di traduzione shader. |
+| [bd979ced → 79741184](../docs/upstream-upgrades/2026-11-09-bd979ced-79741184-review.md) | Adozione engine per 0.1.4.2 e limiti della validazione registrata. |
+| [79741184 → 8a5c5e7e](../docs/upstream-upgrades/2026-11-12-79741184-8a5c5e7e-review.md) | Adozione engine per 0.1.4.3 e limiti della validazione registrata. |
+| [test_app_bundle.py](../Tests/PublicationChecks/test_app_bundle.py) | Verifica che il bundle del launcher rinunci a Game Mode. |
 | [docs/development.md](../docs/development.md) | Documenta prerequisiti, runtime, build, debug, verifiche, CI e preparazione delle release. |
 | [docs/file-map.md](../docs/file-map.md) | Catalogo corrente delle responsabilità di tutti i file versionati, suddiviso per area. |
 | [docs/upstream-upgrades/2026-10-27-06b7b3e-4f24ce6.md](../docs/upstream-upgrades/2026-10-27-06b7b3e-4f24ce6.md) | Registro della revisione del delta, scelte di adozione e verifiche per questo upgrade del motore. |
@@ -808,7 +822,7 @@ Il resto vive nei file esistenti: `SteamLibrarySource` (StateFlags senza il bit 
 | File | Responsabilità aggiunta per l'attivazione |
 |---|---|
 | [CatalogRepository.swift](../Sources/NXLibraryCore/Services/Catalog/CatalogRepository.swift) | Modifiche tipizzate sull'ultimo catalogo, senza replay di effetti esterni; risultati build limitati ai propri campi. |
-| [NXNativeLibraryMerge.swift](../Sources/NXLibraryCore/Services/NXNativeLibraryMerge.swift) | Unico merge nxnative condiviso tra archivio precedente e catalogo comune. |
+| [NXNativeLibraryMerge.swift](../Sources/NXLibraryCore/Services/NXNativeLibraryMerge.swift) | Algoritmo di merge nxnative usato dal repository del catalogo comune. |
 | [CatalogRecovery.swift](../Sources/NXLibraryCore/Models/CatalogRecovery.swift) | Offerta di recupero con impronte del principale/backup, rivalidata all'accettazione. |
 | [CatalogPersonalizations.swift](../Sources/NXLibraryCore/Models/CatalogPersonalizations.swift) | Lookup personali immutabili per identità e radici distinte per integrazione. |
 | [CatalogErrorCopy.swift](../Sources/NXLibraryCore/Services/Catalog/CatalogErrorCopy.swift) | Errori recuperabili del catalogo nelle sei lingue. |

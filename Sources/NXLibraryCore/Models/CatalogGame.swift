@@ -2,11 +2,6 @@ import Foundation
 
 public enum CatalogIntegration: String, Codable, Hashable, Sendable { case nxnative, steam }
 
-public struct CatalogProviderIdentity: Codable, Hashable, Sendable {
-    public let integration: CatalogIntegration
-    public let externalID: String
-}
-
 /// Namespace and key travel together: a legacy free-form key cannot collide with Steam storage.
 public struct CatalogPersonalizationReference: Codable, Equatable, Sendable {
     public let namespace: CatalogIntegration
@@ -140,15 +135,6 @@ public struct CatalogGame: Identifiable, Codable, Equatable {
     public var personalizationKey: String { personalizationReference.key }
     public var nxnativeGame: PortedGame? { if case .nxnative(let g) = payload { return g }; return nil }
     public var steamGame: SteamCatalogGame? { if case .steam(let g) = payload { return g }; return nil }
-
-    public var providerIdentity: CatalogProviderIdentity {
-        switch payload {
-        case .nxnative(let game):
-            let title = game.titleId.flatMap { $0.isEmpty ? nil : $0.uppercased() }
-            return .init(integration: .nxnative, externalID: title ?? "legacy-\(game.id.uuidString.lowercased())")
-        case .steam(let game): return .init(integration: .steam, externalID: String(game.appID))
-        }
-    }
 
     public mutating func setFavorite(_ value: Bool) {
         switch payload {

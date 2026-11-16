@@ -43,10 +43,10 @@ final class SharedGamePresentationTests: XCTestCase {
         XCTAssertEqual(LibraryArtworkRole.logo.slot, .logo)
     }
     func testCommonOptionsHaveSameOrderAndSourceActionsStaySeparate() {
-        XCTAssertEqual(CatalogGameOptions.commonRows(for: .steam, origin: .spotlight),
-                       CatalogGameOptions.commonRows(for: .nxnative, origin: .spotlight))
-        XCTAssertTrue(CatalogGameOptions.commonRows(for: .steam, origin: .spotlight).contains(.move))
-        XCTAssertFalse(CatalogGameOptions.commonRows(for: .steam, origin: .collection).contains(.move))
+        XCTAssertEqual(CatalogGameOptions.commonRows(origin: .spotlight),
+                       [.play, .editDetails, .move, .favorite, .hidden, .showInFinder])
+        XCTAssertEqual(CatalogGameOptions.commonRows(origin: .collection),
+                       [.play, .editDetails, .favorite, .hidden, .showInFinder])
         let options = SteamOptionsPresentation(canPlay: true, hasApp: true)
         let steam = Set([GameOptionsLevel.main, .editDetails].flatMap { level in
             options.entries(level: level, origin: .spotlight).compactMap { entry -> GameOptionsRow? in

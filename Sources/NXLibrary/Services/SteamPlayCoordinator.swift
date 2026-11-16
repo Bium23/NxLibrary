@@ -500,11 +500,11 @@ final class SteamPlayCoordinator: ObservableObject {
             switch phase {
             case .starting:
                 let wait = patience[id] ?? SteamBackgroundLaunch.attentionDelay
-                if SteamBackgroundLaunch.mayNeedPlayer(enabled: true, phase: phase, now: now, patience: wait) {
+                if SteamBackgroundLaunch.mayNeedPlayer(phase: phase, now: now, patience: wait) {
                     backgrounds[id] = nil
                     late.insert(id)
                     Self.showSteam()
-                } else if SteamBackgroundLaunch.keepsSteamAway(enabled: true, phase: phase, now: now, patience: wait) {
+                } else if SteamBackgroundLaunch.keepsSteamAway(phase: phase, now: now, patience: wait) {
                     keepAway = true
                 }
             case .running:
@@ -520,7 +520,7 @@ final class SteamPlayCoordinator: ObservableObject {
         // Any wait Play started here is late past its patience, whether or not Steam is kept in the background or
         // the launch screen is still up: the head then says to check Steam.
         for (id, wait) in patience
-        where SteamBackgroundLaunch.mayNeedPlayer(enabled: true, phase: phase(ofID: id), now: now, patience: wait) {
+        where SteamBackgroundLaunch.mayNeedPlayer(phase: phase(ofID: id), now: now, patience: wait) {
             late.insert(id)
         }
         if !late.isSubset(of: waiting) { late.formIntersection(waiting) }

@@ -129,9 +129,10 @@ final class BuildServiceTests: XCTestCase {
         PendingInstaller.hold(pending, for: &game)
         XCTAssertThrowsError(try PendingInstaller.install(&game, fileManager: denied))
         XCTAssertEqual(game.pendingInstall, pending)
-        let store = LibraryStore(directory: root.appendingPathComponent("catalog"))
-        try store.save(LibraryFile(games: [game]))
-        game = try XCTUnwrap(store.load().games.first)
+        let store = CatalogRepository(store: CatalogStore(directory: root.appendingPathComponent("catalog")))
+        try store.configureSource(.nxnative, enabled: true, root: nil)
+        try store.updateNXNativeGames { $0 = [game] }
+        game = try XCTUnwrap(store.load().nxnativeGames.first)
         XCTAssertEqual(game.pendingInstall, pending)
         XCTAssertEqual(try PendingInstaller.install(&game), .installed)
         XCTAssertNil(game.pendingInstall)

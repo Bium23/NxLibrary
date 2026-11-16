@@ -132,15 +132,16 @@ final class PendingInstallTests: XCTestCase {
             importer.scan(directories: [root]).map { importer.makeGame(from: $0) }
         }
         let storeDirectory = root.appendingPathComponent("catalog")
-        let store = LibraryStore(directory: storeDirectory)
+        let store = CatalogRepository(store: CatalogStore(directory: storeDirectory))
+        try store.configureSource(.nxnative, enabled: true, root: nil)
         var g = try XCTUnwrap(scanned().first)
         g.status = .built
         g.pendingInstall = p
         g.portingFailure = .failed
         g.portingFailureReason = PortingFailureReason(kind: .diskFull, detail: "Previous failure")
         g.settings.metalHUD = true
-        try store.save(LibraryFile(games: [g]))
-        XCTAssertEqual(try store.merge(scanned: scanned()).games.first?.pendingInstall, p)
+        try store.updateNXNativeGames { $0 = [g] }
+        XCTAssertEqual(try store.mergeNXNative(scanned: scanned()).nxnativeGames.first?.pendingInstall, p)
 
         var io = BuildInstallIO()
         io.afterPublish = { throw CocoaError(.userCancelled) }
@@ -149,8 +150,8 @@ final class PendingInstallTests: XCTestCase {
         // Simulate termination after the bundle was published and staging was
         // cleaned, but before the new build record reached the catalog.
         try FileManager.default.removeItem(at: p.folder)
-        let reopened = LibraryStore(directory: storeDirectory)
-        g = try XCTUnwrap(try reopened.merge(scanned: scanned()).games.first)
+        let reopened = CatalogRepository(store: CatalogStore(directory: storeDirectory))
+        g = try XCTUnwrap(try reopened.mergeNXNative(scanned: scanned()).nxnativeGames.first)
         XCTAssertEqual(g.pendingInstall, p)
         XCTAssertEqual(try PendingInstaller.install(&g), .installed)
         XCTAssertNil(g.pendingInstall)
@@ -160,8 +161,8 @@ final class PendingInstallTests: XCTestCase {
         XCTAssertEqual(g.lastBuild, p.record)
         XCTAssertEqual(g.toolchain, p.toolchain)
         XCTAssertTrue(g.settings.metalHUD)
-        try reopened.save(LibraryFile(games: [g]))
-        g = try XCTUnwrap(try reopened.merge(scanned: scanned()).games.first)
+        try reopened.updateNXNativeGames { $0 = [g] }
+        g = try XCTUnwrap(try reopened.mergeNXNative(scanned: scanned()).nxnativeGames.first)
         XCTAssertNil(try PendingInstaller.install(&g))
         XCTAssertEqual(g.lastBuild, p.record)
         XCTAssertEqual(BuildOutputInstaller.version(of: p.finalApp), "1.2.0")

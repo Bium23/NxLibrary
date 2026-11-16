@@ -13,9 +13,6 @@ public struct SteamArtworkRequest: Equatable {
 
     public var slot: ArtworkSlot { role.slot }
     public var appID: UInt32? { game.steamGame?.appID }
-    /// Distinct per game and role, so a square never shows a cover still loading for the same game.
-    public var key: String { "\(game.id.uuidString)|\(role.rawValue)" }
-
     /// The installed app this game launches, as the rest of the library reads it.
     public var application: CatalogNativeApplication? {
         game.steamGame?.installations.first { $0.availability == .available }?.primaryApplication

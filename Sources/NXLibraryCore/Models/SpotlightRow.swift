@@ -50,13 +50,6 @@ public enum SpotlightRow {
     /// `front` (the game being ported, then the games Steam downloads: `leaders`) become
     /// the first games, in that order: right after the Add game card wherever it is, or
     /// in the first game's place without it.
-    public static func build(games: [PortedGame],
-                             enabledCards: [SpotlightCard],
-                             order: [String],
-                             front: [UUID] = []) -> [SpotlightItem] {
-        build(gameIDs: games.map(\.id), enabledCards: enabledCards, order: order, front: front)
-    }
-
     public static func build(gameIDs: [UUID], enabledCards: [SpotlightCard], order: [String], front: [UUID] = []) -> [SpotlightItem] {
         let enabled = Set(enabledCards)
         let defaults: [SpotlightItem] =

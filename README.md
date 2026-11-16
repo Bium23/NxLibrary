@@ -95,7 +95,7 @@ cd NxLibrary
 
 bash scripts/bundle_runtime.sh
 bash scripts/build_app.sh
-open "$HOME/Applications/NXLibrary.app"
+open "$HOME/Applications/NXLibrary Dev.app"
 ~~~
 
 Run `bundle_runtime.sh` once, and again when `runtime.lock` changes. `build_app.sh` prepares, signs and verifies the app before installing it atomically in `~/Applications`.

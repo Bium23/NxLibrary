@@ -2,11 +2,10 @@ import SwiftUI
 import AppKit
 import NXLibraryCore
 
-/// One link under the Details panel. `enabled` dims the title; the button still takes focus and a click.
+/// One available link under the Details panel.
 struct DetailsLink: Identifiable {
     let id: String
     let title: String
-    var enabled: Bool = true
     let action: () -> Void
 }
 
@@ -218,7 +217,7 @@ struct SeleneActionGrid: View {
         return Button { onPressRow(index) } label: {
             Text(row.title)
                 .seleneFont(14, .medium)
-                .foregroundColor(row.enabled ? SeleneTheme.ink90 : SeleneTheme.ink60)
+                .foregroundColor(SeleneTheme.ink90)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
                 .padding(.horizontal, canvas.u(10))

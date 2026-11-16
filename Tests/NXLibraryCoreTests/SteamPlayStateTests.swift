@@ -38,7 +38,7 @@ final class SteamPlayStateTests: XCTestCase {
                        .handOff(URL(string: "steam://run/570")!, generation: 1))
         state.handoffFinished(accepted: true, generation: 1)
         XCTAssertNil(state.observe([steamClient], application: app, now: t0.addingTimeInterval(5)), "Steam alone is not the game")
-        XCTAssertEqual(state.phase, .starting(since: t0, accepted: true))
+        XCTAssertEqual(state.phase, .starting(since: t0))
         XCTAssertEqual(state.observe([steamClient, game], application: app, now: t0.addingTimeInterval(20)), .started(pid: 42))
         XCTAssertEqual(state.requestPlay(target: .steam(appID: 570), clientAvailable: true, now: t0), .resume(pid: 42))
         // The game quits while Steam stays open: the session ends.
@@ -53,7 +53,7 @@ final class SteamPlayStateTests: XCTestCase {
         state.cancel()
         _ = state.requestPlay(target: .steam(appID: 570), clientAvailable: true, now: t0)
         state.handoffFinished(accepted: false, generation: 1)   // the cancelled request's answer
-        XCTAssertEqual(state.phase, .starting(since: t0, accepted: false))
+        XCTAssertEqual(state.phase, .starting(since: t0))
         state.handoffFinished(accepted: false, generation: state.generation)
         XCTAssertEqual(state.phase, .failed(.handoffRejected))
     }
@@ -72,15 +72,17 @@ final class SteamPlayStateTests: XCTestCase {
     }
 
     func testOnlyThisInstallationsAppMatches() {
-        XCTAssertTrue(SteamPlayState.matches(game, app))
-        XCTAssertTrue(SteamPlayState.matches(.init(pid: 1, bundleURL: app.url, executableURL: nil), app))
-        XCTAssertFalse(SteamPlayState.matches(steamClient, app))
         let otherCopy = NativeProcessObservation(pid: 3, bundleURL: URL(fileURLWithPath: "/Volumes/Ext/Game.app"),
                                                  executableURL: URL(fileURLWithPath: "/Volumes/Ext/Game.app/Contents/MacOS/Game"))
-        XCTAssertFalse(SteamPlayState.matches(otherCopy, app), "same bundle ID elsewhere is another installation")
         let helper = NativeProcessObservation(pid: 4, bundleURL: app.url,
                                               executableURL: app.url.appendingPathComponent("Contents/MacOS/CrashReporter"))
-        XCTAssertFalse(SteamPlayState.matches(helper, app))
+        let withoutExecutable = NativeProcessObservation(pid: 1, bundleURL: app.url, executableURL: nil)
+        for (process, expected) in [(game, SteamPlayState.Change.started(pid: 42)),
+                                    (withoutExecutable, .started(pid: 1)), (steamClient, nil),
+                                    (otherCopy, nil), (helper, nil)] {
+            var state = SteamPlayState()
+            XCTAssertEqual(state.observe([process], application: app, now: t0), expected)
+        }
         XCTAssertNil(SteamPlayState.launchURL(appID: 0))
     }
 
@@ -121,31 +123,30 @@ final class SteamBackgroundLaunchTests: XCTestCase {
 
     func testSteamIsKeptAwayOnlyWhileWaitingThenComesBackIfTheGameIsLate() {
         let start = Date(timeIntervalSince1970: 1_000)
-        let waiting = SteamPlayState.Phase.starting(since: start, accepted: true)
-        XCTAssertTrue(SteamBackgroundLaunch.keepsSteamAway(enabled: true, phase: waiting, now: start.addingTimeInterval(5)))
-        XCTAssertFalse(SteamBackgroundLaunch.keepsSteamAway(enabled: false, phase: waiting, now: start.addingTimeInterval(5)))
+        let waiting = SteamPlayState.Phase.starting(since: start)
+        XCTAssertTrue(SteamBackgroundLaunch.keepsSteamAway(phase: waiting, now: start.addingTimeInterval(5)))
         let late = start.addingTimeInterval(SteamBackgroundLaunch.attentionDelay + 1)
-        XCTAssertFalse(SteamBackgroundLaunch.keepsSteamAway(enabled: true, phase: waiting, now: late))
-        XCTAssertTrue(SteamBackgroundLaunch.mayNeedPlayer(enabled: true, phase: waiting, now: late))
-        XCTAssertFalse(SteamBackgroundLaunch.mayNeedPlayer(enabled: true, phase: waiting, now: start.addingTimeInterval(5)))
-        XCTAssertFalse(SteamBackgroundLaunch.keepsSteamAway(enabled: true, phase: .running(pid: 7), now: start))
-        XCTAssertFalse(SteamBackgroundLaunch.mayNeedPlayer(enabled: true, phase: .idle, now: late))
+        XCTAssertFalse(SteamBackgroundLaunch.keepsSteamAway(phase: waiting, now: late))
+        XCTAssertTrue(SteamBackgroundLaunch.mayNeedPlayer(phase: waiting, now: late))
+        XCTAssertFalse(SteamBackgroundLaunch.mayNeedPlayer(phase: waiting, now: start.addingTimeInterval(5)))
+        XCTAssertFalse(SteamBackgroundLaunch.keepsSteamAway(phase: .running(pid: 7), now: start))
+        XCTAssertFalse(SteamBackgroundLaunch.mayNeedPlayer(phase: .idle, now: late))
     }
 
     func testAColdSteamGetsMorePatience() {
         XCTAssertEqual(SteamBackgroundLaunch.patience(steamWasRunning: true), 15)
         XCTAssertEqual(SteamBackgroundLaunch.patience(steamWasRunning: false), 45)
         let start = Date(timeIntervalSince1970: 1_000)
-        let waiting = SteamPlayState.Phase.starting(since: start, accepted: true)
+        let waiting = SteamPlayState.Phase.starting(since: start)
         let thirty = start.addingTimeInterval(30)
-        XCTAssertTrue(SteamBackgroundLaunch.keepsSteamAway(enabled: true, phase: waiting, now: thirty, patience: 45))
-        XCTAssertFalse(SteamBackgroundLaunch.mayNeedPlayer(enabled: true, phase: waiting, now: thirty, patience: 45))
-        XCTAssertTrue(SteamBackgroundLaunch.mayNeedPlayer(enabled: true, phase: waiting, now: thirty, patience: 15))
+        XCTAssertTrue(SteamBackgroundLaunch.keepsSteamAway(phase: waiting, now: thirty, patience: 45))
+        XCTAssertFalse(SteamBackgroundLaunch.mayNeedPlayer(phase: waiting, now: thirty, patience: 45))
+        XCTAssertTrue(SteamBackgroundLaunch.mayNeedPlayer(phase: waiting, now: thirty, patience: 15))
     }
 
     func testTheLaunchScreenWaitsOnlyForAGameOnItsWay() {
         let start = Date(timeIntervalSince1970: 1_000)
-        let waiting = SteamPlayState.Phase.starting(since: start, accepted: false)
+        let waiting = SteamPlayState.Phase.starting(since: start)
         XCTAssertEqual(SteamBackgroundLaunch.launchScreen(phase: waiting, now: start.addingTimeInterval(10), patience: 15), .waiting)
         XCTAssertEqual(SteamBackgroundLaunch.launchScreen(phase: waiting, now: start.addingTimeInterval(16), patience: 15), .late)
         XCTAssertEqual(SteamBackgroundLaunch.launchScreen(phase: .running(pid: 7), now: start, patience: 15), .gameStarted)
