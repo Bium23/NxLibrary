@@ -2,12 +2,13 @@ import SwiftUI
 import NXLibraryCore
 
 /// A Steam game's achievements at the top of the page's right column, above the source's panel and beside
-/// About this game: "17/50" with the best crystal earned beside it (the completion before any is earned), the last three unlocked icons on the right and a thin
-/// bar under them, in a light, nearly transparent panel with a thin outline, the surface of the panel's buttons
-/// without their dark fill (maintainer's choice, 15 Nov 2026). Focused, Selene's ring sits on the panel's edge.
+/// About this game (layout "A", maintainer's choice, 16 Nov 2026): the best crystal earned large on the left, beside it
+/// "3/41" over the completion (complete: "Arcane" over "All achievements"), the last three unlocked icons on the right
+/// and a thin bar under them while incomplete, in a light, nearly transparent panel with a thin outline, the surface
+/// of the panel's buttons without their dark fill (maintainer's choice, 15 Nov 2026). Focused, Selene's ring sits on the panel's edge.
 /// Shown only when the game has achievements and Steam's files read. A or a click opens the Achievements screen;
 /// under the pointer or the controller's focus it says so (maintainer's choice, 15 Nov 2026): the crystal comes to
-/// colour with "View all" beside it (or the completion gives way to it), the three icons fan out and brighten, and
+/// colour, the line under the headline gives way to "View all", the three icons fan out and brighten, and
 /// the panel lightens. Details, not a button, does none of it.
 /// With Reduce motion the text and light change without movement.
 struct DetailsAchievementsCard: View {
@@ -40,40 +41,31 @@ struct DetailsAchievementsCard: View {
             DetailsBandTitle(text: L10n.text("Achievements"))
             VStack(alignment: .leading, spacing: canvas.u(16)) {
                 HStack(alignment: .center, spacing: canvas.u(16)) {
-                    if let tier = summary.bestTier {
-                        HStack(alignment: .center, spacing: canvas.u(12)) {
-                            count
-                            crystal(tier)
+                    if let tier = summary.bestTier { crystal(tier) }
+                    VStack(alignment: .leading, spacing: canvas.u(4)) {
+                        headline
+                        ZStack(alignment: .leading) {
+                            Text(complete ? L10n.text("All achievements")
+                                          : L10n.format("%d%% complete", [summary.percentComplete]))
+                                .foregroundColor(SeleneTheme.ink60)
+                                .monospacedDigit()
+                                .opacity(active ? 0 : 1)
+                                .offset(y: fanned ? -canvas.u(5) : 0)
                             Text(L10n.text("View all"))
                                 .foregroundColor(SeleneTheme.ink)
-                                .seleneFont(15, .semibold)
                                 .opacity(active ? 1 : 0)
-                                .offset(x: active || !moves ? 0 : -canvas.u(6))
+                                .offset(y: active || !moves ? 0 : canvas.u(5))
                         }
-                        .lineLimit(1)
-                    } else {
-                        HStack(alignment: .firstTextBaseline, spacing: canvas.u(14)) {
-                            count
-                            ZStack(alignment: .leading) {
-                                Text(L10n.format("%d%% complete", [summary.percentComplete]))
-                                    .foregroundColor(SeleneTheme.ink75)
-                                    .monospacedDigit()
-                                    .opacity(active ? 0 : 1)
-                                    .offset(y: fanned ? -canvas.u(5) : 0)
-                                Text(L10n.text("View all"))
-                                    .foregroundColor(SeleneTheme.ink)
-                                    .opacity(active ? 1 : 0)
-                                    .offset(y: active || !moves ? 0 : canvas.u(5))
-                            }
-                            .seleneFont(15, .semibold)
-                        }
-                        .lineLimit(1)
+                        .seleneFont(14, .semibold)
                     }
+                    .lineLimit(1)
                     Spacer(minLength: 0)
                     icons
                 }
-                AchievementProgressBar(fraction: summary.total > 0 ? Double(summary.unlocked) / Double(summary.total) : 0,
-                                       height: 5, track: SeleneTheme.ink25)
+                if !complete {
+                    AchievementProgressBar(fraction: summary.total > 0 ? Double(summary.unlocked) / Double(summary.total) : 0,
+                                           height: 5, track: SeleneTheme.ink25)
+                }
             }
             .padding(.horizontal, canvas.u(18))
             .padding(.vertical, canvas.u(16))
@@ -119,19 +111,28 @@ struct CardGeometryGroup: ViewModifier {
 }
 
 extension DetailsAchievementsCard {
-    /// "17/50": the unlocked count bright, the total dimmer.
-    private var count: some View {
-        (Text("\(summary.unlocked)").foregroundColor(SeleneTheme.ink)
-         + Text("/\(summary.total)").foregroundColor(SeleneTheme.ink60))
-            .seleneFont(30, .semibold)
-            .monospacedDigit()
+    /// Every achievement unlocked: the card names the reward instead of counting (layout "A", 16 Nov 2026).
+    private var complete: Bool { summary.total > 0 && summary.unlocked == summary.total }
+
+    /// Complete, the tier's name ("Arcane"); otherwise "3/41", the unlocked count bright and the total dimmer.
+    private var headline: some View {
+        Group {
+            if complete {
+                Text(AchievementTier.arcane.displayName()).foregroundColor(SeleneTheme.ink)
+            } else {
+                Text("\(summary.unlocked)").foregroundColor(SeleneTheme.ink)
+                    + Text("/\(summary.total)").foregroundColor(SeleneTheme.ink60)
+            }
+        }
+        .seleneFont(22, .bold)
+        .monospacedDigit()
     }
 
-    /// The best crystal earned (`AchievementSummary.bestTier`), in place of the percent (maintainer's choice,
+    /// The best crystal earned (`AchievementSummary.bestTier`), large at the card's left (maintainer's choice,
     /// 16 Nov 2026): black and white at rest, fully opaque so it doesn't read as a locked tier, in colour when the
-    /// card is hovered or focused, with the fan.
+    /// card is hovered or focused, with the fan. The Arcane orb a size up: it fills less of its square.
     private func crystal(_ tier: AchievementTier) -> some View {
-        TierCrystal(tier: tier, size: 40)
+        TierCrystal(tier: tier, size: tier == .arcane ? 76 : 64)
             .saturation(active ? 1 : 0)
             .opacity(active ? 1 : 0.88)
             .scaleEffect(fanned ? 1.06 : 1)

@@ -1,6 +1,47 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "All achievements": {
+      "comment": "Achievements card on a game's page, under the tier's name when every achievement is unlocked.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All achievements"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tutti gli obiettivi"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tous les succès"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Erfolge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos los logros"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todas as conquistas"
+          }
+        }
+      }
+    },
     "Arcane": {
       "comment": "Achievement tier (a violet crystal) for unlocking every achievement of a game, where PlayStation has Platinum.",
       "localizations": {
