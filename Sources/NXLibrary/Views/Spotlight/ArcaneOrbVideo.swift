@@ -45,6 +45,8 @@ final class ArcaneOrbView: NSView {
     /// The card's reveal: slow and soft, never past its target; with Reduce motion, Selene's quick change.
     private static let reveal = CAMediaTimingFunction(controlPoints: 0.22, 1, 0.36, 1)
     private static let toneKey = "filters.tone.inputSaturation"
+    /// Playback speed (maintainer's choice, 16 Nov 2026): the loop at 1.7× feels more alive and fluid.
+    static let speed: Float = 1.7
 
     init(url: URL) {
         super.init(frame: .zero)
@@ -70,6 +72,7 @@ final class ArcaneOrbView: NSView {
 
         player.isMuted = true
         player.preventsDisplaySleepDuringVideoPlayback = false
+        player.defaultRate = Self.speed
         player.actionAtItemEnd = .advance
         let item = AVPlayerItem(asset: AVURLAsset(url: url))
         looper = AVPlayerLooper(player: player, templateItem: item)
