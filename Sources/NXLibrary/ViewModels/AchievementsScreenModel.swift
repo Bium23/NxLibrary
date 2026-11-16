@@ -132,13 +132,19 @@ final class AchievementsScreenModel: ObservableObject {
         filterChanged(next)
     }
 
-    /// A re-read while the screen is open: the selection stays inside the list, the list where it was.
+    /// A re-read while the screen is open: the selection stays on its achievement, and the list follows it when
+    /// a new order moved it (a fresh unlock goes to the top); it was left out of view until the next arrow jumped there.
     func setIDs(_ ids: [String]) {
         var next = state
         next.setIDs(ids)
         guard next != state else { return }
+        let moved = next.index != state.index
         state = next
         relayout()
+        if moved {
+            wheeled = false
+            reveal()
+        }
     }
 
     /// A new filter or order opens at its top, at once: a glide across a different list would show rows that are gone.
