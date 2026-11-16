@@ -10,7 +10,7 @@ import NXLibraryCore
 struct AchievementsScreen: View {
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
-    /// The earned Arcane comes to colour just after the screen opens (`arcaneHero`).
+    /// The earned Arcane comes to colour just after the screen opens (`arcaneOrb`).
     @State private var arcaneLit = false
     @ObservedObject private var logos = SteamLogoCache.shared
     @ObservedObject private var picks = SteamPersonalizations.shared.artwork
@@ -56,7 +56,8 @@ struct AchievementsScreen: View {
             backdrop
             VStack(alignment: .leading, spacing: 0) {
                 // The game on the left; the progress on the right, level with the list's right edge.
-                HStack(alignment: .top, spacing: 0) {
+                // The medallion sits centred on the game's column (logo and Recently unlocked); the gauge, at its top.
+                HStack(alignment: summary.isComplete ? .center : .top, spacing: 0) {
                     header
                     Spacer(minLength: canvas.u(40))
                     progress
@@ -158,31 +159,32 @@ struct AchievementsScreen: View {
     /// The completion as one gauge, read top to bottom: the large percentage, its bar, the count and the newest
     /// unlock, all left-aligned and as wide as the widest of them. Beside it Arcane, Gold, Silver, Bronze with
     /// unlocked/total under each, as PS5 trophies, dimmed while not earned (only Arcane until Steam's rarity
-    /// arrives). Arcane earned, it stands large above the other three instead (`arcaneHero`).
+    /// arrives). Arcane earned, the medallion instead.
+    @ViewBuilder
     private var progress: some View {
-        HStack(alignment: .center, spacing: canvas.u(48)) {
-            gauge
-            board
+        if summary.isComplete {
+            medallion
+        } else {
+            HStack(alignment: .center, spacing: canvas.u(48)) {
+                gauge
+                board
+            }
+            .fixedSize()
         }
-        .fixedSize()
     }
 
     private var gauge: some View {
         let fraction = summary.total > 0 ? Double(summary.unlocked) / Double(summary.total) : 0
         return VStack(alignment: .leading, spacing: 0) {
-            // Complete, the reward's name instead of "100%" and a full bar, as on the page's card
-            // (maintainer's choice, 16 Nov 2026): the large orb beside it already says it is done.
-            Text(summary.isComplete ? AchievementTier.arcane.displayName() : Self.wholePercent(summary.percentComplete))
+            Text(Self.wholePercent(summary.percentComplete))
                 .seleneFont(64, .semibold)
                 .monospacedDigit()
                 .foregroundColor(SeleneTheme.ink)
                 .lineLimit(1)
-            if !summary.isComplete {
-                // Fills the gauge's width (the widest line's), which `fixedSize` settles first.
-                AchievementProgressBar(fraction: fraction, height: 5, track: SeleneTheme.ink25)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, canvas.u(6))
-            }
+            // Fills the gauge's width (the widest line's), which `fixedSize` settles first.
+            AchievementProgressBar(fraction: fraction, height: 5, track: SeleneTheme.ink25)
+                .frame(maxWidth: .infinity)
+                .padding(.top, canvas.u(6))
             Text(countLine)
                 .seleneFont(16)
                 .foregroundColor(SeleneTheme.ink75)
@@ -195,23 +197,63 @@ struct AchievementsScreen: View {
         .accessibilityLabel(L10n.format("Achievements: %d of %d", [summary.unlocked, summary.total]))
     }
 
-    @ViewBuilder
     private var board: some View {
-        if summary.isComplete {
-            VStack(spacing: canvas.u(16)) {
-                arcaneHero
-                if summary.hasRarity { tierRow([.gold, .silver, .bronze], size: 48, font: 16) }
+        let counts = summary.tierCounts
+        let tiers = summary.hasRarity ? AchievementTier.allCases : [.arcane]
+        return HStack(alignment: .top, spacing: canvas.u(26)) {
+            ForEach(tiers, id: \.self) { tier in
+                let count = counts[tier] ?? TierCount(unlocked: 0, total: 0)
+                VStack(spacing: canvas.u(6)) {
+                    TierCrystal(tier: tier, size: 64, dimmed: count.unlocked == 0)
+                    countText(count, size: 18)
+                }
+                .fixedSize()
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(L10n.format("%1$@, %2$d of %3$d", [tier.displayName(), count.unlocked, count.total]))
             }
-        } else {
-            tierRow(summary.hasRarity ? AchievementTier.allCases : [.arcane], size: 64, font: 18)
         }
     }
 
-    /// Arcane earned (design `docs/private/achievements-arcane-hero-2026-11-16-design.md`, 16 Nov 2026): the
-    /// card's looping orb, large and without its "1 / 1", coming to colour just after the screen opens and playing
-    /// while it stays open (still, in colour, with Reduce motion). The still orb without the video.
-    @ViewBuilder
-    private var arcaneHero: some View {
+    /// Arcane earned (design `docs/private/achievements-arcane-hero-2026-11-16-design.md`; layout "B", the
+    /// medallion, maintainer's choice, 16 Nov 2026): everything on one centred axis, the orb on top, its name, the
+    /// count line, and Gold, Silver and Bronze as small crystals with their counts. It replaces the gauge and the
+    /// board: "100%", a full bar and "1 / 1" would only repeat the orb.
+    private var medallion: some View {
+        VStack(spacing: 0) {
+            arcaneOrb
+            Text(AchievementTier.arcane.displayName())
+                .seleneFont(40, .semibold)
+                .foregroundColor(SeleneTheme.ink)
+                .lineLimit(1)
+                .padding(.top, canvas.u(10))
+            Text(countLine)
+                .seleneFont(16)
+                .foregroundColor(SeleneTheme.ink75)
+                .monospacedDigit()
+                .lineLimit(1)
+                .padding(.top, canvas.u(4))
+            if summary.hasRarity {
+                let counts = summary.tierCounts
+                HStack(spacing: canvas.u(24)) {
+                    ForEach([AchievementTier.gold, .silver, .bronze], id: \.self) { tier in
+                        let count = counts[tier] ?? TierCount(unlocked: 0, total: 0)
+                        HStack(spacing: canvas.u(6)) {
+                            TierCrystal(tier: tier, size: 28, dimmed: count.unlocked == 0)
+                            countText(count, size: 16)
+                        }
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(L10n.format("%1$@, %2$d of %3$d", [tier.displayName(), count.unlocked, count.total]))
+                    }
+                }
+                .padding(.top, canvas.u(16))
+            }
+        }
+        .fixedSize()
+    }
+
+    /// The card's looping orb, large, coming to colour just after the screen opens and playing while it stays
+    /// open (still, in colour, with Reduce motion). The still orb without the video.
+    private var arcaneOrb: some View {
         Group {
             if let video = AchievementTier.arcane.videoURL {
                 ArcaneOrbVideo(url: video, active: arcaneLit, moves: !reduceMotion)
@@ -229,25 +271,14 @@ struct AchievementsScreen: View {
         .accessibilityLabel("\(AchievementTier.arcane.displayName()), \(L10n.text("All achievements"))")
     }
 
-    private func tierRow(_ tiers: [AchievementTier], size: CGFloat, font: CGFloat) -> some View {
-        let counts = summary.tierCounts
-        return HStack(alignment: .top, spacing: canvas.u(26)) {
-            ForEach(tiers, id: \.self) { tier in
-                let count = counts[tier] ?? TierCount(unlocked: 0, total: 0)
-                VStack(spacing: canvas.u(6)) {
-                    TierCrystal(tier: tier, size: size, dimmed: count.unlocked == 0)
-                    (Text("\(count.unlocked)").foregroundColor(SeleneTheme.ink)
-                     + Text(" / \(count.total)").foregroundColor(SeleneTheme.ink75))
-                        .seleneFont(font, .semibold)
-                        .monospacedDigit()
-                        // Its own width, never a share of the crystal's: squeezed, "0 / 13" read "0…".
-                        .fixedSize()
-                }
-                .fixedSize()
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(L10n.format("%1$@, %2$d of %3$d", [tier.displayName(), count.unlocked, count.total]))
-            }
-        }
+    /// "36 / 36": the unlocked count bright, the total dimmer.
+    private func countText(_ count: TierCount, size: CGFloat) -> some View {
+        (Text("\(count.unlocked)").foregroundColor(SeleneTheme.ink)
+         + Text(" / \(count.total)").foregroundColor(SeleneTheme.ink75))
+            .seleneFont(size, .semibold)
+            .monospacedDigit()
+            // Its own width, never a share of the crystal's: squeezed, "0 / 13" read "0…".
+            .fixedSize()
     }
 
     /// "17 of 50 unlocked · last on 31 Jul 2026"; the count alone before the first unlock.
