@@ -16,18 +16,51 @@ public struct KeyValuesEntry: Equatable, Sendable {
 }
 
 public extension Array where Element == KeyValuesEntry {
+    /// The first matching key, regardless of its value's type. Later copies are not consulted.
+    func firstValue(for key: String) -> KeyValuesValue? {
+        matchingEntries(for: key).first?.value
+    }
+
+    /// The first matching string, skipping same-named values of another type (Steam achievement data).
+    func firstString(for key: String) -> String? {
+        for entry in matchingEntries(for: key) {
+            if case .string(let value) = entry.value { return value }
+        }
+        return nil
+    }
+
+    /// The first matching object, skipping same-named values of another type (Steam achievement data).
+    func firstObject(for key: String) -> [KeyValuesEntry]? {
+        for entry in matchingEntries(for: key) {
+            if case .object(let value) = entry.value { return value }
+        }
+        return nil
+    }
+
+    /// Missing is nil; duplicate keys of any type are ambiguous and fail.
     func uniqueValue(for key: String) throws -> KeyValuesValue? {
         var result: KeyValuesValue?
-        for entry in self where entry.key.caseInsensitiveCompare(key) == .orderedSame {
+        for entry in matchingEntries(for: key) {
             guard result == nil else { throw KeyValuesError.duplicateField(key) }
             result = entry.value
         }
         return result
     }
+
+    /// A single string or nil when absent; duplicates and a value of another type fail.
+    func uniqueString(for key: String) throws -> String? {
+        guard let value = try uniqueValue(for: key) else { return nil }
+        guard case .string(let text) = value else { throw KeyValuesError.malformed }
+        return text
+    }
+
+    private func matchingEntries(for key: String) -> LazyFilterSequence<[KeyValuesEntry]> {
+        lazy.filter { $0.key.caseInsensitiveCompare(key) == .orderedSame }
+    }
 }
 
 /// The bounded text subset used by Steam's local indexes and manifests.
-/// Entries retain order and duplicates; querying an ambiguous field fails.
+/// Entries retain order and duplicates; unique lookups reject ambiguous fields.
 /// Directives never cause filesystem access: a `#` key is refused, or with `rejectsDirectives`
 /// off (for files that only hold data, such as `localconfig.vdf`) read as an ordinary key.
 public struct KeyValuesDocument: Sendable {

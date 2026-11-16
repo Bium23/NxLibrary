@@ -45,8 +45,8 @@ public enum SteamPlaytimeReader {
         for user in users {
             guard case .object(let fields) = user.value, let id = UInt64(user.key), id >= steamID64Base,
                   let account = UInt32(exactly: id - steamID64Base) else { continue }
-            let recent = (try? string("MostRecent", in: fields)) == "1"
-            let timestamp = (try? string("timestamp", in: fields)).flatMap { Int($0) } ?? 0
+            let recent = (try? fields.uniqueString(for: "MostRecent")) == "1"
+            let timestamp = (try? fields.uniqueString(for: "timestamp")).flatMap { Int($0) } ?? 0
             if let current = best, current.recent != recent ? current.recent : current.timestamp >= timestamp { continue }
             best = (account, recent, timestamp)
         }
@@ -59,30 +59,21 @@ public enum SteamPlaytimeReader {
     /// read from its first copy: nothing outside the two fields can fail the read.
     public static func entries(localConfig text: String) throws -> [UInt32: SteamPlaytimeEntry] {
         let document = try KeyValuesDocument(text: text, maximumEntries: 500_000, rejectsDirectives: false)
-        guard var node = first("UserLocalConfigStore", in: document.entries) else { throw KeyValuesError.malformed }
+        guard var node = document.entries.firstValue(for: "UserLocalConfigStore") else { throw KeyValuesError.malformed }
         for key in ["Software", "Valve", "Steam", "apps"] {
-            guard case .object(let children) = node, let child = first(key, in: children) else { return [:] }
+            guard case .object(let children) = node, let child = children.firstValue(for: key) else { return [:] }
             node = child
         }
         guard case .object(let apps) = node else { return [:] }
         var result: [UInt32: SteamPlaytimeEntry] = [:]
         for app in apps {
             guard let appID = UInt32(app.key), appID > 0, case .object(let fields) = app.value,
-                  let minutes = (try? string("Playtime", in: fields)).flatMap({ Int($0) }), minutes >= 0 else { continue }
-            let seconds = (try? string("LastPlayed", in: fields)).flatMap { TimeInterval($0) } ?? 0
+                  let minutes = (try? fields.uniqueString(for: "Playtime")).flatMap({ Int($0) }), minutes >= 0 else { continue }
+            let seconds = (try? fields.uniqueString(for: "LastPlayed")).flatMap { TimeInterval($0) } ?? 0
             result[appID] = SteamPlaytimeEntry(minutes: minutes,
                                                lastPlayed: seconds > 0 ? Date(timeIntervalSince1970: seconds) : nil)
         }
         return result
-    }
-
-    private static func first(_ key: String, in entries: [KeyValuesEntry]) -> KeyValuesValue? {
-        entries.first { $0.key.caseInsensitiveCompare(key) == .orderedSame }?.value
-    }
-
-    private static func string(_ key: String, in fields: [KeyValuesEntry]) throws -> String? {
-        guard case .string(let value)? = try fields.uniqueValue(for: key) else { return nil }
-        return value
     }
 
     private static func text(at url: URL) throws -> String {

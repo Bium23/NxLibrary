@@ -45,25 +45,25 @@ public enum SteamAchievementReader {
 
     static func achievements(schema: [KeyValuesEntry], stats: [KeyValuesEntry], appID: UInt32, language: String) throws -> [SteamAchievement] {
         let times = unlockTimes(stats)
-        guard let game = objectValue(schema, "\(appID)"), let statList = objectValue(game, "stats") else { return [] }
+        guard let game = schema.firstObject(for: "\(appID)"), let statList = game.firstObject(for: "stats") else { return [] }
         var result: [(stat: Int, bit: Int, achievement: SteamAchievement)] = []
         for stat in statList {
-            guard case .object(let statFields) = stat.value, let bits = objectValue(statFields, "bits"),
+            guard case .object(let statFields) = stat.value, let bits = statFields.firstObject(for: "bits"),
                   let statNumber = Int(stat.key) else { continue }
             for bit in bits {
                 guard case .object(let fields) = bit.value, let bitNumber = Int(bit.key),
-                      let api = stringValue(fields, "name") else { continue }
-                let display = objectValue(fields, "display") ?? []
-                let names = objectValue(display, "name") ?? []
-                let descs = objectValue(display, "desc") ?? []
+                      let api = fields.firstString(for: "name") else { continue }
+                let display = fields.firstObject(for: "display") ?? []
+                let names = display.firstObject(for: "name") ?? []
+                let descs = display.firstObject(for: "desc") ?? []
                 let seconds = times[stat.key]?[bit.key].flatMap { Int64($0) } ?? 0
                 result.append((statNumber, bitNumber, SteamAchievement(
                     apiName: api,
                     name: localized(names, language) ?? api,
                     description: localized(descs, language) ?? "",
-                    hidden: stringValue(display, "hidden") == "1",
-                    icon: stringValue(display, "icon").flatMap { $0.isEmpty ? nil : $0 },
-                    grayIcon: stringValue(display, "icon_gray").flatMap { $0.isEmpty ? nil : $0 },
+                    hidden: display.firstString(for: "hidden") == "1",
+                    icon: display.firstString(for: "icon").flatMap { $0.isEmpty ? nil : $0 },
+                    grayIcon: display.firstString(for: "icon_gray").flatMap { $0.isEmpty ? nil : $0 },
                     unlockedAt: seconds > 0 ? Date(timeIntervalSince1970: TimeInterval(seconds)) : nil)))
             }
         }
@@ -72,10 +72,10 @@ public enum SteamAchievementReader {
 
     /// `cache › <stat> › AchievementTimes › <bit>`; nothing else of the stats file is read.
     private static func unlockTimes(_ stats: [KeyValuesEntry]) -> [String: [String: String]] {
-        guard let cache = objectValue(stats, "cache") else { return [:] }
+        guard let cache = stats.firstObject(for: "cache") else { return [:] }
         var times: [String: [String: String]] = [:]
         for stat in cache {
-            guard case .object(let fields) = stat.value, let list = objectValue(fields, "AchievementTimes") else { continue }
+            guard case .object(let fields) = stat.value, let list = fields.firstObject(for: "AchievementTimes") else { continue }
             for entry in list { if case .string(let value) = entry.value { times[stat.key, default: [:]][entry.key] = value } }
         }
         return times
@@ -83,21 +83,7 @@ public enum SteamAchievementReader {
 
     private static func localized(_ entries: [KeyValuesEntry], _ language: String) -> String? {
         for key in [language, "english"] {
-            if let text = stringValue(entries, key), !text.isEmpty { return text }
-        }
-        return nil
-    }
-
-    private static func objectValue(_ entries: [KeyValuesEntry], _ key: String) -> [KeyValuesEntry]? {
-        for entry in entries where entry.key.caseInsensitiveCompare(key) == .orderedSame {
-            if case .object(let value) = entry.value { return value }
-        }
-        return nil
-    }
-
-    private static func stringValue(_ entries: [KeyValuesEntry], _ key: String) -> String? {
-        for entry in entries where entry.key.caseInsensitiveCompare(key) == .orderedSame {
-            if case .string(let value) = entry.value { return value }
+            if let text = entries.firstString(for: key), !text.isEmpty { return text }
         }
         return nil
     }

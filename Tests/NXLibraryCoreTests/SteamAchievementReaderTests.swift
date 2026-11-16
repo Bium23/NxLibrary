@@ -89,6 +89,29 @@ final class SteamAchievementReaderTests: XCTestCase {
         XCTAssertNil(rows[0].unlockedAt)
     }
 
+    func testLookupSkipsWrongTypesAndKeepsTheFirstMatchingTypedValue() throws {
+        let fields: E = [("name", [] as E), ("NAME", "FIRST"), ("name", "SECOND"),
+                         ("display", "wrong type"), ("DISPLAY", [
+                            ("name", [("italian", [] as E), ("ITALIAN", "Primo"), ("italian", "Secondo")] as E)
+                         ] as E)]
+        let game: E = [("stats", "wrong type"), ("STATS", [("1", [
+            ("bits", "wrong type"), ("BITS", [("0", fields)] as E)
+        ] as E)] as E)]
+        let schema = try SteamBinaryKeyValues.parse(BinaryKV.data([("\(app)", "wrong type"), ("\(app)", game)]))
+        let rows = try read(schema, stats([("1", "0", 5)]))
+        XCTAssertEqual(rows.map(\.apiName), ["FIRST"])
+        XCTAssertEqual(rows.map(\.name), ["Primo"])
+        XCTAssertEqual(rows.first?.unlockedAt, Date(timeIntervalSince1970: 5))
+    }
+
+    func testEmptyFirstLocalizedStringFallsBackToEnglishRatherThanADuplicate() throws {
+        let fields: E = [("name", "A"), ("display", [("name", [
+            ("italian", ""), ("ITALIAN", "Ignored duplicate"), ("english", "English fallback")
+        ] as E)] as E)]
+        let rows = try read(schema([("1", [("bits", [("0", fields)] as E)])]), stats([]))
+        XCTAssertEqual(rows.map(\.name), ["English fallback"])
+    }
+
     // MARK: - Files
 
     private var root: URL!

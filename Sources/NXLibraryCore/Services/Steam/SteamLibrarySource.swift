@@ -165,7 +165,7 @@ private struct Scan {
                     switch entry.value {
                     case .string(let value): path = value
                     case .object(let children):
-                        guard case .string(let value)? = try children.uniqueValue(for: "path") else { throw KeyValuesError.malformed }
+                        guard let value = try children.uniqueString(for: "path") else { throw KeyValuesError.malformed }
                         path = value
                     }
                     guard path.hasPrefix("/"), !path.contains("\0") else { issue(.unsafePath, at: index); continue }
@@ -193,10 +193,10 @@ private struct Scan {
             guard let filenameID else { throw KeyValuesError.malformed }
             let document = try readDocument(file)
             guard case .object(let fields)? = try document.uniqueValue(for: "AppState"),
-                  let idText = try Self.string("appid", in: fields), let id = Self.numeric(idText) else { throw KeyValuesError.malformed }
+                  let idText = try fields.uniqueString(for: "appid"), let id = Self.numeric(idText) else { throw KeyValuesError.malformed }
             guard id == filenameID else { issue(.conflictingIdentity, at: file, appID: filenameID); return }
-            guard let name = try Self.string("name", in: fields), !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                  let directory = try Self.string("installdir", in: fields), !directory.isEmpty else { throw KeyValuesError.malformed }
+            guard let name = try fields.uniqueString(for: "name"), !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  let directory = try fields.uniqueString(for: "installdir"), !directory.isEmpty else { throw KeyValuesError.malformed }
             let components = directory.split(separator: "/", omittingEmptySubsequences: false)
             guard !directory.hasPrefix("/"), !directory.contains("\\"), !directory.contains("\0"),
                   !components.contains(where: { $0 == ".." || $0 == "." || $0.isEmpty }) else {
@@ -207,10 +207,10 @@ private struct Scan {
             guard NativeMacApplication.isWithin(common, root: library), NativeMacApplication.isWithin(install, root: common), install.path != common.path else {
                 issue(.unsafePath, at: file, appID: id); return
             }
-            let size = try Self.string("SizeOnDisk", in: fields).flatMap(Self.nonnegativeSize)
-            let build = try Self.string("buildid", in: fields)
+            let size = try fields.uniqueString(for: "SizeOnDisk").flatMap(Self.nonnegativeSize)
+            let build = try fields.uniqueString(for: "buildid")
             // Bit 4 is FullyInstalled. Missing or unreadable flags keep the folder check alone, as before.
-            if let flags = try Self.string("StateFlags", in: fields).flatMap({ UInt64($0) }), flags & 4 == 0 {
+            if let flags = try fields.uniqueString(for: "StateFlags").flatMap({ UInt64($0) }), flags & 4 == 0 {
                 games.append(.init(appID: id, name: name, installationURL: install, libraryURL: library,
                                    reportedSizeBytes: size, buildID: build, nativeApps: [], state: .downloading))
                 return
@@ -308,11 +308,5 @@ private struct Scan {
     private static func nonnegativeSize(_ text: String) -> Int64? {
         guard !text.isEmpty, text.utf8.allSatisfy({ (48...57).contains($0) }), let value = Int64(text) else { return nil }
         return value
-    }
-
-    private static func string(_ key: String, in fields: [KeyValuesEntry]) throws -> String? {
-        guard let value = try fields.uniqueValue(for: key) else { return nil }
-        guard case .string(let result) = value else { throw KeyValuesError.malformed }
-        return result
     }
 }

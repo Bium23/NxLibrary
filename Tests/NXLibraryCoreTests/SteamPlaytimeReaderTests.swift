@@ -111,6 +111,38 @@ final class SteamPlaytimeReaderTests: XCTestCase {
         XCTAssertEqual(try SteamPlaytimeReader.entries(localConfig: text)[440]?.minutes, 3)
     }
 
+    func testWrongTypedFirstPathDoesNotFallThroughToALaterObject() throws {
+        let apps = "\"440\" { \"Playtime\" \"9\" }"
+        let duplicateRoot = "\"UserLocalConfigStore\" \"wrong type\" " + Self.localConfig(apps: apps)
+        let duplicateSoftware = Self.localConfig(apps: apps, before: "\"software\" \"wrong type\"")
+        for text in [duplicateRoot, duplicateSoftware] {
+            XCTAssertEqual(try SteamPlaytimeReader.entries(localConfig: text), [:])
+        }
+    }
+
+    func testDuplicateOrWrongTypedScalarsDoNotReplacePlaytimeOrInventDates() throws {
+        let text = Self.localConfig(apps: """
+            "440" { "Playtime" "3" "PLAYTIME" "9" }
+            "441" { "Playtime" "7" "LastPlayed" "10" "LASTPLAYED" "20" }
+            "442" { "Playtime" {} "PLAYTIME" "9" }
+            "443" { "Playtime" "4" "LastPlayed" {} }
+            "444" { "Playtime" {} }
+            """)
+        XCTAssertEqual(try SteamPlaytimeReader.entries(localConfig: text),
+                       [441: SteamPlaytimeEntry(minutes: 7, lastPlayed: nil),
+                        443: SteamPlaytimeEntry(minutes: 4, lastPlayed: nil)])
+    }
+
+    func testDuplicateMostRecentMarkerDoesNotTakeAnotherAccountsPriority() throws {
+        let text = """
+            "users" {
+                "\(Self.base + 42)" { "MostRecent" "1" "MOSTRECENT" "1" "timestamp" "900" }
+                "\(Self.base + 43)" { "MostRecent" "1" "timestamp" "100" }
+            }
+            """
+        XCTAssertEqual(try SteamPlaytimeReader.accountID(loginUsers: text), 43)
+    }
+
     func testHashKeysElsewhereDoNotFailTheRead() throws {
         let text = Self.localConfig(apps: "\"440\" { \"Playtime\" \"2\" }", before: "\"WebStorage\" { \"#tag\" \"x\" }")
         XCTAssertEqual(try SteamPlaytimeReader.entries(localConfig: text)[440]?.minutes, 2)

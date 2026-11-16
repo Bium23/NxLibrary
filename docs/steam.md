@@ -76,6 +76,21 @@ Formati: `SteamKeyValues` (testo, campi duplicati conservati, nessuna direttiva 
 (binario). Le letture di file e cartelle hanno limiti di dimensione e di voci (`InstallationFileSnapshot`,
 `InstallationDirectorySnapshot`) e si possono annullare.
 
+I lookup senza distinzione maiuscole/minuscole sono condivisi nell’estensione di `[KeyValuesEntry]` in
+`SteamKeyValues.swift`. Le regole restano esplicite e distinte:
+
+| Lookup | Regola | Uso |
+|---|---|---|
+| `firstValue` | prima chiave, anche se il suo valore ha un tipo inatteso | blocchi del percorso in `localconfig.vdf` |
+| `firstString` / `firstObject` | primo valore del tipo richiesto; copie di altro tipo vengono saltate | schema e statistiche achievement |
+| `uniqueValue` / `uniqueString` | duplicati di qualsiasi tipo rifiutati; `uniqueString` rifiuta anche un valore non stringa | manifest, indice librerie e campi delle ore/account |
+
+I lettori decidono l’esito al proprio confine: i campi scalari non utilizzabili delle ore mantengono i ripieghi
+esistenti, mentre manifest e indici non validi producono una scansione parziale con un problema segnalato.
+Una prima stringa localizzata vuota negli achievement mantiene il ripiego inglese, senza scegliere un duplicato
+successivo. La pulizia del 16 novembre conserva questi risultati: sette prove aggiunte sui lettori reali passano
+prima e dopo l’estrazione. La verifica nella Dev resta da confermare; non è stata cambiata la semantica dei file.
+
 ## Rilevamento e catalogo
 
 1. `CatalogSourcesModel` avvia una scansione: all’avvio se Steam è abilitato, su Refresh, quando si attiva la fonte o

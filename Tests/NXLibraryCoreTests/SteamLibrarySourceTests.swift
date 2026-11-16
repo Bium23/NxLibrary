@@ -71,6 +71,35 @@ final class SteamLibrarySourceTests: XCTestCase {
         XCTAssertFalse(result.libraries[0].isComplete)
     }
 
+    func testDuplicateOrWrongTypedKnownScalarsRejectTheManifest() throws {
+        for field in ["APPID 10", "NAME Other", "INSTALLDIR First", "SizeOnDisk {}", "buildid {}", "StateFlags {}"] {
+            let f = try SteamTestFixture.temporary(in: self)
+            let root = try f.library()
+            let manifest = root.appendingPathComponent("steamapps/appmanifest_10.acf")
+            try Data("AppState { appid 10 name Fixture installdir First \(field) }".utf8).write(to: manifest)
+            try f.app(at: "Steam/steamapps/common/First/Game.app")
+            let result = try SteamLibrarySource(root: root).scan()
+            XCTAssertTrue(result.games.isEmpty, field)
+            XCTAssertTrue(result.issues.contains { $0.reason == .invalidManifest && $0.appID == 10 }, field)
+            XCTAssertFalse(result.libraries[0].isComplete, field)
+        }
+    }
+
+    func testDuplicateOrWrongTypedLibraryPathPreservesDefaultLibraryAndReportsInvalidIndex() throws {
+        let f = try SteamTestFixture.temporary(in: self)
+        let root = try f.library()
+        try f.manifest(in: root)
+        try f.app(at: "Steam/steamapps/common/First/Game.app")
+        for path in ["path {}", "path \"/Volumes/First\" PATH \"/Volumes/Second\""] {
+            let index = root.appendingPathComponent("steamapps/libraryfolders.vdf")
+            try Data("libraryfolders { 1 { \(path) } }".utf8).write(to: index)
+            let result = try SteamLibrarySource(root: root).scan()
+            XCTAssertEqual(result.games.map(\.appID), [10])
+            XCTAssertTrue(result.issues.contains { $0.reason == .invalidIndex })
+            XCTAssertFalse(result.libraries[0].isComplete)
+        }
+    }
+
     func testRejectsMismatchedOrInvalidAppIdentifiers() throws {
         for id in ["20", "+10", "0", "4294967296", "a10"] {
             let f = try SteamTestFixture.temporary(in: self)
