@@ -21,15 +21,14 @@ public enum AchievementTier: CaseIterable, Sendable {
         return .bronze
     }
 
-    /// The tier's crystal: a 1024 px PNG (`.superpowers/arcane/gpt-2026-11-16`), large enough
-    /// for the achievement detail, in Core's resources; found as the translations are (the installed app's bundle
-    /// first); nil only if it is missing.
+    /// The tier's crystal: a 1024 px PNG of the maintainer's own art, large enough for the achievement detail, in
+    /// Core's resources; found as the translations are (the installed app's bundle first); nil only if it is missing.
     public var imageURL: URL? {
         L10n.resources()?.url(forResource: "crystal-\(self)", withExtension: "png")
     }
 
-    /// Arcane's looping video (the maintainer's `2.mp4`, chosen over `1.mp4` on 16 Nov 2026): 384 px HEVC with alpha, 180 frames at
-    /// 24 fps, made by `.superpowers/arcane/video/make.py` and `encode.sh`; nil for the other tiers, which stay still.
+    /// Arcane's looping video, the maintainer's own (chosen on 16 Nov 2026): 384 px HEVC with alpha, 180 frames at
+    /// 24 fps; nil for the other tiers, which stay still.
     public var videoURL: URL? {
         self == .arcane ? L10n.resources()?.url(forResource: "crystal-arcane", withExtension: "mov") : nil
     }

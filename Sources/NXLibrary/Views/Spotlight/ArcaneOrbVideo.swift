@@ -3,11 +3,10 @@ import AppKit
 import AVFoundation
 import NXLibraryCore
 
-/// The Arcane orb as the maintainer's looping video (`AchievementTier.videoURL`), for the achievements card
-/// (design `docs/private/arcane-video-2026-11-16-design.md`, 16 Nov 2026) and, always active, the earned Arcane
-/// on the Achievements screen. At rest it is the current frame in grey;
-/// active (hover or focus) it comes to colour and plays; inactive again it stops on its frame and greys. The
-/// next appearance, on any page, resumes from that frame.
+/// The Arcane orb as the maintainer's looping video (`AchievementTier.videoURL`, 16 Nov 2026), for the achievements
+/// card and, always active, the earned Arcane on the Achievements screen. At rest it is the current frame in grey;
+/// active (hover or focus) it comes to colour and plays; inactive again it stops on its frame and greys. The next
+/// appearance, on any page, resumes from that frame.
 ///
 /// The video is decoded by the media engine (AVPlayerLayer); grey ↔ colour, light and scale are Core Animation
 /// on the layer, run by the render server, so the change stays smooth while the app is busy. Nothing plays while

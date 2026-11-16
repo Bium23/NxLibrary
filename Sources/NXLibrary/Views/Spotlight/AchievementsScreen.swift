@@ -184,44 +184,41 @@ struct AchievementsScreen: View {
             AchievementProgressBar(fraction: fraction, height: 4, track: SeleneTheme.ink25)
                 .frame(maxWidth: .infinity)
                 .padding(.top, canvas.u(4))
-            Text(countLine)
-                .seleneFont(16)
-                .foregroundColor(SeleneTheme.ink75)
-                .monospacedDigit()
-                // A long language wraps under the trophies rather than overflowing them.
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
+            // A long language wraps under the trophies rather than overflowing them.
+            countLineText(lines: 2)
                 .padding(.top, canvas.u(10))
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(L10n.format("Achievements: %d of %d", [summary.unlocked, summary.total]))
     }
 
-    /// Four 64-unit trophies 26 apart: the gauge keeps this width while only Arcane shows, so Arcane does not move
-    /// when Steam's rarity brings the other three.
-    private static let fourTrophies: CGFloat = 4 * 64 + 3 * 26
+    /// The board's trophies, in canvas units.
+    private static let trophy: CGFloat = 64
+    private static let trophySpacing: CGFloat = 26
+    /// All four trophies' width: the gauge keeps it while only Arcane shows, so Arcane does not move when Steam's
+    /// rarity brings the other three.
+    private static let fourTrophies: CGFloat = 4 * trophy + 3 * trophySpacing
 
     private var board: some View {
         let counts = summary.tierCounts
         let tiers = summary.hasRarity ? AchievementTier.allCases : [.arcane]
-        return HStack(alignment: .top, spacing: canvas.u(26)) {
+        return HStack(alignment: .top, spacing: canvas.u(Self.trophySpacing)) {
             ForEach(tiers, id: \.self) { tier in
                 let count = counts[tier] ?? TierCount(unlocked: 0, total: 0)
                 VStack(spacing: canvas.u(6)) {
-                    TierCrystal(tier: tier, size: 64, dimmed: count.unlocked == 0)
+                    TierCrystal(tier: tier, size: Self.trophy, dimmed: count.unlocked == 0)
                     countText(count, size: 18)
                 }
                 .fixedSize()
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(L10n.format("%1$@, %2$d of %3$d", [tier.displayName(), count.unlocked, count.total]))
+                .accessibilityLabel(Self.tierLabel(tier, count))
             }
         }
     }
 
-    /// Arcane earned (design `docs/private/achievements-arcane-hero-2026-11-16-design.md`; layout "B", the
-    /// medallion, maintainer's choice, 16 Nov 2026): everything on one centred axis, the orb on top, its name, the
-    /// count line, and Gold, Silver and Bronze as small crystals with their counts. It replaces the gauge and the
-    /// board: "100%", a full bar and "1 / 1" would only repeat the orb.
+    /// Arcane earned (layout "B", the medallion, maintainer's choice, 16 Nov 2026): everything on one centred axis,
+    /// the orb on top, its name, the count line, and Gold, Silver and Bronze as small crystals with their counts. It
+    /// replaces the gauge and the board: "100%", a full bar and "1 / 1" would only repeat the orb.
     private var medallion: some View {
         VStack(spacing: 0) {
             arcaneOrb
@@ -230,11 +227,7 @@ struct AchievementsScreen: View {
                 .foregroundColor(SeleneTheme.ink)
                 .lineLimit(1)
                 .padding(.top, canvas.u(10))
-            Text(countLine)
-                .seleneFont(16)
-                .foregroundColor(SeleneTheme.ink75)
-                .monospacedDigit()
-                .lineLimit(1)
+            countLineText(lines: 1)
                 .padding(.top, canvas.u(4))
             if summary.hasRarity {
                 let counts = summary.tierCounts
@@ -246,7 +239,7 @@ struct AchievementsScreen: View {
                             countText(count, size: 16)
                         }
                         .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(L10n.format("%1$@, %2$d of %3$d", [tier.displayName(), count.unlocked, count.total]))
+                        .accessibilityLabel(Self.tierLabel(tier, count))
                     }
                 }
                 .padding(.top, canvas.u(16))
@@ -272,7 +265,7 @@ struct AchievementsScreen: View {
             arcaneLit = true
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(AchievementTier.arcane.displayName()), \(L10n.text("All achievements"))")
+        .accessibilityLabel(L10n.format("%@, every achievement unlocked", [AchievementTier.arcane.displayName()]))
     }
 
     /// "36 / 36": the unlocked count bright, the total dimmer.
@@ -283,6 +276,21 @@ struct AchievementsScreen: View {
             .monospacedDigit()
             // Its own width, never a share of the crystal's: squeezed, "0 / 13" read "0…".
             .fixedSize()
+    }
+
+    /// The count line as the gauge and the medallion show it, in up to `lines` lines.
+    private func countLineText(lines: Int) -> some View {
+        Text(countLine)
+            .seleneFont(16)
+            .foregroundColor(SeleneTheme.ink75)
+            .monospacedDigit()
+            .lineLimit(lines)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// "Gold, 3 of 12", for VoiceOver.
+    private static func tierLabel(_ tier: AchievementTier, _ count: TierCount) -> String {
+        L10n.format("%1$@, %2$d of %3$d", [tier.displayName(), count.unlocked, count.total])
     }
 
     /// "17 of 50 unlocked · last on 31 Jul 2026"; the count alone before the first unlock.

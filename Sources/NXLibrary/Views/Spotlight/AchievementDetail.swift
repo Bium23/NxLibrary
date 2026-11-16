@@ -1,11 +1,11 @@
 import SwiftUI
 import NXLibraryCore
 
-/// One achievement in full, over the Achievements screen (A on a row), as a medallion (design
-/// `docs/private/achievement-detail-medallion-2026-11-16-design.md`, maintainer's choice "A", 16 Nov 2026): on one
-/// centred axis the achievement's icon large with its tier crystal as a small badge on the corner, the whole name
-/// and description the list cuts, then how many players have it and when it was unlocked. The arrows step it
-/// through the list, A or B (or a click outside the card) close it. Without Steam's rarity the icon has no badge.
+/// One achievement in full, over the Achievements screen (A on a row), as a medallion (maintainer's choice "A",
+/// 16 Nov 2026): on one centred axis the achievement's icon large with its tier crystal as a small badge on the
+/// corner, the whole name and description the list cuts, then how many players have it and when it was unlocked.
+/// The arrows step it through the list, A or B (or a click outside the card) close it. Without Steam's rarity the
+/// icon has no badge.
 struct AchievementDetail: View {
     @Environment(\.seleneCanvas) private var canvas
 

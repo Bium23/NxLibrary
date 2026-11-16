@@ -42,6 +42,47 @@
         }
       }
     },
+    "%@, every achievement unlocked": {
+      "comment": "VoiceOver label of the earned Arcane on the Achievements screen; %@ is the tier's name (Arcane).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, every achievement unlocked"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, tutti gli obiettivi sbloccati"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, tous les succès débloqués"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, alle Erfolge freigeschaltet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, todos los logros desbloqueados"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, todas as conquistas desbloqueadas"
+          }
+        }
+      }
+    },
     "Arcane": {
       "comment": "Achievement tier (a violet crystal) for unlocking every achievement of a game, where PlayStation has Platinum.",
       "localizations": {
