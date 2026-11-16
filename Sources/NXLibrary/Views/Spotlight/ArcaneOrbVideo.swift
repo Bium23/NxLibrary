@@ -32,6 +32,11 @@ final class ArcaneOrbView: NSView {
     /// Where the orb last stopped, shared by every card for the app's life.
     private static var resume: CMTime = .zero
 
+    /// Layers: `zoom` carries only the scale; inside it `orb` carries the grey filter and the light; inside that the
+    /// video. With the scale on the filtered layer itself, the end of the shrink jumped (maintainer's check with the
+    /// scale off, 16 Nov 2026): the filtered drawing was made one way while transformed and another at rest. Kept
+    /// apart, the filtered layer is never transformed and is always drawn the same way.
+    private let zoom = CALayer()
     private let orb = CALayer()
     private let playerLayer = AVPlayerLayer()
     private let player = AVQueuePlayer()
@@ -68,7 +73,9 @@ final class ArcaneOrbView: NSView {
         // Hidden until the first frame is decoded, then faded in: never an empty or black square.
         playerLayer.opacity = 0
         orb.addSublayer(playerLayer)
-        layer?.addSublayer(orb)
+        zoom.addSublayer(orb)
+        layer?.addSublayer(zoom)
+        applyBackingScale()
 
         player.isMuted = true
         player.preventsDisplaySleepDuringVideoPlayback = false
@@ -97,10 +104,35 @@ final class ArcaneOrbView: NSView {
 
     override func layout() {
         super.layout()
+        // A square of whole pixels in the middle: SwiftUI may give 68.5 × 68 points, and the square video was then
+        // fitted a quarter point off its layer.
+        let scale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
+        let side = (min(bounds.width, bounds.height) * scale).rounded(.down) / scale
         CATransaction.begin(); CATransaction.setDisableActions(true)
-        orb.bounds = bounds
-        orb.position = CGPoint(x: bounds.midX, y: bounds.midY)
+        zoom.bounds = CGRect(x: 0, y: 0, width: side, height: side)
+        zoom.position = CGPoint(x: bounds.midX, y: bounds.midY)
+        orb.frame = zoom.bounds
         playerLayer.frame = orb.bounds
+        CATransaction.commit()
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        applyBackingScale()
+        needsLayout = true
+    }
+
+    override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        applyBackingScale()
+        needsLayout = true
+    }
+
+    /// AppKit leaves a layer-hosting view's layers at 1x: their pixel density follows the window's (Retina) here.
+    private func applyBackingScale() {
+        let scale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
+        CATransaction.begin(); CATransaction.setDisableActions(true)
+        for layer in [layer, zoom, orb, playerLayer].compactMap({ $0 }) { layer.contentsScale = scale }
         CATransaction.commit()
     }
 
@@ -112,9 +144,9 @@ final class ArcaneOrbView: NSView {
         // The first state is set as it is; later ones animate from where the layer is now, so an
         // interrupted change blends towards the new end instead of jumping.
         let animated = previous != nil
-        set(Self.toneKey, to: active ? 1 : 0, duration: duration, animated: animated)
-        set("opacity", to: active ? 1 : 0.88, duration: duration, animated: animated)
-        set("transform.scale", to: active && moves ? 1.06 : 1, duration: duration, animated: animated)
+        set(Self.toneKey, on: orb, to: active ? 1 : 0, duration: duration, animated: animated)
+        set("opacity", on: orb, to: active ? 1 : 0.88, duration: duration, animated: animated)
+        set("transform.scale", on: zoom, to: active && moves ? 1.06 : 1, duration: duration, animated: animated)
         syncPlayback()
     }
 
@@ -127,10 +159,10 @@ final class ArcaneOrbView: NSView {
         player.removeAllItems()
     }
 
-    private func set(_ keyPath: String, to value: CGFloat, duration: CFTimeInterval, animated: Bool) {
-        let from = (orb.presentation() ?? orb).value(forKeyPath: keyPath)
+    private func set(_ keyPath: String, on target: CALayer, to value: CGFloat, duration: CFTimeInterval, animated: Bool) {
+        let from = (target.presentation() ?? target).value(forKeyPath: keyPath)
         CATransaction.begin(); CATransaction.setDisableActions(true)
-        orb.setValue(value, forKeyPath: keyPath)
+        target.setValue(value, forKeyPath: keyPath)
         CATransaction.commit()
         guard animated, let from else { return }
         let animation = CABasicAnimation(keyPath: keyPath)
@@ -138,7 +170,7 @@ final class ArcaneOrbView: NSView {
         animation.toValue = value
         animation.duration = duration
         animation.timingFunction = Self.reveal
-        orb.add(animation, forKey: keyPath)
+        target.add(animation, forKey: keyPath)
     }
 
     /// Once the first frame is ready, move to where the orb last stopped (exactly, a seek before then may be
