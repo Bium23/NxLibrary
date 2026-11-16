@@ -26,7 +26,7 @@ final class AchievementTierTests: XCTestCase {
     }
 
     func testBoardOrderIsRarestFirst() {
-        XCTAssertEqual(AchievementTier.allCases, [.platinum, .gold, .silver, .bronze])
+        XCTAssertEqual(AchievementTier.allCases, [.arcane, .gold, .silver, .bronze])
     }
 
     func testRowTierFollowsPercent() {
@@ -42,16 +42,16 @@ final class AchievementTierTests: XCTestCase {
         XCTAssertEqual(summary.tierCounts[.gold], TierCount(unlocked: 1, total: 2))
         XCTAssertEqual(summary.tierCounts[.silver], TierCount(unlocked: 1, total: 1))
         XCTAssertEqual(summary.tierCounts[.bronze], TierCount(unlocked: 0, total: 1))
-        XCTAssertEqual(summary.tierCounts[.platinum], TierCount(unlocked: 0, total: 1))
+        XCTAssertEqual(summary.tierCounts[.arcane], TierCount(unlocked: 0, total: 1))
         XCTAssertTrue(summary.hasRarity)
     }
 
-    func testPlatinumOnlyAtHundredPercent() {
+    func testArcaneOnlyAtHundredPercent() {
         let summary = AchievementSummary(achievements: [a("A", at: 1), a("B", at: 2)], percents: ["A": 50])
-        XCTAssertEqual(summary.tierCounts[.platinum], TierCount(unlocked: 1, total: 1))
+        XCTAssertEqual(summary.tierCounts[.arcane], TierCount(unlocked: 1, total: 1))
     }
 
-    func testNoAchievementsNoPlatinum() {
+    func testNoAchievementsNoArcane() {
         let summary = AchievementSummary(achievements: [], percents: [:])
         for tier in AchievementTier.allCases {
             XCTAssertEqual(summary.tierCounts[tier], TierCount(unlocked: 0, total: 0), "\(tier)")
@@ -65,7 +65,7 @@ final class AchievementTierTests: XCTestCase {
         for tier in [AchievementTier.gold, .silver, .bronze] {
             XCTAssertEqual(summary.tierCounts[tier], TierCount(unlocked: 0, total: 0), "\(tier)")
         }
-        XCTAssertEqual(summary.tierCounts[.platinum], TierCount(unlocked: 0, total: 1))
+        XCTAssertEqual(summary.tierCounts[.arcane], TierCount(unlocked: 0, total: 1))
         XCTAssertFalse(summary.hasRarity)
     }
 
@@ -74,13 +74,14 @@ final class AchievementTierTests: XCTestCase {
         XCTAssertEqual(summary.lastUnlockedAt, Date(timeIntervalSince1970: 20))
     }
 
-    func testDisplayNamesAreTheClassicOnes() {
+    /// The completion tier is Arcane (violet), no longer Platinum; the rarity tiers keep their classic names.
+    func testDisplayNames() {
         let english = AppLocale(language: .english, region: "US")
         XCTAssertEqual(AchievementTier.allCases.map { $0.displayName(context: english) },
-                       ["Platinum", "Gold", "Silver", "Bronze"])
+                       ["Arcane", "Gold", "Silver", "Bronze"])
         let italian = AppLocale(language: .italian, region: "IT")
         XCTAssertEqual(AchievementTier.allCases.map { $0.displayName(context: italian) },
-                       ["Platino", "Oro", "Argento", "Bronzo"])
+                       ["Arcano", "Oro", "Argento", "Bronzo"])
     }
 
     func testEveryTierHasArt() throws {

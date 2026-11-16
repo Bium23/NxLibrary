@@ -159,8 +159,8 @@ struct AchievementsScreen: View {
     }
 
     /// The completion as one gauge, read top to bottom: the large percentage, its bar, the count and the newest
-    /// unlock, all left-aligned and as wide as the widest of them. Beside it Platinum, Gold, Silver, Bronze with
-    /// unlocked/total under each, as PS5 trophies, dimmed while not earned (only Platinum until Steam's rarity
+    /// unlock, all left-aligned and as wide as the widest of them. Beside it Arcane, Gold, Silver, Bronze with
+    /// unlocked/total under each, as PS5 trophies, dimmed while not earned (only Arcane until Steam's rarity
     /// arrives).
     private var progress: some View {
         HStack(alignment: .center, spacing: canvas.u(48)) {
@@ -196,7 +196,7 @@ struct AchievementsScreen: View {
 
     private var board: some View {
         let counts = summary.tierCounts
-        let tiers = summary.hasRarity ? AchievementTier.allCases : [.platinum]
+        let tiers = summary.hasRarity ? AchievementTier.allCases : [.arcane]
         return HStack(alignment: .top, spacing: canvas.u(26)) {
             ForEach(tiers, id: \.self) { tier in
                 let count = counts[tier] ?? TierCount(unlocked: 0, total: 0)

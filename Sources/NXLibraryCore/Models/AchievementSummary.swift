@@ -59,11 +59,11 @@ public struct AchievementSummary: Equatable, Sendable {
         Array((unlockedRows.isEmpty ? lockedRows : unlockedRows).compactMap(\.icon).prefix(3))
     }
 
-    /// Unlocked and total per tier. Platinum is one per game, lit when everything is unlocked (0/0 without
+    /// Unlocked and total per tier. Arcane is one per game, lit when everything is unlocked (0/0 without
     /// achievements); the others count the achievements whose rarity is known.
     public var tierCounts: [AchievementTier: TierCount] {
         var counts: [AchievementTier: TierCount] = [
-            .platinum: TierCount(unlocked: total > 0 && unlocked == total ? 1 : 0, total: total > 0 ? 1 : 0),
+            .arcane: TierCount(unlocked: total > 0 && unlocked == total ? 1 : 0, total: total > 0 ? 1 : 0),
         ]
         for tier in [AchievementTier.gold, .silver, .bronze] {
             counts[tier] = TierCount(unlocked: unlockedRows.filter { $0.tier == tier }.count,

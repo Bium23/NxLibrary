@@ -1,6 +1,47 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Arcane": {
+      "comment": "Achievement tier (a violet crystal) for unlocking every achievement of a game, where PlayStation has Platinum.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcane"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcano"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcane"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arkan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcano"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcano"
+          }
+        }
+      }
+    },
     "\n\n--- Build log: %@ ---\n": {
       "comment": "ConsoleView.swift:481",
       "localizations": {
@@ -44973,47 +45014,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pré-compilação de pipelines"
-          }
-        }
-      }
-    },
-    "Platinum": {
-      "comment": "Achievement tier (a crystal), as PlayStation trophy tiers.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Platinum"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Platino"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Platine"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Platin"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Platino"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Platina"
           }
         }
       }
