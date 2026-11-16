@@ -156,20 +156,19 @@ struct AchievementsScreen: View {
         }
     }
 
-    /// The completion as one gauge, read top to bottom: the large percentage, its bar, the count and the newest
-    /// unlock, all left-aligned and as wide as the widest of them. Beside it Arcane, Gold, Silver, Bronze with
-    /// unlocked/total under each, as PS5 trophies, dimmed while not earned (only Arcane until Steam's rarity
-    /// arrives). Arcane earned, the medallion instead.
+    /// Arcane, Gold, Silver, Bronze with unlocked/total under each, as PS5 trophies, dimmed while not earned (only
+    /// Arcane until Steam's rarity arrives). Under them the gauge, as wide as the four trophies: the large
+    /// percentage, its bar and the count line, all starting at the first trophy's edge (layout "A, barra larga",
+    /// maintainer's choice, 16 Nov 2026). Arcane earned, the medallion instead.
     @ViewBuilder
     private var progress: some View {
         if summary.isComplete {
             medallion
         } else {
-            HStack(alignment: .center, spacing: canvas.u(48)) {
-                gauge
+            TrophyColumn(minWidth: canvas.u(Self.fourTrophies), spacing: canvas.u(24)) {
                 board
+                gauge
             }
-            .fixedSize()
         }
     }
 
@@ -181,7 +180,7 @@ struct AchievementsScreen: View {
                 .monospacedDigit()
                 .foregroundColor(SeleneTheme.ink)
                 .lineLimit(1)
-            // Fills the gauge's width (the widest line's), which `fixedSize` settles first.
+            // As wide as the trophies above, the width `TrophyColumn` gives the gauge.
             AchievementProgressBar(fraction: fraction, height: 5, track: SeleneTheme.ink25)
                 .frame(maxWidth: .infinity)
                 .padding(.top, canvas.u(6))
@@ -189,13 +188,18 @@ struct AchievementsScreen: View {
                 .seleneFont(16)
                 .foregroundColor(SeleneTheme.ink75)
                 .monospacedDigit()
-                .lineLimit(1)
+                // A long language wraps under the trophies rather than overflowing them.
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, canvas.u(12))
         }
-        .fixedSize()
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(L10n.format("Achievements: %d of %d", [summary.unlocked, summary.total]))
     }
+
+    /// Four 64-unit trophies 26 apart: the gauge keeps this width while only Arcane shows, so Arcane does not move
+    /// when Steam's rarity brings the other three.
+    private static let fourTrophies: CGFloat = 4 * 64 + 3 * 26
 
     private var board: some View {
         let counts = summary.tierCounts
@@ -538,5 +542,32 @@ private struct AchievementsList: View {
     private func report(_ height: CGFloat) {
         model.setLayout(layout, visible: height, above: canvas.u(Screen.topFade + 12),
                         below: canvas.u(Screen.bottomRoom), animates: !reduceMotion)
+    }
+}
+
+/// The trophies, then the gauge under them: the first view sets the column's width (at least `minWidth`) and every
+/// view below is offered that width, left-aligned. A `VStack` would take the widest line's width instead, so a long
+/// count line would push the trophies off their place.
+private struct TrophyColumn: Layout {
+    var minWidth: CGFloat
+    var spacing: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = columnWidth(subviews)
+        let heights = subviews.map { $0.sizeThatFits(ProposedViewSize(width: width, height: nil)).height }
+        return CGSize(width: width, height: heights.reduce(0, +) + spacing * CGFloat(max(0, subviews.count - 1)))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let offer = ProposedViewSize(width: columnWidth(subviews), height: nil)
+        var y = bounds.minY
+        for view in subviews {
+            view.place(at: CGPoint(x: bounds.minX, y: y), anchor: .topLeading, proposal: offer)
+            y += view.sizeThatFits(offer).height + spacing
+        }
+    }
+
+    private func columnWidth(_ subviews: Subviews) -> CGFloat {
+        max(minWidth, subviews.first?.sizeThatFits(.unspecified).width ?? 0)
     }
 }
