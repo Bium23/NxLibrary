@@ -40,10 +40,10 @@ struct SeleneHintsBar: View {
 
     var left: [HintItem] = []
     var right: [HintItem] = []
-    /// Distance from the bottom edge in Selene units: 48 (Ui.cs:267); home uses SeleneBottomScrim.hintsBottom.
-    var bottom: CGFloat = 48
+    /// Every screen uses Settings' bottom inset (Ui.cs:267).
+    var bottom: CGFloat = SeleneBottomScrim.hintsBottom
     /// Extra inset before the left group (Spotlight's prompts carry Selene's 18 margin).
-    var leftInset: CGFloat = 0
+    var leftInset: CGFloat = 18
     /// Labels each right slot can show on this screen, left to right. A slot is
     /// as wide as its longest label, and a missing item keeps its slot, so the
     /// prompts never shift as the focus moves.

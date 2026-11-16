@@ -137,6 +137,18 @@ struct GameDetailView: View {
                 .frame(width: canvas.stageSize.width, height: canvas.stageSize.height, alignment: .topLeading)
                 .clipped()
                 .offset(x: canvas.stageOrigin.x, y: canvas.stageOrigin.y)
+                .frame(width: canvas.size.width, height: canvas.size.height, alignment: .topLeading)
+                .mask(pageMask)
+                .contentShape(Path(CGRect(x: 0, y: 0, width: canvas.size.width,
+                                          height: max(0, canvas.size.height - canvas.u(SeleneBottomScrim.contentClearance)))))
+            // Anchor to the window, like Settings and Home, rather than the centred 16:9 stage.
+            VStack(spacing: 0) {
+                Spacer(minLength: 0)
+                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back"), action: { router.back() })],
+                               right: [HintItem(.y, L10n.text("Options")), HintItem(.a, L10n.text("Select"))],
+                               bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
+            }
+            .seleneOverlaidHints(router.overlayHasHints(viewModel))
         }
         .overlay(viewerOverlay)
         .overlay(ModsBandOverlay(host: modsHost, find: modsHost.find, game: game))
@@ -178,19 +190,18 @@ struct GameDetailView: View {
     // MARK: - Stage
 
     private func stage(_ model: Model) -> some View {
-        ZStack(alignment: .topLeading) {
-            page(model)
-                .offset(y: canvas.u(pageShift))
-                // The glide is movement: reduce motion makes it instant.
-                .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.32), value: pageShift)
+        page(model)
+            .offset(y: canvas.u(pageShift))
+            // The glide is movement: reduce motion makes it instant.
+            .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.32), value: pageShift)
+    }
 
-            VStack(spacing: 0) {
-                Spacer(minLength: 0)
-                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back"), action: { router.back() })],
-                               right: [HintItem(.y, L10n.text("Options")), HintItem(.a, L10n.text("Select"))],
-                               bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
-            }
-            .seleneOverlaidHints(router.overlayHasHints(viewModel))
+    private var pageMask: some View {
+        VStack(spacing: 0) {
+            Color.black
+            LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom)
+                .frame(height: canvas.u(16))
+            Color.clear.frame(height: canvas.u(SeleneBottomScrim.contentClearance))
         }
     }
 
@@ -200,10 +211,14 @@ struct GameDetailView: View {
     /// row rests where a one-row band would.
     var pageShift: CGFloat {
         let mods = modsBandShift
+        // These fixed band positions were laid out for a 16-unit footer inset. Move a focused band up
+        // by the same amount as the hints, retaining its gap above them and the spacing between bands.
+        let footerLift = max(0, SeleneBottomScrim.hintsBottom - 16)
         switch focus.zone {
-        case DetailsFocus.actionsZone: return -230
-        case DetailsFocus.modsZone: return -460 - modsGridExtra
-        case DetailsFocus.moreZone: return -560 - mods
+        case DetailsFocus.screenshotsZone: return -footerLift
+        case DetailsFocus.actionsZone: return -230 - footerLift
+        case DetailsFocus.modsZone: return -460 - modsGridExtra - footerLift
+        case DetailsFocus.moreZone: return -560 - mods - footerLift
         default: return 0
         }
     }

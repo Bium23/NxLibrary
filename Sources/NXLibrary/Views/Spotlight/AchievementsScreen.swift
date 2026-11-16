@@ -35,12 +35,12 @@ struct AchievementsScreen: View {
     /// The Recently unlocked strip's length.
     static let recentLimit = 12
     /// The list's last row can rise this far above the bottom edge: clear of the fade and the hints bar.
-    static let bottomRoom: CGFloat = 176
+    static let bottomRoom: CGFloat = hintsBand + bottomFade
     /// The fades at the list's edges.
     static let topFade: CGFloat = 40
     static let bottomFade: CGFloat = 110
-    /// Keep the home-aligned hints (16 inset, 30 badges) and some breathing room clear of the rows.
-    static let hintsBand: CGFloat = 66
+    /// The shared footer stays entirely clear of rows, below the fade.
+    static let hintsBand: CGFloat = SeleneBottomScrim.contentClearance
     static let rowSpacing: CGFloat = 16
     /// Room for the focus ring around the rows.
     static let ring: CGFloat = 6
@@ -440,6 +440,8 @@ private struct AchievementsList: View {
         // The rows fade out above the hints bar, gone before its buttons, and at the top once the list has
         // scrolled: no row sits under a button. No chevrons (maintainer's choice): the fades alone say there is more.
         .mask(mask(atTop: scroll.state.atTop))
+        .contentShape(Path(CGRect(x: 0, y: 0, width: width,
+                                  height: max(0, height - canvas.u(Screen.hintsBand)))))
     }
 
     /// Opaque in the middle; the top fades only once rows have scrolled past it; the bottom always fades out,

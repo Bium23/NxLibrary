@@ -63,7 +63,7 @@ struct ScreenshotViewer: View {
                 Spacer(minLength: 0)
                 SeleneHintsBar(left: [HintItem(.b, L10n.text("Back"))],
                                right: [HintItem(.lb, "‹"), HintItem(.rb, "›")],
-                               bottom: 40, leftInset: 18)
+                               bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

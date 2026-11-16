@@ -383,6 +383,8 @@ public struct SpotlightView: View {
             // The page fades out short of the window's edges, top and bottom.
             .frame(width: canvas.stageSize.width, height: canvas.size.height, alignment: .topLeading)
             .mask(pageMask)
+            .contentShape(Path(CGRect(x: 0, y: 0, width: canvas.stageSize.width,
+                                      height: max(0, canvas.size.height - canvas.u(SeleneBottomScrim.contentClearance)))))
 
             // Off the row, the page has risen: there is more above (More like this is the end).
             SpotlightUpHint()
@@ -782,7 +784,7 @@ public struct SpotlightView: View {
         let storeTop = canvas.u(420) + (blocks[.head] ?? 0) + canvas.u(Self.storeGap)
         let target = canvas.u(150) - storeTop - canvas.u(ModStoreLayout.top(of: at, in: kinds))
         let bottom = storeTop + canvas.u(ModStoreLayout.top(of: kinds.count, in: kinds)) + canvas.u(90)
-        let end = canvas.size.height - canvas.u(130) - bottom
+        let end = canvas.size.height - canvas.u(Self.pageBottomInset) - bottom
         return min(first, max(target, end))
     }
 
@@ -851,14 +853,14 @@ public struct SpotlightView: View {
             return first
         case .strip:
             // Keep the strip clear of the hints on the window's bottom edge.
-            return min(first, canvas.size.height - canvas.u(130) - stripBottom)
+            return min(first, canvas.size.height - canvas.u(Self.pageBottomInset) - stripBottom)
         case .about, .actions, .mods, .more, .achievements:
             // The bands report a height only when they are shown.
             let more = h(.more) > 0
             let pageBottom = stripBottom + h(.description) + h(.mods) + (more ? h(.more) : 0)
             let rest = SpotlightPageScroll.resting(
                 first: first, aboutTop: aboutTop, moreTop: more ? moreTop : nil, pageBottom: pageBottom,
-                top: canvas.u(150), viewport: canvas.size.height, bottomInset: canvas.u(130))
+                top: canvas.u(150), viewport: canvas.size.height, bottomInset: canvas.u(Self.pageBottomInset))
             switch area {
             case .actions, .achievements: return rest.actions
             case .more: return rest.more
@@ -868,11 +870,11 @@ public struct SpotlightView: View {
                 return SpotlightPageScroll.resting(
                     first: first, aboutTop: aboutTop, moreTop: modsTop,
                     pageBottom: pageBottom, top: canvas.u(150), viewport: canvas.size.height,
-                    bottomInset: canvas.u(130)).more
+                    bottomInset: canvas.u(Self.pageBottomInset)).more
             default:
                 // Read more (or Show less, under the whole text) comes into view.
                 return SpotlightPageScroll.revealing(rest.actions, bottom: aboutTop + h(.about),
-                                                     viewport: canvas.size.height, bottomInset: canvas.u(130))
+                                                     viewport: canvas.size.height, bottomInset: canvas.u(Self.pageBottomInset))
             }
         }
     }
@@ -880,7 +882,10 @@ public struct SpotlightView: View {
     /// The page's edges, in canvas units: clear up to `clear` from the window's
     /// edge, solid from `solid` (the top bar's breathing room, top and bottom).
     static let pageEdge = (top: (clear: CGFloat(28), solid: CGFloat(84)),
-                           bottom: (clear: CGFloat(36), solid: CGFloat(100)))
+                           bottom: (clear: SeleneBottomScrim.contentClearance,
+                                    solid: SeleneBottomScrim.contentClearance + 64))
+    /// A focused band clears both the footer and its fade, with space for its ring.
+    static let pageBottomInset: CGFloat = pageEdge.bottom.solid + 30
 
     private var pageMask: some View {
         let height = max(canvas.size.height, 1)

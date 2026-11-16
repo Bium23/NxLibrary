@@ -374,3 +374,15 @@ maintainer e limiti noti. In breve:
   Steam.
 - Un gioco che Steam sta scaricando appare subito, in bianco e nero con il simbolo che pulsa, guida la riga fino
   all’uscita e diventa giocabile da solo quando Steam finisce.
+
+
+### Posizione condivisa dei comandi (16 novembre 2026, in attesa di validazione umana)
+
+Le barre `SeleneHintsBar` usano il margine inferiore dei Settings: 48 unità Selene
+(`SeleneBottomScrim.hintsBottom`), con simboli da 30 unità invariati e margine sinistro
+aggiuntivo di 18. La configurazione precedente resta nel commit locale `0c0f885`.
+Le schermate con barra in un VStack riservano lo spazio nel layout; Spotlight e
+Achievements riservano invece una fascia trasparente di 100 unità e tengono il focus
+sopra la sfumatura inferiore. In Details la barra è ancorata alla finestra, il contenuto
+sparisce prima dei comandi e le fasce in focus salgono insieme alla barra. La posizione
+si condivide anche con le opzioni, il visualizzatore di screenshot e le schermate Home.
