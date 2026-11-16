@@ -431,6 +431,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/Views/Components/SeleneHintsBar.swift](../Sources/NXLibrary/Views/Components/SeleneHintsBar.swift) | Disegna i suggerimenti contestuali alla posizione condivisa, con grandezza dei simboli invariata. |
 | [Sources/NXLibrary/Views/Components/SeleneHomeChrome.swift](../Sources/NXLibrary/Views/Components/SeleneHomeChrome.swift) | Rende elementi condivisi della cornice e dei controlli della home Selene. |
 | [Sources/NXLibrary/Views/Components/SeleneOptionRow.swift](../Sources/NXLibrary/Views/Components/SeleneOptionRow.swift) | Disegna righe di opzioni con icona, titolo, descrizione, focus e contenuto laterale. |
+| [Sources/NXLibrary/Views/Components/SeleneExpandableText.swift](../Sources/NXLibrary/Views/Components/SeleneExpandableText.swift) | Rivela la descrizione completa animando l'altezza fra due layout di testo stabili; usato solo dalle righe dei metadati. |
 | [Sources/NXLibrary/Views/Components/SelenePillButton.swift](../Sources/NXLibrary/Views/Components/SelenePillButton.swift) | Disegna il pulsante pill condiviso da azioni e dialoghi. |
 | [Sources/NXLibrary/Views/Components/SelenePromptBadge.swift](../Sources/NXLibrary/Views/Components/SelenePromptBadge.swift) | Rende simbolo o etichetta del pulsante del controller o della tastiera. |
 | [Sources/NXLibrary/Views/Components/SeleneReveal.swift](../Sources/NXLibrary/Views/Components/SeleneReveal.swift) | Applica l’animazione di comparsa Selene rispettando la preferenza Riduci movimento. |
@@ -686,6 +687,7 @@ Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua rig
 | [Sources/NXLibrary/Views/Settings/LocalePicker.swift](../Sources/NXLibrary/Views/Settings/LocalePicker.swift) | Scelta diretta della lingua e ricerca dei formati regionali, con focus tastiera/controller e codici stabili. |
 | [Tests/NXLibraryCoreTests/AppLocaleTests.swift](../Tests/NXLibraryCoreTests/AppLocaleTests.swift) | Preferenze, migrazione, formati, ricerca, identità e traduzioni native. |
 | [scripts/check_localizations.py](../scripts/check_localizations.py) | Verifica copertura, placeholder, plurali e risorse nel bundle installato. |
+| [scripts/check_metadata_text_layout.swift](../scripts/check_metadata_text_layout.swift) | Verifica fuori schermo il layout delle descrizioni e la destinazione dello scroll dopo cambi di focus, anche rapidi e con Riduci movimento. |
 | [Tests/PublicationChecks/test_localizations.py](../Tests/PublicationChecks/test_localizations.py) | Rifiuto di cataloghi incompleti e bundle senza risorse. |
 
 ### Profilo di sviluppo del launcher

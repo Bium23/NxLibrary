@@ -544,6 +544,27 @@ chiusura durante il caricamento. Stato: **in attesa di validazione umana**.
 
 #### Fonti pubbliche dei metadati — ambito approvato, 16 novembre 2026
 
+Correzione del movimento nel selettore: il cambio di focus sostituiva istantaneamente
+l'estratto (240 caratteri) con il testo completo e avviava separatamente uno scroll
+centrato, anche per righe più alte della finestra. `SeleneExpandableText` conserva i
+due layout alla stessa larghezza: `Layout` risolve subito la geometria finale,
+mentre SwiftUI anima i frame e la dissolvenza tra estratto e testo completo
+([contratto SwiftUI](https://developer.apple.com/documentation/swiftui/layout)).
+Interpolare le misure dentro `Layout` sposterebbe il bersaglio di `scrollTo`
+durante la chiusura della riga precedente; la sonda fuori schermo ha riprodotto
+questo errore e verificato l'allineamento con misure finali stabili.
+Il selettore usa la stessa curva per espansione e scroll, con allineamento iniziale
+per leggere il titolo delle descrizioni lunghe. Riduci movimento disattiva entrambi.
+L'opzione è locale ai metadati: gli altri `SeleneOptionRow` restano invariati. Nessuna
+modifica a richieste, cache, testi salvati o selezione delle fonti.
+
+`scripts/check_metadata_text_layout.swift` verifica fuori schermo le altezze a tre
+larghezze, il cambio di contenuto e le destinazioni dello scroll durante cambi
+di focus ripetuti, anche con Riduci movimento; non misura frame rate o fluidità reale.
+Da verificare nella Dev: su/giù ripetuti fra descrizioni corte e molto lunghe, scroll
+manuale fino alla fine, Q/E, scelta/salvataggio e Riduci movimento. Correzione del
+movimento **in attesa di validazione umana**.
+
 Il maintainer ha approvato LaunchBox e TheGamesDB come alternative nel medesimo
 selettore per i giochi già gestiti. La ricerca usa titolo/edizione e piattaforma,
 non il negozio: lo Steam ID rimane un aiuto dove supportato, non un prerequisito.

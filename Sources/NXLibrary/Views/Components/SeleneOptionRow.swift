@@ -11,6 +11,8 @@ struct SeleneOptionRow<Trailing: View>: View {
     var destructive = false
     /// False draws the row dim (ink60 text and icon), as Selene's disabled pills do. It still takes focus.
     var enabled = true
+    /// Opt-in focus expansion; other option screens keep their existing layout.
+    var aboutPreview: String? = nil
     @ViewBuilder var trailing: () -> Trailing
 
     var body: some View {
@@ -24,7 +26,13 @@ struct SeleneOptionRow<Trailing: View>: View {
                     .seleneFont(21, .medium)
                     .foregroundColor(destructive ? SeleneTheme.danger : (enabled ? SeleneTheme.ink : SeleneTheme.ink60))
                 if let about {
-                    Text(about)
+                    Group {
+                        if let aboutPreview {
+                            SeleneExpandableText(text: about, preview: aboutPreview, expanded: focused)
+                        } else {
+                            Text(about)
+                        }
+                    }
                         .seleneFont(15)
                         .foregroundColor(SeleneTheme.ink60)
                         .fixedSize(horizontal: false, vertical: true)

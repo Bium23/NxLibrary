@@ -233,18 +233,23 @@ struct ChangeMetadataView: View {
                 }
                 .padding(.top, canvas.u(6))
                 .padding(.bottom, canvas.u(24))
+                // Expansion and focus scrolling share one curve; the text itself
+                // stays laid out at its final width throughout the transition.
+                .animation(reduceMotion ? nil : SeleneTheme.quick, value: focus)
             }
             .scrollIndicators(.hidden)
             .onChange(of: focus) { index in
-                withAnimation(reduceMotion ? nil : SeleneTheme.quick) { proxy.scrollTo(index, anchor: .center) }
+                // A description can exceed the viewport: reveal its beginning,
+                // rather than centring it with the heading already off screen.
+                withAnimation(reduceMotion ? nil : SeleneTheme.quick) { proxy.scrollTo(index, anchor: .top) }
             }
         }
     }
 
     private func rowView(_ row: Row, focused: Bool) -> some View {
         let text = describe(row)
-        return SeleneOptionRow(icon: icon(row), title: text.title, about: excerpt(text.value, full: focused),
-                               focused: focused, enabled: enabled(row)) {
+        return SeleneOptionRow(icon: icon(row), title: text.title, about: text.value,
+                               focused: focused, enabled: enabled(row), aboutPreview: excerpt(text.value)) {
             if isCurrent(row) {
                 MaterialIconView(.check, size: 26).foregroundColor(SeleneTheme.focus)
             }
@@ -290,8 +295,8 @@ struct ChangeMetadataView: View {
     }
 
     /// Long descriptions show in full only on the focused row.
-    private func excerpt(_ value: String?, full: Bool) -> String? {
-        guard let value, !full, value.count > 240 else { return value }
+    private func excerpt(_ value: String?) -> String? {
+        guard let value, value.count > 240 else { return nil }
         return String(value.prefix(240)).trimmingCharacters(in: .whitespaces) + "…"
     }
 
