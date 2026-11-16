@@ -111,7 +111,7 @@ struct CardGeometryGroup: ViewModifier {
 
 extension DetailsAchievementsCard {
     /// Every achievement unlocked: the card names the reward instead of counting (layout "A", 16 Nov 2026).
-    private var complete: Bool { summary.total > 0 && summary.unlocked == summary.total }
+    private var complete: Bool { summary.isComplete }
 
     /// Complete, the tier's name ("Arcane"); otherwise "3/41", the unlocked count bright and the total dimmer.
     private var headline: some View {

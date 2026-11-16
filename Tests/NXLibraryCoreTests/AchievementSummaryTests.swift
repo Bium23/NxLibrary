@@ -15,6 +15,12 @@ final class AchievementSummaryTests: XCTestCase {
         XCTAssertEqual(summary.percentComplete, 34)
     }
 
+    func testCompleteOnlyWithEveryAchievementUnlocked() {
+        XCTAssertTrue(AchievementSummary(achievements: [a("A", at: 1), a("B", at: 2)], percents: [:]).isComplete)
+        XCTAssertFalse(AchievementSummary(achievements: [a("A", at: 1), a("B")], percents: [:]).isComplete)
+        XCTAssertFalse(AchievementSummary(achievements: [], percents: [:]).isComplete)
+    }
+
     func testEmptyIsZeroPercent() {
         XCTAssertEqual(AchievementSummary(achievements: [], percents: [:]).percentComplete, 0)
     }

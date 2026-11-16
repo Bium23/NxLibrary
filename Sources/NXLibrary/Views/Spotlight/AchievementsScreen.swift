@@ -9,6 +9,9 @@ import NXLibraryCore
 /// `AchievementsScreen.handle`. Present it as an overlay inside the canvas root so the canvas scaling applies.
 struct AchievementsScreen: View {
     @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.seleneReduceMotion) private var reduceMotion
+    /// The earned Arcane comes to colour just after the screen opens (`arcaneHero`).
+    @State private var arcaneLit = false
     @ObservedObject private var logos = SteamLogoCache.shared
     @ObservedObject private var picks = SteamPersonalizations.shared.artwork
     @ObservedObject var model: AchievementsScreenModel
@@ -155,7 +158,7 @@ struct AchievementsScreen: View {
     /// The completion as one gauge, read top to bottom: the large percentage, its bar, the count and the newest
     /// unlock, all left-aligned and as wide as the widest of them. Beside it Arcane, Gold, Silver, Bronze with
     /// unlocked/total under each, as PS5 trophies, dimmed while not earned (only Arcane until Steam's rarity
-    /// arrives).
+    /// arrives). Arcane earned, it stands large above the other three instead (`arcaneHero`).
     private var progress: some View {
         HStack(alignment: .center, spacing: canvas.u(48)) {
             gauge
@@ -188,17 +191,50 @@ struct AchievementsScreen: View {
         .accessibilityLabel(L10n.format("Achievements: %d of %d", [summary.unlocked, summary.total]))
     }
 
+    @ViewBuilder
     private var board: some View {
+        if summary.isComplete {
+            VStack(spacing: canvas.u(16)) {
+                arcaneHero
+                if summary.hasRarity { tierRow([.gold, .silver, .bronze], size: 48, font: 16) }
+            }
+        } else {
+            tierRow(summary.hasRarity ? AchievementTier.allCases : [.arcane], size: 64, font: 18)
+        }
+    }
+
+    /// Arcane earned (design `docs/private/achievements-arcane-hero-2026-11-16-design.md`, 16 Nov 2026): the
+    /// card's looping orb, large and without its "1 / 1", coming to colour just after the screen opens and playing
+    /// while it stays open (still, in colour, with Reduce motion). The still orb without the video.
+    @ViewBuilder
+    private var arcaneHero: some View {
+        Group {
+            if let video = AchievementTier.arcane.videoURL {
+                ArcaneOrbVideo(url: video, active: arcaneLit, moves: !reduceMotion)
+            } else {
+                TierCrystal(tier: .arcane, size: 128)
+            }
+        }
+        .frame(width: canvas.u(128), height: canvas.u(128))
+        .task {
+            // After the orb's first, grey state is drawn, so the change to colour is seen.
+            try? await Task.sleep(nanoseconds: 150_000_000)
+            arcaneLit = true
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(AchievementTier.arcane.displayName()), \(L10n.text("All achievements"))")
+    }
+
+    private func tierRow(_ tiers: [AchievementTier], size: CGFloat, font: CGFloat) -> some View {
         let counts = summary.tierCounts
-        let tiers = summary.hasRarity ? AchievementTier.allCases : [.arcane]
         return HStack(alignment: .top, spacing: canvas.u(26)) {
             ForEach(tiers, id: \.self) { tier in
                 let count = counts[tier] ?? TierCount(unlocked: 0, total: 0)
                 VStack(spacing: canvas.u(6)) {
-                    TierCrystal(tier: tier, size: 64, dimmed: count.unlocked == 0)
+                    TierCrystal(tier: tier, size: size, dimmed: count.unlocked == 0)
                     (Text("\(count.unlocked)").foregroundColor(SeleneTheme.ink)
                      + Text(" / \(count.total)").foregroundColor(SeleneTheme.ink75))
-                        .seleneFont(18, .semibold)
+                        .seleneFont(font, .semibold)
                         .monospacedDigit()
                         // Its own width, never a share of the crystal's: squeezed, "0 / 13" read "0…".
                         .fixedSize()

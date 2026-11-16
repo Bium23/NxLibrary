@@ -4,7 +4,8 @@ import AVFoundation
 import NXLibraryCore
 
 /// The Arcane orb as the maintainer's looping video (`AchievementTier.videoURL`), for the achievements card
-/// (design `docs/private/arcane-video-2026-11-16-design.md`, 16 Nov 2026). At rest it is the current frame in grey;
+/// (design `docs/private/arcane-video-2026-11-16-design.md`, 16 Nov 2026) and, always active, the earned Arcane
+/// on the Achievements screen. At rest it is the current frame in grey;
 /// active (hover or focus) it comes to colour and plays; inactive again it stops on its frame and greys. The
 /// next appearance, on any page, resumes from that frame.
 ///

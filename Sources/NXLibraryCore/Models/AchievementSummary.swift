@@ -49,6 +49,9 @@ public struct AchievementSummary: Equatable, Sendable {
             .sorted { Self.commoner($0.1.percent, $0.0, than: $1.1.percent, $1.0) }.map(\.1)
     }
 
+    /// Every achievement unlocked, which earns Arcane; never without achievements.
+    public var isComplete: Bool { total > 0 && unlocked == total }
+
     /// Rounded to a whole percent; 0 without achievements.
     public var percentComplete: Int {
         total > 0 ? Int((Double(unlocked) * 100 / Double(total)).rounded()) : 0
@@ -63,7 +66,7 @@ public struct AchievementSummary: Equatable, Sendable {
     /// achievements); the others count the achievements whose rarity is known.
     public var tierCounts: [AchievementTier: TierCount] {
         var counts: [AchievementTier: TierCount] = [
-            .arcane: TierCount(unlocked: total > 0 && unlocked == total ? 1 : 0, total: total > 0 ? 1 : 0),
+            .arcane: TierCount(unlocked: isComplete ? 1 : 0, total: total > 0 ? 1 : 0),
         ]
         for tier in [AchievementTier.gold, .silver, .bronze] {
             counts[tier] = TierCount(unlocked: unlockedRows.filter { $0.tier == tier }.count,
@@ -75,7 +78,7 @@ public struct AchievementSummary: Equatable, Sendable {
     /// The best crystal earned, for the page's card: Arcane with everything unlocked, otherwise the rarest tier
     /// among the unlocked achievements; nil with nothing unlocked or while their rarity is unknown.
     public var bestTier: AchievementTier? {
-        if total > 0 && unlocked == total { return .arcane }
+        if isComplete { return .arcane }
         let earned = Set(unlockedRows.compactMap(\.tier))
         return AchievementTier.allCases.first { earned.contains($0) }
     }
