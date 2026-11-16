@@ -43,18 +43,7 @@ Ramo: `bium/library-manager` (rilascio grande, non pubblicato). Aggiornato al 15
 
 ## Stato di validazione
 
-Ogni parte è implementata e provata automaticamente (1566 test). Conta come validata solo dopo la prova del
-maintainer in NX Library Dev.
-
-| Parte | Stato |
-|---|---|
-| Catalogo comune, fonti, libreria mista | in attesa di validazione umana |
-| Metadati store e arte | in attesa di validazione umana |
-| Pagina condivisa, Opzioni, personalizzazioni | in attesa di validazione umana |
-| Play, schermata di lancio, domande di Steam, Steam in background | in attesa di validazione umana |
-| Ore di gioco | in attesa di validazione umana |
-| Achievement | in attesa di validazione umana; aspetto della pagina da rivedere (richiesta del maintainer) |
-| Giochi in download, osservazione dei manifest, ordine della riga | aspetto approvato dal maintainer il 15 nov 2026; fine download e controlli di accettazione ancora da provare |
+Lo stato di ogni parte Steam sta nell'elenco unico [validation.md](validation.md). Una parte conta come validata solo dopo la prova del maintainer in NX Library Dev.
 
 ## File di Steam letti
 

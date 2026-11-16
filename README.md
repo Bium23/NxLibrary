@@ -345,7 +345,10 @@ More to come as NX Library evolves.
 | [Screenshots and demo](docs/media/README.md) | Screenshot inventory, placement and the upcoming video. |
 | [Contributing](CONTRIBUTING.md) | Change and verification guidelines. |
 | [Security](SECURITY.md) | Private vulnerability reporting and handling sensitive files. |
-| [Technical guide](docs/architecture.md) | Current architecture and feature flows, in Italian. |
+| [Technical guide](docs/architecture.md) | How each area works today, in Italian. |
+| [How to build](docs/conventions.md) | Where new code goes and the recipes to follow, in Italian. |
+| [Flows](docs/flows.md) | End-to-end flows with diagrams, in Italian. |
+| [Validation status](docs/validation.md) | What the maintainer has tested and what is still pending, in Italian. |
 | [File catalog](docs/file-map.md) | Responsibility of every project file, in Italian. |
 | [Steam](docs/steam.md) | Steam integration: files read, game states, launch, playtime, achievements, limits; in Italian. |
 | [Engine upgrade notes](docs/upstream-upgrades/README.md) | Pin changes and their evidence. |

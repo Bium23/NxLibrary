@@ -1,6 +1,21 @@
 # NX Library — agent guidance
 
-A personal macOS SwiftUI front-end for upstream [nxnative](https://github.com/seedds/nxnative). Read `README.md` and `docs/architecture.md` before changing behavior.
+A personal macOS SwiftUI front-end for upstream [nxnative](https://github.com/seedds/nxnative). Before changing behavior, read in this order: this file, `docs/architecture.md` (how each area works), `docs/conventions.md` (where new code goes and how it is built), `docs/flows.md` (end-to-end paths), the area's own document if it has one (for example `docs/steam.md`), then the files through `docs/file-map.md`.
+
+## Documentation
+
+The documentation is how the next session understands the structure. Keep it exact.
+
+- **Build on the existing structure.** Every new piece follows a recipe in `docs/conventions.md` and its named example. If no recipe fits, propose one to the maintainer; once approved, add it to `conventions.md` before or with the code. Never invent a second way to do something the codebase already does.
+- **Same commit, same truth.** A change updates, in the same commit:
+  - its row in `docs/file-map.md`, placed in its area section, and the total;
+  - its area in `docs/architecture.md` (or the area's own document);
+  - `docs/flows.md`, if a flow changed;
+  - `docs/validation.md`, if something new awaits validation or the maintainer confirmed something.
+- **Present tense only.** `architecture.md`, `conventions.md`, `flows.md` and area documents describe what the code does now. Put history in `CHANGELOG.md`, dated notes (`docs/upstream-upgrades/`, `docs/reviews/`) or git. Keep the *why* of a choice next to it in one sentence. Move measurements and probe evidence to a dated note in `docs/reviews/` and link it.
+- **One validation list.** Validation status lives only in `docs/validation.md`. A row becomes validated only on the maintainer's confirmation.
+- **No appended sections.** New features go into the section of their area, never into a dated section at the end of a guide or of the file map. If an area grows a document of its own, add it to the reading order above.
+- **Readable docs.** Use short paragraphs, lists and tables; avoid single lines of thousands of characters. Name real types and files. Verify every claim against the code before writing it.
 
 ## Non-negotiables
 

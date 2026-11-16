@@ -1,0 +1,162 @@
+# NX Library — i flussi principali
+
+Ogni flusso segue un'azione dall'input all'effetto, nominando i tipi che se ne occupano. I dettagli e le regole di ogni passo sono nella sezione dell'area in [architecture.md](architecture.md); come costruire un pezzo nuovo è in [conventions.md](conventions.md). Se un flusso cambia, il suo schema si aggiorna nello stesso commit.
+
+- [1. Avvio dell'app](#1-avvio-dellapp)
+- [2. Dal disco alla libreria](#2-dal-disco-alla-libreria)
+- [3. Play di un gioco Switch (nxnative)](#3-play-di-un-gioco-switch-nxnative)
+- [4. Play di un gioco Steam](#4-play-di-un-gioco-steam)
+- [5. Costruire un gioco Switch (Add Game)](#5-costruire-un-gioco-switch-add-game)
+- [6. Importare o ripristinare un salvataggio](#6-importare-o-ripristinare-un-salvataggio)
+- [7. Installare una mod](#7-installare-una-mod)
+- [8. Cambiare un'impostazione](#8-cambiare-unimpostazione)
+- [9. Aggiornare l'app](#9-aggiornare-lapp)
+
+## 1. Avvio dell'app
+
+```mermaid
+flowchart TD
+    A["NXLibraryApp (@main)"] --> B["DevelopmentStartupView<br/>AppData.prepare: profilo release o Dev"]
+    B --> C["AppSettingsStore · lingua (AppLocalization)"]
+    C --> D["CatalogStore legge catalog.json<br/>(conversione da library.json se serve)"]
+    D -->|"archivio danneggiato"| R["Recupero esplicito: Retry / ripristino backup"]
+    D --> E["AppShellState prepara coordinatore, router, tema"]
+    E --> F["AppShellView: AppViewModel, store, monitor, updater"]
+    F --> G{"Primo avvio completato?<br/>(FirstRunSetup)"}
+    G -->|"no"| H["Setup: Get ready → Your games"]
+    G -->|"sì"| I["Intro (se attiva) → Spotlight"]
+    F --> J["In background: recuperi dei salvataggi, installazioni in attesa,<br/>scansione Steam se attivo, controllo engine se attivo, aggiornamenti"]
+```
+
+Punti fissi:
+- Gli store si costruiscono una volta sola, prima della shell.
+- Un archivio illeggibile non diventa mai una libreria vuota.
+- La Dev legge e scrive solo nel suo profilo.
+
+## 2. Dal disco alla libreria
+
+```mermaid
+flowchart TD
+    subgraph NX["Switch (nxnative)"]
+        N1["Cartella Game apps"] --> N2["ImportService<br/>DMTitleID o org.nxnative.*"]
+        N2 --> N3["NXNativeLibraryMerge<br/>conserva impostazioni, preferiti, build"]
+    end
+    subgraph ST["Steam"]
+        S1["libraryfolders.vdf + manifest"] --> S2["SteamLibrarySource<br/>(worker annullabile, limiti)"]
+        S2 --> S3["SteamCatalogReconciler<br/>ticket di revisione e radice"]
+        S4["SteamManifestWatcher (FSEvents)"] --> S2
+    end
+    N3 --> W["CatalogRepository<br/>unico writer di catalog.json"]
+    S3 --> W
+    W --> P["CatalogLibraryProjection<br/>solo fonti attive"]
+    P --> V["Spotlight · Collection · Ricerca<br/>(stessi UUID, filtri, ordine)"]
+```
+
+Punti fissi:
+- Una scansione aggiorna solo ciò che ha osservato; un'assenza non cancella nulla.
+- Un risultato superato da un cambio di cartella o di fonte non si applica.
+
+## 3. Play di un gioco Switch (nxnative)
+
+```mermaid
+flowchart TD
+    A["Play (GamePrimaryActions)"] --> B["AppViewModel.launchGame"]
+    B --> C{"Possibile ora?"}
+    C -->|"operazione sui salvataggi o recupero"| X["Attesa / spiegazione"]
+    C -->|"icona in firma"| Y["Dialogo Preparing (IconLaunchWait)"]
+    C -->|"sì"| D["SaveOperationGate: lease del titolo"]
+    D --> E["GameRuntimeConfig → variabili DM_*<br/>LauncherSettings dal launcher.json"]
+    E --> F["CloudSavesPreferences applica la scelta cloud"]
+    F --> G["LaunchService scrive env.txt e apre l'app<br/>(NSWorkspace)"]
+    G --> H["LaunchCoverWindow + LaunchMotion<br/>finché LaunchReadinessProbe vede una finestra"]
+    H --> I["RunningGameMonitor · PlaySessionStore (heartbeat)"]
+    I --> J["Fine: sessione salvata → SessionCard<br/>GameFocus/LibraryWindow riportano la libreria davanti"]
+    J --> K["Dopo la chiusura: icone, installazioni in attesa"]
+```
+
+## 4. Play di un gioco Steam
+
+```mermaid
+flowchart TD
+    A["Play (GamePrimaryActions)"] --> B["SteamPlayCoordinator"]
+    B --> C["steam://run/AppID al client di Valve"]
+    C --> D["SteamPlayState / SteamBackgroundLaunch<br/>attesa del processo del gioco"]
+    D -->|"Steam fa una domanda"| Q["SteamLaunchQuestions dal console_log"]
+    D --> E["LaunchCoverWindow finché il gioco disegna"]
+    E --> F["PlaySessionStore registra la sessione reale"]
+    F --> G["Fine: SessionCard · SteamReturnFocus"]
+    G --> H["SteamPlaytimeSync rilegge le ore da localconfig.vdf"]
+```
+
+Arcane non scrive mai i file di Steam e non apre l'app del gioco direttamente. Dettagli in [steam.md](steam.md).
+
+## 5. Costruire un gioco Switch (Add Game)
+
+```mermaid
+flowchart TD
+    A["AddGameView: file o cartelle"] --> B["SourceCatalog · ExtractedSourceCatalog · NUPSourceCatalog<br/>base, update, DLC"]
+    B --> C["SourceSelection: titolo e versioni scelte"]
+    C --> D["KeyCheck (se le sorgenti sono cifrate)"]
+    D --> E["Review: GameAppDestination, GameRuntimeConfig.forReview"]
+    E --> F{"Gate: CompatibilityChecker<br/>Metal certificato o override"}
+    F -->|"bloccato"| Z["Spiegazione (ToolchainGateCopy)<br/>Play delle app esistenti resta attivo"]
+    F -->|"ok"| G["WorkspaceManager + BuildScratch"]
+    G --> H["BuildCommandBuilder → BuildService<br/>processo dell'engine nxnative"]
+    H --> I["BuildEventParser → PortingProgress<br/>tile, percentuale, ETA"]
+    I --> J["BuildOutputInstaller: scambio atomico"]
+    J -->|"gioco aperto o installazione fallita"| K["PendingInstall: Retry più tardi"]
+    J --> L["CatalogRepository: BuildRecord, toolchain"]
+    L --> M["AppIconWriter (se c'è un'icona scelta) · notifica"]
+```
+
+## 6. Importare o ripristinare un salvataggio
+
+```mermaid
+flowchart TD
+    A["SavesPanel"] --> B["SavePanelModel"]
+    B --> C["AppViewModel+Saves: SaveLocation, identità, cloud"]
+    C -->|"cloud attivo o gioco aperto"| X["Rifiuto con motivo (SaveFailure)"]
+    C --> D["SaveOperationGate: lease"]
+    D --> E["SaveSnapshotStore.stageImport / SaveRestorePreview<br/>copia accanto, hash, anteprima From → To"]
+    E --> F["Conferma: si ricontrollano sorgente, staging e salvataggio attuale"]
+    F --> G["SaveTransaction: backup verificato → journal → scambio"]
+    G --> H["SeleneSuccessNotice"]
+    G -.->|"interruzione"| I["Al prossimo avvio: rollback o verifica dal journal<br/>Play attende"]
+```
+
+## 7. Installare una mod
+
+```mermaid
+flowchart TD
+    A["Fascia Mods o card Mods (store)"] --> B["GameBananaMatch: pagina del gioco"]
+    B --> C["AvailableModsFinder + ModSupport<br/>solo mod RomFS che funzionano"]
+    C --> D["ModDetailPanel: Install"]
+    D --> E["ModDownload (host GameBanana) · dimensione e MD5"]
+    E --> F["ModInstaller: bsdtar, niente .. / link"]
+    F --> G["ModStore.adopt: ordine e stato in mods/TID.json"]
+    G --> H["EnvFileEditor scrive DM_ROMFS_OVERLAY in env.txt"]
+    H --> I["L'engine legge le mod al prossimo avvio del gioco"]
+```
+
+## 8. Cambiare un'impostazione
+
+```mermaid
+flowchart TD
+    A["Riga in Settings (SettingsCatalog)"] --> B["AppSettings modificato"]
+    B --> C["AppSettingsStore.save: file temporaneo e sostituzione"]
+    C -->|"errore"| X["Dialogo Selene con Retry"]
+    C --> D["Pubblicazione: le viste si aggiornano"]
+    A --> E["Search e Changed leggono lo stesso catalogo"]
+```
+
+## 9. Aggiornare l'app
+
+```mermaid
+flowchart TD
+    A["AppUpdater: release su GitHub"] --> B{"AppUpdate.mayInstall<br/>versione più nuova e copia installabile"}
+    B -->|"no (copia Dev o sola lettura)"| X["Solo note di rilascio"]
+    B --> C["AppUpdateDownload: dimensione dichiarata, host GitHub"]
+    C --> D["validate_update.py: struttura e percorsi"]
+    D --> E["SaveOperationGate: esclusione globale"]
+    E --> F["Controllo di versione, identità e firma → sostituzione → riavvio"]
+```

@@ -146,7 +146,7 @@ These are distribution decisions. Do not bypass the dirty-tree check, change the
 | `scripts/` | Runtime preparation, app packaging, installation helpers, release packaging and publication checks. |
 | `docs/` | Current guides, audits, dated designs and engine-adoption evidence. |
 
-For component interactions, read the [architecture guide](architecture.md). For the role of every individual file, use the [file catalog](file-map.md). Screenshots and demo placement are described in the [media guide](media/README.md).
+For component interactions, read the [architecture guide](architecture.md); for where new code goes, the [conventions](conventions.md); for end-to-end paths, the [flows](flows.md). For the role of every individual file, use the [file catalog](file-map.md). Screenshots and demo placement are described in the [media guide](media/README.md).
 
 ### Localization resources
 
