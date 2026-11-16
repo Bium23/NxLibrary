@@ -3,8 +3,21 @@ import Foundation
 /// Public lookup identity only. Never sends catalog paths, account IDs or play history.
 public struct CriticRatingQuery: Hashable, Codable, Sendable {
     public enum Platform: String, Codable, Sendable {
-        case mac, `switch`
-        var wikidataID: String { self == .mac ? "Q14116" : "Q19610114" }
+        case mac, `switch`, switch2
+        var wikidataID: String {
+            switch self {
+            case .mac: return "Q14116"
+            case .switch: return "Q19610114"
+            case .switch2: return "Q122761124"
+            }
+        }
+        var igdbID: Int {
+            switch self {
+            case .mac: return 14
+            case .switch: return 130
+            case .switch2: return 508
+            }
+        }
     }
     public let name: String
     public let platform: Platform
@@ -14,6 +27,11 @@ public struct CriticRatingQuery: Hashable, Codable, Sendable {
         self.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         self.platform = platform
         self.steamAppID = steamAppID
+    }
+
+    /// Use the same console identity as the game's Details, including Switch 2 titles.
+    public init(game: PortedGame, name: String? = nil) {
+        self.init(name: name ?? game.name, platform: game.isSwitch2 ? .switch2 : .switch)
     }
 }
 

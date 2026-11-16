@@ -1069,7 +1069,7 @@ public struct SpotlightView: View {
 
     private var selectedRatingQuery: CriticRatingQuery? {
         if let game = selectedGame {
-            return CriticRatingQuery(name: viewModel.storeMetadata[game.id]?.name ?? game.name, platform: .switch)
+            return CriticRatingQuery(game: game, name: viewModel.storeMetadata[game.id]?.name)
         }
         guard let game = selectedCatalogGame, let steam = game.steamGame else { return nil }
         return CriticRatingQuery(name: steam.name, platform: .mac, steamAppID: steam.appID)

@@ -449,6 +449,20 @@ cache. La cache IGDB separata è per client pubblico/identità del gioco, senza 
 token, e conserva il voto datato offline. Configurare/rimuovere il provider invalida
 richieste e token e ridisegna la riga tramite una revisione posseduta da `IGDBSettings`.
 
+La verifica di Ocarina of Time (2026-11-16) ha individuato un filtro errato: entrambe
+le pagine passavano sempre Switch (IGDB 130), scartando la scheda Switch 2. La query ora
+deriva la console da `PortedGame.isSwitch2`, come Details, e distingue `switch` da
+`switch2` (IGDB 508; Wikidata Q122761124). Nome/alias esatti e unicità rimangono obbligatori:
+non si allarga il filtro alle due console insieme, evitando di mescolare edizioni omonime.
+La console fa parte della chiave di entrambe le cache: Switch 2 riprova subito senza
+riutilizzare l'assenza salvata come Switch, mentre voti validi e cache esistenti restano
+intatti. Nessuna cancellazione di dati o modifica alle credenziali. Test con dati sintetici
+coprono edizioni omonime, query dai giochi, compatibilità della vecchia identità Switch,
+ripiego Wikidata e un'assenza preesistente. Restano da validare in Dev Ocarina/Switch 2,
+un titolo Switch e uno Steam; non è stata usata una chiave reale dall'agente e il voto
+compare solo se IGDB restituisce una media della critica. Correzione in attesa di
+validazione umana.
+
 `CriticRatingService.preferred` prova IGDB solo con credenziali presenti, poi Wikidata se
 non ottiene un voto. Nessuna impostazione cambia i metadati o la libreria. Test di
 autenticazione/errore usano credenziali inventate: la verifica reale con le credenziali

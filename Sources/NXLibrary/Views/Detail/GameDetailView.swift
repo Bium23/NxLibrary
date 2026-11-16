@@ -289,7 +289,7 @@ struct GameDetailView: View {
                         onHoverLink: { hoverRow($0) },
                         onPressLink: { pressRow($0) },
                         width: DetailsPanel.wideWidth,
-                        ratingQuery: CriticRatingQuery(name: metadata?.name ?? game.name, platform: .switch))
+                        ratingQuery: CriticRatingQuery(game: game, name: metadata?.name))
                     Spacer(minLength: 0)
                 }
                 .frame(width: canvas.u(1700), alignment: .topLeading)

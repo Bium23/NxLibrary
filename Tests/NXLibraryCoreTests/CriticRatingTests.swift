@@ -61,6 +61,15 @@ final class CriticRatingTests: XCTestCase {
         XCTAssertNil(try WikidataRatings.rating(in: payload([score()], second: true), ids: ["Q10", "Q11"], query: query))
         XCTAssertThrowsError(try WikidataRatings.rating(in: Data("{\"error\":{\"code\":\"maxlag\"}}".utf8), ids: ["Q10"], query: query))
     }
+
+    func testSwitch2FallbackUsesItsOwnPlatformWithoutBorrowingSwitchScores() throws {
+        let switch2 = CriticRatingQuery(name: "Fixture", platform: .switch2)
+        let data = try payload([score("81/100", platform: "Q122761124"),
+                                score("92/100", platform: "Q19610114")])
+        XCTAssertEqual(try WikidataRatings.rating(in: data, ids: ["Q10"], query: switch2)?.score, 81)
+        XCTAssertNil(try WikidataRatings.rating(in: payload([score(platform: "Q19610114")]),
+                                              ids: ["Q10"], query: switch2))
+    }
     func testSearchRequiresExactTitleOrAliasNeverAnEditionOrSequel() throws {
         let data = Data("""
         {"search":[{"id":"Q10","label":"Fixture"},{"id":"Q11","label":"Fixture II"},

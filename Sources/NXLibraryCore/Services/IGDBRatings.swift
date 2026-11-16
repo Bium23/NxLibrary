@@ -26,7 +26,7 @@ public enum IGDBRatings {
         let target = normalized(query.name)
         let matching = games.filter { game in
             ([game.name] + (game.alternative_names ?? []).map(\.name)).contains { normalized($0) == target }
-                && (game.platforms ?? []).contains(query.platform == .mac ? 14 : 130)
+                && (game.platforms ?? []).contains(query.platform.igdbID)
         }
         guard matching.count == 1, let game = matching.first else { return nil }
         return game.rating

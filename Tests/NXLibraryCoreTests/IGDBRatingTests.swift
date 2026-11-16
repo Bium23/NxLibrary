@@ -44,6 +44,66 @@ final class IGDBRatingTests: XCTestCase {
         let duplicate = Data(("[" + String(decoding: game, as: UTF8.self).dropFirst().dropLast() + "," + String(decoding: game, as: UTF8.self).dropFirst().dropLast() + "]").utf8)
         XCTAssertNil(try IGDBRatings.rating(in: duplicate, query: query))
     }
+
+    func testRatingQueryUsesTheGamesConsoleAndPreservesLegacySwitchIdentity() throws {
+        var game = PortedGame(name: "Fixture", url: URL(fileURLWithPath: "/tmp/Fixture.app"),
+                              platform: .macApp, sizeBytes: 1, modificationDate: Date(), titleId: "0100000000000000")
+        XCTAssertEqual(CriticRatingQuery(game: game).platform, .switch)
+        game.titleId = "0400000000000000"
+        let query = CriticRatingQuery(game: game, name: "Official Fixture")
+        XCTAssertEqual(query.platform, .switch2)
+        XCTAssertEqual(query.name, "Official Fixture")
+        XCTAssertNil(query.steamAppID)
+        XCTAssertEqual(try JSONDecoder().decode(CriticRatingQuery.self,
+                       from: Data(#"{"name":"Fixture","platform":"switch"}"#.utf8)).platform, .switch)
+        XCTAssertEqual(try JSONDecoder().decode(CriticRatingQuery.self, from: JSONEncoder().encode(query)), query)
+    }
+
+    func testSameTitleOnDifferentConsolesSelectsOnlyTheRequestedEdition() throws {
+        // Synthetic scores: the important regression is identity, not a live game's current rating.
+        let games = Data("""
+        [{"id":1,"name":"Fixture","platforms":[4],"aggregated_rating":99,"aggregated_rating_count":3,"url":"https://www.igdb.com/games/original"},
+         {"id":2,"name":"Fixture","platforms":[508],"aggregated_rating":85,"aggregated_rating_count":2,"url":"https://www.igdb.com/games/remake"},
+         {"id":3,"name":"Fixture","platforms":[130],"aggregated_rating":80,"aggregated_rating_count":2,"url":"https://www.igdb.com/games/switch-edition"}]
+        """.utf8)
+        XCTAssertEqual(try IGDBRatings.rating(in: games, query: .init(name: "Fixture™", platform: .switch2))?.igdbID, 2)
+        XCTAssertEqual(try IGDBRatings.rating(in: games, query: query)?.igdbID, 3)
+        XCTAssertNil(try IGDBRatings.rating(in: games, query: .init(name: "Fixture", platform: .mac)))
+        let originalOnly = Data("""
+        [{"id":1,"name":"Fixture","platforms":[4],"aggregated_rating":99,"aggregated_rating_count":3,"url":"https://www.igdb.com/games/original"}]
+        """.utf8)
+        XCTAssertNil(try IGDBRatings.rating(in: originalOnly, query: .init(name: "Fixture", platform: .switch2)))
+    }
+
+    func testSwitch2RetriesDespiteLegacySwitchMissAndCachesItsOwnResult() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let token = token, query = query
+        let old = IGDBRatingService(directory: root, transport: { request in
+            let data = request.url!.host == "id.twitch.tv" ? token : Data("[]".utf8)
+            return (data, HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+        })
+        let missed = await old.load(query, credentials: credentials)
+        XCTAssertNil(missed.rating)
+        XCTAssertNotNil(missed.fetchedAt)
+        let switch2 = CriticRatingQuery(name: query.name, platform: .switch2)
+        let game = Data(String(decoding: game, as: UTF8.self).replacingOccurrences(of: "[130]", with: "[508]").utf8)
+        let fixed = IGDBRatingService(directory: root, transport: { request in
+            let data = request.url!.host == "id.twitch.tv" ? token : game
+            return (data, HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+        })
+        let found = await fixed.load(switch2, credentials: credentials)
+        XCTAssertEqual(found.rating?.score, 83.5)
+        let cached = IGDBRatingService(directory: root, transport: { _ in
+            XCTFail("Fresh results for either console must remain cached separately")
+            throw URLError(.notConnectedToInternet)
+        })
+        let retained = await cached.load(switch2, credentials: credentials)
+        XCTAssertEqual(retained.rating, found.rating)
+        let priorMiss = await cached.load(query, credentials: credentials)
+        XCTAssertNil(priorMiss.rating)
+        XCTAssertEqual(priorMiss.fetchedAt, missed.fetchedAt)
+    }
     func testTokenAndAPIHostsAreIsolatedAndOfflineCacheSurvives() async throws {
         actor Requests {
             var items: [URLRequest] = []
