@@ -135,9 +135,9 @@ extension DetailsAchievementsCard {
         let count = summary.recentIcons.count
         let middle = Double(max(count - 1, 0)) / 2
         return HStack(spacing: canvas.u(fanned ? 12 : 8)) {
-            ForEach(Array(summary.recentIcons.enumerated()), id: \.offset) { index, icon in
+            ForEach(Array(summary.recentIcons.enumerated()), id: \.offset) { index, row in
                 let side = Double(index) - middle
-                AchievementIcon(appID: appID, file: icon, size: 44, dimmed: summary.unlocked == 0)
+                AchievementIcon(appID: appID, file: row.icon, size: 44, dimmed: summary.unlocked == 0, secret: row.isMasked)
                     .opacity(active ? 1 : 0.88)
                     .scaleEffect(fanned ? 1.04 : 1)
                     .rotationEffect(.degrees(fanned ? side * 5 : 0), anchor: .bottom)

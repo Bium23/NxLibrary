@@ -15,6 +15,9 @@ struct AchievementIcon: View {
     let size: CGFloat
     /// Locked: Steam's gray icon, dimmed a little more on the page.
     var dimmed = false
+    /// A secret not unlocked yet (`AchievementRow.isMasked`): blurred past reading, under the app's lock, as a
+    /// failed port's art (maintainer's idea, 16 Nov 2026). The lock stays bright on a dimmed icon.
+    var secret = false
 
     /// The file whose icon arrived while this view was on screen: only redraws it, the image is in `memory`.
     @State private var loaded: String?
@@ -40,12 +43,20 @@ struct AchievementIcon: View {
                     .resizable()
                     .interpolation(.high)
                     .aspectRatio(contentMode: .fill)
+                    .blur(radius: secret ? canvas.u(size * 0.09) : 0, opaque: true)
                     .transition(.opacity)
             }
         }
         .frame(width: canvas.u(size), height: canvas.u(size))
         .clipShape(shape)
         .opacity(dimmed ? 0.5 : 1)
+        .overlay {
+            if secret {
+                MaterialIconView(.lock, size: max(16, size * 0.36))
+                    .foregroundColor(.white.opacity(0.9))
+                    .shadow(color: .black.opacity(0.55), radius: canvas.u(size * 0.05))
+            }
+        }
         .accessibilityHidden(true)
         .task(id: file) {
             guard let file, Self.memory.object(forKey: Self.key(appID, file)) == nil,

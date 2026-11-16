@@ -92,7 +92,7 @@ struct AchievementDetail: View {
     /// The icon, the thing earned, with its grade on the corner as a trophy's: the tier crystal, a little out of
     /// the icon's square, lifted off it by a soft shadow.
     private func medal(unlocked: Bool) -> some View {
-        AchievementIcon(appID: appID, file: row.icon, size: Self.icon, dimmed: !unlocked)
+        AchievementIcon(appID: appID, file: row.icon, size: Self.icon, dimmed: !unlocked, secret: row.isMasked)
             .overlay(alignment: .bottomTrailing) {
                 if let tier = row.tier {
                     TierCrystal(tier: tier, size: Self.badge, dimmed: !unlocked)

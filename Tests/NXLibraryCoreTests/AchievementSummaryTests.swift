@@ -97,11 +97,18 @@ final class AchievementSummaryTests: XCTestCase {
         XCTAssertTrue(summary.recentIcons.isEmpty)
     }
 
+    /// The card locks and blurs a secret among its gray icons, as the list does.
+    func testRecentIconsSayWhichAreSecret() {
+        let summary = AchievementSummary(achievements: [a("A"), a("H", hidden: true)], percents: [:])
+        XCTAssertEqual(summary.recentIcons.map(\.icon), ["A-g.jpg", "H-g.jpg"])
+        XCTAssertEqual(summary.recentIcons.map(\.isMasked), [false, true])
+    }
+
     func testRecentIconsFallBackToLockedGray() {
         let none = AchievementSummary(achievements: [a("A"), a("B"), a("C"), a("D")], percents: [:])
-        XCTAssertEqual(none.recentIcons, ["A-g.jpg", "B-g.jpg", "C-g.jpg"])
+        XCTAssertEqual(none.recentIcons.map(\.icon), ["A-g.jpg", "B-g.jpg", "C-g.jpg"])
         let some = AchievementSummary(achievements: [a("A", at: 1), a("B", at: 3), a("C"), a("D", at: 2), a("E", at: 4)], percents: [:])
-        XCTAssertEqual(some.recentIcons, ["E.jpg", "B.jpg", "D.jpg"])
+        XCTAssertEqual(some.recentIcons.map(\.icon), ["E.jpg", "B.jpg", "D.jpg"])
     }
 
     func testRecentUnlockedIconsNewestFirstCapped() {

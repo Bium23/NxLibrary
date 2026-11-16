@@ -380,7 +380,7 @@ private struct AchievementsScreenRow: View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         let unlocked = row.unlockedAt != nil
         HStack(spacing: canvas.u(18)) {
-            AchievementIcon(appID: appID, file: row.icon, size: 64, dimmed: !unlocked)
+            AchievementIcon(appID: appID, file: row.icon, size: 64, dimmed: !unlocked, secret: row.isMasked)
             VStack(alignment: .leading, spacing: canvas.u(4)) {
                 Text(row.name)
                     .seleneFont(18, .semibold)

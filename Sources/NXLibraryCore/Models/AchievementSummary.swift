@@ -57,9 +57,10 @@ public struct AchievementSummary: Equatable, Sendable {
         total > 0 ? Int((Double(unlocked) * 100 / Double(total)).rounded()) : 0
     }
 
-    /// The last three unlocked, newest first; before any unlock, the first three locked ones in gray.
-    public var recentIcons: [String] {
-        Array((unlockedRows.isEmpty ? lockedRows : unlockedRows).compactMap(\.icon).prefix(3))
+    /// The last three unlocked with an icon, newest first; before any unlock, the first three locked ones in gray.
+    /// Rows, not file names: the card shows a secret among them locked (`AchievementRow.isMasked`).
+    public var recentIcons: [AchievementRow] {
+        Array((unlockedRows.isEmpty ? lockedRows : unlockedRows).filter { $0.icon != nil }.prefix(3))
     }
 
     /// Unlocked and total per tier. Arcane is one per game, lit when everything is unlocked (0/0 without
