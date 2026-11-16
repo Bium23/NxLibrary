@@ -228,6 +228,15 @@ come medaglione (`AchievementDetail`): icona grande con il cristallo sull’ango
 (Sinistra/Destra). «Your activity» non c’è: ore e ultima partita sono già nella testata. Schema: nomi e descrizioni
 nella lingua dell’app, poi inglese. Nessuna chiave Web API di Steam: non serve per questi dati.
 
+Correzione del 16 novembre, in attesa di validazione umana: riaprire rapidamente la schermata durante la sua
+transizione poteva riusare la vista della lista con un nuovo `AchievementsScreenModel`, senza richiamare
+`onAppear` né cambiare altezza. La selezione avanzava, ma il nuovo modello non aveva geometria e lo scroll
+restava a zero. La lista riporta ora le misure con un `task(id:)` legato all’istanza corrente del modello
+([contratto SwiftUI](https://developer.apple.com/documentation/swiftui/view/task%28id%3Aname%3Apriority%3Afile%3Aline%3A_%3A%29)),
+conservando i controlli per altezza, scala e Riduci movimento. Nessun reset dell’identità della vista o dello stato.
+La sonda fuori schermo `run_achievement_scroll.py` riproduce il difetto con 41 righe sintetiche e verifica
+riaperture rapide e dopo la transizione, dettagli della prima riga, ridimensionamento e Riduci movimento.
+
 ## Metadati, arte e personalizzazioni
 
 - `SteamMetadataService`: dati pubblici dello store per AppID e lingua, separati da installazioni e scelte personali.

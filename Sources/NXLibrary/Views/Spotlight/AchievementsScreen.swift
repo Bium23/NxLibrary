@@ -490,7 +490,8 @@ private struct AchievementsList: View {
                     content(height: height)
                 }
             }
-            .onAppear { report(height) }
+            // A rapid reopen reuses the outgoing view at the same size, but the new model needs its layout.
+            .task(id: ObjectIdentifier(model)) { report(height) }
             .onChange(of: height) { report($0) }
             .onChange(of: canvas.scale) { _ in report(height) }
             .onChange(of: reduceMotion) { _ in report(height) }

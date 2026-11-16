@@ -10,6 +10,7 @@ These corrections are implemented in NX Library Dev and **awaiting human validat
 
 - Scrolling a game page can keep focus on its achievements card; Game Details is disabled while another panel owns input.
 - Achievement requests made before Steam is configured are retried when its source becomes available.
+- The achievements list keeps following the selected row after quickly closing and reopening the screen.
 - Automatic logo searches use the game's Switch or Switch 2 platform.
 - Steam libraries that return after a scan join file watching on the next scan, even when their paths have not changed. Event paths under `/var` and `/tmp` are recognized consistently.
 - Steam achievement and playtime readers reject unsafe or changing files through the shared bounded reader.
