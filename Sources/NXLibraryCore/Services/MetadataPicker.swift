@@ -19,7 +19,7 @@ public enum MetadataField: String, CaseIterable, Codable, Sendable {
 /// One value a source offers for a field. Genres are one comma-separated line.
 public struct MetadataOption: Equatable, Hashable, Sendable {
     public let field: MetadataField
-    /// "Nintendo store", "Title DB", "GameTDB".
+    /// "Nintendo store", "Title DB", "GameTDB", "IGDB".
     public let source: String
     public let value: String
 

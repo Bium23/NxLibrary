@@ -73849,6 +73849,457 @@
           }
         }
       }
+    },
+    "Looking for metadata…": {
+      "comment": "Change metadata: optional IGDB source preview, status or retry.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Looking for metadata…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ricerca metadati…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recherche de métadonnées…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metadaten werden gesucht…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscando metadatos…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscando metadados…"
+          }
+        }
+      }
+    },
+    "Saved IGDB information · refresh unavailable": {
+      "comment": "Change metadata: optional IGDB source preview, status or retry.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved IGDB information · refresh unavailable"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dati IGDB salvati · aggiornamento non disponibile"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Données IGDB enregistrées · actualisation indisponible"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gespeicherte IGDB-Daten · Aktualisierung nicht verfügbar"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datos IGDB guardados · actualización no disponible"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dados IGDB salvos · atualização indisponível"
+          }
+        }
+      }
+    },
+    "No matching IGDB game for this platform.": {
+      "comment": "Change metadata: optional IGDB source preview, status or retry.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching IGDB game for this platform."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun gioco IGDB corrispondente per questa piattaforma."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun jeu IGDB correspondant pour cette plateforme."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein passendes IGDB-Spiel für diese Plattform."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay un juego IGDB coincidente para esta plataforma."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum jogo IGDB correspondente para esta plataforma."
+          }
+        }
+      }
+    },
+    "Multiple IGDB matches · no game chosen automatically.": {
+      "comment": "Change metadata: optional IGDB source preview, status or retry.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multiple IGDB matches · no game chosen automatically."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Più risultati IGDB · nessun gioco scelto automaticamente."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plusieurs résultats IGDB · aucun jeu choisi automatiquement."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mehrere IGDB-Treffer · kein Spiel automatisch ausgewählt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varios resultados IGDB · no se eligió ningún juego automáticamente."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vários resultados IGDB · nenhum jogo escolhido automaticamente."
+          }
+        }
+      }
+    },
+    "IGDB unavailable · other sources remain available.": {
+      "comment": "Change metadata: optional IGDB source preview, status or retry.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB unavailable · other sources remain available."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB non disponibile · le altre fonti restano accessibili."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB indisponible · les autres sources restent accessibles."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB nicht verfügbar · andere Quellen bleiben verfügbar."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB no disponible · las demás fuentes siguen disponibles."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB indisponível · as outras fontes continuam disponíveis."
+          }
+        }
+      }
+    },
+    "IGDB has no value for this field.": {
+      "comment": "Change metadata: optional IGDB source preview, status or retry.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB has no value for this field."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB non ha dati per questo campo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB ne propose aucune valeur pour ce champ."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB hat keinen Wert für dieses Feld."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB no tiene datos para este campo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O IGDB não tem dados para este campo."
+          }
+        }
+      }
+    },
+    "IGDB descriptions are shown in their original language.": {
+      "comment": "Change metadata: optional IGDB source preview, status or retry.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB descriptions are shown in their original language."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le descrizioni IGDB sono mostrate nella lingua originale."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les descriptions IGDB sont affichées dans leur langue d’origine."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB-Beschreibungen werden in der Originalsprache angezeigt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las descripciones de IGDB se muestran en su idioma original."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As descrições do IGDB são exibidas no idioma original."
+          }
+        }
+      }
+    },
+    "IGDB: %@": {
+      "comment": "Change metadata: optional IGDB source preview, status or retry.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB: %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB: %@"
+          }
+        }
+      }
+    },
+    "IGDB is optional · connect it in Settings → API services.": {
+      "comment": "Change metadata: optional IGDB source preview, status or retry.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB is optional · connect it in Settings → API services."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB è facoltativo · collegalo in Impostazioni → Servizi API."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB est facultatif · connectez-le dans Paramètres → Services API."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB ist optional · unter Einstellungen → API-Dienste verbinden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB es opcional · conéctalo en Ajustes → Servicios API."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O IGDB é opcional · conecte em Configurações → Serviços API."
+          }
+        }
+      }
+    },
+    "Retry IGDB": {
+      "comment": "Change metadata: optional IGDB source preview, status or retry.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry IGDB"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riprova IGDB"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réessayer IGDB"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB erneut versuchen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar IGDB"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tentar IGDB novamente"
+          }
+        }
+      }
+    },
+    "Other sources and your saved choices remain available.": {
+      "comment": "Change metadata: optional IGDB source preview, status or retry.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other sources and your saved choices remain available."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le altre fonti e le tue scelte salvate restano disponibili."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les autres sources et vos choix enregistrés restent disponibles."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andere Quellen und gespeicherte Auswahlen bleiben verfügbar."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las demás fuentes y tus elecciones guardadas siguen disponibles."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As outras fontes e suas escolhas salvas continuam disponíveis."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

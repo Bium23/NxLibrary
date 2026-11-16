@@ -12,8 +12,15 @@ public enum IGDBRatings {
             .unicodeScalars.filter { CharacterSet.alphanumerics.contains($0) })
     }
     static func body(for query: CriticRatingQuery) -> String {
+        body(for: query, fields: fields)
+    }
+    static func body(for query: CriticRatingQuery, fields: String) -> String {
         let escaped = clean(query.name).replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
         return "search \"\(escaped)\"; fields \(fields); limit 20;"
+    }
+    static func matches(name: String, aliases: [String], platforms: [Int], query: CriticRatingQuery) -> Bool {
+        ([name] + aliases).contains { normalized($0) == normalized(query.name) }
+            && platforms.contains(query.platform.igdbID)
     }
     static func safeGameURL(_ url: URL) -> URL? {
         guard url.scheme == "https", ["www.igdb.com", "igdb.com"].contains(url.host ?? ""),
@@ -23,10 +30,9 @@ public enum IGDBRatings {
     }
     public static func rating(in data: Data, query: CriticRatingQuery) throws -> CriticRating? {
         let games = try decode(data)
-        let target = normalized(query.name)
         let matching = games.filter { game in
-            ([game.name] + (game.alternative_names ?? []).map(\.name)).contains { normalized($0) == target }
-                && (game.platforms ?? []).contains(query.platform.igdbID)
+            matches(name: game.name, aliases: (game.alternative_names ?? []).map(\.name),
+                    platforms: game.platforms ?? [], query: query)
         }
         guard matching.count == 1, let game = matching.first else { return nil }
         return game.resolvedRating

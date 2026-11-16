@@ -166,6 +166,8 @@ The last row in **Details** shows five stars, the original score out of 100 and 
 
 Optional **Settings → API services → IGDB** accepts your own Twitch application's **Client ID** and **Client Secret**. The dialog includes five short setup steps and a direct link to register an application. **Check and save** verifies access before keeping the credentials in a private file on this Mac. The secret is hidden, and credentials are separate from ordinary settings and the Dev-profile import. **Remove** returns to the keyless source. With IGDB configured, its critic average takes priority, followed by public critic scores via Wikidata and finally the explicitly labelled IGDB user average. Cached scores remain available offline. The same general settings page contains the SteamGridDB key for game artwork; API connections are optional.
 
+The same optional connection adds **IGDB** proposals to **Game options → Edit details → Change metadata**, for Switch, Switch 2 and Steam games. Preview descriptions, genres, developers, publishers and platform-specific release dates, then choose each field individually. Automatic and your manual choices remain available; fetching never replaces them. IGDB descriptions keep their original language. Saved proposals remain usable offline, with a retry when refresh is unavailable. This metadata flow is awaiting maintainer validation.
+
 Use the dialog's **Developer portal** and **Setup guide** links to create your credentials. IGDB documents free non-commercial API access; commercial use requires its partnership process. This optional integration is awaiting maintainer validation with real credentials.
 
 ### Add or rebuild a game

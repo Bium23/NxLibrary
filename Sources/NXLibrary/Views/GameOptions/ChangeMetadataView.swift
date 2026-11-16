@@ -4,7 +4,7 @@ import NXLibraryCore
 
 /// Game options → Edit details → Change metadata: field by field (description,
 /// genres, developer, publisher, release date), Automatic (the store's value, as
-/// NX Library reads it), what Title DB and GameTDB offer instead, or the player's
+/// NX Library reads it), what Title DB, GameTDB and optional IGDB offer instead, or the player's
 /// own text. A choice is kept in `MetadataPicks` and laid over the store's data.
 /// A Steam game's Automatic is the Steam store's text; it has no Switch databases to offer,
 /// and its choices go to the Steam personal store.
@@ -19,6 +19,10 @@ struct ChangeMetadataView: View {
     @ObservedObject private var picks = MetadataPicks.shared
     @ObservedObject private var steamPicks = SteamPersonalizations.shared.metadata
     @ObservedObject private var steamFacts = SteamGameFacts.shared
+    @ObservedObject private var igdb = IGDBSettings.shared
+    @State private var igdbResult: IGDBMetadataResult?
+    @State private var igdbSearching = false
+    @State private var igdbAttempt = 0
     @State private var failure: String?
     @State private var field: MetadataField = .description
     @State private var focus = 0
@@ -38,7 +42,13 @@ struct ChangeMetadataView: View {
         case automatic
         case yourPick(String)
         case option(MetadataOption)
+        case retryIGDB
         case write
+    }
+    private struct IGDBLookup: Hashable {
+        let query: CriticRatingQuery
+        let revision: UUID
+        let attempt: Int
     }
 
     init(viewModel: AppViewModel, subject: PersonalizationSubject, onClose: @escaping () -> Void) {
@@ -54,6 +64,10 @@ struct ChangeMetadataView: View {
         return subject.metadataPick(field)
     }
     private var store: NintendoStoreMetadata? { subject.ported.flatMap(viewModel.storeMetadataAsFetched) }
+    private var igdbQuery: CriticRatingQuery {
+        if let game = subject.ported { return CriticRatingQuery(game: game, name: store?.name) }
+        return CriticRatingQuery(name: subject.steam?.steamGame?.name ?? subject.name, platform: .mac, steamAppID: subject.steamAppID)
+    }
 
     /// What Automatic shows: the Nintendo or Steam store's value.
     private var automaticValue: String? {
@@ -63,16 +77,22 @@ struct ChangeMetadataView: View {
 
     /// Automatic is the store's value, so the store's option is not listed again.
     private var options: [MetadataOption] {
-        guard subject.ported != nil else { return [] }
-        return MetadataOptions.list(for: field, store: store, titleDB: titleDB, gameTDB: gameTDB)
+        var result = subject.ported == nil ? [] : MetadataOptions.list(for: field, store: store, titleDB: titleDB, gameTDB: gameTDB)
             .filter { $0.source != "Nintendo store" }
+        if let option = igdbResult?.metadata?.option(for: field),
+           !result.contains(where: { $0.value.caseInsensitiveCompare(option.value) == .orderedSame }) {
+            result.append(option)
+        }
+        return result
     }
 
     private var rows: [Row] {
         let options = self.options
         var rows: [Row] = [.automatic]
         if let pick, !options.contains(where: { $0.value == pick }) { rows.append(.yourPick(pick)) }
-        return rows + options.map(Row.option) + [.write]
+        rows += options.map(Row.option)
+        if igdbResult?.issue == .unavailable || (igdbSearching && igdbAttempt > 0) { rows.append(.retryIGDB) }
+        return rows + [.write]
     }
 
     // MARK: - Body
@@ -98,9 +118,11 @@ struct ChangeMetadataView: View {
                         .padding(.leading, canvas.u(6))
                         .padding(.bottom, canvas.u(14))
                     tabs
-                    Text(failure ?? (searching ? L10n.text("Looking on Title DB and GameTDB…") : " "))
+                    Text(failure ?? sourceStatus)
                         .seleneFont(14)
                         .foregroundColor(SeleneTheme.ink60)
+                        .lineLimit(1)
+                        .help(failure ?? sourceStatus)
                         .padding(.leading, canvas.u(10))
                         .padding(.vertical, canvas.u(10))
                     list(rows)
@@ -126,6 +148,7 @@ struct ChangeMetadataView: View {
             handleGamepad(action)
         }
         .task { await search() }
+        .task(id: IGDBLookup(query: igdbQuery, revision: igdb.revision, attempt: igdbAttempt)) { await searchIGDB() }
     }
 
     private var tabs: some View {
@@ -172,7 +195,7 @@ struct ChangeMetadataView: View {
     private func rowView(_ row: Row, focused: Bool) -> some View {
         let text = describe(row)
         return SeleneOptionRow(icon: icon(row), title: text.title, about: excerpt(text.value, full: focused),
-                               focused: focused) {
+                               focused: focused, enabled: row != .retryIGDB || !igdbSearching) {
             if isCurrent(row) {
                 MaterialIconView(.check, size: 26).foregroundColor(SeleneTheme.focus)
             }
@@ -184,7 +207,7 @@ struct ChangeMetadataView: View {
 
     private func icon(_ row: Row) -> MaterialIcon? {
         switch row {
-        case .automatic: return .restore
+        case .automatic, .retryIGDB: return .restore
         case .yourPick, .write: return .edit
         case .option: return .info
         }
@@ -199,6 +222,8 @@ struct ChangeMetadataView: View {
             return (L10n.text("Your own"), displayValue(value))
         case .option(let option):
             return (option.source, displayValue(option.value))
+        case .retryIGDB:
+            return (L10n.text("Retry IGDB"), L10n.text("Other sources and your saved choices remain available."))
         case .write:
             return (L10n.text("Write your own…"), L10n.format("Type the %@ yourself.", [String(describing: (field.title.lowercased()))]))
         }
@@ -219,7 +244,7 @@ struct ChangeMetadataView: View {
         case .automatic: return pick == nil
         case .yourPick: return true
         case .option(let option): return option.value == pick
-        case .write: return false
+        case .write, .retryIGDB: return false
         }
     }
 
@@ -228,11 +253,63 @@ struct ChangeMetadataView: View {
     private func search() async {
         guard subject.ported != nil else { return }
         defer { searching = false }
-        if let titleId = subject.titleId { titleDB = await TitleDBInfo.fetch(titleID: titleId) }
+        if let titleId = subject.titleId {
+            let result = await TitleDBInfo.fetch(titleID: titleId)
+            guard !Task.isCancelled else { return }
+            preservingFocus { titleDB = result }
+        }
         let names = [subject.name, store?.name, titleDB?.name].compactMap { $0 }
         // Only exact titles: a look-alike game's synopsis would be the wrong game's.
         let all = await viewModel.boxArt.pickerEntries(names: names)
-        gameTDB = all.filter { entry in names.contains { GameTDB.normalize($0) == GameTDB.normalize(entry.title) } }
+        guard !Task.isCancelled else { return }
+        preservingFocus {
+            gameTDB = all.filter { entry in names.contains { GameTDB.normalize($0) == GameTDB.normalize(entry.title) } }
+        }
+    }
+
+    private var sourceStatus: String {
+        if searching || igdbSearching { return L10n.text("Looking for metadata…") }
+        if igdbResult?.isStale == true { return L10n.text("Saved IGDB information · refresh unavailable") }
+        if let issue = igdbResult?.issue {
+            switch issue {
+            case .notFound: return L10n.text("No matching IGDB game for this platform.")
+            case .ambiguous: return L10n.text("Multiple IGDB matches · no game chosen automatically.")
+            case .unavailable: return L10n.text("IGDB unavailable · other sources remain available.")
+            case .cancelled: return " "
+            }
+        }
+        if let metadata = igdbResult?.metadata {
+            if metadata.option(for: field) == nil { return L10n.text("IGDB has no value for this field.") }
+            return field == .description ? L10n.text("IGDB descriptions are shown in their original language.")
+                : L10n.format("IGDB: %@", [metadata.name])
+        }
+        return igdb.isConfigured ? " " : L10n.text("IGDB is optional · connect it in Settings → API services.")
+    }
+
+    private func searchIGDB() async {
+        let query = igdbQuery, revision = igdb.revision
+        let credentials = igdb.credentials
+        preservingFocus { igdbResult = nil; igdbSearching = credentials != nil }
+        guard let credentials else { return }
+        let result = await IGDBMetadataService.shared.load(query, credentials: credentials)
+        guard !Task.isCancelled, revision == igdb.revision, query == igdbQuery else { return }
+        preservingFocus { igdbResult = result; igdbSearching = false }
+    }
+
+    /// Source results must not move the user's selection to a different action.
+    private func preservingFocus(_ update: () -> Void) {
+        let before = rows
+        let selected = before.indices.contains(focus) ? before[focus] : nil
+        update()
+        let after = rows
+        if let selected, let index = after.firstIndex(of: selected) { focus = index }
+        else if case .yourPick(let value) = selected,
+                let index = after.firstIndex(where: { if case .option(let option) = $0 { return option.value == value }; return false }) {
+            focus = index
+        } else if selected == .retryIGDB,
+                  let index = after.firstIndex(where: { if case .option(let option) = $0 { return option.source == "IGDB" }; return false }) {
+            focus = index
+        } else { focus = 0 }
     }
 
     // MARK: - Choosing
@@ -246,6 +323,10 @@ struct ChangeMetadataView: View {
             break
         case .option(let option):
             save(option.value)
+        case .retryIGDB:
+            guard !igdbSearching else { return }
+            igdbSearching = true
+            igdbAttempt += 1
         case .write:
             draft = pick ?? automaticValue ?? ""
             editorFocus = .cancel

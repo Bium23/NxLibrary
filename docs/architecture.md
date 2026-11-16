@@ -500,3 +500,44 @@ pubblici, la risposta Ocarina verificata, etichette, validità, lettura delle ve
 cache e recupero offline. Da verificare in Dev: Ocarina con voto utenti, un gioco con
 voto della critica, cambio rapido di gioco e rimozione di IGDB. In attesa di
 validazione umana.
+
+#### IGDB in Change metadata — 16 novembre 2026
+
+La fonte opzionale IGDB arricchisce il selettore esistente per nxnative e Steam:
+`ChangeMetadataView` presenta una proposta per descrizione, generi, sviluppatore,
+editore e data. Il fetch non modifica `MetadataPicks`, SteamPersonalizations o i dati
+dello store. A decide soltanto il campo in anteprima; Automatic rimuove il suo override,
+Write your own resta disponibile. Le descrizioni mantengono la lingua originale e lo
+dicono nel sottotitolo. Non sono aggiunti artwork o sostituzioni automatiche.
+
+La scelta architetturale è separare `IGDBClient` (autenticazione/rete) dai servizi di
+voti e metadati, invece di duplicare token e limiti o caricare il coordinator dei voti
+anche dei metadati. Le istanze predefinite condividono il client: token solo in memoria,
+una coda seriale fino a otto lavori, distanza fra richieste, host/endpoint esistenti,
+limiti di dimensione/durata, niente redirect/cookie e cancellazione. Il trasporto
+iniettabile mantiene test isolati e la vecchia API di download dei voti delega al client.
+
+`IGDBMetadataParser` riusa le stesse regole nome/alias e piattaforma dei voti. Per Steam
+verifica `external_games.uid` e la fonte Steam; zero risultati permettono il ripiego per
+nome, mentre un'identità ambigua non viene indovinata. I valori hanno campi distinti;
+le aziende sono qualificate dai flag developer/publisher, non dalla semplice presenza
+nell'elenco. Una data richiede piattaforma corrispondente e formato `YYYYMMDD`: una data
+Windows non diventa Mac e un anno o mese non diventa un giorno inventato. La verifica
+live autorizzata di Ocarina ha confermato questi campi nelle API correnti
+([Game](https://api-docs.igdb.com/#game), [Involved Company](https://api-docs.igdb.com/#involved-company),
+[Release Date](https://api-docs.igdb.com/#release-date)). Nessuna credenziale è nei log.
+
+`IGDBMetadataService` conserva solo la proposta/identità verificata, per client pubblico
+e query, in `metadata/igdb`: sette giorni per i dati, uno per assenze o ambiguità. Errori
+non diventano assenze in cache; i dati salvati restano disponibili offline con avviso.
+Retry è una riga raggiungibile anche dal controller e non avvia doppie richieste.
+Risposte arrivate tardi o da credenziali rimosse non si pubblicano nella vista. Le fonti
+si caricano indipendentemente; il focus resta sulla scelta corrente quando arrivano
+nuove righe e torna ad Automatic se la scelta sparisce, senza aprire il campo di testo.
+
+Verifiche automatiche: regressioni dei voti/autenticazione e test nuovi su parser,
+identità/edizioni, ruoli, date, ID Steam, cache, errore/retry, cancellazione e coda/token
+condivisi. La verifica umana rimane necessaria: aprire un gioco nxnative e uno Steam,
+leggere e scegliere una proposta, cambiare campo con Q/E o controller, provare Automatic
+e testo personale, riaprire per controllare la persistenza, verificare offline/retry e
+chiusura durante il caricamento. Stato: **in attesa di validazione umana**.
