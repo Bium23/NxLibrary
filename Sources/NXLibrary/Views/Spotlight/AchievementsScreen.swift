@@ -173,52 +173,63 @@ struct AchievementsScreen: View {
         }
     }
 
-    /// Not complete (maintainer's choice, variant 1, 16 Nov 2026): the progress mirrors the game's column band by
-    /// band, so the two sides read as one. Level with the logo, the large percentage over its bar; level with
-    /// "Recently unlocked", the count and the newest unlock; level with the icons, Arcane, Gold, Silver and Bronze
-    /// with unlocked/total beside each (only Arcane until Steam's rarity arrives). Before the first unlock the left
-    /// has only the logo and the right keeps its three bands.
+    /// Not complete (maintainer's choice, 16 Nov 2026): the two sides share the column's bands. Level with the
+    /// logo, where they always were, Arcane, Gold, Silver and Bronze with unlocked/total under each, as PS5 trophies
+    /// (only Arcane until Steam's rarity arrives); under them, level with Recently unlocked and ending with its
+    /// icons, the large percentage, its bar and the count line. Before the first unlock the left has only the logo.
     private var bands: some View {
         let recent = summary.recentUnlockedIcons(limit: Self.recentLimit)
         return Grid(alignment: .leading, horizontalSpacing: 0, verticalSpacing: 0) {
-            GridRow(alignment: .center) {
+            GridRow(alignment: .top) {
                 logo
                 Spacer(minLength: canvas.u(40))
-                percentage
-                    // As wide as the column the lines below set: the bar spans it.
-                    .gridCellUnsizedAxes(.horizontal)
+                board
             }
-            GridRow(alignment: .firstTextBaseline) {
+            GridRow(alignment: .bottom) {
                 Group {
-                    if recent.isEmpty { Color.clear.frame(width: 0, height: 0) } else { recentTitle }
+                    if recent.isEmpty {
+                        Color.clear.frame(width: 0, height: 0)
+                    } else {
+                        VStack(alignment: .leading, spacing: canvas.u(12)) {
+                            recentTitle
+                            recentStrip(recent)
+                        }
+                    }
                 }
                 .padding(.top, canvas.u(24))
                 Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
-                Text(countLine)
-                    .seleneFont(16)
-                    .foregroundColor(SeleneTheme.ink75)
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .fixedSize()
+                gauge
+                    // As wide as the trophies above: the bar spans them.
+                    .gridCellUnsizedAxes(.horizontal)
                     .padding(.top, canvas.u(24))
-            }
-            GridRow(alignment: .center) {
-                Group {
-                    if recent.isEmpty { Color.clear.frame(width: 0, height: 0) } else { recentStrip(recent) }
-                }
-                .padding(.top, canvas.u(12))
-                Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
-                tierChips(summary.hasRarity ? AchievementTier.allCases : [.arcane], size: 56, font: 18, spacing: 30)
-                    .frame(minHeight: canvas.u(72))
-                    .padding(.top, canvas.u(12))
             }
         }
     }
 
-    /// "7%" over a thin bar as wide as the column.
-    private var percentage: some View {
+    /// Arcane, Gold, Silver, Bronze, each over its unlocked/total, dimmed (a trace of their colour) while not earned.
+    private var board: some View {
+        let counts = summary.tierCounts
+        let tiers = summary.hasRarity ? AchievementTier.allCases : [.arcane]
+        return HStack(alignment: .top, spacing: canvas.u(26)) {
+            ForEach(tiers, id: \.self) { tier in
+                let count = counts[tier] ?? TierCount(unlocked: 0, total: 0)
+                VStack(spacing: canvas.u(6)) {
+                    TierCrystal(tier: tier, size: 64, dimmed: count.unlocked == 0)
+                    countText(count, size: 18)
+                }
+                .fixedSize()
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(L10n.format("%1$@, %2$d of %3$d", [tier.displayName(), count.unlocked, count.total]))
+            }
+        }
+        .fixedSize()
+    }
+
+    /// The completion read top to bottom: the large percentage, a thin bar as wide as the trophies, the count and
+    /// the newest unlock.
+    private var gauge: some View {
         let fraction = summary.total > 0 ? Double(summary.unlocked) / Double(summary.total) : 0
-        return VStack(alignment: .leading, spacing: canvas.u(6)) {
+        return VStack(alignment: .leading, spacing: 0) {
             Text(Self.wholePercent(summary.percentComplete))
                 .seleneFont(64, .semibold)
                 .monospacedDigit()
@@ -226,6 +237,13 @@ struct AchievementsScreen: View {
                 .lineLimit(1)
             AchievementProgressBar(fraction: fraction, height: 5, track: SeleneTheme.ink25)
                 .frame(maxWidth: .infinity)
+                .padding(.top, canvas.u(6))
+            Text(countLine)
+                .seleneFont(16)
+                .foregroundColor(SeleneTheme.ink75)
+                .monospacedDigit()
+                .lineLimit(1)
+                .padding(.top, canvas.u(12))
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(L10n.format("Achievements: %d of %d", [summary.unlocked, summary.total]))
