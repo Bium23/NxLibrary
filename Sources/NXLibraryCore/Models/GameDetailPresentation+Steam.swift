@@ -49,7 +49,7 @@ extension GameDetailPresentation {
         hasBaseSource = false
         storeURL = appID.flatMap { URL(string: "https://store.steampowered.com/app/\($0)/") }
         hltbURL = Self.hltbURL(for: game.name)
-        appPath = game.steamGame?.installations.first { $0.availability == .available }?.primaryApplication?.url.path ?? ""
+        appPath = game.steamGame?.firstAvailableInstallation?.primaryApplication?.url.path ?? ""
         savePath = ""
     }
 }

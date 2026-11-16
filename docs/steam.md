@@ -228,7 +228,7 @@ come medaglione (`AchievementDetail`): icona grande con il cristallo sull’ango
 (Sinistra/Destra). «Your activity» non c’è: ore e ultima partita sono già nella testata. Schema: nomi e descrizioni
 nella lingua dell’app, poi inglese. Nessuna chiave Web API di Steam: non serve per questi dati.
 
-Correzione del 16 novembre, in attesa di validazione umana: riaprire rapidamente la schermata durante la sua
+Correzione del 16 novembre, **validata dal maintainer nella Dev**: riaprire rapidamente la schermata durante la sua
 transizione poteva riusare la vista della lista con un nuovo `AchievementsScreenModel`, senza richiamare
 `onAppear` né cambiare altezza. La selezione avanzava, ma il nuovo modello non aveva geometria e lo scroll
 restava a zero. La lista riporta ora le misure con un `task(id:)` legato all’istanza corrente del modello
@@ -236,6 +236,14 @@ restava a zero. La lista riporta ora le misure con un `task(id:)` legato all’i
 conservando i controlli per altezza, scala e Riduci movimento. Nessun reset dell’identità della vista o dello stato.
 La sonda fuori schermo `run_achievement_scroll.py` riproduce il difetto con 41 righe sintetiche e verifica
 riaperture rapide e dopo la transizione, dettagli della prima riga, ridimensionamento e Riduci movimento.
+
+Armonizzazione successiva del 16 novembre: `SteamCatalogGame.firstAvailableInstallation` è il lookup condiviso
+per artwork, pagina, Opzioni, volume e osservazione dei processi. Restituisce la prima installazione con stato
+`available` nell’ordine del catalogo; non effettua I/O, non modifica i record e non decide se Play sia consentito.
+`CatalogGamePresentation` conserva i controlli di fonte, riconoscimento, review e unicità prima del lancio.
+I test di caratterizzazione di artwork e dettagli passano prima e dopo l’estrazione, compreso Play bloccato con
+più installazioni e assenza di app/dati installazione negli stati non disponibili. Questa pulizia non aggiunge
+funzionalità; la verifica nell’app dopo il refactor resta da confermare.
 
 ## Metadati, arte e personalizzazioni
 

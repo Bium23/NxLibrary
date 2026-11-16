@@ -15,7 +15,7 @@ struct SteamArtwork: View {
     @Environment(\.seleneCanvas) private var canvas
     @ObservedObject private var picks = SteamPersonalizations.shared.artwork
     private var installedApp: CatalogNativeApplication? {
-        game.steamGame?.installations.first(where: { $0.availability == .available })?.primaryApplication
+        game.steamGame?.firstAvailableInstallation?.primaryApplication
     }
     /// The installed app's path is part of it: an installation that moves brings its icon along.
     private var key: String {

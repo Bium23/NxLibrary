@@ -36,7 +36,7 @@ extension DetailsLink {
     /// The Steam library's volume by its localized name ("Macintosh HD"). Read once per library.
     @MainActor
     static func volumeName(of game: CatalogGame) -> String? {
-        guard let library = game.steamGame?.installations.first(where: { $0.availability == .available })?.libraryURL
+        guard let library = game.steamGame?.firstAvailableInstallation?.libraryURL
         else { return nil }
         return volumeNames.name(for: library)
     }

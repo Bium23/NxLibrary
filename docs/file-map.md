@@ -808,7 +808,7 @@ Il resto vive nei file esistenti: `SteamLibrarySource` (StateFlags senza il bit 
 
 | File | Responsabilità |
 |---|---|
-| [CatalogGame.swift](../Sources/NXLibraryCore/Models/CatalogGame.swift) | Record tipizzato nxnative/Steam, identità e personalizzazioni con namespace, osservazioni delle installazioni. |
+| [CatalogGame.swift](../Sources/NXLibraryCore/Models/CatalogGame.swift) | Record tipizzato nxnative/Steam, identità e personalizzazioni con namespace, osservazioni delle installazioni; lookup condiviso della prima installazione disponibile, separato dal gate di Play. |
 | [CatalogDocument.swift](../Sources/NXLibraryCore/Models/CatalogDocument.swift) | Schema, revisione, provenienza legacy, configurazione delle fonti e validazione delle identità. |
 | [CatalogGamePresentation.swift](../Sources/NXLibraryCore/Models/CatalogGamePresentation.swift) | Contratto comune per presentazione, operazioni supportate e target di avvio; nessuna operazione I/O. |
 | [CatalogStore.swift](../Sources/NXLibraryCore/Services/Catalog/CatalogStore.swift) | Conversione conservativa, letture limitate, revisioni attese e serializzazione degli scrittori. |
@@ -840,7 +840,7 @@ Il resto vive nei file esistenti: `SteamLibrarySource` (StateFlags senza il bit 
 | [run_game_header.py](../Tests/CatalogAppChecks/run_game_header.py) | Esegue i corpi reali di logo e azioni condivisi senza finestra né store applicativi, per entrambi i layout. |
 | [NoticeHost.swift](../Tests/CatalogAppChecks/NoticeHost.swift) | Host minimo per i controlli applicativi, con storage reale e dati sintetici temporanei. |
 | [CatalogGameOptions.swift](../Sources/NXLibraryCore/Models/CatalogGameOptions.swift) | Ordine unico delle operazioni comuni della libreria; ciò che una fonte può fare dipende dal suo record (nessuna modifica nxnative su un gioco Steam). |
-| [SharedGamePresentationTests.swift](../Tests/NXLibraryCoreTests/SharedGamePresentationTests.swift) | Presentazione Steam con identità, personalizzazioni e cronologia; confine comune per nxnative; quadrato senza copertina verticale; opzioni comuni nello stesso ordine. |
+| [SharedGamePresentationTests.swift](../Tests/NXLibraryCoreTests/SharedGamePresentationTests.swift) | Presentazione Steam con identità, personalizzazioni e cronologia; prima installazione disponibile coerente per artwork e dettagli, con Play bloccato se ambiguo; confine nxnative e opzioni comuni. |
 
 
 ## Fonti e libreria mista (Dev, in attesa di validazione)

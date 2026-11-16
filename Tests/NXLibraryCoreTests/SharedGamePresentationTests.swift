@@ -2,6 +2,52 @@ import XCTest
 @testable import NXLibraryCore
 
 final class SharedGamePresentationTests: XCTestCase {
+    private func installation(_ name: String, availability: CatalogInstallationAvailability,
+                              size: Int64) -> SteamCatalogInstallation {
+        let root = URL(fileURLWithPath: "/Volumes/\(name)/Steam")
+        let content = root.appendingPathComponent("steamapps/common/Fixture")
+        let app = content.appendingPathComponent("Game.app")
+        let native = CatalogNativeApplication(NativeMacApplication(
+            url: app, executableURL: app.appendingPathComponent("Contents/MacOS/game"),
+            bundleIdentifier: "test.\(name)", name: "Fixture", architectures: [.arm64],
+            isDeclaredGame: true, fileObservations: []))
+        return SteamCatalogInstallation(libraryURL: root, contentURL: content, applications: [native],
+                                        availability: availability, reportedSizeBytes: size,
+                                        lastObservedAt: Date(timeIntervalSince1970: 0))
+    }
+
+    func testSteamArtworkAndDetailsKeepFirstAvailableInCatalogOrderWhileAmbiguousPlayIsBlocked() {
+        var steam = SteamCatalogGame(appID: 42, name: "Fixture")
+        steam.hasBeenRecognized = true
+        steam.installations = [installation("Old", availability: .notDetected, size: 1_000_000_000),
+                               installation("First", availability: .available, size: 140_000_000_000),
+                               installation("Second", availability: .available, size: 2_000_000_000)]
+        let game = CatalogGame(steam: steam)
+        let expected = "/Volumes/First/Steam/steamapps/common/Fixture/Game.app"
+        XCTAssertEqual(SteamArtworkRequest(game: game, role: .square).application?.url.path, expected)
+        let page = GameDetailPresentation(steamRecord: game, metadata: nil, totalPlaytime: 0, lastPlayed: nil)
+        XCTAssertEqual(page.appPath, expected)
+        let facts = DetailsFacts.steamGame(game, metadata: nil, volumeName: "First", locale: Locale(identifier: "en_US"))
+        XCTAssertEqual(facts.first { $0.kind == .size }?.value, "140 GB")
+        let launch = CatalogGamePresentation(game: game, sourceEnabled: true)
+        XCTAssertTrue(launch.requiresReview)
+        XCTAssertNil(launch.launchTarget)
+    }
+
+    func testSteamArtworkAndDetailsIgnoreHistoricalAndUnavailableInstallations() {
+        for availability in [CatalogInstallationAvailability.unavailable, .notDetected, .sourceUnavailable, .requiresReview] {
+            var steam = SteamCatalogGame(appID: 42, name: "Fixture")
+            steam.hasBeenRecognized = true
+            steam.installations = [installation("Old", availability: availability, size: 140_000_000_000)]
+            let game = CatalogGame(steam: steam)
+            XCTAssertNil(SteamArtworkRequest(game: game, role: .square).application)
+            let page = GameDetailPresentation(steamRecord: game, metadata: nil, totalPlaytime: 0, lastPlayed: nil)
+            XCTAssertEqual(page.appPath, "")
+            XCTAssertEqual(DetailsFacts.steamGame(game, metadata: nil, volumeName: "Old"), [])
+            XCTAssertNil(CatalogGamePresentation(game: game, sourceEnabled: true).launchTarget)
+        }
+    }
+
     func testSteamPresentationKeepsIdentityPersonalOverridesAndHistory() throws {
         let body = Data("""
         {"10":{"success":true,"data":{"steam_appid":10,"short_description":"Store text","genres":[{"description":"Strategy"}],"publishers":["Studio"],"release_date":{"date":"23 mag 2023"}}}}

@@ -32,7 +32,7 @@ struct SteamOptionsView: View {
     }
 
     private var application: CatalogNativeApplication? {
-        current.steamGame?.installations.first { $0.availability == .available }?.primaryApplication
+        current.steamGame?.firstAvailableInstallation?.primaryApplication
     }
 
     private var presentation: SteamOptionsPresentation {

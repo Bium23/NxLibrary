@@ -15,7 +15,7 @@ public struct SteamArtworkRequest: Equatable {
     public var appID: UInt32? { game.steamGame?.appID }
     /// The installed app this game launches, as the rest of the library reads it.
     public var application: CatalogNativeApplication? {
-        game.steamGame?.installations.first { $0.availability == .available }?.primaryApplication
+        game.steamGame?.firstAvailableInstallation?.primaryApplication
     }
 
     /// A square with no app to take the icon from (Steam still installing the game): it asks for an automatic

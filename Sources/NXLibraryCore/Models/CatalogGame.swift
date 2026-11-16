@@ -99,6 +99,12 @@ public struct SteamCatalogGame: Codable, Equatable, Identifiable, Sendable {
 
     public init(id: UUID = UUID(), appID: UInt32, name: String) { self.id = id; self.appID = appID; self.name = name }
 
+    /// Descriptive lookup in catalog order, shared by artwork, facts and process observation.
+    /// Play separately checks source status, review and installation uniqueness in `CatalogGamePresentation`.
+    public var firstAvailableInstallation: SteamCatalogInstallation? {
+        installations.first { $0.availability == .available }
+    }
+
     /// Steam is installing it: of the installations still detected, the only one is downloading. An old folder no
     /// longer detected (a game removed and installed again elsewhere) does not hide the download.
     public var isDownloading: Bool {

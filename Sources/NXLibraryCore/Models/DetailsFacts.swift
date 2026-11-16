@@ -54,7 +54,7 @@ public enum DetailsFacts {
                                  locale: Locale = L10n.context.formatLocale) -> [DetailsFact] {
         let appID = game.steamGame?.appID
         let facts = metadata.flatMap { $0.appID == appID ? $0 : nil }
-        let installation = game.steamGame?.installations.first { $0.availability == .available }
+        let installation = game.steamGame?.firstAvailableInstallation
         return rows([.developer: names(overrides[.developer].map { [$0] } ?? facts?.developers),
                      .publisher: names(overrides[.publisher].map { [$0] } ?? facts?.publishers),
                      .size: installation.flatMap { size($0.reportedSizeBytes, locale: locale) },
