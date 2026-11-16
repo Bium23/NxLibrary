@@ -170,15 +170,19 @@ struct AchievementsScreen: View {
     private var gauge: some View {
         let fraction = summary.total > 0 ? Double(summary.unlocked) / Double(summary.total) : 0
         return VStack(alignment: .leading, spacing: 0) {
-            Text(Self.wholePercent(summary.percentComplete))
+            // Complete, the reward's name instead of "100%" and a full bar, as on the page's card
+            // (maintainer's choice, 16 Nov 2026): the large orb beside it already says it is done.
+            Text(summary.isComplete ? AchievementTier.arcane.displayName() : Self.wholePercent(summary.percentComplete))
                 .seleneFont(64, .semibold)
                 .monospacedDigit()
                 .foregroundColor(SeleneTheme.ink)
                 .lineLimit(1)
-            // Fills the gauge's width (the widest line's), which `fixedSize` settles first.
-            AchievementProgressBar(fraction: fraction, height: 5, track: SeleneTheme.ink25)
-                .frame(maxWidth: .infinity)
-                .padding(.top, canvas.u(6))
+            if !summary.isComplete {
+                // Fills the gauge's width (the widest line's), which `fixedSize` settles first.
+                AchievementProgressBar(fraction: fraction, height: 5, track: SeleneTheme.ink25)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, canvas.u(6))
+            }
             Text(countLine)
                 .seleneFont(16)
                 .foregroundColor(SeleneTheme.ink75)
