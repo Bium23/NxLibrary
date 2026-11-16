@@ -21,6 +21,7 @@ struct SettingsAboutSection: View {
         ("Title DB", L10n.text("Game names, icons and banners"), "https://github.com/blawar/titledb"),
         ("LaunchBox Games Database", L10n.text("Box covers, logos, backgrounds and square art in Change artwork"), "https://gamesdb.launchbox-app.com"),
         ("SteamGridDB", L10n.text("Community covers, backgrounds, logos and icons, with your API key"), "https://www.steamgriddb.com"),
+        ("IGDB", L10n.text("Critic scores with your own credentials"), "https://www.igdb.com"),
         ("NX2Apple", L10n.text("Key check, failure explanations and diagnostics, adapted (MIT)"), "https://github.com/LNPANDY/NX2Apple")
     ]
 

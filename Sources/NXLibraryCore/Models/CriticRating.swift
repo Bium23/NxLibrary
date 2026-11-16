@@ -20,41 +20,59 @@ public struct CriticRatingQuery: Hashable, Codable, Sendable {
 /// One referenced critic average, never an audience recommendation or an average of providers.
 public struct CriticRating: Equatable, Codable, Sendable {
     public enum Source: String, Codable, Sendable {
-        case openCritic, metacritic, criticDB
+        case openCritic, metacritic, criticDB, igdb
         public var name: String {
             switch self {
             case .openCritic: return "OpenCritic"
             case .metacritic: return "Metacritic"
             case .criticDB: return "CriticDB"
+            case .igdb: return "IGDB"
             }
         }
         var priority: Int {
-            switch self { case .openCritic: return 0; case .metacritic: return 1; case .criticDB: return 2 }
+            switch self { case .igdb: return -1; case .openCritic: return 0; case .metacritic: return 1; case .criticDB: return 2 }
         }
     }
     public let score: Double
     public let source: Source
-    public let entityID: String
-    public let statementID: String
+    public let entityID: String?
+    public let statementID: String?
     public let referenceURLs: [URL]
     public let referenceItems: [String]
     /// Wikidata's point-in-time, not the date the app fetched this value.
     public let scoreDate: String?
     /// Empty means platform unspecified; never inferred from the requesting game's platform.
     public let platforms: [String]
+    public let igdbID: Int?
+    public let igdbURL: URL?
+    public let reviewCount: Int?
+
+    public init(score: Double, source: Source, entityID: String? = nil, statementID: String? = nil,
+                referenceURLs: [URL] = [], referenceItems: [String] = [], scoreDate: String? = nil,
+                platforms: [String] = [], igdbID: Int? = nil, igdbURL: URL? = nil, reviewCount: Int? = nil) {
+        self.score = score; self.source = source; self.entityID = entityID; self.statementID = statementID
+        self.referenceURLs = referenceURLs; self.referenceItems = referenceItems; self.scoreDate = scoreDate
+        self.platforms = platforms; self.igdbID = igdbID; self.igdbURL = igdbURL; self.reviewCount = reviewCount
+    }
 
     public var starFills: [Double] { (0..<5).map { max(0, min(1, score / 20 - Double($0))) } }
     public func number(locale: Locale = L10n.context.formatLocale) -> String {
         score.formatted(.number.precision(.fractionLength(0...1)).locale(locale)) + "/100"
     }
     public var sourceURL: URL {
-        var url = URLComponents(string: "https://www.wikidata.org/wiki/\(entityID)")!
+        if source == .igdb { return igdbURL ?? URL(string: "https://www.igdb.com")! }
+        var url = URLComponents(string: "https://www.wikidata.org/wiki/\(entityID ?? "")")!
         url.fragment = statementID
         return url.url!
     }
     var isValid: Bool {
-        score.isFinite && (0...100).contains(score) && WikidataRatings.isItemID(entityID)
-            && statementID.hasPrefix(entityID + "$") && (!referenceURLs.isEmpty || !referenceItems.isEmpty)
+        guard score.isFinite, (0...100).contains(score) else { return false }
+        if source == .igdb {
+            return (igdbID ?? 0) > 0 && (reviewCount ?? 0) > 0 && igdbURL.flatMap(IGDBRatings.safeGameURL) != nil
+        }
+        guard let entityID, let statementID else { return false }
+        return WikidataRatings.isItemID(entityID) && statementID.hasPrefix(entityID + "$")
+            && (!referenceURLs.isEmpty || !referenceItems.isEmpty)
     }
 }
 

@@ -34,7 +34,7 @@ struct CriticRatingValue: View {
                         .foregroundColor(SeleneTheme.ink90)
                         .monospacedDigit()
                         .fixedSize()
-                    Text("\(rating.source.name) · Wikidata")
+                    Text(rating.source == .igdb ? "IGDB" : "\(rating.source.name) · Wikidata")
                         .seleneFont(11)
                         .foregroundColor(SeleneTheme.ink60)
                         .lineLimit(1)
@@ -53,7 +53,7 @@ struct CriticRatingValue: View {
 
     private func provenance(_ rating: CriticRating) -> String {
         var lines = [rating.number(locale: localization.formatLocale),
-                     L10n.format("%@ via Wikidata", [rating.source.name]),
+                     rating.source == .igdb ? "IGDB" : L10n.format("%@ via Wikidata", [rating.source.name]),
                      rating.platforms.isEmpty ? L10n.text("Platform not specified")
                         : (rating.platforms.contains("Q14116") ? "macOS" : "Nintendo Switch")]
         if let date = rating.scoreDate { lines.append(String(date.dropFirst(date.hasPrefix("+") ? 1 : 0).prefix(10))) }

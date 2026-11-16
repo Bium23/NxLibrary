@@ -38,6 +38,7 @@ public struct SettingsView: View {
     }
     /// A palette change redraws the whole screen; selection and focus live here and survive it.
     @ObservedObject private var theme = ThemeStore.shared
+    @ObservedObject private var igdb = IGDBSettings.shared
     @Environment(\.nxAppLocale) private var localization
 
     public init(initialSection: SettingsSection,
@@ -81,6 +82,7 @@ public struct SettingsView: View {
         .background(SeleneBackdrop().environment(\.seleneBackdropStyle, settingsBackdropStyle))
         .onAppear(perform: installKeyMonitor)
         .onDisappear(perform: removeKeyMonitor)
+        .onDisappear { igdb.isEditing = false }
         .onChange(of: section) { _ in
             rowActions = []
             rowFocus = FocusIndex()
@@ -99,6 +101,11 @@ public struct SettingsView: View {
                 SteamGridDBKeyDialog(viewModel: viewModel, gamepad: .nxSettingsGamepadAction) { _ in
                     viewModel.isEditingSteamGridDBKey = false
                 }
+            }
+        }
+        .overlay {
+            if igdb.isEditing {
+                IGDBCredentialsDialog(model: igdb) { igdb.isEditing = false }
             }
         }
         .overlay {
@@ -349,7 +356,7 @@ public struct SettingsView: View {
                   !NativeMenuCommands.shared.isTracking,
                   !router.isMenuPresented,
                   !viewModel.showSetupCheck,
-                  !showingControls, localePicker == nil, !viewModel.isEditingSteamGridDBKey,
+                  !showingControls, localePicker == nil, !viewModel.isEditingSteamGridDBKey, !igdb.isEditing,
                   viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
                   viewModel.gameWithInstallFailure == nil,
                   let window = event.window,
@@ -402,7 +409,7 @@ public struct SettingsView: View {
 
     private func handleGamepad(_ action: GamepadAction) {
         // The key dialog takes the controller while it is open.
-        if viewModel.isEditingSteamGridDBKey { return }
+        if viewModel.isEditingSteamGridDBKey || igdb.isEditing { return }
         if localePicker != nil {
             NotificationCenter.default.post(name: .nxLocalePickerGamepadAction, object: action)
             return

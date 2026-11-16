@@ -114,6 +114,7 @@ public enum SettingsCatalog {
         action("iconAppearance", .look, "App icon", "The icon appearance in the Dock."),
         action("boxCovers", .library, "Box covers", "Open GameTDB for box covers."),
         action("steamGridDB", .look, "SteamGridDB", "Add your API key to find covers, backgrounds, logos and icons in Change artwork."),
+        action("igdb", .look, "IGDB", "Personal IGDB credentials for critic scores. Wikidata remains available without a key."),
 
         // Games
         row("launchStyle", .games, "Launch screen style",

@@ -391,7 +391,7 @@ sopra la sfumatura inferiore. In Details la barra è ancorata alla finestra, il 
 sparisce prima dei comandi e le fasce in focus salgono insieme alla barra. La posizione
 si condivide anche con le opzioni, il visualizzatore di screenshot e le schermate Home.
 
-### Voto della critica in Details (16 novembre 2026, in attesa di validazione umana)
+### Voto della critica in Details (Wikidata validato il 16 novembre 2026; IGDB da validare)
 
 L'ultima riga del pannello Details, dopo Installed in, mostra cinque stelle proporzionali,
 il voto originale /100 e la fonte con Wikidata. È una riga informativa, senza una nuova
@@ -413,7 +413,8 @@ un errore. La cache separata `ratings/wikidata` nel profilo corrente dura sette 
 per un voto, un giorno per un'assenza verificata; offline conserva il dato con la propria
 data. La data di scaricamento resta distinta da quella del voto. Cambiare gioco annulla
 il lettore e impedisce la pubblicazione di un risultato precedente. Nessuna scrittura
-del catalogo, dei dati Steam o dei giochi; i provider con credenziali rimangono rinviati.
+del catalogo, dei dati Steam o dei giochi. Il maintainer ha validato la riga e la correzione
+degli abbinamenti Wikidata; la nuova opzione IGDB personale attende validazione.
 
 La verifica nella libreria reale ha individuato due difetti di ricerca: i simboli ™/®/©
 nei nomi dello store davano risultati vuoti, e un nome Steam personalizzato non identificava
@@ -421,3 +422,34 @@ il titolo. Le query ora tolgono soltanto quei simboli, conservando sequel/edizio
 prova prima P1733 (ID pubblico esatto), verificato di nuovo nelle dichiarazioni dell'entità.
 Il ripiego per nome usa anche il campo `match` degli alias. Le assenze salvate dal vecchio
 resolver vengono ricontrollate, senza eliminare voti validi o modificare la libreria.
+
+#### IGDB facoltativo
+
+Settings → Look → Ratings presenta IGDB con aggiunta/modifica delle credenziali e rimozione.
+Il dialogo usa Client ID e Client Secret dell'applicazione Twitch personale, controlla
+la connessione prima del salvataggio e permette di annullare anche durante la verifica.
+Tastiera/controller della pagina sottostante sono sospesi; i link aprono portale e guida
+ufficiali. Search trova IGDB; About contiene l'attribuzione. Nessuna credenziale condivisa
+è inclusa nel bundle.
+
+`IGDBCredentialsStore` conserva le credenziali nel solo profilo corrente, in
+`credentials/igdb.json` con modo 0600, escluso dall'importazione Dev. Non passano per
+AppSettings, UserDefaults, log o URL. Il Client Secret va nel corpo del POST a Twitch;
+solo il token derivato e il Client ID raggiungono IGDB. Redirect rifiutati e host vincolati,
+richieste seriali distanziate, limiti di durata/dimensione e messaggi senza il corpo del
+server mantengono questo confine. I token rimangono in memoria, si rinnovano a scadenza
+o una sola volta dopo 401; non sono scritti su disco.
+
+`IGDBRatingService` usa `aggregated_rating` e `aggregated_rating_count`, mai il voto utenti
+o misto. Nome/alias e piattaforma devono corrispondere, oppure l'ID Steam deve essere
+verificato su `external_games` con il nuovo `external_game_source.name`. La media IGDB è
+del gioco, non specifica di un port: conserva questo ambito senza fingere una recensione
+macOS. `CriticRating` distingue provenienza IGDB e Wikidata, mantenendo leggibili le vecchie
+cache. La cache IGDB separata è per client pubblico/identità del gioco, senza segreti o
+token, e conserva il voto datato offline. Configurare/rimuovere il provider invalida
+richieste e token e ridisegna la riga tramite una revisione posseduta da `IGDBSettings`.
+
+`CriticRatingService.preferred` prova IGDB solo con credenziali presenti, poi Wikidata se
+non ottiene un voto. Nessuna impostazione cambia i metadati o la libreria. Test di
+autenticazione/errore usano credenziali inventate: la verifica reale con le credenziali
+del maintainer e il controllo manuale della schermata rimangono necessari.

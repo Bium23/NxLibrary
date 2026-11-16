@@ -8,6 +8,7 @@ struct SettingsLookSection: View {
     let onActions: ([SettingsRowAction]) -> Void
     @Environment(\.seleneCanvas) private var canvas
     @ObservedObject private var theme = ThemeStore.shared
+    @ObservedObject private var igdb = IGDBSettings.shared
 
     private var themeName: String {
         theme.palettes.first { $0.id == settings.settings.colorThemeID }?.name ?? theme.palette.name
@@ -123,8 +124,24 @@ struct SettingsLookSection: View {
                             buttonTitle: viewModel.hasSteamGridDBKey ? "Remove key" : "Add key") {
                 steamGridDBAction()
             }
+
+            SettingsSubheading(L10n.text("Ratings"))
+            SeleneRow("IGDB", subtitle: igdb.message ?? (igdb.isConfigured
+                      ? "IGDB connected · Wikidata is the fallback"
+                      : "Optional critic scores with your own credentials")) {
+                HStack(spacing: canvas.u(18)) {
+                    Button(L10n.text(igdb.isConfigured ? "Edit credentials" : "Connect")) { igdb.isEditing = true }
+                        .foregroundColor(SeleneTheme.glyph)
+                    if igdb.isConfigured {
+                        Button(L10n.text("Remove")) { Task { await igdb.remove() } }
+                            .foregroundColor(SeleneTheme.ink60).disabled(igdb.isRemoving)
+                    }
+                }
+                .buttonStyle(.plain).seleneFont(15, .semibold)
+            }
         }
         .onAppear(perform: publishActions)
+        .onChange(of: igdb.revision) { _ in publishActions() }
     }
 
     private func steamGridDBAction() {
@@ -155,7 +172,11 @@ struct SettingsLookSection: View {
                 settings.settings.reduceMotion.toggle()
             },
             .value("icon", "App icon") { stepIcon($0) },
-            .init(id: "SteamGridDB", title: "SteamGridDB") { steamGridDBAction() }
+            .init(id: "SteamGridDB", title: "SteamGridDB") { steamGridDBAction() },
+            .init(id: "IGDB", title: "IGDB",
+                  secondary: igdb.isConfigured ? (title: "Remove", activate: { Task { await igdb.remove() }; return }) : nil) {
+                igdb.isEditing = true
+            }
         ])
     }
 }

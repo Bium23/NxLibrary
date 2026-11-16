@@ -285,7 +285,10 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/DetailsFacts.swift](../Sources/NXLibraryCore/Models/DetailsFacts.swift) | Sceglie le righe del pannello Details per Switch e Steam: solo i valori presenti, niente di tecnico. |
 | [Sources/NXLibraryCore/Models/CriticRating.swift](../Sources/NXLibraryCore/Models/CriticRating.swift) | Identità pubblica del gioco, voto originale /100, provenienza e riempimento proporzionale delle cinque stelle. |
 | [Sources/NXLibraryCore/Services/WikidataRatings.swift](../Sources/NXLibraryCore/Services/WikidataRatings.swift) | Abbina titoli esatti e ID Steam; seleziona medie della critica documentate, senza confondere piattaforme o raccomandazioni. |
-| [Sources/NXLibraryCore/Services/CriticRatingService.swift](../Sources/NXLibraryCore/Services/CriticRatingService.swift) | Letture pubbliche Wikidata seriali e annullabili, cache delle valutazioni, ripiego offline e pausa dopo errori. |
+| [Sources/NXLibraryCore/Services/CriticRatingService.swift](../Sources/NXLibraryCore/Services/CriticRatingService.swift) | Preferenza IGDB personale → Wikidata pubblico, cache Wikidata, ripiego offline e pausa dopo errori. |
+| [Sources/NXLibraryCore/Services/IGDBCredentials.swift](../Sources/NXLibraryCore/Services/IGDBCredentials.swift) | Credenziali Twitch personali in file 0600, validazione e messaggi sicuri senza segreti nei log. |
+| [Sources/NXLibraryCore/Services/IGDBRatings.swift](../Sources/NXLibraryCore/Services/IGDBRatings.swift) | Abbinamento IGDB esatto o tramite ID Steam e sola media della critica, con provenienza distinta da Wikidata. |
+| [Sources/NXLibraryCore/Services/IGDBRatingService.swift](../Sources/NXLibraryCore/Services/IGDBRatingService.swift) | Accesso Twitch/IGDB limitato e annullabile, token solo in memoria, rinnovo 401, cache separata e controllo connessione. |
 | [Sources/NXLibraryCore/Models/DetailsFocus.swift](../Sources/NXLibraryCore/Models/DetailsFocus.swift) | Gestisce zone e spostamenti del focus nei link e nelle bande di Details. |
 | [Sources/NXLibraryCore/Models/FocusIndex.swift](../Sources/NXLibraryCore/Models/FocusIndex.swift) | Mantiene un indice di focus entro i limiti di una lista. |
 | [Sources/NXLibraryCore/Models/SettingsRowAction.swift](../Sources/NXLibraryCore/Models/SettingsRowAction.swift) | Identifica azioni e righe Settings, mantenendo una sola azione primaria per riga senza accorpare giochi omonimi. |
@@ -348,6 +351,8 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/Views/Detail/DetailsBands.swift](../Sources/NXLibrary/Views/Detail/DetailsBands.swift) | Disegna bande screenshot, mod e giochi correlati con i relativi titoli. |
 | [Sources/NXLibrary/Views/Detail/DetailsPanel.swift](../Sources/NXLibrary/Views/Detail/DetailsPanel.swift) | Pannello Details uguale per ogni fonte: righe con icona, voto della critica in ultima riga e link in `SeleneActionGrid`; carica solo il voto del gioco mostrato. |
 | [Sources/NXLibrary/Views/Detail/CriticRatingValue.swift](../Sources/NXLibrary/Views/Detail/CriticRatingValue.swift) | Valore della riga Critic score: cinque stelle, numero /100 e fonte, senza finestre aggiuntive; caricamento e assenza espliciti. |
+| [Sources/NXLibrary/ViewModels/IGDBSettings.swift](../Sources/NXLibrary/ViewModels/IGDBSettings.swift) | Configurazione IGDB facoltativa: verifica prima del salvataggio, rimozione e invalidazione delle richieste/voti precedenti. |
+| [Sources/NXLibrary/Views/Components/IGDBCredentialsDialog.swift](../Sources/NXLibrary/Views/Components/IGDBCredentialsDialog.swift) | Client ID, Client Secret nascosto, Verifica e salva, annullamento e link alle istruzioni ufficiali; input Settings sospeso. |
 
 ## UI · Game Options, cheats e salvataggi
 
@@ -568,6 +573,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/FirstRunSetupTests.swift](../Tests/NXLibraryCoreTests/FirstRunSetupTests.swift) | Skip persistente, ripresa, riapertura manuale senza reset, attesa della scansione, separazione dei requisiti e navigazione del primo gioco. |
 | [Tests/NXLibraryCoreTests/SmokeTests.swift](../Tests/NXLibraryCoreTests/SmokeTests.swift) | Importabilità e versione nominale del modulo Core. |
 | [Tests/NXLibraryCoreTests/CriticRatingTests.swift](../Tests/NXLibraryCoreTests/CriticRatingTests.swift) | Abbinamenti esatti, metriche e piattaforme, stelle proporzionali, cache offline, richieste seriali/condivise, errori e annullamento delle valutazioni. |
+| [Tests/NXLibraryCoreTests/IGDBRatingTests.swift](../Tests/NXLibraryCoreTests/IGDBRatingTests.swift) | Credenziali 0600 sintetiche, isolamento degli host, voti critica/utenti, rinnovo accesso, annullamento, cache offline e ripiego Wikidata. |
 | [Tests/NXLibraryCoreTests/SourceCatalogTests.swift](../Tests/NXLibraryCoreTests/SourceCatalogTests.swift) | Fixture PFS0/CNMT e riconoscimento di base, aggiornamenti e DLC. |
 | [Tests/NXLibraryCoreTests/EngineUpgradeSourcesTests.swift](../Tests/NXLibraryCoreTests/EngineUpgradeSourcesTests.swift) | Copre cartelle estratte, pacchetti multipli, selezione, persistenza, bridge Python, file illeggibili e restaging senza perdita di cache o originali. |
 | [Tests/NXLibraryCoreTests/SpotlightPageTests.swift](../Tests/NXLibraryCoreTests/SpotlightPageTests.swift) | Estratti del testo e stati dello scorrimento della pagina del gioco. |

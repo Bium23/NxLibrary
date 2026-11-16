@@ -72537,6 +72537,785 @@
           }
         }
       }
+    },
+    "IGDB": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB"
+          }
+        }
+      }
+    },
+    "Ratings": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ratings"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valutazioni"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Évaluations"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bewertungen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valoraciones"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avaliações"
+          }
+        }
+      }
+    },
+    "Connect": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collega"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecter"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbinden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectar"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectar"
+          }
+        }
+      }
+    },
+    "Edit credentials": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit credentials"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifica credenziali"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier les identifiants"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zugangsdaten bearbeiten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar credenciales"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar credenciais"
+          }
+        }
+      }
+    },
+    "Client ID": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client ID"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client ID"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client ID"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client ID"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client ID"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client ID"
+          }
+        }
+      }
+    },
+    "Client Secret": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client Secret"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client Secret"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client Secret"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client Secret"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client Secret"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client Secret"
+          }
+        }
+      }
+    },
+    "Check and save": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check and save"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifica e salva"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifier et enregistrer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prüfen und speichern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificar y guardar"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificar e salvar"
+          }
+        }
+      }
+    },
+    "Developer portal": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Developer portal"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portale sviluppatori"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portail développeurs"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entwicklerportal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portal de desarrolladores"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portal de desenvolvedores"
+          }
+        }
+      }
+    },
+    "Setup guide": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setup guide"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guida alla configurazione"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guide de configuration"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einrichtungsanleitung"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guía de configuración"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guia de configuração"
+          }
+        }
+      }
+    },
+    "Personal IGDB credentials for critic scores. Wikidata remains available without a key.": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal IGDB credentials for critic scores. Wikidata remains available without a key."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credenziali IGDB personali per i voti della critica. Wikidata resta disponibile senza chiave."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identifiants IGDB personnels pour les notes de la critique. Wikidata reste disponible sans clé."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eigene IGDB-Zugangsdaten für Kritikerwertungen. Wikidata bleibt ohne Schlüssel verfügbar."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credenciales personales de IGDB para las puntuaciones de la crítica. Wikidata sigue disponible sin clave."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credenciais pessoais do IGDB para notas da crítica. O Wikidata continua disponível sem chave."
+          }
+        }
+      }
+    },
+    "Critic scores with your own credentials": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Critic scores with your own credentials"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voti della critica con le tue credenziali"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes de la critique avec vos identifiants"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kritikerwertungen mit eigenen Zugangsdaten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puntuaciones de la crítica con tus credenciales"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notas da crítica com suas credenciais"
+          }
+        }
+      }
+    },
+    "IGDB connected · Wikidata is the fallback": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB connected · Wikidata is the fallback"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB collegato · Wikidata come alternativa"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB connecté · Wikidata en secours"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB verbunden · Wikidata als Rückfallquelle"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB conectado · Wikidata como alternativa"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB conectado · Wikidata como alternativa"
+          }
+        }
+      }
+    },
+    "Optional critic scores with your own credentials": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional critic scores with your own credentials"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voti della critica facoltativi con le tue credenziali"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes de la critique facultatives avec vos identifiants"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optionale Kritikerwertungen mit eigenen Zugangsdaten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puntuaciones de la crítica opcionales con tus credenciales"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notas da crítica opcionais com suas credenciais"
+          }
+        }
+      }
+    },
+    "Use your Twitch application credentials for critic scores. They stay on this Mac and are sent only to Twitch and IGDB.": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use your Twitch application credentials for critic scores. They stay on this Mac and are sent only to Twitch and IGDB."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa le credenziali della tua applicazione Twitch per i voti della critica. Restano su questo Mac e vengono inviate solo a Twitch e IGDB."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilisez les identifiants de votre application Twitch pour les notes de la critique. Ils restent sur ce Mac et sont envoyés uniquement à Twitch et IGDB."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nutze die Zugangsdaten deiner Twitch-Anwendung für Kritikerwertungen. Sie bleiben auf diesem Mac und werden nur an Twitch und IGDB gesendet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa las credenciales de tu aplicación Twitch para las puntuaciones de la crítica. Se guardan en este Mac y solo se envían a Twitch e IGDB."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use as credenciais do seu aplicativo Twitch para notas da crítica. Elas ficam neste Mac e são enviadas apenas à Twitch e ao IGDB."
+          }
+        }
+      }
+    },
+    "Enter the Client ID and Client Secret from your Twitch developer application.": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the Client ID and Client Secret from your Twitch developer application."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inserisci Client ID e Client Secret della tua applicazione nel portale sviluppatori Twitch."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez le Client ID et le Client Secret de votre application du portail développeurs Twitch."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib Client ID und Client Secret deiner Anwendung aus dem Twitch-Entwicklerportal ein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce el Client ID y el Client Secret de tu aplicación del portal de desarrolladores de Twitch."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insira o Client ID e o Client Secret do seu aplicativo no portal de desenvolvedores da Twitch."
+          }
+        }
+      }
+    },
+    "IGDB did not accept these credentials. Check the Client ID and Client Secret.": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB did not accept these credentials. Check the Client ID and Client Secret."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB non ha accettato queste credenziali. Controlla Client ID e Client Secret."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB a refusé ces identifiants. Vérifiez le Client ID et le Client Secret."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB hat diese Zugangsdaten abgelehnt. Prüfe Client ID und Client Secret."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB no ha aceptado estas credenciales. Comprueba el Client ID y el Client Secret."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O IGDB não aceitou essas credenciais. Confira o Client ID e o Client Secret."
+          }
+        }
+      }
+    },
+    "IGDB could not be reached. Check the connection and try again.": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB could not be reached. Check the connection and try again."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB non è raggiungibile. Controlla la connessione e riprova."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB est inaccessible. Vérifiez la connexion et réessayez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB ist nicht erreichbar. Prüfe die Verbindung und versuche es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se puede conectar con IGDB. Comprueba la conexión e inténtalo de nuevo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível acessar o IGDB. Verifique a conexão e tente novamente."
+          }
+        }
+      }
+    },
+    "IGDB is busy. Wait a moment and try again.": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB is busy. Wait a moment and try again."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB è occupato. Attendi un momento e riprova."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB est occupé. Patientez un instant et réessayez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB ist ausgelastet. Warte kurz und versuche es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB está ocupado. Espera un momento e inténtalo de nuevo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O IGDB está ocupado. Aguarde um momento e tente novamente."
+          }
+        }
+      }
+    },
+    "IGDB credentials could not be saved on this Mac.": {
+      "comment": "Optional personal IGDB integration: settings, connection check and safe error copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB credentials could not be saved on this Mac."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile salvare le credenziali IGDB su questo Mac."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d’enregistrer les identifiants IGDB sur ce Mac."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die IGDB-Zugangsdaten konnten auf diesem Mac nicht gespeichert werden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se han podido guardar las credenciales de IGDB en este Mac."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível salvar as credenciais do IGDB neste Mac."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

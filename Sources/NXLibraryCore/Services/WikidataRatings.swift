@@ -77,7 +77,7 @@ public enum WikidataRatings {
             if a.platforms.isEmpty != b.platforms.isEmpty { return !a.platforms.isEmpty }
             if a.source.priority != b.source.priority { return a.source.priority < b.source.priority }
             if a.scoreDate != b.scoreDate { return (a.scoreDate ?? "") > (b.scoreDate ?? "") }
-            return a.statementID < b.statementID
+            return (a.statementID ?? "") < (b.statementID ?? "")
         }.first
     }
     private static func parse(_ claim: [String: Any], entityID: String, platform: String) -> CriticRating? {

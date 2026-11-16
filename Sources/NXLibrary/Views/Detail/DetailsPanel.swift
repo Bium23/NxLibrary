@@ -73,6 +73,9 @@ struct DetailsPanel: View {
     var ratingQuery: CriticRatingQuery? = nil
     @State private var loadedRatingQuery: CriticRatingQuery?
     @State private var ratingResult: CriticRatingResult?
+    @ObservedObject private var igdb = IGDBSettings.shared
+    @State private var loadedRatingRevision: UUID?
+    private struct RatingTask: Hashable { let query: CriticRatingQuery?; let revision: UUID }
 
     /// Spotlight's column beside About this game: three links and their gaps.
     static let narrowWidth: CGFloat = 520
@@ -87,15 +90,19 @@ struct DetailsPanel: View {
         Group {
             if !facts.isEmpty || !links.isEmpty || ratingQuery != nil { content }
         }
-        .task(id: ratingQuery) {
+        .task(id: RatingTask(query: ratingQuery, revision: igdb.revision)) {
             loadedRatingQuery = nil
+            loadedRatingRevision = nil
             ratingResult = nil
             guard let query = ratingQuery else { return }
+            let revision = igdb.revision
+            let credentials = igdb.credentials
             do { try await Task.sleep(nanoseconds: 300_000_000) }
             catch { return }
-            let result = await CriticRatingService.shared.load(query)
-            guard !Task.isCancelled else { return }
+            let result = await CriticRatingService.shared.preferred(query, credentials: credentials)
+            guard !Task.isCancelled, revision == igdb.revision else { return }
             loadedRatingQuery = query
+            loadedRatingRevision = revision
             ratingResult = result
         }
     }
@@ -138,7 +145,7 @@ struct DetailsPanel: View {
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 0) {
                     label(symbol: "star", text: L10n.text("Critic score"))
-                    CriticRatingValue(result: loadedRatingQuery == ratingQuery ? ratingResult : nil)
+                    CriticRatingValue(result: loadedRatingQuery == ratingQuery && loadedRatingRevision == igdb.revision ? ratingResult : nil)
                     Spacer(minLength: 0)
                 }
                 .padding(.vertical, canvas.u(9))

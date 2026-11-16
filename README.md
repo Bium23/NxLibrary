@@ -160,6 +160,14 @@ The unreleased hotfix adds **English, Italiano, Français, Deutsch, Español and
 
 Choose a language directly from its list. Known catalog genres are translated locally, without changing the saved metadata. Descriptions from Nlib are requested in the app language when supported, with cached descriptions shared between regions using the same language. Switching language reuses available artwork and credits; when those are fresh, only the localized description is requested. English remains available when a translated description cannot be found; descriptions, mod text and release notes from external sources are not automatically translated. Personal names, metadata choices, artwork and game settings are preserved.
 
+### Critic scores
+
+The last row in **Details** shows five stars, the original score out of 100 and its source. Public ratings via Wikidata work without a key; games without a verified match or usable score show **Rating unavailable**. These are critic scores, not personal votes or player recommendation percentages.
+
+Optional **Settings → Look → Ratings → IGDB** accepts your own Twitch application's **Client ID** and **Client Secret**. **Check and save** verifies access before keeping the credentials in a private file on this Mac. The secret is hidden, and credentials are separate from ordinary settings and the Dev-profile import. **Remove** returns to the keyless source. With IGDB configured, its critic average takes priority; Wikidata remains the fallback. Cached scores remain available offline.
+
+Use the dialog's **Developer portal** and **Setup guide** links to create your credentials. IGDB documents free non-commercial API access; commercial use requires its partnership process. This optional integration is awaiting maintainer validation with real credentials.
+
 ### Add or rebuild a game
 
 1. Open **Add game** and choose or drop a supported file or folder.

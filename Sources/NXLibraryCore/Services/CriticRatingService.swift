@@ -27,6 +27,15 @@ public actor CriticRatingService {
         self.directory = directory
         self.transport = transport
     }
+    /// Two deliberately fixed sources: optional personal IGDB first, then the public fallback.
+    public func preferred(_ query: CriticRatingQuery, credentials: IGDBCredentials?,
+                          igdb: IGDBRatingService = .shared) async -> CriticRatingResult {
+        if let credentials {
+            let primary = await igdb.load(query, credentials: credentials)
+            if !Task.isCancelled, primary.rating != nil { return primary }
+        }
+        return await load(query)
+    }
     public func load(_ query: CriticRatingQuery, now: Date = Date()) async -> CriticRatingResult {
         let empty = CriticRatingResult(rating: nil, fetchedAt: nil, isStale: false)
         guard !Task.isCancelled, !query.name.isEmpty, query.name.count <= 300 else { return empty }
