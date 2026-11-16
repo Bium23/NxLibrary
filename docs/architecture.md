@@ -463,6 +463,15 @@ un titolo Switch e uno Steam; non è stata usata una chiave reale dall'agente e 
 compare solo se IGDB restituisce una media della critica. Correzione in attesa di
 validazione umana.
 
+Verifica diretta autorizzata dal maintainer il 16 novembre 2026: la stessa ricerca
+dell'app restituisce la scheda Ocarina Switch 2 (405460, piattaforma 508), confermata
+anche per ID. La risposta non contiene `aggregated_rating` né `aggregated_rating_count`:
+ha solo `rating` (circa 99,7) e `rating_count` (35), cioè voti utenti al momento della
+verifica. L'assenza nella riga della critica è quindi attesa anche dopo la correzione
+della console. Non sostituire silenziosamente il voto utenti o quello di un'altra
+edizione; un eventuale ripiego comunitario richiede una provenienza e un'etichetta
+distinte e una scelta del maintainer. Nessuna credenziale o token è stata registrata.
+
 `CriticRatingService.preferred` prova IGDB solo con credenziali presenti, poi Wikidata se
 non ottiene un voto. Nessuna impostazione cambia i metadati o la libreria. Test di
 autenticazione/errore usano credenziali inventate: la verifica reale con le credenziali
