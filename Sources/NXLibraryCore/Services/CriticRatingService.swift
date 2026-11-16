@@ -27,14 +27,20 @@ public actor CriticRatingService {
         self.directory = directory
         self.transport = transport
     }
-    /// Two deliberately fixed sources: optional personal IGDB first, then the public fallback.
+    /// IGDB critics, public critics, then explicitly identified IGDB community scores.
     public func preferred(_ query: CriticRatingQuery, credentials: IGDBCredentials?,
                           igdb: IGDBRatingService = .shared) async -> CriticRatingResult {
+        var community: CriticRatingResult?
         if let credentials {
             let primary = await igdb.load(query, credentials: credentials)
-            if !Task.isCancelled, primary.rating != nil { return primary }
+            if !Task.isCancelled, let rating = primary.rating {
+                if !rating.isCommunity { return primary }
+                community = primary
+            }
         }
-        return await load(query)
+        let fallback = await load(query)
+        guard !Task.isCancelled else { return CriticRatingResult(rating: nil, fetchedAt: nil, isStale: false) }
+        return fallback.rating != nil ? fallback : (community ?? fallback)
     }
     public func load(_ query: CriticRatingQuery, now: Date = Date()) async -> CriticRatingResult {
         let empty = CriticRatingResult(rating: nil, fetchedAt: nil, isStale: false)

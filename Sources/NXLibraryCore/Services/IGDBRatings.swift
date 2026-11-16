@@ -1,8 +1,8 @@
 import Foundation
 
-/// Only IGDB's external-critic aggregate, with an exact identity. Not rating/total_rating.
+/// Exact identity, preferring external critics; user scores remain an explicitly identified fallback.
 public enum IGDBRatings {
-    static let fields = "id,name,alternative_names.name,platforms,aggregated_rating,aggregated_rating_count,url"
+    static let fields = "id,name,alternative_names.name,platforms,aggregated_rating,aggregated_rating_count,rating,rating_count,url"
     static func clean(_ name: String) -> String {
         ["™", "®", "©"].reduce(name) { $0.replacingOccurrences(of: $1, with: "") }
             .split(whereSeparator: \.isWhitespace).joined(separator: " ")
@@ -29,7 +29,7 @@ public enum IGDBRatings {
                 && (game.platforms ?? []).contains(query.platform.igdbID)
         }
         guard matching.count == 1, let game = matching.first else { return nil }
-        return game.rating
+        return game.resolvedRating
     }
     struct Game: Decodable {
         struct Name: Decodable { let name: String }
@@ -39,11 +39,17 @@ public enum IGDBRatings {
         let platforms: [Int]?
         let aggregated_rating: Double?
         let aggregated_rating_count: Int?
+        let rating: Double?
+        let rating_count: Int?
         let url: URL?
-        var rating: CriticRating? {
-            guard id > 0, let score = aggregated_rating, score.isFinite, (0...100).contains(score),
-                  let count = aggregated_rating_count, count > 0, let url, let safe = safeGameURL(url) else { return nil }
-            return CriticRating(score: score, source: .igdb, igdbID: id, igdbURL: safe, reviewCount: count)
+        var resolvedRating: CriticRating? {
+            guard id > 0, let url, let safe = safeGameURL(url) else { return nil }
+            func make(_ score: Double?, _ count: Int?, audience: CriticRating.Audience) -> CriticRating? {
+                guard let score, score.isFinite, (0...100).contains(score), let count, count > 0 else { return nil }
+                return CriticRating(score: score, source: .igdb, igdbID: id, igdbURL: safe, reviewCount: count, audience: audience)
+            }
+            return make(aggregated_rating, aggregated_rating_count, audience: .critics)
+                ?? make(rating, rating_count, audience: .users)
         }
     }
     static func decode(_ data: Data) throws -> [Game] {
@@ -65,6 +71,6 @@ public enum IGDBRatings {
         guard games.count == 1, let game = matching.first?.game else { return nil }
         // The exact external ID establishes identity even when a Mac port is absent from IGDB's platform list.
         // Its returned score remains explicitly an overall game aggregate, not a Mac-specific score.
-        return game.rating
+        return game.resolvedRating
     }
 }

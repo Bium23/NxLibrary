@@ -34,7 +34,7 @@ struct CriticRatingValue: View {
                         .foregroundColor(SeleneTheme.ink90)
                         .monospacedDigit()
                         .fixedSize()
-                    Text(rating.source == .igdb ? "IGDB" : "\(rating.source.name) · Wikidata")
+                    Text(rating.attribution(context: localization))
                         .seleneFont(11)
                         .foregroundColor(SeleneTheme.ink60)
                         .lineLimit(1)
@@ -52,10 +52,14 @@ struct CriticRatingValue: View {
     }
 
     private func provenance(_ rating: CriticRating) -> String {
-        var lines = [rating.number(locale: localization.formatLocale),
-                     rating.source == .igdb ? "IGDB" : L10n.format("%@ via Wikidata", [rating.source.name]),
+        var lines = [L10n.text(rating.labelKey), rating.number(locale: localization.formatLocale),
+                     rating.attribution(context: localization),
                      rating.platforms.isEmpty ? L10n.text("Platform not specified")
-                        : (rating.platforms.contains("Q14116") ? "macOS" : "Nintendo Switch")]
+                        : (rating.platforms.contains("Q14116") ? "macOS"
+                           : (rating.platforms.contains("Q122761124") ? "Nintendo Switch 2" : "Nintendo Switch"))]
+        if let count = rating.reviewCount {
+            lines.append(L10n.format(rating.isCommunity ? "User ratings: %d" : "Critic reviews: %d", [count]))
+        }
         if let date = rating.scoreDate { lines.append(String(date.dropFirst(date.hasPrefix("+") ? 1 : 0).prefix(10))) }
         if result?.isStale == true { lines.append(L10n.text("Saved rating · refresh unavailable")) }
         lines.append(rating.sourceURL.absoluteString)

@@ -7,7 +7,12 @@ public actor IGDBRatingService {
     private let directory: URL
     private let transport: Transport
     private struct Token { let owner: String; let value: String; let expires: Date }
-    private struct Cache: Codable { let query: CriticRatingQuery; let rating: CriticRating?; let fetchedAt: Date }
+    private struct Cache: Codable {
+        let query: CriticRatingQuery
+        let rating: CriticRating?
+        let fetchedAt: Date
+        let resolverVersion: Int?
+    }
     private struct Flight { let id: UUID; let task: Task<CriticRatingResult, Never>; var waiters: Set<UUID> }
     private var pending: [String: Flight] = [:]
     private var workTail: Task<Void, Never>?
@@ -73,9 +78,15 @@ public actor IGDBRatingService {
     }
     private func resolve(_ query: CriticRatingQuery, credentials: IGDBCredentials, key: String, now: Date) async -> CriticRatingResult {
         let file = directory.appendingPathComponent(key + ".json")
-        let cached = (try? InstallationFileSnapshot.read(at: file, maximumBytes: 65_536).data)
-            .flatMap { try? JSONDecoder().decode(Cache.self, from: $0) }
-            .flatMap { $0.query == query && ($0.rating == nil || ($0.rating?.source == .igdb && $0.rating?.isValid == true)) ? $0 : nil }
+        let bytes = try? InstallationFileSnapshot.read(at: file, maximumBytes: 65_536).data
+        let decoded = bytes.flatMap { try? JSONDecoder().decode(Cache.self, from: $0) }
+        let cached: Cache? = {
+            guard let saved = decoded, saved.query == query else { return nil }
+            if let rating = saved.rating {
+                return rating.source == .igdb && rating.isValid ? saved : nil
+            }
+            return saved.resolverVersion == 2 ? saved : nil
+        }()
         func result(_ cache: Cache?, stale: Bool) -> CriticRatingResult {
             CriticRatingResult(rating: cache?.rating, fetchedAt: cache?.fetchedAt, isStale: stale && cache != nil)
         }
@@ -95,7 +106,7 @@ public actor IGDBRatingService {
                 rating = try IGDBRatings.rating(in: data, query: query)
             }
             try Task.checkCancellation()
-            let value = Cache(query: query, rating: rating, fetchedAt: now)
+            let value = Cache(query: query, rating: rating, fetchedAt: now, resolverVersion: 2)
             do {
                 try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
                 try JSONEncoder().encode(value).write(to: file, options: .atomic)

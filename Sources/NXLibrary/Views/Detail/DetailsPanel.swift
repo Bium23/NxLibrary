@@ -144,14 +144,18 @@ struct DetailsPanel: View {
                     Rectangle().fill(SeleneTheme.ink15).frame(height: max(1, canvas.u(1)))
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 0) {
-                    label(symbol: "star", text: L10n.text("Critic score"))
-                    CriticRatingValue(result: loadedRatingQuery == ratingQuery && loadedRatingRevision == igdb.revision ? ratingResult : nil)
+                    label(symbol: "star", text: L10n.text(currentRatingResult?.rating?.labelKey ?? "Critic score"))
+                    CriticRatingValue(result: currentRatingResult)
                     Spacer(minLength: 0)
                 }
                 .padding(.vertical, canvas.u(9))
             }
         }
         .frame(width: canvas.u(width), alignment: .topLeading)
+    }
+
+    private var currentRatingResult: CriticRatingResult? {
+        loadedRatingQuery == ratingQuery && loadedRatingRevision == igdb.revision ? ratingResult : nil
     }
 
     private func row(_ fact: DetailsFact) -> some View {

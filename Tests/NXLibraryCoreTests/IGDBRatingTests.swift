@@ -26,7 +26,7 @@ final class IGDBRatingTests: XCTestCase {
         try store.remove()
         XCTAssertNil(store.load())
     }
-    func testOnlyCriticAverageIsShownAndHasIGDBProvenance() throws {
+    func testCriticAverageWinsWithoutMixingCommunityScores() throws {
         let rating = try XCTUnwrap(IGDBRatings.rating(in: game, query: query))
         XCTAssertEqual(rating.source, .igdb)
         XCTAssertEqual(rating.score, 83.5)
@@ -34,8 +34,70 @@ final class IGDBRatingTests: XCTestCase {
         XCTAssertEqual(rating.sourceURL.absoluteString, "https://www.igdb.com/games/fixture")
         XCTAssertEqual(rating.starFills.reduce(0,+), 4.175, accuracy: 0.0001)
         XCTAssertNil(rating.entityID)
+        XCTAssertFalse(rating.isCommunity)
         let userOnly = Data("[{\"id\":10,\"name\":\"Fixture\",\"rating\":99,\"rating_count\":100,\"platforms\":[130]}]".utf8)
         XCTAssertNil(try IGDBRatings.rating(in: userOnly, query: query))
+    }
+
+    func testCommunityFallbackIsDistinctAndRequiresACountAndProvenance() throws {
+        let entry = Data("""
+        [{"id":405460,"name":"The Legend of Zelda: Ocarina of Time","platforms":[508],
+          "rating":99.65387466304598,"rating_count":35,
+          "url":"https://www.igdb.com/games/the-legend-of-zelda-ocarina-of-time--1"}]
+        """.utf8)
+        let query = CriticRatingQuery(name: "The Legend of Zelda™: Ocarina of Time", platform: .switch2)
+        let rating = try XCTUnwrap(IGDBRatings.rating(in: entry, query: query))
+        XCTAssertTrue(rating.isCommunity)
+        XCTAssertEqual(rating.reviewCount, 35)
+        XCTAssertEqual(rating.score, 99.65387466304598)
+        XCTAssertEqual(rating.labelKey, "User score")
+        XCTAssertEqual(rating.attribution(context: .init(language: .italian, region: "IT")), "Utenti · IGDB")
+        XCTAssertEqual(try JSONDecoder().decode(CriticRating.self, from: JSONEncoder().encode(rating)), rating)
+        let noVotes = Data(String(decoding: entry, as: UTF8.self).replacingOccurrences(of: "\"rating_count\":35", with: "\"rating_count\":0").utf8)
+        XCTAssertNil(try IGDBRatings.rating(in: noVotes, query: query))
+        let invalid = Data(String(decoding: entry, as: UTF8.self).replacingOccurrences(of: "99.65387466304598", with: "101").utf8)
+        XCTAssertNil(try IGDBRatings.rating(in: invalid, query: query))
+    }
+
+    func testLegacyCriticCacheDecodesAndFreshLegacyMissRetriesForCommunity() async throws {
+        let rating = try XCTUnwrap(IGDBRatings.rating(in: game, query: query))
+        var legacy = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(rating)) as? [String: Any])
+        legacy.removeValue(forKey: "audience")
+        let decoded = try JSONDecoder().decode(CriticRating.self, from: JSONSerialization.data(withJSONObject: legacy))
+        XCTAssertFalse(decoded.isCommunity)
+        XCTAssertTrue(decoded.isValid)
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let key = IGDBCredentials.digest(credentials.clientID + String(decoding: try encoder.encode(query), as: UTF8.self))
+        let old: [String: Any] = ["query": ["name": query.name, "platform": "switch"], "fetchedAt": Date().timeIntervalSinceReferenceDate]
+        try JSONSerialization.data(withJSONObject: old).write(to: root.appendingPathComponent(key + ".json"))
+        let token = token
+        let community = Data("""
+        [{"id":10,"name":"Fixture","platforms":[130],"rating":70,"rating_count":8,"url":"https://www.igdb.com/games/fixture"}]
+        """.utf8)
+        let service = IGDBRatingService(directory: root, transport: { request in
+            if request.url!.host == "api.igdb.com" {
+                let body = String(decoding: request.httpBody ?? Data(), as: UTF8.self)
+                XCTAssertTrue(body.contains(",rating,rating_count,"))
+            }
+            return (request.url!.host == "id.twitch.tv" ? token : community,
+             HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+        })
+        let found = await service.load(query, credentials: credentials)
+        XCTAssertEqual(found.rating?.isCommunity, true)
+        let offline = IGDBRatingService(directory: root, transport: { _ in throw URLError(.notConnectedToInternet) })
+        let saved = await offline.load(query, credentials: credentials, now: Date().addingTimeInterval(8 * 86400))
+        XCTAssertEqual(saved.rating, found.rating)
+        XCTAssertTrue(saved.isStale)
+        var oldCriticCache = old
+        oldCriticCache["rating"] = legacy
+        try JSONSerialization.data(withJSONObject: oldCriticCache).write(to: root.appendingPathComponent(key + ".json"))
+        let retainedCritic = await offline.load(query, credentials: credentials)
+        XCTAssertEqual(retainedCritic.rating?.score, decoded.score)
+        XCTAssertEqual(retainedCritic.rating?.isCommunity, false)
+        XCTAssertFalse(retainedCritic.isStale)
     }
     func testExactTitleAliasAndPlatformWithoutSequelOrAmbiguity() throws {
         let otherPlatform = Data(String(decoding: game, as: UTF8.self).replacingOccurrences(of: "[130]", with: "[6]").utf8)
@@ -206,6 +268,30 @@ final class IGDBRatingTests: XCTestCase {
         XCTAssertEqual(fallback.rating?.source, .openCritic)
         let removed = await wiki.preferred(query, credentials: nil, igdb: primary)
         XCTAssertEqual(removed.rating, fallback.rating)
+
+        let token = token
+        let users = Data("""
+        [{"id":10,"name":"Fixture","platforms":[130],"rating":99,"rating_count":35,"url":"https://www.igdb.com/games/fixture"}]
+        """.utf8)
+        let community = IGDBRatingService(directory: root.appendingPathComponent("community"), transport: { request in
+            (request.url!.host == "id.twitch.tv" ? token : users,
+             HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+        })
+        let criticsFirst = await wiki.preferred(query, credentials: credentials, igdb: community)
+        XCTAssertEqual(criticsFirst.rating?.source, .openCritic)
+        let criticGame = game
+        let critic = IGDBRatingService(directory: root.appendingPathComponent("critic"), transport: { request in
+            (request.url!.host == "id.twitch.tv" ? token : criticGame,
+             HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+        })
+        let igdbFirst = await wiki.preferred(query, credentials: credentials, igdb: critic)
+        XCTAssertEqual(igdbFirst.rating?.source, .igdb)
+        XCTAssertEqual(igdbFirst.rating?.score, 83.5)
+        let missing = CriticRatingService(directory: root.appendingPathComponent("missing"), transport: { _ in Data("{\"search\":[]}".utf8) })
+        let usersLast = await missing.preferred(query, credentials: credentials, igdb: community)
+        XCTAssertEqual(usersLast.rating?.isCommunity, true)
+        let removedUsers = await missing.preferred(query, credentials: nil, igdb: community)
+        XCTAssertNil(removedUsers.rating)
     }
 
     func testSteamExternalMappingUsesItsSourceAndIDNotASimilarTitle() throws {

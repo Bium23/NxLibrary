@@ -35,8 +35,9 @@ public struct CriticRatingQuery: Hashable, Codable, Sendable {
     }
 }
 
-/// One referenced critic average, never an audience recommendation or an average of providers.
+/// One attributed average; community scores are explicit fallbacks, never mixed with critics.
 public struct CriticRating: Equatable, Codable, Sendable {
+    public enum Audience: String, Codable, Sendable { case critics, users }
     public enum Source: String, Codable, Sendable {
         case openCritic, metacritic, criticDB, igdb
         public var name: String {
@@ -64,15 +65,25 @@ public struct CriticRating: Equatable, Codable, Sendable {
     public let igdbID: Int?
     public let igdbURL: URL?
     public let reviewCount: Int?
+    /// Nil in older caches means critics; users are always explicitly identified.
+    public let audience: Audience?
 
     public init(score: Double, source: Source, entityID: String? = nil, statementID: String? = nil,
                 referenceURLs: [URL] = [], referenceItems: [String] = [], scoreDate: String? = nil,
-                platforms: [String] = [], igdbID: Int? = nil, igdbURL: URL? = nil, reviewCount: Int? = nil) {
+                platforms: [String] = [], igdbID: Int? = nil, igdbURL: URL? = nil, reviewCount: Int? = nil,
+                audience: Audience = .critics) {
         self.score = score; self.source = source; self.entityID = entityID; self.statementID = statementID
         self.referenceURLs = referenceURLs; self.referenceItems = referenceItems; self.scoreDate = scoreDate
         self.platforms = platforms; self.igdbID = igdbID; self.igdbURL = igdbURL; self.reviewCount = reviewCount
+        self.audience = audience
     }
 
+    public var isCommunity: Bool { audience == .users }
+    public var labelKey: String { isCommunity ? "User score" : "Critic score" }
+    public func attribution(context: AppLocale? = nil) -> String {
+        if isCommunity { return L10n.text("Users · IGDB", context: context) }
+        return source == .igdb ? "IGDB" : "\(source.name) · Wikidata"
+    }
     public var starFills: [Double] { (0..<5).map { max(0, min(1, score / 20 - Double($0))) } }
     public func number(locale: Locale = L10n.context.formatLocale) -> String {
         score.formatted(.number.precision(.fractionLength(0...1)).locale(locale)) + "/100"
@@ -84,7 +95,7 @@ public struct CriticRating: Equatable, Codable, Sendable {
         return url.url!
     }
     var isValid: Bool {
-        guard score.isFinite, (0...100).contains(score) else { return false }
+        guard score.isFinite, (0...100).contains(score), !isCommunity || source == .igdb else { return false }
         if source == .igdb {
             return (igdbID ?? 0) > 0 && (reviewCount ?? 0) > 0 && igdbURL.flatMap(IGDBRatings.safeGameURL) != nil
         }

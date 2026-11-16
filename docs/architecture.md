@@ -440,8 +440,9 @@ richieste seriali distanziate, limiti di durata/dimensione e messaggi senza il c
 server mantengono questo confine. I token rimangono in memoria, si rinnovano a scadenza
 o una sola volta dopo 401; non sono scritti su disco.
 
-`IGDBRatingService` usa `aggregated_rating` e `aggregated_rating_count`, mai il voto utenti
-o misto. Nome/alias e piattaforma devono corrispondere, oppure l'ID Steam deve essere
+`IGDBRatingService` preferisce `aggregated_rating` e `aggregated_rating_count`; quando
+mancano usa `rating` e `rating_count` come media utenti esplicita, mai `total_rating`
+(il dato misto). Nome/alias e piattaforma devono corrispondere, oppure l'ID Steam deve essere
 verificato su `external_games` con il nuovo `external_game_source.name`. La media IGDB è
 del gioco, non specifica di un port: conserva questo ambito senza fingere una recensione
 macOS. `CriticRating` distingue provenienza IGDB e Wikidata, mantenendo leggibili le vecchie
@@ -459,9 +460,9 @@ riutilizzare l'assenza salvata come Switch, mentre voti validi e cache esistenti
 intatti. Nessuna cancellazione di dati o modifica alle credenziali. Test con dati sintetici
 coprono edizioni omonime, query dai giochi, compatibilità della vecchia identità Switch,
 ripiego Wikidata e un'assenza preesistente. Restano da validare in Dev Ocarina/Switch 2,
-un titolo Switch e uno Steam; non è stata usata una chiave reale dall'agente e il voto
-compare solo se IGDB restituisce una media della critica. Correzione in attesa di
-validazione umana.
+un titolo Switch e uno Steam; la disponibilità effettiva del dato è stata poi verificata
+con la richiesta autorizzata descritta sotto. La nuova presentazione del ripiego utenti
+rimane in attesa di validazione umana.
 
 Verifica diretta autorizzata dal maintainer il 16 novembre 2026: la stessa ricerca
 dell'app restituisce la scheda Ocarina Switch 2 (405460, piattaforma 508), confermata
@@ -469,11 +470,12 @@ anche per ID. La risposta non contiene `aggregated_rating` né `aggregated_ratin
 ha solo `rating` (circa 99,7) e `rating_count` (35), cioè voti utenti al momento della
 verifica. L'assenza nella riga della critica è quindi attesa anche dopo la correzione
 della console. Non sostituire silenziosamente il voto utenti o quello di un'altra
-edizione; un eventuale ripiego comunitario richiede una provenienza e un'etichetta
-distinte e una scelta del maintainer. Nessuna credenziale o token è stata registrata.
+edizione. Il maintainer ha poi approvato il ripiego utenti esplicitamente distinto.
+Nessuna credenziale o token è stata registrata.
 
-`CriticRatingService.preferred` prova IGDB solo con credenziali presenti, poi Wikidata se
-non ottiene un voto. Nessuna impostazione cambia i metadati o la libreria. Test di
+`CriticRatingService.preferred` ordina i risultati: critica IGDB (con credenziali),
+critica Wikidata, media utenti IGDB. Un voto pubblico della critica prevale quindi
+su una media utenti IGDB, anche se disponibile per prima. Nessuna impostazione cambia i metadati o la libreria. Test di
 autenticazione/errore usano credenziali inventate: la verifica reale con le credenziali
 del maintainer e il controllo manuale della schermata rimangono necessari.
 
@@ -484,3 +486,17 @@ rimangono disponibili senza chiavi. Sidebar, ricerca e navigazione usano la stes
 identità; non esiste un reset di gruppo che elimini le credenziali. Il dialogo IGDB mostra
 cinque passaggi sintetici, i campi del portale e il requisito email/2FA, con link diretto
 alla registrazione. Questa sistemazione è in attesa di validazione umana.
+
+Il ripiego utenti approvato conserva stelle, numero e posizione della riga.
+`CriticRating.audience` distingue critica e utenti; nil nelle vecchie cache significa
+critica. La vista usa “Voto utenti” e “Utenti · IGDB” solo per la community;
+il numero di voti e la provenienza sono anche nell'aiuto e nel testo accessibile.
+Il parser conserva i controlli di identità, piattaforma, intervallo 0…100, conteggio
+positivo e URL IGDB. Il tipo di media si conserva anche offline. Le assenze della
+vecchia cache IGDB senza versione vengono riprovate una volta con il nuovo resolver,
+senza invalidare medie della critica già salvate; le nuove assenze mantengono il TTL.
+Togliere IGDB esclude anche i suoi voti utenti. Test coprono priorità fra fonti e
+pubblici, la risposta Ocarina verificata, etichette, validità, lettura delle vecchie
+cache e recupero offline. Da verificare in Dev: Ocarina con voto utenti, un gioco con
+voto della critica, cambio rapido di gioco e rimozione di IGDB. In attesa di
+validazione umana.
