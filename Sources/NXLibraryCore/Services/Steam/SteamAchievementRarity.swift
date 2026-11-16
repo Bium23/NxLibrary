@@ -40,12 +40,14 @@ public enum SteamAchievementRarity {
     }
 
     /// An icon's address on Steam's CDN, for a plain file name from Steam's schema (`<hash>.jpg`); anything else is refused.
+    /// Steam's community-assets host: the older `steamcommunity/public/images` path answers 404 for icons added
+    /// recently (17 of Crimson Desert's 82, 16 Nov 2026), and this one serves both those and older games' icons.
     public static func iconURL(appID: UInt32, file: String) -> URL? {
         let lower = file.lowercased()
         guard file.count > 4, file.count <= 128, !file.contains("/"), !file.contains("\\"), !file.hasPrefix("."),
               file.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "." || $0 == "_" || $0 == "-") }),
               lower.hasSuffix(".jpg") || lower.hasSuffix(".png") else { return nil }
-        return SteamMetadata.safeImage(URL(string: "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/\(appID)/\(file)"))
+        return SteamMetadata.safeImage(URL(string: "https://shared.akamai.steamstatic.com/community_assets/images/apps/\(appID)/\(file)"))
     }
 }
 

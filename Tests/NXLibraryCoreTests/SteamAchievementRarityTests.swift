@@ -30,7 +30,7 @@ final class SteamAchievementRarityTests: XCTestCase {
 
     func testIconURLRefusesPaths() {
         XCTAssertEqual(SteamAchievementRarity.iconURL(appID: 7, file: "ab12.jpg")?.absoluteString,
-                       "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/7/ab12.jpg")
+                       "https://shared.akamai.steamstatic.com/community_assets/images/apps/7/ab12.jpg")
         XCTAssertNil(SteamAchievementRarity.iconURL(appID: 7, file: "../x.jpg"))
         XCTAssertNil(SteamAchievementRarity.iconURL(appID: 7, file: "a/b.jpg"))
         XCTAssertNil(SteamAchievementRarity.iconURL(appID: 7, file: "x.exe"))
