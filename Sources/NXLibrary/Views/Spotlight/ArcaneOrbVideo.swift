@@ -32,12 +32,14 @@ final class ArcaneOrbView: NSView {
     /// Where the orb last stopped, shared by every card for the app's life.
     private static var resume: CMTime = .zero
 
-    /// Layers: `zoom` carries only the scale; inside it `orb` carries the grey filter and the light; inside that the
-    /// video. With the scale on the filtered layer itself, the end of the shrink jumped (maintainer's check with the
-    /// scale off, 16 Nov 2026): the filtered drawing was made one way while transformed and another at rest. Kept
-    /// apart, the filtered layer is never transformed and is always drawn the same way.
-    private let zoom = CALayer()
+    /// Layers: `orb` carries the grey filter and the light, and is never transformed; the video inside it carries the
+    /// scale. Any scale on or above the filtered layer made the end of the shrink jump (maintainer's checks,
+    /// 16 Nov 2026: gone with the scale off, still there with it on a parent): macOS draws a transformed filtered
+    /// layer one way and an untransformed one another. Scaled inside, the video is only content changing under a
+    /// still filter, as when it plays and stops.
     private let orb = CALayer()
+    /// The video's growth when the card is active; `orb` is this much larger than the video, so it never clips.
+    private static let grow: CGFloat = 1.06
     private let playerLayer = AVPlayerLayer()
     private let player = AVQueuePlayer()
     private var looper: AVPlayerLooper?
@@ -73,8 +75,7 @@ final class ArcaneOrbView: NSView {
         // Hidden until the first frame is decoded, then faded in: never an empty or black square.
         playerLayer.opacity = 0
         orb.addSublayer(playerLayer)
-        zoom.addSublayer(orb)
-        layer?.addSublayer(zoom)
+        layer?.addSublayer(orb)
         applyBackingScale()
 
         player.isMuted = true
@@ -108,11 +109,14 @@ final class ArcaneOrbView: NSView {
         // fitted a quarter point off its layer.
         let scale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
         let side = (min(bounds.width, bounds.height) * scale).rounded(.down) / scale
+        // Whole pixels of room on each side for the growth, so the video stays centred on the pixel grid.
+        let margin = (side * (Self.grow - 1) / 2 * scale).rounded(.up) / scale + 1 / scale
+        let room = side + 2 * margin
         CATransaction.begin(); CATransaction.setDisableActions(true)
-        zoom.bounds = CGRect(x: 0, y: 0, width: side, height: side)
-        zoom.position = CGPoint(x: bounds.midX, y: bounds.midY)
-        orb.frame = zoom.bounds
-        playerLayer.frame = orb.bounds
+        orb.bounds = CGRect(x: 0, y: 0, width: room, height: room)
+        orb.position = CGPoint(x: bounds.midX, y: bounds.midY)
+        playerLayer.bounds = CGRect(x: 0, y: 0, width: side, height: side)
+        playerLayer.position = CGPoint(x: room / 2, y: room / 2)
         CATransaction.commit()
     }
 
@@ -132,7 +136,7 @@ final class ArcaneOrbView: NSView {
     private func applyBackingScale() {
         let scale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
         CATransaction.begin(); CATransaction.setDisableActions(true)
-        for layer in [layer, zoom, orb, playerLayer].compactMap({ $0 }) { layer.contentsScale = scale }
+        for layer in [layer, orb, playerLayer].compactMap({ $0 }) { layer.contentsScale = scale }
         CATransaction.commit()
     }
 
@@ -146,7 +150,7 @@ final class ArcaneOrbView: NSView {
         let animated = previous != nil
         set(Self.toneKey, on: orb, to: active ? 1 : 0, duration: duration, animated: animated)
         set("opacity", on: orb, to: active ? 1 : 0.88, duration: duration, animated: animated)
-        set("transform.scale", on: zoom, to: active && moves ? 1.06 : 1, duration: duration, animated: animated)
+        set("transform.scale", on: playerLayer, to: active && moves ? Self.grow : 1, duration: duration, animated: animated)
         syncPlayback()
     }
 
