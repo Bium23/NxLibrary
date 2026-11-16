@@ -378,11 +378,15 @@ maintainer e limiti noti. In breve:
 
 ### Posizione condivisa dei comandi (16 novembre 2026, in attesa di validazione umana)
 
-Le barre `SeleneHintsBar` usano il margine inferiore dei Settings: 48 unità Selene
-(`SeleneBottomScrim.hintsBottom`), con simboli da 30 unità invariati e margine sinistro
-aggiuntivo di 18. La configurazione precedente resta nel commit locale `0c0f885`.
+Il maintainer ha validato la posizione omogenea dei Settings (`7adc0ad`) e chiesto
+una via di mezzo: le barre `SeleneHintsBar` usano ora 32 unità Selene dal fondo
+(`SeleneBottomScrim.hintsBottom`), tra le 16 originali e le 48 dei Settings.
+I simboli restano da 30 unità; solo Q/E e i corrispondenti LB/RB accanto ai filtri
+Achievements sono da 22, con area cliccabile da 30×36. Il margine sinistro aggiuntivo
+resta 18. La posizione iniziale è salvata in `0c0f885`; la prova a 48 in `7adc0ad`.
+La nuova via di mezzo attende validazione umana.
 Le schermate con barra in un VStack riservano lo spazio nel layout; Spotlight e
-Achievements riservano invece una fascia trasparente di 100 unità e tengono il focus
+Achievements riservano invece una fascia trasparente di 84 unità e tengono il focus
 sopra la sfumatura inferiore. In Details la barra è ancorata alla finestra, il contenuto
 sparisce prima dei comandi e le fasce in focus salgono insieme alla barra. La posizione
 si condivide anche con le opzioni, il visualizzatore di screenshot e le schermate Home.

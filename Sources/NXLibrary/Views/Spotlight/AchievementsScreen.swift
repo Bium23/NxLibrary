@@ -252,7 +252,9 @@ struct AchievementsScreen: View {
 
     private func shoulder(_ button: PromptButton, _ label: String, step: Int) -> some View {
         Button { onShiftFilter(step) } label: {
-            SelenePromptBadge(button: button, height: 30)
+            SelenePromptBadge(button: button, height: 22)
+                .frame(minWidth: canvas.u(30), minHeight: canvas.u(36))
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)

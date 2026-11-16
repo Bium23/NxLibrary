@@ -40,7 +40,7 @@ struct SeleneHintsBar: View {
 
     var left: [HintItem] = []
     var right: [HintItem] = []
-    /// Every screen uses Settings' bottom inset (Ui.cs:267).
+    /// Every screen uses the same bottom inset.
     var bottom: CGFloat = SeleneBottomScrim.hintsBottom
     /// Extra inset before the left group (Spotlight's prompts carry Selene's 18 margin).
     var leftInset: CGFloat = 18
