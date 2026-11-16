@@ -46,11 +46,11 @@ final class SteamAchievementsStore: ObservableObject {
             self.language = language
             reset()
         }
+        current = appID
         guard let root else {
             summaries = [:]
             return
         }
-        current = appID
         guard !reading.contains(appID) else {
             readAgain.insert(appID)
             return

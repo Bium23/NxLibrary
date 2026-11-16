@@ -33,6 +33,35 @@ final class SteamManifestWatcherTests: XCTestCase {
     }
 
     @MainActor
+    func testRetriesTheSameLibraryWhenItsFolderBecomesAvailable() async throws {
+        let f = try SteamTestFixture.temporary(in: self)
+        let library = f.root.appendingPathComponent("Later")
+        let changed = expectation(description: "Newly available library is watched")
+        let watcher = SteamManifestWatcher { changed.fulfill() }
+        defer { watcher.stop() }
+        watcher.watch([library], root: library)
+        try f.library("Later")
+        watcher.watch([library], root: library)
+        try f.manifest(in: library)
+        await fulfillment(of: [changed], timeout: 6)
+    }
+
+    @MainActor
+    func testAddsANewlyAvailableLibraryAlongsideAnExistingStream() async throws {
+        let f = try SteamTestFixture.temporary(in: self)
+        let root = try f.library()
+        let library = f.root.appendingPathComponent("Later")
+        let changed = expectation(description: "Additional library is watched")
+        let watcher = SteamManifestWatcher { changed.fulfill() }
+        defer { watcher.stop() }
+        watcher.watch([root, library], root: root)
+        try f.library("Later")
+        watcher.watch([root, library], root: root)
+        try f.manifest(in: library)
+        await fulfillment(of: [changed], timeout: 6)
+    }
+
+    @MainActor
     func testTheStreamKeepsItsWatcherAliveUntilStopped() throws {
         let f = try SteamTestFixture.temporary(in: self)
         let library = try f.library()

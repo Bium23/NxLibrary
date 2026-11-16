@@ -86,9 +86,8 @@ public enum SteamPlaytimeReader {
     }
 
     private static func text(at url: URL) throws -> String {
-        let size = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
-        guard size <= maximumBytes else { throw KeyValuesError.limitExceeded }
-        guard let text = String(data: try Data(contentsOf: url), encoding: .utf8) else { throw KeyValuesError.malformed }
+        let data = try InstallationFileSnapshot.read(at: url, maximumBytes: maximumBytes).data
+        guard let text = String(data: data, encoding: .utf8) else { throw KeyValuesError.malformed }
         return text
     }
 }

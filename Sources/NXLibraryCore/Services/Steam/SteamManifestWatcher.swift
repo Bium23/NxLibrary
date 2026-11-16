@@ -18,16 +18,14 @@ public final class SteamManifestWatcher {
 
     public init(onChange: (@MainActor () -> Void)? = nil) { self.onChange = onChange }
 
-    /// Watches these libraries (the scan's, the source's root among them); the same set again changes nothing,
-    /// none stops watching.
+    /// Watches these libraries (the scan's, the source's root among them). Rechecks available folders even for
+    /// the same set, so a library returning on an external drive joins the stream. None stops watching.
     public func watch(_ libraries: [URL], root: URL?) {
         let paths = libraries.map { $0.resolvingSymlinksInPath().standardizedFileURL.path }
         let rootPath = root.map { $0.resolvingSymlinksInPath().standardizedFileURL.path }
-        guard paths != self.libraries || rootPath != self.root else { return }
-        stop()
-        self.libraries = paths
-        self.root = rootPath
         let folders = paths.map { $0 + "/steamapps" }.filter { FileManager.default.fileExists(atPath: $0) }
+        guard paths != self.libraries || rootPath != self.root || folders != watched else { return }
+        stop()
         guard !folders.isEmpty else { return }
         // The stream holds the watcher until it is released in `stop`, so a callback already queued on the main
         // queue never reaches a freed watcher.
@@ -52,6 +50,8 @@ public final class SteamManifestWatcher {
             return
         }
         self.stream = stream
+        self.libraries = paths
+        self.root = rootPath
         watched = folders
     }
 
@@ -91,7 +91,9 @@ public final class SteamManifestWatcher {
     private func received(_ paths: [String], flags: [FSEventStreamEventFlags]) {
         let mustScan = FSEventStreamEventFlags(kFSEventStreamEventFlagMustScanSubDirs)
         let changed = zip(paths, flags).contains { path, flag in
-            Self.isRelevant(path, dropped: flag & mustScan != 0, libraries: libraries, root: root)
+            // FSEvents can spell /var and /tmp with /private; compare in the same form as `watch`.
+            let canonical = URL(fileURLWithPath: path).resolvingSymlinksInPath().standardizedFileURL.path
+            return Self.isRelevant(canonical, dropped: flag & mustScan != 0, libraries: libraries, root: root)
         }
         if changed { onChange?() }
     }

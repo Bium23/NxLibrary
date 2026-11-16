@@ -1,4 +1,5 @@
 import XCTest
+import Darwin
 @testable import NXLibraryCore
 
 final class SteamPlaytimeReaderTests: XCTestCase {
@@ -121,6 +122,43 @@ final class SteamPlaytimeReaderTests: XCTestCase {
         let filler = String(repeating: " ", count: SteamPlaytimeReader.maximumBytes + 1)
         try write(Self.localConfig(apps: "") + filler, to: "userdata/42/config/localconfig.vdf", in: fixture.root)
         XCTAssertThrowsError(try SteamPlaytimeReader.read(config: SteamPlaytimeReader.localConfigURL(root: fixture.root, account: 42), account: 42))
+    }
+
+    func testConfigSymlinkIsRejected() throws {
+        let fixture = try SteamTestFixture.temporary(in: self)
+        try write(Self.localConfig(apps: "\"440\" { \"Playtime\" \"9\" }"), to: "target.vdf", in: fixture.root)
+        let link = fixture.root.appendingPathComponent("config.vdf")
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: fixture.root.appendingPathComponent("target.vdf"))
+        XCTAssertThrowsError(try SteamPlaytimeReader.read(config: link, account: 42))
+    }
+
+    func testLoginUsersSymlinkIsRejected() throws {
+        let fixture = try SteamTestFixture.temporary(in: self)
+        try write(Self.loginUsers([(Self.base + 42, true, 1)]), to: "target.vdf", in: fixture.root)
+        try FileManager.default.createDirectory(at: fixture.root.appendingPathComponent("config"), withIntermediateDirectories: true)
+        try FileManager.default.createSymbolicLink(at: fixture.root.appendingPathComponent("config/loginusers.vdf"),
+                                                  withDestinationURL: fixture.root.appendingPathComponent("target.vdf"))
+        XCTAssertThrowsError(try SteamPlaytimeReader.accountID(root: fixture.root))
+    }
+
+    func testConfigFIFOIsRejectedWithoutWaitingForAWriter() throws {
+        let fixture = try SteamTestFixture.temporary(in: self)
+        let fifo = fixture.root.appendingPathComponent("config.vdf")
+        XCTAssertEqual(mkfifo(fifo.path, 0o600), 0)
+        let finished = expectation(description: "Playtime rejects a FIFO without blocking")
+        DispatchQueue.global().async {
+            do {
+                _ = try SteamPlaytimeReader.read(config: fifo, account: 42)
+                XCTFail("A FIFO is not playtime data")
+            } catch {}
+            finished.fulfill()
+        }
+        let result = XCTWaiter.wait(for: [finished], timeout: 1)
+        if result != .completed {
+            let writer = Darwin.open(fifo.path, O_WRONLY | O_NONBLOCK)
+            if writer >= 0 { Darwin.close(writer) }
+        }
+        XCTAssertEqual(result, .completed)
     }
 
     private func write(_ text: String, to relative: String, in root: URL) throws {

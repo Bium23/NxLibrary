@@ -315,7 +315,7 @@ Prima dell’installazione, l’updater acquisisce un’esclusione globale dal `
 ```bash
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 bash scripts/build_app.sh
-codesign --verify --deep --strict "$HOME/Applications/NXLibrary.app"
+codesign --verify --deep --strict "$HOME/Applications/NXLibrary Dev.app"
 ```
 
 Le prove interattive dell’app e dei giochi sono eseguite dall’utente. Gli agenti svolgono controlli sul codice, test automatici e build/installazione, secondo `AGENTS.md`.

@@ -567,6 +567,7 @@ extension SpotlightView {
         // The row is reached only by the glide, never by settling.
         var areas: [SpotlightFocusArea] = [.pills]
         if screenshotCount > 0 { areas.append(.strip) }
+        if selectedAchievements != nil { areas.append(.achievements) }
         if !page.links.isEmpty { areas.append(.actions) }
         if modsHost.localMods != nil { areas.append(.mods) }
         if !page.more.isEmpty { areas.append(.more) }

@@ -103,8 +103,6 @@ public enum SteamAchievementReader {
     }
 
     private static func data(at url: URL) throws -> Data {
-        let size = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
-        guard size <= SteamBinaryKeyValues.maximumBytes else { throw KeyValuesError.limitExceeded }
-        return try Data(contentsOf: url)
+        try InstallationFileSnapshot.read(at: url, maximumBytes: SteamBinaryKeyValues.maximumBytes).data
     }
 }

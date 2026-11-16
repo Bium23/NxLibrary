@@ -148,6 +148,24 @@ final class SteamAchievementReaderTests: XCTestCase {
         XCTAssertThrowsError(try SteamAchievementReader.read(root: root, appID: app, language: "english"))
     }
 
+    func testSchemaSymlinkIsRejected() throws {
+        let target = root.appendingPathComponent("schema.bin")
+        try schemaData.write(to: target)
+        try FileManager.default.createSymbolicLink(at: SteamAchievementReader.schemaURL(root: root, appID: app),
+                                                  withDestinationURL: target)
+        try writeStats(BinaryKV.data([("cache", [] as E)]))
+        XCTAssertThrowsError(try SteamAchievementReader.read(root: root, appID: app, language: "english"))
+    }
+
+    func testStatsSymlinkIsRejected() throws {
+        try writeSchema(schemaData)
+        let target = root.appendingPathComponent("stats.bin")
+        try BinaryKV.data([("cache", [] as E)]).write(to: target)
+        try FileManager.default.createSymbolicLink(at: SteamAchievementReader.statsURL(root: root, account: account, appID: app),
+                                                  withDestinationURL: target)
+        XCTAssertThrowsError(try SteamAchievementReader.read(root: root, appID: app, language: "english"))
+    }
+
     func testASchemaForAnotherGameReadsNothing() throws {
         try writeSchema(BinaryKV.data([("999", [("stats", [] as E)] as E)]))
         try writeStats(BinaryKV.data([("cache", [("crc", Int32(1))] as E)]))

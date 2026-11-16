@@ -1,6 +1,6 @@
 # NX Library — catalogo dei file
 
-Aggiornato il 16 novembre 2026. Copertura di **650 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il setup in due passaggi con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 16 novembre 2026. Copertura di **651 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il setup in due passaggi con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -786,7 +786,7 @@ Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua rig
 | File | Responsabilità |
 |---|---|
 | [SteamManifestWatcher.swift](../Sources/NXLibraryCore/Services/Steam/SteamManifestWatcher.swift) | Uno stream FSEvents sulle cartelle `steamapps` delle librerie dell’ultima scansione; segnala solo i manifest `appmanifest_<AppID>.acf` e l’indice `libraryfolders.vdf` della radice, una volta per gruppo di eventi. |
-| [SteamManifestWatcherTests.swift](../Tests/NXLibraryCoreTests/SteamManifestWatcherTests.swift) | Percorsi che contano (manifest, indice della radice) e quelli scartati (download, giochi, file temporanei, altre cartelle). |
+| [SteamManifestWatcherTests.swift](../Tests/NXLibraryCoreTests/SteamManifestWatcherTests.swift) | Filtri e durata dello stream; eventi reali da librerie tornate disponibili, da sole o accanto a una già osservata, inclusa la normalizzazione `/private`. |
 
 Il resto vive nei file esistenti: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downloading`, cartella non letta), `SteamCatalogInstallation.isDownloading` e `SteamCatalogGame.isDownloading`/`needsReview`, `CatalogGamePresentation.isDownloading`, `PortingTileLook.downloading` con `PortingArtLook` (la scritta) e `PortingDownloadMark` → `DownloadMarkLayers` in `TileMotionLayers.swift` (il simbolo che pulsa, fuori dal `drawingGroup`), `SteamPlayCoordinator.openDownloads`, `CatalogSteamInfo` e `GamePrimaryActions.primaryWaveDots` (pulsante «Downloading» con i puntini, come «Porting»), il ritmo delle riscansioni in `CatalogSourcesModel.steamFilesChanged`.
 
@@ -821,6 +821,7 @@ Il resto vive nei file esistenti: `SteamLibrarySource` (StateFlags senza il bit 
 | [CatalogBuildRecoveries.swift](../Sources/NXLibraryCore/Models/CatalogBuildRecoveries.swift) | Generazioni di build non ancora salvate, selezione del retry e conferma della sola generazione persistita. |
 | [CatalogBuildRecoveryTests.swift](../Tests/NXLibraryCoreTests/CatalogBuildRecoveryTests.swift) | Vecchia build persistita e nuova conservata, sospensione automatica e conferme obsolete. |
 | [run_notices.py](../Tests/CatalogAppChecks/run_notices.py) | Esegue i metodi reali degli avvisi e del ponte legacy senza finestre, dopo swift test. |
+| [run_review.py](../Tests/CatalogAppChecks/run_review.py) | Verifica le vere funzioni di avvio achievement, piattaforma dei loghi, focus durante lo scroll e menu sotto i pannelli, con dati sintetici e senza finestre. |
 | [run_game_header.py](../Tests/CatalogAppChecks/run_game_header.py) | Esegue i corpi reali di logo e azioni condivisi senza finestra né store applicativi, per entrambi i layout. |
 | [NoticeHost.swift](../Tests/CatalogAppChecks/NoticeHost.swift) | Host minimo per i controlli applicativi, con storage reale e dati sintetici temporanei. |
 | [CatalogGameOptions.swift](../Sources/NXLibraryCore/Models/CatalogGameOptions.swift) | Ordine unico delle operazioni comuni della libreria; ciò che una fonte può fare dipende dal suo record (nessuna modifica nxnative su un gioco Steam). |

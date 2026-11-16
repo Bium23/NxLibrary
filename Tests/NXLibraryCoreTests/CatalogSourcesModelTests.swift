@@ -146,6 +146,32 @@ final class CatalogSourcesModelTests: XCTestCase {
 
     // MARK: - Rescans when Steam rewrites a manifest
 
+    func testEveryScanRechecksWatchedFoldersEvenWithTheSameLibraryPaths() async throws {
+        let (f, repository, initial) = try prepared()
+        let root = try f.library()
+        let library = f.root.appendingPathComponent("Later")
+        let scan = SteamLibrarySnapshot(libraries: [.init(root: root, isReadable: true, isComplete: true),
+                                                  .init(root: library, isReadable: true, isComplete: true)],
+                                       games: [], issues: [])
+        let model = CatalogSourcesModel(repository: repository, initialConfiguration: initial,
+                                        scanner: { _, _ in scan }, onCommit: { _ in })
+        let watcher = SteamManifestWatcher()
+        defer { watcher.stop() }
+        let observation = model.$libraryRoots.sink { watcher.watch($0, root: root) }
+        defer { withExtendedLifetime(observation) {} }
+        model.configure(enabled: true, root: root)
+        await settled(model)
+        XCTAssertEqual(model.status, .ready)
+        try f.library("Later")
+        model.refresh()
+        await settled(model)
+        XCTAssertEqual(model.status, .ready)
+        let changed = expectation(description: "Watcher retries an unchanged path after the scan")
+        watcher.onChange = { changed.fulfill() }
+        try f.manifest(in: library)
+        await fulfillment(of: [changed], timeout: 6)
+    }
+
     private func settled(_ model: CatalogSourcesModel) async {
         for _ in 0..<200 where model.status == .scanning || model.status == .idle { try? await Task.sleep(nanoseconds: 10_000_000) }
     }

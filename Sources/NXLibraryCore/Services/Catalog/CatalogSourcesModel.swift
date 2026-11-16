@@ -91,8 +91,8 @@ public final class CatalogSourcesModel: ObservableObject {
                     seen.contains($0.appID) && $0.needsReview
                 }.count
                 self.issues = snapshot.issues
-                let roots = snapshot.libraries.map(\.root)
-                if roots != self.libraryRoots { self.libraryRoots = roots }
+                // The paths may be unchanged while a previously missing volume has become available.
+                self.libraryRoots = snapshot.libraries.map(\.root)
                 self.status = snapshot.isComplete ? .ready : .partial
                 self.task = nil
                 self.onCommit(document)

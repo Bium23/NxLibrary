@@ -103,7 +103,8 @@ final class GameArtLoader {
         }
         if image == nil, !Task.isCancelled, searchedOnline.insert(game.id).inserted {
             let names = [game.name, metadata?.name].compactMap { $0 }
-            let found = await OnlineArtwork.find(names: names, slot: .logo)
+            let found = await OnlineArtwork.find(names: names, slot: .logo,
+                                                 platform: game.isSwitch2 ? .switch2 : .switch)
             for remote in found.flatMap({ [$0.url, $0.fallback] }) where image == nil && !Task.isCancelled {
                 if let url = await artwork.fetch(titleID: titleKey, remoteURL: remote, kind: .logo) {
                     image = await Self.decodeLogo(at: url)

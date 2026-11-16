@@ -113,7 +113,10 @@ Lo stato nasce dall’osservazione (`SteamGameObservation.State`) e arriva alla 
 ## Osservazione dei file di Steam
 
 `SteamManifestWatcher` apre un solo `FSEventStream` (eventi per file, latenza 2 s) sulle cartelle `steamapps` di
-tutte le librerie dell’ultima scansione, e lo ricrea quando quell’insieme cambia. Contano solo
+tutte le librerie disponibili dell’ultima scansione. Ogni scansione ricontrolla anche i percorsi invariati: una
+cartella tornata disponibile entra nello stream, anche se le altre erano già osservate. Un avvio dello stream
+fallito si può ritentare. I percorsi degli eventi e delle cartelle usano la stessa normalizzazione (anche sotto
+`/var` e `/tmp`). Contano solo
 `appmanifest_<cifre>.acf` e il `libraryfolders.vdf` della radice; un evento «rileggi le sottocartelle» del sistema
 conta solo se riguarda `steamapps` o una cartella sopra. Tutto il resto (`downloading/`, `common/`) viene scartato nel
 callback.
@@ -278,14 +281,27 @@ Decisi consapevolmente:
 - Un’assenza su LaunchBox (anche per rete assente) non si ricerca fino al prossimo avvio.
 
 Punti minori rimandati dalle revisioni, da decidere prima del rilascio:
-- Watcher: se `FSEventStreamStart` fallisce, un `watch()` identico non riprova; se la scrittura della configurazione
-  fallisce, il watcher resta fermo fino alla scansione successiva; librerie sotto `/tmp` o `/var` non verrebbero mai
-  riconosciute (`/private`); il callback usa `unsafeBitCast` a `NSArray`.
+- Watcher: se la scrittura della configurazione fallisce, resta fermo fino alla scansione successiva;
+  il callback usa `unsafeBitCast` a `NSArray`. Il solo collegamento di un volume non avvia una scansione:
+  serve Refresh o una modifica rilevante ai file Steam già osservati.
 - Un Refresh manuale non annulla una riscansione in attesa (una scansione in più).
 - `openDownloads` ignora gli errori di apertura.
 - I test del ritmo delle riscansioni hanno margini di 60–80 ms.
 - Achievement: la freccia Su sparisce col focus sulla card; riepilogo ricalcolato a ogni disegno. (Risolti il 16 nov
   2026: ordine «più rari» stabile a parità di percentuale, rarità `nan` scartata, lampo dell’icona allo scorrimento.)
+- Il focus dei link Details non viene limitato quando una disinstallazione Steam ne riduce il numero.
+- Un errore Wikidata sospende per 60 s anche le richieste degli altri giochi.
+- In Change metadata, il nome canonico arrivato da IGDB riavvia le ricerche LaunchBox/TheGamesDB.
+- Ore Steam: dopo «nessun account», un errore senza account può ripubblicare le ore precedenti.
+- Un catalogo occupato da un’altra istanza viene presentato come installazione fallita.
+- La prima conversione scrive il backup prima del principale: un errore del secondo può offrire «Restore backup»
+  per il catalogo appena convertito, con dati corretti ma un messaggio poco chiaro.
+
+Revisione del 16 novembre 2026: corretti il focus della card durante lo scroll, il caricamento degli achievement
+richiesto prima della configurazione Steam e la disponibilità di Details sotto i pannelli. I lettori di statistiche,
+schema, account e ore usano ora `InstallationFileSnapshot`, con limite durante la lettura, rifiuto dei symlink finali
+e verifica della stabilità del file. Test Core e controlli delle vere funzioni dell’app con dati sintetici verificano
+le regressioni; nessuna finestra viene aperta. **In attesa di validazione umana nella Dev.**
 
 ## Cambiare l’integrazione
 

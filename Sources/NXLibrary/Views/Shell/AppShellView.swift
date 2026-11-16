@@ -86,10 +86,9 @@ public struct AppShellView: View {
         let focused = general && !router.isMenuPresented ? viewModel.currentFocusedCatalogGame : nil
         let steam = focused?.integration == .steam ? focused : nil
         // A Steam game's details are its Spotlight page; it has no separate Details screen.
-        let catalog = viewModel.currentFocusedCatalogGame
         return NativeMenuAvailability(general: general,
             play: game?.isPlayableLocally == true || steam.map(SteamPlayCoordinator.shared.canPlay) == true,
-            details: isHomeRoute && catalog != nil && (catalog?.integration != .steam || router.route == .library),
+            details: isHomeRoute && focused != nil && (focused?.integration != .steam || router.route == .library),
             options: game != nil || steam != nil,
             catalogRecovery: general && !viewModel.isBuilding && !viewModel.catalogBuildRecoveries.isEmpty)
     }
