@@ -97,9 +97,31 @@ final class ArcaneOrbView: NSView {
 
     override func layout() {
         super.layout()
+        placeOrb()
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        placeOrb()
+    }
+
+    override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        placeOrb()
+    }
+
+    /// The orb on whole pixels of the window (`PixelGrid`). Through its filter, a resting orb is drawn snapped to the
+    /// grid but a scaling one at its exact place, so off the grid the end of the shrink jumped by part of a pixel
+    /// (maintainer's report, 16 Nov 2026). Placed on the grid, both are the same.
+    private func placeOrb() {
+        var rect = bounds
+        if let window {
+            let aligned = PixelGrid.align(convert(bounds, to: nil), scale: window.backingScaleFactor)
+            rect = convert(aligned, from: nil)
+        }
         CATransaction.begin(); CATransaction.setDisableActions(true)
-        orb.bounds = bounds
-        orb.position = CGPoint(x: bounds.midX, y: bounds.midY)
+        orb.bounds = CGRect(origin: .zero, size: rect.size)
+        orb.position = CGPoint(x: rect.midX, y: rect.midY)
         playerLayer.frame = orb.bounds
         CATransaction.commit()
     }
@@ -108,6 +130,8 @@ final class ArcaneOrbView: NSView {
         let previous = state
         guard previous?.active != active || previous?.moves != moves else { return }
         state = (active, moves)
+        // The page may have moved since the last layout: settle on the grid where this change starts.
+        placeOrb()
         let duration: CFTimeInterval = moves ? 0.45 : 0.18
         // The first state is set as it is; later ones animate from where the layer is now, so an
         // interrupted change blends towards the new end instead of jumping.
