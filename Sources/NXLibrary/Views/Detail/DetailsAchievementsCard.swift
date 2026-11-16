@@ -19,9 +19,9 @@ struct DetailsAchievementsCard: View {
     /// What the card shows: set from hover and focus inside its own animation, so only the fan, the text swap
     /// and the light animate (an `.animation` on the card would catch every other change in the same update).
     @State private var active = false
-    /// The fan and the text's slide move only where the card can move as one block (`CardGeometryGroup`);
+    /// The fan and the text's slide move only where the card can move as one block (`GlideGroup`);
     /// elsewhere, as with Reduce motion, only the text and the light change.
-    private var moves: Bool { !reduceMotion && CardGeometryGroup.available }
+    private var moves: Bool { !reduceMotion && GlideGroup.available }
     private var fanned: Bool { active && moves }
     /// Slow and soft, and never past its target (a spring overshot); interrupted, it blends towards the new end.
     private var reveal: Animation { !moves ? SeleneTheme.quick : .timingCurve(0.22, 1, 0.36, 1, duration: 0.45) }
@@ -86,26 +86,9 @@ struct DetailsAchievementsCard: View {
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { onOpen() }
         }
-        .modifier(CardGeometryGroup())
-    }
-}
-
-/// The page glides by an animated offset, which SwiftUI hands down to each leaf view (text, icon), and a leaf
-/// applies the animation of the change that touches it. The fan changed the icons and the text in their own,
-/// faster animation, so they took the rest of the glide with it and ran ahead of the panel, out of its box.
-/// A geometry group moves the card as one block with the glide and keeps the fan inside it (macOS 14).
-struct CardGeometryGroup: ViewModifier {
-    static var available: Bool {
-        if #available(macOS 14.0, *) { return true }
-        return false
-    }
-
-    func body(content: Content) -> some View {
-        if #available(macOS 14.0, *) {
-            content.geometryGroup()
-        } else {
-            content
-        }
+        // The fan runs in its own, faster animation: without the group its leaves took the page's glide with it
+        // and ran ahead of the panel, out of its box.
+        .modifier(GlideGroup())
     }
 }
 

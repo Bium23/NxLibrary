@@ -191,6 +191,8 @@ struct GameDetailView: View {
 
     private func stage(_ model: Model) -> some View {
         page(model)
+            // Art arriving during the glide rides it with the rest (`GlideGroup`).
+            .modifier(GlideGroup())
             .offset(y: canvas.u(pageShift))
             // The glide is movement: reduce motion makes it instant.
             .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.32), value: pageShift)

@@ -378,6 +378,9 @@ public struct SpotlightView: View {
             .onPreferenceChange(SpotlightReadMoreKey.self) { shown in
                 if shown != aboutReadMore { aboutReadMore = shown }
             }
+            // Every block rides the glide as one: the fades that run beside it (`setPageFades`) re-timed leaves
+            // of their own and they slid at their own pace (`GlideGroup`).
+            .modifier(GlideGroup())
             // One page: the focus scrolls it; the glide is movement, so reduce motion jumps.
             .offset(y: scroll)
             // The page fades out short of the window's edges, top and bottom.

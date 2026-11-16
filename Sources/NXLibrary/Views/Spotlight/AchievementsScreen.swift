@@ -507,6 +507,8 @@ private struct AchievementsList: View {
             }
         }
         .frame(width: width, height: height, alignment: .topLeading)
+        // Rows made, and icons arriving, during a glide ride it with the rest (`GlideGroup`).
+        .modifier(GlideGroup())
         .offset(y: -offset)
         .frame(width: width, height: height, alignment: .topLeading)
         .clipped()

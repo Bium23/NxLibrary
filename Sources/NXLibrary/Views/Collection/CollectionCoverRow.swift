@@ -43,6 +43,8 @@ struct CollectionCoverRow: View {
                     .transition(.identity)
             }
         }
+        // Covers made, and art arriving, during the slide ride it with the rest (`GlideGroup`).
+        .modifier(GlideGroup())
         // The camera: the one slide of the whole row.
         .offset(x: canvas.u(-CGFloat(offset) * CollectionRow.pitch))
         .frame(maxWidth: .infinity, alignment: .topLeading)
