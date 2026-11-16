@@ -1,6 +1,6 @@
 # NX Library — catalogo dei file
 
-Aggiornato il 3 novembre 2026. Copertura di **398 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il setup in due passaggi con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 16 novembre 2026. Copertura di **650 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il setup in due passaggi con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -139,6 +139,8 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Services/AppSettingsStore.swift](../Sources/NXLibraryCore/Services/AppSettingsStore.swift) | Pubblica impostazioni ed errori, preserva i file illeggibili e salva settings.json tramite file temporaneo. |
 | [Sources/NXLibraryCore/Services/PlaySessionStore.swift](../Sources/NXLibraryCore/Services/PlaySessionStore.swift) | Registra avvio, heartbeat, fine e riconciliazione delle sessioni di gioco; unisce i totali esterni (Steam) con le sessioni successive. |
 | [Sources/NXLibraryCore/Navigation/AppRouter.swift](../Sources/NXLibraryCore/Navigation/AppRouter.swift) | Gestisce route, ritorno, menu, ricerca e richieste di selezione o spostamento su Spotlight. |
+| [Sources/NXLibraryCore/Models/GameFocus.swift](../Sources/NXLibraryCore/Models/GameFocus.swift) | Quando un gioco che esce riporta NX Library davanti: solo se era l’app in primo piano e nessun altro gioco della libreria è aperto. |
+| [Sources/NXLibraryCore/Models/SessionSummary.swift](../Sources/NXLibraryCore/Models/SessionSummary.swift) | Cosa dice la card di fine sessione: gioco, durata di questa sessione e totale scritto come nelle info del gioco; niente card sotto i dieci secondi. |
 
 ## Core · Setup, motore e chiavi
 
@@ -275,6 +277,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Services/LaunchBoxArt.swift](../Sources/NXLibraryCore/Services/LaunchBoxArt.swift) | Legge ricerca e pagina gioco di LaunchBox; dal payload Nuxt ricava anteprime, file pieni, tipo, regione e dimensioni; screenshot Gameplay. |
 | [Sources/NXLibraryCore/Services/SteamGridDBArt.swift](../Sources/NXLibraryCore/Services/SteamGridDBArt.swift) | Conserva la chiave SteamGridDB in un file 0600 e interroga l’API v2 per griglie, hero, loghi e icone statiche accreditate. |
 | [Sources/NXLibraryCore/Services/ScreenshotFallback.swift](../Sources/NXLibraryCore/Services/ScreenshotFallback.swift) | Conserva per 30 giorni gli screenshot LaunchBox dei giochi senza screenshot Title DB e li sovrappone ai metadati. |
+| [Sources/NXLibraryCore/Models/LibraryArtworkRole.swift](../Sources/NXLibraryCore/Models/LibraryArtworkRole.swift) | Ruoli di layout delle immagini (copertina, quadrato, sfondo…) separati dal fornitore: un quadrato non chiede né ritaglia mai la copertina verticale. |
 
 ## Core · presentazione Selene, focus e impostazioni
 
@@ -315,6 +318,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/ThemePicker.swift](../Sources/NXLibraryCore/Models/ThemePicker.swift) | Gestisce griglia, tab Wallpapers/Live e scelte di sfondo nel selettore temi. |
 | [Sources/NXLibraryCore/Models/WallpaperCatalog.swift](../Sources/NXLibraryCore/Models/WallpaperCatalog.swift) | Elenca wallpaper e video, gruppi, nomi e file delle risorse incluse o importate. |
 | [Sources/NXLibraryCore/Models/WallpaperPlacement.swift](../Sources/NXLibraryCore/Models/WallpaperPlacement.swift) | Decide dove applicare uno sfondo scelto fra schermi principali e Settings. |
+| [Sources/NXLibraryCore/Models/DisplayNameCache.swift](../Sources/NXLibraryCore/Models/DisplayNameCache.swift) | Nomi visualizzati di cartelle e volumi letti una volta per URL: la pagina si ricostruisce a ogni disegno e un disco esterno in stop bloccherebbe ogni volta. |
 
 ## UI · Add Game e porting
 
@@ -448,6 +452,9 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/Views/Components/SteamGridDBKeyDialog.swift](../Sources/NXLibrary/Views/Components/SteamGridDBKeyDialog.swift) | Popup per incollare e verificare la chiave SteamGridDB da Settings → Look e da Change artwork. |
 | [Sources/NXLibrary/Views/Components/SwitchPlatformIcon.swift](../Sources/NXLibrary/Views/Components/SwitchPlatformIcon.swift) | Icona vettoriale della console Switch per la riga della piattaforma. |
 | [Sources/NXLibrary/Views/Components/SteamPlatformLogo.swift](../Sources/NXLibrary/Views/Components/SteamPlatformLogo.swift) | Logo ufficiale Steam per la piattaforma dei giochi Steam: da solo, almeno 50 pixel, spazio libero della manovella. |
+| [Sources/NXLibrary/Views/Components/GameLogoArea.swift](../Sources/NXLibrary/Views/Components/GameLogoArea.swift) | Area del logo del gioco con la geometria condivisa da Spotlight e Collection; caricamento e impostazioni restano fuori. |
+| [Sources/NXLibrary/Views/Components/GamePrimaryActions.swift](../Sources/NXLibrary/Views/Components/GamePrimaryActions.swift) | Play, Options e preferito con lo stesso aspetto e gli stessi bersagli di input per ogni fonte; i puntini di «Porting» e «Downloading». |
+| [Sources/NXLibrary/Views/Components/SessionCard.swift](../Sources/NXLibrary/Views/Components/SessionCard.swift) | Card di fine sessione: aspetta che NX Library sia davanti, compare 1,8 s dopo per 8 s; una sessione più recente sostituisce quella in attesa. |
 
 ## UI · temi, rendering e sfondi
 
@@ -600,6 +607,18 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Tests/NXLibraryCoreTests/WallpaperCatalogTests.swift](../Tests/NXLibraryCoreTests/WallpaperCatalogTests.swift) | Catalogo dei file inclusi/importati, gruppi e tipi immagine/video. |
 | [Tests/NXLibraryCoreTests/WallpaperPlacementTests.swift](../Tests/NXLibraryCoreTests/WallpaperPlacementTests.swift) | Destinazione dello sfondo fra home e impostazioni. |
 | [Tests/NXLibraryCoreTests/WorkspaceManagerTests.swift](../Tests/NXLibraryCoreTests/WorkspaceManagerTests.swift) | Collegamenti simbolici, cache adottate e rilevamento dei link interrotti. |
+| [Tests/NXLibraryCoreTests/AppIconWriterTests.swift](../Tests/NXLibraryCoreTests/AppIconWriterTests.swift) | Icona scelta scritta e ripristinata, originale ricordato anche se assente, ricostruzione dell’app, firma fallita senza modifiche, icona rifilata e opaca. |
+| [Tests/NXLibraryCoreTests/BackdropArtTests.swift](../Tests/NXLibraryCoreTests/BackdropArtTests.swift) | Arte tenuta fra un gioco e l’altro e mai fra card e gioco, dissolvenze sull’orologio come Core Animation, livelli coperti tolti e scorrimento rapido. |
+| [Tests/NXLibraryCoreTests/BoundedDownloadTests.swift](../Tests/NXLibraryCoreTests/BoundedDownloadTests.swift) | Blocchi raccolti fino al limite, corpo o lunghezza dichiarata oltre il limite rifiutati, nessun redirect, annullamento della lettura. |
+| [Tests/NXLibraryCoreTests/DetailsFactsTests.swift](../Tests/NXLibraryCoreTests/DetailsFactsTests.swift) | Righe Details per Switch e Steam: ordine, valori mancanti o vuoti nascosti, mai la versione Steam, solo crediti durante il download, simboli. |
+| [Tests/NXLibraryCoreTests/DetailsReviewFixTests.swift](../Tests/NXLibraryCoreTests/DetailsReviewFixTests.swift) | Play costruisce un gioco non ancora costruito con le sorgenti; nome di cartella o volume letto una volta per URL. |
+| [Tests/NXLibraryCoreTests/EngineRuntimeRequirementsTests.swift](../Tests/NXLibraryCoreTests/EngineRuntimeRequirementsTests.swift) | Il runtime incluso porta ogni pacchetto Python che il motore fissato chiede (riga `pip install` del README e `tools.txt`). |
+| [Tests/NXLibraryCoreTests/GameFocusTests.swift](../Tests/NXLibraryCoreTests/GameFocusTests.swift) | Ritorno della libreria davanti solo per il gioco in primo piano, mai con un altro gioco aperto, uscita contata una volta. |
+| [Tests/NXLibraryCoreTests/ModStoreModelTests.swift](../Tests/NXLibraryCoreTests/ModStoreModelTests.swift) | Store delle mod da copia fresca o vecchia, abbinamenti incerti o sicuri, ordine della libreria, copie di un altro gioco, chiusura senza perdite. |
+| [Tests/NXLibraryCoreTests/SessionSummaryTests.swift](../Tests/NXLibraryCoreTests/SessionSummaryTests.swift) | Card di fine sessione: gioco, sessione e totale, meno di un minuto, sessioni troppo brevi o in corso, altri giochi, giochi Steam. |
+| [Tests/NXLibraryCoreTests/SettingsRowButtonsTests.swift](../Tests/NXLibraryCoreTests/SettingsRowButtonsTests.swift) | Riga con due pulsanti: Sinistra/Destra fra i pulsanti, uscita dalla riga, riga con un solo pulsante, A preme quello in focus. |
+| [Tests/NXLibraryCoreTests/SpotlightRowGeometryTests.swift](../Tests/NXLibraryCoreTests/SpotlightRowGeometryTests.swift) | Posto a schermo = camera più posto nella riga, tessere che restano ferme durante lo scorrimento, distanze costanti e quattro tessere di riserva ai bordi. |
+| [Tests/NXLibraryCoreTests/TileMotionTests.swift](../Tests/NXLibraryCoreTests/TileMotionTests.swift) | Periodi e curve di bagliore, ring e riflesso, campioni che chiudono il loop senza salti, fase nel periodo e simbolo del download. |
 
 ## Script di sviluppo e packaging
 
@@ -731,6 +750,8 @@ Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua rig
 | [SteamLibrarySourceTests.swift](../Tests/NXLibraryCoreTests/SteamLibrarySourceTests.swift) | Più fonti, dischi assenti, identità, file cambiati, limiti e assenza di scritture. |
 | [SteamDiscoveryConsistencyTests.swift](../Tests/NXLibraryCoreTests/SteamDiscoveryConsistencyTests.swift) | Mutazioni reali di inventario e app durante scan, indice inizialmente assente, budget e propagazione dell'annullamento. |
 | [SteamTestSupport.swift](../Tests/NXLibraryCoreTests/SteamTestSupport.swift) | Genera solo metadati e header sintetici nelle directory temporanee dei test. |
+| [SteamPlayState.swift](../Sources/NXLibraryCore/Services/Steam/SteamPlayState.swift) | Stato di Play per un gioco Steam: processi osservati con i percorsi risolti, passaggio a Steam, sessione solo quando gira l’app di questa installazione, attese e rifiuti. |
+| [SteamPlayStateTests.swift](../Tests/NXLibraryCoreTests/SteamPlayStateTests.swift) | Symlink, passaggio senza sessione, Play doppi e risposte tardive, rifiuti e timeout, giochi già aperti, argomenti silenziosi, pazienza di Steam a freddo e schermata di lancio. |
 
 ## Achievements Steam (in attesa di validazione umana)
 
@@ -738,26 +759,27 @@ Quando si aggiunge, rinomina o rimuove un file versionato, aggiornare la sua rig
 |---|---|
 | [SteamBinaryKeyValues.swift](../Sources/NXLibraryCore/Services/Steam/SteamBinaryKeyValues.swift) | Lettura limitata del formato KeyValues binario di Steam (`appcache/stats`): tipi noti, profondità, voci e dimensione; qualunque altro byte è un errore. |
 | [SteamAchievementReader.swift](../Sources/NXLibraryCore/Services/Steam/SteamAchievementReader.swift) | Achievement di un gioco per l’account corrente: schema (nomi nella lingua dell’app, poi inglese; nascosti; icone) e soli `AchievementTimes` del file delle statistiche; nessun file, account o statistiche: nessun dato. |
-| [SteamAchievementRarity.swift](../Sources/NXLibraryCore/Services/Steam/SteamAchievementRarity.swift) | Rarità pubblica (`GetGlobalAchievementPercentagesForApp`, senza chiave) e indirizzi delle icone sul CDN di Steam, solo per nomi di file semplici. |
-| [AchievementSummary.swift](../Sources/NXLibraryCore/Models/AchievementSummary.swift) | Riepilogo puro per la tile e la schermata: conteggi, percentuale, icone recenti, conteggi per tier, sbloccati di recente, ultimo sblocco, filtri e ordini; maschera i nascosti ancora bloccati. |
+| [SteamAchievementRarity.swift](../Sources/NXLibraryCore/Services/Steam/SteamAchievementRarity.swift) | Rarità pubblica (`GetGlobalAchievementPercentagesForApp`, senza chiave) (una percentuale non numerica, «nan» o «inf», si scarta) e indirizzi delle icone sull’host community-assets del CDN di Steam, solo per nomi di file semplici. |
+| [AchievementSummary.swift](../Sources/NXLibraryCore/Models/AchievementSummary.swift) | Riepilogo puro per la tile e la schermata: conteggi, percentuale, gioco completato (`isComplete`), righe recenti con icona, conteggi per tier, sbloccati di recente, ultimo sblocco, filtri e ordini; maschera i nascosti ancora bloccati. |
 | [AchievementTier.swift](../Sources/NXLibraryCore/Models/AchievementTier.swift) | Tier a cristallo come i trofei PS5: Arcano (viola, al posto del Platino) per il gioco completato, Oro / Argento / Bronzo per rarità Steam (<10%, <30%, il resto); nomi tradotti e PNG nelle risorse del Core; `videoURL` dà il video in loop dell'Arcane (`crystal-arcane.mov`, HEVC con alpha a 384 px). |
 | [AchievementsScreenState.swift](../Sources/NXLibraryCore/Models/AchievementsScreenState.swift) | Filtro e selezione della schermata Achievements: due colonne, bordi fermi, LB/RB che girano i filtri. |
 | [SteamAchievementsStore.swift](../Sources/NXLibrary/Services/SteamAchievementsStore.swift) | Legge gli achievement fuori dal thread principale (selezione, apertura della schermata e, per il gioco selezionato, fine di una sessione Steam: subito e dopo un minuto), uno per AppID alla volta; tiene gli ultimi 16 giochi e aggiunge la rarità quando arriva. |
 | [ArcaneOrbVideo.swift](../Sources/NXLibrary/Views/Spotlight/ArcaneOrbVideo.swift) | L'Arcane della card come video: grigio e fermo a riposo, a colori e in movimento con hover o focus, si ferma sul suo fotogramma e riparte da lì; colore, luce e scala animati da Core Animation. Usato anche, grande e sempre attivo, in testa alla schermata Achievements quando l'Arcane è conquistato. |
 | [DetailsAchievementsCard.swift](../Sources/NXLibrary/Views/Detail/DetailsAchievementsCard.swift) | Card Achievements in cima alla colonna destra della pagina, sopra il pannello Details; prende il focus e apre la schermata. |
-| [AchievementIcon.swift](../Sources/NXLibrary/Views/Detail/AchievementIcon.swift) | Icona di un achievement dalla cache di `SteamMetadataService`, decodificata fuori dal thread principale, con un riquadro neutro finché manca. |
-| [AchievementsScreen.swift](../Sources/NXLibrary/Views/Spotlight/AchievementsScreen.swift) | Schermata Achievements sopra l’arte del gioco, impaginata come Selene: logo e sbloccati di recente a sinistra, percentuale, barra e conteggio come un blocco e cristalli per tier a destra, filtri tra LB e RB (Q/E su tastiera), ordine (Y) in basso a destra accanto a Open, con Q/E e LB/RB compatti ai lati delle categorie e barra alla posizione condivisa; lista e sfumatura lasciano libera la fascia dei comandi e lista in una colonna mossa da un offset proprio (niente ScrollView), disegnando solo le righe in vista. |
-| [AchievementDetail.swift](../Sources/NXLibrary/Views/Spotlight/AchievementDetail.swift) | Dettaglio di un obiettivo (A sulla riga o clic sulla riga in focus): cristallo grande, icona, nome e descrizione interi, percentuale dei giocatori, data di sblocco; le frecce scorrono la lista, A/B o un clic fuori chiudono. |
-| [TierCrystal.swift](../Sources/NXLibrary/Views/Spotlight/TierCrystal.swift) | Il cristallo di una tier dalle risorse del Core, decodificato una volta; spento (grigio e tenue) se non ancora ottenuto. |
+| [AchievementIcon.swift](../Sources/NXLibrary/Views/Detail/AchievementIcon.swift) | Icona di un achievement dalla cache di `SteamMetadataService`, decodificata fuori dal thread principale e tenuta in memoria (niente lampo quando una riga torna in vista), con un riquadro neutro finché manca; un segreto non sbloccato è sfocato sotto un lucchetto. |
+| [AchievementsScreen.swift](../Sources/NXLibrary/Views/Spotlight/AchievementsScreen.swift) | Schermata Achievements sopra l’arte del gioco, impaginata come Selene: logo e sbloccati di recente a sinistra; a destra i cristalli per tier con sotto percentuale, barra larga quanto i quattro cristalli e conteggio (`TrophyColumn`), oppure, a gioco completato, il medaglione dell’Arcane (video, nome, conteggio e piccoli cristalli Oro/Argento/Bronzo); filtri tra LB e RB (Q/E su tastiera), ordine (Y) in basso a destra accanto a Open, con Q/E e LB/RB compatti ai lati delle categorie e barra alla posizione condivisa; lista e sfumatura lasciano libera la fascia dei comandi e lista in una colonna mossa da un offset proprio (niente ScrollView), disegnando solo le righe in vista. |
+| [AchievementDetail.swift](../Sources/NXLibrary/Views/Spotlight/AchievementDetail.swift) | Dettaglio di un obiettivo come medaglione (A sulla riga o clic sulla riga in focus): icona grande con il cristallo della tier come piccolo distintivo sull’angolo, nome e descrizione interi centrati, percentuale dei giocatori, data di sblocco; le frecce scorrono la lista, A/B o un clic fuori chiudono. |
+| [TierCrystal.swift](../Sources/NXLibrary/Views/Spotlight/TierCrystal.swift) | Il cristallo di una tier dalle risorse del Core, decodificato una volta; non ancora ottenuto, tenue con una traccia del suo colore, così oro, argento e bronzo restano distinguibili. |
 | [AchievementsScreenModel.swift](../Sources/NXLibrary/ViewModels/AchievementsScreenModel.swift) | Schermata Achievements aperta: selezione, filtro, input e scorrimento della lista; un riferimento, così un passo non ridisegna la Spotlight sotto. Dopo la rotella la prima freccia porta il fuoco alla riga in vista più vicina. |
 | [ListScroll.swift](../Sources/NXLibrary/ViewModels/ListScroll.swift) | Offset di una lista (`TextScroll`) con la planata del pannello delle mod: rotella, trackpad e frecce muovono lo stesso valore. |
 | [GridListLayout.swift](../Sources/NXLibraryCore/Models/GridListLayout.swift) | Geometria di una lista a colonne di righe uguali: altezza, posizione di ogni riga, linee da disegnare, riga da mostrare e riga in vista più vicina. |
 | [SteamBinaryKeyValuesTests.swift](../Tests/NXLibraryCoreTests/SteamBinaryKeyValuesTests.swift) | Tipi, annidamento, fine dei dati, input troncati, tipi ignoti e limiti del parser binario. |
 | [SteamAchievementReaderTests.swift](../Tests/NXLibraryCoreTests/SteamAchievementReaderTests.swift) | Percorsi, account e file mancanti, lingue con ripiego, nascosti, icone vuote, ordine numerico e file corrotti. |
-| [SteamAchievementRarityTests.swift](../Tests/NXLibraryCoreTests/SteamAchievementRarityTests.swift) | Percentuali numeriche o testuali, host e percorso ammessi, cache di un giorno, cache vecchia offline, icone in cache e file che non sono immagini. |
-| [AchievementSummaryTests.swift](../Tests/NXLibraryCoreTests/AchievementSummaryTests.swift) | Conteggi, ordini dei filtri, rarità sconosciute in fondo, soglia del raro, maschera dei nascosti e icone recenti. |
+| [SteamAchievementRarityTests.swift](../Tests/NXLibraryCoreTests/SteamAchievementRarityTests.swift) | Percentuali numeriche o testuali (non numeriche scartate), host e percorso ammessi, cache di un giorno, cache vecchia offline, icone in cache, coda oltre sei download con annullamento, errore recente senza attesa e file che non sono immagini. |
+| [AchievementSummaryTests.swift](../Tests/NXLibraryCoreTests/AchievementSummaryTests.swift) | Conteggi, gioco completato, ordini dei filtri, rarità sconosciute in fondo, soglia del raro, maschera dei nascosti e icone recenti (segreti compresi). |
 | [AchievementsScreenStateTests.swift](../Tests/NXLibraryCoreTests/AchievementsScreenStateTests.swift) | Movimento in due colonne, bordi, liste vuote, cambio filtro e liste che si accorciano. |
 | [GridListLayoutTests.swift](../Tests/NXLibraryCoreTests/GridListLayoutTests.swift) | Linee, altezza, posizione delle righe, spazio da mostrare, linee visibili e riga in vista più vicina dopo la rotella. |
+| [AchievementTierTests.swift](../Tests/NXLibraryCoreTests/AchievementTierTests.swift) | Soglie, tier dalla percentuale mostrata, ordine dal più raro, conteggi per tier, Arcane solo al 100% e mai senza achievement, miglior tier ottenuto, rarità sconosciuta. |
 
 ## Download Steam (in attesa di validazione umana)
 
@@ -801,6 +823,8 @@ Il resto vive nei file esistenti: `SteamLibrarySource` (StateFlags senza il bit 
 | [run_notices.py](../Tests/CatalogAppChecks/run_notices.py) | Esegue i metodi reali degli avvisi e del ponte legacy senza finestre, dopo swift test. |
 | [run_game_header.py](../Tests/CatalogAppChecks/run_game_header.py) | Esegue i corpi reali di logo e azioni condivisi senza finestra né store applicativi, per entrambi i layout. |
 | [NoticeHost.swift](../Tests/CatalogAppChecks/NoticeHost.swift) | Host minimo per i controlli applicativi, con storage reale e dati sintetici temporanei. |
+| [CatalogGameOptions.swift](../Sources/NXLibraryCore/Models/CatalogGameOptions.swift) | Ordine unico delle operazioni comuni della libreria; ciò che una fonte può fare dipende dal suo record (nessuna modifica nxnative su un gioco Steam). |
+| [SharedGamePresentationTests.swift](../Tests/NXLibraryCoreTests/SharedGamePresentationTests.swift) | Presentazione Steam con identità, personalizzazioni e cronologia; confine comune per nxnative; quadrato senza copertina verticale; opzioni comuni nello stesso ordine. |
 
 
 ## Fonti e libreria mista (Dev, in attesa di validazione)
@@ -820,6 +844,8 @@ Il resto vive nei file esistenti: `SteamLibrarySource` (StateFlags senza il bit 
 | [CatalogSourcesRepositoryTests.swift](../Tests/NXLibraryCoreTests/CatalogSourcesRepositoryTests.swift) | Compatibilità generazioni, cambi fonte, preferenze concorrenti e adozione NX esplicita. |
 | [CatalogSourcesModelTests.swift](../Tests/NXLibraryCoreTests/CatalogSourcesModelTests.swift) | Opt-in, annullamento, risultati vecchi, cambio radice e recupero errori. |
 | [CatalogLibraryQueryTests.swift](../Tests/NXLibraryCoreTests/CatalogLibraryQueryTests.swift) | Visibilità, ricerca/filtri misti e selezione per UUID senza sessioni simulate. |
+| [SteamGamePage.swift](../Sources/NXLibrary/Views/Catalog/SteamGamePage.swift) | Dati store Steam dei giochi a schermo, una copia condivisa da Spotlight e Collection, per AppID e lingua; una risposta per un gioco o una lingua non più chiesti si scarta. |
+| [SteamOptionsTests.swift](../Tests/NXLibraryCoreTests/SteamOptionsTests.swift) | Righe delle opzioni Steam come quelle comuni nxnative, niente di nxnative, Play e Finder spenti senza installazione, artwork e impostazione «Keep Steam in the background». |
 
 
 ## Metadati Steam (Dev, in attesa di validazione)
@@ -827,10 +853,16 @@ Il resto vive nei file esistenti: `SteamLibrarySource` (StateFlags senza il bit 
 | File | Responsabilità |
 |---|---|
 | [SteamMetadata.swift](../Sources/NXLibraryCore/Services/Steam/SteamMetadata.swift) | Dati store Steam tipizzati, lingua e URL immagini verificati. |
-| [SteamMetadataService.swift](../Sources/NXLibraryCore/Services/Steam/SteamMetadataService.swift) | Richieste limitate/coalescenti, cache per lingua, ripiego offline e immagini ridimensionate. |
+| [SteamMetadataService.swift](../Sources/NXLibraryCore/Services/Steam/SteamMetadataService.swift) | Richieste coalescenti, al massimo sei download insieme con gli altri in coda (annullabili), cache per lingua, ripiego offline e immagini ridimensionate. |
 | [SteamArtwork.swift](../Sources/NXLibrary/Views/Catalog/SteamArtwork.swift) | Immagini e sfondi Steam, con precedenza alle scelte personali e annullamento dei risultati UI obsoleti. |
 | [SteamPersonalizations.swift](../Sources/NXLibrary/Views/Catalog/SteamPersonalizations.swift) | Archivio delle scelte personali Steam (metadati e artwork), modificate da Change artwork e Change metadata. |
 | [SteamMetadataTests.swift](../Tests/NXLibraryCoreTests/SteamMetadataTests.swift) | Identità, lingue, offline, URL, concorrenza e pubblicazione dopo salvataggio riuscito. |
 
 | [SteamPersonalizationStore.swift](../Sources/NXLibraryCore/Services/Steam/SteamPersonalizationStore.swift) | Pubblicazione unica di metadati e riferimenti artwork; fallimenti e Automatic conservano le scelte coerenti. |
+| [GameDetailPresentation+Steam.swift](../Sources/NXLibraryCore/Models/GameDetailPresentation+Steam.swift) | Dati della pagina di un gioco Steam per le stesse viste About, attività e statistiche di un gioco nxnative; dati di un altro AppID ignorati, campi personali prima. |
+| [SteamArtworkRequest.swift](../Sources/NXLibraryCore/Services/Steam/SteamArtworkRequest.swift) | Cosa chiede la tile di un gioco Steam per ogni ruolo: prima la scelta personale, poi per il quadrato l’icona dell’app installata, mai la copertina; gli altri ruoli vanno all’arte dello store. |
+| [SteamBackdropChoice.swift](../Sources/NXLibraryCore/Services/Steam/SteamBackdropChoice.swift) | Sfondo automatico di un gioco Steam: arte 16:9 pulita (Xbox, GOG, TheGamesDB, fan art LaunchBox), poi il primo screenshot, per ultimo il banner della libreria ritagliato. |
+| [SteamArtworkRequestTests.swift](../Tests/NXLibraryCoreTests/SteamArtworkRequestTests.swift) | Quadrato dall’icona originale e mai dalla copertina, scelta personale prima, link che escono dal bundle ignorati, icona automatica solo senza app. |
+| [SteamAutomaticIconTests.swift](../Tests/NXLibraryCoreTests/SteamAutomaticIconTests.swift) | Quadrato LaunchBox della voce PC preso intero, scaricato una volta e conservato; nessun quadrato non si richiede di nuovo nella sessione. |
+| [SteamBackdropChoiceTests.swift](../Tests/NXLibraryCoreTests/SteamBackdropChoiceTests.swift) | Solo arte in formato schermo, ordine store → screenshot → banner, fan art LaunchBox fra store e screenshot, ripiego sulla prima immagine che si carica. |
 

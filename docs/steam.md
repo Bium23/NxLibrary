@@ -205,22 +205,31 @@ totali Steam sono nascosti, `PlaySessionStore.trimReferences` conserva il moment
 Dai file locali di `appcache/stats`, per l’account delle ore. Senza schema, account o file delle statistiche non c’è
 la card; un file malformato la nasconde (un file vuoto o troncato non è «nessuno sbloccato»). In rete vanno solo la
 rarità pubblica (`GetGlobalAchievementPercentagesForApp`, senza chiave, in cache un giorno, usata anche scaduta
-offline) e le icone dal CDN di Steam. `SteamAchievementsStore` legge alla selezione del gioco, all’apertura della
-schermata e a fine sessione; tiene in memoria gli ultimi 16 giochi.
+offline; una percentuale non numerica si scarta) e le icone dall’host community-assets del CDN di Steam (il vecchio
+percorso `steamcommunity/public/images` risponde 404 per le icone recenti). `SteamAchievementsStore` legge alla
+selezione del gioco, all’apertura della schermata e a fine sessione; tiene in memoria gli ultimi 16 giochi.
+
+Tier come i trofei PS5 (`AchievementTier`): Oro, Argento e Bronzo per rarità (sotto il 10%, sotto il 30%, il resto);
+Arcane, al posto del Platino, quando tutto è sbloccato. I cristalli sono arte del maintainer; l’Arcane è un video in
+loop (`ArcaneOrbVideo`, 1,5×) che a riposo resta fermo e grigio. Una tier non ottenuta tiene una traccia del suo
+colore. Un achievement segreto non ancora sbloccato mostra il nome mascherato e l’icona sfocata sotto un lucchetto.
 
 In cima alla colonna a destra di About, in un pannello chiaro quasi trasparente (sfocatura leggera dell’immagine)
 con il contorno sottile dei pulsanti
-(`DetailsAchievementsCard`: «17/50» con la percentuale accanto, le ultime tre icone a destra, una barra sottile
-sotto; selezionato, l’anello Selene sta sul bordo del pannello); A apre
-`AchievementsScreen` (filtri con LB/RB, nascosti mascherati, raro sotto il 10%: regole in `AchievementSummary`), B
-torna alla card. La card prende il focus fra gli screenshot e il pannello della fonte, accanto a Read more
+(`DetailsAchievementsCard`: il miglior cristallo ottenuto a sinistra, «17/50» o, a gioco completato, il nome
+dell’Arcane, le ultime tre icone a ventaglio con hover o focus; selezionato, l’anello Selene sta sul bordo del
+pannello); A apre `AchievementsScreen` (filtri con LB/RB, ordine con Y, raro sotto il 10%: regole in
+`AchievementSummary`), B torna alla card. In testa alla schermata, a destra, i quattro cristalli con sotto la
+percentuale, la barra e il conteggio; a gioco completato il medaglione dell’Arcane. A su una riga apre il dettaglio
+come medaglione (`AchievementDetail`): icona grande con il cristallo sull’angolo, nome, descrizione, rarità e data. La card prende il focus fra gli screenshot e il pannello della fonte, accanto a Read more
 (Sinistra/Destra). «Your activity» non c’è: ore e ultima partita sono già nella testata. Schema: nomi e descrizioni
 nella lingua dell’app, poi inglese. Nessuna chiave Web API di Steam: non serve per questi dati.
 
 ## Metadati, arte e personalizzazioni
 
 - `SteamMetadataService`: dati pubblici dello store per AppID e lingua, separati da installazioni e scelte personali.
-  Solo HTTPS, niente redirect, al massimo sei trasferimenti, 20 s per richiesta, ripiego sui dati validi già in cache.
+  Solo HTTPS, niente redirect, al massimo sei trasferimenti insieme (gli altri aspettano in coda e si annullano se
+  la loro vista sparisce), 20 s per richiesta, ripiego sui dati validi già in cache.
 - Sfondo automatico (`SteamBackdropChoice`): immagini in formato schermo (Xbox, GOG, TheGamesDB, poi la fan art
   LaunchBox), poi il primo screenshot, per ultimo il banner della libreria Steam ritagliato. La scelta del giocatore
   vince sempre; svuotare la cache artwork ricalcola la scelta automatica.
@@ -255,6 +264,8 @@ Sotto `Application Support/NXLibrary` (Dev: `NXLibrary-Development`):
   con contorno sottile (dopo aver provato senza riquadro e con un’ombra, 15 nov 2026).
 - Logo Steam inalterato al posto del valore sotto PLATFORM, con lo spazio libero ridotto sopra.
 - Ore: base di Steam più le sessioni successive.
+- Achievement (16 nov 2026): Arcane al posto del Platino, cristalli e video dell’Arcane fatti dal maintainer, video a
+  1,5×, medaglione al 100% e nel dettaglio, percentuale e barra larga sotto i cristalli, lucchetto sfocato sui segreti.
 
 ## Limiti noti e punti rimandati
 
@@ -273,8 +284,8 @@ Punti minori rimandati dalle revisioni, da decidere prima del rilascio:
 - Un Refresh manuale non annulla una riscansione in attesa (una scansione in più).
 - `openDownloads` ignora gli errori di apertura.
 - I test del ritmo delle riscansioni hanno margini di 60–80 ms.
-- Achievement: ordine «più rari» instabile a parità di percentuale; una rarità `nan` verrebbe mostrata; la freccia Su
-  sparisce col focus sulla card; breve lampo dell’icona allo scorrimento; riepilogo ricalcolato a ogni disegno.
+- Achievement: la freccia Su sparisce col focus sulla card; riepilogo ricalcolato a ogni disegno. (Risolti il 16 nov
+  2026: ordine «più rari» stabile a parità di percentuale, rarità `nan` scartata, lampo dell’icona allo scorrimento.)
 
 ## Cambiare l’integrazione
 
