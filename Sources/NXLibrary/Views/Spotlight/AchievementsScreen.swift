@@ -39,7 +39,7 @@ struct AchievementsScreen: View {
     /// The fades at the list's edges.
     static let topFade: CGFloat = 40
     static let bottomFade: CGFloat = 110
-    /// The hints bar's band at the bottom (its 40 inset and the 30 badges): no row shows there.
+    /// Keep the home-aligned hints (16 inset, 30 badges) and some breathing room clear of the rows.
     static let hintsBand: CGFloat = 66
     static let rowSpacing: CGFloat = 16
     /// Room for the focus ring around the rows.
@@ -76,7 +76,7 @@ struct AchievementsScreen: View {
                                    if state.isDetailOpen { onCloseDetail() } else { onClose() }
                                }],
                                right: state.isDetailOpen ? [] : listHints(hasRows: !rows.isEmpty),
-                               bottom: 40, leftInset: 18, badgeHeight: 22)
+                               bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
         }
         .animation(SeleneTheme.quick, value: state.isDetailOpen)
@@ -252,9 +252,7 @@ struct AchievementsScreen: View {
 
     private func shoulder(_ button: PromptButton, _ label: String, step: Int) -> some View {
         Button { onShiftFilter(step) } label: {
-            SelenePromptBadge(button: button, height: 22)
-                .frame(minWidth: canvas.u(30), minHeight: canvas.u(36))
-                .contentShape(Rectangle())
+            SelenePromptBadge(button: button, height: 30)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
