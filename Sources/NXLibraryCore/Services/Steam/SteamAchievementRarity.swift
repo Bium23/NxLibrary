@@ -36,7 +36,9 @@ public enum SteamAchievementRarity {
             let achievementpercentages: Inner
         }
         let entries = try JSONDecoder().decode(Body.self, from: data).achievementpercentages.achievements
-        return Dictionary(entries.map { ($0.name, min(max($0.percent, 0), 100)) }, uniquingKeysWith: { first, _ in first })
+        // "nan" and "inf" parse as numbers but are no rarity; clamping would keep NaN and turn infinity into 100.
+        return Dictionary(entries.filter { $0.percent.isFinite }.map { ($0.name, min(max($0.percent, 0), 100)) },
+                          uniquingKeysWith: { first, _ in first })
     }
 
     /// An icon's address on Steam's CDN, for a plain file name from Steam's schema (`<hash>.jpg`); anything else is refused.

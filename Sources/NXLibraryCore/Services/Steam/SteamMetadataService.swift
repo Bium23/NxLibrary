@@ -79,10 +79,15 @@ public actor SteamMetadataService {
     private func cancelWait(_ id: UUID) {
         slotWaiters.removeValue(forKey: id)?.resume(throwing: CancellationError())
     }
+    private func refuseIfFailedRecently(_ url: URL) throws {
+        if let failed = failedAt[url], Date().timeIntervalSince(failed) < 60 { throw URLError(.resourceUnavailable) }
+    }
     private func fetch(_ url: URL) async throws -> Data {
         try Task.checkCancellation()
+        // A recent failure answers at once, before and after waiting for a slot (it may fail meanwhile).
+        try refuseIfFailedRecently(url)
         while pending[url] == nil && pending.count >= Self.concurrentDownloads { try await waitForSlot() }
-        if let failed = failedAt[url], Date().timeIntervalSince(failed) < 60 { throw URLError(.resourceUnavailable) }
+        try refuseIfFailedRecently(url)
         let waiter = UUID()
         var flight: Flight
         if let existing = pending[url] { flight = existing; flight.waiters.insert(waiter) }

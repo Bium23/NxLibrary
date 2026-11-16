@@ -23,6 +23,34 @@ final class SteamAchievementRarityTests: XCTestCase {
         XCTAssertEqual(try SteamAchievementRarity.decode(body), ["A": 80.0, "B": 4.5])
     }
 
+    /// A percent that is not a number (`"nan"`, `"inf"`) is no rarity: clamping left NaN as it was.
+    func testANonFinitePercentIsLeftOut() throws {
+        let body = Data(#"{"achievementpercentages":{"achievements":[{"name":"A","percent":"nan"},{"name":"B","percent":"inf"},{"name":"C","percent":"12.5"}]}}"#.utf8)
+        XCTAssertEqual(try SteamAchievementRarity.decode(body), ["C": 12.5])
+    }
+
+    /// A file that failed a moment ago fails at once, without waiting for a free download behind six others.
+    func testARecentFailureDoesNotWaitForASlot() async throws {
+        let png = try Self.png()
+        let failing = Calls()
+        let service = SteamMetadataService(directory: root, transport: { url in
+            if url.lastPathComponent == "bad.jpg" { await failing.bump(); throw URLError(.badServerResponse) }
+            try await Task.sleep(nanoseconds: 400_000_000)
+            return png
+        })
+        let first = await service.achievementIcon(appID: 7, file: "bad.jpg")
+        XCTAssertNil(first)
+        let busy = (0..<6).map { index in Task { await service.achievementIcon(appID: 7, file: "busy\(index).jpg") } }
+        try await Task.sleep(nanoseconds: 50_000_000)
+        let started = Date()
+        let again = await service.achievementIcon(appID: 7, file: "bad.jpg")
+        XCTAssertNil(again)
+        XCTAssertLessThan(Date().timeIntervalSince(started), 0.2)
+        let count = await failing.count
+        XCTAssertEqual(count, 1)
+        for task in busy { _ = await task.value }
+    }
+
     func testMalformedThrows() {
         XCTAssertThrowsError(try SteamAchievementRarity.decode(Data("{}".utf8)))
         XCTAssertThrowsError(try SteamAchievementRarity.decode(Data("<html>".utf8)))
