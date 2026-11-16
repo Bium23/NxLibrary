@@ -151,16 +151,9 @@ public actor CriticRatingService {
         var request = URLRequest(url: url)
         request.setValue("NXLibrary/0.2 (https://github.com/Bium23/NxLibrary)", forHTTPHeaderField: "User-Agent")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        let (bytes, response) = try await session.bytes(for: request)
-        let limit = 4_194_304
+        let (data, response) = try await BoundedDownload.data(for: request, session: session, limit: 4_194_304)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode),
               http.url == url else { throw URLError(.badServerResponse) }
-        guard response.expectedContentLength <= limit else { throw URLError(.dataLengthExceedsMaximum) }
-        var data = Data()
-        for try await byte in bytes {
-            guard data.count < limit else { throw URLError(.dataLengthExceedsMaximum) }
-            data.append(byte)
-        }
         return data
     }
 }

@@ -145,13 +145,8 @@ public actor DatabaseMetadataService {
     }()
     private static func download(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         guard let url = request.url, allowed(url) else { throw URLError(.badURL) }
-        let (bytes, response) = try await session.bytes(for: request)
-        guard let http = response as? HTTPURLResponse, http.url == url, response.expectedContentLength <= 2_097_152 else { throw URLError(.badServerResponse) }
-        var data = Data()
-        for try await byte in bytes {
-            guard data.count < 2_097_152 else { throw URLError(.dataLengthExceedsMaximum) }
-            data.append(byte)
-        }
+        let (data, response) = try await BoundedDownload.data(for: request, session: session, limit: 2_097_152)
+        guard let http = response as? HTTPURLResponse, http.url == url else { throw URLError(.badServerResponse) }
         return (data, http)
     }
 }

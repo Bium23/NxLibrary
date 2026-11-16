@@ -473,6 +473,16 @@ della console. Non sostituire silenziosamente il voto utenti o quello di un'altr
 edizione. Il maintainer ha poi approvato il ripiego utenti esplicitamente distinto.
 Nessuna credenziale o token è stata registrata.
 
+Correzioni del 16 novembre 2026 (in attesa di validazione umana). Una media della critica IGDB
+vale solo con almeno 3 recensioni (`IGDBRatings.minimumCriticReviews`): con meno, la riga usa
+Wikidata o, in sua assenza, la media utenti IGDB esplicita. `CriticRating.isValid` applica lo
+stesso minimo, così le vecchie cache con 1–2 recensioni vengono richieste di nuovo. Salvare le
+credenziali riporta anche una cartella `credentials` già esistente al modo 0700. I download di
+Wikidata, IGDB, LaunchBox/TheGamesDB e Steam passano per `BoundedDownload`, che conserva i
+blocchi ricevuti da URLSession: leggere `AsyncBytes` un byte alla volta costava circa 6 µs per
+byte (pagina LaunchBox da 640 KB: 5,4 s e 3,9 s di CPU, ora 2,0 s e circa 10–30 ms di CPU).
+Limiti di dimensione, rifiuto dei redirect e annullamento restano invariati.
+
 `CriticRatingService.preferred` ordina i risultati: critica IGDB (con credenziali),
 critica Wikidata, media utenti IGDB. Un voto pubblico della critica prevale quindi
 su una media utenti IGDB, anche se disponibile per prima. Nessuna impostazione cambia i metadati o la libreria. Test di

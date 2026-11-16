@@ -26,6 +26,17 @@ final class IGDBRatingTests: XCTestCase {
         try store.remove()
         XCTAssertNil(store.load())
     }
+    func testSavingTightensAnExistingCredentialsFolder() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let folder = root.appendingPathComponent("credentials")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o755])
+        let store = IGDBCredentialsStore(url: folder.appendingPathComponent("igdb.json"))
+        try store.save(credentials)
+        let permissions = try FileManager.default.attributesOfItem(atPath: folder.path)[.posixPermissions] as? Int
+        XCTAssertEqual(permissions, 0o700)
+    }
+
     func testCriticAverageWinsWithoutMixingCommunityScores() throws {
         let rating = try XCTUnwrap(IGDBRatings.rating(in: game, query: query))
         XCTAssertEqual(rating.source, .igdb)
@@ -37,6 +48,32 @@ final class IGDBRatingTests: XCTestCase {
         XCTAssertFalse(rating.isCommunity)
         let userOnly = Data("[{\"id\":10,\"name\":\"Fixture\",\"rating\":99,\"rating_count\":100,\"platforms\":[130]}]".utf8)
         XCTAssertNil(try IGDBRatings.rating(in: userOnly, query: query))
+    }
+
+    func testCriticAverageNeedsThreeReviews() throws {
+        // Two critics are not a critic consensus: fall back to the explicit user average, or to nothing.
+        let few = Data("""
+        [{"id":10,"name":"Fixture","aggregated_rating":95,"aggregated_rating_count":2,
+          "rating":71,"rating_count":40,"platforms":[130],"url":"https://www.igdb.com/games/fixture"}]
+        """.utf8)
+        let rating = try XCTUnwrap(IGDBRatings.rating(in: few, query: query))
+        XCTAssertTrue(rating.isCommunity)
+        XCTAssertEqual(rating.score, 71)
+        let criticsOnly = Data("""
+        [{"id":10,"name":"Fixture","aggregated_rating":95,"aggregated_rating_count":2,
+          "platforms":[130],"url":"https://www.igdb.com/games/fixture"}]
+        """.utf8)
+        XCTAssertNil(try IGDBRatings.rating(in: criticsOnly, query: query))
+        let three = Data(String(decoding: criticsOnly, as: UTF8.self)
+            .replacingOccurrences(of: "\"aggregated_rating_count\":2", with: "\"aggregated_rating_count\":3").utf8)
+        XCTAssertEqual(try IGDBRatings.rating(in: three, query: query)?.isCommunity, false)
+        // A critic score saved before the minimum is no longer a valid cache entry.
+        let saved = CriticRating(score: 95, source: .igdb, igdbID: 10,
+                                 igdbURL: URL(string: "https://www.igdb.com/games/fixture"), reviewCount: 2)
+        XCTAssertFalse(saved.isValid)
+        let users = CriticRating(score: 71, source: .igdb, igdbID: 10,
+                                 igdbURL: URL(string: "https://www.igdb.com/games/fixture"), reviewCount: 1, audience: .users)
+        XCTAssertTrue(users.isValid)
     }
 
     func testCommunityFallbackIsDistinctAndRequiresACountAndProvenance() throws {
@@ -125,8 +162,8 @@ final class IGDBRatingTests: XCTestCase {
         // Synthetic scores: the important regression is identity, not a live game's current rating.
         let games = Data("""
         [{"id":1,"name":"Fixture","platforms":[4],"aggregated_rating":99,"aggregated_rating_count":3,"url":"https://www.igdb.com/games/original"},
-         {"id":2,"name":"Fixture","platforms":[508],"aggregated_rating":85,"aggregated_rating_count":2,"url":"https://www.igdb.com/games/remake"},
-         {"id":3,"name":"Fixture","platforms":[130],"aggregated_rating":80,"aggregated_rating_count":2,"url":"https://www.igdb.com/games/switch-edition"}]
+         {"id":2,"name":"Fixture","platforms":[508],"aggregated_rating":85,"aggregated_rating_count":3,"url":"https://www.igdb.com/games/remake"},
+         {"id":3,"name":"Fixture","platforms":[130],"aggregated_rating":80,"aggregated_rating_count":3,"url":"https://www.igdb.com/games/switch-edition"}]
         """.utf8)
         XCTAssertEqual(try IGDBRatings.rating(in: games, query: .init(name: "Fixture™", platform: .switch2))?.igdbID, 2)
         XCTAssertEqual(try IGDBRatings.rating(in: games, query: query)?.igdbID, 3)

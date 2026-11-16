@@ -31,7 +31,10 @@ public struct IGDBCredentialsStore {
         let temp = url.deletingLastPathComponent().appendingPathComponent(".igdb-" + UUID().uuidString)
         defer { try? fm.removeItem(at: temp) }
         do {
-            try fm.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+            let folder = url.deletingLastPathComponent()
+            try fm.createDirectory(at: folder, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+            // Creation applies the mode only to a new folder; an existing one is made private too.
+            try fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: folder.path)
             let data = try JSONEncoder().encode(value)
             guard fm.createFile(atPath: temp.path, contents: data, attributes: [.posixPermissions: 0o600]),
                   rename(temp.path, url.path) == 0 else { throw IGDBError.notSaved }

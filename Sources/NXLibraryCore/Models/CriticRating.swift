@@ -97,7 +97,8 @@ public struct CriticRating: Equatable, Codable, Sendable {
     var isValid: Bool {
         guard score.isFinite, (0...100).contains(score), !isCommunity || source == .igdb else { return false }
         if source == .igdb {
-            return (igdbID ?? 0) > 0 && (reviewCount ?? 0) > 0 && igdbURL.flatMap(IGDBRatings.safeGameURL) != nil
+            let minimum = isCommunity ? 1 : IGDBRatings.minimumCriticReviews
+            return (igdbID ?? 0) > 0 && (reviewCount ?? 0) >= minimum && igdbURL.flatMap(IGDBRatings.safeGameURL) != nil
         }
         guard let entityID, let statementID else { return false }
         return WikidataRatings.isItemID(entityID) && statementID.hasPrefix(entityID + "$")

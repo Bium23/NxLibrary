@@ -105,13 +105,10 @@ actor IGDBClient {
         var request = request
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("NXLibrary/0.2 (https://github.com/Bium23/NxLibrary)", forHTTPHeaderField: "User-Agent")
-        let (bytes, response) = try await session.bytes(for: request)
-        guard let http = response as? HTTPURLResponse, http.url == url, response.expectedContentLength <= 2_097_152 else { throw IGDBError.invalidResponse }
-        var data = Data()
-        for try await byte in bytes {
-            guard data.count < 2_097_152 else { throw IGDBError.invalidResponse }
-            data.append(byte)
-        }
+        let data: Data, response: URLResponse
+        do { (data, response) = try await BoundedDownload.data(for: request, session: session, limit: 2_097_152) }
+        catch let error as URLError where error.code == .dataLengthExceedsMaximum { throw IGDBError.invalidResponse }
+        guard let http = response as? HTTPURLResponse, http.url == url else { throw IGDBError.invalidResponse }
         return (data, http)
     }
 }

@@ -2,6 +2,8 @@ import Foundation
 
 /// Exact identity, preferring external critics; user scores remain an explicitly identified fallback.
 public enum IGDBRatings {
+    /// Fewer critic reviews are not a consensus: the explicit user average (or another source) is used instead.
+    static let minimumCriticReviews = 3
     static let fields = "id,name,alternative_names.name,platforms,aggregated_rating,aggregated_rating_count,rating,rating_count,url"
     static func clean(_ name: String) -> String {
         ["™", "®", "©"].reduce(name) { $0.replacingOccurrences(of: $1, with: "") }
@@ -51,7 +53,8 @@ public enum IGDBRatings {
         var resolvedRating: CriticRating? {
             guard id > 0, let url, let safe = safeGameURL(url) else { return nil }
             func make(_ score: Double?, _ count: Int?, audience: CriticRating.Audience) -> CriticRating? {
-                guard let score, score.isFinite, (0...100).contains(score), let count, count > 0 else { return nil }
+                let minimum = audience == .critics ? IGDBRatings.minimumCriticReviews : 1
+                guard let score, score.isFinite, (0...100).contains(score), let count, count >= minimum else { return nil }
                 return CriticRating(score: score, source: .igdb, igdbID: id, igdbURL: safe, reviewCount: count, audience: audience)
             }
             return make(aggregated_rating, aggregated_rating_count, audience: .critics)

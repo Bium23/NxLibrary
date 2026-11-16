@@ -44,16 +44,10 @@ public actor SteamMetadataService {
         guard allowed(url) else { throw URLError(.badURL) }
         var request = URLRequest(url: url); request.timeoutInterval = 15
         request.setValue("NXLibrary/0.1 (macOS)", forHTTPHeaderField: "User-Agent")
-        let (bytes, response) = try await session.bytes(for: request)
+        let limit = url.host == "store.steampowered.com" || url.host == SteamAchievementRarity.host ? 2_097_152 : 12_582_912
+        let (data, response) = try await BoundedDownload.data(for: request, session: session, limit: limit)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode),
               let final = http.url, allowed(final) else { throw URLError(.badServerResponse) }
-        let limit = url.host == "store.steampowered.com" || url.host == SteamAchievementRarity.host ? 2_097_152 : 12_582_912
-        if response.expectedContentLength > limit { throw URLError(.dataLengthExceedsMaximum) }
-        var data = Data()
-        for try await byte in bytes {
-            guard data.count < limit else { throw URLError(.dataLengthExceedsMaximum) }
-            data.append(byte)
-        }
         return data
     }
     private func release(_ url: URL, flightID: UUID, waiter: UUID) {
