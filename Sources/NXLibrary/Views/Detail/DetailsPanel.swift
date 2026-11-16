@@ -69,6 +69,10 @@ struct DetailsPanel: View {
     let onPressLink: (Int) -> Void
     /// The panel's width in canvas units.
     var width: CGFloat = Self.narrowWidth
+    /// Public identity of the game whose critic score belongs below Installed in.
+    var ratingQuery: CriticRatingQuery? = nil
+    @State private var loadedRatingQuery: CriticRatingQuery?
+    @State private var ratingResult: CriticRatingResult?
 
     /// Spotlight's column beside About this game: three links and their gaps.
     static let narrowWidth: CGFloat = 520
@@ -80,13 +84,26 @@ struct DetailsPanel: View {
 
     var body: some View {
         // With nothing to show, no title alone on the page.
-        if !facts.isEmpty || !links.isEmpty { content }
+        Group {
+            if !facts.isEmpty || !links.isEmpty || ratingQuery != nil { content }
+        }
+        .task(id: ratingQuery) {
+            loadedRatingQuery = nil
+            ratingResult = nil
+            guard let query = ratingQuery else { return }
+            do { try await Task.sleep(nanoseconds: 300_000_000) }
+            catch { return }
+            let result = await CriticRatingService.shared.load(query)
+            guard !Task.isCancelled else { return }
+            loadedRatingQuery = query
+            ratingResult = result
+        }
     }
 
     private var content: some View {
         VStack(alignment: .leading, spacing: 0) {
             DetailsBandTitle(text: "Details")
-            if !facts.isEmpty {
+            if !facts.isEmpty || ratingQuery != nil {
                 panel.padding(.bottom, canvas.u(14))
             }
             SeleneActionGrid(rows: links, focusedRow: focusedLink, onHoverRow: onHoverLink, onPressRow: onPressLink)
@@ -95,11 +112,11 @@ struct DetailsPanel: View {
     }
 
     private var panel: some View {
-        let split = wide ? (facts.count + 1) / 2 : facts.count
+        let split = wide ? (facts.count + (ratingQuery == nil ? 0 : 1) + 1) / 2 : facts.count
         let columnWidth = wide ? (width - Self.columnGap) / 2 : width
         return HStack(alignment: .top, spacing: canvas.u(Self.columnGap)) {
-            column(Array(facts.prefix(split)), width: columnWidth)
-            if wide { column(Array(facts.dropFirst(split)), width: columnWidth) }
+            column(Array(facts.prefix(split)), width: columnWidth, includeRating: !wide)
+            if wide { column(Array(facts.dropFirst(split)), width: columnWidth, includeRating: true) }
         }
         .frame(width: canvas.u(width), alignment: .leading)
         .accessibilityElement(children: .contain)
@@ -107,7 +124,7 @@ struct DetailsPanel: View {
     }
 
     /// The rows with a hairline between them, none above the first or under the last.
-    private func column(_ facts: [DetailsFact], width: CGFloat) -> some View {
+    private func column(_ facts: [DetailsFact], width: CGFloat, includeRating: Bool) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(Array(facts.enumerated()), id: \.element.id) { index, fact in
                 if index > 0 {
@@ -115,24 +132,24 @@ struct DetailsPanel: View {
                 }
                 row(fact).padding(.vertical, canvas.u(9))
             }
+            if includeRating, ratingQuery != nil {
+                if !facts.isEmpty {
+                    Rectangle().fill(SeleneTheme.ink15).frame(height: max(1, canvas.u(1)))
+                }
+                HStack(alignment: .firstTextBaseline, spacing: 0) {
+                    label(symbol: "star", text: L10n.text("Critic score"))
+                    CriticRatingValue(result: loadedRatingQuery == ratingQuery ? ratingResult : nil)
+                    Spacer(minLength: 0)
+                }
+                .padding(.vertical, canvas.u(9))
+            }
         }
         .frame(width: canvas.u(width), alignment: .topLeading)
     }
 
     private func row(_ fact: DetailsFact) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 0) {
-            HStack(alignment: .firstTextBaseline, spacing: canvas.u(10)) {
-                Image(systemName: fact.symbol)
-                    .font(.system(size: canvas.u(14), weight: .regular))
-                    .foregroundColor(SeleneTheme.ink.opacity(0.55))
-                    .frame(width: canvas.u(18))
-                Text(fact.label)
-                    .seleneFont(15)
-                    .foregroundColor(SeleneTheme.ink60)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
-            }
-            .frame(width: canvas.u(182), alignment: .leading)
+            label(symbol: fact.symbol, text: fact.label)
             Text(fact.value)
                 .seleneFont(15, .semibold)
                 .foregroundColor(SeleneTheme.ink.opacity(0.92))
@@ -142,6 +159,21 @@ struct DetailsPanel: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(fact.label): \(fact.value)")
+    }
+
+    private func label(symbol: String, text: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: canvas.u(10)) {
+            Image(systemName: symbol)
+                .font(.system(size: canvas.u(14), weight: .regular))
+                .foregroundColor(SeleneTheme.ink.opacity(0.55))
+                .frame(width: canvas.u(18))
+            Text(text)
+                .seleneFont(15)
+                .foregroundColor(SeleneTheme.ink60)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+        }
+        .frame(width: canvas.u(182), alignment: .leading)
     }
 }
 

@@ -390,3 +390,27 @@ Achievements riservano invece una fascia trasparente di 84 unità e tengono il f
 sopra la sfumatura inferiore. In Details la barra è ancorata alla finestra, il contenuto
 sparisce prima dei comandi e le fasce in focus salgono insieme alla barra. La posizione
 si condivide anche con le opzioni, il visualizzatore di screenshot e le schermate Home.
+
+### Voto della critica in Details (16 novembre 2026, in attesa di validazione umana)
+
+L'ultima riga del pannello Details, dopo Installed in, mostra cinque stelle proporzionali,
+il voto originale /100 e la fonte con Wikidata. È una riga informativa, senza una nuova
+card o finestra. La stessa vista serve la pagina Spotlight e la pagina Details di Switch;
+non aggiunge azioni al focus di tastiera/controller. Caricamento e voto assente hanno
+testo esplicito, senza fingere un voto zero. La provenienza, data del voto, ambito e
+l'eventuale ripiego sulla copia salvata sono disponibili nel testo accessibile e nell'aiuto.
+
+`WikidataRatings` verifica nome/alias esatti, tipo videogioco e l'eventuale ID Steam;
+abbinamenti ambigui o ID contrastanti non pubblicano un voto. Seleziona solo medie /100
+documentate di OpenCritic, Metacritic o CriticDB. Preferisce una piattaforma corrispondente,
+altrimenti un voto senza piattaforma dichiarata; non prende il voto Windows per macOS,
+non converte percentuali di raccomandazione e non media fra fonti. I titoli possono
+non avere dati, e un voto comunitario non è un flusso aggiornato direttamente dall'editore.
+
+`CriticRatingService` interroga solo l'API pubblica Wikidata, senza chiavi, cookie o scraping.
+Serializza/coalesca le richieste, limita dimensione e durata e sospende le richieste dopo
+un errore. La cache separata `ratings/wikidata` nel profilo corrente dura sette giorni
+per un voto, un giorno per un'assenza verificata; offline conserva il dato con la propria
+data. La data di scaricamento resta distinta da quella del voto. Cambiare gioco annulla
+il lettore e impedisce la pubblicazione di un risultato precedente. Nessuna scrittura
+del catalogo, dei dati Steam o dei giochi; i provider con credenziali rimangono rinviati.

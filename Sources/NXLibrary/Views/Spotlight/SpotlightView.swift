@@ -1063,7 +1063,16 @@ public struct SpotlightView: View {
             onPressLink: { index in
                 mutate { $0.focus = .actions; $0.actionIndex = index }
                 if index < page.links.count { page.links[index].action() }
-            })
+            },
+            ratingQuery: selectedRatingQuery)
+    }
+
+    private var selectedRatingQuery: CriticRatingQuery? {
+        if let game = selectedGame {
+            return CriticRatingQuery(name: viewModel.storeMetadata[game.id]?.name ?? game.name, platform: .switch)
+        }
+        guard let game = selectedCatalogGame, let steam = game.steamGame else { return nil }
+        return CriticRatingQuery(name: steam.name, platform: .mac, steamAppID: steam.appID)
     }
 
     /// A Steam game's page under the head: About, its achievements and its Details.

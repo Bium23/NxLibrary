@@ -288,7 +288,8 @@ struct GameDetailView: View {
                         focusedLink: focus.zone == DetailsFocus.actionsZone ? focus.action : nil,
                         onHoverLink: { hoverRow($0) },
                         onPressLink: { pressRow($0) },
-                        width: DetailsPanel.wideWidth)
+                        width: DetailsPanel.wideWidth,
+                        ratingQuery: CriticRatingQuery(name: metadata?.name ?? game.name, platform: .switch))
                     Spacer(minLength: 0)
                 }
                 .frame(width: canvas.u(1700), alignment: .topLeading)
