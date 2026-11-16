@@ -80,6 +80,50 @@ final class SteamAchievementRarityTests: XCTestCase {
         XCTAssertEqual(count, 1)
     }
 
+    /// A screen of icons asks for more than the six downloads at once: the rest wait their turn instead of
+    /// failing, and no more than six run together.
+    func testIconsBeyondTheConcurrencyLimitWaitTheirTurn() async throws {
+        let gauge = Gauge(), png = try Self.png()
+        let service = SteamMetadataService(directory: root, transport: { _ in
+            await gauge.enter()
+            try await Task.sleep(nanoseconds: 30_000_000)
+            await gauge.leave()
+            return png
+        })
+        let icons = await withTaskGroup(of: URL?.self) { group in
+            for index in 0..<15 { group.addTask { await service.achievementIcon(appID: 7, file: "icon\(index).jpg") } }
+            return await group.reduce(into: [URL?]()) { $0.append($1) }
+        }
+        XCTAssertEqual(icons.compactMap { $0 }.count, 15)
+        let peak = await gauge.peak
+        XCTAssertLessThanOrEqual(peak, 6)
+    }
+
+    /// A request still waiting for its turn ends when its row goes away.
+    func testAWaitingIconRequestCanBeCancelled() async throws {
+        let png = try Self.png()
+        let service = SteamMetadataService(directory: root, transport: { _ in
+            try await Task.sleep(nanoseconds: 300_000_000)
+            return png
+        })
+        let busy = (0..<6).map { index in Task { await service.achievementIcon(appID: 7, file: "busy\(index).jpg") } }
+        try await Task.sleep(nanoseconds: 50_000_000)
+        let waiting = Task { await service.achievementIcon(appID: 7, file: "late.jpg") }
+        try await Task.sleep(nanoseconds: 50_000_000)
+        let started = Date()
+        waiting.cancel()
+        let late = await waiting.value
+        XCTAssertNil(late)
+        XCTAssertLessThan(Date().timeIntervalSince(started), 0.2)
+        for task in busy { _ = await task.value }
+    }
+
+    private actor Gauge {
+        var current = 0, peak = 0
+        func enter() { current += 1; peak = max(peak, current) }
+        func leave() { current -= 1 }
+    }
+
     func testAnIconThatIsNotAnImageIsNotKept() async {
         let service = SteamMetadataService(directory: root, transport: { _ in Data("nope".utf8) })
         let icon = await service.achievementIcon(appID: 7, file: "ab.jpg")

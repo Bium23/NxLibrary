@@ -15,6 +15,10 @@ public actor SteamMetadataService {
     }
     private var pending: [URL: Flight] = [:]
     private var failedAt: [URL: Date] = [:]
+    /// At most this many downloads at once; later requests wait for a free one (a screen of achievement
+    /// icons asks for dozens together: refused, they stayed blank until their row was drawn again).
+    static let concurrentDownloads = 6
+    private var slotWaiters: [UUID: CheckedContinuation<Void, Error>] = [:]
     public static let resourceDeadline: TimeInterval = 20
     final class NoRedirects: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
         func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
@@ -53,17 +57,36 @@ public actor SteamMetadataService {
     private func release(_ url: URL, flightID: UUID, waiter: UUID) {
         guard var flight = pending[url], flight.id == flightID else { return }
         flight.waiters.remove(waiter)
-        if flight.waiters.isEmpty { flight.task.cancel(); pending[url] = nil }
+        if flight.waiters.isEmpty { flight.task.cancel(); pending[url] = nil; wakeSlotWaiters() }
         else { pending[url] = flight }
+    }
+    /// Every waiter looks again: one may now share a flight that started meanwhile, or take the free slot.
+    private func wakeSlotWaiters() {
+        let waiting = slotWaiters.values
+        slotWaiters.removeAll()
+        waiting.forEach { $0.resume() }
+    }
+    private func waitForSlot() async throws {
+        let id = UUID()
+        try await withTaskCancellationHandler(operation: {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                // Runs on the actor before `cancelWait` can: a cancellation before this point shows here.
+                if Task.isCancelled { continuation.resume(throwing: CancellationError()) }
+                else { slotWaiters[id] = continuation }
+            }
+        }, onCancel: { Task { await self.cancelWait(id) } })
+    }
+    private func cancelWait(_ id: UUID) {
+        slotWaiters.removeValue(forKey: id)?.resume(throwing: CancellationError())
     }
     private func fetch(_ url: URL) async throws -> Data {
         try Task.checkCancellation()
+        while pending[url] == nil && pending.count >= Self.concurrentDownloads { try await waitForSlot() }
         if let failed = failedAt[url], Date().timeIntervalSince(failed) < 60 { throw URLError(.resourceUnavailable) }
         let waiter = UUID()
         var flight: Flight
         if let existing = pending[url] { flight = existing; flight.waiters.insert(waiter) }
         else {
-            guard pending.count < 6 else { throw URLError(.resourceUnavailable) }
             let transport = transport
             flight = Flight(id: UUID(), task: Task { try await transport(url) }, waiters: [waiter])
         }
