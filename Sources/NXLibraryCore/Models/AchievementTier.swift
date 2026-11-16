@@ -21,7 +21,7 @@ public enum AchievementTier: CaseIterable, Sendable {
         return .bronze
     }
 
-    /// The tier's crystal: a prerendered 512 px PNG (`.superpowers/arcane`, recipe v7, tight crop), large enough
+    /// The tier's crystal: a prerendered 1024 px PNG (`.superpowers/arcane/v18`), large enough
     /// for the achievement detail, in Core's resources; found as the translations are (the installed app's bundle
     /// first); nil only if it is missing.
     public var imageURL: URL? {

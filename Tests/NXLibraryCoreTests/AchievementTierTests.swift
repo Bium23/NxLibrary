@@ -84,13 +84,15 @@ final class AchievementTierTests: XCTestCase {
                        ["Arcano", "Oro", "Argento", "Bronzo"])
     }
 
+    /// 1024 px: the detail shows the crystal about 540 px tall on a Retina screen; 512 px art was upscaled there
+    /// and looked soft.
     func testEveryTierHasArt() throws {
         for tier in AchievementTier.allCases {
             let url = try XCTUnwrap(tier.imageURL, "\(tier)")
             let source = try XCTUnwrap(CGImageSourceCreateWithURL(url as CFURL, nil), "\(tier)")
             let props = try XCTUnwrap(CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any])
-            XCTAssertGreaterThanOrEqual(props[kCGImagePropertyPixelWidth] as? Int ?? 0, 512, "\(tier)")
-            XCTAssertGreaterThanOrEqual(props[kCGImagePropertyPixelHeight] as? Int ?? 0, 512, "\(tier)")
+            XCTAssertGreaterThanOrEqual(props[kCGImagePropertyPixelWidth] as? Int ?? 0, 1024, "\(tier)")
+            XCTAssertGreaterThanOrEqual(props[kCGImagePropertyPixelHeight] as? Int ?? 0, 1024, "\(tier)")
         }
     }
 }
