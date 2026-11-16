@@ -72,6 +72,14 @@ public struct AchievementSummary: Equatable, Sendable {
         return counts
     }
 
+    /// The best crystal earned, for the page's card: Arcane with everything unlocked, otherwise the rarest tier
+    /// among the unlocked achievements; nil with nothing unlocked or while their rarity is unknown.
+    public var bestTier: AchievementTier? {
+        if total > 0 && unlocked == total { return .arcane }
+        let earned = Set(unlockedRows.compactMap(\.tier))
+        return AchievementTier.allCases.first { earned.contains($0) }
+    }
+
     /// Whether Steam's rarity has arrived for any achievement.
     public var hasRarity: Bool { (unlockedRows + lockedRows).contains { $0.percent != nil } }
 

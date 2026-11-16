@@ -2,12 +2,13 @@ import SwiftUI
 import NXLibraryCore
 
 /// A Steam game's achievements at the top of the page's right column, above the source's panel and beside
-/// About this game: "17/50" with the completion beside it, the last three unlocked icons on the right and a thin
+/// About this game: "17/50" with the best crystal earned beside it (the completion before any is earned), the last three unlocked icons on the right and a thin
 /// bar under them, in a light, nearly transparent panel with a thin outline, the surface of the panel's buttons
 /// without their dark fill (maintainer's choice, 15 Nov 2026). Focused, Selene's ring sits on the panel's edge.
 /// Shown only when the game has achievements and Steam's files read. A or a click opens the Achievements screen;
-/// under the pointer or the controller's focus it says so (maintainer's choice, 15 Nov 2026): the completion gives way
-/// to "View all", the three icons fan out and brighten, and the panel lightens. Details, not a button, does none of it.
+/// under the pointer or the controller's focus it says so (maintainer's choice, 15 Nov 2026): the crystal comes to
+/// colour with "View all" beside it (or the completion gives way to it), the three icons fan out and brighten, and
+/// the panel lightens. Details, not a button, does none of it.
 /// With Reduce motion the text and light change without movement.
 struct DetailsAchievementsCard: View {
     @Environment(\.seleneCanvas) private var canvas
@@ -39,25 +40,35 @@ struct DetailsAchievementsCard: View {
             DetailsBandTitle(text: L10n.text("Achievements"))
             VStack(alignment: .leading, spacing: canvas.u(16)) {
                 HStack(alignment: .center, spacing: canvas.u(16)) {
-                    HStack(alignment: .firstTextBaseline, spacing: canvas.u(14)) {
-                        (Text("\(summary.unlocked)").foregroundColor(SeleneTheme.ink)
-                         + Text("/\(summary.total)").foregroundColor(SeleneTheme.ink60))
-                            .seleneFont(30, .semibold)
-                            .monospacedDigit()
-                        ZStack(alignment: .leading) {
-                            Text(L10n.format("%d%% complete", [summary.percentComplete]))
-                                .foregroundColor(SeleneTheme.ink75)
-                                .monospacedDigit()
-                                .opacity(active ? 0 : 1)
-                                .offset(y: fanned ? -canvas.u(5) : 0)
+                    if let tier = summary.bestTier {
+                        HStack(alignment: .center, spacing: canvas.u(12)) {
+                            count
+                            crystal(tier)
                             Text(L10n.text("View all"))
                                 .foregroundColor(SeleneTheme.ink)
+                                .seleneFont(15, .semibold)
                                 .opacity(active ? 1 : 0)
-                                .offset(y: active || !moves ? 0 : canvas.u(5))
+                                .offset(x: active || !moves ? 0 : -canvas.u(6))
                         }
-                        .seleneFont(15, .semibold)
+                        .lineLimit(1)
+                    } else {
+                        HStack(alignment: .firstTextBaseline, spacing: canvas.u(14)) {
+                            count
+                            ZStack(alignment: .leading) {
+                                Text(L10n.format("%d%% complete", [summary.percentComplete]))
+                                    .foregroundColor(SeleneTheme.ink75)
+                                    .monospacedDigit()
+                                    .opacity(active ? 0 : 1)
+                                    .offset(y: fanned ? -canvas.u(5) : 0)
+                                Text(L10n.text("View all"))
+                                    .foregroundColor(SeleneTheme.ink)
+                                    .opacity(active ? 1 : 0)
+                                    .offset(y: active || !moves ? 0 : canvas.u(5))
+                            }
+                            .seleneFont(15, .semibold)
+                        }
+                        .lineLimit(1)
                     }
-                    .lineLimit(1)
                     Spacer(minLength: 0)
                     icons
                 }
@@ -108,6 +119,24 @@ struct CardGeometryGroup: ViewModifier {
 }
 
 extension DetailsAchievementsCard {
+    /// "17/50": the unlocked count bright, the total dimmer.
+    private var count: some View {
+        (Text("\(summary.unlocked)").foregroundColor(SeleneTheme.ink)
+         + Text("/\(summary.total)").foregroundColor(SeleneTheme.ink60))
+            .seleneFont(30, .semibold)
+            .monospacedDigit()
+    }
+
+    /// The best crystal earned (`AchievementSummary.bestTier`), in place of the percent (maintainer's choice,
+    /// 16 Nov 2026): black and white at rest, fully opaque so it doesn't read as a locked tier, in colour when the
+    /// card is hovered or focused, with the fan.
+    private func crystal(_ tier: AchievementTier) -> some View {
+        TierCrystal(tier: tier, size: 40)
+            .saturation(active ? 1 : 0)
+            .opacity(active ? 1 : 0.88)
+            .scaleEffect(fanned ? 1.06 : 1)
+    }
+
     /// The last three unlocked icons. Active, they fan out like a held hand of cards: the outer ones tilt
     /// and drop a little, the gaps open, and all three brighten.
     private var icons: some View {

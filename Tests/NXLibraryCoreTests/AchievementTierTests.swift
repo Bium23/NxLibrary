@@ -59,6 +59,36 @@ final class AchievementTierTests: XCTestCase {
         XCTAssertNil(summary.lastUnlockedAt)
     }
 
+    // MARK: The page card's crystal: the best one earned
+
+    /// Everything unlocked: Arcane, even before Steam's rarity arrives.
+    func testBestTierIsArcaneAtHundredPercent() {
+        let summary = AchievementSummary(achievements: [a("A", at: 1), a("B", at: 2)], percents: [:])
+        XCTAssertEqual(summary.bestTier, .arcane)
+    }
+
+    /// Otherwise the rarest tier among the unlocked ones; a rarer one still locked doesn't count.
+    func testBestTierIsTheRarestUnlocked() {
+        let summary = AchievementSummary(achievements: [a("B", at: 1), a("S", at: 2), a("G")],
+                                         percents: ["B": 60, "S": 20, "G": 3])
+        XCTAssertEqual(summary.bestTier, .silver)
+        let gold = AchievementSummary(achievements: [a("B", at: 1), a("G", at: 2), a("L")],
+                                      percents: ["B": 60, "G": 3, "L": 1])
+        XCTAssertEqual(gold.bestTier, .gold)
+    }
+
+    func testBestTierNilWithNothingUnlocked() {
+        let summary = AchievementSummary(achievements: [a("G"), a("B")], percents: ["G": 3, "B": 60])
+        XCTAssertNil(summary.bestTier)
+        XCTAssertNil(AchievementSummary(achievements: [], percents: [:]).bestTier)
+    }
+
+    /// Unlocked achievements whose rarity hasn't arrived give no crystal yet: the card keeps its percent.
+    func testBestTierNilWhileRarityUnknown() {
+        let summary = AchievementSummary(achievements: [a("A", at: 1), a("B")], percents: ["B": 3])
+        XCTAssertNil(summary.bestTier)
+    }
+
     func testUnknownRarityHasNoTierAndNoCounts() {
         let summary = AchievementSummary(achievements: [a("A", at: 1), a("B")], percents: [:])
         XCTAssertTrue(summary.rows(.all).allSatisfy { $0.tier == nil })
