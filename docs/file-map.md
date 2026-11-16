@@ -352,7 +352,8 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/Views/Detail/DetailsPanel.swift](../Sources/NXLibrary/Views/Detail/DetailsPanel.swift) | Pannello Details uguale per ogni fonte: righe con icona, voto della critica in ultima riga e link in `SeleneActionGrid`; carica solo il voto del gioco mostrato. |
 | [Sources/NXLibrary/Views/Detail/CriticRatingValue.swift](../Sources/NXLibrary/Views/Detail/CriticRatingValue.swift) | Valore della riga Critic score: cinque stelle, numero /100 e fonte, senza finestre aggiuntive; caricamento e assenza espliciti. |
 | [Sources/NXLibrary/ViewModels/IGDBSettings.swift](../Sources/NXLibrary/ViewModels/IGDBSettings.swift) | Configurazione IGDB facoltativa: verifica prima del salvataggio, rimozione e invalidazione delle richieste/voti precedenti. |
-| [Sources/NXLibrary/Views/Components/IGDBCredentialsDialog.swift](../Sources/NXLibrary/Views/Components/IGDBCredentialsDialog.swift) | Client ID, Client Secret nascosto, Verifica e salva, annullamento e link alle istruzioni ufficiali; input Settings sospeso. |
+| [Sources/NXLibrary/Views/Components/IGDBCredentialsDialog.swift](../Sources/NXLibrary/Views/Components/IGDBCredentialsDialog.swift) | Guida sintetica in cinque passi, Client ID, Client Secret nascosto, verifica/salvataggio e annullamento; input Settings sospeso. |
+| [Sources/NXLibrary/Views/Settings/SettingsAPISection.swift](../Sources/NXLibrary/Views/Settings/SettingsAPISection.swift) | Pagina generale Servizi API: nota sulle fonti facoltative, IGDB e SteamGridDB con azioni e focus condivisi. |
 
 ## UI · Game Options, cheats e salvataggi
 

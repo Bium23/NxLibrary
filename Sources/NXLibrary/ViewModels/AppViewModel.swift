@@ -34,7 +34,7 @@ public final class AppViewModel: ObservableObject {
         }
     }
     @Published var settingsNoticeFocus = 0
-    /// A SteamGridDB API key is saved (Settings → Look → SteamGridDB), so Change artwork searches it.
+    /// A SteamGridDB API key is saved (Settings → API services → SteamGridDB), so Change artwork searches it.
     @Published var hasSteamGridDBKey = SteamGridDBKey().load() != nil
     @Published var isEditingSteamGridDBKey = false
     @Published var isUpdatingApp = false

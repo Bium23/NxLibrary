@@ -3,7 +3,7 @@ import AppKit
 import NXLibraryCore
 
 /// Adds the player's SteamGridDB API key: pasted, checked with SteamGridDB, then kept on this Mac. Shown from
-/// Settings → Look and from Change artwork. Return saves, Esc cancels; on a controller A chooses the focused pill,
+/// Settings → API services and from Change artwork. Return saves, Esc cancels; on a controller A chooses the focused pill,
 /// Left/Right move between them and B cancels. The owner stops its own input while the dialog is open.
 struct SteamGridDBKeyDialog: View {
     @ObservedObject var viewModel: AppViewModel

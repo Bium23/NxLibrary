@@ -64,6 +64,15 @@ final class SettingsCatalogTests: XCTestCase {
         XCTAssertEqual(hits.first { $0.id == "hiddenGames" }?.group, .games)
     }
 
+    func testPersonalAPIConnectionsShareAGeneralSectionWithoutChangingSourceIdentity() {
+        let connections = SettingsCatalog.all.filter { ["igdb", "steamGridDB"].contains($0.id) }
+        XCTAssertEqual(connections.map(\.group), [.apiServices, .apiServices])
+        XCTAssertEqual(connections.map(\.id), ["igdb", "steamGridDB"])
+        XCTAssertFalse(SettingsSection.apiServices.group.isPlatform)
+        XCTAssertEqual(SettingsSection.sources.place, "Steam · Library")
+        XCTAssertTrue(SettingsCatalog.search("API").contains { $0.group == .apiServices })
+    }
+
     func testEmptySearchReturnsNothing() {
         XCTAssertEqual(SettingsCatalog.search("").count, 0)
         XCTAssertEqual(SettingsCatalog.search("   ").count, 0)

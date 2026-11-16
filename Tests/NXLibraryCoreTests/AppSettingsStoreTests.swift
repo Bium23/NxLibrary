@@ -235,7 +235,7 @@ final class SettingsSectionTests: XCTestCase {
     func testAllSectionsArePresent() {
         XCTAssertEqual(SettingsSection.allCases.map(\.title), [
             "Search", "Changed", "Start-up", "Navigation", "Spotlight", "Sound & music",
-            "Look", "Controllers", "Library", "Games", "Engine", "Library", "Storage", "About"
+            "Look", "API services", "Controllers", "Library", "Games", "Engine", "Library", "Storage", "About"
         ])
         XCTAssertTrue(SettingsSection.allCases.allSatisfy { !$0.icon.rawValue.isEmpty })
     }
@@ -244,7 +244,7 @@ final class SettingsSectionTests: XCTestCase {
         XCTAssertEqual(SettingsSidebarGroup.all.map(\.title), [nil, "General", "Switch", "Steam", "System"])
         XCTAssertEqual(SettingsSidebarGroup.all.map { $0.sections.map(\.rawValue) }, [
             ["search", "changed"],
-            ["startUp", "navigation", "spotlight", "soundMusic", "look", "controllers"],
+            ["startUp", "navigation", "spotlight", "soundMusic", "look", "apiServices", "controllers"],
             ["library", "games", "engine"],
             ["sources"],
             ["storage", "about"],

@@ -24,6 +24,7 @@ struct IGDBCredentialsDialog: View {
                                 confirmEnabled: !checking && draft != nil,
                                 focus: $focus, onCancel: close, onConfirm: save) {
                 VStack(alignment: .leading, spacing: canvas.u(14)) {
+                    setupSteps
                     VStack(alignment: .leading, spacing: canvas.u(6)) {
                         Text(L10n.text("Client ID")).seleneFont(14).foregroundColor(SeleneTheme.ink60)
                         TextField(L10n.text("Client ID"), text: $clientID)
@@ -42,7 +43,7 @@ struct IGDBCredentialsDialog: View {
                     }
                     HStack {
                         Button(L10n.text("Developer portal")) {
-                            NSWorkspace.shared.open(URL(string: "https://dev.twitch.tv/console/apps")!)
+                            NSWorkspace.shared.open(URL(string: "https://dev.twitch.tv/console/apps/create")!)
                         }
                         Spacer(minLength: 0)
                         Button(L10n.text("Setup guide")) {
@@ -77,6 +78,32 @@ struct IGDBCredentialsDialog: View {
             default: break
             }
         }
+    }
+    private var setupSteps: some View {
+        let steps = [
+            L10n.text("Open the developer portal: Applications → Register Your Application."),
+            L10n.text("Choose a unique name. OAuth Redirect URLs: http://localhost → Add."),
+            L10n.text("Category: Application Integration. Client Type: Confidential."),
+            L10n.text("Create → Manage → New Secret."),
+            L10n.text("Paste Client ID and Client Secret below, then Check and save.")
+        ]
+        return VStack(alignment: .leading, spacing: canvas.u(7)) {
+            ForEach(Array(steps.enumerated()), id: \.offset) { index, text in
+                HStack(alignment: .top, spacing: canvas.u(9)) {
+                    Text("\(index + 1).")
+                        .foregroundColor(SeleneTheme.ink60)
+                        .frame(width: canvas.u(18), alignment: .leading)
+                    Text(text).foregroundColor(SeleneTheme.ink90)
+                }
+            }
+            Text(L10n.text("Twitch requires a verified email and two-factor authentication."))
+                .foregroundColor(SeleneTheme.ink60)
+                .padding(.top, canvas.u(3))
+        }
+        .seleneFont(14)
+        .multilineTextAlignment(.leading)
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(.bottom, canvas.u(6))
     }
     private var draft: IGDBCredentials? { IGDBCredentials(clientID: clientID, clientSecret: secret) }
     private func close() { task?.cancel(); secret = ""; onClose() }

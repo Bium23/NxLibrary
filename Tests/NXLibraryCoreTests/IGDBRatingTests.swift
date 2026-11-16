@@ -79,8 +79,8 @@ final class IGDBRatingTests: XCTestCase {
         do { try await service.check(credentials); XCTFail("Rejected credentials must fail") }
         catch { XCTAssertEqual(error as? IGDBError, .rejected) }
     }
-    func testSettingsSearchFindsIGDBInTheGeneralLookSection() {
-        XCTAssertEqual(SettingsCatalog.search("IGDB").first { $0.id == "igdb" }?.group, .look)
+    func testSettingsSearchFindsIGDBInGeneralAPIServices() {
+        XCTAssertEqual(SettingsCatalog.search("IGDB").first { $0.id == "igdb" }?.group, .apiServices)
     }
 
     func testExpiredOrRevokedTokenRenewsOnceAndConcurrentReadersShareWork() async throws {

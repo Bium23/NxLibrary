@@ -33,6 +33,8 @@ struct SettingsSectionContent: View {
             SettingsSoundSection(settings: settings, onActions: onActions)
         case .look:
             SettingsLookSection(viewModel: viewModel, settings: settings, onActions: onActions)
+        case .apiServices:
+            SettingsAPISection(viewModel: viewModel, onActions: onActions)
         case .games:
             SettingsGamesSection(viewModel: viewModel, settings: settings, onActions: onActions)
         case .controllers:

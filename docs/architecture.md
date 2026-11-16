@@ -425,7 +425,7 @@ resolver vengono ricontrollate, senza eliminare voti validi o modificare la libr
 
 #### IGDB facoltativo
 
-Settings → Look → Ratings presenta IGDB con aggiunta/modifica delle credenziali e rimozione.
+Settings → API services presenta IGDB con aggiunta/modifica delle credenziali e rimozione.
 Il dialogo usa Client ID e Client Secret dell'applicazione Twitch personale, controlla
 la connessione prima del salvataggio e permette di annullare anche durante la verifica.
 Tastiera/controller della pagina sottostante sono sospesi; i link aprono portale e guida
@@ -453,3 +453,11 @@ richieste e token e ridisegna la riga tramite una revisione posseduta da `IGDBSe
 non ottiene un voto. Nessuna impostazione cambia i metadati o la libreria. Test di
 autenticazione/errore usano credenziali inventate: la verifica reale con le credenziali
 del maintainer e il controllo manuale della schermata rimangono necessari.
+
+La sezione generale `apiServices` nella colonna sinistra raccoglie IGDB (Ratings) e
+SteamGridDB (Artwork), spostati da Look senza modificare file o modalità di accesso.
+La nota iniziale chiarisce che le connessioni sono facoltative e che le fonti pubbliche
+rimangono disponibili senza chiavi. Sidebar, ricerca e navigazione usano la stessa nuova
+identità; non esiste un reset di gruppo che elimini le credenziali. Il dialogo IGDB mostra
+cinque passaggi sintetici, i campi del portale e il requisito email/2FA, con link diretto
+alla registrazione. Questa sistemazione è in attesa di validazione umana.

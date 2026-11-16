@@ -4,7 +4,7 @@ import Foundation
 /// computed lists; `about` is informational and has no catalog rows.
 public enum SettingsSection: String, CaseIterable, Identifiable, Equatable {
     // Sidebar order (`SettingsSidebarGroup`). Raw values are identities: `sources` is Steam's page.
-    case search, changed, startUp, navigation, spotlight, soundMusic, look, controllers
+    case search, changed, startUp, navigation, spotlight, soundMusic, look, apiServices, controllers
     case library, games, engine
     case sources
     case storage, about
@@ -26,6 +26,7 @@ public enum SettingsSection: String, CaseIterable, Identifiable, Equatable {
         case .spotlight: return "Spotlight"
         case .soundMusic: return "Sound & music"
         case .look: return "Look"
+        case .apiServices: return "API services"
         case .games: return "Games"
         case .controllers: return "Controllers"
         case .library: return "Library"
@@ -45,6 +46,7 @@ public enum SettingsSection: String, CaseIterable, Identifiable, Equatable {
         case .spotlight: return L10n.text("Which cards show on Spotlight and where it opens.")
         case .soundMusic: return L10n.text("Interface sounds, volume and the launch screen.")
         case .look: return L10n.text("How NX Library looks and moves.")
+        case .apiServices: return L10n.text("Optional connections for ratings and game artwork.")
         case .games: return L10n.text("Launch screen, hidden games and defaults for new games.")
         case .controllers: return L10n.text("Library controls and rumble for new Switch games.")
         case .library: return L10n.text("Folders, scans and box covers.")
@@ -65,6 +67,7 @@ public enum SettingsSection: String, CaseIterable, Identifiable, Equatable {
         case .spotlight: return .spotlight
         case .soundMusic: return .volume
         case .look: return .palette
+        case .apiServices: return .link
         case .games: return .play
         case .controllers: return .gamepad
         case .library: return .collections
@@ -108,7 +111,7 @@ public struct SettingsSidebarGroup: Identifiable, Equatable {
 
     public static let all: [SettingsSidebarGroup] = [
         .init(heading: nil, sections: [.search, .changed], isPlatform: false),
-        .init(heading: "Settings group: General", sections: [.startUp, .navigation, .spotlight, .soundMusic, .look, .controllers], isPlatform: false),
+        .init(heading: "Settings group: General", sections: [.startUp, .navigation, .spotlight, .soundMusic, .look, .apiServices, .controllers], isPlatform: false),
         .init(heading: "Settings group: Switch", sections: [.library, .games, .engine], isPlatform: true),
         .init(heading: "Settings group: Steam", sections: [.sources], isPlatform: true),
         .init(heading: "Settings group: System", sections: [.storage, .about], isPlatform: false),

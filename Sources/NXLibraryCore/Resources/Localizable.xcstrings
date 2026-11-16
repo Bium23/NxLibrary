@@ -73316,6 +73316,375 @@
           }
         }
       }
+    },
+    "API services": {
+      "comment": "General API services page and concise Twitch/IGDB setup instructions. Keep official portal control names in English.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API services"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servizi API"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Services API"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API-Dienste"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servicios API"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serviços API"
+          }
+        }
+      }
+    },
+    "Optional connections for ratings and game artwork.": {
+      "comment": "General API services page and concise Twitch/IGDB setup instructions. Keep official portal control names in English.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional connections for ratings and game artwork."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collegamenti facoltativi per valutazioni e immagini dei giochi."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connexions facultatives pour les évaluations et les images des jeux."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optionale Verbindungen für Bewertungen und Spielbilder."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conexiones opcionales para valoraciones e imágenes de juegos."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conexões opcionais para avaliações e imagens dos jogos."
+          }
+        }
+      }
+    },
+    "Connect optional services to enrich your library with ratings and artwork. Public sources remain available without API keys.": {
+      "comment": "General API services page and concise Twitch/IGDB setup instructions. Keep official portal control names in English.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect optional services to enrich your library with ratings and artwork. Public sources remain available without API keys."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collega servizi facoltativi per arricchire la libreria con valutazioni e immagini. Le fonti pubbliche restano disponibili anche senza chiavi API."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connectez des services facultatifs pour enrichir votre bibliothèque avec des évaluations et des images. Les sources publiques restent disponibles sans clé API."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbinde optionale Dienste, um deine Bibliothek mit Bewertungen und Bildern zu ergänzen. Öffentliche Quellen bleiben auch ohne API-Schlüssel verfügbar."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conecta servicios opcionales para enriquecer tu biblioteca con valoraciones e imágenes. Las fuentes públicas siguen disponibles sin claves API."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conecte serviços opcionais para enriquecer sua biblioteca com avaliações e imagens. As fontes públicas continuam disponíveis sem chaves de API."
+          }
+        }
+      }
+    },
+    "Open the developer portal: Applications → Register Your Application.": {
+      "comment": "General API services page and concise Twitch/IGDB setup instructions. Keep official portal control names in English.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the developer portal: Applications → Register Your Application."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri il portale: Applications → Register Your Application."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrez le portail : Applications → Register Your Application."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne das Portal: Applications → Register Your Application."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre el portal: Applications → Register Your Application."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abra o portal: Applications → Register Your Application."
+          }
+        }
+      }
+    },
+    "Choose a unique name. OAuth Redirect URLs: http://localhost → Add.": {
+      "comment": "General API services page and concise Twitch/IGDB setup instructions. Keep official portal control names in English.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a unique name. OAuth Redirect URLs: http://localhost → Add."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli un nome univoco. OAuth Redirect URLs: http://localhost → Add."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez un nom unique. OAuth Redirect URLs : http://localhost → Add."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle einen eindeutigen Namen. OAuth Redirect URLs: http://localhost → Add."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un nombre único. OAuth Redirect URLs: http://localhost → Add."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolha um nome único. OAuth Redirect URLs: http://localhost → Add."
+          }
+        }
+      }
+    },
+    "Category: Application Integration. Client Type: Confidential.": {
+      "comment": "General API services page and concise Twitch/IGDB setup instructions. Keep official portal control names in English.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category: Application Integration. Client Type: Confidential."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category: Application Integration. Client Type: Confidential."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category: Application Integration. Client Type: Confidential."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category: Application Integration. Client Type: Confidential."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category: Application Integration. Client Type: Confidential."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category: Application Integration. Client Type: Confidential."
+          }
+        }
+      }
+    },
+    "Create → Manage → New Secret.": {
+      "comment": "General API services page and concise Twitch/IGDB setup instructions. Keep official portal control names in English.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create → Manage → New Secret."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create → Manage → New Secret."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create → Manage → New Secret."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create → Manage → New Secret."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create → Manage → New Secret."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create → Manage → New Secret."
+          }
+        }
+      }
+    },
+    "Paste Client ID and Client Secret below, then Check and save.": {
+      "comment": "General API services page and concise Twitch/IGDB setup instructions. Keep official portal control names in English.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste Client ID and Client Secret below, then Check and save."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incolla Client ID e Client Secret qui sotto, poi Verifica e salva."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collez le Client ID et le Client Secret ci-dessous, puis Vérifier et enregistrer."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füge Client ID und Client Secret unten ein, dann Prüfen und speichern."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pega el Client ID y el Client Secret abajo y pulsa Verificar y guardar."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cole o Client ID e o Client Secret abaixo e selecione Verificar e salvar."
+          }
+        }
+      }
+    },
+    "Twitch requires a verified email and two-factor authentication.": {
+      "comment": "General API services page and concise Twitch/IGDB setup instructions. Keep official portal control names in English.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twitch requires a verified email and two-factor authentication."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twitch richiede email verificata e autenticazione a due fattori."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twitch exige une adresse e-mail vérifiée et l’authentification à deux facteurs."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twitch benötigt eine bestätigte E-Mail-Adresse und Zwei-Faktor-Authentifizierung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twitch requiere un correo verificado y autenticación de dos factores."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Twitch exige e-mail verificado e autenticação de dois fatores."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
