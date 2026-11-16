@@ -176,14 +176,14 @@ struct AchievementsScreen: View {
         let fraction = summary.total > 0 ? Double(summary.unlocked) / Double(summary.total) : 0
         return VStack(alignment: .leading, spacing: 0) {
             Text(Self.wholePercent(summary.percentComplete))
-                .seleneFont(64, .semibold)
+                .seleneFont(44, .semibold)
                 .monospacedDigit()
                 .foregroundColor(SeleneTheme.ink)
                 .lineLimit(1)
             // As wide as the trophies above, the width `TrophyColumn` gives the gauge.
-            AchievementProgressBar(fraction: fraction, height: 5, track: SeleneTheme.ink25)
+            AchievementProgressBar(fraction: fraction, height: 4, track: SeleneTheme.ink25)
                 .frame(maxWidth: .infinity)
-                .padding(.top, canvas.u(6))
+                .padding(.top, canvas.u(4))
             Text(countLine)
                 .seleneFont(16)
                 .foregroundColor(SeleneTheme.ink75)
@@ -191,7 +191,7 @@ struct AchievementsScreen: View {
                 // A long language wraps under the trophies rather than overflowing them.
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, canvas.u(12))
+                .padding(.top, canvas.u(10))
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(L10n.format("Achievements: %d of %d", [summary.unlocked, summary.total]))
