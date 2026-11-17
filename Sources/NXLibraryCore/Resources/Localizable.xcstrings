@@ -54344,6 +54344,47 @@
         }
       }
     },
+    "Steam couldn't be read completely. Try again or continue and check Settings → Sources later.": {
+      "comment": "First launch Steam scan failed or was partial; Retry is the action on the row. Continuing does not imply that Steam is empty.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam couldn't be read completely. Try again or continue and check Settings → Sources later."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile leggere tutti i dati di Steam. Riprova o continua e controlla Impostazioni → Fonti più tardi."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de lire toutes les données Steam. Réessayez ou continuez et vérifiez Réglages → Sources plus tard."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steam konnte nicht vollständig gelesen werden. Erneut versuchen oder fortfahren und später unter Einstellungen → Quellen prüfen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron leer todos los datos de Steam. Reintenta o continúa y revisa Ajustes → Fuentes más tarde."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível ler todos os dados do Steam. Tente novamente ou continue e confira Ajustes → Fontes depois."
+          }
+        }
+      }
+    },
     "Steam did not receive the request. Try again.": {
       "comment": "CatalogSteamInfo.swift",
       "localizations": {

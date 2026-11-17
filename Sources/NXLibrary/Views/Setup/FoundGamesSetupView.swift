@@ -8,6 +8,7 @@ struct FoundGamesSetupView: View {
     @Environment(\.seleneCanvas) var canvas
     @Environment(\.seleneReduceMotion) var reduceMotion
     @ObservedObject var viewModel: AppViewModel
+    let steamRoot: URL
     /// The Steam switch lives in `FirstRunSetup`, so it survives the Porting path; the shell applies it.
     let onOpenLibrary: (_ importPorted: Bool) -> Void
 
@@ -16,7 +17,7 @@ struct FoundGamesSetupView: View {
 
     var findings: FirstRunFindings? { reader.findings }
     var steamCount: Int? { findings?.steamGameCount }
-    var hasSteam: Bool { steamCount != nil }
+    var hasSteam: Bool { steamCount != nil || findings?.steamReadFailed == true }
     var portedCount: Int { findings?.portedAppCount ?? 0 }
     var isReading: Bool { findings == nil }
     var steamOn: Bool { viewModel.firstRunSetup.steamChoice ?? true }
@@ -50,6 +51,12 @@ struct FoundGamesSetupView: View {
                         SetupCardRow(title: "Steam",
                                      detail: L10n.count("%lld installed Mac games", steamCount),
                                      icon: .store, trailing: .toggle(steamOn),
+                                     focused: focus == .steamToggle,
+                                     onHover: { move(to: .steamToggle) }) { activate(.steamToggle) }
+                    } else if findings?.steamReadFailed == true {
+                        SetupCardRow(title: "Steam",
+                                     detail: L10n.text("Steam couldn't be read completely. Try again or continue and check Settings → Sources later."),
+                                     icon: .store, trailing: .text(L10n.text("Retry")),
                                      focused: focus == .steamToggle,
                                      onHover: { move(to: .steamToggle) }) { activate(.steamToggle) }
                     }
@@ -86,10 +93,11 @@ struct FoundGamesSetupView: View {
         }
         .frame(width: canvas.size.width, height: canvas.size.height)
         .onAppear {
-            reader.start(steamRoot: CatalogSourcesModel.defaultSteamRoot, appsFolder: viewModel.gameAppsFolder)
+            reader.start(steamRoot: steamRoot, appsFolder: viewModel.gameAppsFolder)
         }
         .onDisappear { reader.cancel() }
         .onChange(of: findings) { found in
+            if found != nil, !hasSteam, focus == .steamToggle { move(to: .openLibrary) }
             // The switch starts on; that is the choice until the player turns it off.
             if found?.steamGameCount != nil, viewModel.firstRunSetup.steamChoice == nil {
                 viewModel.chooseSteamOnFound(true)

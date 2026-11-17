@@ -34,6 +34,7 @@ Punti fissi:
 - Gli store si costruiscono una volta sola, prima della shell.
 - Un archivio illeggibile non diventa mai una libreria vuota.
 - La Dev legge e scrive solo nel suo profilo.
+- La scelta Steam del primo Setup resta salvata anche alla chiusura; lettura e attivazione usano la cartella scelta nella fonte. Una lettura incompleta offre Retry, senza dichiarare la libreria vuota.
 - La cartella Game files ricordata resta una preferenza del selettore: l'avvio non ne enumera i sorgenti.
 - Menu e dialoghi nativi hanno precedenza sul routing della shell: `nativeDialogOwnsInput` ferma i comandi del controller anche se un benvenuto, Setup o dialogo dell'app è già aperto sotto.
 
@@ -105,7 +106,8 @@ flowchart TD
     E --> F{"Gate: CompatibilityChecker<br/>Metal certificato o override"}
     F -->|"bloccato"| Z["Spiegazione (ToolchainGateCopy)<br/>Play delle app esistenti resta attivo"]
     F -->|"ok"| G["WorkspaceManager + BuildScratch"]
-    G --> H["BuildCommandBuilder → BuildService<br/>processo dell'engine nxnative"]
+    G --> N["Porting accettato: richiesta permesso notifiche"]
+    N --> H["BuildCommandBuilder → BuildService<br/>processo dell'engine nxnative"]
     H --> I["BuildEventParser → PortingProgress<br/>tile, percentuale, ETA"]
     I --> J["BuildOutputInstaller: scambio atomico"]
     J -->|"gioco aperto o installazione fallita"| K["PendingInstall: Retry più tardi"]

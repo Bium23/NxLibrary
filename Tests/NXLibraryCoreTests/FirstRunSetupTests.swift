@@ -2,6 +2,28 @@ import XCTest
 @testable import NXLibraryCore
 
 final class FirstRunSetupTests: XCTestCase {
+    func testSteamChoiceRestoresBothOnAndOffAfterInterruptedPorting() {
+        for choice in [true, false] {
+            var first = FirstRunSetup()
+            first.chooseSteam(choice)
+            first.openPorting()
+            let resumed = FirstRunSetup(completed: false, savedPage: first.pageToRemember,
+                                        savedSteamChoice: first.steamChoiceToRemember)
+            XCTAssertEqual(resumed.page, .requirements)
+            XCTAssertEqual(resumed.steamChoice, choice)
+            XCTAssertEqual(resumed.steamChoiceToRemember, choice)
+        }
+    }
+
+    func testCompletedSetupDropsSavedChoiceButKeepsItUntilTheShellAppliesIt() {
+        var flow = FirstRunSetup(savedSteamChoice: true)
+        flow.finish()
+        XCTAssertEqual(flow.steamChoice, true)
+        XCTAssertNil(flow.steamChoiceToRemember)
+        XCTAssertNil(FirstRunSetup(completed: true, savedSteamChoice: true).steamChoice)
+        XCTAssertNil(FirstRunSetup().steamChoiceToRemember)
+    }
+
     func testSourceReviewWaitsForASingleReadyTitleAndConsumesEachArrivalOnce() {
         var entry = FirstRunSetup.ReviewEntry()
         let id = UUID()

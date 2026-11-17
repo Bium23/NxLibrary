@@ -19,6 +19,8 @@ These changes are implemented in Arcane Dev. Human validation remains pending un
 
 ### Fixed
 
+- First launch keeps the Steam switch choice after quitting during Porting and uses the saved Steam folder for discovery and activation. An incomplete Steam read offers **Retry** instead of saying no games were found.
+- Notification permission is requested when a porting starts, rather than when opening the library.
 - Scrolling a game page can keep focus on its achievements card; Game Details is disabled while another panel owns input.
 - Achievement requests made before Steam is configured are retried when its source becomes available.
 - The achievements list keeps following the selected row after quickly closing and reopening the screen. Validated in Dev by the maintainer on 16 November.

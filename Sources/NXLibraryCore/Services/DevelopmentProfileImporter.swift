@@ -104,6 +104,7 @@ public struct DevelopmentProfileImporter {
     private static let preferenceKeys: Set<String> = [
         "NXLibrary.lastPortingFinishSeconds", "NXLibrary_AllowUntestedToolchain", "NXLibrary_EngineFolder",
         "NXLibrary_NewestEngineChoice", "NXLibrary_SetupCompleted", "NXLibrary_SetupLastStates", "NXLibrary_SetupPage",
+        "NXLibrary_SetupSteamChoice",
         "NXLibrary_UpdateLastCheck", "NXLibrary_UpdateLaterAt", "NXLibrary_UpdateLaterVersion", "NXLibrary_UpdateRepository",
         "NXLibrary_UpstreamStatus", "NXNative_ControllerDeadzone", "NXNative_SavedGameFolder", "NXNative_SavedIconAppearanceMode",
         "NXNative_SavedLibraryFolder", "NXNative_SavedProdKeysPath"

@@ -25,7 +25,10 @@ extension FoundGamesSetupView {
         guard viewModel.showSetupCheck, viewModel.firstRunSetup.page == .found, NSApp.modalWindow == nil else { return }
         move(to: target)
         switch target {
-        case .steamToggle where hasSteam:
+        case .steamToggle where findings?.steamReadFailed == true:
+            SoundEffectService.shared.play(.click)
+            reader.start(steamRoot: steamRoot, appsFolder: viewModel.gameAppsFolder)
+        case .steamToggle where steamCount != nil:
             viewModel.chooseSteamOnFound(!steamOn)
             SoundEffectService.shared.play(.key)
         case .portingCard:

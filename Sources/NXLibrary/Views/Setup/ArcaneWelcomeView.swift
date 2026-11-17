@@ -9,6 +9,7 @@ struct ArcaneWelcomeView: View {
     @Environment(\.seleneReduceMotion) var reduceMotion
     /// Whether the Steam source is already on; then nothing is read and nothing is offered.
     let steamEnabled: Bool
+    let steamRoot: URL
     let appsFolder: URL
     /// False at launch, over Spotlight's moonlight (`AppViewModel.sharesLaunchBackdrop`).
     var drawsBackdrop = true
@@ -68,7 +69,7 @@ struct ArcaneWelcomeView: View {
         .frame(width: canvas.size.width, height: canvas.size.height)
         .onAppear {
             guard !steamEnabled else { return }
-            reader.start(steamRoot: CatalogSourcesModel.defaultSteamRoot, appsFolder: appsFolder)
+            reader.start(steamRoot: steamRoot, appsFolder: appsFolder)
         }
         .onDisappear { reader.cancel() }
         .onChange(of: offer) { next in

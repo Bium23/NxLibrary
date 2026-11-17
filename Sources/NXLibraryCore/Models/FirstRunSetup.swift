@@ -12,13 +12,15 @@ public struct FirstRunSetup: Equatable {
     /// and applied when it finishes, through Open library or through Porting.
     public private(set) var steamChoice: Bool?
 
-    public init(completed: Bool = false, savedPage: String? = nil) {
+    public init(completed: Bool = false, savedPage: String? = nil, savedSteamChoice: Bool? = nil) {
         isCompleted = completed
+        steamChoice = completed ? nil : savedSteamChoice
         // Settings → Open Setup starts on the requirements; an interrupted first launch resumes where it was.
         page = completed ? .requirements : savedPage.flatMap(Page.init(rawValue:)) ?? .found
     }
 
     public var pageToRemember: String? { isCompleted ? nil : page.rawValue }
+    public var steamChoiceToRemember: Bool? { isCompleted ? nil : steamChoice }
 
     public mutating func chooseSteam(_ on: Bool) {
         guard !isCompleted else { return }

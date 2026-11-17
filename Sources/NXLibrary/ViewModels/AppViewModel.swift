@@ -58,6 +58,7 @@ public final class AppViewModel: ObservableObject {
         static let allowUntestedToolchain = "NXLibrary_AllowUntestedToolchain"
         static let setupCompleted = "NXLibrary_SetupCompleted"
         static let setupPage = "NXLibrary_SetupPage"
+        static let setupSteamChoice = "NXLibrary_SetupSteamChoice"
         /// A chosen engine folder other than ~/nxnative.
         static let savedEngineFolder = "NXLibrary_EngineFolder"
         static let newestEngineChoice = "NXLibrary_NewestEngineChoice"
@@ -361,6 +362,11 @@ public final class AppViewModel: ObservableObject {
             } else {
                 AppData.preferences.removeObject(forKey: StorageKeys.setupPage)
             }
+            if let choice = firstRunSetup.steamChoiceToRemember {
+                AppData.preferences.set(choice, forKey: StorageKeys.setupSteamChoice)
+            } else {
+                AppData.preferences.removeObject(forKey: StorageKeys.setupSteamChoice)
+            }
         }
     }
     public var setupCompleted: Bool { firstRunSetup.isCompleted }
@@ -524,7 +530,8 @@ public final class AppViewModel: ObservableObject {
         let startup = settingsStore.settings
         let didCompleteSetup = AppData.preferences.bool(forKey: StorageKeys.setupCompleted)
         self.firstRunSetup = FirstRunSetup(completed: didCompleteSetup,
-                                           savedPage: AppData.preferences.string(forKey: StorageKeys.setupPage))
+                                           savedPage: AppData.preferences.string(forKey: StorageKeys.setupPage),
+                                           savedSteamChoice: AppData.preferences.object(forKey: StorageKeys.setupSteamChoice) as? Bool)
         self.showSetupCheck = !didCompleteSetup
         
         // 1. Resolve safe root directory (anchored to SSD / Bundle, NEVER "/")
@@ -568,8 +575,9 @@ public final class AppViewModel: ObservableObject {
             self.upstreamState = .loaded(cached)
         }
         updateDockIcon()
-        
-        NotificationService.shared.requestAuthorization()
+        // Register notification-click routing at launch without asking for permission.
+        _ = NotificationService.shared
+
         let held = PendingInstaller.keptFolders(libraryGames)
         let staging = AppData.profile.automaticStagingFolders(
             appFolders: [gameAppsFolder] + libraryGames.map { $0.url.deletingLastPathComponent() })
@@ -2626,6 +2634,8 @@ public final class AppViewModel: ObservableObject {
         isPollingPipelineArchive = false
         buildWizardStep = 3
         isBuilding = true
+        // The request belongs to an accepted porting, never to startup or Steam-only use.
+        NotificationService.shared.requestAuthorization()
         isCancellingBuild = false
         buildState = .running
         buildError = nil

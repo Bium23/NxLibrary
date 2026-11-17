@@ -1,35 +1,44 @@
 import Foundation
 
 /// What the first launch finds already on the Mac, read only and without the network:
-/// installed native Mac games in the default Steam folder and ported apps in the Game apps folder.
+/// installed native Mac games in the chosen Steam folder and ported apps in the Game apps folder.
 public struct FirstRunFindings: Equatable, Sendable {
     /// Ready Mac games in Steam; nil when Steam is absent, unreadable, read only in part, or the read was cancelled.
     public let steamGameCount: Int?
     public let portedAppCount: Int
+    /// An error or partial read is not evidence that Steam or its games are absent.
+    public let steamReadFailed: Bool
 
-    public init(steamGameCount: Int?, portedAppCount: Int) {
+    public init(steamGameCount: Int?, portedAppCount: Int, steamReadFailed: Bool = false) {
         self.steamGameCount = steamGameCount
         self.portedAppCount = portedAppCount
+        self.steamReadFailed = steamReadFailed
     }
 
-    public var isEmpty: Bool { steamGameCount == nil && portedAppCount == 0 }
+    public var isEmpty: Bool { !steamReadFailed && steamGameCount == nil && portedAppCount == 0 }
 
-    /// Blocking; run it on a worker. Errors and partial scans count as nothing found, never as a failure.
+    /// Blocking; run it on a worker. A failed/partial Steam scan can be retried without changing sources.
     public static func read(steamRoot: URL, appsFolder: URL, cancelled: @escaping () -> Bool) -> FirstRunFindings {
-        let steam = steamGameCount(root: steamRoot, cancelled: cancelled)
+        let steam = readSteam(root: steamRoot, cancelled: cancelled)
         guard !cancelled() else { return FirstRunFindings(steamGameCount: nil, portedAppCount: 0) }
         let ported = ImportService().scan(directories: [appsFolder]).count
         guard !cancelled() else { return FirstRunFindings(steamGameCount: nil, portedAppCount: 0) }
-        return FirstRunFindings(steamGameCount: steam, portedAppCount: ported)
+        return FirstRunFindings(steamGameCount: steam.count, portedAppCount: ported, steamReadFailed: steam.failed)
     }
 
-    private static func steamGameCount(root: URL, cancelled: @escaping () -> Bool) -> Int? {
-        var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: root.path, isDirectory: &isDirectory), isDirectory.boolValue,
-              let snapshot = try? SteamLibrarySource(root: root).scan(cancelled: cancelled),
+    private static func readSteam(root: URL, cancelled: @escaping () -> Bool) -> (count: Int?, failed: Bool) {
+        do {
+            let metadata = try root.resolvingSymlinksInPath().resourceValues(forKeys: [.isDirectoryKey])
+            guard metadata.isDirectory == true else { return (nil, true) }
+        } catch let error as NSError {
+            let missing = error.domain == NSCocoaErrorDomain
+                && [NSFileReadNoSuchFileError, NSFileNoSuchFileError].contains(error.code)
+            return (nil, !missing)
+        }
+        guard let snapshot = try? SteamLibrarySource(root: root).scan(cancelled: cancelled),
               !cancelled(), snapshot.isComplete, !snapshot.libraries.isEmpty
-        else { return nil }
-        return snapshot.games.filter { $0.state == .nativeReady }.count
+        else { return (nil, true) }
+        return (snapshot.games.filter { $0.state == .nativeReady }.count, false)
     }
 }
 
@@ -46,6 +55,7 @@ public final class FirstRunFindingsReader: ObservableObject {
 
     public func start(steamRoot: URL, appsFolder: URL) {
         cancel()
+        findings = nil
         let id = requestID
         let worker = Task.detached(priority: .userInitiated) {
             FirstRunFindings.read(steamRoot: steamRoot, appsFolder: appsFolder, cancelled: { Task.isCancelled })

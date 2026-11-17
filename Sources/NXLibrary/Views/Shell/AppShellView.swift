@@ -164,7 +164,7 @@ public struct AppShellView: View {
             if viewModel.showSetupCheck {
                 Group {
                     if viewModel.firstRunSetup.page == .found {
-                        FoundGamesSetupView(viewModel: viewModel) { importPorted in
+                        FoundGamesSetupView(viewModel: viewModel, steamRoot: sources.discoveryRoot) { importPorted in
                             finishFromFound(importPorted: importPorted)
                         }
                     } else if viewModel.firstRunSetup.page == .games {
@@ -184,10 +184,11 @@ public struct AppShellView: View {
             }
             if showsWelcome {
                 ArcaneWelcomeView(steamEnabled: sources.configuration.isEnabled,
+                                  steamRoot: sources.discoveryRoot,
                                   appsFolder: viewModel.gameAppsFolder,
                                   drawsBackdrop: !viewModel.sharesLaunchBackdrop,
                                   onAddSteam: {
-                                      sources.configure(enabled: true, root: CatalogSourcesModel.defaultSteamRoot)
+                                      sources.configure(enabled: true, root: sources.discoveryRoot)
                                   },
                                   onExit: closeWelcome)
                     .transition(.opacity)
@@ -547,8 +548,9 @@ public struct AppShellView: View {
         }
         .onChange(of: viewModel.setupCompleted) { done in
             // The Steam switch of `found` applies however the first launch ends (Open library, Porting, Skip).
-            if done, viewModel.firstRunSetup.steamChoice == true, !sources.configuration.isEnabled {
-                sources.configure(enabled: true, root: CatalogSourcesModel.defaultSteamRoot)
+            if done, let choice = viewModel.firstRunSetup.steamChoice,
+               choice != sources.configuration.isEnabled {
+                sources.configure(enabled: choice, root: sources.discoveryRoot)
             }
             // A first setup finished today: this player starts on Arcane and never needs the welcome.
             if done, !showsWelcome, !settings.settings.welcomeArcaneShown {

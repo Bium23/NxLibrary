@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 17 novembre 2026. Copertura di **696 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 17 novembre 2026. Copertura di **697 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -77,7 +77,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibrary/ViewModels/AppViewModel.swift](../Sources/NXLibrary/ViewModels/AppViewModel.swift) | Coordina libreria, sorgenti, ambiente, porting, log, impostazioni dei giochi e lancio; ricorda Game files per il selettore senza scandirla all'avvio. |
+| [Sources/NXLibrary/ViewModels/AppViewModel.swift](../Sources/NXLibrary/ViewModels/AppViewModel.swift) | Coordina libreria, sorgenti, ambiente, porting e lancio; conserva pagina e scelta Steam del Setup e richiede le notifiche al porting accettato; Game files resta una preferenza del selettore senza scansione all’avvio. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Cheats.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Cheats.swift) | Adatta Core e bundle installato al pannello Cheats, alla riga di stato e alla diagnostica. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Mods.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Mods.swift) | Crea lo `ModStore` di un gioco, il valore della riga Mods e le frasi per ogni errore. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Controller.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Controller.swift) | Conserva il contesto di gioco per i comandi e offre il collegamento alla cartella dei save. |
@@ -160,8 +160,8 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/ToolchainInfo.swift](../Sources/NXLibraryCore/Models/ToolchainInfo.swift) | Registra provenienza e verifica della toolchain associata a un build. |
 | [Sources/NXLibraryCore/Models/ToolchainGateCopy.swift](../Sources/NXLibraryCore/Models/ToolchainGateCopy.swift) | Traduce il gate in testi distinguendo Metal certificato, precedente e successivo. |
 | [Sources/NXLibraryCore/Models/SetupCheck.swift](../Sources/NXLibraryCore/Models/SetupCheck.swift) | Converte fatti e override del Setup in schede, stati, azioni e condizioni di riapertura. |
-| [Sources/NXLibraryCore/Models/FirstRunSetup.swift](../Sources/NXLibraryCore/Models/FirstRunSetup.swift) | Coordina le pagine `found`, requisiti e giochi, completamento, ripresa del primo avvio, stato della scansione, focus e consumo unico delle selezioni avviate da Your games. |
-| [Sources/NXLibraryCore/Models/FirstRunFindings.swift](../Sources/NXLibraryCore/Models/FirstRunFindings.swift) | Conta i giochi Steam per Mac installati e le app già portate per la pagina `found`, senza cambiare nulla; il lettore annullabile pubblica solo l'ultima lettura. |
+| [Sources/NXLibraryCore/Models/FirstRunSetup.swift](../Sources/NXLibraryCore/Models/FirstRunSetup.swift) | Coordina pagina e completamento del Setup, scelta Steam persistente fino alla fine, ripresa, focus e consumo unico delle selezioni da Your games. |
+| [Sources/NXLibraryCore/Models/FirstRunFindings.swift](../Sources/NXLibraryCore/Models/FirstRunFindings.swift) | Conta giochi Steam e app portate senza modifiche; distingue lettura incompleta da assenza e permette nuove letture annullabili. |
 | [Sources/NXLibraryCore/Models/ArcaneWelcome.swift](../Sources/NXLibraryCore/Models/ArcaneWelcome.swift) | Decide quando compare il benvenuto in Arcane, l'offerta di Steam, il focus e come ogni uscita lo segna visto. |
 | [Sources/NXLibraryCore/Models/GameFoldersCopy.swift](../Sources/NXLibraryCore/Models/GameFoldersCopy.swift) | Condivide nomi delle cartelle, formati e descrizioni tra Setup, Settings e selettori dei percorsi. |
 | [Sources/NXLibraryCore/Models/SetupGrid.swift](../Sources/NXLibraryCore/Models/SetupGrid.swift) | Calcola disposizione, centratura e navigazione del focus nella griglia del Setup. |
@@ -351,7 +351,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [CatalogErrorCopy.swift](../Sources/NXLibraryCore/Services/Catalog/CatalogErrorCopy.swift) | Errori recuperabili del catalogo nelle sei lingue. |
 | [CatalogBuildRecoveries.swift](../Sources/NXLibraryCore/Models/CatalogBuildRecoveries.swift) | Generazioni di build non ancora salvate, selezione del retry e conferma della sola generazione persistita. |
 | [CatalogGameOptions.swift](../Sources/NXLibraryCore/Models/CatalogGameOptions.swift) | Ordine unico delle operazioni comuni della libreria; ciò che una fonte può fare dipende dal suo record (nessuna modifica nxnative su un gioco Steam). |
-| [CatalogSourcesModel.swift](../Sources/NXLibraryCore/Services/Catalog/CatalogSourcesModel.swift) | Opt-in, worker annullabile e stato Steam, con la cartella Steam predefinita; pubblica solo documenti salvati dal repository. |
+| [CatalogSourcesModel.swift](../Sources/NXLibraryCore/Services/Catalog/CatalogSourcesModel.swift) | Opt-in, worker annullabile e stato Steam; discoveryRoot conserva la cartella scelta anche con fonte spenta; pubblica solo documenti salvati dal repository. |
 | [CatalogLibraryProjection.swift](../Sources/NXLibraryCore/Models/CatalogLibraryProjection.swift) | Visibilità comune per fonti attive e giochi riconosciuti; nessuna scansione. |
 
 ## Core · Steam
@@ -408,7 +408,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | File | Responsabilità |
 |---|---|
 | [AppDataProfile.swift](../Sources/NXLibraryCore/Services/AppDataProfile.swift) | Policy di percorsi, cache, preferenze e staging del profilo. |
-| [DevelopmentProfileImporter.swift](../Sources/NXLibraryCore/Services/DevelopmentProfileImporter.swift) | Copia iniziale selettiva, hash, validazione e ripresa senza modificare la sorgente. |
+| [DevelopmentProfileImporter.swift](../Sources/NXLibraryCore/Services/DevelopmentProfileImporter.swift) | Copia iniziale selettiva (compresa la scelta Steam del Setup), hash, validazione e ripresa senza modificare la sorgente. |
 | [DevelopmentOperationStore.swift](../Sources/NXLibraryCore/Services/DevelopmentOperationStore.swift) | Autorizzazioni persistenti per le operazioni richieste nella Dev, distinte da quelle importate. |
 
 ## UI · Add Game e porting
@@ -509,10 +509,10 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 |---|---|
 | [Sources/NXLibrary/Views/Setup/SetupCheckView.swift](../Sources/NXLibrary/Views/Setup/SetupCheckView.swift) | Disegna schede dei requisiti, dettagli, progressi e pulsanti Install all/Continue. |
 | [Sources/NXLibrary/Views/Setup/SetupCheckView+Input.swift](../Sources/NXLibrary/Views/Setup/SetupCheckView+Input.swift) | Gestisce focus iniziale, navigazione della griglia, attivazione delle schede Setup e B verso `found` durante il primo avvio. |
-| [Sources/NXLibrary/Views/Setup/ArcaneWelcomeView.swift](../Sources/NXLibrary/Views/Setup/ArcaneWelcomeView.swift) | Disegna il benvenuto in Arcane: nome nuovo, novità, offerta di Steam con Add / Not now e Open library. |
+| [Sources/NXLibrary/Views/Setup/ArcaneWelcomeView.swift](../Sources/NXLibrary/Views/Setup/ArcaneWelcomeView.swift) | Disegna il benvenuto in Arcane: nome nuovo, novità, offerta Steam dalla cartella scelta, Add / Not now e Open library. |
 | [Sources/NXLibrary/Views/Setup/ArcaneWelcomeView+Input.swift](../Sources/NXLibrary/Views/Setup/ArcaneWelcomeView+Input.swift) | Gestisce focus, mouse, tastiera e controller del benvenuto. |
-| [Sources/NXLibrary/Views/Setup/FoundGamesSetupView.swift](../Sources/NXLibrary/Views/Setup/FoundGamesSetupView.swift) | Disegna la prima pagina del primo avvio: Steam con interruttore, app già portate, card Porting con la nota "not affiliated" e Open library. |
-| [Sources/NXLibrary/Views/Setup/FoundGamesSetupView+Input.swift](../Sources/NXLibrary/Views/Setup/FoundGamesSetupView+Input.swift) | Gestisce focus, mouse, tastiera e controller della pagina `found`. |
+| [Sources/NXLibrary/Views/Setup/FoundGamesSetupView.swift](../Sources/NXLibrary/Views/Setup/FoundGamesSetupView.swift) | Prima pagina del Setup: Steam con interruttore o Retry dopo lettura incompleta, app già portate, card Porting e Open library. |
+| [Sources/NXLibrary/Views/Setup/FoundGamesSetupView+Input.swift](../Sources/NXLibrary/Views/Setup/FoundGamesSetupView+Input.swift) | Focus, mouse, tastiera e controller di found, compresa la ripetizione della lettura Steam fallita. |
 | [Sources/NXLibrary/Views/Setup/YourGamesSetupView.swift](../Sources/NXLibrary/Views/Setup/YourGamesSetupView.swift) | Disegna scelta cartella, primo gioco, apertura libreria e Skip; gestisce mouse, tastiera e controller; contiene `SetupCardRow`, la riga condivisa con `found`. |
 | [Sources/NXLibrary/Views/Launch/LaunchScreenView.swift](../Sources/NXLibrary/Views/Launch/LaunchScreenView.swift) | Mostra artwork e logo durante l’avvio di un gioco nxnative o Steam e chiude la schermata a finestra visibile. |
 | [Sources/NXLibrary/Views/Launch/LaunchMotion.swift](../Sources/NXLibrary/Views/Launch/LaunchMotion.swift) | Movimento della schermata di lancio come Selene, in Core Animation: arte che si avvicina piano, logo che entra una volta salendo, segno di Arcane che respira nell’angolo; con Riduci movimento solo la dissolvenza del logo. |
@@ -724,8 +724,8 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Tests/NXLibraryCoreTests/SetupActionsTests.swift](../Tests/NXLibraryCoreTests/SetupActionsTests.swift) | Comandi Git del Setup e rispetto delle modifiche locali nel checkout. |
 | [Tests/NXLibraryCoreTests/SetupCheckTests.swift](../Tests/NXLibraryCoreTests/SetupCheckTests.swift) | Stati delle schede, requisiti, override e condizioni di riapertura del Setup. |
 | [Tests/NXLibraryCoreTests/SetupGridTests.swift](../Tests/NXLibraryCoreTests/SetupGridTests.swift) | Bilanciamento delle righe e spostamento del focus fra le schede. |
-| [Tests/NXLibraryCoreTests/FirstRunSetupTests.swift](../Tests/NXLibraryCoreTests/FirstRunSetupTests.swift) | Partenza da `found`, card Porting, nessun ritorno dopo il completamento, focus delle righe, Skip persistente, ripresa, riapertura manuale senza reset, attesa della scansione, separazione dei requisiti e navigazione del primo gioco. |
-| [Tests/NXLibraryCoreTests/FirstRunFindingsTests.swift](../Tests/NXLibraryCoreTests/FirstRunFindingsTests.swift) | Steam assente, solo giochi pronti per Mac, zero giochi, lettura parziale senza numero, annullamento e app portate contate. |
+| [Tests/NXLibraryCoreTests/FirstRunSetupTests.swift](../Tests/NXLibraryCoreTests/FirstRunSetupTests.swift) | Pagina iniziale, Porting, scelta Steam acceso/spento dopo interruzione, completamento e pulizia della scelta salvata, focus, scansione e ripresa. |
+| [Tests/NXLibraryCoreTests/FirstRunFindingsTests.swift](../Tests/NXLibraryCoreTests/FirstRunFindingsTests.swift) | Steam assente, solo giochi Mac pronti, zero giochi, errore/parziale distinto da assenza, annullamento e app portate contate. |
 | [Tests/NXLibraryCoreTests/SmokeTests.swift](../Tests/NXLibraryCoreTests/SmokeTests.swift) | Importabilità e versione nominale del modulo Core. |
 | [Tests/NXLibraryCoreTests/CriticRatingTests.swift](../Tests/NXLibraryCoreTests/CriticRatingTests.swift) | Abbinamenti esatti, metriche e piattaforme, stelle proporzionali, cache offline, richieste seriali/condivise, errori e annullamento delle valutazioni. |
 | [Tests/NXLibraryCoreTests/IGDBRatingTests.swift](../Tests/NXLibraryCoreTests/IGDBRatingTests.swift) | Credenziali 0600 sintetiche, isolamento degli host, voti critica/utenti, rinnovo accesso, annullamento, cache offline e ripiego Wikidata. |
@@ -794,13 +794,14 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [run_notices.py](../Tests/CatalogAppChecks/run_notices.py) | Esegue i metodi reali degli avvisi e del ponte legacy senza finestre, dopo swift test. |
 | [run_review.py](../Tests/CatalogAppChecks/run_review.py) | Verifica le vere funzioni di avvio achievement, piattaforma dei loghi, focus durante lo scroll, menu e routing del controller sotto alert, dialoghi modali e sheet; prova anche il ritorno all'input. Dati sintetici, senza finestre. |
 | [run_source_access.py](../Tests/CatalogAppChecks/run_source_access.py) | Esegue il ripristino di avvio, l'observer e i selettori reali: nessuna scansione automatica dei sorgenti, cartella ricordata, annullamento e lettura dei soli file scelti; nessuna finestra o dato personale. |
+| [run_onboarding.py](../Tests/CatalogAppChecks/run_onboarding.py) | Esegue observer e ripristino reali del Setup, applicazione acceso/spento/nil, radice della fonte, focus dopo Retry e punti reali di richiesta notifiche su dati sintetici; nessuna finestra o dato personale. |
 | [run_entrance.py](../Tests/CatalogAppChecks/run_entrance.py) | Esegue i metodi reali di input e readiness: primo comando durante il fullscreen, precedenza delle coperture, drawable mancante e presentazione su entrambi i percorsi. Nessuna finestra o GPU reale. |
 | [run_achievement_scroll.py](../Tests/CatalogAppChecks/run_achievement_scroll.py) | Verifica fuori schermo la vera lista e i modelli durante riaperture rapide, dettagli della prima riga, ridimensionamento e Riduci movimento; nessuna finestra o automazione UI. |
 | [run_game_header.py](../Tests/CatalogAppChecks/run_game_header.py) | Esegue i corpi reali di logo e azioni condivisi senza finestra né store applicativi, per entrambi i layout. |
 | [NoticeHost.swift](../Tests/CatalogAppChecks/NoticeHost.swift) | Host minimo per i controlli applicativi, con storage reale e dati sintetici temporanei. |
 | [SharedGamePresentationTests.swift](../Tests/NXLibraryCoreTests/SharedGamePresentationTests.swift) | Presentazione Steam con identità, personalizzazioni e cronologia; prima installazione disponibile coerente per artwork e dettagli, con Play bloccato se ambiguo; confine nxnative e opzioni comuni. |
 | [CatalogSourcesRepositoryTests.swift](../Tests/NXLibraryCoreTests/CatalogSourcesRepositoryTests.swift) | Compatibilità generazioni, cambi fonte, preferenze concorrenti e adozione NX esplicita. |
-| [CatalogSourcesModelTests.swift](../Tests/NXLibraryCoreTests/CatalogSourcesModelTests.swift) | Opt-in, annullamento, risultati vecchi, cambio radice e recupero errori. |
+| [CatalogSourcesModelTests.swift](../Tests/NXLibraryCoreTests/CatalogSourcesModelTests.swift) | Opt-in, annullamento, risultati vecchi, cambio radice, scoperta dalla radice salvata anche a fonte spenta e recupero errori. |
 | [CatalogLibraryQueryTests.swift](../Tests/NXLibraryCoreTests/CatalogLibraryQueryTests.swift) | Visibilità, ricerca/filtri misti e selezione per UUID senza sessioni simulate. |
 | [SteamOptionsTests.swift](../Tests/NXLibraryCoreTests/SteamOptionsTests.swift) | Righe delle opzioni Steam come quelle comuni nxnative, niente di nxnative, Play e Finder spenti senza installazione, artwork e impostazione «Keep Steam in the background». |
 | [SteamMetadataTests.swift](../Tests/NXLibraryCoreTests/SteamMetadataTests.swift) | Identità, lingue, offline, URL, concorrenza e pubblicazione dopo salvataggio riuscito. |

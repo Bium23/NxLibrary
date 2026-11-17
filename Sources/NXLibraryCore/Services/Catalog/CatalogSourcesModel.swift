@@ -9,6 +9,8 @@ public enum CatalogSourceStatus: Equatable, Sendable { case disabled, idle, scan
 public final class CatalogSourcesModel: ObservableObject {
     /// Steam's own folder, where the first launch and Settings → Sources look first.
     public static var defaultSteamRoot: URL { AppData.profile.home.appendingPathComponent("Library/Application Support/Steam") }
+    /// Discovery and its eventual opt-in must use the same folder, including a disabled source's choice.
+    public var discoveryRoot: URL { configuration.rootURL ?? Self.defaultSteamRoot }
     public typealias Scanner = @Sendable (URL, @escaping () -> Bool) throws -> SteamLibrarySnapshot
     @Published public private(set) var configuration: CatalogSourceConfiguration
     @Published public private(set) var status: CatalogSourceStatus

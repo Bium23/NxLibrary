@@ -4,6 +4,21 @@ import Combine
 
 @MainActor
 final class CatalogSourcesModelTests: XCTestCase {
+    func testDiscoveryUsesTheSavedSteamRootEvenWhenDisabled() throws {
+        let (fixture, repository, _) = try prepared()
+        let custom = fixture.root.appendingPathComponent("Custom Steam")
+        let configuration = try repository.configureSource(.steam, enabled: false, root: custom).source(.steam)!
+        let model = CatalogSourcesModel(repository: repository, initialConfiguration: configuration) { _ in }
+        XCTAssertFalse(model.configuration.isEnabled)
+        XCTAssertEqual(model.discoveryRoot, custom)
+    }
+
+    func testDiscoveryWithoutASavedRootUsesTheDefault() throws {
+        let (_, repository, initial) = try prepared()
+        let model = CatalogSourcesModel(repository: repository, initialConfiguration: initial) { _ in }
+        XCTAssertEqual(model.discoveryRoot, CatalogSourcesModel.defaultSteamRoot)
+    }
+
     private func prepared() throws -> (SteamTestFixture, CatalogRepository, CatalogSourceConfiguration) {
         let f = try SteamTestFixture.temporary(in: self)
         _ = try CatalogTestSupport.writeLegacy([CatalogTestSupport.completeLegacyGame()], to: f.root)

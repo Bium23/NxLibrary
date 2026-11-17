@@ -4,7 +4,7 @@ Riferimento unico dell’integrazione Steam: cosa legge, come decide, cosa mostr
 documento da leggere prima di toccare qualunque parte Steam. `architecture.md` ne tiene solo un riassunto;
 `file-map.md` elenca i file uno per uno.
 
-Ramo: `bium/library-manager` (rilascio grande, non pubblicato). Aggiornato al 15 novembre 2026.
+Ramo: `bium/library-manager` (rilascio grande, non pubblicato). Aggiornato al 17 novembre 2026.
 
 ## Indice
 
@@ -39,7 +39,7 @@ Ramo: `bium/library-manager` (rilascio grande, non pubblicato). Aggiornato al 15
   Niente Windows, CrossOver o Proton.
 - **Nessun gioco nxnative finto.** `CatalogGame` porta il payload reale (`SteamCatalogGame`); i comandi Switch
   (build, salvataggi, mod) ricevono solo `PortedGame` e non possono partire da un gioco Steam.
-- **Fonte opzionale.** Con la fonte Steam spenta non si legge nulla di Steam e tutto si comporta come prima.
+- **Fonte opzionale.** Con la fonte Steam spenta non partono scansioni o watcher del catalogo. La scoperta del primo avvio e l’offerta del benvenuto leggono soltanto per proporre la scelta, senza attivare la fonte; usano la cartella Steam salvata oppure quella standard. Una lettura incompleta nel primo avvio offre Retry, senza indicare che i giochi sono assenti.
 
 ## Stato di validazione
 
