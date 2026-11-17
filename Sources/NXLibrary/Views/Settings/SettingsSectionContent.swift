@@ -35,8 +35,12 @@ struct SettingsSectionContent: View {
             SettingsLookSection(viewModel: viewModel, settings: settings, onActions: onActions)
         case .apiServices:
             SettingsAPISection(viewModel: viewModel, onActions: onActions)
+        case .libraryGames:
+            SettingsLibraryGamesSection(viewModel: viewModel, settings: settings, onActions: onActions)
         case .games:
             SettingsGamesSection(viewModel: viewModel, settings: settings, onActions: onActions)
+        case .cloudSaves:
+            SettingsCloudSavesSection(viewModel: viewModel, settings: settings, onActions: onActions)
         case .controllers:
             SettingsControllersSection(settings: settings, onActions: onActions,
                                        onViewControls: onViewControls)
@@ -45,10 +49,15 @@ struct SettingsSectionContent: View {
         case .sources:
             SettingsSourcesSection(viewModel: viewModel, settings: settings, onActions: onActions)
         case .storage:
-            SettingsStorageSection(viewModel: viewModel, artwork: artwork,
-                                   onActions: onActions, onOpenConsole: onOpenConsole)
+            SettingsStorageSection(viewModel: viewModel, artwork: artwork, onActions: onActions)
+        case .portingStorage:
+            SettingsPortingStorageSection(viewModel: viewModel, onActions: onActions)
         case .engine:
             SettingsEngineSection(viewModel: viewModel, settings: settings, onActions: onActions)
+        case .keys:
+            SettingsKeysSection(viewModel: viewModel, onActions: onActions)
+        case .console:
+            SettingsConsoleSection(onActions: onActions, onOpenConsole: onOpenConsole)
         case .about:
             SettingsAboutSection(viewModel: viewModel, onActions: onActions)
         }

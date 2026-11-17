@@ -36,7 +36,7 @@ public enum SettingsCatalog {
 
     /// In sidebar order (`SettingsSidebarGroup`), each section's rows as listed.
     public static let all: [SettingDescriptor] = {
-        let order = SettingsSection.allCases
+        let order = SettingsSidebarGroup.all.flatMap(\.sections)
         return listed.enumerated().sorted {
             (order.firstIndex(of: $0.element.group) ?? order.count, $0.offset)
                 < (order.firstIndex(of: $1.element.group) ?? order.count, $1.offset)
@@ -117,22 +117,22 @@ public enum SettingsCatalog {
         action("igdb", .apiServices, "IGDB", "Personal IGDB credentials for critic scores. Wikidata remains available without a key."),
         action("steamGridDB", .apiServices, "SteamGridDB", "Add your API key to find covers, backgrounds, logos and icons in Change artwork."),
 
-        // Games
-        row("launchStyle", .games, "Launch screen style",
+        // Games (Library) and New games (Porting)
+        row("launchStyle", .libraryGames, "Launch screen style",
             "What shows while a game starts: art and logo, art only, logo on black, or minimal.") { $0.launchStyle },
-        row("launchMotion", .games, "Launch screen motion",
+        row("launchMotion", .libraryGames, "Launch screen motion",
             "A slow drift of the art while the game starts.") { $0.launchMotion },
-        row("launchShade", .games, "Launch screen shade",
+        row("launchShade", .libraryGames, "Launch screen shade",
             "How much the launch art is darkened.") { $0.launchShade },
-        row("surprisePool", .games, "Surprise me pool",
+        row("surprisePool", .libraryGames, "Surprise me pool",
             "Which games Surprise me picks from.") { $0.surprisePool },
-        row("cloudSaves", .games, "Cloud saves",
+        row("cloudSaves", .cloudSaves, "Cloud saves",
             "One sync choice for all games, applied at next launch: Off, iCloud Drive or a folder you choose.") { $0.cloudSaves },
-        row("cloudSavesPickedFolder", .games, "Cloud saves folder",
+        row("cloudSavesPickedFolder", .cloudSaves, "Cloud saves folder",
             "The chosen folder for save sync; choosing a folder enables it.") { $0.cloudSavesPickedFolder },
-        row("showsSessionCard", .games, "Session card",
+        row("showsSessionCard", .libraryGames, "Session card",
             "When you close a game, a card shows how long you played this time and in total.") { $0.showsSessionCard },
-        action("hiddenGames", .games, "Hidden games",
+        action("hiddenGames", .libraryGames, "Hidden games",
                "Games you hid from Game options; Show puts one back in your lists."),
         row("gameDefaults.fullscreen", .games, "Fullscreen",
             "New games: start in fullscreen or a window.") { $0.gameDefaults.fullscreen },
@@ -155,10 +155,10 @@ public enum SettingsCatalog {
         action("buttonLayout", .controllers, "Button layout", "View the library controls."),
         action("controllerDeadzone", .controllers, "Stick navigation deadzone",
                "Thumbstick threshold for library navigation; does not alter game input."),
-        row("gameDefaults.rumble", .controllers, "Rumble",
-            "Default controller vibration for new Switch games.") { $0.gameDefaults.rumble },
-        row("gameDefaults.rumbleGain", .controllers, "Rumble strength",
-            "Default vibration strength for new Switch games.") { $0.gameDefaults.rumbleGain },
+        row("gameDefaults.rumble", .games, "Rumble",
+            "New games: default controller vibration for new ported games.") { $0.gameDefaults.rumble },
+        row("gameDefaults.rumbleGain", .games, "Rumble strength",
+            "New games: default vibration strength for new ported games.") { $0.gameDefaults.rumbleGain },
 
         // Library
         action("gameFolder", .library, GameFoldersCopy.sourcesTitle, "Game sources: NSP, XCI, NSZ and XCZ files, or Switch 2 NUP files and extracted folders, for builds. Optional for existing apps."),
@@ -175,12 +175,12 @@ public enum SettingsCatalog {
 
         // Storage
         action("storageUsage", .storage, "Storage usage", "See per-game app, cache and log sizes and free disk space."),
-        action("buildCaches", .storage, "Build caches", "Delete a game's build cache or clear all caches after confirmation; rebuilds may take longer."),
+        action("buildCaches", .portingStorage, "Build caches", "Delete a game's build cache or clear all caches after confirmation; rebuilds may take longer."),
         action("logs", .storage, "Logs", "Delete build and launch logs after confirmation."),
         action("metadataCache", .storage, "Metadata cache", "Clear cached store descriptions and links."),
         action("artworkCache", .storage, "Artwork cache", "Clear downloaded images; manual picks are kept."),
         action("saveBackups", .storage, "Save backups", "Open the folder of verified per-game backups."),
-        action("console", .storage, "Console", "View, search and copy logs."),
+        action("console", .console, "Console", "View, search and copy logs."),
 
         // Engine
         action("engineFolder", .engine, "Engine repository", "The upstream checkout used for porting; updates stay manual."),
@@ -189,7 +189,7 @@ public enum SettingsCatalog {
         action("upstream", .engine, "Upstream", "Check newer engine commits without installing them."),
         action("newestEngine", .engine, "Newest engine", "Build with nxnative main before Arcane has tested it, or go back to the tested engine."),
         action("compare", .engine, "Compare", "Open the commit comparison on GitHub."),
-        action("keys", .engine, "prod.keys", "Import, replace or detect private keys."),
+        action("keys", .keys, "prod.keys", "Import, replace or detect private keys."),
         action("setup", .engine, "Setup", "Open the setup checklist."),
         action("diagnostics", .about, "Copy diagnostics", "Copy a scrubbed support report."),
         action("appUpdates", .about, "App updates", "Check now, update or read release notes."),

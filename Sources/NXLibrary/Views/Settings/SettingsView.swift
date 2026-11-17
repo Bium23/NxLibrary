@@ -234,82 +234,28 @@ public struct SettingsView: View {
         SoundEffectService.shared.play(.focus)
     }
 
-    private var canResetSection: Bool {
-        switch section {
-        case .startUp, .navigation, .spotlight, .soundMusic, .look, .games, .controllers, .library:
-            return true
-        case .search, .changed, .apiServices, .sources, .engine, .storage, .about:
-            return false
-        }
-    }
+    private var canResetSection: Bool { SettingsReset.canReset(section) }
 
+    /// `SettingsReset` puts the section's `AppSettings` back in one assignment; the preferences
+    /// kept outside it are reset here.
     private func resetSection() {
         guard canResetSection else { return }
         let defaults = AppSettings()
-        var next = settings.settings
         switch section {
-        case .startUp:
-            next.appLanguage = defaults.appLanguage
-            next.appRegion = defaults.appRegion
-            next.startOn = defaults.startOn
-            next.restoreLastGame = defaults.restoreLastGame
-            next.startInFullscreen = defaults.startInFullscreen
-            next.checkAppUpdatesAtLaunch = defaults.checkAppUpdatesAtLaunch
-            next.introAnimation = defaults.introAnimation
-        case .navigation:
-            next.showButtonHints = defaults.showButtonHints
-            next.buttonNames = defaults.buttonNames
-            next.viewButtonSwitches = defaults.viewButtonSwitches
-        case .spotlight:
-            next.visibleSpotlightCards = defaults.visibleSpotlightCards
-            next.startingTab = defaults.startingTab
-            next.spotlightOrder = defaults.spotlightOrder
-        case .soundMusic:
-            next.interfaceSounds = defaults.interfaceSounds
-            next.soundVolume = defaults.soundVolume
-            next.quietLaunch = defaults.quietLaunch
         case .look:
-            next.colorThemeID = defaults.colorThemeID
             ThemeStore.shared.apply(id: defaults.colorThemeID)
-            next.wallpaperID = defaults.wallpaperID
-            next.settingsWallpaperID = defaults.settingsWallpaperID
-            next.keepWallpaperOnGames = defaults.keepWallpaperOnGames
-            next.backgroundSizing = defaults.backgroundSizing
-            next.wallpaperBrightness = defaults.wallpaperBrightness
-            next.backgroundShade = defaults.backgroundShade
-            next.readableText = defaults.readableText
-            next.animatedBackground = defaults.animatedBackground
-            next.showClock = defaults.showClock
-            next.reduceMotion = defaults.reduceMotion
             viewModel.iconAppearanceMode = .auto
-        case .games:
-            resetNotice = L10n.text("Cloud sync kept")
-            next.launchStyle = defaults.launchStyle
-            next.launchMotion = defaults.launchMotion
-            next.launchShade = defaults.launchShade
-            next.showsSessionCard = defaults.showsSessionCard
-            next.surprisePool = defaults.surprisePool
-            let rumble = next.gameDefaults.rumble
-            let gain = next.gameDefaults.rumbleGain
-            next.gameDefaults = defaults.gameDefaults
-            // Rumble lives under Controllers.
-            next.gameDefaults.rumble = rumble
-            next.gameDefaults.rumbleGain = gain
         case .controllers:
             GameControllerService.shared.deadzone = 0.35
-            next.gameDefaults.rumble = defaults.gameDefaults.rumble
-            next.gameDefaults.rumbleGain = defaults.gameDefaults.rumbleGain
         case .library:
             resetNotice = L10n.text("Sources folder kept")
-            next.refreshLibraryAtLaunch = defaults.refreshLibraryAtLaunch
-            next.notifyPortingEnds = defaults.notifyPortingEnds
             viewModel.libraryFolder = URL(fileURLWithPath: viewModel.defaultInstallPath)
                 .appendingPathComponent("Applications")
             viewModel.loadLibrary()
-        case .search, .changed, .apiServices, .sources, .engine, .storage, .about:
+        default:
             break
         }
-        settings.settings = next
+        settings.settings = SettingsReset.reset(section, in: settings.settings)
         SoundEffectService.shared.play(.focus)
     }
 

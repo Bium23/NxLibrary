@@ -63,7 +63,7 @@ Every re-pin is a product decision, not just a hash change. Before changing the 
 
 Never follow `main` automatically. A commit that is newer is not automatically a commit that is tested with this Mac's toolchain.
 
-The only exception is the player's own choice in **Settings → Engine → Newest engine**: it moves the checkout to upstream `main` on request, turns the untested override on and records builds as untested, and is refused when `main` certifies a different Metal compiler. Setup keeps installing the pinned commit and never treats that choice as an error. Do not add any automatic path to `main`.
+The only exception is the player's own choice in **Settings → Setup and engine → Newest engine**: it moves the checkout to upstream `main` on request, turns the untested override on and records builds as untested, and is refused when `main` certifies a different Metal compiler. Setup keeps installing the pinned commit and never treats that choice as an error. Do not add any automatic path to `main`.
 
 ## Branches
 
@@ -81,6 +81,6 @@ codesign --verify --deep --strict "$HOME/Applications/Arcane Dev.app"
 
 Development builds install as **Arcane Dev** (`~/Applications/Arcane Dev.app`), the maintainer's only test copy. Never build over, replace or test in the released copy (`~/Applications/NX Library.app`, which becomes `Arcane.app` when a release that carries the new name quits); it is the copy installed from GitHub and updates itself.
 
-Then verify the gate in **Settings → Engine**, build one real game, and launch it to a visible screen. Do not claim a build or game is working from compilation alone.
+Then verify the gate in **Settings → Setup and engine**, build one real game, and launch it to a visible screen. Do not claim a build or game is working from compilation alone.
 
 Releases go through `scripts/release.sh` only: it refuses a dirty tree, so commit or stash local changes first. Never publish (`--publish`) without the user asking.

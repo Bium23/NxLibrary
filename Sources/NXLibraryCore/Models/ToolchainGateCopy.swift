@@ -1,6 +1,6 @@
 import Foundation
 
-/// What the compatibility gate says (Settings → Engine, the Rebuild hints). A Metal compiler newer than the certified
+/// What the compatibility gate says (Settings → Setup and engine, the Rebuild hints). A Metal compiler newer than the certified
 /// one is information, an older one a warning; both still need the untested-toolchain override to build (AGENTS.md).
 /// Any other failed check stays "Blocked".
 public enum ToolchainGateCopy {
@@ -46,20 +46,20 @@ public enum ToolchainGateCopy {
                 return Summary(label: overrideOn ? L10n.text("Newer Metal · override on") : L10n.text("Newer Metal"), tone: .info,
                                message: head + (overrideOn ? L10n.text(" There should be no problems; builds are recorded as untested.")
                                                            : L10n.text(" There should be no problems: turn on Untested toolchain override to build.")),
-                               buildHint: L10n.text("Newer Metal: turn on the override in Settings → Engine"))
+                               buildHint: L10n.text("Newer Metal: turn on the override in Settings → Setup and engine"))
             case .older(let installed, let required):
                 let head = L10n.format("Your Metal compiler (%@) is older than the one nxnative needs (%@). ", [String(describing: (installed)), String(describing: (required))])
                     + L10n.format("Updating to Metal %@ is strongly recommended.", [String(describing: (required))])
                 return Summary(label: overrideOn ? L10n.text("Older Metal · override on") : L10n.text("Update recommended"), tone: .warning,
                                message: head + (overrideOn ? L10n.text(" Builds are recorded as untested.")
                                                            : L10n.text(" Untested toolchain override builds anyway, at your own risk.")),
-                               buildHint: L10n.text("Older Metal: update it, or use the override in Settings → Engine"))
+                               buildHint: L10n.text("Older Metal: update it, or use the override in Settings → Setup and engine"))
             case .same, .unknown:
                 break
             }
         }
         return overrideOn
             ? Summary(label: L10n.text("Override enabled"), tone: .override, message: nil, buildHint: "")
-            : Summary(label: L10n.text("Blocked"), tone: .blocked, message: nil, buildHint: L10n.text("Build blocked — Settings → Engine"))
+            : Summary(label: L10n.text("Blocked"), tone: .blocked, message: nil, buildHint: L10n.text("Build blocked — Settings → Setup and engine"))
     }
 }

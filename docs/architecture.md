@@ -125,7 +125,7 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
 **Le fonti.**
 - `CatalogSourcesModel` tiene configurazione e stato della fonte Steam e la richiesta di scansione corrente. La lettura avviene su un worker annullabile. Disattivazione, cambio di cartella o nuova richiesta invalidano il risultato precedente. La generazione salvata distingue anche disattivazione e riattivazione sulla stessa radice; nei cataloghi schema 1 più vecchi il valore mancante si legge come una sentinella fissa. Un risultato valido si applica all'ultima revisione conservando le modifiche indipendenti ai preferiti.
 - `SteamCatalogReconciler` applica snapshot già letti, con un ticket legato alla revisione e alla radice. La fusione mantiene UUID, preferiti, nascosti e installazioni storiche. Un titolo ambiguo resta da verificare, una scansione parziale conserva le osservazioni non viste, una fonte assente segnala indisponibilità; l'assenza diventa "non rilevato" solo con uno snapshot completo. `needsInstallationReview` tiene l'ambiguità separata dalla disponibilità del disco. Nessun record o file di gioco viene eliminato.
-- Menu → Manage sources e Settings → Steam · Library attivano Steam, aggiornano o annullano la ricerca, scelgono la sua cartella e recuperano titoli nascosti o installazioni da controllare. L'avvio scansiona solo Steam già abilitato. Adottare esplicitamente sorgenti o build Switch abilita nxnative nello stesso catalogo; una scansione passiva non attiva un'esperienza non scelta.
+- Menu → Manage sources e Settings → Sources attivano Steam, aggiornano o annullano la ricerca, scelgono la sua cartella e recuperano titoli nascosti o installazioni da controllare. L'avvio scansiona solo Steam già abilitato. Adottare esplicitamente sorgenti o build Switch abilita nxnative nello stesso catalogo; una scansione passiva non attiva un'esperienza non scelta.
 - Tutto il resto di Steam è in [steam.md](steam.md).
 
 **La libreria mostrata.**
@@ -149,41 +149,42 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
 
 ## Impostazioni
 
-**La barra laterale.** `SettingsSidebarGroup` raggruppa le sezioni: Search e Changed, General, poi un gruppo per piattaforma e infine System.
-- **General:** Start-up, Navigation, Spotlight, Sound & music, Look, API services, Controllers.
-- **Switch:** Library, Games, Engine.
-- **Steam:** Library.
-- **System:** Storage, About.
+**La barra laterale.** `SettingsSidebarGroup` raggruppa le sezioni: Search e Changed, poi quattro gruppi.
+- **General:** Start-up, Navigation, Spotlight, Sound & music, Look, Controllers, Online services.
+- **Library:** Sources, Games, Storage. Valgono per i giochi di ogni fonte.
+- **Porting:** Setup and engine, Keys, Library, New games, Cloud saves, Storage. Valgono solo per i giochi convertiti.
+- **System:** About, Console.
 
 Regole della barra:
-- Una sezione di piattaforma contiene solo impostazioni che agiscono sui giochi di quella piattaforma. Search, Changed e il titolo di pagina la chiamano col nome della piattaforma ("Steam · Library").
-- `SettingsSection.allCases` segue l'ordine della barra. Le identità non cambiano: la pagina Steam resta `sources`.
-- Le righe solo Switch stanno nel gruppo Switch. Check engine at launch e Setup sono in Engine, dove Compatibility ripete già il controllo dell'ambiente. Refresh library at launch e Box covers sono in Library.
-- Per scelta restano dove sono:
-  - Rumble in Controllers: è un comando del controller, con il testo "nuovi giochi Switch";
-  - App icon in Look: è l'icona del Dock;
-  - Storage intero in System: è la pagina del disco.
-
-  Metadata e Artwork cache stanno solo in Storage.
-- API services (`apiServices`) raccoglie IGDB (voti) e SteamGridDB (artwork). La nota iniziale dice che le connessioni sono facoltative e che le fonti pubbliche funzionano senza chiavi. Non esiste un reset di gruppo che elimini le credenziali.
+- Porting è l'unico gruppo di piattaforma (`isPlatform`): Search, Changed e il titolo di pagina chiamano le sue sezioni col nome del gruppo ("Porting · New games").
+- `SettingsSection` dichiara i casi nell'ordine della barra, quindi `allCases` la percorre come è disegnata. I `rawValue` sono identità e non cambiano: `sources` è la pagina Sources, `library` e `games` sono Library e New games di Porting; i casi nuovi (`libraryGames`, `keys`, `cloudSaves`, `portingStorage`, `console`) hanno identità proprie.
+- Ogni riga di `SettingsCatalog` tiene il suo `rowID` quando cambia sezione.
+- Dove stanno le righe che si potrebbero cercare altrove:
+  - schermata di lancio, Surprise me, card della sessione e giochi nascosti in Library → Games, perché valgono per ogni fonte;
+  - Rumble e Rumble strength in Porting → New games, perché sono default copiati nei nuovi giochi convertiti;
+  - prod.keys in Porting → Keys; Check engine at launch e Setup in Setup and engine, dove Compatibility ripete già il controllo dell'ambiente;
+  - Refresh library at launch e Box covers in Porting → Library;
+  - le cache di compilazione, per gioco e per tutti, in Porting → Storage; spazio usato, log, cache di metadati e artwork e backup in Library → Storage;
+  - App icon in Look: è l'icona del Dock.
+- Online services (`apiServices`) raccoglie IGDB (voti) e SteamGridDB (artwork). La nota iniziale dice che le connessioni sono facoltative e che le fonti pubbliche funzionano senza chiavi. Non esiste un reset di gruppo che elimini le credenziali.
 
 **Chi decide cosa.**
 
 | Punto dell'interfaccia | Autorità |
 |---|---|
-| Settings → Games → New games | Valori iniziali copiati nei nuovi titoli. |
+| Settings → Porting → New games | Valori iniziali copiati nei nuovi titoli, vibrazione compresa. |
 | Game Options → Next launch | Configurazione di quel titolo, applicata al prossimo avvio. |
 | Use new game defaults | Copia una volta i default correnti nel gioco selezionato. |
 | Add Game → Review | Nuovo titolo: parte dai default. Titolo esistente: `GameRuntimeConfig.forReview` legge le sue opzioni effettive. La conferma salva i valori mostrati. |
 | Cloud saves | Preferenza riapplicata prima di ogni avvio, compreso Off. |
-| Controllers | Navigazione della libreria; il sottogruppo New games contiene i default della vibrazione. |
+| Controllers | Navigazione della libreria. |
 
 - Options e Play leggono `GameRuntimeConfig.load`: prima le preferenze per titolo in UserDefaults, poi `env.txt` del titolo, poi quello nel bundle, infine i valori del modello.
-- Il rebuild ricava `languageForBuild` dalla configurazione del titolo e non tiene una lingua separata dal wizard. I default globali cambiati non aggiornano da soli i giochi già aggiunti. Search e Changed attribuiscono la vibrazione a Controllers.
+- Il rebuild ricava `languageForBuild` dalla configurazione del titolo e non tiene una lingua separata dal wizard. I default globali cambiati non aggiornano da soli i giochi già aggiunti. Search e Changed attribuiscono la vibrazione a Porting · New games.
 
 **Catalogo e salvataggio.**
 - `SettingsCatalog` descrive i singoli controlli. Changed riceve anche le differenze delle preferenze esterne ad `AppSettings`. Le azioni del controller si aggiornano con lo stato dei pannelli e mantengono il focus per identità. About pubblica azioni selezionabili.
-- Il reset aggiorna `AppSettings` con una sola assegnazione e segnala le scelte cloud e di percorso conservate.
+- Reset group è possibile dove `SettingsReset.canReset` lo dice. `SettingsReset.reset` rimette ai default i valori `AppSettings` della sezione in una sola assegnazione; la schermata azzera accanto le preferenze esterne (tema applicato, icona dell'app, zona morta della levetta, cartella Game apps) e segnala la cartella delle sorgenti conservata. Cloud saves e le credenziali non hanno reset.
 - `AppSettingsStore` salva `settings.json` tramite un file temporaneo, pubblica gli errori e conserva una copia di un file illeggibile prima di permetterne la sostituzione. La UI usa un dialogo Selene con Retry per una scrittura fallita.
 - `GameRuntimeConfig.save` propaga gli errori di `env.txt` e salva le preferenze per titolo solo dopo una scrittura riuscita. Un `env.txt` illeggibile si conserva e si segnala.
 
@@ -246,7 +247,7 @@ Regole della barra:
 - Una build con l'override del gate riceve `toolchainVerified=false` e `--allow-other-metal`.
 - Play valuta la disponibilità dell'app già installata separatamente dal gate per un nuovo porting.
 
-**Newest engine.** L'engine più nuovo è una scelta esplicita del giocatore (Settings → Engine → **Newest engine**).
+**Newest engine.** L'engine più nuovo è una scelta esplicita del giocatore (Settings → Setup and engine → **Newest engine**).
 - Dopo il controllo Upstream, che misura sempre i commit rispetto al pin, `NewestEngine.fetchLock` legge il lock di main da GitHub. Se certifica un Metal diverso da quello del lock del pin, la riga dice che serve una versione più nuova di Arcane e non offre il cambio.
 - `NewestEngineSwitcher` rifiuta un checkout con file modificati, scarica, rilegge il lock con git e solo allora fa `checkout --detach`.
 - La scelta (`NewestEngineChoice`) è salvata e diventa il commit atteso dal gate e quello registrato nelle build. Accende l'override, che resta bloccato finché la scelta è attiva, e marca le build come non testate. Il gate mostra **Newest engine** in arancione, mai Certified.
@@ -451,7 +452,7 @@ Il percorso completo è in [flows.md](flows.md#6-importare-o-ripristinare-un-sal
 ## Spazio su disco
 
 **Misura.**
-- Settings → Storage usa `StorageManager.snapshot`. `GameStorageUsage` distingue app, cache e log per voce, compresi i giochi nascosti, e ordina le cache dalla più grande.
+- Settings → Storage e Porting → Storage usano `StorageManager.snapshot`. `GameStorageUsage` distingue app, cache e log per voce, compresi i giochi nascosti, e ordina le cache dalla più grande.
 - `StorageSize` distingue file assenti da percorsi non leggibili o volumi scollegati.
 - Le misure sono dimensioni logiche dei file, compresi quelli nascosti. La visita fisica fts non segue i collegamenti interni e scarta le misure incomplete in caso di errore. I percorsi canonici condivisi si misurano e si contano una sola volta nei totali.
 - Lo spazio libero è quello della cartella Game apps corrente, senza ripiegare sul disco interno se questa manca.
@@ -537,7 +538,7 @@ Il percorso completo è in [flows.md](flows.md#6-importare-o-ripristinare-un-sal
   - Serializza e unisce le richieste, limita dimensione e durata e sospende le richieste dopo un errore.
   - La cache `ratings/wikidata` del profilo corrente dura sette giorni per un voto e un giorno per un'assenza verificata; offline conserva il dato con la sua data. La data di scaricamento resta distinta da quella del voto.
   - Cambiare gioco annulla il lettore e impedisce di pubblicare un risultato precedente. Niente viene scritto nel catalogo, nei dati Steam o nei giochi.
-- **IGDB (facoltativo)**, in Settings → API services.
+- **IGDB (facoltativo)**, in Settings → Online services.
   - **Credenziali.**
     - Il dialogo chiede Client ID e Client Secret dell'applicazione Twitch personale, in cinque passi brevi con i campi del portale, il requisito email/2FA e un link diretto alla registrazione. Controlla la connessione prima di salvare e si può annullare anche durante la verifica. Tastiera e controller della pagina sotto sono sospesi.
     - Search trova IGDB, About contiene l'attribuzione, e nel bundle non c'è nessuna credenziale condivisa.

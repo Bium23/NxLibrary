@@ -47,24 +47,6 @@ struct SettingsControllersSection: View {
                         .frame(width: 38, alignment: .trailing)
                 }
             }
-
-            SettingsSubheading(L10n.text("New games"))
-
-            SeleneToggleRow("Rumble",
-                            subtitle: "Vibration in new Switch games",
-                            isOn: $settings.settings.gameDefaults.rumble)
-
-            SeleneRow("Rumble strength",
-                      subtitle: "Vibration strength",
-                      info: "Default haptic feedback multiplier (0: muted, 1: subtle, 2: standard, 3: intense) passed to game builds supporting macOS controller haptics.") {
-                Stepper(value: $settings.settings.gameDefaults.rumbleGain, in: 0...3) {
-                    Text("\(settings.settings.gameDefaults.rumbleGain)")
-                        .seleneFont(15, .semibold, design: .monospaced)
-                        .foregroundColor(SeleneTheme.glyph)
-                        .frame(width: 20, alignment: .trailing)
-                }
-                .fixedSize()
-            }
         }
         .onAppear(perform: publishActions)
         .onChange(of: controller.deadzone) { _ in publishActions() }
@@ -80,13 +62,6 @@ struct SettingsControllersSection: View {
             },
             .value("deadzone", "Stick navigation deadzone") { step in
                 controller.deadzone = min(0.80, max(0.10, controller.deadzone + 0.05 * Float(step)))
-            },
-            .init(id: "rumble", title: "Rumble") {
-                settings.settings.gameDefaults.rumble.toggle()
-            },
-            .value("gain", "Rumble strength") { step in
-                let gain = settings.settings.gameDefaults.rumbleGain + step
-                settings.settings.gameDefaults.rumbleGain = min(3, max(0, gain))
             }
         ])
     }

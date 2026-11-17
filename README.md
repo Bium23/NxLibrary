@@ -80,7 +80,7 @@ The engine is pinned to `8a5c5e7e`: builds no longer need .NET, rendering and sh
 |---|---|
 | **Mac** | Apple silicon, macOS 13 or later. |
 | **Xcode** | 27.2 or later, with the Metal compiler certified for the pinned engine. |
-| **Engine** | nxnative at the pinned commit. Setup can prepare the checkout; an existing folder can be chosen in **Settings → Engine**. |
+| **Engine** | nxnative at the pinned commit. Setup can prepare the checkout; an existing folder can be chosen in **Settings → Setup and engine**. |
 | **Your files** | Your own supported game sources and keys, with the rights and permissions needed to use them. |
 
 A packaged app includes Python and its required packages, `zstd` and `glslangValidator`. Homebrew is used to prepare that runtime during development; it is not needed to use a packaged copy. A source build without the bundled runtime uses the engine's virtual environment and tools on `PATH`.
@@ -130,7 +130,7 @@ Discovery includes subfolders of Game apps. It stays inside the chosen folders, 
 
 Import your `prod.keys` when prompted. Arcane keeps a private copy with mode `0600` and leaves the original file unchanged. Key values are not displayed or logged.
 
-Reopen both setup steps from **Settings → Switch · Engine → Open Setup** whenever needed; this keeps your library and completion state. Arcane never runs `sudo`, accepts the Xcode licence for you or changes `xcode-select`.
+Reopen both setup steps from **Settings → Porting → Setup and engine → Open Setup** whenever needed; this keeps your library and completion state. Arcane never runs `sudo`, accepts the Xcode licence for you or changes `xcode-select`.
 
 Already have a built nxnative game app? Use **Settings → Library → Scan game apps → Scan**. The same action finds existing builds and refreshes the library. Play remains available without the original sources; rebuilding requires attaching them again.
 
@@ -146,9 +146,9 @@ If an installed app is moved or removed, its library entry stays with a blurred,
 
 <p align="center"><strong>A closer look at each game.</strong><br>Artwork, play history and build details in one place.</p>
 
-Use **Find a game** for search, **Game Options** for title-specific actions, and the menu for themes, Settings and running-game controls. Hidden games can be restored under **Settings → Games → Hidden games**.
+Use **Find a game** for search, **Game Options** for title-specific actions, and the menu for themes, Settings and running-game controls. Hidden games can be restored under **Settings → Library → Games → Hidden games**.
 
-When you quit a game, Arcane comes back to the front, unless you had moved to another app or another game is still open. A **session card** in the top right shows how long you played this time and in total; sessions under 10 seconds show none. Turn it off in **Settings → Games → Session card**.
+When you quit a game, Arcane comes back to the front, unless you had moved to another app or another game is still open. A **session card** in the top right shows how long you played this time and in total; sessions under 10 seconds show none. Turn it off in **Settings → Library → Games → Session card**.
 
 ![The quick menu open over Spotlight, with Theme selected](docs/media/quick-menu.webp)
 
@@ -164,7 +164,7 @@ Choose a language directly from its list. Known catalog genres are translated lo
 
 The last row in **Details** shows five stars, the original score out of 100 and its source. Public ratings via Wikidata work without a key; games without a verified match or usable score show **Rating unavailable**. Critic scores take priority. When neither IGDB nor Wikidata supplies one, a configured IGDB connection can show its community average, clearly labelled **User score · Users · IGDB**. Community and critic scores are never mixed.
 
-Optional **Settings → API services → IGDB** accepts your own Twitch application's **Client ID** and **Client Secret**. The dialog includes five short setup steps and a direct link to register an application. **Check and save** verifies access before keeping the credentials in a private file on this Mac. The secret is hidden, and credentials are separate from ordinary settings and the Dev-profile import. **Remove** returns to the keyless source. With IGDB configured, its critic average takes priority, followed by public critic scores via Wikidata and finally the explicitly labelled IGDB user average. Cached scores remain available offline. The same general settings page contains the SteamGridDB key for game artwork; API connections are optional.
+Optional **Settings → Online services → IGDB** accepts your own Twitch application's **Client ID** and **Client Secret**. The dialog includes five short setup steps and a direct link to register an application. **Check and save** verifies access before keeping the credentials in a private file on this Mac. The secret is hidden, and credentials are separate from ordinary settings and the Dev-profile import. **Remove** returns to the keyless source. With IGDB configured, its critic average takes priority, followed by public critic scores via Wikidata and finally the explicitly labelled IGDB user average. Cached scores remain available offline. The same general settings page contains the SteamGridDB key for game artwork; API connections are optional.
 
 The same optional connection adds **IGDB** proposals to **Game options → Edit details → Change metadata**, for Switch, Switch 2 and Steam games. Preview descriptions, genres, developers, publishers and platform-specific release dates, then choose each field individually. Automatic and your manual choices remain available; fetching never replaces them. IGDB descriptions keep their original language. Saved proposals remain usable offline, with a retry when refresh is unavailable. This metadata flow is awaiting maintainer validation.
 
@@ -193,11 +193,11 @@ A rebuild of a running game waits to replace its app until it closes. If compila
 
 | Where | Scope | When it applies |
 |---|---|---|
-| **Settings → Games → New games** | Starting values for titles added later. | When a new title is added. Existing titles keep their choices. |
+| **Settings → Porting → New games** | Starting values for titles added later. | When a new title is added. Existing titles keep their choices. |
 | **Game Options → Next launch** | The selected game. | Its next launch. |
 | **Game Options → Use new game defaults** | Copies the current defaults into that game once. | Its next launch. |
 | **Add game → Review** | The title being added or rebuilt. | That operation, including its saved language. |
-| **Settings → Games → Cloud saves** | Library-wide preference, subject to advanced game configuration overrides. | Reapplied before each launch, including when Off. |
+| **Settings → Porting → Cloud saves** | Library-wide preference, subject to advanced game configuration overrides. | Reapplied before each launch, including when Off. |
 | **Settings → Look** | The library's presentation. | The app interface; game artwork and launch-screen style have their own controls. |
 
 Options include fullscreen, FPS target, docked mode, language, rumble, render scale, MetalFX upscaling and Metal HUD. **MetalFX upscaling** enlarges the finished picture, HUD included, to your window or screen. **Game's upscaler**, offered only by games that upscale their own picture inside the frame (such as Donkey Kong Bananza), keeps the game's own upscaler or swaps it for MetalFX's, which takes much less GPU time; both can be on. Some controls depend on the installed build's capabilities. A control being available does not guarantee that every game supports its effect.
@@ -297,7 +297,7 @@ Prompts follow the connected controller and supported system remapping. **Settin
 
 | What you see | What to do |
 |---|---|
-| **Play works, Rebuild is blocked** | Open **Settings → Engine** and inspect the gate. Existing apps and new builds have separate requirements. |
+| **Play works, Rebuild is blocked** | Open **Settings → Setup and engine** and inspect the gate. Existing apps and new builds have separate requirements. |
 | **Sources detached / missing** | Use **Attach Sources…** or locate the original files. The installed app remains usable. |
 | **Ready build waiting to install** | Close the running game or finish the save operation, then retry the installation if prompted. |
 | **Import is unavailable** | Close the game, finish any active operation and follow the cloud-sync or recovery action shown in Saves. |
@@ -309,7 +309,7 @@ Before reporting a problem, review copied diagnostics and remove anything person
 
 ### Compatibility and limitations
 
-- Arcane uses a manually pinned engine and checks its commit, working tree, CLI contract and Metal compiler before new builds. It does not follow upstream `main` automatically. **Settings → Engine → Newest engine** lets you choose `main` yourself before Arcane has tested it: an orange dot marks it, builds are recorded as untested, **Update** moves to a newer `main` when there is one, **Back to tested** returns to the pinned engine, and it is not offered when `main` needs a different Metal compiler.
+- Arcane uses a manually pinned engine and checks its commit, working tree, CLI contract and Metal compiler before new builds. It does not follow upstream `main` automatically. **Settings → Setup and engine → Newest engine** lets you choose `main` yourself before Arcane has tested it: an orange dot marks it, builds are recorded as untested, **Update** moves to a newer `main` when there is one, **Back to tested** returns to the pinned engine, and it is not offered when `main` needs a different Metal compiler.
 - The current engine is `8a5c5e7e` and certifies Metal `32023.922`. **Build anyway with an untested toolchain** requires explicit confirmation and marks the resulting build as untested. A successful launch does not turn it into a certified combination.
 - Game compatibility depends on nxnative, the game version and the toolchain.
 - Output follows the window/display; native 1440p/4K internal rendering is not supported. Render scale is 50–100% where the build supports it. MetalFX is spatial upscaling.
@@ -321,7 +321,7 @@ The [upgrade notes](docs/upstream-upgrades/README.md) record each engine review 
 
 App data lives in `~/Library/Application Support/NXLibrary/`. Local game data uses `~/Library/Application Support/nxnative/<title ID>/`, with mods in its `mods` folder. Backups are stored under `NXLibrary/SaveBackups/<title ID>/`.
 
-**Settings → Storage → By game** shows app, build cache and log sizes for every library entry, including hidden games, with the largest caches first. **Delete cache** permanently removes only the chosen game's build cache after confirmation. Its app, original game files, saves and logs stay in place; the next rebuild may take longer. Shared caches are identified, and their confirmation explains the effect on the other entries. Connect unavailable drives or check folder access, then choose **Recalculate**. Sizes describe file contents; actual space recovered can differ, and shared folders count once in totals. This addition is unreleased; the maintainer confirmed it works in Dev.
+**Settings → Porting → Storage** shows app, build cache and log sizes for every library entry, including hidden games, with the largest caches first. **Delete cache** permanently removes only the chosen game's build cache after confirmation. Its app, original game files, saves and logs stay in place; the next rebuild may take longer. Shared caches are identified, and their confirmation explains the effect on the other entries. Connect unavailable drives or check folder access, then choose **Recalculate**. Sizes describe file contents; actual space recovered can differ, and shared folders count once in totals. This addition is unreleased; the maintainer confirmed it works in Dev.
 
 Storage can also clear all build caches or logs and open the shared backups folder. Cleanup runs without blocking navigation and is unavailable during a build or app update. **Remove Sources & Build Cache deletes the selected original source files**, while retaining the installed app and saves. Read that confirmation carefully; it differs from clearing a cache.
 

@@ -47,7 +47,7 @@ Lo stato di ogni parte Steam sta nell'elenco unico [validation.md](validation.md
 
 ## File di Steam letti
 
-`<Steam>` è la cartella scelta in Settings → Steam · Library (di solito `~/Library/Application Support/Steam`).
+`<Steam>` è la cartella scelta in Settings → Sources (di solito `~/Library/Application Support/Steam`).
 `<lib>` è ogni libreria: `<Steam>` e quelle elencate in `libraryfolders.vdf`.
 
 | File | Lettore | Cosa ne esce |
@@ -103,7 +103,7 @@ Lo stato nasce dall’osservazione (`SteamGameObservation.State`) e arriva alla 
 | `nativeReady` | un’unica app Mac che si dichiara gioco, nessun problema | `.available`, riconosciuto | tile a colori, Play |
 | `downloading` | `StateFlags` senza il bit 4 (FullyInstalled); la cartella non viene letta | `.unavailable` + `isDownloading` | tile in download, pulsante «Downloading» |
 | `unavailable` | nessuna app nella cartella (es. disco scollegato) | `.unavailable` | resta nella riga senza Play se era già stato riconosciuto, altrimenti non entra |
-| `requiresReview` | più app, problemi di lettura, stesso AppID in due librerie | da controllare | Settings → Steam · Library, «to review» |
+| `requiresReview` | più app, problemi di lettura, stesso AppID in due librerie | da controllare | Settings → Sources, «to review» |
 
 - Un gioco mai riconosciuto non entra nella riga, salvo mentre scarica. Play esiste solo con un’unica installazione
   disponibile e niente da controllare.

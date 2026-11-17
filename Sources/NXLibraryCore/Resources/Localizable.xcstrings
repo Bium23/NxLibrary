@@ -8191,47 +8191,6 @@
         }
       }
     },
-    "Applied before each game starts, including Off. Reset group keeps cloud sync and its folder. Custom save-sync overrides are reported in Saves.": {
-      "comment": "SettingsGamesSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Applied before each game starts, including Off. Reset group keeps cloud sync and its folder. Custom save-sync overrides are reported in Saves."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Applicato prima di ogni avvio, anche se disattivato. Reimposta gruppo conserva la sincronizzazione cloud e la relativa cartella. Le impostazioni personalizzate che prevalgono sulla sincronizzazione dei salvataggi sono indicate in Salvataggi."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Appliqué avant chaque démarrage de jeu, y compris Désactivé. Réinitialiser le groupe conserve la synchronisation cloud et son dossier. Les réglages personnalisés de synchronisation des sauvegardes sont signalés dans Sauvegardes."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wird vor jedem Spielstart angewendet, auch „Aus“. „Gruppe zurücksetzen“ behält die Cloud-Synchronisierung und ihren Ordner bei. Eigene Überschreibungen der Spielstandsynchronisierung werden unter „Spielstände“ angezeigt."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Se aplica antes de iniciar cada juego, también al desactivarlo. Restablecer el grupo conserva la sincronización en la nube y su carpeta. Las personalizaciones de sincronización de partidas se indican en Partidas guardadas."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aplicado antes de cada jogo iniciar, inclusive Desativado. Redefinir o grupo mantém a sincronização na nuvem e sua pasta. Substituições personalizadas da sincronização são informadas em Dados salvos."
-          }
-        }
-      }
-    },
     "Applies at the next launch.": {
       "comment": "SettingsStartUpSection.swift",
       "localizations": {
@@ -8884,47 +8843,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Solicitando à Microsoft o SDK do .NET %@ mais recente…"
-          }
-        }
-      }
-    },
-    "At %@, %@ of the tested %@, chosen in Settings → Engine.": {
-      "comment": "NewestEngine.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "At %@, %@ of the tested %@, chosen in Settings → Engine."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Al commit %@, %@ rispetto al commit testato %@, scelto in Impostazioni → Motore."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Au commit %@, %@ par rapport au commit testé %@, choisi dans Réglages → Moteur."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stand %@, %@ (getestet: %@), gewählt unter Einstellungen → Engine."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En %@, %@ de la versión probada %@, elegido en Ajustes → Motor."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Em %@, %@ em relação à versão testada %@, escolhido em Ajustes → Engine."
           }
         }
       }
@@ -10036,47 +9954,6 @@
         }
       }
     },
-    "Blocked by the Metal gate. See Settings → Engine.": {
-      "comment": "GameOptionsPresentation.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Blocked by the Metal gate. See Settings → Engine."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bloccato dal controllo Metal. Vedi Impostazioni → Motore."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bloqué par le contrôle Metal. Consultez Réglages → Moteur."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Durch die Metal-Prüfung gesperrt. Siehe Einstellungen → Engine."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bloqueado por el control de Metal. Consulta Ajustes → Motor."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bloqueado pela verificação do Metal. Veja Ajustes → Engine."
-          }
-        }
-      }
-    },
     "Box covers": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
@@ -10852,47 +10729,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Compile mesmo assim; a compilação será registrada como não testada. Gráficos corrompidos são um risco conhecido."
-          }
-        }
-      }
-    },
-    "Build blocked — Settings → Engine": {
-      "comment": "ToolchainGateCopy.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Build blocked — Settings → Engine"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compilazione bloccata — Impostazioni → Motore"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compilation bloquée — Réglages → Moteur"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Build gesperrt — Einstellungen → Engine"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compilación bloqueada — Ajustes → Motor"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compilação bloqueada — Ajustes → Engine"
           }
         }
       }
@@ -12000,47 +11836,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cache alterado"
-          }
-        }
-      }
-    },
-    "Caches, logs, saves and the console.": {
-      "comment": "SettingsSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Caches, logs, saves and the console."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cache, log, salvataggi e console."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Caches, journaux, sauvegardes et console."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Caches, Protokolle, Spielstände und Konsole."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cachés, registros, partidas guardadas y consola."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Caches, logs, dados salvos e console."
           }
         }
       }
@@ -14382,47 +14177,6 @@
         }
       }
     },
-    "Choose a folder with your %@. Existing apps play without these files. Change it later in Settings → Library.": {
-      "comment": "GameFoldersCopy.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose a folder with your %@. Existing apps play without these files. Change it later in Settings → Library."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scegli una cartella con i tuoi %@. Le app esistenti funzionano senza questi file. Puoi cambiarla in seguito in Impostazioni → Libreria."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choisissez un dossier contenant vos %@. Les apps existantes fonctionnent sans ces fichiers. Vous pourrez modifier ce choix dans Réglages → Bibliothèque."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wähle einen Ordner mit deinen %@. Vorhandene Apps lassen sich ohne diese Dateien spielen. Du kannst den Ordner später unter Einstellungen → Bibliothek ändern."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Elige una carpeta con tus %@. Las apps existentes se pueden ejecutar sin estos archivos. Puedes cambiarlo más tarde en Ajustes → Biblioteca."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Escolha uma pasta com seus %@. Apps existentes funcionam sem esses arquivos. Altere depois em Ajustes → Biblioteca."
-          }
-        }
-      }
-    },
     "Choose a game": {
       "comment": "AddGameView+Rows.swift",
       "localizations": {
@@ -15362,47 +15116,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Escolha onde manter os apps dos seus jogos. Pode ser uma pasta vazia."
-          }
-        }
-      }
-    },
-    "Choose where to keep your game apps. Put any existing nxnative games (.app) here. Change it later in Settings → Library.": {
-      "comment": "GameFoldersCopy.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose where to keep your game apps. Put any existing nxnative games (.app) here. Change it later in Settings → Library."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scegli dove conservare le app dei giochi. Inserisci qui eventuali giochi nxnative (.app) esistenti. Puoi cambiarla in seguito in Impostazioni → Libreria."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choisissez où conserver vos apps de jeux. Placez-y vos jeux nxnative existants (.app). Vous pourrez modifier ce choix dans Réglages → Bibliothèque."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wähle, wo deine Spiele-Apps gespeichert werden. Lege hier auch vorhandene nxnative-Spiele (.app) ab. Du kannst den Ordner später unter Einstellungen → Bibliothek ändern."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Elige dónde guardar tus apps de juegos. Coloca aquí tus juegos existentes de nxnative (.app). Puedes cambiarlo más tarde en Ajustes → Biblioteca."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Escolha onde manter os apps dos seus jogos. Coloque aqui os jogos existentes do nxnative (.app). Altere depois em Ajustes → Biblioteca."
           }
         }
       }
@@ -16551,47 +16264,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Não foi possível atualizar a sincronização na nuvem para esta abertura. Verifique Jogos → Dados salvos na nuvem."
-          }
-        }
-      }
-    },
-    "Cloud sync kept": {
-      "comment": "SettingsView.swift:265",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cloud sync kept"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sincronizzazione cloud conservata"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Synchronisation cloud conservée"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cloud-Synchronisierung beibehalten"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sincronización en la nube conservada"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sincronização na nuvem mantida"
           }
         }
       }
@@ -19056,47 +18728,6 @@
         }
       }
     },
-    "Default controller vibration for new Switch games.": {
-      "comment": "SettingsCatalog.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Default controller vibration for new Switch games."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vibrazione predefinita del controller per i nuovi giochi Switch."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vibrations de la manette par défaut pour les nouveaux jeux Switch."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Standard-Controller-Vibration für neue Switch-Spiele."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vibración predeterminada del mando para juegos nuevos de Switch."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vibração padrão do controle para novos jogos de Switch."
-          }
-        }
-      }
-    },
     "Default game inputs. Older builds may differ.": {
       "comment": "ControlsView.swift",
       "localizations": {
@@ -19216,47 +18847,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ordem padrão"
-          }
-        }
-      }
-    },
-    "Default vibration strength for new Switch games.": {
-      "comment": "SettingsCatalog.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Default vibration strength for new Switch games."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intensità predefinita della vibrazione per i nuovi giochi Switch."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intensité des vibrations par défaut pour les nouveaux jeux Switch."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Standard-Vibrationsstärke für neue Switch-Spiele."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intensidad de vibración predeterminada para juegos nuevos de Switch."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intensidade padrão da vibração para novos jogos de Switch."
           }
         }
       }
@@ -22633,47 +22223,6 @@
         }
       }
     },
-    "Engine pin, toolchain gate, keys and setup.": {
-      "comment": "SettingsSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Engine pin, toolchain gate, keys and setup."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Versione fissata del motore, controllo della toolchain, chiavi e configurazione."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version épinglée du moteur, contrôle de la chaîne d’outils, clés et configuration."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Festgelegte Engine-Version, Toolchain-Prüfung, Schlüssel und Einrichtung."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Versión fijada del motor, control de la cadena de herramientas, claves y configuración."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Versão fixada da engine, verificação do conjunto de ferramentas, chaves e configuração."
-          }
-        }
-      }
-    },
     "Engine repository": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
@@ -23325,47 +22874,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Exemplo: %@ · %@ · %@"
-          }
-        }
-      }
-    },
-    "Existing game apps play without sources. Choose later in Settings → Library.": {
-      "comment": "SetupCheck.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Existing game apps play without sources. Choose later in Settings → Library."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le app dei giochi esistenti funzionano senza sorgenti. Puoi scegliere più tardi in Impostazioni → Libreria."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les apps de jeux existantes fonctionnent sans sources. Vous pourrez choisir plus tard dans Réglages → Bibliothèque."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vorhandene Spiele-Apps lassen sich ohne Quellen spielen. Wähle sie später unter Einstellungen → Bibliothek aus."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Las apps de juegos existentes se pueden ejecutar sin sus archivos de origen. Puedes elegirlos más tarde en Ajustes → Biblioteca."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apps de jogos existentes funcionam sem os arquivos de origem. Escolha depois em Ajustes → Biblioteca."
           }
         }
       }
@@ -31283,47 +30791,6 @@
         }
       }
     },
-    "Install the certified compiler from Setup, or allow untested toolchains in Settings → Engine.": {
-      "comment": "PortingFailureReason.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Install the certified compiler from Setup, or allow untested toolchains in Settings → Engine."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Installa il compilatore certificato da Configurazione oppure consenti le toolchain non testate in Impostazioni → Motore."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Installez le compilateur certifié depuis Configuration, ou autorisez les chaînes d’outils non testées dans Réglages → Moteur."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Installiere den zertifizierten Compiler über die Einrichtung oder erlaube ungetestete Toolchains unter Einstellungen → Engine."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Instala el compilador certificado desde Configuración inicial o permite cadenas de herramientas no probadas en Ajustes → Motor."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Instale o compilador certificado em Configuração ou permita conjuntos de ferramentas não testados em Ajustes → Engine."
-          }
-        }
-      }
-    },
     "Install these cheats?": {
       "comment": "CheatCopy.swift",
       "localizations": {
@@ -33538,47 +33005,6 @@
         }
       }
     },
-    "Launch screen, hidden games and defaults for new games.": {
-      "comment": "SettingsSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Launch screen, hidden games and defaults for new games."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schermata di avvio, giochi nascosti e valori predefiniti per i nuovi giochi."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Écran de lancement, jeux masqués et réglages par défaut des nouveaux jeux."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Startbildschirm, ausgeblendete Spiele und Standards für neue Spiele."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pantalla de inicio, juegos ocultos y valores predeterminados para juegos nuevos."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tela de abertura, jogos ocultos e padrões para novos jogos."
-          }
-        }
-      }
-    },
     "Launch the installed Mac app.": {
       "comment": "GameOptionsPresentation.swift",
       "localizations": {
@@ -33944,47 +33370,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Controles da biblioteca"
-          }
-        }
-      }
-    },
-    "Library controls and rumble for new Switch games.": {
-      "comment": "SettingsSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Library controls and rumble for new Switch games."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Comandi della libreria e vibrazione dei nuovi giochi Switch."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Commandes de la bibliothèque et vibrations des nouveaux jeux Switch."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bibliothekssteuerung und Vibration für neue Switch-Spiele."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Controles de la biblioteca y vibración de juegos nuevos de Switch."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Controles da biblioteca e vibração para novos jogos de Switch."
           }
         }
       }
@@ -38540,47 +37925,6 @@
         }
       }
     },
-    "Newer Metal: turn on the override in Settings → Engine": {
-      "comment": "ToolchainGateCopy.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Newer Metal: turn on the override in Settings → Engine"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal più recente: ignora il controllo in Impostazioni → Motore"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal plus récent : activez la dérogation dans Réglages → Moteur"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Neueres Metal: Ausnahme unter Einstellungen → Engine aktivieren"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal más reciente: activa la excepción en Ajustes → Motor"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal mais recente: ative a exceção em Ajustes → Engine"
-          }
-        }
-      }
-    },
     "Newest": {
       "comment": "ModCatalog.swift:62",
       "localizations": {
@@ -42021,47 +41365,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Metal mais antigo · exceção ativada"
-          }
-        }
-      }
-    },
-    "Older Metal: update it, or use the override in Settings → Engine": {
-      "comment": "ToolchainGateCopy.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Older Metal: update it, or use the override in Settings → Engine"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal precedente: aggiornalo oppure ignora il controllo in Impostazioni → Motore"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal plus ancien : mettez-le à jour ou utilisez la dérogation dans Réglages → Moteur"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Älteres Metal: aktualisieren oder Ausnahme unter Einstellungen → Engine verwenden"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal anterior: actualízalo o usa la excepción en Ajustes → Motor"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metal mais antigo: atualize ou use a exceção em Ajustes → Engine"
           }
         }
       }
@@ -52499,88 +51802,6 @@
         }
       }
     },
-    "Settings group: Steam": {
-      "comment": "SettingsSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Steam"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Steam"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Steam"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Steam"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Steam"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Steam"
-          }
-        }
-      }
-    },
-    "Settings group: Switch": {
-      "comment": "SettingsSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Switch"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Switch"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Switch"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Switch"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Switch"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Switch"
-          }
-        }
-      }
-    },
     "Settings group: System": {
       "comment": "SettingsSection.swift",
       "localizations": {
@@ -57132,47 +56353,6 @@
         }
       }
     },
-    "The Game apps folder is unavailable. Reconnect it or choose another in Settings → Library.": {
-      "comment": "GameAppDestination.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The Game apps folder is unavailable. Reconnect it or choose another in Settings → Library."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La cartella App dei giochi non è disponibile. Ricollegala o scegline un’altra in Impostazioni → Libreria."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le dossier Apps de jeux est indisponible. Reconnectez-le ou choisissez-en un autre dans Réglages → Bibliothèque."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Der Spiele-App-Ordner ist nicht verfügbar. Verbinde ihn erneut oder wähle unter Einstellungen → Bibliothek einen anderen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La carpeta Apps de juegos no está disponible. Vuelve a conectarla o elige otra en Ajustes → Biblioteca."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A pasta de Apps de jogos está indisponível. Reconecte ou escolha outra em Ajustes → Biblioteca."
-          }
-        }
-      }
-    },
     "The Mac app’s own icon": {
       "comment": "ChangeArtworkView.swift",
       "localizations": {
@@ -60695,47 +59875,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "O checkout do nxnative não foi encontrado."
-          }
-        }
-      }
-    },
-    "The nxnative checkout was not found. Choose it in Settings → Engine.": {
-      "comment": "NXLibraryError.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The nxnative checkout was not found. Choose it in Settings → Engine."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Il checkout di nxnative non è stato trovato. Selezionalo in Impostazioni → Motore."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La copie de travail de nxnative est introuvable. Choisissez-la dans Réglages → Moteur."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Der nxnative-Checkout wurde nicht gefunden. Wähle ihn unter Einstellungen → Engine aus."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se ha encontrado la copia local de nxnative. Selecciónala en Ajustes → Motor."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O checkout do nxnative não foi encontrado. Selecione-o em Ajustes → Engine."
           }
         }
       }
@@ -64389,47 +63528,6 @@
         }
       }
     },
-    "Turn off Cloud saves in Settings → Games to import or restore.": {
-      "comment": "SavesPanel.swift:204",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Turn off Cloud saves in Settings → Games to import or restore."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Disattiva Salvataggi cloud in Impostazioni → Giochi per importare o ripristinare."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Désactivez Sauvegardes dans le cloud dans Réglages → Jeux pour importer ou restaurer."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Deaktiviere Cloud-Spielstände unter Einstellungen → Spiele, um Spielstände zu importieren oder wiederherzustellen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Desactiva Partidas en la nube en Ajustes → Juegos para importar o restaurar."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Desative Dados salvos na nuvem em Ajustes → Jogos para importar ou restaurar."
-          }
-        }
-      }
-    },
     "Turn off Cloud saves in the game's own settings first.": {
       "comment": "SavesPanel.swift:206",
       "localizations": {
@@ -66353,47 +65451,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Versão, créditos e licenças."
-          }
-        }
-      }
-    },
-    "Vibration in new Switch games": {
-      "comment": "SettingsControllersSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vibration in new Switch games"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vibrazione nei nuovi giochi Switch"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vibrations dans les nouveaux jeux Switch"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vibration in neuen Switch-Spielen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vibración en juegos nuevos de Switch"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vibração em novos jogos de Switch"
           }
         }
       }
@@ -73317,47 +72374,6 @@
         }
       }
     },
-    "API services": {
-      "comment": "General API services page and concise Twitch/IGDB setup instructions. Keep official portal control names in English.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "API services"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Servizi API"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Services API"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "API-Dienste"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Servicios API"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Serviços API"
-          }
-        }
-      }
-    },
     "Optional connections for ratings and game artwork.": {
       "comment": "General API services page and concise Twitch/IGDB setup instructions. Keep official portal control names in English.",
       "localizations": {
@@ -74178,47 +73194,6 @@
         }
       }
     },
-    "IGDB is optional · connect it in Settings → API services.": {
-      "comment": "Change metadata: optional IGDB source preview, status or retry.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB is optional · connect it in Settings → API services."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB è facoltativo · collegalo in Impostazioni → Servizi API."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB est facultatif · connectez-le dans Paramètres → Services API."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB ist optional · unter Einstellungen → API-Dienste verbinden."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB es opcional · conéctalo en Ajustes → Servicios API."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O IGDB é opcional · conecte em Configurações → Serviços API."
-          }
-        }
-      }
-    },
     "Retry IGDB": {
       "comment": "Change metadata: optional IGDB source preview, status or retry.",
       "localizations": {
@@ -74748,6 +73723,1252 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sua escolha"
+          }
+        }
+      }
+    },
+    "At %@, %@ of the tested %@, chosen in Settings → Setup and engine.": {
+      "comment": "NewestEngine.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At %@, %@ of the tested %@, chosen in Settings → Setup and engine."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al commit %@, %@ rispetto al commit testato %@, scelto in Impostazioni → Configurazione e motore."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Au commit %@, %@ par rapport au commit testé %@, choisi dans Réglages → Configuration et moteur."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stand %@, %@ (getestet: %@), gewählt unter Einstellungen → Einrichtung und Engine."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En %@, %@ de la versión probada %@, elegido en Ajustes → Configuración y motor."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Em %@, %@ em relação à versão testada %@, escolhido em Ajustes → Configuração e engine."
+          }
+        }
+      }
+    },
+    "Blocked by the Metal gate. See Settings → Setup and engine.": {
+      "comment": "GameOptionsPresentation.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocked by the Metal gate. See Settings → Setup and engine."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloccato dal controllo Metal. Vedi Impostazioni → Configurazione e motore."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloqué par le contrôle Metal. Consultez Réglages → Configuration et moteur."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durch die Metal-Prüfung gesperrt. Siehe Einstellungen → Einrichtung und Engine."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloqueado por el control de Metal. Consulta Ajustes → Configuración y motor."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloqueado pela verificação do Metal. Veja Ajustes → Configuração e engine."
+          }
+        }
+      }
+    },
+    "Build blocked — Settings → Setup and engine": {
+      "comment": "ToolchainGateCopy.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build blocked — Settings → Setup and engine"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compilazione bloccata — Impostazioni → Configurazione e motore"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compilation bloquée — Réglages → Configuration et moteur"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build gesperrt — Einstellungen → Einrichtung und Engine"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compilación bloqueada — Ajustes → Configuración y motor"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compilação bloqueada — Ajustes → Configuração e engine"
+          }
+        }
+      }
+    },
+    "Install the certified compiler from Setup, or allow untested toolchains in Settings → Setup and engine.": {
+      "comment": "PortingFailureReason.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install the certified compiler from Setup, or allow untested toolchains in Settings → Setup and engine."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installa il compilatore certificato da Configurazione oppure consenti le toolchain non testate in Impostazioni → Configurazione e motore."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installez le compilateur certifié depuis Configuration, ou autorisez les chaînes d’outils non testées dans Réglages → Configuration et moteur."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installiere den zertifizierten Compiler über die Einrichtung oder erlaube ungetestete Toolchains unter Einstellungen → Einrichtung und Engine."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instala el compilador certificado desde Configuración inicial o permite cadenas de herramientas no probadas en Ajustes → Configuración y motor."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instale o compilador certificado em Configuração ou permita conjuntos de ferramentas não testados em Ajustes → Configuração e engine."
+          }
+        }
+      }
+    },
+    "Newer Metal: turn on the override in Settings → Setup and engine": {
+      "comment": "ToolchainGateCopy.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Newer Metal: turn on the override in Settings → Setup and engine"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metal più recente: ignora il controllo in Impostazioni → Configurazione e motore"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metal plus récent : activez la dérogation dans Réglages → Configuration et moteur"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neueres Metal: Ausnahme unter Einstellungen → Einrichtung und Engine aktivieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metal más reciente: activa la excepción en Ajustes → Configuración y motor"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metal mais recente: ative a exceção em Ajustes → Configuração e engine"
+          }
+        }
+      }
+    },
+    "Older Metal: update it, or use the override in Settings → Setup and engine": {
+      "comment": "ToolchainGateCopy.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Older Metal: update it, or use the override in Settings → Setup and engine"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metal precedente: aggiornalo oppure ignora il controllo in Impostazioni → Configurazione e motore"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metal plus ancien : mettez-le à jour ou utilisez la dérogation dans Réglages → Configuration et moteur"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Älteres Metal: aktualisieren oder Ausnahme unter Einstellungen → Einrichtung und Engine verwenden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metal anterior: actualízalo o usa la excepción en Ajustes → Configuración y motor"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metal mais antigo: atualize ou use a exceção em Ajustes → Configuração e engine"
+          }
+        }
+      }
+    },
+    "The nxnative checkout was not found. Choose it in Settings → Setup and engine.": {
+      "comment": "NXLibraryError.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The nxnative checkout was not found. Choose it in Settings → Setup and engine."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il checkout di nxnative non è stato trovato. Selezionalo in Impostazioni → Configurazione e motore."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La copie de travail de nxnative est introuvable. Choisissez-la dans Réglages → Configuration et moteur."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der nxnative-Checkout wurde nicht gefunden. Wähle ihn unter Einstellungen → Einrichtung und Engine aus."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha encontrado la copia local de nxnative. Selecciónala en Ajustes → Configuración y motor."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O checkout do nxnative não foi encontrado. Selecione-o em Ajustes → Configuração e engine."
+          }
+        }
+      }
+    },
+    "Choose a folder with your %@. Existing apps play without these files. Change it later in Settings → Porting → Library.": {
+      "comment": "GameFoldersCopy.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a folder with your %@. Existing apps play without these files. Change it later in Settings → Porting → Library."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli una cartella con i tuoi %@. Le app esistenti funzionano senza questi file. Puoi cambiarla in seguito in Impostazioni → Porting → Libreria."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez un dossier contenant vos %@. Les apps existantes fonctionnent sans ces fichiers. Vous pourrez modifier ce choix dans Réglages → Porting → Bibliothèque."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle einen Ordner mit deinen %@. Vorhandene Apps lassen sich ohne diese Dateien spielen. Du kannst den Ordner später unter Einstellungen → Porting → Bibliothek ändern."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una carpeta con tus %@. Las apps existentes se pueden ejecutar sin estos archivos. Puedes cambiarlo más tarde en Ajustes → Porting → Biblioteca."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolha uma pasta com seus %@. Apps existentes funcionam sem esses arquivos. Altere depois em Ajustes → Porting → Biblioteca."
+          }
+        }
+      }
+    },
+    "Choose where to keep your game apps. Put any existing nxnative games (.app) here. Change it later in Settings → Porting → Library.": {
+      "comment": "GameFoldersCopy.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose where to keep your game apps. Put any existing nxnative games (.app) here. Change it later in Settings → Porting → Library."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli dove conservare le app dei giochi. Inserisci qui eventuali giochi nxnative (.app) esistenti. Puoi cambiarla in seguito in Impostazioni → Porting → Libreria."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez où conserver vos apps de jeux. Placez-y vos jeux nxnative existants (.app). Vous pourrez modifier ce choix dans Réglages → Porting → Bibliothèque."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle, wo deine Spiele-Apps gespeichert werden. Lege hier auch vorhandene nxnative-Spiele (.app) ab. Du kannst den Ordner später unter Einstellungen → Porting → Bibliothek ändern."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige dónde guardar tus apps de juegos. Coloca aquí tus juegos existentes de nxnative (.app). Puedes cambiarlo más tarde en Ajustes → Porting → Biblioteca."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolha onde manter os apps dos seus jogos. Coloque aqui os jogos existentes do nxnative (.app). Altere depois em Ajustes → Porting → Biblioteca."
+          }
+        }
+      }
+    },
+    "Existing game apps play without sources. Choose later in Settings → Porting → Library.": {
+      "comment": "SetupCheck.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Existing game apps play without sources. Choose later in Settings → Porting → Library."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le app dei giochi esistenti funzionano senza sorgenti. Puoi scegliere più tardi in Impostazioni → Porting → Libreria."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les apps de jeux existantes fonctionnent sans sources. Vous pourrez choisir plus tard dans Réglages → Porting → Bibliothèque."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorhandene Spiele-Apps lassen sich ohne Quellen spielen. Wähle sie später unter Einstellungen → Porting → Bibliothek aus."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las apps de juegos existentes se pueden ejecutar sin sus archivos de origen. Puedes elegirlos más tarde en Ajustes → Porting → Biblioteca."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apps de jogos existentes funcionam sem os arquivos de origem. Escolha depois em Ajustes → Porting → Biblioteca."
+          }
+        }
+      }
+    },
+    "The Game apps folder is unavailable. Reconnect it or choose another in Settings → Porting → Library.": {
+      "comment": "GameAppDestination.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Game apps folder is unavailable. Reconnect it or choose another in Settings → Porting → Library."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cartella App dei giochi non è disponibile. Ricollegala o scegline un’altra in Impostazioni → Porting → Libreria."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le dossier Apps de jeux est indisponible. Reconnectez-le ou choisissez-en un autre dans Réglages → Porting → Bibliothèque."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Spiele-App-Ordner ist nicht verfügbar. Verbinde ihn erneut oder wähle unter Einstellungen → Porting → Bibliothek einen anderen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La carpeta Apps de juegos no está disponible. Vuelve a conectarla o elige otra en Ajustes → Porting → Biblioteca."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A pasta de Apps de jogos está indisponível. Reconecte ou escolha outra em Ajustes → Porting → Biblioteca."
+          }
+        }
+      }
+    },
+    "Turn off Cloud saves in Settings → Cloud saves to import or restore.": {
+      "comment": "SavesPanel.swift:204",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off Cloud saves in Settings → Cloud saves to import or restore."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disattiva Salvataggi cloud in Impostazioni → Salvataggi cloud per importare o ripristinare."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactivez Sauvegardes dans le cloud dans Réglages → Sauvegardes dans le cloud pour importer ou restaurer."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deaktiviere Cloud-Spielstände unter Einstellungen → Cloud-Spielstände, um Spielstände zu importieren oder wiederherzustellen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactiva Partidas en la nube en Ajustes → Partidas en la nube para importar o restaurar."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desative Dados salvos na nuvem em Ajustes → Dados salvos na nuvem para importar ou restaurar."
+          }
+        }
+      }
+    },
+    "IGDB is optional · connect it in Settings → Online services.": {
+      "comment": "Change metadata: optional IGDB source preview, status or retry.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB is optional · connect it in Settings → Online services."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB è facoltativo · collegalo in Impostazioni → Servizi online."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB est facultatif · connectez-le dans Paramètres → Services en ligne."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB ist optional · unter Einstellungen → Online-Dienste verbinden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IGDB es opcional · conéctalo en Ajustes → Servicios en línea."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O IGDB é opcional · conecte em Configurações → Serviços online."
+          }
+        }
+      }
+    },
+    "Settings group: Library": {
+      "comment": "SettingsSection.swift",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Library"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Libreria"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bibliothèque"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bibliothek"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biblioteca"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biblioteca"
+          }
+        }
+      }
+    },
+    "Settings group: Porting": {
+      "comment": "SettingsSection.swift",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porting"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porting"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porting"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porting"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porting"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porting"
+          }
+        }
+      }
+    },
+    "Settings section: Sources": {
+      "comment": "SettingsSection.swift",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sources"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fonti"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sources"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quellen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuentes"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fontes"
+          }
+        }
+      }
+    },
+    "Online services": {
+      "comment": "SettingsSection.swift",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online services"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servizi online"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Services en ligne"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online-Dienste"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servicios en línea"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serviços online"
+          }
+        }
+      }
+    },
+    "Setup and engine": {
+      "comment": "SettingsSection.swift",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setup and engine"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configurazione e motore"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuration et moteur"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einrichtung und Engine"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuración y motor"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuração e engine"
+          }
+        }
+      }
+    },
+    "Gamepad, button layout and stick deadzone for the library.": {
+      "comment": "SettingsSection.swift",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gamepad, button layout and stick deadzone for the library."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controller, schema dei tasti e zona morta della levetta per la libreria."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manette, disposition des boutons et zone morte du stick pour la bibliothèque."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controller, Tastenbelegung und Stick-Totzone für die Bibliothek."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mando, distribución de botones y zona muerta del stick para la biblioteca."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controle, layout dos botões e zona morta do analógico para a biblioteca."
+          }
+        }
+      }
+    },
+    "Launch screen, Surprise me, session card and hidden games.": {
+      "comment": "SettingsSection.swift",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Launch screen, Surprise me, session card and hidden games."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schermata di avvio, Sorprendimi, card della sessione e giochi nascosti."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écran de lancement, Surprends-moi, carte de session et jeux masqués."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Startbildschirm, Überrasch mich, Sitzungskarte und ausgeblendete Spiele."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantalla de inicio, Sorpréndeme, tarjeta de sesión y juegos ocultos."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tela de abertura, Surpreenda-me, cartão da sessão e jogos ocultos."
+          }
+        }
+      }
+    },
+    "Storage usage, logs, metadata and artwork caches, save backups.": {
+      "comment": "SettingsSection.swift",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Storage usage, logs, metadata and artwork caches, save backups."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spazio usato, log, cache di metadati e immagini, backup dei salvataggi."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espace utilisé, journaux, caches des métadonnées et des illustrations, sauvegardes de progression."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speichernutzung, Protokolle, Metadaten- und Artwork-Cache, Spielstand-Backups."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uso del almacenamiento, registros, cachés de metadatos e imágenes, copias de partidas."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uso do armazenamento, registros, caches de metadados e imagens, backups dos dados salvos."
+          }
+        }
+      }
+    },
+    "Engine pin, toolchain gate and setup.": {
+      "comment": "SettingsSection.swift",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engine pin, toolchain gate and setup."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versione fissata del motore, controllo degli strumenti e configurazione."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version épinglée du moteur, contrôle des outils et configuration."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fixierte Engine-Version, Toolchain-Prüfung und Einrichtung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versión fijada del motor, control de herramientas y configuración."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versão fixada da engine, verificação das ferramentas e configuração."
+          }
+        }
+      }
+    },
+    "Import, replace or detect prod.keys.": {
+      "comment": "SettingsSection.swift",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import, replace or detect prod.keys."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importa, sostituisci o rileva prod.keys."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importer, remplacer ou détecter prod.keys."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "prod.keys importieren, ersetzen oder erkennen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importa, sustituye o detecta prod.keys."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importe, substitua ou detecte prod.keys."
+          }
+        }
+      }
+    },
+    "Defaults copied into each new ported game.": {
+      "comment": "SettingsSection.swift",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Defaults copied into each new ported game."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valori iniziali copiati in ogni nuovo gioco convertito."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valeurs par défaut copiées dans chaque nouveau jeu porté."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standardwerte, die in jedes neu portierte Spiel übernommen werden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valores predeterminados copiados en cada nuevo juego portado."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Padrões copiados para cada novo jogo portado."
+          }
+        }
+      }
+    },
+    "Save sync for ported games: Off, iCloud Drive or a folder.": {
+      "comment": "SettingsSection.swift",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save sync for ported games: Off, iCloud Drive or a folder."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sincronizzazione dei salvataggi dei giochi convertiti: No, iCloud Drive o una cartella."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronisation des sauvegardes des jeux portés : désactivée, iCloud Drive ou un dossier."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spielstand-Synchronisierung portierter Spiele: Aus, iCloud Drive oder ein Ordner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sincronización de partidas de los juegos portados: desactivada, iCloud Drive o una carpeta."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sincronização dos dados salvos de jogos portados: desativada, iCloud Drive ou uma pasta."
+          }
+        }
+      }
+    },
+    "Build caches for each game and for all games.": {
+      "comment": "SettingsSection.swift",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build caches for each game and for all games."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cache di compilazione di ogni gioco e di tutti i giochi."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caches de compilation de chaque jeu et de tous les jeux."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build-Caches für jedes Spiel und für alle Spiele."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cachés de compilación de cada juego y de todos los juegos."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caches de compilação de cada jogo e de todos os jogos."
+          }
+        }
+      }
+    },
+    "New games: default controller vibration for new ported games.": {
+      "comment": "SettingsCatalog.swift",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New games: default controller vibration for new ported games."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuovi giochi: vibrazione predefinita del controller per i nuovi giochi convertiti."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouveaux jeux : vibration de la manette par défaut pour les nouveaux jeux portés."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Spiele: Standard-Controllervibration für neu portierte Spiele."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Juegos nuevos: vibración predeterminada del mando para los nuevos juegos portados."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Novos jogos: vibração padrão do controle para novos jogos portados."
+          }
+        }
+      }
+    },
+    "New games: default vibration strength for new ported games.": {
+      "comment": "SettingsCatalog.swift",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New games: default vibration strength for new ported games."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuovi giochi: intensità predefinita della vibrazione per i nuovi giochi convertiti."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouveaux jeux : intensité de vibration par défaut pour les nouveaux jeux portés."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Spiele: Standard-Vibrationsstärke für neu portierte Spiele."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Juegos nuevos: intensidad predeterminada de la vibración para los nuevos juegos portados."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Novos jogos: intensidade padrão da vibração para novos jogos portados."
+          }
+        }
+      }
+    },
+    "Vibration in new ported games": {
+      "comment": "SettingsCatalog.swift",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibration in new ported games"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibrazione nei nuovi giochi convertiti"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibration dans les nouveaux jeux portés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibration in neu portierten Spielen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibración en los nuevos juegos portados"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibração em novos jogos portados"
+          }
+        }
+      }
+    },
+    "Applied before each game starts, including Off. Custom save-sync overrides are reported in Saves.": {
+      "comment": "SettingsGamesSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applied before each game starts, including Off. Custom save-sync overrides are reported in Saves."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applicato prima di ogni avvio, anche se disattivato. Le impostazioni personalizzate che prevalgono sulla sincronizzazione dei salvataggi sono indicate in Salvataggi."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appliqué avant chaque démarrage de jeu, y compris Désactivé. Les réglages personnalisés de synchronisation des sauvegardes sont signalés dans Sauvegardes."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird vor jedem Spielstart angewendet, auch „Aus“. Eigene Überschreibungen der Spielstandsynchronisierung werden unter „Spielstände“ angezeigt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se aplica antes de iniciar cada juego, también al desactivarlo. Las personalizaciones de sincronización de partidas se indican en Partidas guardadas."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicado antes de cada jogo iniciar, inclusive Desativado. Substituições personalizadas da sincronização são informadas em Dados salvos."
           }
         }
       }

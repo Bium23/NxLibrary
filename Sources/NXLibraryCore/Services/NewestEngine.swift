@@ -1,6 +1,6 @@
 import Foundation
 
-/// The player's choice to build with nxnative main before NX Library has tested it (Settings → Engine,
+/// The player's choice to build with nxnative main before NX Library has tested it (Settings → Setup and engine,
 /// Newest engine). NX Library never follows main by itself: the choice is explicit, turns the untested-toolchain
 /// override on, and records every build it makes as untested.
 public struct NewestEngineChoice: Codable, Equatable, Sendable {
@@ -30,7 +30,7 @@ public enum NewestEngineReadiness: Equatable, Sendable {
     case unknown
 }
 
-/// A button on Settings → Engine's Newest engine row.
+/// A button on Settings → Setup and engine's Newest engine row.
 public enum NewestEngineAction: Equatable, Sendable {
     case useNewest, update, backToTested
 }
@@ -51,7 +51,7 @@ public enum NewestEngineCopy {
         L10n.count("%lld commits ahead", count, arguments: [])
     }
 
-    /// Settings → Engine, Newest engine row, while the tested engine is in use.
+    /// Settings → Setup and engine, Newest engine row, while the tested engine is in use.
     public static func offer(commit: String, aheadBy: Int) -> String {
         L10n.format("Build with nxnative main (%@, %@) before Arcane has tested it.", [String(describing: (commit.prefix(7))), String(describing: (ahead(aheadBy)))])
     }
@@ -62,10 +62,10 @@ public enum NewestEngineCopy {
 
     /// Setup's engine card while the newest engine is in use (the note is its description).
     public static func setupDetail(choice: NewestEngineChoice, tested: String) -> String {
-        L10n.format("At %@, %@ of the tested %@, chosen in Settings → Engine.", [String(describing: (choice.shortCommit)), String(describing: (ahead(choice.aheadBy))), String(describing: (tested.prefix(7)))])
+        L10n.format("At %@, %@ of the tested %@, chosen in Settings → Setup and engine.", [String(describing: (choice.shortCommit)), String(describing: (ahead(choice.aheadBy))), String(describing: (tested.prefix(7)))])
     }
 
-    /// Settings → Engine, Newest engine row, while main is past the commit in use. `aheadBy` counts from the pin,
+    /// Settings → Setup and engine, Newest engine row, while main is past the commit in use. `aheadBy` counts from the pin,
     /// like the choice's own count; a rewritten main (not further ahead) gets no count.
     public static func update(choice: NewestEngineChoice, main: String, aheadBy: Int) -> String {
         let newer = aheadBy - choice.aheadBy
@@ -155,7 +155,7 @@ public enum NewestEngine {
         return (primary, actions.dropFirst().first)
     }
 
-    /// Tags for Settings → Engine's upstream list (newest first): the commit the newest engine is at is In use,
+    /// Tags for Settings → Setup and engine's upstream list (newest first): the commit the newest engine is at is In use,
     /// those above it New. Nothing on the tested engine, or when the commit in use is not in the list.
     public static func marks(_ commits: [UpstreamCommit], inUse: String?) -> [String: UpstreamCommitMark] {
         guard let inUse, let index = commits.firstIndex(where: { $0.sha == inUse }) else { return [:] }

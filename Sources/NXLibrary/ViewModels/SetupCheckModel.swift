@@ -299,7 +299,7 @@ final class SetupCheckModel: ObservableObject {
         }
     }
 
-    /// The newest engine's card: A returns to the tested engine, the same action as Settings → Engine.
+    /// The newest engine's card: A returns to the tested engine, the same action as Settings → Setup and engine.
     private func backToTestedEngine(_ completion: @escaping (Bool) -> Void) {
         setOverride(.engine, .working("SWITCHING…", detail: L10n.text("Returning to the tested engine…")))
         viewModel.useTestedEngine()

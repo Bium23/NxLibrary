@@ -65,7 +65,7 @@ public struct SetupFacts: Equatable {
     /// The checkout's HEAD is an ancestor of the pin (an NX Library update brought a newer engine); false when it
     /// is ahead or elsewhere; nil when git cannot tell (the pin is not fetched yet, so it is newer).
     public var engineBehind: Bool?
-    /// The newest nxnative the player chose in Settings → Engine; nil while the tested engine is in use.
+    /// The newest nxnative the player chose in Settings → Setup and engine; nil while the tested engine is in use.
     public var newestEngine: NewestEngineChoice? = nil
 
     public init(xcodeStatus: Int32?, metalVersion: String?, certifiedMetal: String, allowUntested: Bool,
@@ -97,7 +97,7 @@ public enum SetupOverride: Equatable {
 }
 
 public enum SetupCheck {
-    /// The technical screen has no folder choices; those belong to Your games and Settings → Library.
+    /// The technical screen has no folder choices; those belong to Your games and Settings → Porting → Library.
     public static func requirements(_ items: [SetupItem]) -> [SetupItem] {
         items.filter { $0.id != .library && $0.id != .sources }
     }
@@ -287,7 +287,7 @@ public enum SetupCheck {
             switch f.sourcesReadable {
             case nil:
                 return SetupItem(id: id, title: GameFoldersCopy.sourcesTitle, state: .ready, chip: "OPTIONAL", about: about,
-                                 detail: L10n.text("Existing game apps play without sources. Choose later in Settings → Library."),
+                                 detail: L10n.text("Existing game apps play without sources. Choose later in Settings → Porting → Library."),
                                  actionTitle: L10n.text("Choose folder"), isRequired: false)
             case false?:
                 return SetupItem(id: id, title: GameFoldersCopy.sourcesTitle, state: .warning, chip: "FOLDER UNAVAILABLE", about: about,

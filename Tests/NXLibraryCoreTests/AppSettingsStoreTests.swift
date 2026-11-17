@@ -234,30 +234,25 @@ private final class RejectSettingsWrite: FileManager, @unchecked Sendable {
 final class SettingsSectionTests: XCTestCase {
     func testAllSectionsArePresent() {
         XCTAssertEqual(SettingsSection.allCases.map(\.title), [
-            "Search", "Changed", "Start-up", "Navigation", "Spotlight", "Sound & music",
-            "Look", "API services", "Controllers", "Library", "Games", "Engine", "Library", "Storage", "About"
+            "Search", "Changed", "Start-up", "Navigation", "Spotlight", "Sound & music", "Look", "Controllers",
+            "Online services", "Sources", "Games", "Storage", "Setup and engine", "Keys", "Library", "New games",
+            "Cloud saves", "Storage", "About", "Console"
         ])
         XCTAssertTrue(SettingsSection.allCases.allSatisfy { !$0.icon.rawValue.isEmpty })
     }
 
-    func testSidebarGroupsKeepSwitchAndSteamApartInScreenOrder() {
-        XCTAssertEqual(SettingsSidebarGroup.all.map(\.title), [nil, "General", "Switch", "Steam", "System"])
-        XCTAssertEqual(SettingsSidebarGroup.all.map { $0.sections.map(\.rawValue) }, [
-            ["search", "changed"],
-            ["startUp", "navigation", "spotlight", "soundMusic", "look", "apiServices", "controllers"],
-            ["library", "games", "engine"],
-            ["sources"],
-            ["storage", "about"],
-        ])
+    func testSidebarGroupsInScreenOrder() {
+        XCTAssertEqual(SettingsSidebarGroup.all.map(\.title), [nil, "General", "Library", "Porting", "System"])
         // The sidebar's Up/Down follows the groups as drawn, and every section is in exactly one group.
         XCTAssertEqual(SettingsSidebarGroup.all.flatMap(\.sections), SettingsSection.allCases)
-        XCTAssertEqual(SettingsSection.sources.group.title, "Steam")
+        XCTAssertEqual(SettingsSection.sources.group.title, "Library")
     }
 
-    func testPlatformSectionsAreNamedWithTheirPlatformWhereSearchListsThem() {
-        XCTAssertEqual(SettingsSection.sources.place, "Steam · Library")
-        XCTAssertEqual(SettingsSection.library.place, "Switch · Library")
-        XCTAssertEqual(SettingsSection.games.place, "Switch · Games")
+    func testPortingSectionsAreNamedWithTheirGroupWhereSearchListsThem() {
+        XCTAssertEqual(SettingsSection.library.place, "Porting · Library")
+        XCTAssertEqual(SettingsSection.games.place, "Porting · New games")
+        XCTAssertEqual(SettingsSection.portingStorage.place, "Porting · Storage")
+        XCTAssertEqual(SettingsSection.sources.place, "Sources")
         XCTAssertEqual(SettingsSection.look.place, "Look")
         XCTAssertEqual(SettingsSection.storage.place, "Storage")
     }

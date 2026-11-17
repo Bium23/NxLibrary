@@ -1,6 +1,6 @@
 import Foundation
 
-/// Where the nxnative checkout is: `~/nxnative`, or the folder the player chose in Settings → Engine while that
+/// Where the nxnative checkout is: `~/nxnative`, or the folder the player chose in Settings → Setup and engine while that
 /// folder exists.
 public enum EngineLocation {
     public static func defaultFolder(home: URL) -> URL { home.appendingPathComponent("nxnative") }

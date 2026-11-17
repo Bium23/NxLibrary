@@ -364,7 +364,7 @@ struct ChangeMetadataView: View {
             if result.issue == .ambiguous { return L10n.text("No unique match for this edition.") }
             if result.issue == .notFound { return L10n.text("No matching game for this platform.") }
         } else if source == .igdb {
-            if !igdb.isConfigured { return L10n.text("IGDB is optional · connect it in Settings → API services.") }
+            if !igdb.isConfigured { return L10n.text("IGDB is optional · connect it in Settings → Online services.") }
             if igdbResult == nil { return L10n.text("Loading…") }
             if igdbResult?.issue == .ambiguous { return L10n.text("No unique match for this edition.") }
             if igdbResult?.issue == .notFound { return L10n.text("No matching game for this platform.") }

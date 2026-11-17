@@ -270,7 +270,7 @@ final class NewestEngineTests: XCTestCase {
         XCTAssertEqual(card.chip, "NEWEST ENGINE")
         XCTAssertEqual(card.actionTitle, "Back to tested")
         XCTAssertEqual(card.about, NewestEngineCopy.note)
-        XCTAssertEqual(card.detail, "At 9c1d2e7, 12 commits ahead of the tested 4a0551e, chosen in Settings → Engine.")
+        XCTAssertEqual(card.detail, "At 9c1d2e7, 12 commits ahead of the tested 4a0551e, chosen in Settings → Setup and engine.")
         XCTAssertEqual(SetupActions.engineAction(for: .checkout(head: main, dirty: false), pinned: pin, newest: main), .none)
     }
 

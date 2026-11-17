@@ -34,7 +34,7 @@ public final class AppViewModel: ObservableObject {
         }
     }
     @Published var settingsNoticeFocus = 0
-    /// A SteamGridDB API key is saved (Settings → API services → SteamGridDB), so Change artwork searches it.
+    /// A SteamGridDB API key is saved (Settings → Online services → SteamGridDB), so Change artwork searches it.
     @Published var hasSteamGridDBKey = SteamGridDBKey().load() != nil
     @Published var isEditingSteamGridDBKey = false
     @Published var isUpdatingApp = false
@@ -365,7 +365,7 @@ public final class AppViewModel: ObservableObject {
             AppData.preferences.set(allowUntestedToolchain, forKey: StorageKeys.allowUntestedToolchain)
         }
     }
-    /// The newest nxnative the player chose in Settings → Engine; nil while the tested engine is in use.
+    /// The newest nxnative the player chose in Settings → Setup and engine; nil while the tested engine is in use.
     @Published public internal(set) var newestEngineChoice: NewestEngineChoice? = nil {
         didSet {
             if let choice = newestEngineChoice, let data = try? JSONEncoder().encode(choice) {

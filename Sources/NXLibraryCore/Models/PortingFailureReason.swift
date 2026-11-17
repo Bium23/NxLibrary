@@ -107,7 +107,7 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
         case .translator: return L10n.text("Open Setup and check the nxnative engine card.")
         case .zbic: return L10n.text("Update Arcane: its built-in Python includes zbic from 0.1.3.2. Installing zbic with pip does not reach it.")
         case .cltSelected: return L10n.text("Open Setup and select Xcode.")
-        case .otherMetal: return L10n.text("Install the certified compiler from Setup, or allow untested toolchains in Settings → Engine.")
+        case .otherMetal: return L10n.text("Install the certified compiler from Setup, or allow untested toolchains in Settings → Setup and engine.")
         case .shaderRegression: return L10n.text("Port anyway to keep the broken shaders out, or wait for an engine update.")
         case .damagedNSP: return isUnreadableDamage
             ? L10n.text("Dump or download the game again.")

@@ -147,7 +147,11 @@ flowchart TD
     C -->|"errore"| X["Dialogo Selene con Retry"]
     C --> D["Pubblicazione: le viste si aggiornano"]
     A --> E["Search e Changed leggono lo stesso catalogo"]
+    F["Reset group (X)"] --> G["SettingsReset.reset: i valori della sezione tornano ai default"]
+    G --> B
 ```
+
+La barra laterale segue `SettingsSidebarGroup`: General, Library, Porting e System. Ogni sezione mostra solo le righe di `SettingsCatalog` che le appartengono.
 
 ## 9. Aggiornare l'app
 

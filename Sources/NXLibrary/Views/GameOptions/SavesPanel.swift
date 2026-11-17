@@ -201,7 +201,7 @@ struct SavesPanel: View {
     }
     private var cloudHelp: (message: String, button: String) {
         switch model.context?.cloudReason {
-        case "Arcane → Settings → Games": return (L10n.text("Turn off Cloud saves in Settings → Games to import or restore."), "Settings")
+        case "Arcane → Settings → Cloud saves": return (L10n.text("Turn off Cloud saves in Settings → Cloud saves to import or restore."), "Settings")
         case "the game's env.txt", "the app's env.txt": return (L10n.text("Turn off cloud sync in this configuration file first."), L10n.text("Show file"))
         case "the game's Cloud saves settings": return (L10n.text("Turn off Cloud saves in the game's own settings first."), "OK")
         default: return (L10n.text("Turn off cloud sync in the launch environment first."), "OK")
@@ -210,9 +210,9 @@ struct SavesPanel: View {
     private func resolveCloud() {
         cloudPrompt = false
         switch model.context?.cloudReason {
-        case "Arcane → Settings → Games":
+        case "Arcane → Settings → Cloud saves":
             viewModel.gameForSettingsSheet = nil
-            viewModel.router?.openSettings(.games)
+            viewModel.router?.openSettings(.cloudSaves)
         case "the game's env.txt":
             if let context = model.context { NSWorkspace.shared.activateFileViewerSelecting([context.location.root.appendingPathComponent("env.txt")]) }
         case "the app's env.txt": NSWorkspace.shared.activateFileViewerSelecting([game.url.appendingPathComponent("Contents/Resources/dm/env.txt")])

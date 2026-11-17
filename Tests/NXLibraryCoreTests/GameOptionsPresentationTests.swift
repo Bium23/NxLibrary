@@ -199,11 +199,11 @@ final class GameOptionsPresentationTests: XCTestCase {
         XCTAssertEqual(presentation(detached: true).rebuildAbout,
                        "Game files are missing or not attached. Attach sources in Edit details.")
         XCTAssertEqual(presentation(blocked: true).rebuildAbout,
-                       "Blocked by the Metal gate. See Settings → Engine.")
+                       "Blocked by the Metal gate. See Settings → Setup and engine.")
         let newer = GameOptionsPresentation(supportsRenderScale: true, isPlayable: true, sourcesDetached: false,
                                             toolchainBlocked: true,
-                                            toolchainHint: "Newer Metal: turn on the override in Settings → Engine")
-        XCTAssertEqual(newer.rebuildAbout, "Newer Metal: turn on the override in Settings → Engine.")
+                                            toolchainHint: "Newer Metal: turn on the override in Settings → Setup and engine")
+        XCTAssertEqual(newer.rebuildAbout, "Newer Metal: turn on the override in Settings → Setup and engine.")
         XCTAssertEqual(presentation(detached: true).attachAbout,
                        "Game files are missing or not attached. Attach them to rebuild.")
         XCTAssertEqual(presentation().attachAbout,

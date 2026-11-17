@@ -90,7 +90,7 @@ The engine-log-fragment test skips when `~/nxnative` is absent. A private CI run
 
 Interactive app and game checks are performed by the user. Agents must not use computer-use or other UI automation. Compilation, unit tests and signature verification cannot establish that the interface or a game works.
 
-Before a game/toolchain combination is described as working, the user checks **Settings → Engine**, builds a real game and launches it to a visible screen. Record the engine and Metal versions and whether the untested override was used.
+Before a game/toolchain combination is described as working, the user checks **Settings → Setup and engine**, builds a real game and launches it to a visible screen. Record the engine and Metal versions and whether the untested override was used.
 
 ## Engine upgrades
 

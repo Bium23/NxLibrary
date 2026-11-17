@@ -211,7 +211,7 @@ public struct GameOptionsPresentation: Equatable {
     /// Says where to fix a dimmed Rebuild: the sources or the Metal gate.
     public var rebuildAbout: String {
         if sourcesDetached { return L10n.text("Game files are missing or not attached. Attach sources in Edit details.") }
-        if toolchainBlocked { return toolchainHint.map { $0 + "." } ?? L10n.text("Blocked by the Metal gate. See Settings → Engine.") }
+        if toolchainBlocked { return toolchainHint.map { $0 + "." } ?? L10n.text("Blocked by the Metal gate. See Settings → Setup and engine.") }
         return L10n.text("Build a new app; the old app stays if the build fails.")
     }
 
