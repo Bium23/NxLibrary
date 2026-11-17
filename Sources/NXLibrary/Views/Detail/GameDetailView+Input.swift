@@ -191,6 +191,9 @@ extension GameDetailView {
     /// Re-reads the mods folder (and the overlay).
     func reloadMods() { modsHost.reload(game, viewModel: viewModel) }
 
+    /// Game options (its Cheats panel), a rebuild or a hand edit in Finder can change it.
+    func reloadCheats() { cheatsOn = viewModel.cheatsOn(for: game) }
+
     /// GameBanana's mods for this game.
     func startGameBanana() { modsHost.startOnline(game, viewModel: viewModel) }
 

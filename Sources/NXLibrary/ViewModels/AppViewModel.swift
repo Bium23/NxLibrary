@@ -157,9 +157,6 @@ public final class AppViewModel: ObservableObject {
     @Published var isWindowSettling = true
     /// A home screen (Spotlight or Collection) has shown since launch: Spotlight's entrance plays only on the first.
     var homeSeen = false
-    /// Spotlight holds its entrance, showing only its moonlight: the welcome and Setup draw their content over that
-    /// moonlight instead of their own, so closing them leaves the same moving moonlight and the entrance follows.
-    @Published var sharesLaunchBackdrop = false
     @Published public var isScanningGameFolder: Bool = false
     @Published public var scanError: String? = nil
     
@@ -948,7 +945,10 @@ public final class AppViewModel: ObservableObject {
         return error.localizedDescription
     }
 
-    func resolvedDeveloperDir() -> URL {
+    func resolvedDeveloperDir() -> URL { Self.resolveDeveloperDir() }
+
+    /// Reads no state of the view model, so it can run off the main thread (it runs `xcode-select`).
+    static func resolveDeveloperDir() -> URL {
         let fm = FileManager.default
         // An explicit DEVELOPER_DIR always wins.
         if let env = ProcessInfo.processInfo.environment["DEVELOPER_DIR"],

@@ -20,7 +20,7 @@
 <p align="center">
   <a href="https://github.com/Bium23/NxLibrary/releases/latest">Download</a> ·
   <a href="#getting-started">Get started</a> ·
-  <a href="#using-nx-library">User guide</a> ·
+  <a href="#using-arcane">User guide</a> ·
   <a href="#troubleshooting">Troubleshooting</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
   <a href="#next-steps">Next steps</a> ·

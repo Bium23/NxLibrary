@@ -42,6 +42,7 @@ Come si aggiorna:
 | Achievement: video Arcane, medaglioni del dettaglio, lucchetto dei segreti, scorrimenti (`GlideGroup`) | in attesa | — |
 | Achievement: intestazione senza 100% (percentuale, barra larga e conteggio sotto i quattro trofei, 44 pt / 4) | in attesa | — |
 | Correzioni della revisione di sviluppo (CHANGELOG "Unreleased": focus della card, nuovi tentativi, piattaforma dei loghi, osservazione delle librerie Steam, lettori protetti) | in attesa | — |
+| Revisione 0.2.0: letture dal disco e residui | in attesa | Pagina di un gioco con cheat: "Cheats on" giusto; spegnerli in Game options → Cheats e tornare: l'etichetta sparisce. Game options: cambiare lingua, rumble e scala, chiudere e riaprire: valori salvati. Setup check aperto: cambiare Xcode con `xcode-select` e vedere la scheda aggiornarsi entro qualche secondo. Un gioco senza icona: dopo la build la tessera mostra la sua icona. Benvenuto e Setup all'avvio: chiuderli lascia lo stesso sfondo in movimento. |
 | Posizione condivisa dei comandi: `SeleneHintsBar` a 32 unità dal fondo | in attesa | La posizione dei Settings (`7adc0ad`) è validata; la via di mezzo a 32 no |
 | Pannello Details uguale per ogni fonte | validato il 16 nov 2026 | — |
 | Voto della critica con Wikidata | validato il 16 nov 2026, abbinamenti compresi | — |

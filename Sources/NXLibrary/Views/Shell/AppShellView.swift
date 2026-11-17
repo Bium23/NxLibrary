@@ -227,7 +227,6 @@ public struct AppShellView: View {
                 ArcaneWelcomeView(steamEnabled: sources.configuration.isEnabled,
                                   steamRoot: sources.discoveryRoot,
                                   appsFolder: viewModel.gameAppsFolder,
-                                  drawsBackdrop: !viewModel.sharesLaunchBackdrop,
                                   onAddSteam: {
                                       sources.configure(enabled: true, root: sources.discoveryRoot)
                                   },

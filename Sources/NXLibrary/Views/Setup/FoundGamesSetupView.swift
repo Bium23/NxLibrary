@@ -36,8 +36,7 @@ struct FoundGamesSetupView: View {
 
     var body: some View {
         ZStack {
-            // At launch, Spotlight's moonlight under it (`AppViewModel.sharesLaunchBackdrop`).
-            if !viewModel.sharesLaunchBackdrop { SeleneBackdrop() }
+            SeleneBackdrop()
             VStack(spacing: 0) {
                 Text(title).seleneFont(46, .semibold).foregroundColor(SeleneTheme.ink)
                     .multilineTextAlignment(.center)

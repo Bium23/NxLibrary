@@ -11,8 +11,6 @@ struct ArcaneWelcomeView: View {
     let steamEnabled: Bool
     let steamRoot: URL
     let appsFolder: URL
-    /// False at launch, over Spotlight's moonlight (`AppViewModel.sharesLaunchBackdrop`).
-    var drawsBackdrop = true
     let onAddSteam: () -> Void
     let onExit: (ArcaneWelcome.Exit) -> Void
 
@@ -36,8 +34,7 @@ struct ArcaneWelcomeView: View {
 
     var body: some View {
         ZStack {
-            // At launch, Spotlight's moonlight under it (`AppViewModel.sharesLaunchBackdrop`).
-            if drawsBackdrop { SeleneBackdrop() }
+            SeleneBackdrop()
             VStack(spacing: 0) {
                 Text(L10n.text("Welcome to Arcane")).seleneFont(46, .semibold).foregroundColor(SeleneTheme.ink)
                     .multilineTextAlignment(.center)

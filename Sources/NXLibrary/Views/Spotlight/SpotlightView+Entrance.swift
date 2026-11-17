@@ -49,7 +49,6 @@ extension SpotlightView {
                                           reduceMotion: reduceMotion, enabled: enabled)
         viewModel.homeSeen = true
         guard due else { return landEntrance() }
-        viewModel.sharesLaunchBackdrop = true
         if !isCovered { uncoverEntrance() }
     }
 
@@ -87,7 +86,6 @@ extension SpotlightView {
     func landEntrance() {
         entranceWait?.cancel()
         removeEntranceMonitor()
-        if viewModel.sharesLaunchBackdrop { viewModel.sharesLaunchBackdrop = false }
         guard entrance != .landed else { return }
         var still = Transaction()
         still.disablesAnimations = true

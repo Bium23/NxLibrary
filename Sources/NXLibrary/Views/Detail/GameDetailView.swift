@@ -36,6 +36,8 @@ struct GameDetailView: View {
     @State var keyMonitor: Any?
     @State var wheel = DetailsWheel()
     @State var cache = DetailsModelCache()
+    /// "Cheats on" under the title, read from the app's files where they can change (`reloadCheats`), never per draw.
+    @State var cheatsOn = false
     /// The Mods band: the game's mods (read when the page appears and when Game options or the app comes back),
     /// GameBanana's, and their panels. Shared with Spotlight's page.
     @StateObject var modsHost = ModsBandHost()
@@ -165,14 +167,18 @@ struct GameDetailView: View {
         }
         .onChange(of: viewer != nil) { router.isScreenshotViewerOpen = $0 }
         .onChange(of: model.bands) { _ in settleFocus(model.bands) }
-        // Game options (its Mods panel) closing, or NX Library coming back from Finder, re-reads the mods.
-        .onChange(of: !viewModel.isGameOptionsOpen) { closed in if closed { reloadMods() } }
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in reloadMods() }
+        // Game options (its Mods or Cheats panel) closing, or Arcane coming back from Finder, re-reads mods and cheats.
+        .onChange(of: !viewModel.isGameOptionsOpen) { closed in if closed { reloadMods(); reloadCheats() } }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            reloadMods()
+            reloadCheats()
+        }
         // The key monitor captures this view's value: reinstall it when the game changes.
         .onChange(of: game) { _ in
             removeKeyMonitor()
             installKeyMonitor()
             reloadMods()
+            reloadCheats()
             startGameBanana()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxDetailGamepadAction)) { note in
@@ -236,7 +242,7 @@ struct GameDetailView: View {
             DetailsTopBlock(game: game, logo: art.logo(for: game),
                             presentation: model.presentation,
                             isRunning: runningGames.isRunning(game),
-                            cheatsOn: viewModel.cheatsOn(for: game),
+                            cheatsOn: cheatsOn,
                             focusedPill: focus.zone == DetailsFocus.topZone ? focus.pill : nil,
                             primaryEnabled: model.primaryEnabled,
                             expanded: $expanded,
@@ -349,6 +355,7 @@ struct GameDetailView: View {
         router.isSearchPresented = false
         viewModel.loadStoreMetadata(for: game)
         reloadMods()
+        reloadCheats()
         startGameBanana()
         focus = DetailsFocus()
         settleFocus(model.bands)

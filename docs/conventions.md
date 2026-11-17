@@ -103,6 +103,7 @@ Esempi: `BoundedDownload`, `GameBananaClient`, `IGDBClient`, `SteamMetadataServi
 ## 8. Lavoro in background e stato
 
 - Il lavoro su file e rete gira fuori dal thread principale; ciò che cambia l'interfaccia si pubblica sul main actor.
+- Un `body` e l'initializer di una vista non leggono file: si ridisegnano a ogni cambio della shell. Ciò che viene dal disco si legge quando la pagina si apre o quando può cambiare (`GameOptionsFiles`, `GameDetailView.reloadCheats`), e un'assenza si ricorda (`GameIconProvider`).
 - Ogni lavoro annullabile porta un'identità (generazione, ticket, UUID del gioco). Il risultato si applica solo se l'identità è ancora quella attuale.
 - Le operazioni su un gioco che si escludono a vicenda (salvataggi, Play, installazioni, aggiornamento dell'app) passano da `SaveOperationGate`.
 - Niente ritardi a tempo, ridisegni forzati o errori nascosti per far "sembrare" che funzioni (AGENTS.md).

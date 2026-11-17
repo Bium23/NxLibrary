@@ -30,9 +30,9 @@ final class SetupCheckModel: ObservableObject {
 
     // MARK: - Checking
 
-    private static func makeProbe(_ viewModel: AppViewModel, runner: CommandRunning) -> SetupProbe {
+    private static func makeProbe(_ viewModel: AppViewModel, runner: CommandRunning, developerDir: URL) -> SetupProbe {
         SetupProbe(runner: runner, toolchain: viewModel.engineToolchain,
-                   developerDir: viewModel.resolvedDeveloperDir(),
+                   developerDir: developerDir,
                    engineFolder: URL(fileURLWithPath: viewModel.nxnativePath),
                    pinnedCommit: viewModel.pinnedEngineCommit,
                    certifiedMetal: viewModel.requiredMetalVersion ?? requirements.fallbackMetal,
@@ -46,12 +46,19 @@ final class SetupCheckModel: ObservableObject {
     func refresh() {
         guard !probing else { return }
         probing = true
-        let probe = Self.makeProbe(viewModel, runner: runner)
+        // Every recheck (4 s) asks xcode-select again, off the main thread; the probe reads the view model on main.
         queue.async { [weak self] in
-            let facts = probe.facts()
+            let developerDir = AppViewModel.resolveDeveloperDir()
             DispatchQueue.main.async {
-                self?.probing = false
-                self?.apply(facts)
+                guard let self else { return }
+                let probe = Self.makeProbe(self.viewModel, runner: self.runner, developerDir: developerDir)
+                self.queue.async { [weak self] in
+                    let facts = probe.facts()
+                    DispatchQueue.main.async {
+                        self?.probing = false
+                        self?.apply(facts)
+                    }
+                }
             }
         }
     }
@@ -98,8 +105,10 @@ final class SetupCheckModel: ObservableObject {
     static func checkAtLaunch(viewModel: AppViewModel) {
         guard viewModel.setupCompleted else { return }
         let enginePath = viewModel.nxnativePath
-        let probe = makeProbe(viewModel, runner: SystemCommandRunner())
         DispatchQueue.global(qos: .utility).async {
+            // xcode-select runs here, not on the main thread at launch; the probe reads the view model on main.
+            let developerDir = AppViewModel.resolveDeveloperDir()
+            let probe = DispatchQueue.main.sync { makeProbe(viewModel, runner: SystemCommandRunner(), developerDir: developerDir) }
             let current = SetupCheck.items(from: probe.facts())
             DispatchQueue.main.async {
                 guard !viewModel.isBuilding, !viewModel.isUpdatingApp,
