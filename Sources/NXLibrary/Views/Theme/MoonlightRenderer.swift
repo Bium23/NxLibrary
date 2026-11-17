@@ -3,6 +3,7 @@ import Metal
 import QuartzCore
 import CoreVideo
 import NXLibraryCore
+import os
 
 /// The shaders' uniforms, seven float4s (see `MoonlightShaders`).
 struct MoonlightUniforms {
@@ -203,6 +204,10 @@ struct MoonlightMetalView: NSViewRepresentable {
 /// layer's drawables are its own and `nextDrawable` raises an exception (two crashes, 14 Nov 2026). A still frame
 /// (the motes stopping, a new size) runs the link for one frame, which then stops (`State.stillPending`).
 final class MoonlightLayerView: NSView {
+    private static let transitionLog = Logger(subsystem: "local.nxlibrary.development", category: "backdrop-transition")
+    private let traceID = String(UUID().uuidString.prefix(6))
+    private let createdAt = CACurrentMediaTime()
+    private var tracedPresentation = false
     private let engine: MoonlightEngine
     private let metalLayer = CAMetalLayer()
     private var link: CVDisplayLink?
@@ -248,6 +253,9 @@ final class MoonlightLayerView: NSView {
         metalLayer.colorspace = CGColorSpace(name: CGColorSpace.sRGB)
         metalLayer.needsDisplayOnBoundsChange = false
         wantsLayer = true
+        if AppData.profile.isDevelopment {
+            Self.transitionLog.notice("Backdrop created \(self.traceID, privacy: .public)")
+        }
     }
 
     required init?(coder: NSCoder) { nil }
@@ -469,7 +477,23 @@ final class MoonlightLayerView: NSView {
         // Both display-link paths announce readiness only when an acquired drawable is presented.
         guard let frame = drawable ?? metalLayer.nextDrawable() else { return }
         Self.announceFirstFrame(frame)
+        traceFirstPresentation(frame)
         engine.render(into: frame, uniforms: uniforms)
+    }
+
+    /// Local Dev diagnostics for a newly mounted background; no per-frame logging.
+    private func traceFirstPresentation(_ drawable: CAMetalDrawable) {
+        guard AppData.profile.isDevelopment else { return }
+        lock.lock()
+        let alreadyTraced = tracedPresentation
+        tracedPresentation = true
+        lock.unlock()
+        guard !alreadyTraced else { return }
+        let id = traceID, start = createdAt
+        drawable.addPresentedHandler { _ in
+            let milliseconds = (CACurrentMediaTime() - start) * 1_000
+            Self.transitionLog.notice("Backdrop presented \(id, privacy: .public), since creation \(milliseconds, privacy: .public) ms")
+        }
     }
 
     /// The first frame any moonlight puts on screen in this launch lets the window show (`LaunchReveal`).

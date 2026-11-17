@@ -72,6 +72,7 @@ final class MoonlightHost {
     static func blended(_ state: State, at now: Double) -> Int { 0 }
     func blending(at now: Double) -> Bool { false }
     func updateLink() {}
+    func traceFirstPresentation(_ drawable: CAMetalDrawable) {}
     func draw(_ drawable: CAMetalDrawable? = nil) { renderFrame(at: 1, drawable: drawable) }
     // ACTUAL_RENDER
     // ACTUAL_READY

@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import NXLibraryCore
+import os
 
 enum SettingsFocusArea { case sidebar, rows }
 
@@ -81,6 +82,12 @@ public struct SettingsView: View {
         }
         .background(SeleneBackdrop().environment(\.seleneBackdropStyle, settingsBackdropStyle))
         .onAppear(perform: installKeyMonitor)
+        .onAppear {
+            if AppData.profile.isDevelopment {
+                Logger(subsystem: "local.nxlibrary.development", category: "backdrop-transition")
+                    .notice("Settings appeared, window settling: \(viewModel.isWindowSettling, privacy: .public)")
+            }
+        }
         .onDisappear(perform: removeKeyMonitor)
         .onDisappear { igdb.isEditing = false }
         .onChange(of: section) { _ in
@@ -108,6 +115,8 @@ public struct SettingsView: View {
                 IGDBCredentialsDialog(model: igdb) { igdb.isEditing = false }
             }
         }
+        .opacity(showingControls ? 0.001 : 1)
+        .allowsHitTesting(!showingControls)
         .overlay {
             if showingControls {
                 ControlsView(canHandleInput: {

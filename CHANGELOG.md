@@ -8,7 +8,10 @@ These changes are implemented in Arcane Dev. Human validation remains pending un
 
 ### Changed
 
-- **Arcane** keeps the original blue moonlight as the default. Optional **Arcane Crystal** draws dark crystal planes and fine light threads bending in slow travelling waves; **Arcane Flow** adds softer curved glass surfaces. Pink and cyan stay local, with very small colour changes over three minutes. Both are rendered live, with soft particles and the shared motion controls; no pictures or video. The existing theme identity and preferences stay compatible.
+- The shell keeps the same background renderer when opening Settings and returning home, preserving its frame and motion clock.
+- Changing the theme updates the shared background and its shades even when the wallpaper and selected card stay the same.
+
+- **Arcane** keeps the original blue moonlight as the default. Optional **Arcane Crystal** and **Arcane Flow** draw fine light threads bending in slow travelling waves, with faint ambient light and no broad beams or glass planes. Pink and cyan stay local, with very small colour changes over three minutes. Both are rendered live, with soft particles and the shared motion controls; no pictures or video. The existing theme identity and preferences stay compatible.
 
 - The app opens on the moving backdrop and brings the first Spotlight library in with growing tiles and a gradual game background. The welcome and Setup share that backdrop during the entrance; fullscreen waits for the window to be drawn. **Entrance animation** replaces the old Intro animation label while keeping its saved value and boot sound. The separate intro and preparation message are removed.
 - Native alerts and file pickers take priority over controller actions as well as the keyboard and menu commands, so actions do not reach the library or an Arcane dialog underneath.

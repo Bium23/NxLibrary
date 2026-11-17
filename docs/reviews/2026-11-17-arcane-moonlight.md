@@ -129,3 +129,45 @@ le prove di colori locali, trasparenza a presenza zero, blend e Mods.
 Fotogrammi sintetici e una sequenza reale di18secondi a30fps sono generati
 fuori schermo, senza finestre o catture; questi dati non verificano la
 fluidità dell’app e la qualità visiva resta da confermare dal maintainer.
+
+## Cambio palette con selezione invariata
+
+La prova dei metodi reali della shell e di ThemeStore riproduce la regressione:
+il valore di SeleneBackdropStyle restava identico quando cambiava soltanto la
+palette. SwiftUI non riceveva un cambiamento dell’ambiente; il successivo
+spostamento della card ridisegnava il contenuto e rileggeva i colori globali.
+Ora lo snapshot comprende la palette e i consumer di sfondo/maschere usano
+quel valore. La prova inizialmente rossa passa per blu → Crystal → Flow → blu
+senza cambiare il wallpaper né la card. Non si ricrea la pagina con un ID.
+
+Su richiesta del maintainer, le alternative conservano solo filamenti e
+luce ambientale molto tenue: rimossi i piani e ridotti i campi diffusi.
+Il percorso classico del default resta invariato. Lo scatto/intervallo nero
+nell’apertura immediata delle impostazioni resta distinto: log locali nella
+sola Dev misurano renderer creato/presentato e apertura pagina, senza dati
+del giocatore. I test d’ingresso verificano i contratti di readiness, non
+la fluidità della finestra.
+
+## Continuità home → Settings
+
+La prova umana conferma lo scatto/nero. I log mostrano windowSettling=false
+e un renderer nuovo ad ogni ingresso/ritorno, con21–57ms al primo drawable
+presentato; la discontinuità non dipende soltanto dal fullscreen iniziale.
+La shell conserva ora la superficie persistente. Le pagine dichiarano i
+parametri tramite SeleneBackdropRequest e mantengono artwork/maschere,
+senza creare un secondo sfondo. Il frame e il clock restano nella stessa
+istanza; una richiesta assente conserva i parametri e mette in pausa.
+
+I controlli headless coprono ordine delle richieste sovrapposte, mantenimento
+del frame, pausa, ritorno agli stessi parametri, cambio palette e Mods.
+Passano anche ingresso, onboarding e routing reali senza finestre. La prova
+finale nella Dev deve confermare continuità visiva e stesso ID del renderer
+attraverso home/Settings; i test di codice non sostituiscono questa verifica.
+
+La revisione rileva che condividere la superficie richiede anche di coprire
+i contenuti dei livelli inferiori. ShellBackdropCover definisce nel Core
+la precedenza Setup2,5 → benvenuto2,4 → scelta tema1: ogni strato inferiore
+resta montato/caldo ma quasi trasparente e senza input; dialoghi superiori
+restano visibili. Controls applica la stessa separazione al contenuto locale
+di Settings. Il blur esistente copre anche lo sfondo persistente. I test
+verificano la precedenza dei tre schermi e i livelli0/0,5/0,8/1/2/2,4/2,5/3/4.

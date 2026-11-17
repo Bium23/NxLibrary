@@ -78,6 +78,39 @@ final class Browser { var state: BrowseState? }
 }
 // ACTUAL_STEPPING
 
+// ACTUAL_BACKDROP_STYLE
+// ACTUAL_BACKDROP_REQUEST
+// ACTUAL_BACKDROP_KEY
+final class BackdropTheme {
+    var palette: SelenePalette
+    let palettes: [SelenePalette]
+    init(_ palettes: [SelenePalette]) { self.palettes=palettes; palette=palettes[0] }
+    func wallpaper(for id: String?) -> Wallpaper? { nil }
+    // ACTUAL_APPLY
+}
+final class BackdropViewModel {
+    var showSetupCheck = false
+    var isGameOptionsOpen = false
+}
+@MainActor final class BackdropHost {
+    let theme: BackdropTheme
+    let settings: AppSettingsStore
+    let viewModel = BackdropViewModel()
+    let router = AppRouter()
+    var showsWelcome = false
+    // ACTUAL_COVER_POLICY
+    // ACTUAL_COVER_PRIORITY
+    // ACTUAL_BLUR_POLICY
+    var covered: Bool { fullScreenCover }
+    var blur: CGFloat { contentBlur }
+    var sharedBackdrop: SeleneBackdropRequest?
+    init(theme: BackdropTheme, settings: AppSettingsStore) { self.theme=theme; self.settings=settings }
+    // ACTUAL_SHARED_UPDATE
+    func accept(_ request: SeleneBackdropRequest?) { updateSharedBackdrop(request) }
+    // ACTUAL_SHELL_STYLE
+    var snapshot: SeleneBackdropStyle { backdropStyle }
+}
+
 @main struct Check {
     @MainActor static func main() throws {
         let scratch = URL(fileURLWithPath: CommandLine.arguments[1])
@@ -89,6 +122,50 @@ final class Browser { var state: BrowseState? }
         precondition(palettes[0].surface == .classic && SelenePalette.fallback.surface == .classic)
         precondition(palettes.first { $0.id == "arcane-crystal" }?.surface == .arcane)
         precondition(palettes.first { $0.id == "arcane-flow" }?.surface == .flow)
+        let backdropTheme = BackdropTheme(palettes)
+        let backdropHost = BackdropHost(theme: backdropTheme, settings: settings)
+        precondition(!backdropHost.covered && backdropHost.blur == 0)
+        backdropHost.showsWelcome = true; precondition(backdropHost.covered)
+        backdropHost.showsWelcome = false
+        backdropHost.viewModel.showSetupCheck = true; precondition(backdropHost.covered)
+        backdropHost.viewModel.showSetupCheck = false
+        backdropHost.router.isMenuPresented = true; precondition(!backdropHost.covered)
+        backdropHost.router.isThemePickerOpen = true; precondition(backdropHost.covered)
+        backdropHost.router.closeMenu(); precondition(!backdropHost.covered)
+        backdropHost.router.openAddGame(); precondition(backdropHost.blur == 10)
+        backdropHost.router.back(); precondition(backdropHost.blur == 0)
+        backdropHost.viewModel.isGameOptionsOpen = true; precondition(backdropHost.blur == 10)
+        backdropHost.viewModel.isGameOptionsOpen = false
+        let originalBackdrop = backdropHost.snapshot
+        let homeRequest = SeleneBackdropRequest(style: originalBackdrop)
+        var stacked: SeleneBackdropRequest? = homeRequest
+        var mods = homeRequest; mods.modsTint = true
+        SeleneBackdropRequestKey.reduce(value: &stacked, nextValue: { mods })
+        SeleneBackdropRequestKey.reduce(value: &stacked, nextValue: { nil })
+        precondition(stacked?.modsTint == true)
+        SeleneBackdropRequestKey.reduce(value: &stacked, nextValue: { homeRequest })
+        precondition(stacked == homeRequest, "the top page replaces the underlying Mods background request")
+        var setupRequest = homeRequest; setupRequest.priority = 2.5
+        var menuRequest = mods; menuRequest.priority = 1
+        SeleneBackdropRequestKey.reduce(value: &stacked, nextValue: { setupRequest })
+        SeleneBackdropRequestKey.reduce(value: &stacked, nextValue: { menuRequest })
+        precondition(stacked == setupRequest, "a lower overlay visited later cannot take Setup's background")
+        backdropHost.accept(homeRequest)
+        backdropHost.accept(nil)
+        precondition(backdropHost.sharedBackdrop?.style == originalBackdrop && backdropHost.sharedBackdrop?.still == true,
+                     "a temporary gap retains the background and pauses its clock")
+        backdropHost.accept(homeRequest)
+        precondition(backdropHost.sharedBackdrop == homeRequest, "same-wallpaper Settings reuses the same request")
+
+        backdropTheme.apply(id: "arcane-crystal")
+        let crystalBackdrop = backdropHost.snapshot
+        precondition(originalBackdrop != crystalBackdrop,
+                     "palette-only changes must update the shared backdrop even with the same wallpaper and selection")
+        backdropTheme.apply(id: "arcane-flow")
+        precondition(backdropHost.snapshot != crystalBackdrop)
+        backdropTheme.apply(id: "selene")
+        precondition(backdropHost.snapshot == originalBackdrop)
+        print("Shared backdrop: palette-only changes propagate without moving the selected card: PASS")
         let host = Host(palettes: palettes, settings: settings)
         host.state.themeIndex = palettes.count - 1
         host.key(.down)
@@ -195,6 +272,25 @@ path = 'Sources/NXLibrary/Views/Theme/ThemePickerView.swift'
 methods = '\n'.join(declaration(path, signature) for signature in (
     '    private func move(', '    private func tap(', '    private func accept('))
 host = host.replace('// ACTUAL_METHODS', methods)
+host = host.replace('// ACTUAL_BACKDROP_STYLE', declaration(
+    'Sources/NXLibrary/Views/Theme/SeleneBackdrop.swift', 'struct SeleneBackdropStyle:'))
+host = host.replace('// ACTUAL_BACKDROP_REQUEST', declaration(
+    'Sources/NXLibrary/Views/Theme/SeleneBackdrop.swift', 'struct SeleneBackdropRequest:'))
+host = host.replace('// ACTUAL_SHARED_UPDATE', declaration(
+    'Sources/NXLibrary/Views/Shell/AppShellView.swift', '    private func updateSharedBackdrop('))
+host = host.replace('// ACTUAL_BACKDROP_KEY', declaration(
+    'Sources/NXLibrary/Views/Theme/SeleneBackdrop.swift', 'struct SeleneBackdropRequestKey:'))
+host = host.replace('// ACTUAL_COVER_POLICY', declaration(
+    'Sources/NXLibrary/Views/Shell/AppShellView.swift', '    private var fullScreenCover:'))
+host = host.replace('// ACTUAL_COVER_PRIORITY', declaration(
+    'Sources/NXLibrary/Views/Shell/AppShellView.swift', '    private var currentBackdropCover:'))
+host = host.replace('// ACTUAL_BLUR_POLICY', declaration(
+    'Sources/NXLibrary/Views/Shell/AppShellView.swift', '    private var contentBlur:'))
+host = host.replace('// ACTUAL_APPLY', declaration(
+    'Sources/NXLibrary/Views/Theme/ThemeStore.swift', '    public func apply('))
+host = host.replace('// ACTUAL_SHELL_STYLE', declaration(
+    'Sources/NXLibrary/Views/Shell/AppShellView.swift', '    private var backdropStyle:'))
+
 host = host.replace('// ACTUAL_STEPPING', declaration(
     'Sources/NXLibrary/Views/Components/SeleneSettingsRow.swift', 'extension CaseIterable where Self: Equatable'))
 

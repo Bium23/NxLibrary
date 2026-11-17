@@ -8,6 +8,8 @@ import NXLibraryCore
 /// crossfading on change, and the left, bottom and top shades at 0.3 scaled by
 /// the Background shade setting. Shared by Spotlight and Collection.
 struct SeleneArtBackground: View {
+    @Environment(\.seleneBackdropStyle) private var style
+    @Environment(\.seleneSharesBackdrop) private var sharesBackdrop
     let image: NSImage?
     /// Changes whenever `image` does; drives the crossfade.
     let imageKey: String
@@ -33,7 +35,7 @@ struct SeleneArtBackground: View {
 
     var body: some View {
         ZStack {
-            SeleneTheme.scrim
+            if !sharesBackdrop { Color(hex: style.palette.scrim) }
             // Under a game's art the moonlight is hidden: it holds still (Selene fades it out there). While the art
             // rises it keeps moving, so nothing shows through still.
             backdrop.still(art != nil && reveal == .shown).modsTint(modsTint)
@@ -49,8 +51,9 @@ struct SeleneArtBackground: View {
 /// The home's left, bottom and top shades at 0.3 scaled by the Background shade
 /// setting, in the palette's scrim colour. The Theme screen's preview takes the same.
 struct SeleneShades: View {
+    @Environment(\.seleneBackdropStyle) private var style
     var shade: BackgroundShade = .balanced
-    var scrim: Color = SeleneTheme.scrim
+    var scrim: Color? = nil
 
     var body: some View {
         let k = 0.3 * shade.scrimMultiplier
@@ -69,7 +72,7 @@ struct SeleneShades: View {
 
     /// A scrim stop: Selene's opacity-mask alpha times the shade's opacity.
     private func stop(_ mask: Double, _ opacity: Double, at location: CGFloat) -> Gradient.Stop {
-        .init(color: scrim.opacity(min(1, mask * opacity)), location: location)
+        .init(color: (scrim ?? Color(hex: style.palette.scrim)).opacity(min(1, mask * opacity)), location: location)
     }
 }
 

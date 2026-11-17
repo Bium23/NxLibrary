@@ -81,13 +81,6 @@ float3 filament(float2 uv, float2 a, float2 b, float bend, float phase,
     return color*gate*strands*glint;
 }
 
-float triangle(float2 p,float2 a,float2 b,float2 c) {
-    float2 v=b-a,w=c-a,q=p-a;
-    float det=v.x*w.y-v.y*w.x;
-    float u=(q.x*w.y-q.y*w.x)/det, t=(v.x*q.y-v.y*q.x)/det;
-    return smoothstep(0.0,0.018,u)*smoothstep(0.0,0.018,t)*(1.0-smoothstep(0.982,1.0,u+t));
-}
-
 float3 arcaneSurface(float2 uv,float time,float flow,float height) {
     float phase=time/ mix(120.0,140.0,flow)*6.2831853;
     float2 left=mix(float2(0.18,0.77),float2(0.12,0.79),flow)
@@ -99,18 +92,13 @@ float3 arcaneSurface(float2 uv,float time,float flow,float height) {
     float3 pink=arcaneColors[0]+drift, cyan=arcaneColors[1]+drift;
     float3 base=mix(mix(float3(0.094,0.09,0.18),float3(0.035,0.055,0.125),uv.y),
                     mix(float3(0.165,0.16,0.30),float3(0.078,0.118,0.208),uv.y),flow);
-    float3 result=base+pink*arcaneGlow(uv,left,float2(0.40,0.48))*mix(0.16,0.22,flow)
-        + cyan*arcaneGlow(uv,right,float2(0.37,0.47))*mix(0.15,0.21,flow)
-        + arcaneColors[2]*arcaneGlow(uv,float2(0.22,0.2),float2(0.6,0.8))*mix(0.06,0.14,flow);
+    float3 result=base+pink*arcaneGlow(uv,left,float2(0.40,0.48))*mix(0.016,0.022,flow)
+        + cyan*arcaneGlow(uv,right,float2(0.37,0.47))*mix(0.015,0.021,flow)
+        + arcaneColors[2]*arcaneGlow(uv,float2(0.22,0.2),float2(0.6,0.8))*mix(0.006,0.014,flow);
     float3 angular = float3(0.0);
-    float3 facets = float3(0.0);
     if (flow < 1.0) {
     float2 junction=float2(0.56+0.007*sin(phase+1.0),0.60+0.015*sin(phase+0.3));
-    float2 bottom=float2(0.58+0.009*cos(phase),0.86+0.008*sin(phase+2.0));
     float2 upper=float2(0.96+0.008*sin(phase),0.26+0.01*cos(phase+1.0));
-    facets=arcaneColors[2]*triangle(uv,left,junction,bottom)*0.055
-        + cyan*triangle(uv,right,junction,upper)*0.075
-        + float3(0.28,0.44,0.71)*triangle(uv,right,junction,float2(0.70,0.80))*0.045;
     angular=filament(uv,left,junction,0.007,phase,time,0.0,pink,height)
         + filament(uv,right,junction,0.007,phase,time,4.0,cyan,height)
         + filament(uv,right,upper,0.004,phase,time,6.0,cyan,height)
@@ -121,15 +109,11 @@ float3 arcaneSurface(float2 uv,float time,float flow,float height) {
     float2 a=float2(-0.06,0.49+0.012*sin(phase)), b=float2(0.72,1.02+0.012*cos(phase));
     float2 c=float2(1.04,0.31+0.013*cos(phase)), d=float2(0.38,0.79+0.009*sin(phase+2.0));
     float bendA=0.045+0.022*sin(phase+0.7),bendB=0.08+0.024*sin(phase+0.5);
-    float yA=filamentY(uv.x,a,b,bendA,phase,1.0), yB=filamentY(uv.x,c,d,bendB,phase,4.0);
-    float glassA=smoothstep(yA,yA+0.035,uv.y)*(1.0-smoothstep(yA+0.12,yA+0.28,uv.y));
-    float glassB=smoothstep(yB,yB+0.025,uv.y)*(1.0-smoothstep(yB+0.07,yB+0.19,uv.y));
     flowing=filament(uv,a,b,bendA,phase,time,1.0,pink,height)
         + filament(uv,c,d,bendB,phase,time,4.0,cyan,height)
-        + filament(uv,float2(-0.02,0.87),float2(0.58,0.94),-0.07+0.016*sin(phase+1.0),phase,time,7.0,pink*0.35,height)
-        + pink*glassA*0.06 + cyan*glassB*0.05;
+        + filament(uv,float2(-0.02,0.87),float2(0.58,0.94),-0.07+0.016*sin(phase+1.0),phase,time,7.0,pink*0.35,height);
     }
-    result+=mix(facets+angular,flowing,flow);
+    result+=mix(angular,flowing,flow);
     float vignette=1.0-0.2*smoothstep(0.4,1.0,length((uv-float2(0.5,0.48))*float2(1.0,0.8)));
     return result*vignette;
 }

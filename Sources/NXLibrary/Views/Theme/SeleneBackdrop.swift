@@ -4,10 +4,34 @@ import NXLibraryCore
 
 /// What the backdrop draws, set once on the shell from settings.
 struct SeleneBackdropStyle: Equatable {
+    var palette: SelenePalette = .fallback
     var wallpaperURL: URL?
     var sizing: BackgroundSizing = .fill
     var animated = true
     var brightness: WallpaperBrightness = .balanced
+}
+
+/// Pages describe the background; the shell keeps the drawing surface alive.
+struct SeleneBackdropRequest: Equatable {
+    var style: SeleneBackdropStyle
+    var baseOpacity = 0.6
+    var still = false
+    var modsTint = false
+    var priority: Double = 0
+}
+
+struct SeleneBackdropRequestKey: PreferenceKey {
+    static let defaultValue: SeleneBackdropRequest? = nil
+    static func reduce(value: inout SeleneBackdropRequest?, nextValue: () -> SeleneBackdropRequest?) {
+        if let next = nextValue() {
+            if let current = value, current.priority > next.priority { return }
+            value = next
+        }
+    }
+}
+
+private struct SeleneSharesBackdropKey: EnvironmentKey {
+    static let defaultValue = false
 }
 
 extension WallpaperBrightness {
@@ -23,6 +47,10 @@ private struct SeleneBackdropStyleKey: EnvironmentKey {
 }
 
 extension EnvironmentValues {
+    var seleneSharesBackdrop: Bool {
+        get { self[SeleneSharesBackdropKey.self] }
+        set { self[SeleneSharesBackdropKey.self] = newValue }
+    }
     var seleneBackdropStyle: SeleneBackdropStyle {
         get { self[SeleneBackdropStyleKey.self] }
         set { self[SeleneBackdropStyleKey.self] = newValue }
@@ -48,6 +76,7 @@ final class WallpaperImageCache {
 /// moonlight, `MoonlightBackdrop`): moving when on and motion is allowed, still otherwise.
 struct SeleneBackdrop: View {
     @Environment(\.seleneBackdropStyle) private var style
+    @Environment(\.seleneSharesBackdrop) private var sharesBackdrop
     @Environment(\.seleneReduceMotion) private var reduceMotion
 
     /// The base gradient's opacity; the wallpaper's follows Wallpaper brightness.
@@ -81,11 +110,26 @@ struct SeleneBackdrop: View {
     }
 
     var body: some View {
+        Group {
+            if sharesBackdrop {
+                Color.clear.preference(key: SeleneBackdropRequestKey.self,
+                                       value: SeleneBackdropRequest(style: style, baseOpacity: baseOpacity,
+                                                                    still: still, modsTint: modsTint))
+            } else {
+                drawing
+            }
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private var drawing: some View {
         let moving = style.animated && !reduceMotion && !still
         let hasWallpaper = style.wallpaperURL != nil
         return ZStack {
-            SeleneTheme.scrim
-            Rectangle().fill(SeleneTheme.baseGradient).opacity(baseOpacity)
+            Color(hex: style.palette.scrim)
+            Rectangle().fill(SeleneTheme.baseGradient(for: style.palette)).opacity(baseOpacity)
             if MoonlightEngine.shared == nil {
                 // Without Metal the tint is a layer of its own; with it the moonlight's shader draws the ground,
                 // in step with its light and off the main thread.
@@ -99,20 +143,21 @@ struct SeleneBackdrop: View {
                 wallpaper(image)
                     .mask(style.brightness.mask)
             } else {
-                MoonlightBackdrop(accent: modsTint ? Self.modsAccent : SeleneTheme.glyph, ink: SeleneTheme.ink,
+                MoonlightBackdrop(accent: modsTint ? Self.modsAccent : Color(hex: style.palette.glyph),
+                                  ink: Color(hex: style.palette.ink),
                                   tint: modsTint ? 1 : 0, moving: moving,
-                                  surface: modsTint ? .classic : SeleneTheme.moonlightSurface)
+                                  surface: modsTint ? .classic : style.palette.surface)
             }
             if hasWallpaper, MoonlightEngine.shared != nil {
                 // Over a wallpaper the Mods card brings its own moonlight. It stays mounted (hidden and idle while
                 // gone) and glides in and out on its render thread, so a quick there-and-back carries on from
                 // where it is, and the motes never start over.
-                MoonlightBackdrop(accent: Self.modsAccent, ink: SeleneTheme.ink, tint: 1,
+                MoonlightBackdrop(accent: Self.modsAccent, ink: Color(hex: style.palette.ink), tint: 1,
                                   presence: modsTint ? 1 : 0, moving: moving)
             } else if modsTint, hasWallpaper {
                 ZStack {
                     modsGround
-                    MoonlightBackdrop(accent: Self.modsAccent, ink: SeleneTheme.ink, tint: 1, moving: moving)
+                    MoonlightBackdrop(accent: Self.modsAccent, ink: Color(hex: style.palette.ink), tint: 1, moving: moving)
                 }
                 .transition(.opacity)
             }
@@ -126,7 +171,7 @@ struct SeleneBackdrop: View {
     /// The Mods card's ground, the base it replaces (its own scrim, so no blue shows through and greys it).
     private var modsGround: some View {
         ZStack {
-            SeleneTheme.scrim
+            Color(hex: style.palette.scrim)
             Rectangle().fill(Self.modsGradient).opacity(baseOpacity)
         }
     }

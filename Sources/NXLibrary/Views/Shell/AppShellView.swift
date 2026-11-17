@@ -27,6 +27,7 @@ public struct AppShellView: View {
     @State private var welcomeDismissed = false
     /// Dismisses the Close Game confirmation when its game quits by itself.
     @State private var closeGameWatch: AnyCancellable?
+    @State private var sharedBackdrop: SeleneBackdropRequest?
 
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
 
@@ -48,10 +49,21 @@ public struct AppShellView: View {
     }
 
     private var backdropStyle: SeleneBackdropStyle {
-        SeleneBackdropStyle(wallpaperURL: theme.wallpaper(for: settings.settings.wallpaperID)?.url,
+        SeleneBackdropStyle(palette: theme.palette,
+                            wallpaperURL: theme.wallpaper(for: settings.settings.wallpaperID)?.url,
                             sizing: settings.settings.backgroundSizing,
                             animated: settings.settings.animatedBackground,
                             brightness: settings.settings.wallpaperBrightness)
+    }
+
+    private func updateSharedBackdrop(_ request: SeleneBackdropRequest?) {
+        if let request {
+            sharedBackdrop = request
+        } else if var last = sharedBackdrop {
+            // No page requests a background: keep its last frame, without a live clock.
+            last.still = true
+            sharedBackdrop = last
+        }
     }
 
     /// Spotlight or Collection: the screens that pick a game.
@@ -133,33 +145,59 @@ public struct AppShellView: View {
         reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.985))
     }
 
+    private var contentBlur: CGFloat {
+        !viewModel.isGameOptionsOpen && !router.route.isOverlay ? 0 : 10
+    }
+
+    private var currentBackdropCover: ShellBackdropCover {
+        .resolve(setup: viewModel.showSetupCheck, welcome: showsWelcome,
+                 themePicker: router.isMenuPresented && router.isThemePickerOpen)
+    }
+
+    private var fullScreenCover: Bool { currentBackdropCover.covers(0) }
+
+    private func opacityBelowCover(_ priority: Double) -> Double {
+        currentBackdropCover.covers(priority) ? 0.001 : 1
+    }
+
     /// The screen plus the overlays that sit on it; split from `body` for the type checker.
     private var layers: some View {
         ZStack {
-            SeleneTheme.scrim.ignoresSafeArea()
+            let background = sharedBackdrop ?? SeleneBackdropRequest(style: backdropStyle, still: true)
+            SeleneBackdrop(baseOpacity: background.baseOpacity, still: background.still, modsTint: background.modsTint)
+                .environment(\.seleneBackdropStyle, background.style)
+                .environment(\.seleneSharesBackdrop, false)
+                .blur(radius: contentBlur)
             content
                 // Game options, Add game and the console blur the screen behind instead of darkening it.
-                .blur(radius: !viewModel.isGameOptionsOpen && !router.route.isOverlay ? 0 : 10)
-                .allowsHitTesting(!router.route.isOverlay && !viewModel.isGameOptionsOpen)
+                .blur(radius: contentBlur)
+                // Keep artwork/tiles drawn and warm, as during Spotlight's entrance, while the full page covers them.
+                .opacity(fullScreenCover ? 0.001 : 1)
+                .allowsHitTesting(!fullScreenCover && !router.route.isOverlay && !viewModel.isGameOptionsOpen)
             if router.route == .addGame {
                 AddGameView(viewModel: viewModel,
                             router: router,
                             artwork: artwork,
                             showsHints: settings.settings.showButtonHints,
                             reviewSelectionID: setupSourceEntryID)
-                    .allowsHitTesting(!viewModel.showSetupCheck)
+                    .opacity(opacityBelowCover(0.8))
+                    .allowsHitTesting(!currentBackdropCover.covers(0.8))
                     .transition(overlayTransition)
                     .zIndex(0.8)
             }
             if router.route == .console {
                 ConsoleView(viewModel: viewModel, router: router,
                             showsHints: settings.settings.showButtonHints)
+                    .opacity(opacityBelowCover(0.8))
+                    .allowsHitTesting(!currentBackdropCover.covers(0.8))
                     .transition(overlayTransition)
                     .zIndex(0.8)
             }
             if router.isSearchPresented && isHomeRoute {
                 FindGameView(router: router, viewModel: viewModel, playSessions: playSessions,
                              artwork: artwork)
+                    .opacity(opacityBelowCover(0.5))
+                    .allowsHitTesting(!currentBackdropCover.covers(0.5))
                     .transition(.opacity)
                     .zIndex(0.5)
             }
@@ -182,7 +220,8 @@ public struct AppShellView: View {
                     }
                 }
                     .transition(.opacity)
-                    .zIndex(2.5)
+                    .zIndex(ShellBackdropCover.setup.priority)
+                    .transformPreference(SeleneBackdropRequestKey.self) { $0?.priority = ShellBackdropCover.setup.priority }
             }
             if showsWelcome {
                 ArcaneWelcomeView(steamEnabled: sources.configuration.isEnabled,
@@ -193,9 +232,12 @@ public struct AppShellView: View {
                                       sources.configure(enabled: true, root: sources.discoveryRoot)
                                   },
                                   onExit: closeWelcome)
+                    .opacity(opacityBelowCover(ShellBackdropCover.welcome.priority))
+                    .allowsHitTesting(!currentBackdropCover.covers(ShellBackdropCover.welcome.priority))
                     .transition(.opacity)
                     // Below Setup: a Setup check that opens after the welcome owns the input, so it is drawn on top.
-                    .zIndex(2.4)
+                    .zIndex(ShellBackdropCover.welcome.priority)
+                    .transformPreference(SeleneBackdropRequestKey.self) { $0?.priority = ShellBackdropCover.welcome.priority }
             }
             if let game = viewModel.gameToClose {
                 closeGameOverlay(game)
@@ -223,19 +265,23 @@ public struct AppShellView: View {
                     .zIndex(4)
             }
             if router.isMenuPresented {
-                if router.isThemePickerOpen {
-                    ThemePickerView(viewModel: viewModel, router: router, settings: settings, games: viewModel.libraryGames)
+                Group {
+                    if router.isThemePickerOpen {
+                        ThemePickerView(viewModel: viewModel, router: router, settings: settings, games: viewModel.libraryGames)
+                            .transition(.opacity)
+                            .transformPreference(SeleneBackdropRequestKey.self) { $0?.priority = ShellBackdropCover.themePicker.priority }
+                    } else {
+                        MenuOverlayView(
+                            router: router,
+                            onSelect: { runMenuAction($0) },
+                            onSelectPower: { runPower($0) }
+                        )
                         .transition(.opacity)
-                        .zIndex(1)
-                } else {
-                    MenuOverlayView(
-                        router: router,
-                        onSelect: { runMenuAction($0) },
-                        onSelectPower: { runPower($0) }
-                    )
-                    .transition(.opacity)
-                    .zIndex(1)
+                    }
                 }
+                .opacity(opacityBelowCover(ShellBackdropCover.themePicker.priority))
+                .allowsHitTesting(!currentBackdropCover.covers(ShellBackdropCover.themePicker.priority))
+                .zIndex(ShellBackdropCover.themePicker.priority)
             }
             if let game = viewModel.gameForSettingsSheet {
                 GameOptionsView(
@@ -253,6 +299,8 @@ public struct AppShellView: View {
                     },
                     opensMods: viewModel.gameOptionsOpensMods
                 )
+                .opacity(opacityBelowCover(2))
+                .allowsHitTesting(!currentBackdropCover.covers(2))
                 .transition(overlayTransition)
                 .zIndex(2)
             }
@@ -267,11 +315,14 @@ public struct AppShellView: View {
                         router.requestSpotlightMove(SpotlightItem.game(game.id).key)
                     }
                 )
+                .opacity(opacityBelowCover(2))
+                .allowsHitTesting(!currentBackdropCover.covers(2))
                 .id(game.id)
                 .transition(overlayTransition)
                 .zIndex(2)
             }
         }
+        .onPreferenceChange(SeleneBackdropRequestKey.self, perform: updateSharedBackdrop)
     }
 
     /// Layers with environment, sheets and lifecycle; split from `body` for the type checker.
@@ -311,6 +362,7 @@ public struct AppShellView: View {
         .animation(reduceMotion ? nil : SeleneTheme.quick, value: showsUpdateOffer)
         .environment(\.seleneReduceMotion, reduceMotion)
         .environment(\.seleneBackdropStyle, backdropStyle)
+        .environment(\.seleneSharesBackdrop, true)
         .environment(\.seleneShowButtonHints, settings.settings.showButtonHints)
         .environment(\.seleneButtonNames, settings.settings.buttonNames)
         .environmentObject(updater)
