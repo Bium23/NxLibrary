@@ -52,8 +52,10 @@ fi
 # Every release is tested from its own tree.
 DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}" swift test --package-path "$ROOT" \
   || fail "swift test failed"
-DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}" python3 "$ROOT/Tests/CatalogAppChecks/run_startup_recovery.py" \
-  || fail "startup recovery regressions failed"
+for check in "$ROOT"/Tests/CatalogAppChecks/run_*.py; do
+  DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}" python3 "$check" \
+    || fail "application regressions failed: ${check##*/}"
+done
 (cd "$ROOT" && python3 -m unittest discover -s Tests/PublicationChecks >/dev/null 2>&1) \
   || fail "the publication checks' tests failed (python3 -m unittest discover -s Tests/PublicationChecks)"
 [ -d "$ROOT/work/Runtime" ] || fail "no work/Runtime: run scripts/bundle_runtime.sh first (a release carries its Python and tools)"

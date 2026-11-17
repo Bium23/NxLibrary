@@ -13,14 +13,15 @@ ROOT = Path(__file__).resolve().parents[2]
 source = (ROOT / 'Sources/NXLibrary/ViewModels/AppViewModel.swift').read_text()
 
 
-def declaration(signature):
-    start = source.index(signature)
-    opening = source.index('{', start)
+def declaration(signature, text=None):
+    text = source if text is None else text
+    start = text.index(signature)
+    opening = text.index('{', start)
     depth, end = 1, opening + 1
     while depth:
-        depth += (source[end] == '{') - (source[end] == '}')
+        depth += (text[end] == '{') - (text[end] == '}')
         end += 1
-    return source[start:end]
+    return text[start:end]
 
 
 initial = declaration('    public init(settingsStore:')
@@ -67,6 +68,7 @@ final class Host {
     var showSetupCheck = false
     var isBuilding = false
     var isCancellingBuild = false
+    let gameAppsFolder = URL(fileURLWithPath: "/synthetic/apps")
     init() {
         // RESTORE
         // STARTUP_REQUESTS
@@ -74,6 +76,7 @@ final class Host {
     func chooseSteamOnFound(_ value: Bool) { firstRunSetup.chooseSteam(value) }
     func choose(_ value: Bool) { firstRunSetup.chooseSteam(value) }
     func openPorting() { firstRunSetup.openPorting() }
+    func openPortingFromFound() { firstRunSetup.openPorting() }
     func finish() { firstRunSetup.finish() }
     func acceptBuild() {
         // ACCEPTED_BUILD
@@ -98,10 +101,31 @@ final class Shell {
         // FINISH
     }
 }
+struct NativeApp { var modalWindow: Int? }
+var NSApp = NativeApp()
+final class SoundEffectService {
+    enum Cue { case click, key, error }
+    static let shared = SoundEffectService()
+    func play(_ cue: Cue) {}
+}
+final class FindingsReader {
+    var cancellations = 0
+    func cancel() { cancellations += 1 }
+    func start(steamRoot: URL, appsFolder: URL) {}
+}
 final class FoundHost {
     let viewModel: Host
     var findings: FirstRunFindings?
     var focus = FirstRunSetup.Focus.steamToggle
+    let reader = FindingsReader()
+    let steamRoot = URL(fileURLWithPath: "/synthetic/Steam")
+    var opened: [(ported: Bool, cancelled: Bool)] = []
+    var steamCount: Int? { findings?.steamGameCount }
+    var steamOn: Bool { viewModel.firstRunSetup.steamChoice ?? true }
+    var portedCount: Int { findings?.portedAppCount ?? 0 }
+    var isReading: Bool { findings == nil }
+    func onOpenLibrary(_ ported: Bool) { opened.append((ported, reader.cancellations > 0)) }
+    // ACTIVATE_FOUND
     var hasSteam: Bool { findings?.steamGameCount != nil || findings?.steamReadFailed == true }
     init(_ viewModel: Host) { self.viewModel = viewModel }
     func move(to next: FirstRunSetup.Focus) { focus = next }
@@ -157,6 +181,25 @@ retry.receive(FirstRunFindings(steamGameCount: nil, portedAppCount: 0))
 require(retry.focus == .openLibrary, "Retry that finds no Steam leaves no invisible focused row")
 retry.receive(FirstRunFindings(steamGameCount: 2, portedAppCount: 0))
 require(retryModel.firstRunSetup.steamChoice == false, "Retry never resets an explicit off choice")
+AppData.preferences.removePersistentDomain(forName: AppData.domain)
+let waitingModel = Host()
+waitingModel.showSetupCheck = true
+let waiting = FoundHost(waitingModel)
+waiting.activate(.openLibrary)
+require(waiting.opened.count == 1 && waiting.opened.first?.ported == false,
+        "A pending read does not block Open library or invent ported results")
+require(waiting.opened.first?.cancelled == true, "Cancel the pending request before leaving the found page")
+require(waitingModel.firstRunSetup.steamChoice == nil, "No unread source is opted in")
+waiting.receive(FirstRunFindings(steamGameCount: 2, portedAppCount: 3))
+waiting.activate(.openLibrary)
+require(waiting.opened.last?.ported == true, "A completed read still imports found apps")
+NSApp.modalWindow = 1
+waiting.activate(.openLibrary)
+require(waiting.opened.count == 2, "A native modal still owns input")
+NSApp.modalWindow = nil
+waitingModel.showSetupCheck = false
+waiting.activate(.openLibrary)
+require(waiting.opened.count == 2, "A departed setup does not finish again")
 NotificationService.shared.requests = 0
 let steamOnly = Host()
 require(NotificationService.shared.requests == 0, "Startup and Steam-only use never request notifications")
@@ -166,6 +209,7 @@ require(NotificationService.shared.requests == 1, "Accepted porting requests not
 if failures > 0 { exit(1) }
 print("Onboarding persistence and notification timing: PASS")
 '''
+host = host.replace('// ACTIVATE_FOUND', declaration('    func activate(', (ROOT / 'Sources/NXLibrary/Views/Setup/FoundGamesSetupView+Input.swift').read_text()))
 host = host.replace('// KEYS', declaration('    private enum StorageKeys'))
 host = host.replace('// SETUP', declaration('    @Published public private(set) var firstRunSetup ='))
 host = host.replace('// FINDINGS_CHANGED', findings_changed)

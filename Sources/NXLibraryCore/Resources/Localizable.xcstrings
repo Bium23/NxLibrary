@@ -8314,6 +8314,46 @@
         }
       }
     },
+    "Arcane reads Steam and your Game apps folder without changing anything. You can open the library now and add sources later in Settings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcane reads Steam and your Game apps folder without changing anything. You can open the library now and add sources later in Settings."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcane legge Steam e la cartella delle app dei giochi senza cambiare nulla. Puoi aprire subito la libreria e aggiungere le fonti dopo, dalle Impostazioni."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcane lit Steam et le dossier des apps de jeux sans rien modifier. Vous pouvez ouvrir la bibliothèque maintenant et ajouter les sources plus tard dans les réglages."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcane liest Steam und den Spiele-App-Ordner, ohne etwas zu ändern. Du kannst die Mediathek jetzt öffnen und Quellen später in den Einstellungen hinzufügen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcane lee Steam y la carpeta de apps de juegos sin cambiar nada. Puedes abrir la biblioteca ahora y añadir las fuentes más tarde en Ajustes."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Arcane lê o Steam e a pasta de apps de jogos sem alterar nada. Você pode abrir a biblioteca agora e adicionar as fontes depois, nos Ajustes."
+          }
+        }
+      }
+    },
     "Arrow keys": {
       "comment": "ControlsView.swift:30",
       "localizations": {
@@ -75580,47 +75620,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Veja o que há no seu Mac"
-          }
-        }
-      }
-    },
-    "Arcane reads Steam and your Game apps folder without changing anything.": {
-      "comment": "FoundGamesSetupView.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arcane reads Steam and your Game apps folder without changing anything."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arcane legge Steam e la cartella delle app dei giochi senza cambiare nulla."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arcane lit Steam et votre dossier d'apps de jeux sans rien modifier."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arcane liest Steam und deinen Spiele-Apps-Ordner, ohne etwas zu ändern."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arcane lee Steam y tu carpeta de apps de juegos sin cambiar nada."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O Arcane lê o Steam e sua pasta de apps de jogos sem alterar nada."
           }
         }
       }

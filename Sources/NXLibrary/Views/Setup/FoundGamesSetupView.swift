@@ -28,7 +28,7 @@ struct FoundGamesSetupView: View {
     }
 
     private var subtitle: String {
-        if isReading { return L10n.text("Arcane reads Steam and your Game apps folder without changing anything.") }
+        if isReading { return L10n.text("Arcane reads Steam and your Game apps folder without changing anything. You can open the library now and add sources later in Settings.") }
         return findings?.isEmpty == true
             ? L10n.text("Steam and ported apps aren't here yet. Add them later from Settings → Sources or with Porting.")
             : L10n.text("Arcane looked without changing anything. Choose what goes in your library.")
@@ -75,7 +75,7 @@ struct FoundGamesSetupView: View {
                 .padding(.top, canvas.u(32))
 
                 SelenePillButton(title: L10n.text("Open library"), minWidth: 220,
-                                 focused: focus == .openLibrary, enabled: !isReading) {
+                                 focused: focus == .openLibrary) {
                     activate(.openLibrary)
                 }
                 .onHover { if $0 { move(to: .openLibrary) } }

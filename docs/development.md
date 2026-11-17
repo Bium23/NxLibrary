@@ -89,9 +89,11 @@ The latest complete Swift verification on 2 November 2026 passed **774 tests**, 
 
 For manual setup checks on an existing account, use **Settings → Start-up → Open Setup**: Continue opens Your games without resetting the library. Check file-picker cancellation, Back, Open library and source review. A fresh account additionally verifies Skip persistence and resuming an interrupted first setup. Interactive checks remain the user's responsibility; agents do not launch the UI.
 
+`release.sh` runs the same `CatalogAppChecks/run_*.py` set after the Swift suite and stops if any check fails. These checks use synthetic inputs without opening windows; the NUP engine-snapshot probe remains optional.
+
 ### Continuous integration
 
-The [Checks workflow](../.github/workflows/ci.yml) runs publication checks and their regressions, Swift tests, Release compilation, development-app packaging and signature verification on the `xcode-27` runner. Pull requests from forks stay off that runner and receive the hosted publication checks instead. The checkout action is pinned, repository permissions are read-only and credentials are not retained by checkout. It does not publish releases or run the UI, games or engine builds.
+The [Checks workflow](../.github/workflows/ci.yml) runs publication checks and their regressions, Swift tests, all `Tests/CatalogAppChecks/run_*.py` headless regressions, Release compilation, development-app packaging and signature verification on the `xcode-27` runner. Pull requests from forks stay off that runner and receive the hosted publication checks instead. The checkout action is pinned, repository permissions are read-only and credentials are not retained by checkout. It does not publish releases or run the UI, games or engine builds.
 
 The engine-log-fragment test skips when `~/nxnative` is absent. A private CI run completed with **703 Swift tests reported: 702 passed and one skipped**, plus five Python checks. It verifies frontend packaging without the bundled game runtime; it does not replace the runtime check or the engine compatibility gate.
 

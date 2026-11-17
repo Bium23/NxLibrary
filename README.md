@@ -78,8 +78,9 @@ The engine is pinned to `8a5c5e7e`: builds no longer need .NET, rendering and sh
 
 | Requirement | Details |
 |---|---|
-| **Mac** | Apple silicon, macOS 13 or later. |
-| **Xcode** | 27.2 or later, with the Metal compiler certified for the pinned engine. |
+| **Arcane library** | Apple silicon, macOS 13 or later. Steam and each game can require a newer macOS version. |
+| **Porting and nxnative game apps** | macOS 26.6 or later for the Mac hosts built by the pinned engine. This is separate from Arcane's own minimum. |
+| **Xcode for porting** | 27.2 or later, with the Metal compiler certified for the pinned engine. Browsing the library and using Steam do not require Xcode. |
 | **Engine** | nxnative at the pinned commit. Setup can prepare the checkout; an existing folder can be chosen in **Settings → Setup and engine**. |
 | **Your files** | Your own supported game sources and keys, with the rights and permissions needed to use them. |
 

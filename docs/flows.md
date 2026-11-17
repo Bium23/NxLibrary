@@ -175,8 +175,9 @@ flowchart TD
     D --> E["SaveOperationGate: esclusione globale"]
     E --> F["Controllo di versione, identità e firma"]
     F --> G["Copia in cartella esclusiva sul volume corrente"]
-    G --> H["Scambio atomico → riavvio allo stesso percorso"]
+    G --> H["Scambio atomico"]
     H --> I["Vecchia app nel Cestino; se fallisce, conservarla nella cartella esclusiva"]
+    I --> J["Riavvio allo stesso percorso"]
 ```
 
 Alla chiusura successiva, una copia release che si chiama ancora `NX Library.app` diventa `Arcane.app` (`AppBundleRename`, chiamato da `AppDelegate.applicationWillTerminate`). Non succede se un riavvio è in programma, perché l'aiuto che riapre l'app usa il percorso attuale.

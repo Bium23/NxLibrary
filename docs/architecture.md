@@ -93,7 +93,7 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
 **Primo avvio.**
 - Il primo avvio apre su `found`: cosa c'è già sul Mac, letto senza cambiare nulla.
   `FirstRunFindings` conta i giochi Steam per Mac installati (`.nativeReady`) e le app portate nella
-  cartella Game apps; `FirstRunFindingsReader` legge in un worker annullabile.
+  cartella Game apps; `FirstRunFindingsReader` legge in un worker annullabile. Open library è utilizzabile anche durante la lettura: annulla la richiesta prima di completare il Setup, senza inventare risultati o attivare fonti non scelte. Le fonti restano aggiungibili dalle Impostazioni; un risultato tardivo è scartato dal requestID.
 - La scoperta usa `CatalogSourcesModel.discoveryRoot`: cartella scelta nella fonte, anche spenta,
   altrimenti quella standard. Una lettura incompleta o fallita mostra Retry senza interruttore;
   non equivale a nessun gioco trovato. Retry ripete la lettura senza attivare la fonte.
@@ -727,7 +727,7 @@ Nel repository, `.build/` contiene gli output SwiftPM, `work/Runtime` il runtime
 **Script di build e release.**
 - `bundle_runtime.sh` prepara Python e strumenti da `runtime.lock`, controlla gli hash e sistema i riferimenti Mach-O con `relink_macho.py`.
 - `build_app.sh` compila e confeziona bundle, risorse, plist e firma ad hoc, poi installa il bundle completo attraverso `BuildOutputInstaller` dopo firma e verifica. Il suo parametro di destinazione permette di preparare una copia temporanea prima di sostituire quella installata.
-- `release.sh` richiede un albero pulito e il runtime pronto, esegue suite Swift e regressioni del coordinatore di recupero senza UI, imposta versione e marker di release e crea ZIP e DMG. `--publish` abilita tag e pubblicazione su GitHub, solo con autorizzazione esplicita dell'utente. `build_dmg.sh` confeziona un bundle già costruito.
+- `release.sh` richiede un albero pulito e il runtime pronto, esegue suite Swift e tutti i controlli `Tests/CatalogAppChecks/run_*.py` senza UI, imposta versione e marker di release e crea ZIP e DMG. `--publish` abilita tag e pubblicazione su GitHub, solo con autorizzazione esplicita dell'utente. `build_dmg.sh` confeziona un bundle già costruito.
 - Il runtime e i contenuti versionati si verificano con `scripts/check_publication.py`.
 
 ## Verifica e manutenzione

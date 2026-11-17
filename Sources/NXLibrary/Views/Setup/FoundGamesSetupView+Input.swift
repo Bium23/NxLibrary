@@ -34,7 +34,8 @@ extension FoundGamesSetupView {
         case .portingCard:
             SoundEffectService.shared.play(.click)
             viewModel.openPortingFromFound()
-        case .openLibrary where !isReading:
+        case .openLibrary:
+            reader.cancel()
             SoundEffectService.shared.play(.click)
             onOpenLibrary(portedCount > 0)
         default:

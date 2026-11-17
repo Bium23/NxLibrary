@@ -19,6 +19,8 @@ These changes are implemented in Arcane Dev. Human validation remains pending un
 
 ### Fixed
 
+- Open library remains available during the initial scan, so an unresponsive folder cannot hold up first launch. Leaving cancels the request; sources can be added later in Settings.
+
 - Updating the app preserves existing copies beside it, including files named `(new)` or `(old)`. Each update uses its own staging directory; a failed Trash operation keeps the previous app.
 - If an older copy changes the legacy library after migration, **Keep Arcane’s library** preserves the current games and sources and archives both versions before continuing. The libraries are not merged.
 
