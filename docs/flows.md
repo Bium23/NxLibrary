@@ -160,3 +160,5 @@ flowchart TD
     D --> E["SaveOperationGate: esclusione globale"]
     E --> F["Controllo di versione, identità e firma → sostituzione → riavvio"]
 ```
+
+Alla chiusura successiva, una copia release che si chiama ancora `NX Library.app` diventa `Arcane.app` (`AppBundleRename`, chiamato da `AppDelegate.applicationWillTerminate`). Non succede se un riavvio è in programma, perché l'aiuto che riapre l'app usa il percorso attuale.

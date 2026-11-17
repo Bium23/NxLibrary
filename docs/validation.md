@@ -12,6 +12,7 @@ Come si aggiorna:
 | Parte | Stato | Prove ancora da fare |
 |---|---|---|
 | Nome Arcane in ciò che si vede (finestra, menu, Settings, About, testi nelle sei lingue; copia Dev `Arcane Dev.app`) | in attesa | Aprire `~/Applications/Arcane Dev.app` e ritrovare libreria e impostazioni della vecchia Dev; nessun "NX Library" visibile nelle sei lingue |
+| Rinomina del file alla chiusura (`NX Library.app` → `Arcane.app`) | in attesa | Con la prova del ponte A → B: dopo l'aggiornamento, chiudere; il file diventa `Arcane.app` e il Dock lo apre. Restart app non rinomina |
 | Catalogo comune nella Dev (`CatalogRepository`, conversione da `library.json`, recupero) | in attesa | Prima apertura della Dev con libreria reale, recupero esplicito |
 | Fonti e libreria mista (Steam + Switch, Manage sources) | in attesa | La scelta iniziale Mac/Switch/entrambi non esiste ancora |
 | Steam: metadati store e arte | in attesa | — |

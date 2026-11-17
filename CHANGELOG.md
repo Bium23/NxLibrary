@@ -9,6 +9,7 @@ These changes are implemented in Arcane Dev. Human validation remains pending un
 ### Changed
 
 - The app is now called **Arcane** in every visible place: window, menus, Settings, About and texts in all six languages. Your library, settings and data stay where they are. The development copy is Arcane Dev.
+- After an update, the app file becomes **Arcane.app** the next time you quit, in the same folder; the Dock keeps opening it. It stays as it is when the folder is read-only or an Arcane.app is already there.
 
 ### Fixed
 

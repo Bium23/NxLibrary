@@ -16,6 +16,10 @@ final class AppShellState {
         ThemeStore.shared.apply(id: settings.settings.colorThemeID)
         let model = AppViewModel(settingsStore: settings, catalog: catalog, repository: repository)
         viewModel = model
+        AppDelegate.isBusy = { [weak model] in
+            guard let model else { return false }
+            return model.isBuilding || model.isUpdatingApp || model.hasActiveSaveOperations
+        }
         sources = CatalogSourcesModel(repository: repository, initialConfiguration: catalog.source(.steam) ?? .init(integration: .steam)) { [weak model] document in
             model?.applyCatalog(document)
         }

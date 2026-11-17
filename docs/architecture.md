@@ -655,6 +655,13 @@ Nel repository, `.build/` contiene gli output SwiftPM, `work/Runtime` il runtime
 - La firma ad hoc protegge il contenuto sigillato ma non identifica da sola il maintainer.
 - Prima dell'installazione l'updater ottiene un'esclusione globale dal `SaveOperationGate`: aspetta che finiscano le operazioni in corso su salvataggi, Play e installazioni e impedisce nuovi ingressi durante sostituzione e riavvio. Un recupero bloccato senza I/O attivo non impedisce l'aggiornamento. Il coordinatore esclude nuovi porting mentre l'app si aggiorna.
 
+**Nome del file alla chiusura.**
+- Lo zip dell'aggiornamento contiene sempre `NXLibrary.app`, perché le copie precedenti leggono quel nome, e l'installazione tiene il nome del file corrente. Il nome Arcane arriva al file alla chiusura.
+- `AppDelegate.applicationWillTerminate` chiede ad `AppBundleRename.target` se rinominare. Lo fa solo una copia release, non traslocata, che si chiama `NX Library.app`, in una cartella scrivibile senza un `Arcane.app` accanto.
+- Non rinomina mentre una build, un aggiornamento o un'operazione sui salvataggi usa ancora il bundle (`AppDelegate.isBusy`, impostato da `AppShellState`), né quando un riavvio è in programma (`AppDelegate.relaunchScheduled`, da Restart app e dall'updater): l'aiuto che riapre l'app usa il percorso attuale.
+- *Perché alla chiusura:* rinominare un bundle in esecuzione lascia `Bundle.main` sul percorso vecchio fino al riavvio. Il Dock segue la rinomina nella stessa cartella ([sonda](reviews/2026-11-17-dock-rename-probe.md)).
+- Un errore va nel log e non ferma la chiusura. La copia Dev non si rinomina mai: la ricostruisce `build_app.sh`.
+
 **Changelog dell'engine.** `UpstreamChecker` consulta il changelog del motore e `UpstreamCopy` lo presenta. L'adozione di un nuovo commit segue la procedura manuale di [AGENTS.md](../AGENTS.md) e delle [note di upgrade](upstream-upgrades/README.md).
 
 **Script di build e release.**

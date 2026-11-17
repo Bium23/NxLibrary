@@ -1136,6 +1136,7 @@ public struct AppShellView: View {
             viewModel.alertMessage = L10n.format("Arcane could not restart: %@", [String(describing: (error.localizedDescription))])
             return
         }
+        AppDelegate.relaunchScheduled = true
         NSApplication.shared.terminate(nil)
     }
 

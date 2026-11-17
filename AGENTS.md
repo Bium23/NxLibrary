@@ -79,7 +79,7 @@ bash scripts/build_app.sh
 codesign --verify --deep --strict "$HOME/Applications/Arcane Dev.app"
 ```
 
-Development builds install as **Arcane Dev** (`~/Applications/Arcane Dev.app`), the maintainer's only test copy. Never build over, replace or test in the released `~/Applications/NX Library.app`; it is the copy installed from GitHub and updates itself.
+Development builds install as **Arcane Dev** (`~/Applications/Arcane Dev.app`), the maintainer's only test copy. Never build over, replace or test in the released copy (`~/Applications/NX Library.app`, which becomes `Arcane.app` when a release that carries the new name quits); it is the copy installed from GitHub and updates itself.
 
 Then verify the gate in **Settings → Engine**, build one real game, and launch it to a visible screen. Do not claim a build or game is working from compilation alone.
 

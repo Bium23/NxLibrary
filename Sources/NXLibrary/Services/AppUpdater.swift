@@ -259,6 +259,7 @@ final class AppUpdater: ObservableObject {
                 switch result {
                 case .success(let placed):
                     if AppUpdate.relaunch(placed) {
+                        AppDelegate.relaunchScheduled = true
                         NSApp.terminate(nil)
                     } else {
                         self.state = .failed("Arcane \(release.version) is installed; open it again to finish.")
