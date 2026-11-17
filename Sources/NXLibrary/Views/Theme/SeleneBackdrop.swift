@@ -101,7 +101,7 @@ struct SeleneBackdrop: View {
             } else {
                 MoonlightBackdrop(accent: modsTint ? Self.modsAccent : SeleneTheme.glyph, ink: SeleneTheme.ink,
                                   tint: modsTint ? 1 : 0, moving: moving,
-                                  iridescent: SeleneTheme.usesArcaneBackground && !modsTint)
+                                  surface: modsTint ? .classic : SeleneTheme.moonlightSurface)
             }
             if hasWallpaper, MoonlightEngine.shared != nil {
                 // Over a wallpaper the Mods card brings its own moonlight. It stays mounted (hidden and idle while
@@ -164,11 +164,11 @@ struct MoonlightBackdrop: View {
     var moving = true
     /// A still image instead of a live layer: for small cards that clip and round it.
     var asImage = false
-    var iridescent = false
+    var surface: MoonlightSurface = .classic
 
     var body: some View {
         let colors = MoonlightColors(accent: accent, ink: ink, tint: tint, presence: presence,
-                                     iridescent: iridescent)
+                                     surface: surface)
         if let engine = MoonlightEngine.shared {
             if asImage {
                 MoonlightStill(engine: engine, colors: colors)
@@ -192,7 +192,7 @@ struct MoonlightBackdrop: View {
         squeezed.translateBy(x: size.width * x, y: size.height * y)
         squeezed.scaleBy(x: size.width * rx / radius, y: 1)
         let light: Color
-        if iridescent {
+        if surface != .classic {
             let rgb = MoonlightChromatics.sample(x: Float(x), y: Float(y), time: MoonlightEngine.stillTime)
             light = Color(.sRGB, red: Double(rgb.x), green: Double(rgb.y), blue: Double(rgb.z), opacity: 1)
         } else { light = accent }

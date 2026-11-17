@@ -64,3 +64,31 @@ prestazioni né garantiscono un frame rate nell’app. Servono a rilevare costi
 evidenti nei soli passaggi aggiunti; fluidità, contrasto e integrazione si
 verificano nella Dev. Lo stato delle prove umane è in
 [validation.md](../validation.md).
+
+## Superfici Arcane e Arcane Flow
+
+Le due superfici usano filamenti analitici e piani generati nello shader.
+Il colore resta locale (rosa a sinistra, ciano a destra), con variazioni
+minime su180s. Nessun asset grafico esterno alimenta il movimento.
+La variante è un metadato facoltativo della palette; la preferenza resta
+`colorThemeID`. Le regole di pausa, Riduci movimento, copertura da artwork
+ed entrata restano quelle del renderer e delle viste condivise.
+
+La suite esegue1792test senza errori. Il controllo Metal confronta colori
+GPU/Core, superfici distinte, fotogrammi identici a tempo fermo, movimento
+a tempi diversi, uniform della variante Flow e oro Mods indipendente.
+I fotogrammi sintetici delle due superfici sono stati ispezionati fuori
+schermo; non sono screenshot dell’app e non provano la fluidità interattiva.
+
+Una sonda a1920×1080 registra il tempo completo di `snapshot`, inclusi
+allocazione, rendering, attesa e lettura CPU:12campioni dopo3di riscaldamento.
+Mediane classico10,68ms, Arcane12,55ms, Flow12,41ms; massimi rispettivamente
+11,86/13,08/13,08ms. Questi valori non sono tempi GPU né frame rate della
+finestra e non sono confrontabili con la tabella GPU precedente. La prova
+umana nella Dev resta necessaria per fluidità, leggibilità e ritmo.
+
+La revisione individua valutazioni inutili: variante nascosta e fascio classico
+anche con superficie Arcane pienamente visibile. I rami uniformi ora evitano
+quei percorsi a regime; durante le dissolvenze restano entrambi. Le misure
+sopra precedono questa correzione e non ne quantificano il beneficio. Il
+controllo finale include anche blend intermedi e trasparenza a presenza zero.

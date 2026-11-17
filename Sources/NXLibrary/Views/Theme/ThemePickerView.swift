@@ -412,7 +412,7 @@ struct ThemePickerView: View {
             case .none:
                 if state.tab == .live {
                     MoonlightBackdrop(accent: SeleneTheme.glyph, ink: SeleneTheme.ink, moving: false, asImage: true,
-                                      iridescent: SeleneTheme.usesArcaneBackground)
+                                      surface: SeleneTheme.moonlightSurface)
                 }
                 tileLabel(state.tab == .live ? L10n.text("Moonlight") : "None")
             case .add:

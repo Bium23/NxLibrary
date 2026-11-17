@@ -1,21 +1,20 @@
 import Foundation
 
-/// Arcane's slow spatial colour field. The Metal shader takes its constants
-/// from here; the static fallback samples the same field without a timer.
+public enum MoonlightSurface: String, Sendable {
+    case classic, arcane, flow
+}
+
+/// Fixed local hues, with only a small drift over three minutes.
 public enum MoonlightChromatics {
-    public static let period: Float = 25
+    public static let period: Float = 180
     public static let intensity: Float = 0.5
-    public static let colors: [SIMD3<Float>] = [
-        SIMD3(92, 174, 255), SIMD3(171, 120, 244), SIMD3(236, 133, 172),
-        SIMD3(253, 203, 150), SIMD3(106, 208, 230)
-    ].map { $0 / 255 }
+    public static let colors: [SIMD3<Float>] = [SIMD3(187,91,179), SIMD3(92,181,228), SIMD3(103,92,165)].map { $0 / 255 }
 
     public static func sample(x: Float, y: Float, time: Float, offset: Float = 0) -> SIMD3<Float> {
-        let phase = time / period + x * 0.19 + y * 0.11 + offset
-        let position = (phase - floor(phase)) * Float(colors.count)
-        let index = min(Int(position), colors.count - 1)
-        let fraction = position - floor(position)
-        let eased = fraction * fraction * (3 - 2 * fraction)
-        return colors[index] + (colors[(index + 1) % colors.count] - colors[index]) * eased
+        let phase = time / period * 2 * Float.pi
+        let pinkWeight = exp(-pow((x - 0.18) / 0.42, 2) - pow((y - 0.77) / 0.5, 2))
+        let cyanWeight = exp(-pow((x - 0.84) / 0.42, 2) - pow((y - 0.43) / 0.5, 2))
+        let drift = SIMD3<Float>(2.5 * sin(phase), 1.8 * sin(phase + 1), 2.6 * sin(phase + 2)) / 255
+        return (colors[0] * pinkWeight + colors[1] * cyanWeight + colors[2] * 0.25) / (pinkWeight + cyanWeight + 0.25) + drift
     }
 }

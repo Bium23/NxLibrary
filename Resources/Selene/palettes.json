@@ -426,7 +426,7 @@
   },
   {
     "id": "rose-pine",
-    "name": "Rosé Pine",
+    "name": "Ros\u00e9 Pine",
     "mode": "light",
     "focus": 5674143,
     "onFocus": 16446701,
@@ -472,7 +472,8 @@
           "location": 1.0
         }
       ]
-    }
+    },
+    "moonlight": "arcane"
   },
   {
     "id": "solitude",
@@ -573,5 +574,31 @@
         }
       ]
     }
+  },
+  {
+    "id": "arcane-flow",
+    "name": "Arcane Flow",
+    "mode": "dark",
+    "focus": 16777215,
+    "onFocus": 1118481,
+    "ink": 16777215,
+    "scrim": 0,
+    "glass": 1316895,
+    "glyph": 10275839,
+    "success": 4054148,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 790819,
+          "location": 0.0
+        },
+        {
+          "color": 395282,
+          "location": 1.0
+        }
+      ]
+    },
+    "moonlight": "flow"
   }
 ]

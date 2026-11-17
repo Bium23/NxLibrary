@@ -109,7 +109,8 @@ final class Browser { var state: BrowseState? }
         }
         guard let engine = MoonlightEngine.shared else { fatalError("Moonlight shaders failed to initialize") }
         let soft = MoonlightColors(accent: .blue, ink: .white)
-        let arcane = MoonlightColors(accent: .blue, ink: .white, iridescent: true)
+        let arcane = MoonlightColors(accent: .blue, ink: .white, surface: .arcane)
+        let flow = MoonlightColors(accent: .blue, ink: .white, surface: .flow)
         let gold = MoonlightColors(accent: .yellow, ink: .white, tint: 1)
         let s = MoonlightEngine.uniforms(width: 640, height: 360, time: 24, breath: 0.75, colors: soft)
         let a = MoonlightEngine.uniforms(width: 640, height: 360, time: 24, breath: 0.75, colors: arcane)
@@ -123,13 +124,24 @@ final class Browser { var state: BrowseState? }
         let fixed = pixels(arcane)
         precondition(fixed == pixels(arcane), "a still frame keeps both motion and colour fixed")
         precondition(fixed != pixels(arcane, 27))
+        let flowPixels = pixels(flow)
+        precondition(flowPixels != fixed && flowPixels != pixels(flow, 44))
+        precondition(flowPixels == pixels(flow))
+        var blended = flow
+        blended.flow = 0.5; blended.arcane = 0.5; blended.tint = 0.5
+        precondition(pixels(blended) != fixed && pixels(blended) != flowPixels)
+        for var hidden in [arcane, flow, blended] {
+            hidden.presence = 0
+            precondition(pixels(hidden).allSatisfy { $0 == 0 }, "covered surfaces and particles must remain transparent")
+        }
+        precondition(MoonlightEngine.uniforms(width: 640, height: 360, time: 24, breath: 0.75, colors: flow).look.z == 1)
         precondition(fixed != pixels(soft), "the colour field reaches soft particles too")
         precondition(pixels(gold) != fixed)
 
         // Exercise the very function the real fragment/vertex entry points call.
         let source = MoonlightShaders.source + """
         kernel void sampleArcane(device float4 *out [[buffer(0)]], uint i [[thread_position_in_grid]]) {
-            out[i] = float4(arcaneSpectrum(float2(float(i) * 0.13, 0.3 + float(i) * 0.05), float(i) * 5.3, 0.0), 1.0);
+            out[i] = float4(arcaneSpectrum(float2(float(i) * 0.13, 0.3 + float(i) * 0.05), float(i) * 35.3, 0.0), 1.0);
         }
         """
         let device = engine.device
@@ -144,10 +156,10 @@ final class Browser { var state: BrowseState? }
         precondition(command.status == .completed)
         let values = buffer.contents().bindMemory(to: SIMD4<Float>.self, capacity: 6)
         for i in 0..<6 {
-            let expected = MoonlightChromatics.sample(x: Float(i) * 0.13, y: 0.3 + Float(i) * 0.05, time: Float(i) * 5.3)
+            let expected = MoonlightChromatics.sample(x: Float(i) * 0.13, y: 0.3 + Float(i) * 0.05, time: Float(i) * 35.3)
             for k in 0..<3 { precondition(abs(values[i][k] - expected[k]) < 0.00002) }
         }
-        print("Actual Metal: spectrum parity, soft particles, fixed frame and distinct Mods uniforms: PASS")
+        print("Actual Metal: local colour parity, distinct moving surfaces, soft particles, fixed frame and distinct Mods uniforms: PASS")
     }
 }
 '''

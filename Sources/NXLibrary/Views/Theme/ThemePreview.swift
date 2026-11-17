@@ -51,7 +51,7 @@ struct ThemePreview: View {
                     MoonlightBackdrop(accent: Color(hex: palette.glyph), ink: Color(hex: palette.ink),
                                       moving: animated && !reduceMotion,
                                       asImage: !animated || reduceMotion,
-                                      iridescent: palette.id == SelenePaletteCatalog.defaultID)
+                                      surface: palette.surface)
                 }
                 SeleneShades(shade: shade, scrim: Color(hex: palette.scrim))
                 home(w: w, h: h)

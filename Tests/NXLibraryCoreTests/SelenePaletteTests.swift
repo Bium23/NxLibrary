@@ -8,9 +8,9 @@ final class SelenePaletteTests: XCTestCase {
             .appendingPathComponent("Resources/Selene/palettes.json")
     }
 
-    func testLoadsAll23Palettes() throws {
+    func testLoadsAll24Palettes() throws {
         let all = try SelenePaletteCatalog.load(from: paletteURL)
-        XCTAssertEqual(all.count, 23)
+        XCTAssertEqual(all.count, 24)
         let ids = Set(all.map(\.id))
         XCTAssertTrue(ids.isSuperset(of: ["selene", "white", "catppuccin-latte"]))
     }
@@ -22,8 +22,8 @@ final class SelenePaletteTests: XCTestCase {
         XCTAssertEqual(SelenePaletteCatalog.defaultID, "selene")
         let rest = ordered.dropFirst().map(\.name)
         XCTAssertEqual(rest, rest.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending })
-        XCTAssertEqual(Array(rest.prefix(3)), ["Catppuccin", "Catppuccin Latte", "Ethereal"])
-        XCTAssertEqual(ordered.count, 23)
+        XCTAssertEqual(Array(rest.prefix(3)), ["Arcane Flow", "Catppuccin", "Catppuccin Latte"])
+        XCTAssertEqual(ordered.count, 24)
     }
 
     func testSelenePaletteValues() throws {
@@ -37,6 +37,16 @@ final class SelenePaletteTests: XCTestCase {
         XCTAssertEqual(p.success, 0x3DDC84)
         XCTAssertEqual(p.base.kind, .radial)
         XCTAssertEqual(p.base.stops, [.init(color: 0x0C1123, location: 0), .init(color: 0x060812, location: 1)])
+    }
+
+    func testBothArcaneSurfacesAreSelectableAndOldPalettesStayClassic() throws {
+        let all = try SelenePaletteCatalog.load(from: paletteURL)
+        XCTAssertEqual(SelenePaletteCatalog.resolve("selene", in: all).surface, .arcane)
+        XCTAssertEqual(SelenePaletteCatalog.resolve("arcane-flow", in: all).surface, .flow)
+        XCTAssertEqual(SelenePaletteCatalog.resolve("white", in: all).surface, .classic)
+        var settings = AppSettings()
+        settings.colorThemeID = "arcane-flow"
+        XCTAssertEqual(try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(settings)).colorThemeID, "arcane-flow")
     }
 
     func testUnknownIdFallsBackToSelene() throws {

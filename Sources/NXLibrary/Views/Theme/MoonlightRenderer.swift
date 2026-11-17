@@ -23,15 +23,17 @@ struct MoonlightColors: Equatable, Hashable {
     var tint: Float = 0
     /// The whole layer's opacity (0...1): the Mods card's moonlight over a wallpaper glides in and out with it.
     var presence: Float = 1
-    var iridescence: Float = 0
+    var arcane: Float = 0
+    var flow: Float = 0
 
     init(accent: Color, ink: Color, tint: Float = 0, presence: Float = 1,
-         iridescent: Bool = false) {
+         surface: MoonlightSurface = .classic) {
         self.accent = Self.rgb(accent)
         self.ink = Self.rgb(ink)
         self.tint = tint
         self.presence = presence
-        self.iridescence = iridescent ? 1 : 0
+        self.arcane = surface == .classic ? 0 : 1
+        self.flow = surface == .flow ? 1 : 0
     }
 
     /// The Mods card's ground (`SeleneBackdrop.modsGradient` at the base's 0.6 over the black scrim).
@@ -106,7 +108,7 @@ final class MoonlightEngine: @unchecked Sendable {
         return MoonlightUniforms(size: SIMD4(w, h, time, w / h),
                                  accent: SIMD4(colors.accent, 1),
                                  ink: SIMD4(colors.ink, 0),
-                                 look: SIMD4(breath, colors.presence, 0, colors.iridescence),
+                                 look: SIMD4(breath, colors.presence, colors.flow, colors.arcane),
                                  tintTop: SIMD4(MoonlightColors.tintTop, colors.tint),
                                  tintMid: SIMD4(MoonlightColors.tintMid, 0),
                                  tintBottom: SIMD4(MoonlightColors.tintBottom, 0))
@@ -365,7 +367,8 @@ final class MoonlightLayerView: NSView {
         c.ink = from.ink + (c.ink - from.ink) * e
         c.tint = from.tint + (c.tint - from.tint) * e
         c.presence = from.presence + (c.presence - from.presence) * e
-        c.iridescence = from.iridescence + (c.iridescence - from.iridescence) * e
+        c.arcane = from.arcane + (c.arcane - from.arcane) * e
+        c.flow = from.flow + (c.flow - from.flow) * e
         return c
     }
 

@@ -35,6 +35,21 @@ final class MoonlightAppearanceTests: XCTestCase {
                           MoonlightChromatics.sample(x: 1, y: 1, time: 0))
     }
 
+    func testLocalColorsStayNearTheirOwnHueOverTheWholeCycle() {
+        let positions: [(Float, Float)] = [(0.18,0.77),(0.84,0.43),(0.5,0.3)]
+        for (x,y) in positions {
+            let initial = MoonlightChromatics.sample(x: x, y: y, time: 0)
+            for t in stride(from: Float(0), to: 180, by: 5) {
+                let value = MoonlightChromatics.sample(x: x, y: y, time: t)
+                for k in 0..<3 { XCTAssertLessThan(abs(value[k]-initial[k]), 0.025) }
+            }
+        }
+        let pink = MoonlightChromatics.sample(x: 0.18, y: 0.77, time: 0)
+        let cyan = MoonlightChromatics.sample(x: 0.84, y: 0.43, time: 0)
+        XCTAssertGreaterThan(pink.x, cyan.x)
+        XCTAssertGreaterThan(cyan.y, pink.y)
+    }
+
     func testThemeGridStopsAtItsEdgesBeforeTheBackgroundStep() {
         var state = ThemePickerState(themeIndex: 11, backgroundIndex: 0)
         XCTAssertFalse(state.move(.down, count: 12))

@@ -21,7 +21,7 @@ struct Uniforms {
     float4 size;    // width px, height px, time s, aspect
     float4 accent;  // rgb, overall strength
     float4 ink;     // rgb, unused
-    float4 look;    // breath, presence, reserved, Arcane iridescence (0...1)
+    float4 look;    // breath, presence, Flow blend, Arcane surface blend
     float4 tintTop;     // the Mods card's ground: top rgb, amount 0...1
     float4 tintMid;     // rgb at 0.45 of the height
     float4 tintBottom;  // rgb at the bottom
@@ -29,15 +29,99 @@ struct Uniforms {
 
 struct Particle { float start, lane, depth, speed, size, phase, kind, tint; };
 
-constant float3 arcaneColors[5] = { \#(spectrum) };
+constant float3 arcaneColors[3] = { \#(spectrum) };
 constant float arcanePeriod = \#(MoonlightChromatics.period);
 constant float arcaneIntensity = \#(MoonlightChromatics.intensity);
 
 float3 arcaneSpectrum(float2 uv, float time, float offset) {
-    float position = fract(time / arcanePeriod + uv.x * 0.19 + uv.y * 0.11 + offset) * 5.0;
-    int index = min(int(floor(position)), 4);
-    float f = fract(position);
-    return mix(arcaneColors[index], arcaneColors[(index + 1) % 5], f * f * (3.0 - 2.0 * f));
+    float phase = time / arcanePeriod * 6.2831853;
+    float2 p = (uv - float2(0.18,0.77)) / float2(0.42,0.5);
+    float2 c = (uv - float2(0.84,0.43)) / float2(0.42,0.5);
+    float pw = exp(-dot(p,p)), cw = exp(-dot(c,c));
+    float3 drift = float3(2.5*sin(phase),1.8*sin(phase+1.0),2.6*sin(phase+2.0))/255.0;
+    return (arcaneColors[0]*pw + arcaneColors[1]*cw + arcaneColors[2]*0.25)/(pw+cw+0.25)+drift;
+}
+
+// Analytic moving surfaces, evaluated in the existing light pass. No texture,
+// geometry upload, extra timer, or sampling loop per pixel.
+float arcaneGlow(float2 uv, float2 centre, float2 radius) {
+    float2 d=(uv-centre)/radius;
+    return exp(-dot(d,d)*2.5);
+}
+
+float filamentY(float x, float2 a, float2 b, float bend, float phase, float seed) {
+    float s=clamp((x-a.x)/(b.x-a.x),0.0,1.0);
+    return mix(a.y,b.y,s) + sin(s*3.1415927)*(bend+0.009*sin(s*5.4-phase+seed));
+}
+
+float3 filament(float2 uv, float2 a, float2 b, float bend, float phase,
+                float time, float seed, float3 color, float height) {
+    float s=(uv.x-a.x)/(b.x-a.x);
+    float gate=smoothstep(0.0,0.025,s)*(1.0-smoothstep(0.975,1.0,s));
+    float y=filamentY(uv.x,a,b,bend,phase,seed);
+    float distance=uv.y-y;
+    float aa=max(0.6/height,fwidth(distance));
+    float edge=exp(-distance*distance/0.00009)*0.045
+        + exp(-distance*distance/0.000006)*0.12
+        + (1.0-smoothstep(aa,aa*2.0,abs(distance)))*0.36;
+    float fan=sin(clamp(s,0.0,1.0)*3.1415927)*0.007;
+    float sides=exp(-pow((distance-fan)/max(aa,0.0004),2.0))
+        + exp(-pow((distance+fan)/max(aa,0.0004),2.0));
+    float pulse=pow(0.5+0.5*cos(6.2831853*(s*0.7-time/(100.0+seed*3.0)-seed*0.137)),7.0);
+    return color*gate*(edge*(0.92+0.08*sin(phase+seed)) + sides*0.035 + pulse*edge*0.55);
+}
+
+float triangle(float2 p,float2 a,float2 b,float2 c) {
+    float2 v=b-a,w=c-a,q=p-a;
+    float det=v.x*w.y-v.y*w.x;
+    float u=(q.x*w.y-q.y*w.x)/det, t=(v.x*q.y-v.y*q.x)/det;
+    return step(0.0,u)*step(0.0,t)*step(u+t,1.0);
+}
+
+float3 arcaneSurface(float2 uv,float time,float flow,float height) {
+    float phase=time/ mix(120.0,140.0,flow)*6.2831853;
+    float2 left=mix(float2(0.18,0.77),float2(0.12,0.79),flow)
+        + float2(0.006*sin(phase),0.009*cos(phase));
+    float2 right=mix(float2(0.84,0.43),float2(0.93,0.56),flow)
+        + float2(0.007*sin(phase+2.0),0.012*cos(phase+2.0));
+    float cp=time/arcanePeriod*6.2831853;
+    float3 drift=float3(2.5*sin(cp),1.8*sin(cp+1.0),2.6*sin(cp+2.0))/255.0;
+    float3 pink=arcaneColors[0]+drift, cyan=arcaneColors[1]+drift;
+    float3 base=mix(mix(float3(0.094,0.09,0.18),float3(0.035,0.055,0.125),uv.y),
+                    mix(float3(0.165,0.16,0.30),float3(0.078,0.118,0.208),uv.y),flow);
+    float3 result=base+pink*arcaneGlow(uv,left,float2(0.40,0.48))*mix(0.16,0.22,flow)
+        + cyan*arcaneGlow(uv,right,float2(0.37,0.47))*mix(0.15,0.21,flow)
+        + arcaneColors[2]*arcaneGlow(uv,float2(0.22,0.2),float2(0.6,0.8))*mix(0.06,0.14,flow);
+    float3 angular = float3(0.0);
+    float3 facets = float3(0.0);
+    if (flow < 1.0) {
+    float2 junction=float2(0.56+0.007*sin(phase+1.0),0.60+0.015*sin(phase+0.3));
+    float2 bottom=float2(0.58+0.009*cos(phase),0.86+0.008*sin(phase+2.0));
+    float2 upper=float2(0.96+0.008*sin(phase),0.26+0.01*cos(phase+1.0));
+    facets=arcaneColors[2]*triangle(uv,left,junction,bottom)*0.055
+        + cyan*triangle(uv,right,junction,upper)*0.075
+        + float3(0.28,0.44,0.71)*triangle(uv,right,junction,float2(0.70,0.80))*0.045;
+    angular=filament(uv,left,junction,0.007,phase,time,0.0,pink,height)
+        + filament(uv,right,junction,0.007,phase,time,4.0,cyan,height)
+        + filament(uv,right,upper,0.004,phase,time,6.0,cyan,height)
+        + filament(uv,left,float2(0.32,0.49),0.003,phase,time,2.0,pink*0.3,height);
+    }
+    float3 flowing = float3(0.0);
+    if (flow > 0.0) {
+    float2 a=float2(-0.06,0.49+0.012*sin(phase)), b=float2(0.72,1.02+0.012*cos(phase));
+    float2 c=float2(1.04,0.31+0.013*cos(phase)), d=float2(0.38,0.79+0.009*sin(phase+2.0));
+    float bendA=0.045+0.022*sin(phase+0.7),bendB=0.08+0.024*sin(phase+0.5);
+    float yA=filamentY(uv.x,a,b,bendA,phase,1.0), yB=filamentY(uv.x,c,d,bendB,phase,4.0);
+    float glassA=smoothstep(yA,yA+0.035,uv.y)*(1.0-smoothstep(yA+0.12,yA+0.28,uv.y));
+    float glassB=smoothstep(yB,yB+0.025,uv.y)*(1.0-smoothstep(yB+0.07,yB+0.19,uv.y));
+    flowing=filament(uv,a,b,bendA,phase,time,1.0,pink,height)
+        + filament(uv,c,d,bendB,phase,time,4.0,cyan,height)
+        + filament(uv,float2(-0.02,0.87),float2(0.58,0.94),-0.07+0.016*sin(phase+1.0),phase,time,7.0,pink*0.35,height)
+        + pink*glassA*0.06 + cyan*glassB*0.05;
+    }
+    result+=mix(facets+angular,flowing,flow);
+    float vignette=1.0-0.2*smoothstep(0.4,1.0,length((uv-float2(0.5,0.48))*float2(1.0,0.8)));
+    return result*vignette;
 }
 
 // MARK: Look (window heights and shares of the width)
@@ -124,6 +208,13 @@ fragment float4 moon_light_fragment(FullOut in [[stage_in]], constant Uniforms &
     float aspect = u.size.w, t = u.size.z, breath = u.look.x;
     float2 p = in.position.xy / u.size.y;
     float2 uv = float2(p.x / aspect, p.y);
+    // Uniform branch: a settled Arcane surface does not evaluate the classic beam.
+    // Intermediate blends still draw both paths for the shared colour glide.
+    if (u.look.w >= 1.0 && u.tintTop.w <= 0.0) {
+        float3 surface=arcaneSurface(uv,t,u.look.z,u.size.y);
+        surface+=(hash21(in.position.xy)-0.5)/255.0;
+        return float4(surface,1.0)*u.look.y;
+    }
     float3 accent = u.accent.rgb;
     if (u.look.w > 0.0) { accent = mix(accent, arcaneSpectrum(uv, t, 0.0), u.look.w); }
 
@@ -170,23 +261,15 @@ fragment float4 moon_light_fragment(FullOut in [[stage_in]], constant Uniforms &
     float pulse = 0.62 + 0.38 * breath;
     float3 white = mix(accent, float3(1.0), 0.65);
     float3 c = accent * ((beam * 0.75 + pool) * pulse + wash + haze + road) + white * core * 0.3 * pulse;
-    if (u.look.w > 0.0) {
-        // Broad overlapping fields move through the spectrum over the steady dark ground.
-        float3 ambient = float3(0.0);
-        for (int i = 0; i < 3; i++) {
-            float phase = t / arcanePeriod;
-            float2 centre = float2(0.17 + float(i) * 0.3 + 0.035 * sin(phase * 6.283185 + float(i)),
-                                   0.1 + float(i) * 0.28);
-            float2 d = (uv - centre) / float2(0.65, 0.92);
-            float amount = exp(-dot(d, d) * 3.0) * 0.085;
-            ambient += arcaneSpectrum(float2(float(i) * 0.35, 0.3), t, float(i) * 0.09) * amount;
-        }
-        c = c * mix(1.0, arcaneIntensity, u.look.w) + ambient * u.look.w;
-    }
     c *= u.accent.w;
     // Dither so the dark gradients never band.
     c += (hash21(in.position.xy + fract(t)) - 0.5) / 255.0;
     float4 light = premultiplied(c);
+    if (u.look.w > 0.0) {
+        float3 surface=arcaneSurface(uv,t,u.look.z,u.size.y);
+        surface+=(hash21(in.position.xy)-0.5)/255.0;
+        light=mix(light,float4(surface,1.0),u.look.w);
+    }
     // The Mods card's ground under the light, as opaque as `amount`: drawn here, on the render thread, so it
     // glides in step with the accent and costs a few operations per pixel of a pass that runs anyway.
     float amount = u.tintTop.w;

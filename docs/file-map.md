@@ -320,10 +320,10 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/MaterialIcon.swift](../Sources/NXLibraryCore/Models/MaterialIcon.swift) | Elenca i glifi del font Material Icons incluso nel bundle. |
 | [Sources/NXLibraryCore/Models/MenuSelectionModel.swift](../Sources/NXLibraryCore/Models/MenuSelectionModel.swift) | Gestisce azioni selezionate nel control center e nelle scelte Power. |
 | [Sources/NXLibraryCore/Models/MoonlightField.swift](../Sources/NXLibraryCore/Models/MoonlightField.swift) | Genera in modo deterministico i dati delle particelle per lo sfondo Metal. |
-| [MoonlightAppearance.swift](../Sources/NXLibraryCore/Models/MoonlightAppearance.swift) | Costanti e campionamento dello spettro Arcane condivisi fra shader e fallback. |
+| [MoonlightAppearance.swift](../Sources/NXLibraryCore/Models/MoonlightAppearance.swift) | Identità delle superfici classica/Arcane/Flow e campionamento dei colori locali condiviso fra shader e fallback. |
 | [Sources/NXLibraryCore/Models/ScreenshotViewerState.swift](../Sources/NXLibraryCore/Models/ScreenshotViewerState.swift) | Mantiene indice e limiti della navigazione nel visualizzatore screenshot. |
 | [Sources/NXLibraryCore/Models/SeleneCanvas.swift](../Sources/NXLibraryCore/Models/SeleneCanvas.swift) | Calcola scala uniforme, stage centrato e conversione delle unità del canvas 1920×1080. |
-| [Sources/NXLibraryCore/Models/SelenePalette.swift](../Sources/NXLibraryCore/Models/SelenePalette.swift) | Decodifica palette, ordine del selettore e fallback Arcane, conservando l’identità salvata selene. |
+| [Sources/NXLibraryCore/Models/SelenePalette.swift](../Sources/NXLibraryCore/Models/SelenePalette.swift) | Decodifica palette e metadato opzionale moonlight, ordine del selettore e fallback Arcane con ID selene. |
 | [Sources/NXLibraryCore/Models/SettingsCatalog.swift](../Sources/NXLibraryCore/Models/SettingsCatalog.swift) | Descrive righe, ricerca e valori modificati; ogni riga tiene il suo `rowID` e sta in una sola sezione, vibrazione compresa tra i default dei nuovi giochi. |
 | [Sources/NXLibraryCore/Models/SettingsSection.swift](../Sources/NXLibraryCore/Models/SettingsSection.swift) | Sezioni di Settings con titoli e icone, dichiarate in ordine di sidebar, e `SettingsSidebarGroup`: General, Library, Porting (il gruppo di piattaforma) e System. |
 | [Sources/NXLibraryCore/Models/SettingsReset.swift](../Sources/NXLibraryCore/Models/SettingsReset.swift) | Reset group per sezione: quali sezioni si azzerano e quali valori di `AppSettings` tornano ai default. |
@@ -569,7 +569,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Sources/NXLibrary/Views/Theme/SeleneCanvasEnvironment.swift](../Sources/NXLibrary/Views/Theme/SeleneCanvasEnvironment.swift) | Pubblica il canvas della finestra e applica unità e font scalati. |
 | [Sources/NXLibrary/Views/Theme/SeleneBackdrop.swift](../Sources/NXLibrary/Views/Theme/SeleneBackdrop.swift) | Compone gradiente, wallpaper e Moonlight Arcane a particelle morbide; conserva le immagini decodificate e il fallback statico. |
 | [Sources/NXLibrary/Views/Theme/MoonlightRenderer.swift](../Sources/NXLibrary/Views/Theme/MoonlightRenderer.swift) | Gestisce Metal, display link e rendering live/statico; su entrambi i percorsi il primo drawable presentato sblocca `LaunchReveal`. Da macOS 14 disegna solo il `CAMetalDisplayLink`, anche il frame fermo. |
-| [Sources/NXLibrary/Views/Theme/MoonlightShaders.swift](../Sources/NXLibrary/Views/Theme/MoonlightShaders.swift) | Contiene gli shader Metal del Moonlight, spettro iridescente Arcane e particelle morbide, compilati a runtime. |
+| [Sources/NXLibrary/Views/Theme/MoonlightShaders.swift](../Sources/NXLibrary/Views/Theme/MoonlightShaders.swift) | Contiene gli shader Metal del Moonlight, superfici analitiche Arcane/Flow, filamenti vivi e particelle morbide, compilati a runtime. |
 | [Sources/NXLibrary/Views/Theme/LiveBackdrop.swift](../Sources/NXLibrary/Views/Theme/LiveBackdrop.swift) | Integra video AVFoundation in loop e adatta riproduzione e frame alla visibilità della finestra. |
 | [Sources/NXLibrary/Views/Theme/OnlineBrowsePanel.swift](../Sources/NXLibrary/Views/Theme/OnlineBrowsePanel.swift) | Mantiene stato di ricerca e download e presenta griglia e miniature degli sfondi online. |
 | [Sources/NXLibrary/Views/Theme/ThemePickerView.swift](../Sources/NXLibrary/Views/Theme/ThemePickerView.swift) | Presenta i colori con anteprima viva nel primo passo; sfondi, provider e destinazione nel passo successivo. |
@@ -723,7 +723,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Tests/NXLibraryCoreTests/ScreenshotViewerStateTests.swift](../Tests/NXLibraryCoreTests/ScreenshotViewerStateTests.swift) | Indice, avanzamento e limiti del visualizzatore screenshot. |
 | [Tests/NXLibraryCoreTests/SeleneCanvasTests.swift](../Tests/NXLibraryCoreTests/SeleneCanvasTests.swift) | Scala, centratura e conversione delle unità del canvas. |
 | [Tests/NXLibraryCoreTests/SeleneImporterTests.swift](../Tests/NXLibraryCoreTests/SeleneImporterTests.swift) | Copia delle risorse Selene e risoluzione dei cue sonori. |
-| [Tests/NXLibraryCoreTests/SelenePaletteTests.swift](../Tests/NXLibraryCoreTests/SelenePaletteTests.swift) | Lettura delle palette, nome Arcane con ID stabile, ordine e fallback. |
+| [Tests/NXLibraryCoreTests/SelenePaletteTests.swift](../Tests/NXLibraryCoreTests/SelenePaletteTests.swift) | Lettura delle 24 palette, superfici Arcane/Flow, persistenza ID, ordine e fallback. |
 | [Tests/NXLibraryCoreTests/SettingsCatalogTests.swift](../Tests/NXLibraryCoreTests/SettingsCatalogTests.swift) | Catalogo delle righe, ricerca, valori modificati, identità invariate, sezioni e gruppi in ordine, reset delle righe spostate. |
 | [Tests/NXLibraryCoreTests/SetupActionsTests.swift](../Tests/NXLibraryCoreTests/SetupActionsTests.swift) | Comandi Git del Setup e rispetto delle modifiche locali nel checkout. |
 | [Tests/NXLibraryCoreTests/SetupCheckTests.swift](../Tests/NXLibraryCoreTests/SetupCheckTests.swift) | Stati delle schede, requisiti, override e condizioni di riapertura del Setup. |
@@ -805,7 +805,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [run_nup_programs.py](../Tests/CatalogAppChecks/run_nup_programs.py) | Esegue il probe NUP opzionale su snapshot sintetico, convertitori UI reali, persistenza e argv del rebuild. |
 | [run_save_restart.py](../Tests/CatalogAppChecks/run_save_restart.py) | Arresti reali e nuovi processi nei checkpoint di transazione, recovery e pulizia; verifica tutti gli utenti, registro e integrità dei backup su fixture temporanee. |
 | [run_entrance.py](../Tests/CatalogAppChecks/run_entrance.py) | Esegue i metodi reali di input e readiness: primo comando durante il fullscreen, precedenza delle coperture, drawable mancante e presentazione su entrambi i percorsi. Nessuna finestra o GPU reale. |
-| [run_theme.py](../Tests/CatalogAppChecks/run_theme.py) | Ordine delle righe Look, input reale e bordi della griglia colori senza scelta particelle; shader Metal fuori schermo, spettro GPU/Core, moti morbidi, frame fermo e uniform Mods. |
+| [run_theme.py](../Tests/CatalogAppChecks/run_theme.py) | Ordine delle righe Look, input reale e bordi della griglia colori senza scelta particelle; shader Metal fuori schermo, colori locali GPU/Core, superfici distinte in movimento, frame fermo e uniform Mods. |
 | [run_achievement_scroll.py](../Tests/CatalogAppChecks/run_achievement_scroll.py) | Verifica fuori schermo la vera lista e i modelli durante riaperture rapide, dettagli della prima riga, ridimensionamento e Riduci movimento; nessuna finestra o automazione UI. |
 | [run_game_header.py](../Tests/CatalogAppChecks/run_game_header.py) | Esegue i corpi reali di logo e azioni condivisi senza finestra né store applicativi, per entrambi i layout. |
 | [NoticeHost.swift](../Tests/CatalogAppChecks/NoticeHost.swift) | Host minimo per i controlli applicativi, con storage reale e dati sintetici temporanei. |
@@ -856,7 +856,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Resources/AppIcon-Dark.png](../Resources/AppIcon-Dark.png) | Variante scura dell’icona dell’app. |
 | [Resources/AppIcon-Light.png](../Resources/AppIcon-Light.png) | Variante chiara dell’icona dell’app. |
 | [Resources/AppIcon-Mono.png](../Resources/AppIcon-Mono.png) | Variante monocromatica dell’icona dell’app. |
-| [Resources/Selene/palettes.json](../Resources/Selene/palettes.json) | Catalogo serializzato delle palette disponibili. |
+| [Resources/Selene/palettes.json](../Resources/Selene/palettes.json) | Catalogo delle 24 palette; Arcane e Arcane Flow dichiarano la propria superficie animata. |
 | [Resources/Selene/Fonts/MaterialIcons-Regular.ttf](../Resources/Selene/Fonts/MaterialIcons-Regular.ttf) | Font dei glifi Material Icons disegnati dalla UI. |
 | [Resources/Selene/Fonts/MaterialIcons-LICENSE.txt](../Resources/Selene/Fonts/MaterialIcons-LICENSE.txt) | Licenza del font Material Icons incluso. |
 | [Resources/Selene/NOTICE.txt](../Resources/Selene/NOTICE.txt) | Attribuzioni delle risorse Selene incluse. |
