@@ -419,6 +419,7 @@ extension SpotlightView {
                   viewModel.gameToClose == nil,
                   viewModel.gameToRemove == nil,
                   !viewModel.isUpdateOfferOpen,
+                  !viewModel.isWelcomeOpen,
                   !viewModel.showSetupCheck,
                   let window = event.window,
                   !window.isSheet,

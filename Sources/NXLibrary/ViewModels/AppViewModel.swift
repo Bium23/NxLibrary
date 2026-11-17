@@ -148,6 +148,8 @@ public final class AppViewModel: ObservableObject {
     var reviewsFailureOnAddGame = false
     /// The update dialog is up (set by the shell); screens leave input to it.
     var isUpdateOfferOpen = false
+    /// "Welcome to Arcane" is on screen: screens' own keyboard monitors let Return and the arrows go to it.
+    var isWelcomeOpen = false
     @Published public var isScanningGameFolder: Bool = false
     @Published public var scanError: String? = nil
     

@@ -384,6 +384,7 @@ public struct AppShellView: View {
             if !on { sessionCard.clear() }
         }
         .onChange(of: showsUpdateOffer) { viewModel.isUpdateOfferOpen = $0 }
+        .onChange(of: showsWelcome) { viewModel.isWelcomeOpen = $0 }
         .onChange(of: router.route) { route in
             recordLastHome(route)
             switch route {

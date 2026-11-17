@@ -89,6 +89,7 @@ extension CollectionView {
                   viewModel.gameToClose == nil,
                   viewModel.gameToRemove == nil,
                   !viewModel.isUpdateOfferOpen,
+                  !viewModel.isWelcomeOpen,
                   !viewModel.showSetupCheck,
                   !router.isScreenshotViewerOpen,
                   let window = event.window,

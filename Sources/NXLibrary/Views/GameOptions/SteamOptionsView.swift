@@ -253,6 +253,7 @@ struct SteamOptionsView: View {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             guard viewModel.optionsGameID == game.id,
                   !viewModel.isUpdateOfferOpen,
+                  !viewModel.isWelcomeOpen,
                   !NativeMenuCommands.shared.isTracking,
                   !panelOpen,
                   viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
