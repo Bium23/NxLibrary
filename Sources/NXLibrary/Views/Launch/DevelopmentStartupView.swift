@@ -9,6 +9,7 @@ final class DevelopmentStartup: ObservableObject {
     @Published private(set) var failure: String?
     @Published private(set) var working = false
     @Published private(set) var recovery: CatalogRecoveryCandidate?
+    @Published private(set) var legacyConflict: CatalogLegacyConflictCandidate?
     private let logger = Logger(subsystem: "local.nxlibrary", category: "Startup")
 
     func prepare() async {
@@ -16,6 +17,7 @@ final class DevelopmentStartup: ObservableObject {
         working = true
         failure = nil
         recovery = nil
+        legacyConflict = nil
         var profileReady = false
         do {
             // Services and SwiftUI StateObjects are created only after the profile transaction finishes.
@@ -41,6 +43,9 @@ final class DevelopmentStartup: ObservableObject {
                 recovery = try? await Task.detached(priority: .userInitiated) {
                     try CatalogStore(directory: AppData.supportRoot).recoveryCandidate()
                 }.value
+                legacyConflict = try? await Task.detached(priority: .userInitiated) {
+                    try CatalogStore(directory: AppData.supportRoot).legacyConflictCandidate()
+                }.value
             }
         }
         working = false
@@ -58,6 +63,22 @@ final class DevelopmentStartup: ObservableObject {
         } catch {
             failure = error.localizedDescription
             recovery = nil
+            working = false
+        }
+    }
+
+    func keepCurrentLibrary() async {
+        guard !working, let candidate = legacyConflict else { return }
+        working = true
+        do {
+            _ = try await Task.detached(priority: .userInitiated) {
+                try CatalogStore(directory: AppData.supportRoot).keepCurrentLibrary(candidate)
+            }.value
+            working = false
+            await prepare()
+        } catch {
+            failure = error.localizedDescription
+            legacyConflict = nil
             working = false
         }
     }
@@ -89,6 +110,14 @@ struct DevelopmentStartupView: View {
                         .font(.system(size: 28, weight: .semibold))
                     Text(failure)
                         .font(.system(size: 17)).multilineTextAlignment(.center)
+                    if startup.legacyConflict != nil {
+                        Text(L10n.text("Keep the games and sources in Arcane. The older app's changes will be archived separately, without merging the libraries.", context: context))
+                            .font(.system(size: 15)).multilineTextAlignment(.center)
+                        Button(L10n.text("Keep Arcane's library", context: context)) {
+                            Task { await startup.keepCurrentLibrary() }
+                        }.keyboardShortcut("k", modifiers: [.command, .shift])
+                            .disabled(startup.working)
+                    }
                     if let candidate = startup.recovery {
                         Button(L10n.count("Restore backup (%lld games)", candidate.gameCount, context: context)) {
                             Task { await startup.restoreBackup() }

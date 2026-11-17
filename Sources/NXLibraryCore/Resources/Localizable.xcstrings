@@ -31939,6 +31939,46 @@
         }
       }
     },
+    "Keep Arcane's library": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep Arcane's library"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantieni la libreria di Arcane"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserver la bibliothèque d’Arcane"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcane-Mediathek behalten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservar la biblioteca de Arcane"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manter a biblioteca do Arcane"
+          }
+        }
+      }
+    },
     "Keep Steam in the background": {
       "comment": "SettingsSourcesSection.swift",
       "localizations": {
@@ -32181,6 +32221,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mantenha o jogo fechado, sem iniciá-lo pelo Finder, até a operação terminar."
+          }
+        }
+      }
+    },
+    "Keep the games and sources in Arcane. The older app's changes will be archived separately, without merging the libraries.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep the games and sources in Arcane. The older app's changes will be archived separately, without merging the libraries."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantieni i giochi e le fonti di Arcane. Le modifiche della vecchia app saranno archiviate separatamente, senza unire le librerie."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservez les jeux et les sources d’Arcane. Les modifications de l’ancienne app seront archivées séparément, sans fusionner les bibliothèques."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Spiele und Quellen in Arcane bleiben erhalten. Änderungen aus der älteren App werden separat archiviert, ohne die Mediatheken zusammenzuführen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserva los juegos y las fuentes de Arcane. Los cambios de la app anterior se archivarán por separado, sin combinar las bibliotecas."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantenha os jogos e as fontes do Arcane. As alterações do app antigo serão arquivadas separadamente, sem mesclar as bibliotecas."
           }
         }
       }

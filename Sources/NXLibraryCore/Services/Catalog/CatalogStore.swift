@@ -135,18 +135,23 @@ public struct CatalogStore {
         } catch { throw CatalogStoreError.legacyChanged }
     }
 
-    private func commit(_ data: Data, previous: Data?, current: FileState, validate: () throws -> Void) throws {
+    private func commit(_ data: Data, previous: Data?, current: FileState,
+                        restorePoint: Data? = nil, expectedBackup: FileState? = nil,
+                        validate: () throws -> Void) throws {
         let candidate = try CatalogPublication.stage(data, in: directory)
         defer { try? FileManager.default.removeItem(at: candidate) }
         // Re-read the actual staged bytes, not just the in-memory draft.
         _ = try Self.decode(InstallationFileSnapshot.read(at: candidate, maximumBytes: Self.maximumBytes).data)
         try current.verify(); try validate()
         let backup = try read("catalog.json.bak")
-        let backupStage = try CatalogPublication.stage(previous ?? data, in: directory)
+        try expectedBackup?.verify()
+        let backupStage = try CatalogPublication.stage(restorePoint ?? previous ?? data, in: directory)
         defer { try? FileManager.default.removeItem(at: backupStage) }
         // A valid old main is the new restore point. Initial create also has a
-        // restore point before the main is exposed. Original legacy files stay put.
+        // restore point before the main is exposed. Explicit acknowledgement uses
+        // the accepted baseline for both copies; its old restore point is archived.
         try CatalogPublication.atomic.publish(backupStage, file("catalog.json.bak"), backup.data != nil) {
+            try expectedBackup?.verify()
             try backup.verify(); try current.verify(); try validate()
         }
         try publication.publish(candidate, file("catalog.json"), previous != nil) {
@@ -176,6 +181,65 @@ public struct CatalogStore {
 }
 
 extension CatalogStore {
+    private static let conflictNames = ["catalog.json", "catalog.json.bak", "library.json", "library.json.bak"]
+
+    private func legacyBaseline(_ states: [FileState]) -> CatalogLegacyOrigin {
+        if let data = states[2].data { return .init(kind: .primary, sha256: Self.digest(data)) }
+        if let data = states[3].data { return .init(kind: .backup, sha256: Self.digest(data)) }
+        return .absent
+    }
+
+    /// A valid catalog with a changed legacy baseline needs a different choice
+    /// from restoring a damaged catalog. Reading this offer does not modify inputs.
+    public func legacyConflictCandidate() throws -> CatalogLegacyConflictCandidate? {
+        try locked {
+            let states = try Self.conflictNames.map(read)
+            guard let bytes = states[0].data else { return nil }
+            let document = try Self.decode(bytes)
+            guard legacyBaseline(states) != document.legacyOrigin else { return nil }
+            return .init(directory: directory, digests: states.map { $0.data.map(Self.digest) })
+        }
+    }
+
+    /// Keeps catalog records and archives every input before acknowledging the
+    /// legacy bytes. A later legacy edit still blocks load/save in the usual way.
+    public func keepCurrentLibrary(_ candidate: CatalogLegacyConflictCandidate) throws -> CatalogDocument {
+        try locked {
+            guard candidate.directory == directory else { throw CatalogStoreError.staleRevision }
+            let states = try Self.conflictNames.map(read)
+            guard states.map({ $0.data.map(Self.digest) }) == candidate.digests,
+                  let bytes = states[0].data else { throw CatalogStoreError.staleRevision }
+            let document = try Self.decode(bytes)
+            let origin = legacyBaseline(states)
+            guard origin != document.legacyOrigin else { throw CatalogStoreError.staleRevision }
+            let kept = CatalogDocument(schemaVersion: document.schemaVersion, legacyOrigin: origin,
+                                       sources: document.sources, games: document.games)
+            let data = try Self.encode(kept)
+            func validateAll() throws { for state in states { try state.verify() } }
+            try validateAll()
+
+            var template = Array(file("catalog-conflict-XXXXXX").path.utf8CString)
+            let archive = try template.withUnsafeMutableBufferPointer { buffer -> URL in
+                guard let path = mkdtemp(buffer.baseAddress!) else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
+                return URL(fileURLWithPath: String(cString: path), isDirectory: true)
+            }
+            // Archives, even partial ones after an error, are deliberately kept.
+            for (name, state) in zip(Self.conflictNames, states) {
+                guard let bytes = state.data else { continue }
+                let staged = try CatalogPublication.stage(bytes, in: archive)
+                defer { try? FileManager.default.removeItem(at: staged) }
+                try publication.publish(staged, archive.appendingPathComponent(name), false, validateAll)
+            }
+            try publication.syncDirectory(archive)
+            try publication.syncDirectory(directory)
+            try validateAll()
+            try commit(data, previous: bytes, current: states[0], restorePoint: data, expectedBackup: states[1]) {
+                try states[2].verify(); try states[3].verify()
+            }
+            return kept
+        }
+    }
+
     /// Read-only validation used on an import stage, before making it visible.
     func validateImportedOrigin(_ document: CatalogDocument) throws { try verifyLegacy(document.legacyOrigin) }
 

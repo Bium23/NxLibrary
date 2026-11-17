@@ -309,6 +309,96 @@ final class AppUpdateTests: XCTestCase {
         XCTAssertTrue(exe.contains("old"))
     }
 
+    func testUpdatePreservesUserCopiesBesideTheCurrentApp() throws {
+        for name in ["Arcane", "NX Library"] {
+            let installed = dir.appendingPathComponent(UUID().uuidString)
+            let current = try makeApp(name + ".app", in: installed, marker: "current")
+            let keptNew = try makeApp(name + " (new).app", in: installed, marker: "user-new")
+            let keptOld = try makeApp(name + " (old).app", in: installed, marker: "user-old")
+            let staged = try makeApp(in: dir.appendingPathComponent(UUID().uuidString), marker: "candidate")
+            let placed = try AppUpdate.install(staged, over: current, trashOld: false)
+            XCTAssertEqual(placed, current)
+            XCTAssertTrue(try String(contentsOf: keptNew.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("user-new"))
+            XCTAssertTrue(try String(contentsOf: keptOld.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("user-old"))
+            XCTAssertTrue(try String(contentsOf: current.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("candidate"))
+            XCTAssertTrue(FileManager.default.fileExists(atPath: staged.path), "the verified download remains available")
+        }
+    }
+
+    func testMissingCandidatePreservesUserCopies() throws {
+        let current = try makeApp("Arcane.app", marker: "current")
+        let keptNew = try makeApp("Arcane (new).app", marker: "user-new")
+        let keptOld = try makeApp("Arcane (old).app", marker: "user-old")
+        XCTAssertThrowsError(try AppUpdate.install(dir.appendingPathComponent("missing.app"), over: current, trashOld: false))
+        for kept in [keptNew, keptOld, current] {
+            XCTAssertTrue(FileManager.default.fileExists(atPath: kept.appendingPathComponent("Contents/Info.plist").path))
+        }
+    }
+
+    func testPartialCopyFailureKeepsCurrentAndCleansOwnedStage() throws {
+        let installed = dir.appendingPathComponent("Applications")
+        let current = try makeApp(in: installed, marker: "current")
+        let staged = try makeApp(in: dir.appendingPathComponent("download"))
+        XCTAssertThrowsError(try AppUpdate.install(staged, over: current, trashOld: false,
+                                                  fileManager: UpdateCopyFailure(), io: BuildInstallIO()))
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: installed.path), ["NXLibrary.app"])
+        XCTAssertTrue(try String(contentsOf: current.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("current"))
+    }
+
+    func testPublicationFailureKeepsCurrentAndCandidate() throws {
+        let installed = dir.appendingPathComponent("Applications")
+        let current = try makeApp(in: installed, marker: "current")
+        let staged = try makeApp(in: dir.appendingPathComponent("download"))
+        var io = BuildInstallIO()
+        io.publish = { _, _, _ in throw CocoaError(.fileWriteUnknown) }
+        XCTAssertThrowsError(try AppUpdate.install(staged, over: current, trashOld: false, fileManager: .default, io: io))
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: installed.path), ["NXLibrary.app"])
+        XCTAssertTrue(try String(contentsOf: current.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("current"))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: staged.path))
+    }
+
+    func testErrorAfterAtomicSwapFinishesTheInstalledUpdate() throws {
+        let current = try makeApp("Arcane.app", marker: "current")
+        let staged = try makeApp(in: dir.appendingPathComponent("download"), marker: "candidate")
+        var io = BuildInstallIO()
+        io.afterPublish = { throw CocoaError(.fileWriteUnknown) }
+        XCTAssertEqual(try AppUpdate.install(staged, over: current, trashOld: false, fileManager: .default, io: io), current)
+        XCTAssertTrue(try String(contentsOf: current.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("candidate"))
+    }
+
+    func testTrashFailureRetainsPreviousAppWithoutFailingSuccessfulInstall() throws {
+        let installed = dir.appendingPathComponent("Applications")
+        let current = try makeApp("Arcane.app", in: installed, marker: "current")
+        let staged = try makeApp(in: dir.appendingPathComponent("download"), marker: "candidate")
+        let fm = UpdateTrashFailure()
+        XCTAssertEqual(try AppUpdate.install(staged, over: current, trashOld: true, fileManager: fm, io: BuildInstallIO()), current)
+        let retained = try XCTUnwrap(fm.retained)
+        XCTAssertTrue(try String(contentsOf: retained.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("current"))
+        XCTAssertEqual(retained.deletingLastPathComponent().deletingLastPathComponent().path, installed.path)
+        XCTAssertTrue(try String(contentsOf: current.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("candidate"))
+        XCTAssertEqual(try fm.attributesOfItem(atPath: retained.path)[.systemNumber] as? NSNumber,
+                       try fm.attributesOfItem(atPath: current.path)[.systemNumber] as? NSNumber)
+        let next = try makeApp(in: dir.appendingPathComponent("next-download"), marker: "next")
+        try AppUpdate.install(next, over: current, trashOld: true, fileManager: fm, io: BuildInstallIO())
+        let second = try XCTUnwrap(fm.retained)
+        XCTAssertNotEqual(second.deletingLastPathComponent(), retained.deletingLastPathComponent())
+        XCTAssertTrue(try String(contentsOf: retained.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("current"))
+        XCTAssertTrue(try String(contentsOf: second.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("candidate"))
+    }
+
+    func testAppChangedDuringCopyIsNotReplaced() throws {
+        let current = try makeApp("Arcane.app", marker: "current")
+        let staged = try makeApp(in: dir.appendingPathComponent("download"), marker: "candidate")
+        let moved = dir.appendingPathComponent("moved.app")
+        let fm = UpdateCopyHook {
+            try FileManager.default.moveItem(at: current, to: moved)
+            try FileManager.default.createDirectory(at: current, withIntermediateDirectories: false)
+        }
+        XCTAssertThrowsError(try AppUpdate.install(staged, over: current, trashOld: false, fileManager: fm, io: BuildInstallIO()))
+        XCTAssertTrue(try String(contentsOf: moved.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("current"))
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: current.path), [])
+    }
+
     func testLaterIsPerVersion() {
         let now = Date(timeIntervalSince1970: 1_000_000)
         let hourAgo = now.addingTimeInterval(-3600)
@@ -334,5 +424,30 @@ final class AppUpdateTests: XCTestCase {
         XCTAssertEqual(AppUpdate.repository(defaults: defaults), "someone/NXLibrary")
         defaults.set("not a repo", forKey: AppUpdate.repositoryOverrideKey)
         XCTAssertEqual(AppUpdate.repository(defaults: defaults), AppUpdate.defaultRepository)
+    }
+}
+
+private final class UpdateCopyFailure: FileManager, @unchecked Sendable {
+    override func copyItem(at source: URL, to destination: URL) throws {
+        try createDirectory(at: destination, withIntermediateDirectories: false)
+        try Data("partial".utf8).write(to: destination.appendingPathComponent("partial"))
+        throw CocoaError(.fileWriteUnknown)
+    }
+}
+
+private final class UpdateTrashFailure: FileManager, @unchecked Sendable {
+    var retained: URL?
+    override func trashItem(at url: URL, resultingItemURL: AutoreleasingUnsafeMutablePointer<NSURL?>?) throws {
+        retained = url
+        throw CocoaError(.fileWriteNoPermission)
+    }
+}
+
+private final class UpdateCopyHook: FileManager, @unchecked Sendable {
+    let afterCopy: () throws -> Void
+    init(afterCopy: @escaping () throws -> Void) { self.afterCopy = afterCopy; super.init() }
+    override func copyItem(at source: URL, to destination: URL) throws {
+        try super.copyItem(at: source, to: destination)
+        try afterCopy()
     }
 }

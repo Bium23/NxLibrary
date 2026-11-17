@@ -7,3 +7,9 @@ public struct CatalogRecoveryCandidate: Equatable, Sendable {
     let primaryDigest: String?
     let backupDigest: String
 }
+
+/// An explicit choice to keep the current catalog, never a merge with legacy data.
+public struct CatalogLegacyConflictCandidate: Equatable, Sendable {
+    let directory: URL
+    let digests: [String?]
+}

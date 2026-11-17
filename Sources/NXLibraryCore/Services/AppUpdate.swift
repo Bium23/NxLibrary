@@ -3,6 +3,7 @@
 
 import Foundation
 import CryptoKit
+import Darwin
 
 /// The rules of NX Library's self-update: which release, what may be installed, which copy may
 /// replace itself, and the swap. Everything works on paths it is given, so the tests run it on
@@ -276,32 +277,63 @@ public enum AppUpdate {
 
     public enum InstallError: Error, Equatable { case failed(String) }
 
-    /// Copies `staged` beside `current`, then exchanges the two in one replace, so a failure
-    /// anywhere leaves a working app at `current`. The old copy goes to the Trash (`trashOld`; the
-    /// tests remove it), and the new one loses the quarantine flag (releases are ad-hoc signed).
+    /// Stages on the destination volume in an exclusively owned directory, then
+    /// atomically exchanges the apps. A failed Trash operation retains the old app there.
     @discardableResult
     public static func install(_ staged: URL, over current: URL, trashOld: Bool = true) throws -> URL {
-        let fm = FileManager.default
-        let folder = current.deletingLastPathComponent()
-        let name = current.deletingPathExtension().lastPathComponent
-        let incoming = folder.appendingPathComponent(name + " (new).app")
-        let backupName = name + " (old).app"
-        let backup = folder.appendingPathComponent(backupName)
-        try? fm.removeItem(at: incoming)
-        try? fm.removeItem(at: backup)
+        try install(staged, over: current, trashOld: trashOld, fileManager: .default, io: BuildInstallIO())
+    }
+
+    static func install(_ staged: URL, over current: URL, trashOld: Bool,
+                        fileManager fm: FileManager, io: BuildInstallIO) throws -> URL {
+        guard let previous = updateIdentity(current) else { throw InstallError.failed("The installed app is missing or unsafe.") }
+        var template = Array(current.deletingLastPathComponent().appendingPathComponent(".arcane-update.XXXXXX").path.utf8CString)
+        let work = try template.withUnsafeMutableBufferPointer { buffer -> URL in
+            guard let path = mkdtemp(buffer.baseAddress!) else { throw InstallError.failed(String(cString: strerror(errno))) }
+            return URL(fileURLWithPath: String(cString: path), isDirectory: true)
+        }
+        // Never recursively remove this directory: after a swap it may hold the old app.
+        defer { _ = rmdir(work.path) }
+        let incoming = work.appendingPathComponent(current.lastPathComponent)
         do {
             try fm.copyItem(at: staged, to: incoming)
-            let placed = try fm.replaceItemAt(current, withItemAt: incoming, backupItemName: backupName,
-                                              options: [.withoutDeletingBackupItem])
-            if fm.fileExists(atPath: backup.path) {
-                if trashOld { try? fm.trashItem(at: backup, resultingItemURL: nil) } else { try? fm.removeItem(at: backup) }
-            }
-            clearQuarantine(placed ?? current)
-            return placed ?? current
         } catch {
+            // Only a partial copy inside this attempt's private directory is owned.
             try? fm.removeItem(at: incoming)
             throw InstallError.failed(error.localizedDescription)
         }
+        guard let prepared = updateIdentity(incoming), updateIdentity(current) == previous else {
+            try? fm.removeItem(at: incoming)
+            throw InstallError.failed("The installed app changed while the update was being prepared.")
+        }
+        do {
+            try io.publish(incoming, current, true)
+            try io.afterPublish()
+        } catch {
+            // If publication already happened, finish the successful installation.
+            // Otherwise remove only the candidate whose identity we recorded.
+            guard updateIdentity(current) == prepared, updateIdentity(incoming) == previous else {
+                if updateIdentity(incoming) == prepared { try? fm.removeItem(at: incoming) }
+                throw InstallError.failed(error.localizedDescription)
+            }
+        }
+        if updateIdentity(incoming) == previous {
+            if trashOld { try? fm.trashItem(at: incoming, resultingItemURL: nil) }
+            else { try? fm.removeItem(at: incoming) }
+        }
+        clearQuarantine(current)
+        return current
+    }
+
+    private struct UpdateIdentity: Equatable {
+        let device: dev_t
+        let inode: ino_t
+    }
+
+    private static func updateIdentity(_ url: URL) -> UpdateIdentity? {
+        var info = stat()
+        guard lstat(url.path, &info) == 0, info.st_mode & mode_t(S_IFMT) == mode_t(S_IFDIR) else { return nil }
+        return UpdateIdentity(device: info.st_dev, inode: info.st_ino)
     }
 
     /// Waits until `$1` (a pid) has exited, at most `$3` ticks of 0.2 s, then opens `$2` with `$4`.

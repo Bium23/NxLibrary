@@ -23,7 +23,8 @@ public struct CatalogSourceConfiguration: Codable, Equatable, Sendable {
 
 }
 
-/// Fingerprint of the untouched legacy input, not another writable catalog.
+/// Fingerprint of the legacy input at migration or the last explicit conflict
+/// acknowledgement. Legacy files remain untouched, not another writable catalog.
 public struct CatalogLegacyOrigin: Codable, Equatable, Sendable {
     public enum Kind: String, Codable, Sendable { case absent, primary, backup }
     public let kind: Kind

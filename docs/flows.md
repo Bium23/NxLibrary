@@ -20,6 +20,9 @@ flowchart TD
     B --> C["AppSettingsStore · lingua (AppLocalization)<br/>LaunchReveal: finestra pronta, poi fullscreen"]
     C --> D["CatalogStore legge catalog.json<br/>(conversione da library.json se serve)"]
     D -->|"archivio danneggiato"| R["Recupero esplicito: Retry / ripristino backup"]
+    D -->|"catalogo valido, legacy modificato"| L["Scelta Keep Arcane’s library"]
+    L --> LA["Rivalida impronte → archivia catalogo, backup e legacy<br/>Mantieni i giochi Arcane e riconosci la base legacy"]
+    LA --> D
     D --> E["AppShellState prepara coordinatore, router, tema"]
     E --> F["AppShellView: AppViewModel, store, monitor, updater"]
     F --> G{"Primo avvio completato?<br/>(FirstRunSetup)"}
@@ -170,7 +173,10 @@ flowchart TD
     B --> C["AppUpdateDownload: dimensione dichiarata, host GitHub"]
     C --> D["validate_update.py: struttura e percorsi"]
     D --> E["SaveOperationGate: esclusione globale"]
-    E --> F["Controllo di versione, identità e firma → sostituzione → riavvio"]
+    E --> F["Controllo di versione, identità e firma"]
+    F --> G["Copia in cartella esclusiva sul volume corrente"]
+    G --> H["Scambio atomico → riavvio allo stesso percorso"]
+    H --> I["Vecchia app nel Cestino; se fallisce, conservarla nella cartella esclusiva"]
 ```
 
 Alla chiusura successiva, una copia release che si chiama ancora `NX Library.app` diventa `Arcane.app` (`AppBundleRename`, chiamato da `AppDelegate.applicationWillTerminate`). Non succede se un riavvio è in programma, perché l'aiuto che riapre l'app usa il percorso attuale.

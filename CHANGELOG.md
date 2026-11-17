@@ -19,6 +19,9 @@ These changes are implemented in Arcane Dev. Human validation remains pending un
 
 ### Fixed
 
+- Updating the app preserves existing copies beside it, including files named `(new)` or `(old)`. Each update uses its own staging directory; a failed Trash operation keeps the previous app.
+- If an older copy changes the legacy library after migration, **Keep Arcane’s library** preserves the current games and sources and archives both versions before continuing. The libraries are not merged.
+
 - Spotlight reuses decoded game artwork on its first frame after returning from Settings, preserving personal picks and Steam icons. The Mods card keeps its prepared cover across navigation instead of briefly returning to its empty background.
 - Porting shows **Preparing the first launch** during the engine's prewarm phase instead of estimating it from an older build's finishing time. A prewarm warning explains that missing pipelines are prepared when the game first starts.
 - NUP discovery keeps a selected program separate from its application and DLC identities. Rebuilds explicitly select that program when the engine supports it; older NUP records keep program zero.

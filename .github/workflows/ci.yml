@@ -33,6 +33,8 @@ jobs:
         run: python3 Tests/CatalogAppChecks/run_notices.py
       - name: App review regressions without UI
         run: python3 Tests/CatalogAppChecks/run_review.py
+      - name: Startup recovery regressions without UI
+        run: python3 Tests/CatalogAppChecks/run_startup_recovery.py
       - name: Achievement scroll lifecycle without UI
         run: python3 Tests/CatalogAppChecks/run_achievement_scroll.py
       - name: Shared game header regression without UI
