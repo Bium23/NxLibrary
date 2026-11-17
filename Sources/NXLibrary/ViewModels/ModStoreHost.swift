@@ -27,6 +27,9 @@ final class ModStoreHost: ObservableObject {
     /// The cover being decoded before it is shown.
     private var nextCover: [URL] = []
     private var coverTask: Task<Void, Never>?
+    private var coverTitleIDs: Set<String>?
+    private var coverRequestID = UUID()
+    private var recordsGeneration = UUID()
 
     private static let log = Logger(subsystem: "local.nxlibrary", category: "gamebanana")
     private var gamesByTitle: [String: PortedGame] = [:]
@@ -77,6 +80,8 @@ final class ModStoreHost: ObservableObject {
     /// The card is selected: the store reads its snapshots and refreshes in the background. `games` are your games,
     /// last played first.
     func open(_ games: [PortedGame], viewModel: AppViewModel) {
+        recordsGeneration = UUID()
+        records = [:]
         self.viewModel = viewModel
         var byTitle: [String: PortedGame] = [:]
         var list: [ModStoreGame] = []
@@ -93,28 +98,42 @@ final class ModStoreHost: ObservableObject {
             self.reloadRecords(all: true)
         }
         catalog.open(list)
+        reloadRecords(all: true)
     }
 
     /// The card's cover before the store has looked: the art the store will pick, from the snapshots on disk of
     /// `titleIDs` (your games), read off the main thread. No request.
     func loadCover(titleIDs: Set<String>) {
-        guard cover.isEmpty, nextCover.isEmpty else { return }
+        let wanted = Set(titleIDs.map { $0.uppercased() })
+        if coverTitleIDs != wanted {
+            coverTask?.cancel()
+            coverTitleIDs = wanted
+            cover = []
+            nextCover = []
+        }
+        let requestID = UUID()
+        coverRequestID = requestID
         let snapshots = self.snapshots
         let matches = GameBananaServices.shared.matches
-        let wanted = Set(titleIDs.map { $0.uppercased() })
         Task { [weak self] in
             let urls = await Task.detached(priority: .utility) { () -> [URL] in
                 let games = snapshots.loadAll(matches: matches).filter { wanted.contains($0.titleID) }
                     .map { ModCatalogGame(titleID: $0.titleID, name: $0.gameName, mods: $0.mods) }
                 return ModStoreLayout.coverArt(games: games)
             }.value
-            guard let self, self.cover.isEmpty else { return }
+            guard let self, self.coverTitleIDs == wanted, self.coverRequestID == requestID else { return }
             self.show(cover: urls)
         }
     }
 
     /// Shows `urls` on the card once all of them are decoded, so the mosaic changes in one crossfade.
     private func show(cover urls: [URL]) {
+        if urls.isEmpty {
+            coverTask?.cancel()
+            nextCover = []
+            cover = []
+            return
+        }
         guard !urls.isEmpty, urls != nextCover else { return }
         coverTask?.cancel()
         guard urls != cover else { nextCover = []; return }
@@ -130,6 +149,7 @@ final class ModStoreHost: ObservableObject {
     /// Another card or a game is selected: requests and downloads stop, the panel closes.
     func close() {
         guard catalog.phase != .idle || panel.isPanelOpen else { return }
+        recordsGeneration = UUID()
         panel.stop()
         catalog.close()
         pending?.cancel()
@@ -148,7 +168,11 @@ final class ModStoreHost: ObservableObject {
         let mods = catalog.games.reduce(0) { $0 + $1.mods.count }
         let nextCounts = (mods, catalog.games.count, catalog.refreshing || catalog.phase == .loading)
         if nextCounts != counts { counts = nextCounts }
-        show(cover: ModStoreLayout.coverArt(games: catalog.games))
+        // Closing/loading clears the catalog temporarily, not the prepared cover.
+        if !catalog.games.isEmpty || catalog.phase == .ready {
+            coverRequestID = UUID() // The live catalog supersedes an older snapshot still being read.
+            show(cover: ModStoreLayout.coverArt(games: catalog.games))
+        }
         reloadRecords(all: false)
         prewarm()
         Self.log.notice("store rebuild \(self.sections.count, privacy: .public) sections \(mods, privacy: .public) mods in \(Int(Date().timeIntervalSince(start) * 1000), privacy: .public) ms")
@@ -156,6 +180,7 @@ final class ModStoreHost: ObservableObject {
 
     /// Reads the records of games not read yet (`all`: every game, after an install) off the main thread.
     private func reloadRecords(all: Bool) {
+        if all { recordsGeneration = UUID() }
         guard let viewModel else { return }
         let stores = catalog.games.compactMap { game -> (String, ModStore)? in
             guard all || records[game.titleID] == nil, let ported = gamesByTitle[game.titleID],
@@ -164,11 +189,12 @@ final class ModStoreHost: ObservableObject {
         }
         guard !stores.isEmpty else { return }
         let box = UncheckedBox(stores)
+        let generation = recordsGeneration
         Task { [weak self] in
             let read = await Task.detached(priority: .utility) { () -> [String: [Int: ModRecord]] in
                 Dictionary(box.value.map { ($0.0, $0.1.gameBananaRecords()) }, uniquingKeysWith: { first, _ in first })
             }.value
-            guard let self else { return }
+            guard let self, self.recordsGeneration == generation else { return }
             var next = self.records
             next.merge(read) { _, new in new }
             if next != self.records { self.records = next }

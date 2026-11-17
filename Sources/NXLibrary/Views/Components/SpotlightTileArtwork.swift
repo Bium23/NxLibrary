@@ -21,13 +21,29 @@ struct SpotlightTileArtwork: View {
     @ObservedObject private var picks = ArtworkPicks.shared
     @State private var better: NSImage?
     @State private var picked: NSImage?
+    @State private var loadedPickKey: NSString?
     /// The first look-up has ended (art found or not): the tile is ready for Spotlight's entrance.
     @State private var settled = false
+
+    private var automaticKey: NSString { "nxnative|\(game.id)" as NSString }
+
+    private func pickKey(_ url: URL) -> NSString {
+        "nxnative|pick|\(url.path)|\(picks.revision)" as NSString
+    }
+
+    /// Read the warm cache while constructing the view, before its task runs.
+    private var pickedImage: NSImage? {
+        guard let url = picks.url(titleID: personalizations.nxnativeKey(for: game), slot: .icon) else { return nil }
+        let key = pickKey(url)
+        return TileArtMemo.shared.object(forKey: key) ?? (loadedPickKey == key ? picked : nil)
+    }
+
+    private var automaticImage: NSImage? { better ?? TileArtMemo.shared.object(forKey: automaticKey) }
 
     var body: some View {
         ZStack {
             SeleneTheme.glassSolid
-            if let picked {
+            if let picked = pickedImage {
                 Image(nsImage: picked)
                     .resizable()
                     .interpolation(.high)
@@ -37,7 +53,7 @@ struct SpotlightTileArtwork: View {
                     .resizable()
                     .interpolation(.high)
                     .aspectRatio(contentMode: .fill)
-            } else if let better {
+            } else if let better = automaticImage {
                 Image(nsImage: better)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -54,19 +70,27 @@ struct SpotlightTileArtwork: View {
         .task(id: "\(game.id)|\(picks.revision)") {
             defer { if !settled { settled = true } }
             if let url = picks.url(titleID: personalizations.nxnativeKey(for: game), slot: .icon) {
-                picked = await GameArtLoader.decode(at: url, maxPixelSize: 512)
+                let key = pickKey(url)
+                let decoded: NSImage?
+                if let cached = TileArtMemo.shared.object(forKey: key) { decoded = cached }
+                else { decoded = await GameArtLoader.decode(at: url, maxPixelSize: 512) }
+                guard !Task.isCancelled else { return }
+                if let decoded { TileArtMemo.store(decoded, for: key) }
+                picked = decoded
+                loadedPickKey = key
                 return
             }
             picked = nil
+            loadedPickKey = nil
             guard !ownIconFirst || GameIconProvider.squareArt(for: game) == nil else { return }
-            let key = game.id.uuidString as NSString
+            let key = automaticKey
             if let memo = TileArtMemo.shared.object(forKey: key) {
                 better = memo
                 return
             }
             let loaded = await loadIcon()
             guard !Task.isCancelled, let loaded else { return }
-            TileArtMemo.shared.setObject(loaded, forKey: key)
+            TileArtMemo.store(loaded, for: key)
             withAnimation(.easeInOut(duration: 0.2)) { better = loaded }
         }
     }
@@ -85,10 +109,16 @@ struct TileArtPendingKey: PreferenceKey {
 }
 
 /// Decoded tile art, so a tile that scrolls back into the row paints at once.
-private enum TileArtMemo {
+enum TileArtMemo {
     static let shared: NSCache<NSString, NSImage> = {
         let cache = NSCache<NSString, NSImage>()
         cache.countLimit = 200
+        cache.totalCostLimit = 160 * 1024 * 1024
         return cache
     }()
+
+    static func store(_ image: NSImage, for key: NSString) {
+        let pixels = image.representations.first.map { $0.pixelsWide * $0.pixelsHigh } ?? 0
+        shared.setObject(image, forKey: key, cost: max(pixels, 1) * 4)
+    }
 }

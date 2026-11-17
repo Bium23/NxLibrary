@@ -70,7 +70,7 @@ public struct SpotlightView: View {
     /// The selected game's Mods band (installed mods, GameBanana's, their panels); shared with Details.
     @StateObject var modsHost = ModsBandHost()
     /// The Mods card's store, below the card.
-    @StateObject var storeHost = ModStoreHost()
+    @ObservedObject var storeHost: ModStoreHost
     /// The backdrop's gold (`updateModsBackdrop`).
     @State var modsBackdrop = false
     /// Whether the previous game's art may stay while the next game's loads (`shownArt`).
@@ -102,13 +102,14 @@ public struct SpotlightView: View {
 
     init(viewModel: AppViewModel, router: AppRouter, settings: AppSettingsStore,
          playSessions: PlaySessionStore, runningGames: RunningGameMonitor,
-         artwork: ArtworkStore) {
+         artwork: ArtworkStore, storeHost: ModStoreHost) {
         self.viewModel = viewModel
         self.router = router
         self.settings = settings
         self.playSessions = playSessions
         self.runningGames = runningGames
         self.artwork = artwork
+        self.storeHost = storeHost
         // Held hidden from the first frame (the opening, or under the welcome); `entranceAppear` lands it when not due.
         _entrance = State(initialValue: viewModel.homeSeen ? .landed : .covered)
     }

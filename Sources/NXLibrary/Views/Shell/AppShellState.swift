@@ -9,6 +9,8 @@ final class AppShellState {
     let viewModel: AppViewModel
     let router: AppRouter
     let sources: CatalogSourcesModel
+    /// The Mods card keeps its prepared cover across navigation; Spotlight observes it only while visible.
+    let modStoreHost = ModStoreHost()
     /// "Welcome to Arcane" is up from the first frame, so the library never shows before it. Decided before save recovery starts; what it raises opens above.
     let opensWithWelcome: Bool
 

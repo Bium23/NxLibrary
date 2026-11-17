@@ -13,6 +13,7 @@ public struct AppShellView: View {
     @StateObject private var sessionCard = SessionCardPresenter()
     @StateObject private var updater = AppUpdater()
     @StateObject private var sources: CatalogSourcesModel
+    private let modStoreHost: ModStoreHost
     @StateObject private var nativeMenus = NativeMenuCommands.shared
     @ObservedObject private var theme = ThemeStore.shared
     @ObservedObject private var localization = AppLocalization.shared
@@ -34,6 +35,7 @@ public struct AppShellView: View {
         _settings = StateObject(wrappedValue: state.settings)
         _viewModel = StateObject(wrappedValue: state.viewModel)
         _router = StateObject(wrappedValue: state.router)
+        modStoreHost = state.modStoreHost
         _showsWelcome = State(initialValue: state.opensWithWelcome)
     }
 
@@ -574,7 +576,8 @@ public struct AppShellView: View {
                 settings: settings,
                 playSessions: playSessions,
                 runningGames: runningGames,
-                artwork: artwork
+                artwork: artwork,
+                storeHost: modStoreHost
             )
         case .collection:
             CollectionView(

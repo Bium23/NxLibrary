@@ -62,6 +62,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_notices.py
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_review.py
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_nested_bundles.py
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_artwork_return.py
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_source_access.py
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_entrance.py
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_achievement_scroll.py
@@ -80,6 +81,8 @@ python3 scripts/check_publication.py --runtime work/Runtime
 The Swift suite covers persistence, sources, keys and permissions, CLI contracts, process output and cancellation, compatibility gates, installation and retries, launch configuration, presentation state, artwork, cheats and save recovery. Publication regressions use temporary repositories and synthetic content. Tests must never require copyrighted game content or real keys.
 
 The nested-bundle check creates tiny Mach-O fixtures with signed data bundles and relative Resources links. It exercises the real installer, icon writer and codesign, including signature rollback, interrupted publication and rejection of modified nested data. Its forced copy branch does not establish compatibility with a real external filesystem or game build.
+
+The artwork-return check compiles the real tile views, loading tasks and retained Mods host with generated images and isolated preferences. It records which image the first body selects after view recreation, without rendering or opening a window, and checks pick removal, Steam app updates, Mods badges after external removal and changed GameBanana matches. Network is forbidden in the Mods fixture.
 
 The latest complete Swift verification on 2 November 2026 passed **774 tests**, including first-run skip/resume, setup navigation, explicit title choice, source-selection restoration, chosen-folder installation/discovery and preserving ready builds after destination disconnection. The earlier publication verification passed **15 Python checks**; the development-app bundle passed signature verification, and a headless check exercised a real public GitHub download, its redirect and rejection of a mismatched size. These checks do not establish that the interactive update or a game worked. This is dated evidence, not a promise about future changes. See the [test catalog](file-map.md#test-e-fixture).
 

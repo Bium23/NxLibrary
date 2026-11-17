@@ -19,6 +19,7 @@ These changes are implemented in Arcane Dev. Human validation remains pending un
 
 ### Fixed
 
+- Spotlight reuses decoded game artwork on its first frame after returning from Settings, preserving personal picks and Steam icons. The Mods card keeps its prepared cover across navigation instead of briefly returning to its empty background.
 - Porting shows **Preparing the first launch** during the engine's prewarm phase instead of estimating it from an older build's finishing time. A prewarm warning explains that missing pipelines are prepared when the game first starts.
 - NUP discovery keeps a selected program separate from its application and DLC identities. Rebuilds explicitly select that program when the engine supports it; older NUP records keep program zero.
 - Local save backups include additional users and their registry. Restoring an older backup preserves other local users; interrupted replacements and interrupted recovery retain verified backups and unexpected external changes. Cloud sync remains limited to the primary user and device save.
