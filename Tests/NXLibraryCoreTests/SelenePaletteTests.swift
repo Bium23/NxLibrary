@@ -36,7 +36,7 @@ final class SelenePaletteTests: XCTestCase {
         XCTAssertEqual(p.glyph, 0x9CCBFF)
         XCTAssertEqual(p.success, 0x3DDC84)
         XCTAssertEqual(p.base.kind, .radial)
-        XCTAssertEqual(p.base.stops, [.init(color: 0x0C1123, location: 0), .init(color: 0x060812, location: 1)])
+        XCTAssertEqual(p.base.stops, [.init(color: 0x102A5C, location: 0), .init(color: 0x03081A, location: 1)])
     }
 
     func testBothArcaneSurfacesAreSelectableAndOldPalettesStayClassic() throws {
@@ -59,6 +59,11 @@ final class SelenePaletteTests: XCTestCase {
         XCTAssertThrowsError(try SelenePaletteCatalog.load(from: URL(fileURLWithPath: "/nonexistent/palettes.json")))
         XCTAssertEqual(SelenePaletteCatalog.resolve("selene", in: []), .fallback)
         XCTAssertEqual(SelenePalette.fallback.surface, .classic)
+        XCTAssertEqual(SelenePalette.fallback.base.kind, .linear)
+        XCTAssertEqual(SelenePalette.fallback.base.stops, [
+            .init(color: 0x17244A, location: 0), .init(color: 0x0C142C, location: 0.45),
+            .init(color: 0x05080F, location: 1)
+        ])
     }
 
     func testSettingsDecodeWithoutColorTheme() throws {

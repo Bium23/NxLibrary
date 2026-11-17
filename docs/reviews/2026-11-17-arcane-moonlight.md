@@ -101,3 +101,14 @@ Il ripristino del blu confronta esattamente i valori della palette storica;
 il metadato delle nuove superfici è assente sia dal default sia dal fallback.
 La suite completa passa ancora1792test, con una regressione inizialmente
 rossa per default, fallback, ordine e numero delle alternative.
+
+## Ripristino effettivo della luminosità originale
+
+Il primo ripristino usava ancora i colori scuriti nell’esperimento5eb9862.
+Il riferimento corretto è f427937: default radiale0x102A5C/0x03081A e fallback
+lineare0x17244A/0x0C142C/0x05080F. Test inizialmente rossi ora proteggono
+questi valori. Gli shader classici attuali sono confrontati fuori schermo con
+quelli di f427937, stesso campo e uniform: differenza massima per canale
+0/255 a320px,1/255 a640px,0/255 a960px. Il controllo del pacchetto Dev
+conferma l’esatta palette storica, escluso il nome visibile. Non è una prova
+della finestra o della composizione dello schermo.

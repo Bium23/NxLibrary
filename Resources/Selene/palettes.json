@@ -464,11 +464,11 @@
       "kind": "radial",
       "stops": [
         {
-          "color": 790819,
+          "color": 1059420,
           "location": 0.0
         },
         {
-          "color": 395282,
+          "color": 198682,
           "location": 1.0
         }
       ]
