@@ -51,10 +51,32 @@ public enum SourceSelection {
     }
 
     public static func supported(_ files: [GameFileItem], titleSelection: Bool, extractedFolders: Bool,
-                                 nupContainers: Bool = false) -> Bool {
-        files.allSatisfy { ($0.layout != .extracted || extractedFolders)
+                                 nupContainers: Bool = false, nupPrograms: Bool = false) -> Bool {
+        if files.contains(where: { $0.layout == .container }) {
+            guard files.allSatisfy({ $0.layout == .container }), Set(files.map(path)).count == 1 else { return false }
+        }
+        if let program = files.compactMap(\.nupProgram).first {
+            guard nupPrograms, program.isValid,
+                  files.allSatisfy({ $0.layout == .container && $0.nupProgram == program }),
+                  Set(files.map(path)).count == 1 else { return false }
+        }
+        return files.allSatisfy { ($0.layout != .extracted || extractedFolders)
             && ($0.layout != .container || nupContainers)
             && ($0.requiresTitleSelection != true || titleSelection) }
+    }
+
+    public static func matchesNUPProgram(_ files: [GameFileItem], titleID: String) -> Bool {
+        guard let title = UInt64(titleID, radix: 16) else { return false }
+        return files.compactMap(\.nupProgram).allSatisfy { $0.isValid && $0.programID == title }
+    }
+
+    /// Old NUP records describe program zero. Pin that program explicitly when a newer engine's
+    /// default could otherwise select the highest program of the same application.
+    public static func programIndex(for files: [GameFileItem], titleID: String, nupPrograms: Bool) -> Int? {
+        guard nupPrograms, !files.isEmpty, files.allSatisfy({ $0.layout == .container }),
+              Set(files.map(path)).count == 1,
+              let title = UInt64(titleID, radix: 16), matchesNUPProgram(files, titleID: titleID) else { return nil }
+        return Int(title & 0xFFF)
     }
     private static func path(_ file: GameFileItem) -> String {
         file.url.resolvingSymlinksInPath().standardizedFileURL.path

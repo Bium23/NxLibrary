@@ -101,7 +101,7 @@ Arcane non scrive mai i file di Steam e non apre l'app del gioco direttamente. D
 flowchart TD
     A["AddGameView: scelta esplicita di file o cartelle<br/>il selettore ricorda Game files"] --> B["SourceCatalog · ExtractedSourceCatalog · NUPSourceCatalog<br/>base, update, DLC"]
     B --> C["SourceSelection: titolo e versioni scelte"]
-    C --> D["KeyCheck (se le sorgenti sono cifrate)"]
+    C --> D["KeyCheck (se le sorgenti sono cifrate)<br/>NUP: identità programma e capacità del checkout"]
     D --> E["Review: GameAppDestination, GameRuntimeConfig.forReview"]
     E --> F{"Gate: CompatibilityChecker<br/>Metal certificato o override"}
     F -->|"bloccato"| Z["Spiegazione (ToolchainGateCopy)<br/>Play delle app esistenti resta attivo"]
@@ -124,8 +124,8 @@ flowchart TD
     C -->|"cloud attivo o gioco aperto"| X["Rifiuto con motivo (SaveFailure)"]
     C --> D["SaveOperationGate: lease"]
     D --> E["SaveSnapshotStore.stageImport / SaveRestorePreview<br/>copia accanto, hash, anteprima From → To"]
-    E --> F["Conferma: si ricontrollano sorgente, staging e salvataggio attuale"]
-    F --> G["SaveTransaction: backup verificato → journal → scambio"]
+    E --> F["Conferma: sorgente, staging e salvataggio attuale<br/>schema 1: due slot · schema 2: tutti gli utenti + registro"]
+    F --> G["SaveTransaction: backup completo → journal → soli pezzi da modificare<br/>verifica originali; registro per ultimo"]
     G --> H["SeleneSuccessNotice"]
     G -.->|"interruzione"| I["Al prossimo avvio: rollback o verifica dal journal<br/>Play attende"]
 ```

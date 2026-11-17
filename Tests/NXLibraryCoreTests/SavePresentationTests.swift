@@ -32,4 +32,15 @@ final class SavePresentationTests: XCTestCase {
         XCTAssertTrue(SavePresentation.closedNotice.contains("Finder"))
         XCTAssertTrue(SavePresentation.importWarning.contains("newer"))
     }
+
+    func testLegacyAndMultiuserRestoreExplainTheirScope() {
+        let identity = SaveIdentity(titleID: "0100000000000001", gameName: "Game", version: nil, buildID: nil)
+        var snapshot = SaveSnapshot(id: UUID(), identity: identity, created: Date(), reason: .manual, presentSlots: [], entries: [])
+        XCTAssertTrue(SavePresentation.restoreMessage(snapshot, installedVersion: nil).contains("kept"))
+        snapshot.schemaVersion = 2
+        XCTAssertTrue(SavePresentation.restoreMessage(snapshot, installedVersion: nil).contains("all local users"))
+        XCTAssertTrue(SavePresentation.cloudNotice.contains("primary"))
+        XCTAssertEqual(SavePresentation.slotName(.user2), "User 2")
+        XCTAssertEqual(SavePresentation.slotName(.users), "Local users")
+    }
 }

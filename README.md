@@ -215,7 +215,7 @@ Open **Game Options → Saves**, directly below Cheats. Keep the game closed dur
 | Button | What it does |
 |---|---|
 | **Open folder** | Opens the current local save in Finder. |
-| **Back up now** | Creates a dated, verified copy of account and device saves. |
+| **Back up now** | Creates a dated, verified copy of all local users, their registry and the device save. |
 | **Save type** | Selects the import destination. **User save** is the usual choice; **Device save** is for a separate device save. |
 | **Import save…** | Previews an exported save folder or a dated Arcane backup before replacing anything. |
 | **Refresh** | Reads save and backup information again. If recovery is needed, offers **Retry recovery**. |
@@ -225,9 +225,9 @@ Open **Game Options → Saves**, directly below Cheats. Keep the game closed dur
 
 For Ryujinx, choose the numbered game folder under `bis/user/save/`. A folder selected inside that tree is recognised too; Arcane checks its title metadata and imports the complete committed save, including all slots. For other exports, choose the folder containing the complete save.
 
-**To restore:** choose a dated backup folder through **Import save…**. A restore reinstates both recorded destinations, including whether either one was absent. An ordinary import replaces the selected destination.
+**To restore:** choose a dated backup folder through **Import save…**. A current backup restores the complete local user group, including missing destinations. Older backups restore only the primary user and device save, preserving additional users. An ordinary folder import replaces only the selected primary-user or device destination.
 
-**Cloud sync and backups have different purposes.** Cloud sync can replace local files, so import and restore require it to be off in the effective configuration. A backup is a dated copy you manage in Finder. Save compatibility still depends on the game, platform and version; recognising the folder does not guarantee compatibility.
+**Cloud sync and backups have different purposes.** Cloud sync can replace local files, so import and restore require it to be off in the effective configuration. Cloud sync covers only the primary user and device save; additional local users are protected by local backups, not by cloud sync. A backup is a dated copy you manage in Finder. Save compatibility still depends on the game, platform and version; recognising the folder does not guarantee compatibility.
 
 Interrupted replacements must recover before Play. The Saves panel reports what is blocking an operation and keeps the backup folder accessible.
 

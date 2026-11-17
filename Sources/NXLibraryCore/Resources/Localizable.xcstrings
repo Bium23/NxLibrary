@@ -83,6 +83,47 @@
         }
       }
     },
+    "Applied before each game starts, including Off. Custom save-sync overrides are reported in Saves. Cloud sync covers only the primary user and device save.": {
+      "comment": "NUP program identity or local multiuser save scope; cloud still covers the primary user and device only.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applied before each game starts, including Off. Custom save-sync overrides are reported in Saves. Cloud sync covers only the primary user and device save."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applicato prima di ogni avvio, anche se disattivato. Le impostazioni personalizzate che prevalgono sulla sincronizzazione dei salvataggi sono indicate in Salvataggi. Il cloud sincronizza solo i salvataggi dell’utente principale e del dispositivo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appliqué avant chaque démarrage de jeu, y compris Désactivé. Les réglages personnalisés de synchronisation des sauvegardes sont signalés dans Sauvegardes. Le cloud ne synchronise que les sauvegardes de l’utilisateur principal et de l’appareil."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird vor jedem Spielstart angewendet, auch „Aus“. Eigene Überschreibungen der Spielstandsynchronisierung werden unter „Spielstände“ angezeigt. Die Cloud synchronisiert nur den Spielstand des Hauptbenutzers und den Gerätespielstand."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se aplica antes de iniciar cada juego, también al desactivarlo. Las personalizaciones de sincronización de partidas se indican en Partidas guardadas. La nube solo sincroniza las partidas del usuario principal y del dispositivo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicado antes de cada jogo iniciar, inclusive Desativado. Substituições personalizadas da sincronização são informadas em Dados salvos. A nuvem sincroniza apenas os salvamentos do usuário principal e do dispositivo."
+          }
+        }
+      }
+    },
     "Arcane": {
       "comment": "Achievement tier (a violet crystal) for unlocking every achievement of a game, where PlayStation has Platinum.",
       "localizations": {
@@ -9380,6 +9421,47 @@
         }
       }
     },
+    "Back up all local users and the device save.": {
+      "comment": "NUP program identity or local multiuser save scope; cloud still covers the primary user and device only.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back up all local users and the device save."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salva una copia di tutti gli utenti locali e del salvataggio del dispositivo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sauvegardez tous les utilisateurs locaux et la sauvegarde de l’appareil."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sichere alle lokalen Benutzer und den Gerätespielstand."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea una copia de todos los usuarios locales y de la partida del dispositivo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faça backup de todos os usuários locais e do salvamento do dispositivo."
+          }
+        }
+      }
+    },
     "Back up now": {
       "comment": "SavesPanel.swift",
       "localizations": {
@@ -11754,6 +11836,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "TRAPAÇAS"
+          }
+        }
+      }
+    },
+    "Cloud sync covers only the primary user and device save.": {
+      "comment": "NUP program identity or local multiuser save scope; cloud still covers the primary user and device only.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cloud sync covers only the primary user and device save."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il cloud sincronizza solo i salvataggi dell’utente principale e del dispositivo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le cloud ne synchronise que les sauvegardes de l’utilisateur principal et de l’appareil."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Cloud synchronisiert nur den Spielstand des Hauptbenutzers und den Gerätespielstand."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La nube solo sincroniza las partidas del usuario principal y del dispositivo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A nuvem sincroniza apenas os salvamentos do usuário principal e do dispositivo."
           }
         }
       }
@@ -32390,6 +32513,47 @@
         }
       }
     },
+    "Local users": {
+      "comment": "NUP program identity or local multiuser save scope; cloud still covers the primary user and device only.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local users"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utenti locali"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilisateurs locaux"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokale Benutzer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuarios locales"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuários locais"
+          }
+        }
+      }
+    },
     "LOOKING ON %@…": {
       "comment": "OnlineBrowsePanel.swift:146",
       "localizations": {
@@ -41201,6 +41365,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "MAIS ANTIGO"
+          }
+        }
+      }
+    },
+    "One sync choice for all games, applied at next launch: Off, iCloud Drive or a folder you choose. Only the primary user and device save sync.": {
+      "comment": "NUP program identity or local multiuser save scope; cloud still covers the primary user and device only.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One sync choice for all games, applied at next launch: Off, iCloud Drive or a folder you choose. Only the primary user and device save sync."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un’unica scelta di sincronizzazione per tutti i giochi, applicata al prossimo avvio: Disattivo, iCloud Drive o una cartella a tua scelta. Il cloud sincronizza solo i salvataggi dell’utente principale e del dispositivo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un choix de synchronisation pour tous les jeux, appliqué au prochain lancement : Désactivé, iCloud Drive ou un dossier de votre choix. Le cloud ne synchronise que les sauvegardes de l’utilisateur principal et de l’appareil."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Synchronisierungswahl für alle Spiele, angewendet beim nächsten Spielstart: Aus, iCloud Drive oder ein selbst gewählter Ordner. Die Cloud synchronisiert nur den Spielstand des Hauptbenutzers und den Gerätespielstand."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una opción de sincronización para todos los juegos, aplicada en el próximo inicio: Desactivado, iCloud Drive o una carpeta que elijas. La nube solo sincroniza las partidas del usuario principal y del dispositivo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma opção de sincronização para todos os jogos, aplicada na próxima abertura: Desativado, iCloud Drive ou uma pasta à sua escolha. A nuvem sincroniza apenas os salvamentos do usuário principal e do dispositivo."
           }
         }
       }
@@ -55943,6 +56148,129 @@
         }
       }
     },
+    "The selected NUP program no longer matches this game. Choose the source again.": {
+      "comment": "NUP program identity or local multiuser save scope; cloud still covers the primary user and device only.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected NUP program no longer matches this game. Choose the source again."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il programma selezionato nel NUP non corrisponde più a questo gioco. Scegli di nuovo la sorgente."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le programme sélectionné dans le NUP ne correspond plus à ce jeu. Sélectionnez à nouveau la source."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das gewählte NUP-Programm entspricht nicht mehr diesem Spiel. Wähle die Quelle erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El programa seleccionado del NUP ya no corresponde a este juego. Vuelve a elegir la fuente."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O programa selecionado no NUP não corresponde mais a este jogo. Escolha a fonte novamente."
+          }
+        }
+      }
+    },
+    "This backup restores all local users and their registry.": {
+      "comment": "NUP program identity or local multiuser save scope; cloud still covers the primary user and device only.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This backup restores all local users and their registry."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo backup ripristina tutti gli utenti locali e il loro registro."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette sauvegarde restaure tous les utilisateurs locaux et leur registre."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Backup stellt alle lokalen Benutzer und ihre Registrierung wieder her."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta copia restaura todos los usuarios locales y su registro."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este backup restaura todos os usuários locais e seu registro."
+          }
+        }
+      }
+    },
+    "This older backup restores only the primary user and device save. Other local users will be kept.": {
+      "comment": "NUP program identity or local multiuser save scope; cloud still covers the primary user and device only.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This older backup restores only the primary user and device save. Other local users will be kept."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo vecchio backup ripristina solo i salvataggi dell’utente principale e del dispositivo. Gli altri utenti locali verranno conservati."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette ancienne sauvegarde ne restaure que l’utilisateur principal et la sauvegarde de l’appareil. Les autres utilisateurs locaux seront conservés."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses ältere Backup stellt nur den Hauptbenutzer- und den Gerätespielstand wieder her. Andere lokale Benutzer bleiben erhalten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta copia antigua solo restaura las partidas del usuario principal y del dispositivo. Los demás usuarios locales se conservarán."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este backup antigo restaura apenas os salvamentos do usuário principal e do dispositivo. Os outros usuários locais serão mantidos."
+          }
+        }
+      }
+    },
     "THIS WEEK": {
       "comment": "DetailsBands.swift:70",
       "localizations": {
@@ -64836,6 +65164,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Usar no Mac"
+          }
+        }
+      }
+    },
+    "User %@": {
+      "comment": "NUP program identity or local multiuser save scope; cloud still covers the primary user and device only.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utente %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilisateur %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzer %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuario %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuário %@"
           }
         }
       }

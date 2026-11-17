@@ -40,12 +40,14 @@ public struct GameFileItem: Identifiable, Codable, Equatable {
     /// Absent in older libraries, whose sources are packages.
     public var sourceLayout: SourceLayout?
     public var requiresTitleSelection: Bool?
+    /// Absent in older records. A selected NUP program is independent of the application's DLC IDs.
+    public var nupProgram: NUPProgramSelection?
     public var layout: SourceLayout { sourceLayout ?? .package }
 
     public init(id: UUID = UUID(), url: URL, name: String, sizeBytes: Int64,
                 type: SourceKind, titleId: String? = nil,
                 versionString: String? = nil, isSymlink: Bool = false, sourceLayout: SourceLayout? = nil,
-                requiresTitleSelection: Bool? = nil) {
+                requiresTitleSelection: Bool? = nil, nupProgram: NUPProgramSelection? = nil) {
         self.id = id
         self.url = url
         self.name = name
@@ -56,16 +58,17 @@ public struct GameFileItem: Identifiable, Codable, Equatable {
         self.isSymlink = isSymlink
         self.sourceLayout = sourceLayout
         self.requiresTitleSelection = requiresTitleSelection
+        self.nupProgram = nupProgram
     }
 
     public init(id: UUID = UUID(), url: URL, kind: SourceKind,
                 titleId: String? = nil, versionString: String? = nil,
                 sizeBytes: Int64, isSymlink: Bool = false, sourceLayout: SourceLayout? = nil,
-                requiresTitleSelection: Bool? = nil) {
+                requiresTitleSelection: Bool? = nil, nupProgram: NUPProgramSelection? = nil) {
         self.init(id: id, url: url, name: url.lastPathComponent,
                   sizeBytes: sizeBytes, type: kind, titleId: titleId,
                   versionString: versionString, isSymlink: isSymlink, sourceLayout: sourceLayout,
-                  requiresTitleSelection: requiresTitleSelection)
+                  requiresTitleSelection: requiresTitleSelection, nupProgram: nupProgram)
     }
 
     public var kind: SourceKind { type }

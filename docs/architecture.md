@@ -281,6 +281,11 @@ Regole della barra:
 - **Cartelle estratte e pacchetti con più contenuti:** `EnginePackageReader` riusa il lettore content-meta upstream; `ExtractedSourceCatalog` legge NPDM e profili registrati senza chiavi.
 - **NUP e cartelle senza profilo:** quando lo script espone `survey_nup` / `survey_dump`, `EngineSourceCapabilities` li accetta e l'engine li porta con un profilo provvisorio. Review mostra **Not tested with this engine yet** per qualunque sorgente senza profilo.
 - **File `.zs` danneggiati:** il classificatore dell'engine controlla i file `.zs` danneggiati in NUP e cartelle (riga `files.format`).
+- **Programmi NUP:** `NUPSourceCatalog` conserva programma, applicazione e base DLC distinti in
+  `NUPProgramSelection`, facoltativo sui record storici. Le conversioni UI e i sorgenti salvati mantengono
+  la selezione. Un engine con il contratto multiprogramma riceve `--program` esplicito, anche zero per
+  i vecchi record, così un rebuild non segue un nuovo default. Metadati discordanti o un checkout
+  incapace di selezionare il programma fermano il build; non viene mascherato l'ID.
 - **NUP senza base:** Review offre solo le versioni di update (la più recente selezionata, una sempre scelta), e la build passa quella versione con `--package`, mai `v0`.
 - **Archivio pipeline mancante:** `stage_end` con `warn: true` mostra ⚠ sulla fase e una spiegazione in **Ready to play** (`BuildWarningCopy`).
 - **Cache shader in un file:** cache di compilazione e librerie shader sono un file ciascuna (`shader/cache/cas.db`, `msl/b-<chain>.img`); Arcane non legge dentro nessuno dei due. Quando l'engine sposta una vecchia cache, con l'evento `say` `moving the compile cache …` (`PortingProgress.shaderCacheWorkMessage`), `PortingProgress.isUpdatingShaderCache` si accende e `PortingETA` mostra **Updating shader cache** senza avanzare la percentuale né stimare una durata. Lo stato si azzera alla fase o al passo successivo e a fine build; `PortingFailureEngineTests` verifica che l'engine del pin stampi ancora quel testo.
@@ -288,7 +293,7 @@ Regole della barra:
 - **Interfaccia dei giochi:** la guida dei controlli elenca l'uscita con Home (2 s, poi A) e Shift + frecce per la levetta destra. Le righe nuove di `settings.tsv` (120 fps, upscaler del gioco, forma dell'immagine) arrivano da sole tramite Game options.
 - **Salvataggi:** un salvataggio con nomi creati prima di 7c23cc0 si rinomina al primo mount, quindi una build più vecchia dello stesso gioco potrebbe non leggerlo più.
 - **Strumenti di sviluppo:** `.github/requirements/tools.txt` dell'engine elenca numpy, pillow e texture2ddecoder, usati solo da strumenti di sviluppo; `EngineRuntimeRequirementsTests.notBundled` ne registra il motivo. dav1d si compila dalle sorgenti incluse dell'engine, e il runtime del frontend non cambia.
-- **Non adottati:** `--seen-shaders`, `--program`, le opzioni per i profili provvisori, i diagnostici come nuovi interruttori e gli hook per incorporare la vista del gioco in un frontend (Arcane avvia app di gioco separate).
+- **Non adottati:** `--seen-shaders`, un selettore manuale dei programmi, le opzioni per i profili provvisori, i diagnostici come nuovi interruttori e gli hook per incorporare la vista del gioco in un frontend (Arcane avvia app di gioco separate).
 
 ## Sorgenti e porting
 
@@ -297,7 +302,7 @@ Il percorso completo è in [flows.md](flows.md#5-costruire-un-gioco-switch-add-g
 **Le sorgenti.**
 - La preferenza **Game files** conserva solo il percorso iniziale del selettore. `AppViewModel` non la assegna a `selectedGameFolder` all'avvio: quell'assegnazione avvia una scansione. Il refresh della libreria riguarda le app installate; scegliere cartella o file in Add game avvia la lettura dei sorgenti. *Perché:* aprire la libreria non richiede di enumerare una cartella protetta come Download. I rebuild usano le sorgenti registrate sul gioco.
 - `SourceSelection` tiene separati contenuti selezionati e file fisici: un pacchetto si conta e si collega una sola volta, il DLC incorporato resta incluso e la versione scelta passa con `-p`.
-- `GameFileItem` conserva, se serve, layout e requisito di selezione del titolo; i vecchi JSON continuano a indicare pacchetti. Questi requisiti si verificano prima del build, anche dopo un cambio di checkout.
+- `GameFileItem` conserva, se serve, layout e requisito di selezione del titolo; i vecchi JSON continuano a indicare pacchetti. Questi requisiti e la selezione NUP si verificano prima del build, anche dopo un cambio di checkout. Il programma salvato deve corrispondere al title ID del gioco; il DLC usa la base add-on dichiarata dall’applicazione.
 - Le cartelle estratte si collegano nel layout `base/`, `updates/<version>/`, `dlc/<title>/0/romfs/`. Il restaging rimuove i link esclusi e i contenitori vuoti, preservando cache e originali.
 - Un pacchetto illeggibile non nasconde gli altri giochi validi: la scansione tiene i risultati e segnala i file saltati.
 
@@ -456,14 +461,33 @@ Il percorso completo è in [flows.md](flows.md#6-importare-o-ripristinare-un-sal
 - `SaveSnapshotStore.stageImport` prepara una copia temporanea vicino alla destinazione. L'anteprima contiene inventario, hash SHA-256, attributi estesi e impronta del salvataggio attuale. `SaveRestorePreview.swift` prepara allo stesso modo un ripristino da backup. Alla conferma si ricontrollano sorgente, staging e salvataggio attuale.
 
 **Copia protettiva e sostituzione.**
-- `SaveTransaction` crea prima un backup verificato dei due slot committed, compresa l'eventuale assenza di uno slot. Poi salva il journal `.nxlibrary-save-transaction.json` e sostituisce ogni cartella con uno staging sullo stesso volume. Usa `renamex_np(RENAME_SWAP)` per scambiare due cartelle esistenti e spostamenti per i casi di presenza o assenza.
-- L'importazione sostituisce lo slot scelto. Il ripristino applica l'intero snapshot, compresa la presenza o assenza dei due slot.
+- `SaveSlot` descrive account e device, `user2`…`user8` e il file registro `users` (`save.users`).
+  Gli altri pezzi sono directory. Le cartelle transazionali dell’engine (`.work` / `.new`) non entrano
+  nell’inventario; il registro si copia come file regolare, con limite 64 KiB e senza seguirne link.
+- `SaveSnapshotStore` crea un backup verificato di tutti i pezzi locali committed presenti, compresa
+  la loro assenza. Il manifest resta schema 1 per soli account/device e usa schema 2 per gli utenti
+  aggiuntivi o il registro. I vecchi backup non si riscrivono; versioni o dichiarazioni incoerenti si rifiutano.
+- `SaveTransaction` prepara lo staging, salva il journal `.nxlibrary-save-transaction.json` e cambia
+  soltanto i pezzi dichiarati in `mutatedSlots`. Usa `renamex_np(RENAME_SWAP)` per scambiare file o
+  directory e spostamenti per presenza/assenza. Il registro si scambia per ultimo.
+- L’importazione da cartella modifica solo User oppure Device; registro e utenti aggiuntivi restano
+  intatti, senza ricopiarli o scambiarli. Il restore schema 1 modifica solo i due slot storici e conserva
+  gli altri utenti correnti. Il restore schema 2 applica tutto il gruppo, comprese le assenze, sempre
+  dopo un backup di sicurezza. La conferma spiega l’ambito prima di agire.
+- Il cloud dell’engine copre soltanto utente principale e device. Il pannello e le impostazioni lo
+  dichiarano; un backup locale completo non equivale alla sincronizzazione di tutti gli utenti.
 - `SaveOperationGate` assegna lease per title ID, coordinando salvataggi, Play e installazioni anche quando più voci della libreria condividono lo stesso gioco.
 
 **Integrità e recupero.**
 - `SaveFileIO` centralizza copie, hash, metadati, controlli dei percorsi, scritture durevoli e punti di errore sostituibili nei test.
 - La verifica normalizza provenienza e label di accesso gestite da macOS, più il campo agente della quarantena. Confronta i metadati guest e il contenuto dei file. Manifest e journal precedenti passano dalla stessa normalizzazione.
-- All'avvio o al refresh, un journal incompleto porta al rollback al salvataggio precedente verificato. Un journal committed richiede la verifica del risultato prima della pulizia.
+- Prima e dopo ogni scambio si verificano contenuto live e originale spostato in staging; una modifica
+  inattesa conserva journal e artefatti. La pulizia registra l’intenzione e l’inventario verificato nel journal prima di eliminare i residui, un elemento alla volta; si riprende anche dopo una cancellazione parziale e rifiuta dati nuovi o cambiati.
+- All’avvio o al refresh, un journal incompleto porta al rollback al salvataggio precedente verificato.
+  Il journal 1 osserva solo account/device, conservando eventuali utenti comparsi dopo l’interruzione;
+  il journal 2 osserva il gruppo completo. `mutatedSlots` manca nei journal storici, che conservano
+  l’ambito dei due slot originali. Un journal committed verifica il risultato prima della pulizia.
+  La recovery può a sua volta interrompersi e riprendere. Il gioco deve restare chiuso anche per lanci esterni.
 - Dati modificati da fuori o copie non verificabili tengono il recupero bloccato e conservano gli artefatti per l'intervento. Play aspetta la risoluzione.
 
 **Pannello e backup.**
@@ -650,7 +674,7 @@ I percorsi sono relativi alla home. `Application Support/NXLibrary` è `~/Librar
 | `Application Support/NXLibrary/mods/<TID>.json` | Ordine, stato e origine GameBanana delle mod di un gioco, gestiti da `ModStore`. |
 | `Application Support/NXLibrary/gamebanana/matches.json` | Pagina GameBanana scelta per ogni gioco, gestita da `GameBananaMatchStore`. |
 | `~/Library/Caches/NXLibrary/gamebanana/` | Cache delle risposte e delle immagini di GameBanana, comprese le copie dello store. |
-| `~/Library/Application Support/nxnative/<TID>/` | `env.txt`, `save`, eventuale `save_device`, cheat, mod e dati runtime del motore. |
+| `~/Library/Application Support/nxnative/<TID>/` | `env.txt`, `save`, eventuale `save_device`, `save_user2`…`save_user8`, registro `save.users`, cheat, mod e dati runtime del motore. |
 | `~/Library/Logs/nxnative/<TID>.log` | Log del gioco avviato. |
 | `<Game apps>/<nome>.app` | Prima installazione del gioco; default `~/Applications`. I rebuild aggiornano l'app nella sua posizione. |
 | Accanto al gioco: `.nxlibrary-install-<hash>.json` | Ultima ricevuta di installazione per quel percorso, gestita da `BuildOutputInstaller`. |
@@ -700,6 +724,10 @@ Nel repository, `.build/` contiene gli output SwiftPM, `work/Runtime` il runtime
 
 **Test.**
 - La suite Core usa fixture sintetiche, cartelle temporanee, runner e confini I/O sostituibili. Copre modelli, persistenza, sorgenti, chiavi, contratti CLI, processi, installazione, lancio, stato della UI, artwork, cheat e transazioni dei salvataggi. Il [catalogo dei test](file-map.md#test-e-fixture) indica la responsabilità di ogni file.
+- `run_nup_programs.py` verifica i convertitori reali UI/persistenza e gli argomenti NUP; con uno snapshot
+  immutabile dell’engine verifica anche il probe Python su un contenitore sintetico. `run_save_restart.py`
+  arresta e riavvia processi distinti nei checkpoint di sostituzione e recovery, conservando backup e
+  dati non committed; non apre finestre né accede ai salvataggi del giocatore.
 - `NX_TEST_ENGINE_REPO` permette al controllo dei messaggi del motore di usare un checkout separato; un valore esplicito non valido è un errore. Durante una revisione, `NX_TEST_ENGINE_COMMIT` seleziona l'hash completo del candidato prima di cambiare il pin; senza override il test controlla sempre il pin.
 
 ```bash

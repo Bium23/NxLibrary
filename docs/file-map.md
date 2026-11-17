@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 17 novembre 2026. Copertura di **697 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 17 novembre 2026. Copertura di **701 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -77,7 +77,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibrary/ViewModels/AppViewModel.swift](../Sources/NXLibrary/ViewModels/AppViewModel.swift) | Coordina libreria, sorgenti, ambiente, porting e lancio; conserva pagina e scelta Steam del Setup e richiede le notifiche al porting accettato; Game files resta una preferenza del selettore senza scansione all’avvio. |
+| [Sources/NXLibrary/ViewModels/AppViewModel.swift](../Sources/NXLibrary/ViewModels/AppViewModel.swift) | Coordina libreria, sorgenti, ambiente, porting e lancio; conserva pagina/scelta Steam del Setup e programma NUP nei sorgenti; richiede le notifiche al porting accettato; Game files resta una preferenza del selettore senza scansione all’avvio. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Cheats.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Cheats.swift) | Adatta Core e bundle installato al pannello Cheats, alla riga di stato e alla diagnostica. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Mods.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Mods.swift) | Crea lo `ModStore` di un gioco, il valore della riga Mods e le frasi per ogni errore. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Controller.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Controller.swift) | Conserva il contesto di gioco per i comandi e offre il collegamento alla cartella dei save. |
@@ -169,11 +169,11 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Services/NXNativeEnvironment.swift](../Sources/NXLibraryCore/Services/NXNativeEnvironment.swift) | Ispeziona strumenti, Python, Xcode e Metal e restituisce uno stato dell’ambiente. |
 | [Sources/NXLibraryCore/Services/EngineLocation.swift](../Sources/NXLibraryCore/Services/EngineLocation.swift) | Risolve checkout predefinito o scelto e produce i candidati per prod.keys. |
 | [Sources/NXLibraryCore/Services/EngineToolchain.swift](../Sources/NXLibraryCore/Services/EngineToolchain.swift) | Individua runtime incluso o venv del checkout e prepara ambiente e PATH dei processi. |
-| [Sources/NXLibraryCore/Services/EnginePackageReader.swift](../Sources/NXLibraryCore/Services/EnginePackageReader.swift) | Legge capacità delle sorgenti e content meta di tutti i pacchetti in un solo passaggio del lettore upstream (`package_reader`, o `package_title_reader` sugli engine precedenti a 5c4dc18f), validando identità e tipi senza esporre chiavi. |
+| [Sources/NXLibraryCore/Services/EnginePackageReader.swift](../Sources/NXLibraryCore/Services/EnginePackageReader.swift) | Legge content meta e capacità del checkout, compresa selezione NUP multiprogramma, senza esporre chiavi. |
 | [Sources/NXLibraryCore/Models/BuildWarningCopy.swift](../Sources/NXLibraryCore/Models/BuildWarningCopy.swift) | Testo mostrato a fine build per una fase terminata con `warn` dell’engine (archivio delle pipeline mancante). |
 | [Sources/NXLibraryCore/Models/ReleaseNotesLayout.swift](../Sources/NXLibraryCore/Models/ReleaseNotesLayout.swift) | Divide le note di release in titoli, voci e testo, una riga per volta, per il dialogo degli aggiornamenti. |
 | [Sources/NXLibraryCore/Services/NewestEngine.swift](../Sources/NXLibraryCore/Services/NewestEngine.swift) | Scelta dell’engine più nuovo: testi condivisi, lettura del Metal dal lock di main, cambio di commit con git senza toccare file modificati. |
-| [Sources/NXLibraryCore/Services/NUPSourceCatalog.swift](../Sources/NXLibraryCore/Services/NUPSourceCatalog.swift) | Riconosce i file NUP Switch 2 e ne elenca base, update e DLC tramite il lettore pack_nup dell’engine; accetta anche un NUP senza base (solo update). |
+| [Sources/NXLibraryCore/Services/NUPSourceCatalog.swift](../Sources/NXLibraryCore/Services/NUPSourceCatalog.swift) | Legge NUP con base o soli update; tiene distinti programma, applicazione e base DLC tramite il lettore upstream e conserva il default selezionato. |
 | [Sources/NXLibraryCore/Services/DirectorySize.swift](../Sources/NXLibraryCore/Services/DirectorySize.swift) | Misura le cartelle con fts come du, così il refresh non resta bloccato su app grandi in dischi esterni (issue #2). |
 | [Sources/NXLibraryCore/Services/NXNativeGameSettings.swift](../Sources/NXLibraryCore/Services/NXNativeGameSettings.swift) | Legge l’elenco impostazioni del build, i valori attuali e le chiavi fissate da env.txt. |
 | [Sources/NXLibraryCore/Services/SavedChoicesStore.swift](../Sources/NXLibraryCore/Services/SavedChoicesStore.swift) | Legge e scrive le scelte salvate launcher.<env> nel dominio preferenze dell’app gioco. |
@@ -190,8 +190,9 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Models/GameFileItem.swift](../Sources/NXLibraryCore/Models/GameFileItem.swift) | Descrive sorgenti, tipo base/update/DLC, percorso, dimensione e metadati rilevati. |
-| [Sources/NXLibraryCore/Models/SourceSelection.swift](../Sources/NXLibraryCore/Models/SourceSelection.swift) | Gestisce scelta esplicita dei titoli, selezione e ripristino logico dei contenuti, DLC incorporati, dimensioni uniche, versione di build e requisiti del motore. |
+| [Sources/NXLibraryCore/Models/GameFileItem.swift](../Sources/NXLibraryCore/Models/GameFileItem.swift) | Sorgenti salvate con layout, requisiti e selezione NUP facoltativa, compatibile con i vecchi record. |
+| [NUPProgramSelection.swift](../Sources/NXLibraryCore/Models/NUPProgramSelection.swift) | Identità tipizzata del programma NUP, applicazione e base add-on; indice ricavato dal programma, persistito con i sorgenti. |
+| [Sources/NXLibraryCore/Models/SourceSelection.swift](../Sources/NXLibraryCore/Models/SourceSelection.swift) | Scelte dei contenuti, dimensioni e versione di build; verifica coerenza e supporto del programma NUP e ne vincola l’indice nel rebuild. |
 | [Sources/NXLibraryCore/Models/BuildRecord.swift](../Sources/NXLibraryCore/Models/BuildRecord.swift) | Conserva esito, tempi, log e provenienza di un porting. |
 | [Sources/NXLibraryCore/Models/TargetPlatform.swift](../Sources/NXLibraryCore/Models/TargetPlatform.swift) | Definisce il target mac-app e le sue etichette per l’interfaccia. |
 | [Sources/NXLibraryCore/Models/GameRuntimeConfig.swift](../Sources/NXLibraryCore/Models/GameRuntimeConfig.swift) | Persiste opzioni per titolo, prepara Review e lingua del rebuild, mappa DM_* e unisce env.txt. |
@@ -205,12 +206,12 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/PortingNotice.swift](../Sources/NXLibraryCore/Models/PortingNotice.swift) | Decide quando notificare l’esito di un porting e prepara il relativo messaggio. |
 | [Sources/NXLibraryCore/Models/PendingInstall.swift](../Sources/NXLibraryCore/Models/PendingInstall.swift) | Conserva un bundle pronto in attesa e ne gestisce installazione, scarto e aggiornamento del record, anche dopo una pubblicazione interrotta. |
 | [Sources/NXLibraryCore/Models/RunningGames.swift](../Sources/NXLibraryCore/Models/RunningGames.swift) | Confronta bundle ID e mantiene uno snapshot delle applicazioni in esecuzione. |
-| [Sources/NXLibraryCore/Services/SourceCatalog.swift](../Sources/NXLibraryCore/Services/SourceCatalog.swift) | Riconosce sorgenti NSP/XCI/NSZ/XCZ e raggruppa titoli, aggiornamenti e DLC. |
+| [Sources/NXLibraryCore/Services/SourceCatalog.swift](../Sources/NXLibraryCore/Services/SourceCatalog.swift) | Riconosce sorgenti NSP/XCI/NSZ/XCZ e raggruppa titoli, update e DLC; DetectedSource conserva la selezione NUP tipizzata. |
 | [Sources/NXLibraryCore/Services/ExtractedSourceCatalog.swift](../Sources/NXLibraryCore/Services/ExtractedSourceCatalog.swift) | Verifica il layout di un gioco estratto, legge NPDM e profilo registrato e rileva update e DLC. |
 | [Sources/NXLibraryCore/Services/WorkspaceManager.swift](../Sources/NXLibraryCore/Services/WorkspaceManager.swift) | Prepara collegamenti simbolici, verifica link interrotti e adotta workspace e cache esistenti. |
 | [Sources/NXLibraryCore/Services/BuildScratch.swift](../Sources/NXLibraryCore/Services/BuildScratch.swift) | Sceglie dove stanno workspace e app temporanea (sul volume dell'app quando può ospitarli), riconosce i workspace gestiti e le cartelle temporanee da pulire. |
 | [Sources/NXLibraryCore/Services/BuildCommand.swift](../Sources/NXLibraryCore/Services/BuildCommand.swift) | Valore con eseguibile, argomenti, ambiente e directory di lavoro del processo di porting. |
-| [Sources/NXLibraryCore/Services/BuildCommandBuilder.swift](../Sources/NXLibraryCore/Services/BuildCommandBuilder.swift) | Costruisce il contratto CLI nxnative, comprese destinazione Mac, JSON e override toolchain. |
+| [Sources/NXLibraryCore/Services/BuildCommandBuilder.swift](../Sources/NXLibraryCore/Services/BuildCommandBuilder.swift) | Contratto CLI nxnative: Mac, JSON, versione pacchetto, selezione --program esplicita e override toolchain. |
 | [Sources/NXLibraryCore/Services/BuildEvent.swift](../Sources/NXLibraryCore/Services/BuildEvent.swift) | Definisce gli eventi di fase, step, avanzamento e log ricevuti dal motore. |
 | [Sources/NXLibraryCore/Services/BuildEventParser.swift](../Sources/NXLibraryCore/Services/BuildEventParser.swift) | Decodifica eventi JSON e tratta le altre righe come log. |
 | [Sources/NXLibraryCore/Services/BuildService.swift](../Sources/NXLibraryCore/Services/BuildService.swift) | Avvia il porting, gestisce processi, cancellazione, log ed eventi; conserva il bundle valido quando fallisce solo l’installazione. |
@@ -258,16 +259,16 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Models/SaveLocation.swift](../Sources/NXLibraryCore/Models/SaveLocation.swift) | Valida percorsi e identità, risolve cloud effettivo e definisce slot ed errori dei salvataggi. |
-| [Sources/NXLibraryCore/Models/SaveSnapshot.swift](../Sources/NXLibraryCore/Models/SaveSnapshot.swift) | Definisce identità, inventario, manifest e anteprime di importazione o ripristino. |
-| [Sources/NXLibraryCore/Models/SavePresentation.swift](../Sources/NXLibraryCore/Models/SavePresentation.swift) | Prepara riepiloghi, date, dimensioni, nomi degli slot e disponibilità dell’importazione. |
+| [Sources/NXLibraryCore/Models/SaveLocation.swift](../Sources/NXLibraryCore/Models/SaveLocation.swift) | Percorsi e identità dei salvataggi; account/device, utenti locali aggiuntivi e file registro; cloud effettivo e percorsi sicuri. |
+| [Sources/NXLibraryCore/Models/SaveSnapshot.swift](../Sources/NXLibraryCore/Models/SaveSnapshot.swift) | Identità, inventario, manifest schema 1/2 e anteprime; rifiuta dichiarazioni storiche con componenti nuovi. |
+| [Sources/NXLibraryCore/Models/SavePresentation.swift](../Sources/NXLibraryCore/Models/SavePresentation.swift) | Riepiloghi e ambito dei restore storici/multiutente, nomi dei componenti e limite cloud a primario/device. |
 | [Sources/NXLibraryCore/Models/CloudSaves.swift](../Sources/NXLibraryCore/Models/CloudSaves.swift) | Descrive scelta cloud, cartelle iCloud o personalizzate e passaggi fra le opzioni. |
 | [Sources/NXLibraryCore/Services/CloudSavesPreferences.swift](../Sources/NXLibraryCore/Services/CloudSavesPreferences.swift) | Prepara la cartella e riapplica la scelta cloud ai domini dei giochi prima di ogni avvio, anche Off. |
 | [Sources/NXLibraryCore/Services/RyujinxSaveFolder.swift](../Sources/NXLibraryCore/Services/RyujinxSaveFolder.swift) | Riconosce contenitori Ryujinx, controlla il title ID e seleziona l’intero albero committed 0. |
-| [Sources/NXLibraryCore/Services/SaveFileIO.swift](../Sources/NXLibraryCore/Services/SaveFileIO.swift) | Centralizza copie, hash, xattr portabili, controlli dei percorsi, spazio e scritture durevoli. |
-| [Sources/NXLibraryCore/Services/SaveSnapshotStore.swift](../Sources/NXLibraryCore/Services/SaveSnapshotStore.swift) | Crea e verifica backup e prepara importazioni da esportazioni o backup datati. |
-| [Sources/NXLibraryCore/Services/SaveRestorePreview.swift](../Sources/NXLibraryCore/Services/SaveRestorePreview.swift) | Estende lo store con staging, validazione e rilascio delle anteprime di ripristino. |
-| [Sources/NXLibraryCore/Services/SaveTransaction.swift](../Sources/NXLibraryCore/Services/SaveTransaction.swift) | Esegue sostituzioni con copia protettiva e journal e recupera o ripulisce transazioni interrotte. |
+| [Sources/NXLibraryCore/Services/SaveFileIO.swift](../Sources/NXLibraryCore/Services/SaveFileIO.swift) | Copie, hash e xattr portabili; inventario di directory e registro regolare limitato, controlli dei percorsi e scritture durevoli. |
+| [Sources/NXLibraryCore/Services/SaveSnapshotStore.swift](../Sources/NXLibraryCore/Services/SaveSnapshotStore.swift) | Backup completi degli utenti locali e registro, formati storici compatibili, staging e import User/Device. |
+| [Sources/NXLibraryCore/Services/SaveRestorePreview.swift](../Sources/NXLibraryCore/Services/SaveRestorePreview.swift) | Staging e validazione dei pezzi registrati nel backup, compreso il file utenti, con rilevamento dei cambiamenti concorrenti. |
+| [Sources/NXLibraryCore/Services/SaveTransaction.swift](../Sources/NXLibraryCore/Services/SaveTransaction.swift) | Sostituzioni con ambito esplicito, backup completo e journal 1/2; verifica originali, recovery e pulizia parziale riprendibili con intento durevole. |
 | [Sources/NXLibraryCore/Services/SaveOperationGate.swift](../Sources/NXLibraryCore/Services/SaveOperationGate.swift) | Assegna lease per titolo e un’esclusione globale per l’updater; coordina salvataggi, Play, installazioni e recuperi. |
 
 ## Core · artwork, metadati e sfondi online
@@ -492,7 +493,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Sources/NXLibrary/Views/Settings/SettingsLookSection.swift](../Sources/NXLibrary/Views/Settings/SettingsLookSection.swift) | Espone palette, wallpaper, luminosità, adattamento, animazione e aspetto dell’icona. |
 | [Sources/NXLibrary/Views/Settings/SettingsGamesSection.swift](../Sources/NXLibrary/Views/Settings/SettingsGamesSection.swift) | Porting → New games: default copiati nei nuovi giochi convertiti, vibrazione compresa. |
 | [Sources/NXLibrary/Views/Settings/SettingsLibraryGamesSection.swift](../Sources/NXLibrary/Views/Settings/SettingsLibraryGamesSection.swift) | Library → Games: schermata di lancio, Surprise me, card della sessione e giochi nascosti. |
-| [Sources/NXLibrary/Views/Settings/SettingsCloudSavesSection.swift](../Sources/NXLibrary/Views/Settings/SettingsCloudSavesSection.swift) | Porting → Cloud saves: scelta di sincronizzazione e cartella scelta. |
+| [Sources/NXLibrary/Views/Settings/SettingsCloudSavesSection.swift](../Sources/NXLibrary/Views/Settings/SettingsCloudSavesSection.swift) | Porting → Cloud saves: scelta e cartella; chiarisce che sincronizzano solo primario e device. |
 | [Sources/NXLibrary/Views/Settings/SettingsControllersSection.swift](../Sources/NXLibrary/Views/Settings/SettingsControllersSection.swift) | Espone controller, schema dei tasti e zona morta per la libreria. |
 | [Sources/NXLibrary/Views/Settings/SettingsLibrarySection.swift](../Sources/NXLibrary/Views/Settings/SettingsLibrarySection.swift) | Espone cartella della libreria, scansione e notifiche dei porting. |
 | [Sources/NXLibrary/Views/Settings/SettingsStorageSection.swift](../Sources/NXLibrary/Views/Settings/SettingsStorageSection.swift) | Library → Storage: spazio occupato, log, cache di metadati e artwork, cartella comune dei backup verificati. |
@@ -691,7 +692,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Tests/NXLibraryCoreTests/NintendoStoreMetadataTests.swift](../Tests/NXLibraryCoreTests/NintendoStoreMetadataTests.swift) | Decodifica store e Title DB, cache, screenshot e risposte incomplete. |
 | [Tests/NXLibraryCoreTests/ReleaseNotesLayoutTests.swift](../Tests/NXLibraryCoreTests/ReleaseNotesLayoutTests.swift) | Titoli, voci e righe vuote delle note di release, una voce per riga. |
 | [Tests/NXLibraryCoreTests/NewestEngineTests.swift](../Tests/NXLibraryCoreTests/NewestEngineTests.swift) | Lock e Metal di main, validità della scelta, comandi git del cambio, gate Newest engine, scheda Setup e frase. |
-| [Tests/NXLibraryCoreTests/NUPSourceCatalogTests.swift](../Tests/NXLibraryCoreTests/NUPSourceCatalogTests.swift) | Magic NUP, cartelle, lettura tramite engine, nomi NACP, profili mancanti, selezione e NUP senza base. |
+| [Tests/NXLibraryCoreTests/NUPSourceCatalogTests.swift](../Tests/NXLibraryCoreTests/NUPSourceCatalogTests.swift) | NUP storici, multiprogramma e soli update; identità DLC, JSON, capacità checkout, programma zero nei vecchi record e argv coerenti. |
 | [Tests/NXLibraryCoreTests/NXNativeGameSettingsTests.swift](../Tests/NXLibraryCoreTests/NXNativeGameSettingsTests.swift) | Build senza adattatore, migrazione da env.txt, scrittura dei soli valori diversi dal default e chiavi fissate. |
 | [Tests/NXLibraryCoreTests/OnlineArtworkSourcesTests.swift](../Tests/NXLibraryCoreTests/OnlineArtworkSourcesTests.swift) | Ricerca Steam e loghi MediaWiki/Commons con risposte sintetiche. |
 | [Tests/NXLibraryCoreTests/OnlineBackgroundsTests.swift](../Tests/NXLibraryCoreTests/OnlineBackgroundsTests.swift) | Parser degli sfondi fissi, risoluzioni, crediti e nomi dei download. |
@@ -712,8 +713,9 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Tests/NXLibraryCoreTests/RyujinxSaveImportTests.swift](../Tests/NXLibraryCoreTests/RyujinxSaveImportTests.swift) | Contenitori e slot Ryujinx, identità del titolo e importazioni con strutture e destinazioni differenti. |
 | [Tests/NXLibraryCoreTests/SaveLocationTests.swift](../Tests/NXLibraryCoreTests/SaveLocationTests.swift) | Identificativi, percorsi sicuri, precedenze dell’ambiente e cloud effettivo. |
 | [Tests/NXLibraryCoreTests/SaveOperationGateTests.swift](../Tests/NXLibraryCoreTests/SaveOperationGateTests.swift) | Lease per titolo, esclusione globale dell’updater, operazioni concorrenti e recupero bloccato senza I/O attivo. |
-| [Tests/NXLibraryCoreTests/SavePresentationTests.swift](../Tests/NXLibraryCoreTests/SavePresentationTests.swift) | Riepiloghi, date, nomi degli slot e accessibilità dell’azione di importazione. |
+| [Tests/NXLibraryCoreTests/SavePresentationTests.swift](../Tests/NXLibraryCoreTests/SavePresentationTests.swift) | Azioni e messaggi del pannello; distingue backup storico/completo e limite cloud. |
 | [Tests/NXLibraryCoreTests/SaveSnapshotStoreTests.swift](../Tests/NXLibraryCoreTests/SaveSnapshotStoreTests.swift) | Inventari, xattr, integrità dei backup, staging e selezione dei backup datati. |
+| [MultiuserSaveTests.swift](../Tests/NXLibraryCoreTests/MultiuserSaveTests.swift) | Backup e restore utenti/registro, compatibilità storica, import circoscritti, fault injection e conservazione di dati cambiati da fuori. |
 | [Tests/NXLibraryCoreTests/SaveTestHome.swift](../Tests/NXLibraryCoreTests/SaveTestHome.swift) | Fixture condivisa che crea una home e un bundle sintetici in una directory temporanea dedicata. |
 | [Tests/NXLibraryCoreTests/SaveTransactionTests.swift](../Tests/NXLibraryCoreTests/SaveTransactionTests.swift) | Sostituzioni, interruzioni, rollback, modifiche esterne e compatibilità dei journal precedenti. |
 | [Tests/NXLibraryCoreTests/ScreenshotViewerStateTests.swift](../Tests/NXLibraryCoreTests/ScreenshotViewerStateTests.swift) | Indice, avanzamento e limiti del visualizzatore screenshot. |
@@ -795,6 +797,8 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [run_review.py](../Tests/CatalogAppChecks/run_review.py) | Verifica le vere funzioni di avvio achievement, piattaforma dei loghi, focus durante lo scroll, menu e routing del controller sotto alert, dialoghi modali e sheet; prova anche il ritorno all'input. Dati sintetici, senza finestre. |
 | [run_source_access.py](../Tests/CatalogAppChecks/run_source_access.py) | Esegue il ripristino di avvio, l'observer e i selettori reali: nessuna scansione automatica dei sorgenti, cartella ricordata, annullamento e lettura dei soli file scelti; nessuna finestra o dato personale. |
 | [run_onboarding.py](../Tests/CatalogAppChecks/run_onboarding.py) | Esegue observer e ripristino reali del Setup, applicazione acceso/spento/nil, radice della fonte, focus dopo Retry e punti reali di richiesta notifiche su dati sintetici; nessuna finestra o dato personale. |
+| [run_nup_programs.py](../Tests/CatalogAppChecks/run_nup_programs.py) | Esegue il probe NUP opzionale su snapshot sintetico, convertitori UI reali, persistenza e argv del rebuild. |
+| [run_save_restart.py](../Tests/CatalogAppChecks/run_save_restart.py) | Arresti reali e nuovi processi nei checkpoint di transazione, recovery e pulizia; verifica tutti gli utenti, registro e integrità dei backup su fixture temporanee. |
 | [run_entrance.py](../Tests/CatalogAppChecks/run_entrance.py) | Esegue i metodi reali di input e readiness: primo comando durante il fullscreen, precedenza delle coperture, drawable mancante e presentazione su entrambi i percorsi. Nessuna finestra o GPU reale. |
 | [run_achievement_scroll.py](../Tests/CatalogAppChecks/run_achievement_scroll.py) | Verifica fuori schermo la vera lista e i modelli durante riaperture rapide, dettagli della prima riga, ridimensionamento e Riduci movimento; nessuna finestra o automazione UI. |
 | [run_game_header.py](../Tests/CatalogAppChecks/run_game_header.py) | Esegue i corpi reali di logo e azioni condivisi senza finestra né store applicativi, per entrambi i layout. |

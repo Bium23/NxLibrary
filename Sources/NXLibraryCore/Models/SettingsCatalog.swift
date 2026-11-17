@@ -127,7 +127,7 @@ public enum SettingsCatalog {
         row("surprisePool", .libraryGames, "Surprise me pool",
             "Which games Surprise me picks from.") { $0.surprisePool },
         row("cloudSaves", .cloudSaves, "Cloud saves",
-            "One sync choice for all games, applied at next launch: Off, iCloud Drive or a folder you choose.") { $0.cloudSaves },
+            "One sync choice for all games, applied at next launch: Off, iCloud Drive or a folder you choose. Only the primary user and device save sync.") { $0.cloudSaves },
         row("cloudSavesPickedFolder", .cloudSaves, "Cloud saves folder",
             "The chosen folder for save sync; choosing a folder enables it.") { $0.cloudSavesPickedFolder },
         row("showsSessionCard", .libraryGames, "Session card",

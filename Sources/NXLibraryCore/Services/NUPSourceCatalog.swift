@@ -55,6 +55,9 @@ try:
                     name = raw.decode('utf-8', 'replace'); break
             if name: break
         print(f'title {app:016X}')
+        if getattr(n, 'application', None) is not None:
+            print(f'application {n.application:016X}')
+            print(f'aoc_base {n.aoc_base:016X}')
         print('name ' + name.encode().hex())
         if base is not None: print(f'base {n.tree_bytes(base.root)}')
         for v, k in sorted(vers.items()): print(f'update {v} {n.tree_bytes(k.root)}')
@@ -86,13 +89,37 @@ except pack_nup.Error as e:
         var updates: [DetectedSource] = []
         var dlcs: [DetectedSource] = []
         let lines = output.split(separator: "\n").map { $0.split(separator: " ").map(String.init) }
+        guard lines.filter({ $0.first == "title" }).count == 1 else {
+            throw EngineSourceError.invalidContainer("invalid program title ID")
+        }
         for fields in lines where fields.first == "title" {
-            guard fields.count == 2, let id = UInt64(fields[1], radix: 16), id != 0, id & 0xFFF == 0 else {
+            guard fields.count == 2, fields[1].count == 16, let id = UInt64(fields[1], radix: 16), id != 0 else {
                 throw EngineSourceError.invalidContainer("invalid base title ID")
             }
             title = id
         }
         guard let title else { throw EngineSourceError.invalidContainer("no base title ID") }
+        let applications = lines.filter { $0.first == "application" }
+        let aocBases = lines.filter { $0.first == "aoc_base" }
+        let selection: NUPProgramSelection?
+        if !applications.isEmpty || !aocBases.isEmpty {
+            guard applications.count == 1, aocBases.count == 1,
+                  applications[0].count == 2, aocBases[0].count == 2,
+                  applications[0][1].count == 16, aocBases[0][1].count == 16,
+                  let application = UInt64(applications[0][1], radix: 16),
+                  let aocBase = UInt64(aocBases[0][1], radix: 16) else {
+                throw EngineSourceError.invalidContainer("invalid program metadata")
+            }
+            let program = NUPProgramSelection(programID: title, applicationID: application, addOnContentBaseID: aocBase)
+            guard program.isValid else { throw EngineSourceError.invalidContainer("invalid program metadata") }
+            selection = program
+        } else {
+            guard title & 0xFFF == 0 else { throw EngineSourceError.invalidContainer("invalid base title ID") }
+            selection = nil
+        }
+        let (legacyAOCBase, aocOverflow) = title.addingReportingOverflow(0x1000)
+        guard selection != nil || !aocOverflow else { throw EngineSourceError.invalidContainer("invalid DLC base") }
+        let aocBase = selection?.addOnContentBaseID ?? legacyAOCBase
         for fields in lines {
             switch fields.first {
             case "name":
@@ -103,14 +130,16 @@ except pack_nup.Error as e:
                 guard fields.count == 3, let version = Int(fields[1]), version > 0, let bytes = Int64(fields[2]) else {
                     throw EngineSourceError.invalidContainer("invalid update record")
                 }
-                updates.append(DetectedSource(url: nup, kind: .update, titleId: title + 0x800, version: version,
-                                              sizeBytes: bytes, layout: .container))
+                let (updateID, overflow) = title.addingReportingOverflow(0x800)
+                guard !overflow else { throw EngineSourceError.invalidContainer("invalid update record") }
+                updates.append(DetectedSource(url: nup, kind: .update, titleId: updateID, version: version,
+                                              sizeBytes: bytes, layout: .container, nupProgram: selection))
             case "dlc":
-                guard fields.count == 3, let id = UInt64(fields[1], radix: 16), id > title + 0x1000,
-                      id - title - 0x1000 <= 2000, let bytes = Int64(fields[2]) else {
+                guard fields.count == 3, let id = UInt64(fields[1], radix: 16), id > aocBase,
+                      id - aocBase <= 2000, let bytes = Int64(fields[2]) else {
                     throw EngineSourceError.invalidContainer("invalid DLC record")
                 }
-                dlcs.append(DetectedSource(url: nup, kind: .dlc, titleId: id, sizeBytes: bytes, layout: .container))
+                dlcs.append(DetectedSource(url: nup, kind: .dlc, titleId: id, sizeBytes: bytes, layout: .container, nupProgram: selection))
             default:
                 break
             }
@@ -124,7 +153,7 @@ except pack_nup.Error as e:
         let profileName = profile?.split(separator: "\n").first(where: { $0.hasPrefix("name\t") }).map { String($0.dropFirst(5)) }
         let name = profileName ?? (nacpName.isEmpty ? identity : nacpName)
         let base = hasBase
-            ? DetectedSource(url: nup, kind: .base, titleId: title, version: 0, sizeBytes: fileSize, layout: .container)
+            ? DetectedSource(url: nup, kind: .base, titleId: title, version: 0, sizeBytes: fileSize, layout: .container, nupProgram: selection)
             : nil
         return DetectedGame(baseTitleId: title, name: name, base: base,
                             updates: updates.sorted { ($0.version ?? 0) < ($1.version ?? 0) }, dlcs: dlcs)

@@ -54,10 +54,12 @@ public final class SaveSnapshotStore {
         defer { try? SaveFiles.remove(temp) }
         let slots = Set(before.map(\.slot))
         for slot in SaveSlot.allCases where slots.contains(slot) {
-            try io.copy(location.directory(slot), temp.appendingPathComponent(slot == .account ? "save" : "save_device"))
+            try io.copy(location.directory(slot), temp.appendingPathComponent(slot.fileName))
         }
         guard try SaveFiles.inventory(location) == before else { throw SaveFailure.changed }
-        let snapshot = SaveSnapshot(id: id, identity: identity, created: created, reason: reason, presentSlots: slots, entries: before)
+        let version = slots.allSatisfy(\.isLegacy) ? 1 : 2
+        let snapshot = SaveSnapshot(schemaVersion: version, id: id, identity: identity, created: created,
+                                    reason: reason, presentSlots: slots, entries: before)
         try verifyContents(snapshot, directory: temp)
         try SaveFiles.syncTree(temp)
         try SaveFiles.durableWrite(snapshot, to: temp.appendingPathComponent("manifest.json"))
@@ -92,7 +94,7 @@ public final class SaveSnapshotStore {
         try SaveFiles.safePath(file)
         guard let data = try? SaveFiles.readRegular(file, limit: 32 * 1024 * 1024),
               let snapshot = try? JSONDecoder().decode(SaveSnapshot.self, from: data),
-              snapshot.schemaVersion == 1, snapshot.identity.titleID == titleID.uppercased(),
+              snapshot.hasSupportedSchema, snapshot.identity.titleID == titleID.uppercased(),
               snapshot.entries.allSatisfy({ ($0.path.isEmpty || SaveFiles.validRelative($0.path)) && $0.byteCount >= 0 && $0.byteCount < Int64.max / Int64(max(1, snapshot.entries.count)) }) else { throw SaveFailure.invalidSnapshot }
         // Read older schema-1 backups portably too: provenance is assigned by macOS to a copy.
         var portable = snapshot
@@ -102,12 +104,13 @@ public final class SaveSnapshotStore {
     internal func verifyContents(_ snapshot: SaveSnapshot, directory: URL) throws {
         var actual: [SaveInventoryEntry] = []
         for slot in SaveSlot.allCases {
-            actual += try SaveFiles.inventory(directory.appendingPathComponent(slot == .account ? "save" : "save_device"), slot: slot)
+            actual += try SaveFiles.inventory(directory.appendingPathComponent(slot.fileName), slot: slot)
         }
         guard actual == snapshot.entries, Set(actual.map(\.slot)) == snapshot.presentSlots else { throw SaveFailure.invalidSnapshot }
     }
     public func currentInventory(location: SaveLocation) throws -> [SaveInventoryEntry] { try SaveFiles.inventory(location) }
     public func stageImport(source: URL, slot: SaveSlot, location: SaveLocation) throws -> SaveImportPreview {
+        guard slot.isLegacy else { throw SaveFailure.unsafePath }
         try location.validate()
         try SaveFiles.safePath(source)
         let source = try RyujinxSaveFolder.payload(for: source, titleID: location.titleID)
@@ -133,6 +136,7 @@ public final class SaveSnapshotStore {
               try SaveFiles.inventory(location) == preview.currentEntries else { throw SaveFailure.changed }
     }
     private func validateStaging(_ preview: SaveImportPreview, location: SaveLocation) throws {
+        guard preview.slot.isLegacy else { throw SaveFailure.unsafePath }
         guard preview.staging.path == location.root.appendingPathComponent(".nxlibrary-save-preview-\(preview.id)").path else { throw SaveFailure.unsafePath }
         try location.validate(); try SaveFiles.safePath(preview.staging)
     }

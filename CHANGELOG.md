@@ -19,6 +19,9 @@ These changes are implemented in Arcane Dev. Human validation remains pending un
 
 ### Fixed
 
+- NUP discovery keeps a selected program separate from its application and DLC identities. Rebuilds explicitly select that program when the engine supports it; older NUP records keep program zero.
+- Local save backups include additional users and their registry. Restoring an older backup preserves other local users; interrupted replacements and interrupted recovery retain verified backups and unexpected external changes. Cloud sync remains limited to the primary user and device save.
+
 - First launch keeps the Steam switch choice after quitting during Porting and uses the saved Steam folder for discovery and activation. An incomplete Steam read offers **Retry** instead of saying no games were found.
 - Notification permission is requested when a porting starts, rather than when opening the library.
 - Scrolling a game page can keep focus on its achievements card; Game Details is disabled while another panel owns input.

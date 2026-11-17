@@ -23,7 +23,7 @@ struct SettingsCloudSavesSection: View {
         VStack(spacing: canvas.u(8)) {
             SeleneCycleRow("Cloud saves",
                            subtitle: "All games · Next launch",
-                           info: "Applied before each game starts, including Off. Custom save-sync overrides are reported in Saves.",
+                           info: "Applied before each game starts, including Off. Custom save-sync overrides are reported in Saves. Cloud sync covers only the primary user and device save.",
                            value: cloudSaves.title, cycle: stepCloudSaves)
 
             SeleneButtonRow("Cloud saves folder",

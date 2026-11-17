@@ -48,6 +48,7 @@ public struct EngineSourceCapabilities {
     public let extractedFolders: Bool
     /// Builds from a `.nup` file (scripts/pack_nup.py).
     public let nupContainers: Bool
+    public let nupPrograms: Bool
     /// A NUP or an extracted folder of a game with no registered profile gets a provisional one, as an NSP does
     /// (nxnative 056e41fe: survey_nup, survey_dump). Before it, such a game is refused.
     public let provisionalNUP: Bool
@@ -61,6 +62,7 @@ public struct EngineSourceCapabilities {
         titleSelection = text.contains("'--title-id'") || text.contains("\"--title-id\"")
         extractedFolders = text.contains("import pack_dump") && titleSelection
         nupContainers = text.contains("import pack_nup") && titleSelection
+        nupPrograms = nupContainers && text.contains("pack_nup.scan(n, program)")
         provisionalNUP = nupContainers && text.contains("survey_nup")
         provisionalDumps = extractedFolders && text.contains("survey_dump")
     }

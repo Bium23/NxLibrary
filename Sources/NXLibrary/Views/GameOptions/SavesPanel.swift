@@ -148,7 +148,7 @@ struct SavesPanel: View {
     private func subtitle(_ row: Row) -> String {
         switch row {
         case .open: return L10n.text("Open the current save in Finder.")
-        case .backup: return L10n.text("Keep a copy of your current progress.")
+        case .backup: return L10n.text("Back up all local users and the device save.")
         case .target: return L10n.text("Destination for imports only.")
         case .add: return L10n.text("Choose a save folder to import.")
         case .refresh: return L10n.text("Check saves and backups again.")
@@ -194,7 +194,7 @@ struct SavesPanel: View {
                 confirmTitle: L10n.text("Restore"), focus: $confirmFocus,
                 onCancel: { if !model.busy { model.cancelPreview() } }, onConfirm: { if !model.busy { model.confirmRestore() } }).disabled(model.busy)
         } else if cloudPrompt {
-            SeleneConfirmDialog(title: L10n.text("Cloud saves on"), message: cloudHelp.message, confirmTitle: cloudHelp.button,
+            SeleneConfirmDialog(title: L10n.text("Cloud saves on"), message: cloudHelp.message + "\n\n" + SavePresentation.cloudNotice, confirmTitle: cloudHelp.button,
                 focus: $confirmFocus, onCancel: { cloudPrompt = false }, onConfirm: resolveCloud)
 
         }

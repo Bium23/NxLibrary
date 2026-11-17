@@ -243,7 +243,8 @@ public final class AppViewModel: ObservableObject {
         let capabilities = engineSourceCapabilities
         return SourceSelection.supported(sources, titleSelection: capabilities.titleSelection,
                                          extractedFolders: capabilities.extractedFolders,
-                                         nupContainers: capabilities.nupContainers)
+                                         nupContainers: capabilities.nupContainers,
+                                         nupPrograms: capabilities.nupPrograms)
     }
     
     public var formattedSelectedSourcesSize: String {
@@ -2078,7 +2079,7 @@ public final class AppViewModel: ObservableObject {
                     titleId: String(format: "%016llX", source.titleId),
                     versionString: source.version.map { "v\($0)" },
                     sizeBytes: source.sizeBytes, sourceLayout: source.layout,
-                    requiresTitleSelection: source.requiresTitleSelection
+                    requiresTitleSelection: source.requiresTitleSelection, nupProgram: source.nupProgram
                 )
             }
         )
@@ -2434,7 +2435,7 @@ public final class AppViewModel: ObservableObject {
                          titleId: String(format: "%016llX", $0.titleId),
                          versionString: $0.version.map(String.init),
                          sizeBytes: $0.sizeBytes, isSymlink: folder == nil, sourceLayout: $0.layout,
-                         requiresTitleSelection: $0.requiresTitleSelection)
+                         requiresTitleSelection: $0.requiresTitleSelection, nupProgram: $0.nupProgram)
         }
         game.workspacePath = workspace.directory.path
         game.buildCachePath = workspace.buildCache.path
@@ -2479,6 +2480,9 @@ public final class AppViewModel: ObservableObject {
         let requiresKeys = SourceSelection.requiresKeys(target.sources)
         guard supportsSources(target.sources) else {
             throw NXLibraryError.environmentBlocked(L10n.text("These sources need an engine with extracted-folder or multi-title support."))
+        }
+        guard SourceSelection.matchesNUPProgram(target.sources, titleID: titleId) else {
+            throw NXLibraryError.environmentBlocked(L10n.text("The selected NUP program no longer matches this game. Choose the source again."))
         }
         if requiresKeys {
             guard isProdKeysValid, FileManager.default.fileExists(atPath: keyStore.keyURL.path) else {
@@ -2619,6 +2623,8 @@ public final class AppViewModel: ObservableObject {
             bundleId: target.bundleId ?? "org.nxnative.\(titleId.lowercased())",
             language: loadRuntimeConfig(for: target).languageForBuild,
             titleId: engineSourceCapabilities.titleSelection ? titleId : nil,
+            programIndex: SourceSelection.programIndex(for: target.sources, titleID: titleId,
+                                                       nupPrograms: engineSourceCapabilities.nupPrograms),
             packageVersion: engineSourceCapabilities.titleSelection
                 ? SourceSelection.packageVersion(for: target.sources, stagedSelection: !workspace.links.isEmpty) : nil,
             allowUntestedToolchain: allowUntestedToolchain,
@@ -3034,7 +3040,7 @@ public final class AppViewModel: ObservableObject {
             }
             return DetectedSource(url: item.url, kind: item.kind, titleId: titleId,
                                   version: version, sizeBytes: item.sizeBytes, layout: item.layout,
-                                  requiresTitleSelection: item.requiresTitleSelection == true)
+                                  requiresTitleSelection: item.requiresTitleSelection == true, nupProgram: item.nupProgram)
         }
         guard let titleId = game.titleId.flatMap({ UInt64($0, radix: 16) }) else {
             throw NXLibraryError.missingTitleId
@@ -3056,7 +3062,7 @@ public final class AppViewModel: ObservableObject {
         }
         return DetectedSource(url: file.url, kind: file.type, titleId: titleId,
                               version: version, sizeBytes: file.sizeBytes, layout: file.layout,
-                              requiresTitleSelection: file.requiresTitleSelection == true)
+                              requiresTitleSelection: file.requiresTitleSelection == true, nupProgram: file.nupProgram)
     }
 
     private func finalAppURL(for game: PortedGame) -> URL {
