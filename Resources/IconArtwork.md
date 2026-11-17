@@ -1,9 +1,11 @@
 # App icon artwork
 
 The owner created the original artwork with AI and provided it on
-2026-11-17. `IconArtwork.png` is that full-bleed 1254 × 1254 square master:
-a violet, rose and blue crystal inside a clear glass sphere, framed by
-loose black ink brush strokes on light paper. The source is opaque and has
+2026-11-18 as a WebP image, converted here to PNG without resizing.
+`IconArtwork.png` is that full-bleed 1254 × 1254 square master: a violet,
+rose and blue crystal inside a clear glass sphere, framed by a navy and a
+plum ink brush stroke on light paper, with a plum ink wave inside the
+sphere. The source is opaque and has
 no pre-rendered icon frame, transparent padding, rounded corners, rim or
 external shadow.
 

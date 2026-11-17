@@ -8,7 +8,7 @@ These changes are implemented in Arcane Dev. Human validation remains pending un
 
 ### Changed
 
-- **New app icon.** Arcane's icon is now a crystal inside a glass sphere, framed by black ink strokes on light paper. The Light, Dark and Mono choices in **App icon** follow it.
+- **New app icon.** Arcane's icon is now a crystal inside a glass sphere, framed by navy and plum ink strokes on light paper. The Light, Dark and Mono choices in **App icon** follow it.
 - The shell keeps the same background renderer when opening Settings and returning home, preserving its frame and motion clock.
 - Changing the theme updates the shared background and its shades even when the wallpaper and selected card stay the same.
 
