@@ -843,7 +843,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 
 | File | Responsabilità aggiuntiva |
 |---|---|
-| [Resources/IconArtwork.png](../Resources/IconArtwork.png) | Master quadrato originale dell’icona, fornito dall’utente e creato con AI. |
+| [Resources/IconArtwork.png](../Resources/IconArtwork.png) | Master quadrato originale dell’icona (cristallo nella sfera di vetro), fornito dall’utente e creato con AI. |
 | [Resources/IconArtwork.md](../Resources/IconArtwork.md) | Provenienza dichiarata, brief e riproduzione delle varianti tramite il generatore. |
 | [crystal-arcane.png](../Sources/NXLibraryCore/Resources/crystal-arcane.png) | Immagine ferma del trofeo Arcane, anche come ripiego del video. |
 | [crystal-arcane.mov](../Sources/NXLibraryCore/Resources/crystal-arcane.mov) | Animazione con alpha del trofeo Arcane. |
