@@ -44,8 +44,8 @@ final class SettingsCatalogTests: XCTestCase {
     ]
 
     func testRowIDsAreUnchanged() {
-        XCTAssertEqual(SettingsCatalog.all.count, 80)
-        XCTAssertEqual(Set(SettingsCatalog.all.map(\.id)), Self.rowIDs)
+        XCTAssertEqual(SettingsCatalog.all.count, Self.rowIDs.count + 1)
+        XCTAssertEqual(Set(SettingsCatalog.all.map(\.id)), Self.rowIDs.union(["particleStyle"]))
     }
 
     func testEveryRowSitsInItsNewSection() {

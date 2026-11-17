@@ -52,7 +52,7 @@ struct ThemePickerView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            SeleneBackdrop()
+            SeleneBackdrop().still(true)
             Color.black.opacity(0.3).ignoresSafeArea()
 
             Group {
@@ -162,8 +162,10 @@ struct ThemePickerView: View {
                         .onTapGesture { tap(index) }
                 }
                 VStack(alignment: .leading, spacing: 0) {
-                    ThemePreview(palette: palette, wallpaperURL: previewWallpaper(theme: palette),
-                                 games: games, width: 780, shade: settings.settings.backgroundShade)
+                    ThemePreview(palette: palette, wallpaperURL: state.particlesFocused ? nil : previewWallpaper(theme: palette),
+                                 games: games, width: 780, shade: settings.settings.backgroundShade,
+                                 particleStyle: settings.settings.particleStyle,
+                                 animated: settings.settings.animatedBackground)
                     chips(palette)
                         .padding(.top, canvas.u(18))
                         .padding(.leading, canvas.u(4))
@@ -172,6 +174,11 @@ struct ThemePickerView: View {
                         .foregroundColor(SeleneTheme.ink)
                         .padding(.top, canvas.u(12))
                         .padding(.leading, canvas.u(4))
+                    SeleneCycleRow("Particles", value: settings.settings.particleStyle.title) { stepParticles($0) }
+                        .environment(\.seleneFocusedRowID, state.particlesFocused ? "Particles" : nil)
+                        .onHover { if $0 { state.particlesFocused = true } }
+                        .padding(.top, canvas.u(14))
+                        .frame(width: canvas.u(780))
                 }
             }
             .padding(.top, canvas.u(290))
@@ -205,7 +212,7 @@ struct ThemePickerView: View {
             .frame(width: canvas.u(132), height: canvas.u(76))
             .clipShape(shape)
             .overlay(shape.strokeBorder(Color.white.opacity(0.25), lineWidth: 1))
-            .modifier(TileFocus(focused: focused, radius: 14, scale: 1.08))
+            .modifier(TileFocus(focused: focused && !state.particlesFocused, radius: 14, scale: 1.08))
             Text(palette.name)
                 .seleneFont(14)
                 .foregroundColor(SeleneTheme.ink75)
@@ -302,7 +309,9 @@ struct ThemePickerView: View {
                 }
                 VStack(alignment: .leading, spacing: 0) {
                     ThemePreview(palette: theme.palette, wallpaperURL: previewURL(focused), games: games, width: 820,
-                                 videoURL: previewVideo, shade: settings.settings.backgroundShade)
+                                 videoURL: previewVideo, shade: settings.settings.backgroundShade,
+                                 particleStyle: settings.settings.particleStyle,
+                                 animated: settings.settings.animatedBackground)
                     Text(creditLine(focused) ?? " ")
                         .seleneFont(17)
                         .foregroundColor(SeleneTheme.ink75)
@@ -409,7 +418,9 @@ struct ThemePickerView: View {
                 tileLabel("Theme's own")
             case .none:
                 if state.tab == .live {
-                    MoonlightBackdrop(accent: SeleneTheme.glyph, ink: SeleneTheme.ink, moving: false, asImage: true)
+                    MoonlightBackdrop(accent: SeleneTheme.glyph, ink: SeleneTheme.ink, moving: false, asImage: true,
+                                      particleStyle: settings.settings.particleStyle,
+                                      iridescent: SeleneTheme.usesArcaneBackground)
                 }
                 tileLabel(state.tab == .live ? L10n.text("Moonlight") : "None")
             case .add:
@@ -555,15 +566,26 @@ struct ThemePickerView: View {
     }
 
     private func move(_ direction: GridDirection) {
+        if state.step == .theme, state.particlesFocused, direction == .left || direction == .right {
+            stepParticles(direction == .left ? -1 : 1)
+            return
+        }
         let count = state.step == .theme ? palettes.count : backgrounds.count
         if state.move(direction, count: count) { SoundEffectService.shared.play(.focus) }
+    }
+
+    private func stepParticles(_ delta: Int) {
+        state.particlesFocused = true
+        settings.settings.particleStyle = settings.settings.particleStyle.stepped(delta)
+        SoundEffectService.shared.play(.key)
     }
 
     /// A click focuses a tile; a click on the focused one chooses it.
     private func tap(_ index: Int) {
         switch state.step {
         case .theme:
-            if index == state.themeIndex { return accept() }
+            if index == state.themeIndex, !state.particlesFocused { return accept() }
+            state.particlesFocused = false
             state.themeIndex = index
         case .background:
             if index == state.backgroundIndex { return accept() }

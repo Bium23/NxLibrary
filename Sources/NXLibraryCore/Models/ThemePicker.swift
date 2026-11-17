@@ -41,6 +41,8 @@ public struct ThemePickerState: Equatable {
     public var tab: BackgroundTab = .wallpapers
     public var themeIndex: Int
     public var backgroundIndex: Int
+    /// The particle row belongs to the colours step, below its preview.
+    public var particlesFocused = false
 
     public init(themeIndex: Int, backgroundIndex: Int) {
         self.themeIndex = themeIndex
@@ -61,7 +63,16 @@ public struct ThemePickerState: Equatable {
     public mutating func move(_ direction: GridDirection, count: Int) -> Bool {
         switch step {
         case .theme:
-            guard let next = GridNavigation.move(themeIndex, direction, count: count, columns: Self.themeColumns) else { return false }
+            if particlesFocused {
+                guard direction == .up else { return false }
+                particlesFocused = false
+                return true
+            }
+            guard let next = GridNavigation.move(themeIndex, direction, count: count, columns: Self.themeColumns) else {
+                guard direction == .down || direction == .right, count > 0 else { return false }
+                particlesFocused = true
+                return true
+            }
             themeIndex = next
         case .background:
             guard let next = GridNavigation.move(backgroundIndex, direction, count: count,

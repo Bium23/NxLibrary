@@ -8,6 +8,8 @@ These changes are implemented in Arcane Dev. Human validation remains pending un
 
 ### Changed
 
+- **Arcane** is the default theme: a dark base with slowly changing blue, violet, coral and warm crystal reflections. The saved theme identity stays the same. **Particles** sits under the preview in the first colour-selection step of Quick settings → Theme, before backgrounds; choose soft light or **Crystal dust**. The same preference is in Settings → Look. Reduced motion and Background motion stop the colour cycle as well as the particles.
+
 - The app opens on the moving backdrop and brings the first Spotlight library in with growing tiles and a gradual game background. The welcome and Setup share that backdrop during the entrance; fullscreen waits for the window to be drawn. **Entrance animation** replaces the old Intro animation label while keeping its saved value and boot sound. The separate intro and preparation message are removed.
 - Native alerts and file pickers take priority over controller actions as well as the keyboard and menu commands, so actions do not reach the library or an Arcane dialog underneath.
 - The remembered **Game files** folder is kept for the picker without scanning it at launch. Choosing a folder or files in Add game starts the source scan; library refresh continues to discover installed apps.

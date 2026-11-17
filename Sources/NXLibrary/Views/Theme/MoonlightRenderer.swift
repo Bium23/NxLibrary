@@ -4,7 +4,7 @@ import QuartzCore
 import CoreVideo
 import NXLibraryCore
 
-/// The shaders' uniforms, four float4s (see `MoonlightShaders`).
+/// The shaders' uniforms, seven float4s (see `MoonlightShaders`).
 struct MoonlightUniforms {
     var size: SIMD4<Float>
     var accent: SIMD4<Float>
@@ -16,19 +16,24 @@ struct MoonlightUniforms {
 }
 
 /// The moonlight's colors, as the shaders take them.
-struct MoonlightColors: Equatable {
+struct MoonlightColors: Equatable, Hashable {
     var accent: SIMD3<Float>
     var ink: SIMD3<Float>
     /// How much of the Mods card's gold ground the shader draws under the light (0...1); glides with the accent.
     var tint: Float = 0
     /// The whole layer's opacity (0...1): the Mods card's moonlight over a wallpaper glides in and out with it.
     var presence: Float = 1
+    var crystal: Float = 0
+    var iridescence: Float = 0
 
-    init(accent: Color, ink: Color, tint: Float = 0, presence: Float = 1) {
+    init(accent: Color, ink: Color, tint: Float = 0, presence: Float = 1,
+         particleStyle: MoonlightParticleStyle = .soft, iridescent: Bool = false) {
         self.accent = Self.rgb(accent)
         self.ink = Self.rgb(ink)
         self.tint = tint
         self.presence = presence
+        self.crystal = particleStyle == .crystal ? 1 : 0
+        self.iridescence = iridescent ? 1 : 0
     }
 
     /// The Mods card's ground (`SeleneBackdrop.modsGradient` at the base's 0.6 over the black scrim).
@@ -103,7 +108,7 @@ final class MoonlightEngine: @unchecked Sendable {
         return MoonlightUniforms(size: SIMD4(w, h, time, w / h),
                                  accent: SIMD4(colors.accent, 1),
                                  ink: SIMD4(colors.ink, 0),
-                                 look: SIMD4(breath, colors.presence, 0, 0),
+                                 look: SIMD4(breath, colors.presence, colors.crystal, colors.iridescence),
                                  tintTop: SIMD4(MoonlightColors.tintTop, colors.tint),
                                  tintMid: SIMD4(MoonlightColors.tintMid, 0),
                                  tintBottom: SIMD4(MoonlightColors.tintBottom, 0))
@@ -136,7 +141,8 @@ final class MoonlightEngine: @unchecked Sendable {
     }
 
     /// One still frame as an image (the Theme screen's preview, clipped to its rounded card).
-    func snapshot(width: Int, height: Int, colors: MoonlightColors) -> CGImage? {
+    func snapshot(width: Int, height: Int, colors: MoonlightColors,
+                  time: Float = stillTime, breath: Float = stillBreath) -> CGImage? {
         guard width > 0, height > 0 else { return nil }
         let d = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: width, height: height,
                                                          mipmapped: false)
@@ -148,8 +154,8 @@ final class MoonlightEngine: @unchecked Sendable {
         pass.colorAttachments[0].loadAction = .clear
         pass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
         pass.colorAttachments[0].storeAction = .store
-        encode(pass, buffer, Self.uniforms(width: width, height: height, time: Self.stillTime,
-                                          breath: Self.stillBreath, colors: colors))
+        encode(pass, buffer, Self.uniforms(width: width, height: height, time: time,
+                                          breath: breath, colors: colors))
         if texture.storageMode == .managed, let blit = buffer.makeBlitCommandEncoder() {
             blit.synchronize(resource: texture)
             blit.endEncoding()
@@ -361,6 +367,8 @@ final class MoonlightLayerView: NSView {
         c.ink = from.ink + (c.ink - from.ink) * e
         c.tint = from.tint + (c.tint - from.tint) * e
         c.presence = from.presence + (c.presence - from.presence) * e
+        c.crystal = from.crystal + (c.crystal - from.crystal) * e
+        c.iridescence = from.iridescence + (c.iridescence - from.iridescence) * e
         return c
     }
 
@@ -531,6 +539,11 @@ struct MoonlightStill: View {
     let colors: MoonlightColors
     @Environment(\.displayScale) private var scale
     @State private var image: CGImage?
+    private struct Key: Hashable {
+        let width: Int
+        let height: Int
+        let colors: MoonlightColors
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -540,7 +553,7 @@ struct MoonlightStill: View {
                     Image(decorative: image, scale: scale).resizable()
                 }
             }
-            .task(id: [w, h] + [colors.accent, colors.ink].flatMap { [$0.x, $0.y, $0.z].map { Int($0 * 255) } }) {
+            .task(id: Key(width: w, height: h, colors: colors)) {
                 // Keep the last frame while resizing. A cancelled request never
                 // replaces the latest size/palette with a late result.
                 do { try await Task.sleep(nanoseconds: 40_000_000) } catch { return }

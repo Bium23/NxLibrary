@@ -528,7 +528,7 @@ Il percorso completo è in [flows.md](flows.md#6-importare-o-ripristinare-un-sal
 ## Artwork, metadati e voti
 
 **Sfondi delle schermate.**
-- Look distingue Wallpaper e Library screens. Game backgrounds è un controllo positivo: On mostra l'artwork del titolo in Spotlight e Collection, Off tiene il wallpaper. Riusa la preferenza `keepWallpaperOnGames` invertendo solo il binding.
+- Look comprende anche Particles, la stessa scelta del primo passo di Theme nelle impostazioni rapide. Distingue Wallpaper e Library screens. Game backgrounds è un controllo positivo: On mostra l'artwork del titolo in Spotlight e Collection, Off tiene il wallpaper. Riusa la preferenza `keepWallpaperOnGames` invertendo solo il binding.
 - Details usa sempre l'artwork del gioco, e la schermata di avvio segue le proprie impostazioni globali. Wallpaper sizing riguarda il wallpaper, Library shade le maschere delle schermate della libreria.
 
 **Fonti dell'artwork.**
@@ -619,6 +619,7 @@ Prove e misure di queste scelte: [docs/reviews/2026-11-16-ratings-metadata-evide
 **Sfondi online.**
 - I parser dei provider sono in `OnlineBackgrounds.swift`. `OnlineBackgroundService` gestisce rete, progressi, miniature e crediti.
 - `OnlineBrowser` e `OnlineTransfer`, in `OnlineBrowsePanel.swift`, alimentano la griglia e l'importazione nel selettore dei temi. `ThemeStore` unisce palette, wallpaper inclusi e file importati.
+- Impostazioni rapide → Theme mantiene due passaggi. Nel primo si scelgono i colori e, sotto l’anteprima, **Particles**; nel secondo lo sfondo. Destra dal bordo della griglia o Giù dall’ultima riga raggiungono Particles; Sinistra/Destra cambiano il valore, Su torna alla palette e A continua allo sfondo. L’anteprima della riga mostra il particellare anche con un wallpaper scelto, senza cambiare quel wallpaper; quella grande usa il renderer animato quando il movimento è consentito.
 
 ## Interfaccia Selene e input
 
@@ -638,6 +639,10 @@ Prove e misure di queste scelte: [docs/reviews/2026-11-16-ratings-metadata-evide
 
 **Sfondo.**
 - `SeleneBackdrop` combina gradiente, wallpaper e sfondo animato. `MoonlightRenderer` e `MoonlightShaders` rendono la parte Metal; `LiveBackdrop` usa AVFoundation per i video in loop.
+  - Il tema predefinito si chiama **Arcane** e conserva l’ID salvato `selene`. Il fondo resta blu-notte; campi luminosi sovrapposti e particelle percorrono un ciclo iridescente di 25 s, con intensità 0,5, nei colori del cristallo. `MoonlightChromatics` contiene i colori e il campionamento usato anche dal fallback statico; lo shader riceve le stesse costanti.
+  - `AppSettings.particleStyle` sceglie **Soft** o **Crystal dust** (default). Solo una parte dei moti grandi e vicini riceve faccette, con soglia proporzionale all’altezza del rendering; i punti lontani restano luminosi e morbidi. La scelta sopravvive al riavvio e partecipa a Search, Changed e Reset di Look. Valori assenti o sconosciuti usano il default.
+  - Colore e particelle avanzano con l’orologio del display link esistente, senza timer SwiftUI. Background motion spento e Riduci movimento tengono fermo l’orologio; il fallback senza Metal resta statico. Gli altri temi mantengono la loro palette. I campioni fermi includono stile, iridescenza, tint e presenza nella chiave, così una scelta nuova non riusa un’immagine precedente.
+  - Le misure GPU fuori schermo e i loro limiti sono nella [nota del 17 novembre](reviews/2026-11-17-arcane-moonlight.md).
 - **Arte dei giochi.** `SeleneArtLayer` è una pila di `CALayer` animati nel render server.
   - Ogni nuova immagine entra sopra ciò che si vede, che resta fermo sotto finché la nuova non è entrata. Così una dissolvenza interrotta riparte da ciò che è a schermo (niente salti, niente moonlight che traspare) e non scatta se il main thread è occupato.
   - Ciò che un layer mostra durante una dissolvenza si calcola sull'orologio (`OpacityFade`, la stessa curva dell'animazione), non dal presentation layer, che per un layer aggiunto nello stesso passaggio non esiste ancora. *Perché:* altrimenti due immagini in fila fanno saltare la prima a piena opacità.

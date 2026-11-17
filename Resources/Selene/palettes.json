@@ -426,7 +426,7 @@
   },
   {
     "id": "rose-pine",
-    "name": "Ros\u00e9 Pine",
+    "name": "Rosé Pine",
     "mode": "light",
     "focus": 5674143,
     "onFocus": 16446701,
@@ -451,7 +451,7 @@
   },
   {
     "id": "selene",
-    "name": "Default",
+    "name": "Arcane",
     "mode": "dark",
     "focus": 16777215,
     "onFocus": 1118481,
@@ -464,11 +464,11 @@
       "kind": "radial",
       "stops": [
         {
-          "color": 1059420,
+          "color": 790819,
           "location": 0.0
         },
         {
-          "color": 198682,
+          "color": 395282,
           "location": 1.0
         }
       ]

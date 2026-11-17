@@ -160,6 +160,8 @@ flowchart TD
     G --> B
 ```
 
+Nel menu rapido, Theme apre prima colori e Particles sotto l’anteprima. La scelta delle particelle salva `AppSettings.particleStyle`; A applica la palette e passa alla selezione dello sfondo. Il tema Arcane conserva l’identità salvata `selene`. La scelta dello sfondo mantiene il dialogo di destinazione esistente.
+
 La barra laterale segue `SettingsSidebarGroup`: General, Library, Porting e System. Ogni sezione mostra solo le righe di `SettingsCatalog` che le appartengono.
 
 Tornando alla home, le viste delle tessere ricreate leggono subito le immagini decodificate in `TileArtMemo`; i task caricano quelle mancanti e rivalidano i file Steam. La cover della card Mods resta nel `ModStoreHost` posseduto dalla shell ed è rivalidata in background rispetto agli abbinamenti correnti.

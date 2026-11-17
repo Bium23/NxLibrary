@@ -1,3 +1,5 @@
+import NXLibraryCore
+
 /// The moonlight's Metal shaders, compiled at launch by the system's runtime
 /// compiler (SwiftPM builds no .metal files, and the app needs no Metal toolchain).
 ///
@@ -7,6 +9,10 @@
 /// brightest channel, so the layer composites over the theme's gradient like a
 /// screen blend.
 enum MoonlightShaders {
+    private static let spectrum = MoonlightChromatics.colors.map {
+        "float3(\($0.x), \($0.y), \($0.z))"
+    }.joined(separator: ", ")
+
     static let source = #"""
 #include <metal_stdlib>
 using namespace metal;
@@ -15,13 +21,24 @@ struct Uniforms {
     float4 size;    // width px, height px, time s, aspect
     float4 accent;  // rgb, overall strength
     float4 ink;     // rgb, unused
-    float4 look;    // breath 0...1, presence 0...1 (the whole layer's opacity), unused...
+    float4 look;    // breath, presence, crystal facets, Arcane iridescence (0...1)
     float4 tintTop;     // the Mods card's ground: top rgb, amount 0...1
     float4 tintMid;     // rgb at 0.45 of the height
     float4 tintBottom;  // rgb at the bottom
 };
 
 struct Particle { float start, lane, depth, speed, size, phase, kind, tint; };
+
+constant float3 arcaneColors[5] = { \#(spectrum) };
+constant float arcanePeriod = \#(MoonlightChromatics.period);
+constant float arcaneIntensity = \#(MoonlightChromatics.intensity);
+
+float3 arcaneSpectrum(float2 uv, float time, float offset) {
+    float position = fract(time / arcanePeriod + uv.x * 0.19 + uv.y * 0.11 + offset) * 5.0;
+    int index = min(int(floor(position)), 4);
+    float f = fract(position);
+    return mix(arcaneColors[index], arcaneColors[(index + 1) % 5], f * f * (3.0 - 2.0 * f));
+}
 
 // MARK: Look (window heights and shares of the width)
 
@@ -106,7 +123,9 @@ vertex FullOut moon_full_vertex(uint vid [[vertex_id]]) {
 fragment float4 moon_light_fragment(FullOut in [[stage_in]], constant Uniforms &u [[buffer(0)]]) {
     float aspect = u.size.w, t = u.size.z, breath = u.look.x;
     float2 p = in.position.xy / u.size.y;
+    float2 uv = float2(p.x / aspect, p.y);
     float3 accent = u.accent.rgb;
+    if (u.look.w > 0.0) { accent = mix(accent, arcaneSpectrum(uv, t, 0.0), u.look.w); }
 
     // The beam: a cone from above the top left that bends right as it falls,
     // its edges smoking slowly.
@@ -151,6 +170,19 @@ fragment float4 moon_light_fragment(FullOut in [[stage_in]], constant Uniforms &
     float pulse = 0.62 + 0.38 * breath;
     float3 white = mix(accent, float3(1.0), 0.65);
     float3 c = accent * ((beam * 0.75 + pool) * pulse + wash + haze + road) + white * core * 0.3 * pulse;
+    if (u.look.w > 0.0) {
+        // Broad overlapping fields move through the spectrum over the steady dark ground.
+        float3 ambient = float3(0.0);
+        for (int i = 0; i < 3; i++) {
+            float phase = t / arcanePeriod;
+            float2 centre = float2(0.17 + float(i) * 0.3 + 0.035 * sin(phase * 6.283185 + float(i)),
+                                   0.1 + float(i) * 0.28);
+            float2 d = (uv - centre) / float2(0.65, 0.92);
+            float amount = exp(-dot(d, d) * 3.0) * 0.085;
+            ambient += arcaneSpectrum(float2(float(i) * 0.35, 0.3), t, float(i) * 0.09) * amount;
+        }
+        c = c * mix(1.0, arcaneIntensity, u.look.w) + ambient * u.look.w;
+    }
     c *= u.accent.w;
     // Dither so the dark gradients never band.
     c += (hash21(in.position.xy + fract(t)) - 0.5) / 255.0;
@@ -174,6 +206,8 @@ struct DotOut {
     float alpha;
     float bokeh;       // 0 sharp ... 1 a wide soft disc
     float3 color;
+    float facet;
+    float rotation;
 };
 
 struct Place { float2 at; float depth; float life; };
@@ -246,7 +280,9 @@ vertex DotOut moon_dot_vertex(uint vid [[vertex_id]], uint iid [[instance_id]],
     float bright = 0.5 + 0.5 * fract(q.phase * 13.7);
 
     float2 corner = float2(float(vid & 1), float(vid >> 1)) * 2.0 - 1.0;
-    float extent = radius + 1.5;
+    float facet = u.look.z * step(0.0044 * H, radius) * step(depth, 1.8)
+        * (q.kind < 1.5 ? 1.0 : 0.0) * step(0.52, fract(q.phase * 9.21));
+    float extent = radius * (1.0 + 0.35 * facet) + 1.5;
     float2 px = p * H + corner * extent;
 
     DotOut o;
@@ -257,6 +293,13 @@ vertex DotOut moon_dot_vertex(uint vid [[vertex_id]], uint iid [[instance_id]],
     o.alpha = place.life * spread * far * twinkle * bright * u.accent.w * u.look.y * clamp(sharp / 0.9, 0.3, 1.0);
     o.bokeh = smoothstep(2.5, 12.0, blur);
     o.color = q.tint > 0.5 ? mix(u.ink.rgb, u.accent.rgb, 0.25) : mix(u.accent.rgb, float3(1.0), 0.3);
+    if (u.look.w > 0.0) {
+        float3 spectral = arcaneSpectrum(float2(p.x / aspect, p.y), t, q.phase * 0.11);
+        o.color = mix(o.color, mix(spectral, float3(1.0), q.tint > 0.5 ? 0.55 : 0.18), u.look.w);
+    }
+    o.alpha *= mix(1.0, arcaneIntensity * 1.45, u.look.w);
+    o.facet = facet;
+    o.rotation = q.phase * 3.141593 + 0.23 * sin(t * 0.09 + q.phase * 8.0);
     return o;
 }
 
@@ -268,6 +311,16 @@ fragment float4 moon_dot_fragment(DotOut in [[stage_in]]) {
     shape *= 1.0 + 0.3 * in.bokeh * smoothstep(in.radius * 0.55, in.radius * 0.95, d);
     // A sharp mote has a bright heart.
     shape += (1.0 - in.bokeh) * exp(-d * d / max(in.radius * in.radius * 0.25, 0.3)) * 0.6;
+    if (in.facet > 0.0) {
+        float cs = cos(in.rotation), sn = sin(in.rotation);
+        float2 p = float2(cs * in.local.x + sn * in.local.y,
+                         -sn * in.local.x + cs * in.local.y) / in.radius;
+        float edge = abs(p.x / 0.7) + abs(p.y / 1.3);
+        float aa = min(0.7 / in.radius, 0.35);
+        float face = smoothstep(1.0 + aa, 1.0 - aa, edge);
+        float light = p.x + p.y * 0.18 < 0.0 ? 1.18 : 0.78;
+        shape = mix(shape, face * light, in.facet);
+    }
     return premultiplied(in.color * in.alpha * shape);
 }
 """#

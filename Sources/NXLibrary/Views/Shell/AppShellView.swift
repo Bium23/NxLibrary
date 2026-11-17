@@ -51,7 +51,8 @@ public struct AppShellView: View {
         SeleneBackdropStyle(wallpaperURL: theme.wallpaper(for: settings.settings.wallpaperID)?.url,
                             sizing: settings.settings.backgroundSizing,
                             animated: settings.settings.animatedBackground,
-                            brightness: settings.settings.wallpaperBrightness)
+                            brightness: settings.settings.wallpaperBrightness,
+                            particleStyle: settings.settings.particleStyle)
     }
 
     /// Spotlight or Collection: the screens that pick a game.

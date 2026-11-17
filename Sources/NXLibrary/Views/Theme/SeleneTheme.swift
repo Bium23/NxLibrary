@@ -22,6 +22,7 @@ public enum SeleneTheme {
     /// Selene's confirmation card (dialogs are a touch more solid than rows).
     public static var glassCard: Color { Color(hex: palette.glass, opacity: 0.96) }
     public static var glyph: Color { Color(hex: palette.glyph) }
+    static var usesArcaneBackground: Bool { palette.id == SelenePaletteCatalog.defaultID }
     /// Every list icon in one colour: on Selene a soft ink (its blue accent read poorly
     /// on the glass), elsewhere the palette's glyph.
     public static var rowIcon: Color { palette.id == SelenePaletteCatalog.defaultID ? ink82 : glyph }
