@@ -211,6 +211,17 @@ final class BuildWarningTests: XCTestCase {
         XCTAssertEqual(BuildWarningCopy.text(stage: "pack", summary: nil), "Pack finished with a warning. The log has the details.")
     }
 
+    func testPrewarmWarningExplainsTheFirstLaunchWithoutRawToolOutput() {
+        let text = BuildWarningCopy.text(stage: "Prewarm pipelines", summary: "RAW_TOOL_FAILURE")
+        XCTAssertTrue(text.contains("The game will prepare them on its first start"))
+        XCTAssertTrue(text.contains("rebuilding tries again"))
+        XCTAssertFalse(text.contains("RAW_TOOL_FAILURE"))
+        let event = BuildEventParser.parse(
+            #"{"ev":"stage_end","name":"Prewarm pipelines","ok":true,"warn":true,"summary":"failed, the app is packed without them"}"#)
+        XCTAssertEqual(event, .stageEnd(name: "Prewarm pipelines", ok: true, elapsed: nil,
+                                       summary: "failed, the app is packed without them", warn: true))
+    }
+
     func testAWarnedStageStillCountsAsFinished() {
         var progress = PortingProgress()
         progress.apply(.stage(k: 1, n: 2, name: "Mac shaders", step: nil))

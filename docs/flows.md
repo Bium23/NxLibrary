@@ -108,7 +108,7 @@ flowchart TD
     F -->|"ok"| G["WorkspaceManager + BuildScratch"]
     G --> N["Porting accettato: richiesta permesso notifiche"]
     N --> H["BuildCommandBuilder → BuildService<br/>processo dell'engine nxnative"]
-    H --> I["BuildEventParser → PortingProgress<br/>tile, percentuale, ETA"]
+    H --> I["BuildEventParser → PortingProgress<br/>tile, percentuale, ETA<br/>prewarm senza conteggio: attività e tempo trascorso"]
     I --> J["BuildOutputInstaller: scambio atomico"]
     J -->|"gioco aperto o installazione fallita"| K["PendingInstall: Retry più tardi"]
     J --> L["CatalogRepository: BuildRecord, toolchain"]

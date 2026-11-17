@@ -4,6 +4,10 @@ import Foundation
 /// was built and plays, but without something that stage makes.
 public enum BuildWarningCopy {
     public static func text(stage: String, summary: String?) -> String {
+        if stage.localizedCaseInsensitiveContains(PortingProgress.prewarmStageName) {
+            return L10n.text("Some pipelines could not be prepared during porting. The game will prepare them on its first start, which can take longer. ")
+                + L10n.text("The log has the reason; rebuilding tries again.")
+        }
         if stage.localizedCaseInsensitiveContains("pipeline archive") {
             return L10n.text("The pipeline archive could not be made, so the app was packed without one. ")
                 + L10n.text("The game prepares its shaders the first time it needs them, so its first start can take longer. ")

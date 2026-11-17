@@ -70,6 +70,32 @@ final class PortingPresentationTests: XCTestCase {
         XCTAssertEqual(PortingETA.text(p, lastFinishingSeconds: nil), "Pipelines: about 1 hr")
     }
 
+    func testPrewarmReportsActivityInsteadOfAnOlderFinishingEstimate() throws {
+        var p = finishing
+        p.apply(.stageEnd(name: "Pipeline archive", ok: true, elapsed: 60, summary: nil))
+        p.apply(.stage(k: 8, n: 9, name: "Prewarm pipelines", step: "local GPU"))
+        let before = p.overall
+        let heartbeat = try XCTUnwrap(BuildEventParser.parse(
+            #"{"ev":"progress","done":null,"total":null,"frac":null,"eta":null,"elapsed":3600}"#))
+        p.apply(heartbeat)
+        XCTAssertEqual(p.overall, before, "elapsed time is not a completed-work counter")
+        XCTAssertNil(p.finishingETA)
+        for previousTime: Double? in [nil, 60, 7200] {
+            XCTAssertEqual(PortingETA.text(p, lastFinishingSeconds: previousTime), "Preparing the first launch")
+        }
+        p.apply(.stageEnd(name: "Prewarm pipelines", ok: true, elapsed: 3600, summary: nil))
+        p.apply(.stage(k: 9, n: 9, name: "Mac app", step: nil))
+        XCTAssertEqual(PortingETA.text(p, lastFinishingSeconds: nil), "Finishing up")
+    }
+
+    func testStoppingPrewarmClearsTheActivityCaption() {
+        var p = finishing
+        p.apply(.stage(k: 8, n: 9, name: "Prewarm pipelines", step: nil))
+        XCTAssertEqual(PortingETA.text(p, lastFinishingSeconds: 60), "Preparing the first launch")
+        p.finish(success: false)
+        XCTAssertNil(PortingETA.text(p, lastFinishingSeconds: 60))
+    }
+
     func testETAFormatsHoursAndMinutesWhenOverAnHour() {
         let oneHour = progress([.stage(k: 5, n: 7, name: "Mac shaders", step: nil), .step("compiling"),
                                 .progress(fraction: 0.1, done: nil, total: nil, unit: nil, eta: 3600)])

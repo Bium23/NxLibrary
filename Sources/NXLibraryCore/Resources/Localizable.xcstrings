@@ -43993,6 +43993,46 @@
         }
       }
     },
+    "Preparing the first launch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing the first launch"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparazione del primo avvio"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préparation du premier lancement"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erster Start wird vorbereitet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando el primer inicio"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando a primeira inicialização"
+          }
+        }
+      }
+    },
     "PREVIEW": {
       "comment": "ThemePreview.swift",
       "localizations": {
@@ -49871,6 +49911,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "DADOS SALVOS"
+          }
+        }
+      }
+    },
+    "Some pipelines could not be prepared during porting. The game will prepare them on its first start, which can take longer. ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some pipelines could not be prepared during porting. The game will prepare them on its first start, which can take longer. "
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile preparare alcune pipeline durante il porting. Il gioco le preparerà al primo avvio, che potrà richiedere più tempo. "
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certains pipelines n’ont pas pu être préparés pendant le portage. Le jeu les préparera au premier lancement, qui pourra prendre plus de temps. "
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einige Pipelines konnten beim Portieren nicht vorbereitet werden. Das Spiel bereitet sie beim ersten Start vor, der dadurch länger dauern kann. "
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron preparar algunas canalizaciones durante la conversión. El juego las preparará en su primer inicio, que puede tardar más. "
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível preparar alguns pipelines durante a conversão. O jogo os preparará na primeira inicialização, que poderá demorar mais. "
           }
         }
       }
