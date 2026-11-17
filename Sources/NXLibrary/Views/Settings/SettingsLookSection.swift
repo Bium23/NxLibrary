@@ -84,10 +84,6 @@ struct SettingsLookSection: View {
                             subtitle: "Wallpaper & moonlight",
                             isOn: $settings.settings.animatedBackground)
 
-            SeleneCycleRow("Particles", value: settings.settings.particleStyle.title) {
-                settings.settings.particleStyle = settings.settings.particleStyle.stepped($0)
-            }
-
             SettingsSubheading(L10n.text("Library screens"))
 
             SeleneToggleRow("Game backgrounds",
@@ -131,9 +127,6 @@ struct SettingsLookSection: View {
             .value("brightness", "Wallpaper brightness") { stepBrightness($0) },
             .init(id: "animated", title: "Background motion") {
                 settings.settings.animatedBackground.toggle()
-            },
-            .value("particleStyle", "Particles") {
-                settings.settings.particleStyle = settings.settings.particleStyle.stepped($0)
             },
             .init(id: "keepWallpaper", title: "Game backgrounds") {
                 settings.settings.keepWallpaperOnGames.toggle()

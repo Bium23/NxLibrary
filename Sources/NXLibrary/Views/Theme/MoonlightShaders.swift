@@ -21,7 +21,7 @@ struct Uniforms {
     float4 size;    // width px, height px, time s, aspect
     float4 accent;  // rgb, overall strength
     float4 ink;     // rgb, unused
-    float4 look;    // breath, presence, crystal facets, Arcane iridescence (0...1)
+    float4 look;    // breath, presence, reserved, Arcane iridescence (0...1)
     float4 tintTop;     // the Mods card's ground: top rgb, amount 0...1
     float4 tintMid;     // rgb at 0.45 of the height
     float4 tintBottom;  // rgb at the bottom
@@ -206,8 +206,6 @@ struct DotOut {
     float alpha;
     float bokeh;       // 0 sharp ... 1 a wide soft disc
     float3 color;
-    float facet;
-    float rotation;
 };
 
 struct Place { float2 at; float depth; float life; };
@@ -280,9 +278,7 @@ vertex DotOut moon_dot_vertex(uint vid [[vertex_id]], uint iid [[instance_id]],
     float bright = 0.5 + 0.5 * fract(q.phase * 13.7);
 
     float2 corner = float2(float(vid & 1), float(vid >> 1)) * 2.0 - 1.0;
-    float facet = u.look.z * step(0.0044 * H, radius) * step(depth, 1.8)
-        * (q.kind < 1.5 ? 1.0 : 0.0) * step(0.52, fract(q.phase * 9.21));
-    float extent = radius * (1.0 + 0.35 * facet) + 1.5;
+    float extent = radius + 1.5;
     float2 px = p * H + corner * extent;
 
     DotOut o;
@@ -298,8 +294,6 @@ vertex DotOut moon_dot_vertex(uint vid [[vertex_id]], uint iid [[instance_id]],
         o.color = mix(o.color, mix(spectral, float3(1.0), q.tint > 0.5 ? 0.55 : 0.18), u.look.w);
     }
     o.alpha *= mix(1.0, arcaneIntensity * 1.45, u.look.w);
-    o.facet = facet;
-    o.rotation = q.phase * 3.141593 + 0.23 * sin(t * 0.09 + q.phase * 8.0);
     return o;
 }
 
@@ -311,16 +305,6 @@ fragment float4 moon_dot_fragment(DotOut in [[stage_in]]) {
     shape *= 1.0 + 0.3 * in.bokeh * smoothstep(in.radius * 0.55, in.radius * 0.95, d);
     // A sharp mote has a bright heart.
     shape += (1.0 - in.bokeh) * exp(-d * d / max(in.radius * in.radius * 0.25, 0.3)) * 0.6;
-    if (in.facet > 0.0) {
-        float cs = cos(in.rotation), sn = sin(in.rotation);
-        float2 p = float2(cs * in.local.x + sn * in.local.y,
-                         -sn * in.local.x + cs * in.local.y) / in.radius;
-        float edge = abs(p.x / 0.7) + abs(p.y / 1.3);
-        float aa = min(0.7 / in.radius, 0.35);
-        float face = smoothstep(1.0 + aa, 1.0 - aa, edge);
-        float light = p.x + p.y * 0.18 < 0.0 ? 1.18 : 0.78;
-        shape = mix(shape, face * light, in.facet);
-    }
     return premultiplied(in.color * in.alpha * shape);
 }
 """#

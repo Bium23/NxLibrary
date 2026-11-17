@@ -2,34 +2,20 @@ import XCTest
 @testable import NXLibraryCore
 
 final class MoonlightAppearanceTests: XCTestCase {
-    func testParticlePreferenceDefaultsAndSurvivesSave() throws {
-        XCTAssertEqual(AppSettings().particleStyle, .crystal)
-        var settings = AppSettings()
-        settings.particleStyle = .soft
-        XCTAssertEqual(try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(settings)).particleStyle, .soft)
-    }
-
-    func testOlderAndFutureParticlePreferencesUseTheDefaultWithoutLosingOtherSettings() throws {
-        for value in [nil, "future-effect"] as [String?] {
+    func testRemovedParticlePreferenceIsIgnoredWithoutLosingOtherSettings() throws {
+        for value in [nil, "soft", "crystal", "future-effect"] as [String?] {
             var object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(AppSettings())) as! [String: Any]
             object["soundVolume"] = 0.25
             object["particleStyle"] = value
             let decoded = try JSONDecoder().decode(AppSettings.self, from: JSONSerialization.data(withJSONObject: object))
-            XCTAssertEqual(decoded.particleStyle, .crystal)
             XCTAssertEqual(decoded.soundVolume, 0.25)
+            let saved = try JSONSerialization.jsonObject(with: JSONEncoder().encode(decoded)) as! [String: Any]
+            XCTAssertNil(saved["particleStyle"])
         }
     }
 
-    func testLookResetAndChangedIncludeTheParticlePreference() throws {
-        var settings = AppSettings()
-        settings.particleStyle = .soft
-        settings.soundVolume = 0.25
-        let row = try XCTUnwrap(SettingsCatalog.all.first { $0.id == "particleStyle" })
-        XCTAssertEqual(row.group, .look)
-        XCTAssertTrue(row.isChanged(settings))
-        let reset = SettingsReset.reset(.look, in: settings)
-        XCTAssertEqual(reset.particleStyle, .crystal)
-        XCTAssertEqual(reset.soundVolume, 0.25)
+    func testLookHasNoParticleChoice() {
+        XCTAssertFalse(SettingsCatalog.all.contains { $0.id == "particleStyle" })
     }
 
     func testColorCycleIsContinuousBoundedAndSpatial() {
@@ -49,16 +35,14 @@ final class MoonlightAppearanceTests: XCTestCase {
                           MoonlightChromatics.sample(x: 1, y: 1, time: 0))
     }
 
-    func testParticleChoiceIsReachableBeforeTheBackgroundStep() {
+    func testThemeGridStopsAtItsEdgesBeforeTheBackgroundStep() {
         var state = ThemePickerState(themeIndex: 11, backgroundIndex: 0)
-        XCTAssertTrue(state.move(.down, count: 12))
-        XCTAssertTrue(state.particlesFocused)
+        XCTAssertFalse(state.move(.down, count: 12))
         XCTAssertEqual(state.step, .theme)
-        XCTAssertFalse(state.move(.right, count: 12), "left/right is the setting's value, not another palette")
+        XCTAssertFalse(state.move(.right, count: 12))
         XCTAssertEqual(state.themeIndex, 11)
         XCTAssertTrue(state.move(.up, count: 12))
-        XCTAssertFalse(state.particlesFocused)
-        XCTAssertEqual(state.themeIndex, 11)
+        XCTAssertEqual(state.themeIndex, 6)
         state.step = .background
         XCTAssertTrue(state.move(.right, count: 4))
         XCTAssertEqual(state.backgroundIndex, 1)

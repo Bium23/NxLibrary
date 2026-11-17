@@ -23,16 +23,14 @@ struct MoonlightColors: Equatable, Hashable {
     var tint: Float = 0
     /// The whole layer's opacity (0...1): the Mods card's moonlight over a wallpaper glides in and out with it.
     var presence: Float = 1
-    var crystal: Float = 0
     var iridescence: Float = 0
 
     init(accent: Color, ink: Color, tint: Float = 0, presence: Float = 1,
-         particleStyle: MoonlightParticleStyle = .soft, iridescent: Bool = false) {
+         iridescent: Bool = false) {
         self.accent = Self.rgb(accent)
         self.ink = Self.rgb(ink)
         self.tint = tint
         self.presence = presence
-        self.crystal = particleStyle == .crystal ? 1 : 0
         self.iridescence = iridescent ? 1 : 0
     }
 
@@ -108,7 +106,7 @@ final class MoonlightEngine: @unchecked Sendable {
         return MoonlightUniforms(size: SIMD4(w, h, time, w / h),
                                  accent: SIMD4(colors.accent, 1),
                                  ink: SIMD4(colors.ink, 0),
-                                 look: SIMD4(breath, colors.presence, colors.crystal, colors.iridescence),
+                                 look: SIMD4(breath, colors.presence, 0, colors.iridescence),
                                  tintTop: SIMD4(MoonlightColors.tintTop, colors.tint),
                                  tintMid: SIMD4(MoonlightColors.tintMid, 0),
                                  tintBottom: SIMD4(MoonlightColors.tintBottom, 0))
@@ -367,7 +365,6 @@ final class MoonlightLayerView: NSView {
         c.ink = from.ink + (c.ink - from.ink) * e
         c.tint = from.tint + (c.tint - from.tint) * e
         c.presence = from.presence + (c.presence - from.presence) * e
-        c.crystal = from.crystal + (c.crystal - from.crystal) * e
         c.iridescence = from.iridescence + (c.iridescence - from.iridescence) * e
         return c
     }

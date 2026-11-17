@@ -1,8 +1,9 @@
 # Moonlight Arcane — prove e misure del 17 novembre 2026
 
 Il tema Arcane mantiene l’identità `selene` e usa un campo cromatico continuo
-nei passaggi Metal già esistenti. La preferenza delle particelle è indipendente
-dal tema; le immagini e i video mantengono il proprio aspetto.
+nei passaggi Metal già esistenti. Le misure sotto documentano anche la prima
+prova di Crystal dust, successivamente rimossa; immagini e video mantengono
+il proprio aspetto.
 
 ## Contratti verificati
 
@@ -24,6 +25,21 @@ l’identità di due immagini renderizzate allo stesso istante. Non apre
 finestre, non cattura lo schermo e non legge profili del giocatore. Senza
 device Metal salta soltanto la parte GPU; con un device e shader non
 compilabili fallisce.
+
+## Semplificazione delle particelle, 17 novembre
+
+Il maintainer chiede di mantenere soltanto le particelle morbide: le faccette
+sono poco distinguibili e non giustificano un’opzione. Il selettore esce da
+Theme e Look, dal catalogo Search/Changed/Reset e dal renderer. Il campo
+storico `particleStyle` è ignorato alla lettura e non viene più salvato.
+
+I test di compatibilità e focus falliscono prima della rimozione e passano
+dopo; la suite Swift esegue 1790 test senza errori. `run_theme.py` verifica
+i metodi reali della griglia, il passaggio allo sfondo, l’ordine delle righe
+Look e gli shader Metal reali: particelle morbide, campionamento GPU/Core,
+frame fermo e uniform distinti per Mods. Questi controlli non sostituiscono
+la prova visiva del maintainer. La tabella seguente resta la misura storica
+della prima versione e non misura la rimozione delle faccette.
 
 ## Tempo dei passaggi GPU, fuori schermo
 

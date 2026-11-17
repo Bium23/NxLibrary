@@ -18686,46 +18686,6 @@
         }
       }
     },
-    "Crystal dust": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Crystal dust"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Polvere di cristallo"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Poussière de cristal"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kristallstaub"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Polvo de cristal"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Poeira de cristal"
-          }
-        }
-      }
-    },
     "Current commit": {
       "comment": "SettingsEngineSection.swift",
       "localizations": {
@@ -43989,86 +43949,6 @@
         }
       }
     },
-    "Particle style: Soft": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Soft"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Morbide"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Douces"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weich"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Suaves"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Suaves"
-          }
-        }
-      }
-    },
-    "Particles": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Particles"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Particelle"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Particules"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Partikel"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Partículas"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Partículas"
-          }
-        }
-      }
-    },
     "PICKS FROM": {
       "comment": "SpotlightCardInfoView.swift",
       "localizations": {
@@ -50151,46 +50031,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "DADOS SALVOS"
-          }
-        }
-      }
-    },
-    "Soft light or crystal dust in the animated background. Pictures and videos keep their own appearance.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Soft light or crystal dust in the animated background. Pictures and videos keep their own appearance."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Luci morbide o polvere di cristallo nello sfondo animato. Immagini e video mantengono il proprio aspetto."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lumières douces ou poussière de cristal dans le fond animé. Les images et les vidéos gardent leur aspect."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weiches Licht oder Kristallstaub im animierten Hintergrund. Bilder und Videos behalten ihr Aussehen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Luces suaves o polvo de cristal en el fondo animado. Las imágenes y los vídeos conservan su aspecto."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Luzes suaves ou poeira de cristal no fundo animado. Imagens e vídeos mantêm sua aparência."
           }
         }
       }

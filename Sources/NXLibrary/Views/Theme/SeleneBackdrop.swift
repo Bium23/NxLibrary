@@ -8,7 +8,6 @@ struct SeleneBackdropStyle: Equatable {
     var sizing: BackgroundSizing = .fill
     var animated = true
     var brightness: WallpaperBrightness = .balanced
-    var particleStyle: MoonlightParticleStyle = .crystal
 }
 
 extension WallpaperBrightness {
@@ -102,7 +101,6 @@ struct SeleneBackdrop: View {
             } else {
                 MoonlightBackdrop(accent: modsTint ? Self.modsAccent : SeleneTheme.glyph, ink: SeleneTheme.ink,
                                   tint: modsTint ? 1 : 0, moving: moving,
-                                  particleStyle: style.particleStyle,
                                   iridescent: SeleneTheme.usesArcaneBackground && !modsTint)
             }
             if hasWallpaper, MoonlightEngine.shared != nil {
@@ -110,13 +108,11 @@ struct SeleneBackdrop: View {
                 // gone) and glides in and out on its render thread, so a quick there-and-back carries on from
                 // where it is, and the motes never start over.
                 MoonlightBackdrop(accent: Self.modsAccent, ink: SeleneTheme.ink, tint: 1,
-                                  presence: modsTint ? 1 : 0, moving: moving,
-                                  particleStyle: style.particleStyle)
+                                  presence: modsTint ? 1 : 0, moving: moving)
             } else if modsTint, hasWallpaper {
                 ZStack {
                     modsGround
-                    MoonlightBackdrop(accent: Self.modsAccent, ink: SeleneTheme.ink, tint: 1, moving: moving,
-                                      particleStyle: style.particleStyle)
+                    MoonlightBackdrop(accent: Self.modsAccent, ink: SeleneTheme.ink, tint: 1, moving: moving)
                 }
                 .transition(.opacity)
             }
@@ -168,12 +164,11 @@ struct MoonlightBackdrop: View {
     var moving = true
     /// A still image instead of a live layer: for small cards that clip and round it.
     var asImage = false
-    var particleStyle: MoonlightParticleStyle = .crystal
     var iridescent = false
 
     var body: some View {
         let colors = MoonlightColors(accent: accent, ink: ink, tint: tint, presence: presence,
-                                     particleStyle: particleStyle, iridescent: iridescent)
+                                     iridescent: iridescent)
         if let engine = MoonlightEngine.shared {
             if asImage {
                 MoonlightStill(engine: engine, colors: colors)

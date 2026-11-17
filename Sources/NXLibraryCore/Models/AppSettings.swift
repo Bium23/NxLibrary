@@ -155,7 +155,6 @@ public struct AppSettings: Codable, Equatable {
     public var wallpaperID: String?
     public var backgroundSizing: BackgroundSizing
     public var animatedBackground: Bool
-    public var particleStyle: MoonlightParticleStyle
     public var wallpaperBrightness: WallpaperBrightness
     public var launchStyle: LaunchStyle
     public var launchMotion: Bool
@@ -205,7 +204,6 @@ public struct AppSettings: Codable, Equatable {
                 wallpaperID: String? = nil,
                 backgroundSizing: BackgroundSizing = .fill,
                 animatedBackground: Bool = true,
-                particleStyle: MoonlightParticleStyle = .crystal,
                 wallpaperBrightness: WallpaperBrightness = .balanced,
                 launchStyle: LaunchStyle = .artAndLogo,
                 launchMotion: Bool = true,
@@ -242,7 +240,6 @@ public struct AppSettings: Codable, Equatable {
         self.wallpaperID = wallpaperID
         self.backgroundSizing = backgroundSizing
         self.animatedBackground = animatedBackground
-        self.particleStyle = particleStyle
         self.wallpaperBrightness = wallpaperBrightness
         self.launchStyle = launchStyle
         self.launchMotion = launchMotion
@@ -261,7 +258,6 @@ public struct AppSettings: Codable, Equatable {
         case startOn, lastHome
         case introAnimation, viewButtonSwitches, interfaceSounds, soundVolume, quietLaunch
         case wallpaperID, backgroundSizing, animatedBackground, wallpaperBrightness, launchStyle, launchMotion, launchShade
-        case particleStyle
         case notifyPortingEnds, checkAppUpdatesAtLaunch
         case settingsWallpaperID, keepWallpaperOnGames, showsSessionCard
         case steamInBackground
@@ -301,8 +297,6 @@ public struct AppSettings: Codable, Equatable {
         self.soundVolume = try container.decodeIfPresent(Double.self, forKey: .soundVolume) ?? 0.6
         self.quietLaunch = try container.decodeIfPresent(Bool.self, forKey: .quietLaunch) ?? true
         self.wallpaperID = try container.decodeIfPresent(String.self, forKey: .wallpaperID)
-        self.particleStyle = (try container.decodeIfPresent(String.self, forKey: .particleStyle))
-            .flatMap(MoonlightParticleStyle.init(rawValue:)) ?? .crystal
         self.backgroundSizing = try container.decodeIfPresent(BackgroundSizing.self, forKey: .backgroundSizing) ?? .fill
         self.wallpaperBrightness = try container.decodeIfPresent(WallpaperBrightness.self,
                                                                  forKey: .wallpaperBrightness) ?? .balanced

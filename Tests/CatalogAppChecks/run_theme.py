@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Actual theme input, persisted particle choice and offscreen Metal contracts.
+"""Actual theme input, soft particles and offscreen Metal contracts.
 
 No windows, player data, screenshots or UI automation. Metal checks are skipped
 when the host has no device; Core and actual input checks still run.
@@ -89,43 +89,33 @@ final class Browser { var state: BrowseState? }
         let host = Host(palettes: palettes, settings: settings)
         host.state.themeIndex = palettes.count - 1
         host.key(.down)
-        precondition(host.state.particlesFocused && host.state.step == .theme)
         host.key(.right)
-        precondition(settings.settings.particleStyle == .soft)
         precondition(host.state.step == .theme && host.state.themeIndex == palettes.count - 1)
-        precondition(AppSettingsStore(fileURL: settingsURL).settings.particleStyle == .soft)
-        host.key(.left)
-        precondition(settings.settings.particleStyle == .crystal)
-        host.key(.up)
-        precondition(!host.state.particlesFocused)
         host.state.themeIndex = 4
         host.key(.right)
-        precondition(host.state.particlesFocused)
+        precondition(host.state.themeIndex == 4)
         host.click(0)
-        precondition(!host.state.particlesFocused && host.state.step == .theme)
-        host.key(.down); host.key(.down); host.key(.down); host.key(.down); host.key(.down)
-        precondition(host.state.particlesFocused)
-        host.state.themeIndex = 0
+        precondition(host.state.themeIndex == 0 && host.state.step == .theme)
         host.next()
         precondition(host.state.step == .background && settings.settings.colorThemeID == "selene")
         precondition(host.theme.applied == ["selene"] && host.placements.isEmpty)
         host.next()
         precondition(host.placements == [WallpaperCatalog.none])
-        print("Theme input: particles in the colours step, mouse refocus, persistence and Next to background: PASS")
+        print("Theme input: grid edges, mouse refocus and Next to background without a particle row: PASS")
 
         guard MTLCreateSystemDefaultDevice() != nil else {
             print("Metal unavailable: offscreen rendering checks skipped.")
             return
         }
         guard let engine = MoonlightEngine.shared else { fatalError("Moonlight shaders failed to initialize") }
-        let soft = MoonlightColors(accent: .blue, ink: .white, particleStyle: .soft)
-        let arcane = MoonlightColors(accent: .blue, ink: .white, particleStyle: .crystal, iridescent: true)
-        let gold = MoonlightColors(accent: .yellow, ink: .white, tint: 1, particleStyle: .crystal)
+        let soft = MoonlightColors(accent: .blue, ink: .white)
+        let arcane = MoonlightColors(accent: .blue, ink: .white, iridescent: true)
+        let gold = MoonlightColors(accent: .yellow, ink: .white, tint: 1)
         let s = MoonlightEngine.uniforms(width: 640, height: 360, time: 24, breath: 0.75, colors: soft)
         let a = MoonlightEngine.uniforms(width: 640, height: 360, time: 24, breath: 0.75, colors: arcane)
         let g = MoonlightEngine.uniforms(width: 640, height: 360, time: 24, breath: 0.75, colors: gold)
-        precondition(s.look.z == 0 && s.look.w == 0 && a.look.z == 1 && a.look.w == 1)
-        precondition(g.look.w == 0 && g.tintTop.w == 1 && g.look.z == 1)
+        precondition(s.look.z == 0 && s.look.w == 0 && a.look.z == 0 && a.look.w == 1)
+        precondition(g.look.w == 0 && g.tintTop.w == 1 && g.look.z == 0)
         func pixels(_ colors: MoonlightColors, _ time: Float = 24) -> Data {
             let frame = engine.snapshot(width: 640, height: 360, colors: colors, time: time)!
             return frame.dataProvider!.data! as Data
@@ -133,8 +123,7 @@ final class Browser { var state: BrowseState? }
         let fixed = pixels(arcane)
         precondition(fixed == pixels(arcane), "a still frame keeps both motion and colour fixed")
         precondition(fixed != pixels(arcane, 27))
-        var rounded = arcane; rounded.crystal = 0
-        precondition(fixed != pixels(rounded), "particle selection must reach the shader")
+        precondition(fixed != pixels(soft), "the colour field reaches soft particles too")
         precondition(pixels(gold) != fixed)
 
         // Exercise the very function the real fragment/vertex entry points call.
@@ -158,14 +147,14 @@ final class Browser { var state: BrowseState? }
             let expected = MoonlightChromatics.sample(x: Float(i) * 0.13, y: 0.3 + Float(i) * 0.05, time: Float(i) * 5.3)
             for k in 0..<3 { precondition(abs(values[i][k] - expected[k]) < 0.00002) }
         }
-        print("Actual Metal: spectrum parity, facets, fixed frame and distinct Mods uniforms: PASS")
+        print("Actual Metal: spectrum parity, soft particles, fixed frame and distinct Mods uniforms: PASS")
     }
 }
 '''
 
 path = 'Sources/NXLibrary/Views/Theme/ThemePickerView.swift'
 methods = '\n'.join(declaration(path, signature) for signature in (
-    '    private func move(', '    private func stepParticles(', '    private func tap(', '    private func accept('))
+    '    private func move(', '    private func tap(', '    private func accept('))
 host = host.replace('// ACTUAL_METHODS', methods)
 host = host.replace('// ACTUAL_STEPPING', declaration(
     'Sources/NXLibrary/Views/Components/SeleneSettingsRow.swift', 'extension CaseIterable where Self: Equatable'))

@@ -1,11 +1,5 @@
 import Foundation
 
-public enum MoonlightParticleStyle: String, Codable, CaseIterable, Sendable {
-    case soft, crystal
-
-    public var title: String { L10n.text(self == .soft ? "Particle style: Soft" : "Crystal dust") }
-}
-
 /// Arcane's slow spatial colour field. The Metal shader takes its constants
 /// from here; the static fallback samples the same field without a timer.
 public enum MoonlightChromatics {

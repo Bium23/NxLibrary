@@ -101,8 +101,6 @@ public enum SettingsCatalog {
             "How dark a wallpaper or live background is: dim evenly, bright on the right away from the text, or bright everywhere.") { $0.wallpaperBrightness },
         row("animatedBackground", .look, "Background motion",
             "The moonlight's beam and motes move and a live background plays; off, they hold still.") { $0.animatedBackground },
-        row("particleStyle", .look, "Particles",
-            "Soft light or crystal dust in the animated background. Pictures and videos keep their own appearance.") { $0.particleStyle },
         row("keepWallpaperOnGames", .look, "Game backgrounds",
             "On shows the selected game's art in Spotlight and Collection; Off keeps your wallpaper. Details keeps the game's art.") { $0.keepWallpaperOnGames },
         row("backgroundShade", .look, "Library shade",

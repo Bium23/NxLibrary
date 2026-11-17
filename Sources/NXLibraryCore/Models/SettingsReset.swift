@@ -49,7 +49,6 @@ public enum SettingsReset {
             next.backgroundShade = defaults.backgroundShade
             next.readableText = defaults.readableText
             next.animatedBackground = defaults.animatedBackground
-            next.particleStyle = defaults.particleStyle
             next.showClock = defaults.showClock
             next.reduceMotion = defaults.reduceMotion
         case .libraryGames:
