@@ -83,8 +83,8 @@ public struct SpotlightView: View {
     @State var pendingTileArt = 0
     /// The entrance's longest wait for the tiles' art.
     @State var entranceWait: Task<Void, Never>?
-    /// Lands a waiting or flying entrance on the first input.
-    @State var entranceMonitor: Any?
+    /// The top bar and the button hints, held until the entrance has landed (`finishEntrance`).
+    @State var controlsShown: Bool
     /// The breath on the moving moonlight is over (`SpotlightEntrance.hold`).
     @State var entranceBreathed = false
     var isGliding: Bool { Date() < glideEnds }
@@ -112,6 +112,7 @@ public struct SpotlightView: View {
         self.storeHost = storeHost
         // Held hidden from the first frame (the opening, or under the welcome); `entranceAppear` lands it when not due.
         _entrance = State(initialValue: viewModel.homeSeen ? .landed : .covered)
+        _controlsShown = State(initialValue: viewModel.homeSeen)
     }
 
     // MARK: - Model
@@ -194,6 +195,7 @@ public struct SpotlightView: View {
             rightHints: contextHints(model, state),
             rightReserve: hintReserve(state),
             hintsHidden: router.overlayHasHints(viewModel) || achievementsScreen != nil,
+            hintsHeld: !controlsShown,
             backdrop: {
                 // On a card no art; on the Mods card the moonlight glides to gold (and stays gold until the next
                 // game's art has arrived, so leaving the card is one change, not gold → blue → art).
@@ -353,9 +355,9 @@ public struct SpotlightView: View {
         return ZStack(alignment: .topLeading) {
             SpotlightTopBar(filter: filter, showClock: settings.settings.showClock,
                             onSelect: { if !state.isLifted { setFilter($0) } })
-                .opacity(rowShown && !entrance.holdsHidden ? 1 : 0)
-                .animation(entranceRise, value: entrance.holdsHidden)
-                .allowsHitTesting(rowShown && !entrance.holdsHidden)
+                // Comes in last with the hints (`finishEntrance`).
+                .opacity(rowShown && controlsShown ? 1 : 0)
+                .allowsHitTesting(rowShown && entrance.takesInput)
 
             ZStack(alignment: .topLeading) {
                 SpotlightRowView(
@@ -371,7 +373,7 @@ public struct SpotlightView: View {
                     tileLook: viewModel.portingTileLook,
                     modsCover: storeHost.cover,
                     entrance: entrance,
-                    onEntranceEnd: { landEntrance() },
+                    onEntranceEnd: { finishEntrance() },
                     onSelect: { item in
                         guard !state.isLifted else { return }
                         mutate { $0.select(item) }
@@ -385,7 +387,7 @@ public struct SpotlightView: View {
                 .offset(y: canvas.u(130))
                 // The icons give way as the page rises (and stop taking the pointer).
                 .opacity(rowOpacity)
-                .allowsHitTesting(rowShown && !entrance.holdsHidden)
+                .allowsHitTesting(rowShown && entrance.takesInput)
                 .onPreferenceChange(TileArtPendingKey.self, perform: tileArtPending)
 
                 SpotlightFilterPill(filter: pillFilter, count: rowGames.count)
@@ -399,7 +401,7 @@ public struct SpotlightView: View {
                     .offset(x: canvas.u(80), y: canvas.u(420))
                     .entrance(entrance == .landed ? nil : SpotlightEntrance.info, launched: entranceLaunched,
                               unit: canvas.u(1))
-                    .allowsHitTesting(!entrance.holdsHidden)
+                    .allowsHitTesting(entrance.takesInput)
             }
             .onPreferenceChange(SpotlightBlockKey.self) { heights in
                 if !Self.sameLayout(heights, blocks) { blocks = heights }

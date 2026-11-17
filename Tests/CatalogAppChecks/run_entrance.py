@@ -106,13 +106,17 @@ final class InputHost {
         func require(_ ok: @autoclosure () -> Bool, _ message: String) {
             if !ok() { failures += 1; print("FAIL: " + message) }
         }
-        for phase: SpotlightEntrance.Phase in [.covered, .waiting, .playing, .landed] {
+        for phase: SpotlightEntrance.Phase in [.covered, .waiting, .playing] {
             let input = InputHost()
             input.entrance = phase
             input.receive(Notification(name: .init("fixture"), object: GamepadAction.confirm))
-            require(input.handled == [.confirm] && input.entrance == .landed,
-                    "Window settling must land and deliver the first input once, including phase \(phase)")
+            require(input.handled.isEmpty && input.entrance == phase,
+                    "A press during the entrance must neither act nor skip it (phase \(phase))")
         }
+        let landed = InputHost()
+        landed.entrance = .landed
+        landed.receive(Notification(name: .init("fixture"), object: GamepadAction.confirm))
+        require(landed.handled == [.confirm], "Once landed, a press acts as usual")
         for setup in [false, true] {
             let input = InputHost()
             input.viewModel.showSetupCheck = setup
@@ -145,7 +149,7 @@ final class InputHost {
             require(LaunchReveal.frames == 1, "Later frames must not release the reveal gate twice")
         }
         if failures > 0 { exit(1) }
-        print("Entrance checks passed: input during window settling, covers, missing drawable and presentation readiness on both render paths.")
+        print("Entrance checks passed: no skip during the entrance, covers, missing drawable and presentation readiness on both render paths.")
     }
 }
 '''

@@ -1,13 +1,13 @@
 import SwiftUI
-import AppKit
 import NXLibraryCore
 
 /// Spotlight's entrance, the app's opening: the first time the home shows after launch (`SpotlightEntrance`,
 /// Selene's flight at a calmer pace). While the welcome or Setup covers the screen, the row, the bar, the pill,
 /// the info and the art stay hidden over a shared moving moonlight. Once the cover has gone, the entrance waits for the
 /// breath on the moving moonlight and for the visible tiles' art (at most 1 s more), then the background fades in
-/// slowly, the tiles fly in from the centre while they grow and the info rises. The first key, click, wheel or controller press lands everything at once, then acts. Every
-/// later visit, Reduce motion and a launch on another screen land it at once.
+/// slowly, the tiles fly in from the centre while they grow and the info rises; the top bar and the button hints come in last.
+/// No key, click, wheel or controller press skips it (`Phase.takesInput`). Every later visit, Reduce motion and a
+/// launch on another screen land it at once.
 extension SpotlightView {
     /// Drawn over Spotlight: the welcome until its fade has ended, or Setup (the first launch's pages come first).
     var isOverlaid: Bool { viewModel.isWelcomeOpen || viewModel.showSetupCheck }
@@ -30,7 +30,7 @@ extension SpotlightView {
     /// The pieces' clocks run (`View.entrance`): from the start of the flight on.
     var entranceLaunched: Bool { entrance == .playing || entrance == .landed }
 
-    /// Background, bar and pill come up together as the flight starts; landing is instant.
+    /// The pill comes up with the background as the flight starts; landing is instant.
     var entranceRise: Animation? {
         entrance == .playing ? SeleneArtBackground.rise : nil
     }
@@ -55,7 +55,6 @@ extension SpotlightView {
     func uncoverEntrance() {
         guard entrance == .covered else { return }
         entrance.uncover()
-        installEntranceMonitor()
         entranceWait?.cancel()
         // A breath on the moving moonlight, then the flight once the tiles' art is in (at most 1 s more).
         entranceWait = Task { @MainActor in
@@ -80,31 +79,38 @@ extension SpotlightView {
         guard entrance == .waiting else { return }
         entranceWait?.cancel()
         entrance.start()
+        // The row ends the flight (`onEntranceEnd`). Input waits for the landing, so a flight the row never
+        // ends must still land: well after the longest entrance (about 2.5 s), it finishes here.
+        entranceWait = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: UInt64(SpotlightEntrance.longestWait * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            finishEntrance()
+        }
     }
 
-    /// Everything in its place at once, without animation: the flight's end, input, leaving, Reduce motion.
+    /// Everything in its place at once, top bar and hints included, without animation: leaving, a resize mid-flight, Reduce
+    /// motion, or an entrance that is not due.
     func landEntrance() {
+        land()
+        guard !controlsShown else { return }
+        var still = Transaction()
+        still.disablesAnimations = true
+        withTransaction(still) { controlsShown = true }
+    }
+
+    /// The flight's end: everything is in place, then the top bar and the button hints fade in last, together.
+    func finishEntrance() {
+        land()
+        guard !controlsShown else { return }
+        withAnimation(.easeOut(duration: SpotlightEntrance.controlsFade)) { controlsShown = true }
+    }
+
+    private func land() {
         entranceWait?.cancel()
-        removeEntranceMonitor()
         guard entrance != .landed else { return }
         var still = Transaction()
         still.disablesAnimations = true
         withTransaction(still) { entrance.land() }
-    }
-
-    /// Input lands a waiting or flying entrance, then goes on as usual (the event is never taken).
-    private func installEntranceMonitor() {
-        guard entranceMonitor == nil else { return }
-        entranceMonitor = NSEvent.addLocalMonitorForEvents(
-            matching: [.keyDown, .leftMouseDown, .rightMouseDown, .otherMouseDown, .scrollWheel]) { event in
-            landEntrance()
-            return event
-        }
-    }
-
-    private func removeEntranceMonitor() {
-        if let entranceMonitor { NSEvent.removeMonitor(entranceMonitor) }
-        entranceMonitor = nil
     }
 }
 

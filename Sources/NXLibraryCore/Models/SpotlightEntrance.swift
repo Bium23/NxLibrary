@@ -2,7 +2,7 @@ import CoreGraphics
 
 /// Spotlight's entrance, the app's opening: a breath on the moving moonlight, then the game's background
 /// fades in as when moving between games, only slower, while the tiles fly in from the row's centre and
-/// grow, then the info rises. The shape is Selene's (`HomeNav.PlayIntro`) at a calmer pace.
+/// grow, then the info rises; the top bar and the button hints come last. Nothing skips it. The shape is Selene's (`HomeNav.PlayIntro`) at a calmer pace.
 /// Lengths in stage units, times in seconds.
 public enum SpotlightEntrance {
     /// How one tile comes in. A tile that only fades keeps its place and size.
@@ -42,6 +42,10 @@ public enum SpotlightEntrance {
     public static let infoLiftDuration = 0.8
     /// The title under the selected tile comes once the tiles are in.
     public static let titleDelay = 2.0
+    /// The top bar and the button hints come in last, together, once everything else has landed.
+    public static let controlsFade = 0.4
+    /// A started flight lands by then whatever happens, so input is never held for long.
+    public static let longestWait = 5.0
 
     /// The game's title and info: they fade in and rise 40 units once the background is up.
     public static let info = Flight(delay: infoDelay, fromX: 0, fromY: infoLift, fromScale: 1,
@@ -112,12 +116,16 @@ public enum SpotlightEntrance {
             if self == .waiting { self = .playing }
         }
 
-        /// Input, Reduce motion or the end of the flight: everything is in its place at once.
+        /// The end of the flight, Reduce motion, a resize or leaving: everything is in its place at once.
         public mutating func land() {
             self = .landed
         }
 
         /// Row, info and background are held hidden until the flight starts.
         public var holdsHidden: Bool { self == .covered || self == .waiting }
+
+        /// Keys, clicks, the wheel and the controller reach Spotlight only once it has landed: the entrance
+        /// always plays to its end.
+        public var takesInput: Bool { self == .landed }
     }
 }

@@ -68,7 +68,25 @@ final class SpotlightEntranceTests: XCTestCase {
                        "Settings → Start-up → Entrance off: the library shows at once")
     }
 
-    func testInputLandsAWaitingOrPlayingEntrance() {
+    func testNoInputUntilTheEntranceHasLanded() {
+        for phase: SpotlightEntrance.Phase in [.covered, .waiting, .playing] {
+            XCTAssertFalse(phase.takesInput, "no key, click, wheel or press skips the entrance (\(phase))")
+        }
+        XCTAssertTrue(SpotlightEntrance.Phase.landed.takesInput)
+    }
+
+    func testTopBarAndHintsComeInLast() {
+        XCTAssertEqual(SpotlightEntrance.controlsFade, 0.4, "top bar and button hints fade in together once everything has landed")
+    }
+
+    func testAStartedFlightAlwaysLandsWellAfterTheLongest() {
+        let flights = SpotlightEntrance.flights(tiles: (0..<30).map { CGFloat($0 * 190)...CGFloat($0 * 190 + 174) },
+                                                rowWidth: 1920)
+        XCTAssertGreaterThan(SpotlightEntrance.longestWait, SpotlightEntrance.end(of: flights) + 1)
+        XCTAssertLessThanOrEqual(SpotlightEntrance.longestWait, 5)
+    }
+
+    func testLandingPutsAWaitingOrPlayingEntranceInPlace() {
         var waiting = SpotlightEntrance.Phase.waiting
         waiting.land()
         XCTAssertEqual(waiting, .landed)

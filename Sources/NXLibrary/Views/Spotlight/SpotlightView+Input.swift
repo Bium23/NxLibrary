@@ -5,8 +5,8 @@ import NXLibraryCore
 /// Spotlight's controller, keyboard and pointer input.
 extension SpotlightView {
     func handle(_ action: GamepadAction) {
-        // The entrance lands first, then the press acts on the row as it stands.
-        if entrance != .landed { landEntrance() }
+        // The entrance plays to its end: no press skips it or acts underneath.
+        guard entrance.takesInput else { return }
         if viewer != nil { return handleViewer(action) }
         if achievementsScreen != nil { return handleAchievements(action) }
         if viewModel.spotlight.isLifted { return handleLifted(action) }
@@ -427,6 +427,12 @@ extension SpotlightView {
                   window.attachedSheet == nil,
                   NSApp.modalWindow == nil,
                   !(window.firstResponder is NSText) else { return event }
+            // The entrance plays to its end: keys and the wheel are taken; ⌘, ⌃ and ⌥ shortcuts still pass.
+            if !entrance.takesInput {
+                let shortcut = event.type == .keyDown
+                    && !event.modifierFlags.intersection([.command, .control, .option]).isEmpty
+                return shortcut ? event : nil
+            }
             if event.type == .scrollWheel {
                 // The Achievements screen's list takes the wheel on its own offset, like a mod panel's
                 // description: a notch glides, a trackpad follows the fingers; the page beneath stays.

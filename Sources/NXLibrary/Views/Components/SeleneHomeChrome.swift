@@ -14,6 +14,8 @@ struct SeleneHomeChrome<Backdrop: View, Stage: View>: View {
     var rightReserve: [[String]] = []
     /// An overlay with its own hints is up (`AppRouter.overlayHasHints`).
     var hintsHidden = false
+    /// Spotlight's entrance holds them until everything else has landed; the change brings its own fade.
+    var hintsHeld = false
     @ViewBuilder var backdrop: () -> Backdrop
     @ViewBuilder var stage: () -> Stage
 
@@ -31,6 +33,8 @@ struct SeleneHomeChrome<Backdrop: View, Stage: View>: View {
                                rightReserve: rightReserve)
             }
             .seleneOverlaidHints(hintsHidden)
+            .opacity(hintsHeld ? 0 : 1)
+            .allowsHitTesting(!hintsHeld)
             .frame(width: canvas.size.width, height: canvas.size.height)
         }
         .frame(width: canvas.size.width, height: canvas.size.height, alignment: .topLeading)
