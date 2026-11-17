@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 17 novembre 2026. Copertura di **690 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 17 novembre 2026. Copertura di **692 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -328,6 +328,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/SpotlightRow.swift](../Sources/NXLibraryCore/Models/SpotlightRow.swift) | Costruisce la sequenza per UUID e salva riordini conservando giochi/fonti/card temporaneamente nascosti; Surprise mantiene il proprio contratto nxnative. |
 | [Sources/NXLibraryCore/Models/SpotlightRowGeometry.swift](../Sources/NXLibraryCore/Models/SpotlightRowGeometry.swift) | Posti delle tessere nella riga, camera unica che la fa scorrere e finestra delle tessere create; posto, scala e camera lungo lo scorrimento dalla posizione continua della selezione. |
 | [Sources/NXLibraryCore/Models/SpotlightState.swift](../Sources/NXLibraryCore/Models/SpotlightState.swift) | Gestisce selezione, focus (anche la card Achievements), azioni e spostamento delle tile su Spotlight. |
+| [Sources/NXLibraryCore/Models/SpotlightEntrance.swift](../Sources/NXLibraryCore/Models/SpotlightEntrance.swift) | Tempi e partenze dell'entrata di Spotlight come Selene: volo delle tessere, dissolvenza oltre il bordo, sfondo, informazioni, fasi e quando suona. |
 | [Sources/NXLibraryCore/Models/ThemePicker.swift](../Sources/NXLibraryCore/Models/ThemePicker.swift) | Gestisce griglia, tab Wallpapers/Live e scelte di sfondo nel selettore temi. |
 | [Sources/NXLibraryCore/Models/WallpaperCatalog.swift](../Sources/NXLibraryCore/Models/WallpaperCatalog.swift) | Elenca wallpaper e video, gruppi, nomi e file delle risorse incluse o importate. |
 | [Sources/NXLibraryCore/Models/WallpaperPlacement.swift](../Sources/NXLibraryCore/Models/WallpaperPlacement.swift) | Decide dove applicare uno sfondo scelto fra schermi principali e Settings. |
@@ -734,6 +735,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Tests/NXLibraryCoreTests/SpotlightPageTests.swift](../Tests/NXLibraryCoreTests/SpotlightPageTests.swift) | Estratti del testo e stati dello scorrimento della pagina del gioco. |
 | [Tests/NXLibraryCoreTests/SpotlightRowTests.swift](../Tests/NXLibraryCoreTests/SpotlightRowTests.swift) | Ordine, card, riordino delle tile, gioco avviato primo nell’ordine salvato e selezione Surprise. |
 | [Tests/NXLibraryCoreTests/SpotlightStateTests.swift](../Tests/NXLibraryCoreTests/SpotlightStateTests.swift) | Focus, selezione, filtri, azioni e spostamento delle tile Spotlight. |
+| [Tests/NXLibraryCoreTests/SpotlightEntranceTests.swift](../Tests/NXLibraryCoreTests/SpotlightEntranceTests.swift) | Valori di Selene per la prima tessera, ritardo per tessera, bordi, durata, quando parte e fasi coperta, in attesa, in volo e atterrata. |
 | [Tests/NXLibraryCoreTests/StorageManagerTests.swift](../Tests/NXLibraryCoreTests/StorageManagerTests.swift) | Misure per gioco, cache condivise e nascoste, pulizia selettiva, protezione di app/sorgenti/symlink, file incoerenti e volumi/cartelle non disponibili. |
 | [Tests/NXLibraryCoreTests/ThemePickerTests.swift](../Tests/NXLibraryCoreTests/ThemePickerTests.swift) | Navigazione della griglia, tab e selezione degli sfondi. |
 | [Tests/NXLibraryCoreTests/ToolchainGateCopyTests.swift](../Tests/NXLibraryCoreTests/ToolchainGateCopyTests.swift) | Testi del gate per Metal certificato, precedente, successivo e altre cause di blocco. |
