@@ -97,7 +97,7 @@ public final class BuildService {
         if IOPMAssertionCreateWithName(
             kIOPMAssertionTypeNoIdleSleep as CFString,
             IOPMAssertionLevel(kIOPMAssertionLevelOn),
-            "NX Library build" as CFString,
+            "Arcane build" as CFString,
             &assertion
         ) == kIOReturnSuccess {
             sleepAssertion = assertion

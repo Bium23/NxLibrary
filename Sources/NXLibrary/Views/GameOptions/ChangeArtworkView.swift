@@ -194,7 +194,7 @@ struct ChangeArtworkView: View {
 
     private var appIconMessage: String {
         let running = macApp.map { RunningGameMonitor.runningApplication(for: $0) != nil } ?? false
-        return L10n.text("Only here changes the image inside NX Library. Use on the Mac also shows it in Finder and the Dock. Automatic uses the game's own icon, then an online image if available. Changing the image keeps this location choice.")
+        return L10n.text("Only here changes the image inside Arcane. Use on the Mac also shows it in Finder and the Dock. Automatic uses the game's own icon, then an online image if available. Changing the image keeps this location choice.")
             + (running ? L10n.text(" It changes when the game quits.") : L10n.text(" A large game takes about a minute."))
     }
 

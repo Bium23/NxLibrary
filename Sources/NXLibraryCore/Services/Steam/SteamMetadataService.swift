@@ -47,7 +47,7 @@ public actor SteamMetadataService {
     public static func download(_ url: URL) async throws -> Data {
         guard allowed(url) else { throw URLError(.badURL) }
         var request = URLRequest(url: url); request.timeoutInterval = 15
-        request.setValue("NXLibrary/0.1 (macOS)", forHTTPHeaderField: "User-Agent")
+        request.setValue(AppIdentity.userAgent(), forHTTPHeaderField: "User-Agent")
         let limit = url.host == "store.steampowered.com" || url.host == SteamAchievementRarity.host ? 2_097_152 : 12_582_912
         let (data, response) = try await BoundedDownload.data(for: request, session: session, limit: limit)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode),

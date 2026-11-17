@@ -101,7 +101,7 @@ if [ "$PUBLISH" = "1" ]; then
   git push origin "$TAG"
   { cat "$NOTES"; printf '\n\n%s\n' "$REQUIRES"; } > "$OUT/notes.md"
   gh release create "$TAG" "$ZIP" "$DMG" --repo "$REPOSITORY" \
-    --title "NX Library $VERSION" --notes-file "$OUT/notes.md"
+    --title "Arcane $VERSION" --notes-file "$OUT/notes.md"
   echo "Published $TAG"
 else
   echo "Not published (add --publish --notes <file> to create the GitHub release)."

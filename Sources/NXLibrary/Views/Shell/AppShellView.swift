@@ -746,7 +746,7 @@ public struct AppShellView: View {
     private func presentLegacyNotice() {
         guard viewModel.settingsNotice == nil, let message = viewModel.alertMessage else { return }
         viewModel.alertMessage = nil
-        viewModel.showSettingsNotice(title: L10n.text("NX Library"), message: message)
+        viewModel.showSettingsNotice(title: AppIdentity.name, message: message)
     }
 
     private func settingsNoticeInput(_ action: GamepadAction) {
@@ -1133,7 +1133,7 @@ public struct AppShellView: View {
         do {
             try helper.run()
         } catch {
-            viewModel.alertMessage = L10n.format("NX Library could not restart: %@", [String(describing: (error.localizedDescription))])
+            viewModel.alertMessage = L10n.format("Arcane could not restart: %@", [String(describing: (error.localizedDescription))])
             return
         }
         NSApplication.shared.terminate(nil)

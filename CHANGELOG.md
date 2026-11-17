@@ -1,10 +1,14 @@
 # Changelog
 
-User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
+User-visible changes to Arcane (formerly NX Library) are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
 ## Unreleased — development review
 
-These corrections are implemented in NX Library Dev. Human validation remains pending unless noted below.
+These changes are implemented in Arcane Dev. Human validation remains pending unless noted below.
+
+### Changed
+
+- The app is now called **Arcane** in every visible place: window, menus, Settings, About and texts in all six languages. Your library, settings and data stay where they are. The development copy is Arcane Dev.
 
 ### Fixed
 

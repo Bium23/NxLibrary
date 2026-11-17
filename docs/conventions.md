@@ -1,4 +1,4 @@
-# NX Library — come si costruisce
+# Arcane — come si costruisce
 
 Questa guida dice **dove va una cosa nuova e come si scrive**, partendo da quello che il codice fa già. Prima di scrivere codice nuovo, trova qui la ricetta che corrisponde e segui il file d'esempio indicato. Se nessuna ricetta va bene, non inventarne una in silenzio: proponila al maintainer e, una volta approvata, aggiungila qui.
 

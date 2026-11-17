@@ -93,7 +93,7 @@ public struct TitleDBInfo: Equatable, Sendable {
               let url = URL(string: "https://api.nlib.cc/nx/\(titleID)") else { return nil }
         var request = URLRequest(url: url)
         request.timeoutInterval = 15
-        request.setValue("NXLibrary/0.1 (macOS; personal app)", forHTTPHeaderField: "User-Agent")
+        request.setValue(AppIdentity.userAgent(), forHTTPHeaderField: "User-Agent")
         guard let (data, http) = try? await client.data(for: request), (200..<300).contains(http.statusCode) else {
             return nil
         }
@@ -235,7 +235,7 @@ public enum ArtworkCandidates {
                              client: ArtworkHTTPClient, timeout: TimeInterval = 20) async -> LoadedArtwork? {
         var request = URLRequest(url: url)
         request.timeoutInterval = timeout
-        request.setValue("NXLibrary/0.1 (macOS; personal app)", forHTTPHeaderField: "User-Agent")
+        request.setValue(AppIdentity.userAgent(), forHTTPHeaderField: "User-Agent")
         guard let (data, http) = try? await client.data(for: request), (200..<300).contains(http.statusCode),
               let size = pixelSize(of: data) else { return nil }
         return LoadedArtwork(candidate: candidate, data: data, pixelWidth: size.width, pixelHeight: size.height)
@@ -258,7 +258,7 @@ public final class ArtworkPicks: ObservableObject {
 
     public enum Failure: LocalizedError {
         case notAnImage
-        public var errorDescription: String? { L10n.text("That file is not an image NX Library can read.") }
+        public var errorDescription: String? { L10n.text("That file is not an image Arcane can read.") }
     }
 
     public let directory: URL

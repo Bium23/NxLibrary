@@ -28,7 +28,7 @@ struct SettingsAboutSection: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            SelenePanel(L10n.text("NX Library")) {
+            SelenePanel(AppIdentity.name) {
                 Text(L10n.text("A personal macOS front-end for building and launching your own Switch games with nxnative."))
                     .seleneFont(16)
                     .foregroundColor(SeleneTheme.ink90)
@@ -36,7 +36,7 @@ struct SettingsAboutSection: View {
                 Text(L10n.format("Version %@ · Build %@ · Engine %@", [String(describing: (version)), String(describing: (buildDate)), String(describing: (seleneShort(viewModel.pinnedEngineCommit)))]))
                     .seleneFont(13, .regular, design: .monospaced)
                     .foregroundColor(SeleneTheme.ink60)
-                Text(L10n.text("Play time is tracked only for launches from NX Library. Not affiliated with Nintendo."))
+                Text(L10n.text("Play time is tracked only for launches from Arcane. Not affiliated with Nintendo."))
                     .seleneFont(13)
                     .foregroundColor(SeleneTheme.ink60)
                 updateRow
@@ -110,7 +110,7 @@ struct SettingsAboutSection: View {
                 .padding(6)
                 .seleneRowFocus(focusedRowTitle == "Selene")
                 .id("selene-row-Selene")
-                Text(L10n.text("Selene is a Playnite theme for Windows. No Selene name, logo, wallpaper, avatar or sound is used as NX Library branding; this is a visual adaptation in SwiftUI."))
+                Text(L10n.text("Selene is a Playnite theme for Windows. No Selene name, logo, wallpaper, avatar or sound is used as Arcane branding; this is a visual adaptation in SwiftUI."))
                     .seleneFont(13)
                     .foregroundColor(SeleneTheme.ink60)
                     .fixedSize(horizontal: false, vertical: true)
@@ -127,7 +127,7 @@ struct SettingsAboutSection: View {
             }
 
             SelenePanel(L10n.text("Licenses")) {
-                Text(L10n.text("NX Library is personal software released under the MIT license. nxnative, Ryujinx, SPIR-V Cross, LibHac and the other dependencies retain their own licenses through the engine."))
+                Text(L10n.text("Arcane is personal software released under the MIT license. nxnative, Ryujinx, SPIR-V Cross, LibHac and the other dependencies retain their own licenses through the engine."))
                     .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink90)
                     .fixedSize(horizontal: false, vertical: true)
@@ -227,10 +227,10 @@ struct SettingsAboutSection: View {
         switch updater.state {
         case .hidden: return ""
         case .developer: return L10n.text("Development copy · manual checks only")
-        case .readOnly: return L10n.text("Move NX Library to Applications to update")
+        case .readOnly: return L10n.text("Move Arcane to Applications to update")
         case .idle: return L10n.text("Updates not checked yet")
         case .checking: return "Checking for updates…"
-        case .upToDate: return L10n.text("NX Library is up to date")
+        case .upToDate: return L10n.text("Arcane is up to date")
         case .available(let release):
             let xcode = AppUpdate.neededXcode(release.requirements, installedXcode: viewModel.environmentStatus?.xcodeVersion)
                 .map { L10n.format(" · new portings need Xcode %@", [String(describing: ($0))]) } ?? ""

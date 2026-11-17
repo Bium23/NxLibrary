@@ -1,4 +1,4 @@
-# NX Library — agent guidance
+# Arcane — agent guidance
 
 A personal macOS SwiftUI front-end for upstream [nxnative](https://github.com/seedds/nxnative). Before changing behavior, read in this order: this file, `docs/architecture.md` (how each area works), `docs/conventions.md` (where new code goes and how it is built), `docs/flows.md` (end-to-end paths), the area's own document if it has one (for example `docs/steam.md`), then the files through `docs/file-map.md`.
 
@@ -55,7 +55,7 @@ Every re-pin is a product decision, not just a hash change. Before changing the 
 2. Read the engine's current `scripts/build_ipa_from_nsp.py -h`, `docs/env_switches.tsv`, `dm/games/*/README.md`, and the changed docs.
 3. Classify each change: shader/pipeline, host/runtime, input/display/audio, game profiles, build/extraction, CLI/env, docs/tests.
 4. For each user-visible capability decide **UI**, **backend only**, or **not adopted**, and say why.
-5. Wire any new engine flag that maps to an existing NX Library control. Example: nxnative 4f24ce6 added `--allow-other-metal`; it must be passed when the app's untested-toolchain override is on.
+5. Wire any new engine flag that maps to an existing Arcane control. Example: nxnative 4f24ce6 added `--allow-other-metal`; it must be passed when the app's untested-toolchain override is on.
 6. If the engine's README `pip install` line names a new package, add its wheel (and its dependencies) to `runtime.lock`, rebuild with `scripts/bundle_runtime.sh`, and update `NOTICE`; a GPL package also ships its source in `Runtime/sources/`. `EngineRuntimeRequirementsTests` fails until it is there.
 7. If the engine's `dm/gfx/tools/dmsh_chain.lock` certifies a new Metal compiler, add it to `ToolchainRequirements.current.metalAssets` with Apple's asset build from `xcodebuild -showComponent MetalToolchain -json` (`buildVersion`), so the Setup check can download exactly that compiler. Raise `minimumXcode` when the new compiler needs it.
 8. Re-pin only after tests, the compatibility gate, a certified build, and a smoke launch. Update `README.md` and the design spec.
@@ -76,10 +76,10 @@ The user performs interactive app and game checks. Never use computer-use tools 
 ```bash
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 bash scripts/build_app.sh
-codesign --verify --deep --strict "$HOME/Applications/NXLibrary Dev.app"
+codesign --verify --deep --strict "$HOME/Applications/Arcane Dev.app"
 ```
 
-Development builds install as **NX Library Dev** (`~/Applications/NXLibrary Dev.app`), the maintainer's only test copy. Never build over, replace or test in the released `~/Applications/NX Library.app`; it is the copy installed from GitHub and updates itself.
+Development builds install as **Arcane Dev** (`~/Applications/Arcane Dev.app`), the maintainer's only test copy. Never build over, replace or test in the released `~/Applications/NX Library.app`; it is the copy installed from GitHub and updates itself.
 
 Then verify the gate in **Settings → Engine**, build one real game, and launch it to a visible screen. Do not claim a build or game is working from compilation alone.
 

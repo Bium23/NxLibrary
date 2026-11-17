@@ -85,7 +85,7 @@ final class MoonlightEngine: @unchecked Sendable {
             light = try pipeline("moon_full_vertex", "moon_light_fragment")
             dots = try pipeline("moon_dot_vertex", "moon_dot_fragment")
         } catch {
-            NSLog("NX Library: moonlight shaders unavailable: \(error)")
+            NSLog("Arcane: moonlight shaders unavailable: \(error)")
             return nil
         }
         guard let buffer = particles.withUnsafeBytes({

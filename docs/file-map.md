@@ -1,6 +1,6 @@
-# NX Library — catalogo dei file
+# Arcane — catalogo dei file
 
-Aggiornato il 17 novembre 2026. Copertura di **670 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il setup in due passaggi con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 17 novembre 2026. Copertura di **672 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il setup in due passaggi con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -50,7 +50,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [.gitignore](../.gitignore) | Esclude output di build, bundle, cache, work e file personali dell’IDE dal versionamento. |
 | [AGENTS.md](../AGENTS.md) | Definisce vincoli per gli agenti, procedura di upgrade del motore e verifiche assegnate all’utente. |
 | [CHANGELOG.md](../CHANGELOG.md) | Registra le modifiche visibili all'utente per release; Unreleased raccoglie il lavoro non ancora pubblicato. |
-| [LICENSE](../LICENSE) | Contiene la licenza MIT di NX Library. |
+| [LICENSE](../LICENSE) | Contiene la licenza MIT di Arcane. |
 | [NOTICE](../NOTICE) | Conserva attribuzioni e provenienza dei componenti e dei riferimenti riutilizzati. |
 | [Package.swift](../Package.swift) | Dichiara i target SwiftPM, le loro dipendenze e il deployment macOS minimo. |
 | [README.md](../README.md) | Presenta l'app con logo e badge, guida d'uso, requisiti, risoluzione dei problemi, crediti e note legali. |
@@ -111,14 +111,14 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibrary/Services/AppUpdater.swift](../Sources/NXLibrary/Services/AppUpdater.swift) | Coordina controllo release, download, verifica, installazione e riavvio di NX Library. |
+| [Sources/NXLibrary/Services/AppUpdater.swift](../Sources/NXLibrary/Services/AppUpdater.swift) | Coordina controllo release, download, verifica, installazione e riavvio di Arcane. |
 | [Sources/NXLibrary/Services/NativeMenuCommands.swift](../Sources/NXLibrary/Services/NativeMenuCommands.swift) | Coordina tracking, disponibilità nella scena e passaggio differito dai menu macOS alle azioni del launcher. |
 | [Sources/NXLibrary/Services/GameControllerService.swift](../Sources/NXLibrary/Services/GameControllerService.swift) | Rileva controller e rimappature, gestisce tap e hold e produce azioni e simboli dei pulsanti. |
 | [Sources/NXLibrary/Services/LaunchReadinessProbe.swift](../Sources/NXLibrary/Services/LaunchReadinessProbe.swift) | Attende una finestra visibile del gioco (per bundle o, per Steam, per pid) per terminare la schermata di lancio. |
 | [Sources/NXLibrary/Services/NotificationService.swift](../Sources/NXLibrary/Services/NotificationService.swift) | Invia notifiche dei porting e instrada i clic verso il titolo o l’errore interessato. |
 | [Sources/NXLibrary/Services/OnlineBackgroundService.swift](../Sources/NXLibrary/Services/OnlineBackgroundService.swift) | Carica pagine e miniature e scarica wallpaper o video conservando progressi e crediti. |
 | [Sources/NXLibrary/Services/RunningGameMonitor.swift](../Sources/NXLibrary/Services/RunningGameMonitor.swift) | Riconcilia applicazioni in esecuzione e libreria e offre Resume e chiusura del gioco. |
-| [Sources/NXLibrary/Services/LibraryWindow.swift](../Sources/NXLibrary/Services/LibraryWindow.swift) | Riporta davanti la finestra di NX Library dopo un gioco nxnative o Steam, mai sopra un gioco della libreria. |
+| [Sources/NXLibrary/Services/LibraryWindow.swift](../Sources/NXLibrary/Services/LibraryWindow.swift) | Riporta davanti la finestra di Arcane dopo un gioco nxnative o Steam, mai sopra un gioco della libreria. |
 | [Sources/NXLibrary/Services/SoundEffectService.swift](../Sources/NXLibrary/Services/SoundEffectService.swift) | Riproduce i cue Selene e applica attivazione, volume e file importati. |
 | [Sources/NXLibrary/Services/SystemDetector.swift](../Sources/NXLibrary/Services/SystemDetector.swift) | Individua checkout nxnative, root personale e possibili percorsi delle chiavi. |
 
@@ -148,7 +148,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Services/AppSettingsStore.swift](../Sources/NXLibraryCore/Services/AppSettingsStore.swift) | Pubblica impostazioni ed errori, preserva i file illeggibili e salva settings.json tramite file temporaneo. |
 | [Sources/NXLibraryCore/Services/PlaySessionStore.swift](../Sources/NXLibraryCore/Services/PlaySessionStore.swift) | Registra avvio, heartbeat, fine e riconciliazione delle sessioni di gioco; unisce i totali esterni (Steam) con le sessioni successive. |
 | [Sources/NXLibraryCore/Navigation/AppRouter.swift](../Sources/NXLibraryCore/Navigation/AppRouter.swift) | Gestisce route, ritorno, menu, ricerca e richieste di selezione o spostamento su Spotlight. |
-| [Sources/NXLibraryCore/Models/GameFocus.swift](../Sources/NXLibraryCore/Models/GameFocus.swift) | Quando un gioco che esce riporta NX Library davanti: solo se era l’app in primo piano e nessun altro gioco della libreria è aperto. |
+| [Sources/NXLibraryCore/Models/GameFocus.swift](../Sources/NXLibraryCore/Models/GameFocus.swift) | Quando un gioco che esce riporta Arcane davanti: solo se era l’app in primo piano e nessun altro gioco della libreria è aperto. |
 | [Sources/NXLibraryCore/Models/SessionSummary.swift](../Sources/NXLibraryCore/Models/SessionSummary.swift) | Cosa dice la card di fine sessione: gioco, durata di questa sessione e totale scritto come nelle info del gioco; niente card sotto i dieci secondi. |
 
 ## Core · Setup, motore e chiavi
@@ -162,7 +162,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/FirstRunSetup.swift](../Sources/NXLibraryCore/Models/FirstRunSetup.swift) | Coordina pagine, completamento, ripresa del primo avvio, stato della scansione, focus e consumo unico delle selezioni avviate da Your games. |
 | [Sources/NXLibraryCore/Models/GameFoldersCopy.swift](../Sources/NXLibraryCore/Models/GameFoldersCopy.swift) | Condivide nomi delle cartelle, formati e descrizioni tra Setup, Settings e selettori dei percorsi. |
 | [Sources/NXLibraryCore/Models/SetupGrid.swift](../Sources/NXLibraryCore/Models/SetupGrid.swift) | Calcola disposizione, centratura e navigazione del focus nella griglia del Setup. |
-| [Sources/NXLibraryCore/Models/UpstreamCopy.swift](../Sources/NXLibraryCore/Models/UpstreamCopy.swift) | Prepara i testi del changelog upstream e dell’adozione degli aggiornamenti tramite NX Library. |
+| [Sources/NXLibraryCore/Models/UpstreamCopy.swift](../Sources/NXLibraryCore/Models/UpstreamCopy.swift) | Prepara i testi del changelog upstream e dell’adozione degli aggiornamenti tramite Arcane. |
 | [Sources/NXLibraryCore/Services/NXNativeEnvironment.swift](../Sources/NXLibraryCore/Services/NXNativeEnvironment.swift) | Ispeziona strumenti, Python, Xcode e Metal e restituisce uno stato dell’ambiente. |
 | [Sources/NXLibraryCore/Services/EngineLocation.swift](../Sources/NXLibraryCore/Services/EngineLocation.swift) | Risolve checkout predefinito o scelto e produce i candidati per prod.keys. |
 | [Sources/NXLibraryCore/Services/EngineToolchain.swift](../Sources/NXLibraryCore/Services/EngineToolchain.swift) | Individua runtime incluso o venv del checkout e prepara ambiente e PATH dei processi. |
@@ -216,7 +216,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Services/LaunchService.swift](../Sources/NXLibraryCore/Services/LaunchService.swift) | Scrive l’ambiente runtime e avvia il bundle del gioco tramite NSWorkspace. |
 | [Sources/NXLibraryCore/Services/StorageManager.swift](../Sources/NXLibraryCore/Services/StorageManager.swift) | Misura app, cache e log per gioco e totali senza duplicare percorsi condivisi; verifica cartelle e sorgenti prima della pulizia selettiva. I backup appartengono al flusso Saves. |
 | [Sources/NXLibraryCore/Services/DiagnosticsReport.swift](../Sources/NXLibraryCore/Services/DiagnosticsReport.swift) | Genera il rapporto diagnostico e rimuove percorso home e valori riconosciuti come chiavi. |
-| [Sources/NXLibraryCore/Services/AppUpdate.swift](../Sources/NXLibraryCore/Services/AppUpdate.swift) | Definisce repository, versioni, requisiti, limiti di download, digest, firma e regole di verifica e sostituzione dell’app NX Library. |
+| [Sources/NXLibraryCore/Services/AppUpdate.swift](../Sources/NXLibraryCore/Services/AppUpdate.swift) | Definisce repository, versioni, requisiti, limiti di download, digest, firma e regole di verifica e sostituzione dell’app Arcane. |
 | [Sources/NXLibraryCore/Models/AppUpdatePresentation.swift](../Sources/NXLibraryCore/Models/AppUpdatePresentation.swift) | Definisce gli stati dell’updater e il gate di installazione per versione e tipo di copia. |
 | [Sources/NXLibraryCore/Services/AppUpdateDownload.swift](../Sources/NXLibraryCore/Services/AppUpdateDownload.swift) | Scarica gli aggiornamenti con limiti di dimensione, redirect HTTPS vincolati a GitHub e gestione del file temporaneo. |
 
@@ -356,7 +356,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [SteamKeyValues.swift](../Sources/NXLibraryCore/Services/Steam/SteamKeyValues.swift) | Parser testuale limitato e lookup condivisi dei lettori: prima chiave, primo valore tipizzato o campo unico, con regole esplicite sui duplicati; nessuna direttiva eseguita. |
 | [SteamPlaytimeReader.swift](../Sources/NXLibraryCore/Services/Steam/SteamPlaytimeReader.swift) | Ore e ultima partita dell’account Steam più recente da `localconfig.vdf`; nient’altro del file esce dal tipo. |
 | [SteamPlaytimeBaselines.swift](../Sources/NXLibraryCore/Services/Steam/SteamPlaytimeBaselines.swift) | Totali Steam con il momento in cui sono stati visti; nuovo valore o account ripartono; mappa ai giochi del catalogo. |
-| [SteamReturnFocus.swift](../Sources/NXLibraryCore/Models/SteamReturnFocus.swift) | Quando un gioco Steam che esce riporta NX Library davanti: Play premuto qui, gioco in primo piano, nessun altro gioco aperto. |
+| [SteamReturnFocus.swift](../Sources/NXLibraryCore/Models/SteamReturnFocus.swift) | Quando un gioco Steam che esce riporta Arcane davanti: Play premuto qui, gioco in primo piano, nessun altro gioco aperto. |
 | [SteamLaunchQuestions.swift](../Sources/NXLibraryCore/Services/Steam/SteamLaunchQuestions.swift) | Domande con cui Steam ferma un avvio, dalle sole righe `GameAction` di `logs/console_log.txt` letto in coda; una domanda conta dopo 1 s. |
 | [SteamPlaytimeSync.swift](../Sources/NXLibraryCore/Services/Steam/SteamPlaytimeSync.swift) | Una lettura dei file Steam e cosa fa (pubblica, conserva gli ultimi totali buoni dello stesso account o azzera); coda di una lettura alla volta. |
 | [InstallationFileSnapshot.swift](../Sources/NXLibraryCore/Services/Steam/InstallationFileSnapshot.swift) | Letture limitate e non bloccanti di file regolari; verifica dell'identità prima della pubblicazione. |
@@ -391,6 +391,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 
 | File | Responsabilità |
 |---|---|
+| [Sources/NXLibraryCore/Models/AppIdentity.swift](../Sources/NXLibraryCore/Models/AppIdentity.swift) | Nome visibile dell'app ("Arcane", non tradotto), pagina del progetto e User-Agent unico delle richieste di rete. |
 | [Sources/NXLibraryCore/Models/AppLocale.swift](../Sources/NXLibraryCore/Models/AppLocale.swift) | Sei lingue, risoluzione delle preferenze e regione indipendente; nomi e ricerca delle regioni. |
 | [Sources/NXLibraryCore/Models/GameGenre.swift](../Sources/NXLibraryCore/Models/GameGenre.swift) | Generi noti tradotti alla presentazione; dati originali e generi personali conservati. |
 | [Sources/NXLibraryCore/Services/AppLocalization.swift](../Sources/NXLibraryCore/Services/AppLocalization.swift) | Contesto osservabile, lookup portabile delle risorse e interpolazioni/plurali. |
@@ -499,7 +500,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Sources/NXLibrary/Views/Setup/YourGamesSetupView.swift](../Sources/NXLibrary/Views/Setup/YourGamesSetupView.swift) | Disegna scelta cartella, primo gioco, apertura libreria e Skip; condivide l'indicatore dei due passaggi e gestisce mouse, tastiera e controller. |
 | [Sources/NXLibrary/Views/Launch/IntroView.swift](../Sources/NXLibrary/Views/Launch/IntroView.swift) | Mostra l’intro a freddo (solo lo sfondo animato, senza icona né scritta) e gestisce il salto tramite input. |
 | [Sources/NXLibrary/Views/Launch/LaunchScreenView.swift](../Sources/NXLibrary/Views/Launch/LaunchScreenView.swift) | Mostra artwork e logo durante l’avvio di un gioco nxnative o Steam e chiude la schermata a finestra visibile. |
-| [Sources/NXLibrary/Views/Launch/LaunchMotion.swift](../Sources/NXLibrary/Views/Launch/LaunchMotion.swift) | Movimento della schermata di lancio come Selene, in Core Animation: arte che si avvicina piano, logo che entra una volta salendo, segno di NX Library che respira nell’angolo; con Riduci movimento solo la dissolvenza del logo. |
+| [Sources/NXLibrary/Views/Launch/LaunchMotion.swift](../Sources/NXLibrary/Views/Launch/LaunchMotion.swift) | Movimento della schermata di lancio come Selene, in Core Animation: arte che si avvicina piano, logo che entra una volta salendo, segno di Arcane che respira nell’angolo; con Riduci movimento solo la dissolvenza del logo. |
 | [Sources/NXLibrary/Views/Launch/LaunchCoverWindow.swift](../Sources/NXLibrary/Views/Launch/LaunchCoverWindow.swift) | Finestra propria della schermata di lancio: sopra ogni app e Space, mai attivata, così gioco, Steam e cambi di Space restano dietro. |
 | [Sources/NXLibrary/Views/Search/FindGameView.swift](../Sources/NXLibrary/Views/Search/FindGameView.swift) | Presenta ricerca nella libreria e risultati navigabili e inoltra il gioco scelto alla home. |
 | [Sources/NXLibrary/Views/Console/ConsoleView.swift](../Sources/NXLibrary/Views/Console/ConsoleView.swift) | Mostra log e stato corrente e offre copia di log e diagnostica. |
@@ -539,7 +540,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Sources/NXLibrary/Views/Components/SteamPlatformLogo.swift](../Sources/NXLibrary/Views/Components/SteamPlatformLogo.swift) | Logo ufficiale Steam per la piattaforma dei giochi Steam: da solo, almeno 50 pixel, spazio libero della manovella. |
 | [Sources/NXLibrary/Views/Components/GameLogoArea.swift](../Sources/NXLibrary/Views/Components/GameLogoArea.swift) | Area del logo del gioco con la geometria condivisa da Spotlight e Collection; caricamento e impostazioni restano fuori. |
 | [Sources/NXLibrary/Views/Components/GamePrimaryActions.swift](../Sources/NXLibrary/Views/Components/GamePrimaryActions.swift) | Play, Options e preferito con lo stesso aspetto e gli stessi bersagli di input per ogni fonte; i puntini di «Porting» e «Downloading». |
-| [Sources/NXLibrary/Views/Components/SessionCard.swift](../Sources/NXLibrary/Views/Components/SessionCard.swift) | Card di fine sessione: aspetta che NX Library sia davanti, compare 1,8 s dopo per 8 s; una sessione più recente sostituisce quella in attesa. |
+| [Sources/NXLibrary/Views/Components/SessionCard.swift](../Sources/NXLibrary/Views/Components/SessionCard.swift) | Card di fine sessione: aspetta che Arcane sia davanti, compare 1,8 s dopo per 8 s; una sessione più recente sostituisce quella in attesa. |
 
 ## UI · temi, rendering e sfondi
 
@@ -608,6 +609,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Tests/NXLibraryCoreTests/AppSizeCacheTests.swift](../Tests/NXLibraryCoreTests/AppSizeCacheTests.swift) | Riuso delle dimensioni, invalidazione sui bundle modificati e scansione senza falso stato vuoto. |
 | [Tests/NXLibraryCoreTests/AppUpdateTests.swift](../Tests/NXLibraryCoreTests/AppUpdateTests.swift) | Versioni, asset release, requisiti, digest, identità del bundle e sostituzione dell’app. |
 | [Tests/NXLibraryCoreTests/AppUpdatePresentationTests.swift](../Tests/NXLibraryCoreTests/AppUpdatePresentationTests.swift) | Verifica che i controlli manuali non permettano sostituzioni di copie di sviluppo, in sola lettura o con una versione uguale/più recente. |
+| [Tests/NXLibraryCoreTests/ArcaneNameTests.swift](../Tests/NXLibraryCoreTests/ArcaneNameTests.swift) | Nessun testo del catalogo, in nessuna lingua, mostra il vecchio nome; User-Agent con il nome Arcane e nessuna sorgente con il vecchio. |
 | [Tests/NXLibraryCoreTests/ArtworkPickerFocusTests.swift](../Tests/NXLibraryCoreTests/ArtworkPickerFocusTests.swift) | Spostamenti nella griglia dei candidati e passaggi fra slot di artwork. |
 | [Tests/NXLibraryCoreTests/ArtworkPickerTests.swift](../Tests/NXLibraryCoreTests/ArtworkPickerTests.swift) | Decodifica Title DB, candidati per slot e scelte manuali. |
 | [Tests/NXLibraryCoreTests/AutomaticIconTests.swift](../Tests/NXLibraryCoreTests/AutomaticIconTests.swift) | Priorità delle fonti, ambiguità, edizioni, cache offline, immagini invalide e opt-out del sito. |
@@ -745,7 +747,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [SteamKeyValuesTests.swift](../Tests/NXLibraryCoreTests/SteamKeyValuesTests.swift) | Formato, escape, Unicode, duplicati, input troncati e limiti del parser. |
 | [SteamPlaytimeReaderTests.swift](../Tests/NXLibraryCoreTests/SteamPlaytimeReaderTests.swift) | Campi letti, ultima partita, scelta dell’account, duplicati e tipi errati di blocchi/scalari, file grandi, malformati o non sicuri. |
 | [SteamPlaytimeBaselinesTests.swift](../Tests/NXLibraryCoreTests/SteamPlaytimeBaselinesTests.swift) | Base mantenuta o ripartita, minuto conservato, cambio account, salvataggio e mappatura sul catalogo. |
-| [SteamReturnFocusTests.swift](../Tests/NXLibraryCoreTests/SteamReturnFocusTests.swift) | Ritorno a NX Library solo per Play premuto qui, gioco davanti e nessun altro gioco aperto. |
+| [SteamReturnFocusTests.swift](../Tests/NXLibraryCoreTests/SteamReturnFocusTests.swift) | Ritorno ad Arcane solo per Play premuto qui, gioco davanti e nessun altro gioco aperto. |
 | [SteamLaunchQuestionsTests.swift](../Tests/NXLibraryCoreTests/SteamLaunchQuestionsTests.swift) | Domande aperte o risposte subito, righe spezzate, sequenza reale di una sessione su un altro dispositivo, lettura in coda del log per righe intere (anche con un carattere spezzato) e file nuovo di Steam. |
 | [SteamPlaytimeSyncTests.swift](../Tests/NXLibraryCoreTests/SteamPlaytimeSyncTests.swift) | Letture con o senza account, file illeggibili, file invariato, regole di pubblicazione e coda delle letture. |
 | [NativeMacApplicationTests.swift](../Tests/NXLibraryCoreTests/NativeMacApplicationTests.swift) | Fixture native, classificazione, traversal/link, metadata non regolari e header invalidi. |
@@ -790,7 +792,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | File | Responsabilità |
 |---|---|
 | [scripts/build_app.sh](../scripts/build_app.sh) | Compila in staging, prepara plist, runtime e risorse, verifica la firma e pubblica il bundle con sostituzione atomica. |
-| [scripts/install_built_app.swift](../scripts/install_built_app.swift) | Piccolo ingresso CLI che riusa BuildOutputInstaller per installare NX Library dopo il packaging. |
+| [scripts/install_built_app.swift](../scripts/install_built_app.swift) | Piccolo ingresso CLI che riusa BuildOutputInstaller per installare Arcane dopo il packaging. |
 | [scripts/check_publication.py](../scripts/check_publication.py) | Rifiuta contenuti personali o di gioco versionati e formati di segreto riconoscibili; verifica il runtime rispetto al lock prima del packaging. |
 | [scripts/build_dmg.sh](../scripts/build_dmg.sh) | Confeziona un bundle già costruito in un’immagine DMG di sviluppo. |
 | [scripts/bundle_runtime.sh](../scripts/bundle_runtime.sh) | Prepara Python e strumenti dalle versioni bloccate, verifica gli hash e firma il runtime incluso. |
@@ -817,7 +819,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 
 | File | Responsabilità |
 |---|---|
-| [Resources/AppIcon.icns](../Resources/AppIcon.icns) | Icona macOS del bundle NX Library. |
+| [Resources/AppIcon.icns](../Resources/AppIcon.icns) | Icona macOS del bundle Arcane. |
 | [Resources/AppIcon-Dark.png](../Resources/AppIcon-Dark.png) | Variante scura dell’icona dell’app. |
 | [Resources/AppIcon-Light.png](../Resources/AppIcon-Light.png) | Variante chiara dell’icona dell’app. |
 | [Resources/AppIcon-Mono.png](../Resources/AppIcon-Mono.png) | Variante monocromatica dell’icona dell’app. |

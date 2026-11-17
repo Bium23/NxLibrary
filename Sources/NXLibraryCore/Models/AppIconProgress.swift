@@ -10,7 +10,7 @@ public enum AppIconProgress: Equatable {
         case .searching: return L10n.text("Looking for an icon…")
         case .updating: return L10n.text("Updating the app icon in Finder and the Dock… large games can take a minute")
         case .updated: return L10n.text("App icon updated in Finder and the Dock")
-        case .launcherOnly: return L10n.text("Icon used only in NX Library")
+        case .launcherOnly: return L10n.text("Icon used only in Arcane")
         case .original: return L10n.text("Using the game's original app icon")
         case .unavailable: return L10n.text("No icon available. You can choose one.")
         case .failed(let reason): return L10n.format("The app icon was not changed: %@", [String(describing: (reason))])
@@ -28,6 +28,6 @@ public enum AppIconProgress: Equatable {
         let handle = try FileHandle(forWritingTo: url)
         defer { try? handle.close() }
         try handle.seekToEnd()
-        try handle.write(contentsOf: Data("\n[NX Library · Icon] \(buildMessage)\n".utf8))
+        try handle.write(contentsOf: Data("\n[Arcane · Icon] \(buildMessage)\n".utf8))
     }
 }

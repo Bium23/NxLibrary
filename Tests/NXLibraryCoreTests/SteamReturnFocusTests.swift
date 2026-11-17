@@ -1,7 +1,7 @@
 import XCTest
 @testable import NXLibraryCore
 
-/// NX Library comes back after a Steam game only when Play came from NX Library, the game was the app in front
+/// Arcane comes back after a Steam game only when Play came from Arcane, the game was the app in front
 /// and no other library game is still open.
 final class SteamReturnFocusTests: XCTestCase {
     private let id = UUID()
@@ -48,7 +48,7 @@ final class SteamReturnFocusTests: XCTestCase {
         focus.gameCameForward(id)
         XCTAssertTrue(focus.gameEnded(id, othersRunning: false).returnsToLibrary)
         focus.gameCameForward(id)
-        XCTAssertFalse(focus.gameEnded(id, othersRunning: false).returnsToLibrary, "a later start from Steam is not NX Library's")
+        XCTAssertFalse(focus.gameEnded(id, othersRunning: false).returnsToLibrary, "a later start from Steam is not Arcane's")
     }
 
     // MARK: - Whether the player was still in the game
@@ -57,7 +57,7 @@ final class SteamReturnFocusTests: XCTestCase {
         var focus = SteamReturnFocus()
         focus.playPressed(id)
         focus.gameCameForward(id)
-        XCTAssertTrue(focus.gameEnded(id, othersRunning: true).wasInFront, "true even when NX Library stays back")
+        XCTAssertTrue(focus.gameEnded(id, othersRunning: true).wasInFront, "true even when Arcane stays back")
     }
 
     func testAGameLeftForAnotherAppWasNotInFront() {

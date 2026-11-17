@@ -1,6 +1,6 @@
 <h1 align="center">
-  <img src="Resources/AppIcon-Dark.png" alt="NX Library app icon" width="80" height="80" align="absmiddle">
-  NX Library
+  <img src="Resources/AppIcon-Dark.png" alt="Arcane app icon" width="80" height="80" align="absmiddle">
+  Arcane
 </h1>
 
 <p align="center"><strong>A home for your games on Mac.</strong></p>
@@ -33,7 +33,7 @@ Use the real recording; keep this slot hidden until the video is available.
 NX-DEMO:END -->
 
 <!-- NX-SCREENSHOTS:START -->
-![NX Library Spotlight with a selected game, artwork, play history and library navigation](docs/media/spotlight.webp)
+![Arcane Spotlight with a selected game, artwork, play history and library navigation](docs/media/spotlight.webp)
 
 <p align="center"><strong>Your library, together.</strong><br>Games, artwork and activity in Spotlight.</p>
 <!-- NX-SCREENSHOTS:END -->
@@ -43,14 +43,14 @@ NX-DEMO:END -->
 - **Mods in a few clicks.** A store of GameBanana mods that work with your games, by category and by game. Press **Install** and the mod is on at the next launch, with no rebuild. Mods you already have work too: drop them in, turn them on, choose their order.
 - **A lighter, smoother Ocarina of Time.** The updated engine reduces repeated startup work and first-draw stalls, uses less memory and fixes lighting and fog. Supported games offer up to 120 fps after rebuilding.
 - **A recap when you stop playing.** Quit a game and you are back in your library, with a card showing how long you played this time and in total.
-- **Your icon in the Dock.** Choose whether a game icon stays inside NX Library or also appears in Finder and the Dock, even after a rebuild.
+- **Your icon in the Dock.** Choose whether a game icon stays inside Arcane or also appears in Finder and the Dock, even after a rebuild.
 - **Builds on your external drive.** Keep your games on an external drive and the whole build stays there, so the Mac's own disk needs no free space.
 
 Every release is in the [changelog](CHANGELOG.md).
 
 ## Overview
 
-NX Library is an independent SwiftUI frontend for the external [nxnative](https://github.com/seedds/nxnative) toolchain. It brings your installed game apps, local build workflow and game options into a modern Mac-native library inspired by [Selene](https://github.com/mattxslv/Selene).
+Arcane is an independent SwiftUI frontend for the external [nxnative](https://github.com/seedds/nxnative) toolchain. It brings your installed game apps, local build workflow and game options into a modern Mac-native library inspired by [Selene](https://github.com/mattxslv/Selene).
 
 | Area | What you can do |
 |---|---|
@@ -95,7 +95,7 @@ cd NxLibrary
 
 bash scripts/bundle_runtime.sh
 bash scripts/build_app.sh
-open "$HOME/Applications/NXLibrary Dev.app"
+open "$HOME/Applications/Arcane Dev.app"
 ~~~
 
 Run `bundle_runtime.sh` once, and again when `runtime.lock` changes. `build_app.sh` prepares, signs and verifies the app before installing it atomically in `~/Applications`.
@@ -105,12 +105,12 @@ Build options, runtime dependencies, debug builds and release packaging are docu
 ### Installing a packaged release
 
 1. Download the DMG from [Releases](https://github.com/Bium23/NxLibrary/releases/latest).
-2. Open it and drag **NX Library** to Applications.
+2. Open it and drag **Arcane** to Applications.
 3. Open the app and complete Setup.
 
 The current alpha is ad-hoc signed and not notarised. If macOS blocks first opening, use **System Settings → Privacy & Security → Open Anyway** only for a copy you built or obtained from a source you trust.
 
-Packaged releases check this repository for app updates; no GitHub account is needed. Choose **Update** to download, verify, install and reopen NX Library while keeping your library and preferences. Automatic checks run at most once every 24 hours; **NX Library → Check for Updates…** in the macOS menu bar and **Settings → About → Check now** check immediately. Both open the same app-style dialog, with scrollable release notes and a visible result even when no update is available. Updates wait while a build, a running game or a save operation requires the app. Development builds can check public releases manually but never replace themselves.
+Packaged releases check this repository for app updates; no GitHub account is needed. Choose **Update** to download, verify, install and reopen Arcane while keeping your library and preferences. Automatic checks run at most once every 24 hours; **Arcane → Check for Updates…** in the macOS menu bar and **Settings → About → Check now** check immediately. Both open the same app-style dialog, with scrollable release notes and a visible result even when no update is available. Updates wait while a build, a running game or a save operation requires the app. Development builds can check public releases manually but never replace themselves.
 
 ### First-run setup
 
@@ -128,15 +128,15 @@ Discovery includes subfolders of Game apps. It stays inside the chosen folders, 
 
 **Game files** is a separate optional folder preference in **Settings → Library**. Selecting individual files for a porting does not replace that preference or scan their siblings. Both folder choices can be changed in Settings later.
 
-Import your `prod.keys` when prompted. NX Library keeps a private copy with mode `0600` and leaves the original file unchanged. Key values are not displayed or logged.
+Import your `prod.keys` when prompted. Arcane keeps a private copy with mode `0600` and leaves the original file unchanged. Key values are not displayed or logged.
 
-Reopen both setup steps from **Settings → Switch · Engine → Open Setup** whenever needed; this keeps your library and completion state. NX Library never runs `sudo`, accepts the Xcode licence for you or changes `xcode-select`.
+Reopen both setup steps from **Settings → Switch · Engine → Open Setup** whenever needed; this keeps your library and completion state. Arcane never runs `sudo`, accepts the Xcode licence for you or changes `xcode-select`.
 
 Already have a built nxnative game app? Use **Settings → Library → Scan game apps → Scan**. The same action finds existing builds and refreshes the library. Play remains available without the original sources; rebuilding requires attaching them again.
 
-If an installed app is moved or removed, its library entry stays with a blurred, locked tile and **App not found**. Restore it to its folder or change **Game apps**, then refresh the library. NX Library does not search elsewhere for it. Missing build inputs show **Game files not found** when there is no app to play. An existing app still plays when its source files are missing; only rebuilding is unavailable. To reconnect a game's moved inputs, use **Game Options → Edit details → Attach sources…**.
+If an installed app is moved or removed, its library entry stays with a blurred, locked tile and **App not found**. Restore it to its folder or change **Game apps**, then refresh the library. Arcane does not search elsewhere for it. Missing build inputs show **Game files not found** when there is no app to play. An existing app still plays when its source files are missing; only rebuilding is unavailable. To reconnect a game's moved inputs, use **Game Options → Edit details → Attach sources…**.
 
-## Using NX Library
+## Using Arcane
 
 ### Your library
 
@@ -148,7 +148,7 @@ If an installed app is moved or removed, its library entry stays with a blurred,
 
 Use **Find a game** for search, **Game Options** for title-specific actions, and the menu for themes, Settings and running-game controls. Hidden games can be restored under **Settings → Games → Hidden games**.
 
-When you quit a game, NX Library comes back to the front, unless you had moved to another app or another game is still open. A **session card** in the top right shows how long you played this time and in total; sessions under 10 seconds show none. Turn it off in **Settings → Games → Session card**.
+When you quit a game, Arcane comes back to the front, unless you had moved to another app or another game is still open. A **session card** in the top right shows how long you played this time and in total; sessions under 10 seconds show none. Turn it off in **Settings → Games → Session card**.
 
 ![The quick menu open over Spotlight, with Theme selected](docs/media/quick-menu.webp)
 
@@ -217,13 +217,13 @@ Open **Game Options → Saves**, directly below Cheats. Keep the game closed dur
 | **Open folder** | Opens the current local save in Finder. |
 | **Back up now** | Creates a dated, verified copy of account and device saves. |
 | **Save type** | Selects the import destination. **User save** is the usual choice; **Device save** is for a separate device save. |
-| **Import save…** | Previews an exported save folder or a dated NX Library backup before replacing anything. |
+| **Import save…** | Previews an exported save folder or a dated Arcane backup before replacing anything. |
 | **Refresh** | Reads save and backup information again. If recovery is needed, offers **Retry recovery**. |
 | **Backup folder** | Opens this game's backups in Finder. The row shows the latest backup's date and time. |
 
-**To import:** choose the folder, review the centred **From → To** preview, then confirm. NX Library backs up existing progress first and verifies the result. A successful import shows **Imported successfully**, which disappears after three seconds.
+**To import:** choose the folder, review the centred **From → To** preview, then confirm. Arcane backs up existing progress first and verifies the result. A successful import shows **Imported successfully**, which disappears after three seconds.
 
-For Ryujinx, choose the numbered game folder under `bis/user/save/`. A folder selected inside that tree is recognised too; NX Library checks its title metadata and imports the complete committed save, including all slots. For other exports, choose the folder containing the complete save.
+For Ryujinx, choose the numbered game folder under `bis/user/save/`. A folder selected inside that tree is recognised too; Arcane checks its title metadata and imports the complete committed save, including all slots. For other exports, choose the folder containing the complete save.
 
 **To restore:** choose a dated backup folder through **Import save…**. A restore reinstates both recorded destinations, including whether either one was absent. An ordinary import replaces the selected destination.
 
@@ -233,7 +233,7 @@ Interrupted replacements must recover before Play. The Saves panel reports what 
 
 ### Cheats
 
-Open **Game Options → Cheats**, then choose or drop a matching cheat file. NX Library checks the title/build information; newly imported cheats start off. Enable the master switch and the individual cheats you want, then launch the game.
+Open **Game Options → Cheats**, then choose or drop a matching cheat file. Arcane checks the title/build information; newly imported cheats start off. Enable the master switch and the individual cheats you want, then launch the game.
 
 Changes apply at the next Play and are written only while the game is closed. An older or unrecognised engine build may require **Rebuild**. The engine's in-game panel, `⌘⇧C`, reads the same files.
 
@@ -253,7 +253,7 @@ Mods apply at the next launch, without a rebuild. The engine reads file mods onl
 
 ### Artwork, themes and sound
 
-- **Game Options → Edit details** changes one game's artwork or metadata. Manual artwork choices take priority over automatic images. After choosing an Icon in **Change artwork**, choose **Only here** to keep it inside NX Library or **Use on the Mac** to show it in Finder and the Dock too. This choice is available for every game, including apps with no original icon, and survives restarts and rebuilds. **Only here** restores the original app icon (or its absence) if a custom one was already applied. **Automatic** removes the personal image and uses the game's own icon, then available online artwork, while keeping your location choice. On the Icon tab, **Icon location** changes **Only here** / **Use on the Mac** at any time, including with Automatic selected. If no image is found, the app keeps the standard macOS icon and remains playable; Change artwork explains that no icon is available. The finished build log records the separate icon result.
+- **Game Options → Edit details** changes one game's artwork or metadata. Manual artwork choices take priority over automatic images. After choosing an Icon in **Change artwork**, choose **Only here** to keep it inside Arcane or **Use on the Mac** to show it in Finder and the Dock too. This choice is available for every game, including apps with no original icon, and survives restarts and rebuilds. **Only here** restores the original app icon (or its absence) if a custom one was already applied. **Automatic** removes the personal image and uses the game's own icon, then available online artwork, while keeping your location choice. On the Icon tab, **Icon location** changes **Only here** / **Use on the Mac** at any time, including with Automatic selected. If no image is found, the app keeps the standard macOS icon and remains playable; Change artwork explains that no icon is available. The finished build log records the separate icon result.
 - **Menu → Theme** chooses palettes and wallpapers. Background choices include local images, muted looping videos and optional online sources; source credits appear in the picker.
 - **Settings → Look** controls wallpaper placement, sizing, brightness, game backgrounds, Reduce Motion and the Color/Monochrome app icon.
 - **Settings → Sound & music** controls interface cues and volume. Four interface sounds are bundled; additional sounds and wallpapers can be imported from a Selene theme folder you own.
@@ -309,7 +309,7 @@ Before reporting a problem, review copied diagnostics and remove anything person
 
 ### Compatibility and limitations
 
-- NX Library uses a manually pinned engine and checks its commit, working tree, CLI contract and Metal compiler before new builds. It does not follow upstream `main` automatically. **Settings → Engine → Newest engine** lets you choose `main` yourself before NX Library has tested it: an orange dot marks it, builds are recorded as untested, **Update** moves to a newer `main` when there is one, **Back to tested** returns to the pinned engine, and it is not offered when `main` needs a different Metal compiler.
+- Arcane uses a manually pinned engine and checks its commit, working tree, CLI contract and Metal compiler before new builds. It does not follow upstream `main` automatically. **Settings → Engine → Newest engine** lets you choose `main` yourself before Arcane has tested it: an orange dot marks it, builds are recorded as untested, **Update** moves to a newer `main` when there is one, **Back to tested** returns to the pinned engine, and it is not offered when `main` needs a different Metal compiler.
 - The current engine is `8a5c5e7e` and certifies Metal `32023.922`. **Build anyway with an untested toolchain** requires explicit confirmation and marks the resulting build as untested. A successful launch does not turn it into a certified combination.
 - Game compatibility depends on nxnative, the game version and the toolchain.
 - Output follows the window/display; native 1440p/4K internal rendering is not supported. Render scale is 50–100% where the build supports it. MetalFX is spatial upscaling.
@@ -328,13 +328,13 @@ Storage can also clear all build caches or logs and open the shared backups fold
 ## Next steps
 
 - **Simpler Settings** — Keep everyday options easy to find, with advanced controls grouped within each category.
-- **In-app bug reporting** — Make it easier to report a problem directly from NX Library.
+- **In-app bug reporting** — Make it easier to report a problem directly from Arcane.
 - **Broader game discovery** — Discover and launch games from Steam, CrossOver and the Mac App Store, alongside nxnative apps.
 - **Community translations** — Review and extend the initial six interface languages.
 - **Better controller support** — Refine controller settings and offer more flexible button mapping.
 - **Continued polish** — Fix bugs and improve navigation, feedback and visual details throughout the app.
 
-More to come as NX Library evolves.
+More to come as Arcane evolves.
 
 ## Documentation and development
 
@@ -355,7 +355,7 @@ More to come as NX Library evolves.
 
 ## Credits and licences
 
-NX Library is MIT licensed. It uses upstream [nxnative](https://github.com/seedds/nxnative). It began from the MIT nxnative_Launcher codebase, which has been rewritten since; that repository is no longer available and its notice stays in [NOTICE](NOTICE). Adaptations from [NX2Apple](https://github.com/LNPANDY/NX2Apple) cover key checks, failure explanations, diagnostics and updates.
+Arcane is MIT licensed. It uses upstream [nxnative](https://github.com/seedds/nxnative). It began from the MIT nxnative_Launcher codebase, which has been rewritten since; that repository is no longer available and its notice stays in [NOTICE](NOTICE). Adaptations from [NX2Apple](https://github.com/LNPANDY/NX2Apple) cover key checks, failure explanations, diagnostics and updates.
 
 The interface draws from the MIT [Selene](https://github.com/mattxslv/Selene) theme. Bundled fonts, sounds, palettes and runtime components retain their own licences; see [NOTICE](NOTICE), [media notices](Resources/Selene/NOTICE.txt) and [palette notices](Resources/Selene/NOTICE-palettes.txt).
 
@@ -363,18 +363,18 @@ The app icon is original artwork created by the owner with AI. Its [master and g
 
 ## Legal and third-party notices
 
-**Project scope.** NX Library is an independent macOS frontend for organising and launching game applications. Its current nxnative integration also provides guided setup and local builds using the external nxnative toolchain.
+**Project scope.** Arcane is an independent macOS frontend for organising and launching game applications. Its current nxnative integration also provides guided setup and local builds using the external nxnative toolchain.
 
 **Games and keys.** The project does not provide games, firmware, cryptographic keys or downloadable game packages. Users must supply their own game files and keys and have the rights and permissions required to use them. Do not submit these files through issues, pull requests or support requests.
 
-**Local processing and external services.** Game preparation uses locally supplied files and keys. NX Library checks encrypted game headers using the supplied keys and invokes nxnative to perform the build. Setup, updates and optional artwork features may contact third-party services.
+**Local processing and external services.** Game preparation uses locally supplied files and keys. Arcane checks encrypted game headers using the supplied keys and invokes nxnative to perform the build. Setup, updates and optional artwork features may contact third-party services.
 
 **Permitted use.** Owning a game or console does not necessarily authorise every form of copying, decryption or conversion. Applicable rules vary by jurisdiction. This project does not grant permission to circumvent technological protections or infringe third-party rights. Do not use it to distribute game files, keys or generated packages without the necessary authorisation.
 
-**Third-party software and content.** NX Library does not distribute proprietary Nintendo game code, game assets, firmware or cryptographic keys. Open-source dependencies and bundled resources remain subject to their respective licences and notices. Artwork retrieved from external services remains subject to its owners’ rights and the applicable service terms.
+**Third-party software and content.** Arcane does not distribute proprietary Nintendo game code, game assets, firmware or cryptographic keys. Open-source dependencies and bundled resources remain subject to their respective licences and notices. Artwork retrieved from external services remains subject to its owners’ rights and the applicable service terms.
 
-**Trademarks.** NX Library is not affiliated with, sponsored by or endorsed by Nintendo or any other game publisher or platform provider. Product names, game titles and trademarks belong to their respective owners.
+**Trademarks.** Arcane is not affiliated with, sponsored by or endorsed by Nintendo or any other game publisher or platform provider. Product names, game titles and trademarks belong to their respective owners.
 
 **Rights concerns.** If you believe material distributed by this project infringes your rights, contact the maintainer with the relevant material, your rights claim and sufficient information to assess it. Substantiated concerns will be reviewed promptly and addressed as appropriate.
 
-**No warranty.** NX Library is provided “as is”, without warranty, as described in LICENSE. Third-party components are governed by their own licences. See NOTICE for acknowledgements.
+**No warranty.** Arcane is provided “as is”, without warranty, as described in LICENSE. Third-party components are governed by their own licences. See NOTICE for acknowledgements.

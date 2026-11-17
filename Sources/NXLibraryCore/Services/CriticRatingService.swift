@@ -149,7 +149,7 @@ public actor CriticRatingService {
         guard url.scheme == "https", url.host == "www.wikidata.org", url.path == "/w/api.php",
               url.user == nil, url.password == nil, url.port == nil || url.port == 443 else { throw URLError(.badURL) }
         var request = URLRequest(url: url)
-        request.setValue("NXLibrary/0.2 (https://github.com/Bium23/NxLibrary)", forHTTPHeaderField: "User-Agent")
+        request.setValue(AppIdentity.userAgent(), forHTTPHeaderField: "User-Agent")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         let (data, response) = try await BoundedDownload.data(for: request, session: session, limit: 4_194_304)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode),

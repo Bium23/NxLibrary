@@ -23,7 +23,7 @@ struct IntroView: View {
             SeleneBackdrop()
         }
         .accessibilityElement()
-        .accessibilityLabel(L10n.text("NX Library"))
+        .accessibilityLabel(AppIdentity.name)
         .opacity(leaving ? 0 : 1)
         .ignoresSafeArea()
         .contentShape(Rectangle())

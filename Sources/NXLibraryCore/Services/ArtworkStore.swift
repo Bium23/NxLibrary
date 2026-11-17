@@ -113,7 +113,7 @@ public final class ArtworkStore: ObservableObject {
 
         var request = URLRequest(url: fetchURL)
         request.timeoutInterval = 15
-        request.setValue("NXLibrary/0.1 (macOS; personal app)",
+        request.setValue(AppIdentity.userAgent(),
                          forHTTPHeaderField: "User-Agent")
 
         do {
@@ -173,7 +173,7 @@ public final class ArtworkStore: ObservableObject {
 
         var request = URLRequest(url: remoteURL)
         request.timeoutInterval = 15
-        request.setValue("NXLibrary/0.1 (macOS; personal app)", forHTTPHeaderField: "User-Agent")
+        request.setValue(AppIdentity.userAgent(), forHTTPHeaderField: "User-Agent")
         do {
             let (data, http) = try await client.data(for: request)
             guard (200..<300).contains(http.statusCode), !data.isEmpty else { return nil }

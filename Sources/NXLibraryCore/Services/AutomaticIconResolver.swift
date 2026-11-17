@@ -136,7 +136,7 @@ actor AutomaticIconResolver {
     private static func get(_ url: URL, client: ArtworkHTTPClient, limit: Int = 8 * 1024 * 1024) async -> Data? {
         var request = URLRequest(url: url)
         request.timeoutInterval = 8
-        request.setValue("NXLibrary (macOS; automatic icon lookup)", forHTTPHeaderField: "User-Agent")
+        request.setValue(AppIdentity.userAgent(), forHTTPHeaderField: "User-Agent")
         guard let (data, response) = try? await client.data(for: request), response.statusCode == 200,
               !data.isEmpty, data.count <= limit, let final = response.url,
               final.scheme == "https", final.user == nil, final.password == nil,

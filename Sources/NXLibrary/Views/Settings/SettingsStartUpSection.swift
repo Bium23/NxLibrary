@@ -29,7 +29,7 @@ struct SettingsStartUpSection: View {
                             } ?? L10n.text("Automatic (Mac)"), action: onChooseRegion)
 
             SeleneCycleRow("Start on",
-                           subtitle: "The screen NX Library opens on.",
+                           subtitle: "The screen Arcane opens on.",
                            value: startOnTitle) { step in
                 settings.settings.startOn = settings.settings.startOn.stepped(step)
             }
@@ -43,7 +43,7 @@ struct SettingsStartUpSection: View {
                             isOn: $settings.settings.startInFullscreen)
 
             SeleneToggleRow("Check for app updates",
-                            subtitle: "Look for a newer NX Library release at launch, at most once a day.",
+                            subtitle: "Look for a newer Arcane release at launch, at most once a day.",
                             isOn: $settings.settings.checkAppUpdatesAtLaunch)
 
             SeleneToggleRow("Intro animation",

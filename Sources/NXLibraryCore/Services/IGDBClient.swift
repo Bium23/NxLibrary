@@ -104,7 +104,7 @@ actor IGDBClient {
                 (url.host == "api.igdb.com" && ["/v4/games", "/v4/external_games"].contains(url.path)) else { throw IGDBError.unreachable }
         var request = request
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue("NXLibrary/0.2 (https://github.com/Bium23/NxLibrary)", forHTTPHeaderField: "User-Agent")
+        request.setValue(AppIdentity.userAgent(), forHTTPHeaderField: "User-Agent")
         let data: Data, response: URLResponse
         do { (data, response) = try await BoundedDownload.data(for: request, session: session, limit: 2_097_152) }
         catch let error as URLError where error.code == .dataLengthExceedsMaximum { throw IGDBError.invalidResponse }

@@ -641,7 +641,7 @@ public final class AppViewModel: ObservableObject {
                 keySummary = summary
                 isProdKeysValid = summary.hasHeaderKey
                 prodKeysPath = keyStore.keyURL.path
-                prodKeysSource = "NX Library"
+                prodKeysSource = AppIdentity.name
             } catch {
                 keySummary = nil
                 isProdKeysValid = false
@@ -1601,7 +1601,7 @@ public final class AppViewModel: ObservableObject {
     /// A library that could not be written: what the player sees would be gone at the next start, so say so once
     /// (in the log every time) instead of losing it in silence.
     func reportLibrarySaveFailure(_ error: Error) {
-        let message = L10n.text("NX Library could not save your library, so recent changes may be lost when it quits: ")
+        let message = L10n.text("Arcane could not save your library, so recent changes may be lost when it quits: ")
             + error.localizedDescription
         logs.append(LogEntry(level: .error, message: message))
         if alertMessage == nil { alertMessage = message }
@@ -2487,7 +2487,7 @@ public final class AppViewModel: ObservableObject {
             metalVersion: environmentStatus.metalVersion, xcodeVersion: environmentStatus.xcodeVersion,
             verified: certified,
             note: certified ? "Certified toolchain"
-                : usesNewestEngine ? "Newest engine, not yet tested by NX Library"
+                : usesNewestEngine ? "Newest engine, not yet tested by Arcane"
                 : "Untested toolchain (explicit override)")
 
         let merged = try catalogRepository.mergeNXNative(scanned: [target], enableSource: true)
@@ -2561,7 +2561,7 @@ public final class AppViewModel: ObservableObject {
         let toolchain = engineToolchain
         guard FileManager.default.isExecutableFile(atPath: toolchain.python.path) else {
             throw NXLibraryError.environmentBlocked(toolchain.isBundled
-                ? L10n.text("the bundled Python is missing; reinstall NX Library")
+                ? L10n.text("the bundled Python is missing; reinstall Arcane")
                 : L10n.text("the nxnative venv Python is missing"))
         }
 

@@ -3,20 +3,20 @@
 # NX_VERSION sets the app version (default: the version in progress, from the VERSION file); NX_RELEASE=1
 # marks a release copy, the only kind that updates itself. scripts/release.sh sets both; a plain build sets
 # neither, so a development copy carries the version being worked on and says it is a development build.
-# A development copy is "NX Library Dev" (default ~/Applications/NXLibrary Dev.app), the maintainer's test copy,
-# beside the released "NX Library" that updates itself. The development marker selects separate launcher
+# A development copy is "Arcane Dev" (default ~/Applications/Arcane Dev.app), the maintainer's test copy,
+# beside the released "Arcane" that updates itself. The development marker selects separate launcher
 # data/preferences and a distinct bundle ID, so framework-owned preferences are separate too.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 if [ "${NX_RELEASE:-0}" = "1" ]; then
-  NAME="NX Library"
+  NAME="Arcane"
   BUNDLE_ID="local.nxlibrary"
-  APP="${1:-$HOME/Applications/NX Library.app}"
+  APP="${1:-$HOME/Applications/Arcane.app}"
 else
-  NAME="NX Library Dev"
+  NAME="Arcane Dev"
   BUNDLE_ID="local.nxlibrary.development"
-  APP="${1:-$HOME/Applications/NXLibrary Dev.app}"
+  APP="${1:-$HOME/Applications/Arcane Dev.app}"
 fi
 CONFIG="${NX_BUILD_CONFIG:-release}"
 VERSION="${NX_VERSION:-$(tr -d '[:space:]' < "$ROOT/VERSION")}"

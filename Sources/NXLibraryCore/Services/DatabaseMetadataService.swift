@@ -120,7 +120,7 @@ public actor DatabaseMetadataService {
         try Task.checkCancellation()
         guard Self.allowed(url), url.host == database.host else { throw URLError(.badURL) }
         var request = URLRequest(url: url); request.timeoutInterval = 12
-        request.setValue("NXLibrary/0.2 (https://github.com/Bium23/NxLibrary)", forHTTPHeaderField: "User-Agent")
+        request.setValue(AppIdentity.userAgent(), forHTTPHeaderField: "User-Agent")
         let (data, response) = try await transport(request)
         try Task.checkCancellation()
         guard (200..<300).contains(response.statusCode), response.url == url, data.count <= 2_097_152,

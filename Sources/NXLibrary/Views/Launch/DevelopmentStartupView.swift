@@ -67,7 +67,7 @@ final class DevelopmentStartup: ObservableObject {
 private enum DevelopmentStartupFailure: LocalizedError {
     case otherCopyRunning
     var errorDescription: String? {
-        L10n.text("Close the other NX Library copy, then try again. Your original library has not been changed.", context: AppLocale(language: .automatic, region: nil))
+        L10n.text("Close the other Arcane copy, then try again. Your original library has not been changed.", context: AppLocale(language: .automatic, region: nil))
     }
 }
 

@@ -1,4 +1,4 @@
-# NX Library — i flussi principali
+# Arcane — i flussi principali
 
 Ogni flusso segue un'azione dall'input all'effetto, nominando i tipi che se ne occupano. I dettagli e le regole di ogni passo sono nella sezione dell'area in [architecture.md](architecture.md); come costruire un pezzo nuovo è in [conventions.md](conventions.md). Se un flusso cambia, il suo schema si aggiorna nello stesso commit.
 

@@ -1559,43 +1559,43 @@
         }
       }
     },
-    "%@ has changed files. NX Library never touches them: put them aside, then check again.": {
+    "%@ has changed files. Arcane never touches them: put them aside, then check again.": {
       "comment": "SetupCheck.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ has changed files. NX Library never touches them: put them aside, then check again."
+            "value": "%@ has changed files. Arcane never touches them: put them aside, then check again."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ contiene file modificati. NX Library non li tocca mai: mettili da parte, poi ricontrolla."
+            "value": "%@ contiene file modificati. Arcane non li tocca mai: mettili da parte, poi ricontrolla."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ contient des fichiers modifiés. NX Library n’y touche jamais : mettez-les de côté, puis vérifiez à nouveau."
+            "value": "%@ contient des fichiers modifiés. Arcane n’y touche jamais : mettez-les de côté, puis vérifiez à nouveau."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ enthält geänderte Dateien. NX Library verändert sie niemals: Lege sie beiseite und prüfe erneut."
+            "value": "%@ enthält geänderte Dateien. Arcane verändert sie niemals: Lege sie beiseite und prüfe erneut."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ contiene archivos modificados. NX Library nunca los modifica: apártalos y vuelve a comprobar."
+            "value": "%@ contiene archivos modificados. Arcane nunca los modifica: apártalos y vuelve a comprobar."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ tem arquivos alterados. O NX Library nunca os modifica: guarde-os em outro local e verifique novamente."
+            "value": "%@ tem arquivos alterados. O Arcane nunca os modifica: guarde-os em outro local e verifique novamente."
           }
         }
       }
@@ -3240,43 +3240,43 @@
         }
       }
     },
-    "%@. Reinstall NX Library from its DMG.": {
+    "%@. Reinstall Arcane from its DMG.": {
       "comment": "SetupCheck.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@. Reinstall NX Library from its DMG."
+            "value": "%@. Reinstall Arcane from its DMG."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@. Reinstalla NX Library dal suo DMG."
+            "value": "%@. Reinstalla Arcane dal suo DMG."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@. Réinstallez NX Library depuis son DMG."
+            "value": "%@. Réinstallez Arcane depuis son DMG."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@. Installiere NX Library erneut aus der DMG-Datei."
+            "value": "%@. Installiere Arcane erneut aus der DMG-Datei."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@. Reinstala NX Library desde su DMG."
+            "value": "%@. Reinstala Arcane desde su DMG."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@. Reinstale o NX Library a partir do DMG."
+            "value": "%@. Reinstale o Arcane a partir do DMG."
           }
         }
       }
@@ -5403,43 +5403,43 @@
         }
       }
     },
-    "A notification when a porting finishes while NX Library is in the background.": {
+    "A notification when a porting finishes while Arcane is in the background.": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A notification when a porting finishes while NX Library is in the background."
+            "value": "A notification when a porting finishes while Arcane is in the background."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Una notifica quando la creazione dell’app per Mac termina mentre NX Library è in background."
+            "value": "Una notifica quando la creazione dell’app per Mac termina mentre Arcane è in background."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Une notification quand la création d’une app Mac se termine alors que NX Library est en arrière-plan."
+            "value": "Une notification quand la création d’une app Mac se termine alors qu’Arcane est en arrière-plan."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eine Mitteilung, wenn die App-Erstellung endet, während NX Library im Hintergrund ist."
+            "value": "Eine Mitteilung, wenn die App-Erstellung endet, während Arcane im Hintergrund ist."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Envía una notificación cuando termina una compilación mientras NX Library está en segundo plano."
+            "value": "Envía una notificación cuando termina una compilación mientras Arcane está en segundo plano."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uma notificação quando uma compilação terminar enquanto o NX Library estiver em segundo plano."
+            "value": "Uma notificação quando uma compilação terminar enquanto o Arcane estiver em segundo plano."
           }
         }
       }
@@ -11307,84 +11307,84 @@
         }
       }
     },
-    "Build with nxnative main (%@, %@) before NX Library has tested it.": {
+    "Build with nxnative main (%@, %@) before Arcane has tested it.": {
       "comment": "NewestEngine.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Build with nxnative main (%@, %@) before NX Library has tested it."
+            "value": "Build with nxnative main (%@, %@) before Arcane has tested it."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compila con nxnative main (%@, %@) prima che NX Library l’abbia testato."
+            "value": "Compila con nxnative main (%@, %@) prima che Arcane l’abbia testato."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compiler avec nxnative main (%@, %@) avant qu’il soit testé par NX Library."
+            "value": "Compiler avec nxnative main (%@, %@) avant qu’il soit testé par Arcane."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mit nxnative main (%@, %@) erstellen, bevor NX Library es getestet hat."
+            "value": "Mit nxnative main (%@, %@) erstellen, bevor Arcane es getestet hat."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compila con main de nxnative (%@, %@) antes de que NX Library lo haya probado."
+            "value": "Compila con main de nxnative (%@, %@) antes de que Arcane lo haya probado."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compile com o main do nxnative (%@, %@) antes de o NX Library testá-lo."
+            "value": "Compile com o main do nxnative (%@, %@) antes de o Arcane testá-lo."
           }
         }
       }
     },
-    "Build with nxnative main before NX Library has tested it, or go back to the tested engine.": {
+    "Build with nxnative main before Arcane has tested it, or go back to the tested engine.": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Build with nxnative main before NX Library has tested it, or go back to the tested engine."
+            "value": "Build with nxnative main before Arcane has tested it, or go back to the tested engine."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compila con nxnative main prima che NX Library l’abbia testato oppure torna al motore testato."
+            "value": "Compila con nxnative main prima che Arcane l’abbia testato oppure torna al motore testato."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compiler avec nxnative main avant qu’il soit testé par NX Library, ou revenir au moteur testé."
+            "value": "Compiler avec nxnative main avant qu’il soit testé par Arcane, ou revenir au moteur testé."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mit nxnative main erstellen, bevor NX Library es getestet hat, oder zur getesteten Engine zurückkehren."
+            "value": "Mit nxnative main erstellen, bevor Arcane es getestet hat, oder zur getesteten Engine zurückkehren."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compila con main de nxnative antes de que NX Library lo haya probado o vuelve al motor probado."
+            "value": "Compila con main de nxnative antes de que Arcane lo haya probado o vuelve al motor probado."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compile com o main do nxnative antes de o NX Library testá-lo ou volte à engine testada."
+            "value": "Compile com o main do nxnative antes de o Arcane testá-lo ou volte à engine testada."
           }
         }
       }
@@ -11430,43 +11430,43 @@
         }
       }
     },
-    "Builds games with nxnative main instead of the engine this NX Library is tested with. ": {
+    "Builds games with nxnative main instead of the engine this version of Arcane is tested with. ": {
       "comment": "NewestEngine.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Builds games with nxnative main instead of the engine this NX Library is tested with. "
+            "value": "Builds games with nxnative main instead of the engine this version of Arcane is tested with. "
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compila i giochi con nxnative main anziché con il motore con cui è testata questa NX Library. "
+            "value": "Compila i giochi con nxnative main anziché con il motore con cui è testata questa versione di Arcane. "
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compile les jeux avec nxnative main au lieu du moteur avec lequel cette version de NX Library a été testée. "
+            "value": "Compile les jeux avec nxnative main au lieu du moteur avec lequel cette version d’Arcane a été testée. "
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erstellt Spiele-Apps mit nxnative main statt mit der Engine, mit der diese NX Library-Version getestet wurde. "
+            "value": "Erstellt Spiele-Apps mit nxnative main statt mit der Engine, mit der diese Arcane-Version getestet wurde. "
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compila juegos con main de nxnative en lugar del motor con el que se ha probado este NX Library. "
+            "value": "Compila juegos con main de nxnative en lugar del motor con el que se ha probado este Arcane. "
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compila jogos com o main do nxnative em vez da engine com a qual este NX Library foi testado. "
+            "value": "Compila jogos com o main do nxnative em vez da engine com a qual este Arcane foi testado. "
           }
         }
       }
@@ -14095,43 +14095,43 @@
         }
       }
     },
-    "Checks the engine and toolchain each time NX Library starts.": {
+    "Checks the engine and toolchain each time Arcane starts.": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Checks the engine and toolchain each time NX Library starts."
+            "value": "Checks the engine and toolchain each time Arcane starts."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Controlla il motore e la toolchain a ogni avvio di NX Library."
+            "value": "Controlla il motore e la toolchain a ogni avvio di Arcane."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vérifie le moteur et la chaîne d’outils à chaque démarrage de NX Library."
+            "value": "Vérifie le moteur et la chaîne d’outils à chaque démarrage d’Arcane."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prüft Engine und Toolchain bei jedem Start von NX Library."
+            "value": "Prüft Engine und Toolchain bei jedem Start von Arcane."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comprueba el motor y la cadena de herramientas cada vez que se inicia NX Library."
+            "value": "Comprueba el motor y la cadena de herramientas cada vez que se inicia Arcane."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verifica a engine e o conjunto de ferramentas sempre que o NX Library inicia."
+            "value": "Verifica a engine e o conjunto de ferramentas sempre que o Arcane inicia."
           }
         }
       }
@@ -14546,43 +14546,43 @@
         }
       }
     },
-    "Choose a picture for your background. NX Library keeps its own copy.": {
+    "Choose a picture for your background. Arcane keeps its own copy.": {
       "comment": "ThemePickerView.swift:766",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose a picture for your background. NX Library keeps its own copy."
+            "value": "Choose a picture for your background. Arcane keeps its own copy."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scegli un’immagine per lo sfondo. NX Library ne conserva una copia."
+            "value": "Scegli un’immagine per lo sfondo. Arcane ne conserva una copia."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choisissez une image pour votre arrière-plan. NX Library en conserve une copie."
+            "value": "Choisissez une image pour votre arrière-plan. Arcane en conserve une copie."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wähle ein Bild für deinen Hintergrund. NX Library behält eine eigene Kopie."
+            "value": "Wähle ein Bild für deinen Hintergrund. Arcane behält eine eigene Kopie."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elige una imagen para tu fondo. NX Library conserva su propia copia."
+            "value": "Elige una imagen para tu fondo. Arcane conserva su propia copia."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Escolha uma imagem para seu fundo. O NX Library mantém uma cópia própria."
+            "value": "Escolha uma imagem para seu fundo. O Arcane mantém uma cópia própria."
           }
         }
       }
@@ -14628,43 +14628,43 @@
         }
       }
     },
-    "Choose a video for your live background (MP4, MOV or M4V). NX Library keeps its own copy and plays it muted.": {
+    "Choose a video for your live background (MP4, MOV or M4V). Arcane keeps its own copy and plays it muted.": {
       "comment": "ThemePickerView.swift:765",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose a video for your live background (MP4, MOV or M4V). NX Library keeps its own copy and plays it muted."
+            "value": "Choose a video for your live background (MP4, MOV or M4V). Arcane keeps its own copy and plays it muted."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scegli un video per lo sfondo animato (MP4, MOV o M4V). NX Library ne conserva una copia e lo riproduce senza audio."
+            "value": "Scegli un video per lo sfondo animato (MP4, MOV o M4V). Arcane ne conserva una copia e lo riproduce senza audio."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choisissez une vidéo pour votre arrière-plan animé (MP4, MOV ou M4V). NX Library en conserve une copie et la lit sans le son."
+            "value": "Choisissez une vidéo pour votre arrière-plan animé (MP4, MOV ou M4V). Arcane en conserve une copie et la lit sans le son."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wähle ein Video für deinen Live-Hintergrund (MP4, MOV oder M4V). NX Library behält eine eigene Kopie und spielt es ohne Ton ab."
+            "value": "Wähle ein Video für deinen Live-Hintergrund (MP4, MOV oder M4V). Arcane behält eine eigene Kopie und spielt es ohne Ton ab."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elige un vídeo para tu fondo animado (MP4, MOV o M4V). NX Library conserva su propia copia y lo reproduce sin sonido."
+            "value": "Elige un vídeo para tu fondo animado (MP4, MOV o M4V). Arcane conserva su propia copia y lo reproduce sin sonido."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Escolha um vídeo para seu fundo animado (MP4, MOV ou M4V). O NX Library mantém uma cópia própria e o reproduz sem som."
+            "value": "Escolha um vídeo para seu fundo animado (MP4, MOV ou M4V). O Arcane mantém uma cópia própria e o reproduz sem som."
           }
         }
       }
@@ -16227,43 +16227,43 @@
         }
       }
     },
-    "Close the other NX Library copy, then try again. Your original library has not been changed.": {
+    "Close the other Arcane copy, then try again. Your original library has not been changed.": {
       "comment": "Development profile bootstrap; do not expose credential values.",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Close the other NX Library copy, then try again. Your original library has not been changed."
+            "value": "Close the other Arcane copy, then try again. Your original library has not been changed."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chiudi l’altra copia di NX Library e riprova. La libreria originale non è stata modificata."
+            "value": "Chiudi l’altra copia di Arcane e riprova. La libreria originale non è stata modificata."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fermez l’autre copie de NX Library, puis réessayez. Votre bibliothèque d’origine n’a pas été modifiée."
+            "value": "Fermez l’autre copie d’Arcane, puis réessayez. Votre bibliothèque d’origine n’a pas été modifiée."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Schließe die andere Kopie von NX Library und versuche es erneut. Deine Originalbibliothek wurde nicht verändert."
+            "value": "Schließe die andere Kopie von Arcane und versuche es erneut. Deine Originalbibliothek wurde nicht verändert."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cierra la otra copia de NX Library e inténtalo de nuevo. Tu biblioteca original no se ha modificado."
+            "value": "Cierra la otra copia de Arcane e inténtalo de nuevo. Tu biblioteca original no se ha modificado."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Feche a outra cópia do NX Library e tente novamente. Sua biblioteca original não foi alterada."
+            "value": "Feche a outra cópia do Arcane e tente novamente. Sua biblioteca original não foi alterada."
           }
         }
       }
@@ -16801,43 +16801,43 @@
         }
       }
     },
-    "Colors for all of NX Library. Move through them to see each one in the preview.": {
+    "Colors for all of Arcane. Move through them to see each one in the preview.": {
       "comment": "ThemePickerView.swift:158",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Colors for all of NX Library. Move through them to see each one in the preview."
+            "value": "Colors for all of Arcane. Move through them to see each one in the preview."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Colori per tutta NX Library. Scorri le opzioni per vederle in anteprima."
+            "value": "Colori per tutto Arcane. Scorri le opzioni per vederle in anteprima."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Des couleurs pour toute l’interface de NX Library. Parcourez-les pour voir chaque thème dans l’aperçu."
+            "value": "Des couleurs pour toute l’interface d’Arcane. Parcourez-les pour voir chaque thème dans l’aperçu."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Farben für ganz NX Library. Wechsle zwischen ihnen, um jedes Design in der Vorschau zu sehen."
+            "value": "Farben für ganz Arcane. Wechsle zwischen ihnen, um jedes Design in der Vorschau zu sehen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Colores para todo NX Library. Recorre los temas para ver cada uno en la vista previa."
+            "value": "Colores para todo Arcane. Recorre los temas para ver cada uno en la vista previa."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cores para todo o NX Library. Navegue entre elas para ver cada uma na prévia."
+            "value": "Cores para todo o Arcane. Navegue entre elas para ver cada uma na prévia."
           }
         }
       }
@@ -23207,84 +23207,84 @@
         }
       }
     },
-    "Everything NX Library can install by itself is installed.": {
+    "Everything Arcane can install by itself is installed.": {
       "comment": "SetupCheckView.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Everything NX Library can install by itself is installed."
+            "value": "Everything Arcane can install by itself is installed."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tutto ciò che NX Library può installare da sola è installato."
+            "value": "Tutto ciò che Arcane può installare da sola è installato."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tout ce que NX Library peut installer seul est installé."
+            "value": "Tout ce qu’Arcane peut installer seul est installé."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alles, was NX Library selbst installieren kann, ist installiert."
+            "value": "Alles, was Arcane selbst installieren kann, ist installiert."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ya está instalado todo lo que NX Library puede instalar por sí mismo."
+            "value": "Ya está instalado todo lo que Arcane puede instalar por sí mismo."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tudo o que o NX Library pode instalar por conta própria está instalado."
+            "value": "Tudo o que o Arcane pode instalar por conta própria está instalado."
           }
         }
       }
     },
-    "Everything NX Library needs is here.": {
+    "Everything Arcane needs is here.": {
       "comment": "SetupCheckView.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Everything NX Library needs is here."
+            "value": "Everything Arcane needs is here."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "È presente tutto ciò che serve a NX Library."
+            "value": "È presente tutto ciò che serve a Arcane."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tout ce dont NX Library a besoin est présent."
+            "value": "Tout ce dont Arcane a besoin est présent."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alles, was NX Library benötigt, ist vorhanden."
+            "value": "Alles, was Arcane benötigt, ist vorhanden."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ya está todo lo que necesita NX Library."
+            "value": "Ya está todo lo que necesita Arcane."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tudo o que o NX Library precisa está aqui."
+            "value": "Tudo o que o Arcane precisa está aqui."
           }
         }
       }
@@ -29643,43 +29643,43 @@
         }
       }
     },
-    "How NX Library looks and moves.": {
+    "How Arcane looks and moves.": {
       "comment": "SettingsSection.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "How NX Library looks and moves."
+            "value": "How Arcane looks and moves."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "L’aspetto e le animazioni di NX Library."
+            "value": "L’aspetto e le animazioni di Arcane."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "L’apparence et les animations de NX Library."
+            "value": "L’apparence et les animations d’Arcane."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wie NX Library aussieht und sich bewegt."
+            "value": "Wie Arcane aussieht und sich bewegt."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El aspecto y el movimiento de NX Library."
+            "value": "El aspecto y el movimiento de Arcane."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A aparência e os movimentos do NX Library."
+            "value": "A aparência e os movimentos do Arcane."
           }
         }
       }
@@ -29971,43 +29971,43 @@
         }
       }
     },
-    "Icon used only in NX Library": {
+    "Icon used only in Arcane": {
       "comment": "AppIconProgress.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Icon used only in NX Library"
+            "value": "Icon used only in Arcane"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Icona usata solo in NX Library"
+            "value": "Icona usata solo in Arcane"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Icône utilisée uniquement dans NX Library"
+            "value": "Icône utilisée uniquement dans Arcane"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Symbol wird nur in NX Library verwendet"
+            "value": "Symbol wird nur in Arcane verwendet"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Icono usado solo en NX Library"
+            "value": "Icono usado solo en Arcane"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ícone usado apenas no NX Library"
+            "value": "Ícone usado apenas no Arcane"
           }
         }
       }
@@ -30832,43 +30832,43 @@
         }
       }
     },
-    "Included in NX Library": {
+    "Included in Arcane": {
       "comment": "SettingsEngineSection.swift:497",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Included in NX Library"
+            "value": "Included in Arcane"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Incluso in NX Library"
+            "value": "Incluso in Arcane"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Intégré à NX Library"
+            "value": "Intégré à Arcane"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "In NX Library enthalten"
+            "value": "In Arcane enthalten"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Incluido en NX Library"
+            "value": "Incluido en Arcane"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Incluído no NX Library"
+            "value": "Incluído no Arcane"
           }
         }
       }
@@ -32226,43 +32226,43 @@
         }
       }
     },
-    "Its new features reach NX Library in a future version.": {
+    "Its new features reach Arcane in a future version.": {
       "comment": "NewestEngine.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Its new features reach NX Library in a future version."
+            "value": "Its new features reach Arcane in a future version."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le sue nuove funzionalità arriveranno in una futura versione di NX Library."
+            "value": "Le sue nuove funzionalità arriveranno in una futura versione di Arcane."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ses nouvelles fonctionnalités seront intégrées à une future version de NX Library."
+            "value": "Ses nouvelles fonctionnalités seront intégrées à une future version d’Arcane."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Seine neuen Funktionen kommen in einer künftigen Version in NX Library an."
+            "value": "Seine neuen Funktionen kommen in einer künftigen Version in Arcane an."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sus nuevas funciones llegarán a NX Library en una versión futura."
+            "value": "Sus nuevas funciones llegarán a Arcane en una versión futura."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Seus novos recursos chegarão ao NX Library em uma versão futura."
+            "value": "Seus novos recursos chegarão ao Arcane em uma versão futura."
           }
         }
       }
@@ -33702,43 +33702,43 @@
         }
       }
     },
-    "Let's get NX Library ready": {
+    "Let's get Arcane ready": {
       "comment": "SetupCheckView.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Let's get NX Library ready"
+            "value": "Let's get Arcane ready"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prepariamo NX Library"
+            "value": "Prepariamo Arcane"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Préparons NX Library"
+            "value": "Préparons Arcane"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Machen wir NX Library startklar"
+            "value": "Machen wir Arcane startklar"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vamos a preparar NX Library"
+            "value": "Vamos a preparar Arcane"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vamos preparar o NX Library"
+            "value": "Vamos preparar o Arcane"
           }
         }
       }
@@ -34727,43 +34727,43 @@
         }
       }
     },
-    "Look for a newer NX Library release at launch, at most once a day.": {
+    "Look for a newer Arcane release at launch, at most once a day.": {
       "comment": "SettingsStartUpSection.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Look for a newer NX Library release at launch, at most once a day."
+            "value": "Look for a newer Arcane release at launch, at most once a day."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cerca una nuova versione di NX Library all’avvio, al massimo una volta al giorno."
+            "value": "Cerca una nuova versione di Arcane all’avvio, al massimo una volta al giorno."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rechercher une nouvelle version de NX Library au lancement, au maximum une fois par jour."
+            "value": "Rechercher une nouvelle version d’Arcane au lancement, au maximum une fois par jour."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Beim Start nach einer neueren NX Library-Veröffentlichung suchen, höchstens einmal täglich."
+            "value": "Beim Start nach einer neueren Arcane-Veröffentlichung suchen, höchstens einmal täglich."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Busca una versión más reciente de NX Library al abrir, como máximo una vez al día."
+            "value": "Busca una versión más reciente de Arcane al abrir, como máximo una vez al día."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Busca uma versão mais recente do NX Library ao iniciar, no máximo uma vez por dia."
+            "value": "Busca uma versão mais recente do Arcane ao iniciar, no máximo uma vez por dia."
           }
         }
       }
@@ -35096,43 +35096,43 @@
         }
       }
     },
-    "Looks for a newer NX Library release at launch, at most once a day.": {
+    "Looks for a newer Arcane release at launch, at most once a day.": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Looks for a newer NX Library release at launch, at most once a day."
+            "value": "Looks for a newer Arcane release at launch, at most once a day."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cerca una nuova versione di NX Library all’avvio, al massimo una volta al giorno."
+            "value": "Cerca una nuova versione di Arcane all’avvio, al massimo una volta al giorno."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Recherche une nouvelle version de NX Library au lancement, au maximum une fois par jour."
+            "value": "Recherche une nouvelle version d’Arcane au lancement, au maximum une fois par jour."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sucht beim Start nach einer neueren NX Library-Veröffentlichung, höchstens einmal täglich."
+            "value": "Sucht beim Start nach einer neueren Arcane-Veröffentlichung, höchstens einmal täglich."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Busca una versión más reciente de NX Library al abrir, como máximo una vez al día."
+            "value": "Busca una versión más reciente de Arcane al abrir, como máximo una vez al día."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Busca uma versão mais recente do NX Library ao iniciar, no máximo uma vez por dia."
+            "value": "Busca uma versão mais recente do Arcane ao iniciar, no máximo uma vez por dia."
           }
         }
       }
@@ -36080,43 +36080,43 @@
         }
       }
     },
-    "Mod data provided by GameBanana · only mods that work with NX Library are shown": {
+    "Mod data provided by GameBanana · only mods that work with Arcane are shown": {
       "comment": "ModStorePage.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mod data provided by GameBanana · only mods that work with NX Library are shown"
+            "value": "Mod data provided by GameBanana · only mods that work with Arcane are shown"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dati delle mod forniti da GameBanana · vengono mostrate solo le mod compatibili con NX Library"
+            "value": "Dati delle mod forniti da GameBanana · vengono mostrate solo le mod compatibili con Arcane"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Données des mods fournies par GameBanana · seuls les mods compatibles avec NX Library sont affichés"
+            "value": "Données des mods fournies par GameBanana · seuls les mods compatibles avec Arcane sont affichés"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mod-Daten von GameBanana · Es werden nur Mods angezeigt, die mit NX Library funktionieren"
+            "value": "Mod-Daten von GameBanana · Es werden nur Mods angezeigt, die mit Arcane funktionieren"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Datos de mods proporcionados por GameBanana · solo se muestran mods compatibles con NX Library"
+            "value": "Datos de mods proporcionados por GameBanana · solo se muestran mods compatibles con Arcane"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dados de mods fornecidos pelo GameBanana · apenas mods compatíveis com o NX Library são exibidos"
+            "value": "Dados de mods fornecidos pelo GameBanana · apenas mods compatíveis com o Arcane são exibidos"
           }
         }
       }
@@ -36654,84 +36654,84 @@
         }
       }
     },
-    "Move NX Library to Applications before updating.": {
+    "Move Arcane to Applications before updating.": {
       "comment": "AppUpdateDialog.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Move NX Library to Applications before updating."
+            "value": "Move Arcane to Applications before updating."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sposta NX Library in Applicazioni prima di aggiornarla."
+            "value": "Sposta Arcane in Applicazioni prima di aggiornarla."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Déplacez NX Library dans Applications avant de la mettre à jour."
+            "value": "Déplacez Arcane dans Applications avant de la mettre à jour."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verschiebe NX Library vor dem Aktualisieren in den Programme-Ordner."
+            "value": "Verschiebe Arcane vor dem Aktualisieren in den Programme-Ordner."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mueve NX Library a Aplicaciones antes de actualizar."
+            "value": "Mueve Arcane a Aplicaciones antes de actualizar."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mova o NX Library para Applications antes de atualizar."
+            "value": "Mova o Arcane para Applications antes de atualizar."
           }
         }
       }
     },
-    "Move NX Library to Applications to update": {
+    "Move Arcane to Applications to update": {
       "comment": "SettingsAboutSection.swift:220",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Move NX Library to Applications to update"
+            "value": "Move Arcane to Applications to update"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sposta NX Library in Applicazioni per aggiornarla"
+            "value": "Sposta Arcane in Applicazioni per aggiornarla"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Déplacez NX Library dans Applications pour la mettre à jour"
+            "value": "Déplacez Arcane dans Applications pour la mettre à jour"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library zum Aktualisieren in den Programme-Ordner verschieben"
+            "value": "Arcane zum Aktualisieren in den Programme-Ordner verschieben"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mueve NX Library a Aplicaciones para actualizar"
+            "value": "Mueve Arcane a Aplicaciones para actualizar"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mova o NX Library para Applications para atualizar"
+            "value": "Mova o Arcane para Applications para atualizar"
           }
         }
       }
@@ -37269,617 +37269,576 @@
         }
       }
     },
-    "NX Library": {
-      "comment": "AppShellView.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NX Library"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NX Library"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NX Library"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NX Library"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NX Library"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NX Library"
-          }
-        }
-      }
-    },
-    "NX Library %@": {
+    "Arcane %@": {
       "comment": "AppUpdateDialog.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library %@"
+            "value": "Arcane %@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library %@"
+            "value": "Arcane %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library %@"
+            "value": "Arcane %@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library %@"
+            "value": "Arcane %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library %@"
+            "value": "Arcane %@"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library %@"
+            "value": "Arcane %@"
           }
         }
       }
     },
-    "NX Library %@ needs macOS %@ or later; nothing was changed.": {
+    "Arcane %@ needs macOS %@ or later; nothing was changed.": {
       "comment": "AppUpdater.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library %@ needs macOS %@ or later; nothing was changed."
+            "value": "Arcane %@ needs macOS %@ or later; nothing was changed."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library %@ richiede macOS %@ o successivo; non è stato modificato nulla."
+            "value": "Arcane %@ richiede macOS %@ o successivo; non è stato modificato nulla."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library %@ nécessite macOS %@ ou ultérieur ; aucune modification n’a été effectuée."
+            "value": "Arcane %@ nécessite macOS %@ ou ultérieur ; aucune modification n’a été effectuée."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library %@ benötigt macOS %@ oder neuer; es wurde nichts geändert."
+            "value": "Arcane %@ benötigt macOS %@ oder neuer; es wurde nichts geändert."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library %@ requiere macOS %@ o posterior; no se ha cambiado nada."
+            "value": "Arcane %@ requiere macOS %@ o posterior; no se ha cambiado nada."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O NX Library %@ requer macOS %@ ou posterior; nada foi alterado."
+            "value": "O Arcane %@ requer macOS %@ ou posterior; nada foi alterado."
           }
         }
       }
     },
-    "NX Library cannot read this folder. Reconnect it or choose another.": {
+    "Arcane cannot read this folder. Reconnect it or choose another.": {
       "comment": "SetupCheck.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library cannot read this folder. Reconnect it or choose another."
+            "value": "Arcane cannot read this folder. Reconnect it or choose another."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library non può leggere questa cartella. Ricollegala o scegline un’altra."
+            "value": "Arcane non può leggere questa cartella. Ricollegala o scegline un’altra."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library ne peut pas lire ce dossier. Reconnectez-le ou choisissez-en un autre."
+            "value": "Arcane ne peut pas lire ce dossier. Reconnectez-le ou choisissez-en un autre."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library kann diesen Ordner nicht lesen. Verbinde ihn erneut oder wähle einen anderen."
+            "value": "Arcane kann diesen Ordner nicht lesen. Verbinde ihn erneut oder wähle einen anderen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library no puede leer esta carpeta. Vuelve a conectarla o elige otra."
+            "value": "Arcane no puede leer esta carpeta. Vuelve a conectarla o elige otra."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O NX Library não consegue ler esta pasta. Reconecte ou escolha outra."
+            "value": "O Arcane não consegue ler esta pasta. Reconecte ou escolha outra."
           }
         }
       }
     },
-    "NX Library clones it into %@ at %@.": {
+    "Arcane clones it into %@ at %@.": {
       "comment": "SetupCheck.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library clones it into %@ at %@."
+            "value": "Arcane clones it into %@ at %@."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library lo clona in %@ al commit %@."
+            "value": "Arcane lo clona in %@ al commit %@."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library le clone dans %@ au commit %@."
+            "value": "Arcane le clone dans %@ au commit %@."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library klont es nach %@ mit Stand %@."
+            "value": "Arcane klont es nach %@ mit Stand %@."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library lo clona en %@ en el commit %@."
+            "value": "Arcane lo clona en %@ en el commit %@."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O NX Library clona o repositório em %@ no commit %@."
+            "value": "O Arcane clona o repositório em %@ no commit %@."
           }
         }
       }
     },
-    "NX Library could not read the file.": {
+    "Arcane could not read the file.": {
       "comment": "CheatsPanel.swift:455",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library could not read the file."
+            "value": "Arcane could not read the file."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library non ha potuto leggere il file."
+            "value": "Arcane non ha potuto leggere il file."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library n’a pas pu lire le fichier."
+            "value": "Arcane n’a pas pu lire le fichier."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library konnte die Datei nicht lesen."
+            "value": "Arcane konnte die Datei nicht lesen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library no ha podido leer el archivo."
+            "value": "Arcane no ha podido leer el archivo."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O NX Library não conseguiu ler o arquivo."
+            "value": "O Arcane não conseguiu ler o arquivo."
           }
         }
       }
     },
-    "NX Library could not restart: %@": {
+    "Arcane could not restart: %@": {
       "comment": "AppShellView.swift:1029",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library could not restart: %@"
+            "value": "Arcane could not restart: %@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library non ha potuto riavviarsi: %@"
+            "value": "Arcane non ha potuto riavviarsi: %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library n’a pas pu redémarrer : %@"
+            "value": "Arcane n’a pas pu redémarrer : %@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library konnte nicht neu gestartet werden: %@"
+            "value": "Arcane konnte nicht neu gestartet werden: %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library no ha podido reiniciarse: %@"
+            "value": "Arcane no ha podido reiniciarse: %@"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não foi possível reiniciar o NX Library: %@"
+            "value": "Não foi possível reiniciar o Arcane: %@"
           }
         }
       }
     },
-    "NX Library could not save your library, so recent changes may be lost when it quits: ": {
+    "Arcane could not save your library, so recent changes may be lost when it quits: ": {
       "comment": "AppViewModel.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library could not save your library, so recent changes may be lost when it quits: "
+            "value": "Arcane could not save your library, so recent changes may be lost when it quits: "
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library non ha potuto salvare la libreria; le modifiche recenti potrebbero andare perse alla chiusura: "
+            "value": "Arcane non ha potuto salvare la libreria; le modifiche recenti potrebbero andare perse alla chiusura: "
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library n’a pas pu enregistrer votre bibliothèque. Les modifications récentes risquent donc d’être perdues à sa fermeture : "
+            "value": "Arcane n’a pas pu enregistrer votre bibliothèque. Les modifications récentes risquent donc d’être perdues à sa fermeture : "
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library konnte deine Bibliothek nicht speichern. Daher können beim Beenden die letzten Änderungen verloren gehen: "
+            "value": "Arcane konnte deine Bibliothek nicht speichern. Daher können beim Beenden die letzten Änderungen verloren gehen: "
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library no ha podido guardar la biblioteca, por lo que los cambios recientes podrían perderse al salir: "
+            "value": "Arcane no ha podido guardar la biblioteca, por lo que los cambios recientes podrían perderse al salir: "
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O NX Library não conseguiu salvar sua biblioteca. Por isso, as alterações recentes podem ser perdidas quando o app for encerrado: "
+            "value": "O Arcane não conseguiu salvar sua biblioteca. Por isso, as alterações recentes podem ser perdidas quando o app for encerrado: "
           }
         }
       }
     },
-    "NX Library downloads Microsoft's installer; macOS asks for your password.": {
+    "Arcane downloads Microsoft's installer; macOS asks for your password.": {
       "comment": "SetupCheck.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library downloads Microsoft's installer; macOS asks for your password."
+            "value": "Arcane downloads Microsoft's installer; macOS asks for your password."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library scarica il programma di installazione di Microsoft; macOS chiede la tua password."
+            "value": "Arcane scarica il programma di installazione di Microsoft; macOS chiede la tua password."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library télécharge le programme d’installation de Microsoft ; macOS vous demande votre mot de passe."
+            "value": "Arcane télécharge le programme d’installation de Microsoft ; macOS vous demande votre mot de passe."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library lädt das Installationsprogramm von Microsoft; macOS fragt nach deinem Passwort."
+            "value": "Arcane lädt das Installationsprogramm von Microsoft; macOS fragt nach deinem Passwort."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library descarga el instalador de Microsoft; macOS pide tu contraseña."
+            "value": "Arcane descarga el instalador de Microsoft; macOS pide tu contraseña."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O NX Library baixa o instalador da Microsoft; o macOS pede sua senha."
+            "value": "O Arcane baixa o instalador da Microsoft; o macOS pede sua senha."
           }
         }
       }
     },
-    "NX Library downloads it through Xcode.": {
+    "Arcane downloads it through Xcode.": {
       "comment": "SetupCheck.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library downloads it through Xcode."
+            "value": "Arcane downloads it through Xcode."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library lo scarica tramite Xcode."
+            "value": "Arcane lo scarica tramite Xcode."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library le télécharge via Xcode."
+            "value": "Arcane le télécharge via Xcode."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library lädt ihn über Xcode herunter."
+            "value": "Arcane lädt ihn über Xcode herunter."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library lo descarga a través de Xcode."
+            "value": "Arcane lo descarga a través de Xcode."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O NX Library faz o download pelo Xcode."
+            "value": "O Arcane faz o download pelo Xcode."
           }
         }
       }
     },
-    "NX Library is personal software released under the MIT license. nxnative, Ryujinx, SPIR-V Cross, LibHac and the other dependencies retain their own licenses through the engine.": {
+    "Arcane is personal software released under the MIT license. nxnative, Ryujinx, SPIR-V Cross, LibHac and the other dependencies retain their own licenses through the engine.": {
       "comment": "SettingsAboutSection.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library is personal software released under the MIT license. nxnative, Ryujinx, SPIR-V Cross, LibHac and the other dependencies retain their own licenses through the engine."
+            "value": "Arcane is personal software released under the MIT license. nxnative, Ryujinx, SPIR-V Cross, LibHac and the other dependencies retain their own licenses through the engine."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library è un software personale distribuito con licenza MIT. nxnative, Ryujinx, SPIR-V Cross, LibHac e le altre dipendenze mantengono le proprie licenze tramite il motore."
+            "value": "Arcane è un software personale distribuito con licenza MIT. nxnative, Ryujinx, SPIR-V Cross, LibHac e le altre dipendenze mantengono le proprie licenze tramite il motore."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library est un logiciel personnel publié sous licence MIT. nxnative, Ryujinx, SPIR-V Cross, LibHac et les autres dépendances conservent leurs propres licences via le moteur."
+            "value": "Arcane est un logiciel personnel publié sous licence MIT. nxnative, Ryujinx, SPIR-V Cross, LibHac et les autres dépendances conservent leurs propres licences via le moteur."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library ist persönliche Software unter der MIT-Lizenz. nxnative, Ryujinx, SPIR-V Cross, LibHac und die übrigen Abhängigkeiten behalten über die Engine ihre eigenen Lizenzen."
+            "value": "Arcane ist persönliche Software unter der MIT-Lizenz. nxnative, Ryujinx, SPIR-V Cross, LibHac und die übrigen Abhängigkeiten behalten über die Engine ihre eigenen Lizenzen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library es software personal distribuido bajo la licencia MIT. nxnative, Ryujinx, SPIR-V Cross, LibHac y las demás dependencias conservan sus propias licencias a través del motor."
+            "value": "Arcane es software personal distribuido bajo la licencia MIT. nxnative, Ryujinx, SPIR-V Cross, LibHac y las demás dependencias conservan sus propias licencias a través del motor."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O NX Library é um software pessoal disponibilizado sob a licença MIT. nxnative, Ryujinx, SPIR-V Cross, LibHac e as demais dependências mantêm suas próprias licenças por meio da engine."
+            "value": "O Arcane é um software pessoal disponibilizado sob a licença MIT. nxnative, Ryujinx, SPIR-V Cross, LibHac e as demais dependências mantêm suas próprias licenças por meio da engine."
           }
         }
       }
     },
-    "NX Library is up to date": {
+    "Arcane is up to date": {
       "comment": "SettingsAboutSection.swift:223",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library is up to date"
+            "value": "Arcane is up to date"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library è aggiornata"
+            "value": "Arcane è aggiornata"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library est à jour"
+            "value": "Arcane est à jour"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library ist auf dem neuesten Stand"
+            "value": "Arcane ist auf dem neuesten Stand"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library está al día"
+            "value": "Arcane está al día"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O NX Library está atualizado"
+            "value": "O Arcane está atualizado"
           }
         }
       }
     },
-    "NX Library restarts to finish.": {
+    "Arcane restarts to finish.": {
       "comment": "AppUpdateDialog.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library restarts to finish."
+            "value": "Arcane restarts to finish."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library si riavvia per completare l’operazione."
+            "value": "Arcane si riavvia per completare l’operazione."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library redémarre pour terminer."
+            "value": "Arcane redémarre pour terminer."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library wird zum Abschließen neu gestartet."
+            "value": "Arcane wird zum Abschließen neu gestartet."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library se reinicia para finalizar."
+            "value": "Arcane se reinicia para finalizar."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O NX Library será reiniciado para concluir."
+            "value": "O Arcane será reiniciado para concluir."
           }
         }
       }
     },
-    "NX Library will reopen automatically.": {
+    "Arcane will reopen automatically.": {
       "comment": "AppUpdateDialog.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library will reopen automatically."
+            "value": "Arcane will reopen automatically."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library si riaprirà automaticamente."
+            "value": "Arcane si riaprirà automaticamente."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library se rouvrira automatiquement."
+            "value": "Arcane se rouvrira automatiquement."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library wird automatisch wieder geöffnet."
+            "value": "Arcane wird automatisch wieder geöffnet."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library se volverá a abrir automáticamente."
+            "value": "Arcane se volverá a abrir automáticamente."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O NX Library será reaberto automaticamente."
+            "value": "O Arcane será reaberto automaticamente."
           }
         }
       }
     },
-    "NX Library's copy of %@ goes to the Trash, so you can bring it back from there. Your original file stays where it is.": {
+    "Arcane's copy of %@ goes to the Trash, so you can bring it back from there. Your original file stays where it is.": {
       "comment": "ThemePickerView.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library's copy of %@ goes to the Trash, so you can bring it back from there. Your original file stays where it is."
+            "value": "Arcane's copy of %@ goes to the Trash, so you can bring it back from there. Your original file stays where it is."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La copia di %@ di NX Library viene spostata nel Cestino: puoi ripristinarla da lì. Il file originale resta dov’è."
+            "value": "La copia di %@ di Arcane viene spostata nel Cestino: puoi ripristinarla da lì. Il file originale resta dov’è."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La copie de %@ utilisée par NX Library est placée dans la corbeille ; vous pourrez l’y récupérer. Votre fichier d’origine reste à son emplacement."
+            "value": "La copie de %@ utilisée par Arcane est placée dans la corbeille ; vous pourrez l’y récupérer. Votre fichier d’origine reste à son emplacement."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die NX Library-Kopie von %@ wird in den Papierkorb gelegt. Du kannst sie von dort zurückholen. Deine Originaldatei bleibt an ihrem Platz."
+            "value": "Die Arcane-Kopie von %@ wird in den Papierkorb gelegt. Du kannst sie von dort zurückholen. Deine Originaldatei bleibt an ihrem Platz."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La copia de %@ de NX Library se mueve a la Papelera para que puedas recuperarla. Tu archivo original permanece en su ubicación."
+            "value": "La copia de %@ de Arcane se mueve a la Papelera para que puedas recuperarla. Tu archivo original permanece en su ubicación."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A cópia de %@ do NX Library vai para o Lixo, de onde você poderá restaurá-la. Seu arquivo original permanece onde está."
+            "value": "A cópia de %@ do Arcane vai para o Lixo, de onde você poderá restaurá-la. Seu arquivo original permanece onde está."
           }
         }
       }
@@ -37925,43 +37884,43 @@
         }
       }
     },
-    "Navigate NX Library.": {
+    "Navigate Arcane.": {
       "comment": "ControlsView.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Navigate NX Library."
+            "value": "Navigate Arcane."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Naviga in NX Library."
+            "value": "Naviga in Arcane."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Naviguer dans NX Library."
+            "value": "Naviguer dans Arcane."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "In NX Library navigieren."
+            "value": "In Arcane navigieren."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Navega por NX Library."
+            "value": "Navega por Arcane."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Navegue pelo NX Library."
+            "value": "Navegue pelo Arcane."
           }
         }
       }
@@ -38745,43 +38704,43 @@
         }
       }
     },
-    "Newest nxnative, not yet tested by NX Library. It usually works, but something may not. ": {
+    "Newest nxnative, not yet tested by Arcane. It usually works, but something may not. ": {
       "comment": "NewestEngine.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Newest nxnative, not yet tested by NX Library. It usually works, but something may not. "
+            "value": "Newest nxnative, not yet tested by Arcane. It usually works, but something may not. "
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La versione più recente di nxnative, non ancora testata da NX Library. Di solito funziona, ma qualcosa potrebbe non funzionare. "
+            "value": "La versione più recente di nxnative, non ancora testata da Arcane. Di solito funziona, ma qualcosa potrebbe non funzionare. "
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le dernier nxnative, pas encore testé par NX Library. Il fonctionne généralement, mais des problèmes restent possibles. "
+            "value": "Le dernier nxnative, pas encore testé par Arcane. Il fonctionne généralement, mais des problèmes restent possibles. "
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Neuestes nxnative, noch nicht von NX Library getestet. Es funktioniert in der Regel, aber manches möglicherweise nicht. "
+            "value": "Neuestes nxnative, noch nicht von Arcane getestet. Es funktioniert in der Regel, aber manches möglicherweise nicht. "
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El nxnative más reciente, aún no probado por NX Library. Suele funcionar, pero algo podría fallar. "
+            "value": "El nxnative más reciente, aún no probado por Arcane. Suele funcionar, pero algo podría fallar. "
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "nxnative mais recente, ainda não testado pelo NX Library. Geralmente funciona, mas algo pode falhar. "
+            "value": "nxnative mais recente, ainda não testado pelo Arcane. Geralmente funciona, mas algo pode falhar. "
           }
         }
       }
@@ -39114,43 +39073,43 @@
         }
       }
     },
-    "Nintendo Switch cryptographic keys required to decrypt game packages (NSP/XCI). NX Library stores a private copy with mode 0600 permissions; key values are never displayed or logged.": {
+    "Nintendo Switch cryptographic keys required to decrypt game packages (NSP/XCI). Arcane stores a private copy with mode 0600 permissions; key values are never displayed or logged.": {
       "comment": "SettingsEngineSection.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nintendo Switch cryptographic keys required to decrypt game packages (NSP/XCI). NX Library stores a private copy with mode 0600 permissions; key values are never displayed or logged."
+            "value": "Nintendo Switch cryptographic keys required to decrypt game packages (NSP/XCI). Arcane stores a private copy with mode 0600 permissions; key values are never displayed or logged."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chiavi crittografiche Nintendo Switch necessarie per decrittare i pacchetti di gioco (NSP/XCI). NX Library ne conserva una copia privata con permessi 0600; i valori delle chiavi non vengono mai mostrati né registrati nei log."
+            "value": "Chiavi crittografiche Nintendo Switch necessarie per decrittare i pacchetti di gioco (NSP/XCI). Arcane ne conserva una copia privata con permessi 0600; i valori delle chiavi non vengono mai mostrati né registrati nei log."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clés cryptographiques Nintendo Switch nécessaires au déchiffrement des paquets de jeu (NSP/XCI). NX Library en conserve une copie privée avec des permissions 0600 ; les valeurs des clés ne sont jamais affichées ni inscrites dans les journaux."
+            "value": "Clés cryptographiques Nintendo Switch nécessaires au déchiffrement des paquets de jeu (NSP/XCI). Arcane en conserve une copie privée avec des permissions 0600 ; les valeurs des clés ne sont jamais affichées ni inscrites dans les journaux."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kryptografische Nintendo Switch-Schlüssel zum Entschlüsseln von Spielpaketen (NSP/XCI). NX Library speichert eine private Kopie mit Zugriffsrechten 0600; Schlüsselwerte werden nie angezeigt oder protokolliert."
+            "value": "Kryptografische Nintendo Switch-Schlüssel zum Entschlüsseln von Spielpaketen (NSP/XCI). Arcane speichert eine private Kopie mit Zugriffsrechten 0600; Schlüsselwerte werden nie angezeigt oder protokolliert."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Claves criptográficas de Nintendo Switch necesarias para descifrar paquetes de juegos (NSP/XCI). NX Library guarda una copia privada con permisos 0600; los valores de las claves nunca se muestran ni se escriben en los registros."
+            "value": "Claves criptográficas de Nintendo Switch necesarias para descifrar paquetes de juegos (NSP/XCI). Arcane guarda una copia privada con permisos 0600; los valores de las claves nunca se muestran ni se escriben en los registros."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chaves criptográficas do Nintendo Switch necessárias para descriptografar pacotes de jogos (NSP/XCI). O NX Library armazena uma cópia privada com permissões 0600; os valores das chaves nunca são exibidos nem registrados em logs."
+            "value": "Chaves criptográficas do Nintendo Switch necessárias para descriptografar pacotes de jogos (NSP/XCI). O Arcane armazena uma cópia privada com permissões 0600; os valores das chaves nunca são exibidos nem registrados em logs."
           }
         }
       }
@@ -40262,84 +40221,84 @@
         }
       }
     },
-    "No mods for this game work with NX Library yet": {
+    "No mods for this game work with Arcane yet": {
       "comment": "GameBananaBandModel.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No mods for this game work with NX Library yet"
+            "value": "No mods for this game work with Arcane yet"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Per questo gioco non ci sono ancora mod compatibili con NX Library"
+            "value": "Per questo gioco non ci sono ancora mod compatibili con Arcane"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aucun mod de ce jeu n’est encore compatible avec NX Library"
+            "value": "Aucun mod de ce jeu n’est encore compatible avec Arcane"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Für dieses Spiel gibt es noch keine Mods, die mit NX Library funktionieren"
+            "value": "Für dieses Spiel gibt es noch keine Mods, die mit Arcane funktionieren"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aún no hay mods de este juego compatibles con NX Library"
+            "value": "Aún no hay mods de este juego compatibles con Arcane"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ainda não há mods deste jogo compatíveis com o NX Library"
+            "value": "Ainda não há mods deste jogo compatíveis com o Arcane"
           }
         }
       }
     },
-    "No mods for your games work with NX Library yet.": {
+    "No mods for your games work with Arcane yet.": {
       "comment": "ModStorePage.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No mods for your games work with NX Library yet."
+            "value": "No mods for your games work with Arcane yet."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Per i tuoi giochi non ci sono ancora mod compatibili con NX Library."
+            "value": "Per i tuoi giochi non ci sono ancora mod compatibili con Arcane."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aucun mod pour vos jeux n’est encore compatible avec NX Library."
+            "value": "Aucun mod pour vos jeux n’est encore compatible avec Arcane."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Für deine Spiele gibt es noch keine Mods, die mit NX Library funktionieren."
+            "value": "Für deine Spiele gibt es noch keine Mods, die mit Arcane funktionieren."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aún no hay mods para tus juegos compatibles con NX Library."
+            "value": "Aún no hay mods para tus juegos compatibles con Arcane."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ainda não há mods para seus jogos compatíveis com o NX Library."
+            "value": "Ainda não há mods para seus jogos compatíveis com o Arcane."
           }
         }
       }
@@ -42476,43 +42435,43 @@
         }
       }
     },
-    "Only here changes the image inside NX Library. Use on the Mac also shows it in Finder and the Dock. Automatic uses the game's own icon, then an online image if available. Changing the image keeps this location choice.": {
+    "Only here changes the image inside Arcane. Use on the Mac also shows it in Finder and the Dock. Automatic uses the game's own icon, then an online image if available. Changing the image keeps this location choice.": {
       "comment": "ChangeArtworkView.swift:192",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Only here changes the image inside NX Library. Use on the Mac also shows it in Finder and the Dock. Automatic uses the game's own icon, then an online image if available. Changing the image keeps this location choice."
+            "value": "Only here changes the image inside Arcane. Use on the Mac also shows it in Finder and the Dock. Automatic uses the game's own icon, then an online image if available. Changing the image keeps this location choice."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solo qui cambia l’immagine all’interno di NX Library. Usa sul Mac la mostra anche nel Finder e nel Dock. Automatico usa l’icona del gioco, poi un’immagine online se disponibile. Cambiare immagine mantiene questa scelta di posizione."
+            "value": "Solo qui cambia l’immagine all’interno di Arcane. Usa sul Mac la mostra anche nel Finder e nel Dock. Automatico usa l’icona del gioco, poi un’immagine online se disponibile. Cambiare immagine mantiene questa scelta di posizione."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uniquement ici modifie l’image dans NX Library. Utiliser sur le Mac l’affiche aussi dans le Finder et le Dock. Automatique utilise l’icône du jeu, puis une image en ligne si disponible. Changer l’image conserve ce choix d’emplacement."
+            "value": "Uniquement ici modifie l’image dans Arcane. Utiliser sur le Mac l’affiche aussi dans le Finder et le Dock. Automatique utilise l’icône du jeu, puis une image en ligne si disponible. Changer l’image conserve ce choix d’emplacement."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "„Nur hier“ ändert das Bild innerhalb von NX Library. „Auf dem Mac verwenden“ zeigt es auch im Finder und im Dock. „Automatisch“ verwendet das spieleigene Symbol und danach ein Online-Bild, falls verfügbar. Ein Bildwechsel behält diese Ortsauswahl bei."
+            "value": "„Nur hier“ ändert das Bild innerhalb von Arcane. „Auf dem Mac verwenden“ zeigt es auch im Finder und im Dock. „Automatisch“ verwendet das spieleigene Symbol und danach ein Online-Bild, falls verfügbar. Ein Bildwechsel behält diese Ortsauswahl bei."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solo aquí cambia la imagen dentro de NX Library. Usar en el Mac también la muestra en el Finder y el Dock. Automático usa el icono propio del juego y, si no está disponible, una imagen en línea. Cambiar la imagen conserva esta elección de ubicación."
+            "value": "Solo aquí cambia la imagen dentro de Arcane. Usar en el Mac también la muestra en el Finder y el Dock. Automático usa el icono propio del juego y, si no está disponible, una imagen en línea. Cambiar la imagen conserva esta elección de ubicación."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Só aqui altera a imagem dentro do NX Library. Usar no Mac também a exibe no Finder e no Dock. Automático usa o ícone do próprio jogo e, se não houver, uma imagem on-line disponível. Alterar a imagem mantém esta escolha de local."
+            "value": "Só aqui altera a imagem dentro do Arcane. Usar no Mac também a exibe no Finder e no Dock. Automático usa o ícone do próprio jogo e, se não houver, uma imagem on-line disponível. Alterar a imagem mantém esta escolha de local."
           }
         }
       }
@@ -42763,43 +42722,43 @@
         }
       }
     },
-    "Open NX Library in fullscreen. Applies at the next launch.": {
+    "Open Arcane in fullscreen. Applies at the next launch.": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open NX Library in fullscreen. Applies at the next launch."
+            "value": "Open Arcane in fullscreen. Applies at the next launch."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apri NX Library a schermo intero. Si applica al prossimo avvio."
+            "value": "Apri Arcane a schermo intero. Si applica al prossimo avvio."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ouvrir NX Library en plein écran. S’applique au prochain lancement."
+            "value": "Ouvrir Arcane en plein écran. S’applique au prochain lancement."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "NX Library im Vollbild öffnen. Gilt beim nächsten Start."
+            "value": "Arcane im Vollbild öffnen. Gilt beim nächsten Start."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abre NX Library en pantalla completa. Se aplica en el próximo inicio."
+            "value": "Abre Arcane en pantalla completa. Se aplica en el próximo inicio."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abra o NX Library em tela cheia. Aplicado na próxima abertura."
+            "value": "Abra o Arcane em tela cheia. Aplicado na próxima abertura."
           }
         }
       }
@@ -43460,43 +43419,43 @@
         }
       }
     },
-    "Open the Setup check: what NX Library needs and what is ready.": {
+    "Open the Setup check: what Arcane needs and what is ready.": {
       "comment": "SettingsStartUpSection.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open the Setup check: what NX Library needs and what is ready."
+            "value": "Open the Setup check: what Arcane needs and what is ready."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apri il controllo di configurazione: cosa serve a NX Library e cosa è pronto."
+            "value": "Apri il controllo di configurazione: cosa serve a Arcane e cosa è pronto."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ouvrir la vérification de configuration : ce dont NX Library a besoin et ce qui est prêt."
+            "value": "Ouvrir la vérification de configuration : ce dont Arcane a besoin et ce qui est prêt."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einrichtungsprüfung öffnen: Was NX Library benötigt und was bereit ist."
+            "value": "Einrichtungsprüfung öffnen: Was Arcane benötigt und was bereit ist."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abre la comprobación inicial: qué necesita NX Library y qué está listo."
+            "value": "Abre la comprobación inicial: qué necesita Arcane y qué está listo."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abra a verificação de configuração: o que o NX Library precisa e o que já está pronto."
+            "value": "Abra a verificação de configuração: o que o Arcane precisa e o que já está pronto."
           }
         }
       }
@@ -45181,43 +45140,43 @@
         }
       }
     },
-    "Play time is tracked only for launches from NX Library. Not affiliated with Nintendo.": {
+    "Play time is tracked only for launches from Arcane. Not affiliated with Nintendo.": {
       "comment": "SettingsAboutSection.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Play time is tracked only for launches from NX Library. Not affiliated with Nintendo."
+            "value": "Play time is tracked only for launches from Arcane. Not affiliated with Nintendo."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il tempo di gioco viene registrato solo per gli avvii da NX Library. Non affiliata a Nintendo."
+            "value": "Il tempo di gioco viene registrato solo per gli avvii da Arcane. Non affiliata a Nintendo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le temps de jeu est comptabilisé uniquement pour les lancements depuis NX Library. Sans affiliation avec Nintendo."
+            "value": "Le temps de jeu est comptabilisé uniquement pour les lancements depuis Arcane. Sans affiliation avec Nintendo."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Spielzeit wird nur bei Starts über NX Library erfasst. Keine Verbindung zu Nintendo."
+            "value": "Spielzeit wird nur bei Starts über Arcane erfasst. Keine Verbindung zu Nintendo."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El tiempo de juego solo se registra al iniciar desde NX Library. Sin afiliación con Nintendo."
+            "value": "El tiempo de juego solo se registra al iniciar desde Arcane. Sin afiliación con Nintendo."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O tempo de jogo é registrado apenas quando o jogo é aberto pelo NX Library. Sem afiliação com a Nintendo."
+            "value": "O tempo de jogo é registrado apenas quando o jogo é aberto pelo Arcane. Sem afiliação com a Nintendo."
           }
         }
       }
@@ -46452,43 +46411,43 @@
         }
       }
     },
-    "Python 3.14 with its modules, zstd and glslang, inside NX Library.": {
+    "Python 3.14 with its modules, zstd and glslang, inside Arcane.": {
       "comment": "SetupCheck.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Python 3.14 with its modules, zstd and glslang, inside NX Library."
+            "value": "Python 3.14 with its modules, zstd and glslang, inside Arcane."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Python 3.14 con i suoi moduli, zstd e glslang, all’interno di NX Library."
+            "value": "Python 3.14 con i suoi moduli, zstd e glslang, all’interno di Arcane."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Python 3.14 avec ses modules, zstd et glslang, intégrés à NX Library."
+            "value": "Python 3.14 avec ses modules, zstd et glslang, intégrés à Arcane."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Python 3.14 mit seinen Modulen, zstd und glslang, in NX Library enthalten."
+            "value": "Python 3.14 mit seinen Modulen, zstd und glslang, in Arcane enthalten."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Python 3.14 con sus módulos, zstd y glslang, dentro de NX Library."
+            "value": "Python 3.14 con sus módulos, zstd y glslang, dentro de Arcane."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Python 3.14 com seus módulos, zstd e glslang, dentro do NX Library."
+            "value": "Python 3.14 com seus módulos, zstd e glslang, dentro do Arcane."
           }
         }
       }
@@ -47928,43 +47887,43 @@
         }
       }
     },
-    "Reinstall NX Library so the porting uses its own arm64 Python.": {
+    "Reinstall Arcane so the porting uses its own arm64 Python.": {
       "comment": "PortingFailureReason.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reinstall NX Library so the porting uses its own arm64 Python."
+            "value": "Reinstall Arcane so the porting uses its own arm64 Python."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reinstalla NX Library affinché la creazione dell’app per Mac usi il Python arm64 incluso."
+            "value": "Reinstalla Arcane affinché la creazione dell’app per Mac usi il Python arm64 incluso."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Réinstallez NX Library pour que la création de l’app Mac utilise son propre Python arm64."
+            "value": "Réinstallez Arcane pour que la création de l’app Mac utilise son propre Python arm64."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Installiere NX Library erneut, damit zur App-Erstellung das eigene arm64-Python verwendet wird."
+            "value": "Installiere Arcane erneut, damit zur App-Erstellung das eigene arm64-Python verwendet wird."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reinstala NX Library para que la compilación use su propio Python arm64."
+            "value": "Reinstala Arcane para que la compilación use su propio Python arm64."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reinstale o NX Library para que a compilação use o Python arm64 incluído no app."
+            "value": "Reinstale o Arcane para que a compilação use o Python arm64 incluído no app."
           }
         }
       }
@@ -51925,43 +51884,43 @@
         }
       }
     },
-    "See how this NX Library's engine compares with seedds/nxnative main.": {
+    "See how this version's engine compares with seedds/nxnative main.": {
       "comment": "SettingsEngineSection.swift:256",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "See how this NX Library's engine compares with seedds/nxnative main."
+            "value": "See how this version's engine compares with seedds/nxnative main."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Confronta il motore di questa NX Library con seedds/nxnative main."
+            "value": "Confronta il motore di questa versione di Arcane con seedds/nxnative main."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comparer le moteur de cette version de NX Library avec main de seedds/nxnative."
+            "value": "Comparer le moteur de cette version d’Arcane avec main de seedds/nxnative."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vergleiche die Engine dieser NX Library-Version mit seedds/nxnative main."
+            "value": "Vergleiche die Engine dieser Arcane-Version mit seedds/nxnative main."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compara el motor de este NX Library con main de seedds/nxnative."
+            "value": "Compara el motor de este Arcane con main de seedds/nxnative."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Veja como a engine deste NX Library se compara ao main de seedds/nxnative."
+            "value": "Veja como a engine deste Arcane se compara ao main de seedds/nxnative."
           }
         }
       }
@@ -52171,43 +52130,43 @@
         }
       }
     },
-    "Selene is a Playnite theme for Windows. No Selene name, logo, wallpaper, avatar or sound is used as NX Library branding; this is a visual adaptation in SwiftUI.": {
+    "Selene is a Playnite theme for Windows. No Selene name, logo, wallpaper, avatar or sound is used as Arcane branding; this is a visual adaptation in SwiftUI.": {
       "comment": "SettingsAboutSection.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selene is a Playnite theme for Windows. No Selene name, logo, wallpaper, avatar or sound is used as NX Library branding; this is a visual adaptation in SwiftUI."
+            "value": "Selene is a Playnite theme for Windows. No Selene name, logo, wallpaper, avatar or sound is used as Arcane branding; this is a visual adaptation in SwiftUI."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selene è un tema di Playnite per Windows. Il nome, il logo, gli sfondi, gli avatar e i suoni di Selene non sono usati come identità di NX Library; si tratta di un adattamento visivo in SwiftUI."
+            "value": "Selene è un tema di Playnite per Windows. Il nome, il logo, gli sfondi, gli avatar e i suoni di Selene non sono usati come identità di Arcane; si tratta di un adattamento visivo in SwiftUI."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selene est un thème Playnite pour Windows. NX Library n’utilise ni le nom, ni le logo, ni les fonds d’écran, avatars ou sons de Selene comme identité de marque ; il s’agit d’une adaptation visuelle en SwiftUI."
+            "value": "Selene est un thème Playnite pour Windows. Arcane n’utilise ni le nom, ni le logo, ni les fonds d’écran, avatars ou sons de Selene comme identité de marque ; il s’agit d’une adaptation visuelle en SwiftUI."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selene ist ein Playnite-Theme für Windows. Name, Logo, Hintergrundbilder, Avatare und Sounds von Selene werden nicht als Markenauftritt von NX Library verwendet; dies ist eine visuelle Adaption in SwiftUI."
+            "value": "Selene ist ein Playnite-Theme für Windows. Name, Logo, Hintergrundbilder, Avatare und Sounds von Selene werden nicht als Markenauftritt von Arcane verwendet; dies ist eine visuelle Adaption in SwiftUI."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selene es un tema de Playnite para Windows. NX Library no usa el nombre, el logotipo, los fondos, los avatares ni los sonidos de Selene como identidad de marca; es una adaptación visual en SwiftUI."
+            "value": "Selene es un tema de Playnite para Windows. Arcane no usa el nombre, el logotipo, los fondos, los avatares ni los sonidos de Selene como identidad de marca; es una adaptación visual en SwiftUI."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selene é um tema do Playnite para Windows. Nenhum nome, logotipo, papel de parede, avatar ou som do Selene é usado como identidade do NX Library; esta é uma adaptação visual em SwiftUI."
+            "value": "Selene é um tema do Playnite para Windows. Nenhum nome, logotipo, papel de parede, avatar ou som do Selene é usado como identidade do Arcane; esta é uma adaptação visual em SwiftUI."
           }
         }
       }
@@ -57009,43 +56968,43 @@
         }
       }
     },
-    "That file is not an image NX Library can read.": {
+    "That file is not an image Arcane can read.": {
       "comment": "ArtworkPicker.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "That file is not an image NX Library can read."
+            "value": "That file is not an image Arcane can read."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il file non è un’immagine leggibile da NX Library."
+            "value": "Il file non è un’immagine leggibile da Arcane."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ce fichier n’est pas une image lisible par NX Library."
+            "value": "Ce fichier n’est pas une image lisible par Arcane."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese Datei ist kein für NX Library lesbares Bild."
+            "value": "Diese Datei ist kein für Arcane lesbares Bild."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ese archivo no es una imagen que NX Library pueda leer."
+            "value": "Ese archivo no es una imagen que Arcane pueda leer."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esse arquivo não é uma imagem que o NX Library consiga ler."
+            "value": "Esse arquivo não é uma imagem que o Arcane consiga ler."
           }
         }
       }
@@ -57911,43 +57870,43 @@
         }
       }
     },
-    "The build result is kept for this session. Free space if needed, then retry saving before closing NX Library.": {
+    "The build result is kept for this session. Free space if needed, then retry saving before closing Arcane.": {
       "comment": "Catalog activation and recovery",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The build result is kept for this session. Free space if needed, then retry saving before closing NX Library."
+            "value": "The build result is kept for this session. Free space if needed, then retry saving before closing Arcane."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il risultato della build viene conservato per questa sessione. Libera spazio se necessario, poi ritenta il salvataggio prima di chiudere NX Library."
+            "value": "Il risultato della build viene conservato per questa sessione. Libera spazio se necessario, poi ritenta il salvataggio prima di chiudere Arcane."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le résultat de la compilation est conservé pour cette session. Libérez de l’espace si nécessaire, puis réessayez d’enregistrer avant de fermer NX Library."
+            "value": "Le résultat de la compilation est conservé pour cette session. Libérez de l’espace si nécessaire, puis réessayez d’enregistrer avant de fermer Arcane."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das Build-Ergebnis bleibt für diese Sitzung erhalten. Gib bei Bedarf Speicherplatz frei und versuche das Speichern erneut, bevor du NX Library schließt."
+            "value": "Das Build-Ergebnis bleibt für diese Sitzung erhalten. Gib bei Bedarf Speicherplatz frei und versuche das Speichern erneut, bevor du Arcane schließt."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El resultado de la compilación se conserva durante esta sesión. Libera espacio si es necesario y vuelve a guardarlo antes de cerrar NX Library."
+            "value": "El resultado de la compilación se conserva durante esta sesión. Libera espacio si es necesario y vuelve a guardarlo antes de cerrar Arcane."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O resultado da compilação será mantido nesta sessão. Libere espaço se necessário e tente salvar novamente antes de fechar o NX Library."
+            "value": "O resultado da compilação será mantido nesta sessão. Libere espaço se necessário e tente salvar novamente antes de fechar o Arcane."
           }
         }
       }
@@ -58444,43 +58403,43 @@
         }
       }
     },
-    "The download is not a valid NX Library %@; nothing was changed.": {
+    "The download is not a valid Arcane %@; nothing was changed.": {
       "comment": "AppUpdater.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The download is not a valid NX Library %@; nothing was changed."
+            "value": "The download is not a valid Arcane %@; nothing was changed."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il file scaricato non è una copia valida di NX Library %@; non è stato modificato nulla."
+            "value": "Il file scaricato non è una copia valida di Arcane %@; non è stato modificato nulla."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le téléchargement n’est pas une copie valide de NX Library %@ ; aucune modification n’a été effectuée."
+            "value": "Le téléchargement n’est pas une copie valide d’Arcane %@ ; aucune modification n’a été effectuée."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der Download ist keine gültige Version von NX Library %@; es wurde nichts geändert."
+            "value": "Der Download ist keine gültige Version von Arcane %@; es wurde nichts geändert."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La descarga no es una copia válida de NX Library %@; no se ha cambiado nada."
+            "value": "La descarga no es una copia válida de Arcane %@; no se ha cambiado nada."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O download não é uma cópia válida do NX Library %@; nada foi alterado."
+            "value": "O download não é uma cópia válida do Arcane %@; nada foi alterado."
           }
         }
       }
@@ -58649,43 +58608,43 @@
         }
       }
     },
-    "The engine folder has changed files. NX Library never touches them: put them aside, then try again.": {
+    "The engine folder has changed files. Arcane never touches them: put them aside, then try again.": {
       "comment": "NewestEngine.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The engine folder has changed files. NX Library never touches them: put them aside, then try again."
+            "value": "The engine folder has changed files. Arcane never touches them: put them aside, then try again."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La cartella del motore contiene file modificati. NX Library non li tocca mai: mettili da parte, poi riprova."
+            "value": "La cartella del motore contiene file modificati. Arcane non li tocca mai: mettili da parte, poi riprova."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le dossier du moteur contient des fichiers modifiés. NX Library n’y touche jamais : mettez-les de côté, puis réessayez."
+            "value": "Le dossier du moteur contient des fichiers modifiés. Arcane n’y touche jamais : mettez-les de côté, puis réessayez."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der Engine-Ordner enthält geänderte Dateien. NX Library verändert sie niemals: Lege sie beiseite und versuche es erneut."
+            "value": "Der Engine-Ordner enthält geänderte Dateien. Arcane verändert sie niemals: Lege sie beiseite und versuche es erneut."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La carpeta del motor contiene archivos modificados. NX Library nunca los modifica: apártalos e inténtalo de nuevo."
+            "value": "La carpeta del motor contiene archivos modificados. Arcane nunca los modifica: apártalos e inténtalo de nuevo."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A pasta da engine tem arquivos alterados. O NX Library nunca os modifica: guarde-os em outro local e tente novamente."
+            "value": "A pasta da engine tem arquivos alterados. O Arcane nunca os modifica: guarde-os em outro local e tente novamente."
           }
         }
       }
@@ -58731,43 +58690,43 @@
         }
       }
     },
-    "The engine here is at %@, not the %@ this NX Library is tested with. Switch moves it to %@. Games you built keep playing.": {
+    "The engine here is at %@, not the %@ this version of Arcane is tested with. Switch moves it to %@. Games you built keep playing.": {
       "comment": "SetupCheck.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The engine here is at %@, not the %@ this NX Library is tested with. Switch moves it to %@. Games you built keep playing."
+            "value": "The engine here is at %@, not the %@ this version of Arcane is tested with. Switch moves it to %@. Games you built keep playing."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il motore qui è al commit %@, diverso da %@ con cui è testata questa NX Library. Con Cambia lo porti a %@. I giochi già compilati continuano a funzionare."
+            "value": "Il motore qui è al commit %@, diverso da %@ con cui è testata questa versione di Arcane. Con Cambia lo porti a %@. I giochi già compilati continuano a funzionare."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le moteur présent est au commit %@, et non au commit %@ avec lequel cette version de NX Library a été testée. Changer le fait passer au commit %@. Les jeux déjà compilés restent jouables."
+            "value": "Le moteur présent est au commit %@, et non au commit %@ avec lequel cette version d’Arcane a été testée. Changer le fait passer au commit %@. Les jeux déjà compilés restent jouables."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Engine hier steht auf %@ statt auf %@, womit diese NX Library-Version getestet wurde. „Wechseln“ setzt sie auf %@. Bereits erstellte Spiele bleiben spielbar."
+            "value": "Die Engine hier steht auf %@ statt auf %@, womit diese Arcane-Version getestet wurde. „Wechseln“ setzt sie auf %@. Bereits erstellte Spiele bleiben spielbar."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El motor local está en %@, en lugar de %@, con el que se ha probado este NX Library. Cambiar lo mueve a %@. Los juegos ya compilados siguen funcionando."
+            "value": "El motor local está en %@, en lugar de %@, con el que se ha probado este Arcane. Cambiar lo mueve a %@. Los juegos ya compilados siguen funcionando."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A engine aqui está em %@, e não em %@, com o qual este NX Library foi testado. Trocar a move para %@. Seus jogos compilados continuam funcionando."
+            "value": "A engine aqui está em %@, e não em %@, com o qual este Arcane foi testado. Trocar a move para %@. Seus jogos compilados continuam funcionando."
           }
         }
       }
@@ -58813,43 +58772,43 @@
         }
       }
     },
-    "The engine stopped without a message NX Library recognises.": {
+    "The engine stopped without a message Arcane recognises.": {
       "comment": "PortingFailureReason.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The engine stopped without a message NX Library recognises."
+            "value": "The engine stopped without a message Arcane recognises."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il motore si è interrotto senza un messaggio riconosciuto da NX Library."
+            "value": "Il motore si è interrotto senza un messaggio riconosciuto da Arcane."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le moteur s’est arrêté sans message reconnu par NX Library."
+            "value": "Le moteur s’est arrêté sans message reconnu par Arcane."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Engine wurde ohne eine für NX Library erkennbare Meldung gestoppt."
+            "value": "Die Engine wurde ohne eine für Arcane erkennbare Meldung gestoppt."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El motor se ha detenido sin un mensaje que NX Library reconozca."
+            "value": "El motor se ha detenido sin un mensaje que Arcane reconozca."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A engine parou sem uma mensagem que o NX Library reconheça."
+            "value": "A engine parou sem uma mensagem que o Arcane reconheça."
           }
         }
       }
@@ -59715,43 +59674,43 @@
         }
       }
     },
-    "The icon is not an image NX Library can read.": {
+    "The icon is not an image Arcane can read.": {
       "comment": "AppIconWriter.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The icon is not an image NX Library can read."
+            "value": "The icon is not an image Arcane can read."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "L’icona non è un’immagine leggibile da NX Library."
+            "value": "L’icona non è un’immagine leggibile da Arcane."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "L’icône n’est pas une image lisible par NX Library."
+            "value": "L’icône n’est pas une image lisible par Arcane."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das Symbol ist kein für NX Library lesbares Bild."
+            "value": "Das Symbol ist kein für Arcane lesbares Bild."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El icono no es una imagen que NX Library pueda leer."
+            "value": "El icono no es una imagen que Arcane pueda leer."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O ícone não é uma imagem que o NX Library consiga ler."
+            "value": "O ícone não é uma imagem que o Arcane consiga ler."
           }
         }
       }
@@ -60658,43 +60617,43 @@
         }
       }
     },
-    "The newest nxnative needs Metal %@, so it needs a newer NX Library.": {
+    "The newest nxnative needs Metal %@, so it needs a newer Arcane.": {
       "comment": "NewestEngine.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The newest nxnative needs Metal %@, so it needs a newer NX Library."
+            "value": "The newest nxnative needs Metal %@, so it needs a newer Arcane."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La versione più recente di nxnative richiede Metal %@, quindi serve una NX Library più recente."
+            "value": "La versione più recente di nxnative richiede Metal %@, quindi serve una versione più recente di Arcane."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le dernier nxnative nécessite Metal %@ et requiert donc une version plus récente de NX Library."
+            "value": "Le dernier nxnative nécessite Metal %@ et requiert donc une version plus récente d’Arcane."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das neueste nxnative benötigt Metal %@ und daher eine neuere NX Library-Version."
+            "value": "Das neueste nxnative benötigt Metal %@ und daher eine neuere Arcane-Version."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El nxnative más reciente necesita Metal %@, por lo que requiere una versión más reciente de NX Library."
+            "value": "El nxnative más reciente necesita Metal %@, por lo que requiere una versión más reciente de Arcane."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O nxnative mais recente precisa do Metal %@, por isso requer um NX Library mais recente."
+            "value": "O nxnative mais recente precisa do Metal %@, por isso requer um Arcane mais recente."
           }
         }
       }
@@ -61396,84 +61355,84 @@
         }
       }
     },
-    "The screen NX Library opens on.": {
+    "The screen Arcane opens on.": {
       "comment": "SettingsStartUpSection.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The screen NX Library opens on."
+            "value": "The screen Arcane opens on."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La schermata iniziale di NX Library."
+            "value": "La schermata iniziale di Arcane."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "L’écran affiché à l’ouverture de NX Library."
+            "value": "L’écran affiché à l’ouverture d’Arcane."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Ansicht, mit der NX Library geöffnet wird."
+            "value": "Die Ansicht, mit der Arcane geöffnet wird."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La pantalla que muestra NX Library al abrirse."
+            "value": "La pantalla que muestra Arcane al abrirse."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A tela inicial do NX Library."
+            "value": "A tela inicial do Arcane."
           }
         }
       }
     },
-    "The screen NX Library opens on: Spotlight, Collection, or where you left it.": {
+    "The screen Arcane opens on: Spotlight, Collection, or where you left it.": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The screen NX Library opens on: Spotlight, Collection, or where you left it."
+            "value": "The screen Arcane opens on: Spotlight, Collection, or where you left it."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La schermata iniziale di NX Library: Spotlight, Raccolta o l’ultima aperta."
+            "value": "La schermata iniziale di Arcane: Spotlight, Raccolta o l’ultima aperta."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "L’écran affiché à l’ouverture de NX Library : À la une, Collection ou le dernier écran utilisé."
+            "value": "L’écran affiché à l’ouverture d’Arcane : À la une, Collection ou le dernier écran utilisé."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Ansicht, mit der NX Library geöffnet wird: Spotlight, Sammlung oder die zuletzt verwendete."
+            "value": "Die Ansicht, mit der Arcane geöffnet wird: Spotlight, Sammlung oder die zuletzt verwendete."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La pantalla que muestra NX Library al abrirse: Destacados, Colección o donde lo dejaste."
+            "value": "La pantalla que muestra Arcane al abrirse: Destacados, Colección o donde lo dejaste."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A tela inicial do NX Library: Destaques, Coleção ou onde você parou."
+            "value": "A tela inicial do Arcane: Destaques, Coleção ou onde você parou."
           }
         }
       }
@@ -62749,84 +62708,84 @@
         }
       }
     },
-    "This NX Library uses nxnative %@; the engine here is at %@. Update downloads it and switches to it. Games you built keep playing.": {
+    "This version of Arcane uses nxnative %@; the engine here is at %@. Update downloads it and switches to it. Games you built keep playing.": {
       "comment": "SetupCheck.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This NX Library uses nxnative %@; the engine here is at %@. Update downloads it and switches to it. Games you built keep playing."
+            "value": "This version of Arcane uses nxnative %@; the engine here is at %@. Update downloads it and switches to it. Games you built keep playing."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questa NX Library usa nxnative %@; il motore qui è al commit %@. Con Aggiorna lo scarichi e passi a quella versione. I giochi già compilati continuano a funzionare."
+            "value": "Questa Arcane usa nxnative %@; il motore qui è al commit %@. Con Aggiorna lo scarichi e passi a quella versione. I giochi già compilati continuano a funzionare."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cette version de NX Library utilise nxnative %@ ; le moteur présent est au commit %@. Mettre à jour le télécharge et bascule dessus. Les jeux déjà compilés restent jouables."
+            "value": "Cette version d’Arcane utilise nxnative %@ ; le moteur présent est au commit %@. Mettre à jour le télécharge et bascule dessus. Les jeux déjà compilés restent jouables."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese NX Library-Version verwendet nxnative %@; die Engine hier steht auf %@. „Aktualisieren“ lädt die Version und wechselt zu ihr. Bereits erstellte Spiele bleiben spielbar."
+            "value": "Diese Arcane-Version verwendet nxnative %@; die Engine hier steht auf %@. „Aktualisieren“ lädt die Version und wechselt zu ihr. Bereits erstellte Spiele bleiben spielbar."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este NX Library usa nxnative %@; el motor local está en %@. Actualizar lo descarga y cambia a esa versión. Los juegos ya compilados siguen funcionando."
+            "value": "Este Arcane usa nxnative %@; el motor local está en %@. Actualizar lo descarga y cambia a esa versión. Los juegos ya compilados siguen funcionando."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este NX Library usa o nxnative %@; a engine aqui está em %@. Atualizar baixa a versão e muda para ela. Seus jogos compilados continuam funcionando."
+            "value": "Este Arcane usa o nxnative %@; a engine aqui está em %@. Atualizar baixa a versão e muda para ela. Seus jogos compilados continuam funcionando."
           }
         }
       }
     },
-    "This NX Library uses the newest nxnative.": {
+    "This version of Arcane uses the newest nxnative.": {
       "comment": "UpstreamCopy.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This NX Library uses the newest nxnative."
+            "value": "This version of Arcane uses the newest nxnative."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questa NX Library usa la versione più recente di nxnative."
+            "value": "Questa Arcane usa la versione più recente di nxnative."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cette version de NX Library utilise le dernier nxnative."
+            "value": "Cette version d’Arcane utilise le dernier nxnative."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese NX Library-Version verwendet das neueste nxnative."
+            "value": "Diese Arcane-Version verwendet das neueste nxnative."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este NX Library usa el nxnative más reciente."
+            "value": "Este Arcane usa el nxnative más reciente."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este NX Library usa o nxnative mais recente."
+            "value": "Este Arcane usa o nxnative mais recente."
           }
         }
       }
@@ -63159,43 +63118,43 @@
         }
       }
     },
-    "This changes NX Library, not the language inside your games.": {
+    "This changes Arcane, not the language inside your games.": {
       "comment": "Language/region preferences and existing library filters.",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This changes NX Library, not the language inside your games."
+            "value": "This changes Arcane, not the language inside your games."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modifica NX Library, non la lingua all’interno dei giochi."
+            "value": "Modifica Arcane, non la lingua all’interno dei giochi."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ce réglage modifie NX Library, pas la langue dans vos jeux."
+            "value": "Ce réglage modifie Arcane, pas la langue dans vos jeux."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dies ändert NX Library, nicht die Sprache in deinen Spielen."
+            "value": "Dies ändert Arcane, nicht die Sprache in deinen Spielen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esto cambia NX Library, no el idioma de tus juegos."
+            "value": "Esto cambia Arcane, no el idioma de tus juegos."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Isso altera o NX Library, não o idioma dentro dos seus jogos."
+            "value": "Isso altera o Arcane, não o idioma dentro dos seus jogos."
           }
         }
       }
@@ -65168,43 +65127,43 @@
         }
       }
     },
-    "Update NX Library: its built-in Python includes zbic from 0.1.3.2. Installing zbic with pip does not reach it.": {
+    "Update Arcane: its built-in Python includes zbic from 0.1.3.2. Installing zbic with pip does not reach it.": {
       "comment": "PortingFailureReason.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Update NX Library: its built-in Python includes zbic from 0.1.3.2. Installing zbic with pip does not reach it."
+            "value": "Update Arcane: its built-in Python includes zbic from 0.1.3.2. Installing zbic with pip does not reach it."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aggiorna NX Library: dalla versione 0.1.3.2 il Python incluso contiene zbic. Installare zbic con pip non lo rende disponibile nell’ambiente incluso."
+            "value": "Aggiorna Arcane: dalla versione 0.1.3.2 il Python incluso contiene zbic. Installare zbic con pip non lo rende disponibile nell’ambiente incluso."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mettez NX Library à jour : son Python intégré inclut zbic depuis la version 0.1.3.2. Installer zbic avec pip n’a aucun effet sur ce Python."
+            "value": "Mettez Arcane à jour : son Python intégré inclut zbic depuis la version 0.1.3.2. Installer zbic avec pip n’a aucun effet sur ce Python."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aktualisiere NX Library: Das integrierte Python enthält zbic ab 0.1.3.2. Eine Installation von zbic mit pip erreicht es nicht."
+            "value": "Aktualisiere Arcane: Das integrierte Python enthält zbic ab 0.1.3.2. Eine Installation von zbic mit pip erreicht es nicht."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Actualiza NX Library: su Python integrado incluye zbic desde la versión 0.1.3.2. Instalar zbic con pip no lo añade a ese Python."
+            "value": "Actualiza Arcane: su Python integrado incluye zbic desde la versión 0.1.3.2. Instalar zbic con pip no lo añade a ese Python."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Atualize o NX Library: seu Python integrado inclui o zbic desde a versão 0.1.3.2. Instalar o zbic com pip não afeta esse Python."
+            "value": "Atualize o Arcane: seu Python integrado inclui o zbic desde a versão 0.1.3.2. Instalar o zbic com pip não afeta esse Python."
           }
         }
       }
@@ -66111,43 +66070,43 @@
         }
       }
     },
-    "Version %@ came with this Xcode; the engine is tested with %@. New builds wait for an NX Library update tested with it. Games you built still play.": {
+    "Version %@ came with this Xcode; the engine is tested with %@. New builds wait for an Arcane update tested with it. Games you built still play.": {
       "comment": "SetupCheck.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Version %@ came with this Xcode; the engine is tested with %@. New builds wait for an NX Library update tested with it. Games you built still play."
+            "value": "Version %@ came with this Xcode; the engine is tested with %@. New builds wait for an Arcane update tested with it. Games you built still play."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La versione %@ è inclusa in questo Xcode; il motore è testato con %@. Per nuove compilazioni occorre attendere un aggiornamento di NX Library testato con questa versione. I giochi già compilati funzionano comunque."
+            "value": "La versione %@ è inclusa in questo Xcode; il motore è testato con %@. Per nuove compilazioni occorre attendere un aggiornamento di Arcane testato con questa versione. I giochi già compilati funzionano comunque."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La version %@ est fournie avec ce Xcode ; le moteur est testé avec %@. Les nouvelles compilations attendent une mise à jour de NX Library testée avec elle. Les jeux déjà compilés restent jouables."
+            "value": "La version %@ est fournie avec ce Xcode ; le moteur est testé avec %@. Les nouvelles compilations attendent une mise à jour d’Arcane testée avec elle. Les jeux déjà compilés restent jouables."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Version %@ wurde mit diesem Xcode geliefert; die Engine wurde mit %@ getestet. Neue Builds warten auf ein damit getestetes NX Library-Update. Bereits erstellte Spiele bleiben spielbar."
+            "value": "Version %@ wurde mit diesem Xcode geliefert; die Engine wurde mit %@ getestet. Neue Builds warten auf ein damit getestetes Arcane-Update. Bereits erstellte Spiele bleiben spielbar."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La versión %@ viene con este Xcode; el motor se ha probado con %@. Las nuevas compilaciones deben esperar a una actualización de NX Library probada con ella. Los juegos ya compilados siguen funcionando."
+            "value": "La versión %@ viene con este Xcode; el motor se ha probado con %@. Las nuevas compilaciones deben esperar a una actualización de Arcane probada con ella. Los juegos ya compilados siguen funcionando."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A versão %@ veio com este Xcode; a engine foi testada com %@. Novas compilações aguardam uma atualização do NX Library testada com ela. Seus jogos compilados continuam funcionando."
+            "value": "A versão %@ veio com este Xcode; a engine foi testada com %@. Novas compilações aguardam uma atualização do Arcane testada com ela. Seus jogos compilados continuam funcionando."
           }
         }
       }
@@ -66275,43 +66234,43 @@
         }
       }
     },
-    "Version %@; the engine is tested with %@. NX Library installs %@ through Xcode.": {
+    "Version %@; the engine is tested with %@. Arcane installs %@ through Xcode.": {
       "comment": "SetupCheck.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Version %@; the engine is tested with %@. NX Library installs %@ through Xcode."
+            "value": "Version %@; the engine is tested with %@. Arcane installs %@ through Xcode."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Versione %@; il motore è testato con %@. NX Library installa %@ tramite Xcode."
+            "value": "Versione %@; il motore è testato con %@. Arcane installa %@ tramite Xcode."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Version %@ ; le moteur est testé avec %@. NX Library installe %@ via Xcode."
+            "value": "Version %@ ; le moteur est testé avec %@. Arcane installe %@ via Xcode."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Version %@; die Engine wurde mit %@ getestet. NX Library installiert %@ über Xcode."
+            "value": "Version %@; die Engine wurde mit %@ getestet. Arcane installiert %@ über Xcode."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Versión %@; el motor se ha probado con %@. NX Library instala %@ a través de Xcode."
+            "value": "Versión %@; el motor se ha probado con %@. Arcane instala %@ a través de Xcode."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Versão %@; a engine foi testada com %@. O NX Library instala %@ pelo Xcode."
+            "value": "Versão %@; a engine foi testada com %@. O Arcane instala %@ pelo Xcode."
           }
         }
       }
@@ -68530,43 +68489,43 @@
         }
       }
     },
-    "You have NX Library %@. No newer release is available.": {
+    "You have Arcane %@. No newer release is available.": {
       "comment": "AppUpdateDialog.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You have NX Library %@. No newer release is available."
+            "value": "You have Arcane %@. No newer release is available."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hai NX Library %@. Non sono disponibili versioni più recenti."
+            "value": "Hai Arcane %@. Non sono disponibili versioni più recenti."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vous disposez de NX Library %@. Aucune version plus récente n’est disponible."
+            "value": "Vous disposez d’Arcane %@. Aucune version plus récente n’est disponible."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Du hast NX Library %@. Es ist keine neuere Veröffentlichung verfügbar."
+            "value": "Du hast Arcane %@. Es ist keine neuere Veröffentlichung verfügbar."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tienes NX Library %@. No hay ninguna versión más reciente."
+            "value": "Tienes Arcane %@. No hay ninguna versión más reciente."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Você tem o NX Library %@. Não há versão mais recente disponível."
+            "value": "Você tem o Arcane %@. Não há versão mais recente disponível."
           }
         }
       }
@@ -70867,7 +70826,7 @@
         }
       }
     },
-    "nxnative has %lld newer commits. Engine updates reach you with NX Library updates, once tested.": {
+    "nxnative has %lld newer commits. Engine updates reach you with Arcane updates, once tested.": {
       "comment": "Quantity-sensitive UI message; preserve %lld count and other placeholders.",
       "localizations": {
         "en": {
@@ -70876,13 +70835,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "nxnative has %lld newer commit. Engine updates reach you with NX Library updates, once tested."
+                  "value": "nxnative has %lld newer commit. Engine updates reach you with Arcane updates, once tested."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "nxnative has %lld newer commits. Engine updates reach you with NX Library updates, once tested."
+                  "value": "nxnative has %lld newer commits. Engine updates reach you with Arcane updates, once tested."
                 }
               }
             }
@@ -70894,13 +70853,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "nxnative ha %lld commit più recente. Gli aggiornamenti del motore arrivano con gli aggiornamenti di NX Library, dopo essere stati testati."
+                  "value": "nxnative ha %lld commit più recente. Gli aggiornamenti del motore arrivano con gli aggiornamenti di Arcane, dopo essere stati testati."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "nxnative ha %lld commit più recenti. Gli aggiornamenti del motore arrivano con gli aggiornamenti di NX Library, dopo essere stati testati."
+                  "value": "nxnative ha %lld commit più recenti. Gli aggiornamenti del motore arrivano con gli aggiornamenti di Arcane, dopo essere stati testati."
                 }
               }
             }
@@ -70912,13 +70871,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "nxnative compte %lld commit plus récent. Les mises à jour du moteur vous parviennent avec celles de NX Library, une fois testées."
+                  "value": "nxnative compte %lld commit plus récent. Les mises à jour du moteur vous parviennent avec celles de Arcane, une fois testées."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "nxnative compte %lld commits plus récents. Les mises à jour du moteur vous parviennent avec celles de NX Library, une fois testées."
+                  "value": "nxnative compte %lld commits plus récents. Les mises à jour du moteur vous parviennent avec celles de Arcane, une fois testées."
                 }
               }
             }
@@ -70930,13 +70889,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "nxnative hat %lld neueren Commit. Engine-Updates erhältst du mit NX Library-Updates, sobald sie getestet wurden."
+                  "value": "nxnative hat %lld neueren Commit. Engine-Updates erhältst du mit Arcane-Updates, sobald sie getestet wurden."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "nxnative hat %lld neuere Commits. Engine-Updates erhältst du mit NX Library-Updates, sobald sie getestet wurden."
+                  "value": "nxnative hat %lld neuere Commits. Engine-Updates erhältst du mit Arcane-Updates, sobald sie getestet wurden."
                 }
               }
             }
@@ -70948,13 +70907,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "nxnative tiene %lld commit más reciente. Las actualizaciones del motor te llegan con las de NX Library, una vez probadas."
+                  "value": "nxnative tiene %lld commit más reciente. Las actualizaciones del motor te llegan con las de Arcane, una vez probadas."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "nxnative tiene %lld commits más recientes. Las actualizaciones del motor te llegan con las de NX Library, una vez probadas."
+                  "value": "nxnative tiene %lld commits más recientes. Las actualizaciones del motor te llegan con las de Arcane, una vez probadas."
                 }
               }
             }
@@ -70966,13 +70925,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "O nxnative tem %lld commit mais recente. As atualizações da engine chegam com as atualizações do NX Library, após serem testadas."
+                  "value": "O nxnative tem %lld commit mais recente. As atualizações da engine chegam com as atualizações do Arcane, após serem testadas."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "O nxnative tem %lld commits mais recentes. As atualizações da engine chegam com as atualizações do NX Library, após serem testadas."
+                  "value": "O nxnative tem %lld commits mais recentes. As atualizações da engine chegam com as atualizações do Arcane, após serem testadas."
                 }
               }
             }
@@ -70980,43 +70939,43 @@
         }
       }
     },
-    "nxnative, used as it is upstream, at the commit this NX Library is tested with.": {
+    "nxnative, used as it is upstream, at the commit this version of Arcane is tested with.": {
       "comment": "SetupCheck.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "nxnative, used as it is upstream, at the commit this NX Library is tested with."
+            "value": "nxnative, used as it is upstream, at the commit this version of Arcane is tested with."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "nxnative, usato senza modifiche rispetto a upstream, al commit con cui è testata questa NX Library."
+            "value": "nxnative, usato senza modifiche rispetto a upstream, al commit con cui è testata questa versione di Arcane."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "nxnative, utilisé tel quel depuis le dépôt amont, au commit avec lequel cette version de NX Library a été testée."
+            "value": "nxnative, utilisé tel quel depuis le dépôt amont, au commit avec lequel cette version d’Arcane a été testée."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "nxnative, unverändert aus dem Upstream, mit dem Commit, mit dem diese NX Library-Version getestet wurde."
+            "value": "nxnative, unverändert aus dem Upstream, mit dem Commit, mit dem diese Arcane-Version getestet wurde."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "nxnative, sin modificar respecto al proyecto original, en el commit con el que se ha probado este NX Library."
+            "value": "nxnative, sin modificar respecto al proyecto original, en el commit con el que se ha probado este Arcane."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "nxnative, usado sem alterações do repositório original, no commit com o qual este NX Library foi testado."
+            "value": "nxnative, usado sem alterações do repositório original, no commit com o qual este Arcane foi testado."
           }
         }
       }
@@ -71431,43 +71390,43 @@
         }
       }
     },
-    "the bundled Python is missing; reinstall NX Library": {
+    "the bundled Python is missing; reinstall Arcane": {
       "comment": "AppViewModel.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "the bundled Python is missing; reinstall NX Library"
+            "value": "the bundled Python is missing; reinstall Arcane"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "il Python incluso non è disponibile; reinstalla NX Library"
+            "value": "il Python incluso non è disponibile; reinstalla Arcane"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "le Python intégré est introuvable ; réinstallez NX Library"
+            "value": "le Python intégré est introuvable ; réinstallez Arcane"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "das mitgelieferte Python fehlt; installiere NX Library erneut"
+            "value": "das mitgelieferte Python fehlt; installiere Arcane erneut"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "falta el Python incluido; reinstala NX Library"
+            "value": "falta el Python incluido; reinstala Arcane"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "o Python incluído não foi encontrado; reinstale o NX Library"
+            "value": "o Python incluído não foi encontrado; reinstale o Arcane"
           }
         }
       }

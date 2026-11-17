@@ -1,6 +1,6 @@
-# NX Library — stato della validazione
+# Arcane — stato della validazione
 
-Questo è l'unico elenco di ciò che il maintainer ha provato nell'app. Una cosa è **validata** solo quando il maintainer conferma di averla provata nell'app (NX Library Dev per il lavoro non pubblicato). Test automatici, compilazione e revisioni degli agenti la sostengono, ma non la sostituiscono (AGENTS.md).
+Questo è l'unico elenco di ciò che il maintainer ha provato nell'app. Una cosa è **validata** solo quando il maintainer conferma di averla provata nell'app (Arcane Dev per il lavoro non pubblicato). Test automatici, compilazione e revisioni degli agenti la sostengono, ma non la sostituiscono (AGENTS.md).
 
 Come si aggiorna:
 - Quando il maintainer conferma, la riga passa a **validato**, con la data e le sue parole se utili.
@@ -11,6 +11,7 @@ Come si aggiorna:
 
 | Parte | Stato | Prove ancora da fare |
 |---|---|---|
+| Nome Arcane in ciò che si vede (finestra, menu, Settings, About, testi nelle sei lingue; copia Dev `Arcane Dev.app`) | in attesa | Aprire `~/Applications/Arcane Dev.app` e ritrovare libreria e impostazioni della vecchia Dev; nessun "NX Library" visibile nelle sei lingue |
 | Catalogo comune nella Dev (`CatalogRepository`, conversione da `library.json`, recupero) | in attesa | Prima apertura della Dev con libreria reale, recupero esplicito |
 | Fonti e libreria mista (Steam + Switch, Manage sources) | in attesa | La scelta iniziale Mac/Switch/entrambi non esiste ancora |
 | Steam: metadati store e arte | in attesa | — |

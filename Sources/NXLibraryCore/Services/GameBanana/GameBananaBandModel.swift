@@ -251,7 +251,7 @@ public final class GameBananaBandModel: ObservableObject {
         case .looking: return L10n.text("Looking for mods that work…")
         case .ask: return L10n.text("Is this the right game?")
         case .noPage: return L10n.text("No GameBanana page found")
-        case .noneWork: return L10n.text("No mods for this game work with NX Library yet")
+        case .noneWork: return L10n.text("No mods for this game work with Arcane yet")
         case .offline: return L10n.text("No connection. Mods you installed still work.")
         case .failed: return L10n.text("GameBanana didn't answer. Try again in a moment.")
         case .idle, .matching, .ready: return nil

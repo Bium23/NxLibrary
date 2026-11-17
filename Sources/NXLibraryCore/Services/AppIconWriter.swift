@@ -21,7 +21,7 @@ public struct AppIconWriter {
         public var errorDescription: String? {
             switch self {
             case .notAnApp: return L10n.text("The game's app was not found.")
-            case .notAnImage: return L10n.text("The icon is not an image NX Library can read.")
+            case .notAnImage: return L10n.text("The icon is not an image Arcane can read.")
             case .iconFailed(let detail): return L10n.format("The icon could not be made: %@", [String(describing: (detail))])
             case .signingFailed(let detail): return L10n.format("The app could not be signed again, so it was left as it was: %@", [String(describing: (detail))])
             }

@@ -1,4 +1,4 @@
-# Steam in NX Library
+# Steam in Arcane
 
 Riferimento unico dell’integrazione Steam: cosa legge, come decide, cosa mostra, e cosa resta da validare. È il
 documento da leggere prima di toccare qualunque parte Steam. `architecture.md` ne tiene solo un riassunto;
@@ -19,14 +19,14 @@ Ramo: `bium/library-manager` (rilascio grande, non pubblicato). Aggiornato al 15
 - [Ore di gioco](#ore-di-gioco)
 - [Achievement](#achievement)
 - [Metadati, arte e personalizzazioni](#metadati-arte-e-personalizzazioni)
-- [Dati su disco di NX Library](#dati-su-disco-di-nx-library)
+- [Dati su disco di Arcane](#dati-su-disco-di-arcane)
 - [Scelte del maintainer](#scelte-del-maintainer)
 - [Limiti noti e punti rimandati](#limiti-noti-e-punti-rimandati)
 - [Cambiare l’integrazione](#cambiare-lintegrazione)
 
 ## Principi
 
-- **Steam non viene mai scritto.** NX Library legge file di Steam e invia solo URL `steam://` al client di Valve
+- **Steam non viene mai scritto.** Arcane legge file di Steam e invia solo URL `steam://` al client di Valve
   (bundle `com.valvesoftware.steam`); non apre mai l’app di un gioco direttamente.
 - **Dati privati fuori dal tipo.** `localconfig.vdf`, `loginusers.vdf` e i file delle statistiche contengono ticket,
   amici e altro: ogni lettore estrae solo i campi che servono, non li registra nei log e non li conserva oltre il
@@ -43,7 +43,7 @@ Ramo: `bium/library-manager` (rilascio grande, non pubblicato). Aggiornato al 15
 
 ## Stato di validazione
 
-Lo stato di ogni parte Steam sta nell'elenco unico [validation.md](validation.md). Una parte conta come validata solo dopo la prova del maintainer in NX Library Dev.
+Lo stato di ogni parte Steam sta nell'elenco unico [validation.md](validation.md). Una parte conta come validata solo dopo la prova del maintainer in Arcane Dev.
 
 ## File di Steam letti
 
@@ -111,7 +111,7 @@ Lo stato nasce dall’osservazione (`SteamGameObservation.State`) e arriva alla 
 - Un aggiornamento in coda su un gioco installato (`StateFlags` 6 o 1030: bit 4 presente) resta giocabile; Steam
   aggiorna al lancio.
 - `StateFlags` mancante o illeggibile: si guarda solo la cartella, come prima del supporto ai download.
-- Il catalogo resta leggibile da un NX Library più vecchio: `isDownloading` si decodifica con `decodeIfPresent` e la
+- Il catalogo resta leggibile da una versione più vecchia di Arcane: `isDownloading` si decodifica con `decodeIfPresent` e la
   disponibilità usa casi già esistenti.
 
 ## Osservazione dei file di Steam
@@ -181,7 +181,7 @@ Favorite, Hidden, Show in Finder.
   pazienza (15 s con Steam aperto, 45 s se Play deve avviarlo). Negli ultimi due casi Steam viene mostrato e la
   testata invita a controllarlo. Perché una finestra propria: riprendersi il primo piano mentre Steam si portava davanti
   faceva alternare a macOS schermo intero e scrivania per tutta l’attesa. Mentre la schermata è aperta Play non fa
-  nulla, per nessun gioco. Un clic la chiude (NX Library torna davanti se il gioco non è arrivato, salvo un gioco in
+  nulla, per nessun gioco. Un clic la chiude (Arcane torna davanti se il gioco non è arrivato, salvo un gioco in
   primo piano); se ne va comunque dopo 120 s. Un gioco avviato da Steam non la mostra.
 - Il log si legge fuori dal thread principale ogni 0,5 s durante l’attesa, per righe intere; la prima lettura prende
   l’ultimo megabyte (conta anche una domanda rimasta aperta da un Play precedente), un file nuovo (Steam riavviato)
@@ -191,17 +191,17 @@ Favorite, Hidden, Show in Finder.
   uno Steam già aperto viene nascosto durante l’attesa. Finito Play, Steam torna visibile solo se lo era prima, e uno
   Steam fuori vista viene nascosto di nuovo quando il gioco esce (subito e dopo 2 s, perché Steam riapre la sua
   finestra). Valve non offre un modo ufficiale: nascondere è un ripiego e può non riuscire con alcune versioni.
-- All’uscita del gioco NX Library torna davanti se Play era partito da qui, il gioco era in primo piano e nessun
+- All’uscita del gioco Arcane torna davanti se Play era partito da qui, il gioco era in primo piano e nessun
   altro gioco della libreria è aperto (`SteamReturnFocus`). Una sessione finita mostra la card di fine sessione dei
   giochi Switch, con il totale che include le ore di Steam.
 
 ## Ore di gioco
 
-Le ore sono quelle di Steam (`Playtime`, tutti i computer) più le sessioni di NX Library successive all’ultimo valore
+Le ore sono quelle di Steam (`Playtime`, tutti i computer) più le sessioni di Arcane successive all’ultimo valore
 visto, così nulla si conta due volte anche se Steam aggiorna il file in ritardo (`SteamPlaytimeBaselines`,
 `PlaySessionStore`). Un valore più basso o un altro account ripartono da capo; il totale non torna mai indietro per
 un minuto. Le letture (`SteamPlaytimeCoordinator`, una alla volta, fuori dal thread principale) avvengono quando
-cambiano catalogo o fonti, quando NX Library torna attiva e a fine sessione Steam (subito e dopo un minuto), solo se
+cambiano catalogo o fonti, quando Arcane torna attiva e a fine sessione Steam (subito e dopo un minuto), solo se
 la data del file è cambiata; la regola di ogni lettura è il tipo puro `SteamPlaytimeSync`. Un file illeggibile
 conserva gli ultimi totali buoni dello stesso account; solo l’assenza di un account li azzera. Le sessioni uscite
 dall’elenco recente restano contate (`CarriedPlaytime.afterExternal`) finché Steam non aggiorna il valore; mentre i
@@ -265,7 +265,7 @@ funzionalità; la verifica nell’app dopo il refactor resta da confermare.
 - `SteamPersonalizationStore`: testo e immagini scelte in un solo manifest atomico; un errore conserva le scelte
   precedenti. SteamGridDB usa la chiave del giocatore, in `steamgriddb-api-key` con permessi `0600`, mai nei log.
 
-## Dati su disco di NX Library
+## Dati su disco di Arcane
 
 Sotto `Application Support/NXLibrary` (Dev: `NXLibrary-Development`):
 
@@ -329,8 +329,8 @@ le regressioni; nessuna finestra viene aperta. **In attesa di validazione umana 
 - Un nuovo file di Steam da leggere: un lettore in `Sources/NXLibraryCore/Services/Steam/` che estrae solo i campi
   necessari, con limiti di dimensione, test con fixture sintetiche (`SteamTestSupport`) e una riga nella tabella
   [File di Steam letti](#file-di-steam-letti).
-- Un nuovo stato o campo nel catalogo: decodifica tollerante (`decodeIfPresent`) e nessun nuovo caso persistito che un
-  NX Library più vecchio non sappia leggere.
+- Un nuovo stato o campo nel catalogo: decodifica tollerante (`decodeIfPresent`) e nessun nuovo caso persistito che una
+  versione più vecchia di Arcane non sappia leggere.
 - Una nuova animazione su una tile: Core Animation fuori dal `drawingGroup`, ferma con Riduci movimento.
 - Testi: sei lingue in `Localizable.xcstrings`.
 - Aggiornare questo documento, il riassunto in `architecture.md` e `file-map.md` nello stesso commit.

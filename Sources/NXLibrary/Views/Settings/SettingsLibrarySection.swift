@@ -85,7 +85,7 @@ struct SettingsLibrarySection: View {
                             isOn: $settings.settings.refreshLibraryAtLaunch)
 
             SeleneToggleRow("Notify when a porting ends",
-                            subtitle: "A notification when a porting finishes while NX Library is in the background.",
+                            subtitle: "A notification when a porting finishes while Arcane is in the background.",
                             isOn: $settings.settings.notifyPortingEnds)
 
             SeleneButtonRow("Box covers",

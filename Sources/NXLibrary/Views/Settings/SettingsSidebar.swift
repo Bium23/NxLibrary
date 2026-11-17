@@ -57,7 +57,7 @@ struct SettingsSidebar: View {
                 .frame(width: canvas.u(48), height: canvas.u(48))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: canvas.u(2)) {
-                Text(L10n.text("NX Library"))
+                Text(AppIdentity.name)
                     .seleneFont(28, .semibold)
                     .foregroundColor(SeleneTheme.ink)
                 Text(version)

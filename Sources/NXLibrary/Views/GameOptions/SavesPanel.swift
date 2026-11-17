@@ -201,7 +201,7 @@ struct SavesPanel: View {
     }
     private var cloudHelp: (message: String, button: String) {
         switch model.context?.cloudReason {
-        case "NX Library → Settings → Games": return (L10n.text("Turn off Cloud saves in Settings → Games to import or restore."), "Settings")
+        case "Arcane → Settings → Games": return (L10n.text("Turn off Cloud saves in Settings → Games to import or restore."), "Settings")
         case "the game's env.txt", "the app's env.txt": return (L10n.text("Turn off cloud sync in this configuration file first."), L10n.text("Show file"))
         case "the game's Cloud saves settings": return (L10n.text("Turn off Cloud saves in the game's own settings first."), "OK")
         default: return (L10n.text("Turn off cloud sync in the launch environment first."), "OK")
@@ -210,7 +210,7 @@ struct SavesPanel: View {
     private func resolveCloud() {
         cloudPrompt = false
         switch model.context?.cloudReason {
-        case "NX Library → Settings → Games":
+        case "Arcane → Settings → Games":
             viewModel.gameForSettingsSheet = nil
             viewModel.router?.openSettings(.games)
         case "the game's env.txt":

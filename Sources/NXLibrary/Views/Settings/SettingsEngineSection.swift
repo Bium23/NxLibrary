@@ -137,7 +137,7 @@ struct SettingsEngineSection: View {
             }
 
             SelenePanel(L10n.text("prod.keys"),
-                        info: L10n.text("Nintendo Switch cryptographic keys required to decrypt game packages (NSP/XCI). NX Library stores a private copy with mode 0600 permissions; key values are never displayed or logged.")) {
+                        info: L10n.text("Nintendo Switch cryptographic keys required to decrypt game packages (NSP/XCI). Arcane stores a private copy with mode 0600 permissions; key values are never displayed or logged.")) {
                 HStack(spacing: 8) {
                     Image(systemName: viewModel.isProdKeysValid ? "checkmark.circle.fill" : "xmark.octagon.fill")
                         .seleneFont(15, .bold)
@@ -184,7 +184,7 @@ struct SettingsEngineSection: View {
             .seleneRowFocus(focusedRowTitle == "prod.keys", radius: SeleneTheme.cardRadius)
 
             SeleneButtonRow("Setup",
-                            subtitle: "Open the Setup check: what NX Library needs and what is ready.",
+                            subtitle: "Open the Setup check: what Arcane needs and what is ready.",
                             buttonTitle: "Open Setup") {
                 viewModel.reopenSetup()
             }
@@ -263,7 +263,7 @@ struct SettingsEngineSection: View {
     private var upstreamSubtitle: String {
         switch viewModel.upstreamState {
         case .idle:
-            return L10n.text("See how this NX Library's engine compares with seedds/nxnative main.")
+            return L10n.text("See how this version's engine compares with seedds/nxnative main.")
         case .checking:
             return L10n.text("Asking GitHub for the latest commits...")
         case .loaded(let status):
@@ -504,7 +504,7 @@ struct SettingsEngineSection: View {
     private func runtimeDetail(_ environment: EnvironmentStatus) -> String {
         guard let python = environment.pythonURL else { return "missing" }
         if viewModel.engineToolchain.isBundled {
-            return BundledRuntime.locate()?.versionSummary() ?? L10n.text("Included in NX Library")
+            return BundledRuntime.locate()?.versionSummary() ?? L10n.text("Included in Arcane")
         }
         return L10n.format("Developer build: %@", [String(describing: (python.path))])
     }

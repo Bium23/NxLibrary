@@ -71,7 +71,7 @@ public actor BoxArtService {
         guard index.isStale(now: now()) else { return false }
         var request = URLRequest(url: GameTDB.databaseURL)
         request.timeoutInterval = 60
-        request.setValue("NXLibrary/0.1 (macOS; personal app)", forHTTPHeaderField: "User-Agent")
+        request.setValue(AppIdentity.userAgent(), forHTTPHeaderField: "User-Agent")
         guard let (data, http) = try? await client.data(for: request), (200..<300).contains(http.statusCode),
               let xml = try? unzip(data), let parsed = try? GameTDB.parse(xml), !parsed.isEmpty else { return false }
         try? index.save(parsed, at: now())

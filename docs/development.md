@@ -1,6 +1,6 @@
 # Development and releases
 
-This guide covers building NX Library itself. For app setup, game preparation and daily use, start with the [user guide](../README.md). Read [AGENTS.md](../AGENTS.md) before changing engine integration or installation behaviour.
+This guide covers building Arcane itself. For app setup, game preparation and daily use, start with the [user guide](../README.md). Read [AGENTS.md](../AGENTS.md) before changing engine integration or installation behaviour.
 
 ## Development prerequisites
 
@@ -19,10 +19,10 @@ From the repository root:
 ~~~sh
 bash scripts/bundle_runtime.sh
 bash scripts/build_app.sh
-codesign --verify --deep --strict "$HOME/Applications/NXLibrary Dev.app"
+codesign --verify --deep --strict "$HOME/Applications/Arcane Dev.app"
 ~~~
 
-The default destination is `~/Applications/NXLibrary Dev.app`, named **NX Library Dev**: the copy every change is tested in, kept apart from the released **NX Library** (`~/Applications/NX Library.app`, installed from GitHub and updated by itself), which a development build never replaces. On the launcher-development branch, Dev uses bundle ID `local.nxlibrary.development`, app data under `~/Library/Application Support/NXLibrary-Development`, a separate cache root and preference domain. At its first launch it prepares an independent, one-time copy of selected launcher data; games and build caches are not copied, and credential files are excluded. Close the previous launcher copy before that initial import. The held 0.1.4.3 branch retains its previously validated behavior. `build_app.sh` compiles the Release configuration, creates the bundle in staging, includes resources and notices, ad-hoc signs and verifies it, then installs it through the same atomic installer used by the application. It does not launch the app.
+The default destination is `~/Applications/Arcane Dev.app`, named **Arcane Dev**: the copy every change is tested in, kept apart from the released copy (`~/Applications/NX Library.app`, installed from GitHub and updated by itself), which a development build never replaces. On the launcher-development branch, Dev uses bundle ID `local.nxlibrary.development`, app data under `~/Library/Application Support/NXLibrary-Development`, a separate cache root and preference domain. At its first launch it prepares an independent, one-time copy of selected launcher data; games and build caches are not copied, and credential files are excluded. Close the previous launcher copy before that initial import. The held 0.1.4.3 branch retains its previously validated behavior. `build_app.sh` compiles the Release configuration, creates the bundle in staging, includes resources and notices, ad-hoc signs and verifies it, then installs it through the same atomic installer used by the application. It does not launch the app.
 
 A development copy carries the version in progress from the `VERSION` file at the repository root and shows it as "(Dev · Launcher)" on this development line in Settings; it has no release marker, so it never offers or installs app updates. `scripts/release.sh <version>` sets the released version itself and refuses to run unless `VERSION` already says that version. After a release, raise `VERSION` to the next version being worked on.
 
@@ -63,7 +63,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAp
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_review.py
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_achievement_scroll.py
 bash scripts/build_app.sh
-codesign --verify --deep --strict "$HOME/Applications/NXLibrary Dev.app"
+codesign --verify --deep --strict "$HOME/Applications/Arcane Dev.app"
 ~~~
 
 When reviewing an engine upgrade in a separate checkout, set `NX_TEST_ENGINE_REPO` to that checkout's absolute path for `swift test`. The engine-fragment regression reads the application's pin and checks it in that repository; an invalid explicit path fails. Without the variable it uses `~/nxnative`, skipping only when that default checkout is absent. This allows verification without fetching into or changing the engine used by the installed app.
