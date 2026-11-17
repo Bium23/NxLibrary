@@ -5,6 +5,8 @@ import NXLibraryCore
 /// Spotlight's controller, keyboard and pointer input.
 extension SpotlightView {
     func handle(_ action: GamepadAction) {
+        // The entrance lands first, then the press acts on the row as it stands.
+        if entrance != .landed { landEntrance() }
         if viewer != nil { return handleViewer(action) }
         if achievementsScreen != nil { return handleAchievements(action) }
         if viewModel.spotlight.isLifted { return handleLifted(action) }
@@ -412,7 +414,6 @@ extension SpotlightView {
             guard !router.isMenuPresented,
                   !NativeMenuCommands.shared.isTracking,
                   !router.isSearchPresented,
-                  !router.isIntroShowing,
                   router.route == .library,
                   viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
                   !viewModel.isGameOptionsOpen,

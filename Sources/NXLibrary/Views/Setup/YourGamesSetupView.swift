@@ -31,7 +31,8 @@ struct YourGamesSetupView: View {
 
     var body: some View {
         ZStack {
-            SeleneBackdrop()
+            // At launch, Spotlight's moonlight under it (`AppViewModel.sharesLaunchBackdrop`).
+            if !viewModel.sharesLaunchBackdrop { SeleneBackdrop() }
             VStack(spacing: 0) {
                 SetupStepIndicator(page: .games).padding(.bottom, canvas.u(18))
                 Text(title).seleneFont(46, .semibold).foregroundColor(SeleneTheme.ink)

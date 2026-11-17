@@ -22,6 +22,10 @@ struct SpotlightRowView: View {
     var tileLook: (PortedGame) -> PortingTileLook = { _ in .normal }
     /// Mods' art for the Mods card's face (up to four); empty draws Selene's own face.
     var modsCover: [URL] = []
+    /// Spotlight's entrance (`SpotlightView+Entrance`): the tiles fly in from the centre while it plays.
+    var entrance: SpotlightEntrance.Phase = .landed
+    /// The flight is over: everything is in.
+    var onEntranceEnd: () -> Void = {}
     let onSelect: (SpotlightItem) -> Void
     let onActivate: (SpotlightItem) -> Void
 
@@ -29,6 +33,7 @@ struct SpotlightRowView: View {
     @State private var titleTask: Task<Void, Never>?
     /// The tile last lifted for moving, while it is still the selection.
     @State private var lastLifted: String?
+    @State private var entranceEnd: Task<Void, Never>?
 
     static let pitch = SpotlightRowGeometry.pitch
     static let host = SpotlightRowGeometry.host
@@ -48,11 +53,18 @@ struct SpotlightRowView: View {
         // While a tile is lifted, and after it is put down until the selection moves on, only it is grown: the
         // tiles it passes swap places under it at their own size.
         let alone = liftedKey != nil || (lastLifted != nil && lastLifted == selectedKey)
+        let flights = entranceFlights(window: window, position: position)
+        let launched = entrance == .playing || entrance == .landed
         ZStack(alignment: .topLeading) {
             ForEach(window.map { (index: $0, item: items[$0]) }, id: \.item.key) { entry in
                 let index = entry.index, item = entry.item
                 let isSelected = index == selected
                 tile(item, selected: isSelected)
+                    // Inside the glide: the tile grows about its own centre; the shift is undone by its own size.
+                    .entrance(flights.isEmpty ? nil : flights[index - window.lowerBound], launched: launched,
+                              unit: canvas.u(1),
+                              outerScale: alone ? (isSelected ? SpotlightRowGeometry.grow : 1)
+                                  : SpotlightRowGeometry.scale(of: CGFloat(index), at: position))
                     .modifier(TileGlide(position: position, index: CGFloat(index),
                                         rise: item.key == liftedKey ? 3 - 12 : 3,
                                         grown: alone ? isSelected : nil, unit: canvas.u(1)))
@@ -76,6 +88,8 @@ struct SpotlightRowView: View {
             if let isEmptyFilter {
                 // Beside the last card, whatever the card count and selection, never over them.
                 emptyMessage(isEmptyFilter)
+                    .entrance(entrance == .landed ? nil : SpotlightEntrance.message(after: flights),
+                              launched: launched, unit: canvas.u(1))
                     .offset(x: canvas.u(SpotlightRowGeometry.place(of: items.count, selected: selected) + 32),
                             y: canvas.u(3 + Self.host / 2 - 26))
                     .transition(.opacity)
@@ -99,7 +113,43 @@ struct SpotlightRowView: View {
         .onChange(of: liftedKey) { key in
             if let key { lastLifted = key }
         }
-        .onDisappear { titleTask?.cancel() }
+        .onChange(of: entrance) { phase in
+            entranceEnd?.cancel()
+            guard phase == .playing else { return }
+            scheduleTitle(delay: SpotlightEntrance.titleDelay)
+            let layout = currentLayout()
+            let end = SpotlightEntrance.end(of: entranceFlights(window: layout.window, position: layout.position))
+            entranceEnd = Task { @MainActor in
+                try? await Task.sleep(nanoseconds: UInt64(end * 1_000_000_000))
+                guard !Task.isCancelled else { return }
+                onEntranceEnd()
+            }
+        }
+        .onDisappear {
+            titleTask?.cancel()
+            entranceEnd?.cancel()
+        }
+    }
+
+    /// The visible tiles and the selection's glide position, as `body` works them out.
+    private func currentLayout() -> (window: Range<Int>, position: CGFloat) {
+        let selected = selectedKey.flatMap { key in items.firstIndex { $0.key == key } }
+        let offset = selected.map(SpotlightState.scrollOffset(selectedIndex:)) ?? 0
+        return (visibleRange(offset: offset), selected.map { CGFloat($0) } ?? SpotlightRowGeometry.noSelection)
+    }
+
+    /// The entrance's flight for each tile in `window`, in order, from where each one sits in the window (Selene
+    /// measures the row, which spans the window); empty once landed.
+    private func entranceFlights(window: Range<Int>, position: CGFloat) -> [SpotlightEntrance.Flight?] {
+        guard entrance != .landed else { return [] }
+        let unit = max(canvas.u(1), 0.0001)
+        let shift = SpotlightRowGeometry.camera(at: position) + canvas.stageOrigin.x / unit
+        let tiles = window.map { index -> ClosedRange<CGFloat> in
+            let i = CGFloat(index)
+            let x = SpotlightRowGeometry.place(of: i, at: position) + 1 + shift
+            return x...(x + Self.host * SpotlightRowGeometry.scale(of: i, at: position))
+        }
+        return SpotlightEntrance.flights(tiles: tiles, rowWidth: canvas.size.width / unit)
     }
 
     /// Items from a few tiles left of the screen to a few past its right edge; tiles

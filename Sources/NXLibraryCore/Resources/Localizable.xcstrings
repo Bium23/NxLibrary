@@ -22469,6 +22469,47 @@
         }
       }
     },
+    "Entrance animation": {
+      "comment": "SettingsCatalog.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrance animation"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Animazione d’entrata"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Animation d’entrée"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eingangsanimation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Animación de entrada"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Animação de entrada"
+          }
+        }
+      }
+    },
     "Errors": {
       "comment": "ConsoleView.swift:16",
       "localizations": {
@@ -31484,47 +31525,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Resolução interna"
-          }
-        }
-      }
-    },
-    "Intro animation": {
-      "comment": "SettingsCatalog.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intro animation"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Animazione introduttiva"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Animation d’introduction"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intro-Animation"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Animación de entrada"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Animação de abertura"
           }
         }
       }
@@ -44525,47 +44525,6 @@
         }
       }
     },
-    "Plays a short opening with the boot sound when the app opens.": {
-      "comment": "SettingsCatalog.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Plays a short opening with the boot sound when the app opens."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Riproduce una breve introduzione con il suono di avvio all’apertura dell’app."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Affiche une courte introduction accompagnée du son de démarrage à l’ouverture de l’app."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spielt beim Öffnen der App ein kurzes Intro mit Startklang ab."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reproduce una breve animación con el sonido de arranque al abrir la app."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reproduz uma breve abertura com o som de inicialização ao abrir o app."
-          }
-        }
-      }
-    },
     "Plays a short sound when you move, select, go back or launch a game.": {
       "comment": "SettingsCatalog.swift",
       "localizations": {
@@ -45222,47 +45181,6 @@
         }
       }
     },
-    "Preparing a separate copy of your launcher data. Games stay in their current locations.": {
-      "comment": "Development profile bootstrap; do not expose credential values.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preparing a separate copy of your launcher data. Games stay in their current locations."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preparazione di una copia separata dei dati del launcher. I giochi restano nei loro percorsi attuali."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Préparation d’une copie séparée des données du lanceur. Les jeux restent à leur emplacement actuel."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eine separate Kopie der Launcher-Daten wird vorbereitet. Die Spiele bleiben an ihren bisherigen Speicherorten."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preparando una copia separada de los datos del launcher. Los juegos permanecen en sus ubicaciones actuales."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preparando uma cópia separada dos dados do launcher. Os jogos permanecem nos locais atuais."
-          }
-        }
-      }
-    },
     "Preparing the app icon. The game will start when it is ready. This can take a minute for a large game.": {
       "comment": "AppViewModel+AppIcon.swift",
       "localizations": {
@@ -45341,47 +45259,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Preparando sua biblioteca de desenvolvimento"
-          }
-        }
-      }
-    },
-    "Preparing your library": {
-      "comment": "Catalog activation and recovery",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preparing your library"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preparazione della libreria"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Préparation de votre bibliothèque"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Deine Bibliothek wird vorbereitet"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preparando tu biblioteca"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preparando sua biblioteca"
           }
         }
       }
@@ -55980,6 +55857,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Trocando…"
+          }
+        }
+      }
+    },
+    "The library's tiles fly in with the boot sound when the app opens.": {
+      "comment": "SettingsCatalog.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The library's tiles fly in with the boot sound when the app opens."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All’apertura dell’app le tessere della libreria entrano in volo, con il suono di avvio."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À l’ouverture de l’app, les tuiles de la bibliothèque arrivent en vol, avec le son de démarrage."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beim Öffnen der App fliegen die Kacheln der Bibliothek mit dem Startklang herein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al abrir la app, los mosaicos de la biblioteca entran volando con el sonido de arranque."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ao abrir o app, os blocos da biblioteca entram voando com o som de inicialização."
           }
         }
       }

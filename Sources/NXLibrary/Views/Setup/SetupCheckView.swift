@@ -33,7 +33,8 @@ struct SetupCheckView: View {
 
     var body: some View {
         ZStack {
-            SeleneBackdrop()
+            // At launch, Spotlight's moonlight under it (`AppViewModel.sharesLaunchBackdrop`).
+            if !viewModel.sharesLaunchBackdrop { SeleneBackdrop() }
             VStack(spacing: 0) {
                 SetupStepIndicator(page: .requirements).padding(.bottom, canvas.u(18))
                 Text(L10n.text("Let's get Arcane ready"))

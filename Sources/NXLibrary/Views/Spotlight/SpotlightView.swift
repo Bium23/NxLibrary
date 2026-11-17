@@ -83,6 +83,10 @@ public struct SpotlightView: View {
     @State var pendingTileArt = 0
     /// The entrance's longest wait for the tiles' art.
     @State var entranceWait: Task<Void, Never>?
+    /// Lands a waiting or flying entrance on the first input.
+    @State var entranceMonitor: Any?
+    /// The breath on the moving moonlight is over (`SpotlightEntrance.hold`).
+    @State var entranceBreathed = false
     var isGliding: Bool { Date() < glideEnds }
 
     struct ViewerContext: Equatable {
@@ -105,7 +109,7 @@ public struct SpotlightView: View {
         self.playSessions = playSessions
         self.runningGames = runningGames
         self.artwork = artwork
-        // Held hidden from the first frame, under the intro or the welcome; `entranceAppear` lands it when not due.
+        // Held hidden from the first frame (the opening, or under the welcome); `entranceAppear` lands it when not due.
         _entrance = State(initialValue: viewModel.homeSeen ? .landed : .covered)
     }
 
@@ -196,7 +200,7 @@ public struct SpotlightView: View {
                 SeleneArtBackground(image: shown, imageKey: shown == nil ? "none" : art.key,
                                     shade: settings.settings.backgroundShade, crossfade: 0.8,
                                     showsArt: !settings.settings.keepWallpaperOnGames, modsTint: modsBackdrop,
-                                    reveal: entrance.holdsHidden ? .hidden : .shown)
+                                    reveal: artReveal)
                 // Deeper in the page the art dims so the text reads.
                 Color.black.opacity(dimmed ? 0.4 : 0)
                     .allowsHitTesting(false)
@@ -212,6 +216,8 @@ public struct SpotlightView: View {
         .onAppear(perform: entranceAppear)
         .onChange(of: isCovered) { covered in if !covered { uncoverEntrance() } }
         .onChange(of: reduceMotion) { reduced in if reduced { landEntrance() } }
+        // A resize mid-flight lands it; before the flight the starts follow the window (the launch can still size it).
+        .onChange(of: canvas) { _ in if entrance == .playing { landEntrance() } }
         .onAppear { storeHost.loadCover(titleIDs: Set(storeGames.compactMap { viewModel.modStore(for: $0)?.titleID })) }
         .onAppear { mutate { $0.setPillLimit(selectedPillCount) } }
         .onChange(of: selectedPillCount) { count in mutate { $0.setPillLimit(count) } }
@@ -277,7 +283,7 @@ public struct SpotlightView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxSpotlightGamepadAction)) { note in
             // The welcome's fade: the controller reaches Spotlight only once it has gone.
-            guard viewModel.alertMessage == nil, viewModel.settingsNotice == nil, !isCovered else { return }
+            guard viewModel.alertMessage == nil, viewModel.settingsNotice == nil, !isOverlaid else { return }
             if let action = note.object as? GamepadAction { handle(action) }
         }
         .onChange(of: playSessions.sessions.count) { _ in reconcile() }
@@ -347,6 +353,7 @@ public struct SpotlightView: View {
             SpotlightTopBar(filter: filter, showClock: settings.settings.showClock,
                             onSelect: { if !state.isLifted { setFilter($0) } })
                 .opacity(rowShown && !entrance.holdsHidden ? 1 : 0)
+                .animation(entranceRise, value: entrance.holdsHidden)
                 .allowsHitTesting(rowShown && !entrance.holdsHidden)
 
             ZStack(alignment: .topLeading) {
@@ -362,6 +369,8 @@ public struct SpotlightView: View {
                     artwork: artwork,
                     tileLook: viewModel.portingTileLook,
                     modsCover: storeHost.cover,
+                    entrance: entrance,
+                    onEntranceEnd: { landEntrance() },
                     onSelect: { item in
                         guard !state.isLifted else { return }
                         mutate { $0.select(item) }
@@ -374,7 +383,7 @@ public struct SpotlightView: View {
                 )
                 .offset(y: canvas.u(130))
                 // The icons give way as the page rises (and stop taking the pointer).
-                .opacity(rowShown && !entrance.holdsHidden ? 1 : 0)
+                .opacity(rowOpacity)
                 .allowsHitTesting(rowShown && !entrance.holdsHidden)
                 .onPreferenceChange(TileArtPendingKey.self, perform: tileArtPending)
 
@@ -383,10 +392,12 @@ public struct SpotlightView: View {
                     // Opacity fades always run, reduce motion or not.
                     .opacity(pillVisible && !entrance.holdsHidden ? 1 : 0)
                     .animation(.easeOut(duration: 0.2), value: pillVisible)
+                    .animation(entranceRise, value: entrance.holdsHidden)
 
                 info(model, state: state)
                     .offset(x: canvas.u(80), y: canvas.u(420))
-                    .opacity(entrance.holdsHidden ? 0 : 1)
+                    .entrance(entrance == .landed ? nil : SpotlightEntrance.info, launched: entranceLaunched,
+                              unit: canvas.u(1))
                     .allowsHitTesting(!entrance.holdsHidden)
             }
             .onPreferenceChange(SpotlightBlockKey.self) { heights in

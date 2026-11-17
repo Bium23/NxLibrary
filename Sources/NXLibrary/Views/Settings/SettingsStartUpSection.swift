@@ -46,8 +46,8 @@ struct SettingsStartUpSection: View {
                             subtitle: "Look for a newer Arcane release at launch, at most once a day.",
                             isOn: $settings.settings.checkAppUpdatesAtLaunch)
 
-            SeleneToggleRow("Intro animation",
-                            subtitle: "Plays a short opening with the boot sound when the app opens.",
+            SeleneToggleRow("Entrance animation",
+                            subtitle: "The library's tiles fly in with the boot sound when the app opens.",
                             isOn: $settings.settings.introAnimation)
         }
         .onAppear(perform: publishActions)
@@ -71,7 +71,7 @@ struct SettingsStartUpSection: View {
             .init(id: "appUpdates", title: "Check for app updates") {
                 settings.settings.checkAppUpdatesAtLaunch.toggle()
             },
-            .init(id: "intro", title: "Intro animation") {
+            .init(id: "intro", title: "Entrance animation") {
                 settings.settings.introAnimation.toggle()
             }
         ])

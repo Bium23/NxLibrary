@@ -59,8 +59,8 @@ public enum SettingsCatalog {
             "Scans your library folders for new or removed games at start.") { $0.refreshLibraryAtLaunch },
         row("checkAppUpdatesAtLaunch", .startUp, "Check for app updates",
             "Looks for a newer Arcane release at launch, at most once a day.") { $0.checkAppUpdatesAtLaunch },
-        row("introAnimation", .startUp, "Intro animation",
-            "Plays a short opening with the boot sound when the app opens.") { $0.introAnimation },
+        row("introAnimation", .startUp, "Entrance animation",
+            "The library's tiles fly in with the boot sound when the app opens.") { $0.introAnimation },
 
         // Navigation
         row("showButtonHints", .navigation, "Button hints",

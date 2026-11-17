@@ -17,14 +17,16 @@ Ogni flusso segue un'azione dall'input all'effetto, nominando i tipi che se ne o
 ```mermaid
 flowchart TD
     A["NXLibraryApp (@main)"] --> B["DevelopmentStartupView<br/>AppData.prepare: profilo release o Dev"]
-    B --> C["AppSettingsStore · lingua (AppLocalization)"]
+    B --> C["AppSettingsStore · lingua (AppLocalization)<br/>LaunchReveal: finestra pronta, poi fullscreen"]
     C --> D["CatalogStore legge catalog.json<br/>(conversione da library.json se serve)"]
     D -->|"archivio danneggiato"| R["Recupero esplicito: Retry / ripristino backup"]
     D --> E["AppShellState prepara coordinatore, router, tema"]
     E --> F["AppShellView: AppViewModel, store, monitor, updater"]
     F --> G{"Primo avvio completato?<br/>(FirstRunSetup)"}
     G -->|"no"| H["Setup: found (Steam, app portate) → Open library<br/>oppure Porting → Get ready → Your games"]
-    G -->|"sì"| I["Intro (se attiva) → Spotlight<br/>Benvenuto in Arcane una volta, per chi aggiorna"]
+    G -->|"sì"| I["Benvenuto in Arcane una volta, per chi aggiorna<br/>altrimenti home scelta"]
+    H --> K["Prima home Spotlight: moonlight condiviso → entrata<br/>Entrance animation; niente volo con Riduci movimento"]
+    I --> K
     F --> J["In background: recuperi dei salvataggi, installazioni in attesa,<br/>scansione Steam se attivo, controllo engine se attivo, aggiornamenti"]
 ```
 
@@ -32,6 +34,8 @@ Punti fissi:
 - Gli store si costruiscono una volta sola, prima della shell.
 - Un archivio illeggibile non diventa mai una libreria vuota.
 - La Dev legge e scrive solo nel suo profilo.
+- La cartella Game files ricordata resta una preferenza del selettore: l'avvio non ne enumera i sorgenti.
+- Menu e dialoghi nativi hanno precedenza sul routing della shell: `nativeDialogOwnsInput` ferma i comandi del controller anche se un benvenuto, Setup o dialogo dell'app è già aperto sotto.
 
 ## 2. Dal disco alla libreria
 
@@ -94,7 +98,7 @@ Arcane non scrive mai i file di Steam e non apre l'app del gioco direttamente. D
 
 ```mermaid
 flowchart TD
-    A["AddGameView: file o cartelle"] --> B["SourceCatalog · ExtractedSourceCatalog · NUPSourceCatalog<br/>base, update, DLC"]
+    A["AddGameView: scelta esplicita di file o cartelle<br/>il selettore ricorda Game files"] --> B["SourceCatalog · ExtractedSourceCatalog · NUPSourceCatalog<br/>base, update, DLC"]
     B --> C["SourceSelection: titolo e versioni scelte"]
     C --> D["KeyCheck (se le sorgenti sono cifrate)"]
     D --> E["Review: GameAppDestination, GameRuntimeConfig.forReview"]

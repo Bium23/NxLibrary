@@ -10,6 +10,7 @@ import os
 import struct
 import subprocess
 import tempfile
+import re
 
 ROOT = Path(__file__).resolve().parents[2]
 BIN = ROOT / '.build/debug'
@@ -80,6 +81,9 @@ final class ModsHost { var localMods: Int? }
     var spotlight = SpotlightState(focus: .actions)
     var showSetupCheck = false
     var isGameOptionsOpen = false
+    var alertMessage: String?
+    var gameToClose: Int?
+    var gameToRemove: Int?
     var launchOverlay: Int?
     var isBuilding = false
     var catalogBuildRecoveries: [Int] = []
@@ -108,17 +112,27 @@ final class ModsHost { var localMods: Int? }
     // ACTUAL_SCROLL
 }
 
-enum Route { case library, collection, other }
 final class Router {
-    var route = Route.library
-    var isIntroShowing = false
+    var route = AppRoute.library
     var isScreenshotViewerOpen = false
     var isSearchPresented = false
     var isMenuPresented = false
+    func openSettings(_ section: SettingsSection) { route = .settings(section) }
 }
 final class WindowState { var attachedSheet: Int?; var isSheet = false }
-final class ApplicationState { var modalWindow: Int?; var keyWindow: WindowState? }
+final class ApplicationState {
+    var modalWindow: Int?
+    var keyWindow: WindowState?
+    var mainWindow: WindowState?
+}
 let NSApp = ApplicationState()
+final class NativeMenus { var isTracking = false }
+@MainActor final class GameControllerService {
+    static let shared = GameControllerService()
+    var onAction: ((GamepadAction) -> Void)?
+}
+@MainActor final class InputRecorder { var actions: [GamepadAction] = [] }
+// ACTUAL_ACTION_NAMES
 @MainActor struct SteamPlayCoordinator {
     static let shared = Self()
     func canPlay(_ game: CatalogGame) -> Bool { true }
@@ -127,9 +141,27 @@ let NSApp = ApplicationState()
 @MainActor final class MenuHost {
     let router = Router()
     let viewModel = ViewModel()
+    let nativeMenus = NativeMenus()
     var isCloseGameOpen = false
+    var showsWelcome = false
+    var showsSettingsNotice = false
+    var showsInstallFailure = false
+    var showsUpdateOffer = false
+    var dialogActions: [GamepadAction] = []
     var isHomeRoute: Bool { router.route == .library || router.route == .collection }
     func availability() -> NativeMenuAvailability { nativeMenuAvailability }
+    func connectController() {
+        let viewModel = viewModel
+        let router = router
+        // ACTUAL_CONTROLLER
+    }
+    func settingsNoticeInput(_ action: GamepadAction) { dialogActions.append(action) }
+    func installFailureInput(_ action: GamepadAction) { dialogActions.append(action) }
+    func closeGameInput(_ action: GamepadAction) { dialogActions.append(action) }
+    func removeGameInput(_ action: GamepadAction) { dialogActions.append(action) }
+    func updateOfferInput(_ action: GamepadAction) { dialogActions.append(action) }
+    func menuInput(_ action: GamepadAction) { dialogActions.append(action) }
+    // ACTUAL_DIALOG
     // ACTUAL_MENU
 }
 
@@ -170,7 +202,7 @@ let NSApp = ApplicationState()
         let overlays: [(MenuHost, Bool) -> Void] = [
             { $0.router.isSearchPresented = $1 }, { $0.router.isScreenshotViewerOpen = $1 },
             { $0.viewModel.isGameOptionsOpen = $1 }, { $0.router.isMenuPresented = $1 },
-            { $0.router.isIntroShowing = $1 }, { $0.viewModel.showSetupCheck = $1 },
+            { $0.viewModel.showSetupCheck = $1 },
             { $0.isCloseGameOpen = $1 }, { $0.viewModel.launchOverlay = $1 ? 1 : nil }
         ]
         for (index, overlay) in overlays.enumerated() {
@@ -182,8 +214,61 @@ let NSApp = ApplicationState()
         require(menu.availability().details, "Steam Details must remain available in Spotlight")
         menu.router.route = .collection
         require(!menu.availability().details, "Steam must not acquire a separate Details screen in Collection")
+
+        let input = MenuHost()
+        input.connectController()
+        let received = InputRecorder()
+        let watch = NotificationCenter.default.addObserver(forName: .nxSpotlightGamepadAction,
+                                                           object: nil, queue: nil) { note in
+            MainActor.assumeIsolated {
+                if let action = note.object as? GamepadAction { received.actions.append(action) }
+            }
+        }
+        defer { NotificationCenter.default.removeObserver(watch); GameControllerService.shared.onAction = nil }
+        GameControllerService.shared.onAction?(.confirm)
+        require(received.actions == [.confirm], "An uncovered library must receive controller actions")
+        received.actions = []
+        let blockers: [(String, (Bool) -> Void)] = [
+            ("pending alert", { input.viewModel.alertMessage = $0 ? "Fixture alert" : nil }),
+            ("modal dialog", { NSApp.modalWindow = $0 ? 1 : nil }),
+            ("key sheet", { NSApp.keyWindow = $0 ? WindowState() : nil; NSApp.keyWindow?.isSheet = $0 }),
+            ("sheet on key window", { NSApp.keyWindow = $0 ? WindowState() : nil; NSApp.keyWindow?.attachedSheet = $0 ? 1 : nil }),
+            ("sheet on main window, no key window", { NSApp.mainWindow = $0 ? WindowState() : nil; NSApp.mainWindow?.attachedSheet = $0 ? 1 : nil }),
+            ("native menu", { input.nativeMenus.isTracking = $0 })
+        ]
+        for (name, block) in blockers {
+            block(true)
+            for action: GamepadAction in [.navigateRight, .confirm, .cancel, .menu, .menuHold] {
+                GameControllerService.shared.onAction?(action)
+            }
+            require(received.actions.isEmpty && input.router.route == .library && !input.router.isMenuPresented,
+                    "Controller must not navigate or launch underneath \(name)")
+            if name != "native menu" {
+                require(!input.availability().general, "Native menu commands must yield to \(name)")
+            }
+            // An internal update confirmation is also below the native window.
+            input.showsUpdateOffer = true
+            input.isCloseGameOpen = true
+            GameControllerService.shared.onAction?(.confirm)
+            require(input.dialogActions.isEmpty, "The update dialog must not receive input underneath \(name)")
+            input.showsUpdateOffer = false
+            input.isCloseGameOpen = false
+            block(false)
+            input.router.route = .library
+            input.router.isMenuPresented = false
+            received.actions = []
+            GameControllerService.shared.onAction?(.navigateLeft)
+            require(received.actions == [.navigateLeft], "Closing \(name) must restore fresh input without replaying blocked actions")
+            received.actions = []
+            input.dialogActions = []
+        }
+        input.showsUpdateOffer = true
+        input.isCloseGameOpen = true
+        GameControllerService.shared.onAction?(.confirm)
+        require(input.dialogActions == [.confirm] && received.actions.isEmpty,
+                "An internal update dialog must still receive input when no native window is open")
         if failures > 0 { exit(1) }
-        print("Actual app review checks passed: achievement startup, logo platform, wheel focus and overlay menu gating.")
+        print("Actual app review checks passed: achievement startup, logo platform, wheel focus, native dialogs and input routing.")
     }
 }
 '''
@@ -194,6 +279,14 @@ host = host.replace('// ACTUAL_AVAILABILITY_TYPE', declaration(
     'Sources/NXLibrary/Services/NativeMenuCommands.swift', 'struct NativeMenuAvailability'))
 host = host.replace('// ACTUAL_MENU', declaration(
     'Sources/NXLibrary/Views/Shell/AppShellView.swift', '    private var nativeMenuAvailability:'))
+host = host.replace('// ACTUAL_DIALOG', declaration(
+    'Sources/NXLibrary/Views/Shell/AppShellView.swift', '    private var nativeDialogOwnsInput:'))
+controller = declaration('Sources/NXLibrary/Views/Shell/AppShellView.swift',
+                         '        GameControllerService.shared.onAction =')
+host = host.replace('// ACTUAL_CONTROLLER', controller.replace('[weak viewModel, weak router]', '[self, weak viewModel, weak router]'))
+names = sorted(set(re.findall(r'name: \.(nx\w+)', controller)))
+host = host.replace('// ACTUAL_ACTION_NAMES', 'extension Notification.Name {\n' + '\n'.join(
+    f'    static let {name} = Notification.Name("{name}")' for name in names) + '\n}')
 
 with tempfile.TemporaryDirectory(prefix='catalog-review-check-') as folder:
     scratch = Path(folder)
@@ -211,6 +304,7 @@ with tempfile.TemporaryDirectory(prefix='catalog-review-check-') as folder:
     subprocess.run(['xcrun', 'swiftc', '-parse-as-library', '-I', str(BIN), str(swift),
                     str(ROOT / 'Sources/NXLibrary/Services/SteamAchievementsStore.swift'),
                     str(ROOT / 'Sources/NXLibrary/Views/Spotlight/GameArtLoader.swift'),
+                    str(ROOT / 'Sources/NXLibrary/Models/GamepadType.swift'),
                     str(BIN / 'NXLibraryCore.o'), '-o', str(executable)], cwd=ROOT, check=True)
     subprocess.run([str(executable), str(scratch)], check=True,
                    env=dict(os.environ, PACKAGE_RESOURCE_BUNDLE_PATH=str(BIN)))

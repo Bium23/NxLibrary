@@ -122,13 +122,6 @@ final class MoonlightEngine: @unchecked Sendable {
         encoder.endEncoding()
     }
 
-    /// Renders one frame into the layer's next drawable and presents it. Safe
-    /// from any thread: the render thread while moving, the main thread otherwise.
-    func render(into layer: CAMetalLayer, uniforms: MoonlightUniforms) {
-        guard let drawable = layer.nextDrawable() else { return }
-        render(into: drawable, uniforms: uniforms)
-    }
-
     /// Renders one frame into a drawable the caller already has (a `CAMetalDisplayLink` update) and presents it.
     func render(into drawable: CAMetalDrawable, uniforms: MoonlightUniforms) {
         guard let buffer = queue.makeCommandBuffer() else { return }
@@ -465,7 +458,24 @@ final class MoonlightLayerView: NSView {
         let breath = Float(0.5 + 0.5 * sin(2 * .pi * clock / MoonlightEngine.breathPeriod))
         let uniforms = MoonlightEngine.uniforms(width: Int(size.width), height: Int(size.height),
                                                 time: Float(clock), breath: breath, colors: colors)
-        if let drawable { engine.render(into: drawable, uniforms: uniforms) } else { engine.render(into: metalLayer, uniforms: uniforms) }
+        // Both display-link paths announce readiness only when an acquired drawable is presented.
+        guard let frame = drawable ?? metalLayer.nextDrawable() else { return }
+        Self.announceFirstFrame(frame)
+        engine.render(into: frame, uniforms: uniforms)
+    }
+
+    /// The first frame any moonlight puts on screen in this launch lets the window show (`LaunchReveal`).
+    private static var firstFrameAnnounced = false
+    private static let firstFrameLock = NSLock()
+
+    private static func announceFirstFrame(_ drawable: CAMetalDrawable) {
+        firstFrameLock.lock()
+        let first = !firstFrameAnnounced
+        firstFrameAnnounced = true
+        firstFrameLock.unlock()
+        guard first else { return }
+        // The handler must be registered before the command buffer presents the drawable.
+        drawable.addPresentedHandler { _ in Task { @MainActor in LaunchReveal.moonlightShown() } }
     }
 }
 

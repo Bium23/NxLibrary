@@ -8,6 +8,9 @@ These changes are implemented in Arcane Dev. Human validation remains pending un
 
 ### Changed
 
+- The app opens on the moving backdrop and brings the first Spotlight library in with growing tiles and a gradual game background. The welcome and Setup share that backdrop during the entrance; fullscreen waits for the window to be drawn. **Entrance animation** replaces the old Intro animation label while keeping its saved value and boot sound. The separate intro and preparation message are removed.
+- Native alerts and file pickers take priority over controller actions as well as the keyboard and menu commands, so actions do not reach the library or an Arcane dialog underneath.
+- The remembered **Game files** folder is kept for the picker without scanning it at launch. Choosing a folder or files in Add game starts the source scan; library refresh continues to discover installed apps.
 - The app is now called **Arcane** in every visible place: window, menus, Settings, About and texts in all six languages. Your library, settings and data stay where they are. The development copy is Arcane Dev.
 - Settings are grouped into **General**, **Library**, **Porting** and **System**. Launch screen, Surprise me, session card and hidden games are in Library → Games; keys, cloud saves and build caches have their own Porting pages; Rumble sits with the other new-game defaults; Console is in System. Every setting keeps its value.
 - Players coming from NX Library see **Welcome to Arcane** once: the new name, what's new, and an offer to add Steam games for Mac when Steam is found and still off.

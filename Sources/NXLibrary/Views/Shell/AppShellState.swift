@@ -1,16 +1,15 @@
 import NXLibraryCore
 
 /// Prepared before the shell enters SwiftUI's view graph. Model startup can
-/// update AppKit and shared observable services; it must not run in a view's
-/// StateObject creation while replacing the already-visible preparation screen.
+/// update AppKit and shared observable services; it must not run during a view's
+/// StateObject creation while the prepared shell enters the view graph.
 @MainActor
 final class AppShellState {
     let settings: AppSettingsStore
     let viewModel: AppViewModel
     let router: AppRouter
     let sources: CatalogSourcesModel
-    /// "Welcome to Arcane" is up from the first frame, under the intro, so the intro fades straight into it
-    /// and the library never shows in between. Decided before save recovery starts; what it raises opens above.
+    /// "Welcome to Arcane" is up from the first frame, so the library never shows before it. Decided before save recovery starts; what it raises opens above.
     let opensWithWelcome: Bool
 
     init(settings: AppSettingsStore, catalog: CatalogDocument, repository: CatalogRepository) {
@@ -28,7 +27,6 @@ final class AppShellState {
         }
         let router = AppRouter()
         router.setInitialRoute(AppRouter.initialRoute(for: settings.settings.startOn, last: settings.settings.lastHome))
-        router.isIntroShowing = settings.settings.introAnimation
         self.router = router
         opensWithWelcome = ArcaneWelcome.shouldShow(setupCompleted: model.setupCompleted,
                                                     shown: settings.settings.welcomeArcaneShown,

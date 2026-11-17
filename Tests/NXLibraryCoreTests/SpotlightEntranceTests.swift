@@ -13,28 +13,28 @@ final class SpotlightEntranceTests: XCTestCase {
         }
     }
 
-    func testSeleneValuesForTheFirstTile() throws {
+    func testFirstTileFliesInFromTheCentreWhileItGrows() throws {
         let flight = try XCTUnwrap(SpotlightEntrance.flights(tiles: [80...254], rowWidth: row).first ?? nil)
-        XCTAssertEqual(flight.delay, 0.30, accuracy: 0.0001)
+        XCTAssertEqual(flight.delay, 0.6, accuracy: 0.0001)
         XCTAssertEqual(flight.fromScale, 0.35, accuracy: 0.0001)
         XCTAssertEqual(flight.fromY, -18, accuracy: 0.0001)
-        XCTAssertEqual(flight.duration, 0.65, accuracy: 0.0001)
-        XCTAssertEqual(flight.fadeDuration, 0.35, accuracy: 0.0001)
+        XCTAssertEqual(flight.duration, 0.9, accuracy: 0.0001)
+        XCTAssertEqual(flight.fadeDuration, 0.5, accuracy: 0.0001)
         XCTAssertEqual(flight.fromX, (880 - 167) * 0.75, accuracy: 0.0001)
         XCTAssertFalse(flight.fadesOnly)
     }
 
-    func testDelayGrowsByFortyFiveMillisecondsPerFlownTile() throws {
+    func testDelayGrowsBySixtyMillisecondsPerFlownTile() throws {
         let flights = SpotlightEntrance.flights(tiles: tiles(3), rowWidth: row)
         let third = try XCTUnwrap(flights[2])
-        XCTAssertEqual(third.delay, 0.39, accuracy: 0.0001)
+        XCTAssertEqual(third.delay, 0.72, accuracy: 0.0001)
     }
 
     func testTilesLeftOfTheStageDoNotFly() throws {
         let flights = SpotlightEntrance.flights(tiles: [(-300)...(-126), 80...254], rowWidth: row)
         XCTAssertNil(flights[0])
         let first = try XCTUnwrap(flights[1])
-        XCTAssertEqual(first.delay, 0.30, accuracy: 0.0001, "a tile off the left edge does not count")
+        XCTAssertEqual(first.delay, 0.6, accuracy: 0.0001, "a tile off the left edge does not count")
     }
 
     func testTilesPastTheRightEdgeOnlyFade() throws {
@@ -42,7 +42,7 @@ final class SpotlightEntranceTests: XCTestCase {
         let flights = SpotlightEntrance.flights(tiles: tiles(2, from: 1400) + tiles(14, from: 1800), rowWidth: row)
         let firstLate = try XCTUnwrap(flights[2])
         XCTAssertTrue(firstLate.fadesOnly)
-        XCTAssertEqual(firstLate.delay, 0.30 + 2 * 0.045, accuracy: 0.0001)
+        XCTAssertEqual(firstLate.delay, 0.6 + 2 * 0.06, accuracy: 0.0001)
         XCTAssertEqual(firstLate.fromScale, 1)
         XCTAssertEqual(firstLate.fromX, 0)
         XCTAssertEqual(firstLate.fromY, 0)
@@ -55,15 +55,17 @@ final class SpotlightEntranceTests: XCTestCase {
 
     func testDurationEndsWithTheLastLanding() {
         let flights = SpotlightEntrance.flights(tiles: tiles(10, from: 0), rowWidth: 2000)
-        XCTAssertEqual(SpotlightEntrance.duration(of: flights), 0.30 + 9 * 0.045 + 0.65, accuracy: 0.0001)
+        XCTAssertEqual(SpotlightEntrance.duration(of: flights), 0.6 + 9 * 0.06 + 0.9, accuracy: 0.0001)
         XCTAssertEqual(SpotlightEntrance.duration(of: []), 0)
     }
 
-    func testPlaysOnlyOnFirstSpotlightWithoutReduceMotion() {
-        XCTAssertTrue(SpotlightEntrance.plays(isFirstHome: true, route: .library, reduceMotion: false))
-        XCTAssertFalse(SpotlightEntrance.plays(isFirstHome: true, route: .collection, reduceMotion: false))
-        XCTAssertFalse(SpotlightEntrance.plays(isFirstHome: true, route: .library, reduceMotion: true))
-        XCTAssertFalse(SpotlightEntrance.plays(isFirstHome: false, route: .library, reduceMotion: false))
+    func testPlaysOnlyOnFirstSpotlightWithTheSwitchOnAndWithoutReduceMotion() {
+        XCTAssertTrue(SpotlightEntrance.plays(isFirstHome: true, route: .library, reduceMotion: false, enabled: true))
+        XCTAssertFalse(SpotlightEntrance.plays(isFirstHome: true, route: .collection, reduceMotion: false, enabled: true))
+        XCTAssertFalse(SpotlightEntrance.plays(isFirstHome: true, route: .library, reduceMotion: true, enabled: true))
+        XCTAssertFalse(SpotlightEntrance.plays(isFirstHome: false, route: .library, reduceMotion: false, enabled: true))
+        XCTAssertFalse(SpotlightEntrance.plays(isFirstHome: true, route: .library, reduceMotion: false, enabled: false),
+                       "Settings → Start-up → Entrance off: the library shows at once")
     }
 
     func testInputLandsAWaitingOrPlayingEntrance() {
@@ -91,11 +93,57 @@ final class SpotlightEntranceTests: XCTestCase {
         XCTAssertEqual(phase, .playing)
     }
 
-    func testInfoAndBackgroundUseSeleneTimes() {
-        XCTAssertEqual(SpotlightEntrance.backgroundDuration, 0.9)
-        XCTAssertEqual(SpotlightEntrance.infoDelay, 0.9)
-        XCTAssertEqual(SpotlightEntrance.infoFade, 0.5)
+    func testABreathOnTheMoonlightThenASlowBackground() {
+        XCTAssertEqual(SpotlightEntrance.hold, 0.5)
+        XCTAssertEqual(SpotlightEntrance.backgroundDuration, 1.4)
+        XCTAssertEqual(SpotlightEntrance.infoDelay, 1.3)
+        XCTAssertEqual(SpotlightEntrance.infoFade, 0.7)
         XCTAssertEqual(SpotlightEntrance.infoLift, 40)
-        XCTAssertEqual(SpotlightEntrance.infoLiftDuration, 0.55)
+        XCTAssertEqual(SpotlightEntrance.infoLiftDuration, 0.8)
+        XCTAssertEqual(SpotlightEntrance.titleDelay, 2.0)
+    }
+    func testFlightEasesOutAndFadesOnItsOwnClock() throws {
+        let flight = try XCTUnwrap(SpotlightEntrance.flights(tiles: [80...254], rowWidth: row)[0])
+        XCTAssertEqual(flight.move(at: 0), 0)
+        XCTAssertEqual(flight.move(at: 0.45), 1 - 0.125, accuracy: 0.0001, "cubic out at half time")
+        XCTAssertEqual(flight.move(at: 0.9), 1)
+        XCTAssertEqual(flight.move(at: 2), 1)
+        XCTAssertEqual(flight.opacity(at: 0.25), 0.5, accuracy: 0.0001, "linear fade")
+        XCTAssertEqual(flight.opacity(at: 0.5), 1)
+        XCTAssertEqual(flight.length, 0.9)
+    }
+
+    func testFadeOnlyFlightNeverMoves() throws {
+        let flights = SpotlightEntrance.flights(tiles: [1800...1974], rowWidth: row)
+        let late = try XCTUnwrap(flights[0])
+        XCTAssertEqual(late.move(at: 0), 1)
+        XCTAssertEqual(late.length, 0.4)
+    }
+
+    func testInfoRisesFortyUnitsAfterTheBackground() {
+        let info = SpotlightEntrance.info
+        XCTAssertEqual(info.delay, 1.3)
+        XCTAssertEqual(info.fromY, 40)
+        XCTAssertEqual(info.fromX, 0)
+        XCTAssertEqual(info.fromScale, 1)
+        XCTAssertEqual(info.duration, 0.8)
+        XCTAssertEqual(info.fadeDuration, 0.7)
+    }
+
+    func testEmptyMessageComesJustAfterTheLastTile() {
+        let flights = SpotlightEntrance.flights(tiles: tiles(2), rowWidth: row)
+        let message = SpotlightEntrance.message(after: flights)
+        XCTAssertEqual(message.delay, 0.6 + 2 * 0.06 + 0.25, accuracy: 0.0001)
+        XCTAssertTrue(message.fadesOnly)
+        XCTAssertEqual(SpotlightEntrance.message(after: []).delay, 0.85, accuracy: 0.0001)
+    }
+
+    func testEntranceEndsWhenEverythingIsIn() {
+        // Ten tiles land at 2.04 s; the info is in at 2.1 s.
+        let flights = SpotlightEntrance.flights(tiles: tiles(10, from: 0), rowWidth: 2000)
+        XCTAssertEqual(SpotlightEntrance.end(of: flights), 2.1, accuracy: 0.0001)
+        // Twenty tiles land at 0.6 + 19 × 0.06 + 0.9 = 2.64 s.
+        let many = SpotlightEntrance.flights(tiles: tiles(20, from: 0), rowWidth: 4000)
+        XCTAssertEqual(SpotlightEntrance.end(of: many), 2.64, accuracy: 0.0001)
     }
 }

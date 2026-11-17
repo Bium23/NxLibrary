@@ -82,35 +82,39 @@ struct DevelopmentStartupView: View {
                     .onAppear {
                         Logger(subsystem: "local.nxlibrary", category: "Startup").notice("Library view appeared")
                     }
-            } else {
+            } else if let failure = startup.failure {
                 VStack(spacing: 20) {
                     if startup.working { ProgressView().controlSize(.large) }
-                    Text(L10n.text(startup.failure == nil ? "Preparing your library" : "Library unavailable", context: context))
+                    Text(L10n.text("Library unavailable", context: context))
                         .font(.system(size: 28, weight: .semibold))
-                    Text(startup.failure ?? L10n.text("Preparing a separate copy of your launcher data. Games stay in their current locations.", context: context))
+                    Text(failure)
                         .font(.system(size: 17)).multilineTextAlignment(.center)
-                    if startup.failure != nil {
-                        if let candidate = startup.recovery {
-                            Button(L10n.count("Restore backup (%lld games)", candidate.gameCount, context: context)) {
-                                Task { await startup.restoreBackup() }
-                            }.keyboardShortcut("r", modifiers: [.command, .shift])
-                                .disabled(startup.working)
-                        }
-                        HStack(spacing: 24) {
-                            Button(L10n.text("Close", context: context)) { NSApplication.shared.terminate(nil) }
-                                .keyboardShortcut(.cancelAction)
-                            Button(L10n.text("Open library folder", context: context)) { NSWorkspace.shared.open(AppData.supportRoot) }
-                                .keyboardShortcut("o", modifiers: [.command])
-                            Button(L10n.text("Retry", context: context)) { Task { await startup.prepare() } }
-                                .keyboardShortcut(.defaultAction)
-                        }.disabled(startup.working)
+                    if let candidate = startup.recovery {
+                        Button(L10n.count("Restore backup (%lld games)", candidate.gameCount, context: context)) {
+                            Task { await startup.restoreBackup() }
+                        }.keyboardShortcut("r", modifiers: [.command, .shift])
+                            .disabled(startup.working)
                     }
+                    HStack(spacing: 24) {
+                        Button(L10n.text("Close", context: context)) { NSApplication.shared.terminate(nil) }
+                            .keyboardShortcut(.cancelAction)
+                        Button(L10n.text("Open library folder", context: context)) { NSWorkspace.shared.open(AppData.supportRoot) }
+                            .keyboardShortcut("o", modifiers: [.command])
+                        Button(L10n.text("Retry", context: context)) { Task { await startup.prepare() } }
+                            .keyboardShortcut(.defaultAction)
+                    }.disabled(startup.working)
                 }
                 .foregroundColor(.white)
                 .padding(48).frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color(red: 0.08, green: 0.09, blue: 0.12))
+                .onAppear { LaunchReveal.show() }
+            } else {
+                // While the profile is prepared (a fraction of a second) the window is still transparent
+                // (`LaunchReveal`) and stays on the scrim, with no words or spinner.
+                SeleneTheme.scrim.ignoresSafeArea()
             }
         }
+        .background(LaunchRevealHold())
         .task { await startup.prepare() }
     }
 }

@@ -82,7 +82,6 @@ extension CollectionView {
             guard !router.isMenuPresented,
                   !NativeMenuCommands.shared.isTracking,
                   !router.isSearchPresented,
-                  !router.isIntroShowing,
                   router.route == .collection,
                   viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
                   !viewModel.isGameOptionsOpen,

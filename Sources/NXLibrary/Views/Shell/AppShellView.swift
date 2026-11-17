@@ -62,17 +62,17 @@ public struct AppShellView: View {
         viewModel.gameToClose != nil || viewModel.gameToRemove != nil || showsUpdateOffer || showsInstallFailure || showsSettingsNotice
     }
     private var showsInstallFailure: Bool {
-        viewModel.gameWithInstallFailure != nil && !router.isIntroShowing && !viewModel.showSetupCheck
+        viewModel.gameWithInstallFailure != nil && !viewModel.showSetupCheck
             && viewModel.launchOverlay == nil && viewModel.gameToClose == nil && viewModel.gameToRemove == nil
     }
-    /// The update dialog waits for the intro and the Setup check.
+    /// The update dialog waits for the Setup check.
     private var showsUpdateOffer: Bool {
-        (updater.offer != nil || updater.isCheckPresented) && !router.isIntroShowing && !viewModel.showSetupCheck
+        (updater.offer != nil || updater.isCheckPresented) && !viewModel.showSetupCheck
             && !showsInstallFailure && viewModel.gameToClose == nil && viewModel.gameToRemove == nil
             && viewModel.launchOverlay == nil && !router.isScreenshotViewerOpen
     }
     private var showsSettingsNotice: Bool {
-        viewModel.settingsNotice != nil && !router.isIntroShowing && !viewModel.showSetupCheck
+        viewModel.settingsNotice != nil && !viewModel.showSetupCheck
             && !router.isScreenshotViewerOpen && viewModel.launchOverlay == nil
             && viewModel.gameToClose == nil && viewModel.gameToRemove == nil
             && !showsInstallFailure && !showsUpdateOffer
@@ -82,11 +82,18 @@ public struct AppShellView: View {
         settings.settings.reduceMotion || accessibilityReduceMotion
     }
 
+    /// Native alerts and file pickers own input, including while their parent has no key window.
+    /// Check at delivery: controller actions under a dialog are dropped, never replayed after it closes.
+    private var nativeDialogOwnsInput: Bool {
+        viewModel.alertMessage != nil || NSApp.modalWindow != nil
+            || NSApp.keyWindow?.isSheet == true || NSApp.keyWindow?.attachedSheet != nil
+            || NSApp.mainWindow?.attachedSheet != nil
+    }
+
     private var nativeMenuAvailability: NativeMenuAvailability {
-        let general = !router.isIntroShowing && !viewModel.showSetupCheck && !showsWelcome
+        let general = !viewModel.showSetupCheck && !showsWelcome
             && !isCloseGameOpen && !router.isScreenshotViewerOpen && !router.isSearchPresented
-            && !viewModel.isGameOptionsOpen && viewModel.launchOverlay == nil && NSApp.modalWindow == nil
-            && NSApp.keyWindow?.attachedSheet == nil && NSApp.keyWindow?.isSheet != true
+            && !viewModel.isGameOptionsOpen && viewModel.launchOverlay == nil && !nativeDialogOwnsInput
         let game = general && !router.isMenuPresented ? viewModel.currentFocusedGame : nil
         let focused = general && !router.isMenuPresented ? viewModel.currentFocusedCatalogGame : nil
         let steam = focused?.integration == .steam ? focused : nil
@@ -104,16 +111,10 @@ public struct AppShellView: View {
         return viewModel.catalogGames.first { $0.id == id && $0.integration == .steam }.map(PlayedGame.steam)
     }
 
-    @ViewBuilder private var introLayer: some View {
-        if router.isIntroShowing {
-            IntroView(settings: settings, reduceMotion: reduceMotion) { router.isIntroShowing = false }
-        }
-    }
-
     /// The launch screen, in its own window over every app and Space (`LaunchCoverWindow`). Its window has its own
     /// SwiftUI root: the canvas and the locale are given to it here.
     private var launchCover: some View {
-        LaunchCoverWindow(state: router.isIntroShowing ? nil : viewModel.launchOverlay) { state in
+        LaunchCoverWindow(state: viewModel.launchOverlay) { state in
             LaunchScreenView(state: state, viewModel: viewModel, artwork: artwork,
                              settings: settings.settings, reduceMotion: reduceMotion)
                 .id(state.game.id)
@@ -184,6 +185,7 @@ public struct AppShellView: View {
             if showsWelcome {
                 ArcaneWelcomeView(steamEnabled: sources.configuration.isEnabled,
                                   appsFolder: viewModel.gameAppsFolder,
+                                  drawsBackdrop: !viewModel.sharesLaunchBackdrop,
                                   onAddSteam: {
                                       sources.configure(enabled: true, root: CatalogSourcesModel.defaultSteamRoot)
                                   },
@@ -274,13 +276,14 @@ public struct AppShellView: View {
         layers
         .allowsHitTesting(!nativeMenus.isTracking)
         .background(FullscreenCursorView())
-        .background(StartupWindowView(fullscreen: settings.settings.startInFullscreen))
+        .background(StartupWindowView(fullscreen: settings.settings.startInFullscreen) {
+            viewModel.isWindowSettling = false
+        })
         .focusedSceneValue(\.nxMenuAvailability, nativeMenuAvailability)
         .overlay {
             SessionCardLayer(presenter: sessionCard, game: playedGame,
                              metadata: viewModel.storeMetadata, artwork: artwork)
         }
-        .overlay { introLayer }
         .background { launchCover }
         .modifier(SoundCueHooks(router: router, viewModel: viewModel))
         // Inside the canvas root so the sheet inherits the window's canvas units.
@@ -614,6 +617,8 @@ public struct AppShellView: View {
         viewModel.playSessionStore = playSessions
         viewModel.settingsStore = settings
         SoundEffectService.shared.bind(to: settings)
+        // The opening's boot cue, with Spotlight's entrance (Settings → Start-up → Entrance animation).
+        if settings.settings.introAnimation { SoundEffectService.shared.play(.boot) }
         artwork.trimCache()
         viewModel.refreshBoxArtIndex()
         if settings.settings.checkEngineAtLaunch && !AppData.profile.isDevelopment { SetupCheckModel.checkAtLaunch(viewModel: viewModel) }
@@ -671,12 +676,7 @@ public struct AppShellView: View {
         installGestureKeyMonitor()
         GameControllerService.shared.onAction = { [weak viewModel, weak router] action in
             guard let viewModel, let router else { return }
-            guard !nativeMenus.isTracking else { return }
-            if router.isIntroShowing {
-                // Any controller input skips the intro.
-                NotificationCenter.default.post(name: .nxIntroSkip, object: nil)
-                return
-            }
+            guard !nativeMenus.isTracking, !nativeDialogOwnsInput else { return }
             if viewModel.showSetupCheck {
                 // The Setup check owns the controller; Menu does nothing there (as in Selene).
                 NotificationCenter.default.post(name: .nxSetupCheckGamepadAction, object: action)
@@ -781,9 +781,9 @@ public struct AppShellView: View {
         presentLegacyNotice()
     }
 
-    /// Anything that comes before the welcome: intro, Setup, dialogs, a launch, the screenshot viewer.
+    /// Anything that comes before the welcome: Setup, dialogs, a launch, the screenshot viewer.
     private var welcomeBlocked: Bool {
-        router.isIntroShowing || viewModel.showSetupCheck || showsSettingsNotice || showsInstallFailure
+        viewModel.showSetupCheck || showsSettingsNotice || showsInstallFailure
             || showsUpdateOffer || viewModel.gameToClose != nil || viewModel.gameToRemove != nil
             || viewModel.launchOverlay != nil || router.isScreenshotViewerOpen
     }
@@ -1013,10 +1013,8 @@ public struct AppShellView: View {
             if nativeMenus.isTracking { return event }
             // The screenshot viewer owns the keyboard (its own monitor handles it); no navigating underneath.
             if router.isScreenshotViewerOpen { return event }
-            // The intro's own monitor takes any key as "skip".
-            if router.isIntroShowing { return event }
             // An alert or another window's sheet owns Return and Esc.
-            if viewModel.alertMessage != nil || NSApp.modalWindow != nil
+            if nativeDialogOwnsInput
                 || event.window?.attachedSheet != nil || event.window?.isSheet == true {
                 return event
             }

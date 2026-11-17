@@ -151,8 +151,14 @@ public final class AppViewModel: ObservableObject {
     /// "Welcome to Arcane" is on screen, until its fade has ended: screens' own keyboard monitors let Return and
     /// the arrows go to it, and Spotlight holds its entrance until it has gone.
     @Published var isWelcomeOpen = false
+    /// The window is still taking its launch mode (Start in fullscreen): Spotlight's entrance waits for it, so the
+    /// fullscreen transition never cuts the flight (`StartupWindowObserver`, at most 4 s from attachment).
+    @Published var isWindowSettling = true
     /// A home screen (Spotlight or Collection) has shown since launch: Spotlight's entrance plays only on the first.
     var homeSeen = false
+    /// Spotlight holds its entrance, showing only its moonlight: the welcome and Setup draw their content over that
+    /// moonlight instead of their own, so closing them leaves the same moving moonlight and the entrance follows.
+    @Published var sharesLaunchBackdrop = false
     @Published public var isScanningGameFolder: Bool = false
     @Published public var scanError: String? = nil
     
@@ -550,14 +556,8 @@ public final class AppViewModel: ObservableObject {
         restoreBuildInputs(automatic: true)
         if !AppData.profile.isDevelopment && (startup.checkEngineAtLaunch || !didCompleteSetup) { refreshCompatibility() }
         
-        // Restore saved game folder if it exists
-        if let savedGamePath = AppData.preferences.string(forKey: StorageKeys.savedGameFolder) {
-            if !savedGamePath.isEmpty, savedGamePath != "/" {
-                restoringGameFolder = !startup.refreshLibraryAtLaunch
-                self.selectedGameFolder = URL(fileURLWithPath: savedGamePath)
-                restoringGameFolder = false
-            }
-        }
+        // Keep Game files as a picker preference, not an active Add game draft.
+        // Assigning selectedGameFolder scans it; launch refresh only concerns installed apps.
         
         recoverSavesAtStartup()
         if !setupCompleted && firstRunSetup.page == .games { prepareInitialGameAppsFolder() }
@@ -2110,7 +2110,7 @@ public final class AppViewModel: ObservableObject {
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
-        panel.directoryURL = selectedGameFolder
+        panel.directoryURL = selectedGameFolder ?? gameFilesFolder
         panel.prompt = "Choose folder"
         panel.message = GameFoldersCopy.sourcesPickerMessage(extractedFolders: engineSourceCapabilities.extractedFolders)
         

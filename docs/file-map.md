@@ -1,10 +1,10 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 17 novembre 2026. Copertura di **693 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 17 novembre 2026. Copertura di **696 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
-Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Application Support sono descritti nella guida. Per i piani datati, leggere anche le note finali di esecuzione e la specifica della funzionalità interessata.
+Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Application Support sono descritti nella guida.
 
 ## Indice
 
@@ -64,19 +64,20 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/NXLibraryApp.swift](../Sources/NXLibrary/NXLibraryApp.swift) | Punto @main, finestra SwiftUI, notifiche interne e comandi della barra menu. |
 | [Sources/NXLibrary/AppDelegate.swift](../Sources/NXLibrary/AppDelegate.swift) | Registra Material Icons, gestisce il ciclo di chiusura e riapertura della finestra e, alla chiusura, dà a una copia release il nome `Arcane.app`. |
 | [Sources/NXLibrary/Views/MainView.swift](../Sources/NXLibrary/Views/MainView.swift) | Presenta AppShellView come contenuto della finestra principale. |
-| [Sources/NXLibrary/Views/Shell/AppShellView.swift](../Sources/NXLibrary/Views/Shell/AppShellView.swift) | Possiede lo stato condiviso, compone schermate e overlay (compreso il benvenuto in Arcane) e assegna priorità all’input. |
+| [Sources/NXLibrary/Views/Shell/AppShellView.swift](../Sources/NXLibrary/Views/Shell/AppShellView.swift) | Possiede lo stato condiviso, compone schermate e overlay (compreso il benvenuto in Arcane) e assegna priorità all’input; `nativeDialogOwnsInput` sospende controller, tastiera e comandi dei menu sotto alert e selettori nativi. |
 | [Sources/NXLibrary/Views/Shell/FullscreenCursorView.swift](../Sources/NXLibrary/Views/Shell/FullscreenCursorView.swift) | Gestisce il cursore inattivo nella sola finestra fullscreen del launcher, sospendendolo per pannelli e menu e ripristinando gli eventi al distacco. |
-| [Sources/NXLibrary/Views/Shell/StartupWindowView.swift](../Sources/NXLibrary/Views/Shell/StartupWindowView.swift) | Applica una sola volta alla finestra pronta la preferenza fullscreen letta al lancio. |
+| [Sources/NXLibrary/Views/Shell/StartupWindowView.swift](../Sources/NXLibrary/Views/Shell/StartupWindowView.swift) | Applica il fullscreen dopo la comparsa della finestra e segnala fine transizione o scadenza alla fase dell’entrata. |
 | [Sources/NXLibrary/Views/Shell/MenuOverlayView.swift](../Sources/NXLibrary/Views/Shell/MenuOverlayView.swift) | Disegna il control center con azioni, focus e sottomenu Power. |
 | [Sources/NXLibraryCore/NXLibraryCore.swift](../Sources/NXLibraryCore/NXLibraryCore.swift) | Espone la versione nominale del modulo Core. |
-| [DevelopmentStartupView.swift](../Sources/NXLibrary/Views/Launch/DevelopmentStartupView.swift) | Avvio asincrono, errore recuperabile e costruzione della shell dopo l'importazione. |
+| [LaunchReveal.swift](../Sources/NXLibrary/Views/Launch/LaunchReveal.swift) | Rende visibile la finestra al primo frame del moonlight, con dissolvenza e scadenza, poi consente il fullscreen; integra il bootstrap con un NSView non interattivo. |
+| [DevelopmentStartupView.swift](../Sources/NXLibrary/Views/Launch/DevelopmentStartupView.swift) | Avvio asincrono senza schermata di preparazione, recupero degli errori e costruzione della shell dopo l’importazione. |
 | [AppShellState.swift](../Sources/NXLibrary/Views/Shell/AppShellState.swift) | Prepara coordinatore, router, fonti, lingua e tema prima dell’inserimento della libreria nel grafo SwiftUI. |
 
 ## Coordinamento applicativo
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibrary/ViewModels/AppViewModel.swift](../Sources/NXLibrary/ViewModels/AppViewModel.swift) | Coordina libreria, sorgenti, ambiente, porting, log, impostazioni dei giochi e lancio. |
+| [Sources/NXLibrary/ViewModels/AppViewModel.swift](../Sources/NXLibrary/ViewModels/AppViewModel.swift) | Coordina libreria, sorgenti, ambiente, porting, log, impostazioni dei giochi e lancio; ricorda Game files per il selettore senza scandirla all'avvio. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Cheats.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Cheats.swift) | Adatta Core e bundle installato al pannello Cheats, alla riga di stato e alla diagnostica. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Mods.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Mods.swift) | Crea lo `ModStore` di un gioco, il valore della riga Mods e le frasi per ogni errore. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Controller.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Controller.swift) | Conserva il contesto di gioco per i comandi e offre il collegamento alla cartella dei save. |
@@ -328,7 +329,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/SpotlightRow.swift](../Sources/NXLibraryCore/Models/SpotlightRow.swift) | Costruisce la sequenza per UUID e salva riordini conservando giochi/fonti/card temporaneamente nascosti; Surprise mantiene il proprio contratto nxnative. |
 | [Sources/NXLibraryCore/Models/SpotlightRowGeometry.swift](../Sources/NXLibraryCore/Models/SpotlightRowGeometry.swift) | Posti delle tessere nella riga, camera unica che la fa scorrere e finestra delle tessere create; posto, scala e camera lungo lo scorrimento dalla posizione continua della selezione. |
 | [Sources/NXLibraryCore/Models/SpotlightState.swift](../Sources/NXLibraryCore/Models/SpotlightState.swift) | Gestisce selezione, focus (anche la card Achievements), azioni e spostamento delle tile su Spotlight. |
-| [Sources/NXLibraryCore/Models/SpotlightEntrance.swift](../Sources/NXLibraryCore/Models/SpotlightEntrance.swift) | Tempi e partenze dell'entrata di Spotlight come Selene: volo delle tessere, dissolvenza oltre il bordo, sfondo, informazioni, fasi e quando suona. |
+| [Sources/NXLibraryCore/Models/SpotlightEntrance.swift](../Sources/NXLibraryCore/Models/SpotlightEntrance.swift) | Tempi e partenze del volo delle tessere, dissolvenza oltre il bordo, sfondo, informazioni e fasi della prima entrata di Spotlight. |
 | [Sources/NXLibraryCore/Models/ThemePicker.swift](../Sources/NXLibraryCore/Models/ThemePicker.swift) | Gestisce griglia, tab Wallpapers/Live e scelte di sfondo nel selettore temi. |
 | [Sources/NXLibraryCore/Models/WallpaperCatalog.swift](../Sources/NXLibraryCore/Models/WallpaperCatalog.swift) | Elenca wallpaper e video, gruppi, nomi e file delle risorse incluse o importate. |
 | [Sources/NXLibraryCore/Models/WallpaperPlacement.swift](../Sources/NXLibraryCore/Models/WallpaperPlacement.swift) | Decide dove applicare uno sfondo scelto fra schermi principali e Settings. |
@@ -426,7 +427,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 |---|---|
 | [Sources/NXLibrary/Views/Spotlight/SpotlightView.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightView.swift) | Compone home, selezione, filtri, pagina del gioco e stato delle tile. |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightView+Input.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightView+Input.swift) | Traduce input, card, azioni, screenshot e riordino nel modello Spotlight. |
-| [Sources/NXLibrary/Views/Spotlight/SpotlightView+Entrance.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightView+Entrance.swift) | Entrata della prima home: tiene Spotlight nascosta e ferma sotto intro, benvenuto e Setup, aspetta l'arte delle tessere visibili (al massimo 1 s) e la fa atterrare. |
+| [Sources/NXLibrary/Views/Spotlight/SpotlightView+Entrance.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightView+Entrance.swift) | Coordina l’entrata su moonlight condiviso: coperture e fullscreen, pausa, attesa dell’arte, effetti di volo e dissolvenza, atterraggio al primo input. |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightRowView.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightRowView.swift) | Disegna la riga di tile con finestra visibile, focus e titoli; la faccia della card Mods (`ModsCardCover`). |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightTopBar.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightTopBar.swift) | Disegna filtri, prompt dei dorsali e orologio condivisi con Collection. |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightInfoView.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightInfoView.swift) | Mostra logo, Play/Options/Favorite, statistiche e stato di porting del gioco selezionato. |
@@ -484,7 +485,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Sources/NXLibrary/Views/Settings/SettingsSidebar.swift](../Sources/NXLibrary/Views/Settings/SettingsSidebar.swift) | Disegna intestazione e sezioni sotto le intestazioni di gruppo (General, Switch, Steam, System). |
 | [Sources/NXLibrary/Views/Settings/SettingsSectionContent.swift](../Sources/NXLibrary/Views/Settings/SettingsSectionContent.swift) | Instrada il gruppo selezionato e fornisce sottotitoli e formattazioni condivise. |
 | [Sources/NXLibrary/Views/Settings/SettingsSearchSection.swift](../Sources/NXLibrary/Views/Settings/SettingsSearchSection.swift) | Presenta ricerca e Changed, con apertura del gruppo della riga selezionata. |
-| [Sources/NXLibrary/Views/Settings/SettingsStartUpSection.swift](../Sources/NXLibrary/Views/Settings/SettingsStartUpSection.swift) | Espone schermata iniziale, intro, Setup e controlli degli aggiornamenti all’avvio. |
+| [Sources/NXLibrary/Views/Settings/SettingsStartUpSection.swift](../Sources/NXLibrary/Views/Settings/SettingsStartUpSection.swift) | Espone schermata iniziale, animazione d’entrata, Setup e controlli degli aggiornamenti all’avvio. |
 | [Sources/NXLibrary/Views/Settings/SettingsNavigationSection.swift](../Sources/NXLibrary/Views/Settings/SettingsNavigationSection.swift) | Espone le preferenze di navigazione e dei suggerimenti dei tasti. |
 | [Sources/NXLibrary/Views/Settings/SettingsSpotlightSection.swift](../Sources/NXLibrary/Views/Settings/SettingsSpotlightSection.swift) | Espone card, ordine e preferenze della home Spotlight. |
 | [Sources/NXLibrary/Views/Settings/SettingsSoundSection.swift](../Sources/NXLibrary/Views/Settings/SettingsSoundSection.swift) | Espone volume e suoni e importa risorse da una cartella Selene. |
@@ -513,7 +514,6 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Sources/NXLibrary/Views/Setup/FoundGamesSetupView.swift](../Sources/NXLibrary/Views/Setup/FoundGamesSetupView.swift) | Disegna la prima pagina del primo avvio: Steam con interruttore, app già portate, card Porting con la nota "not affiliated" e Open library. |
 | [Sources/NXLibrary/Views/Setup/FoundGamesSetupView+Input.swift](../Sources/NXLibrary/Views/Setup/FoundGamesSetupView+Input.swift) | Gestisce focus, mouse, tastiera e controller della pagina `found`. |
 | [Sources/NXLibrary/Views/Setup/YourGamesSetupView.swift](../Sources/NXLibrary/Views/Setup/YourGamesSetupView.swift) | Disegna scelta cartella, primo gioco, apertura libreria e Skip; gestisce mouse, tastiera e controller; contiene `SetupCardRow`, la riga condivisa con `found`. |
-| [Sources/NXLibrary/Views/Launch/IntroView.swift](../Sources/NXLibrary/Views/Launch/IntroView.swift) | Mostra l’intro a freddo (solo lo sfondo animato, senza icona né scritta) e gestisce il salto tramite input. |
 | [Sources/NXLibrary/Views/Launch/LaunchScreenView.swift](../Sources/NXLibrary/Views/Launch/LaunchScreenView.swift) | Mostra artwork e logo durante l’avvio di un gioco nxnative o Steam e chiude la schermata a finestra visibile. |
 | [Sources/NXLibrary/Views/Launch/LaunchMotion.swift](../Sources/NXLibrary/Views/Launch/LaunchMotion.swift) | Movimento della schermata di lancio come Selene, in Core Animation: arte che si avvicina piano, logo che entra una volta salendo, segno di Arcane che respira nell’angolo; con Riduci movimento solo la dissolvenza del logo. |
 | [Sources/NXLibrary/Views/Launch/LaunchCoverWindow.swift](../Sources/NXLibrary/Views/Launch/LaunchCoverWindow.swift) | Finestra propria della schermata di lancio: sopra ogni app e Space, mai attivata, così gioco, Steam e cambi di Space restano dietro. |
@@ -566,7 +566,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Sources/NXLibrary/Views/Theme/SeleneFonts.swift](../Sources/NXLibrary/Views/Theme/SeleneFonts.swift) | Registra il font incluso e definisce MaterialIconView. |
 | [Sources/NXLibrary/Views/Theme/SeleneCanvasEnvironment.swift](../Sources/NXLibrary/Views/Theme/SeleneCanvasEnvironment.swift) | Pubblica il canvas della finestra e applica unità e font scalati. |
 | [Sources/NXLibrary/Views/Theme/SeleneBackdrop.swift](../Sources/NXLibrary/Views/Theme/SeleneBackdrop.swift) | Compone gradiente, wallpaper e Moonlight e conserva le immagini già decodificate. |
-| [Sources/NXLibrary/Views/Theme/MoonlightRenderer.swift](../Sources/NXLibrary/Views/Theme/MoonlightRenderer.swift) | Gestisce device Metal, pipeline, display link, particelle e rendering live o statico del backdrop; da macOS 14 disegna solo il `CAMetalDisplayLink`, anche il fotogramma fermo (`nextDrawable` con il link attaccato solleva un’eccezione). |
+| [Sources/NXLibrary/Views/Theme/MoonlightRenderer.swift](../Sources/NXLibrary/Views/Theme/MoonlightRenderer.swift) | Gestisce Metal, display link e rendering live/statico; su entrambi i percorsi il primo drawable presentato sblocca `LaunchReveal`. Da macOS 14 disegna solo il `CAMetalDisplayLink`, anche il frame fermo. |
 | [Sources/NXLibrary/Views/Theme/MoonlightShaders.swift](../Sources/NXLibrary/Views/Theme/MoonlightShaders.swift) | Contiene le sorgenti shader Metal dello sfondo compilate a runtime. |
 | [Sources/NXLibrary/Views/Theme/LiveBackdrop.swift](../Sources/NXLibrary/Views/Theme/LiveBackdrop.swift) | Integra video AVFoundation in loop e adatta riproduzione e frame alla visibilità della finestra. |
 | [Sources/NXLibrary/Views/Theme/OnlineBrowsePanel.swift](../Sources/NXLibrary/Views/Theme/OnlineBrowsePanel.swift) | Mantiene stato di ricerca e download e presenta griglia e miniature degli sfondi online. |
@@ -736,7 +736,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Tests/NXLibraryCoreTests/SpotlightPageTests.swift](../Tests/NXLibraryCoreTests/SpotlightPageTests.swift) | Estratti del testo e stati dello scorrimento della pagina del gioco. |
 | [Tests/NXLibraryCoreTests/SpotlightRowTests.swift](../Tests/NXLibraryCoreTests/SpotlightRowTests.swift) | Ordine, card, riordino delle tile, gioco avviato primo nell’ordine salvato e selezione Surprise. |
 | [Tests/NXLibraryCoreTests/SpotlightStateTests.swift](../Tests/NXLibraryCoreTests/SpotlightStateTests.swift) | Focus, selezione, filtri, azioni e spostamento delle tile Spotlight. |
-| [Tests/NXLibraryCoreTests/SpotlightEntranceTests.swift](../Tests/NXLibraryCoreTests/SpotlightEntranceTests.swift) | Valori di Selene per la prima tessera, ritardo per tessera, bordi, durata, quando parte e fasi coperta, in attesa, in volo e atterrata. |
+| [Tests/NXLibraryCoreTests/SpotlightEntranceTests.swift](../Tests/NXLibraryCoreTests/SpotlightEntranceTests.swift) | Partenze, tempi di volo e dissolvenza, bordi, durata, messaggio vuoto, avanzamento degli effetti e fasi dell’entrata; interruttore e Riduci movimento. |
 | [Tests/NXLibraryCoreTests/StorageManagerTests.swift](../Tests/NXLibraryCoreTests/StorageManagerTests.swift) | Misure per gioco, cache condivise e nascoste, pulizia selettiva, protezione di app/sorgenti/symlink, file incoerenti e volumi/cartelle non disponibili. |
 | [Tests/NXLibraryCoreTests/ThemePickerTests.swift](../Tests/NXLibraryCoreTests/ThemePickerTests.swift) | Navigazione della griglia, tab e selezione degli sfondi. |
 | [Tests/NXLibraryCoreTests/ToolchainGateCopyTests.swift](../Tests/NXLibraryCoreTests/ToolchainGateCopyTests.swift) | Testi del gate per Metal certificato, precedente, successivo e altre cause di blocco. |
@@ -792,7 +792,9 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [CatalogPersonalizationTests.swift](../Tests/NXLibraryCoreTests/CatalogPersonalizationTests.swift) | Rinomina senza perdita del lookup e isolamento di chiavi uguali tra fonti. |
 | [CatalogBuildRecoveryTests.swift](../Tests/NXLibraryCoreTests/CatalogBuildRecoveryTests.swift) | Vecchia build persistita e nuova conservata, sospensione automatica e conferme obsolete. |
 | [run_notices.py](../Tests/CatalogAppChecks/run_notices.py) | Esegue i metodi reali degli avvisi e del ponte legacy senza finestre, dopo swift test. |
-| [run_review.py](../Tests/CatalogAppChecks/run_review.py) | Verifica le vere funzioni di avvio achievement, piattaforma dei loghi, focus durante lo scroll e menu sotto i pannelli, con dati sintetici e senza finestre. |
+| [run_review.py](../Tests/CatalogAppChecks/run_review.py) | Verifica le vere funzioni di avvio achievement, piattaforma dei loghi, focus durante lo scroll, menu e routing del controller sotto alert, dialoghi modali e sheet; prova anche il ritorno all'input. Dati sintetici, senza finestre. |
+| [run_source_access.py](../Tests/CatalogAppChecks/run_source_access.py) | Esegue il ripristino di avvio, l'observer e i selettori reali: nessuna scansione automatica dei sorgenti, cartella ricordata, annullamento e lettura dei soli file scelti; nessuna finestra o dato personale. |
+| [run_entrance.py](../Tests/CatalogAppChecks/run_entrance.py) | Esegue i metodi reali di input e readiness: primo comando durante il fullscreen, precedenza delle coperture, drawable mancante e presentazione su entrambi i percorsi. Nessuna finestra o GPU reale. |
 | [run_achievement_scroll.py](../Tests/CatalogAppChecks/run_achievement_scroll.py) | Verifica fuori schermo la vera lista e i modelli durante riaperture rapide, dettagli della prima riga, ridimensionamento e Riduci movimento; nessuna finestra o automazione UI. |
 | [run_game_header.py](../Tests/CatalogAppChecks/run_game_header.py) | Esegue i corpi reali di logo e azioni condivisi senza finestra né store applicativi, per entrambi i layout. |
 | [NoticeHost.swift](../Tests/CatalogAppChecks/NoticeHost.swift) | Host minimo per i controlli applicativi, con storage reale e dati sintetici temporanei. |
@@ -878,6 +880,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [docs/flows.md](../docs/flows.md) | Schemi dei flussi completi: avvio, libreria, Play Switch e Steam, Add Game, salvataggi, mod, impostazioni, aggiornamento dell’app. |
 | [docs/validation.md](../docs/validation.md) | Elenco unico di ciò che il maintainer ha validato o deve ancora provare, compresi i pin dell’engine. |
 | [docs/steam.md](../docs/steam.md) | Riferimento unico dell’integrazione Steam: file letti, stati, osservazione, libreria, Play, ore, achievement, scelte e limiti. |
+| [2026-11-17-entrance-frames.md](../docs/reviews/2026-11-17-entrance-frames.md) | Metodo, campioni e limiti delle misure temporanee dell’entrata e del passaggio al fullscreen. |
 | [2026-11-17-dock-rename-probe.md](../docs/reviews/2026-11-17-dock-rename-probe.md) | Sonda: il Dock apre ancora un'app rinominata nella stessa cartella. |
 | [2026-11-16-ratings-metadata-evidence.md](../docs/reviews/2026-11-16-ratings-metadata-evidence.md) | Prove e misure dietro le scelte di voti e metadati: abbinamenti Wikidata, console Switch 2 in IGDB, download a blocchi, movimento del selettore, sonde LaunchBox/TheGamesDB. |
 | [2026-11-09-hotfix-0.1.4.2.md](../docs/reviews/2026-11-09-hotfix-0.1.4.2.md) | Ambito della release 0.1.4.2, autorizzazione del maintainer e verifiche ancora non confermate. |
