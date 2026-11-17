@@ -22,6 +22,8 @@ public struct AppShellView: View {
     @State private var setupSourceEntryID: UUID?
     /// "Welcome to Arcane" is on screen (once, after the update from NX Library).
     @State private var showsWelcome = false
+    /// Closed in this session: never presented again, even while its fade has not yet saved it as shown.
+    @State private var welcomeDismissed = false
     /// Dismisses the Close Game confirmation when its game quits by itself.
     @State private var closeGameWatch: AnyCancellable?
 
@@ -32,6 +34,7 @@ public struct AppShellView: View {
         _settings = StateObject(wrappedValue: state.settings)
         _viewModel = StateObject(wrappedValue: state.viewModel)
         _router = StateObject(wrappedValue: state.router)
+        _showsWelcome = State(initialValue: state.opensWithWelcome)
     }
 
     private func updateLocale() {
@@ -790,7 +793,7 @@ public struct AppShellView: View {
     }
 
     private func presentWelcomeIfDue() async {
-        guard !showsWelcome, !welcomeBlocked, viewModel.setupCompleted,
+        guard !showsWelcome, !welcomeDismissed, !welcomeBlocked, viewModel.setupCompleted,
               !settings.settings.welcomeArcaneShown else { return }
         // `hasActiveSaveOperations` is in the trigger: the welcome comes back here when the save recovery ends.
         let pending = viewModel.hasActiveSaveOperations || viewModel.saveGate.hasActiveOperations
@@ -802,10 +805,25 @@ public struct AppShellView: View {
         withAnimation(reduceMotion ? nil : SeleneTheme.screen) { showsWelcome = true }
     }
 
+    /// The welcome fades first; saving and moving to the library wait until it has gone, so no redraw of the
+    /// whole shell lands in the fade's first frames (Selene does its home work once the layer has really gone).
     private func closeWelcome(_ exit: ArcaneWelcome.Exit) {
-        settings.settings = ArcaneWelcome.settings(after: exit, from: settings.settings)
-        withAnimation(reduceMotion ? nil : SeleneTheme.screen) { showsWelcome = false }
-        if exit == .openLibrary { router.navigate(to: .library) }
+        guard showsWelcome else { return }
+        welcomeDismissed = true
+        let finish = {
+            settings.settings = ArcaneWelcome.settings(after: exit, from: settings.settings)
+            if exit == .openLibrary { router.navigate(to: .library) }
+        }
+        guard !reduceMotion else {
+            showsWelcome = false
+            finish()
+            return
+        }
+        withAnimation(SeleneTheme.screen) { showsWelcome = false }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: UInt64(SeleneTheme.screenDuration * 1_000_000_000))
+            finish()
+        }
     }
 
     private func presentLegacyNotice() {

@@ -9,6 +9,9 @@ final class AppShellState {
     let viewModel: AppViewModel
     let router: AppRouter
     let sources: CatalogSourcesModel
+    /// "Welcome to Arcane" is up from the first frame, under the intro, so the intro fades straight into it
+    /// and the library never shows in between. Decided before save recovery starts; what it raises opens above.
+    let opensWithWelcome: Bool
 
     init(settings: AppSettingsStore, catalog: CatalogDocument, repository: CatalogRepository) {
         self.settings = settings
@@ -27,5 +30,9 @@ final class AppShellState {
         router.setInitialRoute(AppRouter.initialRoute(for: settings.settings.startOn, last: settings.settings.lastHome))
         router.isIntroShowing = settings.settings.introAnimation
         self.router = router
+        opensWithWelcome = ArcaneWelcome.shouldShow(setupCompleted: model.setupCompleted,
+                                                    shown: settings.settings.welcomeArcaneShown,
+                                                    hasPendingRecovery: false)
+        model.isWelcomeOpen = opensWithWelcome
     }
 }

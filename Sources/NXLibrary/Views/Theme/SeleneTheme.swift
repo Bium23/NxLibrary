@@ -58,7 +58,8 @@ public enum SeleneTheme {
     public static let standard = Animation.timingCurve(0.32, 0.72, 0, 1, duration: 0.24)
     public static let focusIn = Animation.timingCurve(0.22, 1, 0.36, 1, duration: 0.18)
     public static let focusOut = Animation.timingCurve(0.22, 1, 0.36, 1, duration: 0.20)
-    public static let screen = Animation.timingCurve(0.32, 0.72, 0, 1, duration: 0.32)
+    public static let screenDuration = 0.32
+    public static let screen = Animation.timingCurve(0.32, 0.72, 0, 1, duration: screenDuration)
     public static func cubicOut(_ duration: Double) -> Animation {
         .timingCurve(0.215, 0.61, 0.355, 1, duration: duration)
     }
