@@ -111,39 +111,15 @@ struct YourGamesSetupView: View {
 
     private func row(_ target: FirstRunSetup.Focus, title: String, detail: String, icon: MaterialIcon,
                      trailing: String? = nil, enabled: Bool = true, action: @escaping () -> Void) -> some View {
-        let focused = focus == target
-        return Button {
+        SetupCardRow(title: title, detail: detail, icon: icon,
+                     trailing: trailing.map { .text($0) } ?? .chevron,
+                     focused: focus == target, enabled: enabled,
+                     onHover: { move(to: target) }) {
             move(to: target)
             guard enabled else { return }
             SoundEffectService.shared.play(.click)
             action()
-        } label: {
-            HStack(spacing: canvas.u(22)) {
-                MaterialIconView(icon, size: 30).frame(width: canvas.u(40))
-                VStack(alignment: .leading, spacing: canvas.u(5)) {
-                    Text(title).seleneFont(22, .semibold)
-                    Text(detail).seleneFont(15).foregroundColor(SeleneTheme.ink75)
-                        .lineLimit(2).truncationMode(.middle)
-                }
-                Spacer(minLength: canvas.u(12))
-                if let trailing { Text(trailing).seleneFont(16, .semibold) }
-                else { MaterialIconView(.chevron, size: 22) }
-            }
-            .foregroundColor(SeleneTheme.ink)
-            .padding(.horizontal, canvas.u(24))
-            .frame(width: canvas.u(960), height: canvas.u(112))
-            .background(RoundedRectangle(cornerRadius: canvas.u(SeleneTheme.cardRadius), style: .continuous)
-                .fill(SeleneTheme.glassCard))
-            .overlay(RoundedRectangle(cornerRadius: canvas.u(SeleneTheme.cardRadius), style: .continuous)
-                .strokeBorder(focused ? SeleneTheme.focus : SeleneTheme.ink15, lineWidth: canvas.u(focused ? 2 : 1)))
-            .shadow(color: focused ? SeleneTheme.focusGlow : .clear, radius: canvas.u(16))
-            .opacity(enabled ? 1 : 0.45)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .disabled(!enabled)
-        .onHover { if $0 { move(to: target) } }
-        .animation(reduceMotion ? nil : SeleneTheme.focusIn, value: focused)
     }
 
     private func move(to next: FirstRunSetup.Focus) {
@@ -174,6 +150,7 @@ struct YourGamesSetupView: View {
         case .folder: onChooseFolder()
         case .back: viewModel.returnToSetupRequirements()
         case .finish: onFinish()
+        case .steamToggle, .portingCard, .openLibrary: break
         }
     }
 }
@@ -200,5 +177,60 @@ struct SetupStepIndicator: View {
                 .background(Circle().fill(active ? SeleneTheme.focus : SeleneTheme.glass))
             Text(title).seleneFont(14, .semibold).foregroundColor(active ? SeleneTheme.ink : SeleneTheme.ink60)
         }
+    }
+}
+
+/// A first-launch card row: icon, title, detail and what sits on the right. Focus draws the outline and glow.
+struct SetupCardRow: View {
+    enum Trailing { case chevron, text(String), toggle(Bool), none }
+
+    @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.seleneReduceMotion) private var reduceMotion
+    let title: String
+    let detail: String
+    var note: String? = nil
+    let icon: MaterialIcon
+    var trailing: Trailing = .chevron
+    var height: CGFloat = 112
+    let focused: Bool
+    var enabled: Bool = true
+    var onHover: () -> Void = {}
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: canvas.u(22)) {
+                MaterialIconView(icon, size: 30).frame(width: canvas.u(40))
+                VStack(alignment: .leading, spacing: canvas.u(5)) {
+                    Text(title).seleneFont(22, .semibold)
+                    Text(detail).seleneFont(15).foregroundColor(SeleneTheme.ink75)
+                        .lineLimit(2).truncationMode(.middle)
+                    if let note {
+                        Text(note).seleneFont(13).foregroundColor(SeleneTheme.ink60).padding(.top, canvas.u(1))
+                    }
+                }
+                Spacer(minLength: canvas.u(12))
+                switch trailing {
+                case .chevron: MaterialIconView(.chevron, size: 22)
+                case .text(let text): Text(text).seleneFont(16, .semibold)
+                case .toggle(let isOn): SeleneSwitch(isOn: .constant(isOn)).allowsHitTesting(false)
+                case .none: EmptyView()
+                }
+            }
+            .foregroundColor(SeleneTheme.ink)
+            .padding(.horizontal, canvas.u(24))
+            .frame(width: canvas.u(960), height: canvas.u(height))
+            .background(RoundedRectangle(cornerRadius: canvas.u(SeleneTheme.cardRadius), style: .continuous)
+                .fill(SeleneTheme.glassCard))
+            .overlay(RoundedRectangle(cornerRadius: canvas.u(SeleneTheme.cardRadius), style: .continuous)
+                .strokeBorder(focused ? SeleneTheme.focus : SeleneTheme.ink15, lineWidth: canvas.u(focused ? 2 : 1)))
+            .shadow(color: focused ? SeleneTheme.focusGlow : .clear, radius: canvas.u(16))
+            .opacity(enabled ? 1 : 0.45)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .onHover { if $0 { onHover() } }
+        .animation(reduceMotion ? nil : SeleneTheme.focusIn, value: focused)
     }
 }

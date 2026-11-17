@@ -157,7 +157,11 @@ public struct AppShellView: View {
             }
             if viewModel.showSetupCheck {
                 Group {
-                    if viewModel.firstRunSetup.page == .games {
+                    if viewModel.firstRunSetup.page == .found {
+                        FoundGamesSetupView(viewModel: viewModel) { steam, importPorted in
+                            finishFromFound(steam: steam, importPorted: importPorted)
+                        }
+                    } else if viewModel.firstRunSetup.page == .games {
                         YourGamesSetupView(viewModel: viewModel,
                                            onChooseFiles: { chooseFirstGame(usingFolder: false) },
                                            onChooseFolder: { chooseFirstGame(usingFolder: true) },
@@ -1149,6 +1153,16 @@ public struct AppShellView: View {
         default: return
         }
         if settings.settings.lastHome != home { settings.settings.lastHome = home }
+    }
+
+    /// Open library on the first launch's `found` page: the Steam switch applies only now.
+    private func finishFromFound(steam: Bool?, importPorted: Bool) {
+        guard viewModel.showSetupCheck, viewModel.firstRunSetup.page == .found else { return }
+        if steam == true {
+            sources.configure(enabled: true, root: CatalogSourcesModel.defaultSteamRoot)
+        }
+        viewModel.finishFromFound(importPorted: importPorted)
+        router.navigate(to: .library)
     }
 
     private func chooseFirstGame(usingFolder: Bool) {

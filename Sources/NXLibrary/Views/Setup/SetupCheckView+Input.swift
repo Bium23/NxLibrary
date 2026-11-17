@@ -15,7 +15,7 @@ extension SetupCheckView {
         case .navigateDown: navigate(.down)
         case .confirm: activate()
         case .cancel:
-            if isFirstRun { shake() } else { close() }
+            if isFirstRun { backToFound() } else { close() }
         default: break
         }
     }
@@ -83,6 +83,12 @@ extension SetupCheckView {
             SoundEffectService.shared.play(.click)
             viewModel.advanceSetupToGames()
         }
+    }
+
+    /// B during the first launch: back to what Arcane found on the Mac.
+    func backToFound() {
+        SoundEffectService.shared.play(.back)
+        viewModel.returnToFound()
     }
 
     func close() {

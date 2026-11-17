@@ -10,7 +10,7 @@ struct SettingsSourcesSection: View {
     @Environment(\.nxAppLocale) private var localization
     let onActions: ([SettingsRowAction]) -> Void
 
-    private var defaultRoot: URL { AppData.profile.home.appendingPathComponent("Library/Application Support/Steam") }
+    private var defaultRoot: URL { CatalogSourcesModel.defaultSteamRoot }
     private var hidden: [CatalogGame] { viewModel.catalogGames.filter { $0.integration == .steam && $0.isHidden } }
     private var review: [CatalogGame] {
         viewModel.catalogGames.filter { !$0.isHidden && $0.steamGame?.needsReview == true }

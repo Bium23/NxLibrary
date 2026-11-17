@@ -23,7 +23,7 @@ flowchart TD
     D --> E["AppShellState prepara coordinatore, router, tema"]
     E --> F["AppShellView: AppViewModel, store, monitor, updater"]
     F --> G{"Primo avvio completato?<br/>(FirstRunSetup)"}
-    G -->|"no"| H["Setup: Get ready → Your games"]
+    G -->|"no"| H["Setup: found (Steam, app portate) → Open library<br/>oppure Porting → Get ready → Your games"]
     G -->|"sì"| I["Intro (se attiva) → Spotlight"]
     F --> J["In background: recuperi dei salvataggi, installazioni in attesa,<br/>scansione Steam se attivo, controllo engine se attivo, aggiornamenti"]
 ```

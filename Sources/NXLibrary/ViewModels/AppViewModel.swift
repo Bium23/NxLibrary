@@ -991,6 +991,26 @@ public final class AppViewModel: ObservableObject {
 
     public func returnToSetupRequirements() { firstRunSetup.goBack() }
 
+    /// The Porting card on the first launch's `found` page.
+    public func openPortingFromFound() {
+        guard showSetupCheck, !setupCompleted else { return }
+        firstRunSetup.openPorting()
+    }
+
+    /// Back from the requirements to `found`, during the first launch only.
+    public func returnToFound() { firstRunSetup.returnToFound() }
+
+    /// Open library on `found`. Ported apps already in the Game apps folder join the library, which
+    /// turns the Switch source on; without them it stays off until the player chooses Porting.
+    public func finishFromFound(importPorted: Bool) {
+        guard showSetupCheck, !setupCompleted else { return }
+        if importPorted {
+            prepareInitialGameAppsFolder()
+            importExistingBuilds()
+        }
+        completeSetup()
+    }
+
     private func prepareInitialGameAppsFolder() {
         do {
             try GameAppDestination.prepareInitialFolder(gameAppsFolder,

@@ -7,6 +7,8 @@ public enum CatalogSourceStatus: Equatable, Sendable { case disabled, idle, scan
 /// persisted source configuration and game records; no competing catalog cache.
 @MainActor
 public final class CatalogSourcesModel: ObservableObject {
+    /// Steam's own folder, where the first launch and Settings → Sources look first.
+    public static var defaultSteamRoot: URL { AppData.profile.home.appendingPathComponent("Library/Application Support/Steam") }
     public typealias Scanner = @Sendable (URL, @escaping () -> Bool) throws -> SteamLibrarySnapshot
     @Published public private(set) var configuration: CatalogSourceConfiguration
     @Published public private(set) var status: CatalogSourceStatus

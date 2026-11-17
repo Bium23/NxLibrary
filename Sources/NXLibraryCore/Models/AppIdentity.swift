@@ -4,6 +4,8 @@ import Foundation
 /// is the contact Wikidata asks clients for; no personal data goes in it.
 public enum AppIdentity {
     public static let name = "Arcane"
+    /// The module that ports games to the Mac. A name, like the app's, so it is never translated.
+    public static let portingName = "Porting"
     public static let projectPage = "https://github.com/Bium23/NxLibrary"
 
     /// The running app's version, "0" when the bundle has none (tests, command-line runs).

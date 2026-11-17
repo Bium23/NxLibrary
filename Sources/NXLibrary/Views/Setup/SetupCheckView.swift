@@ -51,7 +51,7 @@ struct SetupCheckView: View {
             .offset(y: canvas.u(-20))
             VStack {
                 Spacer(minLength: 0)
-                SeleneHintsBar(right: isFirstRun ? [HintItem(.a, L10n.text("Select"))] : [HintItem(.a, L10n.text("Select")), HintItem(.b, L10n.text("Back"))],
+                SeleneHintsBar(right: [HintItem(.a, L10n.text("Select")), HintItem(.b, L10n.text("Back"))],
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
         }
