@@ -116,6 +116,21 @@ final class AppUpdateTests: XCTestCase {
         }
     }
 
+    private let successorURL = "https://github.com/Bium23/Arcane/releases/download/v0.3.0/NXLibrary-0.3.0.zip"
+
+    func testSuccessorRepositoryAssetIsAccepted() throws {
+        let json = try changingAsset { $0["browser_download_url"] = successorURL }
+        let release = try XCTUnwrap(AppUpdate.parseRelease(json, successor: "Bium23/Arcane"))
+        XCTAssertEqual(release.zipURL.absoluteString, successorURL)
+        XCTAssertNotNil(AppUpdate.parseRelease(Data(releaseJSON.utf8), successor: "Bium23/Arcane"))
+    }
+
+    func testWithoutSuccessorOnlyTheConfiguredPathIsAccepted() throws {
+        let json = try changingAsset { $0["browser_download_url"] = successorURL }
+        XCTAssertNil(AppUpdate.parseRelease(json, successor: nil))
+        XCTAssertNil(AppUpdate.successorRepository)
+    }
+
     func testDownloadBudgetAndGitHubRedirectBoundary() {
         XCTAssertTrue(AppUpdate.downloadWithinLimit(received: 1024, expected: 1024))
         XCTAssertFalse(AppUpdate.downloadWithinLimit(received: 1025, expected: 1024))

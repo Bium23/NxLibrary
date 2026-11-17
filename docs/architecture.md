@@ -649,6 +649,7 @@ Nel repository, `.build/` contiene gli output SwiftPM, `work/Runtime` il runtime
 
 **Download e verifica.**
 - `AppUpdater` coordina gli aggiornamenti da `Bium23/NxLibrary`, senza autenticazione. Le regole di versione, requisiti, digest, identità del bundle e installazione sono in `AppUpdate`.
+- La release si accetta solo se lo zip `NXLibrary-<versione>.zip` sta nel percorso di download di quel repository. `AppUpdate.successorRepository` (oggi `nil`) nomina un repository che può sostituirlo con un altro nome: GitHub reindirizza lì la vecchia API delle release, quindi anche i suoi asset sono accettati.
 - `AppUpdateDownload` limita il trasferimento alla dimensione dichiarata e agli host HTTPS di GitHub.
 - `validate_update.py` verifica struttura e percorsi, poi estrae contando i dati davvero decompressi tramite il Python incluso. Prima della sostituzione si controllano versione, marker, identificativo e firma del bundle.
 - La firma ad hoc protegge il contenuto sigillato ma non identifica da sola il maintainer.

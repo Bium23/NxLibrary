@@ -19,6 +19,9 @@ public enum AppUpdate {
     public static let defaultRepository: String? = "Bium23/NxLibrary"
     /// A UserDefaults override of `defaultRepository`, for testing before publishing.
     public static let repositoryOverrideKey = "NXLibrary_UpdateRepository"
+    /// A repository that may replace `defaultRepository` under another name. GitHub redirects the old
+    /// release API there, so its assets are accepted too; nil while the project keeps its name.
+    public static let successorRepository: String? = nil
     /// The Info.plist key that marks a release copy.
     public static let releaseMarker = "NXLibraryRelease"
     static let interval: TimeInterval = 24 * 3600
@@ -115,8 +118,10 @@ public enum AppUpdate {
         return notes
     }
 
-    /// GitHub's `releases/latest` answer, with the asset named `NXLibrary-<version>.zip`.
-    public static func parseRelease(_ json: Data, repository: String = "Bium23/NxLibrary") -> Release? {
+    /// GitHub's `releases/latest` answer, with the asset named `NXLibrary-<version>.zip` in `repository`
+    /// or, when there is one, in its `successor`.
+    public static func parseRelease(_ json: Data, repository: String = "Bium23/NxLibrary",
+                                    successor: String? = AppUpdate.successorRepository) -> Release? {
         guard json.count <= 1024 * 1024,
               let object = try? JSONSerialization.jsonObject(with: json) as? [String: Any],
               let tag = object["tag_name"] as? String, let version = version(fromTag: tag),
@@ -124,7 +129,9 @@ public enum AppUpdate {
               let asset = assets.first(where: { $0["name"] as? String == "NXLibrary-\(version).zip" }),
               let link = asset["browser_download_url"] as? String, let url = URL(string: link),
               trustedDownloadURL(url), url.host?.lowercased() == "github.com",
-              url.path == "/\(repository)/releases/download/\(tag)/NXLibrary-\(version).zip",
+              ([repository] + [successor].compactMap { $0 }).contains(where: { owner in
+                  url.path == "/\(owner)/releases/download/\(tag)/NXLibrary-\(version).zip"
+              }),
               url.query == nil, url.fragment == nil,
               let bytes = asset["size"] as? Int64, bytes > 0, bytes <= maximumDownloadBytes,
               let digest = asset["digest"] as? String,
