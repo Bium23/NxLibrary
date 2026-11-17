@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 17 novembre 2026. Copertura di **685 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 17 novembre 2026. Copertura di **689 file** del progetto, compresi i controlli di pubblicazione, la CI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -64,7 +64,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibrary/NXLibraryApp.swift](../Sources/NXLibrary/NXLibraryApp.swift) | Punto @main, finestra SwiftUI, notifiche interne e comandi della barra menu. |
 | [Sources/NXLibrary/AppDelegate.swift](../Sources/NXLibrary/AppDelegate.swift) | Registra Material Icons, gestisce il ciclo di chiusura e riapertura della finestra e, alla chiusura, dà a una copia release il nome `Arcane.app`. |
 | [Sources/NXLibrary/Views/MainView.swift](../Sources/NXLibrary/Views/MainView.swift) | Presenta AppShellView come contenuto della finestra principale. |
-| [Sources/NXLibrary/Views/Shell/AppShellView.swift](../Sources/NXLibrary/Views/Shell/AppShellView.swift) | Possiede lo stato condiviso, compone schermate e overlay e assegna priorità all’input. |
+| [Sources/NXLibrary/Views/Shell/AppShellView.swift](../Sources/NXLibrary/Views/Shell/AppShellView.swift) | Possiede lo stato condiviso, compone schermate e overlay (compreso il benvenuto in Arcane) e assegna priorità all’input. |
 | [Sources/NXLibrary/Views/Shell/FullscreenCursorView.swift](../Sources/NXLibrary/Views/Shell/FullscreenCursorView.swift) | Gestisce il cursore inattivo nella sola finestra fullscreen del launcher, sospendendolo per pannelli e menu e ripristinando gli eventi al distacco. |
 | [Sources/NXLibrary/Views/Shell/StartupWindowView.swift](../Sources/NXLibrary/Views/Shell/StartupWindowView.swift) | Applica una sola volta alla finestra pronta la preferenza fullscreen letta al lancio. |
 | [Sources/NXLibrary/Views/Shell/MenuOverlayView.swift](../Sources/NXLibrary/Views/Shell/MenuOverlayView.swift) | Disegna il control center con azioni, focus e sottomenu Power. |
@@ -161,6 +161,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [Sources/NXLibraryCore/Models/SetupCheck.swift](../Sources/NXLibraryCore/Models/SetupCheck.swift) | Converte fatti e override del Setup in schede, stati, azioni e condizioni di riapertura. |
 | [Sources/NXLibraryCore/Models/FirstRunSetup.swift](../Sources/NXLibraryCore/Models/FirstRunSetup.swift) | Coordina le pagine `found`, requisiti e giochi, completamento, ripresa del primo avvio, stato della scansione, focus e consumo unico delle selezioni avviate da Your games. |
 | [Sources/NXLibraryCore/Models/FirstRunFindings.swift](../Sources/NXLibraryCore/Models/FirstRunFindings.swift) | Conta i giochi Steam per Mac installati e le app già portate per la pagina `found`, senza cambiare nulla; il lettore annullabile pubblica solo l'ultima lettura. |
+| [Sources/NXLibraryCore/Models/ArcaneWelcome.swift](../Sources/NXLibraryCore/Models/ArcaneWelcome.swift) | Decide quando compare il benvenuto in Arcane, l'offerta di Steam, il focus e come ogni uscita lo segna visto. |
 | [Sources/NXLibraryCore/Models/GameFoldersCopy.swift](../Sources/NXLibraryCore/Models/GameFoldersCopy.swift) | Condivide nomi delle cartelle, formati e descrizioni tra Setup, Settings e selettori dei percorsi. |
 | [Sources/NXLibraryCore/Models/SetupGrid.swift](../Sources/NXLibraryCore/Models/SetupGrid.swift) | Calcola disposizione, centratura e navigazione del focus nella griglia del Setup. |
 | [Sources/NXLibraryCore/Models/UpstreamCopy.swift](../Sources/NXLibraryCore/Models/UpstreamCopy.swift) | Prepara i testi del changelog upstream e dell’adozione degli aggiornamenti tramite Arcane. |
@@ -394,7 +395,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Models/AppIdentity.swift](../Sources/NXLibraryCore/Models/AppIdentity.swift) | Nome visibile dell'app ("Arcane", non tradotto), pagina del progetto e User-Agent unico delle richieste di rete. |
+| [Sources/NXLibraryCore/Models/AppIdentity.swift](../Sources/NXLibraryCore/Models/AppIdentity.swift) | Nome visibile dell'app ("Arcane", non tradotto), il vecchio nome detto solo dal benvenuto, il nome del modulo Porting, pagina del progetto e User-Agent unico delle richieste di rete. |
 | [Sources/NXLibraryCore/Models/AppLocale.swift](../Sources/NXLibraryCore/Models/AppLocale.swift) | Sei lingue, risoluzione delle preferenze e regione indipendente; nomi e ricerca delle regioni. |
 | [Sources/NXLibraryCore/Models/GameGenre.swift](../Sources/NXLibraryCore/Models/GameGenre.swift) | Generi noti tradotti alla presentazione; dati originali e generi personali conservati. |
 | [Sources/NXLibraryCore/Services/AppLocalization.swift](../Sources/NXLibraryCore/Services/AppLocalization.swift) | Contesto osservabile, lookup portabile delle risorse e interpolazioni/plurali. |
@@ -505,6 +506,8 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 |---|---|
 | [Sources/NXLibrary/Views/Setup/SetupCheckView.swift](../Sources/NXLibrary/Views/Setup/SetupCheckView.swift) | Disegna schede dei requisiti, dettagli, progressi e pulsanti Install all/Continue. |
 | [Sources/NXLibrary/Views/Setup/SetupCheckView+Input.swift](../Sources/NXLibrary/Views/Setup/SetupCheckView+Input.swift) | Gestisce focus iniziale, navigazione della griglia, attivazione delle schede Setup e B verso `found` durante il primo avvio. |
+| [Sources/NXLibrary/Views/Setup/ArcaneWelcomeView.swift](../Sources/NXLibrary/Views/Setup/ArcaneWelcomeView.swift) | Disegna il benvenuto in Arcane: nome nuovo, novità, offerta di Steam con Add / Not now e Open library. |
+| [Sources/NXLibrary/Views/Setup/ArcaneWelcomeView+Input.swift](../Sources/NXLibrary/Views/Setup/ArcaneWelcomeView+Input.swift) | Gestisce focus, mouse, tastiera e controller del benvenuto. |
 | [Sources/NXLibrary/Views/Setup/FoundGamesSetupView.swift](../Sources/NXLibrary/Views/Setup/FoundGamesSetupView.swift) | Disegna la prima pagina del primo avvio: Steam con interruttore, app già portate, card Porting con la nota "not affiliated" e Open library. |
 | [Sources/NXLibrary/Views/Setup/FoundGamesSetupView+Input.swift](../Sources/NXLibrary/Views/Setup/FoundGamesSetupView+Input.swift) | Gestisce focus, mouse, tastiera e controller della pagina `found`. |
 | [Sources/NXLibrary/Views/Setup/YourGamesSetupView.swift](../Sources/NXLibrary/Views/Setup/YourGamesSetupView.swift) | Disegna scelta cartella, primo gioco, apertura libreria e Skip; gestisce mouse, tastiera e controller; contiene `SetupCardRow`, la riga condivisa con `found`. |
@@ -620,6 +623,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Tests/NXLibraryCoreTests/AppSizeCacheTests.swift](../Tests/NXLibraryCoreTests/AppSizeCacheTests.swift) | Riuso delle dimensioni, invalidazione sui bundle modificati e scansione senza falso stato vuoto. |
 | [Tests/NXLibraryCoreTests/AppUpdateTests.swift](../Tests/NXLibraryCoreTests/AppUpdateTests.swift) | Versioni, asset release (anche da un repository successore), requisiti, digest, identità del bundle e sostituzione dell’app. |
 | [Tests/NXLibraryCoreTests/AppUpdatePresentationTests.swift](../Tests/NXLibraryCoreTests/AppUpdatePresentationTests.swift) | Verifica che i controlli manuali non permettano sostituzioni di copie di sviluppo, in sola lettura o con una versione uguale/più recente. |
+| [Tests/NXLibraryCoreTests/ArcaneWelcomeTests.swift](../Tests/NXLibraryCoreTests/ArcaneWelcomeTests.swift) | Una volta dopo l'aggiornamento, mai dopo un primo Setup né con un recupero in corso, decodifica di un file vecchio, offerta di Steam, focus e uscite. |
 | [Tests/NXLibraryCoreTests/ArcaneNameTests.swift](../Tests/NXLibraryCoreTests/ArcaneNameTests.swift) | Nessun testo del catalogo, in nessuna lingua, mostra il vecchio nome; User-Agent con il nome Arcane e nessuna sorgente con il vecchio. |
 | [Tests/NXLibraryCoreTests/ArtworkPickerFocusTests.swift](../Tests/NXLibraryCoreTests/ArtworkPickerFocusTests.swift) | Spostamenti nella griglia dei candidati e passaggi fra slot di artwork. |
 | [Tests/NXLibraryCoreTests/ArtworkPickerTests.swift](../Tests/NXLibraryCoreTests/ArtworkPickerTests.swift) | Decodifica Title DB, candidati per slot e scelte manuali. |

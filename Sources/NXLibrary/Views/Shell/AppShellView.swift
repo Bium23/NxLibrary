@@ -20,6 +20,8 @@ public struct AppShellView: View {
     /// Rescans the Steam source when Steam rewrites a manifest (a download finishing, a game installed or removed).
     @State private var steamWatcher = SteamManifestWatcher()
     @State private var setupSourceEntryID: UUID?
+    /// "Welcome to Arcane" is on screen (once, after the update from NX Library).
+    @State private var showsWelcome = false
     /// Dismisses the Close Game confirmation when its game quits by itself.
     @State private var closeGameWatch: AnyCancellable?
 
@@ -78,7 +80,7 @@ public struct AppShellView: View {
     }
 
     private var nativeMenuAvailability: NativeMenuAvailability {
-        let general = !router.isIntroShowing && !viewModel.showSetupCheck
+        let general = !router.isIntroShowing && !viewModel.showSetupCheck && !showsWelcome
             && !isCloseGameOpen && !router.isScreenshotViewerOpen && !router.isSearchPresented
             && !viewModel.isGameOptionsOpen && viewModel.launchOverlay == nil && NSApp.modalWindow == nil
             && NSApp.keyWindow?.attachedSheet == nil && NSApp.keyWindow?.isSheet != true
@@ -175,6 +177,16 @@ public struct AppShellView: View {
                 }
                     .transition(.opacity)
                     .zIndex(2.5)
+            }
+            if showsWelcome {
+                ArcaneWelcomeView(steamEnabled: sources.configuration.isEnabled,
+                                  appsFolder: viewModel.gameAppsFolder,
+                                  onAddSteam: {
+                                      sources.configure(enabled: true, root: CatalogSourcesModel.defaultSteamRoot)
+                                  },
+                                  onExit: closeWelcome)
+                    .transition(.opacity)
+                    .zIndex(2.6)
             }
             if let game = viewModel.gameToClose {
                 closeGameOverlay(game)
@@ -524,6 +536,13 @@ public struct AppShellView: View {
         .onChange(of: viewModel.alertMessage) { _ in
             presentLegacyNotice()
         }
+        .onChange(of: viewModel.setupCompleted) { done in
+            // A first setup finished today: this player starts on Arcane and never needs the welcome.
+            if done, !showsWelcome, !settings.settings.welcomeArcaneShown {
+                settings.settings = ArcaneWelcome.markShown(settings.settings)
+            }
+        }
+        .task(id: welcomeTrigger) { await presentWelcomeIfDue() }
         .onChange(of: viewModel.settingsNotice?.id) { id in
             if id == nil { presentLegacyNotice() }
         }
@@ -657,6 +676,11 @@ public struct AppShellView: View {
                 settingsNoticeInput(action)
                 return
             }
+            if showsWelcome, !showsInstallFailure, viewModel.gameToClose == nil, viewModel.gameToRemove == nil,
+               !showsUpdateOffer {
+                NotificationCenter.default.post(name: .nxArcaneWelcomeGamepadAction, object: action)
+                return
+            }
             if showsInstallFailure {
                 installFailureInput(action)
                 return
@@ -745,6 +769,41 @@ public struct AppShellView: View {
         notice?.onDismiss?()
         if choice == 1 { notice?.retry?() }
         presentLegacyNotice()
+    }
+
+    /// Anything that comes before the welcome: intro, Setup, dialogs, a launch, the screenshot viewer.
+    private var welcomeBlocked: Bool {
+        router.isIntroShowing || viewModel.showSetupCheck || showsSettingsNotice || showsInstallFailure
+            || showsUpdateOffer || viewModel.gameToClose != nil || viewModel.gameToRemove != nil
+            || viewModel.launchOverlay != nil || router.isScreenshotViewerOpen
+    }
+
+    private var welcomeTrigger: [Bool] {
+        [welcomeBlocked, viewModel.setupCompleted, settings.settings.welcomeArcaneShown,
+         viewModel.gameWithInstallFailure != nil]
+    }
+
+    private func presentWelcomeIfDue() async {
+        guard !showsWelcome, !welcomeBlocked, viewModel.setupCompleted,
+              !settings.settings.welcomeArcaneShown else { return }
+        // `SaveOperationGate` is a lock-guarded object shared with background queues, not observable:
+        // the welcome waits here for the save recovery that starts with the app.
+        while viewModel.saveGate.hasActiveOperations {
+            try? await Task.sleep(nanoseconds: 250_000_000)
+            if Task.isCancelled { return }
+        }
+        let pending = viewModel.saveGate.hasActiveOperations || viewModel.gameWithInstallFailure != nil
+        guard !Task.isCancelled, !welcomeBlocked,
+              ArcaneWelcome.shouldShow(setupCompleted: viewModel.setupCompleted,
+                                       shown: settings.settings.welcomeArcaneShown,
+                                       hasPendingRecovery: pending) else { return }
+        withAnimation(reduceMotion ? nil : SeleneTheme.screen) { showsWelcome = true }
+    }
+
+    private func closeWelcome(_ exit: ArcaneWelcome.Exit) {
+        settings.settings = ArcaneWelcome.settings(after: exit, from: settings.settings)
+        withAnimation(reduceMotion ? nil : SeleneTheme.screen) { showsWelcome = false }
+        if exit == .openLibrary { router.navigate(to: .library) }
     }
 
     private func presentLegacyNotice() {
@@ -940,8 +999,10 @@ public struct AppShellView: View {
                 return event
             }
             let mods = event.modifierFlags.intersection([.command, .control, .option, .shift])
-            // The Setup check takes the keyboard: arrows, Return, Space and Esc go to it.
-            if viewModel.showSetupCheck {
+            // The Setup check and the welcome take the keyboard: arrows, Return, Space and Esc go to them.
+            if viewModel.showSetupCheck || (showsWelcome && !showsSettingsNotice && !showsInstallFailure
+                                            && !showsUpdateOffer && viewModel.gameToClose == nil
+                                            && viewModel.gameToRemove == nil) {
                 guard mods.isEmpty, !(event.window?.firstResponder is NSText) else { return event }
                 let setupAction: GamepadAction?
                 switch event.keyCode {

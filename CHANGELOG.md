@@ -10,6 +10,7 @@ These changes are implemented in Arcane Dev. Human validation remains pending un
 
 - The app is now called **Arcane** in every visible place: window, menus, Settings, About and texts in all six languages. Your library, settings and data stay where they are. The development copy is Arcane Dev.
 - Settings are grouped into **General**, **Library**, **Porting** and **System**. Launch screen, Surprise me, session card and hidden games are in Library → Games; keys, cloud saves and build caches have their own Porting pages; Rumble sits with the other new-game defaults; Console is in System. Every setting keeps its value.
+- Players coming from NX Library see **Welcome to Arcane** once: the new name, what's new, and an offer to add Steam games for Mac when Steam is found and still off.
 - A first launch starts from what is already on the Mac: installed Steam games for Mac and games you already ported, each with a count. Choose whether Steam joins the library, then open it; **Porting** leads to the setup for converting Switch games. Nothing changes on disk until you open the library.
 - After an update, the app file becomes **Arcane.app** the next time you quit, in the same folder; the Dock keeps opening it. It stays as it is when the folder is read-only or an Arcane.app is already there.
 

@@ -24,7 +24,7 @@ flowchart TD
     E --> F["AppShellView: AppViewModel, store, monitor, updater"]
     F --> G{"Primo avvio completato?<br/>(FirstRunSetup)"}
     G -->|"no"| H["Setup: found (Steam, app portate) → Open library<br/>oppure Porting → Get ready → Your games"]
-    G -->|"sì"| I["Intro (se attiva) → Spotlight"]
+    G -->|"sì"| I["Intro (se attiva) → Spotlight<br/>Benvenuto in Arcane una volta, per chi aggiorna"]
     F --> J["In background: recuperi dei salvataggi, installazioni in attesa,<br/>scansione Steam se attivo, controllo engine se attivo, aggiornamenti"]
 ```
 
