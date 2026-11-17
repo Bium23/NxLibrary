@@ -997,6 +997,9 @@ public final class AppViewModel: ObservableObject {
         firstRunSetup.openPorting()
     }
 
+    /// The Steam switch on `found`; the shell applies it when the first launch finishes.
+    public func chooseSteamOnFound(_ on: Bool) { firstRunSetup.chooseSteam(on) }
+
     /// Back from the requirements to `found`, during the first launch only.
     public func returnToFound() { firstRunSetup.returnToFound() }
 

@@ -152,4 +152,25 @@ final class FirstRunSetupTests: XCTestCase {
         let folder = SetupItem(id: .library, title: "Game apps", state: .warning, chip: "", about: "", detail: "")
         XCTAssertFalse(SetupCheck.shouldReopen(previous: [.library: .ready], current: [folder]))
     }
+
+    func testSteamChoiceSurvivesThePortingPath() {
+        var setup = FirstRunSetup()
+        XCTAssertNil(setup.steamChoice)
+        setup.chooseSteam(true)
+        setup.openPorting()
+        setup.advance()
+        setup.goBack()
+        setup.returnToFound()
+        XCTAssertEqual(setup.steamChoice, true)
+        setup.chooseSteam(false)
+        setup.openPorting()
+        setup.finish()
+        XCTAssertEqual(setup.steamChoice, false)
+    }
+
+    func testFinishedSetupTakesNoSteamChoice() {
+        var setup = FirstRunSetup(completed: true)
+        setup.chooseSteam(true)
+        XCTAssertNil(setup.steamChoice)
+    }
 }

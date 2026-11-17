@@ -8,6 +8,9 @@ public struct FirstRunSetup: Equatable {
 
     public private(set) var page: Page
     public private(set) var isCompleted: Bool
+    /// The Steam switch on `found`: nil until Steam is found, then kept on every page of the first launch
+    /// and applied when it finishes, through Open library or through Porting.
+    public private(set) var steamChoice: Bool?
 
     public init(completed: Bool = false, savedPage: String? = nil) {
         isCompleted = completed
@@ -16,6 +19,11 @@ public struct FirstRunSetup: Equatable {
     }
 
     public var pageToRemember: String? { isCompleted ? nil : page.rawValue }
+
+    public mutating func chooseSteam(_ on: Bool) {
+        guard !isCompleted else { return }
+        steamChoice = on
+    }
 
     /// The Porting card on `found`: the requirements of today's Setup.
     public mutating func openPorting() {

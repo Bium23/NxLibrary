@@ -160,8 +160,8 @@ public struct AppShellView: View {
             if viewModel.showSetupCheck {
                 Group {
                     if viewModel.firstRunSetup.page == .found {
-                        FoundGamesSetupView(viewModel: viewModel) { steam, importPorted in
-                            finishFromFound(steam: steam, importPorted: importPorted)
+                        FoundGamesSetupView(viewModel: viewModel) { importPorted in
+                            finishFromFound(importPorted: importPorted)
                         }
                     } else if viewModel.firstRunSetup.page == .games {
                         YourGamesSetupView(viewModel: viewModel,
@@ -186,7 +186,8 @@ public struct AppShellView: View {
                                   },
                                   onExit: closeWelcome)
                     .transition(.opacity)
-                    .zIndex(2.6)
+                    // Below Setup: a Setup check that opens after the welcome owns the input, so it is drawn on top.
+                    .zIndex(2.4)
             }
             if let game = viewModel.gameToClose {
                 closeGameOverlay(game)
@@ -537,6 +538,10 @@ public struct AppShellView: View {
             presentLegacyNotice()
         }
         .onChange(of: viewModel.setupCompleted) { done in
+            // The Steam switch of `found` applies however the first launch ends (Open library, Porting, Skip).
+            if done, viewModel.firstRunSetup.steamChoice == true, !sources.configuration.isEnabled {
+                sources.configure(enabled: true, root: CatalogSourcesModel.defaultSteamRoot)
+            }
             // A first setup finished today: this player starts on Arcane and never needs the welcome.
             if done, !showsWelcome, !settings.settings.welcomeArcaneShown {
                 settings.settings = ArcaneWelcome.markShown(settings.settings)
@@ -780,19 +785,15 @@ public struct AppShellView: View {
 
     private var welcomeTrigger: [Bool] {
         [welcomeBlocked, viewModel.setupCompleted, settings.settings.welcomeArcaneShown,
-         viewModel.gameWithInstallFailure != nil]
+         viewModel.gameWithInstallFailure != nil, viewModel.hasActiveSaveOperations]
     }
 
     private func presentWelcomeIfDue() async {
         guard !showsWelcome, !welcomeBlocked, viewModel.setupCompleted,
               !settings.settings.welcomeArcaneShown else { return }
-        // `SaveOperationGate` is a lock-guarded object shared with background queues, not observable:
-        // the welcome waits here for the save recovery that starts with the app.
-        while viewModel.saveGate.hasActiveOperations {
-            try? await Task.sleep(nanoseconds: 250_000_000)
-            if Task.isCancelled { return }
-        }
-        let pending = viewModel.saveGate.hasActiveOperations || viewModel.gameWithInstallFailure != nil
+        // `hasActiveSaveOperations` is in the trigger: the welcome comes back here when the save recovery ends.
+        let pending = viewModel.hasActiveSaveOperations || viewModel.saveGate.hasActiveOperations
+            || viewModel.gameWithInstallFailure != nil
         guard !Task.isCancelled, !welcomeBlocked,
               ArcaneWelcome.shouldShow(setupCompleted: viewModel.setupCompleted,
                                        shown: settings.settings.welcomeArcaneShown,
@@ -1216,12 +1217,9 @@ public struct AppShellView: View {
         if settings.settings.lastHome != home { settings.settings.lastHome = home }
     }
 
-    /// Open library on the first launch's `found` page: the Steam switch applies only now.
-    private func finishFromFound(steam: Bool?, importPorted: Bool) {
+    /// Open library on the first launch's `found` page; the Steam switch applies with the finish.
+    private func finishFromFound(importPorted: Bool) {
         guard viewModel.showSetupCheck, viewModel.firstRunSetup.page == .found else { return }
-        if steam == true {
-            sources.configure(enabled: true, root: CatalogSourcesModel.defaultSteamRoot)
-        }
         viewModel.finishFromFound(importPorted: importPorted)
         router.navigate(to: .library)
     }

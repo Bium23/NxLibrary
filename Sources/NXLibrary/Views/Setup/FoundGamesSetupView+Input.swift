@@ -26,14 +26,14 @@ extension FoundGamesSetupView {
         move(to: target)
         switch target {
         case .steamToggle where hasSteam:
-            steamOn.toggle()
+            viewModel.chooseSteamOnFound(!steamOn)
             SoundEffectService.shared.play(.key)
         case .portingCard:
             SoundEffectService.shared.play(.click)
             viewModel.openPortingFromFound()
         case .openLibrary where !isReading:
             SoundEffectService.shared.play(.click)
-            onOpenLibrary(hasSteam ? steamOn : nil, portedCount > 0)
+            onOpenLibrary(portedCount > 0)
         default:
             SoundEffectService.shared.play(.error)
         }
