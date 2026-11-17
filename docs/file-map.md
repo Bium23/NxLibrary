@@ -723,7 +723,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Tests/NXLibraryCoreTests/ScreenshotViewerStateTests.swift](../Tests/NXLibraryCoreTests/ScreenshotViewerStateTests.swift) | Indice, avanzamento e limiti del visualizzatore screenshot. |
 | [Tests/NXLibraryCoreTests/SeleneCanvasTests.swift](../Tests/NXLibraryCoreTests/SeleneCanvasTests.swift) | Scala, centratura e conversione delle unità del canvas. |
 | [Tests/NXLibraryCoreTests/SeleneImporterTests.swift](../Tests/NXLibraryCoreTests/SeleneImporterTests.swift) | Copia delle risorse Selene e risoluzione dei cue sonori. |
-| [Tests/NXLibraryCoreTests/SelenePaletteTests.swift](../Tests/NXLibraryCoreTests/SelenePaletteTests.swift) | Lettura delle 24 palette, superfici Arcane/Flow, persistenza ID, ordine e fallback. |
+| [Tests/NXLibraryCoreTests/SelenePaletteTests.swift](../Tests/NXLibraryCoreTests/SelenePaletteTests.swift) | Lettura delle 25 palette, default blu classico e alternative Crystal/Flow, persistenza ID, ordine e fallback. |
 | [Tests/NXLibraryCoreTests/SettingsCatalogTests.swift](../Tests/NXLibraryCoreTests/SettingsCatalogTests.swift) | Catalogo delle righe, ricerca, valori modificati, identità invariate, sezioni e gruppi in ordine, reset delle righe spostate. |
 | [Tests/NXLibraryCoreTests/SetupActionsTests.swift](../Tests/NXLibraryCoreTests/SetupActionsTests.swift) | Comandi Git del Setup e rispetto delle modifiche locali nel checkout. |
 | [Tests/NXLibraryCoreTests/SetupCheckTests.swift](../Tests/NXLibraryCoreTests/SetupCheckTests.swift) | Stati delle schede, requisiti, override e condizioni di riapertura del Setup. |
@@ -856,7 +856,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Resources/AppIcon-Dark.png](../Resources/AppIcon-Dark.png) | Variante scura dell’icona dell’app. |
 | [Resources/AppIcon-Light.png](../Resources/AppIcon-Light.png) | Variante chiara dell’icona dell’app. |
 | [Resources/AppIcon-Mono.png](../Resources/AppIcon-Mono.png) | Variante monocromatica dell’icona dell’app. |
-| [Resources/Selene/palettes.json](../Resources/Selene/palettes.json) | Catalogo delle 24 palette; Arcane e Arcane Flow dichiarano la propria superficie animata. |
+| [Resources/Selene/palettes.json](../Resources/Selene/palettes.json) | Catalogo delle 25 palette: blu classico predefinito, Arcane Crystal e Arcane Flow come superfici opzionali. |
 | [Resources/Selene/Fonts/MaterialIcons-Regular.ttf](../Resources/Selene/Fonts/MaterialIcons-Regular.ttf) | Font dei glifi Material Icons disegnati dalla UI. |
 | [Resources/Selene/Fonts/MaterialIcons-LICENSE.txt](../Resources/Selene/Fonts/MaterialIcons-LICENSE.txt) | Licenza del font Material Icons incluso. |
 | [Resources/Selene/NOTICE.txt](../Resources/Selene/NOTICE.txt) | Attribuzioni delle risorse Selene incluse. |

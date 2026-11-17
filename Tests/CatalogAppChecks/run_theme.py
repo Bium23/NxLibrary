@@ -86,6 +86,9 @@ final class Browser { var state: BrowseState? }
         let palettes = SelenePaletteCatalog.pickerOrder(try SelenePaletteCatalog.load(from:
             URL(fileURLWithPath: "Resources/Selene/palettes.json")))
         precondition(palettes[0].name == AppIdentity.name && palettes[0].id == "selene")
+        precondition(palettes[0].surface == .classic && SelenePalette.fallback.surface == .classic)
+        precondition(palettes.first { $0.id == "arcane-crystal" }?.surface == .arcane)
+        precondition(palettes.first { $0.id == "arcane-flow" }?.surface == .flow)
         let host = Host(palettes: palettes, settings: settings)
         host.state.themeIndex = palettes.count - 1
         host.key(.down)

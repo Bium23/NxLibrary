@@ -92,3 +92,12 @@ anche con superficie Arcane pienamente visibile. I rami uniformi ora evitano
 quei percorsi a regime; durante le dissolvenze restano entrambi. Le misure
 sopra precedono questa correzione e non ne quantificano il beneficio. Il
 controllo finale include anche blend intermedi e trasparenza a presenza zero.
+
+Il blu classico resta il default `selene` e il fallback. Le superfici nuove
+sono alternative esplicite: `arcane-crystal` (Arcane Crystal) e `arcane-flow`
+(Arcane Flow). I controlli verificano anche questa separazione, l’ordine
+predefinito e la persistenza degli ID; nessuna preferenza è riscritta.
+Il ripristino del blu confronta esattamente i valori della palette storica;
+il metadato delle nuove superfici è assente sia dal default sia dal fallback.
+La suite completa passa ancora1792test, con una regressione inizialmente
+rossa per default, fallback, ordine e numero delle alternative.

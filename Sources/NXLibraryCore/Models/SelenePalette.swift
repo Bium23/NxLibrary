@@ -41,7 +41,6 @@ public struct SelenePalette: Codable, Equatable, Identifiable {
         id: "selene", name: AppIdentity.name, mode: .dark,
         focus: 0xFFFFFF, onFocus: 0x111111, ink: 0xFFFFFF, scrim: 0x000000,
         glass: 0x14181F, glyph: 0x9CCBFF, success: 0x3DDC84,
-        moonlight: "arcane",
         base: .init(kind: .radial, stops: [
             .init(color: 0x0C1123, location: 0),
             .init(color: 0x060812, location: 1)

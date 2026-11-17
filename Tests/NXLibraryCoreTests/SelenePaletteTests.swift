@@ -8,9 +8,9 @@ final class SelenePaletteTests: XCTestCase {
             .appendingPathComponent("Resources/Selene/palettes.json")
     }
 
-    func testLoadsAll24Palettes() throws {
+    func testLoadsAll25Palettes() throws {
         let all = try SelenePaletteCatalog.load(from: paletteURL)
-        XCTAssertEqual(all.count, 24)
+        XCTAssertEqual(all.count, 25)
         let ids = Set(all.map(\.id))
         XCTAssertTrue(ids.isSuperset(of: ["selene", "white", "catppuccin-latte"]))
     }
@@ -22,8 +22,8 @@ final class SelenePaletteTests: XCTestCase {
         XCTAssertEqual(SelenePaletteCatalog.defaultID, "selene")
         let rest = ordered.dropFirst().map(\.name)
         XCTAssertEqual(rest, rest.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending })
-        XCTAssertEqual(Array(rest.prefix(3)), ["Arcane Flow", "Catppuccin", "Catppuccin Latte"])
-        XCTAssertEqual(ordered.count, 24)
+        XCTAssertEqual(Array(rest.prefix(3)), ["Arcane Crystal", "Arcane Flow", "Catppuccin"])
+        XCTAssertEqual(ordered.count, 25)
     }
 
     func testSelenePaletteValues() throws {
@@ -41,7 +41,8 @@ final class SelenePaletteTests: XCTestCase {
 
     func testBothArcaneSurfacesAreSelectableAndOldPalettesStayClassic() throws {
         let all = try SelenePaletteCatalog.load(from: paletteURL)
-        XCTAssertEqual(SelenePaletteCatalog.resolve("selene", in: all).surface, .arcane)
+        XCTAssertEqual(SelenePaletteCatalog.resolve("selene", in: all).surface, .classic)
+        XCTAssertEqual(SelenePaletteCatalog.resolve("arcane-crystal", in: all).surface, .arcane)
         XCTAssertEqual(SelenePaletteCatalog.resolve("arcane-flow", in: all).surface, .flow)
         XCTAssertEqual(SelenePaletteCatalog.resolve("white", in: all).surface, .classic)
         var settings = AppSettings()
@@ -57,10 +58,12 @@ final class SelenePaletteTests: XCTestCase {
     func testMissingFileUsesFallback() {
         XCTAssertThrowsError(try SelenePaletteCatalog.load(from: URL(fileURLWithPath: "/nonexistent/palettes.json")))
         XCTAssertEqual(SelenePaletteCatalog.resolve("selene", in: []), .fallback)
+        XCTAssertEqual(SelenePalette.fallback.surface, .classic)
     }
 
     func testSettingsDecodeWithoutColorTheme() throws {
         let settings = try JSONDecoder().decode(AppSettings.self, from: Data("{}".utf8))
         XCTAssertEqual(settings.colorThemeID, "selene")
+        XCTAssertEqual(SelenePaletteCatalog.resolve(settings.colorThemeID, in: []).surface, .classic)
     }
 }

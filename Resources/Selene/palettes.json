@@ -472,8 +472,7 @@
           "location": 1.0
         }
       ]
-    },
-    "moonlight": "arcane"
+    }
   },
   {
     "id": "solitude",
@@ -600,5 +599,31 @@
       ]
     },
     "moonlight": "flow"
+  },
+  {
+    "id": "arcane-crystal",
+    "name": "Arcane Crystal",
+    "mode": "dark",
+    "focus": 16777215,
+    "onFocus": 1118481,
+    "ink": 16777215,
+    "scrim": 0,
+    "glass": 1316895,
+    "glyph": 10275839,
+    "success": 4054148,
+    "base": {
+      "kind": "radial",
+      "stops": [
+        {
+          "color": 790819,
+          "location": 0.0
+        },
+        {
+          "color": 395282,
+          "location": 1.0
+        }
+      ]
+    },
+    "moonlight": "arcane"
   }
 ]
