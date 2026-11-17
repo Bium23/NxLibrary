@@ -21,6 +21,8 @@ struct SpotlightTileArtwork: View {
     @ObservedObject private var picks = ArtworkPicks.shared
     @State private var better: NSImage?
     @State private var picked: NSImage?
+    /// The first look-up has ended (art found or not): the tile is ready for Spotlight's entrance.
+    @State private var settled = false
 
     var body: some View {
         ZStack {
@@ -48,7 +50,9 @@ struct SpotlightTileArtwork: View {
         }
         .frame(width: side, height: side)
         .clipped()
+        .preference(key: TileArtPendingKey.self, value: settled ? 0 : 1)
         .task(id: "\(game.id)|\(picks.revision)") {
+            defer { if !settled { settled = true } }
             if let url = picks.url(titleID: personalizations.nxnativeKey(for: game), slot: .icon) {
                 picked = await GameArtLoader.decode(at: url, maxPixelSize: 512)
                 return
@@ -72,6 +76,12 @@ struct SpotlightTileArtwork: View {
         guard let url = await artwork.automaticIcon(titleID: titleID, name: game.name) else { return nil }
         return await GameArtLoader.decode(at: url, maxPixelSize: 512)
     }
+}
+
+/// How many tiles below are still looking up their first art; Spotlight's entrance waits for none (or 1 s).
+struct TileArtPendingKey: PreferenceKey {
+    static let defaultValue = 0
+    static func reduce(value: inout Int, nextValue: () -> Int) { value += nextValue() }
 }
 
 /// Decoded tile art, so a tile that scrolls back into the row paints at once.

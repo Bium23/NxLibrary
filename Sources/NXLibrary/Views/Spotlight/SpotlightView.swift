@@ -77,6 +77,12 @@ public struct SpotlightView: View {
     @State var artRule = BackdropArtRule()
     /// The wheel's travel inside the store, toward the next section.
     @State var storeWheel: CGFloat = 0
+    /// The first home's entrance (`SpotlightView+Entrance`); landed on every later visit.
+    @State var entrance: SpotlightEntrance.Phase
+    /// Visible tiles still looking up their first art (`TileArtPendingKey`).
+    @State var pendingTileArt = 0
+    /// The entrance's longest wait for the tiles' art.
+    @State var entranceWait: Task<Void, Never>?
     var isGliding: Bool { Date() < glideEnds }
 
     struct ViewerContext: Equatable {
@@ -99,6 +105,8 @@ public struct SpotlightView: View {
         self.playSessions = playSessions
         self.runningGames = runningGames
         self.artwork = artwork
+        // Held hidden from the first frame, under the intro or the welcome; `entranceAppear` lands it when not due.
+        _entrance = State(initialValue: viewModel.homeSeen ? .landed : .covered)
     }
 
     // MARK: - Model
@@ -187,7 +195,8 @@ public struct SpotlightView: View {
                 let shown = shownArt(model)
                 SeleneArtBackground(image: shown, imageKey: shown == nil ? "none" : art.key,
                                     shade: settings.settings.backgroundShade, crossfade: 0.8,
-                                    showsArt: !settings.settings.keepWallpaperOnGames, modsTint: modsBackdrop)
+                                    showsArt: !settings.settings.keepWallpaperOnGames, modsTint: modsBackdrop,
+                                    reveal: entrance.holdsHidden ? .hidden : .shown)
                 // Deeper in the page the art dims so the text reads.
                 Color.black.opacity(dimmed ? 0.4 : 0)
                     .allowsHitTesting(false)
@@ -200,6 +209,9 @@ public struct SpotlightView: View {
         .overlay(model.selectedGame.map { ModsBandOverlay(host: modsHost, find: modsHost.find, game: $0) })
         .overlay(storeOverlay(model))
         .onAppear(perform: appear)
+        .onAppear(perform: entranceAppear)
+        .onChange(of: isCovered) { covered in if !covered { uncoverEntrance() } }
+        .onChange(of: reduceMotion) { reduced in if reduced { landEntrance() } }
         .onAppear { storeHost.loadCover(titleIDs: Set(storeGames.compactMap { viewModel.modStore(for: $0)?.titleID })) }
         .onAppear { mutate { $0.setPillLimit(selectedPillCount) } }
         .onChange(of: selectedPillCount) { count in mutate { $0.setPillLimit(count) } }
@@ -218,6 +230,7 @@ public struct SpotlightView: View {
         // Another game, or the row: the screen belongs to the game it opened on.
         .onChange(of: viewModel.spotlight.selectedKey) { _ in achievementsScreen = nil }
         .onDisappear {
+            landEntrance()
             removeKeyMonitor()
             router.isScreenshotViewerOpen = false
             achievementsScreen = nil
@@ -263,7 +276,8 @@ public struct SpotlightView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxSpotlightGamepadAction)) { note in
-            guard viewModel.alertMessage == nil, viewModel.settingsNotice == nil else { return }
+            // The welcome's fade: the controller reaches Spotlight only once it has gone.
+            guard viewModel.alertMessage == nil, viewModel.settingsNotice == nil, !isCovered else { return }
             if let action = note.object as? GamepadAction { handle(action) }
         }
         .onChange(of: playSessions.sessions.count) { _ in reconcile() }
@@ -332,8 +346,8 @@ public struct SpotlightView: View {
         return ZStack(alignment: .topLeading) {
             SpotlightTopBar(filter: filter, showClock: settings.settings.showClock,
                             onSelect: { if !state.isLifted { setFilter($0) } })
-                .opacity(rowShown ? 1 : 0)
-                .allowsHitTesting(rowShown)
+                .opacity(rowShown && !entrance.holdsHidden ? 1 : 0)
+                .allowsHitTesting(rowShown && !entrance.holdsHidden)
 
             ZStack(alignment: .topLeading) {
                 SpotlightRowView(
@@ -360,17 +374,20 @@ public struct SpotlightView: View {
                 )
                 .offset(y: canvas.u(130))
                 // The icons give way as the page rises (and stop taking the pointer).
-                .opacity(rowShown ? 1 : 0)
-                .allowsHitTesting(rowShown)
+                .opacity(rowShown && !entrance.holdsHidden ? 1 : 0)
+                .allowsHitTesting(rowShown && !entrance.holdsHidden)
+                .onPreferenceChange(TileArtPendingKey.self, perform: tileArtPending)
 
                 SpotlightFilterPill(filter: pillFilter, count: rowGames.count)
                     .offset(x: canvas.u(80), y: canvas.u(88))
                     // Opacity fades always run, reduce motion or not.
-                    .opacity(pillVisible ? 1 : 0)
+                    .opacity(pillVisible && !entrance.holdsHidden ? 1 : 0)
                     .animation(.easeOut(duration: 0.2), value: pillVisible)
 
                 info(model, state: state)
                     .offset(x: canvas.u(80), y: canvas.u(420))
+                    .opacity(entrance.holdsHidden ? 0 : 1)
+                    .allowsHitTesting(!entrance.holdsHidden)
             }
             .onPreferenceChange(SpotlightBlockKey.self) { heights in
                 if !Self.sameLayout(heights, blocks) { blocks = heights }

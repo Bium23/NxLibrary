@@ -148,8 +148,11 @@ public final class AppViewModel: ObservableObject {
     var reviewsFailureOnAddGame = false
     /// The update dialog is up (set by the shell); screens leave input to it.
     var isUpdateOfferOpen = false
-    /// "Welcome to Arcane" is on screen: screens' own keyboard monitors let Return and the arrows go to it.
-    var isWelcomeOpen = false
+    /// "Welcome to Arcane" is on screen, until its fade has ended: screens' own keyboard monitors let Return and
+    /// the arrows go to it, and Spotlight holds its entrance until it has gone.
+    @Published var isWelcomeOpen = false
+    /// A home screen (Spotlight or Collection) has shown since launch: Spotlight's entrance plays only on the first.
+    var homeSeen = false
     @Published public var isScanningGameFolder: Bool = false
     @Published public var scanError: String? = nil
     

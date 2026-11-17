@@ -19,15 +19,18 @@ struct SeleneArtBackground: View {
     var showsArt = true
     /// The Mods card: no art, the moonlight turns gold (`SeleneBackdrop.modsTint`).
     var modsTint = false
+    /// Spotlight's entrance (`SpotlightEntrance`): the art hidden and the moonlight still while the intro or the
+    /// welcome covers the screen, so nothing moves under them.
+    var reveal: ArtReveal = .shown
 
     private var art: NSImage? { showsArt ? image : nil }
 
     var body: some View {
         ZStack {
             // Under a game's art the moonlight is hidden: it holds still (Selene fades it out there).
-            backdrop.still(art != nil).modsTint(modsTint)
+            backdrop.still(art != nil || reveal == .hidden).modsTint(modsTint)
             // A crossfade is not movement: it stays under reduce motion (spec §8).
-            SeleneArtLayer(image: art, key: art == nil ? "none" : imageKey, crossfade: crossfade)
+            SeleneArtLayer(image: art, key: art == nil ? "none" : imageKey, crossfade: crossfade, reveal: reveal)
             SeleneShades(shade: shade)
         }
         .allowsHitTesting(false)
@@ -62,6 +65,11 @@ struct SeleneShades: View {
     }
 }
 
+/// How the art layer shows as a whole: hidden under a cover, or shown.
+enum ArtReveal: Equatable {
+    case hidden, shown
+}
+
 /// The art as one Core Animation layer: a change dissolves old into new in the render server, so the crossfade
 /// never dips through to the moonlight halfway (both images half faded) and never stutters while the main thread
 /// is busy (a page building, a store opening). No SwiftUI work per frame.
@@ -70,10 +78,12 @@ struct SeleneArtLayer: NSViewRepresentable {
     /// Changes whenever `image` does; "none" without art.
     let key: String
     let crossfade: Double
+    var reveal: ArtReveal = .shown
 
     func makeNSView(context: Context) -> SeleneArtLayerView { SeleneArtLayerView() }
 
     func updateNSView(_ view: SeleneArtLayerView, context: Context) {
+        view.reveal(reveal)
         view.show(image, key: key, crossfade: crossfade)
     }
 }
@@ -106,6 +116,16 @@ final class SeleneArtLayerView: NSView {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         for art in stack { art.frame = bounds }
+        CATransaction.commit()
+    }
+
+    /// The whole art layer: its own opacity, apart from each image's crossfade.
+    func reveal(_ reveal: ArtReveal) {
+        let opacity: Float = reveal == .hidden ? 0 : 1
+        guard layer?.opacity != opacity else { return }
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        layer?.opacity = opacity
         CATransaction.commit()
     }
 

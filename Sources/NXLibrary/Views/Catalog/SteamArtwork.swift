@@ -12,6 +12,8 @@ struct SteamArtwork: View {
     @State private var loadedKey = ""
     /// The installed app's own icon, the cover/icon fallback: read once per bundle, not on every redraw.
     @State private var appIcon: NSImage?
+    /// The first look-up has ended (art found or not): a tile is ready for Spotlight's entrance.
+    @State private var settled = false
     @Environment(\.seleneCanvas) private var canvas
     @ObservedObject private var picks = SteamPersonalizations.shared.artwork
     private var installedApp: CatalogNativeApplication? {
@@ -37,7 +39,9 @@ struct SteamArtwork: View {
             } else { Color.clear }
         }
         .clipped()
+        .preference(key: TileArtPendingKey.self, value: settled ? 0 : 1)
         .task(id: key) {
+            defer { if !settled { settled = true } }
             let expected = key
             if slot == .cover || slot == .icon {
                 appIcon = installedApp.map { SteamAppIconCache.icon(at: $0.url) }

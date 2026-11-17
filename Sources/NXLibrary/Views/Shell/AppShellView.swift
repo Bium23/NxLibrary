@@ -387,7 +387,8 @@ public struct AppShellView: View {
             if !on { sessionCard.clear() }
         }
         .onChange(of: showsUpdateOffer) { viewModel.isUpdateOfferOpen = $0 }
-        .onChange(of: showsWelcome) { viewModel.isWelcomeOpen = $0 }
+        // Closing clears it once the fade has ended (`closeWelcome`), so nothing under it moves or takes input before.
+        .onChange(of: showsWelcome) { if $0 { viewModel.isWelcomeOpen = true } }
         .onChange(of: router.route) { route in
             recordLastHome(route)
             switch route {
@@ -813,6 +814,7 @@ public struct AppShellView: View {
         let finish = {
             settings.settings = ArcaneWelcome.settings(after: exit, from: settings.settings)
             if exit == .openLibrary { router.navigate(to: .library) }
+            viewModel.isWelcomeOpen = false
         }
         guard !reduceMotion else {
             showsWelcome = false

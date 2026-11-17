@@ -70,6 +70,8 @@ public struct CollectionView: View {
             },
             stage: { stage(games: games, game: game) })
         .onAppear(perform: appear)
+        // A launch on Collection: Spotlight's entrance belongs to the first home only (`SpotlightView+Entrance`).
+        .onAppear { viewModel.homeSeen = true }
         .onDisappear(perform: removeKeyMonitor)
         .onChange(of: viewModel.catalogGames) { _ in
             viewModel.preloadCachedStoreMetadata()
