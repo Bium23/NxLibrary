@@ -49,33 +49,43 @@ float arcaneGlow(float2 uv, float2 centre, float2 radius) {
     return exp(-dot(d,d)*2.5);
 }
 
+// Travelling, overlapping wind waves bend the whole thread, not just its glow.
 float filamentY(float x, float2 a, float2 b, float bend, float phase, float seed) {
     float s=clamp((x-a.x)/(b.x-a.x),0.0,1.0);
-    return mix(a.y,b.y,s) + sin(s*3.1415927)*(bend+0.009*sin(s*5.4-phase+seed));
+    float envelope=sin(s*3.1415927);
+    float wind=0.026*sin(s*5.2-phase*1.35+seed)
+        + 0.009*sin(s*11.7-phase*1.91+seed*0.63);
+    return mix(a.y,b.y,s) + envelope*(bend+wind);
+}
+
+// A subpixel luminous core integrated across a pixel. Soft, dim scattering
+// gives it air without widening it into a neon ribbon.
+float filamentProfile(float distancePixels) {
+    return 0.34*exp(-0.5*distancePixels*distancePixels/0.25)
+        + 0.018*exp(-0.5*distancePixels*distancePixels/4.84);
 }
 
 float3 filament(float2 uv, float2 a, float2 b, float bend, float phase,
                 float time, float seed, float3 color, float height) {
     float s=(uv.x-a.x)/(b.x-a.x);
-    float gate=smoothstep(0.0,0.025,s)*(1.0-smoothstep(0.975,1.0,s));
+    float gate=smoothstep(0.0,0.12,s)*(1.0-smoothstep(0.78,1.0,s));
     float y=filamentY(uv.x,a,b,bend,phase,seed);
     float distance=uv.y-y;
-    float aa=max(0.6/height,fwidth(distance));
-    float edge=exp(-distance*distance/0.00009)*0.045
-        + exp(-distance*distance/0.000006)*0.12
-        + (1.0-smoothstep(aa,aa*2.0,abs(distance)))*0.36;
-    float fan=sin(clamp(s,0.0,1.0)*3.1415927)*0.007;
-    float sides=exp(-pow((distance-fan)/max(aa,0.0004),2.0))
-        + exp(-pow((distance+fan)/max(aa,0.0004),2.0));
-    float pulse=pow(0.5+0.5*cos(6.2831853*(s*0.7-time/(100.0+seed*3.0)-seed*0.137)),7.0);
-    return color*gate*(edge*(0.92+0.08*sin(phase+seed)) + sides*0.035 + pulse*edge*0.55);
+    float footprint=max(length(float2(dfdx(distance),dfdy(distance))),1.0/height);
+    float separation=(0.0015+0.006*sin(clamp(s,0.0,1.0)*3.1415927))
+        *(0.75+0.25*sin(s*4.8-phase*0.8+seed));
+    float strands=filamentProfile(distance/footprint)
+        + 0.32*filamentProfile((distance-separation)/footprint)
+        + 0.18*filamentProfile((distance+separation*1.4)/footprint);
+    float glint=0.78+0.22*cos(6.2831853*(s*0.65-time/(100.0+seed*3.0)-seed*0.137));
+    return color*gate*strands*glint;
 }
 
 float triangle(float2 p,float2 a,float2 b,float2 c) {
     float2 v=b-a,w=c-a,q=p-a;
     float det=v.x*w.y-v.y*w.x;
     float u=(q.x*w.y-q.y*w.x)/det, t=(v.x*q.y-v.y*q.x)/det;
-    return step(0.0,u)*step(0.0,t)*step(u+t,1.0);
+    return smoothstep(0.0,0.018,u)*smoothstep(0.0,0.018,t)*(1.0-smoothstep(0.982,1.0,u+t));
 }
 
 float3 arcaneSurface(float2 uv,float time,float flow,float height) {
@@ -376,7 +386,7 @@ vertex DotOut moon_dot_vertex(uint vid [[vertex_id]], uint iid [[instance_id]],
         float3 spectral = arcaneSpectrum(float2(p.x / aspect, p.y), t, q.phase * 0.11);
         o.color = mix(o.color, mix(spectral, float3(1.0), q.tint > 0.5 ? 0.55 : 0.18), u.look.w);
     }
-    o.alpha *= mix(1.0, arcaneIntensity * 1.45, u.look.w);
+    o.alpha *= mix(1.0, arcaneIntensity * 1.45 * mix(0.85, 0.22, o.bokeh), u.look.w);
     return o;
 }
 

@@ -112,3 +112,20 @@ quelli di f427937, stesso campo e uniform: differenza massima per canale
 0/255 a320px,1/255 a640px,0/255 a960px. Il controllo del pacchetto Dev
 conferma l’esatta palette storica, escluso il nome visibile. Non è una prova
 della finestra o della composizione dello schermo.
+
+## Fili sottili e onde viaggianti
+
+La correzione mantiene intatto il percorso classico. Nei due temi opzionali
+il profilo usa un nucleo gaussiano da0,5pixel sigma e dispersione molto
+debole; il footprint è calcolato dalle derivate spaziali per mantenere il
+tratto sottile anche sulle diagonali. Due onde sovrapposte deformano le curve
+lungo la loro lunghezza, con fili secondari più deboli ed estremi sfumati.
+I bokeh grandi sono attenuati soltanto nelle alternative.
+
+La regressione GPU inizialmente rossa prova le funzioni Metal effettive:
+luce a un pixel dal nucleo inferiore al20% del picco, escursione limitata,
+spostamenti continui e deformazioni diverse in due punti del filo. Restano
+le prove di colori locali, trasparenza a presenza zero, blend e Mods.
+Fotogrammi sintetici e una sequenza reale di18secondi a30fps sono generati
+fuori schermo, senza finestre o catture; questi dati non verificano la
+fluidità dell’app e la qualità visiva resta da confermare dal maintainer.

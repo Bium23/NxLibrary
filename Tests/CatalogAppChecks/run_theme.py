@@ -146,6 +146,12 @@ final class Browser { var state: BrowseState? }
         kernel void sampleArcane(device float4 *out [[buffer(0)]], uint i [[thread_position_in_grid]]) {
             out[i] = float4(arcaneSpectrum(float2(float(i) * 0.13, 0.3 + float(i) * 0.05), float(i) * 35.3, 0.0), 1.0);
         }
+        kernel void sampleWind(device float4 *out [[buffer(0)]], uint i [[thread_position_in_grid]]) {
+            float phase = float(i)*0.4;
+            out[i] = float4(filamentY(0.5,float2(0.1,0.3),float2(0.9,0.7),0.0,phase,0.0),
+                            filamentProfile(0.0), filamentProfile(1.0),
+                            filamentY(0.7,float2(0.1,0.3),float2(0.9,0.7),0.0,phase,0.0));
+        }
         """
         let device = engine.device
         let library = try device.makeLibrary(source: source, options: nil)
@@ -162,6 +168,24 @@ final class Browser { var state: BrowseState? }
             let expected = MoonlightChromatics.sample(x: Float(i) * 0.13, y: 0.3 + Float(i) * 0.05, time: Float(i) * 35.3)
             for k in 0..<3 { precondition(abs(values[i][k] - expected[k]) < 0.00002) }
         }
+        let windPipeline = try device.makeComputePipelineState(function: library.makeFunction(name: "sampleWind")!)
+        let windBuffer = device.makeBuffer(length: 16 * MemoryLayout<SIMD4<Float>>.stride, options: .storageModeShared)!
+        let windCommand = device.makeCommandQueue()!.makeCommandBuffer()!
+        let windEncoder = windCommand.makeComputeCommandEncoder()!
+        windEncoder.setComputePipelineState(windPipeline)
+        windEncoder.setBuffer(windBuffer, offset: 0, index: 0)
+        windEncoder.dispatchThreads(MTLSize(width: 16,height: 1,depth: 1), threadsPerThreadgroup: MTLSize(width: 16,height: 1,depth: 1))
+        windEncoder.endEncoding(); windCommand.commit(); windCommand.waitUntilCompleted()
+        precondition(windCommand.status == .completed)
+        let wind = windBuffer.contents().bindMemory(to: SIMD4<Float>.self, capacity: 16)
+        let heights = (0..<16).map { wind[$0].x }
+        precondition(heights.max()! - heights.min()! > 0.025 && heights.max()! - heights.min()! < 0.08,
+                     "wind must bend the curve visibly, within a small part of the height")
+        precondition(wind[0].z < wind[0].y * 0.2, "one pixel from the core, light must be faint")
+        precondition(abs((wind[3].x-wind[0].x)-(wind[3].w-wind[0].w)) > 0.001,
+                     "wind deforms the curve instead of translating a rigid line")
+        for i in 1..<16 { precondition(abs(wind[i].x-wind[i-1].x) < 0.025) }
+        print("Actual Metal: thin core and bounded travelling wind deformation: PASS")
         print("Actual Metal: local colour parity, distinct moving surfaces, soft particles, fixed frame and distinct Mods uniforms: PASS")
     }
 }
