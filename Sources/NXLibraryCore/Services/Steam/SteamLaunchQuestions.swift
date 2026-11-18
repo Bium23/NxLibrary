@@ -2,8 +2,9 @@ import Foundation
 
 /// A launch Steam holds until the player answers it: Steam writes `GameAction [AppID <id>, …] : LaunchApp waiting
 /// for user response to <question>` to its console log when a launch stops on a question (the game is playing on
-/// another device, a cloud conflict, …), and a later `GameAction` line for that game once it moves on. Questions
-/// Steam answers itself (`ShowInterstitials`) move on at once, so a question counts only after `grace`.
+/// another device, a cloud conflict, …), and a later `GameAction` line for that game once it moves on.
+/// `ShowInterstitials` is a generic startup step that can use the same wording during a cold start.
+/// Other questions count only after `grace`.
 /// Only `GameAction` lines are read; nothing is kept but which games wait and since when.
 public struct SteamLaunchQuestions: Equatable, Sendable {
     public static let grace: TimeInterval = 1
@@ -36,11 +37,12 @@ public struct SteamLaunchQuestions: Equatable, Sendable {
         guard let start = line.range(of: Self.action)?.upperBound,
               let end = line[start...].firstIndex(where: { !$0.isNumber }),
               let appID = UInt32(line[start..<end]) else { return }
-        if line[end...].contains(Self.question) {
-            if pending[appID] == nil { pending[appID] = now }
-        } else {
+        guard let question = line[end...].range(of: Self.question),
+              line[question.upperBound...].prefix(while: { !$0.isWhitespace }) != "ShowInterstitials" else {
             pending[appID] = nil
+            return
         }
+        if pending[appID] == nil { pending[appID] = now }
     }
 }
 

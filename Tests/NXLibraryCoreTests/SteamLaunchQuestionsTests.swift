@@ -17,6 +17,17 @@ final class SteamLaunchQuestionsTests: XCTestCase {
         XCTAssertFalse(questions.isAsking(appID: 2141910, now: date(5)))
     }
 
+    func testColdStartInterstitialDoesNotDismissTheCoverBeforeARealQuestion() {
+        var questions = SteamLaunchQuestions()
+        questions.read(line(2141910, "changed task to ShowInterstitials with \"\"")
+                       + line(2141910, "waiting for user response to ShowInterstitials \"\""), now: date(7))
+        XCTAssertFalse(questions.isAsking(appID: 2141910, now: date(9)))
+
+        questions.read(waiting(), now: date(10))
+        XCTAssertFalse(questions.isAsking(appID: 2141910, now: date(10.5)))
+        XCTAssertTrue(questions.isAsking(appID: 2141910, now: date(11)))
+    }
+
     func testAnOpenQuestionAsksOnceItOutlastsTheGrace() {
         var questions = SteamLaunchQuestions()
         questions.read(waiting(), now: date(10))

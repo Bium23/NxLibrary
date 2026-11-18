@@ -185,6 +185,8 @@ Favorite, Hidden, Show in Finder.
   faceva alternare a macOS schermo intero e scrivania per tutta l’attesa. Mentre la schermata è aperta Play non fa
   nulla, per nessun gioco. Un clic la chiude (Arcane torna davanti se il gioco non è arrivato, salvo un gioco in
   primo piano); se ne va comunque dopo 120 s. Un gioco avviato da Steam non la mostra.
+- `ShowInterstitials` è un passaggio interno che all'avvio a freddo può restare in attesa oltre un secondo.
+  La schermata rimane visibile durante quel passaggio. Se Steam si ferma lì, si applica l'attesa di 45 s.
 - Il log si legge fuori dal thread principale ogni 0,5 s durante l’attesa, per righe intere; la prima lettura prende
   l’ultimo megabyte (conta anche una domanda rimasta aperta da un Play precedente), un file nuovo (Steam riavviato)
   azzera tutto. Esempio di domanda: `KickingOtherSession`, il gioco è aperto su un altro dispositivo. Se Valve cambia

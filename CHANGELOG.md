@@ -33,6 +33,7 @@ See the [validation checklist](docs/validation.md) for the state of manual check
 ### Fixed
 
 - Steam receives Play once Arcane submits the launch cover, so a fast Space change can stay behind the waiting screen.
+- The waiting screen stays up when a cold Steam launch pauses during its startup interstitials.
 - Spotlight loads installed mods and the lower game page when the page opens. Moving on the game row skips the Details calculations. Spotlight and Collection save the last selected game in the background.
 - Open library remains available during the initial scan, so an unresponsive folder cannot hold up first launch. Leaving cancels the request; sources can be added later in Settings.
 

@@ -88,17 +88,17 @@ flowchart TD
 ```mermaid
 flowchart TD
     A["Play (GamePrimaryActions)"] --> B["SteamPlayCoordinator"]
-    B --> C["steam://run/AppID al client di Valve"]
-    C --> K["LaunchCoverWindow prima della richiesta Steam<br/>ripiego entro 1 s se il pannello manca"]
-    K --> D["SteamPlayState / SteamBackgroundLaunch<br/>attesa del processo del gioco"]
-    D -->|"Steam fa una domanda"| Q["SteamLaunchQuestions dal console_log"]
+    B --> K["LaunchCoverWindow<br/>ripiego entro 1 s se il pannello manca"]
+    K --> C["steam://run/AppID al client di Valve"]
+    C --> D["SteamPlayState / SteamBackgroundLaunch<br/>attesa del processo del gioco"]
+    D -->|"Domanda effettiva o scadenza"| Q["La schermata lascia spazio a Steam"]
     D --> E["LaunchCoverWindow finché il gioco disegna"]
     E --> F["PlaySessionStore registra la sessione reale"]
     F --> G["Fine: SessionCard · SteamReturnFocus"]
     G --> H["SteamPlaytimeSync rilegge le ore da localconfig.vdf"]
 ```
 
-Arcane non scrive mai i file di Steam e non apre l'app del gioco direttamente. Dettagli in [steam.md](steam.md).
+Arcane legge le domande dal log di Steam. Durante `ShowInterstitials` l'attesa prosegue. Arcane non scrive mai i file di Steam e non apre l'app del gioco direttamente. Dettagli in [steam.md](steam.md).
 
 Nella pagina Spotlight di un titolo Steam, Giù porta anche a **More like this** quando la fascia è presente. Invio, A o doppio clic selezionano la copertina sulla riga della libreria. Se il filtro la esclude, la libreria passa a **All games** come per Switch.
 

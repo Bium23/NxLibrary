@@ -475,17 +475,18 @@ final class SteamPlayCoordinator: ObservableObject {
         questionWatch = (gameID, watch)
         guard asks, case .starting = phase(ofID: gameID) else { return }
         stopWatchingQuestions()
-        handToSteam(gameID)
+        handToSteam(gameID, reason: "Steam is waiting for a response")
     }
 
     /// Steam may need the player for this wait: it stops being kept away, is shown, and the head says to check it.
     /// While the game's launch screen waits, Steam is also brought forward and the screen leaves; a player who
     /// dismissed the screen is left where they are.
-    private func handToSteam(_ id: UUID) {
+    private func handToSteam(_ id: UUID, reason: String) {
         late.insert(id)
         backgrounds[id] = nil
         Self.showSteam()
         guard var screen = launchScreen, screen.gameID == id, !screen.ready else { return }
+        LaunchCoverTrace.event("Cover yields to Steam: \(reason)")
         if let steam = Self.steamApplication { RunningGameMonitor.activate(steam) }
         screen.ready = true
         launchScreen = screen
@@ -505,7 +506,7 @@ final class SteamPlayCoordinator: ObservableObject {
             if case .running(let pid) = phase { watchWindow(of: id, pid: pid) }
             return
         case .late:
-            handToSteam(id)
+            handToSteam(id, reason: "launch wait reached its limit")
             return
         case .over:
             break
