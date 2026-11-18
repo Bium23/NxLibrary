@@ -13,6 +13,8 @@ See the [validation checklist](docs/validation.md) for the state of manual check
 
 ### Changed
 
+- **Updated nxnative to `461a5f9f`.** The upstream update includes shader and texture fixes, audio output-route fixes, more game profiles and improvements in package discovery and pipeline preparation. The required Metal compiler is still `32023.922`. The new engine applies to games built with this pin.
+
 - **New app icon.** Arcane's icon is now a crystal inside a glass sphere, framed by navy and plum ink strokes on light paper. The Light, Dark and Mono choices in **App icon** follow it.
 - The shell keeps the same background renderer when opening Settings and returning home, preserving its frame and motion clock.
 - Changing the theme updates the shared background and its shades even when the wallpaper and selected card stay the same.

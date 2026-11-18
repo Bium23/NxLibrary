@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 18 novembre 2026. Copertura di **710 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 18 novembre 2026. Copertura di **711 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -904,6 +904,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [e5f03403 → bd979ced](../docs/upstream-upgrades/2026-11-08-e5f03403-bd979ced-review.md) | Revisione engine dell’8 novembre e nuova catena di traduzione shader. |
 | [bd979ced → 79741184](../docs/upstream-upgrades/2026-11-09-bd979ced-79741184-review.md) | Adozione engine per 0.1.4.2 e limiti della validazione registrata. |
 | [79741184 → 8a5c5e7e](../docs/upstream-upgrades/2026-11-12-79741184-8a5c5e7e-review.md) | Adozione engine per 0.1.4.3 e limiti della validazione registrata. |
+| [8a5c5e7e → 461a5f9f](../docs/upstream-upgrades/2026-11-18-8a5c5e7e-461a5f9f-review.md) | Revisione engine per 0.2.0, confronto con il commit già provato, scelte d'integrazione e prove del gate. |
 | [docs/development.md](../docs/development.md) | Documenta prerequisiti, runtime, build, debug, verifiche, CI e preparazione delle release. |
 | [docs/file-map.md](../docs/file-map.md) | Catalogo corrente delle responsabilità di tutti i file versionati, suddiviso per area. |
 | [docs/upstream-upgrades/2026-10-27-06b7b3e-4f24ce6.md](../docs/upstream-upgrades/2026-10-27-06b7b3e-4f24ce6.md) | Registro della revisione del delta, scelte di adozione e verifiche per questo upgrade del motore. |

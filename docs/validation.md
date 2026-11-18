@@ -11,7 +11,7 @@ Come si aggiorna:
 
 | Parte | Stato | Prove ancora da fare |
 |---|---|---|
-| Candidata 0.2.0 con pin `8a5c5e7e` | in attesa | Su copie temporanee, l'updater della 0.1.4.3 verifica lo ZIP reale, sostituisce il bundle e la rinomina di 0.2.0 conserva la firma. Prima del passaggio da 0.1.4.3 spostare eventuali copie sorelle `(new)` e `(old)`, che il vecchio updater può cancellare. Restano la prova in Arcane Dev del gate e del Play e, su un profilo isolato, la riapertura dall'updater con benvenuto, dati conservati e rinomina su Quit. |
+| Candidata 0.2.0 con pin `461a5f9f` | in attesa | Su copie temporanee, l'updater della 0.1.4.3 verifica lo ZIP reale della prima candidata, sostituisce il bundle e la rinomina conserva la firma. Prima del passaggio da 0.1.4.3 spostare eventuali copie sorelle `(new)` e `(old)`, che il vecchio updater può cancellare. Resta la prova interattiva dell'aggiornamento con benvenuto, dati conservati e rinomina su Quit. |
 | Nome Arcane in ciò che si vede (finestra, menu, Settings, About, testi nelle sei lingue; copia Dev `Arcane Dev.app`) | in attesa | Aprire `~/Applications/Arcane Dev.app` e ritrovare libreria e impostazioni della vecchia Dev; nessun "NX Library" visibile nelle sei lingue |
 | Rinomina del file alla chiusura (`NX Library.app` → `Arcane.app`) | in attesa | Con la prova del ponte A → B: dopo l'aggiornamento, chiudere; il file diventa `Arcane.app` e il Dock lo apre. Restart app non rinomina |
 | Impostazioni in General, Library, Porting e System (sezioni nuove Games, Keys, Cloud saves, Storage di Porting, Console; Rumble in New games) | gruppi, navigazione con controller, Search e conservazione dei valori confermati il 17 nov 2026 («ho fatto tutte le verifiche e mi sembra che non ci sia niente di sbagliato»); altre varianti in attesa | Changed mostra "Porting · …"; Reset group in Library → Games non tocca Rumble; i link "Settings → …" degli errori aprono la sezione giusta |
@@ -77,7 +77,8 @@ Il dettaglio di ogni revisione è in [upstream-upgrades](upstream-upgrades/READM
 
 | Pin | Versione | Stato |
 |---|---|---|
-| `8a5c5e7e` (Metal 32023.922, Xcode 27.2) | 0.1.4.3, attuale | adottato su richiesta del maintainer; build e avvio sull'esatto hash da confermare |
+| `461a5f9f` (Metal 32023.922, Xcode 27.2) | 0.2.0, attuale | adottato su richiesta del maintainer. Gate certificato e test automatici passati. Rebuild e avvio sull'esatto hash non eseguiti per la decisione del maintainer. |
+| `8a5c5e7e` (Metal 32023.922, Xcode 27.2) | 0.1.4.3 | adottato su richiesta del maintainer; build e avvio sull'esatto hash da confermare |
 | `79741184` | 0.1.4.2 | gate e test superati; build e avvio sull'esatto hash non confermati |
 | `bd979ced` | 0.1.4.1 | — |
 | `e5f03403`, `7fe9fc4d` | precedenti | confermati con un rebuild di Ocarina of Time |

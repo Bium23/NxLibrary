@@ -485,7 +485,7 @@ public final class AppViewModel: ObservableObject {
         .resolve(runtime: .locate(), repo: URL(fileURLWithPath: nxnativePath))
     }
 
-    public let pinnedEngineCommit = "8a5c5e7e1ee606c650fe1aef6959a83009b6a2fc"
+    public let pinnedEngineCommit = "461a5f9f95fc9fc40a690bb2a82eb23f1f03bdca"
     private let core = AppData.supportRoot
     let catalogRepository: CatalogRepository
     lazy var keyStore = KeyStore(directory: core.appendingPathComponent("keys"))
