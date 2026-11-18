@@ -59,6 +59,16 @@ final class SteamPlayCoordinator: ObservableObject {
     private var patience: [UUID: TimeInterval] = [:]
     /// Waits for the started game's window, for the launch screen.
     private var readiness: Task<Void, Never>?
+    private struct PendingHandOff {
+        let gameID: UUID
+        let generation: Int
+        let token = UUID()
+        let send: () -> Void
+    }
+    private var pendingHandOff: PendingHandOff?
+    private var handOffDeadline: Task<Void, Never>?
+    /// The normal path is a callback from the ordered panel. Keep Play usable when there is no panel.
+    private static let coverWait: UInt64 = 1_000_000_000
     /// The library's nxnative games, set by the shell: one that is open keeps NX Library from coming forward.
     weak var nativeGames: RunningGameMonitor?
     /// Whether a launch screen (any game's) is on screen, set by the shell: Play waits until it has gone.
@@ -165,6 +175,8 @@ final class SteamPlayCoordinator: ObservableObject {
         returnFocus = SteamReturnFocus()
         hideAgain?.cancel(); hideAgain = nil
         readiness?.cancel(); readiness = nil
+        handOffDeadline?.cancel(); handOffDeadline = nil
+        pendingHandOff = nil
         stopWatchingQuestions()
         // A screen still up leaves the usual way before the wait is forgotten.
         if launchScreen?.ready == false { launchScreen?.ready = true }
@@ -221,27 +233,59 @@ final class SteamPlayCoordinator: ObservableObject {
             let wait = SteamBackgroundLaunch.patience(steamWasRunning: steam != nil)
             patience[id] = wait
             readiness?.cancel(); readiness = nil
-            launchScreen = LaunchScreen(gameID: id)
-            watchQuestions(for: game)
-            Timer.scheduledTimer(withTimeInterval: wait + 0.5, repeats: false) { [weak self] _ in
-                Task { @MainActor in self?.followBackground() }
-            }
-            if background {
-                backgrounds[id] = backgrounds[id] ?? (steam.map { !$0.isHidden } ?? false)
-            }
-            followBackground()
-            NSWorkspace.shared.open([url], withApplicationAt: client, configuration: configuration) { [weak self] _, error in
-                let accepted = error == nil
-                Task { @MainActor in self?.finishHandOff(id, accepted: accepted, generation: generation) }
+            prepareHandOff(for: id, generation: generation) { [weak self] in
+                guard let self else { return }
+                self.watchQuestions(for: game)
+                Timer.scheduledTimer(withTimeInterval: wait + 0.5, repeats: false) { [weak self] _ in
+                    Task { @MainActor in self?.followBackground() }
+                }
+                if background {
+                    self.backgrounds[id] = self.backgrounds[id] ?? (steam.map { !$0.isHidden } ?? false)
+                }
+                self.followBackground()
+                NSWorkspace.shared.open([url], withApplicationAt: client, configuration: configuration) { [weak self] _, error in
+                    let accepted = error == nil
+                    Task { @MainActor in self?.finishHandOff(id, accepted: accepted, generation: generation) }
+                }
             }
         case .wait, .refuse:
             break
         }
     }
 
+    private func prepareHandOff(for id: UUID, generation: Int, send: @escaping () -> Void) {
+        let request = PendingHandOff(gameID: id, generation: generation, send: send)
+        pendingHandOff = request
+        handOffDeadline?.cancel()
+        handOffDeadline = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: Self.coverWait)
+            guard !Task.isCancelled, let self, self.pendingHandOff?.token == request.token else { return }
+            self.submitHandOff(for: id, reason: "cover deadline")
+        }
+        LaunchCoverTrace.event("Steam Play waiting for cover")
+        launchScreen = LaunchScreen(gameID: id)
+    }
+
+    func launchCoverPrepared(for id: UUID) {
+        submitHandOff(for: id, reason: "cover prepared")
+    }
+
+    private func submitHandOff(for id: UUID, reason: String) {
+        guard let request = pendingHandOff, request.gameID == id else { return }
+        pendingHandOff = nil
+        handOffDeadline?.cancel(); handOffDeadline = nil
+        guard let state = states[id], state.generation == request.generation, case .starting = state.phase else { return }
+        LaunchCoverTrace.event("Steam hand-off: \(reason)")
+        request.send()
+    }
+
     /// Stop waiting, or dismiss a failure. A game already running is not touched.
     func cancel(_ game: CatalogGame) {
         guard var state = states[game.id] else { return }
+        if pendingHandOff?.gameID == game.id {
+            pendingHandOff = nil
+            handOffDeadline?.cancel(); handOffDeadline = nil
+        }
         state.cancel(); states[game.id] = state
         if !isRunning(game) { returnFocus.playAbandoned(game.id) }
         followBackground()
@@ -387,6 +431,7 @@ final class SteamPlayCoordinator: ObservableObject {
         DispatchQueue.main.async { [weak self] in
             guard let self, let screen = self.launchScreen, screen.gameID == gameID else { return }
             self.launchScreen = nil
+            self.submitHandOff(for: gameID, reason: "cover dismissed")
             self.readiness?.cancel(); self.readiness = nil
             if !screen.ready, !NSApp.isActive || NSApp.mainWindow?.isOnActiveSpace == false { self.comeBack() }
         }

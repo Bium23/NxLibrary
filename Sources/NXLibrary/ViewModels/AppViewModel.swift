@@ -1449,6 +1449,9 @@ public final class AppViewModel: ObservableObject {
             }
         }
 
+        // Play can come straight from the row. Reconcile removed mod folders before the game reads its overlay.
+        if let store = modStore(for: game) { _ = performModChange { try store.sync() } }
+
         launchService.launch(appURL: game.url,
                              environment: gameSettings == nil ? config.toEnvironmentDict() : [:]) { [weak self] success, error in
             DispatchQueue.main.async {

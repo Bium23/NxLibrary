@@ -207,7 +207,7 @@ public struct CollectionView: View {
     func reconcile() {
         var state = viewModel.librarySelection
         state.reconcileCatalog(with: viewModel.visibleCatalogGames, history: playSessions,
-                        preferredGameID: settings.settings.restoreLastGame ? settings.settings.lastSelectedGameID : nil)
+                        preferredGameID: settings.settings.restoreLastGame ? settings.lastSelectedGameID : nil)
         if state != viewModel.librarySelection { viewModel.librarySelection = state }
     }
 
@@ -223,10 +223,9 @@ public struct CollectionView: View {
     }
 
     private func selectionChanged() {
-        if let id = selectedCatalogGame?.id, settings.settings.lastSelectedGameID != id { settings.settings.lastSelectedGameID = id }
-        guard let game = selectedGame else { return }
-        if settings.settings.lastSelectedGameID != game.id { settings.settings.lastSelectedGameID = game.id }
-        viewModel.loadStoreMetadata(for: game)
+        let game = selectedGame
+        if let id = game?.id ?? selectedCatalogGame?.id { settings.rememberLastSelectedGame(id) }
+        if let game { viewModel.loadStoreMetadata(for: game) }
     }
 
     // MARK: - Art

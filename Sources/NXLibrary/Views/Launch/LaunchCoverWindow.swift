@@ -1,4 +1,7 @@
 import AppKit
+import NXLibraryCore
+import QuartzCore
+import os
 import SwiftUI
 
 /// The launch screen's own window, as Selene's launch cover: borderless and see-through (the screen fades in over
@@ -8,6 +11,7 @@ import SwiftUI
 /// own fade-out runs before `state` clears.
 struct LaunchCoverWindow<Content: View>: NSViewRepresentable {
     let state: LaunchOverlayState?
+    let onPrepared: (UUID) -> Void
     @ViewBuilder let content: (LaunchOverlayState) -> Content
 
     func makeCoordinator() -> Cover { Cover() }
@@ -16,7 +20,8 @@ struct LaunchCoverWindow<Content: View>: NSViewRepresentable {
 
     func updateNSView(_ view: NSView, context: Context) {
         if let state {
-            context.coordinator.show(AnyView(content(state)), on: view.window?.screen ?? NSScreen.main)
+            context.coordinator.show(AnyView(content(state)), for: state.game.id, on: view.window?.screen ?? NSScreen.main,
+                                     prepared: onPrepared)
         } else {
             context.coordinator.close()
         }
@@ -28,20 +33,33 @@ struct LaunchCoverWindow<Content: View>: NSViewRepresentable {
     final class Cover {
         private var panel: LaunchCoverPanel?
         private var host: LaunchCoverHostingView?
+        private var gameID: UUID?
 
-        func show(_ content: AnyView, on screen: NSScreen?) {
+        func show(_ content: AnyView, for id: UUID, on screen: NSScreen?, prepared: @escaping (UUID) -> Void) {
             guard let screen else { return }
-            if let panel, let host {
+            if gameID == id, let panel, let host {
                 host.rootView = content
                 if panel.frame != screen.frame { panel.setFrame(screen.frame, display: true) }
                 return
             }
+            close()
             let panel = LaunchCoverPanel(frame: screen.frame)
             let host = LaunchCoverHostingView(rootView: content)
             panel.contentView = host
-            panel.orderFrontRegardless()
             self.panel = panel
             self.host = host
+            gameID = id
+            panel.orderFrontRegardless()
+            // Leave SwiftUI's representable update before committing the panel. Steam can change Space as soon as
+            // it receives Play, so send the hand-off only after submitting the ordered cover to the window server.
+            DispatchQueue.main.async { [weak self, weak panel, weak host] in
+                guard let self, let panel, let host, self.panel === panel, panel.isVisible else { return }
+                host.layoutSubtreeIfNeeded()
+                panel.displayIfNeeded()
+                CATransaction.flush()
+                LaunchCoverTrace.event("Cover submitted, active Space: \(panel.isOnActiveSpace)")
+                prepared(id)
+            }
         }
 
         func close() {
@@ -49,7 +67,18 @@ struct LaunchCoverWindow<Content: View>: NSViewRepresentable {
             panel?.contentView = nil
             panel = nil
             host = nil
+            gameID = nil
         }
+    }
+}
+
+/// Local development diagnostics for the cover hand-off, without game or account identifiers.
+enum LaunchCoverTrace {
+    private static let log = Logger(subsystem: "local.nxlibrary.development", category: "launch-cover")
+
+    static func event(_ message: String) {
+        guard AppData.profile.isDevelopment else { return }
+        log.notice("\(message, privacy: .public)")
     }
 }
 

@@ -8,7 +8,7 @@ struct SpotlightPageModel {
     let presentation: GameDetailPresentation
     let facts: [DetailsFact]
     let links: [DetailsLink]
-    let more: [PortedGame]
+    let more: [CatalogGame]
     /// The Metal gate refuses new builds.
     let buildBlocked: Bool
 }

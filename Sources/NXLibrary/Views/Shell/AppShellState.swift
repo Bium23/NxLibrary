@@ -16,6 +16,7 @@ final class AppShellState {
 
     init(settings: AppSettingsStore, catalog: CatalogDocument, repository: CatalogRepository) {
         self.settings = settings
+        AppDelegate.settingsStore = settings
         AppLocalization.shared.configure(settings.settings)
         ThemeStore.shared.apply(id: settings.settings.colorThemeID)
         let model = AppViewModel(settingsStore: settings, catalog: catalog, repository: repository)

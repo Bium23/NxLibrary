@@ -17,9 +17,7 @@ extension GameDetailPresentation {
         description = overrides[.description] ?? facts?.description ?? ""
         descriptionIsEnglishFallback = false
         descriptionLanguageNote = nil
-        let genreNames = overrides[.genres].map { $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) } }
-            ?? facts?.genres ?? []
-        genres = GameGenre.list(genreNames)
+        genres = Self.steamGenres(for: game, metadata: metadata, override: overrides[.genres])
         // Steam's dates are display text in the store's language: shown as given, never re-parsed.
         let release = (overrides[.releaseDate] ?? facts?.releaseDate)?.trimmingCharacters(in: .whitespaces)
         released = release.flatMap { $0.isEmpty ? nil : $0 }
@@ -51,5 +49,13 @@ extension GameDetailPresentation {
         hltbURL = Self.hltbURL(for: game.name)
         appPath = game.steamGame?.firstAvailableInstallation?.primaryApplication?.url.path ?? ""
         savePath = ""
+    }
+
+    /// The genre chips can draw without building the page's rank, activity and details.
+    public static func steamGenres(for game: CatalogGame, metadata: SteamMetadata?, override: String?) -> [String] {
+        let facts = metadata.flatMap { $0.appID == game.steamGame?.appID ? $0 : nil }
+        let names = override.map { $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) } }
+            ?? facts?.genres ?? []
+        return GameGenre.list(names)
     }
 }

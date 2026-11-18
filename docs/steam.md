@@ -156,6 +156,8 @@ sopra l’ordine salvato con Move, e ci resta fino all’uscita anche a download
 Size on disk, Installed in «Steam · <volume>»; in download solo Developer e Publisher; mai il build ID). La piattaforma è il logo
 ufficiale Valve (`SteamPlatformLogo`), con l’attribuzione in Settings › About e in `NOTICE`.
 
+**More like this** sta sotto About e Details. Usa la fascia e il focus condivisi con Switch, con fino a sei titoli correlati della libreria. I titoli Steam hanno precedenza; quando nessuno corrisponde, la fascia usa le corrispondenze Switch. Lo store legge i tratti per il punteggio dalla cache Steam all'apertura, e le scelte personali prevalgono. Doppio clic, Invio o A selezionano il gioco sulla riga di Spotlight.
+
 | Situazione | Primo pulsante | Nota sopra i pulsanti |
 |---|---|---|
 | installato | Play | — |
@@ -168,7 +170,7 @@ Favorite, Hidden, Show in Finder.
 
 ## Play, sessioni e primo piano
 
-- Play invia `steam://run/<AppID>` (`SteamPlayCoordinator`) solo se il gestore registrato è il client di Valve.
+- Play invia `steam://run/<AppID>` (`SteamPlayCoordinator`) solo al client di Valve registrato. La richiesta aspetta che Arcane ordini e invii la finestra d'attesa al server delle finestre, così la copertura precede il passaggio di Space. Se il pannello non si prepara, la richiesta parte entro un secondo.
 - La sessione inizia quando compare il processo dell’app installata (stesso bundle ed eseguibile) e finisce quando
   esce. Steam aperto non conta; un gioco avviato da Steam viene seguito allo stesso modo. Attesa massima 300 s; un pid
   riusato non è il gioco. Una sessione in corso segue il processo che ha visto partire (pid e bundle) anche se il

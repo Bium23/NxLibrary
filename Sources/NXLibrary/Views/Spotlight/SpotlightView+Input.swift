@@ -18,7 +18,7 @@ extension SpotlightView {
             // Y (the card's menu), X and the row's jumps belong to the row, not the store.
             if [.contextAction, .secondaryAction, .jumpToStart, .jumpToEnd].contains(action) { return }
         }
-        let items = self.items
+        if handleRowGlide(action) { return }
         let shots = screenshotCount
         let tops = topGameCount
         let page = currentPage
@@ -33,11 +33,9 @@ extension SpotlightView {
         case .navigateLeft, .navigateRight:
             let delta = action == .navigateLeft ? -1 : 1
             mutate { state in
-                moved = state.focus == .row
-                    ? state.move(by: delta, in: items)
-                    : state.moveSideways(by: delta, screenshotCount: shots, topGameCount: tops,
-                                         actionCount: actions, moreCount: more, readMore: readMore, modsCount: mods,
-                                         hasAchievements: hasAchievements)
+                moved = state.moveSideways(by: delta, screenshotCount: shots, topGameCount: tops,
+                                           actionCount: actions, moreCount: more, readMore: readMore, modsCount: mods,
+                                           hasAchievements: hasAchievements)
             }
         case .navigateDown where selectedItem == .card(.mods) && viewModel.spotlight.focus == .row:
             enterStore()
@@ -58,6 +56,7 @@ extension SpotlightView {
         case .tabNext:
             setFilter(filter.shifted(by: 1))
         case .jumpToStart, .jumpToEnd:
+            let items = self.items
             mutate { moved = $0.jump(toEnd: action == .jumpToEnd, in: items) }
         case .confirm:
             confirm()
@@ -93,6 +92,17 @@ extension SpotlightView {
             break
         }
         if moved { SoundEffectService.shared.play(.focus) }
+    }
+
+    /// Horizontal browsing only needs the row. Constructing the game page here does disk and layout work before the glide.
+    func handleRowGlide(_ action: GamepadAction) -> Bool {
+        guard viewModel.spotlight.focus == .row, action == .navigateLeft || action == .navigateRight else { return false }
+        let items = self.items
+        let delta = action == .navigateLeft ? -1 : 1
+        var moved = false
+        mutate { moved = $0.move(by: delta, in: items) }
+        if moved { SoundEffectService.shared.play(.focus) }
+        return true
     }
 
     func pressCatalogPill(_ index: Int, game: CatalogGame) {

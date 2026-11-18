@@ -307,7 +307,7 @@ struct GameDetailView: View {
             if !model.more.isEmpty {
                 band(zone: DetailsFocus.moreZone) {
                     DetailsMoreBand(
-                        games: model.more,
+                        games: model.more.map(CatalogGame.init(nxnative:)),
                         focusedIndex: focus.zone == DetailsFocus.moreZone ? focus.more : nil,
                         artwork: artwork,
                         boxArt: viewModel.boxArt,

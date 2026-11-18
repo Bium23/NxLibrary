@@ -22,6 +22,23 @@ final class SteamMetadataTests: XCTestCase {
         XCTAssertEqual(SteamMetadata.language(.portugueseBrazil), "brazilian")
         XCTAssertEqual(SteamMetadata.language(.italian), "italian")
     }
+    func testRelatedTraitsReadTheRequestedLanguageFromCacheWithoutNetwork() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let body = payload()
+        let online = SteamMetadataService(directory: root, transport: { _ in body })
+        _ = await online.metadata(appID: 10, language: "italian")
+        let cached = SteamMetadataService(directory: root, transport: { _ in
+            XCTFail("Recommendations must read the cache without fetching other games")
+            throw URLError(.notConnectedToInternet)
+        })
+        let italian = await cached.cachedRelatedTraits(appIDs: [10, 20], language: "italian")
+        let english = await cached.cachedRelatedTraits(appIDs: [10], language: "english")
+        XCTAssertEqual(italian[10]?.genres, ["Strategia"])
+        XCTAssertEqual(italian[10]?.developers, ["Studio"])
+        XCTAssertNil(italian[20])
+        XCTAssertTrue(english.isEmpty)
+    }
     func testOfflineCacheAndPersonalDataAreIndependentOfRefresh() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }

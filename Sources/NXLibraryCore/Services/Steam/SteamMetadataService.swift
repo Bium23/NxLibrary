@@ -106,11 +106,33 @@ public actor SteamMetadataService {
             }
         }, onCancel: { Task { await self.release(url, flightID: id, waiter: waiter) } })
     }
-    public func metadata(appID: UInt32, language: String, refresh: Bool = false) async -> SteamMetadata? {
-        guard appID > 0, ["english","italian","french","german","spanish","brazilian"].contains(language) else { return nil }
-        let file = directory.appendingPathComponent("\(appID)/\(language).json")
+    private static let metadataLanguages: Set<String> = ["english", "italian", "french", "german", "spanish", "brazilian"]
+
+    private func metadataFile(appID: UInt32, language: String) -> URL {
+        directory.appendingPathComponent("\(appID)/\(language).json")
+    }
+
+    private func cachedMetadata(appID: UInt32, language: String) -> SteamMetadata? {
+        let file = metadataFile(appID: appID, language: language)
         let cached = (try? InstallationFileSnapshot.read(at: file, maximumBytes: 2_097_152).data).flatMap { try? JSONDecoder().decode(SteamMetadata.self, from: $0) }
-        let valid = cached.flatMap { $0.appID == appID && $0.language == language ? $0 : nil }
+        return cached.flatMap { $0.appID == appID && $0.language == language ? $0 : nil }
+    }
+
+    /// The game's related row needs only scoring traits. Read existing entries and leave other games off the network.
+    public func cachedRelatedTraits(appIDs: Set<UInt32>, language: String) -> [UInt32: MoreLikeThis.Traits] {
+        guard Self.metadataLanguages.contains(language) else { return [:] }
+        var traits: [UInt32: MoreLikeThis.Traits] = [:]
+        for appID in appIDs where appID > 0 {
+            guard !Task.isCancelled else { return [:] }
+            if let cached = cachedMetadata(appID: appID, language: language) { traits[appID] = .init(steam: cached) }
+        }
+        return traits
+    }
+
+    public func metadata(appID: UInt32, language: String, refresh: Bool = false) async -> SteamMetadata? {
+        guard appID > 0, Self.metadataLanguages.contains(language) else { return nil }
+        let file = metadataFile(appID: appID, language: language)
+        let valid = cachedMetadata(appID: appID, language: language)
         if let valid, !refresh, Date().timeIntervalSince(valid.fetchedAt) < 604800 { return valid }
         let url = URL(string: "https://store.steampowered.com/api/appdetails?appids=\(appID)&l=\(language)")!
         do {

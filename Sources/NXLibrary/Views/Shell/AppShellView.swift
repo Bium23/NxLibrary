@@ -128,7 +128,7 @@ public struct AppShellView: View {
     /// The launch screen, in its own window over every app and Space (`LaunchCoverWindow`). Its window has its own
     /// SwiftUI root: the canvas and the locale are given to it here.
     private var launchCover: some View {
-        LaunchCoverWindow(state: viewModel.launchOverlay) { state in
+        LaunchCoverWindow(state: viewModel.launchOverlay, onPrepared: { SteamPlayCoordinator.shared.launchCoverPrepared(for: $0) }) { state in
             LaunchScreenView(state: state, viewModel: viewModel, artwork: artwork,
                              settings: settings.settings, reduceMotion: reduceMotion)
                 .id(state.game.id)

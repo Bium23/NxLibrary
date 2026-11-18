@@ -2,9 +2,14 @@
 
 User-visible changes to Arcane (formerly NX Library) are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
-## Unreleased — development review
+## 0.2.0 — Unreleased
 
-These changes are implemented in Arcane Dev. Human validation remains pending unless noted below.
+See the [validation checklist](docs/validation.md) for the state of manual checks.
+
+### Added
+
+- Add installed Steam games for Mac to Spotlight and Collection alongside nxnative games. Steam pages show playtime and achievements when available.
+- Steam game pages show **More like this** below About and Details, with related Steam games first and a fallback to matching Switch titles in your library.
 
 ### Changed
 
@@ -25,6 +30,8 @@ These changes are implemented in Arcane Dev. Human validation remains pending un
 
 ### Fixed
 
+- Steam receives Play once Arcane submits the launch cover, so a fast Space change can stay behind the waiting screen.
+- Spotlight loads installed mods and the lower game page when the page opens. Moving on the game row skips the Details calculations. Spotlight and Collection save the last selected game in the background.
 - Open library remains available during the initial scan, so an unresponsive folder cannot hold up first launch. Leaving cancels the request; sources can be added later in Settings.
 
 - Updating the app preserves existing copies beside it, including files named `(new)` or `(old)`. Each update uses its own staging directory; a failed Trash operation keeps the previous app.

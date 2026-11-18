@@ -76,7 +76,17 @@ struct ArtworkPicks {
 }
 
 struct SpotlightPageModel { var links = [1]; var more: [Int] = [] }
-final class ModsHost { var localMods: Int? }
+@MainActor final class ModsHost {
+    var localMods: Int?
+    var game: PortedGame?
+    var reloads: [UUID] = []
+    func reload(_ game: PortedGame, viewModel: ViewModel) {
+        self.game = game
+        reloads.append(game.id)
+    }
+    func stop() {}
+    func clearGame() { game = nil }
+}
 @MainActor final class ViewModel {
     var spotlight = SpotlightState(focus: .actions)
     var showSetupCheck = false
@@ -101,6 +111,7 @@ final class ModsHost { var localMods: Int? }
     var currentPage: SpotlightPageModel? = SpotlightPageModel()
     var screenshotCount = 0
     var selectedAchievements: Int? = 1
+    var selectedGame: PortedGame?
     let modsHost = ModsHost()
     var scroll: Double = -200
     var holdScroll = false
@@ -110,6 +121,33 @@ final class ModsHost { var localMods: Int? }
     func mutate(_ change: (inout SpotlightState) -> Void) { change(&viewModel.spotlight) }
     func settle() { settleFocusOnScroll() }
     // ACTUAL_SCROLL
+    // ACTUAL_MODS_RELOAD
+}
+
+@MainActor final class RowGlideHost {
+    let viewModel = ViewModel()
+    let items: [SpotlightItem] = [.card(.collection), .card(.surprise)]
+    func mutate(_ change: (inout SpotlightState) -> Void) { change(&viewModel.spotlight) }
+    // ACTUAL_ROW_GLIDE
+}
+
+enum LaunchCoverTrace { static func event(_ message: String) {} }
+@MainActor final class CoverHandoffHost {
+    struct LaunchScreen { let gameID: UUID }
+    struct State { let generation: Int; var phase: SteamPlayState.Phase }
+    var states: [UUID: State] = [:]
+    var launchScreen: LaunchScreen?
+    private var pendingHandOff: PendingHandOff?
+    private var handOffDeadline: Task<Void, Never>?
+    private static let coverWait: UInt64 = 30_000_000
+    // ACTUAL_PENDING_HANDOFF
+    // ACTUAL_PREPARE_HANDOFF
+    // ACTUAL_COVER_PREPARED
+    // ACTUAL_SUBMIT_HANDOFF
+    func prepare(_ id: UUID, send: @escaping () -> Void) {
+        states[id] = .init(generation: 1, phase: .starting(since: Date()))
+        prepareHandOff(for: id, generation: 1, send: send)
+    }
 }
 
 final class Router {
@@ -199,6 +237,49 @@ final class NativeMenus { var isTracking = false }
         menu.viewModel.currentFocusedCatalogGame = .init(nxnative: PortedGame(name: "Fixture", url: root.appendingPathComponent("Game.app"),
             platform: .macApp, sizeBytes: 1, modificationDate: Date()))
         require(menu.availability().details, "Details must remain available for the selected game")
+        let firstModsGame = menu.viewModel.currentFocusedGame!
+        let nextModsGame = PortedGame(name: "Next fixture", url: root.appendingPathComponent("Next.app"),
+                                      platform: .macApp, sizeBytes: 1, modificationDate: Date())
+        scroll.selectedGame = firstModsGame
+        scroll.reloadMods()
+        scroll.viewModel.spotlight.focus = .row
+        scroll.selectedGame = nextModsGame
+        scroll.reloadMods()
+        require(scroll.modsHost.reloads == [firstModsGame.id] && scroll.modsHost.game == nil,
+                "Switching games on the Spotlight row must clear the old Mods band without reading the next one")
+        scroll.viewModel.spotlight.focus = .pills
+        scroll.reloadMods()
+        require(scroll.modsHost.reloads == [firstModsGame.id, nextModsGame.id],
+                "The selected game's Mods band must load once the game page is open")
+
+        let row = RowGlideHost()
+        row.viewModel.spotlight = SpotlightState(selectedKey: row.items[0].key)
+        require(row.handleRowGlide(.navigateRight), "The row must handle Right using only the row items")
+        require(row.viewModel.spotlight.selectedKey == row.items[1].key, "Right selects the next tile")
+        let rowCues = SoundEffectService.shared.count
+        require(row.handleRowGlide(.navigateRight) && SoundEffectService.shared.count == rowCues,
+                "Right at the row's edge is handled without playing a move cue")
+        row.viewModel.spotlight.focus = .pills
+        require(!row.handleRowGlide(.navigateLeft), "Page focus continues to use page navigation")
+
+        let handoff = CoverHandoffHost()
+        let pending = UUID()
+        var handoffs = 0
+        handoff.prepare(pending) { handoffs += 1 }
+        require(handoff.launchScreen?.gameID == pending && handoffs == 0,
+                "Steam must wait for the cover while its state is being published")
+        handoff.launchCoverPrepared(for: UUID())
+        require(handoffs == 0, "Another cover cannot release this launch")
+        handoff.launchCoverPrepared(for: pending)
+        handoff.launchCoverPrepared(for: pending)
+        require(handoffs == 1, "The current cover releases Steam exactly once")
+        handoff.prepare(pending) { handoffs += 1 }
+        handoff.states[pending]?.phase = .idle
+        handoff.launchCoverPrepared(for: pending)
+        require(handoffs == 1, "Closing the launch state must prevent a stale cover from sending Play")
+        handoff.prepare(pending) { handoffs += 1 }
+        try? await Task.sleep(nanoseconds: 150_000_000)
+        require(handoffs == 2, "Without a visible cover the deadline still lets Play proceed")
         let overlays: [(MenuHost, Bool) -> Void] = [
             { $0.router.isSearchPresented = $1 }, { $0.router.isScreenshotViewerOpen = $1 },
             { $0.viewModel.isGameOptionsOpen = $1 }, { $0.router.isMenuPresented = $1 },
@@ -268,13 +349,25 @@ final class NativeMenus { var isTracking = false }
         require(input.dialogActions == [.confirm] && received.actions.isEmpty,
                 "An internal update dialog must still receive input when no native window is open")
         if failures > 0 { exit(1) }
-        print("Actual app review checks passed: achievement startup, logo platform, wheel focus, native dialogs and input routing.")
+        print("Actual app review checks passed: achievement startup, logo platform, wheel focus, Mods reads, native dialogs and input routing.")
     }
 }
 '''
 
 host = host.replace('// ACTUAL_SCROLL', declaration(
     'Sources/NXLibrary/Views/Spotlight/SpotlightView+Input.swift', '    private func settleFocusOnScroll()'))
+host = host.replace('// ACTUAL_MODS_RELOAD', declaration(
+    'Sources/NXLibrary/Views/Spotlight/SpotlightView.swift', '    func reloadMods()'))
+host = host.replace('// ACTUAL_ROW_GLIDE', declaration(
+    'Sources/NXLibrary/Views/Spotlight/SpotlightView+Input.swift', '    func handleRowGlide('))
+coordinator = 'Sources/NXLibrary/Services/SteamPlayCoordinator.swift'
+for marker, signature in (
+    ('// ACTUAL_PENDING_HANDOFF', '    private struct PendingHandOff'),
+    ('// ACTUAL_PREPARE_HANDOFF', '    private func prepareHandOff('),
+    ('// ACTUAL_COVER_PREPARED', '    func launchCoverPrepared('),
+    ('// ACTUAL_SUBMIT_HANDOFF', '    private func submitHandOff('),
+):
+    host = host.replace(marker, declaration(coordinator, signature))
 host = host.replace('// ACTUAL_AVAILABILITY_TYPE', declaration(
     'Sources/NXLibrary/Services/NativeMenuCommands.swift', 'struct NativeMenuAvailability'))
 host = host.replace('// ACTUAL_MENU', declaration(

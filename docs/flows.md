@@ -73,9 +73,10 @@ flowchart TD
     C -->|"operazione sui salvataggi o recupero"| X["Attesa / spiegazione"]
     C -->|"icona in firma"| Y["Dialogo Preparing (IconLaunchWait)"]
     C -->|"sì"| D["SaveOperationGate: lease del titolo"]
-    D --> E["GameRuntimeConfig → variabili DM_*<br/>LauncherSettings dal launcher.json"]
+    D --> E["LauncherSettings migra launcher.json<br/>oppure LaunchService aggiorna env.txt"]
     E --> F["CloudSavesPreferences applica la scelta cloud"]
-    F --> G["LaunchService scrive env.txt e apre l'app<br/>(NSWorkspace)"]
+    F --> M["ModStore riconcilia le cartelle prima di Play"]
+    M --> G["LaunchService apre l'app (NSWorkspace)"]
     G --> H["LaunchCoverWindow + LaunchMotion<br/>finché LaunchReadinessProbe vede una finestra"]
     H --> I["RunningGameMonitor · PlaySessionStore (heartbeat)"]
     I --> J["Fine: sessione salvata → SessionCard<br/>GameFocus/LibraryWindow riportano la libreria davanti"]
@@ -88,7 +89,8 @@ flowchart TD
 flowchart TD
     A["Play (GamePrimaryActions)"] --> B["SteamPlayCoordinator"]
     B --> C["steam://run/AppID al client di Valve"]
-    C --> D["SteamPlayState / SteamBackgroundLaunch<br/>attesa del processo del gioco"]
+    C --> K["LaunchCoverWindow prima della richiesta Steam<br/>ripiego entro 1 s se il pannello manca"]
+    K --> D["SteamPlayState / SteamBackgroundLaunch<br/>attesa del processo del gioco"]
     D -->|"Steam fa una domanda"| Q["SteamLaunchQuestions dal console_log"]
     D --> E["LaunchCoverWindow finché il gioco disegna"]
     E --> F["PlaySessionStore registra la sessione reale"]
@@ -97,6 +99,8 @@ flowchart TD
 ```
 
 Arcane non scrive mai i file di Steam e non apre l'app del gioco direttamente. Dettagli in [steam.md](steam.md).
+
+Nella pagina Spotlight di un titolo Steam, Giù porta anche a **More like this** quando la fascia è presente. Invio, A o doppio clic selezionano la copertina sulla riga della libreria. Se il filtro la esclude, la libreria passa a **All games** come per Switch.
 
 ## 5. Costruire un gioco Switch (Add Game)
 

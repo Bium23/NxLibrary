@@ -84,9 +84,13 @@ public struct ModStore {
 
     /// Recorded mods in their order (only those whose folder exists), then folders without a record, off, by name.
     public func mods() -> [LocalMod] {
-        let names = ModFolderScanner.entries(in: modsFolder).map(\.lastPathComponent)
+        mods(entries: ModFolderScanner.entries(in: modsFolder), records: loadRecords())
+    }
+
+    private func mods(entries: [URL], records: [ModRecord]) -> [LocalMod] {
+        let names = entries.map(\.lastPathComponent)
         let present = Set(names)
-        let recorded = loadRecords().filter { present.contains($0.folderName) }
+        let recorded = records.filter { present.contains($0.folderName) }
         let known = Set(recorded.map(\.folderName))
         let list = recorded.map { mod($0.folderName, on: $0.isOn) }
             + names.filter { !known.contains($0) }.map { mod($0, on: false) }
@@ -221,14 +225,14 @@ public struct ModStore {
 
     /// Drops records whose folder is gone and brings the overlay line in line with the list. Does nothing while the
     /// game runs, or before NX Library has managed this game's mods (no records yet: a hand-written overlay stays). A
-    /// list whose overlay no longer fits the launcher's line leaves `env.txt` as it is and throws `overlayTooLong`.
+    /// failed read or overlong overlay leaves both the records and `env.txt` intact.
     public func sync(automatic: Bool = true) throws {
         guard !automatic || allowsAutomaticMaintenance else { return }
         guard canWrite(), FileManager.default.fileExists(atPath: recordsFile.path) else { return }
-        let list = mods()
+        let stored = try readRecords()
+        let list = mods(entries: try ModFolderScanner.checkedEntries(in: modsFolder), records: stored)
         let value = overlay(for: list)
         if let value, value.utf8.count > Self.overlayLimit { throw ModStoreError.overlayTooLong }
-        let stored = loadRecords()
         let recorded = Set(stored.map(\.folderName))
         let kept = list.filter { recorded.contains($0.folderName) }.map(\.folderName)
         if kept != stored.map(\.folderName) {
@@ -277,8 +281,11 @@ public struct ModStore {
     }
 
     private func loadRecords() -> [ModRecord] {
-        guard let data = try? Data(contentsOf: recordsFile) else { return [] }
-        return (try? JSONDecoder().decode([ModRecord].self, from: data)) ?? []
+        (try? readRecords()) ?? []
+    }
+
+    private func readRecords() throws -> [ModRecord] {
+        try JSONDecoder().decode([ModRecord].self, from: Data(contentsOf: recordsFile))
     }
 
     private func write(records: [ModRecord]) throws {

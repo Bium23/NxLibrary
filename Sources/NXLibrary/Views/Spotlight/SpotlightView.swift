@@ -25,6 +25,7 @@ public struct SpotlightView: View {
 
     @Environment(\.seleneCanvas) var canvas
     @Environment(\.seleneReduceMotion) var reduceMotion
+    @Environment(\.nxAppLocale) private var localization
 
     @StateObject var art = SeleneHeroArt()
     /// Art the player picks redraws the hero and logo (their task keys carry its revision).
@@ -33,6 +34,8 @@ public struct SpotlightView: View {
     @ObservedObject var steamFacts = SteamGameFacts.shared
     @ObservedObject var achievementsStore = SteamAchievementsStore.shared
     @ObservedObject var steamFields = SteamPersonalizations.shared.metadata
+    /// Only traits are retained for the cache pass, without artwork, screenshots or descriptions.
+    @State private var cachedSteamRelated: (request: SteamRelatedRequest, traits: [UInt32: MoreLikeThis.Traits])?
     @State var keyMonitor: Any?
     @State var hadGames = false
     /// The card Y menu: which card and the focused row.
@@ -131,8 +134,10 @@ public struct SpotlightView: View {
         guard case .game(let id) = selectedItem else { return nil }
         return viewModel.visibleCatalogGames.first { $0.id == id }
     }
-    var items: [SpotlightItem] {
-        let ids = rowGames.map(\.id)
+    var items: [SpotlightItem] { rowItems(for: rowGames) }
+
+    private func rowItems(for games: [CatalogGame]) -> [SpotlightItem] {
+        let ids = games.map(\.id)
         return SpotlightRow.build(gameIDs: ids,
                                   enabledCards: settings.settings.visibleSpotlightCards,
                                   order: viewModel.spotlight.lift?.order ?? settings.settings.spotlightOrder,
@@ -150,6 +155,7 @@ public struct SpotlightView: View {
     /// Everything one render needs, computed once per body.
     struct Snapshot {
         let items: [SpotlightItem]
+        let rowGameCount: Int
         let gamesByID: [UUID: PortedGame]
         let selectedItem: SpotlightItem?
         let selectedGame: PortedGame?
@@ -158,14 +164,17 @@ public struct SpotlightView: View {
     }
 
     private func snapshot() -> Snapshot {
-        let items = self.items
+        let visible = viewModel.visibleCatalogGames
+        let rowGames = LibraryQuery(filter: filter).applyCatalog(to: visible, history: playSessions)
+        let items = rowItems(for: rowGames)
         let gamesByID = Dictionary(viewModel.libraryGames.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         let item = viewModel.spotlight.selectedItem(in: items)
-        var game: PortedGame?
-        if case .game(let id) = item { game = gamesByID[id] }
-        let catalog = Dictionary(viewModel.visibleCatalogGames.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-        return Snapshot(items: items, gamesByID: gamesByID, selectedItem: item, selectedGame: game,
-                        catalogGamesByID: catalog, selectedCatalogGame: selectedCatalogGame)
+        let catalog = Dictionary(visible.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let id: UUID?
+        if case .game(let selected) = item { id = selected } else { id = nil }
+        return Snapshot(items: items, rowGameCount: rowGames.count, gamesByID: gamesByID, selectedItem: item,
+                        selectedGame: id.flatMap { gamesByID[$0] }, catalogGamesByID: catalog,
+                        selectedCatalogGame: id.flatMap { catalog[$0] })
     }
 
     /// One pill while the selected game ports, three otherwise.
@@ -390,7 +399,7 @@ public struct SpotlightView: View {
                 .allowsHitTesting(rowShown && entrance.takesInput)
                 .onPreferenceChange(TileArtPendingKey.self, perform: tileArtPending)
 
-                SpotlightFilterPill(filter: pillFilter, count: rowGames.count)
+                SpotlightFilterPill(filter: pillFilter, count: model.rowGameCount)
                     .offset(x: canvas.u(80), y: canvas.u(88))
                     // Opacity fades always run, reduce motion or not.
                     .opacity(pillVisible && !entrance.holdsHidden ? 1 : 0)
@@ -448,7 +457,7 @@ public struct SpotlightView: View {
     private func info(_ model: Snapshot, state: SpotlightState) -> some View {
         if let game = model.selectedGame {
             let metadata = viewModel.storeMetadata[game.id]
-            let page = page(for: game)
+            let genres = GameGenre.list(metadata?.genres ?? [])
             VStack(alignment: .leading, spacing: 0) {
                 SpotlightGameInfoView(
                     game: game,
@@ -477,8 +486,8 @@ public struct SpotlightView: View {
                 .id(game.id)
                 .spotlightBlock(.head)
 
-                if !page.presentation.genres.isEmpty {
-                    SpotlightGenreChips(genres: page.presentation.genres)
+                if !genres.isEmpty {
+                    SpotlightGenreChips(genres: genres)
                         // They leave and come back with the pills, not stay while the rest changes.
                         .modifier(SpotlightInfoFollow())
                         .id(game.id)
@@ -490,12 +499,14 @@ public struct SpotlightView: View {
                                 urls: metadata?.screenshotURLs ?? [],
                                 known: screenshotsKnown(game, metadata: metadata), state: state)
 
-                pageBelow(game, page: page, state: state)
-                    // Hidden while the row has focus: it rises in with the page.
-                    .opacity(belowShown ? 1 : 0)
+                // The lower page is offscreen on the row. Build it only as the page rises.
+                if belowShown { pageBelow(game, page: page(for: game), state: state).transition(.opacity) }
             }
         } else if let game = model.selectedCatalogGame, game.integration == .steam {
-            let page = steamPage(for: game)
+            let metadata = steamFacts.metadata(for: game)
+            let genres = GameDetailPresentation.steamGenres(
+                for: game, metadata: metadata,
+                override: steamFields.value(titleID: game.personalizationReference.key, field: .genres))
             VStack(alignment: .leading, spacing: 0) {
                 CatalogSteamInfo(game: game, totalPlaytime: playSessions.totalDuration(for: game.id),
                                  lastPlayed: playSessions.lastPlayed(for: game.id),
@@ -512,8 +523,8 @@ public struct SpotlightView: View {
                     .id(game.id)
                     .spotlightBlock(.head)
 
-                if !page.presentation.genres.isEmpty {
-                    SpotlightGenreChips(genres: page.presentation.genres)
+                if !genres.isEmpty {
+                    SpotlightGenreChips(genres: genres)
                         .modifier(SpotlightInfoFollow())
                         .id(game.id)
                         .padding(.top, canvas.u(20))
@@ -521,11 +532,17 @@ public struct SpotlightView: View {
                 }
 
                 screenshotStrip(id: game.id, titleID: game.personalizationReference.key,
-                                urls: steamFacts.metadata(for: game)?.screenshots ?? [],
+                                urls: metadata?.screenshots ?? [],
                                 known: steamFacts.isKnown(game), state: state)
 
-                steamPageBelow(page, state: state)
-                    .opacity(belowShown ? 1 : 0)
+                if belowShown {
+                    let request = SteamRelatedRequest(
+                        appIDs: Set(model.catalogGamesByID.values.compactMap { $0.isHidden ? nil : $0.steamGame?.appID }),
+                        language: SteamMetadata.language(localization.language))
+                    steamPageBelow(steamPage(for: game), state: state)
+                        .task(id: request) { await loadCachedSteamRelated(request) }
+                        .transition(.opacity)
+                }
             }
         } else if model.selectedItem == .card(.mods) {
             VStack(alignment: .leading, spacing: 0) {
@@ -741,7 +758,7 @@ public struct SpotlightView: View {
         if let lifted = viewModel.spotlight.lift?.key, !items.contains(where: { $0.key == lifted }) {
             mutate { $0.cancelLift() }
         }
-        let preferred = settings.settings.restoreLastGame ? settings.settings.lastSelectedGameID : nil
+        let preferred = settings.settings.restoreLastGame ? settings.lastSelectedGameID : nil
         let items = self.items
         mutate { $0.reconcile(with: items, preferredGameID: preferred) }
     }
@@ -761,20 +778,21 @@ public struct SpotlightView: View {
         artRule.select(viewModel.spotlight.selectedKey, isGame: selectedGame != nil || selectedCatalogGame?.integration == .steam)
         reloadMods()
         startModsOnline(viewModel.spotlight.focus)
-        if let id = selectedCatalogGame?.id, settings.settings.lastSelectedGameID != id { settings.settings.lastSelectedGameID = id }
+        let game = selectedGame
+        if let id = game?.id ?? selectedCatalogGame?.id { settings.rememberLastSelectedGame(id) }
         loadAchievements()
-        guard let game = selectedGame else { return }
-        if settings.settings.lastSelectedGameID != game.id {
-            settings.settings.lastSelectedGameID = game.id
-        }
-        viewModel.loadStoreMetadata(for: game)
+        if let game { viewModel.loadStoreMetadata(for: game) }
     }
 
     // MARK: - Mods
 
-    /// The selected game's installed mods; another game (or a card) stops the previous game's band.
+    /// The Mods band lives on the game page. Browsing the row releases the previous band without reading the next.
     func reloadMods() {
-        if let game = selectedGame { modsHost.reload(game, viewModel: viewModel) } else { modsHost.stop() }
+        guard viewModel.spotlight.focus != .row, let game = selectedGame else {
+            modsHost.clearGame()
+            return
+        }
+        modsHost.reload(game, viewModel: viewModel)
     }
 
     /// GameBanana is asked once the game's page is open, not while the row is browsed.
@@ -1006,6 +1024,38 @@ public struct SpotlightView: View {
         return selectedCatalogGame.flatMap { $0.integration == .steam ? steamPage(for: $0) : nil }
     }
 
+    private struct SteamRelatedRequest: Equatable {
+        let appIDs: Set<UInt32>
+        let language: String
+    }
+
+    private func loadCachedSteamRelated(_ request: SteamRelatedRequest) async {
+        guard cachedSteamRelated?.request != request else { return }
+        let traits = await SteamMetadataService.shared.cachedRelatedTraits(appIDs: request.appIDs, language: request.language)
+        guard !Task.isCancelled else { return }
+        cachedSteamRelated = (request, traits)
+    }
+
+    private func relatedTraits(for game: CatalogGame, language: String) -> MoreLikeThis.Traits? {
+        if let native = game.nxnativeGame {
+            return viewModel.storeMetadata[native.id].map {
+                MoreLikeThis.Traits(developers: $0.developers, publishers: $0.publishers, genres: GameGenre.list($0.genres))
+            }
+        }
+        guard let appID = game.steamGame?.appID else { return nil }
+        let key = game.personalizationReference.key
+        let loaded = steamFacts.metadata(for: game).flatMap { $0.language == language ? MoreLikeThis.Traits(steam: $0) : nil }
+        let cached = cachedSteamRelated.flatMap { $0.request.language == language ? $0.traits[appID] : nil }
+        let traits = loaded ?? cached
+        let developer = steamFields.value(titleID: key, field: .developer)
+        let publisher = steamFields.value(titleID: key, field: .publisher)
+        let genres = steamFields.value(titleID: key, field: .genres)
+        guard traits != nil || developer != nil || publisher != nil || genres != nil else { return nil }
+        return MoreLikeThis.Traits(developers: developer.map { [$0] } ?? traits?.developers ?? [],
+                                   publishers: publisher.map { [$0] } ?? traits?.publishers ?? [],
+                                   genres: GameGenre.list(genres.map { $0.split(separator: ",").map(String.init) } ?? traits?.genres ?? []))
+    }
+
     func steamPage(for game: CatalogGame) -> SpotlightPageModel {
         let visible = viewModel.visibleCatalogGames
         let playtimes = Dictionary(visible.map { ($0.id, playSessions.totalDuration(for: $0.id)) },
@@ -1021,10 +1071,14 @@ public struct SpotlightView: View {
         let facts = DetailsFacts.steamGame(game, metadata: steamFacts.metadata(for: game), overrides: overrides,
                                            volumeName: DetailsLink.volumeName(of: game))
         let app = presentation.appPath.isEmpty ? nil : URL(fileURLWithPath: presentation.appPath)
+        let language = SteamMetadata.language(localization.language)
+        let ids = belowShown ? MoreLikeThis.pick(for: game, in: visible, fallbackToOtherSources: true,
+                                                traits: { relatedTraits(for: $0, language: language) }) : []
+        let byID = Dictionary(visible.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         return SpotlightPageModel(presentation: presentation, facts: facts,
                                   links: DetailsLink.links(app: app, store: presentation.storeURL,
                                                            hltb: presentation.hltbURL, viewModel: viewModel),
-                                  more: [], buildBlocked: false)
+                                  more: ids.compactMap { byID[$0] }, buildBlocked: false)
     }
 
     func page(for game: PortedGame) -> SpotlightPageModel {
@@ -1045,7 +1099,7 @@ public struct SpotlightView: View {
                                     metadata: { viewModel.storeMetadata[$0] }, limit: 6)
         let byID = Dictionary(library.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         return SpotlightPageModel(presentation: presentation, facts: facts, links: links,
-                                  more: ids.compactMap { byID[$0] }, buildBlocked: blocked)
+                                  more: ids.compactMap { byID[$0].map(CatalogGame.init(nxnative:)) }, buildBlocked: blocked)
     }
 
     /// About this game with the column beside it (a Steam game's achievements, then the source's panel):
@@ -1109,10 +1163,11 @@ public struct SpotlightView: View {
         return CriticRatingQuery(name: steam.name, platform: .mac, steamAppID: steam.appID)
     }
 
-    /// A Steam game's page under the head: About, its achievements and its Details.
+    /// A Steam game's page under the head: About, its achievements, Details, then related games.
     private func steamPageBelow(_ page: SpotlightPageModel, state: SpotlightState) -> some View {
-        aboutAndColumn(page, state: state) {
-            detailsPanel(page, state: state)
+        VStack(alignment: .leading, spacing: 0) {
+            aboutAndColumn(page, state: state) { detailsPanel(page, state: state) }
+            relatedBand(page, state: state)
         }
     }
 
@@ -1179,22 +1234,27 @@ public struct SpotlightView: View {
                     .spotlightBlock(.mods)
             }
 
-            if !page.more.isEmpty {
-                DetailsMoreBand(
-                    games: page.more,
-                    focusedIndex: state.focus == .more ? state.moreIndex : nil,
-                    artwork: artwork,
-                    boxArt: viewModel.boxArt,
-                    boxArtIndexVersion: viewModel.boxArtIndexVersion,
-                    officialName: { viewModel.storeMetadata[$0.id]?.name },
-                    onFocus: { index in mutate { $0.focus = .more; $0.moreIndex = index } },
-                    onOpen: { index in
-                        SoundEffectService.shared.play(.click)
-                        selectGame(page.more[index].id)
-                    })
+            relatedBand(page, state: state)
+        }
+    }
+
+    @ViewBuilder
+    private func relatedBand(_ page: SpotlightPageModel, state: SpotlightState) -> some View {
+        if !page.more.isEmpty {
+            DetailsMoreBand(
+                games: page.more,
+                focusedIndex: state.focus == .more ? state.moreIndex : nil,
+                artwork: artwork,
+                boxArt: viewModel.boxArt,
+                boxArtIndexVersion: viewModel.boxArtIndexVersion,
+                officialName: { viewModel.storeMetadata[$0.id]?.name },
+                onFocus: { index in mutate { $0.focus = .more; $0.moreIndex = index } },
+                onOpen: { index in
+                    SoundEffectService.shared.play(.click)
+                    selectGame(page.more[index].id)
+                })
                 .padding(.top, canvas.u(Self.moreGap))
                 .spotlightBlock(.more)
-            }
         }
     }
 

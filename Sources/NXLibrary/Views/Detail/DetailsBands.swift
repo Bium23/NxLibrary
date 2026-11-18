@@ -48,14 +48,13 @@ struct DetailsScreenshotsBand: View {
     }
 }
 
-/// Band 3: more games from your own library (`MoreLikeThis`), Switch box
-/// covers of 173 × 280 (`SwitchBoxArtCover`). A click focuses, a double
-/// click opens the game on Spotlight.
+/// More games from your own library (`MoreLikeThis`), in portrait covers of 173 × 280.
+/// A click focuses, a double click opens the game on Spotlight.
 struct DetailsMoreBand: View {
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
 
-    let games: [PortedGame]
+    let games: [CatalogGame]
     let focusedIndex: Int?
     let artwork: ArtworkStore
     let boxArt: BoxArtService
@@ -80,12 +79,11 @@ struct DetailsMoreBand: View {
         }
     }
 
-    private func tile(_ game: PortedGame, index: Int, focused: Bool) -> some View {
+    private func tile(_ game: CatalogGame, index: Int, focused: Bool) -> some View {
         let w = canvas.u(Self.width), h = canvas.u(Self.height)
         let face = RoundedRectangle(cornerRadius: canvas.u(14), style: .continuous)
         return ZStack {
-            SwitchBoxArtCover(game: game, width: w, height: h, officialName: officialName(game),
-                              boxArt: boxArt, artwork: artwork, indexVersion: boxArtIndexVersion)
+            cover(game, width: w, height: h)
                 .clipShape(face)
             SeleneTileRing(cornerRadius: canvas.u(21), active: focused)
                 .frame(width: w + canvas.u(14), height: h + canvas.u(14))
@@ -100,6 +98,17 @@ struct DetailsMoreBand: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(game.name)
         .accessibilityAddTraits(focused ? [.isButton, .isSelected] : .isButton)
+    }
+
+    @ViewBuilder
+    private func cover(_ game: CatalogGame, width: CGFloat, height: CGFloat) -> some View {
+        if let native = game.nxnativeGame {
+            SwitchBoxArtCover(game: native, width: width, height: height, officialName: officialName(native),
+                              boxArt: boxArt, artwork: artwork, indexVersion: boxArtIndexVersion)
+        } else {
+            CatalogNativeArtwork(game: game)
+                .frame(width: width, height: height)
+        }
     }
 }
 

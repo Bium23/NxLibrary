@@ -6,8 +6,8 @@
 <p align="center"><strong>A home for your games on Mac.</strong></p>
 
 <p align="center">
-  Organise your library, build your own Switch dumps with nxnative,<br>
-  and launch the resulting Mac apps from one place.
+  Play your installed Steam games for Mac, organise your library,<br>
+  and build Mac apps from your own Switch game files with nxnative.
 </p>
 
 <p align="center">
@@ -23,7 +23,6 @@
   <a href="#using-arcane">User guide</a> ·
   <a href="#troubleshooting">Troubleshooting</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
-  <a href="#next-steps">Next steps</a> ·
   <a href="docs/development.md">Development</a>
 </p>
 
@@ -40,11 +39,10 @@ NX-DEMO:END -->
 
 ### <img src="https://img.shields.io/badge/new-E8833A?style=flat" alt="New" height="20" align="absmiddle"> Latest highlights
 
-- **Mods in a few clicks.** A store of GameBanana mods that work with your games, by category and by game. Press **Install** and the mod is on at the next launch, with no rebuild. Mods you already have work too: drop them in, turn them on, choose their order.
-- **A lighter, smoother Ocarina of Time.** The updated engine reduces repeated startup work and first-draw stalls, uses less memory and fixes lighting and fog. Supported games offer up to 120 fps after rebuilding.
-- **A recap when you stop playing.** Quit a game and you are back in your library, with a card showing how long you played this time and in total.
-- **Your icon in the Dock.** Choose whether a game icon stays inside Arcane or also appears in Finder and the Dock, even after a rebuild.
-- **Builds on your external drive.** Keep your games on an external drive and the whole build stays there, so the Mac's own disk needs no free space.
+- **Welcome to Arcane.** NX Library has a new name and icon. The library, preferences and save backups stay in place.
+- **Steam and ported games together.** Choose whether to add installed Steam games for Mac. Game pages include related titles from your library, and Steam can show playtime and achievements when available.
+- **Spotlight opens directly to your library.** Tiles and game artwork arrive over the moving background. The entrance animation can be turned off in Settings.
+- **Settings are easier to browse.** General, Library, Porting and System group controls by what they affect.
 
 Every release is in the [changelog](CHANGELOG.md).
 
@@ -66,7 +64,7 @@ Game files, keys and firmware are not provided. See [Legal and third-party notic
 
 ### Project status
 
-**0.1.4.3 alpha.** Download the packaged app from [Releases](https://github.com/Bium23/NxLibrary/releases/latest), or [build it from source](#building-from-source).
+Arcane is in alpha. Get the latest published build from [Releases](https://github.com/Bium23/NxLibrary/releases/latest), or [build this version from source](#building-from-source).
 
 Automated checks cover the application code, publication inputs, compilation and development-app packaging. They do not certify game compatibility. Changes are recorded in the [changelog](CHANGELOG.md), and the current checks are available under [Actions](https://github.com/Bium23/NxLibrary/actions/workflows/ci.yml).
 
@@ -325,17 +323,6 @@ App data lives in `~/Library/Application Support/NXLibrary/`. Local game data us
 **Settings → Porting → Storage** shows app, build cache and log sizes for every library entry, including hidden games, with the largest caches first. **Delete cache** permanently removes only the chosen game's build cache after confirmation. Its app, original game files, saves and logs stay in place; the next rebuild may take longer. Shared caches are identified, and their confirmation explains the effect on the other entries. Connect unavailable drives or check folder access, then choose **Recalculate**. Sizes describe file contents; actual space recovered can differ, and shared folders count once in totals. This addition is unreleased; the maintainer confirmed it works in Dev.
 
 Storage can also clear all build caches or logs and open the shared backups folder. Cleanup runs without blocking navigation and is unavailable during a build or app update. **Remove Sources & Build Cache deletes the selected original source files**, while retaining the installed app and saves. Read that confirmation carefully; it differs from clearing a cache.
-
-## Next steps
-
-- **Simpler Settings** — Keep everyday options easy to find, with advanced controls grouped within each category.
-- **In-app bug reporting** — Make it easier to report a problem directly from Arcane.
-- **Broader game discovery** — Discover and launch games from Steam, CrossOver and the Mac App Store, alongside nxnative apps.
-- **Community translations** — Review and extend the initial six interface languages.
-- **Better controller support** — Refine controller settings and offer more flexible button mapping.
-- **Continued polish** — Fix bugs and improve navigation, feedback and visual details throughout the app.
-
-More to come as Arcane evolves.
 
 ## Documentation and development
 

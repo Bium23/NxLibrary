@@ -50,4 +50,42 @@ final class MoreLikeThisTests: XCTestCase {
         let data = [me.id: meta(genres: ["Other"]), other.id: meta(genres: ["other"])]
         XCTAssertEqual(MoreLikeThis.pick(for: me, in: [me, other], metadata: { data[$0] }), [])
     }
+
+    func testSteamUsesTheSameRankingAndOnlyVisibleSteamGames() {
+        let current = CatalogGame(steam: .init(appID: 10, name: "Current"))
+        let maker = CatalogGame(steam: .init(appID: 11, name: "Bravo"))
+        let genres = CatalogGame(steam: .init(appID: 12, name: "Alpha"))
+        var hidden = CatalogGame(steam: .init(appID: 13, name: "Hidden"))
+        hidden.setHidden(true)
+        let nx = CatalogGame(nxnative: game("Native"))
+        let all = [current, maker, genres, hidden, nx]
+        let own = MoreLikeThis.Traits(developers: ["Studio"], genres: ["Action", "Puzzle"])
+        let facts: [UUID: MoreLikeThis.Traits] = [
+            current.id: own, maker.id: .init(publishers: [" studio "]),
+            genres.id: .init(genres: ["action", "puzzle"]), hidden.id: own, nx.id: own
+        ]
+        XCTAssertEqual(MoreLikeThis.pick(for: current, in: all, traits: { facts[$0.id] }), [genres.id, maker.id])
+        XCTAssertEqual(MoreLikeThis.pick(for: current, in: all, traits: { facts[$0.id] }, limit: 1), [genres.id])
+        XCTAssertEqual(MoreLikeThis.pick(for: current, in: all, traits: { _ in nil }), [])
+    }
+
+    func testSteamFallsBackToGenuinelyRelatedGamesFromOtherSources() {
+        let steam = CatalogGame(steam: .init(appID: 10, name: "Current"))
+        let otherSteam = CatalogGame(steam: .init(appID: 11, name: "Steam candidate"))
+        let related = CatalogGame(nxnative: game("Related"))
+        let hidden = CatalogGame(nxnative: game("Hidden", hidden: true))
+        let different = CatalogGame(nxnative: game("Unrelated"))
+        let candidates = [steam, otherSteam, related, hidden, different]
+        let action = MoreLikeThis.Traits(genres: ["Action"])
+        let racing = MoreLikeThis.Traits(genres: ["Racing"])
+        var facts = [steam.id: action, otherSteam.id: racing, related.id: action, hidden.id: action, different.id: racing]
+        func picks() -> [UUID] {
+            MoreLikeThis.pick(for: steam, in: candidates, fallbackToOtherSources: true, traits: { facts[$0.id] })
+        }
+        XCTAssertEqual(picks(), [related.id])
+        facts[otherSteam.id] = action
+        XCTAssertEqual(picks(), [otherSteam.id], "A matching Steam game keeps precedence")
+        facts[steam.id] = nil
+        XCTAssertTrue(picks().isEmpty)
+    }
 }

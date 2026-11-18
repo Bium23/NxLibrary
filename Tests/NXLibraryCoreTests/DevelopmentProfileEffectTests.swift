@@ -23,6 +23,46 @@ final class DevelopmentProfileEffectTests: XCTestCase {
         try store.sync(automatic: false)
         XCTAssertNotEqual(try String(contentsOf: env), original, "Explicit changes must remain possible")
     }
+
+    func testModSyncPreservesRecordsAndOverlayWhenFolderCannotBeListed() throws {
+        let game = try root()
+        try Data("not a directory".utf8).write(to: game.appendingPathComponent("mods"))
+        let (store, records, overlay) = try modSyncFixture(game: game)
+        XCTAssertThrowsError(try store.sync())
+        XCTAssertEqual(try Data(contentsOf: store.recordsFile), records)
+        XCTAssertEqual(try Data(contentsOf: store.envFile), overlay)
+    }
+
+    func testModSyncPreservesAnUnreadableRecordFileAndTheOverlay() throws {
+        let game = try root()
+        try FileManager.default.createDirectory(at: game.appendingPathComponent("mods"), withIntermediateDirectories: true)
+        let (store, _, overlay) = try modSyncFixture(game: game)
+        let broken = Data("incomplete json".utf8)
+        try broken.write(to: store.recordsFile)
+        XCTAssertThrowsError(try store.sync())
+        XCTAssertEqual(try Data(contentsOf: store.recordsFile), broken)
+        XCTAssertEqual(try Data(contentsOf: store.envFile), overlay)
+    }
+
+    func testModSyncRemovesAnEntryAbsentFromAReadableFolder() throws {
+        let game = try root()
+        try FileManager.default.createDirectory(at: game.appendingPathComponent("mods"), withIntermediateDirectories: true)
+        let (store, _, _) = try modSyncFixture(game: game)
+        try store.sync()
+        XCTAssertEqual(try JSONDecoder().decode([ModRecord].self, from: Data(contentsOf: store.recordsFile)), [])
+        XCTAssertFalse(try String(contentsOf: store.envFile).contains(ModStore.overlayKey))
+    }
+
+    private func modSyncFixture(game: URL) throws -> (ModStore, Data, Data) {
+        let store = ModStore(supportFolder: game, recordsFile: game.appendingPathComponent("records.json"),
+                             titleID: "0100000000000000", canWrite: { true }, trash: { _ in XCTFail() })
+        let records = try JSONEncoder().encode([ModRecord(folderName: "Foo", isOn: true)])
+        let overlay = Data("DM_ROMFS_OVERLAY=/current-selection\n".utf8)
+        try records.write(to: store.recordsFile)
+        try overlay.write(to: store.envFile)
+        return (store, records, overlay)
+    }
+
     func testBrowsingUsesActualOverlayAndKeepsOtherProfilesInstallStaging() throws {
         let root = try root()
         let game = root.appendingPathComponent("game")

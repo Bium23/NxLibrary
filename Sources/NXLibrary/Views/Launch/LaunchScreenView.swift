@@ -128,10 +128,12 @@ struct LaunchScreenView: View {
     }
 
     private func appear() {
+        LaunchCoverTrace.event("Screen content appeared")
         appearedAt = CACurrentMediaTime()
         hero = GameArtLoader.shared.cachedHero(for: game)
         logo = GameArtLoader.shared.cachedLogo(for: game)
         withAnimation(.easeOut(duration: LaunchMotion.screenFade)) { shown = true }
+        if state.isReady { finish() }
     }
 
     private func finish() {

@@ -8,6 +8,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor static var isBusy: () -> Bool = { false }
     /// Set when a helper will reopen this bundle at its current path after the app quits.
     @MainActor static var relaunchScheduled = false
+    /// The profile's store outlives the last window so it can finish a selection write when quitting.
+    @MainActor static var settingsStore: AppSettingsStore?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         SeleneFonts.register()
@@ -16,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// A release copy still called "NX Library.app" takes its current name on its way out
     /// (`AppBundleRename`); a failure is logged and never holds up quitting.
     func applicationWillTerminate(_ notification: Notification) {
+        Self.settingsStore?.flushPendingSelection()
         let bundle = Bundle.main.bundleURL
         guard let target = AppBundleRename.target(
             bundleURL: bundle,

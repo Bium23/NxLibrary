@@ -3,8 +3,16 @@ import Combine
 
 public final class AppSettingsStore: ObservableObject {
     @Published public var settings: AppSettings {
-        didSet { save() }
+        didSet {
+            if settings.lastSelectedGameID != oldValue.lastSelectedGameID {
+                lastSelectedGameID = settings.lastSelectedGameID
+            }
+            save()
+        }
     }
+
+    /// Navigation state. Publishing it as a settings change re-enters the view graph during a row move.
+    public private(set) var lastSelectedGameID: UUID?
 
     public enum ErrorKind { case reading, writing }
     @Published public private(set) var loadError: String?
@@ -13,6 +21,10 @@ public final class AppSettingsStore: ObservableObject {
     public let fileURL: URL
     private let fileManager: FileManager
     private var isLoading = false
+    // The main thread owns the snapshots and their revision. The writer serializes file replacement.
+    private let writer = DispatchQueue(label: "local.nxlibrary.settings-write", qos: .utility)
+    private var writeRevision = 0
+    private var pendingSelectionWrite: DispatchWorkItem?
     private var needsRecoveryCopy = false
 
     public init(fileURL: URL = AppSettingsStore.defaultURL(),
@@ -29,13 +41,56 @@ public final class AppSettingsStore: ObservableObject {
 
     @discardableResult public func save() -> Bool {
         guard !isLoading else { return true }
+        let revision = nextWriteRevision()
+        let snapshot = snapshotForWrite()
+        let outcome = writer.sync { write(snapshot) }
+        publish(outcome, revision: revision)
+        return outcome.error == nil
+    }
+
+    /// Update the restore choice without invalidating settings observers or writing on the animation thread.
+    @MainActor public func rememberLastSelectedGame(_ id: UUID) {
+        guard lastSelectedGameID != id else { return }
+        lastSelectedGameID = id
+
+        let revision = nextWriteRevision()
+        let snapshot = snapshotForWrite()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            let outcome = self.write(snapshot)
+            DispatchQueue.main.async { [weak self] in self?.publish(outcome, revision: revision) }
+        }
+        pendingSelectionWrite = work
+        writer.async(execute: work)
+    }
+
+    /// Quitting can overtake the queued write. Save the latest value before exiting.
+    @MainActor public func flushPendingSelection() {
+        if pendingSelectionWrite != nil { save() }
+    }
+
+    private func snapshotForWrite() -> AppSettings {
+        var snapshot = settings
+        snapshot.lastSelectedGameID = lastSelectedGameID
+        return snapshot
+    }
+
+    private func nextWriteRevision() -> Int {
+        pendingSelectionWrite?.cancel()
+        pendingSelectionWrite = nil
+        writeRevision += 1
+        return writeRevision
+    }
+
+    private func write(_ snapshot: AppSettings) -> (recovery: URL?, error: Error?) {
+        var recovery: URL?
         do {
             try fileManager.createDirectory(
                 at: fileURL.deletingLastPathComponent(),
                 withIntermediateDirectories: true
             )
-            try preserveUnreadableFile()
-            let data = try JSONEncoder().encode(settings)
+            recovery = try preserveUnreadableFile()
+            let data = try JSONEncoder().encode(snapshot)
             let temp = fileURL.deletingLastPathComponent()
                 .appendingPathComponent(".settings-\(UUID()).tmp")
             defer { try? fileManager.removeItem(at: temp) }
@@ -45,13 +100,22 @@ public final class AppSettingsStore: ObservableObject {
             } else {
                 try fileManager.moveItem(at: temp, to: fileURL)
             }
-            errorKind = nil
-            loadError = nil
-            return true
+            return (recovery, nil)
         } catch {
+            return (recovery, error)
+        }
+    }
+
+    private func publish(_ outcome: (recovery: URL?, error: Error?), revision: Int) {
+        if let copied = outcome.recovery { recoveryFileURL = copied }
+        guard writeRevision == revision else { return }
+        pendingSelectionWrite = nil
+        if let error = outcome.error {
             errorKind = .writing
             loadError = error.localizedDescription
-            return false
+        } else {
+            errorKind = nil
+            if loadError != nil { loadError = nil }
         }
     }
 
@@ -60,13 +124,13 @@ public final class AppSettingsStore: ObservableObject {
         loadError = nil
     }
 
-    private func preserveUnreadableFile() throws {
-        guard needsRecoveryCopy else { return }
+    private func preserveUnreadableFile() throws -> URL? {
+        guard needsRecoveryCopy else { return nil }
         let copy = fileURL.deletingLastPathComponent()
             .appendingPathComponent("settings.unreadable-\(UUID()).json")
         try fileManager.copyItem(at: fileURL, to: copy)
-        recoveryFileURL = copy
         needsRecoveryCopy = false
+        return copy
     }
 
     private func load() {
@@ -80,7 +144,7 @@ public final class AppSettingsStore: ObservableObject {
         } catch {
             settings = AppSettings()
             needsRecoveryCopy = true
-            try? preserveUnreadableFile()
+            recoveryFileURL = try? preserveUnreadableFile()
             errorKind = .reading
             loadError = error.localizedDescription
         }

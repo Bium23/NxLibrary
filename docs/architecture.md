@@ -159,6 +159,7 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
   - Lo scorrimento è una molla smorzata: a pressioni rapide riprende la velocità che ha invece di ripartire ogni volta. Le tessere si creano quattro oltre ogni bordo dello schermo.
   - In Spotlight posto e dimensione di ogni tessera e la camera si ricavano da un solo valore animato, la posizione della selezione (un indice, con frazioni a metà strada). *Perché:* animati separatamente, la crescita di una tessera partiva un paio di fotogrammi dopo il suo spostamento e la tessera si staccava dalla vicina.
   - Una selezione che salta più tessere scorre attraverso quelle in mezzo; mentre una tessera è sollevata per spostarla cresce solo lei.
+  - In Spotlight sinistra e destra sulla riga lavorano sulla lista filtrata. La parte sotto gli screenshot si monta quando la pagina sale, così navigare tra tessere evita il calcolo di descrizioni, classifica e link fuori schermo.
 - **Entrata di Spotlight** (`SpotlightView+Entrance`, tempi e fasi in `SpotlightEntrance`).
   - C’è solo la prima volta che una home si vede dopo l’avvio, se è Spotlight (`AppViewModel.homeSeen`, che segna anche Collection), con **Entrance animation** accesa e mai con Riduci movimento. La chiave `introAnimation` resta compatibile; la shell usa lo stesso interruttore per il suono di avvio.
   - Benvenuto e Setup, fino alla fine della chiusura, e la finestra che prende il fullscreen tengono l’entrata coperta. L’arte è nascosta (`ArtReveal.hidden`); riga e informazioni si preparano a opacità 0,001, mentre barra e pillola sono nascoste e non ricevono input. *Perché:* il primo disegno delle tessere avviene prima del volo. Benvenuto e Setup chiedono alla shell lo stesso sfondo condiviso, così chiuderli lascia lo stesso moonlight in movimento.
@@ -213,6 +214,7 @@ Regole della barra:
 - `SettingsCatalog` descrive i singoli controlli. Changed riceve anche le differenze delle preferenze esterne ad `AppSettings`. Le azioni del controller si aggiornano con lo stato dei pannelli e mantengono il focus per identità. About pubblica azioni selezionabili.
 - Reset group è possibile dove `SettingsReset.canReset` lo dice. `SettingsReset.reset` rimette ai default i valori `AppSettings` della sezione in una sola assegnazione; la schermata azzera accanto le preferenze esterne (tema applicato, icona dell'app, zona morta della levetta, cartella Game apps) e segnala la cartella delle sorgenti conservata. Cloud saves e le credenziali non hanno reset.
 - `AppSettingsStore` salva `settings.json` tramite un file temporaneo, pubblica gli errori e conserva una copia di un file illeggibile prima di permetterne la sostituzione. La UI usa un dialogo Selene con Retry per una scrittura fallita.
+  In Spotlight e Collection l'ultimo gioco selezionato è stato di navigazione nello stesso store, senza notificare gli osservatori delle impostazioni a ogni movimento. Lo store include lo stesso campo nel JSON, accoda la scrittura in background e sostituisce le scritture ancora in attesa con la selezione più recente. Un salvataggio esplicito e la chiusura conservano la selezione corrente.
 - `GameRuntimeConfig.save` propaga gli errori di `env.txt` e salva le preferenze per titolo solo dopo una scrittura riuscita. Un `env.txt` illeggibile si conserva e si segnala.
 
 ## Lingua e regione
@@ -375,6 +377,7 @@ I percorsi completi sono in [flows.md](flows.md#3-play-di-un-gioco-switch-nxnati
 - La schermata ha una finestra propria, come la "launch cover" di Selene (`LaunchCoverWindow`). È senza bordi e trasparente (appare sfumando sopra la libreria), sta sopra ogni app, il Dock e la barra dei menu, su ogni Space compresi quelli a schermo intero, e non viene mai attivata.
 - Quando un gioco si apre a schermo intero, la schermata scorre via con la libreria e rientra con lo Space del gioco, coprendolo finché il gioco non disegna. *Perché:* tenuta nel solo Space di Arcane, lì si vedeva lo sfondo della scrivania; il maintainer preferisce la schermata (prova con MTGA, 15 nov 2026).
 - Il gioco parte dietro di lei; Steam che prende il primo piano o macOS che cambia Space restano dietro, quindi Arcane non deve mai riprendersi il primo piano.
+- Play Steam accoda la richiesta fino a quando AppKit ordina e invia il pannello al server delle finestre. Arcane lascia al pannello il passaggio SwiftUI di preparazione prima che Steam possa cambiare Space. Se il pannello manca, Play procede comunque entro un secondo. Solo la richiesta ancora corrente può partire.
 - Il movimento è quello di Selene (`LaunchMotion`), in Core Animation così resta fluido mentre il gioco o Steam si avviano:
   - l'arte si avvicina piano (scala da 1,04 a 1,12 in 20 s);
   - il logo entra una sola volta, poco dopo la dissolvenza della schermata (0,36 s): appare in 0,75 s mentre sale di 30 unità in 1 s, poi resta fermo. Al massimo metà larghezza e 38% dell'altezza, come Selene;
@@ -397,6 +400,8 @@ I percorsi completi sono in [flows.md](flows.md#3-play-di-un-gioco-switch-nxnati
 - La media utenti IGDB usa "Voto utenti" e "Utenti · IGDB", conservando stelle, numero e posizione della riga. Le fonti sono descritte in [Artwork, metadati e voti](#artwork-metadati-e-voti).
 
 **Fascia Mods.** Sta tra Details e More like this: vedi [Mod](#mod).
+
+**More like this.** La fascia condivisa `DetailsMoreBand` mostra fino a sei giochi, dopo Mods per Switch e sotto About e Details per Steam. `MoreLikeThis` ordina per generi, sviluppatore ed editore in comune. Esclude il gioco corrente e quelli nascosti. Steam dà precedenza ai titoli Steam e cerca titoli Switch correlati quando non trova corrispondenze Steam. Usa scelte personali e metadati già disponibili, con i generi nella lingua dell'interfaccia. La cache Steam si legge all'apertura della pagina e la fascia compare solo con corrispondenze effettive.
 
 ## Cheat
 
@@ -429,7 +434,9 @@ I percorsi completi sono in [flows.md](flows.md#3-play-di-un-gioco-switch-nxnati
 **Fascia Mods della pagina.**
 - Compare sia nella pagina del gioco della Spotlight sia in Details, tra Details e More like this (focus `.mods` in `SpotlightState`, `DetailsFocus.modsZone`).
 - È una griglia di sei tessere per riga che non scorre di lato (`ModsBandLayout`): Sinistra e Destra restano nella riga, Giù scende di riga e dall'ultima passa a More like this.
-- `ModsBandHost` tiene per entrambe le pagine mod installate, GameBanana e pannelli, e interroga GameBanana solo quando la pagina è aperta, non mentre si scorre la riga.
+- `ModsBandHost` tiene per entrambe le pagine mod installate, GameBanana e pannelli. In Spotlight legge le mod all'apertura della pagina del gioco. Cambiare selezione sulla riga svuota la fascia precedente senza leggere quella successiva, così la lettura delle mod resta fuori dallo scorrimento.
+  Le [misure dei primi cambi gioco](reviews/2026-11-18-spotlight-glide.md) mostrano il costo della lettura prima e dopo.
+- Play riconcilia le cartelle delle mod prima di avviare il gioco, anche dalla riga. Se la cartella o i record non si leggono, `ModStore.sync` conserva entrambi i file di stato. La Dev mantiene il divieto di manutenzione automatica dell'overlay.
 - `GameBananaBandModel` coordina abbinamento, ricerca e installazioni. Cambiando gioco dimentica le mod del precedente; alla prima apertura di un gioco in ogni avvio toglie gli avanzi di un'installazione interrotta (`ModStore.removeLeftoverInstalls`). `GameBananaFindModel` tiene lo stato della ricerca per nome.
 - Le mod trovate entrano al massimo in due gruppi: le prime cinque, accanto ad Add mods, appena ci sono, poi tutte le altre a ricerca finita. Ogni gruppo aspetta (al massimo 1,2 s, `imageWait`) che la sua arte sia decodificata (`prepareImages`, cioè `GameBananaImageView.prepare`, in parallelo) ed entra con un'unica dissolvenza. Una tessera di stato spinta più in là sfuma nel nuovo posto invece di attraversare la griglia.
 - Un'installazione è per un file (`GameBananaBandModel.installFiles`): solo la sua riga mostra avanzamento ed esito, le altre aspettano che finisca.

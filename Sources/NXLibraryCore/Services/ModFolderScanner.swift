@@ -17,11 +17,23 @@ public enum ModFolderScanner {
     /// The mods folder's visible entries, sorted by name: subfolders and stray files (an archive not unzipped yet, which
     /// is then shown as not a mod). Hidden entries and symlinks are left out.
     public static func entries(in modsFolder: URL) -> [URL] {
-        let fm = FileManager.default
-        let entries = (try? fm.contentsOfDirectory(at: modsFolder, includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey],
-                                                   options: .skipsHiddenFiles)) ?? []
-        return entries
+        ((try? listedEntries(in: modsFolder)) ?? [])
             .filter { (try? $0.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) == false }
+    }
+
+    /// A caller removing records needs a complete listing. Read failures cannot stand for missing mods.
+    static func checkedEntries(in modsFolder: URL) throws -> [URL] {
+        try listedEntries(in: modsFolder).filter { entry in
+            guard let isLink = try entry.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink else {
+                throw CocoaError(.fileReadUnknown)
+            }
+            return !isLink
+        }
+    }
+
+    private static func listedEntries(in modsFolder: URL) throws -> [URL] {
+        try FileManager.default.contentsOfDirectory(at: modsFolder, includingPropertiesForKeys: [.isSymbolicLinkKey],
+                                                    options: .skipsHiddenFiles)
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
     }
 
