@@ -1,13 +1,13 @@
 <h1 align="center">
-  <img src="Resources/AppIcon-Dark.png" alt="Arcane app icon" width="80" height="80" align="absmiddle">
+  <img src="Resources/AppIcon-Light.png" alt="Arcane's crystal-in-glass app icon" width="96" height="96" align="absmiddle">
   Arcane
 </h1>
 
 <p align="center"><strong>A home for your games on Mac.</strong></p>
 
 <p align="center">
-  Play your installed Steam games for Mac, organise your library,<br>
-  and build Mac apps from your own Switch game files with nxnative.
+  Browse and launch games from one Mac library, with controller navigation,<br>
+  game artwork and activity. Bring together installed Steam games for Mac and games you’ve ported.
 </p>
 
 <p align="center">
@@ -26,10 +26,8 @@
   <a href="docs/development.md">Development</a>
 </p>
 
-<!-- NX-DEMO:START
-Insert the final GitHub-hosted video attachment here, below the introduction.
-Use the real recording; keep this slot hidden until the video is available.
-NX-DEMO:END -->
+<!-- NX-DEMO:START -->
+<!-- NX-DEMO:END -->
 
 <!-- NX-SCREENSHOTS:START -->
 ![Arcane Spotlight with a selected game, artwork, play history and library navigation](docs/media/spotlight.webp)
@@ -39,26 +37,25 @@ NX-DEMO:END -->
 
 ### <img src="https://img.shields.io/badge/new-E8833A?style=flat" alt="New" height="20" align="absmiddle"> Latest highlights
 
-- **Welcome to Arcane.** NX Library has a new name and icon. The library, preferences and save backups stay in place.
-- **Steam and ported games together.** Choose whether to add installed Steam games for Mac. Game pages include related titles from your library, and Steam can show playtime and achievements when available.
-- **Spotlight opens directly to your library.** Tiles and game artwork arrive over the moving background. The entrance animation can be turned off in Settings.
-- **Settings are easier to browse.** General, Library, Porting and System group controls by what they affect.
+- **One library for your Mac games.** Add installed Steam games for Mac alongside games ported with nxnative. Browse in Spotlight or Collection and launch from either view.
+- **Steam achievements.** See playtime, achievement rarity and crystal tiers when available. Complete every achievement in a game to reveal the animated Arcane.
+- **An interface built for browsing.** Navigate with a controller, keyboard or mouse, and personalise your library with artwork, themes and live backgrounds.
+- **NX Library is now Arcane.** Your library, preferences and save backups carry over. Settings are grouped into General, Library, Porting and System.
 
 Every release is in the [changelog](CHANGELOG.md).
 
 ## Overview
 
-Arcane is an independent SwiftUI frontend for the external [nxnative](https://github.com/seedds/nxnative) toolchain. It brings your installed game apps, local build workflow and game options into a modern Mac-native library inspired by [Selene](https://github.com/mattxslv/Selene).
+Arcane is an independent game library and launcher for Apple silicon Macs. It brings installed Steam games for Mac and games ported with nxnative into the same interface, inspired by [Selene](https://github.com/mattxslv/Selene). The integrated porting workflow uses [nxnative](https://github.com/seedds/nxnative) to build compatible Mac apps from your own Switch game files.
 
 | Area | What you can do |
 |---|---|
 | **Library** | Browse Spotlight and Collection, search, favourite, hide and reorder games. |
-| **Local builds** | Select your own sources, review updates and DLC, follow progress and retry a failed installation. |
+| **Steam** | Launch installed games for Mac and browse playtime, achievements and related games. |
 | **Game options** | Keep each title's launch settings, artwork and metadata together. |
-| **Saves** | Back up local progress, preview imports and restore a previous copy. |
-| **Mods** | Install GameBanana mods that work with the engine, or add your own, and choose what is on for the next launch. |
-| **Cheats** | Import matching cheat files and choose what is enabled for the next launch. |
 | **Personalisation** | Choose palettes, wallpapers, live backgrounds, interface sounds and controller prompts. |
+| **Porting** | Build compatible Switch titles with nxnative, review updates and DLC, and follow build progress. |
+| **Ported games** | Manage compatible mods and cheats, back up local saves and preview save imports. |
 
 Game files, keys and firmware are not provided. See [Legal and third-party notices](#legal-and-third-party-notices).
 
@@ -68,7 +65,7 @@ Arcane is in alpha. Get the latest published build from [Releases](https://githu
 
 Automated checks cover the application code, publication inputs, compilation and development-app packaging. They do not certify game compatibility. Changes are recorded in the [changelog](CHANGELOG.md), and the current checks are available under [Actions](https://github.com/Bium23/NxLibrary/actions/workflows/ci.yml).
 
-The engine is pinned to `461a5f9f` and uses Xcode 27.2 / Metal 32023.922. The pin includes upstream shader, rendering, audio and package-reading fixes. Setup retrieves this exact commit. Installed game apps use the engine they were built with. See the [engine upgrade notes](docs/upstream-upgrades/README.md).
+Porting uses nxnative commit `461a5f9f` with Xcode 27.2 and Metal 32023.922. Porting Setup retrieves that commit. Installed game apps use the engine they were built with. See the [engine upgrade notes](docs/upstream-upgrades/README.md).
 
 ## Getting started
 
@@ -79,8 +76,8 @@ The engine is pinned to `461a5f9f` and uses Xcode 27.2 / Metal 32023.922. The pi
 | **Arcane library** | Apple silicon, macOS 13 or later. Steam and each game can require a newer macOS version. |
 | **Porting and nxnative game apps** | macOS 26.6 or later for the Mac hosts built by the pinned engine. This is separate from Arcane's own minimum. |
 | **Xcode for porting** | 27.2 or later, with the Metal compiler certified for the pinned engine. Browsing the library and using Steam do not require Xcode. |
-| **Engine** | nxnative at the pinned commit. Setup can prepare the checkout; an existing folder can be chosen in **Settings → Setup and engine**. |
-| **Your files** | Your own supported game sources and keys, with the rights and permissions needed to use them. |
+| **Porting engine** | nxnative at the pinned commit. Setup can prepare the checkout. To select an existing folder, use **Settings → Porting → Setup and engine**. |
+| **Porting inputs** | Your own supported game sources and keys, with the rights and permissions needed to use them. |
 
 A packaged app includes Python and its required packages, `zstd` and `glslangValidator`. Homebrew is used to prepare that runtime during development; it is not needed to use a packaged copy. A source build without the bundled runtime uses the engine's virtual environment and tools on `PATH`.
 
@@ -105,7 +102,7 @@ Build options, runtime dependencies, debug builds and release packaging are docu
 
 1. Download the DMG from [Releases](https://github.com/Bium23/NxLibrary/releases/latest).
 2. Open it and drag **Arcane** to Applications.
-3. Open the app and complete Setup.
+3. Open Arcane, choose which detected sources to use, and select **Open library**.
 
 The current alpha is ad-hoc signed and not notarised. If macOS blocks first opening, use **System Settings → Privacy & Security → Open Anyway** only for a copy you built or obtained from a source you trust.
 
@@ -113,9 +110,9 @@ Packaged releases check this repository for app updates; no GitHub account is ne
 
 ### First-run setup
 
-Setup has two steps, **Get ready** and **Your games**.
+On first launch, Arcane looks for installed Steam games for Mac and previously ported apps. Choose whether to include Steam and select **Open library**. Use **Settings → Library → Sources** to change your Steam source or refresh it later. Choose **Porting** on the first screen to set up local game builds with nxnative.
 
-**Get ready** shows the engine, build tools and keys. **Install all** handles the supported steps: the engine checkout and the certified Metal compiler. The engine's tools are native, so .NET is no longer needed. Xcode itself comes from the App Store; its licence and any system prompts remain your responsibility. Choose **Continue** to proceed; incomplete build requirements can be finished later, and existing game apps remain playable.
+**Get ready** shows the engine, build tools and keys. **Install all** prepares the engine checkout and certified Metal compiler. Install Xcode from the App Store and follow its licence and system prompts. Choose **Continue** to proceed. Build requirements can be completed later, and existing game apps remain playable.
 
 **Your games** shows **Game apps**: where to keep existing nxnative games (`.app`) and install new builds. It checks the selected folder before reporting an empty library. Use **Change** to choose another folder, **Choose game file** for NSP, XCI, NSZ or XCZ, or **Choose a folder instead** for a source folder, including supported extracted inputs. A single detected title opens the existing build review; multiple titles require a choice. Selecting sources never starts a build by itself. Cancelling the picker stays on this page.
 
@@ -123,15 +120,15 @@ If games are found, **Open library** takes you to them. **Skip for now** enters 
 
 The default Game apps folder is `~/Applications`; first use can prepare this default without an extra picker. Remembered or custom unavailable folders are never recreated automatically. Changing folders does not move installed apps, and a rebuild updates an existing app in its current location. A read-only folder still allows discovery and Play; installing new builds needs write access.
 
-Discovery includes subfolders of Game apps. It stays inside the chosen folders, skips app contents and limits how far it searches. Search limits and unreadable folders are explained beside **Settings → Library → Scan game apps**, without interrupting launch. Existing library entries are kept. If several builds of a title are found, the registered app is retained while it exists; a newly discovered title uses the most recently modified build.
+Discovery includes subfolders of **Game apps**, skips app contents and limits the search depth. **Settings → Porting → Library → Scan game apps** reports search limits and unreadable folders. If several builds of a title are found, Arcane keeps the registered app while it exists. For a newly discovered title, it uses the most recently modified build.
 
-**Game files** is a separate optional folder preference in **Settings → Library**. Selecting individual files for a porting does not replace that preference or scan their siblings. Both folder choices can be changed in Settings later.
+**Game files** is a separate optional folder preference in **Settings → Porting → Library**. Selecting individual files leaves that preference in place. Both folder choices can be changed later.
 
 Import your `prod.keys` when prompted. Arcane keeps a private copy with mode `0600` and leaves the original file unchanged. Key values are not displayed or logged.
 
 Reopen both setup steps from **Settings → Porting → Setup and engine → Open Setup** whenever needed; this keeps your library and completion state. Arcane never runs `sudo`, accepts the Xcode licence for you or changes `xcode-select`.
 
-Already have a built nxnative game app? Use **Settings → Library → Scan game apps → Scan**. The same action finds existing builds and refreshes the library. Play remains available without the original sources; rebuilding requires attaching them again.
+To discover existing nxnative game apps, choose **Settings → Porting → Library → Scan game apps → Scan**. Play works with the installed app. To rebuild it, attach the original sources.
 
 If an installed app is moved or removed, its library entry stays with a blurred, locked tile and **App not found**. Restore it to its folder or change **Game apps**, then refresh the library. Arcane does not search elsewhere for it. Missing build inputs show **Game files not found** when there is no app to play. An existing app still plays when its source files are missing; only rebuilding is unavailable. To reconnect a game's moved inputs, use **Game Options → Edit details → Attach sources…**.
 
@@ -139,11 +136,13 @@ If an installed app is moved or removed, its library entry stays with a blurred,
 
 ### Your library
 
-**Spotlight** places your games in a row of square tiles, with Play, Options and Favourite beside the selected title. Scroll down for descriptions, screenshots, activity and build information. **Collection** offers a cover-based view.
+**Spotlight** places your games in a row of square tiles, with Play, Options and Favourite beside the selected title. **Collection** offers a cover-based view. Both use the same library and support a controller, keyboard or mouse.
 
-![Game details with screenshots, a description, play activity and build information](docs/media/game-details.webp)
+![A game page with screenshots, a description and play activity](docs/media/game-details.webp)
 
-<p align="center"><strong>A closer look at each game.</strong><br>Artwork, play history and build details in one place.</p>
+<p align="center"><strong>A closer look at each game.</strong><br>Artwork, details and play history in one place.</p>
+
+Scroll down for screenshots, the game description and **More like this** when matching titles are in your library. Steam games can show playtime and an **Achievements** card with rarity, unlocked items and crystal tiers. The animated Arcane appears when every achievement is unlocked.
 
 Use **Find a game** for search, **Game Options** for title-specific actions, and the menu for themes, Settings and running-game controls. Hidden games can be restored under **Settings → Library → Games → Hidden games**.
 
@@ -155,7 +154,7 @@ When you quit a game, Arcane comes back to the front, unless you had moved to an
 
 ### Language and region
 
-The unreleased hotfix adds **English, Italiano, Français, Deutsch, Español and Português (Brasil)**. **Settings → Start-up → Language & region** follows the Mac automatically or lets you choose the app language and region separately. Changes apply immediately and are remembered. The **Regional formats** setting controls only date, number and size formats; **Game options → Language** continues to control each game independently.
+Arcane is available in **English, Italiano, Français, Deutsch, Español and Português (Brasil)**. **Settings → Start-up → Language & region** follows the Mac automatically or lets you choose the app language and region separately. Changes apply immediately and are remembered. **Regional formats** controls dates, numbers and sizes. **Game options → Language** controls each supported game's language.
 
 Choose a language directly from its list. Known catalog genres are translated locally, without changing the saved metadata. Descriptions from Nlib are requested in the app language when supported, with cached descriptions shared between regions using the same language. Switching language reuses available artwork and credits; when those are fresh, only the localized description is requested. English remains available when a translated description cannot be found; descriptions, mod text and release notes from external sources are not automatically translated. Personal names, metadata choices, artwork and game settings are preserved.
 
@@ -165,16 +164,18 @@ The last row in **Details** shows five stars, the original score out of 100 and 
 
 Optional **Settings → Online services → IGDB** accepts your own Twitch application's **Client ID** and **Client Secret**. The dialog includes five short setup steps and a direct link to register an application. **Check and save** verifies access before keeping the credentials in a private file on this Mac. The secret is hidden, and credentials are separate from ordinary settings and the Dev-profile import. **Remove** returns to the keyless source. With IGDB configured, its critic average takes priority, followed by public critic scores via Wikidata and finally the explicitly labelled IGDB user average. Cached scores remain available offline. The same general settings page contains the SteamGridDB key for game artwork; API connections are optional.
 
-The same optional connection adds **IGDB** proposals to **Game options → Edit details → Change metadata**, for Switch, Switch 2 and Steam games. Preview descriptions, genres, developers, publishers and platform-specific release dates, then choose each field individually. Automatic and your manual choices remain available; fetching never replaces them. IGDB descriptions keep their original language. Saved proposals remain usable offline, with a retry when refresh is unavailable. This metadata flow is awaiting maintainer validation.
+The same optional connection adds **IGDB** proposals to **Game options → Edit details → Change metadata** for Switch, Switch 2 and Steam games. Preview descriptions, genres, developers, publishers and platform-specific release dates, then choose each field individually. Automatic and manual choices remain available. Saved proposals work offline, and IGDB descriptions keep their original language.
 
-**LaunchBox** and **TheGamesDB** also provide optional metadata proposals without an API key, using the game title and platform rather than its shop. The picker keeps source rows visible, explains missing/ambiguous data and values equal to Automatic, and offers retry after failures. Native Mac entries take priority; PC alternatives are labelled and do not supply a Windows release date as a Mac date. These lookups fetch text pages only, cache all fields together and retain saved proposals offline. TheGamesDB artwork searches now follow Mac, Switch or Switch 2 as appropriate. These additions await maintainer validation.
+**LaunchBox** and **TheGamesDB** also provide optional proposals without an API key, based on the game's title and platform. The picker explains missing or ambiguous data and allows a retry. Native Mac entries take priority, and PC alternatives are labelled.
 
-Use the dialog's **Developer portal** and **Setup guide** links to create your credentials. IGDB documents free non-commercial API access; commercial use requires its partnership process. This optional integration is awaiting maintainer validation with real credentials.
+Use the dialog's **Developer portal** and **Setup guide** links to create your credentials.
 
 ### Add or rebuild a game
 
+Use this workflow for games you want to port with nxnative. Arcane discovers installed Steam games through **Settings → Library → Sources**.
+
 1. Open **Add game** and choose or drop a supported file or folder.
-2. Review the detected base game, update and DLC. Supported source formats are NSP, XCI, NSZ and XCZ.
+2. Review the detected base game, update and DLC. Arcane accepts NSP, XCI, NSZ, XCZ and Switch 2 NUP packages, plus supported source folders.
 3. Check the destination, disk estimate and game options.
 4. Choose **Add and port** to build, or **Add to library only** to keep the entry for later.
 
@@ -199,17 +200,13 @@ A rebuild of a running game waits to replace its app until it closes. If compila
 | **Settings → Porting → Cloud saves** | Library-wide preference, subject to advanced game configuration overrides. | Reapplied before each launch, including when Off. |
 | **Settings → Look** | The library's presentation. | The app interface; game artwork and launch-screen style have their own controls. |
 
-Options include fullscreen, FPS target, docked mode, language, rumble, render scale, MetalFX upscaling and Metal HUD. **MetalFX upscaling** enlarges the finished picture, HUD included, to your window or screen. **Game's upscaler**, offered only by games that upscale their own picture inside the frame (such as Donkey Kong Bananza), keeps the game's own upscaler or swaps it for MetalFX's, which takes much less GPU time; both can be on. Some controls depend on the installed build's capabilities. A control being available does not guarantee that every game supports its effect.
+For games built with nxnative, options can include fullscreen, FPS target, docked mode, language, rumble, render scale, MetalFX upscaling and Metal HUD. **MetalFX upscaling** enlarges the finished picture, including the HUD, to your window or screen. **Game's upscaler** is offered for games that upscale inside the frame, such as Donkey Kong Bananza. Available options depend on the installed build and game.
 
-Settings includes **Search** and **Changed**. Group resets retain the cloud-sync choice and selected sources folder. Descriptions explain the scope; information buttons provide additional detail.
-
-![Settings with categories, Start-up preferences and access to Setup](docs/media/settings.webp)
-
-<p align="center"><strong>Settings by area.</strong><br>Find library, appearance, controller and start-up preferences.</p>
+Arcane groups Settings into **General**, **Library**, **Porting** and **System**. Use **Search** to find a setting and **Changed** to review values you’ve adjusted. Group resets retain the cloud-sync choice and selected sources folder.
 
 ### Saves: back up, import, restore
 
-Open **Game Options → Saves**, directly below Cheats. Keep the game closed during backup, import or restore.
+For a ported game, open **Game Options → Saves**. Keep the game closed during backup, import or restore.
 
 | Button | What it does |
 |---|---|
@@ -232,13 +229,15 @@ Interrupted replacements must recover before Play. The Saves panel reports what 
 
 ### Cheats
 
-Open **Game Options → Cheats**, then choose or drop a matching cheat file. Arcane checks the title/build information; newly imported cheats start off. Enable the master switch and the individual cheats you want, then launch the game.
+For a ported game, open **Game Options → Cheats**, then choose or drop a matching cheat file. Arcane checks the title and build information. Newly imported cheats start off. Enable the master switch and the individual cheats you want, then launch the game.
 
 Changes apply at the next Play and are written only while the game is closed. An older or unrecognised engine build may require **Rebuild**. The engine's in-game panel, `⌘⇧C`, reads the same files.
 
 Cheats change values while you play, for one game version only. New items, looks or gameplay are mods.
 
 ### Mods
+
+Arcane manages file mods for games ported with nxnative.
 
 - **Mod store.** The **Mods** card in Spotlight opens a store of the GameBanana mods that work with your games: a featured banner, the most popular, a row per category and a row per game, sorted by Popular, Most liked, Newest or Recently updated. Hide the card in **Settings → Spotlight**.
 - **A game's Mods band.** Each game page lists its GameBanana mods and the ones you installed. Open a mod for its images, author, version and requirements, then press **Install**; **Update** appears when the author replaces the file. If the game's GameBanana page is uncertain, the band asks once, and **Wrong game?** picks another.
@@ -296,7 +295,8 @@ Prompts follow the connected controller and supported system remapping. **Settin
 
 | What you see | What to do |
 |---|---|
-| **Play works, Rebuild is blocked** | Open **Settings → Setup and engine** and inspect the gate. Existing apps and new builds have separate requirements. |
+| **A Steam game is missing** | Open **Settings → Library → Sources**, verify the Steam folder, then choose **Refresh Steam**. Arcane lists supported titles installed as Mac apps. |
+| **Play works, Rebuild is blocked** | Open **Settings → Porting → Setup and engine** and check Compatibility. Existing apps and new builds have separate requirements. |
 | **Sources detached / missing** | Use **Attach Sources…** or locate the original files. The installed app remains usable. |
 | **Ready build waiting to install** | Close the running game or finish the save operation, then retry the installation if prompted. |
 | **Import is unavailable** | Close the game, finish any active operation and follow the cloud-sync or recovery action shown in Saves. |
@@ -320,7 +320,7 @@ The [upgrade notes](docs/upstream-upgrades/README.md) record each engine review 
 
 App data lives in `~/Library/Application Support/NXLibrary/`. Local game data uses `~/Library/Application Support/nxnative/<title ID>/`, with mods in its `mods` folder. Backups are stored under `NXLibrary/SaveBackups/<title ID>/`.
 
-**Settings → Porting → Storage** shows app, build cache and log sizes for every library entry, including hidden games, with the largest caches first. **Delete cache** permanently removes only the chosen game's build cache after confirmation. Its app, original game files, saves and logs stay in place; the next rebuild may take longer. Shared caches are identified, and their confirmation explains the effect on the other entries. Connect unavailable drives or check folder access, then choose **Recalculate**. Sizes describe file contents; actual space recovered can differ, and shared folders count once in totals. This addition is unreleased; the maintainer confirmed it works in Dev.
+**Settings → Porting → Storage** shows app, build cache and log sizes for every library entry, including hidden games, with the largest caches first. **Delete cache** permanently removes only the chosen game's build cache after confirmation. Its app, original game files, saves and logs stay in place. The next rebuild may take longer. Shared cache confirmations list the other affected entries. Connect unavailable drives or check folder access, then choose **Recalculate**.
 
 Storage can also clear all build caches or logs and open the shared backups folder. Cleanup runs without blocking navigation and is unavailable during a build or app update. **Remove Sources & Build Cache deletes the selected original source files**, while retaining the installed app and saves. Read that confirmation carefully; it differs from clearing a cache.
 
@@ -330,13 +330,12 @@ Storage can also clear all build caches or logs and open the shared backups fold
 |---|---|
 | [Changelog](CHANGELOG.md) | User-visible changes and release history. |
 | [Development guide](docs/development.md) | Runtime preparation, debug builds, tests, packaging and releases. |
-| [Screenshots and demo](docs/media/README.md) | Screenshot inventory, placement and the upcoming video. |
+| [Screenshots and demo](docs/media/README.md) | Media inventory and display guidance. |
 | [Contributing](CONTRIBUTING.md) | Change and verification guidelines. |
 | [Security](SECURITY.md) | Private vulnerability reporting and handling sensitive files. |
 | [Technical guide](docs/architecture.md) | How each area works today, in Italian. |
 | [How to build](docs/conventions.md) | Where new code goes and the recipes to follow, in Italian. |
 | [Flows](docs/flows.md) | End-to-end flows with diagrams, in Italian. |
-| [Validation status](docs/validation.md) | What the maintainer has tested and what is still pending, in Italian. |
 | [File catalog](docs/file-map.md) | Responsibility of every project file, in Italian. |
 | [Steam](docs/steam.md) | Steam integration: files read, game states, launch, playtime, achievements, limits; in Italian. |
 | [Engine upgrade notes](docs/upstream-upgrades/README.md) | Pin changes and their evidence. |
@@ -347,11 +346,11 @@ Arcane is MIT licensed. It uses upstream [nxnative](https://github.com/seedds/nx
 
 The interface draws from the MIT [Selene](https://github.com/mattxslv/Selene) theme. Bundled fonts, sounds, palettes and runtime components retain their own licences; see [NOTICE](NOTICE), [media notices](Resources/Selene/NOTICE.txt) and [palette notices](Resources/Selene/NOTICE-palettes.txt).
 
-The app icon is original artwork created by the owner with AI. Its [master and generation notes](Resources/IconArtwork.md) are included.
+The app icon uses original artwork. The [master and generation notes](Resources/IconArtwork.md) are included.
 
 ## Legal and third-party notices
 
-**Project scope.** Arcane is an independent macOS frontend for organising and launching game applications. Its current nxnative integration also provides guided setup and local builds using the external nxnative toolchain.
+**Project scope.** Arcane is an independent macOS game library and launcher. It supports installed Steam games for Mac and provides guided setup and local game builds through nxnative.
 
 **Games and keys.** The project does not provide games, firmware, cryptographic keys or downloadable game packages. Users must supply their own game files and keys and have the rights and permissions required to use them. Do not submit these files through issues, pull requests or support requests.
 

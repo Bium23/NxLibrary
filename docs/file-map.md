@@ -53,7 +53,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 | [LICENSE](../LICENSE) | Contiene la licenza MIT di Arcane. |
 | [NOTICE](../NOTICE) | Conserva attribuzioni e provenienza dei componenti e dei riferimenti riutilizzati. |
 | [Package.swift](../Package.swift) | Dichiara i target SwiftPM, le loro dipendenze e il deployment macOS minimo. |
-| [README.md](../README.md) | Presenta l'app con logo e badge, guida d'uso, requisiti, risoluzione dei problemi, crediti e note legali. |
+| [README.md](../README.md) | Presenta Arcane come libreria e launcher Mac, con guida per Steam e nxnative, requisiti, risoluzione dei problemi, crediti e note legali. |
 | [runtime.lock](../runtime.lock) | Fissa versioni, download e hash del runtime Python e degli strumenti inclusi nel bundle. |
 | [VERSION](../VERSION) | Versione in sviluppo usata dal packaging e verificata dalla procedura di release. |
 
@@ -872,13 +872,13 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 
 | File | Responsabilità |
 |---|---|
-| [docs/media/README.md](../docs/media/README.md) | Registra provenienza e posizione degli screenshot, ottimizzazione delle copie e inserimento del video futuro. |
+| [docs/media/README.md](../docs/media/README.md) | Registra i media del README e la loro posizione. |
 | [docs/media/spotlight.webp](../docs/media/spotlight.webp) | Presenta Spotlight e la libreria nell'apertura del README. |
 | [docs/media/game-details.webp](../docs/media/game-details.webp) | Mostra dettagli, attività e informazioni di build di un gioco. |
 | [docs/media/mod-store.webp](../docs/media/mod-store.webp) | Presenta lo store delle mod nel README. |
 | [docs/media/quick-menu.webp](../docs/media/quick-menu.webp) | Illustra il menu rapido sopra la libreria. |
 | [docs/media/porting-progress.webp](../docs/media/porting-progress.webp) | Mostra l'avanzamento di un porting dalla schermata Spotlight. |
-| [docs/media/settings.webp](../docs/media/settings.webp) | Illustra le categorie di Settings e il pannello Start-up. |
+| [docs/media/settings.webp](../docs/media/settings.webp) | Cattura storica di Settings in NX Library. |
 | [docs/media/color-themes.webp](../docs/media/color-themes.webp) | Mostra la scelta delle palette con anteprima della libreria. |
 | [docs/media/static-wallpapers.webp](../docs/media/static-wallpapers.webp) | Illustra il browser degli sfondi statici e la relativa anteprima. |
 | [docs/media/live-wallpapers.webp](../docs/media/live-wallpapers.webp) | Mostra il selettore degli sfondi animati e l'importazione di video personali. |
