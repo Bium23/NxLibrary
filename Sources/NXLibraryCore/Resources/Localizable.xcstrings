@@ -1,6 +1,47 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "A free, open-source game library and launcher for Mac. Play installed games and port compatible Switch titles with nxnative.": {
+      "comment": "SettingsAboutSection.swift",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine kostenlose Open-Source-Spielebibliothek mit Launcher für den Mac. Starte installierte Spiele und portiere kompatible Switch-Titel mit nxnative."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A free, open-source game library and launcher for Mac. Play installed games and port compatible Switch titles with nxnative."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una biblioteca y un lanzador de juegos gratuitos y de código abierto para Mac. Juega a tus juegos instalados y adapta títulos compatibles de Switch con nxnative."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une bibliothèque et un lanceur de jeux gratuits et open source pour Mac. Lancez vos jeux installés et portez les titres Switch compatibles avec nxnative."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una libreria e un launcher di giochi per Mac, gratuiti e open source. Avvia i giochi installati e converti i titoli Switch compatibili con nxnative."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma biblioteca e um inicializador de jogos gratuitos e de código aberto para Mac. Abra os jogos instalados e porte títulos compatíveis de Switch com nxnative."
+          }
+        }
+      }
+    },
     "All achievements": {
       "comment": "Achievements card on a game's page, under the tier's name when every achievement is unlocked.",
       "localizations": {
@@ -5481,47 +5522,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Uma notificação quando uma compilação terminar enquanto o Arcane estiver em segundo plano."
-          }
-        }
-      }
-    },
-    "A personal macOS front-end for building and launching your own Switch games with nxnative.": {
-      "comment": "SettingsAboutSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A personal macOS front-end for building and launching your own Switch games with nxnative."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Un’interfaccia personale per macOS per creare e avviare i tuoi giochi Switch con nxnative."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Une interface macOS personnelle pour compiler et lancer vos propres jeux Switch avec nxnative."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eine persönliche macOS-Oberfläche zum Erstellen und Starten deiner eigenen Switch-Spiele als Apps mit nxnative."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Una interfaz personal para macOS que permite compilar y ejecutar tus propios juegos de Switch con nxnative."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Uma interface pessoal para macOS que compila e executa seus próprios jogos de Switch com o nxnative."
           }
         }
       }
@@ -55934,6 +55934,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esticar"
+          }
+        }
+      }
+    },
+    "Support Arcane": {
+      "comment": "SettingsAboutSection.swift",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcane unterstützen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Support Arcane"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apoyar a Arcane"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soutenir Arcane"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sostieni Arcane"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apoiar o Arcane"
           }
         }
       }

@@ -340,6 +340,8 @@ Storage can also clear all build caches or logs and open the shared backups fold
 | [Steam](docs/steam.md) | Steam integration: files read, game states, launch, playtime, achievements, limits; in Italian. |
 | [Engine upgrade notes](docs/upstream-upgrades/README.md) | Pin changes and their evidence. |
 
+If you’d like to support Arcane’s development and maintenance, you can [buy me a coffee](https://buymeacoffee.com/bium).
+
 ## Credits and licences
 
 Arcane is MIT licensed. It uses upstream [nxnative](https://github.com/seedds/nxnative). It began from the MIT nxnative_Launcher codebase, which has been rewritten since; that repository is no longer available and its notice stays in [NOTICE](NOTICE). Adaptations from [NX2Apple](https://github.com/LNPANDY/NX2Apple) cover key checks, failure explanations, diagnostics and updates.

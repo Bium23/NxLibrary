@@ -10,6 +10,7 @@ See the [validation checklist](docs/validation.md) for the state of manual check
 
 - Add installed Steam games for Mac to Spotlight and Collection alongside nxnative games. Steam pages show playtime and achievements when available.
 - Steam game pages show **More like this** below About and Details, with related Steam games first and a fallback to matching Switch titles in your library.
+- **Settings → About → Support Arcane** opens the project's optional Buy Me a Coffee page in your browser.
 
 ### Changed
 

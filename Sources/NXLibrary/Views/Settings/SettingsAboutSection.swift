@@ -9,6 +9,7 @@ struct SettingsAboutSection: View {
     let onActions: ([SettingsRowAction]) -> Void
 
     @State private var didCopyDiagnostics = false
+    private static let supportTitle = "Support Arcane"
 
     private let credits: [(name: String, role: String, url: String)] = [
         ("seedds", "nxnative engine, NVN/Metal host and ARM64 rewriter", "https://github.com/seedds/nxnative"),
@@ -29,7 +30,7 @@ struct SettingsAboutSection: View {
     var body: some View {
         VStack(spacing: 12) {
             SelenePanel(AppIdentity.name) {
-                Text(L10n.text("A personal macOS front-end for building and launching your own Switch games with nxnative."))
+                Text(L10n.text("A free, open-source game library and launcher for Mac. Play installed games and port compatible Switch titles with nxnative."))
                     .seleneFont(16)
                     .foregroundColor(SeleneTheme.ink90)
                     .fixedSize(horizontal: false, vertical: true)
@@ -55,6 +56,19 @@ struct SettingsAboutSection: View {
                 .seleneRowFocus(focusedRowTitle == "Copy diagnostics")
                 .id("selene-row-Copy diagnostics")
                 .accessibilityHint(L10n.text("A report for an issue: versions, setup and the last porting. No keys."))
+
+                Button(action: openSupportPage) {
+                    HStack(spacing: 4) {
+                        Text(L10n.text(Self.supportTitle))
+                        Image(systemName: "arrow.up.right")
+                    }
+                    .seleneFont(14, .semibold)
+                    .foregroundColor(SeleneTheme.glyph)
+                }
+                .buttonStyle(.plain)
+                .padding(6)
+                .seleneRowFocus(focusedRowTitle == Self.supportTitle)
+                .id("selene-row-\(Self.supportTitle)")
             }
 
             SelenePanel(L10n.text("Credits")) {
@@ -181,6 +195,7 @@ struct SettingsAboutSection: View {
                               isEnabled: action.enabled, activate: action.perform)
         }
         actions.append(.init(id: "diagnostics", title: "Copy diagnostics", activate: copyDiagnostics))
+        actions.append(.init(id: "support", title: Self.supportTitle, activate: openSupportPage))
         actions += credits.map { credit in
             SettingsRowAction(id: "credit-\(credit.name)", title: credit.name) {
                 if let url = URL(string: credit.url) { NSWorkspace.shared.open(url) }
@@ -270,6 +285,12 @@ struct SettingsAboutSection: View {
             return date.formatted(.dateTime.day().month(.abbreviated).year().locale(L10n.context.formatLocale))
         }
         return "local"
+    }
+
+    private func openSupportPage() {
+        if let url = URL(string: "https://buymeacoffee.com/bium") {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     private func openProjectDocs() {

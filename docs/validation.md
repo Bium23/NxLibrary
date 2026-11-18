@@ -11,6 +11,7 @@ Come si aggiorna:
 
 | Parte | Stato | Prove ancora da fare |
 |---|---|---|
+| Link di sostegno volontario | in attesa | In Arcane Dev, Settings → About → Support Arcane apre la pagina pubblica corretta con mouse, tastiera e controller. Dopo la pubblicazione, verificare lo stesso indirizzo dal README e dal pulsante Sponsor di GitHub. |
 | Candidata 0.2.0 con pin `461a5f9f` | in attesa | Su copie temporanee, l'updater della 0.1.4.3 legge il requisito del nuovo engine, verifica lo ZIP con questo pin e sostituisce il bundle. La rinomina conserva la firma. Prima del passaggio da 0.1.4.3 spostare eventuali copie sorelle `(new)` e `(old)`, che il vecchio updater può cancellare. Resta la prova interattiva dell'aggiornamento con benvenuto, dati conservati e rinomina su Quit. |
 | Nome Arcane in ciò che si vede (finestra, menu, Settings, About, testi nelle sei lingue; copia Dev `Arcane Dev.app`) | in attesa | Aprire `~/Applications/Arcane Dev.app` e ritrovare libreria e impostazioni della vecchia Dev; nessun "NX Library" visibile nelle sei lingue |
 | Rinomina del file alla chiusura (`NX Library.app` → `Arcane.app`) | in attesa | Con la prova del ponte A → B: dopo l'aggiornamento, chiudere; il file diventa `Arcane.app` e il Dock lo apre. Restart app non rinomina |
