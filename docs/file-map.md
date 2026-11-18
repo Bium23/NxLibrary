@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 18 novembre 2026. Copertura di **711 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 18 novembre 2026. Copertura di **712 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -583,10 +583,10 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [AppViewModel+Catalog.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Catalog.swift) | Rilettura, errori e retry del risultato di build senza libreria di ripiego. |
 | [CatalogPersonalizationsEnvironment.swift](../Sources/NXLibrary/Views/Theme/CatalogPersonalizationsEnvironment.swift) | Dipendenza SwiftUI esplicita per le chiavi personali stabili. |
 | [AppViewModel+Sources.swift](../Sources/NXLibrary/ViewModels/AppViewModel+Sources.swift) | Proiezione visibile, selezione comune e modifiche personali tipizzate. |
-| [SettingsSourcesSection.swift](../Sources/NXLibrary/Views/Settings/SettingsSourcesSection.swift) | Attivazione, refresh/cancel, cartella Steam, revisione e recupero dei nascosti. |
+| [SettingsSourcesSection.swift](../Sources/NXLibrary/Views/Settings/SettingsSourcesSection.swift) | Attivazione, refresh/cancel, cartella Steam, avvio in background, revisione e recupero dei nascosti. |
 | [CatalogNativeArtwork.swift](../Sources/NXLibrary/Views/Catalog/CatalogNativeArtwork.swift) | Icona nativa in sola lettura e indicatore Steam; nessun artwork Nintendo. |
 | [CatalogSteamInfo.swift](../Sources/NXLibrary/Views/Catalog/CatalogSteamInfo.swift) | Intestazione condivisa nelle due librerie: Play/Riprendi/Annulla/Riprova, Opzioni e preferito, con la nota di stato. |
-| [SteamPlayCoordinator.swift](../Sources/NXLibrary/Services/SteamPlayCoordinator.swift) | Play tramite il client verificato dopo la preparazione della schermata, con ripiego entro un secondo. Sessioni dal processo dell’app installata. |
+| [SteamPlayCoordinator.swift](../Sources/NXLibrary/Services/SteamPlayCoordinator.swift) | Play tramite il client verificato dopo la preparazione della schermata. La schermata copre Steam durante l'attesa. Sessioni dal processo dell’app installata. |
 | [SteamPlaytimeCoordinator.swift](../Sources/NXLibrary/Services/SteamPlaytimeCoordinator.swift) | Una lettura alla volta delle ore di Steam fuori dal thread principale; applica `SteamPlaytimeSync` e passa i totali a `PlaySessionStore`. |
 | [SteamOptionsView.swift](../Sources/NXLibrary/Views/GameOptions/SteamOptionsView.swift) | Opzioni di un gioco Steam con l’aspetto e l’input di Game options: Play, Edit details, Move, preferito, nascosto, Finder. |
 | [PersonalizationSubject.swift](../Sources/NXLibrary/Views/GameOptions/PersonalizationSubject.swift) | Il gioco che Change artwork e Change metadata personalizzano: scelte nxnative o archivio personale Steam, senza icona Mac per Steam. |
@@ -796,7 +796,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [CatalogPersonalizationTests.swift](../Tests/NXLibraryCoreTests/CatalogPersonalizationTests.swift) | Rinomina senza perdita del lookup e isolamento di chiavi uguali tra fonti. |
 | [CatalogBuildRecoveryTests.swift](../Tests/NXLibraryCoreTests/CatalogBuildRecoveryTests.swift) | Vecchia build persistita e nuova conservata, sospensione automatica e conferme obsolete. |
 | [run_notices.py](../Tests/CatalogAppChecks/run_notices.py) | Esegue i metodi reali degli avvisi e del ponte legacy senza finestre, dopo swift test. |
-| [run_review.py](../Tests/CatalogAppChecks/run_review.py) | Verifica achievement, loghi, focus, navigazione, lettura Mods e priorità dei dialoghi. Prova l’attesa del pannello Steam e il ripiego. Dati sintetici, senza finestre. |
+| [run_review.py](../Tests/CatalogAppChecks/run_review.py) | Verifica achievement, loghi, focus, navigazione, lettura Mods e priorità dei dialoghi. Prova il pannello di attesa, Steam che riappare durante Play e il ripiego. Dati sintetici, senza finestre. |
 | [run_startup_recovery.py](../Tests/CatalogAppChecks/run_startup_recovery.py) | Coordinatore di avvio reale su profili sintetici: conflitto, scelta esplicita, offerta obsoleta, Retry e fallimento della preparazione; nessuna finestra. |
 | [run_source_access.py](../Tests/CatalogAppChecks/run_source_access.py) | Esegue il ripristino di avvio, l'observer e i selettori reali: nessuna scansione automatica dei sorgenti, cartella ricordata, annullamento e lettura dei soli file scelti; nessuna finestra o dato personale. |
 | [run_onboarding.py](../Tests/CatalogAppChecks/run_onboarding.py) | Esegue observer e ripristino del Setup, uscita durante lettura pendente con annullamento, input sotto modali, scelte acceso/spento/nil, radice della fonte, focus dopo Retry e richiesta notifiche su dati sintetici; nessuna finestra. |
@@ -893,6 +893,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [docs/validation.md](../docs/validation.md) | Elenco unico di ciò che il maintainer ha validato o deve ancora provare, compresi i pin dell’engine. |
 | [docs/steam.md](../docs/steam.md) | Riferimento unico dell’integrazione Steam: file letti, stati, osservazione, libreria, Play, ore, achievement, scelte e limiti. |
 | [2026-11-18-spotlight-glide.md](../docs/reviews/2026-11-18-spotlight-glide.md) | Campioni dei primi cambi gioco e costo di mod e salvataggio selezione. |
+| [2026-11-18-steam-launch-spaces.md](../docs/reviews/2026-11-18-steam-launch-spaces.md) | Riscontro video e log dei cambi rapidi di Space durante Play Steam, causa e regressione. |
 | [2026-11-17-entrance-frames.md](../docs/reviews/2026-11-17-entrance-frames.md) | Metodo, campioni e limiti delle misure temporanee dell’entrata e del passaggio al fullscreen. |
 | [2026-11-17-dock-rename-probe.md](../docs/reviews/2026-11-17-dock-rename-probe.md) | Sonda: il Dock apre ancora un'app rinominata nella stessa cartella. |
 | [docs/reviews/2026-11-17-arcane-moonlight.md](../docs/reviews/2026-11-17-arcane-moonlight.md) | Contratti provati fuori schermo e tempi GPU del Moonlight prima/dopo, con limiti delle misure. |

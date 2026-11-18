@@ -1,11 +1,8 @@
 import Foundation
 
-/// Waiting for a Steam game that Play started: the launch screen, and keeping Steam out of sight
-/// ("Keep Steam in the background"). Valve documents `-silent` (no window at startup, only when Steam
-/// is not running yet) and `-nofriendsui`; nothing stops an open Steam from coming forward when it gets
-/// `steam://run`, so NX Library hides it for a short while instead. Past the wait's `patience` without
-/// the game, Steam may be asking for something (sign-in, an update, a cloud conflict): the launch screen
-/// gives way and Steam is shown again.
+/// The waiting screen and silent launch arguments for Steam games started from Play.
+/// A closed Steam can start with `-silent` and `-nofriendsui`. Past the wait's `patience` without the
+/// game, the launch screen makes way for Steam so the player can check sign-in, updates or a cloud conflict.
 public enum SteamBackgroundLaunch {
     /// The wait with Steam already open.
     public static let attentionDelay: TimeInterval = 15
@@ -21,13 +18,6 @@ public enum SteamBackgroundLaunch {
         enabled && !steamRunning ? ["-silent", "-nofriendsui"] : []
     }
 
-    /// Steam is hidden only while this game is on its way and not yet late.
-    public static func keepsSteamAway(phase: SteamPlayState.Phase, now: Date,
-                                      patience: TimeInterval = attentionDelay) -> Bool {
-        guard case .starting(let since) = phase else { return false }
-        return now.timeIntervalSince(since) <= patience
-    }
-
     /// The game is late: Steam is back in view and the head says to check it.
     public static func mayNeedPlayer(phase: SteamPlayState.Phase, now: Date,
                                      patience: TimeInterval = attentionDelay) -> Bool {
@@ -37,7 +27,7 @@ public enum SteamBackgroundLaunch {
 
     /// Where the launch screen of a Steam game stands.
     public enum LaunchScreen: Equatable, Sendable {
-        /// The game is on its way: NX Library stays in front.
+        /// The game is on its way: the waiting screen stays up.
         case waiting
         /// The game's app is running: the screen leaves once its window is up.
         case gameStarted

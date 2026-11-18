@@ -171,7 +171,7 @@ public enum SettingsCatalog {
         action("steamRefresh", .sources, "Refresh Steam", "Check enabled Steam libraries without changing your game files."),
         action("steamFolder", .sources, "Steam folder", "Choose the Steam folder containing steamapps."),
         row("steamInBackground", .sources, "Keep Steam in the background",
-            "Steam stays out of sight while a game starts, and comes back if it needs you.") { $0.steamInBackground },
+            "Steam starts quietly when possible and comes forward if it needs you.") { $0.steamInBackground },
 
         // Storage
         action("storageUsage", .storage, "Storage usage", "See per-game app, cache and log sizes and free disk space."),

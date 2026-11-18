@@ -1,0 +1,7 @@
+# 2026-11-18 — Cambi ripetuti di Space durante Play Steam
+
+Il video mostra la schermata di attesa e la pagina di Arcane che scorrono lateralmente, alternate a Steam, scrivania e fotogrammi neri. Arcane segnala il pannello consegnato al server delle finestre e invia Play alle 09:36:06.407. Steam è già in esecuzione e si ferma a `ShowInterstitials`. Il log di sistema conta 55 eventi `DoHide(self)` di Steam fra 09:36:07.454 e 09:36:12.035, durante le oscillazioni. Alle 09:36:21.910 la schermata lascia spazio a Steam per scadenza dell'attesa. Gli eventi relativi al controller si sovrappongono al problema, con il primo evento osservato dopo l'inizio dei nascondimenti. Non stabiliscono cosa abbia fatto riapparire Steam.
+
+Con **Keep Steam in the background** attivo, ogni notifica di attivazione o riapertura richiamava il controllo che nascondeva il client mentre il gioco era in avvio. Il rilancio della finestra di Steam riattivava quel controllo. Limitarsi a ritardare i nascondimenti conserva la causa. Per l'attesa è già disponibile il pannello che attraversa gli Space, quindi il client può finire di aprire le finestre senza essere nascosto durante Play.
+
+La regressione headless esegue il metodo reale su dieci riaperture simulate. Prima della correzione rileva chiamate a `hide()`. Con la correzione il contatore resta a zero e, alla scadenza, Steam viene comunque mostrato. [Prove interattive](../validation.md)

@@ -185,16 +185,17 @@ Favorite, Hidden, Show in Finder.
   faceva alternare a macOS schermo intero e scrivania per tutta l’attesa. Mentre la schermata è aperta Play non fa
   nulla, per nessun gioco. Un clic la chiude (Arcane torna davanti se il gioco non è arrivato, salvo un gioco in
   primo piano); se ne va comunque dopo 120 s. Un gioco avviato da Steam non la mostra.
-- `ShowInterstitials` è un passaggio interno che all'avvio a freddo può restare in attesa oltre un secondo.
-  La schermata rimane visibile durante quel passaggio. Se Steam si ferma lì, si applica l'attesa di 45 s.
+- `ShowInterstitials` è un passaggio di avvio che può restare in attesa oltre un secondo.
+  La schermata rimane visibile durante quel passaggio, con il normale limite di 15 s o 45 s.
 - Il log si legge fuori dal thread principale ogni 0,5 s durante l’attesa, per righe intere; la prima lettura prende
   l’ultimo megabyte (conta anche una domanda rimasta aperta da un Play precedente), un file nuovo (Steam riavviato)
   azzera tutto. Esempio di domanda: `KickingOtherSession`, il gioco è aperto su un altro dispositivo. Se Valve cambia
   il formato, resta l’attesa a tempo.
-- **Keep Steam in the background** (`SteamBackgroundLaunch`): Steam avviato da Play parte con `-silent -nofriendsui`;
-  uno Steam già aperto viene nascosto durante l’attesa. Finito Play, Steam torna visibile solo se lo era prima, e uno
-  Steam fuori vista viene nascosto di nuovo quando il gioco esce (subito e dopo 2 s, perché Steam riapre la sua
-  finestra). Valve non offre un modo ufficiale: nascondere è un ripiego e può non riuscire con alcune versioni.
+- **Keep Steam in the background** (`SteamBackgroundLaunch`): Steam avviato da Play parte con `-silent -nofriendsui`.
+  Durante l'attesa la schermata copre il client, che può finire di aprire le sue finestre. Nasconderlo in risposta
+  a ogni riapertura fa oscillare macOS fra lo Space fullscreen e la scrivania.
+  All'uscita di un gioco rimasto in primo piano, Steam torna fuori vista se lo era prima del Play.
+  [Analisi dello sfarfallio](reviews/2026-11-18-steam-launch-spaces.md)
 - All’uscita del gioco Arcane torna davanti se Play era partito da qui, il gioco era in primo piano e nessun
   altro gioco della libreria è aperto (`SteamReturnFocus`). Una sessione finita mostra la card di fine sessione dei
   giochi Switch, con il totale che include le ore di Steam.

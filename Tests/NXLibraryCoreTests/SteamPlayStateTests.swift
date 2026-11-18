@@ -121,15 +121,13 @@ final class SteamBackgroundLaunchTests: XCTestCase {
         XCTAssertEqual(SteamBackgroundLaunch.arguments(enabled: false, steamRunning: false), [])
     }
 
-    func testSteamIsKeptAwayOnlyWhileWaitingThenComesBackIfTheGameIsLate() {
+    func testSteamMayNeedThePlayerOnlyAfterAStartingGameIsLate() {
         let start = Date(timeIntervalSince1970: 1_000)
         let waiting = SteamPlayState.Phase.starting(since: start)
-        XCTAssertTrue(SteamBackgroundLaunch.keepsSteamAway(phase: waiting, now: start.addingTimeInterval(5)))
         let late = start.addingTimeInterval(SteamBackgroundLaunch.attentionDelay + 1)
-        XCTAssertFalse(SteamBackgroundLaunch.keepsSteamAway(phase: waiting, now: late))
         XCTAssertTrue(SteamBackgroundLaunch.mayNeedPlayer(phase: waiting, now: late))
         XCTAssertFalse(SteamBackgroundLaunch.mayNeedPlayer(phase: waiting, now: start.addingTimeInterval(5)))
-        XCTAssertFalse(SteamBackgroundLaunch.keepsSteamAway(phase: .running(pid: 7), now: start))
+        XCTAssertFalse(SteamBackgroundLaunch.mayNeedPlayer(phase: .running(pid: 7), now: late))
         XCTAssertFalse(SteamBackgroundLaunch.mayNeedPlayer(phase: .idle, now: late))
     }
 
@@ -139,7 +137,6 @@ final class SteamBackgroundLaunchTests: XCTestCase {
         let start = Date(timeIntervalSince1970: 1_000)
         let waiting = SteamPlayState.Phase.starting(since: start)
         let thirty = start.addingTimeInterval(30)
-        XCTAssertTrue(SteamBackgroundLaunch.keepsSteamAway(phase: waiting, now: thirty, patience: 45))
         XCTAssertFalse(SteamBackgroundLaunch.mayNeedPlayer(phase: waiting, now: thirty, patience: 45))
         XCTAssertTrue(SteamBackgroundLaunch.mayNeedPlayer(phase: waiting, now: thirty, patience: 15))
     }

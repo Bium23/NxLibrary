@@ -37,7 +37,7 @@ Come si aggiorna:
 | Fonti e libreria mista (Steam + Switch, Manage sources) | in attesa | Attivazione e disattivazione delle fonti, persistenza delle scelte, conservazione delle voci e librerie su disco esterno |
 | Steam: metadati store e arte | in attesa | — |
 | Steam: pagina condivisa, Opzioni, personalizzazioni | in attesa | — |
-| Steam: Play, schermata di lancio, domande di Steam, Steam in background | Play/Resume validati il 17 nov 2026 («funziona»); schermata al primo Play con Steam chiuso in attesa | Chiudere Steam con Quit, aprire Arcane Dev in fullscreen e premere Play. La schermata resta visibile durante l'attesa e lascia spazio al gioco quando si apre. Ripetere con Steam già avviato. Una domanda effettiva o la scadenza consegna l'attesa a Steam. |
+| Steam: Play, schermata di lancio, domande di Steam, Steam in background | Play/Resume validati il 17 nov 2026 («funziona»); schermata a freddo e sfarfallio in attesa | Con Arcane Dev in fullscreen, controller collegato e Keep Steam in the background acceso, premere Play con Steam già aperto. La schermata copre l'attesa senza alternanza fra fullscreen e scrivania. Ripetere dopo Quit di Steam e verificare che un gioco avviato appaia, o che Steam venga mostrato una volta se serve una risposta. |
 | Steam: ore di gioco | validato il 17 nov 2026 («le ore di Steam funzionano») | — |
 | Steam: giochi in download, osservazione dei manifest, ordine della riga | aspetto validato il 15 nov 2026 | Fine del download e controlli di accettazione |
 | Achievement Steam: lista, rarità, tier a cristallo, card Details | presenza e consultazione confermate il 17 nov 2026 («gli achievement ci sono»); dettagli in attesa | Rarità, tier e casi privati/offline o senza statistiche |

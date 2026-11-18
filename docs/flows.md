@@ -98,7 +98,7 @@ flowchart TD
     G --> H["SteamPlaytimeSync rilegge le ore da localconfig.vdf"]
 ```
 
-Arcane legge le domande dal log di Steam. Durante `ShowInterstitials` l'attesa prosegue. Arcane non scrive mai i file di Steam e non apre l'app del gioco direttamente. Dettagli in [steam.md](steam.md).
+Arcane legge le domande dal log di Steam. Durante `ShowInterstitials` l'attesa prosegue e il client può aprire le sue finestre dietro la schermata. Arcane non scrive mai i file di Steam e non apre l'app del gioco direttamente. Dettagli in [steam.md](steam.md).
 
 Nella pagina Spotlight di un titolo Steam, Giù porta anche a **More like this** quando la fascia è presente. Invio, A o doppio clic selezionano la copertina sulla riga della libreria. Se il filtro la esclude, la libreria passa a **All games** come per Switch.
 

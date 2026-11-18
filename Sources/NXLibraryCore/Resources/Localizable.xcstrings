@@ -55077,43 +55077,43 @@
         }
       }
     },
-    "Steam stays out of sight while a game starts, and comes back if it needs you.": {
+    "Steam starts quietly when possible and comes forward if it needs you.": {
       "comment": "SettingsSourcesSection.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Steam stays out of sight while a game starts, and comes back if it needs you."
+            "value": "Steam starts quietly when possible and comes forward if it needs you."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Steam resta nascosto mentre il gioco si avvia e torna se ha bisogno di te."
+            "value": "Steam si avvia in background quando possibile e viene in primo piano se serve il tuo intervento."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Steam reste caché pendant le lancement d’un jeu et revient s’il a besoin de vous."
+            "value": "Steam démarre en arrière-plan si possible et passe au premier plan si votre intervention est nécessaire."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Steam bleibt beim Spielstart verborgen und kommt zurück, wenn es dich braucht."
+            "value": "Steam startet wenn möglich im Hintergrund und kommt nach vorne, wenn deine Eingabe nötig ist."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Steam permanece oculto mientras se inicia un juego y vuelve si te necesita."
+            "value": "Steam se inicia en segundo plano cuando es posible y pasa al primer plano si necesita tu intervención."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Steam fica oculto enquanto um jogo inicia e volta se precisar de você."
+            "value": "O Steam inicia em segundo plano quando possível e vem para a frente se precisar da sua atenção."
           }
         }
       }
@@ -67008,43 +67008,43 @@
         }
       }
     },
-    "When Play opens Steam, it starts without its window. An open Steam is hidden until the game appears. If the game takes longer than 15 seconds, Steam comes back so you can answer it.": {
+    "When Play opens Steam, it starts quietly. The waiting screen stays visible while the game starts. Steam comes forward if it needs input or the game takes too long.": {
       "comment": "SettingsSourcesSection.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "When Play opens Steam, it starts without its window. An open Steam is hidden until the game appears. If the game takes longer than 15 seconds, Steam comes back so you can answer it."
+            "value": "When Play opens Steam, it starts quietly. The waiting screen stays visible while the game starts. Steam comes forward if it needs input or the game takes too long."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando Gioca apre Steam, si avvia senza finestra. Uno Steam già aperto viene nascosto finché non compare il gioco. Se il gioco impiega più di 15 secondi, Steam torna così puoi rispondergli."
+            "value": "Quando Gioca apre Steam, lo avvia in background. La schermata di attesa resta visibile mentre parte il gioco. Steam viene in primo piano se serve una risposta o se il gioco tarda ad avviarsi."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quand Jouer ouvre Steam, il démarre sans sa fenêtre. Un Steam déjà ouvert est masqué jusqu’à l’apparition du jeu. Si le jeu met plus de 15 secondes, Steam revient pour que vous puissiez lui répondre."
+            "value": "Quand Jouer ouvre Steam, il démarre en arrière-plan. L’écran d’attente reste visible pendant le lancement du jeu. Steam passe au premier plan s’il attend une réponse ou si le jeu tarde à démarrer."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wenn „Spielen“ Steam öffnet, startet es ohne Fenster. Ein offenes Steam wird ausgeblendet, bis das Spiel erscheint. Dauert das Spiel länger als 15 Sekunden, kommt Steam zurück, damit du antworten kannst."
+            "value": "Wenn „Spielen“ Steam öffnet, startet es im Hintergrund. Der Wartebildschirm bleibt beim Spielstart sichtbar. Steam kommt nach vorne, wenn eine Eingabe nötig ist oder der Start zu lange dauert."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cuando Jugar abre Steam, se inicia sin su ventana. Un Steam abierto se oculta hasta que aparece el juego. Si el juego tarda más de 15 segundos, Steam vuelve para que puedas responderle."
+            "value": "Cuando Jugar abre Steam, lo inicia en segundo plano. La pantalla de espera sigue visible mientras se inicia el juego. Steam pasa al primer plano si necesita una respuesta o si el juego tarda demasiado."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando Jogar abre o Steam, ele inicia sem a janela. Um Steam aberto fica oculto até o jogo aparecer. Se o jogo levar mais de 15 segundos, o Steam volta para você responder."
+            "value": "Quando Jogar abre o Steam, ele inicia em segundo plano. A tela de espera continua visível enquanto o jogo inicia. O Steam vem para a frente se precisar de uma resposta ou se o jogo demorar para iniciar."
           }
         }
       }

@@ -15,9 +15,9 @@ import NXLibraryCore
 /// player (`SteamLaunchQuestionWatch`), or past the wait's patience (`SteamBackgroundLaunch`: 15 s with Steam open,
 /// 45 s when Play starts it); in those last two cases Steam is brought forward and the head says to check it.
 ///
-/// With "Keep Steam in the background", a Steam that Play starts opens with `-silent -nofriendsui`, and an open
-/// Steam is hidden while the game is on its way; once Play is over, Steam comes back only if it was in view
-/// before, and one that was out of view goes back out of view.
+/// With "Keep Steam in the background", a Steam that Play starts opens with `-silent -nofriendsui`.
+/// The launch cover handles visibility during startup. A Steam that was out of view before Play goes back
+/// out of view when the game ends in front.
 ///
 /// When a game whose Play was pressed here quits while it was the app in front and no other library game is
 /// open, NX Library comes back to the front (`SteamReturnFocus`, `LibraryWindow`); a game started from Steam
@@ -140,7 +140,7 @@ final class SteamPlayCoordinator: ObservableObject {
         watchingSince = Date()
         let center = NSWorkspace.shared.notificationCenter
         // Launches and quits arrive through the `runningApplications` observation below, once each.
-        // Steam brings itself forward when it gets steam://run; during a background launch it goes away again.
+        // Steam can bring itself forward while it processes steam://run.
         tokens = [NSWorkspace.didActivateApplicationNotification, NSWorkspace.didUnhideApplicationNotification].map { name in
             center.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
                 let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
@@ -148,7 +148,7 @@ final class SteamPlayCoordinator: ObservableObject {
                 let isSteam = app?.bundleIdentifier == Self.steamBundleID
                 Task { @MainActor in
                     // Steam may be coming forward to ask something: look in its log at once.
-                    if isSteam { self?.lookForQuestion(); self?.followBackground() }
+                    if isSteam { self?.lookForQuestion() }
                     if name == NSWorkspace.didActivateApplicationNotification { self?.activated(pid: pid, isSteam: isSteam) }
                 }
             }
@@ -537,10 +537,10 @@ final class SteamPlayCoordinator: ObservableObject {
         }
     }
 
-    /// Hides Steam while a background launch is on its way; shows it again when the game is late,
-    /// and once Play is over if it was in view before.
+    /// Shows Steam when a launch is late and restores previously visible Steam when Play is over.
+    /// The launch cover handles the wait. Hiding Steam here would compete with Steam reopening its own
+    /// windows and repeatedly switch between the desktop and the fullscreen library.
     private func followBackground(now: Date = Date()) {
-        var keepAway = false
         for (id, wasVisible) in backgrounds {
             let phase = states[id]?.phase ?? .idle
             switch phase {
@@ -550,8 +550,6 @@ final class SteamPlayCoordinator: ObservableObject {
                     backgrounds[id] = nil
                     late.insert(id)
                     Self.showSteam()
-                } else if SteamBackgroundLaunch.keepsSteamAway(phase: phase, now: now, patience: wait) {
-                    keepAway = true
                 }
             case .running:
                 break
@@ -571,7 +569,6 @@ final class SteamPlayCoordinator: ObservableObject {
         }
         if !late.isSubset(of: waiting) { late.formIntersection(waiting) }
         patience = patience.filter { waiting.contains($0.key) || launchScreen?.gameID == $0.key }
-        if keepAway, let steam = Self.steamApplication, !steam.isHidden { steam.hide() }
         followLaunchScreen(now: now)
     }
 }

@@ -135,8 +135,18 @@ enum LaunchCoverTrace { static func event(_ message: String) {} }
 @MainActor final class CoverHandoffHost {
     struct LaunchScreen { let gameID: UUID }
     struct State { let generation: Int; var phase: SteamPlayState.Phase }
+    final class SteamClient {
+        var isHidden = false
+        var hides = 0
+        func hide() { hides += 1; isHidden = true }
+    }
+    static let steamApplication: SteamClient? = SteamClient()
+    private static func showSteam() { steamApplication?.isHidden = false }
     var states: [UUID: State] = [:]
     var launchScreen: LaunchScreen?
+    var backgrounds: [UUID: Bool] = [:]
+    var late: Set<UUID> = []
+    private var patience: [UUID: TimeInterval] = [:]
     private var pendingHandOff: PendingHandOff?
     private var handOffDeadline: Task<Void, Never>?
     private static let coverWait: UInt64 = 30_000_000
@@ -144,6 +154,10 @@ enum LaunchCoverTrace { static func event(_ message: String) {} }
     // ACTUAL_PREPARE_HANDOFF
     // ACTUAL_COVER_PREPARED
     // ACTUAL_SUBMIT_HANDOFF
+    // ACTUAL_FOLLOW_BACKGROUND
+    private func phase(ofID id: UUID) -> SteamPlayState.Phase { states[id]?.phase ?? .idle }
+    private func followLaunchScreen(now: Date) {}
+    func observe(at now: Date) { followBackground(now: now) }
     func prepare(_ id: UUID, send: @escaping () -> Void) {
         states[id] = .init(generation: 1, phase: .starting(since: Date()))
         prepareHandOff(for: id, generation: 1, send: send)
@@ -280,6 +294,21 @@ final class NativeMenus { var isTracking = false }
         handoff.prepare(pending) { handoffs += 1 }
         try? await Task.sleep(nanoseconds: 150_000_000)
         require(handoffs == 2, "Without a visible cover the deadline still lets Play proceed")
+
+        let steam = CoverHandoffHost.steamApplication!
+        let start = Date(timeIntervalSince1970: 1_000)
+        handoff.states[pending]?.phase = .starting(since: start)
+        handoff.backgrounds[pending] = true
+        for attempt in 1...10 {
+            steam.isHidden = false // Steam reappears while processing Play.
+            handoff.observe(at: start.addingTimeInterval(Double(attempt) / 5))
+        }
+        require(steam.hides == 0 && !steam.isHidden,
+                "Startup must let the cover handle Steam coming forward without hiding Steam")
+        steam.isHidden = true
+        handoff.observe(at: start.addingTimeInterval(16))
+        require(handoff.late.contains(pending) && !steam.isHidden,
+                "A stalled launch must still show Steam after the wait")
         let overlays: [(MenuHost, Bool) -> Void] = [
             { $0.router.isSearchPresented = $1 }, { $0.router.isScreenshotViewerOpen = $1 },
             { $0.viewModel.isGameOptionsOpen = $1 }, { $0.router.isMenuPresented = $1 },
@@ -349,7 +378,7 @@ final class NativeMenus { var isTracking = false }
         require(input.dialogActions == [.confirm] && received.actions.isEmpty,
                 "An internal update dialog must still receive input when no native window is open")
         if failures > 0 { exit(1) }
-        print("Actual app review checks passed: achievement startup, logo platform, wheel focus, Mods reads, native dialogs and input routing.")
+        print("Actual app review checks passed: achievement startup, logo platform, wheel focus, Mods reads, Steam launch, native dialogs and input routing.")
     }
 }
 '''
@@ -366,6 +395,7 @@ for marker, signature in (
     ('// ACTUAL_PREPARE_HANDOFF', '    private func prepareHandOff('),
     ('// ACTUAL_COVER_PREPARED', '    func launchCoverPrepared('),
     ('// ACTUAL_SUBMIT_HANDOFF', '    private func submitHandOff('),
+    ('// ACTUAL_FOLLOW_BACKGROUND', '    private func followBackground('),
 ):
     host = host.replace(marker, declaration(coordinator, signature))
 host = host.replace('// ACTUAL_AVAILABILITY_TYPE', declaration(
