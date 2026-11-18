@@ -15,13 +15,33 @@ public enum AppRoute: Equatable {
     public var isOverlay: Bool { self == .addGame || self == .console }
 }
 
+/// A full-screen page covers lower UI layers while their shared background stays mounted.
+public enum ShellBackdropCover: Equatable {
+    case none, themePicker, welcome, setup
+
+    public var priority: Double {
+        switch self {
+        case .none: return 0
+        case .themePicker: return 1
+        case .welcome: return 2.4
+        case .setup: return 2.5
+        }
+    }
+
+    public func covers(_ layer: Double) -> Bool { priority > layer }
+
+    public static func resolve(setup: Bool, welcome: Bool, themePicker: Bool) -> Self {
+        if setup { return .setup }
+        if welcome { return .welcome }
+        return themePicker ? .themePicker : .none
+    }
+}
+
 public final class AppRouter: ObservableObject {
     @Published public private(set) var route: AppRoute = .library
     @Published public private(set) var isReturningFromBack = false
     @Published public var isMenuPresented = false
     @Published public var isSearchPresented = false
-    /// The cold-launch intro is on screen; screens ignore input until it ends.
-    @Published public var isIntroShowing = false
     /// True while the full-screen screenshot viewer is open; the shell ignores its global shortcuts.
     @Published public var isScreenshotViewerOpen = false
     @Published public var menuSelection = MenuSelectionModel()

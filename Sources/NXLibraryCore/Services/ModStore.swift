@@ -59,14 +59,16 @@ public struct ModStore {
     public let recordsFile: URL
     public let titleID: String
     private let canWrite: () -> Bool
+    private let allowsAutomaticMaintenance: Bool
     private let trash: (URL) throws -> Void
 
     public init(supportFolder: URL, recordsFile: URL, titleID: String,
-                canWrite: @escaping () -> Bool, trash: @escaping (URL) throws -> Void) {
+                canWrite: @escaping () -> Bool, trash: @escaping (URL) throws -> Void, allowsAutomaticMaintenance: Bool = true) {
         self.supportFolder = supportFolder
         self.recordsFile = recordsFile
         self.titleID = titleID.uppercased()
         self.canWrite = canWrite
+        self.allowsAutomaticMaintenance = allowsAutomaticMaintenance
         self.trash = trash
     }
 
@@ -82,12 +84,41 @@ public struct ModStore {
 
     /// Recorded mods in their order (only those whose folder exists), then folders without a record, off, by name.
     public func mods() -> [LocalMod] {
-        let names = ModFolderScanner.entries(in: modsFolder).map(\.lastPathComponent)
+        mods(entries: ModFolderScanner.entries(in: modsFolder), records: loadRecords())
+    }
+
+    private func mods(entries: [URL], records: [ModRecord]) -> [LocalMod] {
+        let names = entries.map(\.lastPathComponent)
         let present = Set(names)
-        let recorded = loadRecords().filter { present.contains($0.folderName) }
+        let recorded = records.filter { present.contains($0.folderName) }
         let known = Set(recorded.map(\.folderName))
-        return recorded.map { mod($0.folderName, on: $0.isOn) }
+        let list = recorded.map { mod($0.folderName, on: $0.isOn) }
             + names.filter { !known.contains($0) }.map { mod($0, on: false) }
+        return allowsAutomaticMaintenance ? list : readingLiveOverlay(list)
+    }
+
+    /// A copied record orders metadata; the actual game's overlay determines what is active.
+    /// Reading a separate profile must neither write the overlay nor display stale enabled states.
+    private func readingLiveOverlay(_ list: [LocalMod]) -> [LocalMod] {
+        guard let text = try? String(contentsOf: envFile, encoding: .utf8) else { return list }
+        let value = text.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespaces) }
+            .last { $0.hasPrefix(Self.overlayKey + "=") }
+            .map { String($0.dropFirst(Self.overlayKey.count + 1)) } ?? ""
+        let paths = value.split(separator: ":").map { URL(fileURLWithPath: String($0)).standardizedFileURL.resolvingSymlinksInPath().path }
+        var order: [String: Int] = [:]
+        for (index, path) in paths.enumerated() where order[path] == nil { order[path] = index }
+        var observed: [(rank: Int, index: Int, item: LocalMod)] = []
+        for (index, original) in list.enumerated() {
+            var item = original
+            let rank: Int? = item.romfs.flatMap { order[$0.standardizedFileURL.resolvingSymlinksInPath().path] }
+            item.isOn = rank != nil
+            observed.append((rank: rank ?? Int.max, index: index, item: item))
+        }
+        observed.sort { first, second in
+            if first.rank == second.rank { return first.index < second.index }
+            return first.rank < second.rank
+        }
+        return observed.map { $0.item }
     }
 
     /// The overlay value for the mods that are on, top first; nil when none is.
@@ -119,7 +150,7 @@ public struct ModStore {
     /// staging folders and `.installing-<UUID>.download` archives. Mods and other files stay; nothing happens while
     /// the game runs.
     public func removeLeftoverInstalls() {
-        guard canWrite() else { return }
+        guard allowsAutomaticMaintenance, canWrite() else { return }
         let fm = FileManager.default
         for name in (try? fm.contentsOfDirectory(atPath: modsFolder.path)) ?? [] where name.hasPrefix(".installing-") {
             try? fm.removeItem(at: modsFolder.appendingPathComponent(name))
@@ -194,13 +225,14 @@ public struct ModStore {
 
     /// Drops records whose folder is gone and brings the overlay line in line with the list. Does nothing while the
     /// game runs, or before NX Library has managed this game's mods (no records yet: a hand-written overlay stays). A
-    /// list whose overlay no longer fits the launcher's line leaves `env.txt` as it is and throws `overlayTooLong`.
-    public func sync() throws {
+    /// failed read or overlong overlay leaves both the records and `env.txt` intact.
+    public func sync(automatic: Bool = true) throws {
+        guard !automatic || allowsAutomaticMaintenance else { return }
         guard canWrite(), FileManager.default.fileExists(atPath: recordsFile.path) else { return }
-        let list = mods()
+        let stored = try readRecords()
+        let list = mods(entries: try ModFolderScanner.checkedEntries(in: modsFolder), records: stored)
         let value = overlay(for: list)
         if let value, value.utf8.count > Self.overlayLimit { throw ModStoreError.overlayTooLong }
-        let stored = loadRecords()
         let recorded = Set(stored.map(\.folderName))
         let kept = list.filter { recorded.contains($0.folderName) }.map(\.folderName)
         if kept != stored.map(\.folderName) {
@@ -249,8 +281,11 @@ public struct ModStore {
     }
 
     private func loadRecords() -> [ModRecord] {
-        guard let data = try? Data(contentsOf: recordsFile) else { return [] }
-        return (try? JSONDecoder().decode([ModRecord].self, from: data)) ?? []
+        (try? readRecords()) ?? []
+    }
+
+    private func readRecords() throws -> [ModRecord] {
+        try JSONDecoder().decode([ModRecord].self, from: Data(contentsOf: recordsFile))
     }
 
     private func write(records: [ModRecord]) throws {

@@ -322,9 +322,10 @@ struct AddGameStepThreeView: View {
         }
 
         if let path = viewModel.buildSuccessPath {
-            return [
+            let needsSave = viewModel.lastBuildGameID.map { viewModel.catalogBuildRecoveries[$0] != nil } ?? false
+            var actions = [
                 StepAction(id: "play", title: L10n.text("Play"),
-                           systemImage: "play.fill", kind: .primary,
+                           systemImage: "play.fill", kind: needsSave ? .secondary : .primary,
                            isEnabled: FileManager.default.fileExists(atPath: path)) {
                     play(path: path)
                 },
@@ -349,6 +350,13 @@ struct AddGameStepThreeView: View {
                     viewModel.openOutputInFinder()
                 }
             ]
+            if needsSave {
+                actions.insert(StepAction(id: "saveLibrary", title: L10n.text("Retry saving library"),
+                                          systemImage: "arrow.clockwise", kind: .primary, isEnabled: !viewModel.isBuilding) {
+                    viewModel.retrySavingBuildResults()
+                }, at: 0)
+            }
+            return actions
         }
 
         if viewModel.buildError != nil || viewModel.buildState == .cancelled {

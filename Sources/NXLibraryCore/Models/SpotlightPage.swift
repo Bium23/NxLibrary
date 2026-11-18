@@ -42,8 +42,8 @@ public struct DescriptionExcerpt: Equatable, Sendable {
     }
 }
 
-/// Where Spotlight's page rests for Build & Sources and More like this. Build &
-/// Sources brings About this game up to `top`, More like this comes up to `top`,
+/// Where Spotlight's page rests for Details and More like this. Details
+/// brings About this game up to `top`, More like this comes up to `top`,
 /// but neither scrolls past the page's end resting `bottomInset` above the
 /// window's bottom; neither rises above the pills' shift (`first`). Positions
 /// are from the page's top, in points.

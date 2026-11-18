@@ -5,6 +5,7 @@ import NXLibraryCore
 struct SelenePillButton: View {
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
+    @Environment(\.nxAppLocale) private var localization
 
     let title: String?
     var icon: MaterialIcon? = nil
@@ -28,7 +29,10 @@ struct SelenePillButton: View {
                     MaterialIconView(icon, size: iconSize)
                 }
                 if let title {
-                    Text(L10n.text(title)).seleneFont(21)
+                    // A pill's title stays on one line: the pill grows instead.
+                    Text(L10n.text(title, context: localization)).seleneFont(21)
+                        .lineLimit(1)
+                        .fixedSize()
                 }
                 if waveDots {
                     WaveDots()

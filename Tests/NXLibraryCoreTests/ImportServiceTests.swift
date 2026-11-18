@@ -17,22 +17,23 @@ final class ImportServiceTests: XCTestCase {
             bundleId: "org.nxnative.new", appURL: newURL, sizeBytes: 200,
             modificationDate: Date(timeIntervalSince1970: 2))
         let service = ImportService()
-        let store = LibraryStore(directory: root.appendingPathComponent("Catalog"))
-        _ = try store.merge(scanned: [service.makeGame(from: old)])
-        let selected = service.appsForLibrary(scanned: [newer, old], existing: try store.load().games)
+        let store = CatalogRepository(store: CatalogStore(directory: root.appendingPathComponent("Catalog")))
+        try store.configureSource(.nxnative, enabled: true, root: nil)
+        _ = try store.mergeNXNative(scanned: [service.makeGame(from: old)])
+        let selected = service.appsForLibrary(scanned: [newer, old], existing: try store.load().nxnativeGames)
         XCTAssertEqual(selected.count, 1)
-        let library = try store.merge(scanned: selected.map { service.makeGame(from: $0) })
-        let game = try XCTUnwrap(library.games.first)
+        let library = try store.mergeNXNative(scanned: selected.map { service.makeGame(from: $0) })
+        let game = try XCTUnwrap(library.nxnativeGames.first)
         XCTAssertEqual(game.url, oldURL)
         XCTAssertEqual(game.name, "Installed")
         XCTAssertEqual(game.versionString, "1.0")
         XCTAssertEqual(game.modificationDate, Date(timeIntervalSince1970: 1))
         XCTAssertEqual(selected.first?.sizeBytes, 100)
         // A different chosen folder does not silently switch an existing installed app.
-        XCTAssertTrue(service.appsForLibrary(scanned: [newer], existing: library.games).isEmpty)
+        XCTAssertTrue(service.appsForLibrary(scanned: [newer], existing: library.nxnativeGames).isEmpty)
         // If the old app is actually removed, the discovered build can replace its reference.
         try FileManager.default.removeItem(at: oldURL)
-        XCTAssertEqual(service.appsForLibrary(scanned: [newer], existing: library.games).first?.appURL, newURL)
+        XCTAssertEqual(service.appsForLibrary(scanned: [newer], existing: library.nxnativeGames).first?.appURL, newURL)
         // A new title with multiple builds starts with the newest scan result, once.
         XCTAssertEqual(service.appsForLibrary(scanned: [newer, old], existing: []).count, 1)
     }

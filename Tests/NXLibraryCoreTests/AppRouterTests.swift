@@ -2,6 +2,25 @@ import XCTest
 @testable import NXLibraryCore
 
 final class AppRouterTests: XCTestCase {
+    func testFullScreenBackdropCoverFollowsTheVisibleLayerPriority() {
+        XCTAssertEqual(ShellBackdropCover.resolve(setup: true, welcome: true, themePicker: true), .setup)
+        XCTAssertEqual(ShellBackdropCover.resolve(setup: false, welcome: true, themePicker: true), .welcome)
+        XCTAssertEqual(ShellBackdropCover.resolve(setup: false, welcome: false, themePicker: true), .themePicker)
+        XCTAssertEqual(ShellBackdropCover.resolve(setup: false, welcome: false, themePicker: false), .none)
+        for priority in [0.0, 0.5, 0.8, 1, 2, 2.4] {
+            XCTAssertTrue(ShellBackdropCover.setup.covers(priority))
+        }
+        XCTAssertFalse(ShellBackdropCover.setup.covers(2.5))
+        XCTAssertFalse(ShellBackdropCover.setup.covers(3))
+        XCTAssertFalse(ShellBackdropCover.setup.covers(4))
+        XCTAssertTrue(ShellBackdropCover.welcome.covers(2))
+        XCTAssertFalse(ShellBackdropCover.welcome.covers(2.5))
+        XCTAssertTrue(ShellBackdropCover.themePicker.covers(0.8))
+        XCTAssertFalse(ShellBackdropCover.themePicker.covers(1))
+        XCTAssertFalse(ShellBackdropCover.themePicker.covers(2))
+        XCTAssertFalse(ShellBackdropCover.none.covers(0))
+    }
+
     func testInitialRoute() {
         let router = AppRouter()
         XCTAssertEqual(router.route, .library)
@@ -78,7 +97,7 @@ final class AppRouterTests: XCTestCase {
         router.movePowerMenu(by: 1)
         XCTAssertEqual(router.menuSelection.power, .hide)
         router.moveMenu(by: -1)
-        XCTAssertEqual(router.menuSelection.selected, .setupCheck)
+        XCTAssertEqual(router.menuSelection.selected, .manageSources)
     }
 
     func testCloseMenuClosesPowerPills() {
@@ -94,9 +113,9 @@ final class AppRouterTests: XCTestCase {
 final class MenuSelectionModelTests: XCTestCase {
     func testMenuOrder() {
         XCTAssertEqual(MenuAction.allCases,
-                       [.addGame, .refreshLibrary, .settings, .theme, .console, .setupCheck, .power])
+                       [.addGame, .refreshLibrary, .settings, .theme, .console, .setupCheck, .manageSources, .power])
         XCTAssertEqual(MenuAction.allCases.map(\.title),
-                       ["Add Game", "Library refresh", "Settings", "Theme", "Console", "Setup check", "Power"])
+                       ["Add Game", "Library refresh", "Settings", "Theme", "Console", "Setup check", "Manage sources", "Power"])
         XCTAssertEqual(PowerAction.allCases, [.quit, .hide, .relaunch])
         XCTAssertEqual(PowerAction.allCases.map(\.title), ["Quit", "Hide", "Restart app"])
     }

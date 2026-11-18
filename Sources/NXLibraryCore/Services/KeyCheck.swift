@@ -49,7 +49,7 @@ public enum KeyCheck {
                 return ("Your keys are too old for this \(what)",
                         "It needs keys from \(firmware) or later. Dump prod.keys again from your console.", true)
             case .cannotCheck(let file):
-                return ("Keys not checked against \(file)", "NX Library reads NSP and NSZ headers only; the porting checks the rest.", false)
+                return ("Keys not checked against \(file)", "Arcane reads NSP and NSZ headers only; the porting checks the rest.", false)
             }
         }
     }

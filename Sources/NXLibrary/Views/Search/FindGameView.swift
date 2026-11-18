@@ -26,10 +26,10 @@ struct FindGameView: View {
     private static let columns = 6
     private static let limit = 12
 
-    private var results: [PortedGame] {
+    private var results: [CatalogGame] {
         guard !query.trimmingCharacters(in: .whitespaces).isEmpty else { return [] }
         let all = LibraryQuery(filter: .all, searchText: query)
-            .apply(to: viewModel.libraryGames, history: playSessions)
+            .applyCatalog(to: viewModel.visibleCatalogGames, history: playSessions)
         return Array(all.prefix(Self.limit))
     }
 
@@ -60,6 +60,7 @@ struct FindGameView: View {
         }
         .onDisappear(perform: removeKeyMonitor)
         .onChange(of: query) { _ in focused = nil }
+        .onChange(of: results.map(\.id)) { _ in focused = nil }
         .onReceive(NotificationCenter.default.publisher(for: .nxFindGameGamepadAction)) { note in
             guard let action = note.object as? GamepadAction else { return }
             handle(action)
@@ -105,9 +106,12 @@ struct FindGameView: View {
         }
     }
 
-    private func tile(_ game: PortedGame, selected: Bool) -> some View {
+    private func tile(_ game: CatalogGame, selected: Bool) -> some View {
         VStack(spacing: canvas.u(10)) {
-            SpotlightTileArtwork(game: game, side: canvas.u(160), artwork: artwork)
+            Group {
+                if let native = game.nxnativeGame { SpotlightTileArtwork(game: native, side: canvas.u(160), artwork: artwork) }
+                else { CatalogNativeArtwork(game: game, role: .square) }
+            }
                 .frame(width: canvas.u(160), height: canvas.u(160))
                 .clipShape(RoundedRectangle(cornerRadius: canvas.u(12), style: .continuous))
                 .overlay(SeleneTileRing(cornerRadius: canvas.u(12), active: selected))
@@ -166,7 +170,7 @@ struct FindGameView: View {
         SoundEffectService.shared.play(.focus)
     }
 
-    private func pick(_ game: PortedGame?) {
+    private func pick(_ game: CatalogGame?) {
         guard let game else { return }
         SoundEffectService.shared.play(.click)
         router.isSearchPresented = false

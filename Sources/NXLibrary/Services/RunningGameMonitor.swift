@@ -142,7 +142,8 @@ final class RunningGameMonitor: ObservableObject {
         var comesForward = false
         for bundleID in ended {
             let others = libraryBundleIDs.intersection(tracker.running).subtracting(ended)
-            if focus.gameEnded(bundleID, othersRunning: !others.isEmpty) { comesForward = true }
+            let othersRunning = !others.isEmpty || SteamPlayCoordinator.shared.hasRunningGame
+            if focus.gameEnded(bundleID, othersRunning: othersRunning) { comesForward = true }
             for session in sessions?.end(bundleID: bundleID) ?? [] {
                 guard let game = games.first(where: { $0.id == session.gameID }),
                       let summary = SessionSummary(session: session, game: game,
@@ -157,6 +158,11 @@ final class RunningGameMonitor: ObservableObject {
     }
 
     private var libraryBundleIDs: Set<String> { Set(games.compactMap(\.effectiveBundleId)) }
+
+    /// The app is one of the library's nxnative games.
+    func isLibraryGame(_ app: NSRunningApplication) -> Bool {
+        app.bundleIdentifier.map(libraryBundleIDs.contains) == true
+    }
 
     /// A library game in front is noted; another app that is still in front a second later, while that game runs,
     /// means the player left the game (an app macOS brings forward as a game quits does not count).
@@ -174,31 +180,12 @@ final class RunningGameMonitor: ObservableObject {
         }
     }
 
-    /// NX Library back in front after the game in front quit. macOS often makes NX Library the active app by itself
-    /// as the game quits, but leaves the screen on the desktop while NX Library's full-screen window stays in its own
-    /// Space: activating alone shows nothing. So the main window is also brought forward, which takes macOS to its
-    /// Space. `ignoringOtherApps: true` covers the case where macOS put another app in front instead. Checked once
-    /// more after the Space switch; never over a library game.
+    /// NX Library back in front after the game in front quit (`LibraryWindow`), never over a library game.
     private func comeForward() {
-        Self.bringForward(Self.mainWindow)
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: 600_000_000)
-            let window = Self.mainWindow
-            guard let self, !NSApp.isActive || window?.isOnActiveSpace == false else { return }
-            if let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier,
-               self.libraryBundleIDs.contains(front) { return }
-            Self.bringForward(window)
+        LibraryWindow.comeForward { [weak self] app in
+            self?.isLibraryGame(app) == true
+                || SteamPlayCoordinator.shared.isRunningGame(pid: app.processIdentifier)
         }
-    }
-
-    /// NX Library's main window: the visible one that can be main (not a panel or the menu bar's).
-    private static var mainWindow: NSWindow? {
-        NSApp.mainWindow ?? NSApp.windows.first { $0.isVisible && $0.canBecomeMain }
-    }
-
-    private static func bringForward(_ window: NSWindow?) {
-        NSApp.activate(ignoringOtherApps: true)
-        window?.makeKeyAndOrderFront(nil)
     }
 
     private func recompute() {

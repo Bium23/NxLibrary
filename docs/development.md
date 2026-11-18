@@ -1,6 +1,6 @@
 # Development and releases
 
-This guide covers building NX Library itself. For app setup, game preparation and daily use, start with the [user guide](../README.md). Read [AGENTS.md](../AGENTS.md) before changing engine integration or installation behaviour.
+This guide covers building Arcane itself. For app setup, game preparation and daily use, start with the [user guide](../README.md). Read [AGENTS.md](../AGENTS.md) before changing engine integration or installation behaviour.
 
 ## Development prerequisites
 
@@ -19,12 +19,12 @@ From the repository root:
 ~~~sh
 bash scripts/bundle_runtime.sh
 bash scripts/build_app.sh
-codesign --verify --deep --strict "$HOME/Applications/NXLibrary Dev.app"
+codesign --verify --deep --strict "$HOME/Applications/Arcane Dev.app"
 ~~~
 
-The default destination is `~/Applications/NXLibrary Dev.app`, named **NX Library Dev**: the copy every change is tested in, kept apart from the released **NX Library** (`~/Applications/NX Library.app`, installed from GitHub and updated by itself), which a development build never replaces. Both use the bundle ID `local.nxlibrary`, so they share the library, keys and settings, and macOS runs only one at a time: quit one before opening the other. `build_app.sh` compiles the Release configuration, creates the bundle in staging, includes resources and notices, ad-hoc signs and verifies it, then installs it through the same atomic installer used by the application. It does not launch the app.
+The default destination is `~/Applications/Arcane Dev.app`, named **Arcane Dev**: the copy every change is tested in, kept apart from the released copy (`~/Applications/NX Library.app`, installed from GitHub and updated by itself), which a development build never replaces. On the launcher-development branch, Dev uses bundle ID `local.nxlibrary.development`, app data under `~/Library/Application Support/NXLibrary-Development`, a separate cache root and preference domain. At its first launch it prepares an independent, one-time copy of selected launcher data; games and build caches are not copied, and credential files are excluded. Close the previous launcher copy before that initial import. The held 0.1.4.3 branch retains its previously validated behavior. `build_app.sh` compiles the Release configuration, creates the bundle in staging, includes resources and notices, ad-hoc signs and verifies it, then installs it through the same atomic installer used by the application. It does not launch the app.
 
-A development copy carries the version in progress from the `VERSION` file at the repository root and shows it as "(development build)" in Settings; it has no release marker, so it never offers or installs app updates. `scripts/release.sh <version>` sets the released version itself and refuses to run unless `VERSION` already says that version. After a release, raise `VERSION` to the next version being worked on.
+A development copy carries the version in progress from the `VERSION` file at the repository root and shows it as "(Dev · Launcher)" on this development line in Settings; it has no release marker, so it never offers or installs app updates. `scripts/release.sh <version>` sets the released version itself and refuses to run unless `VERSION` already says that version. After a release, raise `VERSION` to the next version being worked on.
 
 An alternate destination can be supplied without replacing the installed development copy:
 
@@ -32,7 +32,7 @@ An alternate destination can be supplied without replacing the installed develop
 bash scripts/build_app.sh /tmp/NXLibrary-Review.app
 ~~~
 
-A plain development app uses bundle ID `local.nxlibrary`, defaults to version `0.1.0` and has no release marker. It never installs its own updates.
+A plain development app uses bundle ID `local.nxlibrary.development`, takes its version from `VERSION` and has no release marker. It never installs its own updates.
 
 ### Bundled runtime
 
@@ -59,8 +59,17 @@ python3 scripts/check_publication.py
 python3 scripts/check_localizations.py
 python3 -m unittest discover -s Tests/PublicationChecks
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_notices.py
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_review.py
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_startup_recovery.py
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_theme.py
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_nested_bundles.py
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_artwork_return.py
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_source_access.py
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_entrance.py
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_achievement_scroll.py
 bash scripts/build_app.sh
-codesign --verify --deep --strict "$HOME/Applications/NXLibrary Dev.app"
+codesign --verify --deep --strict "$HOME/Applications/Arcane Dev.app"
 ~~~
 
 When reviewing an engine upgrade in a separate checkout, set `NX_TEST_ENGINE_REPO` to that checkout's absolute path for `swift test`. The engine-fragment regression reads the application's pin and checks it in that repository; an invalid explicit path fails. Without the variable it uses `~/nxnative`, skipping only when that default checkout is absent. This allows verification without fetching into or changing the engine used by the installed app.
@@ -73,13 +82,19 @@ python3 scripts/check_publication.py --runtime work/Runtime
 
 The Swift suite covers persistence, sources, keys and permissions, CLI contracts, process output and cancellation, compatibility gates, installation and retries, launch configuration, presentation state, artwork, cheats and save recovery. Publication regressions use temporary repositories and synthetic content. Tests must never require copyrighted game content or real keys.
 
+The nested-bundle check creates tiny Mach-O fixtures with signed data bundles and relative Resources links. It exercises the real installer, icon writer and codesign, including signature rollback, interrupted publication and rejection of modified nested data. Its forced copy branch does not establish compatibility with a real external filesystem or game build.
+
+The artwork-return check compiles the real tile views, loading tasks and retained Mods host with generated images and isolated preferences. It records which image the first body selects after view recreation, without rendering or opening a window, and checks pick removal, Steam app updates, Mods badges after external removal and changed GameBanana matches. Network is forbidden in the Mods fixture.
+
 The latest complete Swift verification on 2 November 2026 passed **774 tests**, including first-run skip/resume, setup navigation, explicit title choice, source-selection restoration, chosen-folder installation/discovery and preserving ready builds after destination disconnection. The earlier publication verification passed **15 Python checks**; the development-app bundle passed signature verification, and a headless check exercised a real public GitHub download, its redirect and rejection of a mismatched size. These checks do not establish that the interactive update or a game worked. This is dated evidence, not a promise about future changes. See the [test catalog](file-map.md#test-e-fixture).
 
 For manual setup checks on an existing account, use **Settings → Start-up → Open Setup**: Continue opens Your games without resetting the library. Check file-picker cancellation, Back, Open library and source review. A fresh account additionally verifies Skip persistence and resuming an interrupted first setup. Interactive checks remain the user's responsibility; agents do not launch the UI.
 
+`release.sh` runs the same `CatalogAppChecks/run_*.py` set after the Swift suite and stops if any check fails. These checks use synthetic inputs without opening windows; the NUP engine-snapshot probe remains optional.
+
 ### Continuous integration
 
-The [Checks workflow](../.github/workflows/ci.yml) runs publication checks and their regressions, Swift tests, Release compilation, development-app packaging and signature verification on the `xcode-27` runner. Pull requests from forks stay off that runner and receive the hosted publication checks instead. The checkout action is pinned, repository permissions are read-only and credentials are not retained by checkout. It does not publish releases or run the UI, games or engine builds.
+The [Checks workflow](../.github/workflows/ci.yml) runs publication checks and their regressions, Swift tests, all `Tests/CatalogAppChecks/run_*.py` headless regressions, Release compilation, development-app packaging and signature verification on the `xcode-27` runner. Pull requests from forks stay off that runner and receive the hosted publication checks instead. The checkout action is pinned, repository permissions are read-only and credentials are not retained by checkout. It does not publish releases or run the UI, games or engine builds.
 
 The engine-log-fragment test skips when `~/nxnative` is absent. A private CI run completed with **703 Swift tests reported: 702 passed and one skipped**, plus five Python checks. It verifies frontend packaging without the bundled game runtime; it does not replace the runtime check or the engine compatibility gate.
 
@@ -87,7 +102,7 @@ The engine-log-fragment test skips when `~/nxnative` is absent. A private CI run
 
 Interactive app and game checks are performed by the user. Agents must not use computer-use or other UI automation. Compilation, unit tests and signature verification cannot establish that the interface or a game works.
 
-Before a game/toolchain combination is described as working, the user checks **Settings → Engine**, builds a real game and launches it to a visible screen. Record the engine and Metal versions and whether the untested override was used.
+Before a game/toolchain combination is described as working, the user checks **Settings → Setup and engine**, builds a real game and launches it to a visible screen. Record the engine and Metal versions and whether the untested override was used.
 
 ## Engine upgrades
 
@@ -106,6 +121,8 @@ bash scripts/release.sh 0.1.2
 ~~~
 
 The script builds a release-marked app, verifies its version and signature, and produces a ZIP and DMG in `work/release/`. Without `--publish`, it does not push a tag or create a GitHub release. Version `0.1.0` is the first public alpha; use an unused version for later releases.
+
+Valve's attribution for the Steam logo carries the year Valve's page gives ("©2026 Valve Corporation…", https://partner.steamgames.com/doc/marketing/branding/attribution). In a new year, copy Valve's current wording for each language into `NOTICE` and the `Localizable.xcstrings` entry used by Settings › About before releasing.
 
 Publishing requires an explicit maintainer decision and the script's `--publish --notes <file>` options. Prepare reviewed notes from [CHANGELOG.md](../CHANGELOG.md), then date the version when it is actually published. The script adds engine/Xcode requirement metadata to release notes for the updater. Never publish automatically as part of an agent's verification.
 
@@ -141,8 +158,22 @@ These are distribution decisions. Do not bypass the dirty-tree check, change the
 | `scripts/` | Runtime preparation, app packaging, installation helpers, release packaging and publication checks. |
 | `docs/` | Current guides, audits, dated designs and engine-adoption evidence. |
 
-For component interactions, read the [architecture guide](architecture.md). For the role of every individual file, use the [file catalog](file-map.md). Screenshots and demo placement are described in the [media guide](media/README.md).
+For component interactions, read the [architecture guide](architecture.md); for where new code goes, the [conventions](conventions.md); for end-to-end paths, the [flows](flows.md). For the role of every individual file, use the [file catalog](file-map.md). Screenshots and demo placement are described in the [media guide](media/README.md).
 
 ### Localization resources
 
 SwiftPM processes the shared string catalog into `NXLibrary_NXLibraryCore.bundle`. `build_app.sh` requires and copies that bundle into `Contents/Resources`, declares the six supported app languages and validates the compiled strings/plurals before signing. `scripts/check_localizations.py --app <path.app>` verifies the same resources independently. Missing resources or placeholder mismatches fail packaging. Locale selection is independent from each game's DM_LANG setting.
+
+### Isolated launcher-development data
+
+`AppDataProfile` selects immutable roots from the explicit build marker, and `AppData` routes app-owned stores/default preferences through that policy. `DevelopmentStartupView` completes the background import before constructing app stores or the shell. A failure shows Retry/Close; it never opens a writable fallback on the release profile. A changed legacy library with a valid catalog also offers **Keep Arcane’s library**: it archives the catalog, backup and legacy inputs before acknowledging the changed fingerprint, keeping the catalog’s games and sources without merging older changes. `run_startup_recovery.py` exercises this coordinator using a synthetic profile without windows. The source is read directly, not through store load/recovery methods. A staged, hashed allowlist copy and preference import can resume after failure; a completed profile is never automatically reimported. Copied unfinished sessions end at their last recorded heartbeat.
+
+After the import, `AppShellState` creates the view model and initial router and applies the initial locale/theme on the main actor before publishing the ready shell. Views retain these prepared objects; they do not run model startup or mutate shared theme state as SwiftUI inserts the shell into an already-visible window. Startup logs record only phase boundaries, without library contents or preference values.
+
+The separate bundle IDs select separate standard preference domains. Do not open the app's own bundle ID with `UserDefaults(suiteName:)`: Foundation rejects that suite. Packaging runs `scripts/check_app_profile.swift` in a temporary headless app with the built Info.plist, exercising the real preferences accessor and profile roots without starting UI, running the importer or writing data. Ordinary unit-test hosts do not reproduce the packaged app's identity.
+
+The Dev does not automatically import credentials or restore saves, reconcile app icons, install copied pending builds, sync real mod overlays, or sweep shared external staging. Explicit Dev icon/build requests are recorded in `DevelopmentOperationStore` and can resume on restart. When automatic mod maintenance is disabled, browsing reads the actual overlay without rewriting it or cleaning another profile's staging.
+
+The isolation covers launcher data, not the physical game installations and their saves. Explicit Play, game settings, builds, save/mod actions and cleanup still refer to real resources. Do not describe this as a sandbox of all game effects. Release packaging excludes the development marker, and the updater rejects a release that also selects the development profile. Initial Dev import and native interaction remain awaiting maintainer validation.
+
+Launch the packaged Dev for app checks: an unmarked executable cannot silently choose the stable data profile. Build markers and bundle identity must agree before the startup transaction opens any app store.

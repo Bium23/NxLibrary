@@ -11,12 +11,15 @@ final class GameArtLoader {
 
     private let heroes = NSCache<NSUUID, NSImage>()
     private let logos = NSCache<NSUUID, NSImage>()
+    /// Steam games' launch-screen and session-card art, by game, role and pick revision (`GameArtLoader+Played`).
+    let steamArt = NSCache<NSString, NSImage>()
     /// Games already looked up online this launch, found or not.
     private var searchedOnline: Set<UUID> = []
 
     private init() {
         heroes.countLimit = 24
         logos.countLimit = 64
+        steamArt.countLimit = 16
     }
 
     func cachedHero(for game: PortedGame) -> NSImage? { heroes.object(forKey: game.id as NSUUID) }
@@ -30,9 +33,9 @@ final class GameArtLoader {
 
     /// The player's pick, local hero files, the disk cache, then the store /
     /// titledb banner.
-    func hero(for game: PortedGame, metadata: NintendoStoreMetadata?, artwork: ArtworkStore) async -> NSImage? {
+    func hero(for game: PortedGame, metadata: NintendoStoreMetadata?, artwork: ArtworkStore, personalizations: CatalogPersonalizations) async -> NSImage? {
         if let cached = cachedHero(for: game) { return cached }
-        let titleKey = game.titleId ?? game.uniqueKey
+        let titleKey = personalizations.nxnativeKey(for: game)
         var image: NSImage?
 
         if let picked = ArtworkPicks.shared.url(titleID: titleKey, slot: .background) {
@@ -71,9 +74,9 @@ final class GameArtLoader {
     /// The player's pick, the disk cache, a local logo.png, the store logo then
     /// the online sources' logos in their order (Steam, GOG, TheGamesDB,
     /// Wikidata, Commons, the fan wikis).
-    func logo(for game: PortedGame, metadata: NintendoStoreMetadata?, artwork: ArtworkStore) async -> NSImage? {
+    func logo(for game: PortedGame, metadata: NintendoStoreMetadata?, artwork: ArtworkStore, personalizations: CatalogPersonalizations) async -> NSImage? {
         if let cached = cachedLogo(for: game) { return cached }
-        let titleKey = game.titleId ?? game.uniqueKey
+        let titleKey = personalizations.nxnativeKey(for: game)
         var image: NSImage?
 
         // Every read and decode runs off the main thread (`decodeLogo`); a
@@ -100,7 +103,8 @@ final class GameArtLoader {
         }
         if image == nil, !Task.isCancelled, searchedOnline.insert(game.id).inserted {
             let names = [game.name, metadata?.name].compactMap { $0 }
-            let found = await OnlineArtwork.find(names: names, slot: .logo)
+            let found = await OnlineArtwork.find(names: names, slot: .logo,
+                                                 platform: game.isSwitch2 ? .switch2 : .switch)
             for remote in found.flatMap({ [$0.url, $0.fallback] }) where image == nil && !Task.isCancelled {
                 if let url = await artwork.fetch(titleID: titleKey, remoteURL: remote, kind: .logo) {
                     image = await Self.decodeLogo(at: url)

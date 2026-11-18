@@ -132,8 +132,7 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
 
     public init(
         client: NintendoStoreHTTPClient = URLSessionNintendoStoreClient(),
-        cacheDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/NXLibrary/metadata"),
+        cacheDirectory: URL = AppData.supportRoot.appendingPathComponent("metadata"),
         fileManager: FileManager = .default
     ) {
         self.client = client
@@ -476,7 +475,7 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         request.setValue(Self.appID, forHTTPHeaderField: "X-Algolia-Application-Id")
         request.setValue(key, forHTTPHeaderField: "X-Algolia-API-Key")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("NXLibrary/0.1 (macOS; personal app)", forHTTPHeaderField: "User-Agent")
+        request.setValue(AppIdentity.userAgent(), forHTTPHeaderField: "User-Agent")
         request.httpBody = try JSONEncoder().encode(body)
         let (data, http) = try await client.data(for: request)
         guard (200..<300).contains(http.statusCode) else {
@@ -490,7 +489,7 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
     private func fetchProductPage(_ url: URL) async throws -> PageProduct {
         var request = URLRequest(url: url)
         request.timeoutInterval = 15
-        request.setValue("NXLibrary/0.1 (macOS; personal app)", forHTTPHeaderField: "User-Agent")
+        request.setValue(AppIdentity.userAgent(), forHTTPHeaderField: "User-Agent")
         let (data, http) = try await client.data(for: request)
         guard (200..<300).contains(http.statusCode) else {
             throw NintendoStoreError.http(http.statusCode)

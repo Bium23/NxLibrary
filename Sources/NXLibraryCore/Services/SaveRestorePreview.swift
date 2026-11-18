@@ -13,7 +13,7 @@ extension SaveSnapshotStore {
         do {
             let source = try directory(snapshotID: snapshot.id, titleID: location.titleID)
             for slot in SaveSlot.allCases where snapshot.presentSlots.contains(slot) {
-                let name = slot == .account ? "save" : "save_device"
+                let name = slot.fileName
                 try io.copy(source.appendingPathComponent(name), staging.appendingPathComponent(name))
             }
             try verifyContents(snapshot, directory: staging)

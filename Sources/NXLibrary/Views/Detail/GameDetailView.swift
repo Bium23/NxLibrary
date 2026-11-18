@@ -10,7 +10,7 @@ final class DetailsModelCache {
 
 /// The Details page (spec §5.4, Selene GameDetails + DetailsStage). The top
 /// block sits on the stage; Down glides the page up into the bands, which
-/// are Screenshots (720), Build & Sources with Your activity, Mods (for a game
+/// are Screenshots (720), Details, Mods (for a game
 /// with a title ID) and More like this, one band pitch (230) apart. A band below the one in focus peeks in, blurred, until
 /// it is focused. Input lives in GameDetailView+Input.swift.
 struct GameDetailView: View {
@@ -36,6 +36,8 @@ struct GameDetailView: View {
     @State var keyMonitor: Any?
     @State var wheel = DetailsWheel()
     @State var cache = DetailsModelCache()
+    /// "Cheats on" under the title, read from the app's files where they can change (`reloadCheats`), never per draw.
+    @State var cheatsOn = false
     /// The Mods band: the game's mods (read when the page appears and when Game options or the app comes back),
     /// GameBanana's, and their panels. Shared with Spotlight's page.
     @StateObject var modsHost = ModsBandHost()
@@ -51,7 +53,8 @@ struct GameDetailView: View {
     /// Everything one render needs, computed once per body.
     struct Model {
         let presentation: GameDetailPresentation
-        let rows: [BuildSourcesRow]
+        let facts: [DetailsFact]
+        let links: [DetailsLink]
         let screenshots: [URL]
         let screenshotsKnown: Bool
         let more: [PortedGame]
@@ -71,13 +74,14 @@ struct GameDetailView: View {
         let urls = Array((metadata?.screenshotURLs ?? []).prefix(SpotlightScreenshotStrip.maxCount))
         let more = moreGames
         let blocked = toolchainBlocked
-        let rows = actionRows(p, buildBlocked: blocked)
-        return Model(presentation: p, rows: rows, screenshots: urls,
+        let links = DetailsLink.links(app: game.url, store: p.storeURL, hltb: p.hltbURL, viewModel: viewModel)
+        let facts = DetailsFacts.switchGame(game, metadata: metadata, folderName: DetailsLink.folderName(of: game.url))
+        return Model(presentation: p, facts: facts, links: links, screenshots: urls,
                      screenshotsKnown: screenshotsKnown,
                      more: more,
                      mods: modsHost.localMods,
                      bands: DetailsFocus.Bands(screenshots: urls.count, mods: modsHost.tiles.count,
-                                               actions: rows.count, more: more.count),
+                                               actions: links.count, more: more.count),
                      buildBlocked: blocked,
                      primaryEnabled: p.canPlay || (p.canRebuild && !blocked))
     }
@@ -121,12 +125,6 @@ struct GameDetailView: View {
         return metadata != nil || viewModel.storeMetadataErrors[game.id] != nil
     }
 
-    /// Build & Sources' actions, in grid order.
-    func actionRows(_ p: GameDetailPresentation, buildBlocked: Bool) -> [BuildSourcesRow] {
-        BuildSourcesRow.rows(for: game, presentation: p, buildBlocked: buildBlocked,
-                             viewModel: viewModel, rebuild: { rebuild() })
-    }
-
     // MARK: - Body
 
     var body: some View {
@@ -141,6 +139,18 @@ struct GameDetailView: View {
                 .frame(width: canvas.stageSize.width, height: canvas.stageSize.height, alignment: .topLeading)
                 .clipped()
                 .offset(x: canvas.stageOrigin.x, y: canvas.stageOrigin.y)
+                .frame(width: canvas.size.width, height: canvas.size.height, alignment: .topLeading)
+                .mask(pageMask)
+                .contentShape(Path(CGRect(x: 0, y: 0, width: canvas.size.width,
+                                          height: max(0, canvas.size.height - canvas.u(SeleneBottomScrim.contentClearance)))))
+            // Anchor to the window, like Settings and Home, rather than the centred 16:9 stage.
+            VStack(spacing: 0) {
+                Spacer(minLength: 0)
+                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back"), action: { router.back() })],
+                               right: [HintItem(.y, L10n.text("Options")), HintItem(.a, L10n.text("Select"))],
+                               bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
+            }
+            .seleneOverlaidHints(router.overlayHasHints(viewModel))
         }
         .overlay(viewerOverlay)
         .overlay(ModsBandOverlay(host: modsHost, find: modsHost.find, game: game))
@@ -157,14 +167,18 @@ struct GameDetailView: View {
         }
         .onChange(of: viewer != nil) { router.isScreenshotViewerOpen = $0 }
         .onChange(of: model.bands) { _ in settleFocus(model.bands) }
-        // Game options (its Mods panel) closing, or NX Library coming back from Finder, re-reads the mods.
-        .onChange(of: viewModel.gameForSettingsSheet == nil) { closed in if closed { reloadMods() } }
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in reloadMods() }
+        // Game options (its Mods or Cheats panel) closing, or Arcane coming back from Finder, re-reads mods and cheats.
+        .onChange(of: !viewModel.isGameOptionsOpen) { closed in if closed { reloadMods(); reloadCheats() } }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            reloadMods()
+            reloadCheats()
+        }
         // The key monitor captures this view's value: reinstall it when the game changes.
         .onChange(of: game) { _ in
             removeKeyMonitor()
             installKeyMonitor()
             reloadMods()
+            reloadCheats()
             startGameBanana()
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxDetailGamepadAction)) { note in
@@ -172,42 +186,47 @@ struct GameDetailView: View {
             if let action = note.object as? GamepadAction { handle(action) }
         }
         .task(id: art.heroTaskKey(game, metadata: metadata)) {
-            await art.loadHero(game: game, current: { game.id }, metadata: metadata, artwork: artwork)
+            await art.loadHero(game: game, current: { game.id }, metadata: metadata, artwork: artwork, personalizations: viewModel.personalizations)
         }
         .task(id: art.logoTaskKey(game, metadata: metadata)) {
-            await art.loadLogo(game: game, metadata: metadata, artwork: artwork)
+            await art.loadLogo(game: game, metadata: metadata, artwork: artwork, personalizations: viewModel.personalizations)
         }
     }
 
     // MARK: - Stage
 
     private func stage(_ model: Model) -> some View {
-        ZStack(alignment: .topLeading) {
-            page(model)
-                .offset(y: canvas.u(pageShift))
-                // The glide is movement: reduce motion makes it instant.
-                .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.32), value: pageShift)
+        page(model)
+            // Art arriving during the glide rides it with the rest (`GlideGroup`).
+            .modifier(GlideGroup())
+            .offset(y: canvas.u(pageShift))
+            // The glide is movement: reduce motion makes it instant.
+            .animation(reduceMotion ? nil : SeleneTheme.cubicOut(0.32), value: pageShift)
+    }
 
-            VStack(spacing: 0) {
-                Spacer(minLength: 0)
-                SeleneHintsBar(left: [HintItem(.b, L10n.text("Back"), action: { router.back() })],
-                               right: [HintItem(.y, L10n.text("Options")), HintItem(.a, L10n.text("Select"))],
-                               bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
-            }
-            .seleneOverlaidHints(router.overlayHasHints(viewModel))
+    private var pageMask: some View {
+        VStack(spacing: 0) {
+            Color.black
+            LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom)
+                .frame(height: canvas.u(16))
+            Color.clear.frame(height: canvas.u(SeleneBottomScrim.contentClearance))
         }
     }
 
     /// Selene's band pitch (230), and 100 more for the tall last band so its covers clear the hints. The Mods band,
-    /// when there is one, sits between Build & Sources and More like this and pushes More like this one pitch down,
+    /// when there is one, sits between Details and More like this and pushes More like this one pitch down,
     /// plus one tile row for each row of its grid after the first; focused, it rises by those rows too, so its last
     /// row rests where a one-row band would.
     var pageShift: CGFloat {
         let mods = modsBandShift
+        // These fixed band positions were laid out for a 16-unit footer inset. Move a focused band up
+        // by the same amount as the hints, retaining its gap above them and the spacing between bands.
+        let footerLift = max(0, SeleneBottomScrim.hintsBottom - 16)
         switch focus.zone {
-        case DetailsFocus.actionsZone: return -230
-        case DetailsFocus.modsZone: return -460 - modsGridExtra
-        case DetailsFocus.moreZone: return -560 - mods
+        case DetailsFocus.screenshotsZone: return -footerLift
+        case DetailsFocus.actionsZone: return -230 - footerLift
+        case DetailsFocus.modsZone: return -460 - modsGridExtra - footerLift
+        case DetailsFocus.moreZone: return -560 - mods - footerLift
         default: return 0
         }
     }
@@ -223,7 +242,7 @@ struct GameDetailView: View {
             DetailsTopBlock(game: game, logo: art.logo(for: game),
                             presentation: model.presentation,
                             isRunning: runningGames.isRunning(game),
-                            cheatsOn: viewModel.cheatsOn(for: game),
+                            cheatsOn: cheatsOn,
                             focusedPill: focus.zone == DetailsFocus.topZone ? focus.pill : nil,
                             primaryEnabled: model.primaryEnabled,
                             expanded: $expanded,
@@ -239,7 +258,7 @@ struct GameDetailView: View {
 
             band(zone: DetailsFocus.screenshotsZone) {
                 DetailsScreenshotsBand(
-                    titleID: game.titleId ?? game.uniqueKey,
+                    titleID: viewModel.personalizationKey(for: game),
                     urls: model.screenshots,
                     source: metadata?.screenshotSource,
                     known: model.screenshotsKnown,
@@ -271,17 +290,15 @@ struct GameDetailView: View {
 
             band(zone: DetailsFocus.actionsZone) {
                 HStack(alignment: .top, spacing: 0) {
-                    BuildSourcesPanel(
-                        presentation: model.presentation,
-                        appFileName: game.url.lastPathComponent,
-                        buildBlocked: model.buildBlocked && model.presentation.canRebuild,
-                        blockedHint: viewModel.toolchainGateSummary,
-                        rows: model.rows,
-                        focusedRow: focus.zone == DetailsFocus.actionsZone ? focus.action : nil,
-                        onHoverRow: { hoverRow($0) },
-                        onPressRow: { pressRow($0) })
+                    DetailsPanel(
+                        facts: model.facts,
+                        links: model.links,
+                        focusedLink: focus.zone == DetailsFocus.actionsZone ? focus.action : nil,
+                        onHoverLink: { hoverRow($0) },
+                        onPressLink: { pressRow($0) },
+                        width: DetailsPanel.wideWidth,
+                        ratingQuery: CriticRatingQuery(game: game, name: metadata?.name))
                     Spacer(minLength: 0)
-                    DetailsActivityColumn(presentation: model.presentation)
                 }
                 .frame(width: canvas.u(1700), alignment: .topLeading)
             }
@@ -290,7 +307,7 @@ struct GameDetailView: View {
             if !model.more.isEmpty {
                 band(zone: DetailsFocus.moreZone) {
                     DetailsMoreBand(
-                        games: model.more,
+                        games: model.more.map(CatalogGame.init(nxnative:)),
                         focusedIndex: focus.zone == DetailsFocus.moreZone ? focus.more : nil,
                         artwork: artwork,
                         boxArt: viewModel.boxArt,
@@ -338,6 +355,7 @@ struct GameDetailView: View {
         router.isSearchPresented = false
         viewModel.loadStoreMetadata(for: game)
         reloadMods()
+        reloadCheats()
         startGameBanana()
         focus = DetailsFocus()
         settleFocus(model.bands)

@@ -16,8 +16,8 @@ final class GameBananaServices: @unchecked Sendable {
         let fm = FileManager.default
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
         userAgent = GameBananaClient.userAgent(version: version)
-        let caches = fm.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("NXLibrary/gamebanana")
-        let support = fm.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/NXLibrary/gamebanana")
+        let caches = AppData.cacheRoot.appendingPathComponent("gamebanana")
+        let support = AppData.supportRoot.appendingPathComponent("gamebanana")
         client = GameBananaClient(cacheFolder: caches.appendingPathComponent("api"), userAgent: userAgent)
         images = GameBananaImageCache(folder: caches.appendingPathComponent("images"), userAgent: userAgent)
         matches = GameBananaMatchStore(file: support.appendingPathComponent("matches.json"))

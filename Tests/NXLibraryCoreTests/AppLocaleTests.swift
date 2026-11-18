@@ -9,9 +9,9 @@ final class AppLocaleTests: XCTestCase {
         let identities = SettingsSection.allCases.map(\.id)
         let italian = AppLocale(language: .italian, region: "IT")
         let french = AppLocale(language: .french, region: "FR")
-        XCTAssertEqual(SettingsSection.games.title(in: italian), "Giochi")
-        XCTAssertEqual(SettingsSection.games.title(in: french), "Jeux")
-        XCTAssertEqual(SettingsSection.games.title, "Games")
+        XCTAssertEqual(SettingsSection.libraryGames.title(in: italian), "Giochi")
+        XCTAssertEqual(SettingsSection.libraryGames.title(in: french), "Jeux")
+        XCTAssertEqual(SettingsSection.libraryGames.title, "Games")
         XCTAssertEqual(SettingsSection.allCases.map(\.id), identities)
         XCTAssertEqual(SettingsSection.startUp.id, "startUp")
     }
@@ -128,6 +128,9 @@ final class AppLocaleTests: XCTestCase {
             L10n.setContext(AppLocale(language: language, region: "CH"))
             let warning = BuildWarningCopy.text(stage: "Pipeline archive", summary: "RAW_INTERNAL_SENTINEL")
             XCTAssertFalse(warning.contains("RAW_INTERNAL_SENTINEL"), language.rawValue)
+            let prewarm = BuildWarningCopy.text(stage: "Prewarm pipelines", summary: "RAW_INTERNAL_SENTINEL")
+            XCTAssertFalse(prewarm.contains("RAW_INTERNAL_SENTINEL"), language.rawValue)
+            XCTAssertFalse(prewarm.contains("Some pipelines could not be prepared"), language.rawValue)
             let missingTicket = PortingFailureReason(kind: .keys, detail: "missing-common-ticket")
             XCTAssertEqual(missingTicket.action, .none)
             let game = PortedGame(name: "Play", url: URL(fileURLWithPath: "/tmp/Play.app"), platform: .macApp,

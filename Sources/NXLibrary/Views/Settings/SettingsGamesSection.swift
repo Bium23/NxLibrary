@@ -1,6 +1,7 @@
 import SwiftUI
 import NXLibraryCore
 
+/// Porting → New games: the defaults copied into each new ported game, rumble included.
 struct SettingsGamesSection: View {
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var settings: AppSettingsStore
@@ -16,95 +17,8 @@ struct SettingsGamesSection: View {
         return options
     }
 
-    /// Games hidden from Game options, by name (the library keeps them sorted).
-    private var hiddenGames: [PortedGame] {
-        viewModel.libraryGames.filter(\.isHidden)
-    }
-
-    private func unhide(_ game: PortedGame) {
-        SoundEffectService.shared.play(.click)
-        viewModel.toggleHidden(game)
-    }
-
-    private var surprisePoolTitle: String {
-        switch settings.settings.surprisePool {
-        case .installed: return "Installed"
-        case .notPlayed: return "Not played yet"
-        case .all: return "All games"
-        }
-    }
-
-    private var cloudSaves: CloudSaves { settings.settings.cloudSaves }
-
-    private var pickedFolderSubtitle: String {
-        let picked = settings.settings.cloudSavesPickedFolder
-        return picked.isEmpty ? L10n.text("None chosen yet.") : (picked as NSString).abbreviatingWithTildeInPath
-    }
-
-    private func stepCloudSaves(_ step: Int) {
-        viewModel.setCloudSaves(cloudSaves.stepped(step, picked: settings.settings.cloudSavesPickedFolder))
-    }
-
     var body: some View {
         VStack(spacing: canvas.u(8)) {
-            SettingsSubheading(L10n.text("All games"))
-
-            SeleneCycleRow("Launch screen style",
-                           subtitle: "Artwork layout",
-                           value: settings.settings.launchStyle.title) { step in
-                settings.settings.launchStyle = settings.settings.launchStyle.stepped(step)
-            }
-
-            SeleneToggleRow("Launch screen motion",
-                            subtitle: "Artwork drift",
-                            isOn: $settings.settings.launchMotion)
-
-            SeleneCycleRow("Launch screen shade",
-                           subtitle: "Launch brightness",
-                           value: settings.settings.launchShade.title) { step in
-                settings.settings.launchShade = settings.settings.launchShade.stepped(step)
-            }
-
-            SeleneToggleRow("Session card",
-                            subtitle: "Your playtime when a game closes",
-                            info: "When you close a game, a card shows how long you played this time and in total. Sessions under 10 seconds show none.",
-                            isOn: $settings.settings.showsSessionCard)
-
-            SeleneCycleRow("Surprise me pool",
-                           subtitle: "Which games Surprise me picks from.",
-                           value: surprisePoolTitle) { step in
-                settings.settings.surprisePool = settings.settings.surprisePool.stepped(step)
-            }
-
-            SettingsSubheading(L10n.text("Cloud saves"))
-
-            SeleneCycleRow("Cloud saves",
-                           subtitle: "All games · Next launch",
-                           info: "Applied before each game starts, including Off. Reset group keeps cloud sync and its folder. Custom save-sync overrides are reported in Saves.",
-                           value: cloudSaves.title, cycle: stepCloudSaves)
-
-            SeleneButtonRow("Cloud saves folder",
-                            subtitle: pickedFolderSubtitle,
-                            buttonTitle: "Choose…") { viewModel.chooseCloudSavesFolder() }
-
-            SettingsSubheading(L10n.text("Hidden games"))
-
-            if hiddenGames.isEmpty {
-                Text(L10n.text("No hidden games. Hide one from its Game options; it comes back here."))
-                    .seleneFont(15)
-                    .foregroundColor(SeleneTheme.ink60)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.leading, canvas.u(26))
-            } else {
-                ForEach(hiddenGames) { game in
-                    SeleneButtonRow(game.name, id: "hidden-\(game.id)",
-                                    subtitle: "Out of Spotlight, Collection, Surprise me and search.", verbatimTitle: true,
-                                    buttonTitle: "Show") { unhide(game) }
-                }
-            }
-
-            SettingsSubheading(L10n.text("New games"))
-
             SeleneToggleRow("Fullscreen",
                             subtitle: "Launch mode",
                             isOn: $settings.settings.gameDefaults.fullscreen)
@@ -156,42 +70,35 @@ struct SettingsGamesSection: View {
                 }
             }
 
+            SeleneToggleRow("Rumble",
+                            subtitle: "Vibration in new ported games",
+                            isOn: $settings.settings.gameDefaults.rumble)
+
+            SeleneRow("Rumble strength",
+                      subtitle: "Vibration strength",
+                      info: "Default haptic feedback multiplier (0: muted, 1: subtle, 2: standard, 3: intense) passed to game builds supporting macOS controller haptics.") {
+                Stepper(value: $settings.settings.gameDefaults.rumbleGain, in: 0...3) {
+                    Text("\(settings.settings.gameDefaults.rumbleGain)")
+                        .seleneFont(15, .semibold, design: .monospaced)
+                        .foregroundColor(SeleneTheme.glyph)
+                        .frame(width: 20, alignment: .trailing)
+                }
+                .fixedSize()
+            }
         }
         .onAppear(perform: publishActions)
-        .onChange(of: hiddenGames.map(\.id)) { _ in publishActions() }
     }
 
     private func publishActions() {
-        // Same order as the rows: cloud saves and the hidden games sit between
-        // Surprise me and the defaults.
-        let cloud: [SettingsRowAction] = [
-            .value("cloudSaves", "Cloud saves", cycle: stepCloudSaves),
-            .init(id: "cloudSavesFolder", title: "Cloud saves folder") { viewModel.chooseCloudSavesFolder() }
-        ]
-        let hidden = hiddenGames.map { game in
-            SettingsRowAction(id: "hidden-\(game.id)", title: game.name, rowID: "hidden-\(game.id)") { unhide(game) }
-        }
-        onActions(launchActions + cloud + hidden + defaultActions)
-    }
-
-    private var launchActions: [SettingsRowAction] {
-        [
-            .value("launchStyle", "Launch screen style") { step in
-                settings.settings.launchStyle = settings.settings.launchStyle.stepped(step)
+        onActions(defaultActions + [
+            .init(id: "rumble", title: "Rumble") {
+                settings.settings.gameDefaults.rumble.toggle()
             },
-            .init(id: "launchMotion", title: L10n.text("Launch screen motion"), rowID: "Launch screen motion") {
-                settings.settings.launchMotion.toggle()
-            },
-            .value("launchShade", "Launch screen shade") { step in
-                settings.settings.launchShade = settings.settings.launchShade.stepped(step)
-            },
-            .init(id: "showsSessionCard", title: L10n.text("Session card"), rowID: "Session card") {
-                settings.settings.showsSessionCard.toggle()
-            },
-            .value("surprisePool", "Surprise me pool") { step in
-                settings.settings.surprisePool = settings.settings.surprisePool.stepped(step)
+            .value("gain", "Rumble strength") { step in
+                let gain = settings.settings.gameDefaults.rumbleGain + step
+                settings.settings.gameDefaults.rumbleGain = min(3, max(0, gain))
             }
-        ]
+        ])
     }
 
     private var defaultActions: [SettingsRowAction] {

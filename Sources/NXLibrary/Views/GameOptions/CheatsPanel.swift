@@ -452,7 +452,7 @@ struct CheatsPanel: View {
             default: return
             }
             guard let data = try? Data(contentsOf: found[index].url) else {
-                refuse(L10n.text("NX Library could not read the file."))
+                refuse(L10n.text("Arcane could not read the file."))
                 return
             }
             askConfirm(.install(data: data, file: file, unnamed: unnamed, replacing: cheatState?.file != nil))

@@ -48,58 +48,13 @@ struct DetailsScreenshotsBand: View {
     }
 }
 
-/// Your activity, the right column of band 2 (Selene's SeleneDetailsBand2b):
-/// play time and last played over this week and the rank among your games.
-/// The rank is hidden until the game has play time.
-struct DetailsActivityColumn: View {
-    @Environment(\.seleneCanvas) private var canvas
-
-    let presentation: GameDetailPresentation
-
-    static let width: CGFloat = 510
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            DetailsBandTitle(text: L10n.text("Your activity"))
-            VStack(alignment: .leading, spacing: canvas.u(14)) {
-                HStack(alignment: .top, spacing: canvas.u(24)) {
-                    cell(L10n.text("PLAY TIME"), presentation.playtime)
-                    cell("LAST PLAYED", presentation.lastPlayed)
-                }
-                HStack(alignment: .top, spacing: canvas.u(24)) {
-                    cell(L10n.text("THIS WEEK"), presentation.thisWeek)
-                    if let rank = presentation.rank {
-                        cell(L10n.text("RANK"), rank)
-                    }
-                }
-            }
-        }
-        .frame(width: canvas.u(Self.width), alignment: .topLeading)
-    }
-
-    private func cell(_ label: String, _ value: String) -> some View {
-        VStack(alignment: .leading, spacing: canvas.u(2)) {
-            Text(L10n.text(label))
-                .seleneFont(12, .semibold)
-                .foregroundColor(SeleneTheme.ink60)
-            Text(value)
-                .seleneFont(21, .semibold)
-                .foregroundColor(SeleneTheme.ink)
-                .lineLimit(1)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
-    }
-}
-
-/// Band 3: more games from your own library (`MoreLikeThis`), Switch box
-/// covers of 173 × 280 (`SwitchBoxArtCover`). A click focuses, a double
-/// click opens the game on Spotlight.
+/// More games from your own library (`MoreLikeThis`), in portrait covers of 173 × 280.
+/// A click focuses, a double click opens the game on Spotlight.
 struct DetailsMoreBand: View {
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
 
-    let games: [PortedGame]
+    let games: [CatalogGame]
     let focusedIndex: Int?
     let artwork: ArtworkStore
     let boxArt: BoxArtService
@@ -124,12 +79,11 @@ struct DetailsMoreBand: View {
         }
     }
 
-    private func tile(_ game: PortedGame, index: Int, focused: Bool) -> some View {
+    private func tile(_ game: CatalogGame, index: Int, focused: Bool) -> some View {
         let w = canvas.u(Self.width), h = canvas.u(Self.height)
         let face = RoundedRectangle(cornerRadius: canvas.u(14), style: .continuous)
         return ZStack {
-            SwitchBoxArtCover(game: game, width: w, height: h, officialName: officialName(game),
-                              boxArt: boxArt, artwork: artwork, indexVersion: boxArtIndexVersion)
+            cover(game, width: w, height: h)
                 .clipShape(face)
             SeleneTileRing(cornerRadius: canvas.u(21), active: focused)
                 .frame(width: w + canvas.u(14), height: h + canvas.u(14))
@@ -145,9 +99,20 @@ struct DetailsMoreBand: View {
         .accessibilityLabel(game.name)
         .accessibilityAddTraits(focused ? [.isButton, .isSelected] : .isButton)
     }
+
+    @ViewBuilder
+    private func cover(_ game: CatalogGame, width: CGFloat, height: CGFloat) -> some View {
+        if let native = game.nxnativeGame {
+            SwitchBoxArtCover(game: native, width: width, height: height, officialName: officialName(native),
+                              boxArt: boxArt, artwork: artwork, indexVersion: boxArtIndexVersion)
+        } else {
+            CatalogNativeArtwork(game: game)
+                .frame(width: width, height: height)
+        }
+    }
 }
 
-/// The game's mods, between Build & Sources and More like this. Left to right (`ModsBandLayout`): installed mods (`ModStore`, at most 5) with their state,
+/// The game's mods, between Details and More like this. Left to right (`ModsBandLayout`): installed mods (`ModStore`, at most 5) with their state,
 /// Manage mods, the GameBanana mods that work (image, name, author, Installed / Update), then status tiles (Retry, the
 /// "Is this the right game?" candidates, Wrong game?…). The row slides so the focused tile stays on screen. A click
 /// focuses a tile; a double click (or A) opens it.

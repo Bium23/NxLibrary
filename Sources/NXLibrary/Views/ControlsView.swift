@@ -60,7 +60,7 @@ public struct ControlsView: View {
                         Text(L10n.text("Controls"))
                             .seleneFont(40)
                             .foregroundColor(SeleneTheme.ink)
-                        Text(inGame ? L10n.text("Default game inputs. Older builds may differ.") : L10n.text("Navigate NX Library."))
+                        Text(inGame ? L10n.text("Default game inputs. Older builds may differ.") : L10n.text("Navigate Arcane."))
                             .seleneFont(19)
                             .foregroundColor(SeleneTheme.ink60)
                             .padding(.bottom, canvas.u(18))

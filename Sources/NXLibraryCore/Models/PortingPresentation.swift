@@ -20,6 +20,11 @@ public enum PortingETA {
             if let last = lastFinishingSeconds { return "About \(duration(eta + last)) left" }
             return "Shaders: about \(duration(eta))"
         case .finishing:
+            // Prewarm has no reliable counter and can dwarf an older build's
+            // finishing time. Keep the activity visible without reusing that ETA.
+            if progress.stageName == PortingProgress.prewarmStageName {
+                return L10n.text("Preparing the first launch")
+            }
             if let eta = progress.finishingETA { return "Pipelines: about \(duration(eta))" }
             guard let last = lastFinishingSeconds else { return "Finishing up" }
             return "About \(duration(max(0, last - progress.finishingElapsed))) left"
@@ -64,6 +69,13 @@ public enum PortingTileLook: Equatable {
     case filling(Double)
     /// No app can be played: black and white with a lock.
     case locked
+    /// A Steam game Steam is still installing: black and white, the download glyph and "Downloading".
+    case downloading
+
+    /// A catalog game's tile outside porting: downloading while Steam installs it.
+    public static func make(catalog game: CatalogGame) -> PortingTileLook {
+        game.steamGame?.isDownloading == true ? .downloading : .normal
+    }
 
     public static func make(game: PortedGame, portingGameID: UUID?, progress: PortingProgress?) -> PortingTileLook {
         if game.id == portingGameID, let progress {

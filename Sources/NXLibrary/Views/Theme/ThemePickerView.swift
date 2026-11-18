@@ -52,7 +52,7 @@ struct ThemePickerView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            SeleneBackdrop()
+            SeleneBackdrop().still(true)
             Color.black.opacity(0.3).ignoresSafeArea()
 
             Group {
@@ -155,7 +155,7 @@ struct ThemePickerView: View {
     private var themeStep: some View {
         let palette = palettes[min(state.themeIndex, palettes.count - 1)]
         return ZStack(alignment: .top) {
-            header(L10n.text("Choose your theme"), L10n.text("Colors for all of NX Library. Move through them to see each one in the preview."))
+            header(L10n.text("Choose your theme"), L10n.text("Colors for all of Arcane. Move through them to see each one in the preview."))
             HStack(alignment: .top, spacing: canvas.u(60)) {
                 grid(count: palettes.count, columns: ThemePickerState.themeColumns) { index in
                     swatch(palettes[index], focused: index == state.themeIndex)
@@ -163,7 +163,8 @@ struct ThemePickerView: View {
                 }
                 VStack(alignment: .leading, spacing: 0) {
                     ThemePreview(palette: palette, wallpaperURL: previewWallpaper(theme: palette),
-                                 games: games, width: 780, shade: settings.settings.backgroundShade)
+                                 games: games, width: 780, shade: settings.settings.backgroundShade,
+                                 animated: settings.settings.animatedBackground)
                     chips(palette)
                         .padding(.top, canvas.u(18))
                         .padding(.leading, canvas.u(4))
@@ -302,7 +303,8 @@ struct ThemePickerView: View {
                 }
                 VStack(alignment: .leading, spacing: 0) {
                     ThemePreview(palette: theme.palette, wallpaperURL: previewURL(focused), games: games, width: 820,
-                                 videoURL: previewVideo, shade: settings.settings.backgroundShade)
+                                 videoURL: previewVideo, shade: settings.settings.backgroundShade,
+                                 animated: settings.settings.animatedBackground)
                     Text(creditLine(focused) ?? " ")
                         .seleneFont(17)
                         .foregroundColor(SeleneTheme.ink75)
@@ -409,7 +411,8 @@ struct ThemePickerView: View {
                 tileLabel("Theme's own")
             case .none:
                 if state.tab == .live {
-                    MoonlightBackdrop(accent: SeleneTheme.glyph, ink: SeleneTheme.ink, moving: false, asImage: true)
+                    MoonlightBackdrop(accent: SeleneTheme.glyph, ink: SeleneTheme.ink, moving: false, asImage: true,
+                                      surface: SeleneTheme.moonlightSurface)
                 }
                 tileLabel(state.tab == .live ? L10n.text("Moonlight") : "None")
             case .add:
@@ -762,8 +765,8 @@ struct ThemePickerView: View {
         let live = state.tab == .live
         let panel = NSOpenPanel()
         panel.message = live
-            ? L10n.text("Choose a video for your live background (MP4, MOV or M4V). NX Library keeps its own copy and plays it muted.")
-            : L10n.text("Choose a picture for your background. NX Library keeps its own copy.")
+            ? L10n.text("Choose a video for your live background (MP4, MOV or M4V). Arcane keeps its own copy and plays it muted.")
+            : L10n.text("Choose a picture for your background. Arcane keeps its own copy.")
         panel.allowedContentTypes = live
             ? WallpaperCatalog.videoExtensions.compactMap { UTType(filenameExtension: $0) }
             : [.image]
@@ -830,7 +833,7 @@ struct ThemePickerView: View {
         let name = theme.credits[id]?.title ?? theme.wallpaperTitle(for: id)
         var message = downloaded
             ? L10n.format("%@ goes to the Trash, so you can bring it back from there, or download it again whenever you like.", [String(describing: (name))])
-            : L10n.format("NX Library's copy of %@ goes to the Trash, so you can bring it back from there. Your original file stays where it is.", [String(describing: (name))])
+            : L10n.format("Arcane's copy of %@ goes to the Trash, so you can bring it back from there. Your original file stays where it is.", [String(describing: (name))])
         if settings.settings.wallpaperID == id { message += L10n.text(" Your theme’s own background takes its place.") }
         return ZStack {
             SeleneTheme.scrim45

@@ -1,6 +1,63 @@
 # Changelog
 
-User-visible changes to NX Library are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
+User-visible changes to Arcane (formerly NX Library) are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
+
+## 0.2.0 — 2026-11-18
+
+See the [validation checklist](docs/validation.md) for the state of manual checks.
+
+### Added
+
+- Add installed Steam games for Mac to the shared Spotlight and Collection catalog alongside nxnative games. Arcane watches Steam install manifests to reflect downloads and installed games, and shows playtime and achievements when available.
+- Steam game pages show **More like this** below About and Details, with related Steam games first and a fallback to matching Switch titles in your library.
+- Steam achievements have a controller-friendly view with filters, sorting, public rarity, crystal tiers and an animated Arcane for unlocking every achievement.
+- Shared game details show critic scores from Wikidata and optional IGDB. The metadata picker offers field-by-field suggestions from IGDB, LaunchBox and TheGamesDB.
+- **Settings → About → Support Arcane** opens the project's optional Buy Me a Coffee page in your browser.
+
+### Changed
+
+- **Updated nxnative to `461a5f9f`.** The upstream update includes shader and texture fixes, audio output-route fixes, more game profiles and improvements in package discovery and pipeline preparation. The required Metal compiler is still `32023.922`. The new engine applies to games built with this pin.
+
+- **New app icon.** Arcane's icon is now a crystal inside a glass sphere, framed by navy and plum ink strokes on light paper. The Light, Dark and Mono choices in **App icon** follow it.
+- The shell keeps the same background renderer when opening Settings and returning home, preserving its frame and motion clock.
+- Changing the theme updates the shared background and its shades even when the wallpaper and selected card stay the same.
+
+- **Arcane** keeps the original blue moonlight as the default. Optional **Arcane Crystal** and **Arcane Flow** draw fine light threads bending in slow travelling waves, with faint ambient light and no broad beams or glass planes. Pink and cyan stay local, with very small colour changes over three minutes. Both are rendered live, with soft particles and the shared motion controls; no pictures or video. The existing theme identity and preferences stay compatible.
+
+- The app opens on the moving backdrop and brings the first Spotlight library in with growing tiles and a gradual game background. The welcome and Setup share that backdrop during the entrance; fullscreen waits for the window to be drawn. **Entrance animation** replaces the old Intro animation label while keeping its saved value and boot sound. The separate intro and preparation message are removed. The entrance always plays to its end: keys, clicks, the wheel and the controller wait for it, and the top bar and button hints come in last.
+- Native alerts and file pickers take priority over controller actions as well as the keyboard and menu commands, so actions do not reach the library or an Arcane dialog underneath.
+- The remembered **Game files** folder is kept for the picker without scanning it at launch. Choosing a folder or files in Add game starts the source scan; library refresh continues to discover installed apps.
+- The app is now called **Arcane** in every visible place: window, menus, Settings, About and texts in all six languages. Your library, settings and data stay where they are. The development copy is Arcane Dev.
+- Settings are grouped into **General**, **Library**, **Porting** and **System**. Launch screen, Surprise me, session card and hidden games are in Library → Games; keys, cloud saves and build caches have their own Porting pages; Rumble sits with the other new-game defaults; Console is in System. Every setting keeps its value.
+- Players coming from NX Library see **Welcome to Arcane** once: the new name, what's new, and an offer to add Steam games for Mac when Steam is found and still off.
+- A first launch starts from what is already on the Mac: installed Steam games for Mac and games you already ported, each with a count. Choose whether Steam joins the library, then open it; **Porting** leads to the setup for converting Switch games. Nothing changes on disk until you open the library.
+- After an update, the app file becomes **Arcane.app** the next time you quit, in the same folder; the Dock keeps opening it. It stays as it is when the folder is read-only or an Arcane.app is already there.
+
+### Fixed
+
+- Steam receives Play once Arcane submits the launch cover, so a fast Space change can stay behind the waiting screen.
+- The waiting screen stays up when a cold Steam launch pauses during its startup interstitials.
+- Steam can finish opening windows behind the waiting screen without Arcane repeatedly hiding them and switching macOS Spaces.
+- The waiting screen leaves the bottom-right corner free of app branding.
+- Spotlight loads installed mods and the lower game page when the page opens. Moving on the game row skips the Details calculations. Spotlight and Collection save the last selected game in the background.
+- Open library remains available during the initial scan, so an unresponsive folder cannot hold up first launch. Leaving cancels the request; sources can be added later in Settings.
+
+- Updating the app preserves existing copies beside it, including files named `(new)` or `(old)`. Each update uses its own staging directory; a failed Trash operation keeps the previous app.
+- If an older copy changes the legacy library after migration, **Keep Arcane’s library** preserves the current games and sources and archives both versions before continuing. The libraries are not merged.
+
+- Spotlight reuses decoded game artwork on its first frame after returning from Settings, preserving personal picks and Steam icons. The Mods card keeps its prepared cover across navigation instead of briefly returning to its empty background.
+- Porting shows **Preparing the first launch** during the engine's prewarm phase instead of estimating it from an older build's finishing time. A prewarm warning explains that missing pipelines are prepared when the game first starts.
+- NUP discovery keeps a selected program separate from its application and DLC identities. Rebuilds explicitly select that program when the engine supports it; older NUP records keep program zero.
+- Local save backups include additional users and their registry. Restoring an older backup preserves other local users; interrupted replacements and interrupted recovery retain verified backups and unexpected external changes. Cloud sync remains limited to the primary user and device save.
+
+- First launch keeps the Steam switch choice after quitting during Porting and uses the saved Steam folder for discovery and activation. An incomplete Steam read offers **Retry** instead of saying no games were found.
+- Notification permission is requested when a porting starts, rather than when opening the library.
+- Scrolling a game page can keep focus on its achievements card; Game Details is disabled while another panel owns input.
+- Achievement requests made before Steam is configured are retried when its source becomes available.
+- The achievements list keeps following the selected row after quickly closing and reopening the screen. Validated in Dev by the maintainer on 16 November.
+- Automatic logo searches use the game's Switch or Switch 2 platform.
+- Steam libraries that return after a scan join file watching on the next scan, even when their paths have not changed. Event paths under `/var` and `/tmp` are recognized consistently.
+- Steam achievement and playtime readers reject unsafe or changing files through the shared bounded reader.
 
 ## 0.1.4.3 — 2026-11-12
 

@@ -7,8 +7,10 @@ import NXLibraryCore
 struct SeleneBottomScrim: View {
     @Environment(\.seleneCanvas) private var canvas
 
-    /// Where the home screens set their hints, in Selene units from the window's bottom edge.
-    static let hintsBottom: CGFloat = 16
+    /// Shared by all screens: halfway between the original Home (16) and Settings (48) positions.
+    static let hintsBottom: CGFloat = 32
+    /// Clear space for the 30-unit badges, two-line home hints and breathing room above them.
+    static let contentClearance: CGFloat = hintsBottom + 52
 
     var body: some View {
         VStack(spacing: 0) {

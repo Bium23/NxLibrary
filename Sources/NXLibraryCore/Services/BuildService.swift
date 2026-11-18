@@ -97,7 +97,7 @@ public final class BuildService {
         if IOPMAssertionCreateWithName(
             kIOPMAssertionTypeNoIdleSleep as CFString,
             IOPMAssertionLevel(kIOPMAssertionLevelOn),
-            "NX Library build" as CFString,
+            "Arcane build" as CFString,
             &assertion
         ) == kIOReturnSuccess {
             sleepAssertion = assertion
@@ -147,6 +147,14 @@ public final class BuildService {
         do {
             try process.run()
         } catch {
+            // Nothing will reach EOF or the termination handler: close the log and both pipes here.
+            for pipe in [out, err] {
+                pipe.fileHandleForReading.readabilityHandler = nil
+                try? pipe.fileHandleForReading.close()
+                try? pipe.fileHandleForWriting.close()
+            }
+            logHandle?.closeFile()
+            logHandle = nil
             releaseAssertion()
             stateLock.lock()
             let done = self.completion

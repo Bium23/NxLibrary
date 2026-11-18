@@ -120,7 +120,7 @@ public final class UpstreamChecker {
         request.timeoutInterval = 20
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
-        request.setValue("NXLibrary/0.1", forHTTPHeaderField: "User-Agent")
+        request.setValue(AppIdentity.userAgent(), forHTTPHeaderField: "User-Agent")
 
         let (data, http) = try await client.data(for: request)
         let message = (try? JSONDecoder().decode(APIError.self, from: data))?.message

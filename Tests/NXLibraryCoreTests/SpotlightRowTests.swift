@@ -31,7 +31,7 @@ final class SpotlightRowTests: XCTestCase {
 
     func testCardsThenGames() {
         let a = game("a"), b = game("b")
-        let row = SpotlightRow.build(games: [a, b],
+        let row = SpotlightRow.build(gameIDs: [a, b].map(\.id),
                                      enabledCards: [.surprise, .activity, .addGame],
                                      order: [])
         XCTAssertEqual(row, [.card(.surprise), .card(.activity), .card(.addGame), .game(a.id), .game(b.id)])
@@ -39,7 +39,7 @@ final class SpotlightRowTests: XCTestCase {
 
     func testDisabledCardsDropped() {
         let a = game("a")
-        let row = SpotlightRow.build(games: [a], enabledCards: [.addGame, .collection], order: [])
+        let row = SpotlightRow.build(gameIDs: [a].map(\.id), enabledCards: [.addGame, .collection], order: [])
         XCTAssertEqual(row, [.card(.collection), .card(.addGame), .game(a.id)])
     }
 
@@ -48,21 +48,21 @@ final class SpotlightRowTests: XCTestCase {
         let order = [SpotlightItem.game(b.id).key, SpotlightItem.card(.activity).key,
                      SpotlightItem.game(a.id).key, SpotlightItem.card(.surprise).key,
                      "game:\(UUID().uuidString)"]
-        let row = SpotlightRow.build(games: [a, b], enabledCards: [.surprise, .activity], order: order)
+        let row = SpotlightRow.build(gameIDs: [a, b].map(\.id), enabledCards: [.surprise, .activity], order: order)
         XCTAssertEqual(row, [.game(b.id), .card(.activity), .game(a.id), .card(.surprise)])
     }
 
     func testNewGameNotInOrderAppendsAfterOrdered() {
         let a = game("a"), b = game("b"), c = game("c")
         let order = [SpotlightItem.game(a.id).key, SpotlightItem.game(b.id).key]
-        let row = SpotlightRow.build(games: [a, b, c], enabledCards: [.surprise], order: order)
+        let row = SpotlightRow.build(gameIDs: [a, b, c].map(\.id), enabledCards: [.surprise], order: order)
         XCTAssertEqual(row, [.card(.surprise), .game(a.id), .game(b.id), .game(c.id)])
     }
 
     func testNewGameFollowsItsDefaultPredecessor() {
         let a = game("a"), b = game("b"), c = game("c")
         let order = [SpotlightItem.game(b.id).key, SpotlightItem.game(a.id).key]
-        let row = SpotlightRow.build(games: [a, b, c], enabledCards: [], order: order)
+        let row = SpotlightRow.build(gameIDs: [a, b, c].map(\.id), enabledCards: [], order: order)
         // c followed b in the default sequence, so it stays right after b.
         XCTAssertEqual(row, [.game(b.id), .game(c.id), .game(a.id)])
     }
@@ -79,7 +79,7 @@ final class SpotlightRowTests: XCTestCase {
     }
 
     func testEmptyGamesStillReturnsCards() {
-        let row = SpotlightRow.build(games: [], enabledCards: [.surprise, .addGame], order: [])
+        let row = SpotlightRow.build(gameIDs: [], enabledCards: [.surprise, .addGame], order: [])
         XCTAssertEqual(row, [.card(.surprise), .card(.addGame)])
     }
 
@@ -120,6 +120,21 @@ final class SpotlightRowTests: XCTestCase {
 }
 
 final class SpotlightRowMergeTests: XCTestCase {
+    func testSavingVisibleMoveRetainsDisabledHiddenAndCardPositions() {
+        let a = UUID(), steam = UUID(), hidden = UUID(), b = UUID()
+        let key: (UUID) -> String = { SpotlightItem.game($0).key }
+        let saved = [key(a), key(steam), key(hidden), key(b), SpotlightItem.card(.mods).key]
+        // Only A and B are visible; Steam is disabled, another game hidden,
+        // and Mods disabled. All still belong to the saved layout.
+        let changed = SpotlightRow.saving(visibleOrder: [key(b), key(a)],
+                                          gameIDs: [a, steam, hidden, b], previousOrder: saved)
+        let restored = SpotlightRow.build(gameIDs: [a, steam, hidden, b], enabledCards: [], order: changed)
+        XCTAssertEqual(restored, [.game(b), .game(steam), .game(hidden), .game(a)])
+        XCTAssertTrue(changed.contains(SpotlightItem.card(.mods).key))
+        let back = SpotlightRow.saving(visibleOrder: [key(a), key(b)], gameIDs: [a, steam, hidden, b], previousOrder: changed)
+        XCTAssertEqual(SpotlightRow.build(gameIDs: [a, steam, hidden, b], enabledCards: [], order: back),
+                       [.game(a), .game(steam), .game(hidden), .game(b)])
+    }
     func testFilteredMoveKeepsHiddenSlots() {
         // Saved A…E as D,A,B,C,E; Installed shows A,C,E; C moved first.
         let merged = SpotlightRow.merging(visibleOrder: ["C", "A", "E"],
@@ -139,3 +154,34 @@ final class SpotlightRowMergeTests: XCTestCase {
     }
 }
 
+
+/// A game that starts becomes the first game of the row, the rest of a saved order staying as it was.
+final class SpotlightRowPlayedTests: XCTestCase {
+    private let a = UUID(), b = UUID(), c = UUID(), d = UUID()
+    private func key(_ id: UUID) -> String { SpotlightItem.game(id).key }
+    private var cards: [String] { SpotlightCard.allCases.map { SpotlightItem.card($0).key } }
+
+    func testPlayedGameBecomesTheFirstGame() {
+        let order = SpotlightRow.playing(c, previousOrder: cards + [key(a), key(b), key(c)])
+        XCTAssertEqual(SpotlightRow.build(gameIDs: [a, b, c], enabledCards: [], order: order), [.game(c), .game(a), .game(b)])
+        XCTAssertEqual(order, cards + [key(c), key(a), key(b)])
+    }
+
+    func testCardsPlacedAmongGamesStayWhereTheyAre() {
+        let mods = SpotlightItem.card(.mods).key
+        XCTAssertEqual(SpotlightRow.playing(b, previousOrder: [key(a), mods, key(b)]), [key(b), key(a), mods])
+    }
+
+    func testAGameNotInTheSavedOrderIsPlacedFirst() {
+        XCTAssertEqual(SpotlightRow.playing(d, previousOrder: cards + [key(a), key(b)]), cards + [key(d), key(a), key(b)])
+    }
+
+    func testNoSavedOrderStaysEmptyBecauseRecencyAlreadyLeads() {
+        XCTAssertEqual(SpotlightRow.playing(a, previousOrder: []), [])
+    }
+
+    func testTheFirstGameStaysPut() {
+        let order = cards + [key(a), key(b)]
+        XCTAssertEqual(SpotlightRow.playing(a, previousOrder: order), order)
+    }
+}

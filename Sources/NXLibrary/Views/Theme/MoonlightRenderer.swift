@@ -3,8 +3,9 @@ import Metal
 import QuartzCore
 import CoreVideo
 import NXLibraryCore
+import os
 
-/// The shaders' uniforms, four float4s (see `MoonlightShaders`).
+/// The shaders' uniforms, seven float4s (see `MoonlightShaders`).
 struct MoonlightUniforms {
     var size: SIMD4<Float>
     var accent: SIMD4<Float>
@@ -16,19 +17,24 @@ struct MoonlightUniforms {
 }
 
 /// The moonlight's colors, as the shaders take them.
-struct MoonlightColors: Equatable {
+struct MoonlightColors: Equatable, Hashable {
     var accent: SIMD3<Float>
     var ink: SIMD3<Float>
     /// How much of the Mods card's gold ground the shader draws under the light (0...1); glides with the accent.
     var tint: Float = 0
     /// The whole layer's opacity (0...1): the Mods card's moonlight over a wallpaper glides in and out with it.
     var presence: Float = 1
+    var arcane: Float = 0
+    var flow: Float = 0
 
-    init(accent: Color, ink: Color, tint: Float = 0, presence: Float = 1) {
+    init(accent: Color, ink: Color, tint: Float = 0, presence: Float = 1,
+         surface: MoonlightSurface = .classic) {
         self.accent = Self.rgb(accent)
         self.ink = Self.rgb(ink)
         self.tint = tint
         self.presence = presence
+        self.arcane = surface == .classic ? 0 : 1
+        self.flow = surface == .flow ? 1 : 0
     }
 
     /// The Mods card's ground (`SeleneBackdrop.modsGradient` at the base's 0.6 over the black scrim).
@@ -85,7 +91,7 @@ final class MoonlightEngine: @unchecked Sendable {
             light = try pipeline("moon_full_vertex", "moon_light_fragment")
             dots = try pipeline("moon_dot_vertex", "moon_dot_fragment")
         } catch {
-            NSLog("NX Library: moonlight shaders unavailable: \(error)")
+            NSLog("Arcane: moonlight shaders unavailable: \(error)")
             return nil
         }
         guard let buffer = particles.withUnsafeBytes({
@@ -103,7 +109,7 @@ final class MoonlightEngine: @unchecked Sendable {
         return MoonlightUniforms(size: SIMD4(w, h, time, w / h),
                                  accent: SIMD4(colors.accent, 1),
                                  ink: SIMD4(colors.ink, 0),
-                                 look: SIMD4(breath, colors.presence, 0, 0),
+                                 look: SIMD4(breath, colors.presence, colors.flow, colors.arcane),
                                  tintTop: SIMD4(MoonlightColors.tintTop, colors.tint),
                                  tintMid: SIMD4(MoonlightColors.tintMid, 0),
                                  tintBottom: SIMD4(MoonlightColors.tintBottom, 0))
@@ -122,10 +128,9 @@ final class MoonlightEngine: @unchecked Sendable {
         encoder.endEncoding()
     }
 
-    /// Renders one frame into the layer's next drawable and presents it. Safe
-    /// from any thread: the render thread while moving, the main thread otherwise.
-    func render(into layer: CAMetalLayer, uniforms: MoonlightUniforms) {
-        guard let drawable = layer.nextDrawable(), let buffer = queue.makeCommandBuffer() else { return }
+    /// Renders one frame into a drawable the caller already has (a `CAMetalDisplayLink` update) and presents it.
+    func render(into drawable: CAMetalDrawable, uniforms: MoonlightUniforms) {
+        guard let buffer = queue.makeCommandBuffer() else { return }
         let pass = MTLRenderPassDescriptor()
         pass.colorAttachments[0].texture = drawable.texture
         pass.colorAttachments[0].loadAction = .clear
@@ -137,7 +142,8 @@ final class MoonlightEngine: @unchecked Sendable {
     }
 
     /// One still frame as an image (the Theme screen's preview, clipped to its rounded card).
-    func snapshot(width: Int, height: Int, colors: MoonlightColors) -> CGImage? {
+    func snapshot(width: Int, height: Int, colors: MoonlightColors,
+                  time: Float = stillTime, breath: Float = stillBreath) -> CGImage? {
         guard width > 0, height > 0 else { return nil }
         let d = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: width, height: height,
                                                          mipmapped: false)
@@ -149,8 +155,8 @@ final class MoonlightEngine: @unchecked Sendable {
         pass.colorAttachments[0].loadAction = .clear
         pass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
         pass.colorAttachments[0].storeAction = .store
-        encode(pass, buffer, Self.uniforms(width: width, height: height, time: Self.stillTime,
-                                          breath: Self.stillBreath, colors: colors))
+        encode(pass, buffer, Self.uniforms(width: width, height: height, time: time,
+                                          breath: breath, colors: colors))
         if texture.storageMode == .managed, let blit = buffer.makeBlitCommandEncoder() {
             blit.synchronize(resource: texture)
             blit.endEncoding()
@@ -187,10 +193,26 @@ struct MoonlightMetalView: NSViewRepresentable {
 
 /// A Metal layer drawn from a display link on its own thread, so a busy main
 /// thread (a game's art arriving, the page laying out) never stalls the motes.
+///
+/// On macOS 14 and later the link is a `CAMetalDisplayLink` asking for 60 fps: it tells the
+/// system how often the motes change, so a variable-refresh display (ProMotion) keeps its
+/// rate while nothing else on screen moves, and it hands over each drawable when the screen
+/// can take it. A `CVDisplayLink` says neither: idle for ~10 s, the display slowed down and
+/// `nextDrawable` waited up to 80 ms (measured: 60 fps fell to ~30). macOS 13 keeps it.
+///
+/// On macOS 14 and later only the link draws, still frames included: while a `CAMetalDisplayLink` is attached the
+/// layer's drawables are its own and `nextDrawable` raises an exception (two crashes, 14 Nov 2026). A still frame
+/// (the motes stopping, a new size) runs the link for one frame, which then stops (`State.stillPending`).
 final class MoonlightLayerView: NSView {
+    private static let transitionLog = Logger(subsystem: "local.nxlibrary.development", category: "backdrop-transition")
+    private let traceID = String(UUID().uuidString.prefix(6))
+    private let createdAt = CACurrentMediaTime()
+    private var tracedPresentation = false
     private let engine: MoonlightEngine
     private let metalLayer = CAMetalLayer()
     private var link: CVDisplayLink?
+    /// The `CAMetalDisplayLink` (macOS 14+), held untyped for the macOS 13 build.
+    private var metalLink: AnyObject?
     private var occlusion: NSObjectProtocol?
 
     /// Shared with the render thread, under `lock`.
@@ -210,6 +232,8 @@ final class MoonlightLayerView: NSView {
         /// Starts part way in, so the motes are already spread along the road.
         var clock: Double = 40
         var lastTick: CFTimeInterval?
+        /// A still frame waits for the link (macOS 14+): it runs for that frame, then stops.
+        var stillPending = false
     }
     private var state = State()
     private let lock = NSLock()
@@ -217,6 +241,7 @@ final class MoonlightLayerView: NSView {
     static let blend: CFTimeInterval = 1.2
     /// The frame rate's ceiling (a 120 Hz display draws every other refresh).
     private static let frameInterval = 1.0 / 60 - 0.002
+    static let framesPerSecond: Float = 60
 
     init(engine: MoonlightEngine) {
         self.engine = engine
@@ -228,6 +253,9 @@ final class MoonlightLayerView: NSView {
         metalLayer.colorspace = CGColorSpace(name: CGColorSpace.sRGB)
         metalLayer.needsDisplayOnBoundsChange = false
         wantsLayer = true
+        if AppData.profile.isDevelopment {
+            Self.transitionLog.notice("Backdrop created \(self.traceID, privacy: .public)")
+        }
     }
 
     required init?(coder: NSCoder) { nil }
@@ -251,8 +279,20 @@ final class MoonlightLayerView: NSView {
         state.moving = moving
         if !moving { state.lastTick = nil }
         lock.unlock()
-        updateLink()
-        if !moving { renderFrame() }
+        if moving { updateLink() } else { drawStill() }
+    }
+
+    /// One still frame: from the link on macOS 14+ (the only one to take the layer's drawables), here before.
+    private func drawStill() {
+        if #available(macOS 14.0, *) {
+            lock.lock()
+            state.stillPending = true
+            lock.unlock()
+            updateLink()
+        } else {
+            updateLink()
+            renderFrame()
+        }
     }
 
     /// Gone (presence 0, no glide): the layer is hidden and draws nothing, so a moonlight kept ready over a
@@ -276,6 +316,7 @@ final class MoonlightLayerView: NSView {
     func stop() {
         if let link { CVDisplayLinkStop(link) }
         link = nil
+        stopMetalLink()
         if let occlusion { NotificationCenter.default.removeObserver(occlusion) }
         occlusion = nil
     }
@@ -319,7 +360,7 @@ final class MoonlightLayerView: NSView {
         metalLayer.contentsScale = scale
         if metalLayer.drawableSize != size {
             metalLayer.drawableSize = size
-            renderFrame()
+            drawStill()
         }
     }
 
@@ -334,6 +375,8 @@ final class MoonlightLayerView: NSView {
         c.ink = from.ink + (c.ink - from.ink) * e
         c.tint = from.tint + (c.tint - from.tint) * e
         c.presence = from.presence + (c.presence - from.presence) * e
+        c.arcane = from.arcane + (c.arcane - from.arcane) * e
+        c.flow = from.flow + (c.flow - from.flow) * e
         return c
     }
 
@@ -345,9 +388,14 @@ final class MoonlightLayerView: NSView {
     private func updateLink() {
         lock.lock()
         let now = CACurrentMediaTime()
-        let run = ((state.moving && !isAbsent(at: now)) || blending(at: now)) && state.visible && window != nil
+        let run = (((state.moving || state.stillPending) && !isAbsent(at: now)) || blending(at: now))
+            && state.visible && window != nil
         lock.unlock()
         updateVisibility()
+        if #available(macOS 14.0, *) {
+            if run { startMetalLink() } else { stopMetalLink() }
+            return
+        }
         if run {
             if link == nil {
                 var created: CVDisplayLink?
@@ -366,6 +414,31 @@ final class MoonlightLayerView: NSView {
         }
     }
 
+    @available(macOS 14.0, *)
+    private func startMetalLink() {
+        guard metalLink == nil else { return }
+        let link = CAMetalDisplayLink(metalLayer: metalLayer)
+        link.preferredFrameRateRange = CAFrameRateRange(minimum: Self.framesPerSecond / 2,
+                                                        maximum: Self.framesPerSecond,
+                                                        preferred: Self.framesPerSecond)
+        let target = MoonlightLinkTarget(view: self)
+        link.delegate = target
+        metalLink = MoonlightLinkHandle(link: link, target: target)
+        MoonlightRenderThread.shared.perform { link.add(to: .current, forMode: .default) }
+    }
+
+    /// The layer's last frame stays on screen.
+    private func stopMetalLink() {
+        guard let handle = metalLink as? MoonlightLinkHandle else { return }
+        metalLink = nil
+        if #available(macOS 14.0, *), let link = handle.link as? CAMetalDisplayLink { link.invalidate() }
+    }
+
+    /// The render thread, on the `CAMetalDisplayLink` (macOS 14+): `presentation` is when the frame shows.
+    fileprivate func render(_ drawable: CAMetalDrawable, presentation: CFTimeInterval) {
+        renderFrame(at: presentation, drawable: drawable)
+    }
+
     /// The display link's thread.
     private func tick() {
         let now = CACurrentMediaTime()
@@ -378,7 +451,7 @@ final class MoonlightLayerView: NSView {
         renderFrame(at: now)
     }
 
-    private func renderFrame(at now: CFTimeInterval = CACurrentMediaTime()) {
+    private func renderFrame(at now: CFTimeInterval = CACurrentMediaTime(), drawable: CAMetalDrawable? = nil) {
         lock.lock()
         if state.moving {
             // A late frame (the window was hidden or the link paused) never skips ahead.
@@ -390,15 +463,97 @@ final class MoonlightLayerView: NSView {
         let colors = Self.blended(state, at: now)
         let glideEnded = state.from != nil && !blending(at: now)
         if glideEnded { state.from = nil }
+        // The link's frame is the still frame it ran for.
+        let stillDrawn = drawable != nil && state.stillPending
+        if drawable != nil { state.stillPending = false }
         lock.unlock()
-        // The glide is over: a still layer's link stops on its last frame, a gone one hides.
-        if glideEnded { DispatchQueue.main.async { [weak self] in self?.updateLink() } }
+        // The glide or the still frame is over: a still layer's link stops on its last frame, a gone one hides.
+        if glideEnded || stillDrawn { DispatchQueue.main.async { [weak self] in self?.updateLink() } }
         let size = metalLayer.drawableSize
         guard size.width >= 1, size.height >= 1 else { return }
         let breath = Float(0.5 + 0.5 * sin(2 * .pi * clock / MoonlightEngine.breathPeriod))
-        engine.render(into: metalLayer, uniforms: MoonlightEngine.uniforms(
-            width: Int(size.width), height: Int(size.height),
-            time: Float(clock), breath: breath, colors: colors))
+        let uniforms = MoonlightEngine.uniforms(width: Int(size.width), height: Int(size.height),
+                                                time: Float(clock), breath: breath, colors: colors)
+        // Both display-link paths announce readiness only when an acquired drawable is presented.
+        guard let frame = drawable ?? metalLayer.nextDrawable() else { return }
+        Self.announceFirstFrame(frame)
+        traceFirstPresentation(frame)
+        engine.render(into: frame, uniforms: uniforms)
+    }
+
+    /// Local Dev diagnostics for a newly mounted background; no per-frame logging.
+    private func traceFirstPresentation(_ drawable: CAMetalDrawable) {
+        guard AppData.profile.isDevelopment else { return }
+        lock.lock()
+        let alreadyTraced = tracedPresentation
+        tracedPresentation = true
+        lock.unlock()
+        guard !alreadyTraced else { return }
+        let id = traceID, start = createdAt
+        drawable.addPresentedHandler { _ in
+            let milliseconds = (CACurrentMediaTime() - start) * 1_000
+            Self.transitionLog.notice("Backdrop presented \(id, privacy: .public), since creation \(milliseconds, privacy: .public) ms")
+        }
+    }
+
+    /// The first frame any moonlight puts on screen in this launch lets the window show (`LaunchReveal`).
+    private static var firstFrameAnnounced = false
+    private static let firstFrameLock = NSLock()
+
+    private static func announceFirstFrame(_ drawable: CAMetalDrawable) {
+        firstFrameLock.lock()
+        let first = !firstFrameAnnounced
+        firstFrameAnnounced = true
+        firstFrameLock.unlock()
+        guard first else { return }
+        // The handler must be registered before the command buffer presents the drawable.
+        drawable.addPresentedHandler { _ in Task { @MainActor in LaunchReveal.moonlightShown() } }
+    }
+}
+
+/// The link and its delegate, kept together (the link holds its delegate weakly).
+private final class MoonlightLinkHandle {
+    let link: AnyObject
+    let target: AnyObject
+    init(link: AnyObject, target: AnyObject) { self.link = link; self.target = target }
+}
+
+@available(macOS 14.0, *)
+private final class MoonlightLinkTarget: NSObject, CAMetalDisplayLinkDelegate {
+    weak var view: MoonlightLayerView?
+    init(view: MoonlightLayerView) { self.view = view }
+    func metalDisplayLink(_ link: CAMetalDisplayLink, needsUpdate update: CAMetalDisplayLink.Update) {
+        view?.render(update.drawable, presentation: update.targetPresentationTimestamp)
+    }
+}
+
+/// One thread with its own run loop for the moonlight's display links, so the motes never wait on the main thread.
+private final class MoonlightRenderThread: Thread {
+    static let shared: MoonlightRenderThread = {
+        let thread = MoonlightRenderThread()
+        thread.name = "Moonlight render"
+        thread.qualityOfService = .userInteractive
+        thread.start()
+        thread.ready.wait()
+        return thread
+    }()
+
+    private let ready = DispatchSemaphore(value: 0)
+    private var loop: CFRunLoop?
+
+    override func main() {
+        loop = CFRunLoopGetCurrent()
+        // A port keeps the run loop alive while no link is attached.
+        RunLoop.current.add(NSMachPort(), forMode: .default)
+        ready.signal()
+        while true { RunLoop.current.run(mode: .default, before: .distantFuture) }
+    }
+
+    /// Runs `work` on this thread's run loop.
+    func perform(_ work: @escaping () -> Void) {
+        guard let loop else { return }
+        CFRunLoopPerformBlock(loop, CFRunLoopMode.defaultMode.rawValue, work)
+        CFRunLoopWakeUp(loop)
     }
 }
 
@@ -408,6 +563,11 @@ struct MoonlightStill: View {
     let colors: MoonlightColors
     @Environment(\.displayScale) private var scale
     @State private var image: CGImage?
+    private struct Key: Hashable {
+        let width: Int
+        let height: Int
+        let colors: MoonlightColors
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -417,7 +577,7 @@ struct MoonlightStill: View {
                     Image(decorative: image, scale: scale).resizable()
                 }
             }
-            .task(id: [w, h] + [colors.accent, colors.ink].flatMap { [$0.x, $0.y, $0.z].map { Int($0 * 255) } }) {
+            .task(id: Key(width: w, height: h, colors: colors)) {
                 // Keep the last frame while resizing. A cancelled request never
                 // replaces the latest size/palette with a late result.
                 do { try await Task.sleep(nanoseconds: 40_000_000) } catch { return }

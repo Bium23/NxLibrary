@@ -65,7 +65,7 @@ public struct SetupFacts: Equatable {
     /// The checkout's HEAD is an ancestor of the pin (an NX Library update brought a newer engine); false when it
     /// is ahead or elsewhere; nil when git cannot tell (the pin is not fetched yet, so it is newer).
     public var engineBehind: Bool?
-    /// The newest nxnative the player chose in Settings → Engine; nil while the tested engine is in use.
+    /// The newest nxnative the player chose in Settings → Setup and engine; nil while the tested engine is in use.
     public var newestEngine: NewestEngineChoice? = nil
 
     public init(xcodeStatus: Int32?, metalVersion: String?, certifiedMetal: String, allowUntested: Bool,
@@ -97,7 +97,7 @@ public enum SetupOverride: Equatable {
 }
 
 public enum SetupCheck {
-    /// The technical screen has no folder choices; those belong to Your games and Settings → Library.
+    /// The technical screen has no folder choices; those belong to Your games and Settings → Porting → Library.
     public static func requirements(_ items: [SetupItem]) -> [SetupItem] {
         items.filter { $0.id != .library && $0.id != .sources }
     }
@@ -182,7 +182,7 @@ public enum SetupCheck {
             let about = L10n.text("Compiles each game's shaders for this Mac's GPU.")
             guard let version = f.metalVersion else {
                 return SetupItem(id: id, title: L10n.text("Metal compiler"), state: .missing, chip: "NOT INSTALLED",
-                                 about: about, detail: L10n.text("NX Library downloads it through Xcode."), actionTitle: L10n.text("Install"))
+                                 about: about, detail: L10n.text("Arcane downloads it through Xcode."), actionTitle: L10n.text("Install"))
             }
             if version == f.certifiedMetal {
                 return ready(id, "Metal compiler", about, L10n.format("Version %@, the one this engine is tested with.", [String(describing: (version))]))
@@ -193,26 +193,26 @@ public enum SetupCheck {
             }
             if f.requirements.metalDownload(for: f.certifiedMetal) != nil {
                 return SetupItem(id: id, title: L10n.text("Metal compiler"), state: .warning, chip: "NOT CERTIFIED", about: about,
-                                 detail: L10n.format("Version %@; the engine is tested with %@. NX Library installs %@ through Xcode.", [String(describing: (version)), String(describing: (f.certifiedMetal)), String(describing: (f.certifiedMetal))]),
+                                 detail: L10n.format("Version %@; the engine is tested with %@. Arcane installs %@ through Xcode.", [String(describing: (version)), String(describing: (f.certifiedMetal)), String(describing: (f.certifiedMetal))]),
                                  actionTitle: L10n.format("Install %@", [String(describing: (f.certifiedMetal))]))
             }
             return SetupItem(id: id, title: L10n.text("Metal compiler"), state: .warning, chip: "WAITING FOR ENGINE", about: about,
-                             detail: L10n.format("Version %@ came with this Xcode; the engine is tested with %@. New builds wait for an NX Library update tested with it. Games you built still play.", [String(describing: (version)), String(describing: (f.certifiedMetal))]),
+                             detail: L10n.format("Version %@ came with this Xcode; the engine is tested with %@. New builds wait for an Arcane update tested with it. Games you built still play.", [String(describing: (version)), String(describing: (f.certifiedMetal))]),
                              actionTitle: nil)
         case .engine:
-            let about = L10n.text("nxnative, used as it is upstream, at the commit this NX Library is tested with.")
+            let about = L10n.text("nxnative, used as it is upstream, at the commit this version of Arcane is tested with.")
             let short = String(f.pinnedCommit.prefix(7))
             switch f.engine {
             case .missing:
                 return SetupItem(id: id, title: L10n.text("nxnative engine"), state: .missing, chip: "NOT INSTALLED", about: about,
-                                 detail: L10n.format("NX Library clones it into %@ at %@.", [String(describing: (f.engineFolder.path)), String(describing: (short))]), actionTitle: L10n.text("Clone"))
+                                 detail: L10n.format("Arcane clones it into %@ at %@.", [String(describing: (f.engineFolder.path)), String(describing: (short))]), actionTitle: L10n.text("Clone"))
             case .notACheckout:
                 return SetupItem(id: id, title: L10n.text("nxnative engine"), state: .warning, chip: "NOT A CHECKOUT", about: about,
                                  detail: L10n.format("%@ is not a git checkout of nxnative. Move it away, then check again.", [String(describing: (f.engineFolder.path))]),
                                  actionTitle: nil)
             case .checkout(_, true):
                 return SetupItem(id: id, title: L10n.text("nxnative engine"), state: .warning, chip: "LOCAL CHANGES", about: about,
-                                 detail: L10n.format("%@ has changed files. NX Library never touches them: put them aside, then check again.", [String(describing: (f.engineFolder.path))]),
+                                 detail: L10n.format("%@ has changed files. Arcane never touches them: put them aside, then check again.", [String(describing: (f.engineFolder.path))]),
                                  actionTitle: nil)
             case .checkout(let head, false) where head == f.newestEngine?.commit && head != f.pinnedCommit:
                 // The player's own choice: ready, never "other version", and A goes back to the tested engine.
@@ -226,20 +226,20 @@ public enum SetupCheck {
                 // Warning either way: Setup reopens for it and Install all runs it.
                 if f.engineBehind == false {
                     return SetupItem(id: id, title: L10n.text("nxnative engine"), state: .warning, chip: "OTHER VERSION", about: about,
-                                     detail: L10n.format("The engine here is at %@, not the %@ this NX Library is tested with. Switch moves it to %@. Games you built keep playing.", [String(describing: (head.prefix(7))), String(describing: (short)), String(describing: (short))]),
+                                     detail: L10n.format("The engine here is at %@, not the %@ this version of Arcane is tested with. Switch moves it to %@. Games you built keep playing.", [String(describing: (head.prefix(7))), String(describing: (short)), String(describing: (short))]),
                                      actionTitle: L10n.text("Switch"))
                 }
                 return SetupItem(id: id, title: L10n.text("nxnative engine"), state: .warning, chip: "UPDATE READY", about: about,
-                                 detail: L10n.format("This NX Library uses nxnative %@; the engine here is at %@. Update downloads it and switches to it. Games you built keep playing.", [String(describing: (short)), String(describing: (head.prefix(7)))]),
+                                 detail: L10n.format("This version of Arcane uses nxnative %@; the engine here is at %@. Update downloads it and switches to it. Games you built keep playing.", [String(describing: (short)), String(describing: (head.prefix(7)))]),
                                  actionTitle: L10n.text("Update"))
             case .checkout:
                 return ready(id, L10n.text("nxnative engine"), about, "At \(short) in \(f.engineFolder.path).")
             }
         case .runtime:
-            let about = L10n.text("Python 3.14 with its modules, zstd and glslang, inside NX Library.")
+            let about = L10n.text("Python 3.14 with its modules, zstd and glslang, inside Arcane.")
             if let problem = f.runtimeProblem {
                 return SetupItem(id: id, title: L10n.text("Python and tools"), state: .failed, chip: "REINSTALL APP", about: about,
-                                 detail: L10n.format("%@. Reinstall NX Library from its DMG.", [String(describing: (problem))]), actionTitle: nil)
+                                 detail: L10n.format("%@. Reinstall Arcane from its DMG.", [String(describing: (problem))]), actionTitle: nil)
             }
             return SetupItem(id: id, title: L10n.text("Python and tools"), state: .ready, chip: "✓ INCLUDED", about: about,
                              detail: L10n.text("Nothing to install."), actionTitle: nil)
@@ -271,7 +271,7 @@ public enum SetupCheck {
             case false?:
                 return SetupItem(id: id, title: GameFoldersCopy.appsTitle, state: .warning, chip: "NOT READABLE", about: about,
                                  detail: f.libraryFolder.map { L10n.format("Cannot read %@. Reconnect it or choose another.", [String(describing: ($0.path))]) }
-                                    ?? L10n.text("NX Library cannot read this folder. Reconnect it or choose another."), actionTitle: L10n.text("Choose folder"))
+                                    ?? L10n.text("Arcane cannot read this folder. Reconnect it or choose another."), actionTitle: L10n.text("Choose folder"))
             case true?:
                 if f.libraryWritable == false {
                     return SetupItem(id: id, title: GameFoldersCopy.appsTitle, state: .warning, chip: "READ ONLY", about: about,
@@ -287,7 +287,7 @@ public enum SetupCheck {
             switch f.sourcesReadable {
             case nil:
                 return SetupItem(id: id, title: GameFoldersCopy.sourcesTitle, state: .ready, chip: "OPTIONAL", about: about,
-                                 detail: L10n.text("Existing game apps play without sources. Choose later in Settings → Library."),
+                                 detail: L10n.text("Existing game apps play without sources. Choose later in Settings → Porting → Library."),
                                  actionTitle: L10n.text("Choose folder"), isRequired: false)
             case false?:
                 return SetupItem(id: id, title: GameFoldersCopy.sourcesTitle, state: .warning, chip: "FOLDER UNAVAILABLE", about: about,

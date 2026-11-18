@@ -97,17 +97,17 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
             return L10n.format("%@ has no verified nxnative game profile%@; the pinned engine does not support it yet.", [String(describing: (game)), String(describing: (at))])
         case .unknown:
             if let language = missingLanguage { return L10n.format("%@ has no %@, the language set in its Game options.", [String(describing: (game)), String(describing: (language))]) }
-            return L10n.text("The engine stopped without a message NX Library recognises.")
+            return L10n.text("The engine stopped without a message Arcane recognises.")
         }
     }
 
     public var next: String {
         switch kind {
-        case .rosetta: return L10n.text("Reinstall NX Library so the porting uses its own arm64 Python.")
+        case .rosetta: return L10n.text("Reinstall Arcane so the porting uses its own arm64 Python.")
         case .translator: return L10n.text("Open Setup and check the nxnative engine card.")
-        case .zbic: return L10n.text("Update NX Library: its built-in Python includes zbic from 0.1.3.2. Installing zbic with pip does not reach it.")
+        case .zbic: return L10n.text("Update Arcane: its built-in Python includes zbic from 0.1.3.2. Installing zbic with pip does not reach it.")
         case .cltSelected: return L10n.text("Open Setup and select Xcode.")
-        case .otherMetal: return L10n.text("Install the certified compiler from Setup, or allow untested toolchains in Settings → Engine.")
+        case .otherMetal: return L10n.text("Install the certified compiler from Setup, or allow untested toolchains in Settings → Setup and engine.")
         case .shaderRegression: return L10n.text("Port anyway to keep the broken shaders out, or wait for an engine update.")
         case .damagedNSP: return isUnreadableDamage
             ? L10n.text("Dump or download the game again.")

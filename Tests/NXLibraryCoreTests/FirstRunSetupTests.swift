@@ -2,6 +2,28 @@ import XCTest
 @testable import NXLibraryCore
 
 final class FirstRunSetupTests: XCTestCase {
+    func testSteamChoiceRestoresBothOnAndOffAfterInterruptedPorting() {
+        for choice in [true, false] {
+            var first = FirstRunSetup()
+            first.chooseSteam(choice)
+            first.openPorting()
+            let resumed = FirstRunSetup(completed: false, savedPage: first.pageToRemember,
+                                        savedSteamChoice: first.steamChoiceToRemember)
+            XCTAssertEqual(resumed.page, .requirements)
+            XCTAssertEqual(resumed.steamChoice, choice)
+            XCTAssertEqual(resumed.steamChoiceToRemember, choice)
+        }
+    }
+
+    func testCompletedSetupDropsSavedChoiceButKeepsItUntilTheShellAppliesIt() {
+        var flow = FirstRunSetup(savedSteamChoice: true)
+        flow.finish()
+        XCTAssertEqual(flow.steamChoice, true)
+        XCTAssertNil(flow.steamChoiceToRemember)
+        XCTAssertNil(FirstRunSetup(completed: true, savedSteamChoice: true).steamChoice)
+        XCTAssertNil(FirstRunSetup().steamChoiceToRemember)
+    }
+
     func testSourceReviewWaitsForASingleReadyTitleAndConsumesEachArrivalOnce() {
         var entry = FirstRunSetup.ReviewEntry()
         let id = UUID()
@@ -20,8 +42,53 @@ final class FirstRunSetupTests: XCTestCase {
         XCTAssertFalse(entry.consume(second, isReady: true, titleCount: 1))
     }
 
-    func testNewUserContinuesToGamesBeforeSetupIsCompleted() {
+    func testNewUserStartsOnFound() {
+        let flow = FirstRunSetup(completed: false)
+        XCTAssertEqual(flow.page, .found)
+        XCTAssertEqual(flow.pageToRemember, "found")
+    }
+
+    func testInterruptedOldSetupResumesWhereItWas() {
+        XCTAssertEqual(FirstRunSetup(completed: false, savedPage: "games").page, .games)
+        XCTAssertEqual(FirstRunSetup(completed: false, savedPage: "requirements").page, .requirements)
+    }
+
+    func testUnknownSavedPageStartsOnFound() {
+        XCTAssertEqual(FirstRunSetup(completed: false, savedPage: "unknown").page, .found)
+        XCTAssertEqual(FirstRunSetup(completed: false, savedPage: nil).page, .found)
+    }
+
+    func testPortingCardOpensRequirements() {
         var flow = FirstRunSetup(completed: false)
+        flow.openPorting()
+        XCTAssertEqual(flow.page, .requirements)
+        XCTAssertEqual(flow.pageToRemember, "requirements")
+        flow.returnToFound()
+        XCTAssertEqual(flow.page, .found)
+    }
+
+    func testCompletedSetupNeverReturnsToFound() {
+        var flow = FirstRunSetup(completed: true)
+        XCTAssertEqual(flow.page, .requirements, "Settings → Open Setup starts on the requirements")
+        flow.returnToFound()
+        XCTAssertEqual(flow.page, .requirements)
+    }
+
+    func testFocusMovesThroughFoundRows() {
+        typealias F = FirstRunSetup.Focus
+        XCTAssertEqual(F.initialOnFound, .openLibrary)
+        XCTAssertEqual(F.openLibrary.movedOnFound(.up, hasSteam: true), .portingCard)
+        XCTAssertEqual(F.portingCard.movedOnFound(.up, hasSteam: true), .steamToggle)
+        XCTAssertEqual(F.portingCard.movedOnFound(.up, hasSteam: false), .portingCard)
+        XCTAssertEqual(F.steamToggle.movedOnFound(.down, hasSteam: true), .portingCard)
+        XCTAssertEqual(F.portingCard.movedOnFound(.down, hasSteam: true), .openLibrary)
+        XCTAssertEqual(F.openLibrary.movedOnFound(.down, hasSteam: true), .openLibrary)
+        XCTAssertEqual(F.steamToggle.movedOnFound(.up, hasSteam: true), .steamToggle)
+        XCTAssertEqual(F.steamToggle.movedOnFound(.left, hasSteam: true), .steamToggle)
+    }
+
+    func testNewUserContinuesToGamesBeforeSetupIsCompleted() {
+        var flow = FirstRunSetup(completed: false, savedPage: "requirements")
         XCTAssertEqual(flow.page, .requirements)
         flow.advance()
         XCTAssertEqual(flow.page, .games)
@@ -63,7 +130,7 @@ final class FirstRunSetupTests: XCTestCase {
 
     func testExistingUsersIgnoreStaleOrUnknownProgress() {
         XCTAssertTrue(FirstRunSetup(completed: true, savedPage: "games").isCompleted)
-        XCTAssertEqual(FirstRunSetup(completed: false, savedPage: "unknown").page, .requirements)
+        XCTAssertEqual(FirstRunSetup(completed: false, savedPage: "unknown").page, .found)
     }
 
     func testBackReturnsToRequirementsWithoutCompletingSetup() {
@@ -106,5 +173,26 @@ final class FirstRunSetupTests: XCTestCase {
     func testUnavailableGameFolderDoesNotReopenTheTechnicalSetup() {
         let folder = SetupItem(id: .library, title: "Game apps", state: .warning, chip: "", about: "", detail: "")
         XCTAssertFalse(SetupCheck.shouldReopen(previous: [.library: .ready], current: [folder]))
+    }
+
+    func testSteamChoiceSurvivesThePortingPath() {
+        var setup = FirstRunSetup()
+        XCTAssertNil(setup.steamChoice)
+        setup.chooseSteam(true)
+        setup.openPorting()
+        setup.advance()
+        setup.goBack()
+        setup.returnToFound()
+        XCTAssertEqual(setup.steamChoice, true)
+        setup.chooseSteam(false)
+        setup.openPorting()
+        setup.finish()
+        XCTAssertEqual(setup.steamChoice, false)
+    }
+
+    func testFinishedSetupTakesNoSteamChoice() {
+        var setup = FirstRunSetup(completed: true)
+        setup.chooseSteam(true)
+        XCTAssertNil(setup.steamChoice)
     }
 }

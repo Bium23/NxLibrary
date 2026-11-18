@@ -36,7 +36,7 @@ public enum ModsBandLayout {
     }
 
     /// The band is a grid that never slides sideways: six tiles to a row, as many rows as it needs, and Down walks
-    /// the rows as in Build & Sources.
+    /// the rows as in Details.
     public static let columns = 6
 
     public static func rows(count: Int) -> Int {

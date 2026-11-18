@@ -3,6 +3,7 @@ import NXLibraryCore
 
 struct SettingsEngineSection: View {
     @ObservedObject var viewModel: AppViewModel
+    @ObservedObject var settings: AppSettingsStore
     let onActions: ([SettingsRowAction]) -> Void
 
     @Environment(\.seleneFocusedRowID) private var focusedRowTitle
@@ -98,6 +99,11 @@ struct SettingsEngineSection: View {
             }
             .seleneRowFocus(focusedRowTitle == "Compatibility", radius: SeleneTheme.cardRadius)
 
+            SeleneToggleRow("Check engine at launch",
+                            subtitle: "Verify the pinned engine commit and toolchain when the app starts.",
+                            info: "Checks the nxnative checkout against the certified engine commit and confirms your installed Metal compiler matches the lock file before builds are attempted.",
+                            isOn: $settings.settings.checkEngineAtLaunch)
+
             SeleneRow("Untested toolchain override",
                       subtitle: overrideSubtitle,
                       info: "Permits building games when the toolchain differs from the certified engine and Metal combination shown above. Passes --allow-other-metal to nxnative. Builds are recorded as unverified.") {
@@ -130,52 +136,12 @@ struct SettingsEngineSection: View {
                 }
             }
 
-            SelenePanel(L10n.text("prod.keys"),
-                        info: L10n.text("Nintendo Switch cryptographic keys required to decrypt game packages (NSP/XCI). NX Library stores a private copy with mode 0600 permissions; key values are never displayed or logged.")) {
-                HStack(spacing: 8) {
-                    Image(systemName: viewModel.isProdKeysValid ? "checkmark.circle.fill" : "xmark.octagon.fill")
-                        .seleneFont(15, .bold)
-                        .foregroundColor(viewModel.isProdKeysValid ? SeleneTheme.success : SeleneTheme.danger)
-                    Text(viewModel.isProdKeysValid ? L10n.text("Keys imported") : L10n.text("No prod.keys imported"))
-                        .seleneFont(15, .semibold)
-                        .foregroundColor(SeleneTheme.ink)
-                    Spacer()
-                    Text(viewModel.isProdKeysValid && !viewModel.prodKeysPath.isEmpty
-                         ? viewModel.prodKeysPath : L10n.text("Choose your file once"))
-                        .seleneFont(13, .regular, design: .monospaced)
-                        .foregroundColor(SeleneTheme.ink60)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                }
-
-                if let summary = viewModel.keySummary {
-                    Text(L10n.format("header_key present · %@ application key generations", [String(describing: (summary.applicationKeyGenerations.count))]))
-                        .seleneFont(13, .regular, design: .monospaced)
-                        .foregroundColor(SeleneTheme.success)
-                }
-
-                HStack(spacing: 14) {
-                    Button(viewModel.isProdKeysValid ? L10n.text("Replace Key...") : L10n.text("Import Key...")) {
-                        viewModel.selectProdKeysFile()
-                    }
-                    .buttonStyle(.plain)
-                    .seleneFont(14, .semibold)
-                    .foregroundColor(SeleneTheme.glyph)
-                    .disabled(configurationLocked)
-                    Button(L10n.text("Detect Ryujinx...")) { viewModel.selectRyujinxFolder() }
-                        .buttonStyle(.plain)
-                        .seleneFont(14, .semibold)
-                        .foregroundColor(SeleneTheme.glyph)
-                        .disabled(configurationLocked)
-                    Spacer()
-                }
-
-                Text(L10n.text("The original file is untouched. The stored copy is mode 0600 and key values are never shown or logged."))
-                    .seleneFont(13)
-                    .foregroundColor(SeleneTheme.ink60)
-                    .fixedSize(horizontal: false, vertical: true)
+            SeleneButtonRow("Setup",
+                            subtitle: "Open the Setup check: what Arcane needs and what is ready.",
+                            buttonTitle: "Open Setup") {
+                viewModel.reopenSetup()
             }
-            .seleneRowFocus(focusedRowTitle == "prod.keys", radius: SeleneTheme.cardRadius)
+            .disabled(configurationLocked)
         }
         .onAppear {
             viewModel.prepareBuildEnvironmentIfNeeded()
@@ -250,7 +216,7 @@ struct SettingsEngineSection: View {
     private var upstreamSubtitle: String {
         switch viewModel.upstreamState {
         case .idle:
-            return L10n.text("See how this NX Library's engine compares with seedds/nxnative main.")
+            return L10n.text("See how this version's engine compares with seedds/nxnative main.")
         case .checking:
             return L10n.text("Asking GitHub for the latest commits...")
         case .loaded(let status):
@@ -491,7 +457,7 @@ struct SettingsEngineSection: View {
     private func runtimeDetail(_ environment: EnvironmentStatus) -> String {
         guard let python = environment.pythonURL else { return "missing" }
         if viewModel.engineToolchain.isBundled {
-            return BundledRuntime.locate()?.versionSummary() ?? L10n.text("Included in NX Library")
+            return BundledRuntime.locate()?.versionSummary() ?? L10n.text("Included in Arcane")
         }
         return L10n.format("Developer build: %@", [String(describing: (python.path))])
     }
@@ -539,6 +505,9 @@ struct SettingsEngineSection: View {
             .init(id: "recheck", title: "Compatibility", isEnabled: !configurationLocked) {
                 viewModel.detectEnvironment()
             },
+            .init(id: "engineAtLaunch", title: "Check engine at launch") {
+                settings.settings.checkEngineAtLaunch.toggle()
+            },
             .init(id: "override", title: "Untested toolchain override",
                   isEnabled: canChangeOverride) {
                 if viewModel.allowUntestedToolchain {
@@ -565,8 +534,8 @@ struct SettingsEngineSection: View {
                 viewModel.openUpstreamCompare()
             })
         }
-        actions.append(.init(id: "keys", title: "prod.keys", isEnabled: !configurationLocked) {
-            viewModel.selectProdKeysFile()
+        actions.append(.init(id: "setup", title: "Setup", isEnabled: !configurationLocked) {
+            viewModel.reopenSetup()
         })
         onActions(actions)
     }

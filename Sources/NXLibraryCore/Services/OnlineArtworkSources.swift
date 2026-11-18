@@ -180,7 +180,7 @@ enum OnlineArtworkRequest {
     static func data(_ url: URL, client: ArtworkHTTPClient) async -> Data? {
         var request = URLRequest(url: url)
         request.timeoutInterval = 15
-        request.setValue("NXLibrary/0.1 (macOS; personal app)", forHTTPHeaderField: "User-Agent")
+        request.setValue(AppIdentity.userAgent(), forHTTPHeaderField: "User-Agent")
         guard let (data, http) = try? await client.data(for: request), (200..<300).contains(http.statusCode) else {
             return nil
         }

@@ -22,7 +22,7 @@ final class AppUpdater: ObservableObject {
 
     private let repository: String?
     private let runningVersion: String
-    private let defaults = UserDefaults.standard
+    private let defaults = AppData.preferences
     private var downloadSession: URLSession?
     private var lastRelease: AppUpdate.Release?
     private var shouldOfferResult = false
@@ -231,9 +231,9 @@ final class AppUpdater: ObservableObject {
         let staged = unpacked.appendingPathComponent("NXLibrary.app")
         if let problem = AppUpdate.bundleProblem(staged, expectedID: expectedID, version: release.version, runningOS: runningOS) {
             if case .needsNewerMacOS(let minimum) = problem {
-                return .failure(.init(message: L10n.format("NX Library %@ needs macOS %@ or later; nothing was changed.", [String(describing: (release.version)), String(describing: (minimum))])))
+                return .failure(.init(message: L10n.format("Arcane %@ needs macOS %@ or later; nothing was changed.", [String(describing: (release.version)), String(describing: (minimum))])))
             }
-            return .failure(.init(message: L10n.format("The download is not a valid NX Library %@; nothing was changed.", [String(describing: (release.version))])))
+            return .failure(.init(message: L10n.format("The download is not a valid Arcane %@; nothing was changed.", [String(describing: (release.version))])))
         }
         guard AppUpdate.validCodeSignature(staged) else {
             return .failure(.init(message: L10n.text("The app signature could not be verified; nothing was changed.")))
@@ -259,12 +259,13 @@ final class AppUpdater: ObservableObject {
                 switch result {
                 case .success(let placed):
                     if AppUpdate.relaunch(placed) {
+                        AppDelegate.relaunchScheduled = true
                         NSApp.terminate(nil)
                     } else {
-                        self.state = .failed("NX Library \(release.version) is installed; open it again to finish.")
+                        self.state = .failed("Arcane \(release.version) is installed; open it again to finish.")
                     }
                 case .failure:
-                    self.fail("NX Library could not be replaced; the current version is unchanged.")
+                    self.fail("Arcane could not be replaced; the current version is unchanged.")
                 }
             }
         }
@@ -276,8 +277,7 @@ final class AppUpdater: ObservableObject {
     }
 
     private static func workFolder() -> URL {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("NXLibrary/Temp/Update")
+        AppData.supportRoot.appendingPathComponent("Temp/Update")
     }
 
     nonisolated private static func run(_ tool: String, _ arguments: [String]) -> Bool {

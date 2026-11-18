@@ -27,7 +27,7 @@ public enum NXLibraryError: Error, LocalizedError {
         case .missingKeys:
             return L10n.text("prod.keys is missing. Import it in Settings.")
         case .engineMissing:
-            return L10n.text("The nxnative checkout was not found. Choose it in Settings → Engine.")
+            return L10n.text("The nxnative checkout was not found. Choose it in Settings → Setup and engine.")
         case .environmentBlocked(let detail):
             return L10n.format("The build environment is incomplete: %@", [String(describing: (detail))])
         case .incompatibleToolchain(let detail):

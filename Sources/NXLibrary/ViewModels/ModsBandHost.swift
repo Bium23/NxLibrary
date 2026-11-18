@@ -80,6 +80,15 @@ final class ModsBandHost: ObservableObject {
         detail = nil
     }
 
+    /// Drops the previous game's band while Spotlight browses the row. Opening a page loads its own band.
+    func clearGame() {
+        guard game != nil else { return }
+        stop()
+        game = nil
+        localMods = nil
+        records = [:]
+    }
+
     // MARK: - Tiles and panels
 
     /// A tile: installed mods and Manage open Game options → Mods (`openMods`); a GameBanana mod opens its detail;

@@ -8,6 +8,7 @@ import NXLibraryCore
 /// is found, or when GameTDB has none, a composed cover: the blurred Title DB
 /// banner, the game's icon and its name. The caller applies the corner radius.
 struct SwitchBoxArtCover: View {
+    @Environment(\.catalogPersonalizations) private var personalizations
     let game: PortedGame
     let width: CGFloat
     let height: CGFloat
@@ -81,7 +82,7 @@ struct SwitchBoxArtCover: View {
         [game.name] + (officialName.map { [$0] } ?? [])
     }
 
-    private var titleID: String { game.titleId ?? game.uniqueKey }
+    private var titleID: String { personalizations.nxnativeKey(for: game) }
 
     private var coverKey: String { "\(game.id)|\(officialName ?? "")|\(indexVersion)|\(picks.revision)" }
 

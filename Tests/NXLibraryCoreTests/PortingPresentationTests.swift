@@ -70,6 +70,32 @@ final class PortingPresentationTests: XCTestCase {
         XCTAssertEqual(PortingETA.text(p, lastFinishingSeconds: nil), "Pipelines: about 1 hr")
     }
 
+    func testPrewarmReportsActivityInsteadOfAnOlderFinishingEstimate() throws {
+        var p = finishing
+        p.apply(.stageEnd(name: "Pipeline archive", ok: true, elapsed: 60, summary: nil))
+        p.apply(.stage(k: 8, n: 9, name: "Prewarm pipelines", step: "local GPU"))
+        let before = p.overall
+        let heartbeat = try XCTUnwrap(BuildEventParser.parse(
+            #"{"ev":"progress","done":null,"total":null,"frac":null,"eta":null,"elapsed":3600}"#))
+        p.apply(heartbeat)
+        XCTAssertEqual(p.overall, before, "elapsed time is not a completed-work counter")
+        XCTAssertNil(p.finishingETA)
+        for previousTime: Double? in [nil, 60, 7200] {
+            XCTAssertEqual(PortingETA.text(p, lastFinishingSeconds: previousTime), "Preparing the first launch")
+        }
+        p.apply(.stageEnd(name: "Prewarm pipelines", ok: true, elapsed: 3600, summary: nil))
+        p.apply(.stage(k: 9, n: 9, name: "Mac app", step: nil))
+        XCTAssertEqual(PortingETA.text(p, lastFinishingSeconds: nil), "Finishing up")
+    }
+
+    func testStoppingPrewarmClearsTheActivityCaption() {
+        var p = finishing
+        p.apply(.stage(k: 8, n: 9, name: "Prewarm pipelines", step: nil))
+        XCTAssertEqual(PortingETA.text(p, lastFinishingSeconds: 60), "Preparing the first launch")
+        p.finish(success: false)
+        XCTAssertNil(PortingETA.text(p, lastFinishingSeconds: 60))
+    }
+
     func testETAFormatsHoursAndMinutesWhenOverAnHour() {
         let oneHour = progress([.stage(k: 5, n: 7, name: "Mac shaders", step: nil), .step("compiling"),
                                 .progress(fraction: 0.1, done: nil, total: nil, unit: nil, eta: 3600)])
@@ -177,23 +203,51 @@ final class PortingPresentationTests: XCTestCase {
     /// The porting game is the first game: right after the Add game card, never before the cards.
     func testThePortingGameSitsRightAfterAddGame() {
         let a = UUID(), b = UUID()
-        let games = [game(app: true), game(app: false)].enumerated().map { index, game -> PortedGame in
-            var game = game
-            game.id = index == 0 ? a : b
-            return game
-        }
-        let row = SpotlightRow.build(games: games, enabledCards: [.collection, .addGame], order: [], front: b)
+        let row = SpotlightRow.build(gameIDs: [a, b], enabledCards: [.collection, .addGame], order: [], front: [b])
         XCTAssertEqual(row, [.card(.collection), .card(.addGame), .game(b), .game(a)])
         // The player moved Add game to the end: the porting game still follows it.
-        let moved = SpotlightRow.build(games: games, enabledCards: [.collection, .addGame],
+        let moved = SpotlightRow.build(gameIDs: [a, b], enabledCards: [.collection, .addGame],
                                        order: ["card:collection", "game:\(a.uuidString)", "game:\(b.uuidString)", "card:addGame"],
-                                       front: b)
+                                       front: [b])
         XCTAssertEqual(moved, [.card(.collection), .game(a), .card(.addGame), .game(b)])
         // Without the card: first among the games.
-        let noCard = SpotlightRow.build(games: games, enabledCards: [.collection], order: [], front: b)
+        let noCard = SpotlightRow.build(gameIDs: [a, b], enabledCards: [.collection], order: [], front: [b])
         XCTAssertEqual(noCard, [.card(.collection), .game(b), .game(a)])
-        XCTAssertEqual(SpotlightRow.build(games: games, enabledCards: [.collection], order: [], front: UUID()),
-                       SpotlightRow.build(games: games, enabledCards: [.collection], order: []))
+        XCTAssertEqual(SpotlightRow.build(gameIDs: [a, b], enabledCards: [.collection], order: [], front: [UUID()]),
+                       SpotlightRow.build(gameIDs: [a, b], enabledCards: [.collection], order: []))
+    }
+
+    /// The porting game leads, then the games Steam downloads this session, in the row's order.
+    func testPortingThenDownloadsLeadTheRow() {
+        let a = UUID(), b = UUID(), c = UUID(), d = UUID()
+        let row = SpotlightRow.build(gameIDs: [a, b, c, d], enabledCards: [.collection, .addGame], order: [],
+                                     front: [d, b])
+        XCTAssertEqual(row, [.card(.collection), .card(.addGame), .game(d), .game(b), .game(a), .game(c)])
+        XCTAssertEqual(SpotlightRow.leaders(porting: d, downloads: [c, a, d], row: [a, b, c, d]), [d, a, c])
+        XCTAssertEqual(SpotlightRow.leaders(porting: nil, downloads: [c], row: [a, b, c, d]), [c])
+        XCTAssertEqual(SpotlightRow.leaders(porting: nil, downloads: [], row: [a, b]), [])
+        // A game no longer in the row (filtered out, or the download removed) leads nothing.
+        XCTAssertEqual(SpotlightRow.leaders(porting: UUID(), downloads: [UUID()], row: [a, b]), [])
+    }
+
+    /// A game seen downloading stays remembered for the session, also once Steam has finished it.
+    func testSessionDownloadsRememberEveryGameSeenDownloading() {
+        func steam(_ appID: UInt32, downloading: Bool, id: UUID = UUID()) -> CatalogGame {
+            var game = SteamCatalogGame(id: id, appID: appID, name: "G\(appID)")
+            game.installations = [.init(libraryURL: URL(fileURLWithPath: "/tmp/steam"),
+                                        contentURL: URL(fileURLWithPath: "/tmp/steam/steamapps/common/G\(appID)"),
+                                        availability: downloading ? .unavailable : .available,
+                                        isDownloading: downloading)]
+            return CatalogGame(steam: game)
+        }
+        let downloading = steam(1, downloading: true), installed = steam(2, downloading: false)
+        var session = SessionDownloads()
+        XCTAssertTrue(session.note([downloading, installed]))
+        XCTAssertEqual(session.ids, [downloading.id])
+        XCTAssertFalse(session.note([downloading, installed]))
+        let finished = steam(1, downloading: false, id: downloading.id)
+        XCTAssertFalse(session.note([finished, installed]))
+        XCTAssertEqual(session.ids, [downloading.id])
     }
 
     func testPillMovesStopAtTheLimit() {
@@ -210,5 +264,15 @@ final class PortingPresentationTests: XCTestCase {
 
     func testLockIcon() {
         XCTAssertEqual(MaterialIcon.lock.rawValue, "\u{E897}")
+    }
+
+    func testCatalogTileLookIsDownloadingOnlyWhileSteamDownloads() {
+        let library = URL(fileURLWithPath: "/tmp/steam"), content = URL(fileURLWithPath: "/tmp/steam/steamapps/common/G")
+        var steam = SteamCatalogGame(appID: 10, name: "Steam game")
+        steam.installations = [.init(libraryURL: library, contentURL: content, availability: .unavailable, isDownloading: true)]
+        XCTAssertEqual(PortingTileLook.make(catalog: CatalogGame(steam: steam)), .downloading)
+        steam.installations = [.init(libraryURL: library, contentURL: content, availability: .available)]
+        XCTAssertEqual(PortingTileLook.make(catalog: CatalogGame(steam: steam)), .normal)
+        XCTAssertEqual(PortingTileLook.make(catalog: CatalogGame(nxnative: CatalogTestSupport.completeLegacyGame())), .normal)
     }
 }

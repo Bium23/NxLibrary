@@ -2,7 +2,7 @@ import Foundation
 
 /// Focus on the Details page (spec §5.4). Zone 0 is the top block (Play or
 /// Build, then Game options). Zones 1 to 4 are the bands: Screenshots,
-/// Build & Sources (a grid of actions, the activity beside it), Mods and
+/// Details (its links in a grid), Mods and
 /// More like this, as on Spotlight's page. A band with nothing to focus is skipped; Down goes to the
 /// next band, Up back to the previous one, and Up from the first returns to
 /// the top block.
@@ -39,7 +39,7 @@ public struct DetailsFocus: Equatable {
     public static let moreZone = 4
     /// Play or Build, then Options, then the Favorite heart.
     public static let pillCount = 3
-    /// Build & Sources lays its actions out in rows, as on Spotlight.
+    /// The Details links sit in rows, as on Spotlight.
     public static let actionColumns = SpotlightState.actionColumns
 
     public var zone = DetailsFocus.topZone

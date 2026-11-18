@@ -6,9 +6,14 @@ struct SettingsAboutSection: View {
     @ObservedObject var viewModel: AppViewModel
     @EnvironmentObject private var updater: AppUpdater
     @Environment(\.seleneFocusedRowID) private var focusedRowTitle
+    @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.nxAppLocale) private var localization
     let onActions: ([SettingsRowAction]) -> Void
 
     @State private var didCopyDiagnostics = false
+    private static let supportTitle = "Support Arcane"
+    private static let supportArtwork = Bundle.main.url(forResource: "BuyMeACoffee", withExtension: "png",
+                                                        subdirectory: "Brands").flatMap(NSImage.init(contentsOf:))
 
     private let credits: [(name: String, role: String, url: String)] = [
         ("seedds", "nxnative engine, NVN/Metal host and ARM64 rewriter", "https://github.com/seedds/nxnative"),
@@ -19,22 +24,24 @@ struct SettingsAboutSection: View {
         ("Khronos Group", L10n.text("SPIRV-Cross Metal Shading Language compiler"), "https://github.com/KhronosGroup/SPIRV-Cross"),
         ("GameTDB", L10n.text("Switch box covers"), "https://www.gametdb.com"),
         ("Title DB", L10n.text("Game names, icons and banners"), "https://github.com/blawar/titledb"),
-        ("LaunchBox Games Database", L10n.text("Box covers, logos, backgrounds and square art in Change artwork"), "https://gamesdb.launchbox-app.com"),
+        ("LaunchBox Games Database", L10n.text("Community metadata and game artwork"), "https://gamesdb.launchbox-app.com"),
+        ("TheGamesDB", L10n.text("Community metadata and game artwork"), "https://thegamesdb.net"),
         ("SteamGridDB", L10n.text("Community covers, backgrounds, logos and icons, with your API key"), "https://www.steamgriddb.com"),
+        ("IGDB", L10n.text("Critic scores with your own credentials"), "https://www.igdb.com"),
         ("NX2Apple", L10n.text("Key check, failure explanations and diagnostics, adapted (MIT)"), "https://github.com/LNPANDY/NX2Apple")
     ]
 
     var body: some View {
         VStack(spacing: 12) {
-            SelenePanel(L10n.text("NX Library")) {
-                Text(L10n.text("A personal macOS front-end for building and launching your own Switch games with nxnative."))
+            SelenePanel(AppIdentity.name) {
+                Text(L10n.text("A free, open-source game library and launcher for Mac. Play installed games and port compatible Switch titles with nxnative."))
                     .seleneFont(16)
                     .foregroundColor(SeleneTheme.ink90)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(L10n.format("Version %@ · Build %@ · Engine %@", [String(describing: (version)), String(describing: (buildDate)), String(describing: (seleneShort(viewModel.pinnedEngineCommit)))]))
                     .seleneFont(13, .regular, design: .monospaced)
                     .foregroundColor(SeleneTheme.ink60)
-                Text(L10n.text("Play time is tracked only for launches from NX Library. Not affiliated with Nintendo."))
+                Text(L10n.text("Play time is tracked only for launches from Arcane. Not affiliated with Nintendo."))
                     .seleneFont(13)
                     .foregroundColor(SeleneTheme.ink60)
                 updateRow
@@ -54,6 +61,8 @@ struct SettingsAboutSection: View {
                 .id("selene-row-Copy diagnostics")
                 .accessibilityHint(L10n.text("A report for an issue: versions, setup and the last porting. No keys."))
             }
+
+            supportButton
 
             SelenePanel(L10n.text("Credits")) {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
@@ -108,7 +117,7 @@ struct SettingsAboutSection: View {
                 .padding(6)
                 .seleneRowFocus(focusedRowTitle == "Selene")
                 .id("selene-row-Selene")
-                Text(L10n.text("Selene is a Playnite theme for Windows. No Selene name, logo, wallpaper, avatar or sound is used as NX Library branding; this is a visual adaptation in SwiftUI."))
+                Text(L10n.text("Selene is a Playnite theme for Windows. No Selene name, logo, wallpaper, avatar or sound is used as Arcane branding; this is a visual adaptation in SwiftUI."))
                     .seleneFont(13)
                     .foregroundColor(SeleneTheme.ink60)
                     .fixedSize(horizontal: false, vertical: true)
@@ -125,7 +134,7 @@ struct SettingsAboutSection: View {
             }
 
             SelenePanel(L10n.text("Licenses")) {
-                Text(L10n.text("NX Library is personal software released under the MIT license. nxnative, Ryujinx, SPIR-V Cross, LibHac and the other dependencies retain their own licenses through the engine."))
+                Text(L10n.text("Arcane is personal software released under the MIT license. nxnative, Ryujinx, SPIR-V Cross, LibHac and the other dependencies retain their own licenses through the engine."))
                     .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink90)
                     .fixedSize(horizontal: false, vertical: true)
@@ -148,6 +157,14 @@ struct SettingsAboutSection: View {
                 Text(L10n.text("This app is not affiliated with Nintendo."))
                     .seleneFont(13, .semibold)
                     .foregroundColor(SeleneTheme.ink60)
+                Text(L10n.text("This app is not affiliated with Valve."))
+                    .seleneFont(13, .semibold)
+                    .foregroundColor(SeleneTheme.ink60)
+                // Valve's attribution for the Steam logo, in Valve's own wording for each language.
+                Text(L10n.text("©2026 Valve Corporation. Steam and the Steam logo are trademarks and/or registered trademarks of Valve Corporation in the U.S. and/or other countries."))
+                    .seleneFont(13)
+                    .foregroundColor(SeleneTheme.ink60)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .onAppear(perform: publishActions)
@@ -157,6 +174,42 @@ struct SettingsAboutSection: View {
         .onChange(of: viewModel.hasActiveSaveOperations) { _ in publishActions() }
         .onChange(of: viewModel.isUpdatingApp) { _ in publishActions() }
         .onChange(of: viewModel.runningGameCount) { _ in publishActions() }
+    }
+
+    private var supportButton: some View {
+        Button(action: openSupportPage) {
+            SelenePanel {
+                HStack(spacing: canvas.u(14)) {
+                    if let artwork = Self.supportArtwork {
+                        Image(nsImage: artwork)
+                            .resizable()
+                            .interpolation(.high)
+                            .scaledToFit()
+                            .frame(width: canvas.u(44), height: canvas.u(44))
+                            .clipShape(RoundedRectangle(cornerRadius: canvas.u(9), style: .continuous))
+                            .accessibilityHidden(true)
+                    }
+                    VStack(alignment: .leading, spacing: canvas.u(4)) {
+                        Text(L10n.text(Self.supportTitle, context: localization))
+                            .seleneFont(19, .semibold)
+                            .foregroundColor(SeleneTheme.ink)
+                        Text(L10n.text("Optional contributions support development and maintenance.", context: localization))
+                            .seleneFont(14)
+                            .foregroundColor(SeleneTheme.ink75)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: canvas.u(8))
+                    Image(systemName: "arrow.up.right")
+                        .seleneFont(16, .semibold)
+                        .foregroundColor(SeleneTheme.glyph)
+                        .accessibilityHidden(true)
+                }
+            }
+            .contentShape(RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .seleneRowFocus(focusedRowTitle == Self.supportTitle, radius: SeleneTheme.cardRadius)
+        .id("selene-row-\(Self.supportTitle)")
     }
 
     private func copyDiagnostics() {
@@ -171,6 +224,7 @@ struct SettingsAboutSection: View {
                               isEnabled: action.enabled, activate: action.perform)
         }
         actions.append(.init(id: "diagnostics", title: "Copy diagnostics", activate: copyDiagnostics))
+        actions.append(.init(id: "support", title: Self.supportTitle, activate: openSupportPage))
         actions += credits.map { credit in
             SettingsRowAction(id: "credit-\(credit.name)", title: credit.name) {
                 if let url = URL(string: credit.url) { NSWorkspace.shared.open(url) }
@@ -217,10 +271,10 @@ struct SettingsAboutSection: View {
         switch updater.state {
         case .hidden: return ""
         case .developer: return L10n.text("Development copy · manual checks only")
-        case .readOnly: return L10n.text("Move NX Library to Applications to update")
+        case .readOnly: return L10n.text("Move Arcane to Applications to update")
         case .idle: return L10n.text("Updates not checked yet")
         case .checking: return "Checking for updates…"
-        case .upToDate: return L10n.text("NX Library is up to date")
+        case .upToDate: return L10n.text("Arcane is up to date")
         case .available(let release):
             let xcode = AppUpdate.neededXcode(release.requirements, installedXcode: viewModel.environmentStatus?.xcodeVersion)
                 .map { L10n.format(" · new portings need Xcode %@", [String(describing: ($0))]) } ?? ""
@@ -260,6 +314,12 @@ struct SettingsAboutSection: View {
             return date.formatted(.dateTime.day().month(.abbreviated).year().locale(L10n.context.formatLocale))
         }
         return "local"
+    }
+
+    private func openSupportPage() {
+        if let url = URL(string: "https://buymeacoffee.com/bium") {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     private func openProjectDocs() {

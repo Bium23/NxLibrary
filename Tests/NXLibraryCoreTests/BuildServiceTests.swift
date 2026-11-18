@@ -3,6 +3,31 @@ import Darwin
 @testable import NXLibraryCore
 
 final class BuildServiceTests: XCTestCase {
+    /// A build that cannot even start (here: its working folder is gone) closes its log and its output pipes.
+    func testBuildThatCannotStartLeavesNoFilesOpen() throws {
+        let fm = FileManager.default
+        let root = fm.temporaryDirectory.appendingPathComponent("NXNoStart-\(UUID())")
+        try fm.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: root) }
+        func openFiles() -> Int { (try? fm.contentsOfDirectory(atPath: "/dev/fd").count) ?? 0 }
+        let service = BuildService()
+        func failOnce() throws -> BuildResult? {
+            let done = expectation(description: "launch failure reported")
+            var result: BuildResult?
+            service.start(command: BuildCommand(executable: URL(fileURLWithPath: "/bin/sh"), arguments: ["-c", "true"],
+                                                environment: [:], workingDirectory: root.appendingPathComponent("missing")),
+                          logURL: root.appendingPathComponent("build.log"), tempApp: root.appendingPathComponent("t.app"),
+                          finalApp: root.appendingPathComponent("f.app"), eventHandler: { _ in },
+                          completion: { result = $0; done.fulfill() })
+            wait(for: [done], timeout: 10)
+            return result
+        }
+        XCTAssertEqual(try failOnce()?.success, false)
+        let before = openFiles()
+        for _ in 0..<20 { _ = try failOnce() }
+        XCTAssertLessThan(openFiles() - before, 5, "each failed start must close its log file and both pipes")
+    }
+
     func testDestinationDisconnectedDuringBuildKeepsTheReadyAppWithoutRecreatingTheFolder() throws {
         let fm = FileManager.default
         let root = fm.temporaryDirectory.appendingPathComponent("NXDisconnected-\(UUID())")
@@ -129,9 +154,10 @@ final class BuildServiceTests: XCTestCase {
         PendingInstaller.hold(pending, for: &game)
         XCTAssertThrowsError(try PendingInstaller.install(&game, fileManager: denied))
         XCTAssertEqual(game.pendingInstall, pending)
-        let store = LibraryStore(directory: root.appendingPathComponent("catalog"))
-        try store.save(LibraryFile(games: [game]))
-        game = try XCTUnwrap(store.load().games.first)
+        let store = CatalogRepository(store: CatalogStore(directory: root.appendingPathComponent("catalog")))
+        try store.configureSource(.nxnative, enabled: true, root: nil)
+        try store.updateNXNativeGames { $0 = [game] }
+        game = try XCTUnwrap(store.load().nxnativeGames.first)
         XCTAssertEqual(game.pendingInstall, pending)
         XCTAssertEqual(try PendingInstaller.install(&game), .installed)
         XCTAssertNil(game.pendingInstall)

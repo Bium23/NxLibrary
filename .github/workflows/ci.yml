@@ -29,6 +29,11 @@ jobs:
         run: python3 -m unittest discover -s Tests/PublicationChecks
       - name: Swift tests
         run: swift test
+      - name: Application regressions without UI
+        run: |
+          for check in Tests/CatalogAppChecks/run_*.py; do
+            python3 "$check" || exit 1
+          done
       - name: Release compilation
         run: swift build -c release --product NXLibrary
       - name: Package and verify development app

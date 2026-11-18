@@ -36,7 +36,7 @@ struct SpotlightGameInfoView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             logoArea
-                .offset(x: slid ? 0 : canvas.u(-30))
+                .offset(x: slid ? 0 : canvas.u(Self.logoSlideDistance))
                 .opacity(shown ? 1 : 0)
             Group {
                 if isRunning {
@@ -76,29 +76,7 @@ struct SpotlightGameInfoView: View {
     }
 
     private var logoArea: some View {
-        ZStack(alignment: .bottomLeading) {
-            if let logo {
-                Image(nsImage: logo)
-                    .resizable()
-                    .interpolation(.high)
-                    .aspectRatio(contentMode: .fit)
-                    // The logo box: 700 × 240 (195 plus a −45 top margin), bottom-left.
-                    .frame(width: canvas.u(700), height: canvas.u(240), alignment: .bottomLeading)
-                    .shadow(color: .black.opacity(0.35), radius: canvas.u(8))
-                    .transition(.opacity)
-            } else {
-                Text(game.name)
-                    .seleneFont(56)
-                    .foregroundColor(SeleneTheme.ink)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .shadow(color: .black.opacity(0.45), radius: canvas.u(6))
-            }
-        }
-        .frame(width: canvas.u(900), height: canvas.u(195), alignment: .bottomLeading)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(game.name)
-        .accessibilityAddTraits(.isHeader)
+        GameLogoArea(title: game.name, logo: logo)
     }
 
     /// The time left while porting, or the last failure over a working app.
@@ -155,16 +133,11 @@ struct SpotlightGameInfoView: View {
     }
 
     private var normalPills: some View {
-        HStack(spacing: canvas.u(14)) {
-            pill(0, SelenePillButton(title: primaryTitle, height: 52, focused: focusedPill == 0,
-                                     enabled: isRunning || pillSet.unavailableReason == nil) { onPill(0) })
-            pill(1, SelenePillButton(title: isRunning ? L10n.text("Close Game") : L10n.text("Options"), height: 52,
-                                     focused: focusedPill == 1) { onPill(1) })
-            pill(2, SelenePillButton(title: nil, icon: game.isFavorite ? .favorite : .favoriteBorder,
-                                     iconSize: 20, minWidth: 52, height: 52, horizontalPadding: 0,
-                                     focused: focusedPill == 2) { onPill(2) })
-                .accessibilityLabel(game.isFavorite ? L10n.text("Remove from favorites") : L10n.text("Add to favorites"))
-        }
+        GamePrimaryActions(primaryTitle: primaryTitle,
+                           secondaryTitle: isRunning ? "Close Game" : "Options",
+                           isFavorite: game.isFavorite, focused: focusedPill,
+                           primaryEnabled: isRunning || pillSet.unavailableReason == nil,
+                           onAction: onPill, onHover: onHoverPill)
     }
 
     private var primaryTitle: String {
@@ -199,6 +172,10 @@ struct SpotlightGameInfoView: View {
 
     /// The pills and stats' fade after a change (the genres below come in with them, `SpotlightInfoFollow`).
     static let restMotion = Animation.easeOut(duration: 0.4).delay(0.42)
+    /// The logo's fade and slide after a change. A Steam game's head uses the same three motions.
+    static let logoFade = Animation.easeOut(duration: 0.45).delay(0.3)
+    static let logoSlide = SeleneTheme.cubicOut(0.55).delay(0.3)
+    static let logoSlideDistance: CGFloat = -30
 
     /// Reduce motion keeps the fades and drops the slide.
     private func reveal() {
@@ -210,10 +187,10 @@ struct SpotlightGameInfoView: View {
             slid = reduceMotion
         }
         DispatchQueue.main.async {
-            withAnimation(.easeOut(duration: 0.45).delay(0.3)) { shown = true }
+            withAnimation(Self.logoFade) { shown = true }
             withAnimation(Self.restMotion) { restShown = true }
             if !reduceMotion {
-                withAnimation(SeleneTheme.cubicOut(0.55).delay(0.3)) { slid = true }
+                withAnimation(Self.logoSlide) { slid = true }
             }
         }
     }

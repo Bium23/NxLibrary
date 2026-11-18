@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import NXLibraryCore
+import os
 
 enum SettingsFocusArea { case sidebar, rows }
 
@@ -12,6 +13,8 @@ public struct SettingsView: View {
     @ObservedObject var router: AppRouter
     @ObservedObject var artwork: ArtworkStore
 
+    /// Opens the Search field when the player asks for it (`enterSection`).
+    @State private var searchFieldRequest = 0
     @State private var section: SettingsSection
     @State private var showingControls = false
     @State private var localePicker: LocalePickerMode?
@@ -36,6 +39,7 @@ public struct SettingsView: View {
     }
     /// A palette change redraws the whole screen; selection and focus live here and survive it.
     @ObservedObject private var theme = ThemeStore.shared
+    @ObservedObject private var igdb = IGDBSettings.shared
     @Environment(\.nxAppLocale) private var localization
 
     public init(initialSection: SettingsSection,
@@ -78,7 +82,14 @@ public struct SettingsView: View {
         }
         .background(SeleneBackdrop().environment(\.seleneBackdropStyle, settingsBackdropStyle))
         .onAppear(perform: installKeyMonitor)
+        .onAppear {
+            if AppData.profile.isDevelopment {
+                Logger(subsystem: "local.nxlibrary.development", category: "backdrop-transition")
+                    .notice("Settings appeared, window settling: \(viewModel.isWindowSettling, privacy: .public)")
+            }
+        }
         .onDisappear(perform: removeKeyMonitor)
+        .onDisappear { igdb.isEditing = false }
         .onChange(of: section) { _ in
             rowActions = []
             rowFocus = FocusIndex()
@@ -100,10 +111,17 @@ public struct SettingsView: View {
             }
         }
         .overlay {
+            if igdb.isEditing {
+                IGDBCredentialsDialog(model: igdb) { igdb.isEditing = false }
+            }
+        }
+        .opacity(showingControls ? 0.001 : 1)
+        .allowsHitTesting(!showingControls)
+        .overlay {
             if showingControls {
                 ControlsView(canHandleInput: {
                     !router.isMenuPresented && !viewModel.showSetupCheck
-                        && !viewModel.isUpdateOfferOpen && !NativeMenuCommands.shared.isTracking
+                        && !viewModel.isUpdateOfferOpen && !viewModel.isWelcomeOpen && !NativeMenuCommands.shared.isTracking
                         && viewModel.settingsNotice == nil && viewModel.gameWithInstallFailure == nil
                 }) { showingControls = false }
             }
@@ -112,7 +130,7 @@ public struct SettingsView: View {
             if let mode = localePicker {
                 LocalePicker(mode: mode, settings: settings, canHandleInput: {
                     !router.isMenuPresented && !NativeMenuCommands.shared.isTracking
-                        && !viewModel.showSetupCheck && !viewModel.isUpdateOfferOpen
+                        && !viewModel.showSetupCheck && !viewModel.isUpdateOfferOpen && !viewModel.isWelcomeOpen
                         && viewModel.settingsNotice == nil && NSApp.modalWindow == nil
                 }) { localePicker = nil }
             }
@@ -124,7 +142,7 @@ public struct SettingsView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: canvas.u(8)) {
-                    Text(section.title)
+                    Text(section.place)
                         .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink.opacity(0.55))
                         .padding(.bottom, canvas.u(6))
@@ -139,6 +157,7 @@ public struct SettingsView: View {
                         onOpenConsole: { router.openConsole() },
                         onOpenGroup: openGroup,
                         onSearchSubmit: enterRows,
+                        searchFieldRequest: searchFieldRequest,
                         onActions: updateActions
                     )
                 }
@@ -170,7 +189,7 @@ public struct SettingsView: View {
             hints.append(HintItem(.x, L10n.text("Reset group")) { resetSection() })
         }
         if focusArea == .sidebar {
-            hints.append(HintItem(.a, L10n.text("Open")) { enterRows() })
+            hints.append(HintItem(.a, L10n.text("Open")) { enterSection() })
         } else if focusedRow?.cycle != nil {
             hints.append(HintItem(.a, L10n.text("Change")))
         } else {
@@ -201,6 +220,17 @@ public struct SettingsView: View {
         SoundEffectService.shared.play(.click)
     }
 
+    /// A or Right on the sidebar. Search opens its field; every other section enters its rows.
+    private func enterSection() {
+        guard focusArea == .sidebar else { return }
+        if section == .search {
+            searchFieldRequest += 1
+            SoundEffectService.shared.play(.focus)
+        } else {
+            enterRows()
+        }
+    }
+
     private func enterRows() {
         guard focusArea == .sidebar, !rowActions.isEmpty else { return }
         focusArea = .rows
@@ -213,83 +243,28 @@ public struct SettingsView: View {
         SoundEffectService.shared.play(.focus)
     }
 
-    private var canResetSection: Bool {
-        switch section {
-        case .startUp, .navigation, .spotlight, .soundMusic, .look, .games, .controllers, .library:
-            return true
-        case .search, .changed, .engine, .storage, .about:
-            return false
-        }
-    }
+    private var canResetSection: Bool { SettingsReset.canReset(section) }
 
+    /// `SettingsReset` puts the section's `AppSettings` back in one assignment; the preferences
+    /// kept outside it are reset here.
     private func resetSection() {
         guard canResetSection else { return }
         let defaults = AppSettings()
-        var next = settings.settings
         switch section {
-        case .startUp:
-            next.appLanguage = defaults.appLanguage
-            next.appRegion = defaults.appRegion
-            next.startOn = defaults.startOn
-            next.restoreLastGame = defaults.restoreLastGame
-            next.startInFullscreen = defaults.startInFullscreen
-            next.checkEngineAtLaunch = defaults.checkEngineAtLaunch
-            next.refreshLibraryAtLaunch = defaults.refreshLibraryAtLaunch
-            next.checkAppUpdatesAtLaunch = defaults.checkAppUpdatesAtLaunch
-            next.introAnimation = defaults.introAnimation
-        case .navigation:
-            next.showButtonHints = defaults.showButtonHints
-            next.buttonNames = defaults.buttonNames
-            next.viewButtonSwitches = defaults.viewButtonSwitches
-        case .spotlight:
-            next.visibleSpotlightCards = defaults.visibleSpotlightCards
-            next.startingTab = defaults.startingTab
-            next.spotlightOrder = defaults.spotlightOrder
-        case .soundMusic:
-            next.interfaceSounds = defaults.interfaceSounds
-            next.soundVolume = defaults.soundVolume
-            next.quietLaunch = defaults.quietLaunch
         case .look:
-            next.colorThemeID = defaults.colorThemeID
             ThemeStore.shared.apply(id: defaults.colorThemeID)
-            next.wallpaperID = defaults.wallpaperID
-            next.settingsWallpaperID = defaults.settingsWallpaperID
-            next.keepWallpaperOnGames = defaults.keepWallpaperOnGames
-            next.backgroundSizing = defaults.backgroundSizing
-            next.wallpaperBrightness = defaults.wallpaperBrightness
-            next.backgroundShade = defaults.backgroundShade
-            next.readableText = defaults.readableText
-            next.animatedBackground = defaults.animatedBackground
-            next.showClock = defaults.showClock
-            next.reduceMotion = defaults.reduceMotion
             viewModel.iconAppearanceMode = .auto
-        case .games:
-            resetNotice = L10n.text("Cloud sync kept")
-            next.launchStyle = defaults.launchStyle
-            next.launchMotion = defaults.launchMotion
-            next.launchShade = defaults.launchShade
-            next.showsSessionCard = defaults.showsSessionCard
-            next.surprisePool = defaults.surprisePool
-            let rumble = next.gameDefaults.rumble
-            let gain = next.gameDefaults.rumbleGain
-            next.gameDefaults = defaults.gameDefaults
-            // Rumble lives under Controllers.
-            next.gameDefaults.rumble = rumble
-            next.gameDefaults.rumbleGain = gain
         case .controllers:
             GameControllerService.shared.deadzone = 0.35
-            next.gameDefaults.rumble = defaults.gameDefaults.rumble
-            next.gameDefaults.rumbleGain = defaults.gameDefaults.rumbleGain
         case .library:
             resetNotice = L10n.text("Sources folder kept")
-            next.notifyPortingEnds = defaults.notifyPortingEnds
             viewModel.libraryFolder = URL(fileURLWithPath: viewModel.defaultInstallPath)
                 .appendingPathComponent("Applications")
             viewModel.loadLibrary()
-        case .search, .changed, .engine, .storage, .about:
+        default:
             break
         }
-        settings.settings = next
+        settings.settings = SettingsReset.reset(section, in: settings.settings)
         SoundEffectService.shared.play(.focus)
     }
 
@@ -307,7 +282,7 @@ public struct SettingsView: View {
     private func moveSideways(_ delta: Int) {
         switch focusArea {
         case .sidebar:
-            if delta > 0 { enterRows() }
+            if delta > 0 { enterSection() }
         case .rows:
             if let cycle = focusedRow?.cycle, focusedRow?.isEnabled == true {
                 cycle(delta)
@@ -333,10 +308,11 @@ public struct SettingsView: View {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             guard case .settings = router.route,
                   !viewModel.isUpdateOfferOpen,
+                  !viewModel.isWelcomeOpen,
                   !NativeMenuCommands.shared.isTracking,
                   !router.isMenuPresented,
                   !viewModel.showSetupCheck,
-                  !showingControls, localePicker == nil, !viewModel.isEditingSteamGridDBKey,
+                  !showingControls, localePicker == nil, !viewModel.isEditingSteamGridDBKey, !igdb.isEditing,
                   viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
                   viewModel.gameWithInstallFailure == nil,
                   let window = event.window,
@@ -370,7 +346,6 @@ public struct SettingsView: View {
                 if typing { return event }
                 action = .confirm
             case 53:
-                if typing { window.makeFirstResponder(nil) }
                 action = .cancel
             case 7:                                     // X
                 if typing { return event }
@@ -390,7 +365,7 @@ public struct SettingsView: View {
 
     private func handleGamepad(_ action: GamepadAction) {
         // The key dialog takes the controller while it is open.
-        if viewModel.isEditingSteamGridDBKey { return }
+        if viewModel.isEditingSteamGridDBKey || igdb.isEditing { return }
         if localePicker != nil {
             NotificationCenter.default.post(name: .nxLocalePickerGamepadAction, object: action)
             return
@@ -406,7 +381,7 @@ public struct SettingsView: View {
         case .navigateRight: moveSideways(1)
         case .confirm:
             if focusArea == .sidebar {
-                enterRows()
+                enterSection()
             } else if let row = focusedRow, row.isEnabled {
                 SoundEffectService.shared.play(.click)
                 row.press(button: rowButton)
@@ -422,8 +397,12 @@ public struct SettingsView: View {
         }
     }
 
+    /// B or Esc: steps back one level. Typing in Search, it closes the field and stays on Search.
     private func handleBack() {
-        if focusArea == .rows {
+        if let window = NSApp.keyWindow, window.firstResponder is NSText {
+            window.makeFirstResponder(nil)
+            SoundEffectService.shared.play(.focus)
+        } else if focusArea == .rows {
             leaveRows()
         } else {
             router.back()

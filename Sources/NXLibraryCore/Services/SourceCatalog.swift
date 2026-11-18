@@ -9,10 +9,11 @@ public struct DetectedSource: Identifiable, Equatable {
     public var sizeBytes: Int64
     public var layout: SourceLayout
     public var requiresTitleSelection: Bool
+    public var nupProgram: NUPProgramSelection?
 
     public init(id: UUID = UUID(), url: URL, kind: SourceKind,
                 titleId: UInt64, version: Int? = nil, sizeBytes: Int64, layout: SourceLayout = .package,
-                requiresTitleSelection: Bool = false) {
+                requiresTitleSelection: Bool = false, nupProgram: NUPProgramSelection? = nil) {
         self.id = id
         self.url = url
         self.kind = kind
@@ -21,6 +22,7 @@ public struct DetectedSource: Identifiable, Equatable {
         self.sizeBytes = sizeBytes
         self.layout = layout
         self.requiresTitleSelection = requiresTitleSelection
+        self.nupProgram = nupProgram
     }
 }
 

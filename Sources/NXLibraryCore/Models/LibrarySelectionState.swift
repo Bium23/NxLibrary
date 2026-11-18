@@ -1,51 +1,52 @@
 import Foundation
 
-/// The library filter and the game selected on the Collection screen. The
-/// filter is shared with Spotlight (both read `query.filter`).
+/// The shared home filter and stable UUID selection, independent of integration.
 public struct LibrarySelectionState: Equatable {
     public var query: LibraryQuery
     public var selectedGameID: UUID?
-
-    public init(query: LibraryQuery = LibraryQuery(),
-                selectedGameID: UUID? = nil) {
-        self.query = query
-        self.selectedGameID = selectedGameID
+    public init(query: LibraryQuery = LibraryQuery(), selectedGameID: UUID? = nil) {
+        self.query = query; self.selectedGameID = selectedGameID
     }
-
     @discardableResult
-    public mutating func reconcile(with games: [PortedGame], history: PlayHistory,
-                                   preferredGameID: UUID? = nil) -> [PortedGame] {
+    public mutating func reconcile(with games: [PortedGame], history: PlayHistory, preferredGameID: UUID? = nil) -> [PortedGame] {
         let filtered = query.apply(to: games, history: history)
-        if let selectedGameID,
-           filtered.contains(where: { $0.id == selectedGameID }) {
-            return filtered
-        }
-        if let preferredGameID, filtered.contains(where: { $0.id == preferredGameID }) {
-            selectedGameID = preferredGameID
-        } else {
-            selectedGameID = filtered.first?.id
-        }
+        reconcileIDs(filtered.map(\.id), preferred: preferredGameID)
         return filtered
     }
-
+    @discardableResult
+    public mutating func reconcileCatalog(with games: [CatalogGame], history: PlayHistory, preferredGameID: UUID? = nil) -> [CatalogGame] {
+        let filtered = query.applyCatalog(to: games, history: history)
+        reconcileIDs(filtered.map(\.id), preferred: preferredGameID)
+        return filtered
+    }
     @discardableResult
     public mutating func move(by delta: Int, in games: [PortedGame], history: PlayHistory) -> UUID? {
-        let filtered = query.apply(to: games, history: history)
-        guard !filtered.isEmpty else {
-            selectedGameID = nil
-            return nil
-        }
-        let current = filtered.firstIndex { $0.id == selectedGameID } ?? 0
-        let next = min(max(current + delta, 0), filtered.count - 1)
-        selectedGameID = filtered[next].id
-        return selectedGameID
+        moveIDs(query.apply(to: games, history: history).map(\.id), by: delta)
     }
-
-    /// Selects the first or last game of the filtered list (LT / RT).
+    @discardableResult
+    public mutating func moveCatalog(by delta: Int, in games: [CatalogGame], history: PlayHistory) -> UUID? {
+        moveIDs(query.applyCatalog(to: games, history: history).map(\.id), by: delta)
+    }
     @discardableResult
     public mutating func jump(toEnd: Bool, in games: [PortedGame], history: PlayHistory) -> UUID? {
-        let filtered = query.apply(to: games, history: history)
-        selectedGameID = (toEnd ? filtered.last : filtered.first)?.id
+        jumpIDs(query.apply(to: games, history: history).map(\.id), toEnd: toEnd)
+    }
+    @discardableResult
+    public mutating func jumpCatalog(toEnd: Bool, in games: [CatalogGame], history: PlayHistory) -> UUID? {
+        jumpIDs(query.applyCatalog(to: games, history: history).map(\.id), toEnd: toEnd)
+    }
+    private mutating func reconcileIDs(_ ids: [UUID], preferred: UUID?) {
+        if let selectedGameID, ids.contains(selectedGameID) { return }
+        selectedGameID = preferred.flatMap { ids.contains($0) ? $0 : nil } ?? ids.first
+    }
+    private mutating func moveIDs(_ ids: [UUID], by delta: Int) -> UUID? {
+        guard !ids.isEmpty else { selectedGameID = nil; return nil }
+        let current = ids.firstIndex { $0 == selectedGameID } ?? 0
+        selectedGameID = ids[min(max(current + delta, 0), ids.count - 1)]
+        return selectedGameID
+    }
+    private mutating func jumpIDs(_ ids: [UUID], toEnd: Bool) -> UUID? {
+        selectedGameID = toEnd ? ids.last : ids.first
         return selectedGameID
     }
 }

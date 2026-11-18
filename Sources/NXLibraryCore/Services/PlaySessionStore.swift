@@ -7,7 +7,14 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
     /// Play time and last start of sessions trimmed from `sessions`, per game,
     /// so totals and last-played survive trimming.
     @Published public private(set) var carried: [UUID: CarriedPlaytime] = [:]
+    /// Another launcher's own total for a game (Steam's), with when it was seen. Not persisted here.
+    @Published public private(set) var external: [UUID: ExternalPlaytime] = [:]
+    /// When each game's external value was seen, kept while its total is hidden (source off, another
+    /// account, launch), so trimming still keeps the part after it.
+    public private(set) var trimReferences: [UUID: Date] = [:]
     public static let maxSessions = 200
+    /// Each game whose session just started (not a duplicate start).
+    public let starts = PassthroughSubject<UUID, Never>()
     public private(set) var loadError: String?
 
     /// Recent sessions, a bare `[PlaySession]` array as in every earlier version,
@@ -31,8 +38,7 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
     }
 
     public static func defaultURL() -> URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/NXLibrary/play-sessions.json")
+        AppData.supportRoot.appendingPathComponent("play-sessions.json")
     }
 
     @discardableResult
@@ -49,6 +55,23 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
         sessions.append(session)
         let folded = trim()
         save(totals: folded)
+        starts.send(game.id)
+        return true
+    }
+
+    /// A session for a game of another integration, which observes its own process. `sourceID` is the
+    /// qualified identity ("steam-570"), never a made-up Nintendo title ID. The session is ended by its
+    /// owner, and a restart closes it at its last heartbeat. A game found already
+    /// running when its owner starts watching is not a new start: `announces: false` keeps it off `starts`.
+    @discardableResult
+    public func start(gameID: UUID, sourceID: String, announces: Bool = true) -> Bool {
+        if isRunning(gameID: gameID) { return false }
+        let date = now()
+        sessions.append(PlaySession(gameID: gameID, titleID: sourceID, bundleID: nil,
+                                    startedAt: date, lastHeartbeatAt: date))
+        let folded = trim()
+        save(totals: folded)
+        if announces { starts.send(gameID) }
         return true
     }
 
@@ -58,15 +81,18 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
         save()
     }
 
-    public func end(gameID: UUID) {
+    /// Ends the game's running sessions and returns them, ended.
+    @discardableResult
+    public func end(gameID: UUID) -> [PlaySession] {
         let date = now()
-        var changed = false
+        var ended: [PlaySession] = []
         for index in sessions.indices where sessions[index].gameID == gameID && sessions[index].isActive {
             sessions[index].endedAt = date
             sessions[index].lastHeartbeatAt = date
-            changed = true
+            ended.append(sessions[index])
         }
-        if changed { save() }
+        if !ended.isEmpty { save() }
+        return ended
     }
 
     /// Ends the game's running sessions and returns them, ended.
@@ -101,18 +127,39 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
         if changed { save() }
     }
 
+    /// Sets the external totals; publishes only a change.
+    public func setExternal(_ values: [UUID: ExternalPlaytime]) {
+        if values != external { external = values }
+    }
+
+    public func setTrimReferences(_ values: [UUID: Date]) { trimReferences = values }
+
+    /// With an external total: that total plus the part of this store's sessions after it was seen
+    /// (it already counts what came before), including trimmed sessions' part after that same value.
+    /// Without one: carried time plus every session.
     public func totalDuration(for gameID: UUID) -> TimeInterval {
+        totalDuration(for: gameID, with: external[gameID])
+    }
+
+    /// The total under a given external value (nil: none), whatever is published.
+    public func totalDuration(for gameID: UUID, with external: ExternalPlaytime?) -> TimeInterval {
         let date = now()
-        return sessions
-            .filter { $0.gameID == gameID }
-            .reduce(carried[gameID]?.duration ?? 0) { total, session in
+        let own = sessions.filter { $0.gameID == gameID }
+        guard let base = external else {
+            return own.reduce(carried[gameID]?.duration ?? 0) { total, session in
                 total + max(0, (session.endedAt ?? date).timeIntervalSince(session.startedAt))
             }
+        }
+        let trimmed = carried[gameID].flatMap { $0.externalSince == base.since ? $0.afterExternal : nil } ?? 0
+        return own.reduce(base.duration + trimmed) { total, session in
+            let end = min(session.endedAt ?? date, date)
+            return total + max(0, end.timeIntervalSince(max(session.startedAt, base.since)))
+        }
     }
 
     public func lastPlayed(for gameID: UUID) -> Date? {
         let recent = sessions.filter { $0.gameID == gameID }.map(\.startedAt).max()
-        return [recent, carried[gameID]?.lastPlayed].compactMap { $0 }.max()
+        return [recent, carried[gameID]?.lastPlayed, external[gameID]?.lastPlayed].compactMap { $0 }.max()
     }
 
     public func isRunning(gameID: UUID) -> Bool {
@@ -132,6 +179,12 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
             var entry = carried[session.gameID] ?? CarriedPlaytime(duration: 0, lastPlayed: session.startedAt)
             entry.duration += session.duration ?? 0
             entry.lastPlayed = max(entry.lastPlayed, session.startedAt)
+            // The part after an external value was seen is not in that value yet: keep it, tied to that value.
+            if let since = external[session.gameID]?.since ?? trimReferences[session.gameID] {
+                if entry.externalSince != since { entry.externalSince = since; entry.afterExternal = 0 }
+                let end = session.endedAt ?? session.lastHeartbeatAt
+                entry.afterExternal += max(0, end.timeIntervalSince(max(session.startedAt, since)))
+            }
             carried[session.gameID] = entry
         }
         let droppedIDs = Set(dropped.map(\.id))
@@ -192,14 +245,41 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
     }
 }
 
-/// Play time folded out of the recent-session list for one game.
+/// A game's total as another launcher keeps it, and when NX Library first saw that value.
+public struct ExternalPlaytime: Equatable, Sendable {
+    public let duration: TimeInterval
+    public let lastPlayed: Date?
+    public let since: Date
+
+    public init(duration: TimeInterval, lastPlayed: Date?, since: Date) {
+        self.duration = duration
+        self.lastPlayed = lastPlayed
+        self.since = since
+    }
+}
+
+/// Play time folded out of the recent-session list for one game. `afterExternal` is the part of it after
+/// the external value seen at `externalSince` (Steam's), which that value does not count yet.
 public struct CarriedPlaytime: Codable, Equatable {
     public var duration: TimeInterval
     public var lastPlayed: Date
+    public var externalSince: Date?
+    public var afterExternal: TimeInterval
 
-    public init(duration: TimeInterval, lastPlayed: Date) {
+    public init(duration: TimeInterval, lastPlayed: Date, externalSince: Date? = nil, afterExternal: TimeInterval = 0) {
         self.duration = duration
         self.lastPlayed = lastPlayed
+        self.externalSince = externalSince
+        self.afterExternal = afterExternal
+    }
+
+    private enum CodingKeys: String, CodingKey { case duration, lastPlayed, externalSince, afterExternal }
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        duration = try c.decode(TimeInterval.self, forKey: .duration)
+        lastPlayed = try c.decode(Date.self, forKey: .lastPlayed)
+        externalSince = try c.decodeIfPresent(Date.self, forKey: .externalSince)
+        afterExternal = try c.decodeIfPresent(TimeInterval.self, forKey: .afterExternal) ?? 0
     }
 }
 

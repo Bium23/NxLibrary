@@ -58,7 +58,7 @@ extension AppViewModel {
         case .openEngineSettings: router.openSettings(.engine)
         case .openSetup: reopenSetup()
         case .importKeys: selectProdKeysFile()
-        case .openStorage: router.openSettings(.storage)
+        case .openStorage: router.openSettings(.portingStorage)
         case .none: break
         }
     }

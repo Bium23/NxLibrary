@@ -51,9 +51,10 @@ final class SessionCardPresenter: ObservableObject {
 /// Selene's session card: "Session ended", the game's name and this session · total on the left, the logo on the
 /// right, the game's art faint behind. 640 × 128 units, top right; it takes no input.
 struct SessionCardView: View {
+    @Environment(\.catalogPersonalizations) private var personalizations
     @Environment(\.seleneCanvas) private var canvas
     let summary: SessionSummary
-    let game: PortedGame?
+    let game: PlayedGame?
     let metadata: NintendoStoreMetadata?
     let artwork: ArtworkStore
 
@@ -143,11 +144,11 @@ struct SessionCardView: View {
         hero = GameArtLoader.shared.cachedHero(for: game)
         logo = GameArtLoader.shared.cachedLogo(for: game)
         if hero == nil {
-            let loaded = await GameArtLoader.shared.hero(for: game, metadata: metadata, artwork: artwork)
+            let loaded = await GameArtLoader.shared.hero(for: game, metadata: metadata, artwork: artwork, personalizations: personalizations)
             withAnimation(.easeOut(duration: 0.3)) { hero = loaded }
         }
         if logo == nil {
-            let loaded = await GameArtLoader.shared.logo(for: game, metadata: metadata, artwork: artwork)
+            let loaded = await GameArtLoader.shared.logo(for: game, metadata: metadata, artwork: artwork, personalizations: personalizations)
             withAnimation(.easeOut(duration: 0.3)) { logo = loaded }
         }
     }
@@ -159,7 +160,8 @@ struct SessionCardLayer: View {
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
     @ObservedObject var presenter: SessionCardPresenter
-    let games: [PortedGame]
+    /// The ended session's game, nxnative or Steam.
+    let game: (UUID) -> PlayedGame?
     let metadata: [UUID: NintendoStoreMetadata]
     let artwork: ArtworkStore
 
@@ -167,7 +169,7 @@ struct SessionCardLayer: View {
         ZStack(alignment: .topTrailing) {
             if let summary = presenter.shown {
                 SessionCardView(summary: summary,
-                                game: games.first { $0.id == summary.gameID },
+                                game: game(summary.gameID),
                                 metadata: metadata[summary.gameID],
                                 artwork: artwork)
                     .id(summary.id)

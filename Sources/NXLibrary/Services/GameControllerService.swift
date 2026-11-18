@@ -19,7 +19,7 @@ public final class GameControllerService: ObservableObject {
     @Published public var deadzone: Float = 0.35 {
         didSet {
             let clamped = min(max(deadzone, 0.10), 0.80)
-            UserDefaults.standard.set(Double(clamped), forKey: deadzoneKey)
+            AppData.preferences.set(Double(clamped), forKey: deadzoneKey)
         }
     }
 
@@ -28,8 +28,8 @@ public final class GameControllerService: ObservableObject {
     private var lastNavTime: TimeInterval = 0
     
     private init() {
-        if UserDefaults.standard.object(forKey: deadzoneKey) != nil {
-            deadzone = min(max(Float(UserDefaults.standard.double(forKey: deadzoneKey)), 0.10), 0.80)
+        if AppData.preferences.object(forKey: deadzoneKey) != nil {
+            deadzone = min(max(Float(AppData.preferences.double(forKey: deadzoneKey)), 0.10), 0.80)
         }
         setupObservers()
         refreshControllers()

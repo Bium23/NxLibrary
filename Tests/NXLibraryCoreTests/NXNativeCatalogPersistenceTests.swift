@@ -1,7 +1,7 @@
 import XCTest
 @testable import NXLibraryCore
 
-final class LibraryStoreTests: XCTestCase {
+final class NXNativeCatalogPersistenceTests: XCTestCase {
     private var dir: URL!
 
     override func setUpWithError() throws {
@@ -15,7 +15,8 @@ final class LibraryStoreTests: XCTestCase {
     }
 
     func testExplicitSelectionReplacesExistingSourcesAndSurvivesLaterScans() throws {
-        let store = LibraryStore(directory: dir.appendingPathComponent("catalog"))
+        let store = CatalogRepository(store: CatalogStore(directory: dir.appendingPathComponent("catalog")))
+        try store.configureSource(.nxnative, enabled: true, root: nil)
         let app = dir.appendingPathComponent("Game.app")
         try FileManager.default.createDirectory(at: app.appendingPathComponent("Contents"), withIntermediateDirectories: true)
         try Data("plist".utf8).write(to: app.appendingPathComponent("Contents/Info.plist"))
@@ -30,13 +31,13 @@ final class LibraryStoreTests: XCTestCase {
         old.sources = [GameFileItem(url: oldSource, kind: .base, sizeBytes: 3)]
         old.workspacePath = dir.appendingPathComponent("old-workspace").path
         old.buildCachePath = dir.appendingPathComponent("old-cache").path
-        try store.save(LibraryFile(games: [old]))
+        try store.updateNXNativeGames { $0 = [old] }
         var selected = old
         selected.url = dir.appendingPathComponent("new-workspace")
         selected.sources = [GameFileItem(url: newSource, kind: .base, sizeBytes: 3)]
         selected.workspacePath = selected.url.path
         selected.buildCachePath = dir.appendingPathComponent("new-cache").path
-        let result = try XCTUnwrap(try store.merge(scanned: [selected], replacingSources: true).games.first)
+        let result = try XCTUnwrap(try store.mergeNXNative(scanned: [selected], replacingSources: true).nxnativeGames.first)
         XCTAssertEqual(result.sources, selected.sources)
         XCTAssertEqual(result.workspacePath, selected.workspacePath)
         XCTAssertEqual(result.buildCachePath, selected.buildCachePath)
@@ -46,13 +47,14 @@ final class LibraryStoreTests: XCTestCase {
         XCTAssertTrue(result.isFavorite)
         var scanned = selected
         scanned.sources = []
-        let refreshed = try XCTUnwrap(try store.merge(scanned: [scanned]).games.first)
+        let refreshed = try XCTUnwrap(try store.mergeNXNative(scanned: [scanned]).nxnativeGames.first)
         XCTAssertEqual(refreshed.sources, selected.sources)
         XCTAssertTrue(FileManager.default.fileExists(atPath: oldSource.path), "Replacing a selection never deletes sources")
     }
 
-    func testSaveLoadAndMergePreservesSettings() throws {
-        let store = LibraryStore(directory: dir)
+    func testCatalogSaveLoadAndMergePreservesSettings() throws {
+        let store = CatalogRepository(store: CatalogStore(directory: dir))
+        try store.configureSource(.nxnative, enabled: true, root: nil)
         var game = PortedGame(
             name: "The Legend of Zelda: Breath of the Wild",
             url: URL(fileURLWithPath: "/tmp/game.app"),
@@ -65,35 +67,36 @@ final class LibraryStoreTests: XCTestCase {
         )
         game.status = .builtSourcesMissing
         game.settings.metalHUD = true
-        try store.save(LibraryFile(schemaVersion: 1, games: [game]))
+        try store.updateNXNativeGames { $0 = [game] }
         let loaded = try store.load()
-        XCTAssertEqual(loaded.games.first?.status, .builtSourcesMissing)
-        XCTAssertEqual(loaded.games.first?.settings.metalHUD, true)
+        XCTAssertEqual(loaded.nxnativeGames.first?.status, .builtSourcesMissing)
+        XCTAssertEqual(loaded.nxnativeGames.first?.settings.metalHUD, true)
 
         var scanned = game
         scanned.status = .built
         scanned.settings = GameRuntimeConfig()
-        let merged = try store.merge(scanned: [scanned])
-        XCTAssertEqual(merged.games.first?.status, .built)
-        XCTAssertEqual(merged.games.first?.settings.metalHUD, true)
-        XCTAssertEqual(merged.games.count, 1)
+        let merged = try store.mergeNXNative(scanned: [scanned])
+        XCTAssertEqual(merged.nxnativeGames.first?.status, .built)
+        XCTAssertEqual(merged.nxnativeGames.first?.settings.metalHUD, true)
+        XCTAssertEqual(merged.nxnativeGames.count, 1)
     }
 
     func testMergeKeepsFavoriteAndHidden() throws {
-        let store = LibraryStore(directory: dir)
+        let store = CatalogRepository(store: CatalogStore(directory: dir))
+        try store.configureSource(.nxnative, enabled: true, root: nil)
         var game = PortedGame(name: "G", url: URL(fileURLWithPath: "/tmp/g.app"),
                               platform: .macApp, sizeBytes: 1,
                               modificationDate: Date(timeIntervalSince1970: 1),
                               titleId: "0100000000000001")
         game.isFavorite = true
         game.isHidden = true
-        try store.save(LibraryFile(schemaVersion: 1, games: [game]))
+        try store.updateNXNativeGames { $0 = [game] }
         var scanned = game
         scanned.isFavorite = false
         scanned.isHidden = false
-        let merged = try store.merge(scanned: [scanned])
-        XCTAssertEqual(merged.games.first?.isFavorite, true)
-        XCTAssertEqual(merged.games.first?.isHidden, true)
+        let merged = try store.mergeNXNative(scanned: [scanned])
+        XCTAssertEqual(merged.nxnativeGames.first?.isFavorite, true)
+        XCTAssertEqual(merged.nxnativeGames.first?.isHidden, true)
     }
 
     func testRepeatedScansKeepPendingInstallAndFailureDetails() throws {
@@ -106,7 +109,8 @@ final class LibraryStoreTests: XCTestCase {
         try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0)
             .write(to: app.appendingPathComponent("Contents/Info.plist"))
         let importer = ImportService()
-        let store = LibraryStore(directory: dir.appendingPathComponent("store"))
+        let store = CatalogRepository(store: CatalogStore(directory: dir.appendingPathComponent("store")))
+        try store.configureSource(.nxnative, enabled: true, root: nil)
         var game = try XCTUnwrap(importer.scan(directories: [apps]).first.map { importer.makeGame(from: $0) })
         game.isFavorite = true
         game.settings.metalHUD = true
@@ -115,13 +119,13 @@ final class LibraryStoreTests: XCTestCase {
             toolchain: ToolchainInfo(engineCommit: "2716f78"))
         game.portingFailure = .failed
         game.portingFailureReason = PortingFailureReason(kind: .diskFull, detail: "Synthetic failure")
-        try store.save(LibraryFile(games: [game]))
+        try store.updateNXNativeGames { $0 = [game] }
 
         for _ in 0..<3 {
             let scanned = importer.scan(directories: [apps]).map { importer.makeGame(from: $0) }
-            let merged = try store.merge(scanned: scanned)
-            let saved = try XCTUnwrap(store.load().games.first)
-            XCTAssertEqual(merged.games.count, 1)
+            let merged = try store.mergeNXNative(scanned: scanned)
+            let saved = try XCTUnwrap(store.load().nxnativeGames.first)
+            XCTAssertEqual(merged.nxnativeGames.count, 1)
             XCTAssertEqual(saved.id, game.id)
             XCTAssertEqual(saved.pendingInstall, game.pendingInstall)
             XCTAssertEqual(saved.portingFailure, game.portingFailure)
@@ -131,49 +135,9 @@ final class LibraryStoreTests: XCTestCase {
         }
     }
 
-    func testCorruptFileRestoresBackup() throws {
-        let store = LibraryStore(directory: dir)
-        var game = PortedGame(name: "G", url: URL(fileURLWithPath: "/tmp/g.app"),
-                              platform: .macApp, sizeBytes: 1, modificationDate: Date())
-        game.titleId = "0100000000010000"
-        try store.save(LibraryFile(schemaVersion: 1, games: [game]))
-        try Data("not json".utf8).write(to: store.fileURL)
-        let recovered = try store.load()
-        XCTAssertEqual(recovered.games.count, 1)
-
-        // Saving the recovered value must not replace the good backup with the
-        // corrupt main file. Corrupt the main again and recover again.
-        try store.save(recovered)
-        try Data("still not json".utf8).write(to: store.fileURL)
-        XCTAssertEqual(try store.load().games.count, 1)
-    }
-
-    /// A library that cannot be read and has no backup is moved aside, never written over by the next save: the
-    /// games in it can still be recovered by hand (or by a newer NX Library that reads it).
-    func testUnreadableLibraryWithoutBackupIsKeptAside() throws {
-        let store = LibraryStore(directory: dir)
-        let damaged = Data(#"{"schemaVersion": 1, "games": [{"name": "#.utf8)
-        try damaged.write(to: store.fileURL)
-        XCTAssertEqual(try store.load().games.count, 0)
-        try store.save(LibraryFile())
-        let kept = try FileManager.default.contentsOfDirectory(atPath: dir.path)
-            .filter { $0.hasPrefix("library.json.damaged-") }
-        XCTAssertEqual(kept.count, 1)
-        XCTAssertEqual(try Data(contentsOf: dir.appendingPathComponent(kept[0])), damaged)
-    }
-
-    func testLoadUsesBackupWhenMainIsMissing() throws {
-        let store = LibraryStore(directory: dir)
-        var game = PortedGame(name: "G", url: URL(fileURLWithPath: "/tmp/g.app"),
-                              platform: .macApp, sizeBytes: 1, modificationDate: Date())
-        game.titleId = "0100000000010000"
-        try store.save(LibraryFile(schemaVersion: 1, games: [game]))
-        try FileManager.default.removeItem(at: store.fileURL)
-        XCTAssertEqual(try store.load().games.count, 1)
-    }
-
     func testMergePreservesBuildMetadataAndMarksMissingSources() throws {
-        let store = LibraryStore(directory: dir)
+        let store = CatalogRepository(store: CatalogStore(directory: dir))
+        try store.configureSource(.nxnative, enabled: true, root: nil)
         let sourceFile = dir.appendingPathComponent("Game [0100000000010000].nsp")
         try Data("x".utf8).write(to: sourceFile)
         var game = PortedGame(name: "G", url: URL(fileURLWithPath: "/tmp/G.app"),
@@ -187,7 +151,7 @@ final class LibraryStoreTests: XCTestCase {
                                        xcodeVersion: "27.1", verified: true)
         game.lastBuild = BuildRecord(endedAt: Date(), exitCode: 0,
                                      outputPath: "/tmp/G.app", toolchainVerified: true)
-        try store.save(LibraryFile(schemaVersion: 1, games: [game]))
+        try store.updateNXNativeGames { $0 = [game] }
 
         var imported = game
         imported.status = .builtSourcesMissing
@@ -195,19 +159,20 @@ final class LibraryStoreTests: XCTestCase {
         imported.lastBuild = nil
         imported.sources = []
 
-        let merged = try store.merge(scanned: [imported])
-        XCTAssertEqual(merged.games.first?.status, .built)
-        XCTAssertEqual(merged.games.first?.toolchain.verified, true)
-        XCTAssertEqual(merged.games.first?.lastBuild?.exitCode, 0)
+        let merged = try store.mergeNXNative(scanned: [imported])
+        XCTAssertEqual(merged.nxnativeGames.first?.status, .built)
+        XCTAssertEqual(merged.nxnativeGames.first?.toolchain.verified, true)
+        XCTAssertEqual(merged.nxnativeGames.first?.lastBuild?.exitCode, 0)
 
         try FileManager.default.removeItem(at: sourceFile)
-        let afterDeletion = try store.merge(scanned: [imported])
-        XCTAssertEqual(afterDeletion.games.first?.status, .builtSourcesMissing)
-        XCTAssertEqual(afterDeletion.games.first?.toolchain.verified, true)
+        let afterDeletion = try store.mergeNXNative(scanned: [imported])
+        XCTAssertEqual(afterDeletion.nxnativeGames.first?.status, .builtSourcesMissing)
+        XCTAssertEqual(afterDeletion.nxnativeGames.first?.toolchain.verified, true)
     }
 
     func testAttachingSourcesKeepsTheImportedAppURL() throws {
-        let store = LibraryStore(directory: dir)
+        let store = CatalogRepository(store: CatalogStore(directory: dir))
+        try store.configureSource(.nxnative, enabled: true, root: nil)
         let app = dir.appendingPathComponent("Old.app")
         try FileManager.default.createDirectory(
             at: app.appendingPathComponent("Contents"), withIntermediateDirectories: true)
@@ -221,7 +186,7 @@ final class LibraryStoreTests: XCTestCase {
                                   titleId: "0100000000010000",
                                   versionString: "1.9.0")
         imported.status = .builtSourcesMissing
-        try store.save(LibraryFile(schemaVersion: 1, games: [imported]))
+        try store.updateNXNativeGames { $0 = [imported] }
 
         var added = PortedGame(name: "G", url: dir.appendingPathComponent("workspace"),
                                platform: .macApp, sizeBytes: 1, modificationDate: Date(),
@@ -232,15 +197,16 @@ final class LibraryStoreTests: XCTestCase {
         added.bundleId = "org.nxnative.0100000000010000"
         added.versionString = "65536"
 
-        let merged = try store.merge(scanned: [added])
-        XCTAssertEqual(merged.games.first?.url, app)
-        XCTAssertEqual(merged.games.first?.status, .built)
-        XCTAssertEqual(merged.games.first?.versionString, "1.9.0")
-        XCTAssertEqual(merged.games.first?.bundleId, "org.nxnative.0100000000010000")
+        let merged = try store.mergeNXNative(scanned: [added])
+        XCTAssertEqual(merged.nxnativeGames.first?.url, app)
+        XCTAssertEqual(merged.nxnativeGames.first?.status, .built)
+        XCTAssertEqual(merged.nxnativeGames.first?.versionString, "1.9.0")
+        XCTAssertEqual(merged.nxnativeGames.first?.bundleId, "org.nxnative.0100000000010000")
     }
 
     func testLocateSourcesReplacesMissingRecordedSources() throws {
-        let store = LibraryStore(directory: dir)
+        let store = CatalogRepository(store: CatalogStore(directory: dir))
+        try store.configureSource(.nxnative, enabled: true, root: nil)
         let app = dir.appendingPathComponent("Game.app")
         try FileManager.default.createDirectory(
             at: app.appendingPathComponent("Contents"), withIntermediateDirectories: true)
@@ -255,7 +221,7 @@ final class LibraryStoreTests: XCTestCase {
         old.status = .builtSourcesMissing
         old.sources = [GameFileItem(url: oldSource, kind: .base,
                                     titleId: "0100000000010000", sizeBytes: 1)]
-        try store.save(LibraryFile(schemaVersion: 1, games: [old]))
+        try store.updateNXNativeGames { $0 = [old] }
 
         var scanned = PortedGame(name: "G", url: dir.appendingPathComponent("workspace"),
                                  platform: .macApp, sizeBytes: 1, modificationDate: Date(),
@@ -264,25 +230,26 @@ final class LibraryStoreTests: XCTestCase {
         scanned.sources = [GameFileItem(url: newSource, kind: .base,
                                         titleId: "0100000000010000", sizeBytes: 1)]
 
-        let merged = try store.merge(scanned: [scanned])
-        XCTAssertEqual(merged.games.first?.sources.first?.url, newSource)
-        XCTAssertEqual(merged.games.first?.status, .built)
-        XCTAssertEqual(merged.games.first?.url, app)
+        let merged = try store.mergeNXNative(scanned: [scanned])
+        XCTAssertEqual(merged.nxnativeGames.first?.sources.first?.url, newSource)
+        XCTAssertEqual(merged.nxnativeGames.first?.status, .built)
+        XCTAssertEqual(merged.nxnativeGames.first?.url, app)
     }
 
     func testMergeTitleIdsCaseInsensitively() throws {
-        let store = LibraryStore(directory: dir)
+        let store = CatalogRepository(store: CatalogStore(directory: dir))
+        try store.configureSource(.nxnative, enabled: true, root: nil)
         var old = PortedGame(name: "G", url: URL(fileURLWithPath: "/tmp/G.app"),
                              platform: .macApp, sizeBytes: 1, modificationDate: Date(),
                              titleId: "01007EF00011E000")
         old.status = .builtSourcesMissing
-        try store.save(LibraryFile(schemaVersion: 1, games: [old]))
+        try store.updateNXNativeGames { $0 = [old] }
 
         var scanned = old
         scanned.titleId = "01007ef00011e000"
         scanned.status = .builtSourcesMissing
-        let merged = try store.merge(scanned: [scanned])
-        XCTAssertEqual(merged.games.count, 1)
-        XCTAssertEqual(merged.games.first?.titleId, "01007ef00011e000")
+        let merged = try store.mergeNXNative(scanned: [scanned])
+        XCTAssertEqual(merged.nxnativeGames.count, 1)
+        XCTAssertEqual(merged.nxnativeGames.first?.titleId, "01007ef00011e000")
     }
 }

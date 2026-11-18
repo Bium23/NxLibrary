@@ -1,12 +1,12 @@
 import Foundation
 
 /// Where controller focus sits on Spotlight. Below the pills the screen is one
-/// page that scrolls up: screenshots, About this game beside Build & Sources, More like this.
+/// page that scrolls up: screenshots, About this game beside Details, More like this.
 public enum SpotlightFocusArea: Hashable {
     case row, pills, strip
-    /// About this game's Read more, left of Build & Sources.
+    /// About this game's Read more, left of Details.
     case about
-    /// Build & Sources' actions, `SpotlightState.actionColumns` to a row.
+    /// The Details links, `SpotlightState.actionColumns` to a row.
     case actions
     /// More like this.
     case more
@@ -16,6 +16,9 @@ public enum SpotlightFocusArea: Hashable {
     case topGames
     /// The Mods card's store, below the card; `ModStoreFocus` moves inside it.
     case store
+    /// A Steam game's achievements card, at the top of the column right of About this game, above the
+    /// source's panel.
+    case achievements
 }
 
 /// A tile lifted off the row to be moved. `order` is the working order (item
@@ -33,7 +36,7 @@ public struct SpotlightState: Equatable {
     public static let anchorSlot = 2
     /// Play, Options, Favorite.
     public static let pillCount = 3
-    /// Build & Sources lays its actions out as small buttons, three to a row.
+    /// The Details links are small buttons, three to a row.
     public static let actionColumns = 3
 
     public var selectedKey: String?
@@ -151,12 +154,13 @@ public struct SpotlightState: Equatable {
         modsIndex = 0
     }
 
-    /// Down: row → pills (games only) → strip → Build & Sources (row by row) → Mods (row by row) →
-    /// More like this, skipping whatever is empty.
+    /// Down: row → pills (games only) → strip → Achievements (when shown) → Details (row by row) →
+    /// Mods (row by row) → More like this, skipping whatever is empty.
     @discardableResult
     public mutating func moveDown(selectedIsGame: Bool, screenshotCount: Int,
                                   selectedIsActivity: Bool = false, topGameCount: Int = 0,
-                                  actionCount: Int = 0, moreCount: Int = 0, modsCount: Int = 0) -> Bool {
+                                  actionCount: Int = 0, moreCount: Int = 0, modsCount: Int = 0,
+                                  hasAchievements: Bool = false) -> Bool {
         switch focus {
         case .row:
             if selectedIsActivity {
@@ -176,8 +180,12 @@ public struct SpotlightState: Equatable {
                 stripIndex = min(stripIndex, screenshotCount - 1)
                 return true
             }
+            if hasAchievements { focus = .achievements; return true }
             return enterActions(actionCount: actionCount, moreCount: moreCount, modsCount: modsCount)
         case .strip:
+            if hasAchievements { focus = .achievements; return true }
+            return enterActions(actionCount: actionCount, moreCount: moreCount, modsCount: modsCount)
+        case .achievements:
             return enterActions(actionCount: actionCount, moreCount: moreCount, modsCount: modsCount)
         case .actions:
             if let below = Self.actionBelow(actionIndex, count: actionCount) {
@@ -227,16 +235,21 @@ public struct SpotlightState: Equatable {
         return true
     }
 
-    /// Up: More like this → Mods (row by row) → Build & Sources (row by row) → strip → pills → row.
+    /// Up: More like this → Mods (row by row) → Details (row by row) → Achievements (when shown) →
+    /// strip → pills → row.
     @discardableResult
-    public mutating func moveUp(screenshotCount: Int = 1, actionCount: Int = 0, modsCount: Int = 0) -> Bool {
-        let aboveActions: SpotlightFocusArea = screenshotCount > 0 ? .strip : .pills
+    public mutating func moveUp(screenshotCount: Int = 1, actionCount: Int = 0, modsCount: Int = 0,
+                                hasAchievements: Bool = false) -> Bool {
+        let aboveTiles: SpotlightFocusArea = screenshotCount > 0 ? .strip : .pills
+        let aboveActions: SpotlightFocusArea = hasAchievements ? .achievements : aboveTiles
         switch focus {
         case .row: return false
         case .pills, .topGames, .store: focus = .row
         case .strip: focus = .pills
+        case .achievements: focus = aboveTiles
         case .about:
-            focus = aboveActions
+            // The card sits beside About, not above it.
+            focus = aboveTiles
         case .actions:
             if actionIndex >= Self.actionColumns {
                 actionIndex -= Self.actionColumns
@@ -261,7 +274,7 @@ public struct SpotlightState: Equatable {
         return true
     }
 
-    /// Up into Build & Sources lands on its last row's first action.
+    /// Up into the Details links lands on its last row's first link.
     private mutating func enterLastActionRow(actionCount: Int, otherwise: SpotlightFocusArea) {
         guard actionCount > 0 else {
             focus = otherwise
@@ -271,19 +284,28 @@ public struct SpotlightState: Equatable {
         actionIndex = ((actionCount - 1) / Self.actionColumns) * Self.actionColumns
     }
 
-    /// Left/Right inside the pills, the strip, Build & Sources or More like this.
-    /// Left of Build & Sources' first column is Read more, when `readMore`.
+    /// Left/Right inside the pills, the strip, Details or More like this.
+    /// Left of the Details links' first column, and of the achievements card, is Read more, when `readMore`.
     @discardableResult
     public mutating func moveSideways(by delta: Int, screenshotCount: Int, topGameCount: Int = 0,
                                       actionCount: Int = 0, moreCount: Int = 0, readMore: Bool = false,
-                                      modsCount: Int = 0) -> Bool {
+                                      modsCount: Int = 0, hasAchievements: Bool = false) -> Bool {
         switch focus {
+        case .achievements:
+            guard delta < 0, readMore else { return false }
+            focus = .about
+            return true
         case .mods:
             guard let next = ModsBandLayout.beside(modsIndex, by: delta, count: modsCount) else { return false }
             modsIndex = next
             return true
         case .about:
-            guard delta > 0, actionCount > 0 else { return false }
+            guard delta > 0 else { return false }
+            if hasAchievements {
+                focus = .achievements
+                return true
+            }
+            guard actionCount > 0 else { return false }
             focus = .actions
             actionIndex -= actionIndex % Self.actionColumns
             return true

@@ -13,9 +13,10 @@ extension AppViewModel {
             return libraryGames.first { $0.id == id && !$0.isHidden }
         }
         guard router?.route == .collection else { return nil }
-        let games = librarySelection.query.apply(to: libraryGames, history: playSessionStore ?? NoPlayHistory())
+        let games = librarySelection.query.applyCatalog(to: visibleCatalogGames, history: playSessionStore ?? NoPlayHistory())
         guard !games.isEmpty else { return nil }
-        return games.first { $0.id == librarySelection.selectedGameID } ?? games.first
+        let selected = games.first { $0.id == librarySelection.selectedGameID } ?? games.first
+        return selected?.nxnativeGame
     }
 
     public func revealSaveFolder(_ url: URL) {

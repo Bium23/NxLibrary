@@ -3,11 +3,12 @@ import AppKit
 import NXLibraryCore
 
 /// What Spotlight's page needs below the stats: the game's details,
-/// Build & Sources' actions and More like this.
+/// the Details panel's rows and links, and More like this.
 struct SpotlightPageModel {
     let presentation: GameDetailPresentation
-    let rows: [BuildSourcesRow]
-    let more: [PortedGame]
+    let facts: [DetailsFact]
+    let links: [DetailsLink]
+    let more: [CatalogGame]
     /// The Metal gate refuses new builds.
     let buildBlocked: Bool
 }
@@ -26,6 +27,14 @@ struct SpotlightBlockKey: PreferenceKey {
     static func reduce(value: inout [SpotlightPageBlock: CGFloat], nextValue: () -> [SpotlightPageBlock: CGFloat]) {
         value.merge(nextValue(), uniquingKeysWith: { $1 })
     }
+}
+
+/// Whether About this game shows Read more, as drawn. Input reads this rather than cutting the text again:
+/// the keyboard reaches Spotlight through a copy of the view made when the monitor was installed, whose
+/// canvas can be an earlier window size, so its own cut could disagree with the one on screen.
+struct SpotlightReadMoreKey: PreferenceKey {
+    static var defaultValue = false
+    static func reduce(value: inout Bool, nextValue: () -> Bool) { value = value || nextValue() }
 }
 
 extension View {
@@ -62,7 +71,7 @@ struct SpotlightGenreChips: View {
 
 /// The store description under the screenshots, at least as tall as the
 /// column beside it (`excerpt`), with Read more for the rest. Read more takes
-/// controller focus left of Build & Sources.
+/// controller focus left of Details.
 struct SpotlightDescription: View {
     @Environment(\.seleneCanvas) private var canvas
     let text: String

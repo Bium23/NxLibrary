@@ -9,7 +9,7 @@ import NXLibraryCore
 actor OnlineBackgroundService {
     static let shared = OnlineBackgroundService()
 
-    static let userAgent = "NXLibrary/0.1 (personal macOS app)"
+    static let userAgent = AppIdentity.userAgent()
     private static let spacing: [BackgroundSourceID: TimeInterval] = [.wallhaven: 60.0 / 45, .danbooru: 1,
                                                                       .motionbgs: 1, .steam: 1]
     private let session: URLSession

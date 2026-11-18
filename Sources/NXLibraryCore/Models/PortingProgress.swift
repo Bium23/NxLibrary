@@ -16,6 +16,7 @@ public struct PortingProgress: Equatable {
 
     public static let shaderStageName = "Mac shaders"
     public static let pipelineArchiveStageName = "Pipeline archive"
+    public static let prewarmStageName = "Prewarm pipelines"
     public static let shaderShare = 0.9
     /// The stages after the shaders when the engine has not counted them yet.
     public static let expectedFinishingStages = 3

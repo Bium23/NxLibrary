@@ -62,13 +62,13 @@ final class LaunchBoxArtTests: XCTestCase {
         return page(fixed + shots + [("Fanart - Background", "World", "fanart.jpg", "fanart-full.jpg", 1920, 1080), ("Square", "World", "r2_square.jpg", "r2_square-full.jpg", 950, 950)])
     }
 
-    static let search = "https://gamesdb.launchbox-app.com/games/results/Donkey%20Kong%20Bananza"
+    static let search = "https://gamesdb.launchbox-app.com/games/results/donkey%20kong%20bananza"
     static let details = "https://gamesdb.launchbox-app.com/games/details/424483-donkey-kong-bananza"
 
     func testSearchURLKeepsTheNameInThePath() {
         XCTAssertEqual(LaunchBoxArt.searchURL(for: "Donkey Kong Bananza")?.absoluteString, Self.search)
         XCTAssertEqual(LaunchBoxArt.searchURL(for: "Fate/Samurai")?.absoluteString,
-                       "https://gamesdb.launchbox-app.com/games/results/Fate%2FSamurai")
+                       "https://gamesdb.launchbox-app.com/games/results/fate%2Fsamurai")
         XCTAssertNil(LaunchBoxArt.searchURL(for: "  "))
     }
 
@@ -84,6 +84,19 @@ final class LaunchBoxArtTests: XCTestCase {
         let snes = LaunchBoxArt.results(in: Self.card("1-x", "Donkey Kong Bananza", "Super Nintendo"))
         XCTAssertNil(LaunchBoxArt.pick(snes, names: ["Donkey Kong Bananza"], switch2: false), "only a Switch entry")
         XCTAssertNil(LaunchBoxArt.pick(snes, names: ["Donkey Kong Bananza"], switch2: false, loose: true), "even typed")
+    }
+
+    func testAMacGameTakesItsComputerEntryNeverAConsoleOne() {
+        let results = LaunchBoxArt.results(in: Self.card("3-ps", "The Witcher 3: Wild Hunt", "Sony Playstation 4")
+                                           + Self.card("2-sw", "The Witcher 3: Wild Hunt", "Nintendo Switch")
+                                           + Self.card("1-win", "The Witcher 3: Wild Hunt", "Windows"))
+        XCTAssertEqual(LaunchBoxArt.pick(results, names: ["The Witcher 3: Wild Hunt"], computer: true)?.path, "/games/details/1-win")
+        let both = LaunchBoxArt.results(in: Self.card("1-win", "Fixture", "Windows") + Self.card("4-mac", "Fixture", "Apple Mac OS"))
+        XCTAssertEqual(LaunchBoxArt.pick(both, names: ["Fixture"], computer: true)?.path, "/games/details/4-mac", "the Mac entry first")
+        let consoles = LaunchBoxArt.results(in: Self.card("2-sw", "Fixture", "Nintendo Switch"))
+        XCTAssertNil(LaunchBoxArt.pick(consoles, names: ["Fixture"], computer: true, loose: true))
+        XCTAssertEqual(LaunchBoxArt.pick(results, names: ["The Witcher 3: Wild Hunt"], switch2: false)?.path, "/games/details/2-sw",
+                       "a Switch game still takes the Switch entry")
     }
 
     func testATypedNameTakesTheFirstSwitchResult() {

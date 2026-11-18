@@ -27,6 +27,10 @@ public struct SaveSnapshot: Codable, Equatable, Identifiable {
     public var presentSlots: Set<SaveSlot>
     public var entries: [SaveInventoryEntry]
     public var byteCount: Int64 { entries.reduce(0) { $0 + $1.byteCount } }
+    internal var hasSupportedSchema: Bool {
+        schemaVersion == 2 || (schemaVersion == 1 && presentSlots.allSatisfy(\.isLegacy)
+                              && entries.allSatisfy { $0.slot.isLegacy })
+    }
 }
 public struct SaveImportPreview: Equatable {
     public let id: UUID

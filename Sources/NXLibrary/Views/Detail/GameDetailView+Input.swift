@@ -98,7 +98,7 @@ extension GameDetailView {
         viewModel.toggleFavorite(game)
     }
 
-    /// Hover moves the action focus only while Build & Sources is in focus.
+    /// Hover moves the action focus only while Details is in focus.
     func hoverRow(_ index: Int) {
         guard focus.zone == DetailsFocus.actionsZone, focus.action != index else { return }
         var next = focus
@@ -106,7 +106,7 @@ extension GameDetailView {
         if next != focus { focus = next }
     }
 
-    /// Press on a row: when Build & Sources is in focus it runs the row (the
+    /// Press on a row: when Details is in focus it runs the row (the
     /// row's own path explains a refusal, e.g. the Metal gate); otherwise the
     /// press first brings that band into focus.
     func pressRow(_ index: Int) {
@@ -115,7 +115,7 @@ extension GameDetailView {
             return
         }
         hoverRow(index)
-        let rows = currentModel.rows
+        let rows = currentModel.links
         guard index < rows.count else { return }
         rows[index].action()
     }
@@ -130,8 +130,8 @@ extension GameDetailView {
         case DetailsFocus.modsZone:
             activateModsTile(focus.mod)
         case DetailsFocus.actionsZone:
-            guard focus.action < model.rows.count else { return }
-            model.rows[focus.action].action()
+            guard focus.action < model.links.count else { return }
+            model.links[focus.action].action()
         case DetailsFocus.moreZone:
             guard focus.more < model.more.count else { return }
             selectOnSpotlight(model.more[focus.more])
@@ -191,6 +191,9 @@ extension GameDetailView {
     /// Re-reads the mods folder (and the overlay).
     func reloadMods() { modsHost.reload(game, viewModel: viewModel) }
 
+    /// Game options (its Cheats panel), a rebuild or a hand edit in Finder can change it.
+    func reloadCheats() { cheatsOn = viewModel.cheatsOn(for: game) }
+
     /// GameBanana's mods for this game.
     func startGameBanana() { modsHost.startOnline(game, viewModel: viewModel) }
 
@@ -209,7 +212,7 @@ extension GameDetailView {
     func openViewer(at index: Int) {
         let urls = currentModel.screenshots
         guard !urls.isEmpty else { return }
-        viewer = ViewerContext(titleID: game.titleId ?? game.uniqueKey, urls: urls,
+        viewer = ViewerContext(titleID: viewModel.personalizationKey(for: game), urls: urls,
                                state: ScreenshotViewerState(count: urls.count, start: index))
         SoundEffectService.shared.play(.click)
     }
@@ -246,10 +249,11 @@ extension GameDetailView {
                   !NativeMenuCommands.shared.isTracking,
                   case .detail(let id) = router.route, id == game.id,
                   viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
-                  viewModel.gameForSettingsSheet == nil,
+                  !viewModel.isGameOptionsOpen,
                   viewModel.gameToClose == nil,
                   viewModel.gameToRemove == nil,
                   !viewModel.isUpdateOfferOpen,
+                  !viewModel.isWelcomeOpen,
                   !viewModel.showSetupCheck,
                   let window = event.window,
                   !window.isSheet,

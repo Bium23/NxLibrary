@@ -16,6 +16,8 @@ struct ThemePreview: View {
     var videoURL: URL? = nil
     /// The home's Background shade, so the preview is as dark as the home and no darker.
     var shade: BackgroundShade = .balanced
+    var animated = false
+    @Environment(\.seleneReduceMotion) private var reduceMotion
 
     @Environment(\.seleneBackdropStyle) private var style
     @State private var art: [NSImage] = []
@@ -47,7 +49,9 @@ struct ThemePreview: View {
                     }
                 } else {
                     MoonlightBackdrop(accent: Color(hex: palette.glyph), ink: Color(hex: palette.ink),
-                                      moving: false, asImage: true)
+                                      moving: animated && !reduceMotion,
+                                      asImage: !animated || reduceMotion,
+                                      surface: palette.surface)
                 }
                 SeleneShades(shade: shade, scrim: Color(hex: palette.scrim))
                 home(w: w, h: h)

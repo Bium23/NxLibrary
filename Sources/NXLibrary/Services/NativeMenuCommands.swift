@@ -6,6 +6,7 @@ struct NativeMenuAvailability {
     var play = false
     var details = false
     var options = false
+    var catalogRecovery = false
 }
 
 private struct NativeMenuAvailabilityKey: FocusedValueKey {

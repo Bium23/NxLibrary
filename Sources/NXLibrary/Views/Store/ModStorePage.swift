@@ -69,7 +69,7 @@ struct ModStorePage: View {
                     Text(line).seleneFont(18, .medium).foregroundColor(SeleneTheme.ink75)
                 }
             }
-            Text(L10n.text("Mod data provided by GameBanana · only mods that work with NX Library are shown"))
+            Text(L10n.text("Mod data provided by GameBanana · only mods that work with Arcane are shown"))
                 .seleneFont(14)
                 .foregroundColor(SeleneTheme.ink60)
         }
@@ -85,7 +85,7 @@ struct ModStorePage: View {
         case .ready:
             if catalog.games.isEmpty {
                 return catalog.refreshing ? L10n.text("Looking for mods that work with your games…")
-                    : L10n.text("No mods for your games work with NX Library yet.")
+                    : L10n.text("No mods for your games work with Arcane yet.")
             }
             return catalog.refreshing ? L10n.text("Looking for more mods…") : nil
         }

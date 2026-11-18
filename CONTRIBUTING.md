@@ -1,8 +1,8 @@
 # Contributing
 
 NX Library is an early macOS front-end for a pinned upstream nxnative.
-Start with [README](README.md), [architecture](docs/architecture.md) and
-[AGENTS.md](AGENTS.md).
+Start with [README](README.md), [AGENTS.md](AGENTS.md),
+[architecture](docs/architecture.md) and [conventions](docs/conventions.md).
 
 Keep changes small and preserve Play for existing apps. Never patch the user's
 nxnative checkout, silently follow upstream main, or bypass the compatibility

@@ -19,7 +19,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
     case fullscreen, fps60, frameRate, metalFX, gameUpscaler, metalHUD, consoleMode, language, rumble, rumbleStrength
     case renderScale, moreSettings, restoreDefaults
     case cheats, mods, rebuild, showInFinder, openSaves, editDetails, removeGame
-    case changeArtwork, changeMetadata, storePage, attachSources, openLog, removeSources
+    case changeArtwork, changeMetadata, storePage, searchStore, attachSources, openLog, removeSources
 
     public var title: String {
         switch self {
@@ -50,6 +50,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
         case .changeArtwork: return L10n.text("Change artwork")
         case .changeMetadata: return L10n.text("Change metadata")
         case .storePage: return L10n.text("Store page")
+        case .searchStore: return L10n.text("Search Nintendo Store")
         case .attachSources: return L10n.text("Attach sources…")
         case .openLog: return L10n.text("Open log")
         case .removeSources: return L10n.text("Remove sources & build cache")
@@ -83,6 +84,7 @@ public enum GameOptionsRow: String, CaseIterable, Sendable {
         case .changeArtwork: return .image
         case .changeMetadata: return .edit
         case .storePage: return .store
+        case .searchStore: return .search
         case .attachSources: return .link
         case .openLog: return .terminal
         }
@@ -166,6 +168,8 @@ public struct GameOptionsPresentation: Equatable {
     /// What the gate says about the refusal (ToolchainGateCopy.Summary.buildHint); nil keeps the generic line.
     public let toolchainHint: String?
     public let hasStorePage: Bool
+    /// The game has no description: Edit details offers a Nintendo store search.
+    public let offersStoreSearch: Bool
     public let gameName: String
     public let appPath: String
     public let canDeleteBundle: Bool
@@ -179,6 +183,7 @@ public struct GameOptionsPresentation: Equatable {
 
     public init(supportsRenderScale: Bool, isPlayable: Bool, sourcesDetached: Bool,
                 toolchainBlocked: Bool = false, toolchainHint: String? = nil, hasStorePage: Bool = false,
+                offersStoreSearch: Bool = false,
                 gameName: String = "", appPath: String = "", canDeleteBundle: Bool = false,
                 cheatsValue: String = "None", modsValue: String = "None", settings: GameSettingsSnapshot? = nil) {
         self.cheatsValue = cheatsValue
@@ -190,6 +195,7 @@ public struct GameOptionsPresentation: Equatable {
         self.toolchainBlocked = toolchainBlocked
         self.toolchainHint = toolchainHint.flatMap { $0.isEmpty ? nil : $0 }
         self.hasStorePage = hasStorePage
+        self.offersStoreSearch = offersStoreSearch
         self.gameName = gameName
         self.appPath = appPath
         self.canDeleteBundle = canDeleteBundle
@@ -205,7 +211,7 @@ public struct GameOptionsPresentation: Equatable {
     /// Says where to fix a dimmed Rebuild: the sources or the Metal gate.
     public var rebuildAbout: String {
         if sourcesDetached { return L10n.text("Game files are missing or not attached. Attach sources in Edit details.") }
-        if toolchainBlocked { return toolchainHint.map { $0 + "." } ?? L10n.text("Blocked by the Metal gate. See Settings → Engine.") }
+        if toolchainBlocked { return toolchainHint.map { $0 + "." } ?? L10n.text("Blocked by the Metal gate. See Settings → Setup and engine.") }
         return L10n.text("Build a new app; the old app stays if the build fails.")
     }
 
@@ -274,6 +280,7 @@ public struct GameOptionsPresentation: Equatable {
         case .changeArtwork: return L10n.text("Cover, background, icon and logo, from GameTDB, Title DB or a file.")
         case .changeMetadata: return L10n.text("Description, genres, developer, publisher and release date.")
         case .storePage: return L10n.text("Open the game's Nintendo store page.")
+        case .searchStore: return L10n.text("Find this game on the Nintendo store.")
         case .attachSources: return attachAbout
         case .openLog: return L10n.text("Reveal the latest build log.")
         case .removeSources: return L10n.text("Deletes only the source files named in this game and its app-owned workspace. The app and saves stay.")
@@ -334,6 +341,7 @@ public struct GameOptionsPresentation: Equatable {
         case .editDetails:
             var entries: [GameOptionsEntry] = [.heading("Edit details"), .row(.changeArtwork), .row(.changeMetadata)]
             if hasStorePage { entries.append(.row(.storePage)) }
+            if offersStoreSearch { entries.append(.row(.searchStore)) }
             entries += [.row(.attachSources), .row(.openLog), .gap, .row(.removeSources)]
             return entries
         }

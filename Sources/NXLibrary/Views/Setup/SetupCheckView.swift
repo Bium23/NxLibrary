@@ -36,7 +36,7 @@ struct SetupCheckView: View {
             SeleneBackdrop()
             VStack(spacing: 0) {
                 SetupStepIndicator(page: .requirements).padding(.bottom, canvas.u(18))
-                Text(L10n.text("Let's get NX Library ready"))
+                Text(L10n.text("Let's get Arcane ready"))
                     .seleneFont(46, .semibold)
                     .foregroundColor(SeleneTheme.ink)
                 Text(L10n.text("Check what you need to build. Your games come next."))
@@ -51,7 +51,7 @@ struct SetupCheckView: View {
             .offset(y: canvas.u(-20))
             VStack {
                 Spacer(minLength: 0)
-                SeleneHintsBar(right: isFirstRun ? [HintItem(.a, L10n.text("Select"))] : [HintItem(.a, L10n.text("Select")), HintItem(.b, L10n.text("Back"))],
+                SeleneHintsBar(right: [HintItem(.a, L10n.text("Select")), HintItem(.b, L10n.text("Back"))],
                                bottom: SeleneBottomScrim.hintsBottom, leftInset: 18)
             }
         }
@@ -206,7 +206,7 @@ struct SetupCheckView: View {
             }
             if names.isEmpty {
                 return Story(icon: .check, tone: SeleneTheme.success, title: L10n.text("Install all"), state: "Done",
-                             about: L10n.text("Everything NX Library can install by itself is installed."),
+                             about: L10n.text("Everything Arcane can install by itself is installed."),
                              detail: L10n.text("Import your keys on their card if needed."), action: nil)
             }
             return Story(icon: .sync, tone: SeleneTheme.glyph, title: L10n.text("Install all"), state: L10n.format("%@ to go", [String(describing: (names.count))]),
@@ -218,7 +218,7 @@ struct SetupCheckView: View {
             let left = required.filter { $0.state != .ready }.map(\.title)
             if left.isEmpty {
                 return Story(icon: .check, tone: SeleneTheme.success, title: L10n.text("All set"), state: L10n.text("Ready"),
-                             about: L10n.text("Everything NX Library needs is here."), detail: "", action: "Continue")
+                             about: L10n.text("Everything Arcane needs is here."), detail: "", action: "Continue")
             }
             return Story(icon: .checklist, tone: SeleneTheme.glyph, title: L10n.format("%@ of %@ ready", [String(describing: (ready)), String(describing: (required.count))]),
                          state: L10n.format("%@ left", [String(describing: (left.count))]), about: L10n.format("Still to do: %@.", [String(describing: (left.joined(separator: ", ")))]),

@@ -109,11 +109,19 @@ public struct GameDetailPresentation: Equatable {
 
     private static func rank(game: PortedGame, total: TimeInterval, library: [PortedGame],
                              playtimes: [UUID: TimeInterval]) -> String? {
+        rank(id: game.id, name: game.name, total: total,
+             others: library.filter { !$0.isHidden }.map { ($0.id, $0.name) }, playtimes: playtimes)
+    }
+
+    /// "#2 of 5" among the visible games with play time, whatever their source.
+    static func rank(id: UUID, name: String, total: TimeInterval, others: [(id: UUID, name: String)],
+                     playtimes: [UUID: TimeInterval]) -> String? {
         guard total > 0 else { return nil }
-        var entries: [(id: UUID, name: String, time: TimeInterval)] = [(game.id, game.name, total)]
-        for other in library where other.id != game.id && !other.isHidden {
+        var entries: [(id: UUID, name: String, time: TimeInterval)] = [(id, name, total)]
+        for other in others where other.id != id {
             if let t = playtimes[other.id], t > 0 { entries.append((other.id, other.name, t)) }
         }
+        let game = (id: id, name: name)
         entries.sort { a, b in
             if a.time != b.time { return a.time > b.time }
             let c = a.name.localizedCaseInsensitiveCompare(b.name)
@@ -138,7 +146,7 @@ public struct GameDetailPresentation: Equatable {
         return ""
     }
 
-    private static func hltbURL(for name: String) -> URL? {
+    static func hltbURL(for name: String) -> URL? {
         var components = URLComponents(string: "https://howlongtobeat.com/")
         components?.queryItems = [URLQueryItem(name: "q", value: name)]
         return components?.url

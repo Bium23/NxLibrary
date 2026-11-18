@@ -8,6 +8,8 @@ import NXLibraryCore
 /// crossfading on change, and the left, bottom and top shades at 0.3 scaled by
 /// the Background shade setting. Shared by Spotlight and Collection.
 struct SeleneArtBackground: View {
+    @Environment(\.seleneBackdropStyle) private var style
+    @Environment(\.seleneSharesBackdrop) private var sharesBackdrop
     let image: NSImage?
     /// Changes whenever `image` does; drives the crossfade.
     let imageKey: String
@@ -19,15 +21,26 @@ struct SeleneArtBackground: View {
     var showsArt = true
     /// The Mods card: no art, the moonlight turns gold (`SeleneBackdrop.modsTint`).
     var modsTint = false
+    /// Spotlight's entrance (`SpotlightEntrance`): the game's art hidden until the flight, then rising over the
+    /// moonlight, which keeps moving until the art is in.
+    var reveal: ArtReveal = .shown
 
     private var art: NSImage? { showsArt ? image : nil }
 
+    /// The entrance's background rise (`SpotlightEntrance.backgroundDuration`) on the crossfade's curve
+    /// (`OpacityFade`), the art layer's own: soft at both ends, as when moving between games.
+    static let rise = Animation.timingCurve(Double(OpacityFade.controlPoints.0), Double(OpacityFade.controlPoints.1),
+                                            Double(OpacityFade.controlPoints.2), Double(OpacityFade.controlPoints.3),
+                                            duration: SpotlightEntrance.backgroundDuration)
+
     var body: some View {
         ZStack {
-            // Under a game's art the moonlight is hidden: it holds still (Selene fades it out there).
-            backdrop.still(art != nil).modsTint(modsTint)
+            if !sharesBackdrop { Color(hex: style.palette.scrim) }
+            // Under a game's art the moonlight is hidden: it holds still (Selene fades it out there). While the art
+            // rises it keeps moving, so nothing shows through still.
+            backdrop.still(art != nil && reveal == .shown).modsTint(modsTint)
             // A crossfade is not movement: it stays under reduce motion (spec §8).
-            SeleneArtLayer(image: art, key: art == nil ? "none" : imageKey, crossfade: crossfade)
+            SeleneArtLayer(image: art, key: art == nil ? "none" : imageKey, crossfade: crossfade, reveal: reveal)
             SeleneShades(shade: shade)
         }
         .allowsHitTesting(false)
@@ -38,8 +51,9 @@ struct SeleneArtBackground: View {
 /// The home's left, bottom and top shades at 0.3 scaled by the Background shade
 /// setting, in the palette's scrim colour. The Theme screen's preview takes the same.
 struct SeleneShades: View {
+    @Environment(\.seleneBackdropStyle) private var style
     var shade: BackgroundShade = .balanced
-    var scrim: Color = SeleneTheme.scrim
+    var scrim: Color? = nil
 
     var body: some View {
         let k = 0.3 * shade.scrimMultiplier
@@ -58,8 +72,13 @@ struct SeleneShades: View {
 
     /// A scrim stop: Selene's opacity-mask alpha times the shade's opacity.
     private func stop(_ mask: Double, _ opacity: Double, at location: CGFloat) -> Gradient.Stop {
-        .init(color: scrim.opacity(min(1, mask * opacity)), location: location)
+        .init(color: (scrim ?? Color(hex: style.palette.scrim)).opacity(min(1, mask * opacity)), location: location)
     }
+}
+
+/// How the art layer shows as a whole: hidden under a cover, fading up with Spotlight's entrance, or shown.
+enum ArtReveal: Equatable {
+    case hidden, rising, shown
 }
 
 /// The art as one Core Animation layer: a change dissolves old into new in the render server, so the crossfade
@@ -70,10 +89,12 @@ struct SeleneArtLayer: NSViewRepresentable {
     /// Changes whenever `image` does; "none" without art.
     let key: String
     let crossfade: Double
+    var reveal: ArtReveal = .shown
 
     func makeNSView(context: Context) -> SeleneArtLayerView { SeleneArtLayerView() }
 
     func updateNSView(_ view: SeleneArtLayerView, context: Context) {
+        view.reveal(reveal)
         view.show(image, key: key, crossfade: crossfade)
     }
 }
@@ -88,6 +109,9 @@ final class SeleneArtLayerView: NSView {
     /// Animation, which has no presentation for a layer added in the pass still open.
     private var fades: [ObjectIdentifier: OpacityFade] = [:]
     private var key: String?
+    private var revealed = ArtReveal.shown
+    /// Held for Spotlight's entrance once: the first art then fades in too, even when it arrives after the rise.
+    private var heldOnce = false
 
     init() {
         super.init(frame: .zero)
@@ -109,11 +133,34 @@ final class SeleneArtLayerView: NSView {
         CATransaction.commit()
     }
 
+    /// The whole art layer, apart from each image's crossfade: the entrance's slow rise from hidden on the crossfade's
+    /// curve, in the render server so a busy main thread never holds it; shown (landing) ends a rise at once.
+    func reveal(_ reveal: ArtReveal) {
+        if reveal == .hidden { heldOnce = true }
+        guard reveal != revealed, let layer else { return }
+        let from = revealed
+        revealed = reveal
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        layer.removeAnimation(forKey: "entrance")
+        layer.opacity = reveal == .hidden ? 0 : 1
+        if reveal == .rising, from == .hidden {
+            let rise = CABasicAnimation(keyPath: "opacity")
+            rise.fromValue = 0
+            rise.toValue = 1
+            rise.duration = SpotlightEntrance.backgroundDuration
+            let (x1, y1, x2, y2) = OpacityFade.controlPoints
+            rise.timingFunction = CAMediaTimingFunction(controlPoints: x1, y1, x2, y2)
+            layer.add(rise, forKey: "entrance")
+        }
+        CATransaction.commit()
+    }
+
     func show(_ image: NSImage?, key: String, crossfade: Double) {
         guard key != self.key else { return }
         let first = self.key == nil
         self.key = key
-        let duration = first ? 0 : crossfade
+        let duration = first && !heldOnce ? 0 : crossfade
         let now = CACurrentMediaTime()
         let cg = image?.cgImage(forProposedRect: nil, context: nil, hints: nil)
         let interrupted = stack.filter { fades[ObjectIdentifier($0)].map { !$0.isDone(at: now) } ?? false }.count

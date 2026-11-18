@@ -5,7 +5,10 @@ import NXLibraryCore
 /// Spotlight's controller, keyboard and pointer input.
 extension SpotlightView {
     func handle(_ action: GamepadAction) {
+        // The entrance plays to its end: no press skips it or acts underneath.
+        guard entrance.takesInput else { return }
         if viewer != nil { return handleViewer(action) }
+        if achievementsScreen != nil { return handleAchievements(action) }
         if viewModel.spotlight.isLifted { return handleLifted(action) }
         if cardMenu != nil { return handleCardMenu(action) }
         if modsHost.isPanelOpen { return modsHost.handlePanel(action) }
@@ -15,41 +18,45 @@ extension SpotlightView {
             // Y (the card's menu), X and the row's jumps belong to the row, not the store.
             if [.contextAction, .secondaryAction, .jumpToStart, .jumpToEnd].contains(action) { return }
         }
-        let items = self.items
+        if handleRowGlide(action) { return }
         let shots = screenshotCount
         let tops = topGameCount
         let page = currentPage
-        let actions = page?.rows.count ?? 0
+        let actions = page?.links.count ?? 0
         let more = page?.more.count ?? 0
-        let readMore = page.map { aboutExcerpt($0).truncated } ?? false
+        // As drawn: this copy's canvas may be an older window size than the page's (`SpotlightReadMoreKey`).
+        let readMore = page != nil && aboutReadMore
+        let hasAchievements = selectedAchievements != nil
         let mods = selectedGame.flatMap { modsHost.game?.id == $0.id ? modsHost.tiles.count : nil } ?? 0
         var moved = false
         switch action {
         case .navigateLeft, .navigateRight:
             let delta = action == .navigateLeft ? -1 : 1
             mutate { state in
-                moved = state.focus == .row
-                    ? state.move(by: delta, in: items)
-                    : state.moveSideways(by: delta, screenshotCount: shots, topGameCount: tops,
-                                         actionCount: actions, moreCount: more, readMore: readMore, modsCount: mods)
+                moved = state.moveSideways(by: delta, screenshotCount: shots, topGameCount: tops,
+                                           actionCount: actions, moreCount: more, readMore: readMore, modsCount: mods,
+                                           hasAchievements: hasAchievements)
             }
         case .navigateDown where selectedItem == .card(.mods) && viewModel.spotlight.focus == .row:
             enterStore()
         case .navigateDown:
-            let isGame = selectedGame != nil
+            let isGame = selectedCatalogGame != nil
             let isActivity = selectedItem == .card(.activity)
             mutate {
                 moved = $0.moveDown(selectedIsGame: isGame, screenshotCount: shots,
                                     selectedIsActivity: isActivity, topGameCount: tops,
-                                    actionCount: actions, moreCount: more, modsCount: mods)
+                                    actionCount: actions, moreCount: more, modsCount: mods,
+                                    hasAchievements: hasAchievements)
             }
         case .navigateUp:
-            mutate { moved = $0.moveUp(screenshotCount: shots, actionCount: actions, modsCount: mods) }
+            mutate { moved = $0.moveUp(screenshotCount: shots, actionCount: actions, modsCount: mods,
+                                       hasAchievements: hasAchievements) }
         case .tabPrevious:
             setFilter(filter.shifted(by: -1))
         case .tabNext:
             setFilter(filter.shifted(by: 1))
         case .jumpToStart, .jumpToEnd:
+            let items = self.items
             mutate { moved = $0.jump(toEnd: action == .jumpToEnd, in: items) }
         case .confirm:
             confirm()
@@ -58,10 +65,15 @@ extension SpotlightView {
             mutate { if $0.focus != .row { $0.focus = .row; moved = true } }
         case .secondaryAction:
             // X scrolls to the game's page (the pills), like Down from the row.
-            if selectedGame != nil {
+            if selectedGame != nil || selectedCatalogGame?.integration == .steam {
                 mutate { if $0.focus == .row { moved = $0.showGameDetails() } }
             }
         case .contextAction:
+            if let steam = selectedCatalogGame, steam.integration == .steam {
+                SoundEffectService.shared.play(.click)
+                viewModel.openSteamOptions(steam, from: .spotlight)
+                return
+            }
             if let game = selectedGame {
                 viewModel.openGameOptions(game, from: .spotlight)
             } else if case .card(let card) = selectedItem {
@@ -82,6 +94,27 @@ extension SpotlightView {
         if moved { SoundEffectService.shared.play(.focus) }
     }
 
+    /// Horizontal browsing only needs the row. Constructing the game page here does disk and layout work before the glide.
+    func handleRowGlide(_ action: GamepadAction) -> Bool {
+        guard viewModel.spotlight.focus == .row, action == .navigateLeft || action == .navigateRight else { return false }
+        let items = self.items
+        let delta = action == .navigateLeft ? -1 : 1
+        var moved = false
+        mutate { moved = $0.move(by: delta, in: items) }
+        if moved { SoundEffectService.shared.play(.focus) }
+        return true
+    }
+
+    func pressCatalogPill(_ index: Int, game: CatalogGame) {
+        switch index {
+        // The positions of Play, Options and favorite, as for an nxnative game.
+        case 0: SoundEffectService.shared.play(.click); SteamPlayCoordinator.shared.press(game)
+        case 1: SoundEffectService.shared.play(.click); viewModel.openSteamOptions(game, from: .spotlight)
+        case 2: viewModel.setCatalogFavorite(game)
+        default: break
+        }
+    }
+
     private func confirm() {
         let state = viewModel.spotlight
         switch state.focus {
@@ -89,13 +122,14 @@ extension SpotlightView {
             if let item = selectedItem { activate(item) }
         case .pills:
             if let game = selectedGame { pressPill(state.pillIndex, game: game) }
+            else if let game = selectedCatalogGame { pressCatalogPill(state.pillIndex, game: game) }
         case .strip:
             openViewer(at: state.stripIndex)
         case .about:
             aboutExpanded.toggle()
             SoundEffectService.shared.play(.click)
         case .actions:
-            let rows = currentPage?.rows ?? []
+            let rows = currentPage?.links ?? []
             guard state.actionIndex < rows.count else { return }
             rows[state.actionIndex].action()
         case .more:
@@ -110,17 +144,62 @@ extension SpotlightView {
             if state.topGameIndex < ids.count { selectGame(ids[state.topGameIndex]) }
         case .store:
             break // The store takes A itself (`handleStore`).
+        case .achievements:
+            openAchievements()
+        }
+    }
+
+    // MARK: - Achievements
+
+    /// Reads the selected Steam game's achievements (again), in the app's language.
+    func loadAchievements() {
+        guard let appID = selectedCatalogGame?.steamGame?.appID else { return }
+        achievementsStore.load(appID: appID, language: SteamMetadata.language(L10n.context.language))
+    }
+
+    /// Opens on All, and reads Steam's files again for unlocks made since the page opened.
+    func openAchievements() {
+        guard let summary = selectedAchievements, achievementsScreen == nil else { return }
+        achievementsScreen = AchievementsScreenModel(ids: summary.rows(.all).map(\.id))
+        SoundEffectService.shared.play(.click)
+        loadAchievements()
+    }
+
+    /// Closing returns Spotlight's focus to the tile.
+    func closeAchievements() {
+        guard achievementsScreen != nil else { return }
+        achievementsScreen = nil
+        if selectedAchievements != nil { mutate { $0.focus = .achievements } }
+        SoundEffectService.shared.play(.focus)
+    }
+
+    private func handleAchievements(_ action: GamepadAction) {
+        guard let screen = achievementsScreen, let summary = selectedAchievements else {
+            achievementsScreen = nil
+            return
+        }
+        switch screen.handle(action, summary: summary) {
+        case .moved: SoundEffectService.shared.play(.focus)
+        case .filtered, .ordered: SoundEffectService.shared.play(.tabSwitch)
+        case .opened: SoundEffectService.shared.play(.click)
+        case .closedDetail: SoundEffectService.shared.play(.focus)
+        case .close: closeAchievements()
+        case .ignored: break
         }
     }
 
     // MARK: - Screenshot viewer
 
     func openViewer(at index: Int) {
-        guard let game = selectedGame else { return }
-        let urls = Array((viewModel.storeMetadata[game.id]?.screenshotURLs ?? [])
-            .prefix(SpotlightScreenshotStrip.maxCount))
+        let titleID: String, all: [URL]
+        if let game = selectedGame {
+            titleID = viewModel.personalizationKey(for: game); all = viewModel.storeMetadata[game.id]?.screenshotURLs ?? []
+        } else if let game = selectedCatalogGame, game.integration == .steam {
+            titleID = game.personalizationReference.key; all = steamFacts.metadata(for: game)?.screenshots ?? []
+        } else { return }
+        let urls = Array(all.prefix(SpotlightScreenshotStrip.maxCount))
         guard !urls.isEmpty else { return }
-        viewer = ViewerContext(titleID: game.titleId ?? game.uniqueKey, urls: urls,
+        viewer = ViewerContext(titleID: titleID, urls: urls,
                                state: ScreenshotViewerState(count: urls.count, start: index))
         SoundEffectService.shared.play(.click)
     }
@@ -162,12 +241,9 @@ extension SpotlightView {
             var order: [String]?
             mutate { order = $0.drop() }
             if let order {
-                // Under a filter, fold the visible order into the full one.
-                let full = SpotlightRow.build(
-                    games: LibraryQuery(filter: .all).apply(to: viewModel.libraryGames, history: playSessions),
-                    enabledCards: settings.settings.visibleSpotlightCards,
-                    order: settings.settings.spotlightOrder).map(\.key)
-                settings.settings.spotlightOrder = SpotlightRow.merging(visibleOrder: order, into: full)
+                settings.settings.spotlightOrder = SpotlightRow.saving(
+                    visibleOrder: order, gameIDs: viewModel.catalogGames.map(\.id),
+                    previousOrder: settings.settings.spotlightOrder)
             }
             SoundEffectService.shared.play(.click)
         case .cancel:
@@ -223,6 +299,9 @@ extension SpotlightView {
     func activate(_ item: SpotlightItem) {
         switch item {
         case .game(let id):
+            if let steam = viewModel.visibleCatalogGames.first(where: { $0.id == id }), steam.integration == .steam {
+                SoundEffectService.shared.play(.click); SteamPlayCoordinator.shared.press(steam); return
+            }
             guard let game = viewModel.libraryGames.first(where: { $0.id == id }) else { return }
             if viewModel.portingPills(game) == .porting {
                 SoundEffectService.shared.play(.click)
@@ -287,17 +366,19 @@ extension SpotlightView {
         }
     }
 
+    /// Play, or Build for a game not built yet (as on the Details page); the page has no build button any more.
     private func play(_ game: PortedGame) {
-        guard GameResourceState.unavailableReason(for: game) == nil else {
-            SoundEffectService.shared.play(.error)
-            return
-        }
-        if game.isPlayableLocally {
+        let step = GamePrimaryStep.decide(unavailable: GameResourceState.unavailableReason(for: game) != nil,
+                                          playable: game.isPlayableLocally,
+                                          sourcesAvailable: GameResourceState.sourcesAvailable(for: game))
+        switch step {
+        case .play:
             viewModel.launchGame(game)
-        } else {
-            // Not built yet: scroll down to Build & Sources.
-            let canBuild = GameResourceState.sourcesAvailable(for: game)
-            mutate { $0.focus = .actions; $0.actionIndex = canBuild ? 1 : 0 }
+        case .build:
+            viewModel.startBuild(for: game)
+            if viewModel.isBuilding { router.openAddGame() }
+        case .refuse:
+            SoundEffectService.shared.play(.error)
         }
     }
 
@@ -343,20 +424,36 @@ extension SpotlightView {
             guard !router.isMenuPresented,
                   !NativeMenuCommands.shared.isTracking,
                   !router.isSearchPresented,
-                  !router.isIntroShowing,
                   router.route == .library,
                   viewModel.alertMessage == nil, viewModel.settingsNotice == nil,
-                  viewModel.gameForSettingsSheet == nil,
+                  !viewModel.isGameOptionsOpen,
                   viewModel.gameToClose == nil,
                   viewModel.gameToRemove == nil,
                   !viewModel.isUpdateOfferOpen,
+                  !viewModel.isWelcomeOpen,
                   !viewModel.showSetupCheck,
                   let window = event.window,
                   !window.isSheet,
                   window.attachedSheet == nil,
                   NSApp.modalWindow == nil,
                   !(window.firstResponder is NSText) else { return event }
+            // The entrance plays to its end: keys and the wheel are taken; ⌘, ⌃ and ⌥ shortcuts still pass.
+            if !entrance.takesInput {
+                let shortcut = event.type == .keyDown
+                    && !event.modifierFlags.intersection([.command, .control, .option]).isEmpty
+                return shortcut ? event : nil
+            }
             if event.type == .scrollWheel {
+                // The Achievements screen's list takes the wheel on its own offset, like a mod panel's
+                // description: a notch glides, a trackpad follows the fingers; the page beneath stays.
+                if let screen = achievementsScreen {
+                    let dy = event.scrollingDeltaY
+                    if abs(dy) >= abs(event.scrollingDeltaX) {
+                        let precise = event.hasPreciseScrollingDeltas
+                        screen.wheel(by: -(precise ? dy : dy * canvas.u(48)), animated: !precise && !reduceMotion)
+                    }
+                    return nil
+                }
                 // An open mod panel takes the wheel: its description scrolls, the page beneath stays.
                 if let panel = [modsHost, storeHost.panel].first(where: \.isPanelOpen) {
                     let dy = event.scrollingDeltaY
@@ -488,7 +585,8 @@ extension SpotlightView {
         // The row is reached only by the glide, never by settling.
         var areas: [SpotlightFocusArea] = [.pills]
         if screenshotCount > 0 { areas.append(.strip) }
-        if !page.rows.isEmpty { areas.append(.actions) }
+        if selectedAchievements != nil { areas.append(.achievements) }
+        if !page.links.isEmpty { areas.append(.actions) }
         if modsHost.localMods != nil { areas.append(.mods) }
         if !page.more.isEmpty { areas.append(.more) }
         let current = scroll

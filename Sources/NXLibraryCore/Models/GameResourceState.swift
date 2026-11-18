@@ -52,3 +52,15 @@ public enum GameResourceState {
         return game.status
     }
 }
+
+/// What a Switch game's Play does on Spotlight: play it, build it when it is not built yet and its
+/// sources are there, or refuse with a sound (the note above the pills says why).
+public enum GamePrimaryStep: Equatable, Sendable {
+    case play, build, refuse
+
+    public static func decide(unavailable: Bool, playable: Bool, sourcesAvailable: Bool) -> GamePrimaryStep {
+        if unavailable { return .refuse }
+        if playable { return .play }
+        return sourcesAvailable ? .build : .refuse
+    }
+}

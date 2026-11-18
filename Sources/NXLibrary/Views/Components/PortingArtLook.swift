@@ -6,7 +6,8 @@ import NXLibraryCore
 /// the shaders compile, a thin "k/n" bar with the stage and its step in small type
 /// sits on the softly blurred art; then the percentage fades in, small, with a slow
 /// pastel sheen. A failed porting with no app keeps the art black and white,
-/// lightly blurred, under a lock.
+/// lightly blurred, under a lock; a Steam game still installing looks the same with
+/// "Downloading" under a thin download mark that pulses (`PortingDownloadMark`).
 ///
 /// The art is drawn once: a grey layer in `.saturation` blend takes the colour out
 /// above the fill line. The sheen moves only while compiling, and stands still
@@ -49,7 +50,7 @@ struct PortingArtLook: ViewModifier {
     private var fill: Double {
         switch look {
         case .normal: return 1
-        case .preparing, .locked: return 0
+        case .preparing, .locked, .downloading: return 0
         case .filling(let value): return min(max(value, 0), 1)
         }
     }
@@ -58,13 +59,13 @@ struct PortingArtLook: ViewModifier {
     private var blur: CGFloat {
         switch look {
         case .preparing: return 0.02
-        case .locked: return 0.012
+        case .locked, .downloading: return 0.012
         case .normal, .filling: return 0
         }
     }
 
     /// What sits on the art; animating between them is the slow dissolve.
-    private enum Stage: Equatable { case none, steps, percent, lock }
+    private enum Stage: Equatable { case none, steps, percent, lock, download }
 
     private var stage: Stage {
         switch look {
@@ -72,6 +73,7 @@ struct PortingArtLook: ViewModifier {
         case .preparing: return .steps
         case .filling: return .percent
         case .locked: return .lock
+        case .downloading: return .download
         }
     }
 
@@ -106,6 +108,10 @@ struct PortingArtLook: ViewModifier {
                     MaterialIconView(.lock, size: side * 0.22)
                         .foregroundColor(.white.opacity(0.88))
                         .shadow(color: .black.opacity(0.55), radius: side * 0.04)
+                        .transition(.opacity)
+                }
+                if stage == .download {
+                    downloading(side: side)
                         .transition(.opacity)
                 }
             }
@@ -151,6 +157,33 @@ struct PortingArtLook: ViewModifier {
         }
     }
 
+    /// Steam is still installing the game: the word in small type under the mark, which the tile draws outside its
+    /// flattened picture (`PortingDownloadMark`) so it can pulse.
+    private func downloading(side: CGFloat) -> some View {
+        ZStack {
+            // A soft shade, as under the porting steps, so the white reads on light art too.
+            Color.black.opacity(0.32)
+            downloadMark(side: side)
+        }
+    }
+
+    /// The download mark and its word, as fractions of the side, centred together on the tile: the circle (its
+    /// symbol's point size; the drawn ring is about as wide) sits this far above the centre, the word's middle this
+    /// far below, a small gap between them.
+    static let downloadMarkSize: CGFloat = 0.18
+    static let downloadMarkLift: CGFloat = 0.055
+    static let downloadWordDrop: CGFloat = 0.1
+
+    private func downloadMark(side: CGFloat) -> some View {
+        Text(L10n.text("Downloading"))
+            .font(.system(size: side * 0.06, weight: .medium))
+            .foregroundColor(.white.opacity(0.85))
+            .lineLimit(1)
+            .frame(width: side * 0.84)
+            .shadow(color: .black.opacity(0.55), radius: side * 0.04)
+            .offset(y: side * Self.downloadWordDrop)
+    }
+
     /// Soft pastels, never vivid; the blue kept faint: pink, peach, butter, mint, mist, lavender.
     private static let pastels: [Color] = [0xF4CFDA, 0xF6E0C8, 0xF3EECB, 0xD3EBDD, 0xD8E6F2, 0xE2DAF2]
         .map { Color(hex: $0) }
@@ -182,5 +215,28 @@ struct PortingArtLook: ViewModifier {
 extension View {
     func portingLook(_ look: PortingTileLook, cornerRadius: CGFloat) -> some View {
         modifier(PortingArtLook(look: look, cornerRadius: cornerRadius))
+    }
+}
+
+/// A downloading game's mark, pulsing in brightness over the word "Downloading". A Core Animation view cannot be
+/// drawn inside a tile flattened with `drawingGroup` (SwiftUI shows a placeholder instead), so the tile places
+/// this over its face, outside the flattened picture, as it does its shine. Nothing for any other look.
+struct PortingDownloadMark: View {
+    let look: PortingTileLook
+    let width: CGFloat
+    let height: CGFloat
+
+    @Environment(\.seleneReduceMotion) private var reduceMotion
+
+    var body: some View {
+        if look == .downloading {
+            let side = min(width, height)
+            DownloadMarkLayers(size: side * PortingArtLook.downloadMarkSize, still: reduceMotion)
+                .frame(width: side * 0.3, height: side * 0.3)
+                .offset(y: -side * PortingArtLook.downloadMarkLift)
+                .frame(width: width, height: height)
+                .allowsHitTesting(false)
+                .transition(.opacity)
+        }
     }
 }

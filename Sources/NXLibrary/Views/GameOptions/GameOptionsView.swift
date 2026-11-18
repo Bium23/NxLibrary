@@ -12,6 +12,27 @@ import NXLibraryCore
 /// pointer alone never moves the focus; the wheel or trackpad scrolls the list
 /// freely and, once it stops, the focus moves to the nearest row in view without
 /// moving the list. A click activates.
+/// What Game options reads from the game's files when it opens. The view holds it as a `@StateObject`, built once
+/// per opening: the view's own initializer runs on every redraw of the shell and must not read files there.
+final class GameOptionsFiles: ObservableObject {
+    /// It parses the game's launcher file, which the rows must not do on every draw.
+    let supportsRenderScale: Bool
+    @Published var config: GameRuntimeConfig
+    /// The build's settings and their values, for a build with saved choices; nil for an older build (`config`).
+    @Published var snapshot: GameSettingsSnapshot?
+    /// The Cheats row's value: read when Game options opens and when the panel closes, not on every draw.
+    @Published var cheatsValue: String
+    @Published var modsValue: String
+
+    init(viewModel: AppViewModel, game: PortedGame) {
+        supportsRenderScale = viewModel.supportsSetting("DM_RENDER_SCALE", for: game)
+        config = viewModel.loadRuntimeConfig(for: game)
+        snapshot = viewModel.settingsSnapshot(for: game)
+        cheatsValue = viewModel.cheatRowValue(for: game)
+        modsValue = viewModel.modsRowValue(for: game)
+    }
+}
+
 struct GameOptionsView: View {
     @ObservedObject var viewModel: AppViewModel
     let game: PortedGame
@@ -19,12 +40,16 @@ struct GameOptionsView: View {
     let onClose: () -> Void
     let onShowBuild: () -> Void
     let onMove: () -> Void
-    /// Read once: it parses the game's launcher file, which the rows must not do on every draw.
-    private let supportsRenderScale: Bool
-
-    @State private var config: GameRuntimeConfig
-    /// The build's settings and their values, for a build with saved choices; nil for an older build (`config`).
-    @State private var snapshot: GameSettingsSnapshot?
+    @StateObject private var files: GameOptionsFiles
+    private var supportsRenderScale: Bool { files.supportsRenderScale }
+    private var config: GameRuntimeConfig {
+        get { files.config }
+        nonmutating set { files.config = newValue }
+    }
+    private var snapshot: GameSettingsSnapshot? {
+        get { files.snapshot }
+        nonmutating set { files.snapshot = newValue }
+    }
     @State private var level: GameOptionsLevel = .main
     /// The focused row by identity; nil means the top row of the level.
     @State private var pickedRow: GameOptionsRow?
@@ -38,10 +63,15 @@ struct GameOptionsView: View {
     @State private var savesOpen = false
     /// The Mods panel, likewise.
     @State private var modsOpen: Bool
-    @State private var modsValue: String
+    private var modsValue: String {
+        get { files.modsValue }
+        nonmutating set { files.modsValue = newValue }
+    }
     @State private var moreOpen = false
-    /// The Cheats row's value: read from disk when Game options opens and when the panel closes, not on every draw.
-    @State private var cheatsValue: String
+    private var cheatsValue: String {
+        get { files.cheatsValue }
+        nonmutating set { files.cheatsValue = newValue }
+    }
     /// A panel over the list has the input.
     private var panelOpen: Bool { artworkOpen || metadataOpen || cheatsOpen || modsOpen || savesOpen || moreOpen }
     @State private var confirmFocus: SeleneConfirmButton = .cancel
@@ -68,11 +98,8 @@ struct GameOptionsView: View {
         self.onClose = onClose
         self.onShowBuild = onShowBuild
         self.onMove = onMove
-        supportsRenderScale = viewModel.supportsSetting("DM_RENDER_SCALE", for: game)
-        _config = State(initialValue: viewModel.loadRuntimeConfig(for: game))
-        _snapshot = State(initialValue: viewModel.settingsSnapshot(for: game))
-        _cheatsValue = State(initialValue: viewModel.cheatRowValue(for: game))
-        _modsValue = State(initialValue: viewModel.modsRowValue(for: game))
+        // The autoclosure runs only when Game options opens, not on the shell's later redraws.
+        _files = StateObject(wrappedValue: GameOptionsFiles(viewModel: viewModel, game: game))
         _modsOpen = State(initialValue: opensMods)
     }
 
@@ -93,6 +120,8 @@ struct GameOptionsView: View {
             toolchainBlocked: viewModel.isCheckingEnvironment || (viewModel.compatibilityReport != nil && !viewModel.canPassToolchainGate),
             toolchainHint: viewModel.isCheckingEnvironment ? L10n.text("Checking environment") : viewModel.toolchainGateSummary?.buildHint,
             hasStorePage: viewModel.storeMetadata[game.id]?.storeURL != nil,
+            offersStoreSearch: (viewModel.storeMetadata[game.id]?.description ?? "").isEmpty
+                && viewModel.nintendoStoreSearchURL(for: game) != nil,
             gameName: game.name,
             appPath: game.url.path,
             canDeleteBundle: game.canDeleteAppBundle(),
@@ -136,13 +165,13 @@ struct GameOptionsView: View {
             .allowsHitTesting(!panelOpen)
 
             if artworkOpen {
-                ChangeArtworkView(viewModel: viewModel, game: current) { artworkOpen = false }
+                ChangeArtworkView(viewModel: viewModel, subject: PersonalizationSubject(current, viewModel: viewModel)) { artworkOpen = false }
                     .transition(.opacity)
                     .zIndex(2)
             }
 
             if metadataOpen {
-                ChangeMetadataView(viewModel: viewModel, game: current) { metadataOpen = false }
+                ChangeMetadataView(viewModel: viewModel, subject: PersonalizationSubject(current, viewModel: viewModel)) { metadataOpen = false }
                     .transition(.opacity)
                     .zIndex(2)
             }
@@ -508,6 +537,7 @@ struct GameOptionsView: View {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .scrollWheel]) { event in
             guard viewModel.gameForSettingsSheet?.id == game.id,
                   !viewModel.isUpdateOfferOpen,
+                  !viewModel.isWelcomeOpen,
                   !NativeMenuCommands.shared.isTracking,
                   !panelOpen,
                   viewModel.gameToClose == nil,
@@ -789,6 +819,10 @@ struct GameOptionsView: View {
             metadataOpen = true
         case .storePage:
             guard let url = viewModel.storeMetadata[game.id]?.storeURL else { return }
+            SoundEffectService.shared.play(.click)
+            viewModel.openURL(url)
+        case .searchStore:
+            guard let url = viewModel.nintendoStoreSearchURL(for: current) else { return }
             SoundEffectService.shared.play(.click)
             viewModel.openURL(url)
         case .attachSources:

@@ -152,6 +152,74 @@ final class SpotlightStateTests: XCTestCase {
         XCTAssertNil(SpotlightState(selectedKey: SpotlightItem.card(.collection).key).selectedGameID)
         XCTAssertNil(SpotlightState().selectedGameID)
     }
+    // MARK: - Achievements card
+
+    private func gameState(_ focus: SpotlightFocusArea) -> SpotlightState {
+        var state = SpotlightState(selectedKey: SpotlightItem.game(UUID()).key)
+        state.focus = focus
+        return state
+    }
+
+    func testDownFromStripEntersAchievements() {
+        var state = gameState(.strip)
+        XCTAssertTrue(state.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 4, hasAchievements: true))
+        XCTAssertEqual(state.focus, .achievements)
+    }
+
+    func testDownFromAchievementsEntersActions() {
+        var state = gameState(.achievements)
+        XCTAssertTrue(state.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 4, hasAchievements: true))
+        XCTAssertEqual(state.focus, .actions)
+        XCTAssertEqual(state.actionIndex, 0)
+    }
+
+    func testUpFromActionsFirstRowReturnsToAchievements() {
+        var state = gameState(.actions)
+        state.actionIndex = 1
+        XCTAssertTrue(state.moveUp(screenshotCount: 3, actionCount: 4, hasAchievements: true))
+        XCTAssertEqual(state.focus, .achievements)
+    }
+
+    func testUpFromAboutSkipsTheCardBesideIt() {
+        var about = gameState(.about)
+        XCTAssertTrue(about.moveUp(screenshotCount: 3, actionCount: 4, hasAchievements: true))
+        XCTAssertEqual(about.focus, .strip)
+    }
+
+    func testReadMoreAndTheCardSitSideBySide() {
+        var state = gameState(.about)
+        XCTAssertTrue(state.moveSideways(by: 1, screenshotCount: 3, actionCount: 4, readMore: true, hasAchievements: true))
+        XCTAssertEqual(state.focus, .achievements)
+        XCTAssertTrue(state.moveSideways(by: -1, screenshotCount: 3, actionCount: 4, readMore: true, hasAchievements: true))
+        XCTAssertEqual(state.focus, .about)
+        // Without the card Right goes to the actions, as before.
+        XCTAssertTrue(state.moveSideways(by: 1, screenshotCount: 3, actionCount: 4, readMore: true))
+        XCTAssertEqual(state.focus, .actions)
+    }
+
+    func testWithoutAchievementsThePathIsUnchanged() {
+        var state = gameState(.strip)
+        state.moveDown(selectedIsGame: true, screenshotCount: 3, actionCount: 4)
+        XCTAssertEqual(state.focus, .actions)
+        state.moveUp(screenshotCount: 3, actionCount: 4)
+        XCTAssertEqual(state.focus, .strip)
+    }
+
+    func testUpFromAchievementsWithoutScreenshotsGoesToPills() {
+        var state = gameState(.achievements)
+        XCTAssertTrue(state.moveUp(screenshotCount: 0, actionCount: 4, hasAchievements: true))
+        XCTAssertEqual(state.focus, .pills)
+        var pills = gameState(.pills)
+        pills.moveDown(selectedIsGame: true, screenshotCount: 0, actionCount: 4, hasAchievements: true)
+        XCTAssertEqual(pills.focus, .achievements)
+    }
+
+    func testSidewaysOnAchievementsWithoutReadMoreDoesNothing() {
+        var state = gameState(.achievements)
+        XCTAssertFalse(state.moveSideways(by: 1, screenshotCount: 3, actionCount: 4, hasAchievements: true))
+        XCTAssertFalse(state.moveSideways(by: -1, screenshotCount: 3, actionCount: 4, hasAchievements: true))
+        XCTAssertEqual(state.focus, .achievements)
+    }
 }
 
 final class SpotlightLiftTests: XCTestCase {
@@ -388,4 +456,5 @@ final class SpotlightLiftTests: XCTestCase {
         XCTAssertEqual(s.focus, .strip)
         XCTAssertEqual(s.stripIndex, 4)
     }
+
 }

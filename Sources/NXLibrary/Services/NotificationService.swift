@@ -2,6 +2,7 @@ import Foundation
 import UserNotifications
 import AppKit
 import NXLibraryCore
+import os
 
 extension Notification.Name {
     /// A porting notification was clicked; userInfo carries "gameID" and "outcome" ("ready" or "failed").
@@ -11,6 +12,7 @@ extension Notification.Name {
 /// Sends the end-of-porting notification (`PortingNotice` decides when) and routes its click.
 public final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     public static let shared = NotificationService()
+    private static let log = Logger(subsystem: "local.nxlibrary", category: "notifications")
 
     private override init() {
         super.init()
@@ -20,7 +22,7 @@ public final class NotificationService: NSObject, UNUserNotificationCenterDelega
     public func requestAuthorization() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { _, error in
             if let error = error {
-                print("[NotificationService] Authorization error: \(error.localizedDescription)")
+                Self.log.error("Notification authorization failed: \(error.localizedDescription, privacy: .public)")
             }
         }
     }
@@ -36,7 +38,7 @@ public final class NotificationService: NSObject, UNUserNotificationCenterDelega
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                print("[NotificationService] Failed to schedule notification: \(error)")
+                Self.log.error("Scheduling a notification failed: \(error.localizedDescription, privacy: .public)")
             }
         }
     }

@@ -84,6 +84,7 @@ struct ModDetailPanel: View {
                     .background(GeometryReader { proxy in
                         Color.clear.preference(key: ContentHeightKey.self, value: proxy.size.height)
                     })
+                    .modifier(GlideGroup())
                     .offset(y: -state.offset)
             }
             // Where there is more, the edge fades; the sides leave room for a row's focus ring.

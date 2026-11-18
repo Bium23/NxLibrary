@@ -72,6 +72,51 @@ final class AppSettingsStoreTests: XCTestCase {
         XCTAssertTrue(reloaded.settings.gameDefaults.enableMetalFXUpscale)
     }
 
+    @MainActor
+    func testSelectingAGamePersistsOffTheMainThread() async throws {
+        let url = tempURL()
+        let written = expectation(description: "selection written off the main thread")
+        let fileManager = ObserveSettingsWrite { onMain in
+            XCTAssertFalse(onMain)
+            written.fulfill()
+        }
+        let store = AppSettingsStore(fileURL: url, fileManager: fileManager)
+        let id = UUID()
+        store.rememberLastSelectedGame(id)
+        XCTAssertEqual(store.lastSelectedGameID, id)
+        await fulfillment(of: [written], timeout: 3)
+        XCTAssertEqual(AppSettingsStore(fileURL: url).lastSelectedGameID, id)
+    }
+
+    @MainActor
+    func testSelectingAGameDoesNotInvalidateSettingsObservers() {
+        let store = AppSettingsStore(fileURL: tempURL())
+        var publications = 0
+        let observation = store.objectWillChange.sink { publications += 1 }
+        store.rememberLastSelectedGame(UUID())
+        store.flushPendingSelection()
+        XCTAssertEqual(publications, 0, "A row move must not invalidate views observing settings")
+        withExtendedLifetime(observation) {}
+    }
+
+    @MainActor
+    func testQuittingAndExplicitSettingsWritesKeepTheLatestSelection() {
+        let url = tempURL()
+        let store = AppSettingsStore(fileURL: url)
+        let first = UUID(), second = UUID(), third = UUID()
+        store.rememberLastSelectedGame(first)
+        store.rememberLastSelectedGame(second)
+        store.flushPendingSelection()
+        XCTAssertEqual(AppSettingsStore(fileURL: url).settings.lastSelectedGameID, second)
+
+        store.rememberLastSelectedGame(third)
+        store.settings.showClock = false
+        store.flushPendingSelection()
+        let saved = AppSettingsStore(fileURL: url).settings
+        XCTAssertEqual(saved.lastSelectedGameID, third)
+        XCTAssertFalse(saved.showClock)
+    }
+
     func testCorruptFileFallsBackToDefaultsAndKeepsError() throws {
         let url = tempURL()
         try Data("{ not json".utf8).write(to: url)
@@ -231,13 +276,41 @@ private final class RejectSettingsWrite: FileManager, @unchecked Sendable {
     }
 }
 
+private final class ObserveSettingsWrite: FileManager, @unchecked Sendable {
+    let onWrite: (Bool) -> Void
+
+    init(onWrite: @escaping (Bool) -> Void) { self.onWrite = onWrite }
+
+    override func moveItem(at srcURL: URL, to dstURL: URL) throws {
+        try super.moveItem(at: srcURL, to: dstURL)
+        onWrite(Thread.isMainThread)
+    }
+}
+
 final class SettingsSectionTests: XCTestCase {
     func testAllSectionsArePresent() {
         XCTAssertEqual(SettingsSection.allCases.map(\.title), [
-            "Search", "Changed", "Start-up", "Navigation", "Spotlight", "Sound & music",
-            "Look", "Games", "Controllers", "Library", "Storage", "Engine", "About"
+            "Search", "Changed", "Start-up", "Navigation", "Spotlight", "Sound & music", "Look", "Controllers",
+            "Online services", "Sources", "Games", "Storage", "Setup and engine", "Keys", "Library", "New games",
+            "Cloud saves", "Storage", "About", "Console"
         ])
         XCTAssertTrue(SettingsSection.allCases.allSatisfy { !$0.icon.rawValue.isEmpty })
+    }
+
+    func testSidebarGroupsInScreenOrder() {
+        XCTAssertEqual(SettingsSidebarGroup.all.map(\.title), [nil, "General", "Library", "Porting", "System"])
+        // The sidebar's Up/Down follows the groups as drawn, and every section is in exactly one group.
+        XCTAssertEqual(SettingsSidebarGroup.all.flatMap(\.sections), SettingsSection.allCases)
+        XCTAssertEqual(SettingsSection.sources.group.title, "Library")
+    }
+
+    func testPortingSectionsAreNamedWithTheirGroupWhereSearchListsThem() {
+        XCTAssertEqual(SettingsSection.library.place, "Porting · Library")
+        XCTAssertEqual(SettingsSection.games.place, "Porting · New games")
+        XCTAssertEqual(SettingsSection.portingStorage.place, "Porting · Storage")
+        XCTAssertEqual(SettingsSection.sources.place, "Sources")
+        XCTAssertEqual(SettingsSection.look.place, "Look")
+        XCTAssertEqual(SettingsSection.storage.place, "Storage")
     }
 
     func testStartScreenDefaultsAndDecode() throws {

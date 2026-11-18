@@ -66,6 +66,22 @@ final class DetailsFocusTests: XCTestCase {
         XCTAssertEqual(focus.action, 0)
     }
 
+    /// The Details links: three at most, one row. Down and Up leave the band; Right stops at the end.
+    func testThreeLinksFormOneRow() {
+        let links = DetailsFocus.Bands(screenshots: 2, actions: 3, more: 1)
+        var focus = DetailsFocus()
+        focus.zone = DetailsFocus.actionsZone
+        for _ in 0..<2 { XCTAssertTrue(focus.right(in: links)) }
+        XCTAssertEqual(focus.action, 2)
+        XCTAssertFalse(focus.right(in: links))
+        XCTAssertEqual(focus.action, 2)
+        XCTAssertTrue(focus.down(in: links))
+        XCTAssertEqual(focus.zone, DetailsFocus.moreZone)
+        XCTAssertTrue(focus.up(in: links))
+        XCTAssertEqual(focus.zone, DetailsFocus.actionsZone)
+        XCTAssertEqual(focus.action, 2)
+    }
+
     func testActionGridLeavesBandFromLastRow() {
         var focus = DetailsFocus()
         focus.zone = DetailsFocus.actionsZone

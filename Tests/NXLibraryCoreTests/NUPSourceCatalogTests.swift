@@ -2,6 +2,88 @@ import XCTest
 @testable import NXLibraryCore
 
 final class NUPSourceCatalogTests: XCTestCase {
+    private let editionProbe = "title 0400F00000010001\napplication 0100F00000010000\naoc_base 0100F00000011000\nname 546573742047616d65\nbase 272\nupdate 5 280\ndlc 0100F00000011001 2\n"
+
+    func testEditionKeepsSelectedProgramApplicationAndDLCIdentitySeparate() throws {
+        let game = try NUPSourceCatalog.parse(editionProbe, nup: dir.appendingPathComponent("Edition.nup"),
+            fileSize: 400, profiles: dir.appendingPathComponent("profiles"), provisional: true)
+        let selection = try XCTUnwrap(game.base?.nupProgram)
+        XCTAssertEqual(game.baseTitleId, 0x0400F00000010001)
+        XCTAssertEqual(selection.programID, game.baseTitleId)
+        XCTAssertEqual(selection.applicationID, 0x0100F00000010000)
+        XCTAssertEqual(selection.addOnContentBaseID, 0x0100F00000011000)
+        XCTAssertEqual(selection.index, 1)
+        XCTAssertEqual(game.dlcs.first?.titleId, 0x0100F00000011001)
+        XCTAssertTrue(game.allSources.allSatisfy { $0.nupProgram == selection })
+        let updateOnly = try NUPSourceCatalog.parse(editionProbe.replacingOccurrences(of: "base 272\n", with: ""),
+            nup: dir.appendingPathComponent("Edition.nup"), fileSize: 400,
+            profiles: dir.appendingPathComponent("profiles"), provisional: true)
+        XCTAssertNil(updateOnly.base)
+        XCTAssertEqual(updateOnly.updates.first?.nupProgram, selection)
+        XCTAssertTrue(updateOnly.hasGame)
+    }
+
+    func testPartialDuplicateAndMalformedProgramMetadataAreRefused() {
+        for output in [editionProbe.replacingOccurrences(of: "aoc_base 0100F00000011000\n", with: ""),
+                       editionProbe + "application 0100F00000010000\n",
+                       editionProbe.replacingOccurrences(of: "aoc_base 0100F00000011000", with: "aoc_base 0"),
+                       editionProbe.replacingOccurrences(of: "application 0100F00000010000", with: "application not-hex"),
+                       editionProbe.replacingOccurrences(of: "dlc 0100F00000011001", with: "dlc 0400F00000011001")] {
+            XCTAssertThrowsError(try NUPSourceCatalog.parse(output, nup: dir.appendingPathComponent("Edition.nup"),
+                fileSize: 400, profiles: dir.appendingPathComponent("profiles"), provisional: true))
+        }
+    }
+
+    func testProgramMetadataPersistsAndOldSourcesRemainReadable() throws {
+        let selection = NUPProgramSelection(programID: 0x0400F00000010001,
+            applicationID: 0x0100F00000010000, addOnContentBaseID: 0x0100F00000011000)
+        let source = GameFileItem(url: dir.appendingPathComponent("Edition.nup"), kind: .base,
+            titleId: "0400F00000010001", sizeBytes: 400, sourceLayout: .container, nupProgram: selection)
+        let saved = try JSONEncoder().encode(source)
+        XCTAssertEqual(try JSONDecoder().decode(GameFileItem.self, from: saved).nupProgram, selection)
+        var legacy = try XCTUnwrap(JSONSerialization.jsonObject(with: saved) as? [String: Any])
+        legacy.removeValue(forKey: "nupProgram")
+        XCTAssertNil(try JSONDecoder().decode(GameFileItem.self,
+            from: JSONSerialization.data(withJSONObject: legacy)).nupProgram)
+        XCTAssertFalse(SourceSelection.supported([source], titleSelection: true, extractedFolders: true, nupContainers: true))
+        XCTAssertTrue(SourceSelection.supported([source], titleSelection: true, extractedFolders: true,
+                                               nupContainers: true, nupPrograms: true))
+        var conflict = source
+        conflict.nupProgram = NUPProgramSelection(programID: 0x0400F00000010002,
+            applicationID: selection.applicationID, addOnContentBaseID: selection.addOnContentBaseID)
+        XCTAssertFalse(SourceSelection.supported([source, conflict], titleSelection: true, extractedFolders: true,
+                                                nupContainers: true, nupPrograms: true))
+        XCTAssertFalse(SourceSelection.matchesNUPProgram([source], titleID: "0100F00000010000"))
+        XCTAssertTrue(SourceSelection.matchesNUPProgram([source], titleID: "0400F00000010001"))
+    }
+
+    func testCandidateBuildExplicitlySelectsProgramZeroForLegacyNUPRecords() throws {
+        let legacy = GameFileItem(url: dir.appendingPathComponent("Game.nup"), kind: .base,
+            titleId: "0100F00000010000", sizeBytes: 400, sourceLayout: .container)
+        XCTAssertEqual(SourceSelection.programIndex(for: [legacy], titleID: "0100F00000010000", nupPrograms: true), 0)
+        XCTAssertNil(SourceSelection.programIndex(for: [legacy], titleID: "0100F00000010000", nupPrograms: false))
+        let repo = dir.appendingPathComponent("engine")
+        let command = BuildCommandBuilder.make(repo: repo,
+            toolchain: EngineToolchain(python: dir.appendingPathComponent("python"), extraPath: [], isBundled: true),
+            workspace: dir, keys: nil, output: dir.appendingPathComponent("Game.app"), developerDir: dir,
+            titleId: "0400F00000010001", programIndex: 1)
+        let args = command.arguments
+        XCTAssertEqual(args[try XCTUnwrap(args.firstIndex(of: "--program")) + 1], "1")
+        XCTAssertEqual(args[try XCTUnwrap(args.firstIndex(of: "--title-id")) + 1], "0400F00000010001")
+        XCTAssertTrue(EngineSourceCapabilities(script: "'--title-id'\nimport pack_nup\npack_nup.scan(n, program)").nupPrograms)
+        XCTAssertFalse(EngineSourceCapabilities(script: "'--title-id'\nimport pack_nup\npack_nup.scan(n)").nupPrograms)
+    }
+
+    func testLegacyNUPSourcesMustStillBeOnePhysicalContainer() {
+        let first = GameFileItem(url: dir.appendingPathComponent("First.nup"), kind: .base,
+            titleId: "0100F00000010000", sizeBytes: 400, sourceLayout: .container)
+        let second = GameFileItem(url: dir.appendingPathComponent("Second.nup"), kind: .update,
+            titleId: "0100F00000010800", sizeBytes: 400, sourceLayout: .container)
+        XCTAssertFalse(SourceSelection.supported([first, second], titleSelection: true,
+            extractedFolders: true, nupContainers: true, nupPrograms: true))
+        XCTAssertNil(SourceSelection.programIndex(for: [first, second], titleID: "0100F00000010000", nupPrograms: true))
+    }
+
     private var dir: URL!
 
     override func setUpWithError() throws {

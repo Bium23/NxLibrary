@@ -3,18 +3,20 @@
 # NX_VERSION sets the app version (default: the version in progress, from the VERSION file); NX_RELEASE=1
 # marks a release copy, the only kind that updates itself. scripts/release.sh sets both; a plain build sets
 # neither, so a development copy carries the version being worked on and says it is a development build.
-# A development copy is "NX Library Dev" (default ~/Applications/NXLibrary Dev.app), the maintainer's test copy,
-# beside the released "NX Library" that updates itself. Both keep the bundle ID local.nxlibrary, so they share the
-# library, keys and settings, and macOS runs only one of them at a time.
+# A development copy is "Arcane Dev" (default ~/Applications/Arcane Dev.app), the maintainer's test copy,
+# beside the released "Arcane" that updates itself. The development marker selects separate launcher
+# data/preferences and a distinct bundle ID, so framework-owned preferences are separate too.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 if [ "${NX_RELEASE:-0}" = "1" ]; then
-  NAME="NX Library"
-  APP="${1:-$HOME/Applications/NX Library.app}"
+  NAME="Arcane"
+  BUNDLE_ID="local.nxlibrary"
+  APP="${1:-$HOME/Applications/Arcane.app}"
 else
-  NAME="NX Library Dev"
-  APP="${1:-$HOME/Applications/NXLibrary Dev.app}"
+  NAME="Arcane Dev"
+  BUNDLE_ID="local.nxlibrary.development"
+  APP="${1:-$HOME/Applications/Arcane Dev.app}"
 fi
 CONFIG="${NX_BUILD_CONFIG:-release}"
 VERSION="${NX_VERSION:-$(tr -d '[:space:]' < "$ROOT/VERSION")}"
@@ -22,7 +24,7 @@ if ! [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,3}$ ]]; then
   echo "error: NX_VERSION must be dotted numbers, got '$VERSION'" >&2
   exit 1
 fi
-RELEASE_KEY=""
+RELEASE_KEY="  <key>NXLibraryDevelopmentProfile</key><true/>"
 [ "${NX_RELEASE:-0}" = "1" ] && RELEASE_KEY="  <key>NXLibraryRelease</key><true/>"
 if [ -z "${DEVELOPER_DIR:-}" ]; then
   if [ -d "/Applications/Xcode.app/Contents/Developer" ]; then
@@ -57,6 +59,7 @@ done
 [ -f "$ROOT/NOTICE" ] && cp "$ROOT/NOTICE" "$APP/Contents/Resources/NOTICE"
 cp "$ROOT/scripts/validate_update.py" "$APP/Contents/Resources/validate_update.py"
 [ -d "$ROOT/Resources/Selene" ] && cp -R "$ROOT/Resources/Selene" "$APP/Contents/Resources/Selene"
+[ -d "$ROOT/Resources/Brands" ] && cp -R "$ROOT/Resources/Brands" "$APP/Contents/Resources/Brands"
 # Python and build tools from scripts/bundle_runtime.sh. Without it, a developer
 # build falls back to ~/nxnative/.venv and the PATH tools.
 if [ -d "$ROOT/work/Runtime" ]; then
@@ -78,7 +81,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleDisplayName</key><string>$NAME</string>
   <key>CFBundleExecutable</key><string>NXLibrary</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
-  <key>CFBundleIdentifier</key><string>local.nxlibrary</string>
+  <key>CFBundleIdentifier</key><string>$BUNDLE_ID</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
   <key>CFBundleName</key><string>$NAME</string>
   <key>CFBundlePackageType</key><string>APPL</string>
@@ -95,6 +98,15 @@ $RELEASE_KEY
 </dict>
 </plist>
 PLIST
+
+# Exercise the real profile/defaults accessor under this bundle identity, without
+# opening the app or importing data. Unit-test hosts have a different identity.
+PROFILE_PROBE="$STAGE/ProfileCheck.app"
+mkdir -p "$PROFILE_PROBE/Contents/MacOS"
+cp "$APP/Contents/Info.plist" "$PROFILE_PROBE/Contents/Info.plist"
+swiftc -I "$ROOT/.build/$CONFIG" "$ROOT/scripts/check_app_profile.swift" \
+  "$ROOT/.build/$CONFIG/NXLibraryCore.o" -o "$PROFILE_PROBE/Contents/MacOS/NXLibrary"
+"$PROFILE_PROBE/Contents/MacOS/NXLibrary"
 
 python3 "$ROOT/scripts/check_localizations.py" --app "$APP"
 codesign --force --deep --sign - "$APP"

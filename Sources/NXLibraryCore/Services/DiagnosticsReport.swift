@@ -40,7 +40,7 @@ public enum DiagnosticsReport {
     public static func markdown(_ i: Inputs) -> String {
         func value(_ s: String?) -> String { s.map { $0.isEmpty ? "—" : $0 } ?? "—" }
         func yes(_ b: Bool) -> String { b ? "yes" : "no" }
-        var lines = ["# NX Library diagnostics", ""]
+        var lines = ["# Arcane diagnostics", ""]
         lines += ["## App",
                   "- Version: \(i.appVersion)" + (i.buildDate.map { " (built \($0))" } ?? ""),
                   "- Bundle ID: \(i.bundleID)",

@@ -72,7 +72,7 @@ extension SaveFiles {
         }
         return portableAttributes(result)
     }
-    static func inventory(_ directory: URL, slot: SaveSlot) throws -> [SaveInventoryEntry] {
+    static func inventory(_ directory: URL, slot: SaveSlot, componentRoot: Bool = true) throws -> [SaveInventoryEntry] {
         try safePath(directory)
         guard exists(directory) else { return [] }
         var entries: [SaveInventoryEntry] = []
@@ -82,6 +82,10 @@ extension SaveFiles {
             guard lstat(url.path, &st) == 0 else { throw SaveFailure.changed }
             let kind = st.st_mode & S_IFMT
             guard kind == S_IFDIR || kind == S_IFREG else { throw SaveFailure.unsafePath }
+            if relative.isEmpty && componentRoot {
+                guard (kind == S_IFDIR) == slot.isDirectory else { throw SaveFailure.unsafePath }
+                if slot == .users, st.st_size > 64 * 1024 { throw SaveFailure.invalidSnapshot }
+            }
             guard relative.isEmpty || validRelative(relative) else { throw SaveFailure.unsafePath }
             var digest = ""
             if kind == S_IFREG {
@@ -101,7 +105,6 @@ extension SaveFiles {
             }
         }
         try visit(directory, relative: "")
-        guard entries.first?.isDirectory == true else { throw SaveFailure.unsafePath }
         return entries
     }
     static func inventory(_ location: SaveLocation) throws -> [SaveInventoryEntry] {

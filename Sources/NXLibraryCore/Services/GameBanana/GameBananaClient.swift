@@ -34,7 +34,7 @@ actor GameBananaGate {
 /// cached on disk (game searches 1 day, mod pages 6 h, archive listings forever, since a file's contents never
 /// change; an empty listing is not kept, since GameBanana may still be reading a new file). When the network fails, an expired cache entry is used rather than nothing.
 public actor GameBananaClient {
-    public static func userAgent(version: String) -> String { "NXLibrary/\(version) (macOS; personal app)" }
+    public static func userAgent(version: String) -> String { AppIdentity.userAgent(version: version) }
 
     private let http: ArtworkHTTPClient
     private let cacheFolder: URL

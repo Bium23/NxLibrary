@@ -24,10 +24,10 @@ final class GameOptionsPresentationTests: XCTestCase {
 
     private func presentation(renderScale: Bool = true, playable: Bool = true,
                               detached: Bool = false, blocked: Bool = false,
-                              store: Bool = false, bundle: Bool = false) -> GameOptionsPresentation {
+                              store: Bool = false, search: Bool = false, bundle: Bool = false) -> GameOptionsPresentation {
         GameOptionsPresentation(supportsRenderScale: renderScale, isPlayable: playable,
                                 sourcesDetached: detached, toolchainBlocked: blocked,
-                                hasStorePage: store, gameName: "Game",
+                                hasStorePage: store, offersStoreSearch: search, gameName: "Game",
                                 appPath: "/Applications/Game.app", canDeleteBundle: bundle)
     }
 
@@ -131,6 +131,18 @@ final class GameOptionsPresentationTests: XCTestCase {
                        .storePage)
     }
 
+    func testEditDetailsOffersStoreSearchWhenAsked() {
+        let rows = presentation(search: true).focusableRows(level: .editDetails, origin: .details)
+        XCTAssertEqual(rows, [.changeArtwork, .changeMetadata, .searchStore, .attachSources, .openLog, .removeSources])
+        XCTAssertEqual(GameOptionsRow.searchStore.title, "Search Nintendo Store")
+        XCTAssertEqual(presentation(store: true, search: true).focusableRows(level: .editDetails, origin: .details)
+            .prefix(4), [.changeArtwork, .changeMetadata, .storePage, .searchStore])
+    }
+
+    func testEditDetailsHasNoStoreSearchByDefault() {
+        XCTAssertFalse(presentation().focusableRows(level: .editDetails, origin: .details).contains(.searchStore))
+    }
+
     func testEditDetailsEndsWithRemoveSources() {
         let rows = presentation().focusableRows(level: .editDetails, origin: .details)
         XCTAssertEqual(rows, [.changeArtwork, .changeMetadata, .attachSources, .openLog, .removeSources])
@@ -145,7 +157,7 @@ final class GameOptionsPresentationTests: XCTestCase {
         for origin in [GameOptionsOrigin.spotlight, .collection, .details] {
             for store in [false, true] {
                 for renderScale in [false, true] {
-                    let p = presentation(renderScale: renderScale, store: store)
+                    let p = presentation(renderScale: renderScale, store: store, search: store)
                     seen.formUnion(p.focusableRows(level: .main, origin: origin))
                     seen.formUnion(p.focusableRows(level: .editDetails, origin: origin))
                     seen.formUnion(savedChoices(full: true).focusableRows(level: .main, origin: origin))
@@ -187,11 +199,11 @@ final class GameOptionsPresentationTests: XCTestCase {
         XCTAssertEqual(presentation(detached: true).rebuildAbout,
                        "Game files are missing or not attached. Attach sources in Edit details.")
         XCTAssertEqual(presentation(blocked: true).rebuildAbout,
-                       "Blocked by the Metal gate. See Settings → Engine.")
+                       "Blocked by the Metal gate. See Settings → Setup and engine.")
         let newer = GameOptionsPresentation(supportsRenderScale: true, isPlayable: true, sourcesDetached: false,
                                             toolchainBlocked: true,
-                                            toolchainHint: "Newer Metal: turn on the override in Settings → Engine")
-        XCTAssertEqual(newer.rebuildAbout, "Newer Metal: turn on the override in Settings → Engine.")
+                                            toolchainHint: "Newer Metal: turn on the override in Settings → Setup and engine")
+        XCTAssertEqual(newer.rebuildAbout, "Newer Metal: turn on the override in Settings → Setup and engine.")
         XCTAssertEqual(presentation(detached: true).attachAbout,
                        "Game files are missing or not attached. Attach them to rebuild.")
         XCTAssertEqual(presentation().attachAbout,

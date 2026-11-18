@@ -78,7 +78,7 @@ final class GameBananaClientTests: XCTestCase {
         http.serve("Mod/5/ProfilePage", profile)
         _ = try await client().profile(modID: 5)
         let request = try XCTUnwrap(http.requests.first)
-        XCTAssertEqual(request.value(forHTTPHeaderField: "User-Agent"), "NXLibrary/0.1.4 (macOS; personal app)")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "User-Agent"), "Arcane/0.1.4 (macOS; +https://github.com/Bium23/NxLibrary)")
         XCTAssertEqual(request.timeoutInterval, 15)
     }
 

@@ -24,7 +24,21 @@ public enum SaveFailure: LocalizedError, Equatable {
     }
 }
 
-public enum SaveSlot: String, Codable, CaseIterable, Hashable { case account, device }
+public enum SaveSlot: String, Codable, CaseIterable, Hashable {
+    case account, device, user2, user3, user4, user5, user6, user7, user8, users
+
+    public static let legacyCases: [SaveSlot] = [.account, .device]
+    public var isLegacy: Bool { Self.legacyCases.contains(self) }
+    public var isDirectory: Bool { self != .users }
+    public var fileName: String {
+        switch self {
+        case .account: return "save"
+        case .device: return "save_device"
+        case .users: return "save.users"
+        default: return "save_" + rawValue
+        }
+    }
+}
 public struct SaveContext {
     public let location: SaveLocation
     public let cloudReason: String?
@@ -35,7 +49,8 @@ public struct SaveContext {
 public struct SaveLocation: Equatable {
     public let titleID: String
     public let root: URL
-    public func directory(_ slot: SaveSlot) -> URL { root.appendingPathComponent(slot == .account ? "save" : "save_device") }
+    /// Historical name: the users component is a regular registry file; the other components are directories.
+    public func directory(_ slot: SaveSlot) -> URL { root.appendingPathComponent(slot.fileName) }
     /// nxnative's journal of a cloud-save pull (dm/host/save_sync.c, `<DM_SAVE>.pull`, nxnative e6048dea): while it is
     /// there, the game's next start puts this device's save back, so nothing may replace the save folders first.
     public var cloudPullJournal: URL { root.appendingPathComponent("save.pull") }
@@ -71,7 +86,7 @@ public struct SaveLocation: Equatable {
         if let sync = env["DM_SAVE_SYNC"] {
             if !sync.isEmpty && sync != "0" { reason = origins["DM_SAVE_SYNC"] }
         } else if let libraryCloudFolder, !libraryCloudFolder.isEmpty {
-            reason = "NX Library → Settings → Games"
+            reason = "Arcane → Settings → Cloud saves"
         } else if let gameCloudFolder, !gameCloudFolder.isEmpty {
             reason = "the game's Cloud saves settings"
         }

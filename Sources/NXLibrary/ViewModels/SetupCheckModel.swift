@@ -30,9 +30,9 @@ final class SetupCheckModel: ObservableObject {
 
     // MARK: - Checking
 
-    private static func makeProbe(_ viewModel: AppViewModel, runner: CommandRunning) -> SetupProbe {
+    private static func makeProbe(_ viewModel: AppViewModel, runner: CommandRunning, developerDir: URL) -> SetupProbe {
         SetupProbe(runner: runner, toolchain: viewModel.engineToolchain,
-                   developerDir: viewModel.resolvedDeveloperDir(),
+                   developerDir: developerDir,
                    engineFolder: URL(fileURLWithPath: viewModel.nxnativePath),
                    pinnedCommit: viewModel.pinnedEngineCommit,
                    certifiedMetal: viewModel.requiredMetalVersion ?? requirements.fallbackMetal,
@@ -46,12 +46,19 @@ final class SetupCheckModel: ObservableObject {
     func refresh() {
         guard !probing else { return }
         probing = true
-        let probe = Self.makeProbe(viewModel, runner: runner)
+        // Every recheck (4 s) asks xcode-select again, off the main thread; the probe reads the view model on main.
         queue.async { [weak self] in
-            let facts = probe.facts()
+            let developerDir = AppViewModel.resolveDeveloperDir()
             DispatchQueue.main.async {
-                self?.probing = false
-                self?.apply(facts)
+                guard let self else { return }
+                let probe = Self.makeProbe(self.viewModel, runner: self.runner, developerDir: developerDir)
+                self.queue.async { [weak self] in
+                    let facts = probe.facts()
+                    DispatchQueue.main.async {
+                        self?.probing = false
+                        self?.apply(facts)
+                    }
+                }
             }
         }
     }
@@ -86,11 +93,11 @@ final class SetupCheckModel: ObservableObject {
     }
 
     func rememberStates() {
-        var states = UserDefaults.standard.dictionary(forKey: Self.lastStatesKey) as? [String: String] ?? [:]
+        var states = AppData.preferences.dictionary(forKey: Self.lastStatesKey) as? [String: String] ?? [:]
         for item in items where item.state != .working {
             states[item.id.rawValue] = item.state.rawValue
         }
-        UserDefaults.standard.set(states, forKey: Self.lastStatesKey)
+        AppData.preferences.set(states, forKey: Self.lastStatesKey)
     }
 
     /// At launch, after setup: opens the Setup check when something that was ready
@@ -98,13 +105,15 @@ final class SetupCheckModel: ObservableObject {
     static func checkAtLaunch(viewModel: AppViewModel) {
         guard viewModel.setupCompleted else { return }
         let enginePath = viewModel.nxnativePath
-        let probe = makeProbe(viewModel, runner: SystemCommandRunner())
         DispatchQueue.global(qos: .utility).async {
+            // xcode-select runs here, not on the main thread at launch; the probe reads the view model on main.
+            let developerDir = AppViewModel.resolveDeveloperDir()
+            let probe = DispatchQueue.main.sync { makeProbe(viewModel, runner: SystemCommandRunner(), developerDir: developerDir) }
             let current = SetupCheck.items(from: probe.facts())
             DispatchQueue.main.async {
                 guard !viewModel.isBuilding, !viewModel.isUpdatingApp,
                       viewModel.nxnativePath == enginePath else { return }
-                let stored = UserDefaults.standard.dictionary(forKey: lastStatesKey) as? [String: String] ?? [:]
+                let stored = AppData.preferences.dictionary(forKey: lastStatesKey) as? [String: String] ?? [:]
                 var previous: [SetupItemID: SetupState] = [:]
                 for (key, value) in stored {
                     if let id = SetupItemID(rawValue: key), let state = SetupState(rawValue: value) { previous[id] = state }
@@ -112,7 +121,7 @@ final class SetupCheckModel: ObservableObject {
                 if SetupCheck.shouldReopen(previous: previous, current: current) {
                     viewModel.showSetupCheck = true
                 } else {
-                    UserDefaults.standard.set(
+                    AppData.preferences.set(
                         Dictionary(uniqueKeysWithValues: current.map { ($0.id.rawValue, $0.state.rawValue) }),
                         forKey: lastStatesKey)
                 }
@@ -260,7 +269,7 @@ final class SetupCheckModel: ObservableObject {
                     .flatMap { MetalVersion.parse($0.stdout) }
                 if let now, now != certified {
                     final = CommandResult(status: 1, stdout: final.stdout,
-                                          stderr: "This Xcode uses Metal \(now); builds wait for an NX Library update tested with it.")
+                                          stderr: "This Xcode uses Metal \(now); builds wait for an Arcane update tested with it.")
                 }
             }
             DispatchQueue.main.async {
@@ -299,7 +308,7 @@ final class SetupCheckModel: ObservableObject {
         }
     }
 
-    /// The newest engine's card: A returns to the tested engine, the same action as Settings → Engine.
+    /// The newest engine's card: A returns to the tested engine, the same action as Settings → Setup and engine.
     private func backToTestedEngine(_ completion: @escaping (Bool) -> Void) {
         setOverride(.engine, .working("SWITCHING…", detail: L10n.text("Returning to the tested engine…")))
         viewModel.useTestedEngine()

@@ -52,6 +52,10 @@ fi
 # Every release is tested from its own tree.
 DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}" swift test --package-path "$ROOT" \
   || fail "swift test failed"
+for check in "$ROOT"/Tests/CatalogAppChecks/run_*.py; do
+  DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}" python3 "$check" \
+    || fail "application regressions failed: ${check##*/}"
+done
 (cd "$ROOT" && python3 -m unittest discover -s Tests/PublicationChecks >/dev/null 2>&1) \
   || fail "the publication checks' tests failed (python3 -m unittest discover -s Tests/PublicationChecks)"
 [ -d "$ROOT/work/Runtime" ] || fail "no work/Runtime: run scripts/bundle_runtime.sh first (a release carries its Python and tools)"
@@ -73,6 +77,9 @@ mkdir -p "$OUT"
 
 NX_VERSION="$VERSION" NX_RELEASE=1 bash "$ROOT/scripts/build_app.sh" "$APP"
 codesign --verify --deep --strict "$APP"
+if /usr/libexec/PlistBuddy -c 'Print :NXLibraryDevelopmentProfile' "$APP/Contents/Info.plist" >/dev/null 2>&1; then
+  fail "a release must not select the development data profile"
+fi
 [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")" = "$VERSION" ] \
   || fail "the built app does not carry version $VERSION"
 [ "$(/usr/libexec/PlistBuddy -c 'Print :NXLibraryRelease' "$APP/Contents/Info.plist")" = "true" ] \
@@ -98,7 +105,7 @@ if [ "$PUBLISH" = "1" ]; then
   git push origin "$TAG"
   { cat "$NOTES"; printf '\n\n%s\n' "$REQUIRES"; } > "$OUT/notes.md"
   gh release create "$TAG" "$ZIP" "$DMG" --repo "$REPOSITORY" \
-    --title "NX Library $VERSION" --notes-file "$OUT/notes.md"
+    --title "Arcane $VERSION" --notes-file "$OUT/notes.md"
   echo "Published $TAG"
 else
   echo "Not published (add --publish --notes <file> to create the GitHub release)."

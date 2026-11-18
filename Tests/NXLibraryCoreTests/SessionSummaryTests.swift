@@ -54,4 +54,18 @@ final class SessionSummaryTests: XCTestCase {
                                 lastHeartbeatAt: Date(timeIntervalSince1970: 0))
         XCTAssertNil(SessionSummary(session: other, game: game, total: 600))
     }
+
+    func testASteamGameSummarisesLikeAnyOther() throws {
+        let steam = CatalogGame(steam: SteamCatalogGame(appID: 440, name: "Steam game"))
+        let start = Date(timeIntervalSince1970: 1_000)
+        let played = PlaySession(gameID: steam.id, titleID: "steam-440", bundleID: nil, startedAt: start,
+                                 endedAt: start.addingTimeInterval(1_500), lastHeartbeatAt: start)
+        let summary = try XCTUnwrap(SessionSummary(session: played, game: steam, total: 36_000))
+        XCTAssertEqual(summary.gameID, steam.id)
+        XCTAssertEqual(summary.gameName, "Steam game")
+        XCTAssertEqual(summary.thisSession, "25m")
+        XCTAssertEqual(summary.total, "10h 0m")
+        XCTAssertNil(SessionSummary(session: played, game: CatalogGame(steam: SteamCatalogGame(appID: 1, name: "Other")),
+                                    total: 0), "another game's session")
+    }
 }

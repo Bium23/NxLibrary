@@ -9,8 +9,7 @@ public struct SteamGridDBKey {
     public init(url: URL = SteamGridDBKey.defaultURL()) { self.url = url }
 
     public static func defaultURL() -> URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/NXLibrary/steamgriddb-api-key")
+        AppData.supportRoot.appendingPathComponent("steamgriddb-api-key")
     }
 
     /// A key as SteamGridDB writes it: letters and digits only (its keys are 32 hex digits).
@@ -71,7 +70,7 @@ public enum SteamGridDBArt {
         var request = URLRequest(url: url)
         request.timeoutInterval = 15
         request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
-        request.setValue("NXLibrary/0.1 (macOS; personal app)", forHTTPHeaderField: "User-Agent")
+        request.setValue(AppIdentity.userAgent(), forHTTPHeaderField: "User-Agent")
         return request
     }
 

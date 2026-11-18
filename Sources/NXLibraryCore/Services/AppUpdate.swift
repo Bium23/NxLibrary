@@ -3,6 +3,7 @@
 
 import Foundation
 import CryptoKit
+import Darwin
 
 /// The rules of NX Library's self-update: which release, what may be installed, which copy may
 /// replace itself, and the swap. Everything works on paths it is given, so the tests run it on
@@ -19,6 +20,9 @@ public enum AppUpdate {
     public static let defaultRepository: String? = "Bium23/NxLibrary"
     /// A UserDefaults override of `defaultRepository`, for testing before publishing.
     public static let repositoryOverrideKey = "NXLibrary_UpdateRepository"
+    /// A repository that may replace `defaultRepository` under another name. GitHub redirects the old
+    /// release API there, so its assets are accepted too; nil while the project keeps its name.
+    public static let successorRepository: String? = nil
     /// The Info.plist key that marks a release copy.
     public static let releaseMarker = "NXLibraryRelease"
     static let interval: TimeInterval = 24 * 3600
@@ -28,10 +32,12 @@ public enum AppUpdate {
     /// of the version in progress, so it never reads like a published release.
     public static func versionLabel(_ info: [String: Any]?) -> String {
         let short = info?["CFBundleShortVersionString"] as? String ?? "?"
-        return info?[releaseMarker] as? Bool == true ? short : "\(short) (development build)"
+        if info?[releaseMarker] as? Bool == true { return short }
+        if info?["NXLibraryDevelopmentProfile"] as? Bool == true { return "\(short) (Dev · Launcher)" }
+        return "\(short) (development build)"
     }
 
-    public static func repository(defaults: UserDefaults = .standard) -> String? {
+    public static func repository(defaults: UserDefaults = AppData.preferences) -> String? {
         if let value = defaults.string(forKey: repositoryOverrideKey)?.trimmingCharacters(in: .whitespaces),
            value.range(of: #"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"#, options: .regularExpression) != nil {
             return value
@@ -113,8 +119,10 @@ public enum AppUpdate {
         return notes
     }
 
-    /// GitHub's `releases/latest` answer, with the asset named `NXLibrary-<version>.zip`.
-    public static func parseRelease(_ json: Data, repository: String = "Bium23/NxLibrary") -> Release? {
+    /// GitHub's `releases/latest` answer, with the asset named `NXLibrary-<version>.zip` in `repository`
+    /// or, when there is one, in its `successor`.
+    public static func parseRelease(_ json: Data, repository: String = "Bium23/NxLibrary",
+                                    successor: String? = AppUpdate.successorRepository) -> Release? {
         guard json.count <= 1024 * 1024,
               let object = try? JSONSerialization.jsonObject(with: json) as? [String: Any],
               let tag = object["tag_name"] as? String, let version = version(fromTag: tag),
@@ -122,7 +130,9 @@ public enum AppUpdate {
               let asset = assets.first(where: { $0["name"] as? String == "NXLibrary-\(version).zip" }),
               let link = asset["browser_download_url"] as? String, let url = URL(string: link),
               trustedDownloadURL(url), url.host?.lowercased() == "github.com",
-              url.path == "/\(repository)/releases/download/\(tag)/NXLibrary-\(version).zip",
+              ([repository] + [successor].compactMap { $0 }).contains(where: { owner in
+                  url.path == "/\(owner)/releases/download/\(tag)/NXLibrary-\(version).zip"
+              }),
               url.query == nil, url.fragment == nil,
               let bytes = asset["size"] as? Int64, bytes > 0, bytes <= maximumDownloadBytes,
               let digest = asset["digest"] as? String,
@@ -236,7 +246,7 @@ public enum AppUpdate {
               FileManager.default.isExecutableFile(atPath: app.appendingPathComponent("Contents/MacOS/" + exe).path)
         else { return .noExecutable }
         guard info["CFBundleShortVersionString"] as? String == version else { return .wrongVersion }
-        guard info[releaseMarker] as? Bool == true else { return .notRelease }
+        guard info[releaseMarker] as? Bool == true, info["NXLibraryDevelopmentProfile"] as? Bool != true else { return .notRelease }
         if let text = info["LSMinimumSystemVersion"] as? String, let minimum = numbers(text) {
             let running = [runningOS.majorVersion, runningOS.minorVersion, runningOS.patchVersion]
             let padded = minimum + Array(repeating: 0, count: max(0, 3 - minimum.count))
@@ -256,7 +266,7 @@ public enum AppUpdate {
     }
 
     public static func installability(_ bundle: URL) -> Installability {
-        guard bundle.pathExtension == "app", info(bundle)?[releaseMarker] as? Bool == true else { return .developer }
+        guard bundle.pathExtension == "app", let metadata = info(bundle), metadata[releaseMarker] as? Bool == true, metadata["NXLibraryDevelopmentProfile"] as? Bool != true else { return .developer }
         let standardized = bundle.standardizedFileURL
         if standardized.path.contains("/AppTranslocation/") { return .readOnly }
         if !FileManager.default.isWritableFile(atPath: standardized.deletingLastPathComponent().path) { return .readOnly }
@@ -267,32 +277,63 @@ public enum AppUpdate {
 
     public enum InstallError: Error, Equatable { case failed(String) }
 
-    /// Copies `staged` beside `current`, then exchanges the two in one replace, so a failure
-    /// anywhere leaves a working app at `current`. The old copy goes to the Trash (`trashOld`; the
-    /// tests remove it), and the new one loses the quarantine flag (releases are ad-hoc signed).
+    /// Stages on the destination volume in an exclusively owned directory, then
+    /// atomically exchanges the apps. A failed Trash operation retains the old app there.
     @discardableResult
     public static func install(_ staged: URL, over current: URL, trashOld: Bool = true) throws -> URL {
-        let fm = FileManager.default
-        let folder = current.deletingLastPathComponent()
-        let name = current.deletingPathExtension().lastPathComponent
-        let incoming = folder.appendingPathComponent(name + " (new).app")
-        let backupName = name + " (old).app"
-        let backup = folder.appendingPathComponent(backupName)
-        try? fm.removeItem(at: incoming)
-        try? fm.removeItem(at: backup)
+        try install(staged, over: current, trashOld: trashOld, fileManager: .default, io: BuildInstallIO())
+    }
+
+    static func install(_ staged: URL, over current: URL, trashOld: Bool,
+                        fileManager fm: FileManager, io: BuildInstallIO) throws -> URL {
+        guard let previous = updateIdentity(current) else { throw InstallError.failed("The installed app is missing or unsafe.") }
+        var template = Array(current.deletingLastPathComponent().appendingPathComponent(".arcane-update.XXXXXX").path.utf8CString)
+        let work = try template.withUnsafeMutableBufferPointer { buffer -> URL in
+            guard let path = mkdtemp(buffer.baseAddress!) else { throw InstallError.failed(String(cString: strerror(errno))) }
+            return URL(fileURLWithPath: String(cString: path), isDirectory: true)
+        }
+        // Never recursively remove this directory: after a swap it may hold the old app.
+        defer { _ = rmdir(work.path) }
+        let incoming = work.appendingPathComponent(current.lastPathComponent)
         do {
             try fm.copyItem(at: staged, to: incoming)
-            let placed = try fm.replaceItemAt(current, withItemAt: incoming, backupItemName: backupName,
-                                              options: [.withoutDeletingBackupItem])
-            if fm.fileExists(atPath: backup.path) {
-                if trashOld { try? fm.trashItem(at: backup, resultingItemURL: nil) } else { try? fm.removeItem(at: backup) }
-            }
-            clearQuarantine(placed ?? current)
-            return placed ?? current
         } catch {
+            // Only a partial copy inside this attempt's private directory is owned.
             try? fm.removeItem(at: incoming)
             throw InstallError.failed(error.localizedDescription)
         }
+        guard let prepared = updateIdentity(incoming), updateIdentity(current) == previous else {
+            try? fm.removeItem(at: incoming)
+            throw InstallError.failed("The installed app changed while the update was being prepared.")
+        }
+        do {
+            try io.publish(incoming, current, true)
+            try io.afterPublish()
+        } catch {
+            // If publication already happened, finish the successful installation.
+            // Otherwise remove only the candidate whose identity we recorded.
+            guard updateIdentity(current) == prepared, updateIdentity(incoming) == previous else {
+                if updateIdentity(incoming) == prepared { try? fm.removeItem(at: incoming) }
+                throw InstallError.failed(error.localizedDescription)
+            }
+        }
+        if updateIdentity(incoming) == previous {
+            if trashOld { try? fm.trashItem(at: incoming, resultingItemURL: nil) }
+            else { try? fm.removeItem(at: incoming) }
+        }
+        clearQuarantine(current)
+        return current
+    }
+
+    private struct UpdateIdentity: Equatable {
+        let device: dev_t
+        let inode: ino_t
+    }
+
+    private static func updateIdentity(_ url: URL) -> UpdateIdentity? {
+        var info = stat()
+        guard lstat(url.path, &info) == 0, info.st_mode & mode_t(S_IFMT) == mode_t(S_IFDIR) else { return nil }
+        return UpdateIdentity(device: info.st_dev, inode: info.st_ino)
     }
 
     /// Waits until `$1` (a pid) has exited, at most `$3` ticks of 0.2 s, then opens `$2` with `$4`.

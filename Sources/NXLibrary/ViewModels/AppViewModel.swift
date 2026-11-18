@@ -34,7 +34,7 @@ public final class AppViewModel: ObservableObject {
         }
     }
     @Published var settingsNoticeFocus = 0
-    /// A SteamGridDB API key is saved (Settings → Look → SteamGridDB), so Change artwork searches it.
+    /// A SteamGridDB API key is saved (Settings → Online services → SteamGridDB), so Change artwork searches it.
     @Published var hasSteamGridDBKey = SteamGridDBKey().load() != nil
     @Published var isEditingSteamGridDBKey = false
     @Published var isUpdatingApp = false
@@ -58,6 +58,7 @@ public final class AppViewModel: ObservableObject {
         static let allowUntestedToolchain = "NXLibrary_AllowUntestedToolchain"
         static let setupCompleted = "NXLibrary_SetupCompleted"
         static let setupPage = "NXLibrary_SetupPage"
+        static let setupSteamChoice = "NXLibrary_SetupSteamChoice"
         /// A chosen engine folder other than ~/nxnative.
         static let savedEngineFolder = "NXLibrary_EngineFolder"
         static let newestEngineChoice = "NXLibrary_NewestEngineChoice"
@@ -74,7 +75,7 @@ public final class AppViewModel: ObservableObject {
     @Published public var prodKeysPath: String = "" {
         didSet {
             if !prodKeysPath.isEmpty {
-                UserDefaults.standard.set(prodKeysPath, forKey: StorageKeys.savedProdKeysPath)
+                AppData.preferences.set(prodKeysPath, forKey: StorageKeys.savedProdKeysPath)
             }
         }
     }
@@ -86,7 +87,7 @@ public final class AppViewModel: ObservableObject {
         didSet {
             if let folder = selectedGameFolder {
                 if !keepsRememberedGameFolder {
-                    UserDefaults.standard.set(folder.path, forKey: StorageKeys.savedGameFolder)
+                    AppData.preferences.set(folder.path, forKey: StorageKeys.savedGameFolder)
                 }
                 if !restoringGameFolder {
                     selectedPackageURLs = nil
@@ -94,7 +95,7 @@ public final class AppViewModel: ObservableObject {
                 }
             } else {
                 if !keepsRememberedGameFolder {
-                    UserDefaults.standard.removeObject(forKey: StorageKeys.savedGameFolder)
+                    AppData.preferences.removeObject(forKey: StorageKeys.savedGameFolder)
                 }
                 scanGeneration = UUID()
                 selectedPackageURLs = nil
@@ -112,7 +113,7 @@ public final class AppViewModel: ObservableObject {
     private var selectedPackageURLs: [URL]?
     /// The global source-folder preference is independent of the current Add Game draft.
     public var gameFilesFolder: URL? {
-        guard let path = UserDefaults.standard.string(forKey: StorageKeys.savedGameFolder),
+        guard let path = AppData.preferences.string(forKey: StorageKeys.savedGameFolder),
               !path.isEmpty, path != "/" else { return nil }
         return URL(fileURLWithPath: path)
     }
@@ -148,6 +149,14 @@ public final class AppViewModel: ObservableObject {
     var reviewsFailureOnAddGame = false
     /// The update dialog is up (set by the shell); screens leave input to it.
     var isUpdateOfferOpen = false
+    /// "Welcome to Arcane" is on screen, until its fade has ended: screens' own keyboard monitors let Return and
+    /// the arrows go to it, and Spotlight holds its entrance until it has gone.
+    @Published var isWelcomeOpen = false
+    /// The window is still taking its launch mode (Start in fullscreen): Spotlight's entrance waits for it, so the
+    /// fullscreen transition never cuts the flight (`StartupWindowObserver`, at most 4 s from attachment).
+    @Published var isWindowSettling = true
+    /// A home screen (Spotlight or Collection) has shown since launch: Spotlight's entrance plays only on the first.
+    var homeSeen = false
     @Published public var isScanningGameFolder: Bool = false
     @Published public var scanError: String? = nil
     
@@ -231,7 +240,8 @@ public final class AppViewModel: ObservableObject {
         let capabilities = engineSourceCapabilities
         return SourceSelection.supported(sources, titleSelection: capabilities.titleSelection,
                                          extractedFolders: capabilities.extractedFolders,
-                                         nupContainers: capabilities.nupContainers)
+                                         nupContainers: capabilities.nupContainers,
+                                         nupPrograms: capabilities.nupPrograms)
     }
     
     public var formattedSelectedSourcesSize: String {
@@ -284,22 +294,33 @@ public final class AppViewModel: ObservableObject {
     @Published public var dropErrorMessage: String? = nil
     
     // MARK: - Library
-    @Published public var libraryGames: [PortedGame] = []
+    @Published public private(set) var libraryGames: [PortedGame] = []
+    @Published public private(set) var catalogGames: [CatalogGame] = []
+    @Published public private(set) var catalogSourceConfigurations: [CatalogSourceConfiguration] = []
+    @Published private(set) var personalizations = CatalogPersonalizations.empty
+    /// Finished file operations whose catalog save must still be retried.
+    @Published var catalogBuildRecoveries = CatalogBuildRecoveries()
     @Published public var libraryFolder: URL? {
         didSet {
             if let folder = libraryFolder {
-                UserDefaults.standard.set(folder.path, forKey: StorageKeys.savedLibraryFolder)
+                AppData.preferences.set(folder.path, forKey: StorageKeys.savedLibraryFolder)
             }
         }
     }
     /// First use asks where to find existing games and install new ones; later visits keep that choice.
     public var requiresGameAppsFolderChoice: Bool {
-        !setupCompleted && UserDefaults.standard.string(forKey: StorageKeys.savedLibraryFolder) == nil
+        !setupCompleted && AppData.preferences.string(forKey: StorageKeys.savedLibraryFolder) == nil
     }
     @Published public var isScanningLibrary: Bool = false
     /// Non-blocking scan details shown beside Library refresh, never an automatic launch dialog.
     @Published public var libraryScanWarnings: [String] = []
     @Published public var gameForSettingsSheet: PortedGame? = nil
+    /// The Steam game whose Options are open (`SteamOptionsView`); never open with `gameForSettingsSheet`.
+    @Published var steamOptionsGame: CatalogGame? = nil
+    /// Any game's Options are open: the screens underneath stop reading input.
+    var isGameOptionsOpen: Bool { gameForSettingsSheet != nil || steamOptionsGame != nil }
+    /// The game whose Options are open, for the panels' own key monitors.
+    var optionsGameID: UUID? { gameForSettingsSheet?.id ?? steamOptionsGame?.id }
     /// Where the open Game options came from; decides its rows (Move is Spotlight-only).
     @Published public var gameOptionsOrigin: GameOptionsOrigin = .collection
     /// Game options opens straight on its Mods panel (the Details page's Mods band).
@@ -333,11 +354,16 @@ public final class AppViewModel: ObservableObject {
     lazy var setupModel = SetupCheckModel(viewModel: self)
     @Published public private(set) var firstRunSetup = FirstRunSetup() {
         didSet {
-            UserDefaults.standard.set(firstRunSetup.isCompleted, forKey: StorageKeys.setupCompleted)
+            AppData.preferences.set(firstRunSetup.isCompleted, forKey: StorageKeys.setupCompleted)
             if let page = firstRunSetup.pageToRemember {
-                UserDefaults.standard.set(page, forKey: StorageKeys.setupPage)
+                AppData.preferences.set(page, forKey: StorageKeys.setupPage)
             } else {
-                UserDefaults.standard.removeObject(forKey: StorageKeys.setupPage)
+                AppData.preferences.removeObject(forKey: StorageKeys.setupPage)
+            }
+            if let choice = firstRunSetup.steamChoiceToRemember {
+                AppData.preferences.set(choice, forKey: StorageKeys.setupSteamChoice)
+            } else {
+                AppData.preferences.removeObject(forKey: StorageKeys.setupSteamChoice)
             }
         }
     }
@@ -351,16 +377,16 @@ public final class AppViewModel: ObservableObject {
     @Published public var lastBuildGameID: UUID? = nil
     @Published public var allowUntestedToolchain: Bool = false {
         didSet {
-            UserDefaults.standard.set(allowUntestedToolchain, forKey: StorageKeys.allowUntestedToolchain)
+            AppData.preferences.set(allowUntestedToolchain, forKey: StorageKeys.allowUntestedToolchain)
         }
     }
-    /// The newest nxnative the player chose in Settings → Engine; nil while the tested engine is in use.
+    /// The newest nxnative the player chose in Settings → Setup and engine; nil while the tested engine is in use.
     @Published public internal(set) var newestEngineChoice: NewestEngineChoice? = nil {
         didSet {
             if let choice = newestEngineChoice, let data = try? JSONEncoder().encode(choice) {
-                UserDefaults.standard.set(data, forKey: StorageKeys.newestEngineChoice)
+                AppData.preferences.set(data, forKey: StorageKeys.newestEngineChoice)
             } else {
-                UserDefaults.standard.removeObject(forKey: StorageKeys.newestEngineChoice)
+                AppData.preferences.removeObject(forKey: StorageKeys.newestEngineChoice)
             }
         }
     }
@@ -387,6 +413,8 @@ public final class AppViewModel: ObservableObject {
     @Published public var portingProgress: PortingProgress? = nil
     /// The game ported last in this session leads Spotlight's row until quit.
     @Published public var frontGameID: UUID? = nil
+    /// The Steam games seen downloading this session lead the row after it, until quit.
+    @Published public private(set) var sessionDownloads = SessionDownloads()
     /// Spotlight's Delete on a failed porting asks first.
     @Published public var gameToRemove: PortedGame? = nil
     @Published var removeGameFocus: SeleneConfirmButton = .cancel
@@ -404,12 +432,13 @@ public final class AppViewModel: ObservableObject {
 
     var canRetryReadyInstall: Bool {
         buildState == .failed && portingFailureReason == nil
-            && libraryGames.contains { $0.id == lastBuildGameID && $0.pendingInstall != nil }
+            && (libraryGames.contains { $0.id == lastBuildGameID && $0.pendingInstall != nil }
+                || catalogBuildRecoveries.values.contains { $0.id == lastBuildGameID && $0.pendingInstall != nil })
     }
     @Published public var buildWizardStep: Int = 1 // 1: Select Game, 2: Configure & Output, 3: Porting
     @Published public var iconAppearanceMode: AppIconAppearanceMode = .auto {
         didSet {
-            UserDefaults.standard.set(iconAppearanceMode.rawValue, forKey: StorageKeys.savedIconAppearanceMode)
+            AppData.preferences.set(iconAppearanceMode.rawValue, forKey: StorageKeys.savedIconAppearanceMode)
             updateDockIcon()
         }
     }
@@ -426,7 +455,7 @@ public final class AppViewModel: ObservableObject {
     @Published public private(set) var boxArtIndexVersion = 0
     @Published public var launchingGameId: UUID? = nil
     /// The launch screen: shown on Play, `isReady` once the game's window is up (or the probe gave up).
-    @Published public var launchOverlay: LaunchOverlayState? = nil {
+    @Published var launchOverlay: LaunchOverlayState? = nil {
         didSet {
             SoundEffectService.shared.isQuieted =
                 launchOverlay != nil && (settingsStore?.settings.quietLaunch ?? true)
@@ -456,16 +485,16 @@ public final class AppViewModel: ObservableObject {
         .resolve(runtime: .locate(), repo: URL(fileURLWithPath: nxnativePath))
     }
 
-    public let pinnedEngineCommit = "8a5c5e7e1ee606c650fe1aef6959a83009b6a2fc"
-    private let core = FileManager.default.homeDirectoryForCurrentUser
-        .appendingPathComponent("Library/Application Support/NXLibrary")
-    lazy var libraryStore = LibraryStore(directory: core)
+    public let pinnedEngineCommit = "461a5f9f95fc9fc40a690bb2a82eb23f1f03bdca"
+    private let core = AppData.supportRoot
+    let catalogRepository: CatalogRepository
     lazy var keyStore = KeyStore(directory: core.appendingPathComponent("keys"))
     /// Sizes of built apps are remembered between launches, so a scan walks only new or rebuilt apps.
     private lazy var importService = ImportService(sizeCache: AppSizeCache(file: core.appendingPathComponent("app-sizes.json")))
     private let launchService = LaunchService()
     private lazy var upstreamChecker = UpstreamChecker()
     private lazy var storeMetadataService = NintendoStoreMetadataService()
+    let developmentOperations = DevelopmentOperationStore()
     private var metadataLocaleGeneration = UUID()
     private var localizedMetadataRefresh: Task<Void, Never>?
     private let upstreamCacheKey = "NXLibrary_UpstreamStatus"
@@ -473,6 +502,7 @@ public final class AppViewModel: ObservableObject {
     private let sourceCatalog = SourceCatalog()
     private lazy var workspaceManager = WorkspaceManager(root: core.appendingPathComponent("workspaces"))
     private var scanGeneration = UUID()
+    private var libraryRescanRequested = false
     private var buildService: BuildService?
     private var buildPreviousStatus: GameStatus?
     private var activeBuildToolchain: ToolchainInfo?
@@ -485,8 +515,10 @@ public final class AppViewModel: ObservableObject {
     private var pipelinePollGeneration = UUID()
     private var isPollingPipelineArchive = false
     
-    public init(settingsStore: AppSettingsStore = AppSettingsStore()) {
+    public init(settingsStore: AppSettingsStore, catalog: CatalogDocument, repository: CatalogRepository) {
+        self.catalogRepository = repository
         self.settingsStore = settingsStore
+        applyCatalog(catalog)
         saveGate.onActivityChange = { [weak self] in
             DispatchQueue.main.async {
                 guard let self else { return }
@@ -494,9 +526,10 @@ public final class AppViewModel: ObservableObject {
             }
         }
         let startup = settingsStore.settings
-        let didCompleteSetup = UserDefaults.standard.bool(forKey: StorageKeys.setupCompleted)
+        let didCompleteSetup = AppData.preferences.bool(forKey: StorageKeys.setupCompleted)
         self.firstRunSetup = FirstRunSetup(completed: didCompleteSetup,
-                                           savedPage: UserDefaults.standard.string(forKey: StorageKeys.setupPage))
+                                           savedPage: AppData.preferences.string(forKey: StorageKeys.setupPage),
+                                           savedSteamChoice: AppData.preferences.object(forKey: StorageKeys.setupSteamChoice) as? Bool)
         self.showSetupCheck = !didCompleteSetup
         
         // 1. Resolve safe root directory (anchored to SSD / Bundle, NEVER "/")
@@ -505,52 +538,47 @@ public final class AppViewModel: ObservableObject {
         
         // The launcher's old ~/Games default is not a Mac-app library.
         let oldGamesDefault = root.appendingPathComponent("Games").standardized.path
-        if let savedLib = UserDefaults.standard.string(forKey: StorageKeys.savedLibraryFolder),
+        if let savedLib = AppData.preferences.string(forKey: StorageKeys.savedLibraryFolder),
            savedLib != oldGamesDefault, !savedLib.isEmpty, savedLib != "/" {
             self.libraryFolder = URL(fileURLWithPath: savedLib)
         } else {
             self.libraryFolder = root.appendingPathComponent("Applications")
-            UserDefaults.standard.removeObject(forKey: StorageKeys.savedLibraryFolder)
+            AppData.preferences.removeObject(forKey: StorageKeys.savedLibraryFolder)
         }
         
         // Restore user preferences
-        if let savedMode = UserDefaults.standard.string(forKey: StorageKeys.savedIconAppearanceMode),
+        if let savedMode = AppData.preferences.string(forKey: StorageKeys.savedIconAppearanceMode),
            let mode = AppIconAppearanceMode(rawValue: savedMode) {
             self.iconAppearanceMode = mode == .mono ? .mono : .auto
         }
-        if UserDefaults.standard.object(forKey: StorageKeys.allowUntestedToolchain) != nil {
-            self.allowUntestedToolchain = UserDefaults.standard.bool(forKey: StorageKeys.allowUntestedToolchain)
+        if AppData.preferences.object(forKey: StorageKeys.allowUntestedToolchain) != nil {
+            self.allowUntestedToolchain = AppData.preferences.bool(forKey: StorageKeys.allowUntestedToolchain)
         }
-        if let data = UserDefaults.standard.data(forKey: StorageKeys.newestEngineChoice) {
+        if let data = AppData.preferences.data(forKey: StorageKeys.newestEngineChoice) {
             self.newestEngineChoice = try? JSONDecoder().decode(NewestEngineChoice.self, from: data)
         }
         
-        restoreBuildInputs()
-        if startup.checkEngineAtLaunch || !didCompleteSetup { refreshCompatibility() }
+        restoreBuildInputs(automatic: true)
+        if !AppData.profile.isDevelopment && (startup.checkEngineAtLaunch || !didCompleteSetup) { refreshCompatibility() }
         
-        // Restore saved game folder if it exists
-        if let savedGamePath = UserDefaults.standard.string(forKey: StorageKeys.savedGameFolder) {
-            if !savedGamePath.isEmpty, savedGamePath != "/" {
-                restoringGameFolder = !startup.refreshLibraryAtLaunch
-                self.selectedGameFolder = URL(fileURLWithPath: savedGamePath)
-                restoringGameFolder = false
-            }
-        }
+        // Keep Game files as a picker preference, not an active Add game draft.
+        // Assigning selectedGameFolder scans it; launch refresh only concerns installed apps.
         
-        restoreLibraryFromDisk()
+        recoverSavesAtStartup()
         if !setupCompleted && firstRunSetup.page == .games { prepareInitialGameAppsFolder() }
-        if startup.refreshLibraryAtLaunch || (!setupCompleted && firstRunSetup.page == .games) { loadLibrary() }
-        if let data = UserDefaults.standard.data(forKey: upstreamCacheKey),
+        if startup.refreshLibraryAtLaunch || (!setupCompleted && firstRunSetup.page == .games) { scanLibrary(using: catalog) }
+        if let data = AppData.preferences.data(forKey: upstreamCacheKey),
            let cached = try? JSONDecoder().decode(UpstreamStatus.self, from: data),
            cached.baseCommit == pinnedEngineCommit {
             self.upstreamState = .loaded(cached)
         }
         updateDockIcon()
-        
-        NotificationService.shared.requestAuthorization()
+        // Register notification-click routing at launch without asking for permission.
+        _ = NotificationService.shared
+
         let held = PendingInstaller.keptFolders(libraryGames)
-        let staging = BuildScratch.tempFolders(
-            core: core, appFolders: [gameAppsFolder] + libraryGames.map { $0.url.deletingLastPathComponent() })
+        let staging = AppData.profile.automaticStagingFolders(
+            appFolders: [gameAppsFolder] + libraryGames.map { $0.url.deletingLastPathComponent() })
         DispatchQueue.global(qos: .utility).async { [weak self] in
             self?.sweepStaleBuildTemp(in: staging, keeping: held)
         }
@@ -601,12 +629,12 @@ public final class AppViewModel: ObservableObject {
         refreshCompatibility()
     }
 
-    private func restoreBuildInputs(customRyujinxDir: String? = nil) {
+    private func restoreBuildInputs(customRyujinxDir: String? = nil, automatic: Bool = false) {
         let nxResult = SystemDetector.shared.detectNxnativeDirectory(
-            saved: UserDefaults.standard.string(forKey: StorageKeys.savedEngineFolder))
+            saved: AppData.preferences.string(forKey: StorageKeys.savedEngineFolder))
         self.nxnativePath = nxResult.path
         self.isNxnativeValid = nxResult.isValid
-        ensureKeysImported(customRyujinxDir: customRyujinxDir)
+        if !automatic || !AppData.profile.isDevelopment { ensureKeysImported(customRyujinxDir: customRyujinxDir) }
     }
 
     /// With launch checks off, inspecting a build screen performs the check on demand.
@@ -624,7 +652,7 @@ public final class AppViewModel: ObservableObject {
                 keySummary = summary
                 isProdKeysValid = summary.hasHeaderKey
                 prodKeysPath = keyStore.keyURL.path
-                prodKeysSource = "NX Library"
+                prodKeysSource = AppIdentity.name
             } catch {
                 keySummary = nil
                 isProdKeysValid = false
@@ -634,7 +662,7 @@ public final class AppViewModel: ObservableObject {
             }
             return
         }
-        let saved = UserDefaults.standard.string(forKey: StorageKeys.savedProdKeysPath)
+        let saved = AppData.preferences.string(forKey: StorageKeys.savedProdKeysPath)
         let detected = SystemDetector.shared.detectProdKeys(additionalSearchDir: customRyujinxDir)
         let candidate = [saved, detected?.path].compactMap { $0 }.first {
             !$0.isEmpty && fm.fileExists(atPath: $0)
@@ -747,7 +775,7 @@ public final class AppViewModel: ObservableObject {
                 let status = try await checker.check(from: base)
                 self.upstreamState = .loaded(status)
                 if let data = try? JSONEncoder().encode(status) {
-                    UserDefaults.standard.set(data, forKey: self.upstreamCacheKey)
+                    AppData.preferences.set(data, forKey: self.upstreamCacheKey)
                 }
                 self.checkNewestEngineReadiness(status)
             } catch {
@@ -833,7 +861,7 @@ public final class AppViewModel: ObservableObject {
     /// Keeps the fetched metadata and shows it with the player's choices (`MetadataPicks`) over it.
     private func setStoreMetadata(_ metadata: NintendoStoreMetadata, for game: PortedGame) {
         storeMetadataOriginals[game.id] = metadata
-        let shown = MetadataPicks.shared.applied(to: metadata, titleID: game.titleId ?? game.uniqueKey)
+        let shown = MetadataPicks.shared.applied(to: metadata, titleID: personalizationKey(for: game))
         storeMetadata[game.id] = screenshotFallback.filled(shown)
     }
 
@@ -867,7 +895,7 @@ public final class AppViewModel: ObservableObject {
 
     /// Keeps the player's value for a field, or (nil) goes back to the store's.
     public func pickMetadata(_ value: String?, field: MetadataField, for game: PortedGame) {
-        let key = game.titleId ?? game.uniqueKey
+        let key = personalizationKey(for: game)
         if let value { MetadataPicks.shared.set(value, titleID: key, field: field) }
         else { MetadataPicks.shared.remove(titleID: key, field: field) }
         if let original = storeMetadataOriginals[game.id] { setStoreMetadata(original, for: game) }
@@ -917,7 +945,10 @@ public final class AppViewModel: ObservableObject {
         return error.localizedDescription
     }
 
-    func resolvedDeveloperDir() -> URL {
+    func resolvedDeveloperDir() -> URL { Self.resolveDeveloperDir() }
+
+    /// Reads no state of the view model, so it can run off the main thread (it runs `xcode-select`).
+    static func resolveDeveloperDir() -> URL {
         let fm = FileManager.default
         // An explicit DEVELOPER_DIR always wins.
         if let env = ProcessInfo.processInfo.environment["DEVELOPER_DIR"],
@@ -968,23 +999,46 @@ public final class AppViewModel: ObservableObject {
     public func advanceSetupToGames() {
         guard showSetupCheck else { return }
         if !setupCompleted { prepareInitialGameAppsFolder() }
-        loadLibrary()
+        importExistingBuilds()
         firstRunSetup.advance()
     }
 
     public func returnToSetupRequirements() { firstRunSetup.goBack() }
 
+    /// The Porting card on the first launch's `found` page.
+    public func openPortingFromFound() {
+        guard showSetupCheck, !setupCompleted else { return }
+        firstRunSetup.openPorting()
+    }
+
+    /// The Steam switch on `found`; the shell applies it when the first launch finishes.
+    public func chooseSteamOnFound(_ on: Bool) { firstRunSetup.chooseSteam(on) }
+
+    /// Back from the requirements to `found`, during the first launch only.
+    public func returnToFound() { firstRunSetup.returnToFound() }
+
+    /// Open library on `found`. Ported apps already in the Game apps folder join the library, which
+    /// turns the Switch source on; without them it stays off until the player chooses Porting.
+    public func finishFromFound(importPorted: Bool) {
+        guard showSetupCheck, !setupCompleted else { return }
+        if importPorted {
+            prepareInitialGameAppsFolder()
+            importExistingBuilds()
+        }
+        completeSetup()
+    }
+
     private func prepareInitialGameAppsFolder() {
         do {
             try GameAppDestination.prepareInitialFolder(gameAppsFolder,
-                hasExplicitChoice: UserDefaults.standard.string(forKey: StorageKeys.savedLibraryFolder) != nil)
+                hasExplicitChoice: AppData.preferences.string(forKey: StorageKeys.savedLibraryFolder) != nil)
         } catch {
             logs.append(LogEntry(level: .warning, message: L10n.format("Could not prepare the default Game apps folder: %@", [String(describing: (error.localizedDescription))])))
         }
     }
 
     public func completeSetup() {
-        UserDefaults.standard.set(gameAppsFolder.path, forKey: StorageKeys.savedLibraryFolder)
+        AppData.preferences.set(gameAppsFolder.path, forKey: StorageKeys.savedLibraryFolder)
         firstRunSetup.finish()
         showSetupCheck = false
         logs.append(LogEntry(level: .success, message: L10n.text("Setup completed.")))
@@ -1124,45 +1178,58 @@ public final class AppViewModel: ObservableObject {
         loadLibrary()
     }
 
-    private func restoreLibraryFromDisk() {
-        do {
-            libraryGames = try libraryStore.load().games.sorted {
-                $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-            }
-            recoverSavesAtStartup()
-        } catch {
-            lastError = error.localizedDescription
-            logs.append(LogEntry(level: .error, message: L10n.format("Could not read the library: %@", [String(describing: (error.localizedDescription))])))
+    func applyCatalog(_ document: CatalogDocument) {
+        catalogGames = document.games
+        // Published only when a game is new, so a rescan that changes nothing redraws nothing for it.
+        var downloads = sessionDownloads
+        if downloads.note(document.games) { sessionDownloads = downloads }
+        catalogSourceConfigurations = document.sources
+        personalizations = CatalogPersonalizations(document: document)
+        libraryGames = document.nxnativeGames.sorted {
+            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
         }
     }
 
     public func loadLibrary() {
+        guard !isScanningLibrary else { libraryRescanRequested = true; return }
+        libraryRescanRequested = false
+        do {
+            let current = try catalogRepository.load()
+            applyCatalog(current)
+            scanLibrary(using: current)
+        } catch { reportCatalogFailure(error) }
+    }
+
+    /// Startup consumes its already-validated document, without a second
+    /// fallible read before publishing the shell or starting runtime hooks.
+    private func scanLibrary(using current: CatalogDocument) {
         guard !isScanningLibrary else { return }
+        let choosingSwitch = !setupCompleted && firstRunSetup.page == .games
+        guard current.source(.nxnative)?.isEnabled == true || choosingSwitch else { return }
+        let existing = current.nxnativeGames
         isScanningLibrary = true
-        // At launch the saved library shows at once; the folder scan below then brings in new and changed apps.
-        if libraryGames.isEmpty, let stored = try? libraryStore.load(), !stored.games.isEmpty {
-            libraryGames = stored.games.sorted {
-                $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-            }
-        }
         let fm = FileManager.default
         let directories = [gameAppsFolder]
-        let store = libraryStore
         let importer = importService
         let folderSnapshot = libraryFolder?.standardizedFileURL
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let loaded = (try? store.load()) ?? LibraryFile()
             let scanned = importer.scan(directories: directories)
             let scanWarnings = importer.scanWarnings
-            let selected = importer.appsForLibrary(scanned: scanned, existing: loaded.games)
+            let selected = importer.appsForLibrary(scanned: scanned, existing: existing)
             let importedGames = selected.map { importer.makeGame(from: $0) }
             DispatchQueue.main.async {
                 guard let self else { return }
-                // A folder chosen during the startup scan gets its own scan before results appear.
                 guard self.libraryFolder?.standardizedFileURL == folderSnapshot else {
                     self.isScanningLibrary = false
                     self.loadLibrary()
                     return
+                }
+                defer {
+                    self.isScanningLibrary = false
+                    if self.libraryRescanRequested {
+                        self.libraryRescanRequested = false
+                        self.loadLibrary()
+                    }
                 }
                 self.importedApps = selected
                 var scannedByTitle: [String: ImportedApp] = [:]
@@ -1171,52 +1238,40 @@ public final class AppViewModel: ObservableObject {
                         scannedByTitle[titleId.uppercased()] = app
                     }
                 }
-                var library = loaded
                 do {
-                    library = try store.merge(scanned: importedGames)
-                } catch {
-                    self.lastError = error.localizedDescription
-                    self.logs.append(LogEntry(level: .error,
-                                              message: L10n.format("Could not update the library: %@", [String(describing: (error.localizedDescription))])))
-                }
-                for index in library.games.indices {
-                    let scannedApp = library.games[index].titleId
-                        .flatMap { scannedByTitle[$0.uppercased()] }
-                    if let scannedApp, !fm.fileExists(atPath: library.games[index].url.path),
-                       fm.fileExists(atPath: scannedApp.appURL.path) {
-                        library.games[index].url = scannedApp.appURL
+                    let catalog = try self.catalogRepository.mergeNXNative(scanned: importedGames, enableSource: choosingSwitch, observedFrom: existing) { games, acceptedIDs in
+                        for index in games.indices where acceptedIDs.contains(games[index].id) {
+                            let scannedApp = games[index].titleId
+                                .flatMap { scannedByTitle[$0.uppercased()] }
+                            if let scannedApp, !fm.fileExists(atPath: games[index].url.path),
+                               fm.fileExists(atPath: scannedApp.appURL.path) {
+                                games[index].url = scannedApp.appURL
+                            }
+                            if let scannedApp, fm.fileExists(atPath: scannedApp.appURL.path) {
+                                games[index].sizeBytes = scannedApp.sizeBytes
+                                games[index].versionString = scannedApp.version
+                                    ?? games[index].versionString
+                                games[index].bundleId = scannedApp.bundleId
+                                    ?? games[index].bundleId
+                            }
+                            let appExists = fm.fileExists(atPath: games[index].url.path)
+                            let sourcesExist = GameResourceState.sourcesAvailable(for: games[index], fileManager: fm)
+                            games[index].status = GameResourceState.reconciledStatus(
+                                for: games[index], appExists: appExists, sourcesAvailable: sourcesExist)
+                        }
                     }
-                    if let scannedApp, fm.fileExists(atPath: scannedApp.appURL.path) {
-                        library.games[index].sizeBytes = scannedApp.sizeBytes
-                        library.games[index].versionString = scannedApp.version
-                            ?? library.games[index].versionString
-                        library.games[index].bundleId = scannedApp.bundleId
-                            ?? library.games[index].bundleId
-                    }
-                    let appExists = fm.fileExists(atPath: library.games[index].url.path)
-                    let sourcesExist = GameResourceState.sourcesAvailable(for: library.games[index], fileManager: fm)
-                    library.games[index].status = GameResourceState.reconciledStatus(
-                        for: library.games[index], appExists: appExists, sourcesAvailable: sourcesExist)
-                }
-                do { try store.save(library) } catch { self.reportLibrarySaveFailure(error) }
-                self.libraryGames = library.games.sorted {
-                    $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-                }
+                    self.applyCatalog(catalog)
+                    self.reconcileAppIcons()
+                } catch { self.reportCatalogFailure(error) }
                 self.libraryScanWarnings = scanWarnings
-                self.isScanningLibrary = false
-                // Paths are known again: icons chosen while an app was elsewhere, or left half done, go on now.
-                self.reconcileAppIcons()
-                if !scanWarnings.isEmpty {
-                    for warning in scanWarnings {
-                        self.logs.append(LogEntry(level: .warning, message: warning))
-                    }
-                }
+                for warning in scanWarnings { self.logs.append(LogEntry(level: .warning, message: warning)) }
             }
         }
     }
 
     public func importExistingBuilds() {
-        loadLibrary()
+        do { applyCatalog(try catalogRepository.configureSource(.nxnative, enabled: true, root: nil)); loadLibrary() }
+        catch { reportCatalogFailure(error) }
     }
 
     /// Attach source files to an already-imported app. The app URL, version and
@@ -1304,7 +1359,8 @@ public final class AppViewModel: ObservableObject {
     }
 
     public func launchGame(_ game: PortedGame) {
-        guard launchingGameId == nil else { return }
+        // One launch at a time: the launch screen covers the library, and input reaching it changes nothing.
+        guard launchingGameId == nil, launchOverlay == nil else { return }
         // A running game is brought forward, never started a second time.
         if let running = RunningGameMonitor.runningApplication(for: game) {
             RunningGameMonitor.activate(running)
@@ -1359,7 +1415,7 @@ public final class AppViewModel: ObservableObject {
             return
         }
         launchingGameId = game.id
-        launchOverlay = LaunchOverlayState(game: game)
+        launchOverlay = LaunchOverlayState(game: .nxnative(game))
         SoundEffectService.shared.play(.launch)
 
         // A saved-choices build reads the game's own store; only an older build takes env.txt and the environment.
@@ -1392,6 +1448,9 @@ public final class AppViewModel: ObservableObject {
                                    message: L10n.text("Cloud sync could not be updated for this launch. Check Games → Cloud saves."))
             }
         }
+
+        // Play can come straight from the row. Reconcile removed mod folders before the game reads its overlay.
+        if let store = modStore(for: game) { _ = performModChange { try store.sync() } }
 
         launchService.launch(appURL: game.url,
                              environment: gameSettings == nil ? config.toEnvironmentDict() : [:]) { [weak self] success, error in
@@ -1453,7 +1512,16 @@ public final class AppViewModel: ObservableObject {
     public func openGameOptions(_ game: PortedGame, from origin: GameOptionsOrigin, opensMods: Bool = false) {
         gameOptionsOrigin = origin
         gameOptionsOpensMods = opensMods
+        steamOptionsGame = nil
         gameForSettingsSheet = game
+    }
+
+    /// Opens a Steam game's Options, remembering the screen it was opened from.
+    func openSteamOptions(_ game: CatalogGame, from origin: GameOptionsOrigin) {
+        guard game.integration == .steam else { return }
+        gameOptionsOrigin = origin
+        gameForSettingsSheet = nil
+        steamOptionsGame = game
     }
 
     /// Flips the favorite heart and saves the library.
@@ -1506,18 +1574,8 @@ public final class AppViewModel: ObservableObject {
 
     /// Applies one change to the stored game and saves the library, the same way for every flag.
     private func updateStoredGame(_ game: PortedGame, _ change: (inout PortedGame) -> Void) {
-        guard var library = try? libraryStore.load(),
-              let index = library.games.firstIndex(where: { $0.id == game.id }) else { return }
-        change(&library.games[index])
-        do {
-            try libraryStore.save(library)
-        } catch {
-            alertMessage = error.localizedDescription
-            return
-        }
-        libraryGames = library.games.sorted {
-            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-        }
+        do { applyCatalog(try catalogRepository.updateNXNative(id: game.id, change)) }
+        catch { reportCatalogFailure(error) }
     }
 
     /// Opens the Close Game confirmation for a running game (Spotlight and Details).
@@ -1554,17 +1612,17 @@ public final class AppViewModel: ObservableObject {
     /// Seeded once from the newest porting log when nothing is stored yet.
     public var lastPortingFinishSeconds: Double? {
         get {
-            let stored = UserDefaults.standard.double(forKey: StorageKeys.lastPortingFinishSeconds)
+            let stored = AppData.preferences.double(forKey: StorageKeys.lastPortingFinishSeconds)
             if stored > 0 { return stored }
             guard !didSeedFinishSeconds else { return nil }
             didSeedFinishSeconds = true
             guard let seeded = Self.finishSecondsFromNewestLog(in: core.appendingPathComponent("logs")) else {
                 return nil
             }
-            UserDefaults.standard.set(seeded, forKey: StorageKeys.lastPortingFinishSeconds)
+            AppData.preferences.set(seeded, forKey: StorageKeys.lastPortingFinishSeconds)
             return seeded
         }
-        set { UserDefaults.standard.set(newValue ?? 0, forKey: StorageKeys.lastPortingFinishSeconds) }
+        set { AppData.preferences.set(newValue ?? 0, forKey: StorageKeys.lastPortingFinishSeconds) }
     }
 
     private static func finishSecondsFromNewestLog(in directory: URL) -> Double? {
@@ -1583,20 +1641,14 @@ public final class AppViewModel: ObservableObject {
     /// A library that could not be written: what the player sees would be gone at the next start, so say so once
     /// (in the log every time) instead of losing it in silence.
     func reportLibrarySaveFailure(_ error: Error) {
-        let message = L10n.text("NX Library could not save your library, so recent changes may be lost when it quits: ")
+        let message = L10n.text("Arcane could not save your library, so recent changes may be lost when it quits: ")
             + error.localizedDescription
         logs.append(LogEntry(level: .error, message: message))
         if alertMessage == nil { alertMessage = message }
     }
 
     private func updateStoredStatus(_ status: GameStatus, for game: PortedGame) {
-        guard var library = try? libraryStore.load(),
-              let index = library.games.firstIndex(where: { $0.id == game.id }) else { return }
-        library.games[index].status = status
-        do { try libraryStore.save(library) } catch { reportLibrarySaveFailure(error) }
-        libraryGames = library.games.sorted {
-            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-        }
+        updateStoredGame(game) { $0.status = status }
     }
 
     public func loadRuntimeConfig(for game: PortedGame) -> GameRuntimeConfig {
@@ -1701,14 +1753,16 @@ public final class AppViewModel: ObservableObject {
             return
         }
         let fm = FileManager.default
-        guard var library = try? libraryStore.load(),
-              let index = library.games.firstIndex(where: { $0.id == game.id }) else {
+        let current: CatalogDocument
+        do { current = try catalogRepository.load() }
+        catch { reportCatalogFailure(error); return }
+        guard current.nxnativeGames.contains(where: { $0.id == game.id }) else {
             alertMessage = L10n.format("Could not load the library entry for %@.", [game.name])
             return
         }
 
         let appPath = game.url.standardizedFileURL.path
-        let otherGames = library.games.filter { $0.id != game.id }
+        let otherGames = current.nxnativeGames.filter { $0.id != game.id }
         var removedCount = 0
         var removedBytes: Int64 = 0
         var failures: [String] = []
@@ -1757,7 +1811,7 @@ public final class AppViewModel: ObservableObject {
             }
         }
 
-        var updated = library.games[index]
+        var updated = current.nxnativeGames.first { $0.id == game.id }!
         updated.sources = updated.sources.filter { source in
             var isDir: ObjCBool = false
             return fm.fileExists(atPath: source.url.path, isDirectory: &isDir)
@@ -1772,19 +1826,18 @@ public final class AppViewModel: ObservableObject {
         if updated.sources.isEmpty {
             updated.status = .builtSourcesMissing
         }
-        library.games[index] = updated
-
         do {
-            try libraryStore.save(library)
+            applyCatalog(try catalogRepository.updateNXNative(id: game.id) { stored in
+                stored.sources = updated.sources
+                stored.workspacePath = updated.workspacePath
+                stored.buildCachePath = updated.buildCachePath
+                stored.status = updated.status
+            })
         } catch {
             alertMessage = L10n.format("The sources were removed, but the library could not be saved: %@", [error.localizedDescription])
             logs.append(LogEntry(level: .error, message: alertMessage!))
             return
         }
-        libraryGames = library.games.sorted {
-            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-        }
-
         let removed = L10n.count("Removed %lld source files (%@).", removedCount, arguments: [Self.formatBytes(removedBytes)])
             + (removedWorkspace ? " " + L10n.text("The build cache was also removed.") : "")
         if failures.isEmpty {
@@ -1844,12 +1897,9 @@ public final class AppViewModel: ObservableObject {
                 }
             }
 
-            var library = try libraryStore.load()
-            library.games.removeAll { $0.id == game.id }
-            try libraryStore.save(library)
-            libraryGames = library.games.sorted {
-                $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-            }
+            applyCatalog(try catalogRepository.updateNXNativeGames { games in
+                games.removeAll { $0.id == game.id }
+            })
             if deleteBundle {
                 logs.append(LogEntry(level: .warning,
                     message: L10n.format("Game app deleted: %@%@", [String(describing: (game.name)), String(describing: (removedWorkspace ? "; staged workspace removed" : ""))])))
@@ -2032,7 +2082,7 @@ public final class AppViewModel: ObservableObject {
                     titleId: String(format: "%016llX", source.titleId),
                     versionString: source.version.map { "v\($0)" },
                     sizeBytes: source.sizeBytes, sourceLayout: source.layout,
-                    requiresTitleSelection: source.requiresTitleSelection
+                    requiresTitleSelection: source.requiresTitleSelection, nupProgram: source.nupProgram
                 )
             }
         )
@@ -2056,9 +2106,9 @@ public final class AppViewModel: ObservableObject {
             }
             // Remembered, so launch and every check use it; ~/nxnative itself needs nothing stored.
             if let saved = EngineLocation.savedValue(for: url, home: SystemDetector.shared.resolveRootDirectory()) {
-                UserDefaults.standard.set(saved, forKey: StorageKeys.savedEngineFolder)
+                AppData.preferences.set(saved, forKey: StorageKeys.savedEngineFolder)
             } else {
-                UserDefaults.standard.removeObject(forKey: StorageKeys.savedEngineFolder)
+                AppData.preferences.removeObject(forKey: StorageKeys.savedEngineFolder)
             }
             self.nxnativePath = url.path
             self.isNxnativeValid = true
@@ -2072,7 +2122,7 @@ public final class AppViewModel: ObservableObject {
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
-        panel.directoryURL = selectedGameFolder
+        panel.directoryURL = selectedGameFolder ?? gameFilesFolder
         panel.prompt = "Choose folder"
         panel.message = GameFoldersCopy.sourcesPickerMessage(extractedFolders: engineSourceCapabilities.extractedFolders)
         
@@ -2388,18 +2438,16 @@ public final class AppViewModel: ObservableObject {
                          titleId: String(format: "%016llX", $0.titleId),
                          versionString: $0.version.map(String.init),
                          sizeBytes: $0.sizeBytes, isSymlink: folder == nil, sourceLayout: $0.layout,
-                         requiresTitleSelection: $0.requiresTitleSelection)
+                         requiresTitleSelection: $0.requiresTitleSelection, nupProgram: $0.nupProgram)
         }
         game.workspacePath = workspace.directory.path
         game.buildCachePath = workspace.buildCache.path
         game.status = .notBuilt
         game.settings = pendingRuntimeConfig
 
-        let library = try libraryStore.merge(scanned: [game], replacingSources: true)
-        libraryGames = library.games.sorted {
-            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-        }
-        return library.games.first(where: { $0.titleId == titleId }) ?? game
+        let catalog = try catalogRepository.mergeNXNative(scanned: [game], replacingSources: true, enableSource: true)
+        applyCatalog(catalog)
+        return catalog.nxnativeGames.first(where: { $0.titleId == titleId }) ?? game
     }
 
     public func startBuild(for game: PortedGame, extraArguments: [String] = []) {
@@ -2435,6 +2483,9 @@ public final class AppViewModel: ObservableObject {
         let requiresKeys = SourceSelection.requiresKeys(target.sources)
         guard supportsSources(target.sources) else {
             throw NXLibraryError.environmentBlocked(L10n.text("These sources need an engine with extracted-folder or multi-title support."))
+        }
+        guard SourceSelection.matchesNUPProgram(target.sources, titleID: titleId) else {
+            throw NXLibraryError.environmentBlocked(L10n.text("The selected NUP program no longer matches this game. Choose the source again."))
         }
         if requiresKeys {
             guard isProdKeysValid, FileManager.default.fileExists(atPath: keyStore.keyURL.path) else {
@@ -2479,14 +2530,12 @@ public final class AppViewModel: ObservableObject {
             metalVersion: environmentStatus.metalVersion, xcodeVersion: environmentStatus.xcodeVersion,
             verified: certified,
             note: certified ? "Certified toolchain"
-                : usesNewestEngine ? "Newest engine, not yet tested by NX Library"
+                : usesNewestEngine ? "Newest engine, not yet tested by Arcane"
                 : "Untested toolchain (explicit override)")
 
-        let merged = try libraryStore.merge(scanned: [target])
-        libraryGames = merged.games.sorted {
-            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-        }
-        guard let stored = merged.games.first(where: { $0.titleId == titleId }) else {
+        let merged = try catalogRepository.mergeNXNative(scanned: [target], enableSource: true)
+        applyCatalog(merged)
+        guard let stored = merged.nxnativeGames.first(where: { $0.titleId == titleId }) else {
             throw NXLibraryError.missingSources
         }
         target = stored
@@ -2529,15 +2578,12 @@ public final class AppViewModel: ObservableObject {
             target.buildCachePath = workspace.buildCache.path
         }
 
-        if var library = try? libraryStore.load(),
-           let index = library.games.firstIndex(where: { $0.id == target.id }) {
-            library.games[index].workspacePath = target.workspacePath
-            library.games[index].buildCachePath = target.buildCachePath
-            do { try libraryStore.save(library) } catch { reportLibrarySaveFailure(error) }
-            libraryGames = library.games.sorted {
-                $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-            }
-        }
+        do {
+            applyCatalog(try catalogRepository.updateNXNative(id: target.id) {
+                $0.workspacePath = target.workspacePath
+                $0.buildCachePath = target.buildCachePath
+            })
+        } catch { reportCatalogFailure(error); throw error }
 
         let requiredDisk = SourceSelection.uniqueSize(target.sources) * 2 + 10_000_000_000
         var measured = Set<UInt64>()
@@ -2558,7 +2604,7 @@ public final class AppViewModel: ObservableObject {
         let toolchain = engineToolchain
         guard FileManager.default.isExecutableFile(atPath: toolchain.python.path) else {
             throw NXLibraryError.environmentBlocked(toolchain.isBundled
-                ? L10n.text("the bundled Python is missing; reinstall NX Library")
+                ? L10n.text("the bundled Python is missing; reinstall Arcane")
                 : L10n.text("the nxnative venv Python is missing"))
         }
 
@@ -2580,6 +2626,8 @@ public final class AppViewModel: ObservableObject {
             bundleId: target.bundleId ?? "org.nxnative.\(titleId.lowercased())",
             language: loadRuntimeConfig(for: target).languageForBuild,
             titleId: engineSourceCapabilities.titleSelection ? titleId : nil,
+            programIndex: SourceSelection.programIndex(for: target.sources, titleID: titleId,
+                                                       nupPrograms: engineSourceCapabilities.nupPrograms),
             packageVersion: engineSourceCapabilities.titleSelection
                 ? SourceSelection.packageVersion(for: target.sources, stagedSelection: !workspace.links.isEmpty) : nil,
             allowUntestedToolchain: allowUntestedToolchain,
@@ -2595,6 +2643,8 @@ public final class AppViewModel: ObservableObject {
         isPollingPipelineArchive = false
         buildWizardStep = 3
         isBuilding = true
+        // The request belongs to an accepted porting, never to startup or Steam-only use.
+        NotificationService.shared.requestAuthorization()
         isCancellingBuild = false
         buildState = .running
         buildError = nil
@@ -2681,7 +2731,7 @@ public final class AppViewModel: ObservableObject {
             return
         }
         if canRetryReadyInstall {
-            installPendingBuilds(only: id)
+            installPendingBuilds(only: id, automatic: false)
             return
         }
         startBuild(for: game)
@@ -2829,9 +2879,9 @@ public final class AppViewModel: ObservableObject {
         if result.heldApp == nil { try? FileManager.default.removeItem(at: tempDir) }
         buildTempDirectory = nil
 
-        var library = (try? libraryStore.load()) ?? LibraryFile(games: libraryGames)
-        if let index = library.games.firstIndex(where: { $0.id == gameID }) {
-            var game = library.games[index]
+        // Displayed state can retain a finished result for an explicit retry,
+        // but is never serialized as a replacement catalog.
+        if var game = libraryGames.first(where: { $0.id == gameID }) {
             let toolchain = activeBuildToolchain ?? ToolchainInfo(engineCommit: activeEngineCommit, verified: false)
             let verified = toolchain.verified
             let record = BuildRecord(
@@ -2848,6 +2898,8 @@ public final class AppViewModel: ObservableObject {
             )
 
             if result.success || result.installationFailed {
+                _ = authorizeDevelopmentOperation(.build, game: game)
+                _ = authorizeDevelopmentOperation(.icon, game: game)
                 if let held = result.heldApp {
                     PendingInstaller.hold(PendingInstall(tempApp: held, finalApp: finalApp,
                                                          record: record, toolchain: toolchain), for: &game)
@@ -2914,21 +2966,7 @@ public final class AppViewModel: ObservableObject {
                 notifyPortingEnded(game, success: false)
             }
 
-            library.games[index] = game
-            var saved = true
-            do {
-                try libraryStore.save(library)
-            } catch {
-                saved = false
-                if game.pendingInstall != nil {
-                    presentInstallFailure(for: game, error: error.localizedDescription)
-                } else {
-                    logs.append(LogEntry(level: .error, message: L10n.format("Could not save the library: %@", [String(describing: (error.localizedDescription))])))
-                }
-            }
-            libraryGames = library.games.sorted {
-                $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-            }
+            let saved = persistBuildOutcome(game)
             if result.success && saved {
                 if result.heldApp == nil { appIconBuildLogs[gameID] = result.logURL }
                 loadLibrary()
@@ -3005,7 +3043,7 @@ public final class AppViewModel: ObservableObject {
             }
             return DetectedSource(url: item.url, kind: item.kind, titleId: titleId,
                                   version: version, sizeBytes: item.sizeBytes, layout: item.layout,
-                                  requiresTitleSelection: item.requiresTitleSelection == true)
+                                  requiresTitleSelection: item.requiresTitleSelection == true, nupProgram: item.nupProgram)
         }
         guard let titleId = game.titleId.flatMap({ UInt64($0, radix: 16) }) else {
             throw NXLibraryError.missingTitleId
@@ -3027,7 +3065,7 @@ public final class AppViewModel: ObservableObject {
         }
         return DetectedSource(url: file.url, kind: file.type, titleId: titleId,
                               version: version, sizeBytes: file.sizeBytes, layout: file.layout,
-                              requiresTitleSelection: file.requiresTitleSelection == true)
+                              requiresTitleSelection: file.requiresTitleSelection == true, nupProgram: file.nupProgram)
     }
 
     private func finalAppURL(for game: PortedGame) -> URL {

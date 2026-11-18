@@ -16,6 +16,7 @@ public enum BuildCommandBuilder {
         motion: Bool? = nil,
         romfsMode: String? = nil,
         titleId: String? = nil,
+        programIndex: Int? = nil,
         packageVersion: String? = nil,
         allowUntestedToolchain: Bool = false,
         extraArguments: [String] = []
@@ -30,6 +31,7 @@ public enum BuildCommandBuilder {
         ]
         if let keys { args += ["-k", keys.path] }
         if let titleId { args += ["--title-id", titleId] }
+        if let programIndex { args += ["--program", String(programIndex)] }
         if let packageVersion { args += ["-p", packageVersion] }
         if let appName, !appName.isEmpty { args += ["--app-name", appName] }
         if let bundleId, !bundleId.isEmpty { args += ["--bundle-id", bundleId] }

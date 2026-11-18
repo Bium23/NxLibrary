@@ -11,7 +11,7 @@ extension AppViewModel {
     static let appIconWriter = AppIconWriter()
     static let automaticIconArtwork = ArtworkStore()
 
-    private func iconKey(_ game: PortedGame) -> String { game.titleId ?? game.uniqueKey }
+    private func iconKey(_ game: PortedGame) -> String { personalizationKey(for: game) }
 
     /// Resolve the image independently of whether the player wants it applied to the Mac app.
     func automaticIconURL(for game: PortedGame) async -> URL? {
@@ -69,6 +69,7 @@ extension AppViewModel {
 
     /// The pop-up's answer: show the player's Icon on the app too, or keep the game's own.
     public func setUsesPickedAppIcon(_ use: Bool, for game: PortedGame) {
+        guard authorizeDevelopmentOperation(.icon, game: game) else { return }
         updateAppIconState(game) {
             $0.usesPickedAppIcon = use
             $0.appIconOnMac = use
@@ -79,6 +80,7 @@ extension AppViewModel {
 
     /// Automatic removes the personal image without changing the player's destination choice.
     public func appIconPickChanged(for game: PortedGame, removed: Bool) {
+        guard authorizeDevelopmentOperation(.icon, game: game) else { return }
         updateAppIconState(game) {
             if removed { $0.useAutomaticAppIcon() }
             $0.appIconPending = true
@@ -89,6 +91,7 @@ extension AppViewModel {
     /// After a library scan: an app whose icon differs from what the rule wants (a pick chosen while the app was
     /// elsewhere or missing, an app moved or built again, a change lost to a crash) is put right.
     public func reconcileAppIcons() {
+        guard !AppData.profile.isDevelopment else { return }
         for game in libraryGames where !game.appIconPending && !appIconsInFlight.contains(game.id) {
             guard let app = installedApp(game) else { continue }
             let writer = Self.appIconWriter
@@ -107,6 +110,7 @@ extension AppViewModel {
     /// the same app is being signed runs again once that finishes, so the last choice wins.
     public func syncPendingAppIcons() {
         for game in libraryGames where game.appIconPending {
+            guard developmentOperations.permits(.icon, gameID: game.id) else { continue }
             guard !appIconsInFlight.contains(game.id) else {
                 appIconRerun.insert(game.id)
                 continue
@@ -178,15 +182,8 @@ extension AppViewModel {
     }
 
     private func updateAppIconState(_ game: PortedGame, _ change: (inout PortedGame) -> Void) {
-        guard var library = try? libraryStore.load(),
-              let index = library.games.firstIndex(where: { $0.id == game.id }) else { return }
-        change(&library.games[index])
-        guard (try? libraryStore.save(library)) != nil else { return }
-        if let shown = libraryGames.firstIndex(where: { $0.id == game.id }) {
-            libraryGames[shown].usesPickedAppIcon = library.games[index].usesPickedAppIcon
-            libraryGames[shown].appIconOnMac = library.games[index].appIconOnMac
-            libraryGames[shown].appIconPending = library.games[index].appIconPending
-        }
+        do { applyCatalog(try catalogRepository.updateNXNative(id: game.id, change)) }
+        catch { reportCatalogFailure(error) }
     }
 
     /// Finder and the Dock read icons through Launch Services, which caches them by the bundle's date.

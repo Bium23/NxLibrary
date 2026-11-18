@@ -7,7 +7,7 @@ The MIT permission notice is reproduced for each project below.
 --------------------------------------------------------------------------------
 nxnative
 https://github.com/seedds/nxnative
-Pinned engine commit: 2716f78f01e90a9f9bbf0d09e7a798903525962f
+Pinned engine commit: 461a5f9f95fc9fc40a690bb2a82eb23f1f03bdca
 
 MIT License
 
@@ -94,6 +94,16 @@ SOFTWARE.
 No Nintendo games, keys, logos, fonts, sounds, or other Nintendo assets are
 included in this repository. NX Library is not affiliated with, endorsed by,
 or sponsored by Nintendo.
+
+The Steam logo (Resources/Brands/SteamLogo.png, the inverse logo from Valve's
+Steam brand guidelines, unaltered) marks Steam games in the library.
+©2026 Valve Corporation. Steam and the Steam logo are trademarks and/or
+registered trademarks of Valve Corporation in the U.S. and/or other countries.
+NX Library is not affiliated with, endorsed by, or sponsored by Valve.
+
+The Buy Me a Coffee cup (Resources/Brands/BuyMeACoffee.png) is from the
+official brand kit (https://buymeacoffee.com/brand) and identifies the external
+support page. The artwork belongs to Buy Me a Coffee.
 
 --------------------------------------------------------------------------------
 Bundled media (Material Icons, Selene sounds and palettes): see

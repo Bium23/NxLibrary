@@ -61,7 +61,8 @@ public struct ThemePickerState: Equatable {
     public mutating func move(_ direction: GridDirection, count: Int) -> Bool {
         switch step {
         case .theme:
-            guard let next = GridNavigation.move(themeIndex, direction, count: count, columns: Self.themeColumns) else { return false }
+            guard let next = GridNavigation.move(themeIndex, direction, count: count,
+                                                 columns: Self.themeColumns) else { return false }
             themeIndex = next
         case .background:
             guard let next = GridNavigation.move(backgroundIndex, direction, count: count,
