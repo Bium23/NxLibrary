@@ -168,7 +168,7 @@ Nel menu rapido, Theme apre prima i colori con anteprima viva; A applica la pale
 
 La barra laterale segue `SettingsSidebarGroup`: General, Library, Porting e System. Ogni sezione mostra solo le righe di `SettingsCatalog` che le appartengono.
 
-In System → About, Support Arcane è un'azione di `SettingsAboutSection`: clic, Invio e conferma del controller aprono la pagina Buy Me a Coffee nel browser predefinito.
+In System → About, il pulsante Support Arcane compare tra il riepilogo dell’app e i crediti. `SettingsAboutSection` apre la pagina Buy Me a Coffee nel browser predefinito tramite clic, Invio o conferma del controller.
 
 Tornando alla home, le viste delle tessere ricreate leggono subito le immagini decodificate in `TileArtMemo`; i task caricano quelle mancanti e rivalidano i file Steam. La cover della card Mods resta nel `ModStoreHost` posseduto dalla shell ed è rivalidata in background rispetto agli abbinamenti correnti.
 

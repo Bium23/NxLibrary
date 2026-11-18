@@ -181,7 +181,7 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
 - **General:** Start-up, Navigation, Spotlight, Sound & music, Look, Controllers, Online services.
 - **Library:** Sources, Games, Storage. Valgono per i giochi di ogni fonte.
 - **Porting:** Setup and engine, Keys, Library, New games, Cloud saves, Storage. Valgono solo per i giochi convertiti.
-- **System:** About, Console. `SettingsAboutSection` apre il link di sostegno volontario a Buy Me a Coffee nel browser predefinito, con la stessa azione per clic, tastiera e controller.
+- **System:** About, Console. In `SettingsAboutSection`, il pulsante di sostegno volontario a tutta larghezza, prima dei crediti, mostra l’icona di Buy Me a Coffee e apre la pagina nel browser predefinito. Clic, tastiera e controller usano la stessa azione.
 
 Regole della barra:
 - Porting è l'unico gruppo di piattaforma (`isPlatform`): Search, Changed e il titolo di pagina chiamano le sue sezioni col nome del gruppo ("Porting · New games").

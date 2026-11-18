@@ -43539,6 +43539,47 @@
         }
       }
     },
+    "Optional contributions support development and maintenance.": {
+      "comment": "SettingsAboutSection.swift",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freiwillige Beiträge unterstützen die Entwicklung und Pflege der App."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional contributions support development and maintenance."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las aportaciones voluntarias apoyan el desarrollo y el mantenimiento de la app."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les contributions volontaires soutiennent le développement et la maintenance de l’app."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un contributo facoltativo per lo sviluppo e la manutenzione dell’app."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contribuições voluntárias ajudam no desenvolvimento e na manutenção do app."
+          }
+        }
+      }
+    },
     "Optional: %@ for building.": {
       "comment": "GameFoldersCopy.swift",
       "localizations": {

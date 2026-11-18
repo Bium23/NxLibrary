@@ -6,10 +6,14 @@ struct SettingsAboutSection: View {
     @ObservedObject var viewModel: AppViewModel
     @EnvironmentObject private var updater: AppUpdater
     @Environment(\.seleneFocusedRowID) private var focusedRowTitle
+    @Environment(\.seleneCanvas) private var canvas
+    @Environment(\.nxAppLocale) private var localization
     let onActions: ([SettingsRowAction]) -> Void
 
     @State private var didCopyDiagnostics = false
     private static let supportTitle = "Support Arcane"
+    private static let supportArtwork = Bundle.main.url(forResource: "BuyMeACoffee", withExtension: "png",
+                                                        subdirectory: "Brands").flatMap(NSImage.init(contentsOf:))
 
     private let credits: [(name: String, role: String, url: String)] = [
         ("seedds", "nxnative engine, NVN/Metal host and ARM64 rewriter", "https://github.com/seedds/nxnative"),
@@ -56,20 +60,9 @@ struct SettingsAboutSection: View {
                 .seleneRowFocus(focusedRowTitle == "Copy diagnostics")
                 .id("selene-row-Copy diagnostics")
                 .accessibilityHint(L10n.text("A report for an issue: versions, setup and the last porting. No keys."))
-
-                Button(action: openSupportPage) {
-                    HStack(spacing: 4) {
-                        Text(L10n.text(Self.supportTitle))
-                        Image(systemName: "arrow.up.right")
-                    }
-                    .seleneFont(14, .semibold)
-                    .foregroundColor(SeleneTheme.glyph)
-                }
-                .buttonStyle(.plain)
-                .padding(6)
-                .seleneRowFocus(focusedRowTitle == Self.supportTitle)
-                .id("selene-row-\(Self.supportTitle)")
             }
+
+            supportButton
 
             SelenePanel(L10n.text("Credits")) {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
@@ -181,6 +174,42 @@ struct SettingsAboutSection: View {
         .onChange(of: viewModel.hasActiveSaveOperations) { _ in publishActions() }
         .onChange(of: viewModel.isUpdatingApp) { _ in publishActions() }
         .onChange(of: viewModel.runningGameCount) { _ in publishActions() }
+    }
+
+    private var supportButton: some View {
+        Button(action: openSupportPage) {
+            SelenePanel {
+                HStack(spacing: canvas.u(14)) {
+                    if let artwork = Self.supportArtwork {
+                        Image(nsImage: artwork)
+                            .resizable()
+                            .interpolation(.high)
+                            .scaledToFit()
+                            .frame(width: canvas.u(44), height: canvas.u(44))
+                            .clipShape(RoundedRectangle(cornerRadius: canvas.u(9), style: .continuous))
+                            .accessibilityHidden(true)
+                    }
+                    VStack(alignment: .leading, spacing: canvas.u(4)) {
+                        Text(L10n.text(Self.supportTitle, context: localization))
+                            .seleneFont(19, .semibold)
+                            .foregroundColor(SeleneTheme.ink)
+                        Text(L10n.text("Optional contributions support development and maintenance.", context: localization))
+                            .seleneFont(14)
+                            .foregroundColor(SeleneTheme.ink75)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: canvas.u(8))
+                    Image(systemName: "arrow.up.right")
+                        .seleneFont(16, .semibold)
+                        .foregroundColor(SeleneTheme.glyph)
+                        .accessibilityHidden(true)
+                }
+            }
+            .contentShape(RoundedRectangle(cornerRadius: SeleneTheme.cardRadius, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .seleneRowFocus(focusedRowTitle == Self.supportTitle, radius: SeleneTheme.cardRadius)
+        .id("selene-row-\(Self.supportTitle)")
     }
 
     private func copyDiagnostics() {
