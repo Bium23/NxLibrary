@@ -129,6 +129,8 @@ callback.
 15 s, mai sopra una scansione in corso (quella successiva la segue). Il watcher parte con la fonte e si ferma quando la
 fonte si spegne o l’app esce. Nessun polling.
 
+Il test dell’intervallo minimo confronta gli avvii delle scansioni pubblicati dal modello.
+
 Effetto: a fine download la tile passa da sola a colori con Play; un gioco installato o rimosso in Steam appare o
 sparisce senza Refresh.
 
@@ -313,7 +315,6 @@ Punti minori rimandati dalle revisioni, da decidere prima del rilascio:
   serve Refresh o una modifica rilevante ai file Steam già osservati.
 - Un Refresh manuale non annulla una riscansione in attesa (una scansione in più).
 - `openDownloads` ignora gli errori di apertura.
-- I test del ritmo delle riscansioni hanno margini di 60–80 ms.
 - Achievement: la freccia Su sparisce col focus sulla card; riepilogo ricalcolato a ogni disegno. (Risolti il 16 nov
   2026: ordine «più rari» stabile a parità di percentuale, rarità `nan` scartata, lampo dell’icona allo scorrimento.)
 - Il focus dei link Details non viene limitato quando una disinstallazione Steam ne riduce il numero.

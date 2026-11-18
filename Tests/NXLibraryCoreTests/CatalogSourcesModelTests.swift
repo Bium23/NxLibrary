@@ -4,6 +4,8 @@ import Combine
 
 @MainActor
 final class CatalogSourcesModelTests: XCTestCase {
+    private static let rescanSpacing: TimeInterval = 0.2
+
     func testDiscoveryUsesTheSavedSteamRootEvenWhenDisabled() throws {
         let (fixture, repository, _) = try prepared()
         let custom = fixture.root.appendingPathComponent("Custom Steam")
@@ -201,7 +203,7 @@ final class CatalogSourcesModelTests: XCTestCase {
         } else { scan = base }
         let model = CatalogSourcesModel(repository: repository, initialConfiguration: initial,
                                         scanner: { _, _ in calls.increment(); if delay > 0 { Thread.sleep(forTimeInterval: delay) }; return scan },
-                                        rescanQuiet: 0.05, rescanSpacing: 0.2) { _ in }
+                                        rescanQuiet: 0.05, rescanSpacing: Self.rescanSpacing) { _ in }
         model.configure(enabled: true, root: f.root)
         await settled(model)
         return (model, calls, f.root)
@@ -236,19 +238,23 @@ final class CatalogSourcesModelTests: XCTestCase {
 
     func testRescansAreSpacedApart() async throws {
         let (model, calls, _) = try await watching()
-        // Past the spacing of the first scan, a change rescans after the quiet time alone.
-        try await Task.sleep(nanoseconds: 250_000_000)
+        let rescans = expectation(description: "both rescans start")
+        rescans.expectedFulfillmentCount = 2
+        var starts: [Date] = []
+        let observation = model.$status.sink { status in
+            guard status == .scanning else { return }
+            starts.append(Date())
+            if starts.count == 1 { model.steamFilesChanged() }
+            rescans.fulfill()
+        }
+        defer { observation.cancel() }
         model.steamFilesChanged()
-        try await Task.sleep(nanoseconds: 100_000_000)
-        await settled(model)
-        XCTAssertEqual(calls.value, 2)
-        model.steamFilesChanged()
-        // Quiet time has passed, but the last scan started less than the spacing ago.
-        try await Task.sleep(nanoseconds: 80_000_000)
-        XCTAssertEqual(calls.value, 2)
-        try await Task.sleep(nanoseconds: 400_000_000)
+        await fulfillment(of: [rescans], timeout: 5)
         await settled(model)
         XCTAssertEqual(calls.value, 3)
+        guard starts.count == 2 else { return XCTFail("Expected two rescan starts") }
+        // Status publishes just after the model records the start time.
+        XCTAssertGreaterThanOrEqual(starts[1].timeIntervalSince(starts[0]), Self.rescanSpacing - 0.01)
     }
 
     func testDisablingDropsAPendingRescanAndClearsLibraries() async throws {
