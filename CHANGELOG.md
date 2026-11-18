@@ -2,14 +2,16 @@
 
 User-visible changes to Arcane (formerly NX Library) are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
-## 0.2.0 — Unreleased
+## 0.2.0 — 2026-11-18
 
 See the [validation checklist](docs/validation.md) for the state of manual checks.
 
 ### Added
 
-- Add installed Steam games for Mac to Spotlight and Collection alongside nxnative games. Steam pages show playtime and achievements when available.
+- Add installed Steam games for Mac to the shared Spotlight and Collection catalog alongside nxnative games. Arcane watches Steam install manifests to reflect downloads and installed games, and shows playtime and achievements when available.
 - Steam game pages show **More like this** below About and Details, with related Steam games first and a fallback to matching Switch titles in your library.
+- Steam achievements have a controller-friendly view with filters, sorting, public rarity, crystal tiers and an animated Arcane for unlocking every achievement.
+- Shared game details show critic scores from Wikidata and optional IGDB. The metadata picker offers field-by-field suggestions from IGDB, LaunchBox and TheGamesDB.
 - **Settings → About → Support Arcane** opens the project's optional Buy Me a Coffee page in your browser.
 
 ### Changed
