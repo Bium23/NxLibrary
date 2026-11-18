@@ -59,7 +59,6 @@ struct LaunchScreenView: View {
             centrePiece
             Color.black.opacity(blackout ? 1 : 0)
         }
-        .overlay(alignment: .bottomTrailing) { mark }
         .ignoresSafeArea()
         .opacity(shown && !leaving ? 1 : 0)
         .contentShape(Rectangle())
@@ -117,14 +116,6 @@ struct LaunchScreenView: View {
             .foregroundColor(.white)
             .multilineTextAlignment(.center)
             .padding(.horizontal, canvas.u(120))
-    }
-
-    private var mark: some View {
-        LaunchMark(image: NSApplication.shared.applicationIconImage, reduceMotion: reduceMotion)
-            .frame(width: canvas.u(56), height: canvas.u(56))
-            .padding(.trailing, canvas.u(64))
-            .padding(.bottom, canvas.u(56))
-            .accessibilityHidden(true)
     }
 
     private func appear() {

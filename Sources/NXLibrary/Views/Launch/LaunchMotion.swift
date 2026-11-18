@@ -2,10 +2,8 @@ import AppKit
 import SwiftUI
 
 /// The launch screen's motion, as Selene's: the game's art drifts slowly closer for as long as the game takes, and
-/// its logo comes in once, fading while it rises gently into place, then stands still; NX Library's mark in the
-/// corner breathes. Core Animation plays all three in the render server, so they stay smooth while the game or
-/// Steam starts and the main thread is busy. With Reduce Motion the art and the mark stand still and the logo only
-/// fades in.
+/// its logo comes in once, fading while it rises gently into place, then stands still. Core Animation plays both
+/// in the render server while the game or Steam starts. With Reduce Motion the art stands still and the logo fades in.
 enum LaunchMotion {
     /// Selene's ease-outs: sine for the fades and the drift, quintic for the rise.
     static let sineOut = CAMediaTimingFunction(controlPoints: 0.39, 0.575, 0.565, 1)
@@ -18,10 +16,6 @@ enum LaunchMotion {
     static let logoRise: CFTimeInterval = 1.0
     /// How far below its place the logo starts, in canvas units.
     static let riseDistance: CGFloat = 30
-
-    /// The corner mark's breath: from 45% to full, 1.6 s each way.
-    static let markDim: Float = 0.45
-    static let markLeg: CFTimeInterval = 1.6
 
     static let artFrom: CGFloat = 1.04
     static let artTo: CGFloat = 1.12
@@ -177,49 +171,5 @@ final class LaunchArtLayerView: TileMotionLayerView {
         drift.duration = LaunchMotion.artDrift
         drift.timingFunction = LaunchMotion.sineOut
         art.add(drift, forKey: "drift")
-    }
-}
-
-/// NX Library's mark in the launch screen's corner, breathing while the game starts (`LaunchMotion`).
-struct LaunchMark: NSViewRepresentable {
-    let image: NSImage
-    let reduceMotion: Bool
-
-    func makeNSView(context: Context) -> LaunchMarkLayerView { LaunchMarkLayerView(image: image, reduceMotion: reduceMotion) }
-
-    func updateNSView(_ view: LaunchMarkLayerView, context: Context) {}
-}
-
-final class LaunchMarkLayerView: TileMotionLayerView {
-    private let mark = CALayer()
-    private let reduceMotion: Bool
-
-    init(image: NSImage, reduceMotion: Bool) {
-        self.reduceMotion = reduceMotion
-        super.init()
-        mark.contentsGravity = .resizeAspect
-        mark.contents = image
-        root.addSublayer(mark)
-    }
-
-    required init?(coder: NSCoder) { nil }
-
-    override func arrange(scale: CGFloat) {
-        mark.frame = bounds
-        mark.contentsScale = scale
-    }
-
-    override func startLoops() {
-        mark.removeAnimation(forKey: "breathe")
-        guard !reduceMotion else { return }
-        let breath = CABasicAnimation(keyPath: "opacity")
-        breath.fromValue = LaunchMotion.markDim
-        breath.toValue = Float(1)
-        breath.duration = LaunchMotion.markLeg
-        breath.autoreverses = true
-        breath.repeatCount = .infinity
-        breath.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-        breath.isRemovedOnCompletion = false
-        mark.add(breath, forKey: "breathe")
     }
 }

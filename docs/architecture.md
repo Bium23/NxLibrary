@@ -378,6 +378,7 @@ I percorsi completi sono in [flows.md](flows.md#3-play-di-un-gioco-switch-nxnati
 - Quando un gioco si apre a schermo intero, la schermata scorre via con la libreria e rientra con lo Space del gioco, coprendolo finché il gioco non disegna. *Perché:* tenuta nel solo Space di Arcane, lì si vedeva lo sfondo della scrivania; il maintainer preferisce la schermata (prova con MTGA, 15 nov 2026).
 - Il gioco parte dietro di lei; Steam che prende il primo piano o macOS che cambia Space restano dietro, quindi Arcane non deve mai riprendersi il primo piano.
 - Play Steam accoda la richiesta fino a quando AppKit ordina e invia il pannello al server delle finestre. Arcane lascia al pannello il passaggio SwiftUI di preparazione prima che Steam possa cambiare Space. Se il pannello manca, Play procede comunque entro un secondo. Solo la richiesta ancora corrente può partire.
+- La schermata d'attesa mostra artwork, logo o titolo del gioco secondo lo stile scelto, con l'angolo inferiore destro libero.
 - Il movimento è quello di Selene (`LaunchMotion`), in Core Animation così resta fluido mentre il gioco o Steam si avviano:
   - l'arte si avvicina piano (scala da 1,04 a 1,12 in 20 s);
   - il logo entra una sola volta, poco dopo la dissolvenza della schermata (0,36 s): appare in 0,75 s mentre sale di 30 unità in 1 s, poi resta fermo. Al massimo metà larghezza e 38% dell'altezza, come Selene;
