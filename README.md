@@ -1,7 +1,8 @@
-<h1 align="center">
-  <img src="Resources/AppIcon-Light.png" alt="Arcane's crystal-in-glass app icon" width="96" height="96" align="absmiddle">
-  Arcane
-</h1>
+<p align="center">
+  <img src="Resources/AppIcon-Light.png" alt="Arcane's crystal-in-glass app icon" width="96" height="96">
+</p>
+
+<h1 align="center">Arcane</h1>
 
 <p align="center"><strong>A home for your games on Mac.</strong></p>
 
