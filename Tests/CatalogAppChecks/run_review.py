@@ -162,6 +162,10 @@ enum LaunchCoverTrace { static func event(_ message: String) {} }
         states[id] = .init(generation: 1, phase: .starting(since: Date()))
         prepareHandOff(for: id, generation: 1, send: send)
     }
+
+    func waitForCoverDeadline() async {
+        await handOffDeadline?.value
+    }
 }
 
 final class Router {
@@ -292,7 +296,8 @@ final class NativeMenus { var isTracking = false }
         handoff.launchCoverPrepared(for: pending)
         require(handoffs == 1, "Closing the launch state must prevent a stale cover from sending Play")
         handoff.prepare(pending) { handoffs += 1 }
-        try? await Task.sleep(nanoseconds: 150_000_000)
+        // The deadline task starts when the main actor schedules it.
+        await handoff.waitForCoverDeadline()
         require(handoffs == 2, "Without a visible cover the deadline still lets Play proceed")
 
         let steam = CoverHandoffHost.steamApplication!

@@ -171,6 +171,7 @@ Favorite, Hidden, Show in Finder.
 ## Play, sessioni e primo piano
 
 - Play invia `steam://run/<AppID>` (`SteamPlayCoordinator`) solo al client di Valve registrato. La richiesta aspetta che Arcane ordini e invii la finestra d'attesa al server delle finestre, così la copertura precede il passaggio di Space. Se il pannello non si prepara, la richiesta parte entro un secondo.
+  Il controllo senza finestre attende il completamento del task di ripiego, così il carico del runner non anticipa l'asserzione rispetto all'invio.
 - La sessione inizia quando compare il processo dell’app installata (stesso bundle ed eseguibile) e finisce quando
   esce. Steam aperto non conta; un gioco avviato da Steam viene seguito allo stesso modo. Attesa massima 300 s; un pid
   riusato non è il gioco. Una sessione in corso segue il processo che ha visto partire (pid e bundle) anche se il
