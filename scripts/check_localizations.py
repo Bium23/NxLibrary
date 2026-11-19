@@ -8,7 +8,7 @@ import plistlib
 import re
 from xml.parsers.expat import ExpatError
 
-LANGUAGES = ('en', 'it', 'fr', 'de', 'es', 'pt-BR')
+LANGUAGES = ('en', 'it', 'fr', 'de', 'es', 'pt-BR', 'zh-Hans')
 BUNDLE = 'NXLibrary_NXLibraryCore.bundle'
 PLACEHOLDER = re.compile(r'%(?:(\d+)\$)?(lld|ld|d|@|(?:\.\d+)?f)')
 
@@ -63,7 +63,7 @@ def check_app(app):
     except (OSError, ValueError, plistlib.InvalidFileException, ExpatError, UnicodeError):
         return ['App Info.plist missing or invalid']
     if not set(LANGUAGES).issubset(info.get('CFBundleLocalizations', [])):
-        errors.append('App Info.plist does not declare all six languages')
+        errors.append('App Info.plist does not declare every interface language')
     resources = app / 'Contents/Resources' / BUNDLE / 'Contents/Resources'
     if not resources.is_dir():
         return errors + ['Compiled localization bundle missing']
@@ -91,7 +91,7 @@ def main():
         for error in errors:
             print(error)
         return 1
-    print('Localization checks passed (six languages, placeholders and plurals).')
+    print(f'Localization checks passed ({len(LANGUAGES)} languages, placeholders and plurals).')
     return 0
 
 

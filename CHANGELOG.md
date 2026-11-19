@@ -2,6 +2,18 @@
 
 User-visible changes to Arcane (formerly NX Library) are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
 
+## 0.2.1 — 2026-11-19
+
+See the [validation checklist](docs/validation.md) for the state of manual checks.
+
+### Added
+
+- Arcane is available in **Simplified Chinese (简体中文)**. **Automatic** chooses it when the Mac prefers Simplified Chinese; a Mac set to Traditional Chinese keeps following its next preferred language. Steam descriptions and achievements are requested in Simplified Chinese. The Nintendo Store has no Chinese descriptions, so those stay in English with the usual notice. The translation is a first draft awaiting review by a native speaker.
+
+### Changed
+
+- Updates keep working if the project's GitHub repository is later renamed to **Arcane**: this version also accepts releases served under `Bium23/Arcane`.
+
 ## 0.2.0 — 2026-11-18
 
 See the [validation checklist](docs/validation.md) for the state of manual checks.

@@ -155,7 +155,7 @@ When you quit a game, Arcane comes back to the front, unless you had moved to an
 
 ### Language and region
 
-Arcane is available in **English, Italiano, Français, Deutsch, Español and Português (Brasil)**. **Settings → Start-up → Language & region** follows the Mac automatically or lets you choose the app language and region separately. Changes apply immediately and are remembered. **Regional formats** controls dates, numbers and sizes. **Game options → Language** controls each supported game's language.
+Arcane is available in **English, Italiano, Français, Deutsch, Español, Português (Brasil) and 简体中文**. **Settings → Start-up → Language & region** follows the Mac automatically or lets you choose the app language and region separately. Changes apply immediately and are remembered. **Regional formats** controls dates, numbers and sizes. **Game options → Language** controls each supported game's language.
 
 Choose a language directly from its list. Known catalog genres are translated locally, without changing the saved metadata. Descriptions from Nlib are requested in the app language when supported, with cached descriptions shared between regions using the same language. Switching language reuses available artwork and credits; when those are fresh, only the localized description is requested. English remains available when a translated description cannot be found; descriptions, mod text and release notes from external sources are not automatically translated. Personal names, metadata choices, artwork and game settings are preserved.
 

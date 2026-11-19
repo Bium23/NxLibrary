@@ -38,7 +38,8 @@ final class AppLocaleTests: XCTestCase {
         let expected: [(AppLanguage, String, String)] = [
             (.english, "Action", "Adventure"), (.italian, "Azione", "Avventura"),
             (.french, "Action", "Aventure"), (.german, "Action", "Abenteuer"),
-            (.spanish, "Acción", "Aventura"), (.portugueseBrazil, "Ação", "Aventura")
+            (.spanish, "Acción", "Aventura"), (.portugueseBrazil, "Ação", "Aventura"),
+            (.chineseSimplified, "动作", "冒险")
         ]
         for (language, action, adventure) in expected {
             L10n.setContext(AppLocale(language: language, region: "CH"))
@@ -62,6 +63,25 @@ final class AppLocaleTests: XCTestCase {
         XCTAssertEqual(portuguese.language, .portugueseBrazil)
         XCTAssertEqual(portuguese.metadataLanguage, "pt")
         XCTAssertEqual(AppLocale(language: .automatic, region: "US", preferredLanguages: ["ja", "nl"]).language, .english)
+    }
+
+    func testSimplifiedChineseFollowsTheMacButNotTraditionalChinese() {
+        for tag in ["zh-Hans-CN", "zh-CN", "zh-Hans", "zh_CN", "zh-SG", "zh-Hans-HK"] {
+            XCTAssertEqual(AppLocale(language: .automatic, region: "CN", preferredLanguages: [tag]).language,
+                           .chineseSimplified, tag)
+        }
+        for tag in ["zh-Hant-TW", "zh-TW", "zh-HK", "zh-MO", "zh-Hant"] {
+            XCTAssertEqual(AppLocale(language: .automatic, region: "TW", preferredLanguages: [tag, "fr"]).language,
+                           .french, "Traditional Chinese is not offered: \(tag) falls to the next language")
+        }
+        let chinese = AppLocale(language: .chineseSimplified, region: "TW")
+        XCTAssertEqual(chinese.formatLocale.identifier, "zh-Hans_TW", "dates and numbers in Simplified characters")
+        XCTAssertEqual(chinese.metadataLanguage, "zh")
+        XCTAssertEqual(AppLanguage.chineseSimplified.rawValue, "zh-Hans")
+        XCTAssertEqual(AppLanguage.chineseSimplified.nativeName, "简体中文")
+        XCTAssertEqual(SteamMetadata.language(.chineseSimplified), "schinese")
+        let restored = try? JSONDecoder().decode(AppSettings.self, from: Data(#"{"appLanguage":"zh-Hans"}"#.utf8))
+        XCTAssertEqual(restored?.appLanguage, .chineseSimplified)
     }
 
     func testSettingsMigrationAndInvalidPreferencesDoNotChangeGameLanguage() throws {

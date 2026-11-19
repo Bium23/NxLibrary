@@ -76,7 +76,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <dict>
   <key>CFBundleDevelopmentRegion</key><string>en</string>
   <key>CFBundleLocalizations</key><array>
-    <string>en</string><string>it</string><string>fr</string><string>de</string><string>es</string><string>pt-BR</string>
+    <string>en</string><string>it</string><string>fr</string><string>de</string><string>es</string><string>pt-BR</string><string>zh-Hans</string>
   </array>
   <key>CFBundleDisplayName</key><string>$NAME</string>
   <key>CFBundleExecutable</key><string>NXLibrary</string>

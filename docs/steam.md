@@ -339,5 +339,5 @@ le regressioni; nessuna finestra viene aperta. **In attesa di validazione umana 
 - Un nuovo stato o campo nel catalogo: decodifica tollerante (`decodeIfPresent`) e nessun nuovo caso persistito che una
   versione più vecchia di Arcane non sappia leggere.
 - Una nuova animazione su una tile: Core Animation fuori dal `drawingGroup`, ferma con Riduci movimento.
-- Testi: sei lingue in `Localizable.xcstrings`.
+- Testi: sette lingue in `Localizable.xcstrings`.
 - Aggiornare questo documento, il riassunto in `architecture.md` e `file-map.md` nello stesso commit.

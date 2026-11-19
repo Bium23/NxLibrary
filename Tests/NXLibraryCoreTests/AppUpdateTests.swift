@@ -128,7 +128,20 @@ final class AppUpdateTests: XCTestCase {
     func testWithoutSuccessorOnlyTheConfiguredPathIsAccepted() throws {
         let json = try changingAsset { $0["browser_download_url"] = successorURL }
         XCTAssertNil(AppUpdate.parseRelease(json, successor: nil))
-        XCTAssertNil(AppUpdate.successorRepository)
+    }
+
+    /// The bridge: once the repository is renamed, GitHub answers the old release API with links under the new
+    /// name (checked on a moved repository). This copy keeps updating from both, and from nothing else.
+    func testTheBridgeAcceptsTheRenamedRepositoryByDefault() throws {
+        XCTAssertEqual(AppUpdate.defaultRepository, "Bium23/NxLibrary")
+        XCTAssertEqual(AppUpdate.successorRepository, "Bium23/Arcane")
+        let renamed = try changingAsset { $0["browser_download_url"] = successorURL }
+        XCTAssertNotNil(AppUpdate.parseRelease(renamed))
+        XCTAssertNotNil(AppUpdate.parseRelease(Data(releaseJSON.utf8)))
+        let wrongCase = try changingAsset {
+            $0["browser_download_url"] = "https://github.com/Bium23/arcane/releases/download/v0.3.0/NXLibrary-0.3.0.zip"
+        }
+        XCTAssertNil(AppUpdate.parseRelease(wrongCase), "the path must match GitHub's spelling exactly")
     }
 
     func testDownloadBudgetAndGitHubRedirectBoundary() {

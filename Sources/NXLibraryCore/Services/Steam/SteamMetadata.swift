@@ -19,6 +19,7 @@ public struct SteamMetadata: Codable, Equatable, Sendable {
         case .german: return "german"
         case .spanish: return "spanish"
         case .portugueseBrazil: return "brazilian"
+        case .chineseSimplified: return "schinese"
         default: return "english"
         }
     }

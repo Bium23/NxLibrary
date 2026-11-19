@@ -3,6 +3,7 @@ import Foundation
 public enum AppLanguage: String, CaseIterable, Codable, Identifiable {
     case automatic = "auto", english = "en", italian = "it", french = "fr", german = "de", spanish = "es"
     case portugueseBrazil = "pt-BR"
+    case chineseSimplified = "zh-Hans"
 
     public var id: String { rawValue }
     public var nativeName: String {
@@ -14,6 +15,7 @@ public enum AppLanguage: String, CaseIterable, Codable, Identifiable {
         case .german: return "Deutsch"
         case .spanish: return "Español"
         case .portugueseBrazil: return "Português (Brasil)"
+        case .chineseSimplified: return "简体中文"
         }
     }
 }
@@ -22,20 +24,33 @@ public struct AppLocale: Equatable {
     public let language: AppLanguage
     public let region: String
     public var metadataLanguage: String { String(language.rawValue.prefix(2)) }
-    public var formatLocale: Locale { Locale(identifier: "\(metadataLanguage)_\(region)") }
+    /// Simplified Chinese keeps its script in any region, so dates and numbers use Simplified characters.
+    public var formatLocale: Locale {
+        Locale(identifier: "\(language == .chineseSimplified ? "zh-Hans" : metadataLanguage)_\(region)")
+    }
     public var cacheKey: String { "\(language.rawValue)_\(region)" }
 
     public init(language: AppLanguage, region: String?, preferredLanguages: [String] = Locale.preferredLanguages,
                 systemLocale: Locale = .current) {
         if language != .automatic { self.language = language }
         else {
-            self.language = preferredLanguages.lazy.compactMap { tag in
-                let base = tag.replacingOccurrences(of: "_", with: "-").lowercased().split(separator: "-").first.map(String.init) ?? ""
-                if base == "pt" { return AppLanguage.portugueseBrazil }
-                return AppLanguage.allCases.first { $0 != .automatic && $0.rawValue == base }
-            }.first ?? .english
+            self.language = preferredLanguages.lazy.compactMap(Self.supported).first ?? .english
         }
         self.region = Self.validRegion(region) ?? Self.validRegion(systemLocale.regionCode) ?? "US"
+    }
+
+    /// The offered language for one of the Mac's preferred languages, if any. Chinese means Simplified unless the
+    /// tag names the Traditional script or a region that writes it (Taiwan, Hong Kong, Macao).
+    static func supported(_ tag: String) -> AppLanguage? {
+        let parts = tag.replacingOccurrences(of: "_", with: "-").lowercased().split(separator: "-").map(String.init)
+        guard let base = parts.first else { return nil }
+        switch base {
+        case "pt": return .portugueseBrazil
+        case "zh":
+            if parts.contains("hans") { return .chineseSimplified }
+            return parts.contains { ["hant", "tw", "hk", "mo"].contains($0) } ? nil : .chineseSimplified
+        default: return AppLanguage.allCases.first { $0 != .automatic && $0.rawValue == base }
+        }
     }
 
     public static func validRegion(_ value: String?) -> String? {

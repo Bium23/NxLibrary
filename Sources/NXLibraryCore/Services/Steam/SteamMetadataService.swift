@@ -106,7 +106,7 @@ public actor SteamMetadataService {
             }
         }, onCancel: { Task { await self.release(url, flightID: id, waiter: waiter) } })
     }
-    private static let metadataLanguages: Set<String> = ["english", "italian", "french", "german", "spanish", "brazilian"]
+    private static let metadataLanguages: Set<String> = ["english", "italian", "french", "german", "spanish", "brazilian", "schinese"]
 
     private func metadataFile(appID: UInt32, language: String) -> URL {
         directory.appendingPathComponent("\(appID)/\(language).json")

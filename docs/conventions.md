@@ -95,7 +95,7 @@ Esempi: `BoundedDownload`, `GameBananaClient`, `IGDBClient`, `SteamMetadataServi
 
 ## 7. Testi e lingue
 
-- Ogni testo dell'interfaccia passa da `L10n.text` / `L10n.format` e sta in `Localizable.xcstrings` con en, it, fr, de, es e pt-BR.
+- Ogni testo dell'interfaccia passa da `L10n.text` / `L10n.format` e sta in `Localizable.xcstrings` con en, it, fr, de, es, pt-BR e zh-Hans.
 - Le identità restano in inglese e non si traducono: rawValue salvati, rowID, variabili `DM_*`, eventi dell'engine.
 - Le viste leggono la lingua da `nxAppLocale`, così un cambio di lingua non ricrea stato o focus.
 - Controllo: `scripts/check_localizations.py`, che verifica copertura, segnaposto e plurali.
