@@ -25,6 +25,12 @@ Regole:
 
   La vista disegna e traduce l'input.
 - **Non far crescere `AppViewModel`.** Uno stato che appartiene a una sola schermata o a un solo pannello ha il suo modello. Esempi: `SavePanelModel`, `SetupCheckModel`, `ModStoreHost`, `AchievementsScreenModel`, `CatalogSourcesModel`. Le estensioni `AppViewModel+…` servono solo a collegare il coordinatore a un servizio del Core.
+- **Una parte del modulo Switch ha il suo modello di area.** Esempi: `PortingModel`, `SetupModel`, `RuntimeSettingsModel`, `CheatsModel`, `AppIconModel`, `StoreMetadataModel`.
+  - È una `final class` con `unowned let app: AppViewModel`; il coordinatore la crea come `lazy var` con un nome breve (`app.porting`).
+  - Raggiunge il resto di Arcane solo da `app`. *Perché:* quell'elenco è ciò che il modulo dovrà chiedere alla base.
+  - È `ObservableObject` solo se pubblica stato. Ogni schermata che mostra quello stato lo osserva con `@ObservedObject` (dall'`init` o passato dalla shell), mai attraverso il coordinatore.
+  - Un lavoro in background non tocca il modello: è una funzione statica (`PortingModel.sweepStaleBuildTemp`).
+  - Nessun nome è uguale fra il modello e il coordinatore.
 - **Un solo writer per ogni file su disco.** Il catalogo lo scrive solo `CatalogRepository`, le impostazioni solo `AppSettingsStore`, le sessioni solo `PlaySessionStore`, le mod di un gioco solo `ModStore`.
 
 ## 2. Una fonte di giochi (Steam oggi, CrossOver e altre domani)
