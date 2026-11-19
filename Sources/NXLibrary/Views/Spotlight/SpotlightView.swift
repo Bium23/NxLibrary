@@ -70,6 +70,8 @@ public struct SpotlightView: View {
     @State var aboutExpanded = false
     /// About this game shows Read more, as last drawn (`SpotlightReadMoreKey`).
     @State var aboutReadMore = false
+    /// Translate in About this game (`DescriptionTranslator`).
+    @ObservedObject var translator = DescriptionTranslator.shared
     /// The selected game's Mods band (installed mods, GameBanana's, their panels); shared with Details.
     @StateObject var modsHost = ModsBandHost()
     /// The Mods card's store, below the card.
@@ -643,7 +645,15 @@ public struct SpotlightView: View {
             return [HintItem(.b, L10n.text("Back")), HintItem(.a, L10n.text("Select"))]
         case .strip:
             return [HintItem(.b, L10n.text("Back")), HintItem(.a, L10n.text("View"))]
-        case .mods, .about, .actions:
+        case .about:
+            // A opens Read more when there is one, otherwise it translates; X always translates.
+            let text = currentPage?.presentation.description ?? ""
+            let translate = DescriptionTranslateLine.buttonTitle(translator.phase(for: text))
+            let select = aboutReadMore ? [HintItem(.a, L10n.text("Select"))]
+                : translate.map { [HintItem(.a, $0) { translator.toggle(text) }] } ?? []
+            let x = aboutReadMore ? translate.map { [HintItem(.x, $0) { translator.toggle(text) }] } ?? [] : []
+            return [HintItem(.b, L10n.text("Back"))] + x + select
+        case .mods, .actions:
             return [HintItem(.b, L10n.text("Back")), HintItem(.a, L10n.text("Select"))]
         case .more:
             return [HintItem(.b, L10n.text("Back")), HintItem(.a, L10n.text("Show"))]
@@ -958,7 +968,8 @@ public struct SpotlightView: View {
 
     /// About this game's cut for the page, as tall as the column beside it.
     func aboutExcerpt(_ page: SpotlightPageModel) -> DescriptionExcerpt {
-        SpotlightDescription.excerpt(page.presentation.description, columnHeight: blocks[.column] ?? 0, canvas: canvas)
+        SpotlightDescription.excerpt(translator.displayed(page.presentation.description),
+                                     columnHeight: blocks[.column] ?? 0, canvas: canvas)
     }
 
     /// The page's glide: one slow, soft curve (1 s, long ease out) for the whole screen.
@@ -1108,7 +1119,9 @@ public struct SpotlightView: View {
                                              @ViewBuilder panel: () -> Panel) -> some View {
         HStack(alignment: .top, spacing: 0) {
             let excerpt = aboutExcerpt(page)
-            SpotlightDescription(text: page.presentation.description, languageNote: page.presentation.descriptionLanguageNote, excerpt: excerpt,
+            SpotlightDescription(text: translator.displayed(page.presentation.description),
+                                 original: page.presentation.description,
+                                 languageNote: page.presentation.descriptionLanguageNote, excerpt: excerpt,
                                  expanded: aboutExpanded, focused: state.focus == .about,
                                  onToggle: { aboutExpanded.toggle() })
                 .spotlightBlock(.about)

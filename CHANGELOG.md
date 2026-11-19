@@ -9,6 +9,7 @@ See the [validation checklist](docs/validation.md) for the state of manual check
 ### Added
 
 - Arcane is available in **Simplified Chinese (简体中文)**. **Automatic** chooses it when the Mac prefers Simplified Chinese; a Mac set to Traditional Chinese keeps following its next preferred language. Steam descriptions and achievements are requested in Simplified Chinese. The Nintendo Store has no Chinese descriptions, so those stay in English with the usual notice. The translation is a first draft awaiting review by a native speaker.
+- **Translate** in About this game: when a description is in another language than Arcane's, Arcane translates it on this Mac with Apple's Translation, only when you ask (macOS 15 or later). The translation is kept for that exact text, and **Show original** brings back the source. Change metadata shows the language of each description it offers.
 
 ### Changed
 

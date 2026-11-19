@@ -74,7 +74,9 @@ struct SpotlightGenreChips: View {
 /// controller focus left of Details.
 struct SpotlightDescription: View {
     @Environment(\.seleneCanvas) private var canvas
+    /// What is shown: the translation once asked for, otherwise `original`.
     let text: String
+    var original: String? = nil
     var languageNote: String? = nil
     let excerpt: DescriptionExcerpt
     let expanded: Bool
@@ -86,10 +88,9 @@ struct SpotlightDescription: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             DetailsBandTitle(text: L10n.text("About this game"))
-            if let languageNote {
-                Text(languageNote).seleneFont(14).foregroundColor(SeleneTheme.ink60)
-                    .padding(.bottom, canvas.u(8))
-            }
+            // Without Read more, the focus sits on Translate.
+            DescriptionTranslateLine(text: original ?? text, note: languageNote, focused: focused && !excerpt.truncated,
+                                     bottomPadding: 8)
             Text(text.isEmpty ? L10n.text("No description for this game yet.") : (expanded ? text : excerpt.text))
                 .seleneFont(17)
                 .lineSpacing(canvas.u(3))

@@ -97,6 +97,7 @@ Esempi: `BoundedDownload`, `GameBananaClient`, `IGDBClient`, `SteamMetadataServi
 
 - Ogni testo dell'interfaccia passa da `L10n.text` / `L10n.format` e sta in `Localizable.xcstrings` con en, it, fr, de, es, pt-BR e zh-Hans.
 - Le identità restano in inglese e non si traducono: rawValue salvati, rowID, variabili `DM_*`, eventi dell'engine.
+- I testi che arrivano dalle fonti (descrizioni, dati dei giochi) non si traducono nel catalogo: si traducono sul Mac su richiesta con `DescriptionTranslator`. Nel catalogo stanno solo i testi fissi dell'interfaccia.
 - I nomi dei simboli SF (`systemImage`, `systemName`, `systemSymbolName`) sono letterali e non passano da `L10n`: tradotti non trovano il simbolo. `check_localizations.py` lo verifica sui sorgenti.
 - Le viste leggono la lingua da `nxAppLocale`, così un cambio di lingua non ricrea stato o focus.
 - Controllo: `scripts/check_localizations.py`, che verifica copertura, segnaposto e plurali.
