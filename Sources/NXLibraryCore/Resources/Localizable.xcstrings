@@ -283,6 +283,53 @@
         }
       }
     },
+    "Open Applications": {
+      "comment": "AppShellView.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Applications"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri Applicazioni"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir Applications"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Programme öffnen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir Aplicaciones"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir Applications"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开“应用程序”"
+          }
+        }
+      }
+    },
     "Store and Wikipedia descriptions and links.": {
       "comment": "SettingsStorageSection.swift",
       "localizations": {
@@ -78337,6 +78384,53 @@
           "stringUnit": {
             "state": "translated",
             "value": "macOS 无法启动 %@。"
+          }
+        }
+      }
+    },
+    "macOS is running a temporary copy of Arcane, so it cannot update itself. In the Finder, move Arcane to Applications, then quit it and open it from there.": {
+      "comment": "AppShellView.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS is running a temporary copy of Arcane, so it cannot update itself. In the Finder, move Arcane to Applications, then quit it and open it from there."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS sta usando una copia temporanea di Arcane, che quindi non può aggiornarsi. Nel Finder sposta Arcane in Applicazioni, poi chiudila e aprila da lì."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS exécute une copie temporaire d’Arcane, qui ne peut donc pas se mettre à jour. Dans le Finder, déplacez Arcane dans Applications, puis quittez-la et ouvrez-la depuis cet emplacement."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS führt eine temporäre Kopie von Arcane aus, die sich deshalb nicht aktualisieren kann. Verschiebe Arcane im Finder in den Programme-Ordner, beende die App und öffne sie dort erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS está ejecutando una copia temporal de Arcane, así que no puede actualizarse. En el Finder, mueve Arcane a Aplicaciones, ciérralo y ábrelo desde allí."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O macOS está executando uma cópia temporária do Arcane, por isso ele não pode se atualizar. No Finder, mova o Arcane para Applications, depois feche-o e abra-o de lá."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS 正在运行 Arcane 的临时副本，因此它无法自行更新。请在“访达”中将 Arcane 移到“应用程序”文件夹，然后退出并从那里重新打开。"
           }
         }
       }

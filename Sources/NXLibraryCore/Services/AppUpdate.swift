@@ -268,9 +268,19 @@ public enum AppUpdate {
     public static func installability(_ bundle: URL) -> Installability {
         guard bundle.pathExtension == "app", let metadata = info(bundle), metadata[releaseMarker] as? Bool == true, metadata["NXLibraryDevelopmentProfile"] as? Bool != true else { return .developer }
         let standardized = bundle.standardizedFileURL
-        if standardized.path.contains("/AppTranslocation/") { return .readOnly }
+        if isTranslocated(standardized) { return .readOnly }
         if !FileManager.default.isWritableFile(atPath: standardized.deletingLastPathComponent().path) { return .readOnly }
         return .ok
+    }
+
+    /// True for the temporary read-only copy macOS runs when a downloaded app is opened where it was unpacked.
+    public static func isTranslocated(_ bundle: URL) -> Bool {
+        bundle.standardizedFileURL.path.contains("/AppTranslocation/")
+    }
+
+    /// A release copy that macOS runs as a temporary copy never updates itself, so at launch it asks to be moved.
+    public static func asksToBeMoved(_ bundle: URL) -> Bool {
+        isTranslocated(bundle) && installability(bundle) == .readOnly
     }
 
     // MARK: - The swap

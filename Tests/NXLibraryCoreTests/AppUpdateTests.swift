@@ -290,6 +290,17 @@ final class AppUpdateTests: XCTestCase {
         XCTAssertEqual(AppUpdate.installability(dir.appendingPathComponent("bare-binary")), .developer)
     }
 
+    func testTranslocatedReleaseAsksToBeMoved() throws {
+        let temporary = dir.appendingPathComponent("AppTranslocation/0A1B/d")
+        try FileManager.default.createDirectory(at: temporary, withIntermediateDirectories: true)
+        let release = try makeApp(in: temporary)
+        XCTAssertTrue(AppUpdate.isTranslocated(release))
+        XCTAssertEqual(AppUpdate.installability(release), .readOnly)
+        XCTAssertTrue(AppUpdate.asksToBeMoved(release))
+        XCTAssertFalse(AppUpdate.asksToBeMoved(try makeApp("Dev.app", in: temporary, release: false)), "a developer build never asks")
+        XCTAssertFalse(AppUpdate.asksToBeMoved(try makeApp("Rel.app")), "a release in a normal folder never asks")
+    }
+
     func testInstallabilityReadOnlyFolder() throws {
         let folder = dir.appendingPathComponent("locked")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)

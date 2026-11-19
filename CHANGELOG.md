@@ -13,6 +13,7 @@ See the [validation checklist](docs/working-on-it/validation.md) for the state o
 
 ### Changed
 
+- If macOS runs Arcane as a temporary copy, because it was opened where it was downloaded, Arcane says so at launch: that copy can never update itself. **Open Applications** opens the folder to move it to.
 - Updates keep working if the project's GitHub repository is later renamed to **Arcane**: this version also accepts releases served under `Bium23/Arcane`.
 
 ### Fixed

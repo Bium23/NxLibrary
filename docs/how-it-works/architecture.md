@@ -735,6 +735,7 @@ Nel repository, `.build/` contiene gli output SwiftPM, `work/Runtime` il runtime
 
 **Regole di installazione.**
 - `AppUpdateState` descrive gli stati nel Core. `AppUpdate.mayInstall` richiede una versione più recente e una copia installabile: i controlli manuali di copie di sviluppo o in sola lettura leggono le release senza autorizzarne la sostituzione.
+- Una copia di release che macOS esegue come copia temporanea (App Translocation, `AppUpdate.isTranslocated`) non si aggiorna mai: a ogni avvio `AppShellView` chiede di spostarla in Applicazioni con un `SettingsNotice` (`AppUpdate.asksToBeMoved`). Il pulsante apre `/Applications`, perché il percorso temporaneo non aiuta a ritrovare l'originale.
 - Il gate si verifica prima del download e prima dell'installazione, insieme ai controlli e ai lease esistenti. Il motivo dell'attesa arriva al dialogo come valore, così la chiusura di un gioco aggiorna il pulsante Update.
 
 **Download e verifica.**

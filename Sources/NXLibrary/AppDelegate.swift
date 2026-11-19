@@ -23,7 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let target = AppBundleRename.target(
             bundleURL: bundle,
             isRelease: AppUpdate.installability(bundle) != .developer,
-            isTranslocated: bundle.standardizedFileURL.path.contains("/AppTranslocation/"),
+            isTranslocated: AppUpdate.isTranslocated(bundle),
             isBusy: Self.relaunchScheduled || Self.isBusy()
         ) else { return }
         do {

@@ -670,6 +670,7 @@ public struct AppShellView: View {
 
     private func startRuntime() {
         presentLegacyNotice()
+        askToMoveIfTranslocated()
         viewModel.playSessionStore = playSessions
         viewModel.settingsStore = settings
         SoundEffectService.shared.bind(to: settings)
@@ -827,6 +828,18 @@ public struct AppShellView: View {
                                focus: $viewModel.settingsNoticeFocus,
                                onChoose: { finishSettingsNotice(choice: $0) })
         }
+    }
+
+    /// At every launch from a temporary copy (`AppUpdate.asksToBeMoved`): that copy never updates itself, and only
+    /// moving the downloaded app in the Finder fixes it. The temporary path itself is no help, so this opens Applications.
+    private func askToMoveIfTranslocated() {
+        guard AppUpdate.asksToBeMoved(Bundle.main.bundleURL) else { return }
+        viewModel.showSettingsNotice(
+            title: L10n.text("Move Arcane to Applications to update"),
+            message: L10n.text("macOS is running a temporary copy of Arcane, so it cannot update itself. In the Finder, move Arcane to Applications, then quit it and open it from there."),
+            actionTitle: L10n.text("Open Applications"),
+            cancelTitle: L10n.text("Not now"),
+            retry: { NSWorkspace.shared.open(URL(fileURLWithPath: "/Applications", isDirectory: true)) })
     }
 
     private func finishSettingsNotice(choice: Int) {
