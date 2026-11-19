@@ -59,10 +59,6 @@ public final class RuntimeSettingsModel {
         LauncherSettingsReader.supports(env, for: game.url)
     }
 
-    public func launcherSettings(for game: PortedGame) -> LauncherSettingsFile? {
-        LauncherSettingsReader.load(for: game.url)
-    }
-
     @discardableResult public func saveRuntimeConfig(_ config: GameRuntimeConfig, for game: PortedGame) -> Bool {
         do {
             try config.save(for: game)

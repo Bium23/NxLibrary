@@ -163,7 +163,6 @@ public final class AppViewModel: ObservableObject {
     /// The running game whose Close Game confirmation is open. The shell draws the dialog.
     @Published public var gameToClose: PortedGame? = nil
     @Published var closeGameFocus: SeleneConfirmButton = .cancel
-    @Published public var importedApps: [ImportedApp] = []
     @Published public var storeMetadata: [UUID: NintendoStoreMetadata] = [:]
     @Published public var storeMetadataLoading: Set<UUID> = []
     @Published public var storeMetadataErrors: [UUID: String] = [:]
@@ -612,12 +611,6 @@ public final class AppViewModel: ObservableObject {
         storeMetadataOriginals.removeAll()
     }
 
-    public func howLongToBeatURL(for game: PortedGame) -> URL? {
-        var components = URLComponents(string: "https://howlongtobeat.com/")
-        components?.queryItems = [URLQueryItem(name: "q", value: game.name)]
-        return components?.url
-    }
-
     public func nintendoStoreSearchURL(for game: PortedGame) -> URL? {
         var components = URLComponents(string: "https://www.nintendo.com/us/search/")
         components?.fragment = "q=\(game.name)&p=1&cat=gme&sort=df"
@@ -632,12 +625,6 @@ public final class AppViewModel: ObservableObject {
 
 
 
-
-    public var canCompleteSetup: Bool {
-        setup.isNxnativeValid
-            && (setup.isProdKeysValid || engineSourceCapabilities.extractedFolders)
-            && setup.environmentStatus?.canBuild == true
-    }
 
     public func advanceSetupToGames() {
         guard showSetupCheck else { return }
@@ -874,7 +861,6 @@ public final class AppViewModel: ObservableObject {
                         self.loadLibrary()
                     }
                 }
-                self.importedApps = selected
                 var scannedByTitle: [String: ImportedApp] = [:]
                 for app in selected {
                     if let titleId = app.titleId, scannedByTitle[titleId.uppercased()] == nil {
@@ -1512,32 +1498,6 @@ public final class AppViewModel: ObservableObject {
         }
     }
     
-    // MARK: - Build Actions
-    public func canBuild(_ game: PortedGame) -> Bool {
-        guard !isBuilding,
-              !isCleaningStorage,
-              !isUpdatingApp,
-              (!SourceSelection.requiresKeys(game.sources) || setup.isProdKeysValid),
-              supportsSources(game.sources),
-              setup.isNxnativeValid,
-              setup.environmentStatus?.canBuild == true,
-              !game.sources.isEmpty,
-              SourceSelection.hasGame(game.sources),
-              game.sources.allSatisfy({ FileManager.default.fileExists(atPath: $0.url.path) }) else {
-            return false
-        }
-        let required = SourceSelection.uniqueSize(game.sources) * 2 + 10_000_000_000
-        let parent = finalAppURL(for: game).deletingLastPathComponent()
-        guard GameAppDestination.folderProblem(at: parent) == nil else { return false }
-        for folder in buildFolders(appFolder: parent, workspace: game.workspacePath) {
-            if let free = freeBytes(at: folder), free < required { return false }
-        }
-        return setup.canPassToolchainGate
-    }
-
-
-
-
     public func logURL(for game: PortedGame) -> URL? {
         if let path = game.lastBuild?.logPath, !path.isEmpty {
             return URL(fileURLWithPath: path)
