@@ -87,13 +87,6 @@ public final class WorkspaceManager {
         }
     }
 
-    /// A workspace that already exists beside the sources can be adopted
-    /// without touching its build cache, which is what makes rebuilds fast.
-    public func adoptExistingWorkspace(for game: DetectedGame, folder: URL) -> Workspace {
-        let cache = folder.appendingPathComponent(cacheName(for: game))
-        return Workspace(directory: folder, buildCache: cache, links: [])
-    }
-
     public func brokenLinks(in workspace: URL) -> [URL] {
         guard let items = try? fm.contentsOfDirectory(
             at: workspace, includingPropertiesForKeys: [.isSymbolicLinkKey]) else { return [] }

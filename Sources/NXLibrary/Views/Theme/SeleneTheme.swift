@@ -64,9 +64,6 @@ enum SeleneTheme {
     static func cubicOut(_ duration: Double) -> Animation {
         .timingCurve(0.215, 0.61, 0.355, 1, duration: duration)
     }
-    static func sineInOut(_ duration: Double) -> Animation {
-        .timingCurve(0.445, 0.05, 0.55, 0.95, duration: duration)
-    }
     static let art = Animation.easeOut(duration: 0.42)
     static let menu = Animation.spring(response: 0.26, dampingFraction: 0.88)
     static let expand = Animation.spring(response: 0.42, dampingFraction: 0.86)
@@ -184,27 +181,6 @@ extension EnvironmentValues {
     var seleneReduceMotion: Bool {
         get { self[SeleneReduceMotionKey.self] }
         set { self[SeleneReduceMotionKey.self] = newValue }
-    }
-}
-
-extension View {
-    /// Activates the virtual focus ring with Return or Space on macOS 14+.
-    /// Text fields and other focusable controls consume their own keys first.
-    @ViewBuilder
-    func seleneActivationKeys(_ activate: @escaping () -> Void) -> some View {
-        if #available(macOS 14.0, *) {
-            self
-                .onKeyPress(.return) {
-                    activate()
-                    return .handled
-                }
-                .onKeyPress(.space) {
-                    activate()
-                    return .handled
-                }
-        } else {
-            self
-        }
     }
 }
 

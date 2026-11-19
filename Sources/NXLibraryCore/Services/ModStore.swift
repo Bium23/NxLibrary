@@ -121,9 +121,6 @@ public struct ModStore {
         return observed.map { $0.item }
     }
 
-    /// The overlay value for the mods that are on, top first; nil when none is.
-    public func overlayValue() -> String? { overlay(for: mods()) }
-
     /// The records of mods installed from GameBanana whose folder still exists, by GameBanana mod id.
     public func gameBananaRecords() -> [Int: ModRecord] {
         let present = Set(ModFolderScanner.entries(in: modsFolder).map(\.lastPathComponent))

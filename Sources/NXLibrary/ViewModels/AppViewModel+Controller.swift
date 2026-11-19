@@ -1,5 +1,4 @@
 import Foundation
-import AppKit
 import NXLibraryCore
 
 extension AppViewModel {
@@ -17,13 +16,5 @@ extension AppViewModel {
         guard !games.isEmpty else { return nil }
         let selected = games.first { $0.id == librarySelection.selectedGameID } ?? games.first
         return selected?.nxnativeGame
-    }
-
-    func revealSaveFolder(_ url: URL) {
-        let fm = FileManager.default
-        if !fm.fileExists(atPath: url.path) {
-            try? fm.createDirectory(at: url, withIntermediateDirectories: true)
-        }
-        NSWorkspace.shared.activateFileViewerSelecting([url])
     }
 }
