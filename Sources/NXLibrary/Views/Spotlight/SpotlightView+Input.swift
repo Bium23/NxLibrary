@@ -25,8 +25,7 @@ extension SpotlightView {
         let actions = page?.links.count ?? 0
         let more = page?.more.count ?? 0
         // As drawn: this copy's canvas may be an older window size than the page's (`SpotlightReadMoreKey`).
-        // About this game takes focus for Read more, or for Translate when the text is in another language.
-        let readMore = page != nil && (aboutReadMore || aboutTranslatable)
+        let readMore = page != nil && aboutReadMore
         let hasAchievements = selectedAchievements != nil
         let mods = selectedGame.flatMap { modsHost.game?.id == $0.id ? modsHost.tiles.count : nil } ?? 0
         var moved = false
@@ -64,9 +63,6 @@ extension SpotlightView {
         case .cancel:
             if router.isSearchPresented { router.isSearchPresented = false }
             mutate { if $0.focus != .row { $0.focus = .row; moved = true } }
-        case .secondaryAction where viewModel.spotlight.focus == .about:
-            // X on About this game: Translate, Show original, Show translation.
-            if aboutTranslatable { translateAbout() }
         case .secondaryAction:
             // X scrolls to the game's page (the pills), like Down from the row.
             if selectedGame != nil || selectedCatalogGame?.integration == .steam {
@@ -130,7 +126,6 @@ extension SpotlightView {
         case .strip:
             openViewer(at: state.stripIndex)
         case .about:
-            guard aboutReadMore else { return translateAbout() }
             aboutExpanded.toggle()
             SoundEffectService.shared.play(.click)
         case .actions:
@@ -152,20 +147,6 @@ extension SpotlightView {
         case .achievements:
             openAchievements()
         }
-    }
-
-    // MARK: - Translate
-
-    /// The selected page's description has a translate line (`DescriptionTranslateLine`), so About this game takes focus.
-    var aboutTranslatable: Bool {
-        guard let text = currentPage?.presentation.description else { return false }
-        return translator.phase(for: text) != .none
-    }
-
-    func translateAbout() {
-        guard let text = currentPage?.presentation.description else { return }
-        SoundEffectService.shared.play(.click)
-        translator.toggle(text)
     }
 
     // MARK: - Achievements

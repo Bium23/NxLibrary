@@ -271,16 +271,15 @@ struct ChangeMetadataView: View {
         switch row {
         case .automatic:
             let format = subject.steam != nil ? "Steam: %@" : "Nintendo store: %@"
-            return (withLanguage(L10n.text("Automatic"), automaticValue),
-                    automaticValue.map { L10n.format(format, [displayValue($0)]) } ?? L10n.text("Nothing from the store yet."))
+            return (L10n.text("Automatic"), automaticValue.map { L10n.format(format, [displayValue($0)]) } ?? L10n.text("Nothing from the store yet."))
         case .yourPick(let value):
-            return (withLanguage(L10n.text("Your choice"), value), displayValue(value))
+            return (L10n.text("Your choice"), displayValue(value))
         case .source(let source, _):
             if let option = option(row) {
                 let same = automaticValue?.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare(option.value) == .orderedSame
                 var value = same ? L10n.text("Same as Automatic") : displayValue(option.value)
                 if isStale(source) { value = L10n.text("Saved copy") + " · " + value }
-                return (withLanguage(option.source, option.value), value)
+                return (option.source, value)
             }
             let platform = source.database.flatMap { databaseResults[$0]?.preview?.platform }
             return (platform.map { "\(source.name) · \($0)" } ?? source.name, sourceMessage(source))
@@ -289,15 +288,6 @@ struct ChangeMetadataView: View {
         case .write:
             return (L10n.text("Write your own…"), L10n.format("Type the %@ yourself.", [String(describing: (field.title.lowercased()))]))
         }
-    }
-
-    /// A description's language beside its row title ("IGDB · English"), read from the text itself, so the
-    /// player sees what About this game will offer to translate.
-    private func withLanguage(_ title: String, _ value: String?) -> String {
-        guard field == .description, let value, let tag = TextLanguage.detect(value),
-              let name = L10n.context.formatLocale.localizedString(forIdentifier: tag) else { return title }
-        // A label of its own: "Inglese", not "inglese".
-        return "\(title) · " + name.prefix(1).uppercased(with: L10n.context.formatLocale) + name.dropFirst()
     }
 
     private func displayValue(_ value: String) -> String {

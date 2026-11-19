@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 19 novembre 2026. Copertura di **715 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 19 novembre 2026. Copertura di **711 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -115,7 +115,6 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURIT
 |---|---|
 | [Sources/NXLibrary/Services/AppUpdater.swift](../Sources/NXLibrary/Services/AppUpdater.swift) | Coordina controllo release, download, verifica, installazione e riavvio di Arcane. |
 | [Sources/NXLibrary/Services/NativeMenuCommands.swift](../Sources/NXLibrary/Services/NativeMenuCommands.swift) | Coordina tracking, disponibilità nella scena e passaggio differito dai menu macOS alle azioni del launcher. |
-| [Sources/NXLibrary/Services/DescriptionTranslator.swift](../Sources/NXLibrary/Services/DescriptionTranslator.swift) | Translate in About this game con il framework Translation di Apple (macOS 15+), una descrizione alla volta e solo su richiesta; host nella finestra e riga con avviso e pulsante condivisa da Spotlight e Details. |
 | [Sources/NXLibrary/Services/GameControllerService.swift](../Sources/NXLibrary/Services/GameControllerService.swift) | Rileva controller e rimappature, gestisce tap e hold e produce azioni e simboli dei pulsanti. |
 | [Sources/NXLibrary/Services/LaunchReadinessProbe.swift](../Sources/NXLibrary/Services/LaunchReadinessProbe.swift) | Attende una finestra visibile del gioco (per bundle o, per Steam, per pid) per terminare la schermata di lancio. |
 | [Sources/NXLibrary/Services/NotificationService.swift](../Sources/NXLibrary/Services/NotificationService.swift) | Invia notifiche dei porting e instrada i clic verso il titolo o l’errore interessato. |
@@ -404,7 +403,6 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Sources/NXLibraryCore/Models/AppIdentity.swift](../Sources/NXLibraryCore/Models/AppIdentity.swift) | Nome visibile dell'app ("Arcane", non tradotto), il vecchio nome detto solo dal benvenuto, il nome del modulo Porting, pagina del progetto, guida online aperta da About e User-Agent unico delle richieste di rete. |
 | [Sources/NXLibraryCore/Models/AppLocale.swift](../Sources/NXLibraryCore/Models/AppLocale.swift) | Sette lingue, risoluzione delle preferenze e regione indipendente; nomi e ricerca delle regioni. |
 | [Sources/NXLibraryCore/Models/GameGenre.swift](../Sources/NXLibraryCore/Models/GameGenre.swift) | Generi noti tradotti alla presentazione; dati originali e generi personali conservati. |
-| [Sources/NXLibraryCore/Services/DescriptionTranslation.swift](../Sources/NXLibraryCore/Services/DescriptionTranslation.swift) | Lingua di un testo letta sul Mac (`TextLanguage`), se va offerta la traduzione nella lingua dell'app, e cache delle descrizioni tradotte con chiave sul testo esatto. |
 | [Sources/NXLibraryCore/Services/AppLocalization.swift](../Sources/NXLibraryCore/Services/AppLocalization.swift) | Contesto osservabile, lookup portabile delle risorse e interpolazioni/plurali. |
 | [Sources/NXLibraryCore/Resources/Localizable.xcstrings](../Sources/NXLibraryCore/Resources/Localizable.xcstrings) | Testi condivisi e traduzioni en/it/fr/de/es/pt-BR/zh-Hans. |
 
@@ -437,7 +435,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Sources/NXLibrary/Views/Spotlight/SpotlightTopBar.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightTopBar.swift) | Disegna filtri, prompt dei dorsali e orologio condivisi con Collection. |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightInfoView.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightInfoView.swift) | Mostra logo, Play/Options/Favorite, statistiche e stato di porting del gioco selezionato. |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightCardInfoView.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightCardInfoView.swift) | Mostra informazioni e azioni delle card Collection, Surprise, Activity e Add Game. |
-| [Sources/NXLibrary/Views/Spotlight/SpotlightPageSections.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightPageSections.swift) | Modello della pagina inferiore con dettagli, link e giochi correlati del catalogo; generi e descrizione, con la riga di traduzione. |
+| [Sources/NXLibrary/Views/Spotlight/SpotlightPageSections.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightPageSections.swift) | Modello della pagina inferiore con dettagli, link e giochi correlati del catalogo; generi e descrizione. |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightScreenshotStrip.swift](../Sources/NXLibrary/Views/Spotlight/SpotlightScreenshotStrip.swift) | Disegna la striscia di screenshot con focus e stile adattabile alle schermate. |
 | [Sources/NXLibrary/Views/Spotlight/SeleneArtBackground.swift](../Sources/NXLibrary/Views/Spotlight/SeleneArtBackground.swift) | Compone wallpaper, sfondo del gioco, transizioni e maschere leggendo la palette dallo snapshot condiviso; l'arte è un `CALayer` che dissolve nel render server (`SeleneArtLayer`) e che l'entrata di Spotlight tiene nascosto (`ArtReveal`). |
 | [Sources/NXLibrary/Views/Spotlight/SeleneHeroArt.swift](../Sources/NXLibrary/Views/Spotlight/SeleneHeroArt.swift) | Coordina il caricamento differito di hero e logo del gioco selezionato. |
@@ -454,7 +452,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Sources/NXLibrary/Views/Detail/GameDetailView.swift](../Sources/NXLibrary/Views/Detail/GameDetailView.swift) | Compone la pagina Details e coordina bande, modello corrente e focus. |
 | [Sources/NXLibrary/Views/Detail/GameDetailView+Input.swift](../Sources/NXLibrary/Views/Detail/GameDetailView+Input.swift) | Gestisce azioni, screenshot, navigazione e passaggio ai giochi correlati da Details. |
 | [Sources/NXLibrary/Views/Detail/DetailsBackground.swift](../Sources/NXLibrary/Views/Detail/DetailsBackground.swift) | Compone hero e maschere dello sfondo dedicato alla pagina Details. |
-| [Sources/NXLibrary/Views/Detail/DetailsTopBlock.swift](../Sources/NXLibrary/Views/Detail/DetailsTopBlock.swift) | Mostra logo, crediti, azioni, statistiche, generi e descrizione del gioco, con Translate quando è in un'altra lingua. |
+| [Sources/NXLibrary/Views/Detail/DetailsTopBlock.swift](../Sources/NXLibrary/Views/Detail/DetailsTopBlock.swift) | Mostra logo, crediti, azioni, statistiche, generi e descrizione del gioco. |
 | [Sources/NXLibrary/Views/Detail/DetailsBands.swift](../Sources/NXLibrary/Views/Detail/DetailsBands.swift) | Disegna screenshot, mod e fascia correlati condivisa, con copertine Switch o Steam secondo la fonte. |
 | [Sources/NXLibrary/Views/Detail/DetailsPanel.swift](../Sources/NXLibrary/Views/Detail/DetailsPanel.swift) | Pannello Details uguale per ogni fonte: righe con icona, voto della critica in ultima riga e link in `SeleneActionGrid`; carica solo il voto del gioco mostrato. |
 | [Sources/NXLibrary/Views/Detail/CriticRatingValue.swift](../Sources/NXLibrary/Views/Detail/CriticRatingValue.swift) | Valore della riga Critic score: cinque stelle, numero /100 e fonte, senza finestre aggiuntive; caricamento e assenza espliciti. |
@@ -468,7 +466,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 |---|---|
 | [Sources/NXLibrary/Views/GameOptions/GameOptionsView.swift](../Sources/NXLibrary/Views/GameOptions/GameOptionsView.swift) | Presenta opzioni del gioco, Edit details, impostazioni runtime e conferme delle azioni; `GameOptionsFiles` legge i file una volta per apertura. |
 | [Sources/NXLibrary/Views/GameOptions/ChangeArtworkView.swift](../Sources/NXLibrary/Views/GameOptions/ChangeArtworkView.swift) | Seleziona artwork per titolo da rete o file e indica dove viene usato, con stato ad altezza stabile. |
-| [Sources/NXLibrary/Views/GameOptions/ChangeMetadataView.swift](../Sources/NXLibrary/Views/GameOptions/ChangeMetadataView.swift) | Offre alternative per campo da store, Title DB, GameTDB e IGDB, oppure testo personale; anteprima, scelta, annullamento e retry con lo stesso input; ogni descrizione porta la sua lingua. |
+| [Sources/NXLibrary/Views/GameOptions/ChangeMetadataView.swift](../Sources/NXLibrary/Views/GameOptions/ChangeMetadataView.swift) | Offre alternative per campo da store, Title DB, GameTDB e IGDB, oppure testo personale; anteprima, scelta, annullamento e retry con lo stesso input. |
 | [Sources/NXLibrary/Views/GameOptions/CheatsPanel.swift](../Sources/NXLibrary/Views/GameOptions/CheatsPanel.swift) | Presenta file, master switch, codici, importazione, rimozione e stato di scrittura dei cheats. |
 | [Sources/NXLibrary/Views/GameOptions/ModsPanel.swift](../Sources/NXLibrary/Views/GameOptions/ModsPanel.swift) | Game options → Mods: accende, ordina e sposta nel Cestino le mod RomFS, apre la cartella mods. |
 | [Sources/NXLibrary/Views/Detail/ModDetailPanel.swift](../Sources/NXLibrary/Views/Detail/ModDetailPanel.swift) | Dettaglio di una mod GameBanana: immagini, autore, versione, descrizione, Install/Update e link. |
@@ -763,7 +761,6 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Tests/NXLibraryCoreTests/SettingsRowButtonsTests.swift](../Tests/NXLibraryCoreTests/SettingsRowButtonsTests.swift) | Riga con due pulsanti: Sinistra/Destra fra i pulsanti, uscita dalla riga, riga con un solo pulsante, A preme quello in focus. |
 | [Tests/NXLibraryCoreTests/SpotlightRowGeometryTests.swift](../Tests/NXLibraryCoreTests/SpotlightRowGeometryTests.swift) | Posto a schermo = camera più posto nella riga, tessere che restano ferme durante lo scorrimento, distanze costanti e quattro tessere di riserva ai bordi. |
 | [Tests/NXLibraryCoreTests/TileMotionTests.swift](../Tests/NXLibraryCoreTests/TileMotionTests.swift) | Periodi e curve di bagliore, ring e riflesso, campioni che chiudono il loop senza salti, fase nel periodo e simbolo del download. |
-| [Tests/NXLibraryCoreTests/DescriptionTranslationTests.swift](../Tests/NXLibraryCoreTests/DescriptionTranslationTests.swift) | Quando offrire Translate (lingua dell'app, pt-BR, scrittura cinese, testi corti, Automatic) e cache legata a testo e lingua. |
 | [Tests/NXLibraryCoreTests/AppLocaleTests.swift](../Tests/NXLibraryCoreTests/AppLocaleTests.swift) | Preferenze, migrazione, formati, ricerca, identità e traduzioni native; avvisi pipeline localizzati senza output tecnico grezzo. |
 | [Tests/PublicationChecks/test_localizations.py](../Tests/PublicationChecks/test_localizations.py) | Rifiuto di cataloghi incompleti e bundle senza risorse. |
 | [DevelopmentProfileTests.swift](../Tests/NXLibraryCoreTests/DevelopmentProfileTests.swift) | Copia, conservazione della sorgente, errori, sessioni, symlink e ripetizione. |
@@ -896,7 +893,6 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [docs/steam.md](../docs/steam.md) | Riferimento unico dell’integrazione Steam: file letti, stati, osservazione, libreria, Play, ore, achievement, scelte e limiti. |
 | [2026-11-18-spotlight-glide.md](../docs/reviews/2026-11-18-spotlight-glide.md) | Campioni dei primi cambi gioco e costo di mod e salvataggio selezione. |
 | [2026-11-18-steam-launch-spaces.md](../docs/reviews/2026-11-18-steam-launch-spaces.md) | Riscontro video e log dei cambi rapidi di Space durante Play Steam, causa e regressione. |
-| [2026-11-19-description-translation-probe.md](../docs/reviews/2026-11-19-description-translation-probe.md) | Prova di Translation e del modello di Apple Intelligence sulle descrizioni: tempi, scrittura cinese, rifiuti e scelta. |
 | [2026-11-17-entrance-frames.md](../docs/reviews/2026-11-17-entrance-frames.md) | Metodo, campioni e limiti delle misure temporanee dell’entrata e del passaggio al fullscreen. |
 | [2026-11-17-dock-rename-probe.md](../docs/reviews/2026-11-17-dock-rename-probe.md) | Sonda: il Dock apre ancora un'app rinominata nella stessa cartella. |
 | [docs/reviews/2026-11-17-arcane-moonlight.md](../docs/reviews/2026-11-17-arcane-moonlight.md) | Contratti provati fuori schermo e tempi GPU del Moonlight prima/dopo, con limiti delle misure. |

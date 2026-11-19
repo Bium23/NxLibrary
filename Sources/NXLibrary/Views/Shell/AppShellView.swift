@@ -513,7 +513,6 @@ public struct AppShellView: View {
 
     public var body: some View {
         nativeGameCommands
-        .descriptionTranslationHost()
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryCheckAppUpdates)) { _ in
             guard nativeMenuAvailability.general else { return }
             router.closeMenu()

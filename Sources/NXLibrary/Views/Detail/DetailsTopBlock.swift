@@ -8,7 +8,6 @@ import NXLibraryCore
 /// placed at (110, 96) on the stage; every length is in Selene units.
 struct DetailsTopBlock: View {
     @Environment(\.seleneCanvas) private var canvas
-    @ObservedObject private var translator = DescriptionTranslator.shared
 
     let game: PortedGame
     let logo: NSImage?
@@ -219,14 +218,16 @@ struct DetailsTopBlock: View {
 
     @ViewBuilder
     private var description: some View {
-        let text = translator.displayed(presentation.description)
+        let text = presentation.description
         VStack(alignment: .leading, spacing: canvas.u(6)) {
             if text.isEmpty {
                 Text(L10n.text("No description for this game yet."))
                     .seleneFont(17)
                     .foregroundColor(SeleneTheme.ink60)
             } else {
-                DescriptionTranslateLine(text: presentation.description, note: presentation.descriptionLanguageNote)
+                if let note = presentation.descriptionLanguageNote {
+                    Text(note).seleneFont(14).foregroundColor(SeleneTheme.ink60)
+                }
                 if expanded {
                     ScrollView(.vertical, showsIndicators: false) {
                         descriptionText(text)

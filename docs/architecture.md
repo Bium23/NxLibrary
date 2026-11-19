@@ -221,14 +221,14 @@ Regole della barra:
 
 **Scelta della lingua.**
 - `AppLanguage` definisce auto/en/it/fr/de/es/pt-BR/zh-Hans. `AppLocale` risolve le preferenze ordinate del Mac e una regione indipendente, valida i codici e mappa pt-BR a pt soltanto per Nlib.
-- Per il cinese `AppLanguage.supported` accetta zh-Hans e zh senza script; zh-Hant, TW, HK e MO passano alla preferenza successiva, perché non c'è una traduzione tradizionale. I formati usano `zh-Hans_<regione>`, Nlib riceve `zh` (senza descrizioni cinesi, quindi compare l'avviso della descrizione in inglese con Translate) e Steam `schinese`.
+- Per il cinese `AppLanguage.supported` accetta zh-Hans e zh senza script; zh-Hant, TW, HK e MO passano alla preferenza successiva, perché non c'è una traduzione tradizionale. I formati usano `zh-Hans_<regione>`, Nlib riceve `zh` (senza descrizioni cinesi, quindi compare l'avviso della descrizione in inglese) e Steam `schinese`.
 - `AppSettings` conserva i due override in modo additivo: vecchi file e scelte non riconosciute tornano ad Automatic.
 - `DevelopmentStartupView` carica un solo `AppSettingsStore`, configura il locale e passa lo store a `MainView` e `AppShellView`. Gli initializer delle viste non pubblicano cambi di locale, perché il controllo sincrono della toolchain può far rientrare il run loop mentre SwiftUI costruisce i propri StateObject.
 
 **Propagazione alle viste.**
 - `AppLocalization` pubblica il contesto. La shell lo propaga alle viste tramite `nxAppLocale`, una dipendenza SwiftUI esplicita che non ricrea identità o stato.
 - Settings passa questo valore alla barra laterale, e `SettingsSection.title(in:)` risolve le categorie nel contesto ricevuto, anche con il focus sulle righe. Righe, informazioni, pannelli e suggerimenti condivisi usano lo stesso valore.
-- `L10n` tiene al massimo un bundle per ciascuna delle sette lingue. Le risorse iniettate restano isolate, senza memorizzare testi interpolati o dati personali. Cattura il contesto per il lavoro asincrono e legge il catalogo compilato, cercando prima nel bundle installato. Non si usa nessun servizio esterno di posizione o traduzione: anche la traduzione delle descrizioni avviene sul Mac.
+- `L10n` tiene al massimo un bundle per ciascuna delle sette lingue. Le risorse iniettate restano isolate, senza memorizzare testi interpolati o dati personali. Cattura il contesto per il lavoro asincrono e legge il catalogo compilato, cercando prima nel bundle installato. Non si usa nessun servizio esterno di posizione o traduzione.
 
 **Testi.**
 - I testi controllati dall'app sono nel catalogo condiviso `NXLibraryCore/Resources/Localizable.xcstrings`, con interpolazioni e plurali.
@@ -238,14 +238,6 @@ Regole della barra:
 - Il nome dell'app, "Arcane", sta in `AppIdentity.name` e non si traduce: le viste che mostrano solo il nome lo leggono da lì, e il catalogo non contiene più il vecchio nome. Bundle ID, cartelle dei dati, chiavi delle preferenze e segni `.nxlibrary-*` tengono il nome storico, perché cambiarli separerebbe i dati di chi aggiorna.
 - Ogni richiesta di rete si presenta con `AppIdentity.userAgent()`, cioè `Arcane/<versione> (macOS; +https://github.com/Bium23/NxLibrary)`.
 - **Open project docs** in About apre `AppIdentity.documentationPage`, il README online, nel browser predefinito: è la guida per i giocatori e si apre su ogni Mac, senza dipendere da dove sta il codice sorgente.
-
-**Traduzione delle descrizioni.** I testi che arrivano dalle fonti non stanno mai nel catalogo: si traducono sul Mac del giocatore, solo quando lo chiede.
-- `TextLanguage.detect` legge la lingua del testo stesso con NaturalLanguage, quindi vale per ogni descrizione: store, scelta da un database, testo dell'utente, Steam. Sotto i 40 caratteri o con fiducia sotto 0,6 non dice nulla. Le lingue si confrontano per codice base (pt è pt-BR); il cinese anche per scrittura, così un testo tradizionale si offre a chi legge il semplificato.
-- `DescriptionTranslator` mostra **Translate** sopra la descrizione di About this game (Spotlight e Details) quando la lingua del testo non è quella dell'app. Traduce con il framework Translation di Apple, che lavora sul Mac e può chiedere una volta di scaricare la lingua; serve macOS 15, e prima il pulsante non compare. Il modello di Apple Intelligence non si usa: in prova mescolava cinese tradizionale e semplificato e rifiutava le descrizioni violente ([prova](reviews/2026-11-19-description-translation-probe.md)).
-- Il risultato va in `DescriptionTranslationStore` (`AppData.cacheRoot/translations/<lingua>/`), con una chiave che è l'hash della lingua e del testo esatto. Una descrizione nuova dello store o una scelta diversa in Change metadata non trovano la traduzione vecchia; nulla va svuotato. La scelta dell'utente resta quella salvata da `MetadataPicker`: la traduzione è solo ciò che si mostra.
-- Tradotta, la descrizione mostra "Translated on this Mac." e **Show original**, che riporta al testo della fonte per la sessione. Un errore (download rifiutato, coppia non supportata) mostra un avviso e lascia Translate per riprovare; non si salva nulla.
-- In Spotlight About this game prende il focus anche senza Read more quando c'è la riga di traduzione. Con Read more, A apre il testo e X traduce; senza, A traduce. Gli hint lo dicono.
-- In Change metadata ogni descrizione proposta porta la sua lingua nel titolo della riga ("IGDB · Inglese").
 
 **Start-up.**
 - Start-up ospita lingua e regione. `LocalePicker` offre la scelta diretta delle lingue e cerca i nomi localizzati delle regioni per codice stabile, con input da tastiera e controller distinto da Settings.
