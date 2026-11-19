@@ -45,7 +45,7 @@ extension AppViewModel {
                         _ = authorizeDevelopmentOperation(.icon, game: game)
                         game.appIconPending = true
                         logs.append(LogEntry(level: .success, message: L10n.format("Installed the new build of %@.", [game.name])))
-                        if let path = game.lastBuild?.logPath, !path.isEmpty { appIconBuildLogs[id] = URL(fileURLWithPath: path) }
+                        if let path = game.lastBuild?.logPath, !path.isEmpty { appIcon.appIconBuildLogs[id] = URL(fileURLWithPath: path) }
                     case .gone:
                         logs.append(LogEntry(level: .warning, message: L10n.format("The new build of %@ that waited for the game to quit is gone. Port it again.", [game.name])))
                     case nil: return

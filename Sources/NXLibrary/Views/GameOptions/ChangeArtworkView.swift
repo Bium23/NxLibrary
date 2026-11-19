@@ -22,8 +22,17 @@ import NXLibraryCore
 /// A click chooses.
 struct ChangeArtworkView: View {
     @ObservedObject var viewModel: AppViewModel
+    /// The game's app icon: its status line follows the icon being written.
+    @ObservedObject private var appIcon: AppIconModel
     let subject: PersonalizationSubject
     let onClose: () -> Void
+
+    init(viewModel: AppViewModel, subject: PersonalizationSubject, onClose: @escaping () -> Void) {
+        self.viewModel = viewModel
+        _appIcon = ObservedObject(wrappedValue: viewModel.appIcon)
+        self.subject = subject
+        self.onClose = onClose
+    }
 
     @ObservedObject private var picks = ArtworkPicks.shared
     @ObservedObject private var steamPicks = SteamPersonalizations.shared.artwork
@@ -201,14 +210,14 @@ struct ChangeArtworkView: View {
     private func answerAppIcon(_ use: Bool) {
         SoundEffectService.shared.play(.click)
         askAppIcon = false
-        if let macApp { viewModel.setUsesPickedAppIcon(use, for: macApp) }
+        if let macApp { appIcon.setUsesPickedAppIcon(use, for: macApp) }
     }
 
     /// Ask for every game, including NUPs, dumps and games not built yet.
     private func iconPicked() {
         guard slot == .icon, let macApp else { return }
         editingIconLocation = false
-        appIconFocus = viewModel.usesIconOnMac(for: macApp) ? .confirm : .cancel
+        appIconFocus = appIcon.usesIconOnMac(for: macApp) ? .confirm : .cancel
         askAppIcon = true
     }
 
@@ -281,7 +290,7 @@ struct ChangeArtworkView: View {
     /// On the Icon tab, how the game app's own icon change stands: signing a large app takes about a minute.
     private var appIconStatus: String? {
         guard slot == .icon, macApp != nil else { return nil }
-        let progress = viewModel.appIconProgress[subject.id]
+        let progress = appIcon.appIconProgress[subject.id]
         if let progress {
             switch progress {
             case .searching, .updating, .failed: return progress.message
@@ -451,7 +460,7 @@ struct ChangeArtworkView: View {
         case .yourPick:
             return (L10n.text("Your pick"), L10n.text("Saved on this Mac"))
         case .iconLocation:
-            return (L10n.text("Icon location"), macApp.map(viewModel.usesIconOnMac) == true ? L10n.text("Use on the Mac") : "Only here")
+            return (L10n.text("Icon location"), macApp.map(appIcon.usesIconOnMac) == true ? L10n.text("Use on the Mac") : "Only here")
         case .art(let item):
             return (item.art.candidate.source, item.art.resolution)
         case .browse(let source):
@@ -600,7 +609,7 @@ struct ChangeArtworkView: View {
         guard slot == .icon else { return }
         automaticIconChecked = false
         let url: URL?
-        if let macApp { url = await viewModel.automaticIconURL(for: macApp) }
+        if let macApp { url = await appIcon.automaticIconURL(for: macApp) }
         else if let steam = subject.steam { url = SteamArtworkRequest(game: steam, role: .square).automaticLocalURL }
         else { url = nil }
         let preview: NSImage?
@@ -637,11 +646,11 @@ struct ChangeArtworkView: View {
                 }
             }
             applied()
-            if slot == .icon, let macApp { viewModel.appIconPickChanged(for: macApp, removed: true) }
+            if slot == .icon, let macApp { appIcon.appIconPickChanged(for: macApp, removed: true) }
         case .iconLocation:
             guard let macApp else { return }
             editingIconLocation = true
-            appIconFocus = viewModel.usesIconOnMac(for: macApp) ? .confirm : .cancel
+            appIconFocus = appIcon.usesIconOnMac(for: macApp) ? .confirm : .cancel
             askAppIcon = true
             SoundEffectService.shared.play(.click)
         case .yourPick:
@@ -838,7 +847,7 @@ struct ChangeArtworkView: View {
             case .cancel:
                 askAppIcon = false
                 // Back dismisses the location question. A newly chosen image still follows the saved scope.
-                if !editingIconLocation, let macApp { viewModel.appIconPickChanged(for: macApp, removed: false) }
+                if !editingIconLocation, let macApp { appIcon.appIconPickChanged(for: macApp, removed: false) }
                 SoundEffectService.shared.play(.focus)
             default: break
             }

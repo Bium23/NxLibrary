@@ -15,20 +15,14 @@ struct SettingsNotice: Identifiable {
 }
 
 public final class AppViewModel: ObservableObject {
-    /// Games whose app icon is being written (`AppViewModel+AppIcon`), and those asked again meanwhile.
-    var appIconsInFlight = Set<UUID>()
-    var appIconRerun = Set<UUID>()
-    /// Finished build logs waiting for their separate icon preparation result.
-    var appIconBuildLogs: [UUID: URL] = [:]
-    var iconLaunchWait = IconLaunchWait()
-    /// The last app icon change per game, for Change artwork's status line.
-    @Published var appIconProgress: [UUID: AppIconProgress] = [:]
+    /// The automatic Icon's online lookup, shared by Switch and Steam games' Change artwork.
+    static let automaticIconArtwork = ArtworkStore()
     let saveGate = SaveOperationGate()
     let saveQueue = DispatchQueue(label: L10n.text("local.nxlibrary.saves"), qos: .userInitiated)
     @Published var settingsNotice: SettingsNotice? {
         didSet {
-            if let waitingGame = iconLaunchWait.gameID, settingsNotice?.id != iconLaunchWait.noticeID {
-                iconLaunchWait.cancel()
+            if let waitingGame = appIcon.iconLaunchWait.gameID, settingsNotice?.id != appIcon.iconLaunchWait.noticeID {
+                appIcon.iconLaunchWait.cancel()
                 if launchingGameId == waitingGame { launchingGameId = nil }
             }
         }
@@ -216,6 +210,8 @@ public final class AppViewModel: ObservableObject {
     public private(set) lazy var runtimeSettings = RuntimeSettingsModel(app: self)
     /// What a game's cheats are and what to do with added files (`CheatsModel`).
     private(set) lazy var cheats = CheatsModel(app: self)
+    /// The game's app icon in Finder and the Dock (`AppIconModel`), observed by Change artwork.
+    private(set) lazy var appIcon = AppIconModel(app: self)
     @Published public var isBuilding: Bool = false
     /// The running (or just finished) porting folded into one overall fraction for the home.
     @Published public var portingProgress: PortingProgress? = nil
@@ -908,7 +904,7 @@ public final class AppViewModel: ObservableObject {
                         }
                     }
                     self.applyCatalog(catalog)
-                    self.reconcileAppIcons()
+                    self.appIcon.reconcileAppIcons()
                 } catch { self.reportCatalogFailure(error) }
                 self.libraryScanWarnings = scanWarnings
                 for warning in scanWarnings { self.logs.append(LogEntry(level: .warning, message: warning)) }
@@ -1017,8 +1013,8 @@ public final class AppViewModel: ObservableObject {
         // Installing a waiting build can itself start an icon update: check after installation too.
         let game = installingPendingBuild(of: game)
         // The app is being signed again with a new icon: starting it now could read a half-written bundle.
-        guard !appIconsInFlight.contains(game.id) else {
-            waitForAppIconBeforeLaunching(game)
+        guard !appIcon.appIconsInFlight.contains(game.id) else {
+            appIcon.waitForAppIconBeforeLaunching(game)
             return
         }
         if !FileManager.default.fileExists(atPath: game.url.path),

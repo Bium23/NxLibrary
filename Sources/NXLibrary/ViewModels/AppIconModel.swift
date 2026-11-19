@@ -7,11 +7,28 @@ import NXLibraryCore
 /// previous automatic behavior until the player makes a choice. Automatic changes the source, preserving scope.
 /// Written after every build that installs (a rebuild replaces the whole app), and only while the game is not
 /// running: otherwise `appIconPending` waits for it to quit (`syncPendingAppIcons`, at launch and on every quit).
-extension AppViewModel {
-    static let appIconWriter = AppIconWriter()
-    static let automaticIconArtwork = ArtworkStore()
+/// Change artwork observes it on its own for the status line. It reaches the rest of Arcane only through `app`:
+/// the library, the catalog, notices, Play and the development guard.
+final class AppIconModel: ObservableObject {
+    /// The coordinator: library, catalog, notices, Play and the building state.
+    unowned let app: AppViewModel
 
-    private func iconKey(_ game: PortedGame) -> String { personalizationKey(for: game) }
+    init(app: AppViewModel) {
+        self.app = app
+    }
+
+    /// Games whose app icon is being written, and those asked again meanwhile.
+    var appIconsInFlight = Set<UUID>()
+    var appIconRerun = Set<UUID>()
+    /// Finished build logs waiting for their separate icon preparation result.
+    var appIconBuildLogs: [UUID: URL] = [:]
+    var iconLaunchWait = IconLaunchWait()
+    /// The last app icon change per game, for Change artwork's status line.
+    @Published var appIconProgress: [UUID: AppIconProgress] = [:]
+
+    static let appIconWriter = AppIconWriter()
+
+    private func iconKey(_ game: PortedGame) -> String { app.personalizationKey(for: game) }
 
     /// Resolve the image independently of whether the player wants it applied to the Mac app.
     func automaticIconURL(for game: PortedGame) async -> URL? {
@@ -21,11 +38,11 @@ extension AppViewModel {
             if NSImage(contentsOf: extracted) != nil { return extracted }
         }
         guard let titleID = game.titleId else { return nil }
-        return await Self.automaticIconArtwork.automaticIcon(titleID: titleID, name: game.name)
+        return await AppViewModel.automaticIconArtwork.automaticIcon(titleID: titleID, name: game.name)
     }
 
     func usesIconOnMac(for game: PortedGame) -> Bool {
-        let current = libraryGames.first { $0.id == game.id } ?? game
+        let current = app.libraryGames.first { $0.id == game.id } ?? game
         return current.appIconOnMac ?? (current.usesPickedAppIcon || !Self.appIconWriter.hasOriginalIcon(current.url, key: iconKey(current)))
     }
 
@@ -38,12 +55,12 @@ extension AppViewModel {
 
     /// Keep one cancellable Play request while the app is being signed; signing itself must finish safely.
     func waitForAppIconBeforeLaunching(_ game: PortedGame) {
-        showSettingsNotice(title: L10n.format("Preparing %@", [String(describing: (game.name))]),
+        app.showSettingsNotice(title: L10n.format("Preparing %@", [String(describing: (game.name))]),
                            message: L10n.text("Preparing the app icon. The game will start when it is ready. This can take a minute for a large game."),
                            cancelTitle: L10n.text("Cancel"))
-        guard let notice = settingsNotice else { return }
+        guard let notice = app.settingsNotice else { return }
         iconLaunchWait.begin(gameID: game.id, noticeID: notice.id)
-        launchingGameId = game.id
+        app.launchingGameId = game.id
         SoundEffectService.shared.play(.click)
     }
 
@@ -53,23 +70,23 @@ extension AppViewModel {
         let succeeded: Bool
         if case .success = outcome { succeeded = true } else { succeeded = false }
         let launchID = iconLaunchWait.finished(gameID: game.id, rerun: false, succeeded: succeeded,
-                                               visibleNoticeID: settingsNotice?.id)
-        if launchingGameId == game.id { launchingGameId = nil }
-        if settingsNotice?.id == noticeID {
-            settingsNotice = nil
+                                               visibleNoticeID: app.settingsNotice?.id)
+        if app.launchingGameId == game.id { app.launchingGameId = nil }
+        if app.settingsNotice?.id == noticeID {
+            app.settingsNotice = nil
             if case .failure(let error) = outcome {
-                showSettingsNotice(title: L10n.text("Could not prepare the game"), message: error.localizedDescription)
+                app.showSettingsNotice(title: L10n.text("Could not prepare the game"), message: error.localizedDescription)
             }
         }
-        if let launchID, let current = libraryGames.first(where: { $0.id == launchID }) {
+        if let launchID, let current = app.libraryGames.first(where: { $0.id == launchID }) {
             // Recheck the current app, saves and running state, as for any Play request.
-            launchGame(current)
+            app.launchGame(current)
         }
     }
 
     /// The pop-up's answer: show the player's Icon on the app too, or keep the game's own.
     public func setUsesPickedAppIcon(_ use: Bool, for game: PortedGame) {
-        guard authorizeDevelopmentOperation(.icon, game: game) else { return }
+        guard app.authorizeDevelopmentOperation(.icon, game: game) else { return }
         updateAppIconState(game) {
             $0.usesPickedAppIcon = use
             $0.appIconOnMac = use
@@ -80,7 +97,7 @@ extension AppViewModel {
 
     /// Automatic removes the personal image without changing the player's destination choice.
     public func appIconPickChanged(for game: PortedGame, removed: Bool) {
-        guard authorizeDevelopmentOperation(.icon, game: game) else { return }
+        guard app.authorizeDevelopmentOperation(.icon, game: game) else { return }
         updateAppIconState(game) {
             if removed { $0.useAutomaticAppIcon() }
             $0.appIconPending = true
@@ -92,7 +109,7 @@ extension AppViewModel {
     /// elsewhere or missing, an app moved or built again, a change lost to a crash) is put right.
     public func reconcileAppIcons() {
         guard !AppData.profile.isDevelopment else { return }
-        for game in libraryGames where !game.appIconPending && !appIconsInFlight.contains(game.id) {
+        for game in app.libraryGames where !game.appIconPending && !appIconsInFlight.contains(game.id) {
             guard let app = installedApp(game) else { continue }
             let writer = Self.appIconWriter
             let hasPick = ArtworkPicks.shared.url(titleID: iconKey(game), slot: .icon) != nil
@@ -109,14 +126,14 @@ extension AppViewModel {
     /// Writes or puts back every waiting icon whose game is not running and not being built. A change asked for while
     /// the same app is being signed runs again once that finishes, so the last choice wins.
     public func syncPendingAppIcons() {
-        for game in libraryGames where game.appIconPending {
-            guard developmentOperations.permits(.icon, gameID: game.id) else { continue }
+        for game in app.libraryGames where game.appIconPending {
+            guard app.developmentOperations.permits(.icon, gameID: game.id) else { continue }
             guard !appIconsInFlight.contains(game.id) else {
                 appIconRerun.insert(game.id)
                 continue
             }
             guard RunningGameMonitor.runningApplication(for: game) == nil,
-                  !(isBuilding && currentBuildGameID == game.id) else { continue }
+                  !(app.isBuilding && app.currentBuildGameID == game.id) else { continue }
             // No app yet (not built, or moved before the next scan): the change waits for it.
             guard let app = installedApp(game) else { continue }
             let pick = ArtworkPicks.shared.url(titleID: iconKey(game), slot: .icon)
@@ -162,18 +179,18 @@ extension AppViewModel {
                         GameIconProvider.forget(game)
                         GameArtLoader.shared.forget(game)
                         ArtworkPicks.shared.touch()
-                        self.logs.append(LogEntry(level: .info, message: L10n.format("Updated the app icon of %@.", [String(describing: (game.name))])))
+                        self.app.logs.append(LogEntry(level: .info, message: L10n.format("Updated the app icon of %@.", [String(describing: (game.name))])))
                     }
                 case .failure(let error):
                     self.appIconProgress[game.id] = .failed(error.localizedDescription)
-                    self.logs.append(LogEntry(level: .error,
+                    self.app.logs.append(LogEntry(level: .error,
                                               message: L10n.format("Could not change the app icon of %@: %@", [String(describing: (game.name)), String(describing: (error.localizedDescription))])))
                 }
                 if !again, let buildLog, self.appIconBuildLogs[game.id] == buildLog,
                    let status = self.appIconProgress[game.id] {
                     self.appIconBuildLogs[game.id] = nil
                     try? status.appendToBuildLog(buildLog)
-                    self.logs.append(LogEntry(level: .info, message: "\(game.name): \(status.buildMessage)"))
+                    self.app.logs.append(LogEntry(level: .info, message: "\(game.name): \(status.buildMessage)"))
                 }
                 self.finishIconLaunchWait(for: game, rerun: again, outcome: outcome)
                 if again { self.syncPendingAppIcons() }
@@ -182,8 +199,8 @@ extension AppViewModel {
     }
 
     private func updateAppIconState(_ game: PortedGame, _ change: (inout PortedGame) -> Void) {
-        do { applyCatalog(try catalogRepository.updateNXNative(id: game.id, change)) }
-        catch { reportCatalogFailure(error) }
+        do { app.applyCatalog(try app.catalogRepository.updateNXNative(id: game.id, change)) }
+        catch { app.reportCatalogFailure(error) }
     }
 
     /// Finder and the Dock read icons through Launch Services, which caches them by the bundle's date.

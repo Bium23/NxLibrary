@@ -688,7 +688,7 @@ public final class PortingModel: ObservableObject {
         guard !app.isBuilding else { throw NXLibraryError.buildAlreadyRunning }
         guard !app.isCleaningStorage else { throw NXLibraryError.environmentBlocked(L10n.text("wait for storage cleanup to finish")) }
         guard !app.isUpdatingApp else { throw NXLibraryError.environmentBlocked(L10n.text("wait for the app update to finish")) }
-        guard !app.appIconsInFlight.contains(game.id) else {
+        guard !app.appIcon.appIconsInFlight.contains(game.id) else {
             throw NXLibraryError.environmentBlocked(L10n.text("wait for the app icon update to finish"))
         }
         var target = app.libraryGames.first(where: { $0.id == game.id }) ?? game
@@ -1134,7 +1134,7 @@ public final class PortingModel: ObservableObject {
                     PendingInstaller.discard(&game)
                     game.recordInstalledBuild(record, toolchain: toolchain, at: finalApp,
                                               version: Self.appVersion(at: finalApp), date: Date())
-                    // A new app has the build's icon: the player's goes back on (AppViewModel+AppIcon).
+                    // A new app has the build's icon: the player's goes back on (AppIconModel).
                     game.appIconPending = true
                 }
                 if let seconds = app.portingProgress?.finishingElapsed, seconds > 0 {
@@ -1194,9 +1194,9 @@ public final class PortingModel: ObservableObject {
 
             let saved = app.persistBuildOutcome(game)
             if result.success && saved {
-                if result.heldApp == nil { app.appIconBuildLogs[gameID] = result.logURL }
+                if result.heldApp == nil { app.appIcon.appIconBuildLogs[gameID] = result.logURL }
                 app.loadLibrary()
-                app.syncPendingAppIcons()
+                app.appIcon.syncPendingAppIcons()
             }
         } else {
             self.buildState = result.success ? .succeeded

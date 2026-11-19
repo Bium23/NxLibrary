@@ -695,7 +695,7 @@ public struct AppShellView: View {
         SteamPlayCoordinator.shared.isLaunchScreenShowing = { [weak viewModel] in viewModel?.launchOverlay != nil }
         SteamPlayCoordinator.shared.start(sessions: playSessions, settings: settings)
         viewModel.installPendingBuilds()
-        viewModel.syncPendingAppIcons()
+        viewModel.appIcon.syncPendingAppIcons()
         closeGameWatch = runningGames.$runningGameIDs.sink { [weak viewModel] ids in
             guard let viewModel else { return }
             viewModel.runningGameCount = ids.count
@@ -703,7 +703,7 @@ public struct AppShellView: View {
             DispatchQueue.main.async {
                 viewModel.installPendingBuilds()
                 // An icon chosen while the game ran goes on once it quits.
-                viewModel.syncPendingAppIcons()
+                viewModel.appIcon.syncPendingAppIcons()
             }
             // The game under Close Game quit by itself: its confirmation has nothing left to close.
             guard let game = viewModel.gameToClose, !ids.contains(game.id) else { return }

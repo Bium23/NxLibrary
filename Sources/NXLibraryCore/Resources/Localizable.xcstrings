@@ -10672,7 +10672,7 @@
       }
     },
     "Back to tested: %@": {
-      "comment": "AppViewModel+NewestEngine.swift",
+      "comment": "SetupModel+NewestEngine.swift",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -19743,7 +19743,7 @@
       }
     },
     "Could not change the app icon of %@: %@": {
-      "comment": "AppViewModel+AppIcon.swift",
+      "comment": "AppIconModel.swift",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -19978,7 +19978,7 @@
       }
     },
     "Could not prepare the game": {
-      "comment": "AppViewModel+AppIcon.swift",
+      "comment": "AppIconModel.swift",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -24460,7 +24460,7 @@
       }
     },
     "Engine back to the tested %@.": {
-      "comment": "AppViewModel+NewestEngine.swift",
+      "comment": "SetupModel+NewestEngine.swift",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -42458,7 +42458,7 @@
       }
     },
     "Newest engine: %@": {
-      "comment": "AppViewModel+NewestEngine.swift",
+      "comment": "SetupModel+NewestEngine.swift",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -50587,7 +50587,7 @@
       }
     },
     "Preparing %@": {
-      "comment": "AppViewModel+AppIcon.swift",
+      "comment": "AppIconModel.swift",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -50634,7 +50634,7 @@
       }
     },
     "Preparing the app icon. The game will start when it is ready. This can take a minute for a large game.": {
-      "comment": "AppViewModel+AppIcon.swift",
+      "comment": "AppIconModel.swift",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -72467,7 +72467,7 @@
       }
     },
     "Updated the app icon of %@.": {
-      "comment": "AppViewModel+AppIcon.swift",
+      "comment": "AppIconModel.swift",
       "localizations": {
         "en": {
           "stringUnit": {

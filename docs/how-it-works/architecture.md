@@ -87,7 +87,7 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
 - `startInFullscreen` sta in `AppSettings` (default false), compare in Search e Changed e torna al default con il reset di Start-up. `StartupWindowView` lo legge alla creazione e lo applica una sola volta alla finestra visibile e attiva, dopo `LaunchReveal.whenShown`. `isWindowSettling` tiene ferma l’entrata fino alla notifica di fine transizione, con ripiego a 4 s dall’aggancio alla finestra. Cambiare la preferenza non altera la finestra corrente.
 
 **Coordinatore.**
-- `AppViewModel.swift` coordina libreria, rilevamento dell'ambiente, Locate Sources e lancio, e tiene lo stato del porting che legge la home. Le estensioni `AppViewModel+…` collegano icona dell'app del gioco, salvataggi, diagnostica, mod, installazioni in attesa e fonti; sono parti dello stesso oggetto osservabile.
+- `AppViewModel.swift` coordina libreria, rilevamento dell'ambiente, Locate Sources e lancio, e tiene lo stato del porting che legge la home. Le estensioni `AppViewModel+…` collegano salvataggi, diagnostica, mod, installazioni in attesa e fonti; sono parti dello stesso oggetto osservabile.
 - `PortingModel` tiene Add Game: la bozza (cartella o file scelti, scansione, titoli trovati, selezione delle sorgenti, nome, bundle ID, scelte per il primo avvio, controllo delle chiavi, spazio su disco) e la build: avvio, eventi del motore, annullamento, fine, notifiche, azioni sugli errori riconosciuti e ciò che il passo Porting ne mostra (passo del wizard, fasi, avanzamento, esito ed errore).
   - Le viste di Add Game e la riga Game files di Impostazioni → Libreria lo osservano da sole, così un cambio di fase ridisegna solo quelle schermate.
   - Il resto di Arcane legge di un porting solo `isBuilding`, `currentBuildGameID` e `portingProgress` (la tile della home), che restano sul coordinatore.
@@ -100,6 +100,9 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
   - Non tiene stato e nessuna vista lo osserva: la verità sono i file del gioco, e le schermate tengono la loro copia.
   - Raggiunge il coordinatore solo da `RuntimeSettingsModel.app`, per il registro, l'avviso di salvataggio fallito e i default dei nuovi giochi.
 - `CheatsModel` dice cosa sono i cheat di un gioco e cosa fare dei file aggiunti (vedi [Cheat](#cheat)). Non pubblica nulla: pannello Cheats, riga di Game options e pagina del gioco lo leggono quando si aprono o si ricaricano. Da `CheatsModel.app` legge solo la cartella dell'engine.
+- `AppIconModel` scrive l'icona nell'app del gioco (vedi [Artwork, metadati e voti](#artwork-metadati-e-voti)) e tiene ciò che serve mentre lo fa: icone in corso o da rifare, log delle build che aspettano l'esito, la richiesta di Play in attesa e l'avanzamento per gioco.
+  - Lo osserva da sola Change artwork, per la riga di stato dell'icona.
+  - Raggiunge il resto dell'app solo da `AppIconModel.app`: libreria, catalogo, avvisi, Play e lo stato della build. La ricerca online dell'icona automatica (`AppViewModel.automaticIconArtwork`) resta sul coordinatore perché la usa anche Steam.
 - Gli stati di un solo pannello hanno il loro modello: `SetupCheckModel`, `SavePanelModel` (anteprima, operazione in corso, errore, ultimo backup, importazione riuscita) e gli altri elencati in [conventions.md](../working-on-it/conventions.md#1-dove-va-il-codice). Gli aggiornamenti destinati alla UI si pubblicano sulla coda principale.
 
 **Primo avvio.**
@@ -578,7 +581,7 @@ Il percorso completo è in [flows.md](flows.md#6-importare-o-ripristinare-un-sal
 - Switch Icon Showdown esclude `/images/` dai crawler, quindi il resolver non scarica le sue immagini (stato in [validation.md](../working-on-it/validation.md)).
 - Fallimenti di rete o ricerche ambigue non fanno fallire il porting. Nessun file del motore viene modificato.
 
-**Icona dell'app del gioco.** L'icona scelta in Change artwork (slot Icon, conservata a 1024 px) diventa anche l'icona dell'app del gioco in Finder e nel Dock (`AppIconWriter`, `AppViewModel+AppIcon`).
+**Icona dell'app del gioco.** L'icona scelta in Change artwork (slot Icon, conservata a 1024 px) diventa anche l'icona dell'app del gioco in Finder e nel Dock (`AppIconWriter`, `AppIconModel`, raggiunto come `app.appIcon`).
 - **La scelta.**
   - Il pop-up offre **Only here** / **Use on the Mac** per ogni gioco, anche senza icona propria o non ancora costruito.
   - `PortedGame.appIconOnMac` memorizza la scelta esplicita: false vieta la scrittura (anche per NUP e dump), true la richiede quando c'è una scelta Icon, nil applica la regola delle vecchie librerie (`usesPickedAppIcon` oppure assenza dell'icona originale) fino alla prossima scelta. Riconciliazione e scrittura condividono `wantsPickedAppIcon`.
@@ -592,7 +595,7 @@ Il percorso completo è in [flows.md](flows.md#6-importare-o-ripristinare-un-sal
   - Durante la firma (circa 50 secondi per un gioco di 9–12 GB) avvio e build del gioco aspettano, e la riga di stato di Change artwork mostra l'avanzamento. Una scelta fatta mentre la stessa app si firma si riesegue alla fine, così vale l'ultima.
 - **Log e riconciliazione.**
   - `AppIconProgress` tiene i testi condivisi fra UI e log. Dopo una build installata, anche differita, l'esito si aggiunge al log della build già chiuso dall'engine e al log della UI; l'assenza di artwork non cambia il successo della build. La riga si scrive solo dopo l'ultimo aggiornamento in coda.
-  - Scansioni e rebuild conservano la preferenza. Dopo ogni scansione `reconcileAppIcons` confronta lo stato voluto con l'app (marca `NXLibraryAppIcon`) e rimette in coda le differenze.
+  - Scansioni e rebuild conservano la preferenza. Dopo ogni scansione `AppIconModel.reconcileAppIcons` confronta lo stato voluto con l'app (marca `NXLibraryAppIcon`) e rimette in coda le differenze.
 
 **Change metadata** (`ChangeMetadataView`). Il selettore propone, per descrizione, generi, sviluppatore, editore e data, i valori delle fonti disponibili per nxnative e Steam.
 - **Comportamento del selettore.**
