@@ -2210,53 +2210,6 @@
         }
       }
     },
-    "%@ installed. Microsoft has %@; A installs it, and macOS asks for your password.": {
-      "comment": "SetupCheck.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ installed. Microsoft has %@; A installs it, and macOS asks for your password."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ installato. Microsoft offre %@; A lo installa e macOS chiede la tua password."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ installé. Microsoft propose %@ ; A l’installe, et macOS vous demande votre mot de passe."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ installiert. Microsoft bietet %@; A installiert es und macOS fragt nach deinem Passwort."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ instalado. Microsoft ofrece %@; A lo instala y macOS pide tu contraseña."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ instalado. A Microsoft tem %@; A inicia a instalação, e o macOS pede sua senha."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已安装 %@。Microsoft 提供 %@；按 A 安装，macOS 会要求输入你的密码。"
-          }
-        }
-      }
-    },
     "%@ is a 32-bit ARM program, and nxnative runs only 64-bit games.": {
       "comment": "PortingFailureReason.swift",
       "localizations": {
@@ -5404,147 +5357,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "，或 Switch 2 NUP 文件和已解包的文件夹"
-          }
-        }
-      }
-    },
-    ".NET %@ SDK installer opened.": {
-      "comment": "SetupCheckModel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ".NET %@ SDK installer opened."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Programma di installazione dell’SDK .NET %@ aperto."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le programme d’installation du SDK .NET %@ a été ouvert."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Installationsprogramm für .NET %@ SDK geöffnet."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Se ha abierto el instalador del SDK de .NET %@."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Instalador do SDK do .NET %@ aberto."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已打开 .NET %@ SDK 安装器。"
-          }
-        }
-      }
-    },
-    ".NET 10 SDK": {
-      "comment": "SetupCheck.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ".NET 10 SDK"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SDK .NET 10"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SDK .NET 10"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ".NET 10 SDK"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SDK de .NET 10"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SDK do .NET 10"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ".NET 10 SDK"
-          }
-        }
-      }
-    },
-    ".NET SDK: %@": {
-      "comment": "SetupCheckModel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ".NET SDK: %@"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SDK .NET: %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SDK .NET : %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ".NET SDK: %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SDK de .NET: %@"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SDK do .NET: %@"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ".NET SDK：%@"
           }
         }
       }
@@ -10154,53 +9966,6 @@
         }
       }
     },
-    "Asking Microsoft for the newest .NET %@ SDK…": {
-      "comment": "SetupCheckModel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Asking Microsoft for the newest .NET %@ SDK…"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Richiesta dell’SDK .NET %@ più recente a Microsoft…"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Demande du dernier SDK .NET %@ auprès de Microsoft…"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Das neueste .NET %@ SDK wird bei Microsoft angefragt …"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Solicitando a Microsoft el SDK de .NET %@ más reciente…"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Solicitando à Microsoft o SDK do .NET %@ mais recente…"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在向 Microsoft 请求最新的 .NET %@ SDK…"
-          }
-        }
-      }
-    },
     "Attach sources…": {
       "comment": "GameOptionsPresentation.swift",
       "localizations": {
@@ -11560,53 +11325,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "盒装封面"
-          }
-        }
-      }
-    },
-    "Box covers, logos, backgrounds and square art in Change artwork": {
-      "comment": "SettingsAboutSection.swift:22",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Box covers, logos, backgrounds and square art in Change artwork"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copertine delle confezioni, loghi, sfondi e immagini quadrate in Cambia grafica"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jaquettes, logos, arrière-plans et illustrations carrées dans Changer l’illustration"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cover, Logos, Hintergründe und quadratische Bilder unter „Artwork ändern“"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Portadas de cajas, logotipos, fondos e imágenes cuadradas en Cambiar imágenes"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capas de caixas, logotipos, fundos e artes quadradas em Alterar arte"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "在“更改图片”中提供盒装封面、标志、背景和方形图片"
           }
         }
       }
@@ -13068,53 +12786,6 @@
         }
       }
     },
-    "Builds the engine's tools that read each game's package.": {
-      "comment": "SetupCheck.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Builds the engine's tools that read each game's package."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compila gli strumenti del motore che leggono il pacchetto di ogni gioco."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compile les outils du moteur qui lisent les paquets de chaque jeu."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erstellt die Engine-Werkzeuge zum Lesen der Spielpakete."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compila las herramientas del motor que leen los paquetes de cada juego."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compila as ferramentas da engine que leem o pacote de cada jogo."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "构建引擎用于读取每个游戏包的工具。"
-          }
-        }
-      }
-    },
     "Bundle identifier": {
       "comment": "AddGameView+Rows.swift",
       "localizations": {
@@ -13346,53 +13017,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "按键名称"
-          }
-        }
-      }
-    },
-    "By game": {
-      "comment": "SettingsStorageSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "By game"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Per gioco"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Par jeu"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nach Spiel"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Por juego"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Por jogo"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "按游戏"
           }
         }
       }
@@ -14666,53 +14290,6 @@
         }
       }
     },
-    "Changes apply immediately.": {
-      "comment": "Language/region preferences and existing library filters.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Changes apply immediately."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le modifiche si applicano subito."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les modifications s’appliquent immédiatement."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Änderungen gelten sofort."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Los cambios se aplican de inmediato."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "As alterações são aplicadas imediatamente."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "更改立即生效。"
-          }
-        }
-      }
-    },
     "Characters & skins": {
       "comment": "ModCatalog.swift",
       "localizations": {
@@ -15508,53 +15085,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "正在检查"
-          }
-        }
-      }
-    },
-    "Checking Microsoft's hash…": {
-      "comment": "SetupCheckModel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Checking Microsoft's hash…"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verifica dell’hash di Microsoft…"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vérification de l’empreinte fournie par Microsoft…"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hash von Microsoft wird geprüft …"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Comprobando el hash de Microsoft…"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verificando o hash da Microsoft…"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在检查 Microsoft 的哈希值…"
           }
         }
       }
@@ -16875,53 +16405,6 @@
         }
       }
     },
-    "Choose how dates and numbers are displayed.": {
-      "comment": "Language/region preferences and existing library filters.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose how dates and numbers are displayed."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scegli come visualizzare date e numeri."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choisir le format d’affichage des dates et des nombres."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wähle, wie Datumsangaben und Zahlen angezeigt werden."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Elige cómo se muestran las fechas y los números."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Escolha como as datas e os números são exibidos."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "选择日期和数字的显示方式。"
-          }
-        }
-      }
-    },
     "Choose one NUP file on its own: it holds the whole game.": {
       "comment": "EnginePackageReader.swift:39",
       "localizations": {
@@ -16965,53 +16448,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "单独选择一个 NUP 文件：它包含整个游戏。"
-          }
-        }
-      }
-    },
-    "Choose region": {
-      "comment": "Language/region preferences and existing library filters.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose region"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scegli zona"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choisir une région"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Region auswählen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Elegir región"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Escolher região"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "选择地区"
           }
         }
       }
@@ -20447,53 +19883,6 @@
         }
       }
     },
-    "Could not read the library: %@": {
-      "comment": "AppViewModel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Could not read the library: %@"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Impossibile leggere la libreria: %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Impossible de lire la bibliothèque : %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Bibliothek konnte nicht gelesen werden: %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se ha podido leer la biblioteca: %@"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Não foi possível ler a biblioteca: %@"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "无法读取游戏库：%@"
-          }
-        }
-      }
-    },
     "Could not read this folder": {
       "comment": "AddGameView+Rows.swift",
       "localizations": {
@@ -20678,100 +20067,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "无法在 %@ 中保存所选项。"
-          }
-        }
-      }
-    },
-    "Could not save the library: %@": {
-      "comment": "AppViewModel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Could not save the library: %@"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Impossibile salvare la libreria: %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Impossible d’enregistrer la bibliothèque : %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Bibliothek konnte nicht gespeichert werden: %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se ha podido guardar la biblioteca: %@"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Não foi possível salvar a biblioteca: %@"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "无法保存游戏库：%@"
-          }
-        }
-      }
-    },
-    "Could not update the library: %@": {
-      "comment": "AppViewModel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Could not update the library: %@"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Impossibile aggiornare la libreria: %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Impossible de mettre à jour la bibliothèque : %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Bibliothek konnte nicht aktualisiert werden: %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se ha podido actualizar la biblioteca: %@"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Não foi possível atualizar a biblioteca: %@"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "无法更新游戏库：%@"
           }
         }
       }
@@ -22045,52 +21340,6 @@
         }
       }
     },
-    "Delete cache for %@?": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delete cache for %@?"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eliminare la cache di %@?"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Supprimer le cache de %@ ?"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cache für %@ löschen?"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "¿Eliminar la caché de %@?"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Excluir o cache de %@?"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "删除 %@ 的缓存？"
-          }
-        }
-      }
-    },
     "Delete logs?": {
       "comment": "SettingsStorageSection.swift",
       "localizations": {
@@ -22678,53 +21927,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "描述语言：%@。"
-          }
-        }
-      }
-    },
-    "Description language unavailable.": {
-      "comment": "Language/region preferences and existing library filters.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Description language unavailable."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lingua della descrizione non disponibile."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Langue de la description indisponible."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Beschreibungssprache nicht verfügbar."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Idioma de la descripción no disponible."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Idioma da descrição indisponível."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "描述语言不可用。"
           }
         }
       }
@@ -23326,53 +22528,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "开发副本 · 仅限手动检查"
-          }
-        }
-      }
-    },
-    "Development library unavailable": {
-      "comment": "Development profile bootstrap; do not expose credential values.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Development library unavailable"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Libreria di sviluppo non disponibile"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bibliothèque de développement indisponible"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Entwicklungsbibliothek nicht verfügbar"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Biblioteca de desarrollo no disponible"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Biblioteca de desenvolvimento indisponível"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "开发版游戏库不可用"
           }
         }
       }
@@ -25210,53 +24365,6 @@
         }
       }
     },
-    "Engine %@ nxnative main %@ (%@); builds are recorded as untested.": {
-      "comment": "AppViewModel+NewestEngine.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Engine %@ nxnative main %@ (%@); builds are recorded as untested."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Motore %@ nxnative main %@ (%@); le compilazioni sono registrate come non testate."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Moteur %@ nxnative main %@ (%@) ; les compilations sont enregistrées comme non testées."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Engine %@ nxnative main %@ (%@); Builds werden als ungetestet erfasst."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Motor %@ nxnative main %@ (%@); las compilaciones se registran como no probadas."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Engine %@ nxnative main %@ (%@); as compilações são registradas como não testadas."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "引擎 %@ nxnative main %@（%@）；构建将被记录为未经测试。"
-          }
-        }
-      }
-    },
     "Engine back to the tested %@.": {
       "comment": "AppViewModel+NewestEngine.swift",
       "localizations": {
@@ -25535,53 +24643,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "引擎已从 %@ 更新到 nxnative main %@（%@）；构建将被记录为未经测试。"
-          }
-        }
-      }
-    },
-    "English description shown.": {
-      "comment": "Language/region preferences and existing library filters.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "English description shown."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "È mostrata la descrizione in inglese."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Description affichée en anglais."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Englische Beschreibung wird angezeigt."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Se muestra la descripción en inglés."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Descrição em inglês exibida."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "显示的是英文描述。"
           }
         }
       }
@@ -27884,100 +26945,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "跟随"
-          }
-        }
-      }
-    },
-    "Follow the Mac’s preferred languages. Game language stays separate.": {
-      "comment": "Language/region preferences and existing library filters.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Follow the Mac’s preferred languages. Game language stays separate."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Segue le lingue preferite del Mac. La lingua dei giochi resta separata."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Suivre les langues préférées du Mac. La langue des jeux reste indépendante."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Den bevorzugten Sprachen des Macs folgen. Die Spielsprache bleibt separat."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sigue los idiomas preferidos del Mac. El idioma del juego se configura por separado."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Segue os idiomas preferidos do Mac. O idioma dos jogos continua separado."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "跟随 Mac 的首选语言。游戏语言单独设置。"
-          }
-        }
-      }
-    },
-    "Formats follow this region; online descriptions follow the app language.": {
-      "comment": "Language/region preferences and existing library filters.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Formats follow this region; online descriptions follow the app language."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I formati seguono questa zona; le descrizioni online seguono la lingua dell’app."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les formats suivent cette région ; les descriptions en ligne suivent la langue de l’app."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Formate richten sich nach dieser Region; Online-Beschreibungen nach der App-Sprache."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Los formatos siguen esta región; las descripciones en línea siguen el idioma de la app."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Os formatos seguem esta região; as descrições on-line seguem o idioma do app."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "格式跟随此地区；在线描述跟随 App 语言。"
           }
         }
       }
@@ -30939,53 +29906,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "游戏正在运行"
-          }
-        }
-      }
-    },
-    "Game sources": {
-      "comment": "Steam source management and native Mac library presentation.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Game sources"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fonti"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sources de jeux"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spielequellen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fuentes de juegos"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fontes de jogos"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "游戏源文件"
           }
         }
       }
@@ -36488,53 +35408,6 @@
         }
       }
     },
-    "Keep a copy of your current progress.": {
-      "comment": "SavesPanel.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keep a copy of your current progress."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Conserva una copia dei tuoi progressi attuali."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Conserver une copie de votre progression actuelle."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eine Kopie deines aktuellen Fortschritts sichern."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Guarda una copia de tu progreso actual."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mantenha uma cópia do seu progresso atual."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "保留一份当前进度的副本。"
-          }
-        }
-      }
-    },
     "Keep editing": {
       "comment": "AddGameView.swift",
       "localizations": {
@@ -39448,53 +38321,6 @@
         }
       }
     },
-    "Looking on Title DB and GameTDB…": {
-      "comment": "ChangeMetadataView.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Looking on Title DB and GameTDB…"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ricerca su Title DB e GameTDB…"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recherche sur Title DB et GameTDB…"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Title DB und GameTDB werden durchsucht …"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Buscando en Title DB y GameTDB…"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Buscando no Title DB e no GameTDB…"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在 Title DB 和 GameTDB 上查找…"
-          }
-        }
-      }
-    },
     "Looking…": {
       "comment": "SpotlightCardInfoView.swift",
       "localizations": {
@@ -40478,53 +39304,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "MetalFX 放大"
-          }
-        }
-      }
-    },
-    "Microsoft's release list has no .NET 10 SDK installer for this Mac.": {
-      "comment": "DotnetRelease.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Microsoft's release list has no .NET 10 SDK installer for this Mac."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L’elenco delle versioni di Microsoft non contiene un programma di installazione dell’SDK .NET 10 per questo Mac."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La liste des versions de Microsoft ne contient aucun programme d’installation du SDK .NET 10 pour ce Mac."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Microsofts Veröffentlichungsliste enthält kein Installationsprogramm für das .NET 10 SDK für diesen Mac."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La lista de versiones de Microsoft no contiene un instalador del SDK de .NET 10 para este Mac."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A lista de versões da Microsoft não tem um instalador do SDK do .NET 10 para este Mac."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Microsoft 的发布列表中没有适用于这台 Mac 的 .NET 10 SDK 安装器。"
           }
         }
       }
@@ -42311,53 +41090,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Arcane 无法保存你的游戏库，因此退出时可能会丢失最近的更改："
-          }
-        }
-      }
-    },
-    "Arcane downloads Microsoft's installer; macOS asks for your password.": {
-      "comment": "SetupCheck.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arcane downloads Microsoft's installer; macOS asks for your password."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arcane scarica il programma di installazione di Microsoft; macOS chiede la tua password."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arcane télécharge le programme d’installation de Microsoft ; macOS vous demande votre mot de passe."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arcane lädt das Installationsprogramm von Microsoft; macOS fragt nach deinem Passwort."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arcane descarga el instalador de Microsoft; macOS pide tu contraseña."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O Arcane baixa o instalador da Microsoft; o macOS pede sua senha."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arcane 会下载 Microsoft 的安装器；macOS 会要求输入你的密码。"
           }
         }
       }
@@ -47720,53 +46452,6 @@
         }
       }
     },
-    "One sync choice for all games, applied at next launch: Off, iCloud Drive or a folder you choose.": {
-      "comment": "SettingsCatalog.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "One sync choice for all games, applied at next launch: Off, iCloud Drive or a folder you choose."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Un’unica scelta di sincronizzazione per tutti i giochi, applicata al prossimo avvio: Disattivo, iCloud Drive o una cartella a tua scelta."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Un choix de synchronisation pour tous les jeux, appliqué au prochain lancement : Désactivé, iCloud Drive ou un dossier de votre choix."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eine Synchronisierungswahl für alle Spiele, angewendet beim nächsten Spielstart: Aus, iCloud Drive oder ein selbst gewählter Ordner."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Una opción de sincronización para todos los juegos, aplicada en el próximo inicio: Desactivado, iCloud Drive o una carpeta que elijas."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Uma opção de sincronização para todos os jogos, aplicada na próxima abertura: Desativado, iCloud Drive ou uma pasta à sua escolha."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "所有游戏使用同一同步选项，下次启动时生效：关、iCloud 云盘或你选择的文件夹。"
-          }
-        }
-      }
-    },
     "One update at a time; bundled DLC stay together.": {
       "comment": "AddGameView+Rows.swift",
       "localizations": {
@@ -48327,53 +47012,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "打开配置，检查 nxnative 引擎卡片。"
-          }
-        }
-      }
-    },
-    "Open Setup and install the .NET 10 SDK.": {
-      "comment": "PortingFailureReason.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open Setup and install the .NET 10 SDK."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apri Configurazione e installa l’SDK .NET 10."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ouvrez Configuration et installez le SDK .NET 10."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Öffne die Einrichtung und installiere das .NET 10 SDK."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Abre Configuración inicial e instala el SDK de .NET 10."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Abra Configuração e instale o SDK do .NET 10."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "打开配置，安装 .NET 10 SDK。"
           }
         }
       }
@@ -49784,53 +48422,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "顺序、文件夹、移除"
-          }
-        }
-      }
-    },
-    "Order: %@": {
-      "comment": "Achievements screen, VoiceOver: the current list order, e.g. \"Order: Rarest first\".",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Order: %@"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ordine: %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ordre : %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reihenfolge: %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Orden: %@"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ordem: %@"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "顺序：%@"
           }
         }
       }
@@ -51944,53 +50535,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "正在准备 App 图标。准备好后游戏就会启动。大型游戏可能需要一分钟。"
-          }
-        }
-      }
-    },
-    "Preparing your development library": {
-      "comment": "Development profile bootstrap; do not expose credential values.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preparing your development library"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preparazione della libreria di sviluppo"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Préparation de votre bibliothèque de développement"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Entwicklungsbibliothek wird vorbereitet"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preparando tu biblioteca de desarrollo"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preparando sua biblioteca de desenvolvimento"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在准备你的开发版游戏库"
           }
         }
       }
@@ -54674,53 +53218,6 @@
         }
       }
     },
-    "Remove this %@?": {
-      "comment": "ThemePickerView.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Remove this %@?"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rimuovere questo elemento (%@)?"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Supprimer cet élément (%@) ?"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ entfernen?"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "¿Eliminar este %@?"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Remover este item: %@?"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "移除此%@？"
-          }
-        }
-      }
-    },
     "Remove this picture?": {
       "comment": "ThemePickerView.swift:828",
       "localizations": {
@@ -56529,53 +55026,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "显示最新的构建日志。"
-          }
-        }
-      }
-    },
-    "Revert to the Mac’s region.": {
-      "comment": "Language/region preferences and existing library filters.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Revert to the Mac’s region."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ripristina la zona del Mac."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rétablir la région du Mac."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zur Region des Macs zurückkehren."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Volver a la región del Mac."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Voltar à região do Mac."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "恢复为 Mac 的地区。"
           }
         }
       }
@@ -69692,53 +68142,6 @@
         }
       }
     },
-    "The selected update is played as the whole game. If the game stops on ": {
-      "comment": "AddGameView+Rows.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The selected update is played as the whole game. If the game stops on "
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L’aggiornamento selezionato viene eseguito come gioco completo. Se il gioco si interrompe per "
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La mise à jour sélectionnée est exécutée comme le jeu complet. Si le jeu s’interrompt en raison de "
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Das ausgewählte Update wird als vollständiges Spiel ausgeführt. Wenn das Spiel abbricht wegen "
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La actualización seleccionada se ejecuta como el juego completo. Si el juego se detiene en "
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A atualização selecionada é usada como jogo completo. Se o jogo parar em "
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "所选更新会作为完整游戏运行。如果游戏因"
-          }
-        }
-      }
-    },
     "The selected update is played as the whole game. If the game stops on missing files, add the base game’s dump (base/exefs and base/romfs).": {
       "comment": "AddGameView+Rows.swift:72",
       "localizations": {
@@ -69876,53 +68279,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "着色器转换器未运行"
-          }
-        }
-      }
-    },
-    "The shader translator needs the .NET 10 runtime for this Mac.": {
-      "comment": "PortingFailureReason.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The shader translator needs the .NET 10 runtime for this Mac."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Il traduttore degli shader richiede il runtime .NET 10 per questo Mac."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le traducteur de shaders nécessite l’environnement d’exécution .NET 10 pour ce Mac."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Der Shader-Übersetzer benötigt die .NET 10-Laufzeit für diesen Mac."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "El traductor de shaders necesita el entorno de ejecución de .NET 10 para este Mac."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O tradutor de shaders precisa do runtime do .NET 10 para este Mac."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "着色器转换器需要适用于这台 Mac 的 .NET 10 运行时。"
           }
         }
       }
@@ -70346,53 +68702,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "无法验证更新归档；未做任何更改。"
-          }
-        }
-      }
-    },
-    "The update can install %@.": {
-      "comment": "AppUpdateDialog.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The update can install %@."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L’aggiornamento può installare %@."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La mise à jour peut installer %@."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Das Update kann zu folgendem Zeitpunkt installiert werden: %@."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La actualización puede instalar %@."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A atualização pode instalar %@."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "此更新可以安装 %@。"
           }
         }
       }
@@ -71568,53 +69877,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "此构建没有 %@ 设置。"
-          }
-        }
-      }
-    },
-    "This changes Arcane, not the language inside your games.": {
-      "comment": "Language/region preferences and existing library filters.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This changes Arcane, not the language inside your games."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Modifica Arcane, non la lingua all’interno dei giochi."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ce réglage modifie Arcane, pas la langue dans vos jeux."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dies ändert Arcane, nicht die Sprache in deinen Spielen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esto cambia Arcane, no el idioma de tus juegos."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Isso altera o Arcane, não o idioma dentro dos seus jogos."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "这会更改 Arcane 的语言，而不是游戏内的语言。"
           }
         }
       }
@@ -80492,53 +78754,6 @@
         }
       }
     },
-    "picture": {
-      "comment": "Display copy only; internal values and paths remain unchanged.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "picture"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "immagine"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "image"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bild"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "imagen"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "imagem"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "图片"
-          }
-        }
-      }
-    },
     "prod.keys": {
       "comment": "SettingsEngineSection.swift",
       "localizations": {
@@ -80821,53 +79036,6 @@
         }
       }
     },
-    "switched to": {
-      "comment": "AppViewModel+NewestEngine.swift:69",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "switched to"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "passato a"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "basculé vers"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "gewechselt zu"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "cambiado a"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "trocada para"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已切换到"
-          }
-        }
-      }
-    },
     "tab": {
       "comment": "ButtonPrompts.swift",
       "localizations": {
@@ -81099,53 +79267,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "该游戏"
-          }
-        }
-      }
-    },
-    "the game’s files": {
-      "comment": "Display copy only; internal values and paths remain unchanged.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "the game’s files"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "i file del gioco"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "les fichiers du jeu"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "die Dateien des Spiels"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "los archivos del juego"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "os arquivos do jogo"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "游戏文件"
           }
         }
       }
@@ -81475,53 +79596,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "未知错误"
-          }
-        }
-      }
-    },
-    "updated from %@ to": {
-      "comment": "AppViewModel+NewestEngine.swift:69",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "updated from %@ to"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "aggiornato da %@ a"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "mis à jour de %@ vers"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "von %@ aktualisiert auf"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "actualizado de %@ a"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "atualizada de %@ para"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已从 %@ 更新到"
           }
         }
       }
@@ -81992,53 +80066,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "◂ ▸  移动"
-          }
-        }
-      }
-    },
-    "%@ via Wikidata": {
-      "comment": "Critic score in Details: referenced aggregate via Wikidata; not a personal rating.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ via Wikidata"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ tramite Wikidata"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ via Wikidata"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ über Wikidata"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ a través de Wikidata"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ via Wikidata"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@，来自 Wikidata"
           }
         }
       }
@@ -83731,382 +81758,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "正在查找元数据…"
-          }
-        }
-      }
-    },
-    "Saved IGDB information · refresh unavailable": {
-      "comment": "Change metadata: optional IGDB source preview, status or retry.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Saved IGDB information · refresh unavailable"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dati IGDB salvati · aggiornamento non disponibile"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Données IGDB enregistrées · actualisation indisponible"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gespeicherte IGDB-Daten · Aktualisierung nicht verfügbar"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Datos IGDB guardados · actualización no disponible"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dados IGDB salvos · atualização indisponível"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已保存的 IGDB 信息 · 无法刷新"
-          }
-        }
-      }
-    },
-    "No matching IGDB game for this platform.": {
-      "comment": "Change metadata: optional IGDB source preview, status or retry.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No matching IGDB game for this platform."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nessun gioco IGDB corrispondente per questa piattaforma."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aucun jeu IGDB correspondant pour cette plateforme."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kein passendes IGDB-Spiel für diese Plattform."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No hay un juego IGDB coincidente para esta plataforma."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nenhum jogo IGDB correspondente para esta plataforma."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "没有与此平台匹配的 IGDB 游戏。"
-          }
-        }
-      }
-    },
-    "Multiple IGDB matches · no game chosen automatically.": {
-      "comment": "Change metadata: optional IGDB source preview, status or retry.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Multiple IGDB matches · no game chosen automatically."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Più risultati IGDB · nessun gioco scelto automaticamente."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Plusieurs résultats IGDB · aucun jeu choisi automatiquement."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mehrere IGDB-Treffer · kein Spiel automatisch ausgewählt."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Varios resultados IGDB · no se eligió ningún juego automáticamente."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vários resultados IGDB · nenhum jogo escolhido automaticamente."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "有多个 IGDB 匹配项 · 未自动选择游戏。"
-          }
-        }
-      }
-    },
-    "IGDB unavailable · other sources remain available.": {
-      "comment": "Change metadata: optional IGDB source preview, status or retry.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB unavailable · other sources remain available."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB non disponibile · le altre fonti restano accessibili."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB indisponible · les autres sources restent accessibles."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB nicht verfügbar · andere Quellen bleiben verfügbar."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB no disponible · las demás fuentes siguen disponibles."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB indisponível · as outras fontes continuam disponíveis."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB 不可用 · 其他来源仍可使用。"
-          }
-        }
-      }
-    },
-    "IGDB has no value for this field.": {
-      "comment": "Change metadata: optional IGDB source preview, status or retry.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB has no value for this field."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB non ha dati per questo campo."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB ne propose aucune valeur pour ce champ."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB hat keinen Wert für dieses Feld."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB no tiene datos para este campo."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O IGDB não tem dados para este campo."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB 中此字段没有值。"
-          }
-        }
-      }
-    },
-    "IGDB descriptions are shown in their original language.": {
-      "comment": "Change metadata: optional IGDB source preview, status or retry.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB descriptions are shown in their original language."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le descrizioni IGDB sono mostrate nella lingua originale."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les descriptions IGDB sont affichées dans leur langue d’origine."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB-Beschreibungen werden in der Originalsprache angezeigt."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Las descripciones de IGDB se muestran en su idioma original."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "As descrições do IGDB são exibidas no idioma original."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB 的描述以原始语言显示。"
-          }
-        }
-      }
-    },
-    "IGDB: %@": {
-      "comment": "Change metadata: optional IGDB source preview, status or retry.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB: %@"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB: %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB: %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB: %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB: %@"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB: %@"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB: %@"
-          }
-        }
-      }
-    },
-    "Retry IGDB": {
-      "comment": "Change metadata: optional IGDB source preview, status or retry.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Retry IGDB"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Riprova IGDB"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Réessayer IGDB"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "IGDB erneut versuchen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reintentar IGDB"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tentar IGDB novamente"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "重试 IGDB"
           }
         }
       }
@@ -86050,53 +83701,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "新移植游戏中的振动"
-          }
-        }
-      }
-    },
-    "Applied before each game starts, including Off. Custom save-sync overrides are reported in Saves.": {
-      "comment": "SettingsGamesSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Applied before each game starts, including Off. Custom save-sync overrides are reported in Saves."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Applicato prima di ogni avvio, anche se disattivato. Le impostazioni personalizzate che prevalgono sulla sincronizzazione dei salvataggi sono indicate in Salvataggi."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Appliqué avant chaque démarrage de jeu, y compris Désactivé. Les réglages personnalisés de synchronisation des sauvegardes sont signalés dans Sauvegardes."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wird vor jedem Spielstart angewendet, auch „Aus“. Eigene Überschreibungen der Spielstandsynchronisierung werden unter „Spielstände“ angezeigt."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Se aplica antes de iniciar cada juego, también al desactivarlo. Las personalizaciones de sincronización de partidas se indican en Partidas guardadas."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aplicado antes de cada jogo iniciar, inclusive Desativado. Substituições personalizadas da sincronização são informadas em Dados salvos."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "在每次游戏启动前应用，包括“关”。自定义的存档同步设置会在“存档”中显示。"
           }
         }
       }
