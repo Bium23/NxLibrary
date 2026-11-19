@@ -33,9 +33,9 @@ public enum WikidataRatings {
             return id
         })).sorted()
     }
-    public static func entitiesURL(ids: [String]) -> URL? {
+    public static func entitiesURL(ids: [String], props: String = "claims") -> URL? {
         guard !ids.isEmpty, ids.count <= 5, ids.allSatisfy(isItemID) else { return nil }
-        return url(["action": "wbgetentities", "ids": ids.joined(separator: "|"), "props": "claims"])
+        return url(["action": "wbgetentities", "ids": ids.joined(separator: "|"), "props": props])
     }
     private static func url(_ values: [String: String]) -> URL? {
         var components = URLComponents(string: "https://www.wikidata.org/w/api.php")!
@@ -59,6 +59,20 @@ public enum WikidataRatings {
     }
     public static func rating(in data: Data, ids: [String], query: CriticRatingQuery,
                               requireSteamID: Bool = false) throws -> CriticRating? {
+        guard let (id, entity) = try entity(in: data, ids: ids, query: query, requireSteamID: requireSteamID),
+              let claims = entity["claims"] as? [String: [[String: Any]]] else { return nil }
+        let ratings = (claims["P444"] ?? []).compactMap { parse($0, entityID: id, platform: query.platform.wikidataID) }
+        return ratings.sorted { a, b in
+            if a.platforms.isEmpty != b.platforms.isEmpty { return !a.platforms.isEmpty }
+            if a.source.priority != b.source.priority { return a.source.priority < b.source.priority }
+            if a.scoreDate != b.scoreDate { return (a.scoreDate ?? "") > (b.scoreDate ?? "") }
+            return (a.statementID ?? "") < (b.statementID ?? "")
+        }.first
+    }
+    /// The one video game among `ids` that the query names: P31 video game, and the Steam app ID when either side has
+    /// one. Shared by ratings and Wikipedia descriptions, so both name the same game.
+    static func entity(in data: Data, ids: [String], query: CriticRatingQuery,
+                       requireSteamID: Bool) throws -> (id: String, entity: [String: Any])? {
         let root = try object(data)
         guard let entities = root["entities"] as? [String: [String: Any]],
               ids.allSatisfy({ entities[$0] != nil }) else { throw URLError(.cannotParseResponse) }
@@ -70,15 +84,8 @@ public enum WikidataRatings {
             if let expected = query.steamAppID, requireSteamID || !steam.isEmpty { return steam.contains(String(expected)) }
             return true
         }
-        guard matched.count == 1, let id = matched.first,
-              let claims = entities[id]?["claims"] as? [String: [[String: Any]]] else { return nil }
-        let ratings = (claims["P444"] ?? []).compactMap { parse($0, entityID: id, platform: query.platform.wikidataID) }
-        return ratings.sorted { a, b in
-            if a.platforms.isEmpty != b.platforms.isEmpty { return !a.platforms.isEmpty }
-            if a.source.priority != b.source.priority { return a.source.priority < b.source.priority }
-            if a.scoreDate != b.scoreDate { return (a.scoreDate ?? "") > (b.scoreDate ?? "") }
-            return (a.statementID ?? "") < (b.statementID ?? "")
-        }.first
+        guard matched.count == 1, let id = matched.first, let entity = entities[id] else { return nil }
+        return (id, entity)
     }
     private static func parse(_ claim: [String: Any], entityID: String, platform: String) -> CriticRating? {
         guard claim["rank"] as? String != "deprecated",
@@ -122,7 +129,7 @@ public enum WikidataRatings {
     private static func claimItems(_ claims: [[String: Any]]) -> [String] {
         claims.filter { $0["rank"] as? String != "deprecated" }.compactMap { ($0["mainsnak"] as? [String: Any]).flatMap(item) }
     }
-    private static func object(_ data: Data) throws -> [String: Any] {
+    static func object(_ data: Data) throws -> [String: Any] {
         guard data.count <= 4_194_304, let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
               root["error"] == nil else { throw URLError(.cannotParseResponse) }
         return root

@@ -17,6 +17,7 @@ extension GameDetailPresentation {
         description = overrides[.description] ?? facts?.description ?? ""
         descriptionIsEnglishFallback = false
         descriptionLanguageNote = nil
+        descriptionLanguage = overrides[.description] != nil ? "custom" : nil
         genres = Self.steamGenres(for: game, metadata: metadata, override: overrides[.genres])
         // Steam's dates are display text in the store's language: shown as given, never re-parsed.
         let release = (overrides[.releaseDate] ?? facts?.releaseDate)?.trimmingCharacters(in: .whitespaces)

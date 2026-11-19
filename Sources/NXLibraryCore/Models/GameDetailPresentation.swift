@@ -8,6 +8,9 @@ public struct GameDetailPresentation: Equatable {
     public let description: String
     public let descriptionIsEnglishFallback: Bool
     public let descriptionLanguageNote: String?
+    /// The store's word on the description's language ("en", "it"), "custom" for the player's own choice, or nil when
+    /// the store does not say (Steam). `WikipediaDescriptions.wanted` reads it with the text.
+    public let descriptionLanguage: String?
     public let genres: [String]
     public let released: String?
     public let developerLine: String?
@@ -41,6 +44,7 @@ public struct GameDetailPresentation: Equatable {
         eyebrow = Self.eyebrow(from: metadata?.name ?? "")
         description = metadata?.description ?? ""
         descriptionIsEnglishFallback = L10n.context.metadataLanguage != "en" && metadata?.descriptionLanguage == "en" && !description.isEmpty
+        descriptionLanguage = metadata?.descriptionLanguage
         if let language = metadata?.descriptionLanguage, language != "custom",
            language != L10n.context.metadataLanguage, !description.isEmpty {
             let name = L10n.context.formatLocale.localizedString(forLanguageCode: language) ?? language

@@ -27372,6 +27372,53 @@
         }
       }
     },
+    "From Wikipedia, CC BY-SA.": {
+      "comment": "About this game: credit under a description taken from Wikipedia, which opens the article; CC BY-SA is the licence name and stays as is",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From Wikipedia, CC BY-SA."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da Wikipedia, CC BY-SA."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Depuis Wikipédia, CC BY-SA."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus Wikipedia, CC BY-SA."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De Wikipedia, CC BY-SA."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da Wikipédia, CC BY-SA."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来自维基百科，CC BY-SA。"
+          }
+        }
+      }
+    },
     "From file…": {
       "comment": "ChangeArtworkView.swift:450",
       "localizations": {
@@ -29483,6 +29530,53 @@
           "stringUnit": {
             "state": "translated",
             "value": "实用工具"
+          }
+        }
+      }
+    },
+    "Game introductions in your language (CC BY-SA)": {
+      "comment": "About \u2192 credits: what Wikipedia provides; CC BY-SA is the licence name and stays as is",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Game introductions in your language (CC BY-SA)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduzioni dei giochi nella tua lingua (CC BY-SA)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Présentations des jeux dans votre langue (CC BY-SA)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spieleinführungen in deiner Sprache (CC BY-SA)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introducciones de los juegos en tu idioma (CC BY-SA)"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduções dos jogos no seu idioma (CC BY-SA)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以你的语言显示的游戏简介（CC BY-SA）"
           }
         }
       }

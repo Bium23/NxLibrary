@@ -76,6 +76,8 @@ struct SpotlightDescription: View {
     @Environment(\.seleneCanvas) private var canvas
     let text: String
     var languageNote: String? = nil
+    /// The page `text` comes from, when it is Wikipedia's (`WikipediaCredit`).
+    var wikipediaPage: URL? = nil
     let excerpt: DescriptionExcerpt
     let expanded: Bool
     let focused: Bool
@@ -86,7 +88,9 @@ struct SpotlightDescription: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             DetailsBandTitle(text: L10n.text("About this game"))
-            if let languageNote {
+            if let wikipediaPage {
+                WikipediaCredit(pageURL: wikipediaPage).padding(.bottom, canvas.u(8))
+            } else if let languageNote {
                 Text(languageNote).seleneFont(14).foregroundColor(SeleneTheme.ink60)
                     .padding(.bottom, canvas.u(8))
             }

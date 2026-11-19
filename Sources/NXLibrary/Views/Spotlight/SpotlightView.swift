@@ -70,6 +70,8 @@ public struct SpotlightView: View {
     @State var aboutExpanded = false
     /// About this game shows Read more, as last drawn (`SpotlightReadMoreKey`).
     @State var aboutReadMore = false
+    /// Wikipedia's introduction for the selected page, when its store text is in another language (`WikipediaAbout`).
+    @State var wikipediaAbout: WikipediaAbout?
     /// The selected game's Mods band (installed mods, GameBanana's, their panels); shared with Details.
     @StateObject var modsHost = ModsBandHost()
     /// The Mods card's store, below the card.
@@ -958,7 +960,17 @@ public struct SpotlightView: View {
 
     /// About this game's cut for the page, as tall as the column beside it.
     func aboutExcerpt(_ page: SpotlightPageModel) -> DescriptionExcerpt {
-        SpotlightDescription.excerpt(page.presentation.description, columnHeight: blocks[.column] ?? 0, canvas: canvas)
+        SpotlightDescription.excerpt(aboutWikipedia(page)?.text ?? page.presentation.description,
+                                     columnHeight: blocks[.column] ?? 0, canvas: canvas)
+    }
+
+    func aboutLookup(_ page: SpotlightPageModel) -> WikipediaAboutLookup? {
+        WikipediaAboutLookup(presentation: page.presentation, query: selectedRatingQuery)
+    }
+
+    /// The selected page's Wikipedia text, once it has arrived for this game and language.
+    func aboutWikipedia(_ page: SpotlightPageModel) -> WikipediaDescription? {
+        wikipediaAbout?.matching(aboutLookup(page))
     }
 
     /// The page's glide: one slow, soft curve (1 s, long ease out) for the whole screen.
@@ -1108,11 +1120,19 @@ public struct SpotlightView: View {
                                              @ViewBuilder panel: () -> Panel) -> some View {
         HStack(alignment: .top, spacing: 0) {
             let excerpt = aboutExcerpt(page)
-            SpotlightDescription(text: page.presentation.description, languageNote: page.presentation.descriptionLanguageNote, excerpt: excerpt,
+            let wikipedia = aboutWikipedia(page)
+            SpotlightDescription(text: wikipedia?.text ?? page.presentation.description,
+                                 languageNote: wikipedia == nil ? page.presentation.descriptionLanguageNote : nil,
+                                 wikipediaPage: wikipedia?.pageURL, excerpt: excerpt,
                                  expanded: aboutExpanded, focused: state.focus == .about,
                                  onToggle: { aboutExpanded.toggle() })
                 .spotlightBlock(.about)
                 .preference(key: SpotlightReadMoreKey.self, value: excerpt.truncated)
+                .task(id: aboutLookup(page)) {
+                    guard let lookup = aboutLookup(page) else { return }
+                    guard let found = await lookup.load() else { return }
+                    wikipediaAbout = WikipediaAbout(lookup: lookup, description: found)
+                }
             Spacer(minLength: 0)
             VStack(alignment: .leading, spacing: canvas.u(40)) {
                 if let summary = selectedAchievements, let appID = selectedCatalogGame?.steamGame?.appID {

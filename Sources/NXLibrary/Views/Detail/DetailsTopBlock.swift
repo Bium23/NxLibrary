@@ -22,6 +22,8 @@ struct DetailsTopBlock: View {
     let primaryEnabled: Bool
     /// Description expanded by "Read more" (the page passes wheel scrolling through meanwhile).
     @Binding var expanded: Bool
+    /// Wikipedia's introduction, shown instead of a store text in another language (`WikipediaAbout`).
+    var wikipedia: WikipediaDescription? = nil
     let onPrimary: () -> Void
     let onSecondary: () -> Void
     let onFavorite: () -> Void
@@ -218,14 +220,16 @@ struct DetailsTopBlock: View {
 
     @ViewBuilder
     private var description: some View {
-        let text = presentation.description
+        let text = wikipedia?.text ?? presentation.description
         VStack(alignment: .leading, spacing: canvas.u(6)) {
             if text.isEmpty {
                 Text(L10n.text("No description for this game yet."))
                     .seleneFont(17)
                     .foregroundColor(SeleneTheme.ink60)
             } else {
-                if let note = presentation.descriptionLanguageNote {
+                if let wikipedia {
+                    WikipediaCredit(pageURL: wikipedia.pageURL)
+                } else if let note = presentation.descriptionLanguageNote {
                     Text(note).seleneFont(14).foregroundColor(SeleneTheme.ink60)
                 }
                 if expanded {

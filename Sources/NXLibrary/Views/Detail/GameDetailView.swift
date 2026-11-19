@@ -33,6 +33,8 @@ struct GameDetailView: View {
     @State var viewer: ViewerContext?
     /// "Read more" is open: the description scrolls, and the wheel scrolls it rather than the bands.
     @State var expanded = false
+    /// Wikipedia's introduction when the store text is in another language (`WikipediaAbout`).
+    @State var wikipediaAbout: WikipediaAbout?
     @State var keyMonitor: Any?
     @State var wheel = DetailsWheel()
     @State var cache = DetailsModelCache()
@@ -237,6 +239,10 @@ struct GameDetailView: View {
         currentModel.mods == nil ? 0 : DetailsModsBand.extraHeight(tileCount: modsHost.tiles.count)
     }
 
+    private func aboutLookup(_ model: Model) -> WikipediaAboutLookup? {
+        WikipediaAboutLookup(presentation: model.presentation, query: CriticRatingQuery(game: game, name: metadata?.name))
+    }
+
     private func page(_ model: Model) -> some View {
         ZStack(alignment: .topLeading) {
             DetailsTopBlock(game: game, logo: art.logo(for: game),
@@ -246,6 +252,7 @@ struct GameDetailView: View {
                             focusedPill: focus.zone == DetailsFocus.topZone ? focus.pill : nil,
                             primaryEnabled: model.primaryEnabled,
                             expanded: $expanded,
+                            wikipedia: wikipediaAbout?.matching(aboutLookup(model)),
                             onPrimary: { pressPill(0) },
                             onSecondary: { pressPill(1) },
                             onFavorite: { pressPill(2) },
@@ -255,6 +262,10 @@ struct GameDetailView: View {
                             onPill: { pressPill($0) },
                             onOpenLog: { viewModel.revealLog(for: game) })
                 .offset(x: canvas.u(110), y: canvas.u(96))
+                .task(id: aboutLookup(model)) {
+                    guard let lookup = aboutLookup(model), let found = await lookup.load() else { return }
+                    wikipediaAbout = WikipediaAbout(lookup: lookup, description: found)
+                }
 
             band(zone: DetailsFocus.screenshotsZone) {
                 DetailsScreenshotsBand(

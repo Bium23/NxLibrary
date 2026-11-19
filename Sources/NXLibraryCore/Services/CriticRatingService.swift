@@ -136,7 +136,8 @@ public actor CriticRatingService {
         func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
                         newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) { completionHandler(nil) }
     }
-    private static let session: URLSession = {
+    /// Ephemeral, one connection per host, no redirects: shared with `WikipediaDescriptionService`.
+    static let session: URLSession = {
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForResource = 20
         config.timeoutIntervalForRequest = 12

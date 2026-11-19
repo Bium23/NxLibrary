@@ -28,6 +28,7 @@ struct SettingsAboutSection: View {
         ("TheGamesDB", L10n.text("Community metadata and game artwork"), "https://thegamesdb.net"),
         ("SteamGridDB", L10n.text("Community covers, backgrounds, logos and icons, with your API key"), "https://www.steamgriddb.com"),
         ("IGDB", L10n.text("Critic scores with your own credentials"), "https://www.igdb.com"),
+        ("Wikipedia", L10n.text("Game introductions in your language (CC BY-SA)"), "https://www.wikipedia.org"),
         ("NX2Apple", L10n.text("Key check, failure explanations and diagnostics, adapted (MIT)"), "https://github.com/LNPANDY/NX2Apple")
     ]
 
