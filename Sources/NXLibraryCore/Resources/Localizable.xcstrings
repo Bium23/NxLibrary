@@ -2821,53 +2821,6 @@
         }
       }
     },
-    "%@ lines": {
-      "comment": "BuildLiveLogsDrawer.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ lines"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ righe"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ lignes"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ Zeilen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ líneas"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ linhas"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ 行"
-          }
-        }
-      }
-    },
     "%@ min": {
       "comment": "PortingPresentation.swift",
       "localizations": {
@@ -12739,53 +12692,6 @@
         }
       }
     },
-    "Build stages": {
-      "comment": "BuildStageStepperView.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Build stages"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fasi di compilazione"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Étapes de compilation"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Build-Phasen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Etapas de compilación"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Etapas da compilação"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "构建阶段"
-          }
-        }
-      }
-    },
     "Build started for %@ (%@).": {
       "comment": "AppViewModel.swift",
       "localizations": {
@@ -14807,53 +14713,6 @@
         }
       }
     },
-    "Change…": {
-      "comment": "DropZoneView.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Change…"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cambia…"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Modifier…"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ändern …"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cambiar…"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alterar…"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "更改…"
-          }
-        }
-      }
-    },
     "Characters & skins": {
       "comment": "ModCatalog.swift",
       "localizations": {
@@ -16542,53 +16401,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "选择一个游戏文件，或稍后再添加。"
-          }
-        }
-      }
-    },
-    "Choose a game folder": {
-      "comment": "DropZoneView.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose a game folder"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scegli una cartella di gioco"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choisir un dossier de jeu"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spielordner auswählen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Elegir una carpeta de juego"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Escolher uma pasta de jogo"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "选择游戏文件夹"
           }
         }
       }
@@ -24642,100 +24454,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "放下即可添加这些文件"
-          }
-        }
-      }
-    },
-    "Drop to scan this folder": {
-      "comment": "DropZoneView.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Drop to scan this folder"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rilascia per analizzare questa cartella"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Déposez pour analyser ce dossier"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ablegen, um diesen Ordner zu durchsuchen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Suelta para analizar esta carpeta"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Solte para examinar esta pasta"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "放下即可扫描此文件夹"
-          }
-        }
-      }
-    },
-    "Drop your game files here": {
-      "comment": "DropZoneView.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Drop your game files here"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Trascina qui i file del gioco"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Déposez les fichiers du jeu ici"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lege deine Spieldateien hier ab"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Suelta aquí tus archivos de juegos"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Solte os arquivos do jogo aqui"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "将你的游戏文件拖到这里"
           }
         }
       }
@@ -39072,53 +38790,6 @@
         }
       }
     },
-    "Live output": {
-      "comment": "BuildLiveLogsDrawer.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Live output"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Output in tempo reale"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sortie en direct"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Live-Ausgabe"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Salida en directo"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Saída em tempo real"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "实时输出"
-          }
-        }
-      }
-    },
     "Loading…": {
       "comment": "ChangeArtworkView.swift:299",
       "localizations": {
@@ -42217,53 +41888,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "NSP · XCI · NSZ · XCZ"
-          }
-        }
-      }
-    },
-    "NSP · XCI · NSZ · folders": {
-      "comment": "DropZoneView.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NSP · XCI · NSZ · folders"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NSP · XCI · NSZ · cartelle"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NSP · XCI · NSZ · dossiers"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NSP · XCI · NSZ · Ordner"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NSP · XCI · NSZ · carpetas"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NSP · XCI · NSZ · pastas"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NSP · XCI · NSZ · 文件夹"
           }
         }
       }
@@ -62266,53 +61890,6 @@
         }
       }
     },
-    "Stage %@: %@": {
-      "comment": "BuildStageStepperView.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stage %@: %@"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fase %@: %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Étape %@ : %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Phase %@: %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Etapa %@: %@"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Etapa %@: %@"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "阶段 %@：%@"
-          }
-        }
-      }
-    },
     "Standard": {
       "comment": "Engine setting option display label.",
       "localizations": {
@@ -65787,53 +65364,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "无法打开备份文件夹。"
-          }
-        }
-      }
-    },
-    "The base game is required. Updates and DLC are optional.": {
-      "comment": "DropZoneView.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The base game is required. Updates and DLC are optional."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Il gioco base è obbligatorio. Aggiornamenti e DLC sono facoltativi."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le jeu de base est requis. Les mises à jour et les DLC sont facultatifs."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Das Basisspiel ist erforderlich. Updates und DLC sind optional."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Se requiere el juego base. Las actualizaciones y los DLC son opcionales."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O jogo base é obrigatório. Atualizações e DLCs são opcionais."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "需要本体游戏。更新和 DLC 为可选。"
           }
         }
       }
@@ -76409,53 +75939,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "正在等待 Steam 启动游戏…"
-          }
-        }
-      }
-    },
-    "Waiting for build output…": {
-      "comment": "BuildLiveLogsDrawer.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Waiting for build output…"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "In attesa dell’output di compilazione…"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En attente de la sortie de compilation…"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Warten auf Build-Ausgabe …"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esperando la salida de la compilación…"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aguardando a saída da compilação…"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在等待构建输出…"
           }
         }
       }

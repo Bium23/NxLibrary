@@ -89,28 +89,3 @@ func seleneShort(_ commit: String?) -> String {
     guard let commit, !commit.isEmpty else { return "unknown" }
     return String(commit.prefix(7))
 }
-
-struct SeleneStatusLine: View {
-    let ok: Bool
-    let title: String
-    let detail: String?
-
-    var body: some View {
-        HStack(spacing: 9) {
-            Image(systemName: ok ? "checkmark.circle.fill" : "xmark.octagon.fill")
-                .seleneFont(15, .bold)
-                .foregroundColor(ok ? SeleneTheme.success : SeleneTheme.danger)
-            Text(title)
-                .seleneFont(15, .semibold)
-                .foregroundColor(SeleneTheme.ink)
-            if let detail {
-                Text(detail)
-                    .seleneFont(13, .regular, design: .monospaced)
-                    .foregroundColor(SeleneTheme.ink60)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-            }
-            Spacer(minLength: 0)
-        }
-    }
-}

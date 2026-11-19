@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 18 novembre 2026. Copertura di **714 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 19 novembre 2026. Copertura di **711 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -528,9 +528,6 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibrary/Views/Components/BuildLiveLogsDrawer.swift](../Sources/NXLibrary/Views/Components/BuildLiveLogsDrawer.swift) | Mostra il log del porting con livelli, scroll sul nuovo contenuto e apertura o chiusura. |
-| [Sources/NXLibrary/Views/Components/BuildStageStepperView.swift](../Sources/NXLibrary/Views/Components/BuildStageStepperView.swift) | Disegna elenco delle fasi e relativo stato di completamento. |
-| [Sources/NXLibrary/Views/Components/DropZoneView.swift](../Sources/NXLibrary/Views/Components/DropZoneView.swift) | Presenta la zona di trascinamento per scegliere le sorgenti del gioco. |
 | [Sources/NXLibrary/Views/Components/GameIconProvider.swift](../Sources/NXLibrary/Views/Components/GameIconProvider.swift) | Fornisce e conserva l’icona estratta dai bundle dei giochi; ricorda anche quando manca. |
 | [Sources/NXLibrary/Views/Components/PortingArtLook.swift](../Sources/NXLibrary/Views/Components/PortingArtLook.swift) | Applica alla tile desaturazione, riempimento e barra di avanzamento del porting. |
 | [Sources/NXLibrary/Views/Components/ScreenshotViewer.swift](../Sources/NXLibrary/Views/Components/ScreenshotViewer.swift) | Mostra screenshot a schermo pieno e navigazione fra le immagini. |
