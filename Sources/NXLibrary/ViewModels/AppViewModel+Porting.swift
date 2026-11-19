@@ -17,6 +17,6 @@ extension AppViewModel {
     /// "About 8 min left" under the Porting pill; nil before the shaders.
     var portingETAText: String? {
         guard isBuilding, let portingProgress else { return nil }
-        return PortingETA.text(portingProgress, lastFinishingSeconds: lastPortingFinishSeconds)
+        return PortingETA.text(portingProgress, lastFinishingSeconds: porting.lastPortingFinishSeconds)
     }
 }

@@ -43,7 +43,7 @@ extension AppViewModel {
                       failure ?? (game.lastBuild != nil ? "succeeded" : nil))
             i.cheats = cheats.cheatDiagnostics(for: game)
         }
-        i.lastCommand = lastPortingCommand
+        i.lastCommand = porting.lastPortingCommand
         let logURL = buildLogURL ?? (lastBuildGameID.flatMap { id in libraryGames.first { $0.id == id } }
             .flatMap { logURL(for: $0) })
         if let logURL, let text = try? String(contentsOf: logURL, encoding: .utf8) {

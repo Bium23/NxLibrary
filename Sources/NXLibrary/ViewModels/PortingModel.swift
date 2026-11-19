@@ -51,6 +51,11 @@ public final class PortingModel: ObservableObject {
 
     init(app: AppViewModel) { self.app = app }
 
+    /// The last porting's command line, for Copy diagnostics (its environment is never kept).
+    var lastPortingCommand: [String] = []
+    /// Set by a failed porting's notification: the next Add game opens on that failure.
+    var reviewsFailureOnAddGame = false
+
     // MARK: - Game Selection
     @Published public var selectedGameFolder: URL? {
         didSet {
@@ -117,7 +122,7 @@ public final class PortingModel: ObservableObject {
     @Published public var scanError: String? = nil
 
     public var availableDiskBytes: Int64? {
-        app.freeBytes(at: selectedGameFolder
+        freeBytes(at: selectedGameFolder
             ?? URL(fileURLWithPath: app.defaultInstallPath.isEmpty
                 ? NSHomeDirectory() : app.defaultInstallPath))
     }
@@ -128,7 +133,7 @@ public final class PortingModel: ObservableObject {
         let name = customName.isEmpty ? selectedGame?.name ?? "Game" : customName
         if var existing = selectedLibraryGame {
             existing.name = name
-            return app.finalAppURL(for: existing)
+            return finalAppURL(for: existing)
         }
         return GameAppDestination.url(name: name, titleId: selectedGame?.titleId, in: app.gameAppsFolder)
     }
@@ -140,8 +145,8 @@ public final class PortingModel: ObservableObject {
     /// The wizard reserves space for both the extracted cache and the temporary
     /// app: the tightest of the folders the build writes to (`BuildScratch`).
     public var availableBuildDiskBytes: Int64? {
-        app.buildFolders(appFolder: selectedBuildAppURL.deletingLastPathComponent(),
-                     workspace: selectedLibraryGame?.workspacePath).compactMap(app.freeBytes(at:)).min()
+        buildFolders(appFolder: selectedBuildAppURL.deletingLastPathComponent(),
+                     workspace: selectedLibraryGame?.workspacePath).compactMap(freeBytes(at:)).min()
     }
 
     public var selectedSources: [GameFileItem] {
@@ -395,7 +400,7 @@ public final class PortingModel: ObservableObject {
         panel.allowsMultipleSelection = false
         panel.directoryURL = selectedGameFolder ?? gameFilesFolder
         panel.prompt = "Choose folder"
-        panel.message = GameFoldersCopy.sourcesPickerMessage(extractedFolders: app.engineSourceCapabilities.extractedFolders)
+        panel.message = GameFoldersCopy.sourcesPickerMessage(extractedFolders: app.setup.engineSourceCapabilities.extractedFolders)
         
         if panel.runModal() == .OK, let url = panel.url {
             if let defaults { startNewAddGame(defaults: defaults) }
@@ -459,8 +464,8 @@ public final class PortingModel: ObservableObject {
             return
         }
         if (returningFromBack || preservingSelection), addGameSessionActive { return }
-        if app.reviewsFailureOnAddGame {
-            app.reviewsFailureOnAddGame = false
+        if reviewsFailureOnAddGame {
+            reviewsFailureOnAddGame = false
             if restoreLastFailure() || self.buildError != nil { return }
         }
         startNewAddGame(defaults: defaults)
@@ -533,7 +538,7 @@ public final class PortingModel: ObservableObject {
             && !app.isCleaningStorage
             && !app.isUpdatingApp
             && self.canAddSelectedGame
-            && app.supportsSources(self.selectedSources)
+            && supportsSources(self.selectedSources)
             && (!self.selectedSourcesRequireKeys || app.setup.isProdKeysValid)
             && !self.keyCheckBlocks
             && app.setup.isNxnativeValid
@@ -702,12 +707,12 @@ public final class PortingModel: ObservableObject {
             throw NXLibraryError.missingSources
         }
         // Snapshot the destination before any build work. Changing folders later cannot redirect this build.
-        let finalApp = app.finalAppURL(for: target)
+        let finalApp = finalAppURL(for: target)
         if let problem = GameAppDestination.folderProblem(at: finalApp.deletingLastPathComponent()) {
             throw NXLibraryError.environmentBlocked(problem)
         }
         let requiresKeys = SourceSelection.requiresKeys(target.sources)
-        guard app.supportsSources(target.sources) else {
+        guard supportsSources(target.sources) else {
             throw NXLibraryError.environmentBlocked(L10n.text("These sources need an engine with extracted-folder or multi-title support."))
         }
         guard SourceSelection.matchesNUPProgram(target.sources, titleID: titleId) else {
@@ -723,7 +728,7 @@ public final class PortingModel: ObservableObject {
             if keyOutcome.blocks, let reason = PortingFailureReason.from(keyOutcome) {
                 throw NXLibraryError.keyCheck(reason, game: target.name)
             }
-        } else if !app.engineSourceCapabilities.extractedFolders {
+        } else if !app.setup.engineSourceCapabilities.extractedFolders {
             throw NXLibraryError.environmentBlocked(L10n.text("This engine does not support extracted folders."))
         }
         guard app.setup.isNxnativeValid else { throw NXLibraryError.engineMissing }
@@ -815,7 +820,7 @@ public final class PortingModel: ObservableObject {
         var measured = Set<UInt64>()
         for volume in [workspace.directory, scratch.temp, finalApp.deletingLastPathComponent()] {
             if let device = BuildScratch.Volume.of(volume)?.device, !measured.insert(device).inserted { continue }
-            if let free = app.freeBytes(at: volume), free < requiredDisk {
+            if let free = freeBytes(at: volume), free < requiredDisk {
                 let freeText = AppViewModel.formatBytes(free)
                 let requiredText = AppViewModel.formatBytes(requiredDisk)
                 let why = scratch.appDriveUnsupported
@@ -851,15 +856,15 @@ public final class PortingModel: ObservableObject {
             appName: target.name,
             bundleId: target.bundleId ?? "org.nxnative.\(titleId.lowercased())",
             language: app.runtimeSettings.loadRuntimeConfig(for: target).languageForBuild,
-            titleId: app.engineSourceCapabilities.titleSelection ? titleId : nil,
+            titleId: app.setup.engineSourceCapabilities.titleSelection ? titleId : nil,
             programIndex: SourceSelection.programIndex(for: target.sources, titleID: titleId,
-                                                       nupPrograms: app.engineSourceCapabilities.nupPrograms),
-            packageVersion: app.engineSourceCapabilities.titleSelection
+                                                       nupPrograms: app.setup.engineSourceCapabilities.nupPrograms),
+            packageVersion: app.setup.engineSourceCapabilities.titleSelection
                 ? SourceSelection.packageVersion(for: target.sources, stagedSelection: !workspace.links.isEmpty) : nil,
             allowUntestedToolchain: app.setup.allowUntestedToolchain,
             extraArguments: extraArguments
         )
-        app.lastPortingCommand = [command.executable.path] + command.arguments
+        lastPortingCommand = [command.executable.path] + command.arguments
 
         stopStageElapsedTimer()
         buildStartedAt = Date()
@@ -1138,7 +1143,7 @@ public final class PortingModel: ObservableObject {
                     game.appIconPending = true
                 }
                 if let seconds = app.portingProgress?.finishingElapsed, seconds > 0 {
-                    app.lastPortingFinishSeconds = seconds
+                    lastPortingFinishSeconds = seconds
                 }
                 self.progressFraction = 1
                 self.currentStageName = result.heldApp == nil ? "Build completed" : PendingInstall.stageName
@@ -1319,6 +1324,94 @@ public final class PortingModel: ObservableObject {
         case .importKeys: app.setup.selectProdKeysFile()
         case .openStorage: router.openSettings(.portingStorage)
         case .none: break
+        }
+    }
+
+    // MARK: - Folders, space and timing
+    public func freeBytes(at url: URL) -> Int64? {
+        let fm = FileManager.default
+        // A folder not made yet (a build's staging folder) is on its nearest existing parent's volume.
+        var target = url.standardizedFileURL
+        while !fm.fileExists(atPath: target.path), target.path != "/" {
+            target = target.deletingLastPathComponent()
+        }
+        var stat = statvfs()
+        if statvfs(target.path, &stat) == 0 {
+            return Int64(stat.f_bavail) * Int64(stat.f_frsize)
+        }
+        let values = try? target.resourceValues(
+            forKeys: [.volumeAvailableCapacityForImportantUsageKey,
+                      .volumeAvailableCapacityKey])
+        if let cap = values?.volumeAvailableCapacityForImportantUsage {
+            return cap
+        }
+        return values?.volumeAvailableCapacity.map { Int64($0) }
+    }
+    /// The folders a build writes to: its workspace (a player's own one beside the sources is kept), its staged app
+    /// and the app's folder. They are on the app's drive when it can hold builds.
+    func buildFolders(appFolder: URL, workspace: String?) -> [URL] {
+        let existing = workspace.map { URL(fileURLWithPath: $0) }
+        let scratch = BuildScratch.choose(core: app.core, appFolder: appFolder, existingWorkspace: existing)
+        let own = existing.flatMap { BuildScratch.isManaged($0, core: app.core) ? nil : $0 }
+        return [own ?? scratch.workspaces, scratch.temp, appFolder]
+    }
+    func finalAppURL(for game: PortedGame) -> URL {
+        GameAppDestination.url(for: game, in: app.gameAppsFolder)
+    }
+    public func supportsSources(_ sources: [GameFileItem]) -> Bool {
+        let capabilities = app.setup.engineSourceCapabilities
+        return SourceSelection.supported(sources, titleSelection: capabilities.titleSelection,
+                                         extractedFolders: capabilities.extractedFolders,
+                                         nupContainers: capabilities.nupContainers,
+                                         nupPrograms: capabilities.nupPrograms)
+    }
+    private var didSeedFinishSeconds = false
+    /// What the final stages took in the last successful porting on this Mac, for the ETA.
+    /// Seeded once from the newest porting log when nothing is stored yet.
+    public var lastPortingFinishSeconds: Double? {
+        get {
+            let stored = AppData.preferences.double(forKey: AppViewModel.StorageKeys.lastPortingFinishSeconds)
+            if stored > 0 { return stored }
+            guard !didSeedFinishSeconds else { return nil }
+            didSeedFinishSeconds = true
+            guard let seeded = Self.finishSecondsFromNewestLog(in: app.core.appendingPathComponent("logs")) else {
+                return nil
+            }
+            AppData.preferences.set(seeded, forKey: AppViewModel.StorageKeys.lastPortingFinishSeconds)
+            return seeded
+        }
+        set { AppData.preferences.set(newValue ?? 0, forKey: AppViewModel.StorageKeys.lastPortingFinishSeconds) }
+    }
+    private static func finishSecondsFromNewestLog(in directory: URL) -> Double? {
+        let fm = FileManager.default
+        let logs = (try? fm.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.contentModificationDateKey]))?
+            .filter { $0.pathExtension == "log" } ?? []
+        let newest = logs.max {
+            let a = (try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+            let b = (try? $1.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+            return a < b
+        }
+        guard let newest, let text = try? String(contentsOf: newest, encoding: .utf8) else { return nil }
+        return PortingProgress.finishingSeconds(inLog: text)
+    }
+    /// `kept`: folders of builds that wait for their game to quit (standardized paths).
+    static func sweepStaleBuildTemp(in folders: [URL], keeping kept: Set<String>) {
+        let cutoff = Date().addingTimeInterval(-24 * 60 * 60)
+        for temp in folders {
+            sweepStaleBuildTemp(temp, before: cutoff, keeping: kept)
+        }
+    }
+    private static func sweepStaleBuildTemp(_ temp: URL, before cutoff: Date, keeping kept: Set<String>) {
+        guard let items = try? FileManager.default.contentsOfDirectory(
+            at: temp, includingPropertiesForKeys: [.contentModificationDateKey]
+        ) else { return }
+        for item in items {
+            let date = (try? item.resourceValues(
+                forKeys: [.contentModificationDateKey]).contentModificationDate)
+                ?? Date.distantPast
+            if date < cutoff, !kept.contains(item.standardizedFileURL.path) {
+                try? FileManager.default.removeItem(at: item)
+            }
         }
     }
 }

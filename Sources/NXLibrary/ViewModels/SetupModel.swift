@@ -33,6 +33,11 @@ public final class SetupModel: ObservableObject {
     lazy var upstreamChecker = UpstreamChecker()
     let upstreamCacheKey = "NXLibrary_UpstreamStatus"
 
+    /// What the engine in use can read: title selection, extracted folders and NUP containers or programs.
+    public var engineSourceCapabilities: EngineSourceCapabilities {
+        EngineSourceCapabilities(repo: URL(fileURLWithPath: nxnativePath))
+    }
+
     // MARK: - Keys
     @Published public var prodKeysPath: String = "" {
         didSet {

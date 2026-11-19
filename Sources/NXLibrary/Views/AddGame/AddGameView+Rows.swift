@@ -170,7 +170,7 @@ extension AddGameView {
 
     private var buildHint: String {
         if porting.canStartBuild { return L10n.text("Builds the Mac app now; you can keep using the library meanwhile.") }
-        if !viewModel.supportsSources(porting.selectedSources) { return L10n.text("These sources need a newer engine.") }
+        if !porting.supportsSources(porting.selectedSources) { return L10n.text("These sources need a newer engine.") }
         if porting.selectedSourcesRequireKeys && !setup.isProdKeysValid { return L10n.text("Import prod.keys first.") }
         if porting.keyCheckBlocks, let readiness = porting.keyCheck?.readiness { return "\(readiness.title)." }
         if !setup.isNxnativeValid { return L10n.text("The nxnative checkout is missing.") }

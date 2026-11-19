@@ -37,7 +37,7 @@ struct SettingsLibrarySection: View {
             }
 
             SeleneRow(GameFoldersCopy.sourcesTitle,
-                      subtitle: GameFoldersCopy.sourcesAbout(extractedFolders: viewModel.engineSourceCapabilities.extractedFolders),
+                      subtitle: GameFoldersCopy.sourcesAbout(extractedFolders: viewModel.setup.engineSourceCapabilities.extractedFolders),
                       info: "Existing game apps play without their sources. Reset group keeps this folder. Clear removes the selection, keeping your files.") {
                 HStack(spacing: 10) {
                     Text(porting.gameFilesFolder?.path ?? L10n.text("Not selected · Optional"))

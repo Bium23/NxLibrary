@@ -545,7 +545,7 @@ public struct AppShellView: View {
             router.closeMenu()
             if note.userInfo?["outcome"] as? String == "failed" {
                 viewModel.lastBuildGameID = id
-                viewModel.reviewsFailureOnAddGame = true
+                viewModel.porting.reviewsFailureOnAddGame = true
                 if router.route == .addGame {
                     viewModel.porting.addGameDidBecomeVisible(defaults: settings.settings.gameDefaults, returningFromBack: false)
                 } else {
