@@ -88,7 +88,7 @@ final class ModStoreHost: ObservableObject {
         for game in games {
             guard let titleID = viewModel.modStore(for: game)?.titleID, byTitle[titleID] == nil else { continue }
             byTitle[titleID] = game
-            let names = [game.name, viewModel.storeMetadata[game.id]?.name].compactMap { $0 }.filter { !$0.isEmpty }
+            let names = [game.name, viewModel.store.storeMetadata[game.id]?.name].compactMap { $0 }.filter { !$0.isEmpty }
             list.append(ModStoreGame(titleID: titleID, name: game.name, names: names))
         }
         gamesByTitle = byTitle

@@ -37,6 +37,8 @@ struct GameOptionsView: View {
     @ObservedObject var viewModel: AppViewModel
     /// The Setup (`SetupModel`): the gate hint below Rebuild follows the engine in use.
     @ObservedObject var setup: SetupModel
+    /// The Nintendo store's data (`StoreMetadataModel`): descriptions, screenshots and names shown here.
+    @ObservedObject var store: StoreMetadataModel
     let game: PortedGame
     let origin: GameOptionsOrigin
     let onClose: () -> Void
@@ -96,6 +98,7 @@ struct GameOptionsView: View {
          onMove: @escaping () -> Void, opensMods: Bool = false) {
         self.viewModel = viewModel
         self.setup = viewModel.setup
+        self.store = viewModel.store
         self.game = game
         self.origin = origin
         self.onClose = onClose
@@ -122,9 +125,9 @@ struct GameOptionsView: View {
             // Mirrors GameDetailView.toolchainBlocked: a known report that does not pass, without the override.
             toolchainBlocked: setup.isCheckingEnvironment || (setup.compatibilityReport != nil && !setup.canPassToolchainGate),
             toolchainHint: setup.isCheckingEnvironment ? L10n.text("Checking environment") : setup.toolchainGateSummary?.buildHint,
-            hasStorePage: viewModel.storeMetadata[game.id]?.storeURL != nil,
-            offersStoreSearch: (viewModel.storeMetadata[game.id]?.description ?? "").isEmpty
-                && viewModel.nintendoStoreSearchURL(for: game) != nil,
+            hasStorePage: store.storeMetadata[game.id]?.storeURL != nil,
+            offersStoreSearch: (store.storeMetadata[game.id]?.description ?? "").isEmpty
+                && store.nintendoStoreSearchURL(for: game) != nil,
             gameName: game.name,
             appPath: game.url.path,
             canDeleteBundle: game.canDeleteAppBundle(),
@@ -520,7 +523,7 @@ struct GameOptionsView: View {
         infoRow = nil
         level = .editDetails
         // The store link needs the store metadata; Details asks for it the same way.
-        viewModel.loadStoreMetadata(for: current)
+        store.loadStoreMetadata(for: current)
     }
 
     private func leaveEditDetails() {
@@ -813,19 +816,19 @@ struct GameOptionsView: View {
         case .changeArtwork:
             SoundEffectService.shared.play(.click)
             // The official name helps the cover search, as on the Collection.
-            viewModel.loadStoreMetadata(for: current)
+            store.loadStoreMetadata(for: current)
             artworkOpen = true
         case .changeMetadata:
             SoundEffectService.shared.play(.click)
             // Automatic is the store's metadata; ask for it if it is not here yet.
-            viewModel.loadStoreMetadata(for: current)
+            store.loadStoreMetadata(for: current)
             metadataOpen = true
         case .storePage:
-            guard let url = viewModel.storeMetadata[game.id]?.storeURL else { return }
+            guard let url = store.storeMetadata[game.id]?.storeURL else { return }
             SoundEffectService.shared.play(.click)
             viewModel.openURL(url)
         case .searchStore:
-            guard let url = viewModel.nintendoStoreSearchURL(for: current) else { return }
+            guard let url = store.nintendoStoreSearchURL(for: current) else { return }
             SoundEffectService.shared.play(.click)
             viewModel.openURL(url)
         case .attachSources:

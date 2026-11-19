@@ -10,6 +10,8 @@ import NXLibraryCore
 /// The art and the row reach the window edges.
 public struct CollectionView: View {
     @ObservedObject var viewModel: AppViewModel
+    /// The Nintendo store's data (`StoreMetadataModel`): descriptions, screenshots and names shown here.
+    @ObservedObject var store: StoreMetadataModel
     @ObservedObject var router: AppRouter
     @ObservedObject var settings: AppSettingsStore
     @ObservedObject var playSessions: PlaySessionStore
@@ -27,6 +29,7 @@ public struct CollectionView: View {
     public init(viewModel: AppViewModel, router: AppRouter, settings: AppSettingsStore,
                 playSessions: PlaySessionStore, artwork: ArtworkStore) {
         self.viewModel = viewModel
+        self.store = viewModel.store
         self.router = router
         self.settings = settings
         self.playSessions = playSessions
@@ -74,7 +77,7 @@ public struct CollectionView: View {
         .onAppear { viewModel.homeSeen = true }
         .onDisappear(perform: removeKeyMonitor)
         .onChange(of: viewModel.catalogGames) { _ in
-            viewModel.preloadCachedStoreMetadata()
+            store.preloadCachedStoreMetadata()
             reconcile()
         }
         .onChange(of: viewModel.catalogSourceConfigurations) { _ in reconcile() }
@@ -92,9 +95,9 @@ public struct CollectionView: View {
         }
         .onChange(of: playSessions.sessions.count) { _ in reconcile() }
         .onChange(of: viewModel.isScanningLibrary) { _ in reconcile() }
-        .task(id: art.heroTaskKey(game, metadata: game.flatMap { viewModel.storeMetadata[$0.id] })) { await loadHero(game) }
+        .task(id: art.heroTaskKey(game, metadata: game.flatMap { store.storeMetadata[$0.id] })) { await loadHero(game) }
         .task(id: art.steamHeroTaskKey(selectedCatalogGame)) { await art.loadSteamHero(game: selectedCatalogGame, current: { selectedCatalogGame?.id }, artwork: artwork) }
-        .task(id: art.logoTaskKey(game, metadata: game.flatMap { viewModel.storeMetadata[$0.id] })) { await loadLogo(game) }
+        .task(id: art.logoTaskKey(game, metadata: game.flatMap { store.storeMetadata[$0.id] })) { await loadLogo(game) }
     }
 
     private func stage(games: [CatalogGame], game: PortedGame?) -> some View {
@@ -105,7 +108,7 @@ public struct CollectionView: View {
             if let game {
                 CollectionInfoView(game: game, logo: art.logo(for: game),
                                    presentation: LibraryPresentation(
-                                       game: game, metadata: viewModel.storeMetadata[game.id],
+                                       game: game, metadata: store.storeMetadata[game.id],
                                        totalPlaytime: playSessions.totalDuration(for: game.id),
                                        lastPlayed: playSessions.lastPlayed(for: game.id)))
                     .id(game.id)
@@ -130,8 +133,8 @@ public struct CollectionView: View {
                     artwork: artwork,
                     boxArt: viewModel.boxArt,
                     boxArtIndexVersion: viewModel.boxArtIndexVersion,
-                    officialName: { viewModel.storeMetadata[$0.id]?.name },
-                    needsMetadata: { viewModel.loadStoreMetadata(for: $0) },
+                    officialName: { store.storeMetadata[$0.id]?.name },
+                    needsMetadata: { store.loadStoreMetadata(for: $0) },
                     tileLook: viewModel.portingTileLook,
                     onSelect: { select($0.id) },
                     onActivate: { record in select(record.id); activateCatalog(record) })
@@ -193,7 +196,7 @@ public struct CollectionView: View {
     func appear() {
         installKeyMonitor()
         router.isSearchPresented = false
-        viewModel.preloadCachedStoreMetadata()
+        store.preloadCachedStoreMetadata()
         // The starting tab is applied once per session, on the first visit to either screen.
         if !viewModel.spotlight.startingTabApplied {
             viewModel.spotlight.startingTabApplied = true
@@ -225,7 +228,7 @@ public struct CollectionView: View {
     private func selectionChanged() {
         let game = selectedGame
         if let id = game?.id ?? selectedCatalogGame?.id { settings.rememberLastSelectedGame(id) }
-        if let game { viewModel.loadStoreMetadata(for: game) }
+        if let game { store.loadStoreMetadata(for: game) }
     }
 
     // MARK: - Art
@@ -233,12 +236,12 @@ public struct CollectionView: View {
     private func loadHero(_ game: PortedGame?) async {
         // On a Steam game the nxnative art stays until the Steam hero replaces it, so the change is one crossfade.
         await art.loadHero(game: game, current: { selectedGame?.id },
-                           metadata: game.flatMap { viewModel.storeMetadata[$0.id] }, artwork: artwork, personalizations: viewModel.personalizations,
+                           metadata: game.flatMap { store.storeMetadata[$0.id] }, artwork: artwork, personalizations: viewModel.personalizations,
                            keepsWithoutGame: selectedCatalogGame?.integration == .steam)
     }
 
     private func loadLogo(_ game: PortedGame?) async {
-        await art.loadLogo(game: game, metadata: game.flatMap { viewModel.storeMetadata[$0.id] },
+        await art.loadLogo(game: game, metadata: game.flatMap { store.storeMetadata[$0.id] },
                            artwork: artwork, personalizations: viewModel.personalizations)
     }
 }

@@ -7,6 +7,8 @@ public struct AppShellView: View {
     @StateObject private var viewModel: AppViewModel
     /// The Setup (`SetupModel`): the update offer names the Xcode a release needs.
     @ObservedObject private var setup: SetupModel
+    /// The Nintendo store's data (`StoreMetadataModel`): descriptions, screenshots and names shown here.
+    @ObservedObject private var store: StoreMetadataModel
     @StateObject private var router: AppRouter
     @StateObject private var settings: AppSettingsStore
     @StateObject private var playSessions = PlaySessionStore()
@@ -38,6 +40,7 @@ public struct AppShellView: View {
         _settings = StateObject(wrappedValue: state.settings)
         _viewModel = StateObject(wrappedValue: state.viewModel)
         _setup = ObservedObject(wrappedValue: state.viewModel.setup)
+        _store = ObservedObject(wrappedValue: state.viewModel.store)
         _router = StateObject(wrappedValue: state.router)
         modStoreHost = state.modStoreHost
         _showsWelcome = State(initialValue: state.opensWithWelcome)
@@ -47,7 +50,7 @@ public struct AppShellView: View {
         let previousLanguage = AppLocalization.shared.context.language
         AppLocalization.shared.configure(settings.settings)
         if previousLanguage != AppLocalization.shared.context.language {
-            viewModel.refreshLocalizedMetadata()
+            store.refreshLocalizedMetadata()
         }
     }
 
@@ -132,7 +135,7 @@ public struct AppShellView: View {
     /// SwiftUI root: the canvas and the locale are given to it here.
     private var launchCover: some View {
         LaunchCoverWindow(state: viewModel.launchOverlay, onPrepared: { SteamPlayCoordinator.shared.launchCoverPrepared(for: $0) }) { state in
-            LaunchScreenView(state: state, viewModel: viewModel, artwork: artwork,
+            LaunchScreenView(state: state, viewModel: viewModel, store: viewModel.store, artwork: artwork,
                              settings: settings.settings, reduceMotion: reduceMotion)
                 .id(state.game.id)
                 .seleneCanvasRoot()
@@ -338,7 +341,7 @@ public struct AppShellView: View {
         .focusedSceneValue(\.nxMenuAvailability, nativeMenuAvailability)
         .overlay {
             SessionCardLayer(presenter: sessionCard, game: playedGame,
-                             metadata: viewModel.storeMetadata, artwork: artwork)
+                             metadata: store.storeMetadata, artwork: artwork)
         }
         .background { launchCover }
         .modifier(SoundCueHooks(router: router, viewModel: viewModel))
@@ -646,6 +649,7 @@ public struct AppShellView: View {
                 GameDetailView(
                     viewModel: viewModel,
                     setup: viewModel.setup,
+                    store: viewModel.store,
                     router: router,
                     settings: settings,
                     playSessions: playSessions,

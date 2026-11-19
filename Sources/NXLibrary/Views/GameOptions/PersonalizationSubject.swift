@@ -56,7 +56,7 @@ struct PersonalizationSubject {
     /// Keeps the player's value, or (nil) goes back to the store's.
     func pickMetadata(_ value: String?, field: MetadataField, viewModel: AppViewModel) throws {
         if steam != nil { try steamFields.save(fields: [field: value ?? ""], images: [:], automatic: [], titleID: key) }
-        else if let ported { viewModel.pickMetadata(value, field: field, for: ported) }
+        else if let ported { viewModel.store.pickMetadata(value, field: field, for: ported) }
     }
 }
 

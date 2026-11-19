@@ -65,8 +65,8 @@ struct SettingsStorageSection: View {
                            subtitle: "Store and Wikipedia descriptions and links.",
                            value: seleneBytes(metadataBytes),
                            actionTitle: "Clear") {
-                viewModel.clearMetadataCache()
-                metadataBytes = viewModel.metadataCacheSize()
+                viewModel.store.clearMetadataCache()
+                metadataBytes = viewModel.store.metadataCacheSize()
             }
 
             SeleneValueRow("Artwork cache",
@@ -87,7 +87,7 @@ struct SettingsStorageSection: View {
         }
         .task {
             viewModel.refreshStorageUsage()
-            metadataBytes = viewModel.metadataCacheSize()
+            metadataBytes = viewModel.store.metadataCacheSize()
             artworkBytes = artwork.cacheSize()
         }
         .onAppear(perform: publishActions)
@@ -139,8 +139,8 @@ struct SettingsStorageSection: View {
                 confirmLogsCleanup()
             },
             .init(id: "metadataClear", title: "Metadata cache") {
-                viewModel.clearMetadataCache()
-                metadataBytes = viewModel.metadataCacheSize()
+                viewModel.store.clearMetadataCache()
+                metadataBytes = viewModel.store.metadataCacheSize()
             },
             .init(id: "artworkClear", title: "Artwork cache") {
                 artwork.clear()

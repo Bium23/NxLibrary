@@ -216,6 +216,8 @@ final class GameBananaServices {
 @MainActor final class AppViewModel {
     let fixtureStore: ModStore
     var storeMetadata: [UUID: NintendoStoreMetadata] = [:]
+    // The store's data lives in StoreMetadataModel, reached as `store`.
+    var store: AppViewModel { self }
     init(_ store: ModStore) { fixtureStore = store }
     func modStore(for game: PortedGame) -> ModStore? { fixtureStore }
 }

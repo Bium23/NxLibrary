@@ -193,7 +193,7 @@ extension SpotlightView {
     func openViewer(at index: Int) {
         let titleID: String, all: [URL]
         if let game = selectedGame {
-            titleID = viewModel.personalizationKey(for: game); all = viewModel.storeMetadata[game.id]?.screenshotURLs ?? []
+            titleID = viewModel.personalizationKey(for: game); all = store.storeMetadata[game.id]?.screenshotURLs ?? []
         } else if let game = selectedCatalogGame, game.integration == .steam {
             titleID = game.personalizationReference.key; all = steamFacts.metadata(for: game)?.screenshots ?? []
         } else { return }

@@ -24,12 +24,15 @@ struct ChangeArtworkView: View {
     @ObservedObject var viewModel: AppViewModel
     /// The game's app icon: its status line follows the icon being written.
     @ObservedObject private var appIcon: AppIconModel
+    /// The Nintendo store's data (`StoreMetadataModel`): descriptions, screenshots and names shown here.
+    @ObservedObject private var store: StoreMetadataModel
     let subject: PersonalizationSubject
     let onClose: () -> Void
 
     init(viewModel: AppViewModel, subject: PersonalizationSubject, onClose: @escaping () -> Void) {
         self.viewModel = viewModel
         _appIcon = ObservedObject(wrappedValue: viewModel.appIcon)
+        _store = ObservedObject(wrappedValue: viewModel.store)
         self.subject = subject
         self.onClose = onClose
     }
@@ -92,7 +95,7 @@ struct ChangeArtworkView: View {
     /// The installed nxnative game: only it has a Mac app icon to change.
     private var macApp: PortedGame? { subject.ported }
     private var gameNames: [String] {
-        let metadata = viewModel.storeMetadata[subject.id]
+        let metadata = store.storeMetadata[subject.id]
         return [subject.name, metadata?.name, titleDB?.name].compactMap { $0 }
             .reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
     }
@@ -500,7 +503,7 @@ struct ChangeArtworkView: View {
             titleDB = await TitleDBInfo.fetch(titleID: titleId)
             titleDBLoaded = true
         }
-        let metadata = viewModel.storeMetadata[subject.id]
+        let metadata = store.storeMetadata[subject.id]
         let names = gameNames
         var candidates: [ArtworkCandidate]
         found[slot] = []

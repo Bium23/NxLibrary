@@ -17,6 +17,8 @@ public struct SpotlightView: View {
     @ObservedObject var viewModel: AppViewModel
     /// The Setup (`SetupModel`): Rebuild follows the Metal gate.
     @ObservedObject var setup: SetupModel
+    /// The Nintendo store's data (`StoreMetadataModel`): descriptions, screenshots and names shown here.
+    @ObservedObject var store: StoreMetadataModel
     @ObservedObject var router: AppRouter
     @ObservedObject var settings: AppSettingsStore
     @ObservedObject var playSessions: PlaySessionStore
@@ -112,6 +114,7 @@ public struct SpotlightView: View {
          artwork: ArtworkStore, storeHost: ModStoreHost) {
         self.viewModel = viewModel
         self.setup = viewModel.setup
+        self.store = viewModel.store
         self.router = router
         self.settings = settings
         self.playSessions = playSessions
@@ -192,7 +195,7 @@ public struct SpotlightView: View {
             return min(steamFacts.metadata(for: game)?.screenshots.count ?? 0, SpotlightScreenshotStrip.maxCount)
         }
         guard let game = selectedGame else { return 0 }
-        let urls = viewModel.storeMetadata[game.id]?.screenshotURLs ?? []
+        let urls = store.storeMetadata[game.id]?.screenshotURLs ?? []
         return min(urls.count, SpotlightScreenshotStrip.maxCount)
     }
 
@@ -304,12 +307,12 @@ public struct SpotlightView: View {
             if let action = note.object as? GamepadAction { handle(action) }
         }
         .onChange(of: playSessions.sessions.count) { _ in reconcile() }
-        .task(id: art.heroTaskKey(model.selectedGame, metadata: model.selectedGame.flatMap { viewModel.storeMetadata[$0.id] })) { await loadHero(model.selectedGame) }
+        .task(id: art.heroTaskKey(model.selectedGame, metadata: model.selectedGame.flatMap { store.storeMetadata[$0.id] })) { await loadHero(model.selectedGame) }
         .task(id: art.steamHeroTaskKey(model.selectedCatalogGame)) {
             await art.loadSteamHero(game: model.selectedCatalogGame, current: { selectedCatalogGame?.id }, artwork: artwork, settle: 420_000_000)
             if model.selectedCatalogGame?.integration == .steam, !Task.isCancelled { modsBackdrop = false }
         }
-        .task(id: art.logoTaskKey(model.selectedGame, metadata: model.selectedGame.flatMap { viewModel.storeMetadata[$0.id] })) { await loadLogo(model.selectedGame) }
+        .task(id: art.logoTaskKey(model.selectedGame, metadata: model.selectedGame.flatMap { store.storeMetadata[$0.id] })) { await loadLogo(model.selectedGame) }
     }
 
     @ViewBuilder
@@ -461,7 +464,7 @@ public struct SpotlightView: View {
     @ViewBuilder
     private func info(_ model: Snapshot, state: SpotlightState) -> some View {
         if let game = model.selectedGame {
-            let metadata = viewModel.storeMetadata[game.id]
+            let metadata = store.storeMetadata[game.id]
             let genres = GameGenre.list(metadata?.genres ?? [])
             VStack(alignment: .leading, spacing: 0) {
                 SpotlightGameInfoView(
@@ -613,9 +616,9 @@ public struct SpotlightView: View {
     /// "No screenshots" only once the answer is final: not before the first
     /// request starts, nor while a stale empty cache entry is being refetched.
     private func screenshotsKnown(_ game: PortedGame, metadata: NintendoStoreMetadata?) -> Bool {
-        if viewModel.storeMetadataLoading.contains(game.id) || viewModel.screenshotLookups.contains(game.id) { return false }
+        if store.storeMetadataLoading.contains(game.id) || store.screenshotLookups.contains(game.id) { return false }
         guard let titleId = game.titleId, !titleId.isEmpty else { return true }
-        return metadata != nil || viewModel.storeMetadataErrors[game.id] != nil
+        return metadata != nil || store.storeMetadataErrors[game.id] != nil
     }
 
     private func logo(for game: PortedGame) -> NSImage? {
@@ -698,7 +701,7 @@ public struct SpotlightView: View {
     private func appear() {
         installKeyMonitor()
         router.isSearchPresented = false
-        viewModel.preloadCachedStoreMetadata()
+        store.preloadCachedStoreMetadata()
         if !viewModel.spotlight.startingTabApplied {
             mutate { $0.startingTabApplied = true }
             viewModel.librarySelection.query.filter = LibraryFilter(startingTab: settings.settings.startingTab)
@@ -744,7 +747,7 @@ public struct SpotlightView: View {
     }
 
     private func gamesChanged() {
-        viewModel.preloadCachedStoreMetadata()
+        store.preloadCachedStoreMetadata()
         // The whole library, not the filtered row: a filter change never
         // counts as "the library arrived".
         let hasGames = !viewModel.visibleCatalogGames.isEmpty
@@ -786,7 +789,7 @@ public struct SpotlightView: View {
         let game = selectedGame
         if let id = game?.id ?? selectedCatalogGame?.id { settings.rememberLastSelectedGame(id) }
         loadAchievements()
-        if let game { viewModel.loadStoreMetadata(for: game) }
+        if let game { store.loadStoreMetadata(for: game) }
     }
 
     // MARK: - Mods
@@ -849,7 +852,7 @@ public struct SpotlightView: View {
 
     private func loadHero(_ game: PortedGame?) async {
         await art.loadHero(game: game, current: { selectedGame?.id },
-                           metadata: game.flatMap { viewModel.storeMetadata[$0.id] }, artwork: artwork, personalizations: viewModel.personalizations,
+                           metadata: game.flatMap { store.storeMetadata[$0.id] }, artwork: artwork, personalizations: viewModel.personalizations,
                            // The logo leads (0.3 s); the art turns after it.
                            settle: 420_000_000, keepsWithoutGame: true)
         // The game's art is in (or it has none): the gold gives way under it.
@@ -1053,7 +1056,7 @@ public struct SpotlightView: View {
 
     private func relatedTraits(for game: CatalogGame, language: String) -> MoreLikeThis.Traits? {
         if let native = game.nxnativeGame {
-            return viewModel.storeMetadata[native.id].map {
+            return store.storeMetadata[native.id].map {
                 MoreLikeThis.Traits(developers: $0.developers, publishers: $0.publishers, genres: GameGenre.list($0.genres))
             }
         }
@@ -1101,17 +1104,17 @@ public struct SpotlightView: View {
         let playtimes = Dictionary(library.map { ($0.id, playSessions.totalDuration(for: $0.id)) },
                                    uniquingKeysWith: { first, _ in first })
         let presentation = GameDetailPresentation(
-            game: game, metadata: viewModel.storeMetadata[game.id],
+            game: game, metadata: store.storeMetadata[game.id],
             totalPlaytime: playSessions.totalDuration(for: game.id),
             lastPlayed: playSessions.lastPlayed(for: game.id),
             sessions: playSessions.sessions, libraryGames: library, playtimeByGame: playtimes)
         let blocked = setup.compatibilityReport != nil && !setup.canPassToolchainGate
-        let facts = DetailsFacts.switchGame(game, metadata: viewModel.storeMetadata[game.id],
+        let facts = DetailsFacts.switchGame(game, metadata: store.storeMetadata[game.id],
                                             folderName: DetailsLink.folderName(of: game.url))
         let links = DetailsLink.links(app: game.url, store: presentation.storeURL, hltb: presentation.hltbURL,
                                       viewModel: viewModel)
         let ids = MoreLikeThis.pick(for: game, in: library,
-                                    metadata: { viewModel.storeMetadata[$0] }, limit: 6)
+                                    metadata: { store.storeMetadata[$0] }, limit: 6)
         let byID = Dictionary(library.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         return SpotlightPageModel(presentation: presentation, facts: facts, links: links,
                                   more: ids.compactMap { byID[$0].map(CatalogGame.init(nxnative:)) }, buildBlocked: blocked)
@@ -1180,7 +1183,7 @@ public struct SpotlightView: View {
 
     private var selectedRatingQuery: CriticRatingQuery? {
         if let game = selectedGame {
-            return CriticRatingQuery(game: game, name: viewModel.storeMetadata[game.id]?.name)
+            return CriticRatingQuery(game: game, name: store.storeMetadata[game.id]?.name)
         }
         guard let game = selectedCatalogGame, let steam = game.steamGame else { return nil }
         return CriticRatingQuery(name: steam.name, platform: .mac, steamAppID: steam.appID)
@@ -1270,7 +1273,7 @@ public struct SpotlightView: View {
                 artwork: artwork,
                 boxArt: viewModel.boxArt,
                 boxArtIndexVersion: viewModel.boxArtIndexVersion,
-                officialName: { viewModel.storeMetadata[$0.id]?.name },
+                officialName: { store.storeMetadata[$0.id]?.name },
                 onFocus: { index in mutate { $0.focus = .more; $0.moreIndex = index } },
                 onOpen: { index in
                     SoundEffectService.shared.play(.click)
@@ -1282,7 +1285,7 @@ public struct SpotlightView: View {
     }
 
     private func loadLogo(_ game: PortedGame?) async {
-        await art.loadLogo(game: game, metadata: game.flatMap { viewModel.storeMetadata[$0.id]},
+        await art.loadLogo(game: game, metadata: game.flatMap { store.storeMetadata[$0.id]},
                            artwork: artwork, personalizations: viewModel.personalizations)
     }
 }

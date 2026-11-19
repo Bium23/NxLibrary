@@ -13,6 +13,8 @@ import NXLibraryCore
 /// B (or Esc) returns to Game options. A click chooses.
 struct ChangeMetadataView: View {
     @ObservedObject var viewModel: AppViewModel
+    /// The Nintendo store's data (`StoreMetadataModel`): Automatic follows it when it arrives.
+    @ObservedObject private var storeData: StoreMetadataModel
     let subject: PersonalizationSubject
     let onClose: () -> Void
 
@@ -72,6 +74,7 @@ struct ChangeMetadataView: View {
 
     init(viewModel: AppViewModel, subject: PersonalizationSubject, onClose: @escaping () -> Void) {
         self.viewModel = viewModel
+        _storeData = ObservedObject(wrappedValue: viewModel.store)
         self.subject = subject
         self.onClose = onClose
         // Steam games have no Switch databases to search.
@@ -82,7 +85,7 @@ struct ChangeMetadataView: View {
         _ = picks.revision; _ = steamPicks.revision
         return subject.metadataPick(field)
     }
-    private var store: NintendoStoreMetadata? { subject.ported.flatMap(viewModel.storeMetadataAsFetched) }
+    private var store: NintendoStoreMetadata? { subject.ported.flatMap(storeData.storeMetadataAsFetched) }
     private var igdbQuery: CriticRatingQuery {
         if let game = subject.ported { return CriticRatingQuery(game: game, name: store?.name) }
         return CriticRatingQuery(name: subject.steam?.steamGame?.name ?? subject.name, platform: .mac, steamAppID: subject.steamAppID)

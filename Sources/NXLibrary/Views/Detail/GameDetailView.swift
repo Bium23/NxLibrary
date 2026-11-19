@@ -17,6 +17,8 @@ struct GameDetailView: View {
     @ObservedObject var viewModel: AppViewModel
     /// The Setup (`SetupModel`): Rebuild follows the Metal gate.
     @ObservedObject var setup: SetupModel
+    /// The Nintendo store's data (`StoreMetadataModel`): descriptions, screenshots and names shown here.
+    @ObservedObject var store: StoreMetadataModel
     @ObservedObject var router: AppRouter
     @ObservedObject var settings: AppSettingsStore
     @ObservedObject var playSessions: PlaySessionStore
@@ -90,7 +92,7 @@ struct GameDetailView: View {
                      primaryEnabled: p.canPlay || (p.canRebuild && !blocked))
     }
 
-    var metadata: NintendoStoreMetadata? { viewModel.storeMetadata[game.id] }
+    var metadata: NintendoStoreMetadata? { store.storeMetadata[game.id] }
 
     /// Blocked only once the compatibility report is known and does not pass;
     /// before it loads the build is not dimmed (the build path still explains a refusal).
@@ -116,7 +118,7 @@ struct GameDetailView: View {
     /// Other games from the library, most alike first (`MoreLikeThis`); nothing without metadata.
     var moreGames: [PortedGame] {
         let ids = MoreLikeThis.pick(for: game, in: viewModel.libraryGames,
-                                    metadata: { viewModel.storeMetadata[$0] }, limit: 6)
+                                    metadata: { store.storeMetadata[$0] }, limit: 6)
         let byID = Dictionary(viewModel.libraryGames.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         return ids.compactMap { byID[$0] }
     }
@@ -124,9 +126,9 @@ struct GameDetailView: View {
     /// "No screenshots" only once the answer is final: not before the first request
     /// starts, nor while a stale empty cache entry is being refetched.
     var screenshotsKnown: Bool {
-        if viewModel.storeMetadataLoading.contains(game.id) || viewModel.screenshotLookups.contains(game.id) { return false }
+        if store.storeMetadataLoading.contains(game.id) || store.screenshotLookups.contains(game.id) { return false }
         guard let titleId = game.titleId, !titleId.isEmpty else { return true }
-        return metadata != nil || viewModel.storeMetadataErrors[game.id] != nil
+        return metadata != nil || store.storeMetadataErrors[game.id] != nil
     }
 
     // MARK: - Body
@@ -325,7 +327,7 @@ struct GameDetailView: View {
                         artwork: artwork,
                         boxArt: viewModel.boxArt,
                         boxArtIndexVersion: viewModel.boxArtIndexVersion,
-                        officialName: { viewModel.storeMetadata[$0.id]?.name },
+                        officialName: { store.storeMetadata[$0.id]?.name },
                         onFocus: { focusPointer(zone: DetailsFocus.moreZone, index: $0, bands: model.bands) },
                         onOpen: { index in
                             focusPointer(zone: DetailsFocus.moreZone, index: index, bands: model.bands)
@@ -366,7 +368,7 @@ struct GameDetailView: View {
     private func appear() {
         installKeyMonitor()
         router.isSearchPresented = false
-        viewModel.loadStoreMetadata(for: game)
+        store.loadStoreMetadata(for: game)
         reloadMods()
         reloadCheats()
         startGameBanana()

@@ -69,7 +69,7 @@ final class ModsBandHost: ObservableObject {
             guard let self, let viewModel, let game = self.game else { return }
             self.reload(game, viewModel: viewModel)
         }
-        let names = [game.name, viewModel.storeMetadata[game.id]?.name].compactMap { $0 }
+        let names = [game.name, viewModel.store.storeMetadata[game.id]?.name].compactMap { $0 }
         gameBanana.start(names: names, store: viewModel.modStore(for: game))
     }
 

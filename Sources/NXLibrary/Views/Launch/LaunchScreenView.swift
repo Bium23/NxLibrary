@@ -20,6 +20,8 @@ struct LaunchOverlayState: Equatable {
 struct LaunchScreenView: View {
     let state: LaunchOverlayState
     @ObservedObject var viewModel: AppViewModel
+    /// The Nintendo store's data (`StoreMetadataModel`): descriptions, screenshots and names shown here.
+    @ObservedObject var store: StoreMetadataModel
     @ObservedObject var artwork: ArtworkStore
     let settings: AppSettings
     let reduceMotion: Bool
@@ -142,7 +144,7 @@ struct LaunchScreenView: View {
 
     @MainActor
     private func loadArt() async {
-        let metadata = viewModel.storeMetadata[game.id]
+        let metadata = store.storeMetadata[game.id]
         if hero == nil, showsArt {
             let loaded = await GameArtLoader.shared.hero(
                 for: game, metadata: metadata, artwork: artwork, personalizations: viewModel.personalizations)
