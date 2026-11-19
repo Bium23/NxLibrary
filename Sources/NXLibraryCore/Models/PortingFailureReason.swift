@@ -20,6 +20,10 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
     /// Damage `--allow-damaged` cannot get past (a filesystem's own tables, a cut-off package).
     static let unreadableDamageDetail = "unreadable"
     private var isUnreadableDamage: Bool { kind == .damagedNSP && detail == Self.unreadableDamageDetail }
+    /// The engine's game profile registers other shader tables than these files split into: other game files, or an
+    /// engine that reads them differently and a profile not split again (issue #20). Kept as `unknown` for rollback.
+    static let profileMismatchDetail = "shader-profile-mismatch"
+    private var isProfileMismatch: Bool { kind == .unknown && detail == Self.profileMismatchDetail }
     /// The game lacks the language its Game options ask for; the detail names it ("missing-language:Japanese").
     static let missingLanguagePrefix = "missing-language:"
     private var missingLanguage: String? {
@@ -64,7 +68,9 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
         case .driveMissing: return L10n.text("A drive is not connected")
         case .cloudFolder: return L10n.text("The library is in a cloud folder")
         case .noProfile: return L10n.text("This game is not supported yet")
-        case .unknown: return missingLanguage == nil ? L10n.text("The porting stopped") : L10n.text("The game does not have this language")
+        case .unknown:
+            if isProfileMismatch { return L10n.text("The engine's profile does not match these files") }
+            return missingLanguage == nil ? L10n.text("The porting stopped") : L10n.text("The game does not have this language")
         }
     }
 
@@ -97,6 +103,7 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
             return L10n.format("%@ has no verified nxnative game profile%@; the pinned engine does not support it yet.", [String(describing: (game)), String(describing: (at))])
         case .unknown:
             if let language = missingLanguage { return L10n.format("%@ has no %@, the language set in its Game options.", [String(describing: (game)), String(describing: (language))]) }
+            if isProfileMismatch { return L10n.format("The engine's profile for %@ expects other shaders than these files hold: either they are another version or update than the one the profile supports, or the engine now reads them differently and the profile is not updated yet.", [String(describing: (game))]) }
             return L10n.text("The engine stopped without a message Arcane recognises.")
         }
     }
@@ -128,6 +135,7 @@ public struct PortingFailureReason: Codable, Equatable, Sendable {
         case .noProfile: return L10n.text("Watch for an engine update that adds this game.")
         case .unknown:
             if missingLanguage != nil { return L10n.text("In Game options, set Language to Game Default or to one of the game's languages, then port again.") }
+            if isProfileMismatch { return L10n.text("If the base and update are the ones the engine supports for this game, nothing on this Mac needs fixing: wait for an engine update. Otherwise add the supported update and port again.") }
             return L10n.text("Open the log, or copy diagnostics for a bug report.")
         }
     }
@@ -178,6 +186,8 @@ public enum PortingFailureClassifier {
         // A NUP or a dump has no NCA hashes: a file whose first bytes are not its format's (b2d46b86 on).
         ("files.format", .damagedNSP, "whose bytes do not start as their names promise",
          "whose bytes do not start as their names promise"),
+        ("shaders.profile", .unknown, "the split shader tables differ from game profile",
+         "the split shader tables differ from game profile"),
         ("language.missing", .unknown, #"the game has no [A-Za-z-]+ \([^)]+\); its languages"#, "); its languages: "),
         ("arm32.program", .a32Program, "is a 32-bit ARM program", "is a 32-bit ARM program"),
         ("keys.missing", .keys, #"no such file: [^"\n]*prod\.keys"#, "no such file: "),
@@ -233,6 +243,7 @@ public enum PortingFailureClassifier {
             let unreadable = log.contains("own tables fail the NCA's hash check") || log.contains("truncated PFS0 ")
             return unreadable ? PortingFailureReason.unreadableDamageDetail : nil
         case .unknown:
+            if log.contains("the split shader tables differ from game profile") { return PortingFailureReason.profileMismatchDetail }
             guard let r = log.range(of: #"the game has no [A-Za-z-]+ \([^)]+\)"#, options: .regularExpression),
                   let open = log[r].firstIndex(of: "(") else { return nil }
             let name = log[log.index(after: open)..<log.index(before: r.upperBound)]

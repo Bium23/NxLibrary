@@ -15,6 +15,8 @@ final class PortingFailureReasonTests: XCTestCase {
         ("nsp.tables", .damagedNSP, "[RED] the NSP is damaged: a filesystem's own tables fail the NCA's hash check, so --allow-damaged cannot read it either: an incomplete copy or a broken download, which a SHA-256 of each NCA shows (its file name is the hash's first 16 bytes); copy or download it again"),
         ("nsp.truncated", .damagedNSP, "[RED] truncated PFS0 header: Example.nsp"),
         ("files.format", .damagedNSP, "[RED] base: 3 file(s) whose bytes do not start as their names promise (a .zs file that is not a zstd stream), so the game files are damaged:\n  Model/a.zs (12,288 bytes, starts 00000000)\nPack again from a good copy of the game (--allow-damaged packs these files as they are)"),
+        // Issue #20 (Pokémon Legends: Arceus 1.1.1, the version its profile registers), as the JSON progress carries it.
+        ("shaders.profile", .unknown, #"[RED] the split shader tables differ from game profile 01001F5010DFA000's:\nshader_map.tsv: 36 row(s) only in the profile, 36 only in the split\nEither these game files are not the versions the profile registers, or shader_split.py now reads them differently and the profile's tables were not split again (the split's tables: /x/tables)"#),
         ("language.missing", .unknown, "[RED] the game has no ja (Japanese); its languages: en-US (American English), fr (French) (--language / LANGUAGE)"),
         ("arm32.program", .a32Program, "[RED] Mario Kart 8 Deluxe v0 (1.0.0) is a 32-bit ARM program, which nxnative does not run"),
         ("keys.missing", .keys, "[RED] no such file: /Users/x/prod.keys"),
@@ -198,6 +200,20 @@ final class PortingFailureReasonTests: XCTestCase {
         XCTAssertTrue(reason.next.contains("Game Default"))
         XCTAssertEqual(reason.action, .none)
         XCTAssertEqual(PortingFailureReason(kind: .unknown).title, "The porting stopped")
+    }
+
+    /// The engine's profile and the split disagree: other game files, or an engine that reads them differently.
+    /// The player is told both, without blame, and an older launcher still reads the saved reason.
+    func testProfileTableMismatchExplainsBothCausesAndStaysReadable() throws {
+        let line = Self.engineLines.first { $0.id == "shaders.profile" }!.line
+        let reason = classify(#"{"ev":"say","msg":""# + line + #""}"#)
+        XCTAssertEqual(reason.kind, .unknown, "an older launcher still reads the saved kind")
+        XCTAssertEqual(reason.title, "The engine's profile does not match these files")
+        XCTAssertTrue(reason.what(game: "Pokémon Legends: Arceus").contains("Pokémon Legends: Arceus"))
+        XCTAssertTrue(reason.next.contains("engine update"))
+        XCTAssertEqual(reason.action, .none)
+        let decoded = try JSONDecoder().decode(PortingFailureReason.self, from: JSONEncoder().encode(reason))
+        XCTAssertEqual(decoded.title, reason.title)
     }
 
     func testDamageThatAllowDamagedCannotReadOffersNoPortAnyway() {

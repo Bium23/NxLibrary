@@ -236,6 +236,53 @@
         }
       }
     },
+    "If the base and update are the ones the engine supports for this game, nothing on this Mac needs fixing: wait for an engine update. Otherwise add the supported update and port again.": {
+      "comment": "PortingFailureReason.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If the base and update are the ones the engine supports for this game, nothing on this Mac needs fixing: wait for an engine update. Otherwise add the supported update and port again."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se base e update sono quelli supportati dal motore per questo gioco, su questo Mac non c'è nulla da correggere: attendi un aggiornamento del motore. Altrimenti aggiungi l'update supportato e crea di nuovo l'app."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si la base et la mise à jour sont celles que le moteur prend en charge pour ce jeu, rien n’est à corriger sur ce Mac : attendez une mise à jour du moteur. Sinon, ajoutez la mise à jour prise en charge et recréez l’app."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn Basis und Update die sind, die die Engine für dieses Spiel unterstützt, ist auf diesem Mac nichts zu beheben: Warte auf ein Engine-Update. Sonst füge das unterstützte Update hinzu und erstelle die App erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si la base y la actualización son las que el motor admite para este juego, no hay nada que corregir en este Mac: espera una actualización del motor. Si no, añade la actualización compatible y vuelve a compilar."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se a base e a atualização são as que a engine suporta para este jogo, não há nada a corrigir neste Mac: aguarde uma atualização da engine. Caso contrário, adicione a atualização suportada e compile de novo."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "如果基础游戏和更新正是引擎为此游戏支持的版本，这台 Mac 上无需修复：请等待引擎更新。否则请添加受支持的更新，然后重新移植。"
+          }
+        }
+      }
+    },
     "Store and Wikipedia descriptions and links.": {
       "comment": "SettingsStorageSection.swift",
       "localizations": {
@@ -62686,6 +62733,100 @@
           "stringUnit": {
             "state": "translated",
             "value": "正在切换…"
+          }
+        }
+      }
+    },
+    "The engine's profile does not match these files": {
+      "comment": "PortingFailureReason.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The engine's profile does not match these files"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il profilo del motore non corrisponde a questi file"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le profil du moteur ne correspond pas à ces fichiers"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Profil der Engine passt nicht zu diesen Dateien"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El perfil del motor no coincide con estos archivos"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O perfil da engine não corresponde a estes arquivos"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "引擎的游戏配置与这些文件不匹配"
+          }
+        }
+      }
+    },
+    "The engine's profile for %@ expects other shaders than these files hold: either they are another version or update than the one the profile supports, or the engine now reads them differently and the profile is not updated yet.": {
+      "comment": "PortingFailureReason.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The engine's profile for %@ expects other shaders than these files hold: either they are another version or update than the one the profile supports, or the engine now reads them differently and the profile is not updated yet."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il profilo del motore per %@ si aspetta shader diversi da quelli di questi file: o sono un'altra versione o un altro update rispetto a quelli supportati dal profilo, o il motore ora li legge in modo diverso e il profilo non è ancora aggiornato."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le profil du moteur pour %@ attend d’autres shaders que ceux de ces fichiers : soit ce sont une autre version ou une autre mise à jour que celle prise en charge par le profil, soit le moteur les lit désormais autrement et le profil n’est pas encore à jour."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Profil der Engine für %@ erwartet andere Shader, als diese Dateien enthalten: Entweder sind es eine andere Version oder ein anderes Update als vom Profil unterstützt, oder die Engine liest sie jetzt anders und das Profil ist noch nicht aktualisiert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El perfil del motor para %@ espera otros shaders que los de estos archivos: o son otra versión o actualización distinta de la que admite el perfil, o el motor ahora los lee de otra forma y el perfil aún no está actualizado."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O perfil da engine para %@ espera outros shaders além dos destes arquivos: ou eles são outra versão ou atualização diferente da que o perfil suporta, ou a engine agora os lê de outro jeito e o perfil ainda não foi atualizado."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "引擎为 %@ 准备的游戏配置所需的着色器与这些文件不同：要么这些文件的版本或更新与配置支持的不同，要么引擎现在以不同方式读取它们，而配置尚未更新。"
           }
         }
       }
