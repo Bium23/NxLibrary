@@ -17,6 +17,7 @@ See the [validation checklist](docs/validation.md) for the state of manual check
 
 ### Fixed
 
+- Changing the app language now brings every Switch game's description in the new language, not only the selected game's, and a game not read yet in that language shows its last description with the language notice instead of an empty page.
 - **Open project docs** in About opens the online guide on every Mac. It used to look for a source folder that only exists on the developer's Mac and showed "Docs unavailable".
 
 ## 0.2.0 — 2026-11-18

@@ -790,6 +790,12 @@ public final class AppViewModel: ObservableObject {
     }
 
     public func loadStoreMetadata(for game: PortedGame) {
+        Task { @MainActor [weak self] in await self?.fetchStoreMetadata(for: game) }
+    }
+
+    /// Returns once `game` has metadata in the app language, or the request failed; a request already running for
+    /// it is not repeated. A language change while it runs discards the answer.
+    @MainActor private func fetchStoreMetadata(for game: PortedGame) async {
         let locale = L10n.context
         let generation = metadataLocaleGeneration
         guard let titleId = game.titleId, !titleId.isEmpty else { return }
@@ -801,20 +807,16 @@ public final class AppViewModel: ObservableObject {
 
         storeMetadataLoading.insert(game.id)
         storeMetadataErrors[game.id] = nil
-        let service = storeMetadataService
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            do {
-                let metadata = try await service.metadata(for: game, locale: locale)
-                guard self.metadataLocaleGeneration == generation else { return }
-                self.setStoreMetadata(metadata, for: game)
-            } catch {
-                guard self.metadataLocaleGeneration == generation else { return }
-                self.storeMetadataErrors[game.id] = error.localizedDescription
-            }
-            self.storeMetadataLoading.remove(game.id)
-            self.loadFallbackScreenshots(for: game)
+        do {
+            let metadata = try await storeMetadataService.metadata(for: game, locale: locale)
+            guard metadataLocaleGeneration == generation else { return }
+            setStoreMetadata(metadata, for: game)
+        } catch {
+            guard metadataLocaleGeneration == generation else { return }
+            storeMetadataErrors[game.id] = error.localizedDescription
         }
+        storeMetadataLoading.remove(game.id)
+        loadFallbackScreenshots(for: game)
     }
 
     /// A language change only resets presentation metadata, never the library, personal picks or game settings.
@@ -827,30 +829,36 @@ public final class AppViewModel: ObservableObject {
         let games = libraryGames
         let locale = L10n.context
         let service = storeMetadataService
-        // Keep the visible description while another language loads. Disk reads do not block the UI.
+        // Keep a visible description while another language loads. Disk reads do not block the UI.
         localizedMetadataRefresh = Task { @MainActor [weak self] in
             let entries = await Task.detached(priority: .userInitiated) {
                 games.compactMap { game -> (PortedGame, NintendoStoreMetadata)? in
                     guard let titleID = game.titleId,
-                          let cached = service.cached(for: titleID, locale: locale) else { return nil }
+                          let cached = service.cachedForDisplay(for: titleID, locale: locale) else { return nil }
                     return (game, cached)
                 }
             }.value
             guard let self, !Task.isCancelled, self.metadataLocaleGeneration == generation else { return }
             for (game, metadata) in entries { self.setStoreMetadata(metadata, for: game) }
-            if let game = self.currentFocusedGame { self.loadStoreMetadata(for: game) }
+            // Every game gets the new language without being opened: the focused one first, one request at a time.
+            let focused = self.currentFocusedGame
+            for game in (focused.map { [$0] } ?? []) + games.filter({ $0.id != focused?.id }) {
+                guard !Task.isCancelled, self.metadataLocaleGeneration == generation else { return }
+                await self.fetchStoreMetadata(for: game)
+            }
         }
     }
 
-    /// Fills metadata from the seven-day disk cache without starting a network
-    /// request. The library uses this so a previously viewed game paints its
-    /// title, description and hero immediately when selected.
+    /// Fills metadata from the disk cache without starting a network request, in
+    /// another language when the app's is not cached yet (`cachedForDisplay`).
+    /// The library uses this so a previously viewed game paints its title,
+    /// description and hero immediately when selected.
     public func preloadCachedStoreMetadata() {
         for game in libraryGames {
             guard storeMetadata[game.id] == nil,
                   let titleId = game.titleId,
                   !titleId.isEmpty,
-                  let metadata = storeMetadataService.cached(for: titleId, locale: L10n.context) else { continue }
+                  let metadata = storeMetadataService.cachedForDisplay(for: titleId, locale: L10n.context) else { continue }
             setStoreMetadata(metadata, for: game)
         }
     }

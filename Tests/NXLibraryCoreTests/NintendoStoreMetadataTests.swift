@@ -48,6 +48,25 @@ final class NintendoStoreMetadataTests: XCTestCase {
         XCTAssertTrue(client.requested.isEmpty, "Formatting region must not trigger another metadata request")
     }
 
+    /// A player who opens the app in a new language sees the last text read, with its language, never an empty page.
+    func testAnotherLanguageIsShownUntilTheNewOneArrives() async throws {
+        let client = FakeClient()
+        client.responses["ncom_game_en_us/query"] = Data(#"{"hits":[{"title":"Game","nsuid":"1","platform":"Nintendo Switch","description":"English description.","url":"/games/detail/game-switch/"}]}"#.utf8)
+        client.responses["lang=it"] = Data(#"{"description":"Descrizione italiana."}"#.utf8)
+        let cache = cacheDirectory()
+        let italian = AppLocale(language: .italian, region: "IT")
+        _ = try await NintendoStoreMetadataService(client: client, cacheDirectory: cache)
+            .metadata(for: game(name: "Game", titleId: "0100000000010000"), locale: italian)
+        let service = NintendoStoreMetadataService(client: FakeClient(), cacheDirectory: cache)
+        let spanish = AppLocale(language: .spanish, region: "IT")
+        XCTAssertNil(service.cached(for: "0100000000010000", locale: spanish))
+        let shown = try XCTUnwrap(service.cachedForDisplay(for: "0100000000010000", locale: spanish))
+        XCTAssertEqual(shown.description, "Descrizione italiana.")
+        XCTAssertEqual(shown.descriptionLanguage, "it")
+        XCTAssertFalse(service.isFresh(shown, locale: spanish), "the Spanish text is still asked for")
+        XCTAssertNil(service.cachedForDisplay(for: "0100000000020000", locale: spanish))
+    }
+
     func testSwitch2RequestsTheSelectedDescriptionLanguage() async throws {
         let client = FakeClient()
         client.responses["ncom_game_en_us/query"] = Data(#"{"hits":[{"title":"Game","nsuid":"1","platform":"Nintendo Switch 2","description":"English description.","url":"/games/detail/game-switch-2/"}]}"#.utf8)

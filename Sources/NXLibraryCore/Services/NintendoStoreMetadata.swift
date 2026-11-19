@@ -141,25 +141,38 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
     }
 
     public func cached(for titleId: String, locale: AppLocale = AppLocale(language: .english, region: "US")) -> NintendoStoreMetadata? {
-        func read(_ url: URL) -> NintendoStoreMetadata? {
-            guard let data = try? Data(contentsOf: url),
-                  let metadata = try? JSONDecoder().decode(NintendoStoreMetadata.self, from: data),
-                  metadata.titleId == titleId else { return nil }
-            return metadata
-        }
-        if let exact = read(cacheURL(for: titleId, locale: locale)) { return exact }
+        if let exact = read(cacheURL(for: titleId, locale: locale), titleId: titleId) { return exact }
         // The provider localizes descriptions by language, not by formatting region.
         var alternatives: [NintendoStoreMetadata] = []
         if locale.language == .english,
-           let legacy = read(cacheURL(for: titleId, locale: AppLocale(language: .english, region: "US"))) {
+           let legacy = read(cacheURL(for: titleId, locale: AppLocale(language: .english, region: "US")), titleId: titleId) {
             alternatives.append(legacy)
         }
         let root = cacheDirectory.appendingPathComponent("localized")
         for folder in (try? fileManager.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)) ?? []
             where folder.lastPathComponent.hasPrefix(locale.language.rawValue + "_") {
-            if let entry = read(folder.appendingPathComponent(Self.safeFileName(titleId) + ".json")) { alternatives.append(entry) }
+            if let entry = read(folder.appendingPathComponent(Self.safeFileName(titleId) + ".json"), titleId: titleId) { alternatives.append(entry) }
         }
         return alternatives.max { $0.fetchedAt < $1.fetchedAt }
+    }
+
+    /// What a page shows before the network answers: the entry for `locale`, else the newest one cached in any
+    /// language, so a new app language shows the last text read (with its language note) instead of an empty page.
+    /// That entry is never fresh for `locale` (`isFresh`), so the text in the new language is still asked for.
+    public func cachedForDisplay(for titleId: String, locale: AppLocale) -> NintendoStoreMetadata? {
+        if let entry = cached(for: titleId, locale: locale) { return entry }
+        let name = Self.safeFileName(titleId) + ".json"
+        let root = cacheDirectory.appendingPathComponent("localized")
+        let folders = (try? fileManager.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)) ?? []
+        let entries = ([cacheDirectory] + folders).compactMap { read($0.appendingPathComponent(name), titleId: titleId) }
+        return entries.max { $0.fetchedAt < $1.fetchedAt }
+    }
+
+    private func read(_ url: URL, titleId: String) -> NintendoStoreMetadata? {
+        guard let data = try? Data(contentsOf: url),
+              let metadata = try? JSONDecoder().decode(NintendoStoreMetadata.self, from: data),
+              metadata.titleId == titleId else { return nil }
+        return metadata
     }
 
     /// Whether `metadata` can be used without asking the network again: younger

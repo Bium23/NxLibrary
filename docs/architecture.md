@@ -247,6 +247,8 @@ Regole della barra:
 - `GameGenre` traduce alla presentazione i generi noti senza modificare metadati e scelte salvate; i generi sconosciuti restano come sono.
 - `NintendoStoreMetadataService` legge le vecchie cache come inglesi e salva i percorsi per lingua e regione, riusando i dati tra regioni della stessa lingua.
   - Un cambio di sola regione non aggiorna i metadati. Un cambio di lingua conserva la scheda visibile, legge la cache fuori dal thread principale e, con dati freschi già presenti, chiede solo la descrizione tradotta.
+  - `cachedForDisplay` dà alla pagina la voce della lingua dell'app o, se manca, la più recente in un'altra lingua, con la sua nota di lingua: un'app aperta in una lingua nuova non mostra pagine vuote. Quella voce non è mai fresca per la nuova lingua, quindi la descrizione si chiede comunque.
+  - Dopo un cambio di lingua `AppViewModel.refreshLocalizedMetadata` chiede la nuova lingua per ogni gioco della libreria, prima quello in primo piano, una richiesta alla volta, perché il giocatore non debba aprirli uno per uno.
   - Gli ID 0400 dei giochi Switch 2 sono ammessi al lookup Nlib come gli 0100.
   - `descriptionCheckedAt` distingue un ripiego già controllato da una vecchia cache mai cercata nella lingua richiesta. Una traduzione vuota si ricontrolla dopo 24 ore; dopo un errore temporaneo si riprova dopo un minuto.
   - Chiede una descrizione Nlib localizzata anche quando il catalogo US ne ha già una inglese, e non invia parametri di regione non documentati.
