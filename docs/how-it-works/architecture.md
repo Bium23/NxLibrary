@@ -1,18 +1,18 @@
 # Arcane — guida tecnica
 
-Questa guida descrive **come funziona l'app oggi**, area per area. Non contiene storia né stati di validazione: lo storico è nel [CHANGELOG](../CHANGELOG.md) e nelle note datate, cosa ha provato il maintainer è in [validation.md](validation.md).
+Questa guida descrive **come funziona l'app oggi**, area per area. Non contiene storia né stati di validazione: lo storico è nel [CHANGELOG](../../CHANGELOG.md) e nelle note datate, cosa ha provato il maintainer è in [validation.md](../working-on-it/validation.md).
 
 Ordine di lettura per chi lavora sul codice:
-1. [AGENTS.md](../AGENTS.md): le regole.
+1. [AGENTS.md](../../AGENTS.md): le regole.
 2. Questa guida: la mappa.
-3. [conventions.md](conventions.md): come si costruisce una cosa nuova.
+3. [conventions.md](../working-on-it/conventions.md): come si costruisce una cosa nuova.
 4. [flows.md](flows.md): i percorsi completi.
 5. Il documento dell'area, se c'è (per esempio [steam.md](steam.md)).
-6. [file-map.md](file-map.md): un file per riga.
+6. [file-map.md](../working-on-it/file-map.md): un file per riga.
 
-Il [README](../README.md) è la guida d'uso; la [guida di sviluppo](development.md) raccoglie build, runtime, CI e release.
+Il [README](../../README.md) è la guida d'uso; la [guida di sviluppo](../working-on-it/development.md) raccoglie build, runtime, CI e release.
 
-**Engine attuale:** pin `461a5f9f95fc9fc40a690bb2a82eb23f1f03bdca`, definito in `AppViewModel.pinnedEngineCommit`. Il suo lock certifica Metal `32023.922`, asset Apple `27B47`, con Xcode minimo `27.2`. Le revisioni di ogni pin sono in [upstream-upgrades](upstream-upgrades/README.md).
+**Engine attuale:** pin `461a5f9f95fc9fc40a690bb2a82eb23f1f03bdca`, definito in `AppViewModel.pinnedEngineCommit`. Il suo lock certifica Metal `32023.922`, asset Apple `27B47`, con Xcode minimo `27.2`. Le revisioni di ogni pin sono in [upstream-upgrades](../history/engine-upgrades/README.md).
 
 ## Indice
 
@@ -39,7 +39,7 @@ Il [README](../README.md) è la guida d'uso; la [guida di sviluppo](development.
 
 ## Struttura e dipendenze
 
-[Package.swift](../Package.swift) dichiara tre target. La toolchain Swift è quella di Xcode, con deployment minimo macOS 13.
+[Package.swift](../../Package.swift) dichiara tre target. La toolchain Swift è quella di Xcode, con deployment minimo macOS 13.
 
 | Target | Compito |
 |---|---|
@@ -88,7 +88,7 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
 
 **Coordinatore.**
 - `AppViewModel.swift` coordina libreria, rilevamento dell'ambiente, selezione delle sorgenti, porting e lancio. Le estensioni `AppViewModel+…` collegano cheat, salvataggi, diagnostica, chiavi, toolchain, installazioni in attesa e fonti; sono parti dello stesso oggetto osservabile.
-- Gli stati di un solo pannello hanno il loro modello: `SetupCheckModel`, `SavePanelModel` (anteprima, operazione in corso, errore, ultimo backup, importazione riuscita) e gli altri elencati in [conventions.md](conventions.md#1-dove-va-il-codice). Gli aggiornamenti destinati alla UI si pubblicano sulla coda principale.
+- Gli stati di un solo pannello hanno il loro modello: `SetupCheckModel`, `SavePanelModel` (anteprima, operazione in corso, errore, ultimo backup, importazione riuscita) e gli altri elencati in [conventions.md](../working-on-it/conventions.md#1-dove-va-il-codice). Gli aggiornamenti destinati alla UI si pubblicano sulla coda principale.
 
 **Primo avvio.**
 - Il primo avvio apre su `found`: cosa c'è già sul Mac, letto senza cambiare nulla.
@@ -166,7 +166,7 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
   - Scoperta la home, il moonlight ha 0,5 s da solo. Poi l’entrata aspetta, per al massimo un altro secondo, che finisca la prima ricerca dell’arte (`TileArtPendingKey`, da `SpotlightTileArtwork` e `SteamArtwork`).
   - L’arte entra in 1,4 s con la curva di `OpacityFade`, come lo scorrimento fra giochi. Il moonlight continua a muoversi finché l’arte è entrata; anche la prima immagine arrivata tardi sfuma (`SeleneArtLayerView.heldOnce`).
   - Ogni tessera visibile parte più vicina al centro della riga (75% della distanza), con scala 0,35 e spostamento verticale −18 unità; vola in 0,9 s, con dissolvenza di 0,5 s, da 0,6 s più 0,06 s per tessera. Le tessere oltre il bordo destro fanno solo una dissolvenza, al massimo dodici. `EntranceFlight` e `EntranceFade` calcolano movimento e opacità su orologi lineari avviati insieme, con il ritardo dentro ogni effetto.
-  - Le informazioni salgono di 40 unità da 1,3 s, in 0,8 s, con dissolvenza di 0,7 s; il titolo sotto la selezione arriva da 2 s. `SpotlightEntrance.end(of:)` determina l’atterraggio finale. Le [misure dell’entrata](reviews/2026-11-17-entrance-frames.md) descrivono metodo, campioni e limiti della sonda temporanea.
+  - Le informazioni salgono di 40 unità da 1,3 s, in 0,8 s, con dissolvenza di 0,7 s; il titolo sotto la selezione arriva da 2 s. `SpotlightEntrance.end(of:)` determina l’atterraggio finale. Le [misure dell’entrata](../history/reviews/2026-11-17-entrance-frames.md) descrivono metodo, campioni e limiti della sonda temporanea.
   - Barra in alto (tab e orologio) e hint dei pulsanti (`SeleneHomeChrome.hintsHeld`) arrivano per ultimi, insieme: a volo finito sfumano in 0,4 s (`SpotlightEntrance.controlsFade`). La pillola del filtro sale con lo sfondo.
   - Nessun input salta l’entrata. Fino all’atterraggio (`Phase.takesInput`) Spotlight ignora controller, tasti e rotella e non riceve clic; passano solo le scorciatoie con ⌘, ⌃ o ⌥. *Perché:* l’entrata è l’apertura dell’app e va vista intera. Un volo iniziato atterra comunque entro 5 s (`SpotlightEntrance.longestWait`), così l’input non resta mai bloccato.
   - Uscendo da Spotlight, ridimensionando durante il volo o accendendo Riduci movimento, tutto atterra subito, barra e hint compresi.
@@ -288,7 +288,7 @@ Regole della barra:
 - Il Setup continua a installare il pin, ma per il commit scelto mostra la scheda pronta in arancione con **Back to tested** e non la riporta indietro da solo.
 - La scelta decade quando il checkout non è più su quel commit, o quando un aggiornamento di Arcane porta un pin che lo contiene. Se l'override l'aveva acceso la scelta, torna spento. Settings e Setup usano la stessa frase (`NewestEngineCopy.note`).
 
-**Capacità dell'engine adottate** (la decisione per ogni pin è nella sua nota in `upstream-upgrades/`):
+**Capacità dell'engine adottate** (la decisione per ogni pin è nella sua nota in `history/engine-upgrades/`):
 - **Cartelle estratte e pacchetti con più contenuti:** `EnginePackageReader` riusa il lettore content-meta upstream; `ExtractedSourceCatalog` legge NPDM e profili registrati senza chiavi.
 - **NUP e cartelle senza profilo:** quando lo script espone `survey_nup` / `survey_dump`, `EngineSourceCapabilities` li accetta e l'engine li porta con un profilo provvisorio. Review mostra **Not tested with this engine yet** per qualunque sorgente senza profilo.
 - **File `.zs` danneggiati:** il classificatore dell'engine controlla i file `.zs` danneggiati in NUP e cartelle (riga `files.format`).
@@ -442,7 +442,7 @@ I percorsi completi sono in [flows.md](flows.md#3-play-di-un-gioco-switch-nxnati
 - Compare sia nella pagina del gioco della Spotlight sia in Details, tra Details e More like this (focus `.mods` in `SpotlightState`, `DetailsFocus.modsZone`).
 - È una griglia di sei tessere per riga che non scorre di lato (`ModsBandLayout`): Sinistra e Destra restano nella riga, Giù scende di riga e dall'ultima passa a More like this.
 - `ModsBandHost` tiene per entrambe le pagine mod installate, GameBanana e pannelli. In Spotlight legge le mod all'apertura della pagina del gioco. Cambiare selezione sulla riga svuota la fascia precedente senza leggere quella successiva, così la lettura delle mod resta fuori dallo scorrimento.
-  Le [misure dei primi cambi gioco](reviews/2026-11-18-spotlight-glide.md) mostrano il costo della lettura prima e dopo.
+  Le [misure dei primi cambi gioco](../history/reviews/2026-11-18-spotlight-glide.md) mostrano il costo della lettura prima e dopo.
 - Play riconcilia le cartelle delle mod prima di avviare il gioco, anche dalla riga. Se la cartella o i record non si leggono, `ModStore.sync` conserva entrambi i file di stato. La Dev mantiene il divieto di manutenzione automatica dell'overlay.
 - `GameBananaBandModel` coordina abbinamento, ricerca e installazioni. Cambiando gioco dimentica le mod del precedente; alla prima apertura di un gioco in ogni avvio toglie gli avanzi di un'installazione interrotta (`ModStore.removeLeftoverInstalls`). `GameBananaFindModel` tiene lo stato della ricerca per nome.
 - Le mod trovate entrano al massimo in due gruppi: le prime cinque, accanto ad Add mods, appena ci sono, poi tutte le altre a ricerca finita. Ogni gruppo aspetta (al massimo 1,2 s, `imageWait`) che la sua arte sia decodificata (`prepareImages`, cioè `GameBananaImageView.prepare`, in parallelo) ed entra con un'unica dissolvenza. Una tessera di stato spinta più in là sfuma nel nuovo posto invece di attraversare la griglia.
@@ -563,7 +563,7 @@ Il percorso completo è in [flows.md](flows.md#6-importare-o-ripristinare-un-sal
 - `AutomaticIconResolver` riempie l'icona di un'app che non ne ha una, solo senza scelta manuale e senza un esplicito Only here. Le app con un'icona propria restano intatte.
 - `ArtworkStore.automaticIcon` prova Title DB e poi una corrispondenza esatta normalizzata in Switch Icon Showdown, senza confondere sequel, omonimi o edizioni. Un title ID Switch 2 da solo non identifica una Switch 2 Edition.
 - La cache PNG è separata da `ArtworkPicks`, con attribuzione e una sola piccola voce negativa per gioco (15 minuti). Il resolver condivide le richieste concorrenti, limita dimensioni e tempi delle risposte, verifica host e immagini quadrate e consulta `robots.txt` prima del download secondario.
-- Switch Icon Showdown esclude `/images/` dai crawler, quindi il resolver non scarica le sue immagini (stato in [validation.md](validation.md)).
+- Switch Icon Showdown esclude `/images/` dai crawler, quindi il resolver non scarica le sue immagini (stato in [validation.md](../working-on-it/validation.md)).
 - Fallimenti di rete o ricerche ambigue non fanno fallire il porting. Nessun file del motore viene modificato.
 
 **Icona dell'app del gioco.** L'icona scelta in Change artwork (slot Icon, conservata a 1024 px) diventa anche l'icona dell'app del gioco in Finder e nel Dock (`AppIconWriter`, `AppViewModel+AppIcon`).
@@ -637,7 +637,7 @@ Il percorso completo è in [flows.md](flows.md#6-importare-o-ripristinare-un-sal
     - `IGDBMetadataService` conserva solo la proposta e l'identità verificate, per client pubblico e query, in `metadata/igdb`: sette giorni per i dati, uno per assenze o ambiguità. Gli errori non diventano assenze in cache, e i dati salvati restano disponibili offline con un avviso. Risposte tardive o di credenziali rimosse non si pubblicano.
 - **Download a blocchi.** I download di Wikidata, IGDB, LaunchBox/TheGamesDB e Steam passano da `BoundedDownload`, che conserva i blocchi ricevuti da URLSession invece di leggere un byte alla volta. Limiti di dimensione, rifiuto dei redirect e annullamento restano gli stessi.
 
-Prove e misure di queste scelte: [docs/reviews/2026-11-16-ratings-metadata-evidence.md](reviews/2026-11-16-ratings-metadata-evidence.md).
+Prove e misure di queste scelte: [docs/history/reviews/2026-11-16-ratings-metadata-evidence.md](../history/reviews/2026-11-16-ratings-metadata-evidence.md).
 
 **Sfondi online.**
 - I parser dei provider sono in `OnlineBackgrounds.swift`. `OnlineBackgroundService` gestisce rete, progressi, miniature e crediti.
@@ -648,7 +648,7 @@ Prove e misure di queste scelte: [docs/reviews/2026-11-16-ratings-metadata-evide
 
 **Canvas, temi e componenti.**
 - `SeleneCanvas` scala il canvas 1920×1080 nello spazio disponibile, e `SeleneCanvasEnvironment` espone unità e font alle viste. `SeleneTheme` ricava colori e curve di animazione dalla palette. `MaterialIcon` elenca i glifi; `SeleneFonts` registra il font e li rende in SwiftUI.
-- I componenti condivisi in `Views/Components` disegnano righe, switch, pill, focus, suggerimenti dei tasti, dialoghi e conferme. Quando usarli è in [conventions.md](conventions.md#3-una-schermata-o-un-pannello-selene).
+- I componenti condivisi in `Views/Components` disegnano righe, switch, pill, focus, suggerimenti dei tasti, dialoghi e conferme. Quando usarli è in [conventions.md](../working-on-it/conventions.md#3-una-schermata-o-un-pannello-selene).
 
 **Suggerimenti dei tasti.**
 - Le barre `SeleneHintsBar` stanno a 32 unità Selene dal fondo (`SeleneBottomScrim.hintsBottom`). I simboli sono da 30 unità; solo Q/E e i corrispondenti LB/RB accanto ai filtri Achievements sono da 22, con area cliccabile di 30×36. Il margine sinistro aggiuntivo è 18.
@@ -667,7 +667,7 @@ Prove e misure di queste scelte: [docs/reviews/2026-11-16-ratings-metadata-evide
   - Le particelle sono sempre morbide, senza un selettore: due stili quasi indistinguibili non giustificano una scelta in più. Il decoder ignora l’eventuale campo storico `particleStyle`, senza modificare le altre preferenze, e non lo riscrive.
   - Colore e particelle avanzano con l’orologio del display link esistente, senza timer SwiftUI. Background motion spento e Riduci movimento tengono fermo l’orologio; il fallback senza Metal resta statico. Gli altri temi mantengono la loro palette. Le uniform interpolano superficie, variante Flow, tint e presenza; la cache dei campioni fermi comprende gli stessi valori. Le regole di pausa, Riduci movimento e passaggio all’artwork restano condivise nel percorso esistente. Senza Metal il ripiego mantiene soltanto bagliori statici nei colori locali.
   - Nella Dev, la categoria locale `backdrop-transition` registra creazione e prima presentazione di ogni renderer, oltre all’apertura di Settings e allo stato del fullscreen iniziale. Non registra input o dati del giocatore.
-  - Le misure GPU fuori schermo e i loro limiti sono nella [nota del 17 novembre](reviews/2026-11-17-arcane-moonlight.md).
+  - Le misure GPU fuori schermo e i loro limiti sono nella [nota del 17 novembre](../history/reviews/2026-11-17-arcane-moonlight.md).
 - **Arte dei giochi.** `SeleneArtLayer` è una pila di `CALayer` animati nel render server.
   - Ogni nuova immagine entra sopra ciò che si vede, che resta fermo sotto finché la nuova non è entrata. Così una dissolvenza interrotta riparte da ciò che è a schermo (niente salti, niente moonlight che traspare) e non scatta se il main thread è occupato.
   - Ciò che un layer mostra durante una dissolvenza si calcola sull'orologio (`OpacityFade`, la stessa curva dell'animazione), non dal presentation layer, che per un layer aggiunto nello stesso passaggio non esiste ancora. *Perché:* altrimenti due immagini in fila fanno saltare la prima a piena opacità.
@@ -750,10 +750,10 @@ Nel repository, `.build/` contiene gli output SwiftPM, `work/Runtime` il runtime
 - Lo zip dell'aggiornamento contiene sempre `NXLibrary.app`, perché le copie precedenti leggono quel nome, e l'installazione tiene il nome del file corrente. Il nome Arcane arriva al file alla chiusura.
 - `AppDelegate.applicationWillTerminate` chiede ad `AppBundleRename.target` se rinominare. Lo fa solo una copia release, non traslocata, che si chiama `NX Library.app`, in una cartella scrivibile senza un `Arcane.app` accanto.
 - Non rinomina mentre una build, un aggiornamento o un'operazione sui salvataggi usa ancora il bundle (`AppDelegate.isBusy`, impostato da `AppShellState`), né quando un riavvio è in programma (`AppDelegate.relaunchScheduled`, da Restart app e dall'updater): l'aiuto che riapre l'app usa il percorso attuale.
-- *Perché alla chiusura:* rinominare un bundle in esecuzione lascia `Bundle.main` sul percorso vecchio fino al riavvio. Il Dock segue la rinomina nella stessa cartella ([sonda](reviews/2026-11-17-dock-rename-probe.md)).
+- *Perché alla chiusura:* rinominare un bundle in esecuzione lascia `Bundle.main` sul percorso vecchio fino al riavvio. Il Dock segue la rinomina nella stessa cartella ([sonda](../history/reviews/2026-11-17-dock-rename-probe.md)).
 - Un errore va nel log e non ferma la chiusura. La copia Dev non si rinomina mai: la ricostruisce `build_app.sh`.
 
-**Changelog dell'engine.** `UpstreamChecker` consulta il changelog del motore e `UpstreamCopy` lo presenta. L'adozione di un nuovo commit segue la procedura manuale di [AGENTS.md](../AGENTS.md) e delle [note di upgrade](upstream-upgrades/README.md).
+**Changelog dell'engine.** `UpstreamChecker` consulta il changelog del motore e `UpstreamCopy` lo presenta. L'adozione di un nuovo commit segue la procedura manuale di [AGENTS.md](../../AGENTS.md) e delle [note di upgrade](../history/engine-upgrades/README.md).
 
 **Script di build e release.**
 - `bundle_runtime.sh` prepara Python e strumenti da `runtime.lock`, controlla gli hash e sistema i riferimenti Mach-O con `relink_macho.py`.
@@ -764,7 +764,7 @@ Nel repository, `.build/` contiene gli output SwiftPM, `work/Runtime` il runtime
 ## Verifica e manutenzione
 
 **Test.**
-- La suite Core usa fixture sintetiche, cartelle temporanee, runner e confini I/O sostituibili. Copre modelli, persistenza, sorgenti, chiavi, contratti CLI, processi, installazione, lancio, stato della UI, artwork, cheat e transazioni dei salvataggi. Il [catalogo dei test](file-map.md#test-e-fixture) indica la responsabilità di ogni file.
+- La suite Core usa fixture sintetiche, cartelle temporanee, runner e confini I/O sostituibili. Copre modelli, persistenza, sorgenti, chiavi, contratti CLI, processi, installazione, lancio, stato della UI, artwork, cheat e transazioni dei salvataggi. Il [catalogo dei test](../working-on-it/file-map.md#test-e-fixture) indica la responsabilità di ogni file.
 - `run_nup_programs.py` verifica i convertitori reali UI/persistenza e gli argomenti NUP; con uno snapshot
   immutabile dell’engine verifica anche il probe Python su un contenitore sintetico. `run_save_restart.py`
   arresta e riavvia processi distinti nei checkpoint di sostituzione e recovery, conservando backup e
@@ -779,4 +779,4 @@ codesign --verify --deep --strict "$HOME/Applications/Arcane Dev.app"
 
 **Prove interattive.** Le esegue l'utente; gli agenti svolgono controlli sul codice, test automatici e build/installazione, secondo `AGENTS.md`.
 
-**Per una modifica.** Parti dall'area in questa guida e nel catalogo dei file, segui il collegamento al file e leggi i chiamanti reali. Segui la ricetta di [conventions.md](conventions.md) e aggiorna i documenti come dice la sua sezione 10.
+**Per una modifica.** Parti dall'area in questa guida e nel catalogo dei file, segui il collegamento al file e leggi i chiamanti reali. Segui la ricetta di [conventions.md](../working-on-it/conventions.md) e aggiorna i documenti come dice la sua sezione 10.

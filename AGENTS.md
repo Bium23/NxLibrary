@@ -1,19 +1,19 @@
 # Arcane — agent guidance
 
-A personal macOS SwiftUI front-end for upstream [nxnative](https://github.com/seedds/nxnative). Before changing behavior, read in this order: this file, `docs/architecture.md` (how each area works), `docs/conventions.md` (where new code goes and how it is built), `docs/flows.md` (end-to-end paths), the area's own document if it has one (for example `docs/steam.md`), then the files through `docs/file-map.md`.
+A personal macOS SwiftUI front-end for upstream [nxnative](https://github.com/seedds/nxnative). Before changing behavior, read in this order: this file, `docs/README.md` (what each docs folder is for), `docs/how-it-works/architecture.md` (how each area works), `docs/working-on-it/conventions.md` (where new code goes and how it is built), `docs/how-it-works/flows.md` (end-to-end paths), the area's own document if it has one (for example `docs/how-it-works/steam.md`), then the files through `docs/working-on-it/file-map.md`.
 
 ## Documentation
 
 The documentation is how the next session understands the structure. Keep it exact.
 
-- **Build on the existing structure.** Every new piece follows a recipe in `docs/conventions.md` and its named example. If no recipe fits, propose one to the maintainer; once approved, add it to `conventions.md` before or with the code. Never invent a second way to do something the codebase already does.
+- **Build on the existing structure.** Every new piece follows a recipe in `docs/working-on-it/conventions.md` and its named example. If no recipe fits, propose one to the maintainer; once approved, add it to `conventions.md` before or with the code. Never invent a second way to do something the codebase already does.
 - **Same commit, same truth.** A change updates, in the same commit:
-  - its row in `docs/file-map.md`, placed in its area section, and the total;
-  - its area in `docs/architecture.md` (or the area's own document);
-  - `docs/flows.md`, if a flow changed;
-  - `docs/validation.md`, if something new awaits validation or the maintainer confirmed something.
-- **Present tense only.** `architecture.md`, `conventions.md`, `flows.md` and area documents describe what the code does now. Put history in `CHANGELOG.md`, dated notes (`docs/upstream-upgrades/`, `docs/reviews/`) or git. Keep the *why* of a choice next to it in one sentence. Move measurements and probe evidence to a dated note in `docs/reviews/` and link it.
-- **One validation list.** Validation status lives only in `docs/validation.md`. A row becomes validated only on the maintainer's confirmation.
+  - its row in `docs/working-on-it/file-map.md`, placed in its area section, and the total;
+  - its area in `docs/how-it-works/architecture.md` (or the area's own document);
+  - `docs/how-it-works/flows.md`, if a flow changed;
+  - `docs/working-on-it/validation.md`, if something new awaits validation or the maintainer confirmed something.
+- **Present tense only.** `architecture.md`, `conventions.md`, `flows.md` and area documents describe what the code does now. Put history in `CHANGELOG.md`, dated notes (`docs/history/engine-upgrades/`, `docs/history/reviews/`) or git. Keep the *why* of a choice next to it in one sentence. Move measurements and probe evidence to a dated note in `docs/history/reviews/` and link it.
+- **One validation list.** Validation status lives only in `docs/working-on-it/validation.md`. A row becomes validated only on the maintainer's confirmation.
 - **No appended sections.** New features go into the section of their area, never into a dated section at the end of a guide or of the file map. If an area grows a document of its own, add it to the reading order above.
 - **Designs and plans stay private.** Design notes, plans, research, product ideas and future intentions live in `docs/private/` (git-ignored) and are never moved into the repository. Public documents state current behavior and the one-sentence *why*; they never name private files or reveal planned features, sources, product or business ideas.
 - **Readable docs.** Use short paragraphs, lists and tables; avoid single lines of thousands of characters. Name real types and files. Verify every claim against the code before writing it.
@@ -59,7 +59,7 @@ Every re-pin is a product decision, not just a hash change. Before changing the 
 6. If the engine's README `pip install` line names a new package, add its wheel (and its dependencies) to `runtime.lock`, rebuild with `scripts/bundle_runtime.sh`, and update `NOTICE`; a GPL package also ships its source in `Runtime/sources/`. `EngineRuntimeRequirementsTests` fails until it is there.
 7. If the engine's `dm/gfx/tools/dmsh_chain.lock` certifies a new Metal compiler, add it to `ToolchainRequirements.current.metalAssets` with Apple's asset build from `xcodebuild -showComponent MetalToolchain -json` (`buildVersion`), so the Setup check can download exactly that compiler. Raise `minimumXcode` when the new compiler needs it.
 8. Re-pin only after tests, the compatibility gate, a certified build, and a smoke launch. Update `README.md` and the design spec.
-9. Write a dated note in `docs/upstream-upgrades/` using the checklist there.
+9. Write a dated note in `docs/history/engine-upgrades/` using the checklist there.
 
 Never follow `main` automatically. A commit that is newer is not automatically a commit that is tested with this Mac's toolchain.
 

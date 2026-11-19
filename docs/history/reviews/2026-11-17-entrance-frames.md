@@ -47,4 +47,4 @@ di 1 s prima di mostrare la finestra e consentire il fullscreen.
 
 La sonda e le sue chiamate sono rimosse dal codice applicativo; questa nota
 conserva metodo e risultati. Lo stato delle prove manuali resta soltanto in
-[validation.md](../validation.md).
+[validation.md](../../working-on-it/validation.md).

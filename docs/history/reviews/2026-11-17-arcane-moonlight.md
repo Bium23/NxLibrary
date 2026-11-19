@@ -63,7 +63,7 @@ non sono controllati. Le differenze non dimostrano un miglioramento di
 prestazioni né garantiscono un frame rate nell’app. Servono a rilevare costi
 evidenti nei soli passaggi aggiunti; fluidità, contrasto e integrazione si
 verificano nella Dev. Lo stato delle prove umane è in
-[validation.md](../validation.md).
+[validation.md](../../working-on-it/validation.md).
 
 ## Superfici Arcane e Arcane Flow
 

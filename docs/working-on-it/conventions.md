@@ -3,8 +3,8 @@
 Questa guida dice **dove va una cosa nuova e come si scrive**, partendo da quello che il codice fa già. Prima di scrivere codice nuovo, trova qui la ricetta che corrisponde e segui il file d'esempio indicato. Se nessuna ricetta va bene, non inventarne una in silenzio: proponila al maintainer e, una volta approvata, aggiungila qui.
 
 Gli altri documenti:
-- [architecture.md](architecture.md): come funziona ogni area;
-- [flows.md](flows.md): i percorsi completi, dall'input all'effetto;
+- [architecture.md](../how-it-works/architecture.md): come funziona ogni area;
+- [flows.md](../how-it-works/flows.md): i percorsi completi, dall'input all'effetto;
 - [file-map.md](file-map.md): un file per riga;
 - [validation.md](validation.md): cosa ha validato il maintainer.
 
@@ -29,7 +29,7 @@ Regole:
 
 ## 2. Una fonte di giochi (Steam oggi, CrossOver e altre domani)
 
-Esempio completo: Steam, documentato in [steam.md](steam.md).
+Esempio completo: Steam, documentato in [steam.md](../how-it-works/steam.md).
 
 - Il gioco entra nel catalogo comune come `CatalogGame` con il **suo payload reale** (`SteamCatalogGame`, `PortedGame`). Non si costruisce mai un gioco di un'altra fonte finto.
 - Cosa offre la pagina lo dice `CatalogGamePresentation`: installazioni, operazioni supportate, `CatalogLaunchTarget`. L'ordine delle Opzioni comuni sta in `CatalogGameOptions`. Una fonte dichiara cosa sa fare; non aggiunge schermate parallele.
@@ -120,9 +120,9 @@ Esempi: `BoundedDownload`, `GameBananaClient`, `IGDBClient`, `SteamMetadataServi
 
 Ogni modifica aggiorna, nello stesso commit:
 - la riga del file in [file-map.md](file-map.md) e il totale;
-- la sezione della sua area in [architecture.md](architecture.md), o il documento dell'area (come [steam.md](steam.md));
-- il percorso in [flows.md](flows.md), se cambia un flusso;
+- la sezione della sua area in [architecture.md](../how-it-works/architecture.md), o il documento dell'area (come [steam.md](../how-it-works/steam.md));
+- il percorso in [flows.md](../how-it-works/flows.md), se cambia un flusso;
 - [validation.md](validation.md), se il maintainer ha validato qualcosa o se c'è una cosa nuova da validare;
 - questa guida, se nasce una ricetta nuova approvata.
 
-I documenti descrivono il **presente**. Lo storico ("prima faceva…") va nel [CHANGELOG](../CHANGELOG.md), nelle note datate (`docs/upstream-upgrades/`, `docs/reviews/`) o nella cronologia git. Il **perché** di una scelta resta invece accanto alla scelta, in una frase.
+I documenti descrivono il **presente**. Lo storico ("prima faceva…") va nel [CHANGELOG](../../CHANGELOG.md), nelle note datate (`docs/history/engine-upgrades/`, `docs/history/reviews/`) o nella cronologia git. Il **perché** di una scelta resta invece accanto alla scelta, in una frase.

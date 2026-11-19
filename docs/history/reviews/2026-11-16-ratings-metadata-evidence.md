@@ -1,6 +1,6 @@
 # Voti e metadati: prove e verifiche (16 nov 2026)
 
-Nota datata. Raccoglie le verifiche reali e le misure che hanno motivato scelte descritte in [architecture.md](../architecture.md#artwork-metadati-e-voti). Il testo è quello che stava nella guida tecnica prima del riordino del 17 novembre 2026; qui resta come prova, la guida descrive solo il comportamento attuale.
+Nota datata. Raccoglie le verifiche reali e le misure che hanno motivato scelte descritte in [architecture.md](../../how-it-works/architecture.md#artwork-metadati-e-voti). Il testo è quello che stava nella guida tecnica prima del riordino del 17 novembre 2026; qui resta come prova, la guida descrive solo il comportamento attuale.
 
 ## Wikidata: difetti trovati nella libreria reale
 

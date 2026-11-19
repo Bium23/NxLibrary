@@ -2,11 +2,11 @@
 
 NX Library is an early macOS front-end for a pinned upstream nxnative.
 Start with [README](README.md), [AGENTS.md](AGENTS.md),
-[architecture](docs/architecture.md) and [conventions](docs/conventions.md).
+[architecture](docs/how-it-works/architecture.md) and [conventions](docs/working-on-it/conventions.md).
 
 Keep changes small and preserve Play for existing apps. Never patch the user's
 nxnative checkout, silently follow upstream main, or bypass the compatibility
-gate. Engine upgrades use the [upgrade checklist](docs/upstream-upgrades/README.md).
+gate. Engine upgrades use the [upgrade checklist](docs/history/engine-upgrades/README.md).
 
 Before submitting:
 

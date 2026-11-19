@@ -24,7 +24,7 @@
   <a href="#using-arcane">User guide</a> ·
   <a href="#troubleshooting">Troubleshooting</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
-  <a href="docs/development.md">Development</a>
+  <a href="docs/working-on-it/development.md">Development</a>
 </p>
 
 <!-- NX-DEMO:START -->
@@ -66,7 +66,7 @@ Arcane is in alpha. Get the latest published build from [Releases](https://githu
 
 Automated checks cover the application code, publication inputs, compilation and development-app packaging. They do not certify game compatibility. Changes are recorded in the [changelog](CHANGELOG.md), and the current checks are available under [Actions](https://github.com/Bium23/NxLibrary/actions/workflows/ci.yml).
 
-Porting uses nxnative commit `461a5f9f` with Xcode 27.2 and Metal 32023.922. Porting Setup retrieves that commit. Installed game apps use the engine they were built with. See the [engine upgrade notes](docs/upstream-upgrades/README.md).
+Porting uses nxnative commit `461a5f9f` with Xcode 27.2 and Metal 32023.922. Porting Setup retrieves that commit. Installed game apps use the engine they were built with. See the [engine upgrade notes](docs/history/engine-upgrades/README.md).
 
 ## Getting started
 
@@ -84,7 +84,7 @@ A packaged app includes Python and its required packages, `zstd` and `glslangVal
 
 ### Building from source
 
-With the [development prerequisites](docs/development.md#development-prerequisites) installed:
+With the [development prerequisites](docs/working-on-it/development.md#development-prerequisites) installed:
 
 ~~~bash
 git clone https://github.com/Bium23/NxLibrary.git
@@ -97,7 +97,7 @@ open "$HOME/Applications/Arcane Dev.app"
 
 Run `bundle_runtime.sh` once, and again when `runtime.lock` changes. `build_app.sh` prepares, signs and verifies the app before installing it atomically in `~/Applications`.
 
-Build options, runtime dependencies, debug builds and release packaging are documented in the [development guide](docs/development.md).
+Build options, runtime dependencies, debug builds and release packaging are documented in the [development guide](docs/working-on-it/development.md).
 
 ### Installing a packaged release
 
@@ -315,7 +315,7 @@ Before reporting a problem, review copied diagnostics and remove anything person
 - Output follows the window/display; native 1440p/4K internal rendering is not supported. Render scale is 50–100% where the build supports it. MetalFX is spatial upscaling.
 - Builds run one at a time. iOS/IPA output, automatic engine updates and notarisation are not currently provided.
 
-The [upgrade notes](docs/upstream-upgrades/README.md) record each engine review and its toolchain requirements.
+The [upgrade notes](docs/history/engine-upgrades/README.md) record each engine review and its toolchain requirements.
 
 ### Data and cleanup
 
@@ -329,17 +329,18 @@ Storage can also clear all build caches or logs and open the shared backups fold
 
 | Document | Contents |
 |---|---|
+| [Documentation index](docs/README.md) | What each docs folder holds and where to start. |
 | [Changelog](CHANGELOG.md) | User-visible changes and release history. |
-| [Development guide](docs/development.md) | Runtime preparation, debug builds, tests, packaging and releases. |
+| [Development guide](docs/working-on-it/development.md) | Runtime preparation, debug builds, tests, packaging and releases. |
 | [Screenshots and demo](docs/media/README.md) | Media inventory and display guidance. |
 | [Contributing](CONTRIBUTING.md) | Change and verification guidelines. |
 | [Security](SECURITY.md) | Private vulnerability reporting and handling sensitive files. |
-| [Technical guide](docs/architecture.md) | How each area works today, in Italian. |
-| [How to build](docs/conventions.md) | Where new code goes and the recipes to follow, in Italian. |
-| [Flows](docs/flows.md) | End-to-end flows with diagrams, in Italian. |
-| [File catalog](docs/file-map.md) | Responsibility of every project file, in Italian. |
-| [Steam](docs/steam.md) | Steam integration: files read, game states, launch, playtime, achievements, limits; in Italian. |
-| [Engine upgrade notes](docs/upstream-upgrades/README.md) | Pin changes and their evidence. |
+| [Technical guide](docs/how-it-works/architecture.md) | How each area works today, in Italian. |
+| [How to build](docs/working-on-it/conventions.md) | Where new code goes and the recipes to follow, in Italian. |
+| [Flows](docs/how-it-works/flows.md) | End-to-end flows with diagrams, in Italian. |
+| [File catalog](docs/working-on-it/file-map.md) | Responsibility of every project file, in Italian. |
+| [Steam](docs/how-it-works/steam.md) | Steam integration: files read, game states, launch, playtime, achievements, limits; in Italian. |
+| [Engine upgrade notes](docs/history/engine-upgrades/README.md) | Pin changes and their evidence. |
 
 If you’d like to support Arcane’s development and maintenance, you can [buy me a coffee](https://buymeacoffee.com/bium).
 

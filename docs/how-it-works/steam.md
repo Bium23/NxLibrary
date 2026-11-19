@@ -2,7 +2,7 @@
 
 Riferimento unico dell’integrazione Steam: cosa legge, come decide e cosa mostra. È il
 documento da leggere prima di toccare qualunque parte Steam. `architecture.md` ne tiene solo un riassunto;
-`file-map.md` elenca i file uno per uno. Lo stato delle prove manuali sta solo in [validation.md](validation.md).
+`file-map.md` elenca i file uno per uno. Lo stato delle prove manuali sta solo in [validation.md](../working-on-it/validation.md).
 
 ## Indice
 
@@ -190,7 +190,7 @@ Favorite, Hidden, Show in Finder.
   Durante l'attesa la schermata copre il client, che può finire di aprire le sue finestre. Nasconderlo in risposta
   a ogni riapertura fa oscillare macOS fra lo Space fullscreen e la scrivania.
   All'uscita di un gioco rimasto in primo piano, Steam torna fuori vista se lo era prima del Play.
-  [Analisi dello sfarfallio](reviews/2026-11-18-steam-launch-spaces.md)
+  [Analisi dello sfarfallio](../history/reviews/2026-11-18-steam-launch-spaces.md)
 - All’uscita del gioco Arcane torna davanti se Play era partito da qui, il gioco era in primo piano e nessun
   altro gioco della libreria è aperto (`SteamReturnFocus`). Una sessione finita mostra la card di fine sessione dei
   giochi Switch, con il totale che include le ore di Steam.

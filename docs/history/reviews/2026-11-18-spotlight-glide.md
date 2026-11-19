@@ -74,4 +74,4 @@ mod assente in una cartella leggibile.
 
 I valori provengono da singoli avvii. Indicano i tempi degli aggiornamenti di
 SwiftUI, non i frame presentati dal compositor. La sonda è rimossa dalla Dev.
-Lo stato delle prove manuali è in [validation.md](../validation.md).
+Lo stato delle prove manuali è in [validation.md](../../working-on-it/validation.md).

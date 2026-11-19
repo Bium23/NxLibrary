@@ -4,4 +4,4 @@ Il video mostra la schermata di attesa e la pagina di Arcane che scorrono latera
 
 Con **Keep Steam in the background** attivo, ogni notifica di attivazione o riapertura richiamava il controllo che nascondeva il client mentre il gioco era in avvio. Il rilancio della finestra di Steam riattivava quel controllo. Limitarsi a ritardare i nascondimenti conserva la causa. Per l'attesa è già disponibile il pannello che attraversa gli Space, quindi il client può finire di aprire le finestre senza essere nascosto durante Play.
 
-La regressione headless esegue il metodo reale su dieci riaperture simulate. Prima della correzione rileva chiamate a `hide()`. Con la correzione il contatore resta a zero e, alla scadenza, Steam viene comunque mostrato. [Prove interattive](../validation.md)
+La regressione headless esegue il metodo reale su dieci riaperture simulate. Prima della correzione rileva chiamate a `hide()`. Con la correzione il contatore resta a zero e, alla scadenza, Steam viene comunque mostrato. [Prove interattive](../../working-on-it/validation.md)

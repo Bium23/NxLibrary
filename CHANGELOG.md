@@ -1,10 +1,10 @@
 # Changelog
 
-User-visible changes to Arcane (formerly NX Library) are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/upstream-upgrades/README.md).
+User-visible changes to Arcane (formerly NX Library) are recorded here. Entries are grouped by release, with the newest first. Engine changes also have their own [upgrade notes](docs/history/engine-upgrades/README.md).
 
 ## 0.2.1 — 2026-11-19
 
-See the [validation checklist](docs/validation.md) for the state of manual checks.
+See the [validation checklist](docs/working-on-it/validation.md) for the state of manual checks.
 
 ### Added
 
@@ -23,7 +23,7 @@ See the [validation checklist](docs/validation.md) for the state of manual check
 
 ## 0.2.0 — 2026-11-18
 
-See the [validation checklist](docs/validation.md) for the state of manual checks.
+See the [validation checklist](docs/working-on-it/validation.md) for the state of manual checks.
 
 ### Added
 
@@ -93,7 +93,7 @@ See the [validation checklist](docs/validation.md) for the state of manual check
 
 ### Changed
 
-- **Updated nxnative to `8a5c5e7e`.** Building no longer needs .NET, so Setup has no .NET card and its downloader is gone. Upstream reports fixes for rendering, shaders, textures and memory across many games, including Ocarina of Time terrain and Star Fox scene changes, steadier movies and ProMotion full screen at 60 fps. Red Dead Redemption, TUNIC, both Ori games, Metroid Prime 4: Beyond, The Binding of Isaac: Rebirth, PRAGMATA, Diablo III, Diablo II: Resurrected and Nintendo Switch Sports Resort are newly playable. The Metal compiler remains **32023.922**. Every game translates its shaders again at its next build, and installed game apps keep their engine until rebuilt. NX Library starts games without the engine's own settings window, so the engine's new cloud-save question does not appear yet. See the [engine review](docs/upstream-upgrades/2026-11-12-79741184-8a5c5e7e-review.md).
+- **Updated nxnative to `8a5c5e7e`.** Building no longer needs .NET, so Setup has no .NET card and its downloader is gone. Upstream reports fixes for rendering, shaders, textures and memory across many games, including Ocarina of Time terrain and Star Fox scene changes, steadier movies and ProMotion full screen at 60 fps. Red Dead Redemption, TUNIC, both Ori games, Metroid Prime 4: Beyond, The Binding of Isaac: Rebirth, PRAGMATA, Diablo III, Diablo II: Resurrected and Nintendo Switch Sports Resort are newly playable. The Metal compiler remains **32023.922**. Every game translates its shaders again at its next build, and installed game apps keep their engine until rebuilt. NX Library starts games without the engine's own settings window, so the engine's new cloud-save question does not appear yet. See the [engine review](docs/history/engine-upgrades/2026-11-12-79741184-8a5c5e7e-review.md).
 
 ## 0.1.4.2 — 2026-11-09
 
@@ -106,7 +106,7 @@ See the [validation checklist](docs/validation.md) for the state of manual check
 
 ### Changed
 
-- **Updated nxnative to `79741184`.** Upstream reports fewer Ocarina of Time startup and first-draw stalls, lower memory use, lighting/fog/foliage fixes, improved frame pacing and safer pipeline reuse. Rebuilt games can offer Switch 2 controllers over Bluetooth in **Game options → More settings → Controls**, and supported profiles offer 120 fps through **Frame rate**. Cloud sync avoids overwriting saves changed after launch; other fixes cover controller rumble, H.264 movies, bracketed folder names and multi-program DLC. The Metal compiler remains **32023.922**. The next rebuild updates shader data as needed; existing game apps keep their engine until rebuilt. See the [full engine review](docs/upstream-upgrades/2026-11-09-bd979ced-79741184-review.md) for per-game support and validation limits.
+- **Updated nxnative to `79741184`.** Upstream reports fewer Ocarina of Time startup and first-draw stalls, lower memory use, lighting/fog/foliage fixes, improved frame pacing and safer pipeline reuse. Rebuilt games can offer Switch 2 controllers over Bluetooth in **Game options → More settings → Controls**, and supported profiles offer 120 fps through **Frame rate**. Cloud sync avoids overwriting saves changed after launch; other fixes cover controller rumble, H.264 movies, bracketed folder names and multi-program DLC. The Metal compiler remains **32023.922**. The next rebuild updates shader data as needed; existing game apps keep their engine until rebuilt. See the [full engine review](docs/history/engine-upgrades/2026-11-09-bd979ced-79741184-review.md) for per-game support and validation limits.
 - **Choose where a game icon changes.** **Change artwork → Icon → Icon location** offers **Only here** or **Use on the Mac** for every game, including Switch 2 NUPs and dumps without an original icon. **Only here** keeps the image inside NX Library and restores the original app icon (or its absence). The choice survives restarts and rebuilds; existing libraries keep their previous behavior until you make a new choice.
 - **Automatic keeps your icon location choice.** It removes the personal image and uses the game's own icon, then available Title DB artwork. An app without an original icon can use the online image when its location choice allows it. Cached artwork works offline; if no replacement is found, the old personal image is removed and the original or standard macOS icon remains. The picker and finished build log explain when no icon is available. Missing artwork does not prevent Play.
 - **Long builds are easier to follow.** Stage times count up while a stage runs and show hours beyond one hour, as do time estimates. Counters include a percentage. **Pipeline archive** reports batches the engine has confirmed ready, including reused batches, and estimates the remaining compilation when it has a measured rate. An unsupported log format leaves the stage indeterminate. Based on [@eduardomozart’s #11](https://github.com/Bium23/NxLibrary/pull/11), with pipeline tracking revised to ignore old caches and in-flight compiler files.
@@ -286,7 +286,7 @@ First public alpha for Apple-silicon Macs, with a DMG for installation and a ZIP
 
 - New-game defaults and each game's **Next launch** settings have explicit scopes. Rebuild review retains the selected title's saved options; **Use new game defaults** copies defaults once.
 - The Saves page keeps one **Backup folder** row showing the latest backup's date and time. Imports use a centred From → To preview with outlined paths and a subtle directional animation.
-- The engine is pinned to `163a9905`, with Xcode 27.2 and certified Metal `32023.922`. Adoption and verification are recorded in the [2026-11-02 upgrade note](docs/upstream-upgrades/2026-11-02-2716f78-163a9905-review.md); newer upstream commits are not adopted automatically. The main app replaces the separate EnginePreview launcher.
+- The engine is pinned to `163a9905`, with Xcode 27.2 and certified Metal `32023.922`. Adoption and verification are recorded in the [2026-11-02 upgrade note](docs/history/engine-upgrades/2026-11-02-2716f78-163a9905-review.md); newer upstream commits are not adopted automatically. The main app replaces the separate EnginePreview launcher.
 - App-update preparation and background snapshot preparation run outside the main UI work. Source builds do not update themselves; packaged releases use the project's public GitHub release channel.
 
 ### Fixed
@@ -314,7 +314,7 @@ First public alpha for Apple-silicon Macs, with a DMG for installation and a ZIP
 - .NET installer downloads verify their expected hash and restrict download hosts and redirects.
 - App updates and save operations exclude each other. Publication checks reject recognised private/game-content paths and secret patterns; bundled runtime metadata is checked against `runtime.lock` before packaging.
 
-Verification details and remaining distribution checks are recorded in the [development guide](docs/development.md). Automated checks do not certify game compatibility, visual behaviour or a first installation on another Mac.
+Verification details and remaining distribution checks are recorded in the [development guide](docs/working-on-it/development.md). Automated checks do not certify game compatibility, visual behaviour or a first installation on another Mac.
 
 <!-- When the first release is actually published, move the relevant entries under
      a heading such as "## [0.1.0] - YYYY-MM-DD", add its real release link, and

@@ -1,6 +1,6 @@
 # Development and releases
 
-This guide covers building Arcane itself. For app setup, game preparation and daily use, start with the [user guide](../README.md). Read [AGENTS.md](../AGENTS.md) before changing engine integration or installation behaviour.
+This guide covers building Arcane itself. For app setup, game preparation and daily use, start with the [user guide](../../README.md). Read [AGENTS.md](../../AGENTS.md) before changing engine integration or installation behaviour.
 
 ## Development prerequisites
 
@@ -8,7 +8,7 @@ This guide covers building Arcane itself. For app setup, game preparation and da
 - Full Xcode selected for the build. The current game toolchain requires Xcode 27.2 or later and the Metal compiler certified for the pinned engine. `Package.swift` declares Swift tools 5.9 and macOS 13 as package minimums; those values do not certify an engine/compiler combination.
 - Git and the command-line tools supplied with Xcode.
 - Python 3 for the publication checks and packaging helpers.
-- Homebrew's `zstd` and `glslang`, at the versions recorded in [runtime.lock](../runtime.lock), when preparing the bundled runtime. The script checks installed versions; it does not install or silently upgrade them.
+- Homebrew's `zstd` and `glslang`, at the versions recorded in [runtime.lock](../../runtime.lock), when preparing the bundled runtime. The script checks installed versions; it does not install or silently upgrade them.
 
 Building the frontend alone does not need games or keys. Running the game's build workflow also needs the pinned nxnative checkout (its tools are native executables since 641636e2, so no .NET) and the user's own authorised sources and keys. Setup explains and prepares the supported prerequisites.
 
@@ -94,7 +94,7 @@ For manual setup checks on an existing account, use **Settings → Start-up → 
 
 ### Continuous integration
 
-The [Checks workflow](../.github/workflows/ci.yml) runs publication checks and their regressions, Swift tests, all `Tests/CatalogAppChecks/run_*.py` headless regressions, Release compilation, development-app packaging and signature verification on the `xcode-27` runner. Pull requests from forks stay off that runner and receive the hosted publication checks instead. The checkout action is pinned, repository permissions are read-only and credentials are not retained by checkout. It does not publish releases or run the UI, games or engine builds.
+The [Checks workflow](../../.github/workflows/ci.yml) runs publication checks and their regressions, Swift tests, all `Tests/CatalogAppChecks/run_*.py` headless regressions, Release compilation, development-app packaging and signature verification on the `xcode-27` runner. Pull requests from forks stay off that runner and receive the hosted publication checks instead. The checkout action is pinned, repository permissions are read-only and credentials are not retained by checkout. It does not publish releases or run the UI, games or engine builds.
 
 The engine-log-fragment test skips when `~/nxnative` is absent. A private CI run completed with **703 Swift tests reported: 702 passed and one skipped**, plus five Python checks. It verifies frontend packaging without the bundled game runtime; it does not replace the runtime check or the engine compatibility gate.
 
@@ -108,7 +108,7 @@ Before a game/toolchain combination is described as working, the user checks **S
 
 Never patch `~/nxnative` or follow its `main` branch automatically. The app's pin is in `AppViewModel.pinnedEngineCommit`; `ToolchainRequirements.current` describes the supported setup requirements and downloadable Metal assets.
 
-An upgrade requires reviewing the upstream delta and CLI, deciding which capabilities to adopt, wiring applicable flags, updating certification data and verifying tests, the gate, a real build and a visible launch. Follow the [upgrade checklist](upstream-upgrades/README.md), write a dated note and update the README, design spec and changelog. A newer engine commit alone is not sufficient evidence.
+An upgrade requires reviewing the upstream delta and CLI, deciding which capabilities to adopt, wiring applicable flags, updating certification data and verifying tests, the gate, a real build and a visible launch. Follow the [upgrade checklist](../history/engine-upgrades/README.md), write a dated note and update the README, design spec and changelog. A newer engine commit alone is not sufficient evidence.
 
 ## Release packaging
 
@@ -124,7 +124,7 @@ The script builds a release-marked app, verifies its version and signature, and 
 
 Valve's attribution for the Steam logo carries the year Valve's page gives ("©2026 Valve Corporation…", https://partner.steamgames.com/doc/marketing/branding/attribution). In a new year, copy Valve's current wording for each language into `NOTICE` and the `Localizable.xcstrings` entry used by Settings › About before releasing.
 
-Publishing requires an explicit maintainer decision and the script's `--publish --notes <file>` options. Prepare reviewed notes from [CHANGELOG.md](../CHANGELOG.md), then date the version when it is actually published. The script adds engine/Xcode requirement metadata to release notes for the updater. Never publish automatically as part of an agent's verification.
+Publishing requires an explicit maintainer decision and the script's `--publish --notes <file>` options. Prepare reviewed notes from [CHANGELOG.md](../../CHANGELOG.md), then date the version when it is actually published. The script adds engine/Xcode requirement metadata to release notes for the updater. Never publish automatically as part of an agent's verification.
 
 ### Distribution work still open
 
@@ -134,7 +134,7 @@ The updater uses `Bium23/NxLibrary` directly, with anonymous public access. No s
 
 ### First installation and A → B update test
 
-Validate installation from the published DMG and replacement of an installed release. Keep the same bundle ID and data paths between versions. Engine upgrades additionally follow the [upgrade checklist](upstream-upgrades/README.md).
+Validate installation from the published DMG and replacement of an installed release. Keep the same bundle ID and data paths between versions. Engine upgrades additionally follow the [upgrade checklist](../history/engine-upgrades/README.md).
 
 1. Download release A's DMG from GitHub, install normally, eject the DMG and complete Setup. Check that the installation folder is writable; updates must not change permissions silently.
 2. Build and launch one supported game using the user's own files. Save progress, set a favourite and change one preference. Create a save backup, then close the game and app.
@@ -158,7 +158,7 @@ These are distribution decisions. Do not bypass the dirty-tree check, change the
 | `scripts/` | Runtime preparation, app packaging, installation helpers, release packaging and publication checks. |
 | `docs/` | Current guides, audits, dated designs and engine-adoption evidence. |
 
-For component interactions, read the [architecture guide](architecture.md); for where new code goes, the [conventions](conventions.md); for end-to-end paths, the [flows](flows.md). For the role of every individual file, use the [file catalog](file-map.md). Screenshots and demo placement are described in the [media guide](media/README.md).
+For component interactions, read the [architecture guide](../how-it-works/architecture.md); for where new code goes, the [conventions](conventions.md); for end-to-end paths, the [flows](../how-it-works/flows.md). For the role of every individual file, use the [file catalog](file-map.md). Screenshots and demo placement are described in the [media guide](../media/README.md).
 
 ### Localization resources
 

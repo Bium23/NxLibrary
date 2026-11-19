@@ -21,7 +21,7 @@ Le copertine, i loghi e i wallpaper visibili nelle catture restano soggetti ai d
 
 ## Aggiornare le immagini
 
-Conservare le catture complete con lo stato originale dell'interfaccia. Aggiungere una copia WebP con didascalia e testo alternativo. Controllare che percorsi privati, chiavi e notifiche personali restino fuori dalle catture. Il commento `NX-SCREENSHOTS` delimita l'immagine d'apertura. Aggiornare il [catalogo dei file](../file-map.md) se cambia l'inventario.
+Conservare le catture complete con lo stato originale dell'interfaccia. Aggiungere una copia WebP con didascalia e testo alternativo. Controllare che percorsi privati, chiavi e notifiche personali restino fuori dalle catture. Il commento `NX-SCREENSHOTS` delimita l'immagine d'apertura. Aggiornare il [catalogo dei file](../working-on-it/file-map.md) se cambia l'inventario.
 
 ## Video subito dopo la presentazione
 
