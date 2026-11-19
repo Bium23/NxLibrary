@@ -28,7 +28,7 @@ initial = declaration('    public init(settingsStore:')
 restore = initial[initial.index('        let didCompleteSetup = '):initial.index('        // 1. Resolve safe root')]
 startup_requests = '\n'.join(line for line in initial.splitlines() if 'NotificationService.shared' in line)
 build = declaration('    private func beginBuild(for game:')
-accepted = build[build.index('        isBuilding = true'):build.index('        buildState = .running')]
+accepted = build[build.index('        isBuilding = true'):build.index('        porting.buildState = .running')]
 shell = (ROOT / 'Sources/NXLibrary/Views/Shell/AppShellView.swift').read_text()
 start = shell.index('.onChange(of: viewModel.setupCompleted)')
 opening = shell.index('{ done in', start)
@@ -67,7 +67,8 @@ final class Host {
     // SETUP
     var showSetupCheck = false
     var isBuilding = false
-    var isCancellingBuild = false
+    final class Porting { var isCancellingBuild = false }
+    let porting = Porting()
     let gameAppsFolder = URL(fileURLWithPath: "/synthetic/apps")
     init() {
         // RESTORE

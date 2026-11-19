@@ -16,6 +16,8 @@ public struct AddGameView: View {
     @Environment(\.seleneCanvas) var canvas
     @Environment(\.seleneReduceMotion) var reduceMotion
     @ObservedObject var viewModel: AppViewModel
+    /// The wizard and the live build (`PortingModel`), observed on their own.
+    @ObservedObject var porting: PortingModel
     @ObservedObject var router: AppRouter
 
     private let showsHints: Bool
@@ -35,6 +37,7 @@ public struct AddGameView: View {
     public init(viewModel: AppViewModel, router: AppRouter, artwork: ArtworkStore? = nil, showsHints: Bool = true,
                 reviewSelectionID: UUID? = nil) {
         self.viewModel = viewModel
+        self.porting = viewModel.porting
         self.router = router
         self.artwork = artwork
         self.showsHints = showsHints
@@ -42,7 +45,7 @@ public struct AddGameView: View {
     }
 
     public var body: some View {
-        let rows = rows(for: viewModel.buildWizardStep)
+        let rows = rows(for: porting.buildWizardStep)
         let focused = focusedRow(in: rows)
         return ZStack {
             SeleneTheme.scrim45
@@ -78,14 +81,14 @@ public struct AddGameView: View {
         .onAppear(perform: appear)
         .onDisappear(perform: removeKeyMonitor)
         .onChange(of: reviewSelectionID) { _ in reviewEntryIfReady() }
-        .onChange(of: viewModel.buildWizardStep) { step in
+        .onChange(of: porting.buildWizardStep) { step in
             editing = nil
             focusedID = defaultRowID(for: step)
         }
         .onChange(of: viewModel.canAddSelectedGame) { canAdd in
-            guard viewModel.buildWizardStep == 1 else { return }
+            guard porting.buildWizardStep == 1 else { return }
             reviewEntryIfReady()
-            guard viewModel.buildWizardStep == 1 else { return }
+            guard porting.buildWizardStep == 1 else { return }
             if canAdd, focusedID == nil || focusedID == "choose" || focusedID == "chooseFiles" { focusedID = "continue" }
         }
         .onReceive(NotificationCenter.default.publisher(for: .nxAddGameGamepadAction)) { note in
@@ -116,8 +119,8 @@ public struct AddGameView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(spacing: canvas.u(8)) {
-                        if viewModel.buildWizardStep == 3 {
-                            AddGameStepThreeView(viewModel: viewModel, router: router, artwork: artwork,
+                        if porting.buildWizardStep == 3 {
+                            AddGameStepThreeView(viewModel: viewModel, porting: porting, router: router, artwork: artwork,
                                                  onActions: publish)
                                 .padding(.bottom, canvas.u(12))
                         }
@@ -175,11 +178,11 @@ public struct AddGameView: View {
     }
 
     private var stepTitle: String {
-        switch viewModel.buildWizardStep {
+        switch porting.buildWizardStep {
         case 1: return "Choose a game"
         case 2: return viewModel.selectedGame?.name ?? L10n.text("Review")
         default:
-            if !viewModel.isBuilding, viewModel.buildError != nil, let reason = viewModel.portingFailureReason {
+            if !viewModel.isBuilding, porting.buildError != nil, let reason = porting.portingFailureReason {
                 return reason.title
             }
             let id = viewModel.currentBuildGameID ?? viewModel.lastBuildGameID
@@ -189,7 +192,7 @@ public struct AddGameView: View {
 
     /// "Choose · Review · Porting", the current step in full ink.
     private var stepLine: some View {
-        let step = viewModel.buildWizardStep
+        let step = porting.buildWizardStep
         return HStack(spacing: canvas.u(10)) {
             ForEach(Array(["Choose", L10n.text("Review"), "Porting"].enumerated()), id: \.offset) { index, title in
                 if index > 0 {
@@ -209,12 +212,12 @@ public struct AddGameView: View {
     private func focusedRow(in rows: [AddGameRow]) -> AddGameRow? {
         let focusable = rows.filter(\.focusable)
         if let id = focusedID, let row = focusable.first(where: { $0.id == id }) { return row }
-        let preferred = defaultRowID(for: viewModel.buildWizardStep)
+        let preferred = defaultRowID(for: porting.buildWizardStep)
         return focusable.first { $0.id == preferred } ?? focusable.first
     }
 
     private func move(by delta: Int) {
-        let focusable = rows(for: viewModel.buildWizardStep).filter(\.focusable)
+        let focusable = rows(for: porting.buildWizardStep).filter(\.focusable)
         guard !focusable.isEmpty else { return }
         let currentID = focusedRow(in: focusable)?.id
         let current = focusable.firstIndex { $0.id == currentID } ?? 0
@@ -224,7 +227,7 @@ public struct AddGameView: View {
     }
 
     private func horizontal(by delta: Int) {
-        guard let row = focusedRow(in: rows(for: viewModel.buildWizardStep)) else { return }
+        guard let row = focusedRow(in: rows(for: porting.buildWizardStep)) else { return }
         switch row.kind {
         case .toggle(let isOn):
             guard row.enabled else { return SoundEffectService.shared.play(.error) }
@@ -285,7 +288,7 @@ public struct AddGameView: View {
     private var backLabel: String {
         if editing != nil { return "Done" }
         if viewModel.isBuilding { return "Hide" }
-        return viewModel.buildWizardStep > 1 ? "Back" : "Close"
+        return porting.buildWizardStep > 1 ? "Back" : "Close"
     }
 
     private func aLabel(_ row: AddGameRow?) -> String {
@@ -303,7 +306,7 @@ public struct AddGameView: View {
 
     private func appear() {
         installKeyMonitor()
-        focusedID = defaultRowID(for: viewModel.buildWizardStep)
+        focusedID = defaultRowID(for: porting.buildWizardStep)
         reviewEntryIfReady()
     }
 
@@ -400,7 +403,7 @@ public struct AddGameView: View {
         case .navigateLeft: horizontal(by: -1)
         case .navigateRight: horizontal(by: 1)
         case .confirm:
-            if let row = focusedRow(in: rows(for: viewModel.buildWizardStep)) { activate(row) }
+            if let row = focusedRow(in: rows(for: porting.buildWizardStep)) { activate(row) }
         case .cancel: handleBack()
         default: break
         }
@@ -409,10 +412,10 @@ public struct AddGameView: View {
     private func handleBack() {
         if confirmDiscard { return dismissDiscard() }
         if viewModel.isBuilding { return requestClose() }
-        if viewModel.buildWizardStep > 1 {
+        if porting.buildWizardStep > 1 {
             SoundEffectService.shared.play(.back)
             withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
-                viewModel.goToWizardStep(viewModel.buildWizardStep - 1)
+                viewModel.goToWizardStep(porting.buildWizardStep - 1)
             }
         } else {
             requestClose()
@@ -453,7 +456,7 @@ public struct AddGameView: View {
     }
 
     private func drop(_ providers: [NSItemProvider]) -> Bool {
-        guard viewModel.buildWizardStep == 1, !viewModel.isBuilding else { return false }
+        guard porting.buildWizardStep == 1, !viewModel.isBuilding else { return false }
         var urls: [URL] = []
         let group = DispatchGroup()
         for provider in providers {

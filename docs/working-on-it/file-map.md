@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 19 novembre 2026. Copertura di **716 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 19 novembre 2026. Copertura di **717 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](../how-it-works/architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -91,6 +91,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../../CONTRIBUTING.md), [SECU
 | [Sources/NXLibrary/ViewModels/AppViewModel+SteamGridDB.swift](../../Sources/NXLibrary/ViewModels/AppViewModel+SteamGridDB.swift) | Verifica, salva e rimuove la chiave SteamGridDB dell’utente senza registrarne il valore. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+NewestEngine.swift](../../Sources/NXLibrary/ViewModels/AppViewModel+NewestEngine.swift) | Usa l’engine più nuovo o torna a quello testato, accende l’override e controlla se main è utilizzabile. |
 | [Sources/NXLibrary/ViewModels/AppViewModel+Toolchain.swift](../../Sources/NXLibrary/ViewModels/AppViewModel+Toolchain.swift) | Espone il riepilogo del gate della toolchain per l’interfaccia. |
+| [Sources/NXLibrary/ViewModels/PortingModel.swift](../../Sources/NXLibrary/ViewModels/PortingModel.swift) | Tiene lo stato che Add Game e il passo Porting mostrano di una build: passo del wizard, fasi, avanzamento, esito ed errore; osservato solo da quelle viste. |
 | [Sources/NXLibrary/ViewModels/SavePanelModel.swift](../../Sources/NXLibrary/ViewModels/SavePanelModel.swift) | Gestisce refresh, anteprime, backup, importazione, ripristino, errori e conferma temporanea di successo. |
 | [Sources/NXLibrary/ViewModels/SetupCheckModel.swift](../../Sources/NXLibrary/ViewModels/SetupCheckModel.swift) | Esegue probe e installazioni del Setup in background, con avanzamento e ricontrollo periodico. |
 

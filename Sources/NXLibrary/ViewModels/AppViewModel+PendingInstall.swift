@@ -56,10 +56,10 @@ extension AppViewModel {
                 guard let outcome else { continue }
                 catalogBuildRecoveries.acknowledge(id: id, matching: recoveryGeneration)
                 if gameWithInstallFailure?.id == id { gameWithInstallFailure = nil }
-                if buildHeldGameID == id { buildHeldGameID = nil }
+                if porting.buildHeldGameID == id { porting.buildHeldGameID = nil }
                 if lastBuildGameID == id, outcome.pendingInstall == nil, outcome.status == .built {
-                    buildState = .succeeded; buildSuccessPath = outcome.url.path
-                    buildError = nil; lastError = nil; currentStageName = "Build completed"
+                    porting.buildState = .succeeded; porting.buildSuccessPath = outcome.url.path
+                    porting.buildError = nil; lastError = nil; porting.currentStageName = "Build completed"
                     portingProgress?.finish(success: true)
                 }
             } catch {

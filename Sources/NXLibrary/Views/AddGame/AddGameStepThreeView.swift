@@ -4,6 +4,7 @@ import NXLibraryCore
 
 struct AddGameStepThreeView: View {
     @ObservedObject var viewModel: AppViewModel
+    @ObservedObject var porting: PortingModel
     @ObservedObject var router: AppRouter
     var artwork: ArtworkStore? = nil
 
@@ -28,24 +29,24 @@ struct AddGameStepThreeView: View {
         content
         .onAppear(perform: publishActions)
         .onChange(of: viewModel.isBuilding) { _ in publishActions() }
-        .onChange(of: viewModel.isCancellingBuild) { _ in publishActions() }
-        .onChange(of: viewModel.buildSuccessPath) { _ in publishActions() }
-        .onChange(of: viewModel.buildError) { _ in publishActions() }
-        .onChange(of: viewModel.portingFailureReason) { _ in publishActions() }
+        .onChange(of: porting.isCancellingBuild) { _ in publishActions() }
+        .onChange(of: porting.buildSuccessPath) { _ in publishActions() }
+        .onChange(of: porting.buildError) { _ in publishActions() }
+        .onChange(of: porting.portingFailureReason) { _ in publishActions() }
         .onChange(of: didCopyDiagnostics) { _ in publishActions() }
-        .onChange(of: viewModel.buildState) { _ in publishActions() }
-        .onChange(of: viewModel.buildHeldGameID) { _ in publishActions() }
+        .onChange(of: porting.buildState) { _ in publishActions() }
+        .onChange(of: porting.buildHeldGameID) { _ in publishActions() }
     }
 
     @ViewBuilder
     private var content: some View {
         if viewModel.isBuilding {
             buildingView
-        } else if let path = viewModel.buildSuccessPath {
+        } else if let path = porting.buildSuccessPath {
             successView(path: path)
-        } else if let error = viewModel.buildError {
+        } else if let error = porting.buildError {
             failureView(error: error)
-        } else if viewModel.buildState == .cancelled {
+        } else if porting.buildState == .cancelled {
             cancelledView
         } else {
             idleView
@@ -58,10 +59,10 @@ struct AddGameStepThreeView: View {
         VStack(alignment: .leading, spacing: canvas.u(24)) {
             HStack(alignment: .top, spacing: canvas.u(36)) {
                 gameTile(caption: viewModel.portingETAText
-                    ?? (viewModel.currentStageName.isEmpty ? L10n.text("Preparing") : viewModel.currentStageName))
+                    ?? (porting.currentStageName.isEmpty ? L10n.text("Preparing") : porting.currentStageName))
                 stageList
             }
-            PortingLogBox(logs: viewModel.logs, expanded: $viewModel.showLiveLogsInBuild)
+            PortingLogBox(logs: viewModel.logs, expanded: $porting.showLiveLogsInBuild)
         }
     }
 
@@ -108,12 +109,12 @@ struct AddGameStepThreeView: View {
     /// Compact stage rows: check, spinner or cross, the name and the time it took.
     private var stageList: some View {
         VStack(alignment: .leading, spacing: canvas.u(4)) {
-            if viewModel.buildStages.isEmpty {
+            if porting.buildStages.isEmpty {
                 Text(L10n.text("Starting the porting…"))
                     .seleneFont(17)
                     .foregroundColor(SeleneTheme.ink60)
             }
-            ForEach(viewModel.buildStages) { stage in
+            ForEach(porting.buildStages) { stage in
                 HStack(spacing: canvas.u(12)) {
                     stageMark(stage)
                         .frame(width: canvas.u(22), height: canvas.u(22))
@@ -121,8 +122,8 @@ struct AddGameStepThreeView: View {
                         Text(stage.name.prefix(1).uppercased() + stage.name.dropFirst())
                             .seleneFont(17, stage.isRunning ? .semibold : .regular)
                             .foregroundColor(stage.isRunning ? SeleneTheme.ink : SeleneTheme.ink75)
-                        if stage.isRunning, !viewModel.currentStepName.isEmpty {
-                            Text(viewModel.currentStepName)
+                        if stage.isRunning, !porting.currentStepName.isEmpty {
+                            Text(porting.currentStepName)
                                 .seleneFont(13, .regular, design: .monospaced)
                                 .foregroundColor(SeleneTheme.ink60)
                                 .lineLimit(1)
@@ -144,7 +145,7 @@ struct AddGameStepThreeView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .animation(reduceMotion ? nil : SeleneTheme.quick, value: viewModel.buildStages)
+        .animation(reduceMotion ? nil : SeleneTheme.quick, value: porting.buildStages)
     }
 
     @ViewBuilder private func stageMark(_ stage: BuildStageItem) -> some View {
@@ -171,7 +172,7 @@ struct AddGameStepThreeView: View {
 
     /// The game whose new app waits for it to quit, if this porting's did.
     private var heldGameName: String? {
-        viewModel.buildHeldGameID.flatMap { id in viewModel.libraryGames.first { $0.id == id }?.name }
+        porting.buildHeldGameID.flatMap { id in viewModel.libraryGames.first { $0.id == id }?.name }
     }
 
     private func successView(path: String) -> some View {
@@ -198,7 +199,7 @@ struct AddGameStepThreeView: View {
                 .seleneFont(14)
                 .foregroundColor(SeleneTheme.ink90)
 
-            ForEach(viewModel.buildStages.filter(\.hasWarning)) { stage in
+            ForEach(porting.buildStages.filter(\.hasWarning)) { stage in
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .seleneFont(14)
@@ -217,7 +218,7 @@ struct AddGameStepThreeView: View {
     /// The tile as the porting left it, what stopped it and the one next step; the step title
     /// carries the reason's title.
     private func failureView(error: String) -> some View {
-        let reason = viewModel.portingFailureReason
+        let reason = porting.portingFailureReason
         return VStack(alignment: .leading, spacing: canvas.u(24)) {
             HStack(alignment: .top, spacing: canvas.u(36)) {
                 gameTile(caption: nil)
@@ -266,7 +267,7 @@ struct AddGameStepThreeView: View {
     }
 
     private var logTailPanel: some View {
-        PortingLogBox(logs: viewModel.logs, expanded: $viewModel.showLiveLogsInBuild)
+        PortingLogBox(logs: viewModel.logs, expanded: $porting.showLiveLogsInBuild)
     }
 
     // MARK: - Idle
@@ -296,17 +297,17 @@ struct AddGameStepThreeView: View {
         if viewModel.isBuilding {
             return [
                 StepAction(id: "log",
-                           title: viewModel.showLiveLogsInBuild ? L10n.text("Hide Log") : L10n.text("Show Log"),
+                           title: porting.showLiveLogsInBuild ? L10n.text("Hide Log") : L10n.text("Show Log"),
                            systemImage: "terminal",
                            kind: .secondary,
                            isEnabled: true) {
-                    viewModel.showLiveLogsInBuild.toggle()
+                    porting.showLiveLogsInBuild.toggle()
                 },
                 StepAction(id: "cancel",
-                           title: viewModel.isCancellingBuild ? L10n.text("Cancelling…") : L10n.text("Cancel porting"),
+                           title: porting.isCancellingBuild ? L10n.text("Cancelling…") : L10n.text("Cancel porting"),
                            systemImage: "stop.circle.fill",
                            kind: .destructive,
-                           isEnabled: !viewModel.isCancellingBuild) {
+                           isEnabled: !porting.isCancellingBuild) {
                     viewModel.cancelBuild()
                 },
                 StepAction(id: "openLog", title: L10n.text("Open log"),
@@ -321,7 +322,7 @@ struct AddGameStepThreeView: View {
             ]
         }
 
-        if let path = viewModel.buildSuccessPath {
+        if let path = porting.buildSuccessPath {
             let needsSave = viewModel.lastBuildGameID.map { viewModel.catalogBuildRecoveries[$0] != nil } ?? false
             var actions = [
                 StepAction(id: "play", title: L10n.text("Play"),
@@ -359,9 +360,9 @@ struct AddGameStepThreeView: View {
             return actions
         }
 
-        if viewModel.buildError != nil || viewModel.buildState == .cancelled {
+        if porting.buildError != nil || porting.buildState == .cancelled {
             var specs: [StepAction] = []
-            if viewModel.buildError != nil, let action = viewModel.portingFailureReason?.action,
+            if porting.buildError != nil, let action = porting.portingFailureReason?.action,
                let spec = failureActionSpec(action) {
                 specs.append(spec)
             }
@@ -373,7 +374,7 @@ struct AddGameStepThreeView: View {
                     viewModel.openBuildLog()
                 },
             ]
-            if viewModel.buildError != nil {
+            if porting.buildError != nil {
                 specs.append(StepAction(id: "diagnostics", title: didCopyDiagnostics ? L10n.text("Copied") : L10n.text("Copy diagnostics"),
                                         systemImage: nil, kind: .secondary, isEnabled: true) {
                     viewModel.copyDiagnostics()

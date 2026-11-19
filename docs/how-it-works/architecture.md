@@ -88,6 +88,7 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
 
 **Coordinatore.**
 - `AppViewModel.swift` coordina libreria, rilevamento dell'ambiente, selezione delle sorgenti, porting e lancio. Le estensioni `AppViewModel+…` collegano cheat, salvataggi, diagnostica, chiavi, toolchain, installazioni in attesa e fonti; sono parti dello stesso oggetto osservabile.
+- `PortingModel` tiene ciò che Add Game e il suo passo Porting mostrano di una build: passo del wizard, fasi e avanzamento, esito ed errore. Le viste di Add Game lo osservano da sole, così un cambio di fase ridisegna solo quelle schermate. Il resto di Arcane legge di un porting solo `isBuilding`, `currentBuildGameID` e `portingProgress` (la tile della home), che restano sul coordinatore. La logica del porting è ancora nel coordinatore.
 - Gli stati di un solo pannello hanno il loro modello: `SetupCheckModel`, `SavePanelModel` (anteprima, operazione in corso, errore, ultimo backup, importazione riuscita) e gli altri elencati in [conventions.md](../working-on-it/conventions.md#1-dove-va-il-codice). Gli aggiornamenti destinati alla UI si pubblicano sulla coda principale.
 
 **Primo avvio.**

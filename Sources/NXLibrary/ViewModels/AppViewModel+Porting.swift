@@ -23,7 +23,7 @@ extension AppViewModel {
     /// Restarts the failed porting once with the reason's one `--allow-*` flag; the flag is not
     /// remembered, and the Metal gate's flag still comes from the persisted override.
     func portAnyway() {
-        guard case .portAnyway(let flag) = portingFailureReason?.action,
+        guard case .portAnyway(let flag) = porting.portingFailureReason?.action,
               let id = lastBuildGameID,
               let game = libraryGames.first(where: { $0.id == id }) else { return }
         startBuild(for: game, extraArguments: PortingFailureClassifier.arguments([], adding: flag))
@@ -43,11 +43,11 @@ extension AppViewModel {
         guard let id = lastBuildGameID, let game = libraryGames.first(where: { $0.id == id }),
               game.portingFailure == .failed else { return false }
         let reason = game.portingFailureReason ?? PortingFailureReason(kind: .unknown)
-        portingFailureReason = reason
-        buildError = reason.what(game: game.name)
-        buildSuccessPath = nil
-        buildState = .failed
-        buildWizardStep = 3
+        porting.portingFailureReason = reason
+        porting.buildError = reason.what(game: game.name)
+        porting.buildSuccessPath = nil
+        porting.buildState = .failed
+        porting.buildWizardStep = 3
         addGameSessionActive = true
         return true
     }

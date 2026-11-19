@@ -368,10 +368,8 @@ public final class AppViewModel: ObservableObject {
         }
     }
     public var setupCompleted: Bool { firstRunSetup.isCompleted }
-    @Published public var buildState: BuildState = .idle
     @Published public var lastError: String? = nil
     @Published public var alertMessage: String? = nil
-    @Published public var isCancellingBuild: Bool = false
     @Published public var buildLogURL: URL? = nil
     @Published public var currentBuildGameID: UUID? = nil
     @Published public var lastBuildGameID: UUID? = nil
@@ -401,14 +399,9 @@ public final class AppViewModel: ObservableObject {
     @Published public var bundleId: String = ""
     
     // MARK: - Build State
+    /// What Add Game and its Porting step show of a build; the home reads only the three values here.
+    public let porting = PortingModel()
     @Published public var isBuilding: Bool = false
-    @Published public var currentStageName: String = ""
-    @Published public var currentStepName: String = ""
-    @Published public var stageIndex: Int = 0
-    @Published public var totalStages: Int = 0
-    @Published public var progressFraction: Double = 0.0
-    @Published public var etaSeconds: Double? = nil
-    @Published public var buildStages: [BuildStageItem] = []
     /// The running (or just finished) porting folded into one overall fraction for the home.
     @Published public var portingProgress: PortingProgress? = nil
     /// The game ported last in this session leads Spotlight's row until quit.
@@ -418,24 +411,16 @@ public final class AppViewModel: ObservableObject {
     /// Spotlight's Delete on a failed porting asks first.
     @Published public var gameToRemove: PortedGame? = nil
     @Published var removeGameFocus: SeleneConfirmButton = .cancel
-    @Published public var showLiveLogsInBuild: Bool = true
     @Published public var logs: [LogEntry] = []
-    @Published public var buildError: String? = nil
-    /// Why the porting on the Porting step failed, when recognised; nil otherwise.
-    @Published public var portingFailureReason: PortingFailureReason? = nil
-    @Published public var buildSuccessPath: String? = nil
-    /// The game whose finished build waits for it to quit (`PendingInstall`).
-    @Published var buildHeldGameID: UUID? = nil
     /// The existing Selene dialog offers retrying the ready app, or closing it.
     @Published var gameWithInstallFailure: PortedGame? = nil
     @Published var installFailureFocus: SeleneConfirmButton = .cancel
 
     var canRetryReadyInstall: Bool {
-        buildState == .failed && portingFailureReason == nil
+        porting.buildState == .failed && porting.portingFailureReason == nil
             && (libraryGames.contains { $0.id == lastBuildGameID && $0.pendingInstall != nil }
                 || catalogBuildRecoveries.values.contains { $0.id == lastBuildGameID && $0.pendingInstall != nil })
     }
-    @Published public var buildWizardStep: Int = 1 // 1: Select Game, 2: Configure & Output, 3: Porting
     @Published public var iconAppearanceMode: AppIconAppearanceMode = .auto {
         didSet {
             AppData.preferences.set(iconAppearanceMode.rawValue, forKey: StorageKeys.savedIconAppearanceMode)
@@ -2339,22 +2324,22 @@ public final class AppViewModel: ObservableObject {
         return String(data: data, encoding: .utf8) ?? ""
     }
 
-    public var buildProgress: Double { progressFraction }
-    public var buildETA: Double? { etaSeconds }
+    public var buildProgress: Double { porting.progressFraction }
+    public var buildETA: Double? { porting.etaSeconds }
     public var buildLog: [LogEntry] { logs }
 
     public func goToWizardStep(_ step: Int) {
         guard step >= 1 && step <= 3 else { return }
         if step == 2 && selectedGame == nil { return }
-        buildWizardStep = step
+        porting.buildWizardStep = step
     }
 
     public func resetWizard() {
-        buildWizardStep = 1
-        buildError = nil
-        portingFailureReason = nil
-        buildSuccessPath = nil
-        buildState = .idle
+        porting.buildWizardStep = 1
+        porting.buildError = nil
+        porting.portingFailureReason = nil
+        porting.buildSuccessPath = nil
+        porting.buildState = .idle
         lastError = nil
     }
 
@@ -2362,7 +2347,7 @@ public final class AppViewModel: ObservableObject {
     /// resumes on the live step; returning with Back keeps the draft; any other
     /// entry starts clean so an old success or failure screen never comes back.
     func consumePreparedReviewEntry(_ id: UUID?) -> Bool {
-        guard buildWizardStep == 1 else { return false }
+        guard porting.buildWizardStep == 1 else { return false }
         return preparedSourceReview.consume(id, isReady: canAddSelectedGame, titleCount: detectedGames.count)
     }
 
@@ -2370,14 +2355,14 @@ public final class AppViewModel: ObservableObject {
                                         preservingSelection: Bool = false) {
         prepareBuildEnvironmentIfNeeded()
         if isBuilding {
-            buildWizardStep = 3
+            porting.buildWizardStep = 3
             addGameSessionActive = true
             return
         }
         if (returningFromBack || preservingSelection), addGameSessionActive { return }
         if reviewsFailureOnAddGame {
             reviewsFailureOnAddGame = false
-            if restoreLastFailure() || buildError != nil { return }
+            if restoreLastFailure() || porting.buildError != nil { return }
         }
         startNewAddGame(defaults: defaults)
     }
@@ -2391,7 +2376,7 @@ public final class AppViewModel: ObservableObject {
     /// Starts a clean wizard while remembering the folder preference for next launch.
     public func startNewAddGame(defaults: GameRuntimeConfig? = nil) {
         guard !isBuilding else {
-            buildWizardStep = 3
+            porting.buildWizardStep = 3
             addGameSessionActive = true
             return
         }
@@ -2417,15 +2402,15 @@ public final class AppViewModel: ObservableObject {
     /// SwiftUI previews and UI work without running nxnative.
     public func previewBuild() {
         isBuilding = true
-        buildState = .running
-        buildWizardStep = 3
+        porting.buildState = .running
+        porting.buildWizardStep = 3
         currentBuildGameID = libraryGames.first?.id
         logs.removeAll()
-        buildStages.removeAll()
-        currentStageName = "Preparing build"
-        currentStepName = ""
-        progressFraction = 0
-        etaSeconds = nil
+        porting.buildStages.removeAll()
+        porting.currentStageName = "Preparing build"
+        porting.currentStepName = ""
+        porting.progressFraction = 0
+        porting.etaSeconds = nil
         handleBuildEvent(.stage(k: 1, n: 8, name: "extract", step: "reading NSP"))
         handleBuildEvent(.stageEnd(name: "extract", ok: true, elapsed: 1.2, summary: L10n.text("done")))
         handleBuildEvent(.stage(k: 2, n: 8, name: "translate shaders", step: "metal"))
@@ -2726,24 +2711,24 @@ public final class AppViewModel: ObservableObject {
         buildLogURL = logURL
         currentBuildCacheURL = workspace.buildCache
         isPollingPipelineArchive = false
-        buildWizardStep = 3
+        porting.buildWizardStep = 3
         isBuilding = true
         // The request belongs to an accepted porting, never to startup or Steam-only use.
         NotificationService.shared.requestAuthorization()
-        isCancellingBuild = false
-        buildState = .running
-        buildError = nil
-        portingFailureReason = nil
+        porting.isCancellingBuild = false
+        porting.buildState = .running
+        porting.buildError = nil
+        porting.portingFailureReason = nil
         lastError = nil
-        buildSuccessPath = nil
-        buildHeldGameID = nil
-        progressFraction = 0
-        currentStageName = "Preparing build"
-        currentStepName = ""
-        stageIndex = 0
-        totalStages = 0
-        etaSeconds = nil
-        buildStages.removeAll()
+        porting.buildSuccessPath = nil
+        porting.buildHeldGameID = nil
+        porting.progressFraction = 0
+        porting.currentStageName = "Preparing build"
+        porting.currentStepName = ""
+        porting.stageIndex = 0
+        porting.totalStages = 0
+        porting.etaSeconds = nil
+        porting.buildStages.removeAll()
         portingProgress = PortingProgress()
         frontGameID = target.id
         logs.append(LogEntry(level: .info,
@@ -2782,14 +2767,14 @@ public final class AppViewModel: ObservableObject {
     public func cancelBuild() {
         guard isBuilding, let buildService else { return }
         stopStageElapsedTimer()
-        isCancellingBuild = true
-        currentStageName = "Cancelling build..."
+        porting.isCancellingBuild = true
+        porting.currentStageName = "Cancelling build..."
         logs.append(LogEntry(level: .warning, message: L10n.text("Cancelling build...")))
         buildService.cancel()
     }
 
     public func openOutputInFinder() {
-        guard let path = buildSuccessPath else { return }
+        guard let path = porting.buildSuccessPath else { return }
         NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
     }
 
@@ -2830,53 +2815,53 @@ public final class AppViewModel: ObservableObject {
             pipelinePollGeneration = UUID()
             isPollingPipelineArchive = false
             currentStageStartedAt = now
-            currentStageName = name
-            stageIndex = k
-            totalStages = n
-            for index in buildStages.indices
-            where buildStages[index].id < k && buildStages[index].isRunning {
-                buildStages[index].isRunning = false
-                buildStages[index].isCompleted = true
+            porting.currentStageName = name
+            porting.stageIndex = k
+            porting.totalStages = n
+            for index in porting.buildStages.indices
+            where porting.buildStages[index].id < k && porting.buildStages[index].isRunning {
+                porting.buildStages[index].isRunning = false
+                porting.buildStages[index].isCompleted = true
             }
-            if let index = buildStages.firstIndex(where: { $0.id == k }) {
-                buildStages[index].isRunning = true
-                buildStages[index].step = step ?? ""
-                if buildStages[index].elapsedSeconds == nil {
-                    buildStages[index].elapsedSeconds = 0
+            if let index = porting.buildStages.firstIndex(where: { $0.id == k }) {
+                porting.buildStages[index].isRunning = true
+                porting.buildStages[index].step = step ?? ""
+                if porting.buildStages[index].elapsedSeconds == nil {
+                    porting.buildStages[index].elapsedSeconds = 0
                 }
             } else {
-                buildStages.append(BuildStageItem(id: k, name: name,
+                porting.buildStages.append(BuildStageItem(id: k, name: name,
                                                   step: step ?? "", isRunning: true,
                                                   elapsedSeconds: 0))
             }
             startStageElapsedTimerIfNeeded()
-            if let step, !step.isEmpty { currentStepName = step }
+            if let step, !step.isEmpty { porting.currentStepName = step }
             logs.append(LogEntry(level: .step, message: "[\(k)/\(n)] \(name)"))
 
         case .step(let step):
-            currentStepName = step
-            if let index = buildStages.firstIndex(where: { $0.id == stageIndex }) {
-                buildStages[index].step = step
+            porting.currentStepName = step
+            if let index = porting.buildStages.firstIndex(where: { $0.id == porting.stageIndex }) {
+                porting.buildStages[index].step = step
             }
             logs.append(LogEntry(level: .info, message: "↳ \(step)"))
 
         case .progress(let fraction, let done, let total, let unit, let eta, let elapsed):
-            progressFraction = min(max(fraction, 0), 1)
-            etaSeconds = eta
+            porting.progressFraction = min(max(fraction, 0), 1)
+            porting.etaSeconds = eta
             if let elapsed,
-               let index = buildStages.firstIndex(where: { $0.id == stageIndex && $0.isRunning }) {
-                buildStages[index].elapsedSeconds = elapsed
+               let index = porting.buildStages.firstIndex(where: { $0.id == porting.stageIndex && $0.isRunning }) {
+                porting.buildStages[index].elapsedSeconds = elapsed
                 currentStageStartedAt = Date().addingTimeInterval(-elapsed)
             }
             if let done, let total, total > 0 {
                 if let unit, !unit.isEmpty,
                    unit.lowercased() != "b", unit.lowercased() != "bytes" {
                     let percent = Int((min(1, max(0, done / total)) * 100).rounded(.down))
-                    currentStepName = "\(Self.formatAmount(done)) / \(Self.formatAmount(total)) \(unit) (\(percent)%)"
+                    porting.currentStepName = "\(Self.formatAmount(done)) / \(Self.formatAmount(total)) \(unit) (\(percent)%)"
                 } else {
                     let doneText = Self.formatBytes(Int64(done))
                     let totalText = Self.formatBytes(Int64(total))
-                    currentStepName = "\(doneText) / \(totalText)"
+                    porting.currentStepName = "\(doneText) / \(totalText)"
                 }
             }
 
@@ -2884,14 +2869,14 @@ public final class AppViewModel: ObservableObject {
             pipelinePollGeneration = UUID()
             isPollingPipelineArchive = false
             let warned = ok && warn
-            if let index = buildStages.firstIndex(where: { $0.name == name })
-                ?? buildStages.firstIndex(where: { $0.isRunning }) {
-                buildStages[index].isRunning = false
-                buildStages[index].isCompleted = ok
-                buildStages[index].isFailed = !ok
-                buildStages[index].hasWarning = warned
-                buildStages[index].elapsedSeconds = elapsed ?? buildStages[index].elapsedSeconds
-                buildStages[index].summary = summary
+            if let index = porting.buildStages.firstIndex(where: { $0.name == name })
+                ?? porting.buildStages.firstIndex(where: { $0.isRunning }) {
+                porting.buildStages[index].isRunning = false
+                porting.buildStages[index].isCompleted = ok
+                porting.buildStages[index].isFailed = !ok
+                porting.buildStages[index].hasWarning = warned
+                porting.buildStages[index].elapsedSeconds = elapsed ?? porting.buildStages[index].elapsedSeconds
+                porting.buildStages[index].summary = summary
             }
             logs.append(LogEntry(
                 level: warned ? .warning : ok ? .success : .error,
@@ -2910,7 +2895,7 @@ public final class AppViewModel: ObservableObject {
     }
 
     private func startStageElapsedTimerIfNeeded() {
-        guard !isCancellingBuild, stageElapsedTimer == nil else { return }
+        guard !porting.isCancellingBuild, stageElapsedTimer == nil else { return }
         let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in self?.tickStageElapsed() }
         stageElapsedTimer = timer
         RunLoop.main.add(timer, forMode: .common)
@@ -2925,19 +2910,19 @@ public final class AppViewModel: ObservableObject {
     }
 
     private func tickStageElapsed() {
-        guard isBuilding, !isCancellingBuild, let started = currentStageStartedAt,
-              let index = buildStages.firstIndex(where: { $0.id == stageIndex && $0.isRunning }) else { return }
+        guard isBuilding, !porting.isCancellingBuild, let started = currentStageStartedAt,
+              let index = porting.buildStages.firstIndex(where: { $0.id == porting.stageIndex && $0.isRunning }) else { return }
         let now = Date()
         let elapsed = max(0, now.timeIntervalSince(started))
-        buildStages[index].elapsedSeconds = elapsed
+        porting.buildStages[index].elapsedSeconds = elapsed
 
-        if currentStageName == PortingProgress.pipelineArchiveStageName,
+        if porting.currentStageName == PortingProgress.pipelineArchiveStageName,
            let cacheURL = currentBuildCacheURL,
            !isPollingPipelineArchive {
             isPollingPipelineArchive = true
             let logURL = cacheURL.appendingPathComponent("logs/pso_offline_mac.log")
             let generation = pipelinePollGeneration
-            let architectures = buildStages[index].step.split(separator: " ").first?
+            let architectures = porting.buildStages[index].step.split(separator: " ").first?
                 .split(separator: ",").map { $0.hasPrefix("applegpu_") ? String($0) : "applegpu_" + $0 } ?? []
             DispatchQueue.global(qos: .utility).async { [weak self] in
                 let event = PipelineArchiveProgress().poll(logURL: logURL, architectures: architectures,
@@ -2945,7 +2930,7 @@ public final class AppViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     guard let self, self.pipelinePollGeneration == generation else { return }
                     self.isPollingPipelineArchive = false
-                    if let event, self.isBuilding, !self.isCancellingBuild, self.currentStageName == PortingProgress.pipelineArchiveStageName {
+                    if let event, self.isBuilding, !self.porting.isCancellingBuild, self.porting.currentStageName == PortingProgress.pipelineArchiveStageName {
                         self.handleBuildEvent(event)
                     }
                 }
@@ -2959,7 +2944,7 @@ public final class AppViewModel: ObservableObject {
         currentBuildCacheURL = nil
         portingProgress?.finish(success: result.success)
         isBuilding = false
-        isCancellingBuild = false
+        porting.isCancellingBuild = false
         buildService = nil
         if result.heldApp == nil { try? FileManager.default.removeItem(at: tempDir) }
         buildTempDirectory = nil
@@ -2988,7 +2973,7 @@ public final class AppViewModel: ObservableObject {
                 if let held = result.heldApp {
                     PendingInstaller.hold(PendingInstall(tempApp: held, finalApp: finalApp,
                                                          record: record, toolchain: toolchain), for: &game)
-                    buildHeldGameID = game.id
+                    porting.buildHeldGameID = game.id
                 } else {
                     PendingInstaller.discard(&game)
                     game.recordInstalledBuild(record, toolchain: toolchain, at: finalApp,
@@ -2999,20 +2984,20 @@ public final class AppViewModel: ObservableObject {
                 if let seconds = portingProgress?.finishingElapsed, seconds > 0 {
                     lastPortingFinishSeconds = seconds
                 }
-                progressFraction = 1
-                currentStageName = result.heldApp == nil ? "Build completed" : PendingInstall.stageName
+                porting.progressFraction = 1
+                porting.currentStageName = result.heldApp == nil ? "Build completed" : PendingInstall.stageName
                 if result.installationFailed {
-                    currentStageName = "Installation failed"
-                    buildState = .failed
-                    buildSuccessPath = nil
-                    buildError = "The build is ready. Retry installation."
-                    portingFailureReason = nil
+                    porting.currentStageName = "Installation failed"
+                    porting.buildState = .failed
+                    porting.buildSuccessPath = nil
+                    porting.buildError = "The build is ready. Retry installation."
+                    porting.portingFailureReason = nil
                     lastError = result.error
                     presentInstallFailure(for: game, error: result.error ?? "Installation failed.")
                 } else {
-                    buildState = .succeeded
-                    buildSuccessPath = finalApp.path
-                    buildError = nil
+                    porting.buildState = .succeeded
+                    porting.buildSuccessPath = finalApp.path
+                    porting.buildError = nil
                     lastError = nil
                     logs.append(LogEntry(level: .success, message: result.heldApp == nil
                         ? L10n.format("Build succeeded: %@", [String(describing: (finalApp.path))])
@@ -3025,9 +3010,9 @@ public final class AppViewModel: ObservableObject {
                     ?? (game.sources.isEmpty ? .builtSourcesMissing : .notBuilt)
                 game.portingFailure = .cancelled
                 game.portingFailureReason = nil
-                buildState = .cancelled
-                buildError = nil
-                portingFailureReason = nil
+                porting.buildState = .cancelled
+                porting.buildError = nil
+                porting.portingFailureReason = nil
                 lastError = "Build cancelled."
                 logs.append(LogEntry(level: .warning, message: L10n.text("Build cancelled.")))
             } else {
@@ -3040,9 +3025,9 @@ public final class AppViewModel: ObservableObject {
                 game.status = .failed
                 game.portingFailure = .failed
                 game.portingFailureReason = reason
-                buildState = .failed
-                buildError = message
-                portingFailureReason = reason
+                porting.buildState = .failed
+                porting.buildError = message
+                porting.portingFailureReason = reason
                 lastError = message
                 logs.append(LogEntry(level: .error,
                                      message: result.error ?? L10n.format("Build failed (exit code %@).", [String(describing: (result.exitCode))])))
@@ -3058,10 +3043,10 @@ public final class AppViewModel: ObservableObject {
                 syncPendingAppIcons()
             }
         } else {
-            buildState = result.success ? .succeeded
+            porting.buildState = result.success ? .succeeded
                 : (result.cancelled ? .cancelled : .failed)
             if !result.success && !result.cancelled {
-                buildError = result.error
+                porting.buildError = result.error
                 lastError = result.error
             }
         }
@@ -3098,12 +3083,12 @@ public final class AppViewModel: ObservableObject {
 
     private func presentBuildError(_ error: Error) {
         let message = error.localizedDescription
-        buildState = .failed
-        buildError = message
+        porting.buildState = .failed
+        porting.buildError = message
         if case .keyCheck(let reason, _) = error as? NXLibraryError {
-            portingFailureReason = reason
+            porting.portingFailureReason = reason
         } else {
-            portingFailureReason = nil
+            porting.portingFailureReason = nil
         }
         lastError = message
         alertMessage = message

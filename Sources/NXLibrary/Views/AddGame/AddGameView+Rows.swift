@@ -190,7 +190,7 @@ extension AddGameView {
 
     private func addSelectedGame(buildNow: Bool) {
         viewModel.addSelectedGame(buildNow: buildNow)
-        guard viewModel.buildError == nil, !viewModel.isBuilding else { return }
+        guard porting.buildError == nil, !viewModel.isBuilding else { return }
         router.showLibrary()
     }
 
@@ -198,11 +198,11 @@ extension AddGameView {
 
     private func readinessRows(includeBuildError: Bool) -> [AddGameRow] {
         var rows: [AddGameRow] = []
-        if includeBuildError, let error = viewModel.buildError {
+        if includeBuildError, let error = porting.buildError {
             rows.append(AddGameRow(id: "buildError", kind: .warning(action: {
-                viewModel.buildError = nil
-                viewModel.portingFailureReason = nil
-            }), title: viewModel.portingFailureReason?.title ?? L10n.text("The last porting failed"), about: error))
+                porting.buildError = nil
+                porting.portingFailureReason = nil
+            }), title: porting.portingFailureReason?.title ?? L10n.text("The last porting failed"), about: error))
         }
         if viewModel.selectedSourcesRequireKeys && !viewModel.isProdKeysValid {
             rows.append(AddGameRow(id: "keys", kind: .action { viewModel.selectProdKeysFile() }, icon: .key,
