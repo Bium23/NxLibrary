@@ -2,7 +2,7 @@
 """Check source-access triggers using the real startup block, observer and pickers.
 
 No AppKit windows or player data: replace the picker and the scanner I/O boundary,
-then count requests made by the actual AppViewModel code, as in run_review.py.
+then count requests made by the actual PortingModel and AppViewModel code, as in run_review.py.
 """
 from pathlib import Path
 import subprocess
@@ -10,9 +10,10 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 source = (ROOT / 'Sources/NXLibrary/ViewModels/AppViewModel.swift').read_text()
+porting_source = (ROOT / 'Sources/NXLibrary/ViewModels/PortingModel.swift').read_text()
 
 
-def declaration(signature):
+def declaration(signature, source=source):
     start = source.index(signature)
     opening = source.index('{', start)
     depth, end = 1, opening + 1
@@ -78,6 +79,9 @@ final class SourceHost {
     var isScanningGameFolder = false
     var engineSourceCapabilities = (extractedFolders: true, unused: false)
     var scans: [(folder: URL, files: [URL]?)] = []
+    // The Add game draft lives in PortingModel, which reaches the coordinator through `app`.
+    static let savedGameFolderKey = StorageKeys.savedGameFolder
+    var app: SourceHost { self }
     // ACTUAL_FOLDER
     // ACTUAL_REMEMBERED_FOLDER
     // ACTUAL_FOLDER_PICKER
@@ -144,7 +148,7 @@ for marker, signature in (
     ('// ACTUAL_FOLDER_PICKER', '    public func selectGameFolder('),
     ('// ACTUAL_FILE_PICKER', '    public func selectGameFiles('),
 ):
-    host = host.replace(marker + '\n', declaration(signature) + '\n')
+    host = host.replace(marker + '\n', declaration(signature, porting_source) + '\n')
 host = host.replace('// ACTUAL_STARTUP', startup)
 with tempfile.TemporaryDirectory(prefix='source-access-check-') as folder:
     scratch = Path(folder)

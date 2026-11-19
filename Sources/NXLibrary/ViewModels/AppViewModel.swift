@@ -82,67 +82,6 @@ public final class AppViewModel: ObservableObject {
     @Published public var prodKeysSource: String = ""
     @Published public var isProdKeysValid: Bool = false
     
-    // MARK: - Game Selection
-    @Published public var selectedGameFolder: URL? {
-        didSet {
-            if let folder = selectedGameFolder {
-                if !keepsRememberedGameFolder {
-                    AppData.preferences.set(folder.path, forKey: StorageKeys.savedGameFolder)
-                }
-                if !restoringGameFolder {
-                    selectedPackageURLs = nil
-                    scanGameFolder(folder)
-                }
-            } else {
-                if !keepsRememberedGameFolder {
-                    AppData.preferences.removeObject(forKey: StorageKeys.savedGameFolder)
-                }
-                scanGeneration = UUID()
-                selectedPackageURLs = nil
-                detectedGames = []
-                selectedGame = nil
-                selectedSourceIDs = []
-                scanError = nil
-                isScanningGameFolder = false
-            }
-        }
-    }
-    private var keepsRememberedGameFolder = false
-    private var restoringGameFolder = false
-    /// Explicit file picks must not silently include other packages in their parent folder.
-    private var selectedPackageURLs: [URL]?
-    /// The global source-folder preference is independent of the current Add Game draft.
-    public var gameFilesFolder: URL? {
-        guard let path = AppData.preferences.string(forKey: StorageKeys.savedGameFolder),
-              !path.isEmpty, path != "/" else { return nil }
-        return URL(fileURLWithPath: path)
-    }
-    @Published public var detectedGames: [SelectableGame] = []
-    @Published public var selectedGame: SelectableGame? = nil {
-        didSet {
-            if let game = selectedGame {
-                self.appName = selectedLibraryGame?.name ?? game.name
-                self.bundleId = selectedLibraryGame?.bundleId ?? ""
-                resetSourceSelection(for: game)
-            } else {
-                selectedSourceIDs = []
-                appName = ""
-                bundleId = ""
-            }
-            pendingRuntimeConfig = selectedLibraryGame.map(loadRuntimeConfig) ?? lastAddGameDefaults
-        }
-    }
-    var selectedLibraryGame: PortedGame? {
-        guard let titleID = selectedGame?.titleId else { return nil }
-        return libraryGames.first { $0.titleId?.caseInsensitiveCompare(titleID) == .orderedSame }
-    }
-    @Published public var selectedSourceIDs: Set<UUID> = [] {
-        didSet { refreshKeyCheck() }
-    }
-    /// The imported keys against the selected sources (`refreshKeyCheck`); nil while it runs.
-    @Published public var keyCheck: KeyCheck.Outcome? = nil
-    /// What `keyCheck` was computed for; a result for an older token is dropped.
-    var keyCheckToken: String? = nil
     /// The last porting's command line, for Copy diagnostics (its environment is never kept).
     var lastPortingCommand: [String] = []
     /// Set by a failed porting's notification: the next Add game opens on that failure.
@@ -157,8 +96,6 @@ public final class AppViewModel: ObservableObject {
     @Published var isWindowSettling = true
     /// A home screen (Spotlight or Collection) has shown since launch: Spotlight's entrance plays only on the first.
     var homeSeen = false
-    @Published public var isScanningGameFolder: Bool = false
-    @Published public var scanError: String? = nil
     
     // MARK: - Disk Capacity Pre-flight
     public func freeBytes(at url: URL) -> Int64? {
@@ -181,37 +118,11 @@ public final class AppViewModel: ObservableObject {
         return values?.volumeAvailableCapacity.map { Int64($0) }
     }
 
-    public var availableDiskBytes: Int64? {
-        freeBytes(at: selectedGameFolder
-            ?? URL(fileURLWithPath: defaultInstallPath.isEmpty
-                ? NSHomeDirectory() : defaultInstallPath))
-    }
 
     var gameAppsFolder: URL {
         libraryFolder ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Applications")
     }
 
-    /// Review and the first-build space check use the same destination policy as the installer.
-    var selectedBuildAppURL: URL {
-        let customName = appName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let name = customName.isEmpty ? selectedGame?.name ?? "Game" : customName
-        if var existing = selectedLibraryGame {
-            existing.name = name
-            return finalAppURL(for: existing)
-        }
-        return GameAppDestination.url(name: name, titleId: selectedGame?.titleId, in: gameAppsFolder)
-    }
-
-    var buildDestinationProblem: String? {
-        GameAppDestination.folderProblem(at: selectedBuildAppURL.deletingLastPathComponent())
-    }
-
-    /// The wizard reserves space for both the extracted cache and the temporary
-    /// app: the tightest of the folders the build writes to (`BuildScratch`).
-    public var availableBuildDiskBytes: Int64? {
-        buildFolders(appFolder: selectedBuildAppURL.deletingLastPathComponent(),
-                     workspace: selectedLibraryGame?.workspacePath).compactMap(freeBytes(at:)).min()
-    }
 
     /// The folders a build writes to: its workspace (a player's own one beside the sources is kept), its staged app
     /// and the app's folder. They are on the app's drive when it can hold builds.
@@ -222,16 +133,6 @@ public final class AppViewModel: ObservableObject {
         return [own ?? scratch.workspaces, scratch.temp, appFolder]
     }
     
-    public var selectedSources: [GameFileItem] {
-        guard let game = selectedGame else { return [] }
-        return game.files.filter { selectedSourceIDs.contains($0.id) }
-    }
-    
-    public var selectedSourcesSizeBytes: Int64 {
-        SourceSelection.uniqueSize(selectedSources)
-    }
-
-    public var selectedSourcesRequireKeys: Bool { SourceSelection.requiresKeys(selectedSources) }
     public var engineSourceCapabilities: EngineSourceCapabilities {
         EngineSourceCapabilities(repo: URL(fileURLWithPath: nxnativePath))
     }
@@ -244,51 +145,6 @@ public final class AppViewModel: ObservableObject {
                                          nupPrograms: capabilities.nupPrograms)
     }
     
-    public var formattedSelectedSourcesSize: String {
-        selectedSourcesSizeBytes.formatted(.byteCount(style: .file).locale(L10n.context.formatLocale))
-    }
-    
-    /// The build keeps an extracted copy and writes a temporary app before the
-    /// atomic install, so plan for roughly twice the source size plus 10 GB.
-    public var requiredBuildDiskBytes: Int64 {
-        selectedSourcesSizeBytes * 2 + 10_000_000_000
-    }
-    
-    public var isAddDiskSpaceLow: Bool {
-        guard let avail = availableDiskBytes, selectedSourcesSizeBytes > 0 else { return false }
-        return avail < requiredBuildDiskBytes
-    }
-
-    public var isDiskSpaceLow: Bool {
-        guard let avail = availableBuildDiskBytes, selectedSourcesSizeBytes > 0 else { return false }
-        return avail < requiredBuildDiskBytes
-    }
-    
-    public var diskSpaceWarningMessage: String? {
-        guard isDiskSpaceLow, let avail = availableBuildDiskBytes else { return nil }
-        let needed = requiredBuildDiskBytes - avail
-        let availStr = Self.formatBytes(avail)
-        let requiredStr = Self.formatBytes(requiredBuildDiskBytes)
-        let neededStr = Self.formatBytes(needed)
-        return L10n.format("Storage warning: this build needs ~%@ free (twice the selected sources plus 10 GB), but only %@ is available. Free at least %@ before adding it.", [requiredStr, availStr, neededStr])
-    }
-    
-    public var canAddSelectedGame: Bool {
-        guard !isBuilding, !isScanningGameFolder, let game = selectedGame else { return false }
-        return game.hasGame
-            && SourceSelection.hasGame(selectedSources)
-            && selectedSourcesSizeBytes > 0
-            && !isAddDiskSpaceLow
-    }
-    
-    public func resetSourceSelection(for game: SelectableGame) {
-        selectedSourceIDs = SourceSelection.initial(in: game.files)
-    }
-    
-    public func toggleSource(_ item: GameFileItem) {
-        guard let game = selectedGame else { return }
-        selectedSourceIDs = SourceSelection.toggling(item.id, in: game.files, selected: selectedSourceIDs)
-    }
     
     // MARK: - Drag & Drop & ZIP
     @Published public var dropErrorMessage: String? = nil
@@ -329,9 +185,6 @@ public final class AppViewModel: ObservableObject {
     @Published public var gameToClose: PortedGame? = nil
     @Published var closeGameFocus: SeleneConfirmButton = .cancel
     @Published public var pendingRuntimeConfig = GameRuntimeConfig()
-    private var lastAddGameDefaults = GameRuntimeConfig()
-    private var preparedSourceReview = FirstRunSetup.ReviewEntry()
-    var addGameSessionActive = false
     @Published public var importedApps: [ImportedApp] = []
     @Published public var environmentStatus: EnvironmentStatus? = nil
     @Published public var compatibilityReport: CompatibilityReport? = nil
@@ -394,13 +247,10 @@ public final class AppViewModel: ObservableObject {
     /// Why the last switch did not happen, shown calmly in the Newest engine row.
     @Published public internal(set) var newestEngineProblem: String? = nil
     
-    // MARK: - Advanced Options
-    @Published public var appName: String = ""
-    @Published public var bundleId: String = ""
     
     // MARK: - Build State
     /// What Add Game and its Porting step show of a build; the home reads only the three values here.
-    public let porting = PortingModel()
+    public private(set) lazy var porting = PortingModel(app: self)
     @Published public var isBuilding: Bool = false
     /// The running (or just finished) porting folded into one overall fraction for the home.
     @Published public var portingProgress: PortingProgress? = nil
@@ -484,9 +334,8 @@ public final class AppViewModel: ObservableObject {
     private var localizedMetadataRefresh: Task<Void, Never>?
     private let upstreamCacheKey = "NXLibrary_UpstreamStatus"
     private lazy var storageManager = StorageManager()
-    private let sourceCatalog = SourceCatalog()
+    let sourceCatalog = SourceCatalog()
     private lazy var workspaceManager = WorkspaceManager(root: core.appendingPathComponent("workspaces"))
-    private var scanGeneration = UUID()
     private var libraryRescanRequested = false
     private var buildService: BuildService?
     private var buildPreviousStatus: GameStatus?
@@ -673,8 +522,8 @@ public final class AppViewModel: ObservableObject {
             isProdKeysValid = summary.hasHeaderKey
             prodKeysPath = keyStore.keyURL.path
             prodKeysSource = "Imported once"
-            refreshKeyCheck()
-            if let folder = selectedGameFolder { scanGameFolder(folder) }
+            porting.refreshKeyCheck()
+            if let folder = porting.selectedGameFolder { porting.scanGameFolder(folder) }
             lastError = nil
             logs.append(LogEntry(
                 level: .success,
@@ -1235,10 +1084,10 @@ public final class AppViewModel: ObservableObject {
         var isDir: ObjCBool = false
         if FileManager.default.fileExists(atPath: first.path, isDirectory: &isDir) {
             if isDir.boolValue {
-                self.selectedGameFolder = first
+                self.porting.selectedGameFolder = first
             } else {
                 let parent = first.deletingLastPathComponent()
-                self.selectedGameFolder = parent
+                self.porting.selectedGameFolder = parent
             }
         }
     }
@@ -1359,15 +1208,15 @@ public final class AppViewModel: ObservableObject {
         panel.message = "Choose the folder holding the base, update and DLC files for \(game.name)."
         guard panel.runModal() == .OK, let folder = panel.url else { return }
 
-        isScanningGameFolder = true
+        porting.isScanningGameFolder = true
         let catalog = sourceCatalog
         let repo = URL(fileURLWithPath: nxnativePath)
         let toolchain = engineToolchain
         let keys = isProdKeysValid ? keyStore.keyURL : nil
         let developer = resolvedDeveloperDir()
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let urls = ExtractedSourceCatalog.recognizes(folder) ? [] : Self.sourceFileURLs(in: folder)
-            let outcome = Result { try Self.scanSources(in: folder, files: urls, catalog: catalog,
+            let urls = ExtractedSourceCatalog.recognizes(folder) ? [] : PortingModel.sourceFileURLs(in: folder)
+            let outcome = Result { try PortingModel.scanSources(in: folder, files: urls, catalog: catalog,
                 repo: repo, toolchain: toolchain, keys: keys, developerDir: developer) }
             let detected = (try? outcome.get().games) ?? []
             let match = detected.first {
@@ -1376,7 +1225,7 @@ public final class AppViewModel: ObservableObject {
             }
             DispatchQueue.main.async {
                 guard let self else { return }
-                self.isScanningGameFolder = false
+                self.porting.isScanningGameFolder = false
                 guard let match, match.hasGame else {
                     if case .failure(let error) = outcome { self.alertMessage = error.localizedDescription }
                     else { self.alertMessage = "No base, update or DLC files for \(game.name) were found in that folder." }
@@ -1944,7 +1793,7 @@ public final class AppViewModel: ObservableObject {
         return total
     }
 
-    private static func formatBytes(_ bytes: Int64) -> String {
+    static func formatBytes(_ bytes: Int64) -> String {
         bytes.formatted(.byteCount(style: .file).locale(L10n.context.formatLocale))
     }
 
@@ -1984,179 +1833,6 @@ public final class AppViewModel: ObservableObject {
         }
     }
     
-    // MARK: - Game Scan
-    private func scanGameFolder(_ folder: URL) {
-        let previousTitle = selectedGame?.id
-        let previousFiles = selectedGame?.files ?? []
-        let previousSelection = selectedSourceIDs
-        let previousName = appName
-        let previousBundle = bundleId
-        let previousConfig = pendingRuntimeConfig
-        scanError = nil
-        isScanningGameFolder = true
-        selectedGame = nil
-        selectedSourceIDs = []
-        let generation = UUID()
-        scanGeneration = generation
-        let catalog = sourceCatalog
-        let repo = URL(fileURLWithPath: nxnativePath)
-        let toolchain = engineToolchain
-        let keys = isProdKeysValid ? keyStore.keyURL : nil
-        let developer = resolvedDeveloperDir()
-        let explicitFiles = selectedPackageURLs
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let urls = explicitFiles ?? (ExtractedSourceCatalog.recognizes(folder) ? [] : Self.sourceFileURLs(in: folder))
-            let outcome = Result { try Self.scanSources(in: folder, files: urls, catalog: catalog,
-                repo: repo, toolchain: toolchain, keys: keys, developerDir: developer,
-                allowExtractedFolder: explicitFiles == nil) }
-            let detected = (try? outcome.get().games) ?? []
-            let games = detected.map(Self.selectableGame(from:))
-            DispatchQueue.main.async {
-                guard let self,
-                      self.scanGeneration == generation,
-                      self.selectedGameFolder?.standardizedFileURL == folder.standardizedFileURL else {
-                    return
-                }
-                self.isScanningGameFolder = false
-                self.detectedGames = games
-                let selectedID = SourceSelection.initialTitleID(available: games.map(\.id), previous: previousTitle)
-                self.selectedGame = games.first { $0.id == selectedID }
-                if let previousTitle, self.selectedGame?.id == previousTitle {
-                    self.selectedSourceIDs = SourceSelection.restoredSelection(previous: previousFiles,
-                        selected: previousSelection, current: self.selectedGame?.files ?? [])
-                    self.appName = previousName
-                    self.bundleId = previousBundle
-                    self.pendingRuntimeConfig = previousConfig
-                }
-                if let skipped = try? outcome.get().skipped, !skipped.isEmpty {
-                    self.scanError = "Unreadable packages: " + skipped.joined(separator: ", ")
-                }
-                if games.isEmpty {
-                    if case .failure(let error) = outcome {
-                        self.scanError = error.localizedDescription
-                    } else { self.scanError = urls.isEmpty
-                        ? "No game was found in this folder: no NSP, XCI, NSZ, XCZ or NUP file, and no extracted game (a folder with exefs and romfs, or with base/exefs and base/romfs)."
-                        : "No readable game files were found. Check that the files are complete and have a title ID or ticket." }
-                    self.logs.append(LogEntry(level: .warning, message: self.scanError!))
-                } else {
-                    self.logs.append(LogEntry(level: .info,
-                        message: L10n.count("Detected %lld games in %@.", games.count, arguments: [String(describing: (folder.lastPathComponent))])))
-                }
-            }
-        }
-    }
-
-    private struct ScannedSources {
-        var games: [DetectedGame]
-        var skipped: [String] = []
-    }
-
-    private static func scanSources(in folder: URL, files: [URL], catalog: SourceCatalog,
-                                    repo: URL, toolchain: EngineToolchain, keys: URL?, developerDir: URL,
-                                    allowExtractedFolder: Bool = true) throws -> ScannedSources {
-        let capabilities = EngineSourceCapabilities(repo: repo)
-        if allowExtractedFolder && ExtractedSourceCatalog.recognizes(folder) {
-            guard capabilities.extractedFolders else {
-                throw NXLibraryError.environmentBlocked(L10n.text("This engine does not support extracted folders."))
-            }
-            let catalog = ExtractedSourceCatalog(profiles: repo.appendingPathComponent("dm/games"),
-                                                 provisional: capabilities.provisionalDumps)
-            return ScannedSources(games: [try catalog.scan(folder: folder)])
-        }
-        // A Switch 2 NUP file holds the whole game: picked on its own, or the one .nup in a folder without packages.
-        let pickedNUPs = files.filter { $0.pathExtension.lowercased() == "nup" }
-        guard pickedNUPs.isEmpty || (files.count == 1 && NUPSourceCatalog.isNUP(files[0])) else {
-            throw EngineSourceError.containerNotAlone
-        }
-        if let nup = pickedNUPs.first ?? (allowExtractedFolder ? NUPSourceCatalog.container(in: folder) : nil) {
-            guard capabilities.nupContainers else {
-                throw NXLibraryError.environmentBlocked(L10n.text("This engine does not support NUP files."))
-            }
-            let reader = NUPSourceCatalog(repo: repo, toolchain: toolchain, developerDir: developerDir)
-            return ScannedSources(games: [try reader.scan(nup: nup)])
-        }
-        var detected: [DetectedGame]
-        var skipped: [String] = []
-        if capabilities.titleSelection, let keys {
-            let reader = EnginePackageReader(repo: repo, toolchain: toolchain, keys: keys, developerDir: developerDir)
-            let readings = try reader.contents(of: files.filter { !$0.hasDirectoryPath }.map {
-                (url: $0, alreadyIdentified: (try? catalog.inspect($0)) != nil)
-            })
-            detected = try catalog.scan(files: files, skippingUnreadable: true,
-                onUnreadable: { url, _ in skipped.append(url.lastPathComponent) }) { file in
-                switch readings[file] {
-                case .contents(let rows)?: return rows
-                case .unreadable(let why)?: throw EngineSourceError.unreadablePackage(why)
-                case nil: return []
-                }
-            }
-        } else {
-            detected = try catalog.scan(files: files.filter { (try? catalog.inspect($0)) != nil })
-        }
-        for index in detected.indices {
-            let title = detected[index].id
-            let profile = repo.appendingPathComponent("dm/games/\(title)/game.tsv")
-            if let text = try? String(contentsOf: profile, encoding: .utf8),
-               let name = text.split(separator: "\n").first(where: { $0.hasPrefix("name\t") }) {
-                detected[index].name = String(name.dropFirst(5))
-            }
-        }
-        return ScannedSources(games: detected, skipped: skipped)
-    }
-    
-    private static func sourceFileURLs(in folder: URL) -> [URL] {
-        let allowed = Set(["nsp", "nsz", "xci", "xcz"])
-        let fm = FileManager.default
-        guard let enumerator = fm.enumerator(
-            at: folder,
-            includingPropertiesForKeys: [.isRegularFileKey, .fileSizeKey],
-            options: [.skipsHiddenFiles, .skipsPackageDescendants]
-        ) else { return [] }
-        var urls: [URL] = []
-        for case let url as URL in enumerator {
-            guard allowed.contains(url.pathExtension.lowercased()) else { continue }
-            let values = try? url.resourceValues(
-                forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
-            let isLink = values?.isSymbolicLink == true
-            guard values?.isRegularFile == true || isLink else { continue }
-            // A symlink must point at a real, non-empty file; its own file size
-            // is just the length of the link path.
-            let target = isLink ? url.resolvingSymlinksInPath() : url
-            let targetValues = try? target.resourceValues(
-                forKeys: [.isRegularFileKey, .fileSizeKey])
-            guard targetValues?.isRegularFile == true,
-                  (targetValues?.fileSize ?? 0) > 0 else { continue }
-            urls.append(url)
-        }
-        return urls.sorted {
-            $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending
-        }
-    }
-    
-    private static func selectableGame(from game: DetectedGame) -> SelectableGame {
-        var ordered = [game.base].compactMap { $0 }
-        ordered += game.updates.sorted {
-            ($0.version ?? -1) > ($1.version ?? -1)
-        }
-        ordered += game.dlcs.sorted {
-            $0.url.lastPathComponent.localizedStandardCompare($1.url.lastPathComponent) == .orderedAscending
-        }
-        return SelectableGame(
-            id: String(format: "%016llX", game.baseTitleId),
-            name: game.name,
-            titleId: String(format: "%016llX", game.baseTitleId),
-            files: ordered.map { source in
-                GameFileItem(
-                    url: source.url,
-                    kind: source.kind,
-                    titleId: String(format: "%016llX", source.titleId),
-                    versionString: source.version.map { "v\($0)" },
-                    sizeBytes: source.sizeBytes, sourceLayout: source.layout,
-                    requiresTitleSelection: source.requiresTitleSelection, nupProgram: source.nupProgram
-                )
-            }
-        )
-    }
     
     // MARK: - File Pickers
     public func selectNxnativeFolder() {
@@ -2186,45 +1862,6 @@ public final class AppViewModel: ObservableObject {
         }
     }
     
-    @discardableResult
-    public func selectGameFolder(startingNewGameWith defaults: GameRuntimeConfig? = nil) -> Bool {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.allowsMultipleSelection = false
-        panel.directoryURL = selectedGameFolder ?? gameFilesFolder
-        panel.prompt = "Choose folder"
-        panel.message = GameFoldersCopy.sourcesPickerMessage(extractedFolders: engineSourceCapabilities.extractedFolders)
-        
-        if panel.runModal() == .OK, let url = panel.url {
-            if let defaults { startNewAddGame(defaults: defaults) }
-            self.selectedGameFolder = url
-            return true
-        }
-        return false
-    }
-
-    @discardableResult
-    public func selectGameFiles(startingNewGameWith defaults: GameRuntimeConfig? = nil) -> Bool {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = true
-        panel.canChooseDirectories = false
-        panel.allowsMultipleSelection = true
-        panel.allowedContentTypes = ["nsp", "xci", "nsz", "xcz", "nup"].compactMap { UTType(filenameExtension: $0) }
-        panel.prompt = "Choose files"
-        panel.message = "Choose NSP, XCI, NSZ or XCZ files, or one Switch 2 NUP file."
-        guard panel.runModal() == .OK, let first = panel.urls.first else { return false }
-        if let defaults { startNewAddGame(defaults: defaults) }
-        let folder = first.deletingLastPathComponent()
-        restoringGameFolder = true
-        keepsRememberedGameFolder = true
-        selectedGameFolder = folder
-        keepsRememberedGameFolder = false
-        restoringGameFolder = false
-        selectedPackageURLs = panel.urls
-        scanGameFolder(folder)
-        return true
-    }
     
     public func selectProdKeysFile() {
         guard !isBuilding, !isUpdatingApp else { return }
@@ -2260,14 +1897,14 @@ public final class AppViewModel: ObservableObject {
         !isBuilding
             && !isCleaningStorage
             && !isUpdatingApp
-            && canAddSelectedGame
-            && supportsSources(selectedSources)
-            && (!selectedSourcesRequireKeys || isProdKeysValid)
-            && !keyCheckBlocks
+            && porting.canAddSelectedGame
+            && supportsSources(porting.selectedSources)
+            && (!porting.selectedSourcesRequireKeys || isProdKeysValid)
+            && !porting.keyCheckBlocks
             && isNxnativeValid
             && environmentStatus?.canBuild == true
-            && !isDiskSpaceLow
-            && buildDestinationProblem == nil
+            && !porting.isDiskSpaceLow
+            && porting.buildDestinationProblem == nil
             && canPassToolchainGate
     }
 
@@ -2328,74 +1965,6 @@ public final class AppViewModel: ObservableObject {
     public var buildETA: Double? { porting.etaSeconds }
     public var buildLog: [LogEntry] { logs }
 
-    public func goToWizardStep(_ step: Int) {
-        guard step >= 1 && step <= 3 else { return }
-        if step == 2 && selectedGame == nil { return }
-        porting.buildWizardStep = step
-    }
-
-    public func resetWizard() {
-        porting.buildWizardStep = 1
-        porting.buildError = nil
-        porting.portingFailureReason = nil
-        porting.buildSuccessPath = nil
-        porting.buildState = .idle
-        lastError = nil
-    }
-
-    /// Called when the Add Game route becomes visible. A build in progress always
-    /// resumes on the live step; returning with Back keeps the draft; any other
-    /// entry starts clean so an old success or failure screen never comes back.
-    func consumePreparedReviewEntry(_ id: UUID?) -> Bool {
-        guard porting.buildWizardStep == 1 else { return false }
-        return preparedSourceReview.consume(id, isReady: canAddSelectedGame, titleCount: detectedGames.count)
-    }
-
-    public func addGameDidBecomeVisible(defaults: GameRuntimeConfig, returningFromBack: Bool,
-                                        preservingSelection: Bool = false) {
-        prepareBuildEnvironmentIfNeeded()
-        if isBuilding {
-            porting.buildWizardStep = 3
-            addGameSessionActive = true
-            return
-        }
-        if (returningFromBack || preservingSelection), addGameSessionActive { return }
-        if reviewsFailureOnAddGame {
-            reviewsFailureOnAddGame = false
-            if restoreLastFailure() || porting.buildError != nil { return }
-        }
-        startNewAddGame(defaults: defaults)
-    }
-
-    /// Ends the draft when the user leaves Add Game for a non-overlay route.
-    public func addGameDidLeave() {
-        guard !isBuilding else { return }
-        addGameSessionActive = false
-    }
-
-    /// Starts a clean wizard while remembering the folder preference for next launch.
-    public func startNewAddGame(defaults: GameRuntimeConfig? = nil) {
-        guard !isBuilding else {
-            porting.buildWizardStep = 3
-            addGameSessionActive = true
-            return
-        }
-        if let defaults {
-            lastAddGameDefaults = defaults
-        }
-        keepsRememberedGameFolder = true
-        selectedGameFolder = nil
-        keepsRememberedGameFolder = false
-        detectedGames = []
-        selectedGame = nil
-        selectedSourceIDs = []
-        scanError = nil
-        appName = ""
-        bundleId = ""
-        pendingRuntimeConfig = lastAddGameDefaults
-        resetWizard()
-        addGameSessionActive = true
-    }
 
     #if DEBUG
     /// Feeds sample events through the same reducer as a real build, for
@@ -2420,11 +1989,11 @@ public final class AppViewModel: ObservableObject {
     #endif
 
     public func addSelectedGame(buildNow: Bool = false) {
-        guard let selection = selectedGame else {
+        guard let selection = porting.selectedGame else {
             presentBuildError(NXLibraryError.noSelectedGame)
             return
         }
-        let files = selectedSources
+        let files = porting.selectedSources
         let sources = files.compactMap(Self.detectedSource(from:))
         // A NUP with no base game has only its updates: the selected one is taken as the whole game.
         guard SourceSelection.hasGame(files),
@@ -2439,20 +2008,20 @@ public final class AppViewModel: ObservableObject {
             updates: sources.filter { $0.kind == .update },
             dlcs: sources.filter { $0.kind == .dlc }
         )
-        let customName = appName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let customName = porting.appName.trimmingCharacters(in: .whitespacesAndNewlines)
         if !customName.isEmpty { detected.name = customName }
-        let useFolderMode = selectedGameFolder != nil
-            && selectedPackageURLs == nil
-            && detectedGames.count == 1
+        let useFolderMode = porting.selectedGameFolder != nil
+            && porting.selectedPackageURLs == nil
+            && porting.detectedGames.count == 1
             && files.count == selection.files.count
             && files.allSatisfy { $0.layout == .package }
         do {
             let game = try addGame(
                 detected: detected,
                 selected: sources,
-                folder: useFolderMode ? selectedGameFolder : nil,
-                bundleId: bundleId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                    ? nil : bundleId.trimmingCharacters(in: .whitespacesAndNewlines)
+                folder: useFolderMode ? porting.selectedGameFolder : nil,
+                bundleId: porting.bundleId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    ? nil : porting.bundleId.trimmingCharacters(in: .whitespacesAndNewlines)
             )
             // Existing titles start Review with their saved settings. The
             // values the user confirms are the values used at the next launch.
@@ -2467,7 +2036,7 @@ public final class AppViewModel: ObservableObject {
             if buildNow, canStartBuild {
                 startBuild(for: game)
             } else {
-                resetWizard()
+                porting.resetWizard()
             }
         } catch {
             presentBuildError(error)
@@ -3138,7 +2707,7 @@ public final class AppViewModel: ObservableObject {
                               requiresTitleSelection: file.requiresTitleSelection == true, nupProgram: file.nupProgram)
     }
 
-    private func finalAppURL(for game: PortedGame) -> URL {
+    func finalAppURL(for game: PortedGame) -> URL {
         GameAppDestination.url(for: game, in: gameAppsFolder)
     }
 

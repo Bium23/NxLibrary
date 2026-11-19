@@ -338,7 +338,7 @@ struct AddGameStepThreeView: View {
                 StepAction(id: "another", title: L10n.text("Port another game"),
                            systemImage: "plus", kind: .secondary, isEnabled: true) {
                     withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
-                        viewModel.startNewAddGame()
+                        porting.startNewAddGame()
                     }
                 },
                 StepAction(id: "openLog", title: L10n.text("Open log"),
@@ -392,7 +392,7 @@ struct AddGameStepThreeView: View {
                            systemImage: "slider.horizontal.3",
                            kind: .secondary, isEnabled: true) {
                     withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
-                        viewModel.goToWizardStep(2)
+                        porting.goToWizardStep(2)
                     }
                 },
                 StepAction(id: "console", title: L10n.text("Open console"),
@@ -408,7 +408,7 @@ struct AddGameStepThreeView: View {
                        systemImage: "arrow.left", kind: .secondary,
                        isEnabled: true) {
                 withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
-                    viewModel.goToWizardStep(viewModel.selectedGame == nil ? 1 : 2)
+                    porting.goToWizardStep(porting.selectedGame == nil ? 1 : 2)
                 }
             }
         ]

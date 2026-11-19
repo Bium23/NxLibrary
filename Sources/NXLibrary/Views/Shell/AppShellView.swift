@@ -450,14 +450,14 @@ public struct AppShellView: View {
             recordLastHome(route)
             switch route {
             case .addGame:
-                viewModel.addGameDidBecomeVisible(
+                viewModel.porting.addGameDidBecomeVisible(
                     defaults: settings.settings.gameDefaults,
                     returningFromBack: router.isReturningFromBack,
                     preservingSelection: setupSourceEntryID != nil
                 )
             case .library, .collection, .detail:
                 setupSourceEntryID = nil
-                viewModel.addGameDidLeave()
+                viewModel.porting.addGameDidLeave()
             default:
                 break
             }
@@ -544,7 +544,7 @@ public struct AppShellView: View {
                 viewModel.lastBuildGameID = id
                 viewModel.reviewsFailureOnAddGame = true
                 if router.route == .addGame {
-                    viewModel.addGameDidBecomeVisible(defaults: settings.settings.gameDefaults, returningFromBack: false)
+                    viewModel.porting.addGameDidBecomeVisible(defaults: settings.settings.gameDefaults, returningFromBack: false)
                 } else {
                     router.openAddGame()
                 }
@@ -1316,8 +1316,8 @@ public struct AppShellView: View {
         guard viewModel.showSetupCheck,
               viewModel.firstRunSetup.page == .games else { return }
         let defaults = settings.settings.gameDefaults
-        let picked = usingFolder ? viewModel.selectGameFolder(startingNewGameWith: defaults)
-            : viewModel.selectGameFiles(startingNewGameWith: defaults)
+        let picked = usingFolder ? viewModel.porting.selectGameFolder(startingNewGameWith: defaults)
+            : viewModel.porting.selectGameFiles(startingNewGameWith: defaults)
         guard picked else { return }
         setupSourceEntryID = UUID()
         viewModel.completeSetup()
@@ -1326,7 +1326,7 @@ public struct AppShellView: View {
 
     private func openFreshAddGame() {
         if router.route == .addGame, !viewModel.isBuilding {
-            viewModel.startNewAddGame(defaults: settings.settings.gameDefaults)
+            viewModel.porting.startNewAddGame(defaults: settings.settings.gameDefaults)
         } else {
             router.openAddGame()
         }

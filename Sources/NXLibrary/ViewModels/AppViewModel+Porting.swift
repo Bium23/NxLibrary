@@ -48,7 +48,7 @@ extension AppViewModel {
         porting.buildSuccessPath = nil
         porting.buildState = .failed
         porting.buildWizardStep = 3
-        addGameSessionActive = true
+        porting.addGameSessionActive = true
         return true
     }
 

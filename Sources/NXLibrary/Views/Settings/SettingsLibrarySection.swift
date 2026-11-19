@@ -4,6 +4,8 @@ import NXLibraryCore
 
 struct SettingsLibrarySection: View {
     @ObservedObject var viewModel: AppViewModel
+    /// Game files shows the folder chosen through the porting model, so the row follows its changes.
+    @ObservedObject var porting: PortingModel
     @ObservedObject var settings: AppSettingsStore
     let onActions: ([SettingsRowAction]) -> Void
 
@@ -38,18 +40,18 @@ struct SettingsLibrarySection: View {
                       subtitle: GameFoldersCopy.sourcesAbout(extractedFolders: viewModel.engineSourceCapabilities.extractedFolders),
                       info: "Existing game apps play without their sources. Reset group keeps this folder. Clear removes the selection, keeping your files.") {
                 HStack(spacing: 10) {
-                    Text(viewModel.gameFilesFolder?.path ?? L10n.text("Not selected · Optional"))
+                    Text(porting.gameFilesFolder?.path ?? L10n.text("Not selected · Optional"))
                         .seleneFont(15, .medium)
                         .foregroundColor(SeleneTheme.ink.opacity(0.62))
                         .lineLimit(1)
                         .truncationMode(.middle)
                         .frame(maxWidth: 320, alignment: .trailing)
-                    Button(L10n.text("Choose")) { viewModel.selectGameFolder() }
+                    Button(L10n.text("Choose")) { porting.selectGameFolder() }
                         .buttonStyle(.plain)
                         .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
-                    if viewModel.gameFilesFolder != nil {
-                        Button(L10n.text("Clear")) { viewModel.selectedGameFolder = nil }
+                    if porting.gameFilesFolder != nil {
+                        Button(L10n.text("Clear")) { porting.selectedGameFolder = nil }
                             .buttonStyle(.plain)
                             .seleneFont(14, .semibold)
                             .foregroundColor(SeleneTheme.danger)
@@ -104,7 +106,7 @@ struct SettingsLibrarySection: View {
                 viewModel.selectLibraryFolder()
             },
             .init(id: "romChoose", title: GameFoldersCopy.sourcesTitle) {
-                viewModel.selectGameFolder()
+                porting.selectGameFolder()
             },
             .init(id: "refresh", title: "Scan game apps", isEnabled: !viewModel.isScanningLibrary) {
                 viewModel.importExistingBuilds()

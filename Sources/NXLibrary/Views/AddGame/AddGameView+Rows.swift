@@ -15,7 +15,7 @@ extension AddGameView {
     /// The row a step opens on.
     func defaultRowID(for step: Int) -> String {
         switch step {
-        case 1: return viewModel.canAddSelectedGame ? "continue" : "chooseFiles"
+        case 1: return porting.canAddSelectedGame ? "continue" : "chooseFiles"
         case 2: return viewModel.canStartBuild ? "build" : "library"
         default: return portingRows.first(where: \.focusable)?.id ?? ""
         }
@@ -25,41 +25,41 @@ extension AddGameView {
 
     private var chooseRows: [AddGameRow] {
         var rows: [AddGameRow] = []
-        let folder = viewModel.selectedGameFolder
-        rows.append(AddGameRow(id: "chooseFiles", kind: .action { viewModel.selectGameFiles() },
+        let folder = porting.selectedGameFolder
+        rows.append(AddGameRow(id: "chooseFiles", kind: .action { porting.selectGameFiles() },
                                icon: .add, title: L10n.text("Choose game files"), about: L10n.text("NSP, XCI, NSZ, XCZ or a Switch 2 NUP.")))
-        rows.append(AddGameRow(id: "choose", kind: .action { viewModel.selectGameFolder() },
+        rows.append(AddGameRow(id: "choose", kind: .action { porting.selectGameFolder() },
                                icon: .folder, title: folder == nil ? L10n.text("Choose folder") : L10n.text("Change folder"),
                                about: folder.map { ($0.path as NSString).abbreviatingWithTildeInPath }
                                    ?? L10n.text("Game packages or an extracted game folder. You can also drop them here.")))
-        if let game = viewModel.selectedGame {
+        if let game = porting.selectedGame {
             rows.append(AddGameRow(id: "continue", kind: .action(goToReview), icon: .chevron,
                                    title: L10n.text("Continue"),
-                                   about: "\(game.name) · \(sourceCountText) · \(viewModel.formattedSelectedSourcesSize)",
-                                   enabled: viewModel.canAddSelectedGame))
+                                   about: "\(game.name) · \(sourceCountText) · \(porting.formattedSelectedSourcesSize)",
+                                   enabled: porting.canAddSelectedGame))
         }
-        if viewModel.isScanningGameFolder {
+        if porting.isScanningGameFolder {
             rows.append(AddGameRow(id: "scanning", kind: .note, title: L10n.text("Reading the folder…")))
         }
-        if let error = viewModel.scanError {
+        if let error = porting.scanError {
             rows.append(AddGameRow(id: "scanError", kind: .warning(action: nil),
-                                   title: viewModel.detectedGames.isEmpty ? L10n.text("Could not read this folder") : L10n.text("Some files were skipped"), about: error))
+                                   title: porting.detectedGames.isEmpty ? L10n.text("Could not read this folder") : L10n.text("Some files were skipped"), about: error))
         }
         if let error = viewModel.dropErrorMessage {
             rows.append(AddGameRow(id: "dropError", kind: .warning(action: nil), title: error))
         }
-        if folder != nil, !viewModel.isScanningGameFolder, viewModel.detectedGames.isEmpty, viewModel.scanError == nil {
+        if folder != nil, !porting.isScanningGameFolder, porting.detectedGames.isEmpty, porting.scanError == nil {
             rows.append(AddGameRow(id: "empty", kind: .note, title: L10n.text("No games were found in this folder.")))
         }
-        if viewModel.detectedGames.count > 1 {
+        if porting.detectedGames.count > 1 {
             rows.append(AddGameRow(id: "gamesHeading", kind: .heading, title: L10n.text("Choose a game")))
-            for game in viewModel.detectedGames {
-                rows.append(AddGameRow(id: "game:\(game.id)", kind: .action { viewModel.selectedGame = game },
+            for game in porting.detectedGames {
+                rows.append(AddGameRow(id: "game:\(game.id)", kind: .action { porting.selectedGame = game },
                                        title: game.name, about: "\(game.summaryText) · \(game.titleId ?? game.id)", compact: true,
-                                       checked: viewModel.selectedGame?.id == game.id))
+                                       checked: porting.selectedGame?.id == game.id))
             }
         }
-        if let game = viewModel.selectedGame {
+        if let game = porting.selectedGame {
             rows.append(AddGameRow(id: "sourcesHeading", kind: .heading, title: L10n.text("Sources")))
             if !game.hasGame {
                 rows.append(AddGameRow(id: "noBase", kind: .warning(action: nil), title: L10n.text("Base game required"),
@@ -79,13 +79,13 @@ extension AddGameView {
                                            + L10n.text("The porting may stop, or the game may not start.")))
             }
             for item in game.files {
-                let locked = SourceSelection.isLocked(item, in: game.files, selected: viewModel.selectedSourceIDs)
+                let locked = SourceSelection.isLocked(item, in: game.files, selected: porting.selectedSourceIDs)
                 rows.append(AddGameRow(
                     id: "source:\(item.id)",
-                    kind: .toggle(Binding(get: { viewModel.selectedSourceIDs.contains(item.id) },
+                    kind: .toggle(Binding(get: { porting.selectedSourceIDs.contains(item.id) },
                                           set: { on in
-                                              if on != viewModel.selectedSourceIDs.contains(item.id) {
-                                                  viewModel.toggleSource(item)
+                                              if on != porting.selectedSourceIDs.contains(item.id) {
+                                                  porting.toggleSource(item)
                                               }
                                           })),
                     title: item.name, about: sourceAbout(item), compact: true))
@@ -102,7 +102,7 @@ extension AddGameView {
     }
 
     private var sourceCountText: String {
-        let count = Set(viewModel.selectedSources.map { $0.url.resolvingSymlinksInPath().path }).count
+        let count = Set(porting.selectedSources.map { $0.url.resolvingSymlinksInPath().path }).count
         return L10n.count("%lld sources", count)
     }
 
@@ -111,15 +111,15 @@ extension AddGameView {
         if let raw = item.versionString?.trimmingCharacters(in: .whitespaces), !raw.isEmpty {
             parts.append(raw.lowercased().hasPrefix("v") ? raw : "v\(raw)")
         }
-        let bundled = viewModel.selectedGame?.files.contains { $0.id != item.id && $0.url == item.url } == true
+        let bundled = porting.selectedGame?.files.contains { $0.id != item.id && $0.url == item.url } == true
         if bundled && item.type != .base { parts.append(item.layout == .container ? L10n.text("In the NUP file") : L10n.text("In package")) }
         else { parts.append(item.layout == .extracted ? L10n.text("Extracted folder") : item.formattedSize) }
         return parts.joined(separator: " · ")
     }
 
     func goToReview() {
-        guard viewModel.canAddSelectedGame else { return }
-        withAnimation(reduceMotion ? nil : SeleneTheme.standard) { viewModel.goToWizardStep(2) }
+        guard porting.canAddSelectedGame else { return }
+        withAnimation(reduceMotion ? nil : SeleneTheme.standard) { porting.goToWizardStep(2) }
     }
 
     // MARK: - Review
@@ -127,15 +127,15 @@ extension AddGameView {
     private var reviewRows: [AddGameRow] {
         var rows: [AddGameRow] = [
             AddGameRow(id: "build", kind: .action { addSelectedGame(buildNow: true) }, icon: .build,
-                       title: viewModel.selectedLibraryGame == nil ? L10n.text("Add and port") : L10n.text("Rebuild"), about: buildHint, enabled: viewModel.canStartBuild),
+                       title: porting.selectedLibraryGame == nil ? L10n.text("Add and port") : L10n.text("Rebuild"), about: buildHint, enabled: viewModel.canStartBuild),
             AddGameRow(id: "library", kind: .action { addSelectedGame(buildNow: false) }, icon: .add,
-                       title: viewModel.selectedLibraryGame == nil ? L10n.text("Add to library only") : L10n.text("Save changes"),
-                       about: viewModel.selectedLibraryGame == nil ? L10n.text("Port later") : L10n.text("Next launch"),
-                       enabled: viewModel.canAddSelectedGame),
+                       title: porting.selectedLibraryGame == nil ? L10n.text("Add to library only") : L10n.text("Save changes"),
+                       about: porting.selectedLibraryGame == nil ? L10n.text("Port later") : L10n.text("Next launch"),
+                       enabled: porting.canAddSelectedGame),
             AddGameRow(id: "sources", kind: .action {
-                withAnimation(reduceMotion ? nil : SeleneTheme.standard) { viewModel.goToWizardStep(1) }
+                withAnimation(reduceMotion ? nil : SeleneTheme.standard) { porting.goToWizardStep(1) }
             }, icon: .folder, title: L10n.text("Change sources"),
-               about: "\(sourceCountText) · \(viewModel.formattedSelectedSourcesSize)"),
+               about: "\(sourceCountText) · \(porting.formattedSelectedSourcesSize)"),
             AddGameRow(id: "runtimeHeading", kind: .heading, title: L10n.text("Next launch")),
             toggle("fps60", "60 FPS", "Frame-rate target",
                    $viewModel.pendingRuntimeConfig.enable60FPS),
@@ -153,10 +153,10 @@ extension AddGameView {
             guard languages.indices.contains(index) else { return }
             viewModel.pendingRuntimeConfig.language = languages[index].code
         }, title: L10n.text("Game language"), compact: true))
-        rows.append(AddGameRow(id: "appName", kind: .field($viewModel.appName, placeholder: viewModel.selectedGame?.name ?? L10n.text("Name")),
+        rows.append(AddGameRow(id: "appName", kind: .field($porting.appName, placeholder: porting.selectedGame?.name ?? L10n.text("Name")),
                                title: L10n.text("App name"), compact: true))
-        if viewModel.selectedLibraryGame == nil {
-            rows.append(AddGameRow(id: "bundleID", kind: .field($viewModel.bundleId, placeholder: "org.nxnative.game"),
+        if porting.selectedLibraryGame == nil {
+            rows.append(AddGameRow(id: "bundleID", kind: .field($porting.bundleId, placeholder: "org.nxnative.game"),
                                    title: L10n.text("Bundle identifier"), compact: true))
         }
         rows += readinessRows(includeBuildError: true)
@@ -170,9 +170,9 @@ extension AddGameView {
 
     private var buildHint: String {
         if viewModel.canStartBuild { return L10n.text("Builds the Mac app now; you can keep using the library meanwhile.") }
-        if !viewModel.supportsSources(viewModel.selectedSources) { return L10n.text("These sources need a newer engine.") }
-        if viewModel.selectedSourcesRequireKeys && !viewModel.isProdKeysValid { return L10n.text("Import prod.keys first.") }
-        if viewModel.keyCheckBlocks, let readiness = viewModel.keyCheck?.readiness { return "\(readiness.title)." }
+        if !viewModel.supportsSources(porting.selectedSources) { return L10n.text("These sources need a newer engine.") }
+        if porting.selectedSourcesRequireKeys && !viewModel.isProdKeysValid { return L10n.text("Import prod.keys first.") }
+        if porting.keyCheckBlocks, let readiness = porting.keyCheck?.readiness { return "\(readiness.title)." }
         if !viewModel.isNxnativeValid { return L10n.text("The nxnative checkout is missing.") }
         if viewModel.environmentStatus?.canBuild != true { return L10n.text("The build environment is incomplete.") }
         if !viewModel.canPassToolchainGate { return L10n.text("The toolchain is not certified; enable the override in Settings.") }
@@ -204,12 +204,12 @@ extension AddGameView {
                 porting.portingFailureReason = nil
             }), title: porting.portingFailureReason?.title ?? L10n.text("The last porting failed"), about: error))
         }
-        if viewModel.selectedSourcesRequireKeys && !viewModel.isProdKeysValid {
+        if porting.selectedSourcesRequireKeys && !viewModel.isProdKeysValid {
             rows.append(AddGameRow(id: "keys", kind: .action { viewModel.selectProdKeysFile() }, icon: .key,
                                    title: L10n.text("Import prod.keys"),
                                    about: L10n.text("Copied once to Application Support, readable only by you.")))
         }
-        if viewModel.isProdKeysValid, let readiness = viewModel.keyCheck?.readiness {
+        if viewModel.isProdKeysValid, let readiness = porting.keyCheck?.readiness {
             if readiness.warning {
                 rows.append(AddGameRow(id: "keyCheck", kind: .warning(action: nil),
                                        title: readiness.title, about: readiness.about))
@@ -224,19 +224,19 @@ extension AddGameView {
             rows.append(AddGameRow(id: "xcode", kind: .action { viewModel.reopenSetup() }, icon: .checklist,
                                    title: L10n.text("Open Setup"), about: L10n.text("Xcode is not ready; a porting needs it.")))
         }
-        if viewModel.isDiskSpaceLow {
+        if porting.isDiskSpaceLow {
             rows.append(AddGameRow(id: "disk", kind: .warning(action: nil), title: L10n.text("Not enough disk space"),
-                                   about: viewModel.diskSpaceWarningMessage))
+                                   about: porting.diskSpaceWarningMessage))
         }
         return rows
     }
 
     private var destinationRow: AddGameRow {
-        if let problem = viewModel.buildDestinationProblem {
+        if let problem = porting.buildDestinationProblem {
             return AddGameRow(id: "destination", kind: .warning(action: nil), title: L10n.text("App folder unavailable"), about: problem)
         }
         return AddGameRow(id: "destination", kind: .note,
-                          title: L10n.format("Installs to %@. On a failure or a cancel the previous app stays as it was.", [String(describing: (viewModel.selectedBuildAppURL.path))]))
+                          title: L10n.format("Installs to %@. On a failure or a cancel the previous app stays as it was.", [String(describing: (porting.selectedBuildAppURL.path))]))
     }
 
     // MARK: - Porting

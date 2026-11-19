@@ -85,7 +85,7 @@ public struct AddGameView: View {
             editing = nil
             focusedID = defaultRowID(for: step)
         }
-        .onChange(of: viewModel.canAddSelectedGame) { canAdd in
+        .onChange(of: porting.canAddSelectedGame) { canAdd in
             guard porting.buildWizardStep == 1 else { return }
             reviewEntryIfReady()
             guard porting.buildWizardStep == 1 else { return }
@@ -180,7 +180,7 @@ public struct AddGameView: View {
     private var stepTitle: String {
         switch porting.buildWizardStep {
         case 1: return "Choose a game"
-        case 2: return viewModel.selectedGame?.name ?? L10n.text("Review")
+        case 2: return porting.selectedGame?.name ?? L10n.text("Review")
         default:
             if !viewModel.isBuilding, porting.buildError != nil, let reason = porting.portingFailureReason {
                 return reason.title
@@ -311,7 +311,7 @@ public struct AddGameView: View {
     }
 
     private func reviewEntryIfReady() {
-        guard !viewModel.showSetupCheck, viewModel.consumePreparedReviewEntry(reviewSelectionID) else { return }
+        guard !viewModel.showSetupCheck, porting.consumePreparedReviewEntry(reviewSelectionID) else { return }
         goToReview()
     }
 
@@ -415,7 +415,7 @@ public struct AddGameView: View {
         if porting.buildWizardStep > 1 {
             SoundEffectService.shared.play(.back)
             withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
-                viewModel.goToWizardStep(porting.buildWizardStep - 1)
+                porting.goToWizardStep(porting.buildWizardStep - 1)
             }
         } else {
             requestClose()
@@ -428,7 +428,7 @@ public struct AddGameView: View {
             close { leave() }
             return
         }
-        if viewModel.selectedGameFolder != nil || !viewModel.selectedSources.isEmpty {
+        if porting.selectedGameFolder != nil || !porting.selectedSources.isEmpty {
             confirmFocus = .cancel
             confirmDiscard = true
             SoundEffectService.shared.play(.alert)
@@ -443,14 +443,14 @@ public struct AddGameView: View {
     }
 
     private func leave() {
-        viewModel.addGameDidLeave()
+        porting.addGameDidLeave()
         router.back()
     }
 
     private func discardAndClose() {
         dismissDiscard()
         close {
-            viewModel.startNewAddGame()
+            porting.startNewAddGame()
             leave()
         }
     }

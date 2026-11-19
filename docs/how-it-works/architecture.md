@@ -88,7 +88,11 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
 
 **Coordinatore.**
 - `AppViewModel.swift` coordina libreria, rilevamento dell'ambiente, selezione delle sorgenti, porting e lancio. Le estensioni `AppViewModel+…` collegano cheat, salvataggi, diagnostica, chiavi, toolchain, installazioni in attesa e fonti; sono parti dello stesso oggetto osservabile.
-- `PortingModel` tiene ciò che Add Game e il suo passo Porting mostrano di una build: passo del wizard, fasi e avanzamento, esito ed errore. Le viste di Add Game lo osservano da sole, così un cambio di fase ridisegna solo quelle schermate. Il resto di Arcane legge di un porting solo `isBuilding`, `currentBuildGameID` e `portingProgress` (la tile della home), che restano sul coordinatore. La logica del porting è ancora nel coordinatore.
+- `PortingModel` tiene Add Game: la bozza (cartella o file scelti, scansione, titoli trovati, selezione delle sorgenti, nome, bundle ID, controllo delle chiavi, spazio su disco) e ciò che il passo Porting mostra di una build (passo del wizard, fasi, avanzamento, esito ed errore).
+  - Le viste di Add Game e la riga Game files di Impostazioni → Libreria lo osservano da sole, così un cambio di fase ridisegna solo quelle schermate.
+  - Il resto di Arcane legge di un porting solo `isBuilding`, `currentBuildGameID` e `portingProgress` (la tile della home), che restano sul coordinatore.
+  - Raggiunge il resto dell'app solo da `PortingModel.app`: libreria, chiavi, engine, catalogo e i valori di Game options. *Perché:* quell'elenco è ciò che il modulo Porting dovrà chiedere alla base.
+  - Avvio, eventi e fine della build sono ancora nel coordinatore.
 - Gli stati di un solo pannello hanno il loro modello: `SetupCheckModel`, `SavePanelModel` (anteprima, operazione in corso, errore, ultimo backup, importazione riuscita) e gli altri elencati in [conventions.md](../working-on-it/conventions.md#1-dove-va-il-codice). Gli aggiornamenti destinati alla UI si pubblicano sulla coda principale.
 
 **Primo avvio.**
@@ -313,7 +317,7 @@ Regole della barra:
 Il percorso completo è in [flows.md](flows.md#5-costruire-un-gioco-switch-add-game).
 
 **Le sorgenti.**
-- La preferenza **Game files** conserva solo il percorso iniziale del selettore. `AppViewModel` non la assegna a `selectedGameFolder` all'avvio: quell'assegnazione avvia una scansione. Il refresh della libreria riguarda le app installate; scegliere cartella o file in Add game avvia la lettura dei sorgenti. *Perché:* aprire la libreria non richiede di enumerare una cartella protetta come Download. I rebuild usano le sorgenti registrate sul gioco.
+- La preferenza **Game files** conserva solo il percorso iniziale del selettore. `PortingModel` la legge (`gameFilesFolder`) ma non la assegna a `selectedGameFolder` all'avvio: quell'assegnazione avvia una scansione. Il refresh della libreria riguarda le app installate; scegliere cartella o file in Add game avvia la lettura dei sorgenti. *Perché:* aprire la libreria non richiede di enumerare una cartella protetta come Download. I rebuild usano le sorgenti registrate sul gioco.
 - `SourceSelection` tiene separati contenuti selezionati e file fisici: un pacchetto si conta e si collega una sola volta, il DLC incorporato resta incluso e la versione scelta passa con `-p`.
 - `GameFileItem` conserva, se serve, layout e requisito di selezione del titolo; i vecchi JSON continuano a indicare pacchetti. Questi requisiti e la selezione NUP si verificano prima del build, anche dopo un cambio di checkout. Il programma salvato deve corrispondere al title ID del gioco; il DLC usa la base add-on dichiarata dall’applicazione.
 - Le cartelle estratte si collegano nel layout `base/`, `updates/<version>/`, `dlc/<title>/0/romfs/`. Il restaging rimuove i link esclusi e i contenitori vuoti, preservando cache e originali.
@@ -324,7 +328,7 @@ Il percorso completo è in [flows.md](flows.md#5-costruire-un-gioco-switch-add-g
    - I file scelti si scandiscono e collegano uno per uno, senza includere altri pacchetti della cartella né cambiare la preferenza globale Game files.
    - La bozza si azzera solo dopo la conferma del selettore. Più titoli richiedono una scelta esplicita.
    - Le riletture dello stesso titolo mantengono nome, impostazioni e selezioni di update/DLC anche se cambiano gli UUID delle righe.
-2. **Chiavi.** `AppViewModel+KeyCheck` chiama `KeyCheck` sulle sorgenti selezionate. Il risultato vale per la selezione corrente, quindi un controllo precedente non abilita un porting diverso.
+2. **Chiavi.** `PortingModel.refreshKeyCheck` chiama `KeyCheck` sulle sorgenti selezionate. Il risultato vale per la selezione corrente, quindi un controllo precedente non abilita un porting diverso.
 3. **Workspace.** `WorkspaceManager` usa la cartella sorgente così com'è oppure prepara un workspace di collegamenti simbolici, riusando una cache esistente. `BuildScratch` sceglie dove mettere workspace e app temporanea: sul volume dell'app.
    - Se la cartella delle app è su un altro volume locale APFS o Mac OS esteso, vanno in `.nxlibrary-build/` accanto alle app, così il disco del Mac non serve e l'installazione è una rinomina. exFAT e FAT accettano i link ma tengono gli attributi in file `._` che rompono la firma; il tipo lo dà `statfs`.
    - Negli altri casi (stesso volume, exFAT, rete) restano in Application Support.

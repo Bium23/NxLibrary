@@ -16,9 +16,10 @@ parser.add_argument('--engine-snapshot', type=Path)
 parser.add_argument('--python', default='python3')
 args = parser.parse_args()
 source = (ROOT / 'Sources/NXLibrary/ViewModels/AppViewModel.swift').read_text()
+porting_source = (ROOT / 'Sources/NXLibrary/ViewModels/PortingModel.swift').read_text()
 
 
-def declaration(signature):
+def declaration(signature, source=source):
     start = source.index(signature)
     opening = source.index('{', start)
     depth, end = 1, opening + 1
@@ -77,8 +78,8 @@ let command = BuildCommandBuilder.make(repo: scratch, toolchain: EngineToolchain
 precondition(command.arguments[command.arguments.firstIndex(of: "--program")! + 1] == "1")
 print("NUP probe → real UI converters → persisted sources → rebuild program: PASS")
 '''
-    methods = '\n'.join(declaration(signature) for signature in (
-        '    private static func selectableGame(from game:', '    private static func detectedSource(from file:'))
+    methods = '\n'.join((declaration('    static func selectableGame(from game:', porting_source),
+                          declaration('    private static func detectedSource(from file:')))
     main = scratch / 'main.swift'
     main.write_text(host.replace('// CONVERTERS', methods))
     library = ROOT / '.build/debug'

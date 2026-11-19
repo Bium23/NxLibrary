@@ -45,7 +45,7 @@ struct SettingsSectionContent: View {
             SettingsControllersSection(settings: settings, onActions: onActions,
                                        onViewControls: onViewControls)
         case .library:
-            SettingsLibrarySection(viewModel: viewModel, settings: settings, onActions: onActions)
+            SettingsLibrarySection(viewModel: viewModel, porting: viewModel.porting, settings: settings, onActions: onActions)
         case .sources:
             SettingsSourcesSection(viewModel: viewModel, settings: settings, onActions: onActions)
         case .storage:

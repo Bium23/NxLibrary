@@ -38,7 +38,7 @@ final class SetupCheckModel: ObservableObject {
                    certifiedMetal: viewModel.requiredMetalVersion ?? requirements.fallbackMetal,
                    allowUntested: viewModel.allowUntestedToolchain,
                    keyStore: viewModel.keyStore, libraryFolder: viewModel.libraryFolder,
-                   sourcesFolder: viewModel.gameFilesFolder,
+                   sourcesFolder: viewModel.porting.gameFilesFolder,
                    libraryNeedsConfirmation: viewModel.requiresGameAppsFolderChoice,
                    newestEngine: viewModel.newestEngineChoice)
     }
@@ -167,7 +167,7 @@ final class SetupCheckModel: ObservableObject {
             viewModel.selectLibraryFolder()
             refresh()
         case .sources:
-            viewModel.selectGameFolder()
+            viewModel.porting.selectGameFolder()
             refresh()
         }
     }
