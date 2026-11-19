@@ -169,7 +169,6 @@ public final class AppViewModel: ObservableObject {
     /// The running game whose Close Game confirmation is open. The shell draws the dialog.
     @Published public var gameToClose: PortedGame? = nil
     @Published var closeGameFocus: SeleneConfirmButton = .cancel
-    @Published public var pendingRuntimeConfig = GameRuntimeConfig()
     @Published public var importedApps: [ImportedApp] = []
     @Published public var storeMetadata: [UUID: NintendoStoreMetadata] = [:]
     @Published public var storeMetadataLoading: Set<UUID> = []
@@ -213,6 +212,8 @@ public final class AppViewModel: ObservableObject {
     public private(set) lazy var porting = PortingModel(app: self)
     /// The Switch Setup: engine, keys, environment and the Metal gate (`SetupModel`), observed on its own.
     public private(set) lazy var setup = SetupModel(app: self)
+    /// A built game's saved choices for its next launch (`RuntimeSettingsModel`).
+    public private(set) lazy var runtimeSettings = RuntimeSettingsModel(app: self)
     @Published public var isBuilding: Bool = false
     /// The running (or just finished) porting folded into one overall fraction for the home.
     @Published public var portingProgress: PortingProgress? = nil
@@ -1063,7 +1064,7 @@ public final class AppViewModel: ObservableObject {
         SoundEffectService.shared.play(.launch)
 
         // A saved-choices build reads the game's own store; only an older build takes env.txt and the environment.
-        let gameSettings = gameSettings(for: game)
+        let gameSettings = runtimeSettings.gameSettings(for: game)
         let config = GameRuntimeConfig.load(for: game)
         do {
             if let gameSettings {
@@ -1293,70 +1294,6 @@ public final class AppViewModel: ObservableObject {
 
     private func updateStoredStatus(_ status: GameStatus, for game: PortedGame) {
         updateStoredGame(game) { $0.status = status }
-    }
-
-    public func loadRuntimeConfig(for game: PortedGame) -> GameRuntimeConfig {
-        gameSettings(for: game)?.runtimeConfig() ?? GameRuntimeConfig.load(for: game)
-    }
-
-    /// The game's saved-choices store, or nil for a build from before saved choices (env.txt).
-    public func gameSettings(for game: PortedGame) -> NXNativeGameSettings? {
-        NXNativeGameSettings.forGame(game)
-    }
-
-    public func settingsSnapshot(for game: PortedGame) -> GameSettingsSnapshot? {
-        gameSettings(for: game)?.snapshot()
-    }
-
-    /// One saved choice; false (with a notice) when it could not be kept.
-    @discardableResult public func setGameSetting(_ env: String, to value: String, for game: PortedGame) -> Bool {
-        guard let settings = gameSettings(for: game) else { return false }
-        do {
-            try settings.set(env, to: value)
-            return true
-        } catch {
-            settingsNotSaved(game, error)
-            return false
-        }
-    }
-
-    /// Use new game defaults: every setting to the build's default, then NX Library's new-game defaults.
-    public func restoreGameDefaults(for game: PortedGame) {
-        guard let settings = gameSettings(for: game) else { return }
-        do {
-            try settings.resetAll()
-            let base = settings.runtimeConfig()
-            try settings.apply(settingsStore?.settings.gameDefaults ?? GameRuntimeConfig(), changedFrom: base)
-        } catch {
-            settingsNotSaved(game, error)
-        }
-    }
-
-    private func settingsNotSaved(_ game: PortedGame, _ error: Error) {
-        logs.append(LogEntry(level: .error, message: L10n.format("Could not save settings for %@: %@", [String(describing: (game.name)), String(describing: (error.localizedDescription))])))
-        showSettingsNotice(title: L10n.text("Options not saved"), message: L10n.text("Your game options could not be saved. Try again."))
-    }
-
-    public func supportsSetting(_ env: String, for game: PortedGame) -> Bool {
-        LauncherSettingsReader.supports(env, for: game.url)
-    }
-
-    public func launcherSettings(for game: PortedGame) -> LauncherSettingsFile? {
-        LauncherSettingsReader.load(for: game.url)
-    }
-
-    @discardableResult public func saveRuntimeConfig(_ config: GameRuntimeConfig, for game: PortedGame) -> Bool {
-        do {
-            try config.save(for: game)
-            logs.append(LogEntry(level: .success, message: L10n.format("Saved settings for %@", [String(describing: (game.name))])))
-            return true
-        } catch {
-            logs.append(LogEntry(level: .error, message: L10n.format("Could not save settings for %@: %@", [String(describing: (game.name)), String(describing: (error.localizedDescription))])))
-            showSettingsNotice(title: L10n.text("Options not saved"), message: L10n.text("Your game options could not be saved. Try again.")) { [weak self] in
-                self?.saveRuntimeConfig(config, for: game)
-            }
-            return false
-        }
     }
 
     public func revealInFinder(url: URL) {

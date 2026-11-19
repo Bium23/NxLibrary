@@ -87,8 +87,8 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
 - `startInFullscreen` sta in `AppSettings` (default false), compare in Search e Changed e torna al default con il reset di Start-up. `StartupWindowView` lo legge alla creazione e lo applica una sola volta alla finestra visibile e attiva, dopo `LaunchReveal.whenShown`. `isWindowSettling` tiene ferma l’entrata fino alla notifica di fine transizione, con ripiego a 4 s dall’aggancio alla finestra. Cambiare la preferenza non altera la finestra corrente.
 
 **Coordinatore.**
-- `AppViewModel.swift` coordina libreria, rilevamento dell'ambiente, Locate Sources e lancio, e tiene lo stato del porting che legge la home. Le estensioni `AppViewModel+…` collegano cheat, salvataggi, diagnostica, chiavi, toolchain, installazioni in attesa e fonti; sono parti dello stesso oggetto osservabile.
-- `PortingModel` tiene Add Game: la bozza (cartella o file scelti, scansione, titoli trovati, selezione delle sorgenti, nome, bundle ID, controllo delle chiavi, spazio su disco) e la build: avvio, eventi del motore, annullamento, fine, notifiche, azioni sugli errori riconosciuti e ciò che il passo Porting ne mostra (passo del wizard, fasi, avanzamento, esito ed errore).
+- `AppViewModel.swift` coordina libreria, rilevamento dell'ambiente, Locate Sources e lancio, e tiene lo stato del porting che legge la home. Le estensioni `AppViewModel+…` collegano cheat, icona dell'app del gioco, salvataggi, diagnostica, mod, installazioni in attesa e fonti; sono parti dello stesso oggetto osservabile.
+- `PortingModel` tiene Add Game: la bozza (cartella o file scelti, scansione, titoli trovati, selezione delle sorgenti, nome, bundle ID, scelte per il primo avvio, controllo delle chiavi, spazio su disco) e la build: avvio, eventi del motore, annullamento, fine, notifiche, azioni sugli errori riconosciuti e ciò che il passo Porting ne mostra (passo del wizard, fasi, avanzamento, esito ed errore).
   - Le viste di Add Game e la riga Game files di Impostazioni → Libreria lo osservano da sole, così un cambio di fase ridisegna solo quelle schermate.
   - Il resto di Arcane legge di un porting solo `isBuilding`, `currentBuildGameID` e `portingProgress` (la tile della home), che restano sul coordinatore.
   - Raggiunge il resto dell'app solo da `PortingModel.app`: libreria, chiavi, engine, catalogo e i valori di Game options. *Perché:* quell'elenco è ciò che il modulo Porting dovrà chiedere alla base.
@@ -96,6 +96,9 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
 - `SetupModel` tiene il Setup Switch: cartella, validità e commit dell'engine, controllo Upstream e Newest engine (`SetupModel+NewestEngine`), chiavi importate (`KeyStore`, riepilogo, importazione), controllo dell'ambiente, compatibilità, override della toolchain non testata e gate (`canPassToolchainGate`).
   - Lo osservano da sole le schermate che ne mostrano una parte: Impostazioni (Setup and engine, Keys, About, la lista Changed), Add Game, Game options, la home e la pagina del gioco (Rebuild segue il gate) e l'offerta di aggiornamento della shell (l'Xcode richiesto).
   - Come `PortingModel`, raggiunge il resto dell'app solo da `SetupModel.app`; `pinnedEngineCommit` resta sul coordinatore.
+- `RuntimeSettingsModel` legge e scrive le scelte salvate di un gioco già costruito: Game options, More settings, il ripristino dei default per i nuovi giochi, le variabili che il build supporta. Lo usano anche il porting (scrive le scelte della bozza) e Play.
+  - Non tiene stato e nessuna vista lo osserva: la verità sono i file del gioco, e le schermate tengono la loro copia.
+  - Raggiunge il coordinatore solo da `RuntimeSettingsModel.app`, per il registro, l'avviso di salvataggio fallito e i default dei nuovi giochi.
 - Gli stati di un solo pannello hanno il loro modello: `SetupCheckModel`, `SavePanelModel` (anteprima, operazione in corso, errore, ultimo backup, importazione riuscita) e gli altri elencati in [conventions.md](../working-on-it/conventions.md#1-dove-va-il-codice). Gli aggiornamenti destinati alla UI si pubblicano sulla coda principale.
 
 **Primo avvio.**
@@ -215,7 +218,7 @@ Regole della barra:
 | Cloud saves | Preferenza riapplicata prima di ogni avvio, compreso Off. |
 | Controllers | Navigazione della libreria. |
 
-- Options e Play leggono `GameRuntimeConfig.load`: prima le preferenze per titolo in UserDefaults, poi `env.txt` del titolo, poi quello nel bundle, infine i valori del modello.
+- Options e Play passano da `RuntimeSettingsModel`. Un build con le scelte salvate usa `NXNativeGameSettings`; uno più vecchio ripiega su `GameRuntimeConfig.load`: prima le preferenze per titolo in UserDefaults, poi `env.txt` del titolo, poi quello nel bundle, infine i valori del modello.
 - Il rebuild ricava `languageForBuild` dalla configurazione del titolo e non tiene una lingua separata dal wizard. I default globali cambiati non aggiornano da soli i giochi già aggiunti. Search e Changed attribuiscono la vibrazione a Porting · New games.
 
 **Catalogo e salvataggio.**

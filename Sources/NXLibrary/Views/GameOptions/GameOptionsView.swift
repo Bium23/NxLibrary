@@ -25,9 +25,9 @@ final class GameOptionsFiles: ObservableObject {
     @Published var modsValue: String
 
     init(viewModel: AppViewModel, game: PortedGame) {
-        supportsRenderScale = viewModel.supportsSetting("DM_RENDER_SCALE", for: game)
-        config = viewModel.loadRuntimeConfig(for: game)
-        snapshot = viewModel.settingsSnapshot(for: game)
+        supportsRenderScale = viewModel.runtimeSettings.supportsSetting("DM_RENDER_SCALE", for: game)
+        config = viewModel.runtimeSettings.loadRuntimeConfig(for: game)
+        snapshot = viewModel.runtimeSettings.settingsSnapshot(for: game)
         cheatsValue = viewModel.cheatRowValue(for: game)
         modsValue = viewModel.modsRowValue(for: game)
     }
@@ -209,7 +209,7 @@ struct GameOptionsView: View {
             if moreOpen {
                 MoreSettingsPanel(viewModel: viewModel, game: current) {
                     moreOpen = false
-                    snapshot = viewModel.settingsSnapshot(for: current)
+                    snapshot = viewModel.runtimeSettings.settingsSnapshot(for: current)
                 }
                 .transition(.opacity)
                 .zIndex(2)
@@ -235,7 +235,7 @@ struct GameOptionsView: View {
             handleGamepad(action)
         }
         .onChange(of: config) { newValue in
-            viewModel.saveRuntimeConfig(newValue, for: game)
+            viewModel.runtimeSettings.saveRuntimeConfig(newValue, for: game)
         }
     }
 
@@ -701,8 +701,8 @@ struct GameOptionsView: View {
         } else {
             next = GameSettingValues.stepped(setting, from: value, by: delta)
         }
-        viewModel.setGameSetting(setting.env, to: next, for: current)
-        snapshot = viewModel.settingsSnapshot(for: current)
+        viewModel.runtimeSettings.setGameSetting(setting.env, to: next, for: current)
+        snapshot = viewModel.runtimeSettings.settingsSnapshot(for: current)
     }
 
     /// Left/Right on a choice row: step backwards or forwards.
@@ -785,8 +785,8 @@ struct GameOptionsView: View {
         case .restoreDefaults:
             SoundEffectService.shared.play(.click)
             if snapshot != nil {
-                viewModel.restoreGameDefaults(for: current)
-                snapshot = viewModel.settingsSnapshot(for: current)
+                viewModel.runtimeSettings.restoreGameDefaults(for: current)
+                snapshot = viewModel.runtimeSettings.settingsSnapshot(for: current)
             } else {
                 config = viewModel.settingsStore?.settings.gameDefaults ?? GameRuntimeConfig()
             }

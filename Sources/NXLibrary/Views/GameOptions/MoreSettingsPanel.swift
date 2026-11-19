@@ -19,7 +19,7 @@ struct MoreSettingsPanel: View {
         self.viewModel = viewModel
         self.game = game
         self.onClose = onClose
-        _snapshot = State(initialValue: viewModel.settingsSnapshot(for: game))
+        _snapshot = State(initialValue: viewModel.runtimeSettings.settingsSnapshot(for: game))
     }
 
     private var rows: [LauncherSetting] {
@@ -118,8 +118,8 @@ struct MoreSettingsPanel: View {
         }
         SoundEffectService.shared.play(.click)
         let next = GameSettingValues.stepped(setting, from: value(setting), by: delta)
-        viewModel.setGameSetting(setting.env, to: next, for: game)
-        snapshot = viewModel.settingsSnapshot(for: game)
+        viewModel.runtimeSettings.setGameSetting(setting.env, to: next, for: game)
+        snapshot = viewModel.runtimeSettings.settingsSnapshot(for: game)
         focus = min(focus, max(0, rows.count - 1))
     }
 

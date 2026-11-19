@@ -98,7 +98,7 @@ public final class PortingModel: ObservableObject {
                 appName = ""
                 bundleId = ""
             }
-            app.pendingRuntimeConfig = selectedLibraryGame.map(app.loadRuntimeConfig) ?? lastAddGameDefaults
+            pendingRuntimeConfig = selectedLibraryGame.map(app.runtimeSettings.loadRuntimeConfig) ?? lastAddGameDefaults
         }
     }
     var selectedLibraryGame: PortedGame? {
@@ -201,6 +201,8 @@ public final class PortingModel: ObservableObject {
         selectedSourceIDs = SourceSelection.toggling(item.id, in: game.files, selected: selectedSourceIDs)
     }
 
+    /// The Add Game draft's choices for the game's first launch; a rebuild starts from the game's saved ones.
+    @Published public var pendingRuntimeConfig = GameRuntimeConfig()
     var lastAddGameDefaults = GameRuntimeConfig()
     var preparedSourceReview = FirstRunSetup.ReviewEntry()
     var addGameSessionActive = false
@@ -218,7 +220,7 @@ public final class PortingModel: ObservableObject {
         let previousSelection = selectedSourceIDs
         let previousName = appName
         let previousBundle = bundleId
-        let previousConfig = app.pendingRuntimeConfig
+        let previousConfig = pendingRuntimeConfig
         scanError = nil
         isScanningGameFolder = true
         selectedGame = nil
@@ -253,7 +255,7 @@ public final class PortingModel: ObservableObject {
                         selected: previousSelection, current: self.selectedGame?.files ?? [])
                     self.appName = previousName
                     self.bundleId = previousBundle
-                    self.app.pendingRuntimeConfig = previousConfig
+                    self.pendingRuntimeConfig = previousConfig
                 }
                 if let skipped = try? outcome.get().skipped, !skipped.isEmpty {
                     self.scanError = "Unreadable packages: " + skipped.joined(separator: ", ")
@@ -489,7 +491,7 @@ public final class PortingModel: ObservableObject {
         scanError = nil
         appName = ""
         bundleId = ""
-        app.pendingRuntimeConfig = lastAddGameDefaults
+        pendingRuntimeConfig = lastAddGameDefaults
         resetWizard()
         addGameSessionActive = true
     }
@@ -610,11 +612,11 @@ public final class PortingModel: ObservableObject {
             )
             // Existing titles start Review with their saved settings. The
             // values the user confirms are the values used at the next launch.
-            if let gameSettings = app.gameSettings(for: game) {
+            if let gameSettings = app.runtimeSettings.gameSettings(for: game) {
                 try gameSettings.migrate()
-                try gameSettings.apply(app.pendingRuntimeConfig, changedFrom: gameSettings.runtimeConfig())
+                try gameSettings.apply(pendingRuntimeConfig, changedFrom: gameSettings.runtimeConfig())
             } else {
-                try app.pendingRuntimeConfig.save(for: game)
+                try pendingRuntimeConfig.save(for: game)
             }
             app.librarySelection.selectedGameID = game.id
             app.logs.append(LogEntry(level: .success, message: L10n.format("Added %@ to the library.", [String(describing: (game.name))])))
@@ -667,7 +669,7 @@ public final class PortingModel: ObservableObject {
         game.workspacePath = workspace.directory.path
         game.buildCachePath = workspace.buildCache.path
         game.status = .notBuilt
-        game.settings = app.pendingRuntimeConfig
+        game.settings = pendingRuntimeConfig
 
         let catalog = try app.catalogRepository.mergeNXNative(scanned: [game], replacingSources: true, enableSource: true)
         app.applyCatalog(catalog)
@@ -848,7 +850,7 @@ public final class PortingModel: ObservableObject {
             developerDir: app.setup.resolvedDeveloperDir(),
             appName: target.name,
             bundleId: target.bundleId ?? "org.nxnative.\(titleId.lowercased())",
-            language: app.loadRuntimeConfig(for: target).languageForBuild,
+            language: app.runtimeSettings.loadRuntimeConfig(for: target).languageForBuild,
             titleId: app.engineSourceCapabilities.titleSelection ? titleId : nil,
             programIndex: SourceSelection.programIndex(for: target.sources, titleID: titleId,
                                                        nupPrograms: app.engineSourceCapabilities.nupPrograms),

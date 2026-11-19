@@ -138,20 +138,20 @@ extension AddGameView {
                about: "\(sourceCountText) · \(porting.formattedSelectedSourcesSize)"),
             AddGameRow(id: "runtimeHeading", kind: .heading, title: L10n.text("Next launch")),
             toggle("fps60", "60 FPS", "Frame-rate target",
-                   $viewModel.pendingRuntimeConfig.enable60FPS),
+                   $porting.pendingRuntimeConfig.enable60FPS),
             toggle("docked", "Docked mode", "Console profile",
-                   $viewModel.pendingRuntimeConfig.isDockedMode),
+                   $porting.pendingRuntimeConfig.isDockedMode),
             toggle("metalFX", "MetalFX upscaling", "Sharper scaling of the whole picture to your screen",
-                   $viewModel.pendingRuntimeConfig.enableMetalFXUpscale),
+                   $porting.pendingRuntimeConfig.enableMetalFXUpscale),
             toggle("metalHUD", "Metal HUD", "Performance overlay",
-                   $viewModel.pendingRuntimeConfig.enableMetalHUD),
+                   $porting.pendingRuntimeConfig.enableMetalHUD),
             AddGameRow(id: "appHeading", kind: .heading, title: L10n.text("App")),
         ]
         let languages = languageOptions
-        let current = languages.firstIndex { $0.code == viewModel.pendingRuntimeConfig.language } ?? 0
+        let current = languages.firstIndex { $0.code == porting.pendingRuntimeConfig.language } ?? 0
         rows.append(AddGameRow(id: "language", kind: .choice(values: languages.map(\.label), index: current) { index in
             guard languages.indices.contains(index) else { return }
-            viewModel.pendingRuntimeConfig.language = languages[index].code
+            porting.pendingRuntimeConfig.language = languages[index].code
         }, title: L10n.text("Game language"), compact: true))
         rows.append(AddGameRow(id: "appName", kind: .field($porting.appName, placeholder: porting.selectedGame?.name ?? L10n.text("Name")),
                                title: L10n.text("App name"), compact: true))
@@ -181,7 +181,7 @@ extension AddGameView {
 
     private var languageOptions: [(code: String, label: String)] {
         var options = viewModel.availableLanguages
-        let current = viewModel.pendingRuntimeConfig.language
+        let current = porting.pendingRuntimeConfig.language
         if !options.contains(where: { $0.code == current }) {
             options.append((current, current.isEmpty ? L10n.text("Game default") : current))
         }
