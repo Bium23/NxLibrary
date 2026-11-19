@@ -13,8 +13,16 @@ struct CheatContext {
 
 /// Cheats: whether a game's app can use them, its files as the
 /// host reads them, and what to do with files the player adds. Writes go through `CheatStore`, only while the game is
-/// not running.
-extension AppViewModel {
+/// not running. It publishes nothing: the Cheats panel, the Game options row and the game page read it when they
+/// open or reload. It reaches the rest of Arcane only through `app`, for the engine folder.
+final class CheatsModel {
+    /// The coordinator; cheats read only the engine folder from the Setup.
+    unowned let app: AppViewModel
+
+    init(app: AppViewModel) {
+        self.app = app
+    }
+
     /// Engine ancestry answers and states read from disk, per launch of NX Library. The state is read again whenever
     /// the files' fingerprint changes, so the panel, the host and a hand edit are all seen.
     private final class CheatCache {
@@ -26,9 +34,9 @@ extension AppViewModel {
 
     private func engineAncestry() -> EngineAncestry {
         let cache = Self.cheatCache
-        if let known = cache.ancestry, known.path == setup.nxnativePath { return known.value }
-        let value = EngineAncestry(runner: SystemCommandRunner(), engineFolder: URL(fileURLWithPath: setup.nxnativePath))
-        cache.ancestry = (setup.nxnativePath, value)
+        if let known = cache.ancestry, known.path == app.setup.nxnativePath { return known.value }
+        let value = EngineAncestry(runner: SystemCommandRunner(), engineFolder: URL(fileURLWithPath: app.setup.nxnativePath))
+        cache.ancestry = (app.setup.nxnativePath, value)
         return value
     }
 

@@ -28,7 +28,7 @@ final class GameOptionsFiles: ObservableObject {
         supportsRenderScale = viewModel.runtimeSettings.supportsSetting("DM_RENDER_SCALE", for: game)
         config = viewModel.runtimeSettings.loadRuntimeConfig(for: game)
         snapshot = viewModel.runtimeSettings.settingsSnapshot(for: game)
-        cheatsValue = viewModel.cheatRowValue(for: game)
+        cheatsValue = viewModel.cheats.cheatRowValue(for: game)
         modsValue = viewModel.modsRowValue(for: game)
     }
 }
@@ -185,7 +185,7 @@ struct GameOptionsView: View {
                     rebuild(current)
                 }, onClose: {
                     cheatsOpen = false
-                    cheatsValue = viewModel.cheatRowValue(for: current)
+                    cheatsValue = viewModel.cheats.cheatRowValue(for: current)
                 })
                 .transition(.opacity)
                 .zIndex(2)

@@ -57,9 +57,9 @@ struct CheatsPanel: View {
         self.game = game
         self.onRebuild = onRebuild
         self.onClose = onClose
-        let context = viewModel.cheatContext(for: game)
+        let context = viewModel.cheats.cheatContext(for: game)
         _context = State(initialValue: context)
-        _cheatState = State(initialValue: viewModel.cheatState(in: context, gameID: game.id))
+        _cheatState = State(initialValue: viewModel.cheats.cheatState(in: context, gameID: game.id))
         _running = State(initialValue: RunningGameMonitor.runningApplication(for: game) != nil)
     }
 
@@ -326,8 +326,8 @@ struct CheatsPanel: View {
     // MARK: - Actions
 
     private func reload() {
-        context = viewModel.cheatContext(for: game)
-        cheatState = viewModel.cheatState(in: context, gameID: game.id)
+        context = viewModel.cheats.cheatContext(for: game)
+        cheatState = viewModel.cheats.cheatState(in: context, gameID: game.id)
         running = RunningGameMonitor.runningApplication(for: game) != nil
         focus = min(focus, max(rows.count - 1, 0))
     }
@@ -442,8 +442,8 @@ struct CheatsPanel: View {
     /// Every added file goes through CheatInstall: the one to install is confirmed with its summary, or the reason it
     /// is not is said in one sentence.
     private func add(_ urls: [URL]) {
-        let found = viewModel.cheatCandidates(urls)
-        let decisions = found.map { viewModel.cheatDecision(for: $0.url, titleIDInPath: $0.titleIDInPath, context: context) }
+        let found = viewModel.cheats.cheatCandidates(urls)
+        let decisions = found.map { viewModel.cheats.cheatDecision(for: $0.url, titleIDInPath: $0.titleIDInPath, context: context) }
         switch CheatInstall.pick(decisions) {
         case .file(let index, let unnamed):
             let file: CheatFile

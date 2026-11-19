@@ -14,7 +14,7 @@ struct DetailsTopBlock: View {
     let presentation: GameDetailPresentation
     /// The game is running: the primary pill reads Resume and the second reads Close Game.
     let isRunning: Bool
-    /// The quiet "Cheats on" stat: cheats on and at least one switch on (AppViewModel.cheatsOn).
+    /// The quiet "Cheats on" stat: cheats on and at least one switch on (CheatsModel.cheatsOn).
     var cheatsOn = false
     /// The focused pill: 0 Play, Resume or Build; 1 Options or Close Game; 2 Favorite; nil when the block has no focus.
     let focusedPill: Int?

@@ -214,6 +214,8 @@ public final class AppViewModel: ObservableObject {
     public private(set) lazy var setup = SetupModel(app: self)
     /// A built game's saved choices for its next launch (`RuntimeSettingsModel`).
     public private(set) lazy var runtimeSettings = RuntimeSettingsModel(app: self)
+    /// What a game's cheats are and what to do with added files (`CheatsModel`).
+    private(set) lazy var cheats = CheatsModel(app: self)
     @Published public var isBuilding: Bool = false
     /// The running (or just finished) porting folded into one overall fraction for the home.
     @Published public var portingProgress: PortingProgress? = nil
