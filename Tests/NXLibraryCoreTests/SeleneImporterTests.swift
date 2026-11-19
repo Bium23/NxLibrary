@@ -66,7 +66,7 @@ final class SeleneImporterTests: XCTestCase {
         try Data("mine".utf8).write(to: keep)
         try write("selene/theme/Audio/Alert.wav", "new")
         _ = try importer.importFrom(seleneRoot: selene)
-        let alert = try String(contentsOf: destination.appendingPathComponent("Sounds/Alert.wav"))
+        let alert = try String(contentsOf: destination.appendingPathComponent("Sounds/Alert.wav"), encoding: .utf8)
         XCTAssertEqual(alert, "new")
         XCTAssertTrue(fm.fileExists(atPath: keep.path))
     }

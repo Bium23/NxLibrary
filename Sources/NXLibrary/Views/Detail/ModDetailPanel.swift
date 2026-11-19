@@ -106,7 +106,7 @@ struct ModDetailPanel: View {
                 scroll.rows = frames.keys.sorted().compactMap { frames[$0].map { $0.minY...$0.maxY } }
             }
             .onAppear { scroll.setLayout(content: contentHeight, visible: window) }
-            .onChange(of: [contentHeight, window]) { sizes in scroll.setLayout(content: sizes[0], visible: sizes[1]) }
+            .onChange(of: [contentHeight, window]) { _, sizes in scroll.setLayout(content: sizes[0], visible: sizes[1]) }
     }
 
     private var content: some View {

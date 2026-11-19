@@ -95,7 +95,7 @@ struct FoundGamesSetupView: View {
             reader.start(steamRoot: steamRoot, appsFolder: viewModel.gameAppsFolder)
         }
         .onDisappear { reader.cancel() }
-        .onChange(of: findings) { found in
+        .onChange(of: findings) { _, found in
             if found != nil, !hasSteam, focus == .steamToggle { move(to: .openLibrary) }
             // The switch starts on; that is the choice until the player turns it off.
             if found?.steamGameCount != nil, viewModel.firstRunSetup.steamChoice == nil {

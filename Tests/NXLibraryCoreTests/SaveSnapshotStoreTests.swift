@@ -36,11 +36,11 @@ final class SaveSnapshotStoreTests: XCTestCase {
         XCTAssertEqual(snapshot.presentSlots, [.account, .device])
         XCTAssertNoThrow(try store.verify(snapshotID: snapshot.id, titleID: h.tid))
         let copied = try store.directory(snapshotID: snapshot.id, titleID: h.tid).appendingPathComponent("save/slot/progress.bin")
-        XCTAssertEqual(try String(contentsOf: copied), "original")
+        XCTAssertEqual(try String(contentsOf: copied, encoding: .utf8), "original")
         XCTAssertEqual(try SaveFiles.attributes(copied)["org.d2rmobile.guest-name"], value)
         try h.write("tampered", copied)
         XCTAssertThrowsError(try store.verify(snapshotID: snapshot.id, titleID: h.tid))
-        XCTAssertEqual(try String(contentsOf: file), "original")
+        XCTAssertEqual(try String(contentsOf: file, encoding: .utf8), "original")
     }
     func testAbsentAndEmptyDirectoriesAreRecorded() throws {
         let h = try SaveTestHome(); defer { h.remove() }
@@ -61,7 +61,7 @@ final class SaveSnapshotStoreTests: XCTestCase {
         try h.write("old", location.directory(.account).appendingPathComponent("data"))
         let preview = try store.stageImport(source: source, slot: .account, location: location)
         XCTAssertEqual(preview.fileCount, 1)
-        XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("data")), "old")
+        XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("data"), encoding: .utf8), "old")
         try h.write("changed", source.appendingPathComponent("data"))
         XCTAssertThrowsError(try store.validate(preview, location: location))
         try store.discard(preview, location: location)
@@ -117,8 +117,8 @@ final class SaveSnapshotStoreTests: XCTestCase {
         defer { try? store.discardRestore(preview, location: location) }
         let safety = try SaveTransaction(store: store, isRunning: { false })
             .restore(preview, location: location, identity: h.identity)
-        XCTAssertEqual(try String(contentsOf: account), "first")
-        XCTAssertEqual(try String(contentsOf: device), "island")
+        XCTAssertEqual(try String(contentsOf: account, encoding: .utf8), "first")
+        XCTAssertEqual(try String(contentsOf: device, encoding: .utf8), "island")
         XCTAssertEqual(try store.list(titleID: h.tid).first?.created, safety.created)
         XCTAssertEqual(safety.reason, .beforeRestore)
         XCTAssertThrowsError(try store.previewFolder(folder, slot: .account, location: h.location(id: "0100000000000002")))
@@ -134,7 +134,7 @@ final class SaveSnapshotStoreTests: XCTestCase {
         let store = SaveSnapshotStore(root: h.backups, io: io)
         XCTAssertThrowsError(try store.create(location: location, identity: h.identity, reason: .manual))
         XCTAssertEqual(try store.list(titleID: h.tid), [])
-        XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("data")), "old")
+        XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("data"), encoding: .utf8), "old")
     }
 }
 

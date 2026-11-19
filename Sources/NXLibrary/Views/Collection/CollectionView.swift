@@ -76,13 +76,13 @@ struct CollectionView: View {
         // A launch on Collection: Spotlight's entrance belongs to the first home only (`SpotlightView+Entrance`).
         .onAppear { viewModel.homeSeen = true }
         .onDisappear(perform: removeKeyMonitor)
-        .onChange(of: viewModel.catalogGames) { _ in
+        .onChange(of: viewModel.catalogGames) {
             store.preloadCachedStoreMetadata()
             reconcile()
         }
-        .onChange(of: viewModel.catalogSourceConfigurations) { _ in reconcile() }
-        .onChange(of: filter) { _ in reconcile() }
-        .onChange(of: viewModel.librarySelection.selectedGameID) { _ in selectionChanged() }
+        .onChange(of: viewModel.catalogSourceConfigurations) { reconcile() }
+        .onChange(of: filter) { reconcile() }
+        .onChange(of: viewModel.librarySelection.selectedGameID) { selectionChanged() }
         .onReceive(NotificationCenter.default.publisher(for: .nxCollectionGamepadAction)) { note in
             guard viewModel.alertMessage == nil, viewModel.settingsNotice == nil else { return }
             if let action = note.object as? GamepadAction { handle(action) }
@@ -93,8 +93,8 @@ struct CollectionView: View {
             if !games.contains(where: { $0.id == id }) { setFilter(.all) }
             select(id)
         }
-        .onChange(of: playSessions.sessions.count) { _ in reconcile() }
-        .onChange(of: viewModel.isScanningLibrary) { _ in reconcile() }
+        .onChange(of: playSessions.sessions.count) { reconcile() }
+        .onChange(of: viewModel.isScanningLibrary) { reconcile() }
         .task(id: art.heroTaskKey(game, metadata: game.flatMap { store.storeMetadata[$0.id] })) { await loadHero(game) }
         .task(id: art.steamHeroTaskKey(selectedCatalogGame)) { await art.loadSteamHero(game: selectedCatalogGame, current: { selectedCatalogGame?.id }, artwork: artwork) }
         .task(id: art.logoTaskKey(game, metadata: game.flatMap { store.storeMetadata[$0.id] })) { await loadLogo(game) }

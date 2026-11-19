@@ -28,14 +28,14 @@ struct AddGameStepThreeView: View {
     var body: some View {
         content
         .onAppear(perform: publishActions)
-        .onChange(of: viewModel.isBuilding) { _ in publishActions() }
-        .onChange(of: porting.isCancellingBuild) { _ in publishActions() }
-        .onChange(of: porting.buildSuccessPath) { _ in publishActions() }
-        .onChange(of: porting.buildError) { _ in publishActions() }
-        .onChange(of: porting.portingFailureReason) { _ in publishActions() }
-        .onChange(of: didCopyDiagnostics) { _ in publishActions() }
-        .onChange(of: porting.buildState) { _ in publishActions() }
-        .onChange(of: porting.buildHeldGameID) { _ in publishActions() }
+        .onChange(of: viewModel.isBuilding) { publishActions() }
+        .onChange(of: porting.isCancellingBuild) { publishActions() }
+        .onChange(of: porting.buildSuccessPath) { publishActions() }
+        .onChange(of: porting.buildError) { publishActions() }
+        .onChange(of: porting.portingFailureReason) { publishActions() }
+        .onChange(of: didCopyDiagnostics) { publishActions() }
+        .onChange(of: porting.buildState) { publishActions() }
+        .onChange(of: porting.buildHeldGameID) { publishActions() }
     }
 
     @ViewBuilder
@@ -540,7 +540,7 @@ struct PortingLogBox: View {
                 }
             )
             .onAppear { if let last = recent.last { proxy.scrollTo(last.id, anchor: .bottom) } }
-            .onChange(of: logs.count) { _ in
+            .onChange(of: logs.count) {
                 guard let last = logs.last else { return }
                 proxy.scrollTo(last.id, anchor: .bottom)
             }

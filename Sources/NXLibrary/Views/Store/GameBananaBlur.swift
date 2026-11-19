@@ -31,7 +31,6 @@ enum GameBananaBlur {
         return image
     }
 
-    /// A CGImage crosses back from the background task safely; the NSImage wrapping it is made by the caller.
     nonisolated private static func render(_ file: URL, radius: CGFloat) -> CGImage? {
         guard let source = CGImageSourceCreateWithURL(file as CFURL, nil),
               let small = CGImageSourceCreateThumbnailAtIndex(source, 0, [

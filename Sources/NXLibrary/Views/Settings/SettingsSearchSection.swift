@@ -47,8 +47,8 @@ struct SettingsSearchSection: View {
             SettingsDescriptorList(rows: results, onOpenGroup: onOpenGroup)
         }
         .onAppear(perform: publishActions)
-        .onChange(of: fieldRequest) { _ in fieldFocused = true }
-        .onChange(of: query) { _ in publishActions() }
+        .onChange(of: fieldRequest) { fieldFocused = true }
+        .onChange(of: query) { publishActions() }
     }
 
     private func publishActions() {
@@ -92,7 +92,7 @@ struct SettingsChangedSection: View {
             SettingsDescriptorList(rows: rows, onOpenGroup: onOpenGroup)
         }
         .onAppear(perform: publishActions)
-        .onChange(of: rows.map(\.id)) { _ in publishActions() }
+        .onChange(of: rows.map(\.id)) { publishActions() }
     }
 
     private func publishActions() {

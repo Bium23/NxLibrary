@@ -89,7 +89,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleVersion</key><string>1</string>
   <key>LSApplicationCategoryType</key><string>public.app-category.games</string>
   <key>LSSupportsGameMode</key><false/>
-  <key>LSMinimumSystemVersion</key><string>13.0</string>
+  <key>LSMinimumSystemVersion</key><string>26.0</string>
   <key>LSMultipleInstancesProhibited</key><true/>
   <key>NSHighResolutionCapable</key><true/>
   <key>NSHumanReadableCopyright</key><string>Copyright © 2026 bium. MIT. Not affiliated with Nintendo.</string>

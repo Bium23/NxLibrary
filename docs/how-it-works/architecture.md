@@ -39,7 +39,7 @@ Il [README](../../README.md) è la guida d'uso; la [guida di sviluppo](../workin
 
 ## Struttura e dipendenze
 
-[Package.swift](../../Package.swift) dichiara tre target. La toolchain Swift è quella di Xcode, con deployment minimo macOS 13.
+[Package.swift](../../Package.swift) dichiara tre target. La toolchain Swift è quella di Xcode, con deployment minimo macOS 26 (`LSMinimumSystemVersion` 26.0 nell'app). *Perché:* è la versione più vecchia che il maintainer prova, e il porting chiede comunque macOS 26.6 per Xcode 27.2.
 
 | Target | Compito |
 |---|---|
@@ -677,7 +677,7 @@ Prove e misure di queste scelte: [docs/history/reviews/2026-11-16-ratings-metada
 
 **Movimento.**
 - L'anello e il riflesso della tessera selezionata (`SeleneTileRing`, `SeleneShine`) girano in Core Animation (`TileMotionLayers`). Curve e campioni stanno in `TileMotion`; il bagliore si disegna una volta con SwiftUI (`ImageRenderer`) e poi si dissolve soltanto, così a schermo fermo l'app non ridisegna nulla tra un frame e l'altro. Con Riduci movimento l'anello resta il disegno SwiftUI fermo.
-- Un blocco che scorre per un offset animato passa da `GlideGroup` (`geometryGroup`, macOS 14): pagina Spotlight, pagina del gioco, lista Achievements, pannello Mod, riga Collection. *Perché:* SwiftUI trasmette l'offset a ogni elemento, e un'altra animazione nello stesso momento (una dissolvenza, un ventaglio, un'immagine che arriva) ne cambiava i tempi, così testi, icone e stelle scivolavano a velocità diverse. Il gruppo risolve lo scorrimento una volta per tutto il blocco, e un nuovo blocco che scorre deve usarlo. Su macOS 13 il blocco scorre senza gruppo.
+- Un blocco che scorre per un offset animato passa da `GlideGroup` (`geometryGroup`): pagina Spotlight, pagina del gioco, lista Achievements, pannello Mod, riga Collection. *Perché:* SwiftUI trasmette l'offset a ogni elemento, e un'altra animazione nello stesso momento (una dissolvenza, un ventaglio, un'immagine che arriva) ne cambiava i tempi, così testi, icone e stelle scivolavano a velocità diverse. Il gruppo risolve lo scorrimento una volta per tutto il blocco, e un nuovo blocco che scorre deve usarlo.
 - La preferenza Riduci movimento unisce l'impostazione dell'app a quella di sistema. Le viste la leggono da `seleneReduceMotion`, insieme agli altri valori dell'ambiente Selene.
 
 **Sfondo.**

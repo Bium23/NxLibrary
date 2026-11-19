@@ -73,9 +73,9 @@ struct SettingsSourcesSection: View {
             }
         }
         .onAppear(perform: publishActions)
-        .onChange(of: sources.status) { _ in publishActions() }
-        .onChange(of: sources.configuration) { _ in publishActions() }
-        .onChange(of: viewModel.catalogGames) { _ in publishActions() }
+        .onChange(of: sources.status) { publishActions() }
+        .onChange(of: sources.configuration) { publishActions() }
+        .onChange(of: viewModel.catalogGames) { publishActions() }
     }
     private func chooseFolder() {
         let panel = NSOpenPanel()

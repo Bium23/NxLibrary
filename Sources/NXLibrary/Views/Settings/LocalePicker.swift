@@ -87,7 +87,7 @@ struct LocalePicker: View {
                         .padding(canvas.u(4))
                     }
                     .scrollIndicators(.hidden)
-                    .onChange(of: focus) { index in
+                    .onChange(of: focus) { _, index in
                         withAnimation(reduceMotion ? nil : SeleneTheme.quick) { proxy.scrollTo(index, anchor: .center) }
                     }
                     .onAppear {
@@ -108,7 +108,7 @@ struct LocalePicker: View {
             .clipShape(RoundedRectangle(cornerRadius: canvas.u(24)))
             .overlay(RoundedRectangle(cornerRadius: canvas.u(24)).strokeBorder(SeleneTheme.ink15, lineWidth: 1))
         }
-        .onChange(of: query) { _ in focus = 0 }
+        .onChange(of: query) { focus = 0 }
         .onAppear(perform: installKeys)
         .onDisappear { if let keyMonitor { NSEvent.removeMonitor(keyMonitor) } }
         .onReceive(NotificationCenter.default.publisher(for: .nxLocalePickerGamepadAction)) { note in

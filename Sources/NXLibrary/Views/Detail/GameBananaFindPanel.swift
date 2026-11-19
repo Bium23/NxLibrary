@@ -41,8 +41,8 @@ struct GameBananaFindPanel: View {
                 .padding(.vertical, canvas.u(10))
                 .background(Capsule().fill(SeleneTheme.glassSolid))
                 .overlay(Capsule().strokeBorder(SeleneTheme.focus, lineWidth: canvas.u(2.5)).opacity(model.editing ? 1 : 0))
-                .onChange(of: model.editing) { if fieldFocused != $0 { fieldFocused = $0 } }
-                .onChange(of: fieldFocused) { if model.editing != $0 { model.editing = $0 } }
+                .onChange(of: model.editing) { if fieldFocused != $1 { fieldFocused = $1 } }
+                .onChange(of: fieldFocused) { if model.editing != $1 { model.editing = $1 } }
 
                 if model.searching {
                     Text(L10n.text("Searching GameBanana…")).seleneFont(16).foregroundColor(SeleneTheme.ink60)

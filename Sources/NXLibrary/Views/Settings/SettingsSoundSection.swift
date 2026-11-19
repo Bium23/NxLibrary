@@ -40,7 +40,7 @@ struct SettingsSoundSection: View {
                             buttonTitle: "Choose folder") { importFromSelene() }
         }
         .onAppear(perform: publishActions)
-        .onChange(of: settings.settings.interfaceSounds) { enabled in
+        .onChange(of: settings.settings.interfaceSounds) { _, enabled in
             if enabled { SoundEffectService.shared.play(.key) }
         }
     }

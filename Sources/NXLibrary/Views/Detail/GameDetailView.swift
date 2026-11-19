@@ -165,22 +165,22 @@ struct GameDetailView: View {
         .clipped()
         .onAppear(perform: appear)
         .onAppear { focus.setPillLimit(viewModel.portingPills(game).count) }
-        .onChange(of: viewModel.portingPills(game).count) { focus.setPillLimit($0) }
+        .onChange(of: viewModel.portingPills(game).count) { focus.setPillLimit($1) }
         .onDisappear {
             modsHost.stop()
             removeKeyMonitor()
             router.isScreenshotViewerOpen = false
         }
-        .onChange(of: viewer != nil) { router.isScreenshotViewerOpen = $0 }
-        .onChange(of: model.bands) { _ in settleFocus(model.bands) }
+        .onChange(of: viewer != nil) { router.isScreenshotViewerOpen = $1 }
+        .onChange(of: model.bands) { settleFocus(model.bands) }
         // Game options (its Mods or Cheats panel) closing, or Arcane coming back from Finder, re-reads mods and cheats.
-        .onChange(of: !viewModel.isGameOptionsOpen) { closed in if closed { reloadMods(); reloadCheats() } }
+        .onChange(of: !viewModel.isGameOptionsOpen) { _, closed in if closed { reloadMods(); reloadCheats() } }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             reloadMods()
             reloadCheats()
         }
         // The key monitor captures this view's value: reinstall it when the game changes.
-        .onChange(of: game) { _ in
+        .onChange(of: game) {
             removeKeyMonitor()
             installKeyMonitor()
             reloadMods()

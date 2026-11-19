@@ -90,12 +90,12 @@ struct SettingsView: View {
         }
         .onDisappear(perform: removeKeyMonitor)
         .onDisappear { igdb.isEditing = false }
-        .onChange(of: section) { _ in
+        .onChange(of: section) {
             rowActions = []
             rowFocus = FocusIndex()
             rowButton = 0
         }
-        .onChange(of: initialSection) { value in
+        .onChange(of: initialSection) { _, value in
             section = value
             focusArea = .sidebar
         }
@@ -167,7 +167,7 @@ struct SettingsView: View {
                 .padding(.bottom, canvas.u(60))
             }
             .scrollIndicators(.hidden)
-            .onChange(of: rowFocus.index) { _ in
+            .onChange(of: rowFocus.index) {
                 rowButton = 0
                 guard focusArea == .rows,
                       rowActions.indices.contains(rowFocus.index) else { return }

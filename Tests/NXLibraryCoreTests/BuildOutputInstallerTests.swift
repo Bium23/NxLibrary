@@ -25,7 +25,7 @@ final class BuildOutputInstallerTests: XCTestCase {
         let temp = try makeApp("Temp.app", marker: "new")
         let final = try makeApp("Final.app", marker: "old")
         try BuildOutputInstaller.install(tempApp: temp, finalApp: final)
-        XCTAssertEqual(try String(contentsOf: final.appendingPathComponent("Contents/Info.plist")),
+        XCTAssertEqual(try String(contentsOf: final.appendingPathComponent("Contents/Info.plist"), encoding: .utf8),
                        "new")
     }
 
@@ -35,7 +35,7 @@ final class BuildOutputInstallerTests: XCTestCase {
         try BuildOutputInstaller.install(tempApp: temp, finalApp: final)
         XCTAssertFalse(FileManager.default.fileExists(atPath: temp.path))
         XCTAssertNoThrow(try BuildOutputInstaller.install(tempApp: temp, finalApp: final))
-        XCTAssertEqual(try String(contentsOf: final.appendingPathComponent("Contents/Info.plist")), "new")
+        XCTAssertEqual(try String(contentsOf: final.appendingPathComponent("Contents/Info.plist"), encoding: .utf8), "new")
     }
 
     func testAnInterruptedReplacementKeepsAnAppAtTheFinalPath() throws {
@@ -47,7 +47,7 @@ final class BuildOutputInstallerTests: XCTestCase {
     }
 
     private func marker(_ app: URL) throws -> String {
-        try String(contentsOf: app.appendingPathComponent("Contents/Info.plist"))
+        try String(contentsOf: app.appendingPathComponent("Contents/Info.plist"), encoding: .utf8)
     }
 
     private func incomingApps() throws -> [URL] {
@@ -185,7 +185,7 @@ final class BuildOutputInstallerTests: XCTestCase {
         try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
         let final = try makeApp("Final.app", marker: "old")
         XCTAssertThrowsError(try BuildOutputInstaller.install(tempApp: temp, finalApp: final))
-        XCTAssertEqual(try String(contentsOf: final.appendingPathComponent("Contents/Info.plist")),
+        XCTAssertEqual(try String(contentsOf: final.appendingPathComponent("Contents/Info.plist"), encoding: .utf8),
                        "old")
     }
 
@@ -197,7 +197,7 @@ final class BuildOutputInstallerTests: XCTestCase {
         XCTAssertThrowsError(try BuildOutputInstaller.install(tempApp: temp, finalApp: final))
         XCTAssertTrue(FileManager.default.fileExists(
             atPath: final.appendingPathComponent("source.nsp").path))
-        XCTAssertEqual(try String(contentsOf: temp.appendingPathComponent("Contents/Info.plist")),
+        XCTAssertEqual(try String(contentsOf: temp.appendingPathComponent("Contents/Info.plist"), encoding: .utf8),
                        "new")
     }
 }

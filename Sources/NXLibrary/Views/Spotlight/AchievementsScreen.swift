@@ -270,8 +270,9 @@ struct AchievementsScreen: View {
 
     /// "36 / 36": the unlocked count bright, the total dimmer.
     private func countText(_ count: TierCount, size: CGFloat) -> some View {
-        (Text("\(count.unlocked)").foregroundColor(SeleneTheme.ink)
-         + Text(" / \(count.total)").foregroundColor(SeleneTheme.ink75))
+        let unlocked = Text("\(count.unlocked)").foregroundColor(SeleneTheme.ink)
+        let total = Text(" / \(count.total)").foregroundColor(SeleneTheme.ink75)
+        return Text("\(unlocked)\(total)")
             .seleneFont(size, .semibold)
             .monospacedDigit()
             // Its own width, never a share of the crystal's: squeezed, "0 / 13" read "0…".
@@ -315,8 +316,8 @@ struct AchievementsScreen: View {
                 let selected = filter == state.filter
                 let count = summary.rows(filter).count
                 Button { onFilter(filter) } label: {
-                    (Text(Self.title(filter))
-                     + Text("  \(count)").foregroundColor(selected ? SeleneTheme.onFocus.opacity(0.7) : SeleneTheme.ink60))
+                    let number = Text("  \(count)").foregroundColor(selected ? SeleneTheme.onFocus.opacity(0.7) : SeleneTheme.ink60)
+                    Text("\(Text(Self.title(filter)))\(number)")
                         .seleneFont(16, .semibold)
                         .monospacedDigit()
                         .foregroundColor(selected ? SeleneTheme.onFocus : SeleneTheme.ink90)
@@ -492,9 +493,9 @@ private struct AchievementsList: View {
             }
             // A rapid reopen reuses the outgoing view at the same size, but the new model needs its layout.
             .task(id: ObjectIdentifier(model)) { report(height) }
-            .onChange(of: height) { report($0) }
-            .onChange(of: canvas.scale) { _ in report(height) }
-            .onChange(of: reduceMotion) { _ in report(height) }
+            .onChange(of: height) { report($1) }
+            .onChange(of: canvas.scale) { report(height) }
+            .onChange(of: reduceMotion) { report(height) }
         }
         .frame(width: width)
     }

@@ -61,7 +61,7 @@ struct SettingsKeysSection: View {
             .seleneRowFocus(focusedRowTitle == "prod.keys", radius: SeleneTheme.cardRadius)
         }
         .onAppear(perform: publishActions)
-        .onChange(of: configurationLocked) { _ in publishActions() }
+        .onChange(of: configurationLocked) { publishActions() }
     }
 
     private func publishActions() {

@@ -7,7 +7,7 @@ final class SteamGridDBArtTests: XCTestCase {
         var requests: [URLRequest] = []
         private let lock = NSLock()
         func data(for request: URLRequest) async throws -> (Data, HTTPURLResponse) {
-            lock.lock(); requests.append(request); lock.unlock()
+            lock.withLock { requests.append(request) }
             let key = request.url!.absoluteString
             let (status, body) = routes[key] ?? (404, Data())
             return (body, HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!)

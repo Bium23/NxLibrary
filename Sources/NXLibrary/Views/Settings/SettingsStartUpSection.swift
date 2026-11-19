@@ -51,8 +51,8 @@ struct SettingsStartUpSection: View {
                             isOn: $settings.settings.introAnimation)
         }
         .onAppear(perform: publishActions)
-        .onChange(of: settings.settings.appLanguage) { _ in publishActions() }
-        .onChange(of: settings.settings.appRegion) { _ in publishActions() }
+        .onChange(of: settings.settings.appLanguage) { publishActions() }
+        .onChange(of: settings.settings.appRegion) { publishActions() }
     }
 
     private func publishActions() {

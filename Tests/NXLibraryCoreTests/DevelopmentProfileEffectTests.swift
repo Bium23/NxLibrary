@@ -19,9 +19,9 @@ final class DevelopmentProfileEffectTests: XCTestCase {
         try JSONEncoder().encode([ModRecord(folderName: "Foo", isOn: true)]).write(to: records)
         let store = ModStore(supportFolder: game, recordsFile: records, titleID: "0100000000000000", canWrite: { true }, trash: { _ in XCTFail() }, allowsAutomaticMaintenance: false)
         try store.sync()
-        XCTAssertEqual(try String(contentsOf: env), original)
+        XCTAssertEqual(try String(contentsOf: env, encoding: .utf8), original)
         try store.sync(automatic: false)
-        XCTAssertNotEqual(try String(contentsOf: env), original, "Explicit changes must remain possible")
+        XCTAssertNotEqual(try String(contentsOf: env, encoding: .utf8), original, "Explicit changes must remain possible")
     }
 
     func testModSyncPreservesRecordsAndOverlayWhenFolderCannotBeListed() throws {
@@ -50,7 +50,7 @@ final class DevelopmentProfileEffectTests: XCTestCase {
         let (store, _, _) = try modSyncFixture(game: game)
         try store.sync()
         XCTAssertEqual(try JSONDecoder().decode([ModRecord].self, from: Data(contentsOf: store.recordsFile)), [])
-        XCTAssertFalse(try String(contentsOf: store.envFile).contains(ModStore.overlayKey))
+        XCTAssertFalse(try String(contentsOf: store.envFile, encoding: .utf8).contains(ModStore.overlayKey))
     }
 
     private func modSyncFixture(game: URL) throws -> (ModStore, Data, Data) {
@@ -109,6 +109,6 @@ final class DevelopmentProfileEffectTests: XCTestCase {
         let store = DevelopmentOperationStore(file: file, isDevelopment: true)
         XCTAssertFalse(store.permits(.icon, gameID: UUID()))
         XCTAssertThrowsError(try store.authorize(.icon, gameID: UUID()))
-        XCTAssertEqual(try String(contentsOf: file), "broken")
+        XCTAssertEqual(try String(contentsOf: file, encoding: .utf8), "broken")
     }
 }

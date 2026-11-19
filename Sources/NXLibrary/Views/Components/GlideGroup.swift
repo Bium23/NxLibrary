@@ -9,18 +9,8 @@ import SwiftUI
 /// 16 Nov 2026).
 ///
 /// A geometry group resolves the glide once for the block and passes each leaf a still position inside it.
-/// It needs macOS 14; on macOS 13 the block glides as before.
 struct GlideGroup: ViewModifier {
-    static var available: Bool {
-        if #available(macOS 14.0, *) { return true }
-        return false
-    }
-
     func body(content: Content) -> some View {
-        if #available(macOS 14.0, *) {
-            content.geometryGroup()
-        } else {
-            content
-        }
+        content.geometryGroup()
     }
 }

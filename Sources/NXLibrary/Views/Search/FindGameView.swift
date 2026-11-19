@@ -59,8 +59,8 @@ struct FindGameView: View {
             installKeyMonitor()
         }
         .onDisappear(perform: removeKeyMonitor)
-        .onChange(of: query) { _ in focused = nil }
-        .onChange(of: results.map(\.id)) { _ in focused = nil }
+        .onChange(of: query) { focused = nil }
+        .onChange(of: results.map(\.id)) { focused = nil }
         .onReceive(NotificationCenter.default.publisher(for: .nxFindGameGamepadAction)) { note in
             guard let action = note.object as? GamepadAction else { return }
             handle(action)

@@ -171,7 +171,7 @@ struct ModsPanel: View {
                 .animation(reduceMotion ? nil : SeleneTheme.quick, value: mods)
             }
             .scrollIndicators(.hidden)
-            .onChange(of: focus) { index in
+            .onChange(of: focus) { _, index in
                 guard rows.indices.contains(index) else { return }
                 withAnimation(reduceMotion ? nil : SeleneTheme.quick) { proxy.scrollTo(rows[index], anchor: .center) }
             }

@@ -147,7 +147,7 @@ final class AppIconWriterTests: XCTestCase {
         XCTAssertEqual(icon(app), "icon A")
         try writer.apply(image: png, to: app, key: "0100")
         XCTAssertEqual(icon(app), "icon B")
-        XCTAssertEqual(try String(contentsOf: root.appendingPathComponent("backups/0100/original.icns")), "game original")
+        XCTAssertEqual(try String(contentsOf: root.appendingPathComponent("backups/0100/original.icns"), encoding: .utf8), "game original")
         try writer.restore(app, key: "0100")
         XCTAssertEqual(icon(app), "game original", "Automatic must not restore A instead of the game's original")
     }
@@ -187,7 +187,7 @@ final class AppIconWriterTests: XCTestCase {
         }
         XCTAssertEqual(icon(app), "original")
         XCTAssertEqual(try Data(contentsOf: app.appendingPathComponent("Contents/Info.plist")), before)
-        XCTAssertEqual(try String(contentsOf: app.appendingPathComponent("Contents/MacOS/nxnative")), "launcher")
+        XCTAssertEqual(try String(contentsOf: app.appendingPathComponent("Contents/MacOS/nxnative"), encoding: .utf8), "launcher")
     }
 
     func testOriginalIconIsRememberedIncludingItsAbsence() throws {

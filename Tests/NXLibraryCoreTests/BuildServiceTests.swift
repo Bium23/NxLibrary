@@ -143,8 +143,8 @@ final class BuildServiceTests: XCTestCase {
         XCTAssertTrue(ready.installationFailed)
         XCTAssertEqual(ready.heldApp, temp)
         XCTAssertNil(ready.outputURL)
-        XCTAssertEqual(try String(contentsOf: final.appendingPathComponent("Contents/Info.plist")), "old")
-        XCTAssertEqual(try String(contentsOf: temp.appendingPathComponent("Contents/Info.plist")), "new")
+        XCTAssertEqual(try String(contentsOf: final.appendingPathComponent("Contents/Info.plist"), encoding: .utf8), "old")
+        XCTAssertEqual(try String(contentsOf: temp.appendingPathComponent("Contents/Info.plist"), encoding: .utf8), "new")
 
         var game = PortedGame(name: "Game", url: final, platform: .macApp, sizeBytes: 1, modificationDate: Date())
         game.status = .built
@@ -161,8 +161,8 @@ final class BuildServiceTests: XCTestCase {
         XCTAssertEqual(game.pendingInstall, pending)
         XCTAssertEqual(try PendingInstaller.install(&game), .installed)
         XCTAssertNil(game.pendingInstall)
-        XCTAssertEqual(try String(contentsOf: final.appendingPathComponent("Contents/Info.plist")), "new")
-        XCTAssertEqual(try String(contentsOf: runs), "run\n", "Retry installs the existing build without starting the engine")
+        XCTAssertEqual(try String(contentsOf: final.appendingPathComponent("Contents/Info.plist"), encoding: .utf8), "new")
+        XCTAssertEqual(try String(contentsOf: runs, encoding: .utf8), "run\n", "Retry installs the existing build without starting the engine")
     }
 
     func testFailedEngineDoesNotKeepItsPartialOutputAsReady() throws {
@@ -325,7 +325,7 @@ final class BuildServiceTests: XCTestCase {
         while !FileManager.default.fileExists(atPath: pidFile.path), Date() < deadline {
             Thread.sleep(forTimeInterval: 0.05)
         }
-        let pid = Int32(try String(contentsOf: pidFile)
+        let pid = Int32(try String(contentsOf: pidFile, encoding: .utf8)
             .trimmingCharacters(in: .whitespacesAndNewlines))!
         service.cancel()
         wait(for: [exp], timeout: 10)
@@ -368,7 +368,7 @@ final class BuildServiceTests: XCTestCase {
         })
         let deadline = Date().addingTimeInterval(10)
         while !FileManager.default.fileExists(atPath: pidFile.path), Date() < deadline { Thread.sleep(forTimeInterval: 0.05) }
-        return try XCTUnwrap(Int32(String(contentsOf: pidFile).trimmingCharacters(in: .whitespacesAndNewlines)))
+        return try XCTUnwrap(Int32(String(contentsOf: pidFile, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines)))
     }
 
     private func assertGone(_ pid: pid_t, file: StaticString = #filePath, line: UInt = #line) {

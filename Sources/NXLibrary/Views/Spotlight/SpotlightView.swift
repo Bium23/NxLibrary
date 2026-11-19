@@ -201,9 +201,13 @@ struct SpotlightView: View {
 
     // MARK: - Body
 
+    // The body is split in steps: one chain of every modifier is more than the type checker can solve in time.
     var body: some View {
         let model = snapshot()
-        let state = viewModel.spotlight
+        tasks(model, on: events(on: libraryChanges(on: lifecycle(on: chrome(model, state: viewModel.spotlight)))))
+    }
+
+    private func chrome(_ model: Snapshot, state: SpotlightState) -> some View {
         SeleneHomeChrome(
             leftHints: state.isLifted || cardMenu != nil || state.focus != .row
                 ? [] : HintItem.homeGlobals(other: "Collection",
@@ -232,29 +236,34 @@ struct SpotlightView: View {
         .animation(SeleneTheme.screen, value: achievementsScreen != nil)
         .overlay(model.selectedGame.map { ModsBandOverlay(host: modsHost, find: modsHost.find, game: $0) })
         .overlay(storeOverlay(model))
+    }
+
+    /// Appearing, the entrance, the pills and the Achievements screen, and leaving.
+    private func lifecycle(on content: some View) -> some View {
+        content
         .onAppear(perform: appear)
         .onAppear(perform: entranceAppear)
-        .onChange(of: isCovered) { covered in if !covered { uncoverEntrance() } }
-        .onChange(of: reduceMotion) { reduced in if reduced { landEntrance() } }
+        .onChange(of: isCovered) { _, covered in if !covered { uncoverEntrance() } }
+        .onChange(of: reduceMotion) { _, reduced in if reduced { landEntrance() } }
         // A resize mid-flight lands it; before the flight the starts follow the window (the launch can still size it).
-        .onChange(of: canvas) { _ in if entrance == .playing { landEntrance() } }
+        .onChange(of: canvas) { if entrance == .playing { landEntrance() } }
         .onAppear { storeHost.loadCover(titleIDs: Set(storeGames.compactMap { viewModel.modStore(for: $0)?.titleID })) }
         .onAppear { mutate { $0.setPillLimit(selectedPillCount) } }
-        .onChange(of: selectedPillCount) { count in mutate { $0.setPillLimit(count) } }
+        .onChange(of: selectedPillCount) { _, count in mutate { $0.setPillLimit(count) } }
         // A re-read can remove the tile (the files went away): the focus leaves it for the screenshots.
-        .onChange(of: selectedAchievements == nil) { gone in
+        .onChange(of: selectedAchievements == nil) { _, gone in
             guard gone else { return }
             achievementsScreen = nil
             guard viewModel.spotlight.focus == .achievements else { return }
             mutate { $0.focus = screenshotCount > 0 ? .strip : .pills }
         }
         // A re-read while the screen is open: the selection stays inside the list.
-        .onChange(of: selectedAchievements) { summary in
+        .onChange(of: selectedAchievements) { _, summary in
             guard let summary, let screen = achievementsScreen else { return }
             screen.setIDs(summary.rows(screen.state.filter, order: screen.state.order).map(\.id))
         }
         // Another game, or the row: the screen belongs to the game it opened on.
-        .onChange(of: viewModel.spotlight.selectedKey) { _ in achievementsScreen = nil }
+        .onChange(of: viewModel.spotlight.selectedKey) { achievementsScreen = nil }
         .onDisappear {
             landEntrance()
             removeKeyMonitor()
@@ -265,32 +274,42 @@ struct SpotlightView: View {
             pillTask?.cancel()
             mutate { $0.cancelLift() }
         }
-        .onChange(of: viewModel.catalogGames) { _ in gamesChanged() }
-        .onChange(of: viewModel.catalogSourceConfigurations) { _ in gamesChanged() }
-        .onChange(of: filter) { newFilter in
+    }
+
+    /// The library, the filter, the selection and the page.
+    private func libraryChanges(on content: some View) -> some View {
+        content
+        .onChange(of: viewModel.catalogGames) { gamesChanged() }
+        .onChange(of: viewModel.catalogSourceConfigurations) { gamesChanged() }
+        .onChange(of: filter) { _, newFilter in
             reconcile()
             filterChanged(to: newFilter)
         }
-        .onChange(of: settings.settings.visibleSpotlightCards) { _ in reconcile() }
-        .onChange(of: settings.settings.spotlightOrder) { _ in reconcile() }
-        .onChange(of: viewModel.spotlight.selectedKey) { _ in
+        .onChange(of: settings.settings.visibleSpotlightCards) { reconcile() }
+        .onChange(of: settings.settings.spotlightOrder) { reconcile() }
+        .onChange(of: viewModel.spotlight.selectedKey) {
             aboutExpanded = false
             selectionChanged()
         }
-        .onChange(of: viewModel.spotlight.focus) { focus in
+        .onChange(of: viewModel.spotlight.focus) { _, focus in
             syncPage()
             startModsOnline(focus)
         }
         // Game options (its Mods panel) closing, or Arcane coming back from Finder, re-reads the mods.
-        .onChange(of: !viewModel.isGameOptionsOpen) { closed in if closed { reloadMods() } }
+        .onChange(of: !viewModel.isGameOptionsOpen) { _, closed in if closed { reloadMods() } }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in reloadMods() }
-        .onChange(of: blocks) { _ in syncPage() }
+        .onChange(of: blocks) { syncPage() }
         // Inside the store the page glides section to section on a shorter curve.
-        .onChange(of: storeHost.focus) { _ in syncPage(glide: Self.storeGlide) }
-        .onChange(of: storeHost.sections.map(\.kind)) { _ in syncPage(glide: Self.storeGlide) }
+        .onChange(of: storeHost.focus) { syncPage(glide: Self.storeGlide) }
+        .onChange(of: storeHost.sections.map(\.kind)) { syncPage(glide: Self.storeGlide) }
         // The viewer and the Achievements screen both keep the shell's own buttons away.
-        .onChange(of: viewer != nil || achievementsScreen != nil) { router.isScreenshotViewerOpen = $0 }
-        .onChange(of: router.pendingSpotlightMove) { _ in consumePendingMove() }
+        .onChange(of: viewer != nil || achievementsScreen != nil) { router.isScreenshotViewerOpen = $1 }
+        .onChange(of: router.pendingSpotlightMove) { consumePendingMove() }
+    }
+
+    /// Find a game and the controller.
+    private func events(on content: some View) -> some View {
+        content
         .onReceive(NotificationCenter.default.publisher(for: .nxFindGameSelect)) { note in
             guard let id = note.object as? UUID else { return }
             // Find a game lands on Spotlight; a tab without the game gives way to All games.
@@ -306,7 +325,12 @@ struct SpotlightView: View {
             guard viewModel.alertMessage == nil, viewModel.settingsNotice == nil, !isOverlaid else { return }
             if let action = note.object as? GamepadAction { handle(action) }
         }
-        .onChange(of: playSessions.sessions.count) { _ in reconcile() }
+    }
+
+    /// Play history and the art of the selected game.
+    private func tasks(_ model: Snapshot, on content: some View) -> some View {
+        content
+        .onChange(of: playSessions.sessions.count) { reconcile() }
         .task(id: art.heroTaskKey(model.selectedGame, metadata: model.selectedGame.flatMap { store.storeMetadata[$0.id] })) { await loadHero(model.selectedGame) }
         .task(id: art.steamHeroTaskKey(model.selectedCatalogGame)) {
             await art.loadSteamHero(game: model.selectedCatalogGame, current: { selectedCatalogGame?.id }, artwork: artwork, settle: 420_000_000)

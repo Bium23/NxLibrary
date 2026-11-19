@@ -271,7 +271,7 @@ struct ChangeArtworkView: View {
             .opacity(focus < 0 ? 1 : 0))
         .frame(width: canvas.u(560))
         .padding(.leading, canvas.u(8))
-        .onChange(of: fieldFocused) { focused in if focused { focus = -1 } }
+        .onChange(of: fieldFocused) { _, focused in if focused { focus = -1 } }
     }
 
     @ViewBuilder
@@ -359,7 +359,7 @@ struct ChangeArtworkView: View {
             // The room reaches past the column, so the tiles still line up with the title.
             .padding(.horizontal, canvas.u(8 - Self.ringRoom))
             .padding(.top, canvas.u(-Self.ringRoom / 2))
-            .onChange(of: focus) { index in
+            .onChange(of: focus) { _, index in
                 guard index >= 0 else { return }
                 withAnimation(reduceMotion ? nil : SeleneTheme.quick) { proxy.scrollTo(index, anchor: .center) }
             }

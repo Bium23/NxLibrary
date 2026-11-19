@@ -172,7 +172,7 @@ struct OnlineBrowsePanel: View {
             }
             .scrollIndicators(.hidden)
             .frame(width: canvas.u(3 * 226))
-            .onChange(of: state.categoryIndex) { index in
+            .onChange(of: state.categoryIndex) { _, index in
                 withAnimation(reduceMotion ? nil : SeleneTheme.quick) { proxy.scrollTo(index, anchor: .center) }
             }
         }
@@ -222,7 +222,7 @@ struct OnlineBrowsePanel: View {
                                          .init(color: .black, location: 1 - 150 / height),
                                          .init(color: .clear, location: 1)],
                                  startPoint: .top, endPoint: .bottom))
-            .onChange(of: focusedIndex) { index in
+            .onChange(of: focusedIndex) { _, index in
                 guard let index else { return }
                 withAnimation(reduceMotion ? nil : SeleneTheme.quick) {
                     proxy.scrollTo(index - index % OnlineBrowseState.columns, anchor: .center)

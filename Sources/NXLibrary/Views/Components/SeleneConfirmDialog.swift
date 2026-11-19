@@ -84,7 +84,7 @@ struct SeleneDialogNotes: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(canvas.u(16))
                 }
-                .onChange(of: scrollRequest) { index in
+                .onChange(of: scrollRequest) { _, index in
                     withAnimation(reduceMotion ? nil : SeleneTheme.quick) { proxy.scrollTo(index, anchor: .top) }
                 }
             }

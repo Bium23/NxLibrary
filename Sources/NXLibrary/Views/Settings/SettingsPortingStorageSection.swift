@@ -39,14 +39,14 @@ struct SettingsPortingStorageSection: View {
         }
         .task { viewModel.refreshStorageUsage() }
         .onAppear(perform: publishActions)
-        .onChange(of: viewModel.isBuilding) { building in
+        .onChange(of: viewModel.isBuilding) { _, building in
             publishActions()
             if !building { viewModel.refreshStorageUsage() }
         }
-        .onChange(of: viewModel.isCleaningStorage) { _ in publishActions() }
-        .onChange(of: viewModel.isUpdatingApp) { _ in publishActions() }
-        .onChange(of: viewModel.storageSnapshot) { _ in publishActions() }
-        .onChange(of: viewModel.storageUsage?.cacheBytes) { _ in publishActions() }
+        .onChange(of: viewModel.isCleaningStorage) { publishActions() }
+        .onChange(of: viewModel.isUpdatingApp) { publishActions() }
+        .onChange(of: viewModel.storageSnapshot) { publishActions() }
+        .onChange(of: viewModel.storageUsage?.cacheBytes) { publishActions() }
     }
 
     private func sizeText(_ size: StorageSize, missing: String) -> String {

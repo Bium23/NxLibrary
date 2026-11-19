@@ -65,8 +65,8 @@ struct SetupCheckView: View {
             model.stopRechecking()
             model.rememberStates()
         }
-        .onChange(of: items.map(\.state)) { _ in placeInitialFocus() }
-        .onChange(of: model.justReady) { ready in pop(ready) }
+        .onChange(of: items.map(\.state)) { placeInitialFocus() }
+        .onChange(of: model.justReady) { _, ready in pop(ready) }
         .onReceive(NotificationCenter.default.publisher(for: .nxSetupCheckGamepadAction)) { note in
             if let action = note.object as? GamepadAction { handle(action) }
         }
@@ -296,7 +296,7 @@ private struct StatusChip: View {
             .animation(reduceMotion ? nil : SeleneTheme.quick, value: popping)
             .opacity(item.state == .working && dim ? 0.45 : 1)
             .onAppear(perform: breathe)
-            .onChange(of: item.state) { _ in breathe() }
+            .onChange(of: item.state) { breathe() }
     }
 
     private func breathe() {

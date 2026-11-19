@@ -72,7 +72,6 @@ struct AchievementIcon: View {
     }
 
     /// The file's pixels decoded now, not at the first draw: NSImage(contentsOf:) leaves that to the main thread.
-    /// A CGImage crosses back to the main actor safely; the NSImage wrapping it is made there.
     private nonisolated static func decode(_ url: URL) -> CGImage? {
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
         return CGImageSourceCreateImageAtIndex(source, 0, [kCGImageSourceShouldCacheImmediately: true] as CFDictionary)

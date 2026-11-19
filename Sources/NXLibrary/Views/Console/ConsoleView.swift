@@ -283,12 +283,12 @@ struct ConsoleView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(RoundedRectangle(cornerRadius: radius, style: .continuous).fill(SeleneTheme.glassLight))
             .onAppear { scrollToEnd(proxy, animated: false) }
-            .onChange(of: viewModel.logs.count) { _ in
+            .onChange(of: viewModel.logs.count) {
                 if follow { scrollToEnd(proxy, animated: false) }
             }
-            .onChange(of: filter) { _ in resetScroll(proxy) }
-            .onChange(of: searchText) { _ in resetScroll(proxy) }
-            .onChange(of: scrollTick) { _ in
+            .onChange(of: filter) { resetScroll(proxy) }
+            .onChange(of: searchText) { resetScroll(proxy) }
+            .onChange(of: scrollTick) {
                 if let scrollTarget {
                     withAnimation(reduceMotion ? nil : SeleneTheme.quick) {
                         proxy.scrollTo(scrollTarget, anchor: .center)

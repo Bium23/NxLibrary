@@ -69,7 +69,7 @@ struct ArcaneWelcomeView: View {
             reader.start(steamRoot: steamRoot, appsFolder: appsFolder)
         }
         .onDisappear { reader.cancel() }
-        .onChange(of: offer) { next in
+        .onChange(of: offer) { _, next in
             // The offer arrives after the read: it takes the first focus unless the player already moved.
             if next != nil, !moved { focus = ArcaneWelcome.Focus.initial(offer: next) }
             if next == nil, focus != .openLibrary { focus = .openLibrary }

@@ -241,7 +241,7 @@ struct ChangeMetadataView: View {
                 .animation(reduceMotion ? nil : SeleneTheme.quick, value: focus)
             }
             .scrollIndicators(.hidden)
-            .onChange(of: focus) { index in
+            .onChange(of: focus) { _, index in
                 // A description can exceed the viewport: reveal its beginning,
                 // rather than centring it with the heading already off screen.
                 withAnimation(reduceMotion ? nil : SeleneTheme.quick) { proxy.scrollTo(index, anchor: .top) }

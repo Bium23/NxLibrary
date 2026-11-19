@@ -49,7 +49,7 @@ struct SettingsControllersSection: View {
             }
         }
         .onAppear(perform: publishActions)
-        .onChange(of: controller.deadzone) { _ in publishActions() }
+        .onChange(of: controller.deadzone) { publishActions() }
     }
 
     private func publishActions() {

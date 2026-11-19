@@ -4,8 +4,8 @@ This guide covers building Arcane itself. For app setup, game preparation and da
 
 ## Development prerequisites
 
-- An Apple-silicon Mac running macOS 13 or later.
-- Full Xcode selected for the build. The current game toolchain requires Xcode 27.2 or later and the Metal compiler certified for the pinned engine. `Package.swift` declares Swift tools 5.9 and macOS 13 as package minimums; those values do not certify an engine/compiler combination.
+- An Apple-silicon Mac running macOS 26 or later.
+- Full Xcode selected for the build. The current game toolchain requires Xcode 27.2 or later and the Metal compiler certified for the pinned engine. `Package.swift` declares Swift tools 5.9 and macOS 26 as package minimums; those values do not certify an engine/compiler combination.
 - Git and the command-line tools supplied with Xcode.
 - Python 3 for the publication checks and packaging helpers.
 - Homebrew's `zstd` and `glslang`, at the versions recorded in [runtime.lock](../../runtime.lock), when preparing the bundled runtime. The script checks installed versions; it does not install or silently upgrade them.

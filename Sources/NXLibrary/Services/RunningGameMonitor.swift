@@ -119,13 +119,9 @@ final class RunningGameMonitor: ObservableObject {
         NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first { !$0.isTerminated }
     }
 
-    /// Activates an app. macOS 14 replaces the options call with cooperative activation.
+    /// Activates an app with cooperative activation.
     nonisolated static func activate(_ app: NSRunningApplication) {
-        if #available(macOS 14.0, *) {
-            app.activate()
-        } else {
-            app.activate(options: [.activateAllWindows])
-        }
+        app.activate()
     }
 
     // MARK: - Notifications

@@ -54,7 +54,7 @@ struct CatalogSteamInfo: View {
         .opacity(!collection || shown ? 1 : 0)
         .offset(x: !collection || slid ? 0 : canvas.u(CollectionInfoView.slideDistance))
         .onAppear { reveal() }
-        .onChange(of: game.id) { _ in reveal() }
+        .onChange(of: game.id) { reveal() }
         .task(id: "\(game.id)|\(localization.language.rawValue)") {
             await facts.load(game, language: localization.language)
         }

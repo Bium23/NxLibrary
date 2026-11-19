@@ -16,12 +16,12 @@ final class SaveTransactionTests: XCTestCase {
         let backup = try tx.importSave(preview, location: location, identity: h.identity)
         XCTAssertEqual(backup.reason, .beforeImport)
         XCTAssertFalse(SaveFiles.exists(location.directory(.account).appendingPathComponent("obsolete")))
-        XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("data")), "new")
-        XCTAssertEqual(try String(contentsOf: location.directory(.device).appendingPathComponent("data")), "island")
-        XCTAssertEqual(try String(contentsOf: location.root.appendingPathComponent("save.work/data")), "sentinel")
-        XCTAssertEqual(try String(contentsOf: location.root.appendingPathComponent("save.sync")), "sync")
+        XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("data"), encoding: .utf8), "new")
+        XCTAssertEqual(try String(contentsOf: location.directory(.device).appendingPathComponent("data"), encoding: .utf8), "island")
+        XCTAssertEqual(try String(contentsOf: location.root.appendingPathComponent("save.work/data"), encoding: .utf8), "sentinel")
+        XCTAssertEqual(try String(contentsOf: location.root.appendingPathComponent("save.sync"), encoding: .utf8), "sync")
         try tx.restore(backup, location: location, identity: h.identity)
-        XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("obsolete")), "old")
+        XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("obsolete"), encoding: .utf8), "old")
         XCTAssertNoThrow(try tx.recover(location: location))
     }
     /// nxnative e6048dea: a cut-short cloud pull leaves `save.pull`; the game's next start puts this Mac's save back,
@@ -42,8 +42,8 @@ final class SaveTransactionTests: XCTestCase {
         XCTAssertThrowsError(try tx.restore(backup, location: location, identity: h.identity)) {
             XCTAssertEqual($0 as? SaveFailure, .cloudPullPending)
         }
-        XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("data")), "mine")
-        XCTAssertEqual(try String(contentsOf: location.cloudPullJournal), "journal")
+        XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("data"), encoding: .utf8), "mine")
+        XCTAssertEqual(try String(contentsOf: location.cloudPullJournal, encoding: .utf8), "journal")
     }
     func testRestoreRemovesSlotAbsentInSnapshot() throws {
         let h = try SaveTestHome(); defer { h.remove() }
@@ -71,8 +71,8 @@ final class SaveTransactionTests: XCTestCase {
             try restarted.recover(location: location)
             try restarted.recover(location: location)
             let prefix = checkpoint == "committed" ? "target" : "original"
-            XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("data")), prefix + "-account")
-            XCTAssertEqual(try String(contentsOf: location.directory(.device).appendingPathComponent("data")), prefix + "-device")
+            XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("data"), encoding: .utf8), prefix + "-account")
+            XCTAssertEqual(try String(contentsOf: location.directory(.device).appendingPathComponent("data"), encoding: .utf8), prefix + "-device")
         }
     }
     func testRestorePreviewRejectsChangedCurrentSave() throws {
@@ -84,7 +84,7 @@ final class SaveTransactionTests: XCTestCase {
         let preview = try store.stageRestore(snapshot, location: location)
         try h.write("changed while confirming", location.directory(.account).appendingPathComponent("data"))
         XCTAssertThrowsError(try SaveTransaction(store: store, isRunning: { false }).restore(preview, location: location, identity: h.identity))
-        XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("data")), "changed while confirming")
+        XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("data"), encoding: .utf8), "changed while confirming")
         try store.discardRestore(preview, location: location)
     }
     func testRecoveryKeepsUnexpectedExternalChangesAndItsJournal() throws {
@@ -99,7 +99,7 @@ final class SaveTransactionTests: XCTestCase {
         XCTAssertThrowsError(try SaveTransaction(store: store, isRunning: { false }, io: io).restore(target, location: location, identity: h.identity))
         try h.write("external change", file)
         XCTAssertThrowsError(try SaveTransaction(store: store, isRunning: { false }).recover(location: location))
-        XCTAssertEqual(try String(contentsOf: file), "external change")
+        XCTAssertEqual(try String(contentsOf: file, encoding: .utf8), "external change")
         XCTAssertTrue(SaveTransaction.needsRecovery(location: location))
         XCTAssertEqual(try store.list(titleID: h.tid).count, 2)
     }
@@ -135,7 +135,7 @@ final class SaveTransactionTests: XCTestCase {
             let restarted = SaveTransaction(store: store, isRunning: { false })
             try restarted.recover(location: location)
             try restarted.recover(location: location)
-            XCTAssertEqual(try String(contentsOf: file), checkpoint == "committed" ? "imported" : "original")
+            XCTAssertEqual(try String(contentsOf: file, encoding: .utf8), checkpoint == "committed" ? "imported" : "original")
             XCTAssertFalse(SaveTransaction.needsRecovery(location: location))
             XCTAssertNoThrow(try store.verify(snapshotID: backup.id, titleID: h.tid))
         }

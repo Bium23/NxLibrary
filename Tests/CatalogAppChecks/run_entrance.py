@@ -41,24 +41,17 @@ final class CAMetalDrawable {
 }
 final class CAMetalLayer {
     var drawableSize = CGSize(width: 1920, height: 1080)
-    var next: CAMetalDrawable?
-    func nextDrawable() -> CAMetalDrawable? { next }
 }
 final class MoonlightEngine {
     static let breathPeriod = 1.0
     static func uniforms(width: Int, height: Int, time: Float, breath: Float, colors: Int) -> Int { 0 }
     var submissions = 0
     func render(into drawable: CAMetalDrawable, uniforms: Int) { submissions += 1 }
-    func render(into layer: CAMetalLayer, uniforms: Int) {
-        guard let drawable = layer.nextDrawable() else { return }
-        render(into: drawable, uniforms: uniforms)
-    }
 }
 final class MoonlightHost {
     struct State {
         var moving = false
         var lastTick: Double?
-        var lastFrame: Double?
         var clock = 0.0
         var from: Int?
         var stillPending = false
@@ -73,7 +66,7 @@ final class MoonlightHost {
     func blending(at now: Double) -> Bool { false }
     func updateLink() {}
     func traceFirstPresentation(_ drawable: CAMetalDrawable) {}
-    func draw(_ drawable: CAMetalDrawable? = nil) { renderFrame(at: 1, drawable: drawable) }
+    func draw(_ drawable: CAMetalDrawable) { renderFrame(at: 1, drawable: drawable) }
     // ACTUAL_RENDER
     // ACTUAL_READY
 }
@@ -125,20 +118,15 @@ final class InputHost {
             require(input.handled.isEmpty && input.entrance == .covered,
                     "A real welcome/Setup cover must still block Spotlight input")
         }
-        for supplied in [false, true] {
+        do {
             MoonlightHost.firstFrameAnnounced = false
             LaunchReveal.frames = 0
             let renderer = MoonlightHost()
-            renderer.draw()
-            for _ in 0..<20 { await Task.yield() }
-            require(LaunchReveal.frames == 0 && renderer.engine.submissions == 0,
-                    "A missing drawable must not announce a ready frame")
             let drawable = CAMetalDrawable()
-            if supplied { renderer.draw(drawable) }
-            else { renderer.metalLayer.next = drawable; renderer.draw() }
+            renderer.draw(drawable)
             for _ in 0..<20 { await Task.yield() }
             require(renderer.engine.submissions == 1 && LaunchReveal.frames == 0,
-                    "Submitting a frame must not announce presentation (supplied=\(supplied))")
+                    "Submitting a frame must not announce presentation")
             drawable.present()
             for _ in 0..<100 where LaunchReveal.frames == 0 { await Task.yield() }
             require(LaunchReveal.frames == 1, "The first presented drawable must release the reveal gate")
@@ -149,7 +137,7 @@ final class InputHost {
             require(LaunchReveal.frames == 1, "Later frames must not release the reveal gate twice")
         }
         if failures > 0 { exit(1) }
-        print("Entrance checks passed: no skip during the entrance, covers, missing drawable and presentation readiness on both render paths.")
+        print("Entrance checks passed: no skip during the entrance, covers, presentation readiness of the link's drawable.")
     }
 }
 '''

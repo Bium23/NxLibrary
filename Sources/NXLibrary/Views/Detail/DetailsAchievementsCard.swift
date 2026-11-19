@@ -19,9 +19,9 @@ struct DetailsAchievementsCard: View {
     /// What the card shows: set from hover and focus inside its own animation, so only the fan, the text swap
     /// and the light animate (an `.animation` on the card would catch every other change in the same update).
     @State private var active = false
-    /// The fan and the text's slide move only where the card can move as one block (`GlideGroup`);
-    /// elsewhere, as with Reduce motion, only the text and the light change.
-    private var moves: Bool { !reduceMotion && GlideGroup.available }
+    /// The fan and the text's slide move with the card as one block (`GlideGroup`); with Reduce motion only the
+    /// text and the light change.
+    private var moves: Bool { !reduceMotion }
     private var fanned: Bool { active && moves }
     /// Slow and soft, and never past its target (a spring overshot); interrupted, it blends towards the new end.
     private var reveal: Animation { !moves ? SeleneTheme.quick : .timingCurve(0.22, 1, 0.36, 1, duration: 0.45) }
@@ -76,7 +76,7 @@ struct DetailsAchievementsCard: View {
             .contentShape(shape)
             .onHover { hovered = $0 }
             .onAppear { active = hovered || focused }
-            .onChange(of: hovered || focused) { wanted in
+            .onChange(of: hovered || focused) { _, wanted in
                 withAnimation(reveal) { active = wanted }
             }
             .seleneRowFocus(focused, radius: canvas.u(Self.radius))
@@ -102,8 +102,9 @@ extension DetailsAchievementsCard {
             if complete {
                 Text(AchievementTier.arcane.displayName()).foregroundColor(SeleneTheme.ink)
             } else {
-                Text("\(summary.unlocked)").foregroundColor(SeleneTheme.ink)
-                    + Text("/\(summary.total)").foregroundColor(SeleneTheme.ink60)
+                let unlocked = Text("\(summary.unlocked)").foregroundColor(SeleneTheme.ink)
+                let total = Text("/\(summary.total)").foregroundColor(SeleneTheme.ink60)
+                Text("\(unlocked)\(total)")
             }
         }
         .seleneFont(22, .bold)

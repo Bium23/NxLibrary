@@ -68,7 +68,7 @@ struct LaunchScreenView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(L10n.format("Starting %@", [String(describing: game.name)]))
         .onAppear(perform: appear)
-        .onChange(of: state.isReady) { ready in
+        .onChange(of: state.isReady) { _, ready in
             if ready { finish() }
         }
         .task(id: game.id) { await loadArt() }

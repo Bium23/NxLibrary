@@ -26,7 +26,7 @@ struct SettingsSidebar: View {
                 }
                 .scrollIndicators(.hidden)
                 .onAppear { proxy.scrollTo(selection) }
-                .onChange(of: selection) { section in proxy.scrollTo(section) }
+                .onChange(of: selection) { _, section in proxy.scrollTo(section) }
             }
         }
     }

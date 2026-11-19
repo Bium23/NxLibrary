@@ -71,7 +71,7 @@ struct MoreSettingsPanel: View {
             }
             .scrollIndicators(.hidden)
             .frame(maxHeight: canvas.u(680))
-            .onChange(of: focus) { index in
+            .onChange(of: focus) { _, index in
                 guard rows.indices.contains(index) else { return }
                 withAnimation(reduceMotion ? nil : SeleneTheme.quick) { proxy.scrollTo(rows[index].env, anchor: .center) }
             }

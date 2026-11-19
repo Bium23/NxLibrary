@@ -398,14 +398,14 @@ struct AppShellView: View {
             steamWatcher.stop()
             removeGestureKeyMonitor()
         }
-        .onChange(of: viewModel.libraryGames) { games in
+        .onChange(of: viewModel.libraryGames) { _, games in
             runningGames.setGames(games)
         }
-        .onChange(of: viewModel.catalogGames) { games in
+        .onChange(of: viewModel.catalogGames) { _, games in
             SteamPlayCoordinator.shared.setGames(games, sources: viewModel.catalogSourceConfigurations)
             SteamPlaytimeCoordinator.shared.setGames(games, sources: viewModel.catalogSourceConfigurations)
         }
-        .onChange(of: viewModel.catalogSourceConfigurations) { sources in
+        .onChange(of: viewModel.catalogSourceConfigurations) { _, sources in
             SteamPlayCoordinator.shared.setGames(viewModel.catalogGames, sources: sources)
             SteamPlaytimeCoordinator.shared.setGames(viewModel.catalogGames, sources: sources)
             SteamAchievementsStore.shared.setSources(sources)
@@ -435,7 +435,7 @@ struct AppShellView: View {
                 SteamPlayCoordinator.shared.launchScreenClosed(screen.gameID)
             }
         }
-        .onChange(of: viewModel.launchOverlay?.game.id) { shown in
+        .onChange(of: viewModel.launchOverlay?.game.id) { _, shown in
             // The screen faded, the player dismissed it or another game's took its place: Arcane stops holding
             // the front for the Steam game.
             if let screen = SteamPlayCoordinator.shared.launchScreen, shown != screen.gameID {
@@ -446,13 +446,13 @@ struct AppShellView: View {
             sessionCard.becameActive()
             SteamPlaytimeCoordinator.shared.refresh()
         }
-        .onChange(of: settings.settings.showsSessionCard) { on in
+        .onChange(of: settings.settings.showsSessionCard) { _, on in
             if !on { sessionCard.clear() }
         }
-        .onChange(of: showsUpdateOffer) { viewModel.isUpdateOfferOpen = $0 }
+        .onChange(of: showsUpdateOffer) { viewModel.isUpdateOfferOpen = $1 }
         // Closing clears it once the fade has ended (`closeWelcome`), so nothing under it moves or takes input before.
-        .onChange(of: showsWelcome) { if $0 { viewModel.isWelcomeOpen = true } }
-        .onChange(of: router.route) { route in
+        .onChange(of: showsWelcome) { if $1 { viewModel.isWelcomeOpen = true } }
+        .onChange(of: router.route) { _, route in
             recordLastHome(route)
             switch route {
             case .addGame:
@@ -475,8 +475,8 @@ struct AppShellView: View {
         .environment(\.locale, localization.context.formatLocale)
         .environment(\.nxAppLocale, localization.context)
         .environment(\.catalogPersonalizations, viewModel.personalizations)
-        .onChange(of: settings.settings.appLanguage) { _ in updateLocale() }
-        .onChange(of: settings.settings.appRegion) { _ in updateLocale() }
+        .onChange(of: settings.settings.appLanguage) { updateLocale() }
+        .onChange(of: settings.settings.appRegion) { updateLocale() }
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryPlayFocused)) { _ in
             guard !router.isMenuPresented,
                   nativeMenuAvailability.play,
@@ -602,10 +602,10 @@ struct AppShellView: View {
                 router.back()
             }
         }
-        .onChange(of: viewModel.alertMessage) { _ in
+        .onChange(of: viewModel.alertMessage) {
             presentLegacyNotice()
         }
-        .onChange(of: viewModel.setupCompleted) { done in
+        .onChange(of: viewModel.setupCompleted) { _, done in
             // The Steam switch of `found` applies however the first launch ends (Open library, Porting, Skip).
             if done, let choice = viewModel.firstRunSetup.steamChoice,
                choice != sources.configuration.isEnabled {
@@ -617,7 +617,7 @@ struct AppShellView: View {
             }
         }
         .task(id: welcomeTrigger) { await presentWelcomeIfDue() }
-        .onChange(of: viewModel.settingsNotice?.id) { id in
+        .onChange(of: viewModel.settingsNotice?.id) { _, id in
             if id == nil { presentLegacyNotice() }
         }
     }
@@ -1351,22 +1351,22 @@ private struct SoundCueHooks: ViewModifier {
             .onReceive(NotificationCenter.default.publisher(for: .nxSeleneImportFinished)) { _ in
                 ThemeStore.shared.reloadWallpapers()
             }
-            .onChange(of: router.isMenuPresented) { open in
+            .onChange(of: router.isMenuPresented) { _, open in
                 SoundEffectService.shared.play(open ? .openPanel : .back)
             }
-            .onChange(of: viewModel.optionsGameID) { id in
+            .onChange(of: viewModel.optionsGameID) { _, id in
                 SoundEffectService.shared.play(id == nil ? .back : .openPanel)
             }
-            .onChange(of: viewModel.gameToClose?.id) { id in
+            .onChange(of: viewModel.gameToClose?.id) { _, id in
                 if id != nil { SoundEffectService.shared.play(.alert) }
             }
-            .onChange(of: viewModel.gameToRemove?.id) { id in
+            .onChange(of: viewModel.gameToRemove?.id) { _, id in
                 if id != nil { SoundEffectService.shared.play(.alert) }
             }
-            .onChange(of: viewModel.gameWithInstallFailure?.id) { id in
+            .onChange(of: viewModel.gameWithInstallFailure?.id) { _, id in
                 if id != nil { SoundEffectService.shared.play(.alert) }
             }
-            .onChange(of: router.route) { route in
+            .onChange(of: router.route) { _, route in
                 if router.isReturningFromBack {
                     SoundEffectService.shared.play(.back)
                 } else if case .settings = route {

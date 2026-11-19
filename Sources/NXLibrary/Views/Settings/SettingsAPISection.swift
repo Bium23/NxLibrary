@@ -43,7 +43,7 @@ struct SettingsAPISection: View {
             }
         }
         .onAppear(perform: publishActions)
-        .onChange(of: igdb.revision) { _ in publishActions() }
+        .onChange(of: igdb.revision) { publishActions() }
     }
     private func steamGridDBAction() {
         if viewModel.hasSteamGridDBKey { viewModel.removeSteamGridDBKey() }

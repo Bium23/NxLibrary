@@ -171,12 +171,12 @@ struct SettingsAboutSection: View {
             }
         }
         .onAppear(perform: publishActions)
-        .onChange(of: updater.state) { _ in publishActions() }
-        .onChange(of: viewModel.isBuilding) { _ in publishActions() }
-        .onChange(of: viewModel.isCleaningStorage) { _ in publishActions() }
-        .onChange(of: viewModel.hasActiveSaveOperations) { _ in publishActions() }
-        .onChange(of: viewModel.isUpdatingApp) { _ in publishActions() }
-        .onChange(of: viewModel.runningGameCount) { _ in publishActions() }
+        .onChange(of: updater.state) { publishActions() }
+        .onChange(of: viewModel.isBuilding) { publishActions() }
+        .onChange(of: viewModel.isCleaningStorage) { publishActions() }
+        .onChange(of: viewModel.hasActiveSaveOperations) { publishActions() }
+        .onChange(of: viewModel.isUpdatingApp) { publishActions() }
+        .onChange(of: viewModel.runningGameCount) { publishActions() }
     }
 
     private var supportButton: some View {

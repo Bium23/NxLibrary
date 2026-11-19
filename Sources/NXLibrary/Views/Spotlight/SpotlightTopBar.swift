@@ -36,7 +36,7 @@ struct SpotlightTopBar: View {
         }
         .padding(.horizontal, canvas.u(64))
         .frame(height: canvas.u(110))
-        .onChange(of: filter) { _ in pop() }
+        .onChange(of: filter) { pop() }
     }
 
     private func tab(_ item: LibraryFilter) -> some View {

@@ -83,12 +83,12 @@ struct AddGameView: View {
         .animation(reduceMotion ? nil : SeleneTheme.quick, value: dropTargeted)
         .onAppear(perform: appear)
         .onDisappear(perform: removeKeyMonitor)
-        .onChange(of: reviewSelectionID) { _ in reviewEntryIfReady() }
-        .onChange(of: porting.buildWizardStep) { step in
+        .onChange(of: reviewSelectionID) { reviewEntryIfReady() }
+        .onChange(of: porting.buildWizardStep) { _, step in
             editing = nil
             focusedID = defaultRowID(for: step)
         }
-        .onChange(of: porting.canAddSelectedGame) { canAdd in
+        .onChange(of: porting.canAddSelectedGame) { _, canAdd in
             guard porting.buildWizardStep == 1 else { return }
             reviewEntryIfReady()
             guard porting.buildWizardStep == 1 else { return }
@@ -151,7 +151,7 @@ struct AddGameView: View {
                             .frame(height: canvas.u(28))
                     }
                 )
-                .onChange(of: focused?.id) { id in
+                .onChange(of: focused?.id) { _, id in
                     guard let id else { return }
                     withAnimation(reduceMotion ? nil : SeleneTheme.quick) {
                         proxy.scrollTo(id, anchor: .center)

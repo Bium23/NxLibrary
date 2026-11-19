@@ -237,7 +237,7 @@ struct GameOptionsView: View {
             guard let action = note.object as? GamepadAction else { return }
             handleGamepad(action)
         }
-        .onChange(of: config) { newValue in
+        .onChange(of: config) { _, newValue in
             viewModel.runtimeSettings.saveRuntimeConfig(newValue, for: game)
         }
     }
@@ -273,7 +273,7 @@ struct GameOptionsView: View {
                 }
                 .scrollIndicators(.hidden)
                 .frame(maxHeight: canvas.u(680))
-                .onChange(of: focusedRow) { row in
+                .onChange(of: focusedRow) { _, row in
                     // A focus that followed the wheel leaves the list where the user put it.
                     if scrollBox.holdScroll { scrollBox.holdScroll = false; return }
                     guard let row else { return }

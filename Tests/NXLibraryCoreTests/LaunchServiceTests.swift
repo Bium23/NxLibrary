@@ -26,7 +26,7 @@ final class LaunchServiceTests: XCTestCase {
         let launcher = FakeLauncher()
         let service = LaunchService(launcher: launcher)
         try service.writeEnvironment(settings: settings, titleId: "0100000000010000", baseDirectory: dir)
-        let env = try String(contentsOf: dir.appendingPathComponent("0100000000010000/env.txt"))
+        let env = try String(contentsOf: dir.appendingPathComponent("0100000000010000/env.txt"), encoding: .utf8)
         XCTAssertTrue(env.contains("DM_FPS_TARGET=30"))
         XCTAssertTrue(env.contains("DM_METAL_HUD=1"))
         var launched = false

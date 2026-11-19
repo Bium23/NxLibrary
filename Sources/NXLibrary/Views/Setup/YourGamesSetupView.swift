@@ -92,7 +92,7 @@ struct YourGamesSetupView: View {
         }
         .frame(width: canvas.size.width, height: canvas.size.height)
         .onAppear(perform: placeInitialFocus)
-        .onChange(of: viewModel.isScanningLibrary) { _ in placeInitialFocus() }
+        .onChange(of: viewModel.isScanningLibrary) { placeInitialFocus() }
         .onReceive(NotificationCenter.default.publisher(for: .nxSetupCheckGamepadAction)) { note in
             guard let action = note.object as? GamepadAction,
                   viewModel.showSetupCheck, viewModel.firstRunSetup.page == .games,

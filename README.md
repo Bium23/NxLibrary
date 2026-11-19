@@ -13,7 +13,7 @@
 
 <p align="center">
   <a href="#project-status"><img src="https://img.shields.io/badge/status-alpha-DB806B?style=flat" alt="Status: alpha"></a>
-  <a href="#requirements"><img src="https://img.shields.io/badge/macOS-13%2B-3D4754?style=flat" alt="macOS 13 or later"></a>
+  <a href="#requirements"><img src="https://img.shields.io/badge/macOS-26%2B-3D4754?style=flat" alt="macOS 26 or later"></a>
   <a href="#requirements"><img src="https://img.shields.io/badge/Apple-silicon-3D4754?style=flat" alt="Apple silicon"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-64816C?style=flat" alt="MIT license"></a>
 </p>
@@ -74,7 +74,7 @@ Porting uses nxnative commit `461a5f9f` with Xcode 27.2 and Metal 32023.922. Por
 
 | Requirement | Details |
 |---|---|
-| **Arcane library** | Apple silicon, macOS 13 or later. Steam and each game can require a newer macOS version. |
+| **Arcane library** | Apple silicon, macOS 26 or later. Steam and each game can require a newer macOS version. |
 | **Porting and nxnative game apps** | macOS 26.6 or later for the Mac hosts built by the pinned engine. This is separate from Arcane's own minimum. |
 | **Xcode for porting** | 27.2 or later, with the Metal compiler certified for the pinned engine. Browsing the library and using Steam do not require Xcode. |
 | **Porting engine** | nxnative at the pinned commit. Setup can prepare the checkout. To select an existing folder, use **Settings → Porting → Setup and engine**. |

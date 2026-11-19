@@ -91,16 +91,16 @@ struct SettingsStorageSection: View {
             artworkBytes = artwork.cacheSize()
         }
         .onAppear(perform: publishActions)
-        .onChange(of: viewModel.isBuilding) { building in
+        .onChange(of: viewModel.isBuilding) { _, building in
             publishActions()
             if !building { viewModel.refreshStorageUsage() }
         }
-        .onChange(of: viewModel.isCleaningStorage) { _ in publishActions() }
-        .onChange(of: viewModel.isCalculatingStorage) { _ in publishActions() }
-        .onChange(of: viewModel.isUpdatingApp) { _ in publishActions() }
-        .onChange(of: viewModel.storageSnapshot) { _ in publishActions() }
-        .onChange(of: viewModel.libraryGames) { _ in viewModel.refreshStorageUsage() }
-        .onChange(of: viewModel.libraryFolder) { _ in viewModel.refreshStorageUsage() }
+        .onChange(of: viewModel.isCleaningStorage) { publishActions() }
+        .onChange(of: viewModel.isCalculatingStorage) { publishActions() }
+        .onChange(of: viewModel.isUpdatingApp) { publishActions() }
+        .onChange(of: viewModel.storageSnapshot) { publishActions() }
+        .onChange(of: viewModel.libraryGames) { viewModel.refreshStorageUsage() }
+        .onChange(of: viewModel.libraryFolder) { viewModel.refreshStorageUsage() }
     }
 
     private func confirmLogsCleanup() {

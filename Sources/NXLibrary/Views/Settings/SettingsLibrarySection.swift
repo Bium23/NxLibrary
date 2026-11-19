@@ -97,7 +97,7 @@ struct SettingsLibrarySection: View {
             }
         }
         .onAppear(perform: publishActions)
-        .onChange(of: viewModel.isScanningLibrary) { _ in publishActions() }
+        .onChange(of: viewModel.isScanningLibrary) { publishActions() }
     }
 
     private func publishActions() {

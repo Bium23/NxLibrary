@@ -29,7 +29,7 @@ final class RyujinxSaveImportTests: XCTestCase {
             XCTAssertEqual(preview.fileCount, 2)
             let backup = try SaveTransaction(store: store, isRunning: { false }).importSave(preview, location: location, identity: h.identity)
             XCTAssertNoThrow(try store.verify(snapshotID: backup.id, titleID: h.tid))
-            XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("SaveSlot1/progress")), "progress")
+            XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("SaveSlot1/progress"), encoding: .utf8), "progress")
             XCTAssertFalse(FileManager.default.fileExists(atPath: location.directory(.account).appendingPathComponent("ExtraData0").path))
         }
     }
@@ -63,9 +63,9 @@ final class RyujinxSaveImportTests: XCTestCase {
             let identity = SaveIdentity(titleID: titleID, gameName: "Synthetic \(titleID)", version: nil, buildID: nil)
             let backup = try SaveTransaction(store: store, isRunning: { false })
                 .importSave(preview, location: location, identity: identity)
-            XCTAssertEqual(try String(contentsOf: location.directory(slot).appendingPathComponent(path)), "progress-\(titleID)")
-            XCTAssertEqual(try String(contentsOf: location.directory(slot).appendingPathComponent("SaveSlot1/progress")), "progress")
-            XCTAssertEqual(try String(contentsOf: untouched), "keep-\(titleID)")
+            XCTAssertEqual(try String(contentsOf: location.directory(slot).appendingPathComponent(path), encoding: .utf8), "progress-\(titleID)")
+            XCTAssertEqual(try String(contentsOf: location.directory(slot).appendingPathComponent("SaveSlot1/progress"), encoding: .utf8), "progress")
+            XCTAssertEqual(try String(contentsOf: untouched, encoding: .utf8), "keep-\(titleID)")
             XCTAssertEqual(backup.identity.titleID, titleID)
             XCTAssertNoThrow(try store.verify(snapshotID: backup.id, titleID: titleID))
             XCTAssertFalse(SaveTransaction.needsRecovery(location: location))

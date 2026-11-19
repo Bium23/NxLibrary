@@ -342,9 +342,9 @@ final class AppUpdateTests: XCTestCase {
             let staged = try makeApp(in: dir.appendingPathComponent(UUID().uuidString), marker: "candidate")
             let placed = try AppUpdate.install(staged, over: current, trashOld: false)
             XCTAssertEqual(placed, current)
-            XCTAssertTrue(try String(contentsOf: keptNew.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("user-new"))
-            XCTAssertTrue(try String(contentsOf: keptOld.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("user-old"))
-            XCTAssertTrue(try String(contentsOf: current.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("candidate"))
+            XCTAssertTrue(try String(contentsOf: keptNew.appendingPathComponent("Contents/MacOS/NXLibrary"), encoding: .utf8).contains("user-new"))
+            XCTAssertTrue(try String(contentsOf: keptOld.appendingPathComponent("Contents/MacOS/NXLibrary"), encoding: .utf8).contains("user-old"))
+            XCTAssertTrue(try String(contentsOf: current.appendingPathComponent("Contents/MacOS/NXLibrary"), encoding: .utf8).contains("candidate"))
             XCTAssertTrue(FileManager.default.fileExists(atPath: staged.path), "the verified download remains available")
         }
     }
@@ -366,7 +366,7 @@ final class AppUpdateTests: XCTestCase {
         XCTAssertThrowsError(try AppUpdate.install(staged, over: current, trashOld: false,
                                                   fileManager: UpdateCopyFailure(), io: BuildInstallIO()))
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: installed.path), ["NXLibrary.app"])
-        XCTAssertTrue(try String(contentsOf: current.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("current"))
+        XCTAssertTrue(try String(contentsOf: current.appendingPathComponent("Contents/MacOS/NXLibrary"), encoding: .utf8).contains("current"))
     }
 
     func testPublicationFailureKeepsCurrentAndCandidate() throws {
@@ -377,7 +377,7 @@ final class AppUpdateTests: XCTestCase {
         io.publish = { _, _, _ in throw CocoaError(.fileWriteUnknown) }
         XCTAssertThrowsError(try AppUpdate.install(staged, over: current, trashOld: false, fileManager: .default, io: io))
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: installed.path), ["NXLibrary.app"])
-        XCTAssertTrue(try String(contentsOf: current.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("current"))
+        XCTAssertTrue(try String(contentsOf: current.appendingPathComponent("Contents/MacOS/NXLibrary"), encoding: .utf8).contains("current"))
         XCTAssertTrue(FileManager.default.fileExists(atPath: staged.path))
     }
 
@@ -387,7 +387,7 @@ final class AppUpdateTests: XCTestCase {
         var io = BuildInstallIO()
         io.afterPublish = { throw CocoaError(.fileWriteUnknown) }
         XCTAssertEqual(try AppUpdate.install(staged, over: current, trashOld: false, fileManager: .default, io: io), current)
-        XCTAssertTrue(try String(contentsOf: current.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("candidate"))
+        XCTAssertTrue(try String(contentsOf: current.appendingPathComponent("Contents/MacOS/NXLibrary"), encoding: .utf8).contains("candidate"))
     }
 
     func testTrashFailureRetainsPreviousAppWithoutFailingSuccessfulInstall() throws {
@@ -397,17 +397,17 @@ final class AppUpdateTests: XCTestCase {
         let fm = UpdateTrashFailure()
         XCTAssertEqual(try AppUpdate.install(staged, over: current, trashOld: true, fileManager: fm, io: BuildInstallIO()), current)
         let retained = try XCTUnwrap(fm.retained)
-        XCTAssertTrue(try String(contentsOf: retained.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("current"))
+        XCTAssertTrue(try String(contentsOf: retained.appendingPathComponent("Contents/MacOS/NXLibrary"), encoding: .utf8).contains("current"))
         XCTAssertEqual(retained.deletingLastPathComponent().deletingLastPathComponent().path, installed.path)
-        XCTAssertTrue(try String(contentsOf: current.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("candidate"))
+        XCTAssertTrue(try String(contentsOf: current.appendingPathComponent("Contents/MacOS/NXLibrary"), encoding: .utf8).contains("candidate"))
         XCTAssertEqual(try fm.attributesOfItem(atPath: retained.path)[.systemNumber] as? NSNumber,
                        try fm.attributesOfItem(atPath: current.path)[.systemNumber] as? NSNumber)
         let next = try makeApp(in: dir.appendingPathComponent("next-download"), marker: "next")
-        try AppUpdate.install(next, over: current, trashOld: true, fileManager: fm, io: BuildInstallIO())
+        _ = try AppUpdate.install(next, over: current, trashOld: true, fileManager: fm, io: BuildInstallIO())
         let second = try XCTUnwrap(fm.retained)
         XCTAssertNotEqual(second.deletingLastPathComponent(), retained.deletingLastPathComponent())
-        XCTAssertTrue(try String(contentsOf: retained.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("current"))
-        XCTAssertTrue(try String(contentsOf: second.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("candidate"))
+        XCTAssertTrue(try String(contentsOf: retained.appendingPathComponent("Contents/MacOS/NXLibrary"), encoding: .utf8).contains("current"))
+        XCTAssertTrue(try String(contentsOf: second.appendingPathComponent("Contents/MacOS/NXLibrary"), encoding: .utf8).contains("candidate"))
     }
 
     func testAppChangedDuringCopyIsNotReplaced() throws {
@@ -419,7 +419,7 @@ final class AppUpdateTests: XCTestCase {
             try FileManager.default.createDirectory(at: current, withIntermediateDirectories: false)
         }
         XCTAssertThrowsError(try AppUpdate.install(staged, over: current, trashOld: false, fileManager: fm, io: BuildInstallIO()))
-        XCTAssertTrue(try String(contentsOf: moved.appendingPathComponent("Contents/MacOS/NXLibrary")).contains("current"))
+        XCTAssertTrue(try String(contentsOf: moved.appendingPathComponent("Contents/MacOS/NXLibrary"), encoding: .utf8).contains("current"))
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: current.path), [])
     }
 

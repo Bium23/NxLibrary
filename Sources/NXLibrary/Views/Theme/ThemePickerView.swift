@@ -293,7 +293,7 @@ struct ThemePickerView: View {
                                                      .init(color: .black, location: 1 - 150 / 500),
                                                      .init(color: .clear, location: 1)],
                                              startPoint: .top, endPoint: .bottom))
-                        .onChange(of: state.backgroundIndex) { index in
+                        .onChange(of: state.backgroundIndex) { _, index in
                             withAnimation(reduceMotion ? nil : SeleneTheme.quick) {
                                 proxy.scrollTo(index - index % ThemePickerState.backgroundColumns, anchor: .center)
                             }

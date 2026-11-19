@@ -72,7 +72,7 @@ struct SpotlightGameInfoView: View {
         }
         .frame(width: canvas.u(900), alignment: .leading)
         .onAppear { reveal() }
-        .onChange(of: game.id) { _ in reveal() }
+        .onChange(of: game.id) { reveal() }
     }
 
     private var logoArea: some View {

@@ -149,14 +149,14 @@ struct SettingsEngineSection: View {
             setup.prepareBuildEnvironmentIfNeeded()
             publishActions()
         }
-        .onChange(of: setup.allowUntestedToolchain) { _ in publishActions() }
-        .onChange(of: setup.compatibilityReport?.ok) { _ in publishActions() }
-        .onChange(of: setup.upstreamState) { _ in publishActions() }
-        .onChange(of: setup.newestEngineChoice) { _ in publishActions() }
-        .onChange(of: setup.newestEngineReadiness) { _ in publishActions() }
-        .onChange(of: setup.isSwitchingEngine) { _ in publishActions() }
-        .onChange(of: viewModel.isBuilding) { _ in publishActions() }
-        .onChange(of: viewModel.isUpdatingApp) { _ in publishActions() }
+        .onChange(of: setup.allowUntestedToolchain) { publishActions() }
+        .onChange(of: setup.compatibilityReport?.ok) { publishActions() }
+        .onChange(of: setup.upstreamState) { publishActions() }
+        .onChange(of: setup.newestEngineChoice) { publishActions() }
+        .onChange(of: setup.newestEngineReadiness) { publishActions() }
+        .onChange(of: setup.isSwitchingEngine) { publishActions() }
+        .onChange(of: viewModel.isBuilding) { publishActions() }
+        .onChange(of: viewModel.isUpdatingApp) { publishActions() }
     }
 
     private func confirmOverride() {

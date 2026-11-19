@@ -130,7 +130,7 @@ final class GameArtLoader {
         return NSImage(cgImage: image, size: NSSize(width: CGFloat(image.width), height: CGFloat(image.height)))
     }
 
-    /// The pixels decoded off the main thread. A CGImage crosses between tasks safely, unlike the NSImage made from it.
+    /// The pixels decoded off the main thread, as a CGImage for callers that build their own NSImage.
     nonisolated static func thumbnail(at url: URL, maxPixelSize: Int) async -> CGImage? {
         await Task.detached(priority: .utility) { () -> CGImage? in
             guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }

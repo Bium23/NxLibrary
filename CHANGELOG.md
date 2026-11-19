@@ -13,6 +13,7 @@ See the [validation checklist](docs/working-on-it/validation.md) for the state o
 
 ### Changed
 
+- Arcane now requires **macOS 26 or later**. On an older Mac the current copy keeps working; when it offers this update, the download stops with "needs macOS 26 or later" and nothing is changed.
 - If macOS runs Arcane as a temporary copy, because it was opened where it was downloaded, Arcane says so at launch: that copy can never update itself. **Open Applications** opens the folder to move it to.
 - Updates keep working if the project's GitHub repository is later renamed to **Arcane**: this version also accepts releases served under `Bium23/Arcane`.
 

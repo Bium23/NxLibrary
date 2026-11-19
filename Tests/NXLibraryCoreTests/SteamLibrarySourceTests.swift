@@ -276,7 +276,7 @@ final class SteamLibrarySourceTests: XCTestCase {
         let snapshot = try InstallationFileSnapshot.read(at: file, maximumBytes: 1024)
         try Data("changed".utf8).write(to: file, options: .atomic)
         XCTAssertThrowsError(try snapshot.verifyUnchanged())
-        XCTAssertEqual(try String(contentsOf: file), "changed")
+        XCTAssertEqual(try String(contentsOf: file, encoding: .utf8), "changed")
     }
 
     func testManifestWithoutFullyInstalledIsDownloadingAndNotWalked() throws {

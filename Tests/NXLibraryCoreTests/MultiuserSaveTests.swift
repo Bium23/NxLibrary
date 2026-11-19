@@ -37,8 +37,8 @@ final class MultiuserSaveTests: XCTestCase {
         XCTAssertEqual(safety.schemaVersion, 2)
         XCTAssertTrue(safety.presentSlots.contains(.user3))
         XCTAssertFalse(SaveFiles.exists(location.directory(.user3)))
-        XCTAssertEqual(try String(contentsOf: location.directory(.user2).appendingPathComponent("progress")), "target-user2")
-        XCTAssertEqual(try String(contentsOf: location.directory(.users)), "nxnative-users-1\ntarget")
+        XCTAssertEqual(try String(contentsOf: location.directory(.user2).appendingPathComponent("progress"), encoding: .utf8), "target-user2")
+        XCTAssertEqual(try String(contentsOf: location.directory(.users), encoding: .utf8), "nxnative-users-1\ntarget")
     }
 
     func testLegacyRestorePreservesAdditionalUsersAndRegistry() throws {
@@ -49,10 +49,10 @@ final class MultiuserSaveTests: XCTestCase {
         XCTAssertEqual(legacy.schemaVersion, 1)
         try seed("current", h, location)
         try SaveTransaction(store: store, isRunning: { false }).restore(legacy, location: location, identity: h.identity)
-        XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("progress")), "legacy")
+        XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("progress"), encoding: .utf8), "legacy")
         XCTAssertFalse(SaveFiles.exists(location.directory(.device)))
-        XCTAssertEqual(try String(contentsOf: location.directory(.user8).appendingPathComponent("progress")), "current-user8")
-        XCTAssertEqual(try String(contentsOf: location.directory(.users)), "nxnative-users-1\ncurrent")
+        XCTAssertEqual(try String(contentsOf: location.directory(.user8).appendingPathComponent("progress"), encoding: .utf8), "current-user8")
+        XCTAssertEqual(try String(contentsOf: location.directory(.users), encoding: .utf8), "nxnative-users-1\ncurrent")
     }
 
     func testImportPreservesOtherUsersAndRegistryAndRefusesRegistryAsAnImportTarget() throws {
@@ -64,9 +64,9 @@ final class MultiuserSaveTests: XCTestCase {
         XCTAssertThrowsError(try store.stageImport(source: source, slot: .users, location: location))
         let preview = try store.stageImport(source: source, slot: .account, location: location)
         try SaveTransaction(store: store, isRunning: { false }).importSave(preview, location: location, identity: h.identity)
-        XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("progress")), "imported")
-        XCTAssertEqual(try String(contentsOf: location.directory(.user2).appendingPathComponent("progress")), "current-user2")
-        XCTAssertEqual(try String(contentsOf: location.directory(.users)), "nxnative-users-1\ncurrent")
+        XCTAssertEqual(try String(contentsOf: location.directory(.account).appendingPathComponent("progress"), encoding: .utf8), "imported")
+        XCTAssertEqual(try String(contentsOf: location.directory(.user2).appendingPathComponent("progress"), encoding: .utf8), "current-user2")
+        XCTAssertEqual(try String(contentsOf: location.directory(.users), encoding: .utf8), "nxnative-users-1\ncurrent")
     }
 
     func testRegistryMutationInvalidatesRestorePreview() throws {
@@ -77,7 +77,7 @@ final class MultiuserSaveTests: XCTestCase {
         let preview = try store.stageRestore(snapshot, location: location)
         try h.write("changed outside Arcane", location.directory(.users))
         XCTAssertThrowsError(try SaveTransaction(store: store, isRunning: { false }).restore(preview, location: location, identity: h.identity))
-        XCTAssertEqual(try String(contentsOf: location.directory(.users)), "changed outside Arcane")
+        XCTAssertEqual(try String(contentsOf: location.directory(.users), encoding: .utf8), "changed outside Arcane")
         try store.discardRestore(preview, location: location)
     }
 
@@ -97,9 +97,9 @@ final class MultiuserSaveTests: XCTestCase {
             try restarted.recover(location: location)
             try restarted.recover(location: location)
             let prefix = checkpoint == "committed" ? "target" : "current"
-            XCTAssertEqual(try String(contentsOf: location.directory(.user2).appendingPathComponent("progress")), prefix + "-user2", checkpoint)
-            XCTAssertEqual(try String(contentsOf: location.directory(.users)), "nxnative-users-1\n" + prefix, checkpoint)
-            XCTAssertEqual(try String(contentsOf: location.root.appendingPathComponent("save_user2.work/file")), "working")
+            XCTAssertEqual(try String(contentsOf: location.directory(.user2).appendingPathComponent("progress"), encoding: .utf8), prefix + "-user2", checkpoint)
+            XCTAssertEqual(try String(contentsOf: location.directory(.users), encoding: .utf8), "nxnative-users-1\n" + prefix, checkpoint)
+            XCTAssertEqual(try String(contentsOf: location.root.appendingPathComponent("save_user2.work/file"), encoding: .utf8), "working")
         }
     }
 
@@ -117,9 +117,9 @@ final class MultiuserSaveTests: XCTestCase {
         try h.write("external", location.directory(.user2).appendingPathComponent("progress"))
         try h.write("registry", location.directory(.users))
         try SaveTransaction(store: store, isRunning: { false }).recover(location: location)
-        XCTAssertEqual(try String(contentsOf: account), "original")
-        XCTAssertEqual(try String(contentsOf: location.directory(.user2).appendingPathComponent("progress")), "external")
-        XCTAssertEqual(try String(contentsOf: location.directory(.users)), "registry")
+        XCTAssertEqual(try String(contentsOf: account, encoding: .utf8), "original")
+        XCTAssertEqual(try String(contentsOf: location.directory(.user2).appendingPathComponent("progress"), encoding: .utf8), "external")
+        XCTAssertEqual(try String(contentsOf: location.directory(.users), encoding: .utf8), "registry")
     }
 
     func testRegistryDirectoryAndLinkAndOversizedFileAreRefused() throws {
@@ -161,7 +161,7 @@ final class MultiuserSaveTests: XCTestCase {
             .restore(target, location: location, identity: h.identity))
         XCTAssertTrue(SaveTransaction.needsRecovery(location: location))
         XCTAssertThrowsError(try SaveTransaction(store: store, isRunning: { false }).recover(location: location))
-        XCTAssertEqual(try String(contentsOf: location.directory(.users)), "external")
+        XCTAssertEqual(try String(contentsOf: location.directory(.users), encoding: .utf8), "external")
     }
 
     func testChangedDisplacedRegistryIsNeverDeletedDuringCleanupOrRecovery() throws {
@@ -184,7 +184,7 @@ final class MultiuserSaveTests: XCTestCase {
         XCTAssertThrowsError(try SaveTransaction(store: store, isRunning: { false }, io: io)
             .restore(target, location: location, identity: h.identity))
         XCTAssertThrowsError(try SaveTransaction(store: store, isRunning: { false }).recover(location: location))
-        XCTAssertEqual(try String(contentsOf: XCTUnwrap(displaced)), "changed open inode")
+        XCTAssertEqual(try String(contentsOf: XCTUnwrap(displaced), encoding: .utf8), "changed open inode")
         XCTAssertTrue(SaveTransaction.needsRecovery(location: location))
     }
 
@@ -223,7 +223,7 @@ final class MultiuserSaveTests: XCTestCase {
             try restarted.recover(location: location)
             try restarted.recover(location: location)
             XCTAssertFalse(SaveTransaction.needsRecovery(location: location))
-            XCTAssertEqual(try String(contentsOf: location.directory(.user2).appendingPathComponent("progress")),
+            XCTAssertEqual(try String(contentsOf: location.directory(.user2).appendingPathComponent("progress"), encoding: .utf8),
                            (committed ? "target" : "original") + "-user2")
         }
     }

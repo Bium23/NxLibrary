@@ -106,14 +106,14 @@ struct SpotlightRowView: View {
         .animation(reduceMotion ? nil : Self.glide, value: liftedKey)
         .animation(.easeOut(duration: 0.3), value: isEmptyFilter)
         .onAppear { scheduleTitle(delay: 0) }
-        .onChange(of: selectedKey) { key in
+        .onChange(of: selectedKey) { _, key in
             if key != lastLifted { lastLifted = nil }
             scheduleTitle(delay: 0.23)
         }
-        .onChange(of: liftedKey) { key in
+        .onChange(of: liftedKey) { _, key in
             if let key { lastLifted = key }
         }
-        .onChange(of: entrance) { phase in
+        .onChange(of: entrance) { _, phase in
             entranceEnd?.cancel()
             guard phase == .playing else { return }
             scheduleTitle(delay: SpotlightEntrance.titleDelay)

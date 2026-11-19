@@ -32,20 +32,20 @@ build = declaration('    func beginBuild(for game:', porting_source)
 accepted = build[build.index('        app.isBuilding = true'):build.index('        self.buildState = .running')]
 shell = (ROOT / 'Sources/NXLibrary/Views/Shell/AppShellView.swift').read_text()
 start = shell.index('.onChange(of: viewModel.setupCompleted)')
-opening = shell.index('{ done in', start)
+opening = shell.index('{ _, done in', start)
 depth, end = 1, opening + 1
 while depth:
     depth += (shell[end] == '{') - (shell[end] == '}')
     end += 1
-finish = shell[opening + len('{ done in'):end - 1]
+finish = shell[opening + len('{ _, done in'):end - 1]
 found = (ROOT / 'Sources/NXLibrary/Views/Setup/FoundGamesSetupView.swift').read_text()
 start = found.index('.onChange(of: findings)')
-opening = found.index('{ found in', start)
+opening = found.index('{ _, found in', start)
 depth, end = 1, opening + 1
 while depth:
     depth += (found[end] == '{') - (found[end] == '}')
     end += 1
-findings_changed = found[opening + len('{ found in'):end - 1]
+findings_changed = found[opening + len('{ _, found in'):end - 1]
 
 host = '''
 import Foundation

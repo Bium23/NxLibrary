@@ -69,13 +69,13 @@ final class DevelopmentProfileTests: XCTestCase {
         let file = profile.supportRoot.appendingPathComponent("settings.json")
         try Data(#"{"showClock":false}"#.utf8).write(to: file)
         XCTAssertFalse(try importer.prepare(profile: profile, sourcePreferences: { XCTFail("must not reread source preferences"); return [:] }, savePreferences: { _ in XCTFail("must not reimport preferences") }))
-        XCTAssertEqual(try String(contentsOf: file), #"{"showClock":false}"#)
+        XCTAssertEqual(try String(contentsOf: file, encoding: .utf8), #"{"showClock":false}"#)
     }
     func testMalformedSourceIsNotRepairedOrActivated() throws {
         let (_, profile) = try fixture()
         try put("broken", "library.json", profile: profile)
         XCTAssertThrowsError(try DevelopmentProfileImporter().prepare(profile: profile, sourcePreferences: { [:] }, savePreferences: { _ in XCTFail() }))
-        XCTAssertEqual(try String(contentsOf: profile.stableSupportRoot.appendingPathComponent("library.json")), "broken")
+        XCTAssertEqual(try String(contentsOf: profile.stableSupportRoot.appendingPathComponent("library.json"), encoding: .utf8), "broken")
         XCTAssertFalse(FileManager.default.fileExists(atPath: profile.supportRoot.path))
     }
     func testSymlinkDoesNotCopyExternalGameData() throws {
@@ -95,7 +95,7 @@ final class DevelopmentProfileTests: XCTestCase {
         var saved: [String: Any] = [:]
         XCTAssertTrue(try importer.prepare(profile: profile, sourcePreferences: { XCTFail("resume uses captured preferences"); return [:] }, savePreferences: { saved = $0 }))
         XCTAssertEqual(saved["NXLibrary_SetupCompleted"] as? Bool, true)
-        XCTAssertEqual(try String(contentsOf: profile.stableSupportRoot.appendingPathComponent("settings.json")), "{}")
+        XCTAssertEqual(try String(contentsOf: profile.stableSupportRoot.appendingPathComponent("settings.json"), encoding: .utf8), "{}")
     }
     func testRefusesAnExistingUnownedDestination() throws {
         let (_, profile) = try fixture()

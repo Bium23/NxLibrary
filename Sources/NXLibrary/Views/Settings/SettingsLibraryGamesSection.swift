@@ -75,7 +75,7 @@ struct SettingsLibraryGamesSection: View {
 
         }
         .onAppear(perform: publishActions)
-        .onChange(of: hiddenGames.map(\.id)) { _ in publishActions() }
+        .onChange(of: hiddenGames.map(\.id)) { publishActions() }
     }
 
     private func publishActions() {

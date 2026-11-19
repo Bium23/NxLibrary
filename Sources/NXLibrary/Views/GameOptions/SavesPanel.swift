@@ -76,8 +76,8 @@ struct SavesPanel: View {
         }
         .onAppear { model.refresh(); installKeyMonitor() }
         .onDisappear { if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }; keyMonitor = nil; model.close() }
-        .onChange(of: model.preview) { _ in confirmFocus = .cancel }
-        .onChange(of: model.restorePreview) { _ in confirmFocus = .cancel }
+        .onChange(of: model.preview) { confirmFocus = .cancel }
+        .onChange(of: model.restorePreview) { confirmFocus = .cancel }
         .task(id: model.importSuccess) {
             guard model.importSuccess != nil else { return }
             do { try await Task.sleep(nanoseconds: 3_000_000_000) }
@@ -117,7 +117,7 @@ struct SavesPanel: View {
                     }
                 }.padding(.top, canvas.u(6)).padding(.bottom, canvas.u(24))
             }.scrollIndicators(.hidden)
-            .onChange(of: focus) { index in
+            .onChange(of: focus) { _, index in
                 guard rows.indices.contains(index) else { return }
                 withAnimation(reduceMotion ? nil : SeleneTheme.quick) { proxy.scrollTo(rows[index], anchor: .center) }
             }

@@ -88,10 +88,10 @@ struct ControlsView: View {
                     .frame(maxWidth: .infinity)
                 }
                 .scrollIndicators(.hidden)
-                .onChange(of: focus) { value in
+                .onChange(of: focus) { _, value in
                     withAnimation(reduceMotion ? nil : SeleneTheme.quick) { proxy.scrollTo(value, anchor: .center) }
                 }
-                .onChange(of: inGame) { _ in focus = 0; proxy.scrollTo(0, anchor: .top) }
+                .onChange(of: inGame) { focus = 0; proxy.scrollTo(0, anchor: .top) }
             }
             SeleneHintsBar(left: [HintItem(.b, L10n.text("Back"), action: onClose)],
                 right: [HintItem(.lb, L10n.text("Library")) { inGame = false }, HintItem(.rb, L10n.text("In game")) { inGame = true }])

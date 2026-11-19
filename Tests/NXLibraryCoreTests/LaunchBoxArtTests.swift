@@ -8,7 +8,7 @@ final class LaunchBoxArtTests: XCTestCase {
         private let lock = NSLock()
         func data(for request: URLRequest) async throws -> (Data, HTTPURLResponse) {
             let url = request.url!.absoluteString
-            lock.lock(); asked.append(url); let body = routes[url]; lock.unlock()
+            let body = lock.withLock { asked.append(url); return routes[url] }
             return (Data((body ?? "").utf8), HTTPURLResponse(url: request.url!, statusCode: body == nil ? 404 : 200,
                                                               httpVersion: nil, headerFields: nil)!)
         }
