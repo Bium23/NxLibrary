@@ -21,7 +21,7 @@ struct SettingsSectionContent: View {
             SettingsSearchSection(settings: settings, onOpenGroup: onOpenGroup,
                                   onSubmit: onSearchSubmit, fieldRequest: searchFieldRequest, onActions: onActions)
         case .changed:
-            SettingsChangedSection(settings: settings, viewModel: viewModel,
+            SettingsChangedSection(settings: settings, viewModel: viewModel, setup: viewModel.setup,
                                    onOpenGroup: onOpenGroup, onActions: onActions)
         case .startUp:
             SettingsStartUpSection(settings: settings, onActions: onActions, onChooseLanguage: onChooseLanguage, onChooseRegion: onChooseRegion)
@@ -53,7 +53,7 @@ struct SettingsSectionContent: View {
         case .portingStorage:
             SettingsPortingStorageSection(viewModel: viewModel, onActions: onActions)
         case .engine:
-            SettingsEngineSection(viewModel: viewModel, settings: settings, onActions: onActions)
+            SettingsEngineSection(viewModel: viewModel, setup: viewModel.setup, settings: settings, onActions: onActions)
         case .keys:
             SettingsKeysSection(viewModel: viewModel, onActions: onActions)
         case .console:

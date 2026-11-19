@@ -173,7 +173,7 @@ extension AddGameView {
         if !viewModel.supportsSources(porting.selectedSources) { return L10n.text("These sources need a newer engine.") }
         if porting.selectedSourcesRequireKeys && !viewModel.isProdKeysValid { return L10n.text("Import prod.keys first.") }
         if porting.keyCheckBlocks, let readiness = porting.keyCheck?.readiness { return "\(readiness.title)." }
-        if !viewModel.isNxnativeValid { return L10n.text("The nxnative checkout is missing.") }
+        if !setup.isNxnativeValid { return L10n.text("The nxnative checkout is missing.") }
         if viewModel.environmentStatus?.canBuild != true { return L10n.text("The build environment is incomplete.") }
         if !viewModel.canPassToolchainGate { return L10n.text("The toolchain is not certified; enable the override in Settings.") }
         return L10n.text("Not available yet.")

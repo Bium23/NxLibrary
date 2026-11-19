@@ -3,6 +3,8 @@ import NXLibraryCore
 
 struct SettingsEngineSection: View {
     @ObservedObject var viewModel: AppViewModel
+    /// Engine, upstream and Newest engine (`SetupModel`), observed on their own.
+    @ObservedObject var setup: SetupModel
     @ObservedObject var settings: AppSettingsStore
     let onActions: ([SettingsRowAction]) -> Void
 
@@ -15,29 +17,29 @@ struct SettingsEngineSection: View {
             SeleneRow("Engine repository",
                       subtitle: "The upstream nxnative checkout used for builds. Updates stay manual.") {
                 HStack(spacing: 10) {
-                    Text(viewModel.nxnativePath.isEmpty ? L10n.text("Not selected") : viewModel.nxnativePath)
+                    Text(setup.nxnativePath.isEmpty ? L10n.text("Not selected") : setup.nxnativePath)
                         .seleneFont(15, .medium)
                         .foregroundColor(SeleneTheme.ink.opacity(0.62))
                         .lineLimit(1)
                         .truncationMode(.middle)
                         .frame(maxWidth: 300, alignment: .trailing)
-                    Button(L10n.text("Change")) { viewModel.selectNxnativeFolder() }
+                    Button(L10n.text("Change")) { setup.selectNxnativeFolder() }
                         .buttonStyle(.plain)
                         .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
                         .disabled(configurationLocked)
                     Button(L10n.text("Reveal")) {
-                        viewModel.revealInFinder(url: URL(fileURLWithPath: viewModel.nxnativePath))
+                        viewModel.revealInFinder(url: URL(fileURLWithPath: setup.nxnativePath))
                     }
                     .buttonStyle(.plain)
                     .seleneFont(14, .semibold)
                     .foregroundColor(SeleneTheme.ink60)
-                    .disabled(!viewModel.isNxnativeValid)
+                    .disabled(!setup.isNxnativeValid)
                 }
             }
 
             SeleneValueRow("Pinned commit", value: seleneShort(viewModel.pinnedEngineCommit))
-            SeleneValueRow("Current commit", value: seleneShort(viewModel.currentEngineCommit))
+            SeleneValueRow("Current commit", value: seleneShort(setup.currentEngineCommit))
 
             SelenePanel(L10n.text("Compatibility"),
                         info: L10n.text("Audits the local engine commit, working tree cleanliness, installed Metal compiler, and required CLI flags against the certified toolchain lock.")) {
@@ -117,14 +119,14 @@ struct SettingsEngineSection: View {
             SeleneButtonRow("Upstream",
                             subtitle: upstreamSubtitle,
                             buttonTitle: upstreamButtonTitle) {
-                viewModel.checkUpstreamChangelog()
+                setup.checkUpstreamChangelog()
             }
 
-            if viewModel.usesNewestEngine || viewModel.newestEngineOffer != nil {
+            if setup.usesNewestEngine || setup.newestEngineOffer != nil {
                 newestEngineRow
             }
 
-            if case .loaded(let status) = viewModel.upstreamState {
+            if case .loaded(let status) = setup.upstreamState {
                 upstreamCommitsPanel(status)
 
                 SeleneButtonRow("Compare",
@@ -132,7 +134,7 @@ struct SettingsEngineSection: View {
                                     ? "The pinned commit matches upstream main."
                                     : "Open the commit comparison on GitHub.",
                                 buttonTitle: "Open GitHub") {
-                    viewModel.openUpstreamCompare()
+                    setup.openUpstreamCompare()
                 }
             }
 
@@ -149,10 +151,10 @@ struct SettingsEngineSection: View {
         }
         .onChange(of: viewModel.allowUntestedToolchain) { _ in publishActions() }
         .onChange(of: viewModel.compatibilityReport?.ok) { _ in publishActions() }
-        .onChange(of: viewModel.upstreamState) { _ in publishActions() }
-        .onChange(of: viewModel.newestEngineChoice) { _ in publishActions() }
-        .onChange(of: viewModel.newestEngineReadiness) { _ in publishActions() }
-        .onChange(of: viewModel.isSwitchingEngine) { _ in publishActions() }
+        .onChange(of: setup.upstreamState) { _ in publishActions() }
+        .onChange(of: setup.newestEngineChoice) { _ in publishActions() }
+        .onChange(of: setup.newestEngineReadiness) { _ in publishActions() }
+        .onChange(of: setup.isSwitchingEngine) { _ in publishActions() }
         .onChange(of: viewModel.isBuilding) { _ in publishActions() }
         .onChange(of: viewModel.isUpdatingApp) { _ in publishActions() }
     }
@@ -182,11 +184,11 @@ struct SettingsEngineSection: View {
     private var canChangeOverride: Bool {
         ToolchainGateCopy.canChangeOverride(certified: viewModel.compatibilityReport?.ok,
             overrideOn: viewModel.allowUntestedToolchain, locked: configurationLocked,
-            newest: viewModel.usesNewestEngine)
+            newest: setup.usesNewestEngine)
     }
 
     private var overrideSubtitle: String {
-        if viewModel.usesNewestEngine { return L10n.text("On while you use the newest engine.") }
+        if setup.usesNewestEngine { return L10n.text("On while you use the newest engine.") }
         guard let report = viewModel.compatibilityReport else {
             return L10n.text("Available when the compatibility gate blocks a build.")
         }
@@ -214,7 +216,7 @@ struct SettingsEngineSection: View {
     }
 
     private var upstreamSubtitle: String {
-        switch viewModel.upstreamState {
+        switch setup.upstreamState {
         case .idle:
             return L10n.text("See how this version's engine compares with seedds/nxnative main.")
         case .checking:
@@ -233,7 +235,7 @@ struct SettingsEngineSection: View {
     private var newestEngineRow: some View {
         SeleneRow("Newest engine", subtitle: newestSubtitle, info: NewestEngineCopy.info) {
             HStack(spacing: 10) {
-                if viewModel.usesNewestEngine {
+                if setup.usesNewestEngine {
                     Circle()
                         .fill(SeleneTheme.untested)
                         .frame(width: 8, height: 8)
@@ -242,20 +244,20 @@ struct SettingsEngineSection: View {
                         .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.untested)
                 }
-                if viewModel.isSwitchingEngine {
+                if setup.isSwitchingEngine {
                     Text(L10n.text("Switching…"))
                         .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink60)
                 } else {
-                    let actions = viewModel.newestEngineActions
+                    let actions = setup.newestEngineActions
                     ForEach(Array(actions.enumerated()), id: \.element) { index, action in
                         // With two buttons, the one Left and Right put the focus on carries the focus ring.
-                        let focused = actions.count > 1 && viewModel.canSwitchEngine
+                        let focused = actions.count > 1 && setup.canSwitchEngine
                             && focusedRowTitle == "Newest engine" && focusedButton == index
                         Button(newestTitle(action)) { newestAction(action) }
                             .buttonStyle(.plain)
                             .seleneFont(15, .semibold)
-                            .foregroundColor(viewModel.canSwitchEngine ? SeleneTheme.glyph : SeleneTheme.ink60)
+                            .foregroundColor(setup.canSwitchEngine ? SeleneTheme.glyph : SeleneTheme.ink60)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
                             .overlay {
@@ -264,7 +266,7 @@ struct SettingsEngineSection: View {
                                     .opacity(focused ? 1 : 0)
                             }
                             .animation(SeleneTheme.focusIn, value: focused)
-                            .disabled(!viewModel.canSwitchEngine)
+                            .disabled(!setup.canSwitchEngine)
                     }
                 }
             }
@@ -272,26 +274,26 @@ struct SettingsEngineSection: View {
     }
 
     private var newestNeedsNewerApp: String? {
-        if case .needsNewerApp(let metal) = viewModel.newestEngineReadiness { return metal }
+        if case .needsNewerApp(let metal) = setup.newestEngineReadiness { return metal }
         return nil
     }
 
     private var newestSubtitle: String {
-        if viewModel.isSwitchingEngine { return L10n.text("Switching the engine…") }
-        if let choice = viewModel.newestEngineChoice {
+        if setup.isSwitchingEngine { return L10n.text("Switching the engine…") }
+        if let choice = setup.newestEngineChoice {
             var base = L10n.format("%@ In use: %@, ", [String(describing: (NewestEngineCopy.note)), String(describing: (choice.shortCommit))])
                 + L10n.format("%@ of the tested %@.", [String(describing: (NewestEngineCopy.ahead(choice.aheadBy))), String(describing: (seleneShort(viewModel.pinnedEngineCommit)))])
-            if viewModel.newestEngineActions.contains(.update), let offer = viewModel.newestEngineOffer {
+            if setup.newestEngineActions.contains(.update), let offer = setup.newestEngineOffer {
                 base += " " + NewestEngineCopy.update(choice: choice, main: offer.upstreamCommit,
                                                       aheadBy: offer.newCommitsCount)
             } else if let metal = newestNeedsNewerApp {
                 base += " " + NewestEngineCopy.needsNewerApp(metal: metal)
             }
-            return viewModel.newestEngineProblem.map { "\(base) \($0)" } ?? base
+            return setup.newestEngineProblem.map { "\(base) \($0)" } ?? base
         }
         if let metal = newestNeedsNewerApp { return NewestEngineCopy.needsNewerApp(metal: metal) }
-        if let problem = viewModel.newestEngineProblem { return problem }
-        guard let offer = viewModel.newestEngineOffer else { return NewestEngineCopy.note }
+        if let problem = setup.newestEngineProblem { return problem }
+        guard let offer = setup.newestEngineOffer else { return NewestEngineCopy.note }
         return NewestEngineCopy.offer(commit: offer.upstreamCommit, aheadBy: offer.newCommitsCount)
     }
 
@@ -304,15 +306,15 @@ struct SettingsEngineSection: View {
     }
 
     private func newestAction(_ action: NewestEngineAction) {
-        guard viewModel.canSwitchEngine else { return }
+        guard setup.canSwitchEngine else { return }
         switch action {
-        case .useNewest, .update: viewModel.useNewestEngine()
-        case .backToTested: viewModel.useTestedEngine()
+        case .useNewest, .update: setup.useNewestEngine()
+        case .backToTested: setup.useTestedEngine()
         }
     }
 
     private var upstreamButtonTitle: String {
-        if case .checking = viewModel.upstreamState { return L10n.text("Checking...") }
+        if case .checking = setup.upstreamState { return L10n.text("Checking...") }
         return L10n.text("Check")
     }
 
@@ -338,7 +340,7 @@ struct SettingsEngineSection: View {
     @ViewBuilder
     private func upstreamCommitsPanel(_ status: UpstreamStatus) -> some View {
         if !status.commits.isEmpty {
-            let marks = NewestEngine.marks(status.commits, inUse: viewModel.newestEngineChoice?.commit)
+            let marks = NewestEngine.marks(status.commits, inUse: setup.newestEngineChoice?.commit)
             let shown = shownCommitCount(status, marks: marks)
             SelenePanel(L10n.format("Upstream Commits (%@ newer)", [String(describing: (status.newCommitsCount))])) {
                 VStack(alignment: .leading, spacing: 10) {
@@ -391,7 +393,7 @@ struct SettingsEngineSection: View {
                                 .foregroundColor(SeleneTheme.ink60)
                             Spacer()
                             Button(L10n.text("View all on GitHub")) {
-                                viewModel.openUpstreamCompare()
+                                setup.openUpstreamCompare()
                             }
                             .buttonStyle(.plain)
                             .seleneFont(14, .semibold)
@@ -500,7 +502,7 @@ struct SettingsEngineSection: View {
     private func publishActions() {
         var actions: [SettingsRowAction] = [
             .init(id: "repo", title: "Engine repository", isEnabled: !configurationLocked) {
-                viewModel.selectNxnativeFolder()
+                setup.selectNxnativeFolder()
             },
             .init(id: "recheck", title: "Compatibility", isEnabled: !configurationLocked) {
                 viewModel.detectEnvironment()
@@ -517,21 +519,21 @@ struct SettingsEngineSection: View {
                 }
             },
             .init(id: "upstream", title: "Upstream") {
-                viewModel.checkUpstreamChangelog()
+                setup.checkUpstreamChangelog()
             }
         ]
         // Keyboard and controller: the row's first button (Update once main has moved on) is in focus first; Right moves
         // to the second (Back to tested), and A or Return presses the one in focus.
-        if let pad = NewestEngine.controller(viewModel.newestEngineActions) {
+        if let pad = NewestEngine.controller(setup.newestEngineActions) {
             let secondary = pad.secondary.map { action in (title: newestTitle(action), activate: { newestAction(action) }) }
-            actions.append(.init(id: "newest", title: "Newest engine", isEnabled: viewModel.canSwitchEngine,
+            actions.append(.init(id: "newest", title: "Newest engine", isEnabled: setup.canSwitchEngine,
                                  secondary: secondary) {
                 newestAction(pad.primary)
             })
         }
-        if case .loaded = viewModel.upstreamState {
+        if case .loaded = setup.upstreamState {
             actions.append(.init(id: "compare", title: "Compare") {
-                viewModel.openUpstreamCompare()
+                setup.openUpstreamCompare()
             })
         }
         actions.append(.init(id: "setup", title: "Setup", isEnabled: !configurationLocked) {

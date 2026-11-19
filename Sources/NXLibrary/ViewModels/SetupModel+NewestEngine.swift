@@ -3,9 +3,9 @@ import NXLibraryCore
 
 /// Settings → Setup and engine, Newest engine: the player may build with nxnative main before NX Library has tested it.
 /// Never automatic (AGENTS.md): only these two actions move the checkout away from, or back to, the tested pin.
-extension AppViewModel {
+extension SetupModel {
     /// The commit the gate expects and builds record: the player's newest engine, else the tested pin.
-    public var activeEngineCommit: String { newestEngineChoice?.commit ?? pinnedEngineCommit }
+    public var activeEngineCommit: String { newestEngineChoice?.commit ?? app.pinnedEngineCommit }
 
     public var usesNewestEngine: Bool { newestEngineChoice != nil }
 
@@ -21,7 +21,7 @@ extension AppViewModel {
         newestEngineReadiness = nil
         guard status.newCommitsCount > 0 else { return }
         let repo = URL(fileURLWithPath: nxnativePath)
-        let pinned = pinnedEngineCommit
+        let pinned = app.pinnedEngineCommit
         Task { @MainActor [weak self] in
             let lock = await NewestEngine.fetchLock(commit: status.upstreamCommit)
             let tested = await Task.detached { NewestEngineSwitcher(repo: repo).lockMetal(at: pinned) }.value
@@ -39,7 +39,7 @@ extension AppViewModel {
     }
 
     public var canSwitchEngine: Bool {
-        isNxnativeValid && !isSwitchingEngine && !isBuilding && !isUpdatingApp
+        isNxnativeValid && !isSwitchingEngine && !app.isBuilding && !app.isUpdatingApp
     }
 
     /// Moves the engine to upstream main and turns the untested-toolchain override on. While the newest engine is
@@ -48,7 +48,7 @@ extension AppViewModel {
         guard canSwitchEngine, let status = newestEngineOffer else { return }
         if case .needsNewerApp = newestEngineReadiness { return }
         let repo = URL(fileURLWithPath: nxnativePath)
-        let pinned = pinnedEngineCommit
+        let pinned = app.pinnedEngineCommit
         let commit = status.upstreamCommit
         let ahead = status.newCommitsCount
         isSwitchingEngine = true
@@ -63,8 +63,8 @@ extension AppViewModel {
                 switch result {
                 case .success:
                     let previous = self.newestEngineChoice
-                    let turnedOn = !self.allowUntestedToolchain || previous?.turnedOnOverride == true
-                    self.allowUntestedToolchain = true
+                    let turnedOn = !self.app.allowUntestedToolchain || previous?.turnedOnOverride == true
+                    self.app.allowUntestedToolchain = true
                     self.newestEngineChoice = NewestEngineChoice(commit: commit, aheadBy: ahead, turnedOnOverride: turnedOn)
                     let message: String
                     if let previous {
@@ -74,15 +74,15 @@ extension AppViewModel {
                         message = L10n.format("Engine switched to nxnative main %@ (%@); builds are recorded as untested.",
                                               [String(commit.prefix(7)), NewestEngineCopy.ahead(ahead)])
                     }
-                    self.logs.append(LogEntry(level: .warning, message: message))
+                    self.app.logs.append(LogEntry(level: .warning, message: message))
                 case .failure(let error):
                     if case NewestEngineError.needsNewerApp(let metal) = error {
                         self.newestEngineReadiness = .needsNewerApp(metal: metal)
                     }
                     self.newestEngineProblem = error.localizedDescription
-                    self.logs.append(LogEntry(level: .warning, message: L10n.format("Newest engine: %@", [String(describing: (error.localizedDescription))])))
+                    self.app.logs.append(LogEntry(level: .warning, message: L10n.format("Newest engine: %@", [String(describing: (error.localizedDescription))])))
                 }
-                self.refreshCompatibility()
+                self.app.refreshCompatibility()
             }
         }
     }
@@ -91,7 +91,7 @@ extension AppViewModel {
     public func useTestedEngine() {
         guard canSwitchEngine, usesNewestEngine else { return }
         let repo = URL(fileURLWithPath: nxnativePath)
-        let pinned = pinnedEngineCommit
+        let pinned = app.pinnedEngineCommit
         isSwitchingEngine = true
         newestEngineProblem = nil
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
@@ -102,12 +102,12 @@ extension AppViewModel {
                 switch result {
                 case .success:
                     self.forgetNewestEngine()
-                    self.logs.append(LogEntry(level: .info, message: L10n.format("Engine back to the tested %@.", [String(describing: (pinned.prefix(7)))])))
+                    self.app.logs.append(LogEntry(level: .info, message: L10n.format("Engine back to the tested %@.", [String(describing: (pinned.prefix(7)))])))
                 case .failure(let error):
                     self.newestEngineProblem = error.localizedDescription
-                    self.logs.append(LogEntry(level: .warning, message: L10n.format("Back to tested: %@", [String(describing: (error.localizedDescription))])))
+                    self.app.logs.append(LogEntry(level: .warning, message: L10n.format("Back to tested: %@", [String(describing: (error.localizedDescription))])))
                 }
-                self.refreshCompatibility()
+                self.app.refreshCompatibility()
             }
         }
     }
@@ -116,6 +116,6 @@ extension AppViewModel {
     func forgetNewestEngine() {
         guard let choice = newestEngineChoice else { return }
         newestEngineChoice = nil
-        if choice.turnedOnOverride { allowUntestedToolchain = false }
+        if choice.turnedOnOverride { app.allowUntestedToolchain = false }
     }
 }

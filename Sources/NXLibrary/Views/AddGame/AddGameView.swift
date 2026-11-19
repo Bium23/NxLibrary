@@ -18,6 +18,8 @@ public struct AddGameView: View {
     @ObservedObject var viewModel: AppViewModel
     /// The wizard and the live build (`PortingModel`), observed on their own.
     @ObservedObject var porting: PortingModel
+    /// The Switch Setup (`SetupModel`): engine, keys and the Metal gate the review checks.
+    @ObservedObject var setup: SetupModel
     @ObservedObject var router: AppRouter
 
     private let showsHints: Bool
@@ -38,6 +40,7 @@ public struct AddGameView: View {
                 reviewSelectionID: UUID? = nil) {
         self.viewModel = viewModel
         self.porting = viewModel.porting
+        self.setup = viewModel.setup
         self.router = router
         self.artwork = artwork
         self.showsHints = showsHints

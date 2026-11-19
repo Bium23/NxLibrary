@@ -60,6 +60,8 @@ struct SettingsSearchSection: View {
 struct SettingsChangedSection: View {
     @ObservedObject var settings: AppSettingsStore
     @ObservedObject var viewModel: AppViewModel
+    /// The engine folder (`SetupModel`), so the Changed list follows it.
+    @ObservedObject var setup: SetupModel
     @ObservedObject private var controller = GameControllerService.shared
     let onOpenGroup: (SettingsSection) -> Void
     let onActions: ([SettingsRowAction]) -> Void
@@ -74,7 +76,7 @@ struct SettingsChangedSection: View {
         if viewModel.libraryFolder?.standardizedFileURL != root.appendingPathComponent("Applications").standardizedFileURL {
             external.insert("libraryFolder")
         }
-        if URL(fileURLWithPath: viewModel.nxnativePath).standardizedFileURL != root.appendingPathComponent("nxnative").standardizedFileURL {
+        if URL(fileURLWithPath: setup.nxnativePath).standardizedFileURL != root.appendingPathComponent("nxnative").standardizedFileURL {
             external.insert("engineFolder")
         }
         return SettingsCatalog.changed(in: settings.settings, externalChanges: external)

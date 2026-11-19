@@ -24,7 +24,7 @@ struct SetupCheckView: View {
     init(viewModel: AppViewModel, isFirstRun: Bool) {
         self.viewModel = viewModel
         self.isFirstRun = isFirstRun
-        self.model = viewModel.setupModel
+        self.model = viewModel.setupCheck
     }
 
     var items: [SetupItem] { SetupCheck.requirements(model.items) }

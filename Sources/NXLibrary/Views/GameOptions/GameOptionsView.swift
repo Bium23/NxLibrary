@@ -35,6 +35,8 @@ final class GameOptionsFiles: ObservableObject {
 
 struct GameOptionsView: View {
     @ObservedObject var viewModel: AppViewModel
+    /// The Setup (`SetupModel`): the gate hint below Rebuild follows the engine in use.
+    @ObservedObject var setup: SetupModel
     let game: PortedGame
     let origin: GameOptionsOrigin
     let onClose: () -> Void
@@ -93,6 +95,7 @@ struct GameOptionsView: View {
          onClose: @escaping () -> Void, onShowBuild: @escaping () -> Void,
          onMove: @escaping () -> Void, opensMods: Bool = false) {
         self.viewModel = viewModel
+        self.setup = viewModel.setup
         self.game = game
         self.origin = origin
         self.onClose = onClose

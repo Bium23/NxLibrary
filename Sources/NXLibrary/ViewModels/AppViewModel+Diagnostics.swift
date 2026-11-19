@@ -22,8 +22,8 @@ extension AppViewModel {
         i.macOS = ProcessInfo.processInfo.operatingSystemVersionString
         i.chip = Self.sysctlString("machdep.cpu.brand_string") ?? "?"
         i.pinnedCommit = pinnedEngineCommit
-        i.newestEngine = newestEngineChoice.map { "\($0.commit) (\(NewestEngineCopy.ahead($0.aheadBy)))" }
-        i.engineHead = Self.engineHead(at: nxnativePath)
+        i.newestEngine = setup.newestEngineChoice.map { "\($0.commit) (\(NewestEngineCopy.ahead($0.aheadBy)))" }
+        i.engineHead = Self.engineHead(at: setup.nxnativePath)
         i.xcodePath = resolvedDeveloperDir().path
         i.xcodeVersion = environmentStatus?.xcodeVersion
         i.metalFound = environmentStatus?.metalVersion

@@ -26,9 +26,9 @@ extension AppViewModel {
 
     private func engineAncestry() -> EngineAncestry {
         let cache = Self.cheatCache
-        if let known = cache.ancestry, known.path == nxnativePath { return known.value }
-        let value = EngineAncestry(runner: SystemCommandRunner(), engineFolder: URL(fileURLWithPath: nxnativePath))
-        cache.ancestry = (nxnativePath, value)
+        if let known = cache.ancestry, known.path == setup.nxnativePath { return known.value }
+        let value = EngineAncestry(runner: SystemCommandRunner(), engineFolder: URL(fileURLWithPath: setup.nxnativePath))
+        cache.ancestry = (setup.nxnativePath, value)
         return value
     }
 

@@ -212,7 +212,7 @@ if failures > 0 { exit(1) }
 print("Onboarding persistence and notification timing: PASS")
 '''
 host = host.replace('// ACTIVATE_FOUND', declaration('    func activate(', (ROOT / 'Sources/NXLibrary/Views/Setup/FoundGamesSetupView+Input.swift').read_text()))
-host = host.replace('// KEYS', declaration('    private enum StorageKeys'))
+host = host.replace('// KEYS', declaration('    enum StorageKeys'))
 host = host.replace('// SETUP', declaration('    @Published public private(set) var firstRunSetup ='))
 host = host.replace('// FINDINGS_CHANGED', findings_changed)
 host = host.replace('// FINISH', finish)

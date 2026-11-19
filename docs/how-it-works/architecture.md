@@ -93,6 +93,9 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
   - Il resto di Arcane legge di un porting solo `isBuilding`, `currentBuildGameID` e `portingProgress` (la tile della home), che restano sul coordinatore.
   - Raggiunge il resto dell'app solo da `PortingModel.app`: libreria, chiavi, engine, catalogo e i valori di Game options. *Perché:* quell'elenco è ciò che il modulo Porting dovrà chiedere alla base.
   - Le installazioni in attesa (`AppViewModel+PendingInstall`) restano sul coordinatore. *Perché:* le avviano anche Play, i salvataggi e la chiusura di un gioco, e il loro dialogo appartiene alla libreria.
+- `SetupModel` tiene il Setup Switch: cartella, validità e commit dell'engine, controllo Upstream e Newest engine (`SetupModel+NewestEngine`).
+  - Lo osservano da sole Impostazioni → Setup and engine, la lista Changed, Add Game e Game options, perché un cambio di engine ridisegni solo quelle schermate.
+  - Come `PortingModel`, raggiunge il resto dell'app solo da `SetupModel.app`; `pinnedEngineCommit` resta sul coordinatore.
 - Gli stati di un solo pannello hanno il loro modello: `SetupCheckModel`, `SavePanelModel` (anteprima, operazione in corso, errore, ultimo backup, importazione riuscita) e gli altri elencati in [conventions.md](../working-on-it/conventions.md#1-dove-va-il-codice). Gli aggiornamenti destinati alla UI si pubblicano sulla coda principale.
 
 **Primo avvio.**

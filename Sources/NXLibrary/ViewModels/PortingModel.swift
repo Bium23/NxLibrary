@@ -226,7 +226,7 @@ public final class PortingModel: ObservableObject {
         let generation = UUID()
         scanGeneration = generation
         let catalog = app.sourceCatalog
-        let repo = URL(fileURLWithPath: app.nxnativePath)
+        let repo = URL(fileURLWithPath: app.setup.nxnativePath)
         let toolchain = app.engineToolchain
         let keys = app.isProdKeysValid ? app.keyStore.keyURL : nil
         let developer = app.resolvedDeveloperDir()
@@ -534,7 +534,7 @@ public final class PortingModel: ObservableObject {
             && app.supportsSources(self.selectedSources)
             && (!self.selectedSourcesRequireKeys || app.isProdKeysValid)
             && !self.keyCheckBlocks
-            && app.isNxnativeValid
+            && app.setup.isNxnativeValid
             && app.environmentStatus?.canBuild == true
             && !self.isDiskSpaceLow
             && self.buildDestinationProblem == nil
@@ -724,7 +724,7 @@ public final class PortingModel: ObservableObject {
         } else if !app.engineSourceCapabilities.extractedFolders {
             throw NXLibraryError.environmentBlocked(L10n.text("This engine does not support extracted folders."))
         }
-        guard app.isNxnativeValid else { throw NXLibraryError.engineMissing }
+        guard app.setup.isNxnativeValid else { throw NXLibraryError.engineMissing }
         guard let environmentStatus = app.environmentStatus else {
             throw NXLibraryError.environmentBlocked(L10n.text("the environment check is still running"))
         }
@@ -735,11 +735,11 @@ public final class PortingModel: ObservableObject {
         // Re-check at build time: the engine tree, Metal compiler or CLI may
         // have changed since the last Settings/launch check.
         let checker = CompatibilityChecker(
-            repoURL: URL(fileURLWithPath: app.nxnativePath),
+            repoURL: URL(fileURLWithPath: app.setup.nxnativePath),
             toolchain: app.engineToolchain,
             developerDir: app.resolvedDeveloperDir()
         )
-        let report = try? checker.check(expectedEngineCommit: app.activeEngineCommit)
+        let report = try? checker.check(expectedEngineCommit: app.setup.activeEngineCommit)
         app.compatibilityReport = report
         if report?.ok != true && !app.allowUntestedToolchain {
             let reason = report?.checks.filter { $0.status == .block }
@@ -749,12 +749,12 @@ public final class PortingModel: ObservableObject {
         }
         app.environmentCheckGeneration = UUID()
         app.isCheckingEnvironment = false
-        let certified = report?.ok == true && !app.allowUntestedToolchain && !app.usesNewestEngine
-        activeBuildToolchain = ToolchainInfo(engineCommit: app.activeEngineCommit,
+        let certified = report?.ok == true && !app.allowUntestedToolchain && !app.setup.usesNewestEngine
+        activeBuildToolchain = ToolchainInfo(engineCommit: app.setup.activeEngineCommit,
             metalVersion: environmentStatus.metalVersion, xcodeVersion: environmentStatus.xcodeVersion,
             verified: certified,
             note: certified ? "Certified toolchain"
-                : app.usesNewestEngine ? "Newest engine, not yet tested by Arcane"
+                : app.setup.usesNewestEngine ? "Newest engine, not yet tested by Arcane"
                 : "Untested toolchain (explicit override)")
 
         let merged = try app.catalogRepository.mergeNXNative(scanned: [target], enableSource: true)
@@ -824,7 +824,7 @@ public final class PortingModel: ObservableObject {
             }
         }
 
-        let repo = URL(fileURLWithPath: app.nxnativePath)
+        let repo = URL(fileURLWithPath: app.setup.nxnativePath)
         let toolchain = app.engineToolchain
         guard FileManager.default.isExecutableFile(atPath: toolchain.python.path) else {
             throw NXLibraryError.environmentBlocked(toolchain.isBundled
@@ -1106,7 +1106,7 @@ public final class PortingModel: ObservableObject {
         // Displayed state can retain a finished result for an explicit retry,
         // but is never serialized as a replacement catalog.
         if var game = app.libraryGames.first(where: { $0.id == gameID }) {
-            let toolchain = activeBuildToolchain ?? ToolchainInfo(engineCommit: app.activeEngineCommit, verified: false)
+            let toolchain = activeBuildToolchain ?? ToolchainInfo(engineCommit: app.setup.activeEngineCommit, verified: false)
             let verified = toolchain.verified
             let record = BuildRecord(
                 startedAt: buildStartedAt ?? Date(),
@@ -1114,7 +1114,7 @@ public final class PortingModel: ObservableObject {
                 exitCode: result.exitCode,
                 logPath: result.logURL.path,
                 outputPath: result.success || result.installationFailed ? finalApp.path : nil,
-                engineCommit: toolchain.engineCommit ?? app.activeEngineCommit,
+                engineCommit: toolchain.engineCommit ?? app.setup.activeEngineCommit,
                 metalVersion: toolchain.metalVersion,
                 xcodeVersion: toolchain.xcodeVersion,
                 toolchainVerified: verified,

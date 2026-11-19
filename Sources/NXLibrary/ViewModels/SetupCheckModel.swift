@@ -33,14 +33,14 @@ final class SetupCheckModel: ObservableObject {
     private static func makeProbe(_ viewModel: AppViewModel, runner: CommandRunning, developerDir: URL) -> SetupProbe {
         SetupProbe(runner: runner, toolchain: viewModel.engineToolchain,
                    developerDir: developerDir,
-                   engineFolder: URL(fileURLWithPath: viewModel.nxnativePath),
+                   engineFolder: URL(fileURLWithPath: viewModel.setup.nxnativePath),
                    pinnedCommit: viewModel.pinnedEngineCommit,
                    certifiedMetal: viewModel.requiredMetalVersion ?? requirements.fallbackMetal,
                    allowUntested: viewModel.allowUntestedToolchain,
                    keyStore: viewModel.keyStore, libraryFolder: viewModel.libraryFolder,
                    sourcesFolder: viewModel.porting.gameFilesFolder,
                    libraryNeedsConfirmation: viewModel.requiresGameAppsFolderChoice,
-                   newestEngine: viewModel.newestEngineChoice)
+                   newestEngine: viewModel.setup.newestEngineChoice)
     }
 
     func refresh() {
@@ -104,7 +104,7 @@ final class SetupCheckModel: ObservableObject {
     /// broke or fell out of step with the engine; opening it starts the fix.
     static func checkAtLaunch(viewModel: AppViewModel) {
         guard viewModel.setupCompleted else { return }
-        let enginePath = viewModel.nxnativePath
+        let enginePath = viewModel.setup.nxnativePath
         DispatchQueue.global(qos: .utility).async {
             // xcode-select runs here, not on the main thread at launch; the probe reads the view model on main.
             let developerDir = AppViewModel.resolveDeveloperDir()
@@ -112,7 +112,7 @@ final class SetupCheckModel: ObservableObject {
             let current = SetupCheck.items(from: probe.facts())
             DispatchQueue.main.async {
                 guard !viewModel.isBuilding, !viewModel.isUpdatingApp,
-                      viewModel.nxnativePath == enginePath else { return }
+                      viewModel.setup.nxnativePath == enginePath else { return }
                 let stored = AppData.preferences.dictionary(forKey: lastStatesKey) as? [String: String] ?? [:]
                 var previous: [SetupItemID: SetupState] = [:]
                 for (key, value) in stored {
@@ -311,15 +311,15 @@ final class SetupCheckModel: ObservableObject {
     /// The newest engine's card: A returns to the tested engine, the same action as Settings → Setup and engine.
     private func backToTestedEngine(_ completion: @escaping (Bool) -> Void) {
         setOverride(.engine, .working("SWITCHING…", detail: L10n.text("Returning to the tested engine…")))
-        viewModel.useTestedEngine()
+        viewModel.setup.useTestedEngine()
         waitForEngineSwitch(completion)
     }
 
     private func waitForEngineSwitch(_ completion: @escaping (Bool) -> Void) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
             guard let self else { return }
-            if self.viewModel.isSwitchingEngine { self.waitForEngineSwitch(completion); return }
-            if let problem = self.viewModel.newestEngineProblem {
+            if self.viewModel.setup.isSwitchingEngine { self.waitForEngineSwitch(completion); return }
+            if let problem = self.viewModel.setup.newestEngineProblem {
                 self.setOverride(.engine, .failed(problem))
                 completion(false)
             } else {
