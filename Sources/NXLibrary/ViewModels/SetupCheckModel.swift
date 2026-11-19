@@ -249,7 +249,7 @@ final class SetupCheckModel: ObservableObject {
         let allowUntested = facts.allowUntested
         let pinned = Self.requirements.metalDownload(for: certified)
         let chip = "DOWNLOADING…"
-        setOverride(.metal, .working(chip, detail: L10n.format("Asking Apple for Metal %@…", [String(describing: (certified))])))
+        setOverride(.metal, .working(chip, detail: L10n.format("Asking Apple for Metal %@…", [String(describing: certified)])))
         let env = environment
         queue.async { [weak self] in
             guard let self else { return }

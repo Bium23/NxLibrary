@@ -76,7 +76,7 @@ struct ScreenshotViewer: View {
             for neighbour in [current + 1, current - 1] { await load(neighbour) }
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel(L10n.format("Screenshot %@", [String(describing: (state.label))]))
+        .accessibilityLabel(L10n.format("Screenshot %@", [String(describing: state.label)]))
     }
 
     @MainActor

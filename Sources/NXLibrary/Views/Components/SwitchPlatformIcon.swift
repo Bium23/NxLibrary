@@ -88,4 +88,3 @@ struct SwitchPlatformIcon: View {
         .aspectRatio(1, contentMode: .fit)
     }
 }
-

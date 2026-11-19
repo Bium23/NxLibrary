@@ -74,7 +74,6 @@ final class ModStoreHost: ObservableObject {
 
     var isPanelOpen: Bool { panel.isPanelOpen }
 
-
     // MARK: - Lifecycle
 
     /// The card is selected: the store reads its snapshots and refreshes in the background. `games` are your games,

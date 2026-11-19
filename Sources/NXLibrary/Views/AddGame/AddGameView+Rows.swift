@@ -236,7 +236,7 @@ extension AddGameView {
             return AddGameRow(id: "destination", kind: .warning(action: nil), title: L10n.text("App folder unavailable"), about: problem)
         }
         return AddGameRow(id: "destination", kind: .note,
-                          title: L10n.format("Installs to %@. On a failure or a cancel the previous app stays as it was.", [String(describing: (porting.selectedBuildAppURL.path))]))
+                          title: L10n.format("Installs to %@. On a failure or a cancel the previous app stays as it was.", [String(describing: porting.selectedBuildAppURL.path)]))
     }
 
     // MARK: - Porting

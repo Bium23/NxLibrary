@@ -14,7 +14,7 @@ Gli altri documenti:
 |---|---|---|
 | Modelli, regole, parsing, persistenza, rete, processi, decisioni di focus e di layout calcolabili | `Sources/NXLibraryCore` | Si prova con XCTest senza finestre. |
 | Viste SwiftUI, integrazione AppKit, controller, coordinamento degli store | `Sources/NXLibrary` | Dipende dal Core, mai il contrario. |
-| Testi mostrati all'utente | `NXLibraryCore/Resources/Localizable.xcstrings` | Un solo catalogo per le sei lingue. |
+| Testi mostrati all'utente | `NXLibraryCore/Resources/Localizable.xcstrings` | Un solo catalogo per le sette lingue. |
 | Test | `Tests/NXLibraryCoreTests`; prove senza finestre dei corpi reali delle viste in `Tests/CatalogAppChecks`; controlli del pacchetto in `Tests/PublicationChecks` | — |
 
 Regole:
@@ -24,6 +24,7 @@ Regole:
   - la geometria di una riga: `SpotlightRowGeometry`, `GridListLayout`.
 
   La vista disegna e traduce l'input.
+- **`public` solo nel Core**, per ciò che l'app usa. Il target app è un eseguibile che nessuno importa: i suoi tipi restano interni.
 - **Non far crescere `AppViewModel`.** Uno stato che appartiene a una sola schermata o a un solo pannello ha il suo modello. Esempi: `SavePanelModel`, `SetupCheckModel`, `ModStoreHost`, `AchievementsScreenModel`, `CatalogSourcesModel`. Le estensioni `AppViewModel+…` servono solo a collegare il coordinatore a un servizio del Core.
 - **Una parte del modulo Switch ha il suo modello di area.** Esempi: `PortingModel`, `SetupModel`, `RuntimeSettingsModel`, `CheatsModel`, `AppIconModel`, `StoreMetadataModel`.
   - È una `final class` con `unowned let app: AppViewModel`; il coordinatore la crea come `lazy var` con un nome breve (`app.porting`).

@@ -131,7 +131,7 @@ struct ModDetailPanel: View {
                         .lineLimit(3)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                Text(L10n.format("%@ likes · %@ downloads", [String(describing: (mod.likes)), String(describing: (mod.downloads))]))
+                Text(L10n.format("%@ likes · %@ downloads", [String(describing: mod.likes), String(describing: mod.downloads)]))
                     .seleneFont(15)
                     .foregroundColor(SeleneTheme.ink60)
             }
@@ -279,7 +279,7 @@ struct ModDetailPanel: View {
                     .frame(width: canvas.u(28), height: canvas.u(28))
                     .clipShape(Circle())
             }
-            Text(L10n.format("by %@", [String(describing: (mod.author))]))
+            Text(L10n.format("by %@", [String(describing: mod.author)]))
                 .seleneFont(18, .medium)
                 .foregroundColor(SeleneTheme.ink)
         }
@@ -287,15 +287,15 @@ struct ModDetailPanel: View {
 
     private var versionLine: String {
         let date = mod.updated.formatted(.dateTime.day().month(.abbreviated).year().locale(L10n.context.formatLocale))
-        var parts = [mod.version.isEmpty ? L10n.format("Updated %@", [String(describing: (date))]) : L10n.format("Version %@ · Updated %@", [String(describing: (mod.version)), String(describing: (date))])]
-        if let version = game.versionString, !version.isEmpty { parts.append(L10n.format("Your game: %@", [String(describing: (version))])) }
+        var parts = [mod.version.isEmpty ? L10n.format("Updated %@", [String(describing: date)]) : L10n.format("Version %@ · Updated %@", [String(describing: mod.version), String(describing: date)])]
+        if let version = game.versionString, !version.isEmpty { parts.append(L10n.format("Your game: %@", [String(describing: version)])) }
         return parts.joined(separator: "   ")
     }
 
     /// The author's requirements (game versions, other mods), so a mismatch shows before the download.
     private var requirementsLine: String? {
         guard !mod.requirements.isEmpty else { return nil }
-        let names = mod.requirements.map { $0.isOptional ? L10n.format("%@ (recommended)", [String(describing: ($0.name))]) : $0.name }
+        let names = mod.requirements.map { $0.isOptional ? L10n.format("%@ (recommended)", [String(describing: $0.name)]) : $0.name }
         return L10n.text("Requires: ") + names.joined(separator: " · ")
     }
 

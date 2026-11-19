@@ -15,6 +15,6 @@ public enum BuildWarningCopy {
         }
         let detail = summary.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.flatMap { $0.isEmpty ? nil : $0 }
         let name = stage.prefix(1).uppercased() + stage.dropFirst()
-        return L10n.format("%@ finished with a warning", [String(describing: (name))]) + (detail.map { ": \($0)." } ?? ".") + L10n.text(" The log has the details.")
+        return L10n.format("%@ finished with a warning", [String(describing: name)]) + (detail.map { ": \($0)." } ?? ".") + L10n.text(" The log has the details.")
     }
 }

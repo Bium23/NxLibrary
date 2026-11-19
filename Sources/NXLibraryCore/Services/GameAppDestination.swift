@@ -47,7 +47,7 @@ public enum GameAppDestination {
             return L10n.text("The Game apps folder is unavailable. Reconnect it or choose another in Settings → Porting → Library.")
         }
         guard fm.isWritableFile(atPath: folder.path) else {
-            return L10n.format("The app folder is read-only: %@. Allow writing here before building.", [String(describing: (folder.path))])
+            return L10n.format("The app folder is read-only: %@. Allow writing here before building.", [String(describing: folder.path)])
         }
         return nil
     }

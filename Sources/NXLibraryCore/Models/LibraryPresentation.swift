@@ -92,9 +92,9 @@ public struct LibraryPresentation: Equatable {
         guard let date else { return L10n.text("Never") }
         let seconds = max(0, now.timeIntervalSince(date))
         if seconds < 60 { return L10n.text("Just now") }
-        if seconds < 3_600 { return L10n.format("%@m ago", [String(describing: (Int(seconds / 60)))]) }
-        if seconds < 86_400 { return L10n.format("%@h ago", [String(describing: (Int(seconds / 3_600)))]) }
-        if seconds < 604_800 { return L10n.format("%@d ago", [String(describing: (Int(seconds / 86_400)))]) }
+        if seconds < 3_600 { return L10n.format("%@m ago", [String(describing: Int(seconds / 60))]) }
+        if seconds < 86_400 { return L10n.format("%@h ago", [String(describing: Int(seconds / 3_600))]) }
+        if seconds < 604_800 { return L10n.format("%@d ago", [String(describing: Int(seconds / 86_400))]) }
         return date.formatted(.dateTime.day().month(.abbreviated).year().locale(L10n.context.formatLocale))
     }
 }

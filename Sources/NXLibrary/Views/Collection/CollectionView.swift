@@ -8,7 +8,7 @@ import NXLibraryCore
 /// and the hints sit where Spotlight has them. On the stage: top bar 0–100, the
 /// logo / stats / genres at x 80 from y 110, the cover band 576–976 (400 high).
 /// The art and the row reach the window edges.
-public struct CollectionView: View {
+struct CollectionView: View {
     @ObservedObject var viewModel: AppViewModel
     /// The Nintendo store's data (`StoreMetadataModel`): descriptions, screenshots and names shown here.
     @ObservedObject var store: StoreMetadataModel
@@ -26,7 +26,7 @@ public struct CollectionView: View {
     @ObservedObject var steamPlayer = SteamPlayCoordinator.shared
     @State var keyMonitor: Any?
 
-    public init(viewModel: AppViewModel, router: AppRouter, settings: AppSettingsStore,
+    init(viewModel: AppViewModel, router: AppRouter, settings: AppSettingsStore,
                 playSessions: PlaySessionStore, artwork: ArtworkStore) {
         self.viewModel = viewModel
         self.store = viewModel.store
@@ -57,7 +57,7 @@ public struct CollectionView: View {
 
     // MARK: - Body
 
-    public var body: some View {
+    var body: some View {
         let games = self.games
         let game = selectedGame(in: games)
         SeleneHomeChrome(

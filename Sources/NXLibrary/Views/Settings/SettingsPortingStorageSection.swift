@@ -25,7 +25,6 @@ struct SettingsPortingStorageSection: View {
                 }
             }
 
-
             SettingsSubheading(L10n.text("All games"))
 
             SeleneButtonRow("Build caches",
@@ -59,9 +58,9 @@ struct SettingsPortingStorageSection: View {
     }
 
     private func gameSummary(_ game: GameStorageUsage) -> String {
-        var text = L10n.format("App: %@ · Cache: %@ · Logs: %@", [String(describing: (sizeText(game.app, missing: L10n.text("Not found")))), String(describing: (sizeText(game.cache, missing: "None"))), String(describing: (sizeText(game.logs, missing: "None")))])
+        var text = L10n.format("App: %@ · Cache: %@ · Logs: %@", [String(describing: sizeText(game.app, missing: L10n.text("Not found"))), String(describing: sizeText(game.cache, missing: "None")), String(describing: sizeText(game.logs, missing: "None"))])
         if !game.sharedCacheWith.isEmpty {
-            text += L10n.format("\nCache shared with %@.", [String(describing: (game.sharedCacheWith.joined(separator: ", ")))])
+            text += L10n.format("\nCache shared with %@.", [String(describing: game.sharedCacheWith.joined(separator: ", "))])
         }
         return text
     }
@@ -69,9 +68,9 @@ struct SettingsPortingStorageSection: View {
     private func confirmCacheCleanup(_ usage: GameStorageUsage) {
         guard viewModel.canCleanStorage, usage.canDeleteCache,
               let game = viewModel.libraryGames.first(where: { $0.id == usage.id }) else { return }
-        var message = L10n.format("Delete %@ of build cache for %@? This permanently removes extracted and compiled build files. The next rebuild may take longer. The game app, original game files, saves and logs are kept.", [String(describing: (seleneBytes(usage.cache.knownBytes ?? 0))), String(describing: (game.name))])
+        var message = L10n.format("Delete %@ of build cache for %@? This permanently removes extracted and compiled build files. The next rebuild may take longer. The game app, original game files, saves and logs are kept.", [String(describing: seleneBytes(usage.cache.knownBytes ?? 0)), String(describing: game.name)])
         if !usage.sharedCacheWith.isEmpty {
-            message += L10n.format(" This cache is also used by %@; their next rebuilds may take longer too.", [String(describing: (usage.sharedCacheWith.joined(separator: ", ")))])
+            message += L10n.format(" This cache is also used by %@; their next rebuilds may take longer too.", [String(describing: usage.sharedCacheWith.joined(separator: ", "))])
         }
         viewModel.showSettingsNotice(title: L10n.text("Delete this game's cache?"), message: message,
                                     actionTitle: L10n.text("Delete cache"), cancelTitle: L10n.text("Cancel")) {
@@ -81,7 +80,7 @@ struct SettingsPortingStorageSection: View {
 
     private func confirmAllCachesCleanup() {
         let amount = seleneBytes(viewModel.storageUsage?.cacheBytes ?? 0)
-        let message = L10n.format("Permanently remove %@ of build caches for all games? Future rebuilds may take longer. Your games, original game files, saves and logs will be kept. Unavailable folders will be left alone.", [String(describing: (amount))])
+        let message = L10n.format("Permanently remove %@ of build caches for all games? Future rebuilds may take longer. Your games, original game files, saves and logs will be kept. Unavailable folders will be left alone.", [String(describing: amount)])
         viewModel.showSettingsNotice(title: L10n.text("Delete build caches?"), message: message,
                                     actionTitle: L10n.text("Delete"), cancelTitle: L10n.text("Cancel")) {
             viewModel.deleteCaches()

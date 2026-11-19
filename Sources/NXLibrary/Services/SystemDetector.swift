@@ -1,30 +1,30 @@
 import Foundation
 import NXLibraryCore
 
-public struct ProdKeysDetectionResult {
-    public let path: String
-    public let sourceName: String
-    public let isValid: Bool
+struct ProdKeysDetectionResult {
+    let path: String
+    let sourceName: String
+    let isValid: Bool
 }
 
-public struct NxNativeDetectionResult {
-    public let path: String
-    public let isValid: Bool
+struct NxNativeDetectionResult {
+    let path: String
+    let isValid: Bool
 }
 
-public final class SystemDetector {
-    public static let shared = SystemDetector()
-    
+final class SystemDetector {
+    static let shared = SystemDetector()
+
     private init() {}
-    
+
     /// Resolves the personal workspace root. The app is not tied to a bundle sibling or an external SSD.
-    public func resolveRootDirectory() -> URL {
+    func resolveRootDirectory() -> URL {
         URL(fileURLWithPath: NSHomeDirectory())
     }
 
     /// Locates the nxnative checkout: `customDir` as it is, else the remembered folder while it exists, else
     /// `~/nxnative`. It never clones or changes it.
-    public func detectNxnativeDirectory(customDir: String? = nil, saved: String? = nil) -> NxNativeDetectionResult {
+    func detectNxnativeDirectory(customDir: String? = nil, saved: String? = nil) -> NxNativeDetectionResult {
         let folder = customDir?.isEmpty == false
             ? URL(fileURLWithPath: customDir!)
             : EngineLocation.folder(saved: saved, home: resolveRootDirectory())
@@ -32,7 +32,7 @@ public final class SystemDetector {
     }
 
     /// Auto-detects prod.keys from Ryujinx and Switch homebrew locations (`ProdKeysLocations`).
-    public func detectProdKeys(additionalSearchDir: String? = nil) -> ProdKeysDetectionResult? {
+    func detectProdKeys(additionalSearchDir: String? = nil) -> ProdKeysDetectionResult? {
         let selected = additionalSearchDir.flatMap { $0.isEmpty ? nil : URL(fileURLWithPath: $0) }
         let fileManager = FileManager.default
         for candidate in ProdKeysLocations.candidates(home: resolveRootDirectory(), selected: selected) {
@@ -44,7 +44,7 @@ public final class SystemDetector {
                 }
             }
         }
-        
+
         return nil
     }
 }

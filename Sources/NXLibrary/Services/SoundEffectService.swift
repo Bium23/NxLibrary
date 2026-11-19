@@ -4,7 +4,7 @@ import Combine
 import NXLibraryCore
 
 /// The older call-site names, each played as a Selene cue.
-public enum SoundEffectType: String, CaseIterable {
+enum SoundEffectType: String, CaseIterable {
     case click
     case tabSwitch
     case focus
@@ -23,10 +23,10 @@ public enum SoundEffectType: String, CaseIterable {
 
 /// Interface sounds: imported Selene cues first, then the bundled MIT cues
 /// (`SoundCueResolver`). On/off and volume live in `AppSettings`.
-public final class SoundEffectService: ObservableObject {
-    public static let shared = SoundEffectService()
+final class SoundEffectService: ObservableObject {
+    static let shared = SoundEffectService()
 
-    @Published public var isSoundEnabled = true {
+    @Published var isSoundEnabled = true {
         didSet {
             if let store, store.settings.interfaceSounds != isSoundEnabled {
                 store.settings.interfaceSounds = isSoundEnabled
@@ -34,7 +34,7 @@ public final class SoundEffectService: ObservableObject {
         }
     }
 
-    @Published public var volume: Double = 0.6 {
+    @Published var volume: Double = 0.6 {
         didSet {
             let clamped = min(max(volume, 0), 1)
             if clamped != volume { volume = clamped; return }
@@ -45,14 +45,14 @@ public final class SoundEffectService: ObservableObject {
     }
 
     /// While the launch screen is up with Quiet launch on, only the game cues play.
-    public var isQuieted = false
+    var isQuieted = false
 
     private weak var store: AppSettingsStore?
     private var cancellable: AnyCancellable?
     /// Starting a player blocks for a few milliseconds (the audio server's
     /// handshake), so the players live and play on a queue of their own: a move
     /// never holds up the frame that draws it.
-    private let audio = DispatchQueue(label: L10n.text("local.nxlibrary.sounds"), qos: .userInteractive)
+    private let audio = DispatchQueue(label: "local.nxlibrary.sounds", qos: .userInteractive)
     private var players: [SoundCue: AVAudioPlayer] = [:]
     private var lastMove = Date.distantPast
     private let resolver = SoundCueResolver(
@@ -62,7 +62,7 @@ public final class SoundEffectService: ObservableObject {
     private init() {}
 
     /// Follows the settings store from now on.
-    public func bind(to store: AppSettingsStore) {
+    func bind(to store: AppSettingsStore) {
         self.store = store
         cancellable = store.$settings
             .map { ($0.interfaceSounds, $0.soundVolume) }
@@ -75,15 +75,15 @@ public final class SoundEffectService: ObservableObject {
     }
 
     /// Drops loaded players so freshly imported sounds are picked up.
-    public func reloadSounds() {
+    func reloadSounds() {
         audio.async { self.players = [:] }
     }
 
-    public func play(_ effect: SoundEffectType) {
+    func play(_ effect: SoundEffectType) {
         play(effect.cue)
     }
 
-    public func play(_ cue: SoundCue) {
+    func play(_ cue: SoundCue) {
         guard isSoundEnabled else { return }
         if isQuieted, cue != .gameStarting, cue != .gameReady { return }
         let volume = Float(volume)

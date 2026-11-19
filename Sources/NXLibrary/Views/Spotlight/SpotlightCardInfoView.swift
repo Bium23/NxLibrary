@@ -96,7 +96,7 @@ struct SpotlightCardInfoView: View {
                 HStack(spacing: canvas.u(26)) {
                     stat("MODS", "\(counts.mods)")
                     divider
-                    stat(L10n.text("FOR"), counts.games == 1 ? L10n.text("1 game") : L10n.format("%@ games", [String(describing: (counts.games))]))
+                    stat(L10n.text("FOR"), counts.games == 1 ? L10n.text("1 game") : L10n.format("%@ games", [String(describing: counts.games)]))
                 }
             } else {
                 stat("MODS", modCounts?.looking == false ? L10n.text("None yet") : L10n.text("Looking…"))
@@ -180,9 +180,9 @@ struct SpotlightCardInfoView: View {
     /// "0 min", "42 min", "3 h 20 min".
     static func duration(_ interval: TimeInterval) -> String {
         let minutes = Int(max(0, interval) / 60)
-        if minutes < 60 { return L10n.format("%@ min", [String(describing: (minutes))]) }
+        if minutes < 60 { return L10n.format("%@ min", [String(describing: minutes)]) }
         let rest = minutes % 60
-        return rest == 0 ? "\(minutes / 60) h" : L10n.format("%@ h %@ min", [String(describing: (minutes / 60)), String(describing: (rest))])
+        return rest == 0 ? "\(minutes / 60) h" : L10n.format("%@ h %@ min", [String(describing: minutes / 60), String(describing: rest)])
     }
 }
 

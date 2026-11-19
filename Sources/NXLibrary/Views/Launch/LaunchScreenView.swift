@@ -66,7 +66,7 @@ struct LaunchScreenView: View {
         .contentShape(Rectangle())
         .onTapGesture { finish() }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(L10n.format("Starting %@", [String(describing: (game.name))]))
+        .accessibilityLabel(L10n.format("Starting %@", [String(describing: game.name)]))
         .onAppear(perform: appear)
         .onChange(of: state.isReady) { ready in
             if ready { finish() }

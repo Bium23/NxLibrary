@@ -10,8 +10,8 @@ extension Notification.Name {
 }
 
 /// Sends the end-of-porting notification (`PortingNotice` decides when) and routes its click.
-public final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
-    public static let shared = NotificationService()
+final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
+    static let shared = NotificationService()
     private static let log = Logger(subsystem: "local.nxlibrary", category: "notifications")
 
     private override init() {
@@ -19,7 +19,7 @@ public final class NotificationService: NSObject, UNUserNotificationCenterDelega
         UNUserNotificationCenter.current().delegate = self
     }
 
-    public func requestAuthorization() {
+    func requestAuthorization() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { _, error in
             if let error = error {
                 Self.log.error("Notification authorization failed: \(error.localizedDescription, privacy: .public)")
@@ -27,7 +27,7 @@ public final class NotificationService: NSObject, UNUserNotificationCenterDelega
         }
     }
 
-    public func sendPortingEnded(gameID: UUID, gameName: String, success: Bool, reason: PortingFailureReason?,
+    func sendPortingEnded(gameID: UUID, gameName: String, success: Bool, reason: PortingFailureReason?,
                                  held: Bool = false) {
         let text = PortingNotice.text(game: gameName, success: success, reason: reason, held: held)
         let content = UNMutableNotificationContent()
@@ -43,7 +43,7 @@ public final class NotificationService: NSObject, UNUserNotificationCenterDelega
         }
     }
 
-    public func userNotificationCenter(_ center: UNUserNotificationCenter,
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
                                        didReceive response: UNNotificationResponse,
                                        withCompletionHandler completionHandler: @escaping () -> Void) {
         let info = response.notification.request.content.userInfo

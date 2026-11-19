@@ -209,7 +209,7 @@ struct SetupCheckView: View {
                              about: L10n.text("Everything Arcane can install by itself is installed."),
                              detail: L10n.text("Import your keys on their card if needed."), action: nil)
             }
-            return Story(icon: .sync, tone: SeleneTheme.glyph, title: L10n.text("Install all"), state: L10n.format("%@ to go", [String(describing: (names.count))]),
+            return Story(icon: .sync, tone: SeleneTheme.glyph, title: L10n.text("Install all"), state: L10n.format("%@ to go", [String(describing: names.count)]),
                          about: names.joined(separator: " · "),
                          detail: L10n.text("Import your keys on their card if needed."), action: "Install all")
         default:
@@ -220,8 +220,8 @@ struct SetupCheckView: View {
                 return Story(icon: .check, tone: SeleneTheme.success, title: L10n.text("All set"), state: L10n.text("Ready"),
                              about: L10n.text("Everything Arcane needs is here."), detail: "", action: "Continue")
             }
-            return Story(icon: .checklist, tone: SeleneTheme.glyph, title: L10n.format("%@ of %@ ready", [String(describing: (ready)), String(describing: (required.count))]),
-                         state: L10n.format("%@ left", [String(describing: (left.count))]), about: L10n.format("Still to do: %@.", [String(describing: (left.joined(separator: ", ")))]),
+            return Story(icon: .checklist, tone: SeleneTheme.glyph, title: L10n.format("%@ of %@ ready", [String(describing: ready), String(describing: required.count)]),
+                         state: L10n.format("%@ left", [String(describing: left.count)]), about: L10n.format("Still to do: %@.", [String(describing: left.joined(separator: ", "))]),
                          detail: L10n.text("Build setup can wait. Existing game apps still play."),
                          action: "Continue")
         }
@@ -235,7 +235,7 @@ struct SetupCheckView: View {
 
     private var buttons: some View {
         let count = model.missingAutomatic.count
-        let title = model.installAllProgress ?? (count > 0 ? L10n.format("Install all (%@)", [String(describing: (count))]) : L10n.text("All installed"))
+        let title = model.installAllProgress ?? (count > 0 ? L10n.format("Install all (%@)", [String(describing: count)]) : L10n.text("All installed"))
         return HStack(spacing: canvas.u(22)) {
             SelenePillButton(title: title, minWidth: 240, focused: focus == .installAll,
                              enabled: count > 0 && !model.installAllRunning) {

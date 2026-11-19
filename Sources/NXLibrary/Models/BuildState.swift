@@ -1,6 +1,6 @@
 import Foundation
 
-public enum BuildState: Equatable {
+enum BuildState: Equatable {
     case idle
     case running
     case succeeded

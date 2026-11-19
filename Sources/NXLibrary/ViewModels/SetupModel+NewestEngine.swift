@@ -5,12 +5,12 @@ import NXLibraryCore
 /// Never automatic (AGENTS.md): only these two actions move the checkout away from, or back to, the tested pin.
 extension SetupModel {
     /// The commit the gate expects and builds record: the player's newest engine, else the tested pin.
-    public var activeEngineCommit: String { newestEngineChoice?.commit ?? app.pinnedEngineCommit }
+    var activeEngineCommit: String { newestEngineChoice?.commit ?? app.pinnedEngineCommit }
 
-    public var usesNewestEngine: Bool { newestEngineChoice != nil }
+    var usesNewestEngine: Bool { newestEngineChoice != nil }
 
     /// Upstream main, when it is ahead of the tested pin and not already the engine in use.
-    public var newestEngineOffer: UpstreamStatus? {
+    var newestEngineOffer: UpstreamStatus? {
         guard case .loaded(let status) = upstreamState, status.newCommitsCount > 0,
               status.upstreamCommit != newestEngineChoice?.commit else { return nil }
         return status
@@ -33,18 +33,18 @@ extension SetupModel {
     }
 
     /// The Newest engine row's buttons: Use newest, or Update beside Back to tested once main has moved on.
-    public var newestEngineActions: [NewestEngineAction] {
+    var newestEngineActions: [NewestEngineAction] {
         NewestEngine.actions(choice: newestEngineChoice, main: newestEngineOffer?.upstreamCommit,
                              readiness: newestEngineReadiness)
     }
 
-    public var canSwitchEngine: Bool {
+    var canSwitchEngine: Bool {
         isNxnativeValid && !isSwitchingEngine && !app.isBuilding && !app.isUpdatingApp
     }
 
     /// Moves the engine to upstream main and turns the untested-toolchain override on. While the newest engine is
     /// already in use this is Update: the checkout moves to the newer main and the override's origin is kept.
-    public func useNewestEngine() {
+    func useNewestEngine() {
         guard canSwitchEngine, let status = newestEngineOffer else { return }
         if case .needsNewerApp = newestEngineReadiness { return }
         let repo = URL(fileURLWithPath: nxnativePath)
@@ -80,7 +80,7 @@ extension SetupModel {
                         self.newestEngineReadiness = .needsNewerApp(metal: metal)
                     }
                     self.newestEngineProblem = error.localizedDescription
-                    self.app.logs.append(LogEntry(level: .warning, message: L10n.format("Newest engine: %@", [String(describing: (error.localizedDescription))])))
+                    self.app.logs.append(LogEntry(level: .warning, message: L10n.format("Newest engine: %@", [String(describing: error.localizedDescription)])))
                 }
                 self.refreshCompatibility()
             }
@@ -88,7 +88,7 @@ extension SetupModel {
     }
 
     /// Returns the engine to the tested pin; the override goes back off if the choice turned it on.
-    public func useTestedEngine() {
+    func useTestedEngine() {
         guard canSwitchEngine, usesNewestEngine else { return }
         let repo = URL(fileURLWithPath: nxnativePath)
         let pinned = app.pinnedEngineCommit
@@ -102,10 +102,10 @@ extension SetupModel {
                 switch result {
                 case .success:
                     self.forgetNewestEngine()
-                    self.app.logs.append(LogEntry(level: .info, message: L10n.format("Engine back to the tested %@.", [String(describing: (pinned.prefix(7)))])))
+                    self.app.logs.append(LogEntry(level: .info, message: L10n.format("Engine back to the tested %@.", [String(describing: pinned.prefix(7))])))
                 case .failure(let error):
                     self.newestEngineProblem = error.localizedDescription
-                    self.app.logs.append(LogEntry(level: .warning, message: L10n.format("Back to tested: %@", [String(describing: (error.localizedDescription))])))
+                    self.app.logs.append(LogEntry(level: .warning, message: L10n.format("Back to tested: %@", [String(describing: error.localizedDescription)])))
                 }
                 self.refreshCompatibility()
             }

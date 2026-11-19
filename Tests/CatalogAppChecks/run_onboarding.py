@@ -24,7 +24,7 @@ def declaration(signature, text=None):
     return text[start:end]
 
 
-initial = declaration('    public init(settingsStore:')
+initial = declaration('    init(settingsStore:')
 restore = initial[initial.index('        let didCompleteSetup = '):initial.index('        // 1. Resolve safe root')]
 startup_requests = '\n'.join(line for line in initial.splitlines() if 'NotificationService.shared' in line)
 porting_source = (ROOT / 'Sources/NXLibrary/ViewModels/PortingModel.swift').read_text()
@@ -213,7 +213,7 @@ print("Onboarding persistence and notification timing: PASS")
 '''
 host = host.replace('// ACTIVATE_FOUND', declaration('    func activate(', (ROOT / 'Sources/NXLibrary/Views/Setup/FoundGamesSetupView+Input.swift').read_text()))
 host = host.replace('// KEYS', declaration('    enum StorageKeys'))
-host = host.replace('// SETUP', declaration('    @Published public private(set) var firstRunSetup ='))
+host = host.replace('// SETUP', declaration('    @Published private(set) var firstRunSetup ='))
 host = host.replace('// FINDINGS_CHANGED', findings_changed)
 host = host.replace('// FINISH', finish)
 host = host.replace('// RESTORE', restore).replace('// STARTUP_REQUESTS', startup_requests)

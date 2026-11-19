@@ -17,10 +17,10 @@ public enum GameFoldersCopy {
     }
 
     public static func sourcesAbout(extractedFolders: Bool) -> String {
-        L10n.format("Optional: %@ for building.", [String(describing: (sourceFormats(extractedFolders: extractedFolders)))])
+        L10n.format("Optional: %@ for building.", [String(describing: sourceFormats(extractedFolders: extractedFolders))])
     }
 
     public static func sourcesPickerMessage(extractedFolders: Bool) -> String {
-        L10n.format("Choose a folder with your %@. Existing apps play without these files. Change it later in Settings → Porting → Library.", [String(describing: (sourceFormats(extractedFolders: extractedFolders)))])
+        L10n.format("Choose a folder with your %@. Existing apps play without these files. Change it later in Settings → Porting → Library.", [String(describing: sourceFormats(extractedFolders: extractedFolders))])
     }
 }

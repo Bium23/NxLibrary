@@ -42,7 +42,7 @@ enum ConsoleControl: Hashable {
 /// B or Esc leaves: out of the search field or the dialog first. Nothing here
 /// takes key focus until the search starts, so a local monitor maps the keys;
 /// the controller arrives through `.nxConsoleGamepadAction`.
-public struct ConsoleView: View {
+struct ConsoleView: View {
     @Environment(\.seleneCanvas) private var canvas
     @Environment(\.seleneReduceMotion) private var reduceMotion
     @ObservedObject var viewModel: AppViewModel
@@ -65,7 +65,7 @@ public struct ConsoleView: View {
     @State private var scrollTick = 0
     @State private var keyMonitor: Any?
 
-    public init(viewModel: AppViewModel, router: AppRouter, showsHints: Bool = true) {
+    init(viewModel: AppViewModel, router: AppRouter, showsHints: Bool = true) {
         self.viewModel = viewModel
         self.router = router
         self.showsHints = showsHints
@@ -93,7 +93,7 @@ public struct ConsoleView: View {
         }
     }
 
-    public var body: some View {
+    var body: some View {
         let logs = filteredLogs
         return ZStack {
             SeleneTheme.scrim45
@@ -478,7 +478,7 @@ public struct ConsoleView: View {
         if let url = viewModel.buildLogURL,
            let build = try? String(contentsOf: url, encoding: .utf8) {
             let tail = build.split(separator: "\n", omittingEmptySubsequences: false).suffix(400)
-            text += L10n.format("\n\n--- Build log: %@ ---\n", [String(describing: (url.lastPathComponent))]) + tail.joined(separator: "\n")
+            text += L10n.format("\n\n--- Build log: %@ ---\n", [String(describing: url.lastPathComponent)]) + tail.joined(separator: "\n")
         }
         guard !text.isEmpty else { return SoundEffectService.shared.play(.error) }
         let pasteboard = NSPasteboard.general

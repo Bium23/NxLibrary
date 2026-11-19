@@ -24,7 +24,7 @@ public struct PendingInstall: Codable, Equatable {
         L10n.text("Ready when you quit")
     }
     public static func message(gameName: String) -> String {
-        L10n.format("%@ is open, so the new app waits beside it and replaces it as soon as you quit the game.", [String(describing: (gameName))])
+        L10n.format("%@ is open, so the new app waits beside it and replaces it as soon as you quit the game.", [String(describing: gameName)])
     }
 }
 

@@ -2,39 +2,39 @@ import Foundation
 import AppKit
 import NXLibraryCore
 
-public struct GameDLCItem: Identifiable, Hashable {
-    public let id: String
-    public let name: String
-    public let index: Int
-    public let sizeBytes: Int64
-    public let folderPath: String
-    
-    public var formattedSize: String {
+struct GameDLCItem: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let index: Int
+    let sizeBytes: Int64
+    let folderPath: String
+
+    var formattedSize: String {
         ByteCountFormatter.string(fromByteCount: sizeBytes, countStyle: .file)
     }
 }
 
-public struct GameDetailsProfile: Equatable {
-    public let gameId: UUID
-    public let dlcItems: [GameDLCItem]
-    public let saveDirectory: URL
-    public let saveExists: Bool
-    public let saveSizeBytes: Int64
-    public let appBundleSizeBytes: Int64
-    public let isExecutablePlayable: Bool
-    
-    public var formattedTotalSize: String {
+struct GameDetailsProfile: Equatable {
+    let gameId: UUID
+    let dlcItems: [GameDLCItem]
+    let saveDirectory: URL
+    let saveExists: Bool
+    let saveSizeBytes: Int64
+    let appBundleSizeBytes: Int64
+    let isExecutablePlayable: Bool
+
+    var formattedTotalSize: String {
         ByteCountFormatter.string(fromByteCount: appBundleSizeBytes, countStyle: .file)
     }
-    
-    public var formattedSaveSize: String {
+
+    var formattedSaveSize: String {
         ByteCountFormatter.string(fromByteCount: saveSizeBytes, countStyle: .file)
     }
-    
-    public static func inspect(for game: PortedGame) -> GameDetailsProfile {
+
+    static func inspect(for game: PortedGame) -> GameDetailsProfile {
         let fm = FileManager.default
         let appURL = game.url
-        
+
         // 1. Inspect DLCs in Contents/Resources/aoc
         var dlcs: [GameDLCItem] = []
         let aocDir = appURL.appendingPathComponent("Contents/Resources/aoc")
@@ -57,7 +57,7 @@ public struct GameDetailsProfile: Equatable {
                 }
             }
         }
-        
+
         // 2. Resolve Save Directory
         let home = NSHomeDirectory()
         let saveDir: URL
@@ -69,10 +69,10 @@ public struct GameDetailsProfile: Equatable {
             let safe = game.name.replacingOccurrences(of: "[^a-zA-Z0-9._-]", with: "_", options: .regularExpression)
             saveDir = URL(fileURLWithPath: "\(home)/Library/Application Support/nxnative/\(safe)/save")
         }
-        
+
         let saveExists = fm.fileExists(atPath: saveDir.path)
         let saveSize = saveExists ? calculateSize(at: saveDir) : 0
-        
+
         return GameDetailsProfile(
             gameId: game.id,
             dlcItems: dlcs,
@@ -83,16 +83,16 @@ public struct GameDetailsProfile: Equatable {
             isExecutablePlayable: game.isPlayableLocally
         )
     }
-    
+
     private static func calculateSize(at url: URL) -> Int64 {
         let fm = FileManager.default
         var isDir: ObjCBool = false
         guard fm.fileExists(atPath: url.path, isDirectory: &isDir) else { return 0 }
-        
+
         if !isDir.boolValue {
             return (try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize.map { Int64($0) } ?? 0
         }
-        
+
         guard let enumerator = fm.enumerator(at: url, includingPropertiesForKeys: [.fileSizeKey]) else { return 0 }
         var total: Int64 = 0
         for case let file as URL in enumerator {

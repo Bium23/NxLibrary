@@ -377,7 +377,7 @@ struct ThemePickerView: View {
         if let browse = browser.state {
             guard let item = browse.focusedItem else { return nil }
             var parts = [item.source.title, item.title]
-            if let author = item.author { parts.append(L10n.format("art by %@", [String(describing: (author))])) }
+            if let author = item.author { parts.append(L10n.format("art by %@", [String(describing: author)])) }
             parts.append("\(item.width) × \(item.height)")
             return parts.joined(separator: " · ")
         }
@@ -487,7 +487,7 @@ struct ThemePickerView: View {
         case .none: return state.tab == .live ? L10n.text("Moonlight") : L10n.text("None")
         case .add: return state.tab == .live ? L10n.text("Add your video") : L10n.text("Add your own")
         case .wallpaper(let id): return theme.wallpaperTitle(for: id)
-        case .online(let source): return L10n.format("Browse %@", [String(describing: (source.title))])
+        case .online(let source): return L10n.format("Browse %@", [String(describing: source.title)])
         }
     }
 
@@ -742,7 +742,7 @@ struct ThemePickerView: View {
                 .contentShape(Rectangle())
                 .onTapGesture { place(.notNow) }
             SeleneChoiceDialog(title: WallpaperPlacement.dialogTitle,
-                               message: L10n.format("%@. You can change both wallpapers any time in Settings → Look.", [String(describing: (name))]),
+                               message: L10n.format("%@. You can change both wallpapers any time in Settings → Look.", [String(describing: name)]),
                                choices: WallpaperPlacement.allCases.map(\.title), focus: $placementFocus) { index in
                 place(WallpaperPlacement.allCases[index])
             }
@@ -832,8 +832,8 @@ struct ThemePickerView: View {
         let downloaded = !id.hasPrefix(WallpaperCatalog.custom + "/")
         let name = theme.credits[id]?.title ?? theme.wallpaperTitle(for: id)
         var message = downloaded
-            ? L10n.format("%@ goes to the Trash, so you can bring it back from there, or download it again whenever you like.", [String(describing: (name))])
-            : L10n.format("Arcane's copy of %@ goes to the Trash, so you can bring it back from there. Your original file stays where it is.", [String(describing: (name))])
+            ? L10n.format("%@ goes to the Trash, so you can bring it back from there, or download it again whenever you like.", [String(describing: name)])
+            : L10n.format("Arcane's copy of %@ goes to the Trash, so you can bring it back from there. Your original file stays where it is.", [String(describing: name)])
         if settings.settings.wallpaperID == id { message += L10n.text(" Your theme’s own background takes its place.") }
         return ZStack {
             SeleneTheme.scrim45

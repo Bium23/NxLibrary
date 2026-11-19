@@ -3,7 +3,7 @@ import AppKit
 import Combine
 import NXLibraryCore
 
-public struct AppShellView: View {
+struct AppShellView: View {
     @StateObject private var viewModel: AppViewModel
     /// The Setup (`SetupModel`): the update offer names the Xcode a release needs.
     @ObservedObject private var setup: SetupModel
@@ -517,7 +517,7 @@ public struct AppShellView: View {
         }
     }
 
-    public var body: some View {
+    var body: some View {
         nativeGameCommands
         .onReceive(NotificationCenter.default.publisher(for: .nxLibraryCheckAppUpdates)) { _ in
             guard nativeMenuAvailability.general else { return }
@@ -722,7 +722,7 @@ public struct AppShellView: View {
             if viewModel.saveGate.hasActiveOperations { return L10n.text("After the save operation") }
             if let ids = runningGames?.runningGameIDs, let id = ids.first {
                 let name = viewModel.libraryGames.first { $0.id == id }?.name ?? "the game"
-                return L10n.format("After you quit %@", [String(describing: (name))])
+                return L10n.format("After you quit %@", [String(describing: name)])
             }
             return nil
         }
@@ -928,7 +928,7 @@ public struct AppShellView: View {
             SeleneTheme.scrim45.ignoresSafeArea().contentShape(Rectangle())
                 .onTapGesture { viewModel.gameWithInstallFailure = nil }
             SeleneConfirmDialog(title: L10n.text("Installation failed"),
-                                message: L10n.format("The new build of %@ has been kept.", [String(describing: (game.name))])
+                                message: L10n.format("The new build of %@ has been kept.", [String(describing: game.name)])
                                     + (currentExists ? L10n.text("\nYour current app is still available.") : L10n.text("\nYou can retry installation.")),
                                 confirmTitle: "Retry", cancelTitle: L10n.text("Close"),
                                 focus: $viewModel.installFailureFocus,
@@ -964,7 +964,7 @@ public struct AppShellView: View {
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
                 .onTapGesture { viewModel.dismissCloseGame() }
-            SeleneConfirmDialog(title: L10n.format("Close %@?", [String(describing: (game.name))]),
+            SeleneConfirmDialog(title: L10n.format("Close %@?", [String(describing: game.name)]),
                                 message: L10n.text("Unsaved progress in the game will be lost."),
                                 confirmTitle: "Close",
                                 focus: $viewModel.closeGameFocus,
@@ -1003,7 +1003,7 @@ public struct AppShellView: View {
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
                 .onTapGesture { viewModel.dismissRemoveGame() }
-            SeleneConfirmDialog(title: L10n.format("Delete %@?", [String(describing: (game.name))]),
+            SeleneConfirmDialog(title: L10n.format("Delete %@?", [String(describing: game.name)]),
                                 message: L10n.text("It leaves the library. Your game files and the build cache stay on disk."),
                                 confirmTitle: "Delete",
                                 focus: $viewModel.removeGameFocus,
@@ -1295,7 +1295,7 @@ public struct AppShellView: View {
         do {
             try helper.run()
         } catch {
-            viewModel.alertMessage = L10n.format("Arcane could not restart: %@", [String(describing: (error.localizedDescription))])
+            viewModel.alertMessage = L10n.format("Arcane could not restart: %@", [String(describing: error.localizedDescription)])
             return
         }
         AppDelegate.relaunchScheduled = true

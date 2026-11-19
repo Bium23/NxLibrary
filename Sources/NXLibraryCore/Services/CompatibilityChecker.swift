@@ -82,7 +82,7 @@ public final class CompatibilityChecker {
             .trimmingCharacters(in: .whitespacesAndNewlines)
         checks.append(.init(id: "commit", title: L10n.text("Engine commit"),
                             status: head == expectedEngineCommit ? .pass : .block,
-                            detail: L10n.format("current %@, expected %@", [String(describing: (head)), String(describing: (expectedEngineCommit))])))
+                            detail: L10n.format("current %@, expected %@", [String(describing: head), String(describing: expectedEngineCommit)])))
 
         let dirty = Self.relevantChanges(run("/usr/bin/git", ["status", "--porcelain"]).stdout)
         checks.append(.init(id: "tree", title: L10n.text("Working tree"),
@@ -96,7 +96,7 @@ public final class CompatibilityChecker {
         let installedNumber = Self.metalNumber(metal) ?? (metal.isEmpty ? "not found" : metal)
         checks.append(.init(id: "metal", title: L10n.text("Metal compiler"),
                             status: standing == .same ? .pass : .block,
-                            detail: L10n.format("installed %@, tested %@", [String(describing: (installedNumber)), String(describing: (Self.metalNumber(required) ?? required))])))
+                            detail: L10n.format("installed %@, tested %@", [String(describing: installedNumber), String(describing: Self.metalNumber(required) ?? required)])))
 
         let pythonVersion = run(pythonURL.path, [
             "-c", "import sys; print(f'{sys.version_info[0]}.{sys.version_info[1]}')"
@@ -107,7 +107,7 @@ public final class CompatibilityChecker {
         checks.append(.init(id: "python", title: L10n.text("Python venv"),
                             status: pythonOK ? .pass : .block,
                             detail: pythonVersion.isEmpty ? L10n.text("version unavailable (requires 3.12+)")
-                                                          : L10n.format("%@ (requires 3.12+)", [String(describing: (pythonVersion))])))
+                                                          : L10n.format("%@ (requires 3.12+)", [String(describing: pythonVersion)])))
 
         let help = run(pythonURL.path, [
             repoURL.appendingPathComponent("scripts/build_ipa_from_nsp.py").path, "-h"
@@ -116,7 +116,7 @@ public final class CompatibilityChecker {
         let missing = requiredFlags.filter { !help.contains($0) }
         checks.append(.init(id: "cli", title: L10n.text("nxnative CLI"),
                             status: missing.isEmpty ? .pass : .block,
-                            detail: missing.isEmpty ? L10n.text("required options present") : L10n.format("missing %@", [String(describing: (missing.joined(separator: ", ")))])))
+                            detail: missing.isEmpty ? L10n.text("required options present") : L10n.format("missing %@", [String(describing: missing.joined(separator: ", "))])))
 
         return CompatibilityReport(ok: checks.allSatisfy { $0.status != .block }, checks: checks, metal: standing)
     }

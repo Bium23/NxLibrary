@@ -362,7 +362,6 @@ struct GameDetailView: View {
         }
     }
 
-
     // MARK: - Lifecycle
 
     private func appear() {

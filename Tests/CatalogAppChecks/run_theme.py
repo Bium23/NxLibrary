@@ -287,7 +287,7 @@ host = host.replace('// ACTUAL_COVER_PRIORITY', declaration(
 host = host.replace('// ACTUAL_BLUR_POLICY', declaration(
     'Sources/NXLibrary/Views/Shell/AppShellView.swift', '    private var contentBlur:'))
 host = host.replace('// ACTUAL_APPLY', declaration(
-    'Sources/NXLibrary/Views/Theme/ThemeStore.swift', '    public func apply('))
+    'Sources/NXLibrary/Views/Theme/ThemeStore.swift', '    func apply('))
 host = host.replace('// ACTUAL_SHELL_STYLE', declaration(
     'Sources/NXLibrary/Views/Shell/AppShellView.swift', '    private var backdropStyle:'))
 

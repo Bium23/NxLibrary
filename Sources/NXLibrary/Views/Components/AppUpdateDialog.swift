@@ -18,7 +18,7 @@ struct AppUpdateDialog: View {
         switch updater.state {
         case .checking: return L10n.text("Checking for updates")
         case .upToDate: return L10n.text("You’re up to date")
-        case .available(let release): return L10n.format("Arcane %@", [String(describing: (release.version))])
+        case .available(let release): return L10n.format("Arcane %@", [String(describing: release.version)])
         case .downloading: return L10n.text("Downloading update")
         case .verifying: return L10n.text("Verifying update")
         case .installing: return L10n.text("Installing update")
@@ -29,9 +29,9 @@ struct AppUpdateDialog: View {
     private var message: String {
         switch updater.state {
         case .checking: return L10n.text("Looking for a new release…")
-        case .upToDate: return L10n.format("You have Arcane %@. No newer release is available.", [String(describing: (updater.currentVersion))])
+        case .upToDate: return L10n.format("You have Arcane %@. No newer release is available.", [String(describing: updater.currentVersion)])
         case .available:
-            var lines = [L10n.format("You have %@.", [String(describing: (updater.currentVersion))])]
+            var lines = [L10n.format("You have %@.", [String(describing: updater.currentVersion)])]
             if updater.installation == .developer {
                 lines.append(L10n.text("This development copy can check releases. Install a packaged release to use automatic updates."))
             } else if updater.installation == .readOnly {
@@ -40,7 +40,7 @@ struct AppUpdateDialog: View {
                 lines.append(L10n.text(reason))
             } else { lines.append(L10n.text("Arcane restarts to finish.")) }
             return (lines + requirementNotes).joined(separator: "\n\n")
-        case .downloading(let progress): return L10n.format("%@%% · Download continues if you close this dialog.", [String(describing: (Int((progress * 100).rounded())))])
+        case .downloading(let progress): return L10n.format("%@%% · Download continues if you close this dialog.", [String(describing: Int((progress * 100).rounded()))])
         case .verifying: return L10n.text("Checking the download before installing.")
         case .installing: return L10n.text("Arcane will reopen automatically.")
         case .failed(let message): return message
@@ -57,7 +57,7 @@ struct AppUpdateDialog: View {
             focus: $updater.offerFocus, onCancel: updater.later, onConfirm: updater.confirmDialog) {
                 if case .checking = updater.state { ProgressView().padding(.top, 16) }
                 if let release = updater.dialogRelease, !release.notes.isEmpty {
-                    Text(L10n.format("Release notes · %@", [String(describing: (release.version))]))
+                    Text(L10n.format("Release notes · %@", [String(describing: release.version)]))
                         .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.ink60)
                         .padding(.top, 18)

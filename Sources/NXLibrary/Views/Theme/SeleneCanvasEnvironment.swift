@@ -9,7 +9,7 @@ private struct SeleneMinimumFontKey: EnvironmentKey {
     static let defaultValue: CGFloat = 0
 }
 
-public extension EnvironmentValues {
+extension EnvironmentValues {
     var seleneMinimumFont: CGFloat {
         get { self[SeleneMinimumFontKey.self] }
         set { self[SeleneMinimumFontKey.self] = newValue }
@@ -44,7 +44,7 @@ private struct SeleneCanvasRoot: ViewModifier {
     }
 }
 
-public extension View {
+extension View {
     /// System font sized in Selene canvas units.
     func seleneFont(_ size: CGFloat, _ weight: Font.Weight = .regular,
                     design: Font.Design = .default) -> some View {

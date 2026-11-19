@@ -73,7 +73,7 @@ struct CheatsPanel: View {
             if let next = entry.section, next != section { lines.append(.heading(next)) }
             section = entry.section
             if let broken = entry.broken {
-                lines.append(.text(title: entry.name, about: L10n.format("Not supported: %@.", [String(describing: (broken))]), chip: nil, dim: true))
+                lines.append(.text(title: entry.name, about: L10n.format("Not supported: %@.", [String(describing: broken)]), chip: nil, dim: true))
                 continue
             }
             switch entry.kind {
@@ -381,10 +381,10 @@ struct CheatsPanel: View {
             running = true
             SoundEffectService.shared.play(.error)
         } catch CheatStoreError.writeFailed(let reason) {
-            message = L10n.format("The cheat files were not changed: %@.", [String(describing: (reason))])
+            message = L10n.format("The cheat files were not changed: %@.", [String(describing: reason)])
             SoundEffectService.shared.play(.error)
         } catch {
-            message = L10n.format("The cheat files were not changed: %@.", [String(describing: (error.localizedDescription))])
+            message = L10n.format("The cheat files were not changed: %@.", [String(describing: error.localizedDescription)])
             SoundEffectService.shared.play(.error)
         }
         return false
@@ -404,7 +404,7 @@ struct CheatsPanel: View {
 
     private func addFromOpenPanel() {
         let panel = NSOpenPanel()
-        panel.title = L10n.format("Add cheats for %@", [String(describing: (game.name))])
+        panel.title = L10n.format("Add cheats for %@", [String(describing: game.name)])
         panel.prompt = L10n.text("Add")
         panel.canChooseFiles = true
         panel.canChooseDirectories = true

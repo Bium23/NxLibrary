@@ -13,7 +13,7 @@ public enum AppIconProgress: Equatable {
         case .launcherOnly: return L10n.text("Icon used only in Arcane")
         case .original: return L10n.text("Using the game's original app icon")
         case .unavailable: return L10n.text("No icon available. You can choose one.")
-        case .failed(let reason): return L10n.format("The app icon was not changed: %@", [String(describing: (reason))])
+        case .failed(let reason): return L10n.format("The app icon was not changed: %@", [String(describing: reason)])
         }
     }
 

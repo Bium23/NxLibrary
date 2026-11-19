@@ -1,7 +1,7 @@
 import Foundation
 import NXLibraryCore
 
-public enum NXLibraryError: Error, LocalizedError {
+enum NXLibraryError: Error, LocalizedError {
     case baseRequired
     case missingSources
     case missingTitleId
@@ -16,7 +16,7 @@ public enum NXLibraryError: Error, LocalizedError {
     /// The imported keys cannot open the game (`KeyCheck`); the engine was not started.
     case keyCheck(PortingFailureReason, game: String)
 
-    public var errorDescription: String? {
+    var errorDescription: String? {
         switch self {
         case .baseRequired:
             return L10n.text("Select a base game. Updates and DLC alone cannot be built.")
@@ -29,15 +29,15 @@ public enum NXLibraryError: Error, LocalizedError {
         case .engineMissing:
             return L10n.text("The nxnative checkout was not found. Choose it in Settings → Setup and engine.")
         case .environmentBlocked(let detail):
-            return L10n.format("The build environment is incomplete: %@", [String(describing: (detail))])
+            return L10n.format("The build environment is incomplete: %@", [String(describing: detail)])
         case .incompatibleToolchain(let detail):
-            return L10n.format("The toolchain is not certified: %@", [String(describing: (detail))])
+            return L10n.format("The toolchain is not certified: %@", [String(describing: detail)])
         case .buildAlreadyRunning:
             return L10n.text("A build is already running.")
         case .appMissing(let path):
-            return L10n.format("The app bundle is missing: %@", [String(describing: (path))])
+            return L10n.format("The app bundle is missing: %@", [String(describing: path)])
         case .launchFailed(let name):
-            return L10n.format("macOS could not launch %@.", [String(describing: (name))])
+            return L10n.format("macOS could not launch %@.", [String(describing: name)])
         case .noSelectedGame:
             return L10n.text("Select a game first.")
         case .keyCheck(let reason, let game):

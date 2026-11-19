@@ -55,7 +55,7 @@ final class AppIconModel: ObservableObject {
 
     /// Keep one cancellable Play request while the app is being signed; signing itself must finish safely.
     func waitForAppIconBeforeLaunching(_ game: PortedGame) {
-        app.showSettingsNotice(title: L10n.format("Preparing %@", [String(describing: (game.name))]),
+        app.showSettingsNotice(title: L10n.format("Preparing %@", [String(describing: game.name)]),
                            message: L10n.text("Preparing the app icon. The game will start when it is ready. This can take a minute for a large game."),
                            cancelTitle: L10n.text("Cancel"))
         guard let notice = app.settingsNotice else { return }
@@ -85,7 +85,7 @@ final class AppIconModel: ObservableObject {
     }
 
     /// The pop-up's answer: show the player's Icon on the app too, or keep the game's own.
-    public func setUsesPickedAppIcon(_ use: Bool, for game: PortedGame) {
+    func setUsesPickedAppIcon(_ use: Bool, for game: PortedGame) {
         guard app.authorizeDevelopmentOperation(.icon, game: game) else { return }
         updateAppIconState(game) {
             $0.usesPickedAppIcon = use
@@ -96,7 +96,7 @@ final class AppIconModel: ObservableObject {
     }
 
     /// Automatic removes the personal image without changing the player's destination choice.
-    public func appIconPickChanged(for game: PortedGame, removed: Bool) {
+    func appIconPickChanged(for game: PortedGame, removed: Bool) {
         guard app.authorizeDevelopmentOperation(.icon, game: game) else { return }
         updateAppIconState(game) {
             if removed { $0.useAutomaticAppIcon() }
@@ -107,7 +107,7 @@ final class AppIconModel: ObservableObject {
 
     /// After a library scan: an app whose icon differs from what the rule wants (a pick chosen while the app was
     /// elsewhere or missing, an app moved or built again, a change lost to a crash) is put right.
-    public func reconcileAppIcons() {
+    func reconcileAppIcons() {
         guard !AppData.profile.isDevelopment else { return }
         for game in app.libraryGames where !game.appIconPending && !appIconsInFlight.contains(game.id) {
             guard let app = installedApp(game) else { continue }
@@ -125,7 +125,7 @@ final class AppIconModel: ObservableObject {
 
     /// Writes or puts back every waiting icon whose game is not running and not being built. A change asked for while
     /// the same app is being signed runs again once that finishes, so the last choice wins.
-    public func syncPendingAppIcons() {
+    func syncPendingAppIcons() {
         for game in app.libraryGames where game.appIconPending {
             guard app.developmentOperations.permits(.icon, gameID: game.id) else { continue }
             guard !appIconsInFlight.contains(game.id) else {
@@ -179,12 +179,12 @@ final class AppIconModel: ObservableObject {
                         GameIconProvider.forget(game)
                         GameArtLoader.shared.forget(game)
                         ArtworkPicks.shared.touch()
-                        self.app.logs.append(LogEntry(level: .info, message: L10n.format("Updated the app icon of %@.", [String(describing: (game.name))])))
+                        self.app.logs.append(LogEntry(level: .info, message: L10n.format("Updated the app icon of %@.", [String(describing: game.name)])))
                     }
                 case .failure(let error):
                     self.appIconProgress[game.id] = .failed(error.localizedDescription)
                     self.app.logs.append(LogEntry(level: .error,
-                                              message: L10n.format("Could not change the app icon of %@: %@", [String(describing: (game.name)), String(describing: (error.localizedDescription))])))
+                                              message: L10n.format("Could not change the app icon of %@: %@", [String(describing: game.name), String(describing: error.localizedDescription)])))
                 }
                 if !again, let buildLog, self.appIconBuildLogs[game.id] == buildLog,
                    let status = self.appIconProgress[game.id] {

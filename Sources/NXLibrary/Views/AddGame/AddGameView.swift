@@ -12,7 +12,7 @@ import NXLibraryCore
 /// once and the porting goes on. Nothing in the column takes key focus, so a
 /// local monitor maps the keys (as Game options does); the controller arrives
 /// through `.nxAddGameGamepadAction`. Files can be dropped anywhere on it.
-public struct AddGameView: View {
+struct AddGameView: View {
     @Environment(\.seleneCanvas) var canvas
     @Environment(\.seleneReduceMotion) var reduceMotion
     @ObservedObject var viewModel: AppViewModel
@@ -36,7 +36,7 @@ public struct AddGameView: View {
     @State private var dropTargeted = false
     @FocusState private var editing: String?
 
-    public init(viewModel: AppViewModel, router: AppRouter, artwork: ArtworkStore? = nil, showsHints: Bool = true,
+    init(viewModel: AppViewModel, router: AppRouter, artwork: ArtworkStore? = nil, showsHints: Bool = true,
                 reviewSelectionID: UUID? = nil) {
         self.viewModel = viewModel
         self.porting = viewModel.porting
@@ -47,7 +47,7 @@ public struct AddGameView: View {
         self.reviewSelectionID = reviewSelectionID
     }
 
-    public var body: some View {
+    var body: some View {
         let rows = rows(for: porting.buildWizardStep)
         let focused = focusedRow(in: rows)
         return ZStack {
@@ -207,7 +207,7 @@ public struct AddGameView: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(L10n.format("Step %@ of 3", [String(describing: (step))]))
+        .accessibilityLabel(L10n.format("Step %@ of 3", [String(describing: step)]))
     }
 
     // MARK: - Focus

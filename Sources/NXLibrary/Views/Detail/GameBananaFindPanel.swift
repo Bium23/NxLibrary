@@ -20,7 +20,7 @@ struct GameBananaFindPanel: View {
                 Text(L10n.text("GAMEBANANA"))
                     .seleneFont(15, .semibold)
                     .foregroundColor(SeleneTheme.ink60)
-                Text(L10n.format("Which game is %@?", [String(describing: (gameName))]))
+                Text(L10n.format("Which game is %@?", [String(describing: gameName)]))
                     .seleneFont(32)
                     .foregroundColor(SeleneTheme.ink)
                     .lineLimit(2)

@@ -154,7 +154,6 @@ final class SpotlightRowMergeTests: XCTestCase {
     }
 }
 
-
 /// A game that starts becomes the first game of the row, the rest of a saved order staying as it was.
 final class SpotlightRowPlayedTests: XCTestCase {
     private let a = UUID(), b = UUID(), c = UUID(), d = UUID()

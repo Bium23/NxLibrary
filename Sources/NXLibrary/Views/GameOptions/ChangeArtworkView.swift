@@ -136,7 +136,7 @@ struct ChangeArtworkView: View {
 
             VStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(browsing.map { L10n.format("%@ · BROWSE ONLINE", [String(describing: ($0.title.uppercased()))]) } ?? L10n.text("CHANGE ARTWORK"))
+                    Text(browsing.map { L10n.format("%@ · BROWSE ONLINE", [String(describing: $0.title.uppercased())]) } ?? L10n.text("CHANGE ARTWORK"))
                         .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink60)
                         .padding(.leading, canvas.u(8))
@@ -255,7 +255,7 @@ struct ChangeArtworkView: View {
         HStack(spacing: canvas.u(10)) {
             MaterialIconView(.search, size: 22).foregroundColor(SeleneTheme.ink60)
             TextField("", text: $browseDraft,
-                      prompt: Text(L10n.format("Search %@", [String(describing: (browsing?.title ?? ""))])).foregroundColor(SeleneTheme.ink60))
+                      prompt: Text(L10n.format("Search %@", [String(describing: browsing?.title ?? "")])).foregroundColor(SeleneTheme.ink60))
                 .textFieldStyle(.plain)
                 .seleneFont(18)
                 .foregroundColor(SeleneTheme.ink)
@@ -308,16 +308,16 @@ struct ChangeArtworkView: View {
     }
 
     private func browseStatus(_ source: ArtworkBrowseSource) -> String {
-        if downloading { return L10n.format("Downloading the full image from %@…", [String(describing: (source.title))]) }
-        guard let result = browseResult else { return L10n.format("Searching %@ for “%@”…", [String(describing: (source.title)), String(describing: (browseQuery))]) }
+        if downloading { return L10n.format("Downloading the full image from %@…", [String(describing: source.title)]) }
+        guard let result = browseResult else { return L10n.format("Searching %@ for “%@”…", [String(describing: source.title), String(describing: browseQuery)]) }
         guard result.page != nil else {
-            return L10n.format("%@ has no %@ called “%@”", [String(describing: (source.title)), String(describing: (source == .launchBox && subject.steam == nil ? L10n.text("Switch game") : "game")), String(describing: (browseQuery))])
+            return L10n.format("%@ has no %@ called “%@”", [String(describing: source.title), String(describing: source == .launchBox && subject.steam == nil ? L10n.text("Switch game") : "game"), String(describing: browseQuery)])
         }
         if browseLoading.contains(slot) && (browseItems[slot] ?? []).isEmpty { return L10n.text("Loading…") }
         if (browseItems[slot] ?? []).isEmpty {
-            return L10n.format("%@ has no %@ for “%@”", [String(describing: (source.title)), String(describing: (slot.title.lowercased())), String(describing: (browseQuery))])
+            return L10n.format("%@ has no %@ for “%@”", [String(describing: source.title), String(describing: slot.title.lowercased()), String(describing: browseQuery)])
         }
-        return L10n.format("%@ · “%@” · full size downloads when you choose", [String(describing: (source.title)), String(describing: (browseQuery))])
+        return L10n.format("%@ · “%@” · full size downloads when you choose", [String(describing: source.title), String(describing: browseQuery)])
     }
 
     private var artworkLocation: String {
@@ -685,7 +685,7 @@ struct ChangeArtworkView: View {
             downloading = false
             guard browsing == source else { return }
             guard let data else {
-                message = L10n.format("The full image could not be downloaded from %@. Try again.", [String(describing: (source.title))])
+                message = L10n.format("The full image could not be downloaded from %@. Try again.", [String(describing: source.title)])
                 SoundEffectService.shared.play(.error)
                 return
             }
@@ -718,7 +718,7 @@ struct ChangeArtworkView: View {
         panel.allowedContentTypes = [.png, .jpeg, .heic, .webP, .image]
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
-        panel.message = L10n.format("Choose a %@ for %@.", [String(describing: (slot.title.lowercased())), String(describing: (subject.name))])
+        panel.message = L10n.format("Choose a %@ for %@.", [String(describing: slot.title.lowercased()), String(describing: subject.name)])
         guard panel.runModal() == .OK, let url = panel.url else { return }
         guard let data = try? Data(contentsOf: url) else {
             message = L10n.text("That file could not be read.")

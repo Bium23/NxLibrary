@@ -42,14 +42,14 @@ public enum ToolchainGateCopy {
         if blockers.allSatisfy({ $0.id == "metal" }) {
             switch report.metal {
             case .newer(let installed, let required):
-                let head = L10n.format("Your Metal compiler (%@) is newer than the one nxnative is tested with (%@).", [String(describing: (installed)), String(describing: (required))])
+                let head = L10n.format("Your Metal compiler (%@) is newer than the one nxnative is tested with (%@).", [String(describing: installed), String(describing: required)])
                 return Summary(label: overrideOn ? L10n.text("Newer Metal · override on") : L10n.text("Newer Metal"), tone: .info,
                                message: head + (overrideOn ? L10n.text(" There should be no problems; builds are recorded as untested.")
                                                            : L10n.text(" There should be no problems: turn on Untested toolchain override to build.")),
                                buildHint: L10n.text("Newer Metal: turn on the override in Settings → Setup and engine"))
             case .older(let installed, let required):
-                let head = L10n.format("Your Metal compiler (%@) is older than the one nxnative needs (%@). ", [String(describing: (installed)), String(describing: (required))])
-                    + L10n.format("Updating to Metal %@ is strongly recommended.", [String(describing: (required))])
+                let head = L10n.format("Your Metal compiler (%@) is older than the one nxnative needs (%@). ", [String(describing: installed), String(describing: required)])
+                    + L10n.format("Updating to Metal %@ is strongly recommended.", [String(describing: required)])
                 return Summary(label: overrideOn ? L10n.text("Older Metal · override on") : L10n.text("Update recommended"), tone: .warning,
                                message: head + (overrideOn ? L10n.text(" Builds are recorded as untested.")
                                                            : L10n.text(" Untested toolchain override builds anyway, at your own risk.")),

@@ -8,7 +8,7 @@ import NXLibraryCore
 /// laid over it. The screens that show it observe it on their own: Spotlight, Collection, the game page, Game options,
 /// Change artwork, Change metadata, the launch screen and the session card. It reaches the rest of Arcane only
 /// through `app`: the library, the focused game and the personalization key.
-public final class StoreMetadataModel: ObservableObject {
+final class StoreMetadataModel: ObservableObject {
     /// The coordinator: library, focused game and personalization keys.
     unowned let app: AppViewModel
 
@@ -16,14 +16,14 @@ public final class StoreMetadataModel: ObservableObject {
         self.app = app
     }
 
-    @Published public var storeMetadata: [UUID: NintendoStoreMetadata] = [:]
-    @Published public var storeMetadataLoading: Set<UUID> = []
-    @Published public var storeMetadataErrors: [UUID: String] = [:]
+    @Published var storeMetadata: [UUID: NintendoStoreMetadata] = [:]
+    @Published var storeMetadataLoading: Set<UUID> = []
+    @Published var storeMetadataErrors: [UUID: String] = [:]
     private lazy var storeMetadataService = NintendoStoreMetadataService()
     private var metadataLocaleGeneration = UUID()
     private var localizedMetadataRefresh: Task<Void, Never>?
 
-    public func loadStoreMetadata(for game: PortedGame) {
+    func loadStoreMetadata(for game: PortedGame) {
         Task { @MainActor [weak self] in await self?.fetchStoreMetadata(for: game) }
     }
 
@@ -59,7 +59,7 @@ public final class StoreMetadataModel: ObservableObject {
     }
 
     /// A language change only resets presentation metadata, never the library, personal picks or game settings.
-    public func refreshLocalizedMetadata() {
+    func refreshLocalizedMetadata() {
         metadataLocaleGeneration = UUID()
         let generation = metadataLocaleGeneration
         localizedMetadataRefresh?.cancel()
@@ -159,7 +159,7 @@ public final class StoreMetadataModel: ObservableObject {
     /// description and hero immediately when selected.
     /// A game shown in another language (the language changed while the app was closed) is
     /// queued for the app's language in the background.
-    public func preloadCachedStoreMetadata() {
+    func preloadCachedStoreMetadata() {
         let locale = L10n.context
         var otherLanguage: [PortedGame] = []
         for game in app.libraryGames {
@@ -185,11 +185,11 @@ public final class StoreMetadataModel: ObservableObject {
 
     private let screenshotFallback = ScreenshotFallbackStore()
     /// Games whose LaunchBox screenshots are being looked up; Details waits before saying it has none.
-    @Published public private(set) var screenshotLookups: Set<UUID> = []
+    @Published private(set) var screenshotLookups: Set<UUID> = []
 
     /// A game whose metadata has no screenshots (Title DB has none for Switch 2 games) asks LaunchBox once, when the
     /// game is selected or opened as its metadata is, and keeps the answer for 30 days. A scan never asks.
-    public func loadFallbackScreenshots(for game: PortedGame) {
+    func loadFallbackScreenshots(for game: PortedGame) {
         guard let titleId = game.titleId, !titleId.isEmpty, let metadata = storeMetadata[game.id],
               !storeMetadataLoading.contains(game.id), screenshotFallback.wantsLookup(metadata),
               screenshotLookups.insert(game.id).inserted else { return }
@@ -207,30 +207,30 @@ public final class StoreMetadataModel: ObservableObject {
     }
 
     /// The metadata as the store gave it: what Automatic means in Change metadata.
-    public func storeMetadataAsFetched(for game: PortedGame) -> NintendoStoreMetadata? {
+    func storeMetadataAsFetched(for game: PortedGame) -> NintendoStoreMetadata? {
         storeMetadataOriginals[game.id]
     }
 
     /// Keeps the player's value for a field, or (nil) goes back to the store's.
-    public func pickMetadata(_ value: String?, field: MetadataField, for game: PortedGame) {
+    func pickMetadata(_ value: String?, field: MetadataField, for game: PortedGame) {
         let key = app.personalizationKey(for: game)
         if let value { MetadataPicks.shared.set(value, titleID: key, field: field) }
         else { MetadataPicks.shared.remove(titleID: key, field: field) }
         if let original = storeMetadataOriginals[game.id] { setStoreMetadata(original, for: game) }
     }
 
-    public func metadataCacheSize() -> Int64 {
+    func metadataCacheSize() -> Int64 {
         storeMetadataService.cacheSize() + WikipediaDescriptionService.shared.cacheSize()
     }
 
-    public func clearMetadataCache() {
+    func clearMetadataCache() {
         storeMetadataService.clearCache()
         WikipediaDescriptionService.shared.clearCache()
         storeMetadata.removeAll()
         storeMetadataOriginals.removeAll()
     }
 
-    public func nintendoStoreSearchURL(for game: PortedGame) -> URL? {
+    func nintendoStoreSearchURL(for game: PortedGame) -> URL? {
         var components = URLComponents(string: "https://www.nintendo.com/us/search/")
         components?.fragment = "q=\(game.name)&p=1&cat=gme&sort=df"
         return components?.url

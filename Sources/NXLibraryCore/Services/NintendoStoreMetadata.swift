@@ -99,7 +99,7 @@ public enum NintendoStoreError: Error, Equatable, LocalizedError {
         switch self {
         case .notFound: return L10n.text("No Nintendo Store entry was found for this game.")
         case .invalidURL: return L10n.text("The Nintendo Store URL is invalid.")
-        case .http(let status): return L10n.format("Nintendo Store returned status %@.", [String(describing: (status))])
+        case .http(let status): return L10n.format("Nintendo Store returned status %@.", [String(describing: status)])
         case .decoding: return L10n.text("Nintendo Store returned a response this app could not read.")
         }
     }

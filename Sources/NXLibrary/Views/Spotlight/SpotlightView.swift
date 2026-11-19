@@ -13,7 +13,7 @@ import NXLibraryCore
 /// description with Details beside it, More like this. Down
 /// from the row shifts everything up (the row and the bar fade away, the logo
 /// rises to the top) and keeps going section by section; Up comes back.
-public struct SpotlightView: View {
+struct SpotlightView: View {
     @ObservedObject var viewModel: AppViewModel
     /// The Setup (`SetupModel`): Rebuild follows the Metal gate.
     @ObservedObject var setup: SetupModel
@@ -201,7 +201,7 @@ public struct SpotlightView: View {
 
     // MARK: - Body
 
-    public var body: some View {
+    var body: some View {
         let model = snapshot()
         let state = viewModel.spotlight
         SeleneHomeChrome(

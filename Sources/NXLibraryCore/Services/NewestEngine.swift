@@ -53,16 +53,16 @@ public enum NewestEngineCopy {
 
     /// Settings → Setup and engine, Newest engine row, while the tested engine is in use.
     public static func offer(commit: String, aheadBy: Int) -> String {
-        L10n.format("Build with nxnative main (%@, %@) before Arcane has tested it.", [String(describing: (commit.prefix(7))), String(describing: (ahead(aheadBy)))])
+        L10n.format("Build with nxnative main (%@, %@) before Arcane has tested it.", [String(describing: commit.prefix(7)), String(describing: ahead(aheadBy))])
     }
 
     public static func needsNewerApp(metal: String) -> String {
-        L10n.format("The newest nxnative needs Metal %@, so it needs a newer Arcane.", [String(describing: (metal))])
+        L10n.format("The newest nxnative needs Metal %@, so it needs a newer Arcane.", [String(describing: metal)])
     }
 
     /// Setup's engine card while the newest engine is in use (the note is its description).
     public static func setupDetail(choice: NewestEngineChoice, tested: String) -> String {
-        L10n.format("At %@, %@ of the tested %@, chosen in Settings → Setup and engine.", [String(describing: (choice.shortCommit)), String(describing: (ahead(choice.aheadBy))), String(describing: (tested.prefix(7)))])
+        L10n.format("At %@, %@ of the tested %@, chosen in Settings → Setup and engine.", [String(describing: choice.shortCommit), String(describing: ahead(choice.aheadBy)), String(describing: tested.prefix(7))])
     }
 
     /// Settings → Setup and engine, Newest engine row, while main is past the commit in use. `aheadBy` counts from the pin,
@@ -70,7 +70,7 @@ public enum NewestEngineCopy {
     public static func update(choice: NewestEngineChoice, main: String, aheadBy: Int) -> String {
         let newer = aheadBy - choice.aheadBy
         let count = newer > 0 ? L10n.count(", %lld commits newer", newer, arguments: []) : ""
-        return L10n.format("main has moved on: %@%@.", [String(describing: (main.prefix(7))), String(describing: (count))])
+        return L10n.format("main has moved on: %@%@.", [String(describing: main.prefix(7)), String(describing: count)])
     }
 
     public static var info: String {
@@ -95,7 +95,7 @@ public enum NewestEngineError: Error, Equatable, LocalizedError {
         case .needsNewerApp(let metal):
             return NewestEngineCopy.needsNewerApp(metal: metal)
         case .switchFailed(let detail):
-            return L10n.format("The engine could not be switched: %@", [String(describing: (detail))])
+            return L10n.format("The engine could not be switched: %@", [String(describing: detail)])
         }
     }
 }

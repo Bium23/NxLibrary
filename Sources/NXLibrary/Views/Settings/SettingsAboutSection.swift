@@ -41,7 +41,7 @@ struct SettingsAboutSection: View {
                     .seleneFont(16)
                     .foregroundColor(SeleneTheme.ink90)
                     .fixedSize(horizontal: false, vertical: true)
-                Text(L10n.format("Version %@ · Build %@ · Engine %@", [String(describing: (version)), String(describing: (buildDate)), String(describing: (seleneShort(viewModel.pinnedEngineCommit)))]))
+                Text(L10n.format("Version %@ · Build %@ · Engine %@", [String(describing: version), String(describing: buildDate), String(describing: seleneShort(viewModel.pinnedEngineCommit))]))
                     .seleneFont(13, .regular, design: .monospaced)
                     .foregroundColor(SeleneTheme.ink60)
                 Text(L10n.text("Play time is tracked only for launches from Arcane. Not affiliated with Nintendo."))
@@ -280,9 +280,9 @@ struct SettingsAboutSection: View {
         case .upToDate: return L10n.text("Arcane is up to date")
         case .available(let release):
             let xcode = AppUpdate.neededXcode(release.requirements, installedXcode: setup.environmentStatus?.xcodeVersion)
-                .map { L10n.format(" · new portings need Xcode %@", [String(describing: ($0))]) } ?? ""
-            return (updater.blockedReason().map { L10n.format("%@ is available · %@", [String(describing: (release.version)), String(describing: ($0))]) } ?? L10n.format("%@ is available", [String(describing: (release.version))])) + xcode
-        case .downloading(let fraction): return L10n.format("Downloading %@%%", [String(describing: (Int((fraction * 100).rounded())))])
+                .map { L10n.format(" · new portings need Xcode %@", [String(describing: $0)]) } ?? ""
+            return (updater.blockedReason().map { L10n.format("%@ is available · %@", [String(describing: release.version), String(describing: $0)]) } ?? L10n.format("%@ is available", [String(describing: release.version)])) + xcode
+        case .downloading(let fraction): return L10n.format("Downloading %@%%", [String(describing: Int((fraction * 100).rounded()))])
         case .verifying: return L10n.text("Checking download…")
         case .installing: return L10n.text("Installing…")
         case .failed(let message): return message

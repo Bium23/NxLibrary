@@ -60,9 +60,9 @@ public enum SourceCatalogError: Error, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .unreadable(let url):
-            return L10n.format("No readable title ID in %@.", [String(describing: (url.lastPathComponent))])
+            return L10n.format("No readable title ID in %@.", [String(describing: url.lastPathComponent)])
         case .tooLarge(let url):
-            return L10n.format("%@ has an unsupported internal table size.", [String(describing: (url.lastPathComponent))])
+            return L10n.format("%@ has an unsupported internal table size.", [String(describing: url.lastPathComponent)])
         }
     }
 }

@@ -105,7 +105,7 @@ struct SettingsStorageSection: View {
 
     private func confirmLogsCleanup() {
         let amount = seleneBytes(viewModel.storageUsage?.logsBytes ?? 0)
-        let message = L10n.format("Remove %@ of logs for all games? Your games, sources and saves will be kept.", [String(describing: (amount))])
+        let message = L10n.format("Remove %@ of logs for all games? Your games, sources and saves will be kept.", [String(describing: amount)])
         viewModel.showSettingsNotice(title: L10n.text("Delete logs?"),
             message: message, actionTitle: L10n.text("Delete"), cancelTitle: L10n.text("Cancel")) {
             viewModel.deleteLogs()

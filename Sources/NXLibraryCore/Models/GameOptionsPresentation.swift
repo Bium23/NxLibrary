@@ -224,14 +224,14 @@ public struct GameOptionsPresentation: Equatable {
     public var removal: GameRemovalCopy {
         if canDeleteBundle {
             return GameRemovalCopy(
-                title: L10n.format("Delete %@?", [String(describing: (gameName))]),
+                title: L10n.format("Delete %@?", [String(describing: gameName)]),
                 confirmTitle: "Delete",
-                message: L10n.format("This deletes %@. Sources, saves and the build cache are not deleted.", [String(describing: (appPath))]))
+                message: L10n.format("This deletes %@. Sources, saves and the build cache are not deleted.", [String(describing: appPath)]))
         }
         return GameRemovalCopy(
-            title: L10n.format("Remove %@?", [String(describing: (gameName))]),
+            title: L10n.format("Remove %@?", [String(describing: gameName)]),
             confirmTitle: "Remove",
-            message: L10n.format("This removes the library record only; %@ stays on disk.", [String(describing: (appPath))]))
+            message: L10n.format("This removes the library record only; %@ stays on disk.", [String(describing: appPath)]))
     }
 
     /// A row that looks disabled. It still takes focus, and its action explains why it cannot run.

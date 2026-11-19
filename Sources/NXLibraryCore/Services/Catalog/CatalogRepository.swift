@@ -107,7 +107,6 @@ extension CatalogRepository {
     }
 }
 
-
 extension CatalogRepository {
     @discardableResult
     public func configureSource(_ integration: CatalogIntegration, enabled: Bool, root: URL?) throws -> CatalogDocument {

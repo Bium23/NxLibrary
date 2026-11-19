@@ -3,30 +3,30 @@ import AppKit
 import GameController
 import NXLibraryCore
 
-public final class GameControllerService: ObservableObject {
-    public static let shared = GameControllerService()
-    
-    @Published public var isGamepadConnected: Bool = false
-    @Published public var activeControllerName: String = "No Gamepad Connected"
-    @Published public var activeBrand: GamepadBrand = .generic
+final class GameControllerService: ObservableObject {
+    static let shared = GameControllerService()
+
+    @Published var isGamepadConnected: Bool = false
+    @Published var activeControllerName: String = "No Gamepad Connected"
+    @Published var activeBrand: GamepadBrand = .generic
     /// SF Symbols names of the buttons behind each prompt, as the connected
     /// controller reports them (printed label, user remapping included).
-    @Published public var buttonSymbols: [PromptButton: String] = [:]
-    
-    public var onAction: ((GamepadAction) -> Void)?
+    @Published var buttonSymbols: [PromptButton: String] = [:]
+
+    var onAction: ((GamepadAction) -> Void)?
 
     private let deadzoneKey = "NXNative_ControllerDeadzone"
-    @Published public var deadzone: Float = 0.35 {
+    @Published var deadzone: Float = 0.35 {
         didSet {
             let clamped = min(max(deadzone, 0.10), 0.80)
             AppData.preferences.set(Double(clamped), forKey: deadzoneKey)
         }
     }
 
-    public var navigationInterval: TimeInterval = 0.12
+    var navigationInterval: TimeInterval = 0.12
     private var isAppActive = true
     private var lastNavTime: TimeInterval = 0
-    
+
     private init() {
         if AppData.preferences.object(forKey: deadzoneKey) != nil {
             deadzone = min(max(Float(AppData.preferences.double(forKey: deadzoneKey)), 0.10), 0.80)
@@ -34,7 +34,7 @@ public final class GameControllerService: ObservableObject {
         setupObservers()
         refreshControllers()
     }
-    
+
     private func setupObservers() {
         NotificationCenter.default.addObserver(
             forName: .GCControllerDidConnect,
@@ -43,7 +43,7 @@ public final class GameControllerService: ObservableObject {
         ) { [weak self] notif in
             self?.refreshControllers()
         }
-        
+
         NotificationCenter.default.addObserver(
             forName: .GCControllerDidDisconnect,
             object: nil,
@@ -68,8 +68,8 @@ public final class GameControllerService: ObservableObject {
             self?.isAppActive = false
         }
     }
-    
-    public func refreshControllers() {
+
+    func refreshControllers() {
         let controllers = GCController.controllers()
         guard let controller = controllers.first else {
             isGamepadConnected = false
@@ -78,14 +78,14 @@ public final class GameControllerService: ObservableObject {
             buttonSymbols = [:]
             return
         }
-        
+
         isGamepadConnected = true
         activeControllerName = controller.vendorName ?? "Gamepad"
         activeBrand = detectBrand(from: activeControllerName, category: controller.productCategory)
-        
+
         bindController(controller)
     }
-    
+
     private func detectBrand(from vendor: String, category: String) -> GamepadBrand {
         switch category {
         case GCProductCategoryDualSense, GCProductCategoryDualShock4: return .playstation
@@ -102,10 +102,10 @@ public final class GameControllerService: ObservableObject {
         }
         return .generic
     }
-    
+
     private func bindController(_ controller: GCController) {
         guard let gamepad = controller.extendedGamepad else { return }
-        
+
         // D-Pad
         gamepad.dpad.up.pressedChangedHandler = { [weak self] _, _, pressed in
             if pressed { self?.triggerAction(.navigateUp) }
@@ -119,13 +119,13 @@ public final class GameControllerService: ObservableObject {
         gamepad.dpad.right.pressedChangedHandler = { [weak self] _, _, pressed in
             if pressed { self?.triggerAction(.navigateRight) }
         }
-        
+
         // Left Thumbstick Analog Navigation with Deadzone and Cooldown
         gamepad.leftThumbstick.valueChangedHandler = { [weak self] _, xVal, yVal in
             guard let self = self else { return }
             let now = ProcessInfo.processInfo.systemUptime
             guard now - self.lastNavTime > self.navigationInterval else { return }
-            
+
             if xVal > self.deadzone {
                 self.lastNavTime = now
                 self.triggerAction(.navigateRight)
@@ -140,7 +140,7 @@ public final class GameControllerService: ObservableObject {
                 self.triggerAction(.navigateDown)
             }
         }
-        
+
         // Face Buttons. The framework maps them by position (A = bottom); a Nintendo
         // controller prints B there, so confirm moves to the button printed A (right)
         // and the rest follow its labels, as on the console.
@@ -158,7 +158,7 @@ public final class GameControllerService: ObservableObject {
             if pressed { self?.triggerAction(.contextAction) }
         }
         buttonSymbols = Self.symbols(gamepad, face: face)
-        
+
         // Shoulders: Tab Switching
         gamepad.leftShoulder.pressedChangedHandler = { [weak self] _, _, pressed in
             if pressed { self?.triggerAction(.tabPrevious) }
@@ -166,7 +166,7 @@ public final class GameControllerService: ObservableObject {
         gamepad.rightShoulder.pressedChangedHandler = { [weak self] _, _, pressed in
             if pressed { self?.triggerAction(.tabNext) }
         }
-        
+
         // Menu / Options
         gamepad.buttonMenu.preferredSystemGestureState = .disabled
         gamepad.buttonMenu.pressedChangedHandler = { [weak self] _, _, pressed in
@@ -214,7 +214,7 @@ public final class GameControllerService: ObservableObject {
             if pressed { self?.triggerAction(.rightStickPress) }
         }
     }
-    
+
     private struct FaceButtons {
         let confirm, cancel, secondary, context: GCControllerButtonInput
     }

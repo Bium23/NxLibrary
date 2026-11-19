@@ -90,7 +90,7 @@ public struct SeleneImporter {
 
         let audio = theme.appendingPathComponent("Audio")
         for name in Self.soundFiles {
-            let relative = L10n.format("Sounds/%@.wav", [String(describing: (name))])
+            let relative = L10n.format("Sounds/%@.wav", [String(describing: name)])
             let source = audio.appendingPathComponent("\(name).wav")
             if fileManager.fileExists(atPath: source.path) {
                 try copy(source, to: relative)
@@ -108,7 +108,7 @@ public struct SeleneImporter {
                                                               options: [.skipsHiddenFiles])) ?? []
             for file in files.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
                 guard (try? file.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true else { continue }
-                let relative = L10n.format("Wallpapers/%@/%@", [String(describing: (folder.lastPathComponent)), String(describing: (file.lastPathComponent))])
+                let relative = L10n.format("Wallpapers/%@/%@", [String(describing: folder.lastPathComponent), String(describing: file.lastPathComponent)])
                 try copy(file, to: relative)
                 report.copied.append(relative)
             }

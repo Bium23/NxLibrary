@@ -72,8 +72,8 @@ struct SettingsSoundSection: View {
             let report = try SeleneImporter().importFrom(seleneRoot: url)
             SoundEffectService.shared.reloadSounds()
             NotificationCenter.default.post(name: .nxSeleneImportFinished, object: nil)
-            importNote = L10n.format("Imported %@ files", [String(describing: (report.copied.count))])
-                + (report.missing.isEmpty ? "." : L10n.format("; %@ not found in that folder.", [String(describing: (report.missing.count))]))
+            importNote = L10n.format("Imported %@ files", [String(describing: report.copied.count)])
+                + (report.missing.isEmpty ? "." : L10n.format("; %@ not found in that folder.", [String(describing: report.missing.count)]))
             SoundEffectService.shared.play(.success)
         } catch {
             importNote = error.localizedDescription

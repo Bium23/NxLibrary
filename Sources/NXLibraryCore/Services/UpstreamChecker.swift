@@ -63,10 +63,10 @@ public enum UpstreamCheckerError: Error, Equatable, LocalizedError {
         case .invalidURL:
             return L10n.text("Could not build the GitHub API URL.")
         case .http(let status, let message):
-            return L10n.format("GitHub returned status %@%@", [String(describing: (status)), String(describing: (message.map { ": \($0)" } ?? "."))])
+            return L10n.format("GitHub returned status %@%@", [String(describing: status), String(describing: message.map { ": \($0)" } ?? ".")])
         case .rateLimited(let reset):
             if let reset {
-                return L10n.format("GitHub API rate limit reached. Try again after %@.", [String(describing: (reset.formatted(date: .abbreviated, time: .shortened)))])
+                return L10n.format("GitHub API rate limit reached. Try again after %@.", [String(describing: reset.formatted(date: .abbreviated, time: .shortened))])
             }
             return L10n.text("GitHub API rate limit reached. Try again later.")
         case .decoding:

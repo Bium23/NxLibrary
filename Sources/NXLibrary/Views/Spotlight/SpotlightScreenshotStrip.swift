@@ -129,7 +129,7 @@ private struct ScreenshotTile: View {
         .scaleEffect(focused ? style.focusScale : 1)
         .animation(reduceMotion ? nil : SpotlightScreenshotStrip.motion, value: focused)
         .accessibilityElement()
-        .accessibilityLabel(L10n.format("Screenshot %@", [String(describing: (index + 1))]))
+        .accessibilityLabel(L10n.format("Screenshot %@", [String(describing: index + 1)]))
         .task(id: "\(titleID)|\(index)|\(url.absoluteString)") {
             image = nil
             guard let file = await artwork.screenshot(titleID: titleID, index: index, remoteURL: url),

@@ -32,7 +32,7 @@ struct SettingsKeysSection: View {
                 }
 
                 if let summary = setup.keySummary {
-                    Text(L10n.format("header_key present · %@ application key generations", [String(describing: (summary.applicationKeyGenerations.count))]))
+                    Text(L10n.format("header_key present · %@ application key generations", [String(describing: summary.applicationKeyGenerations.count)]))
                         .seleneFont(13, .regular, design: .monospaced)
                         .foregroundColor(SeleneTheme.success)
                 }

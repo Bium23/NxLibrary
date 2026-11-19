@@ -213,7 +213,7 @@ struct ModsPanel: View {
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
                 .onTapGesture { dismissConfirm() }
-            SeleneConfirmDialog(title: L10n.format("Move %@ to the Trash?", [String(describing: (name))]),
+            SeleneConfirmDialog(title: L10n.format("Move %@ to the Trash?", [String(describing: name)]),
                                 message: L10n.text("The game stops loading it. You can put it back from the Trash."),
                                 confirmTitle: L10n.text("Move to Trash"), focus: $confirmFocus,
                                 onCancel: dismissConfirm, onConfirm: runRemove)
@@ -385,12 +385,12 @@ enum ModsCopy {
     static func header(on: Int, total: Int) -> String {
         switch (on, total) {
         case (_, 0): return L10n.text("No mods in this game's folder")
-        case (0, _): return total == 1 ? "1 mod, off" : L10n.format("%@ mods, all off", [String(describing: (total))])
-        default: return L10n.format("%@ of %@ on · the upper mod wins when two change the same file", [String(describing: (on)), String(describing: (total))])
+        case (0, _): return total == 1 ? "1 mod, off" : L10n.format("%@ mods, all off", [String(describing: total)])
+        default: return L10n.format("%@ of %@ on · the upper mod wins when two change the same file", [String(describing: on), String(describing: total)])
         }
     }
 
-    static func running(gameName: String) -> String { L10n.format("%@ is running. Quit it to change its mods.", [String(describing: (gameName))]) }
+    static func running(gameName: String) -> String { L10n.format("%@ is running. Quit it to change its mods.", [String(describing: gameName)]) }
 
     static var empty: String {
         L10n.text("Open the mods folder and put each mod in its own folder, with a romfs folder inside.")

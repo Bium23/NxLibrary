@@ -240,7 +240,7 @@ enum PortingPillCopy {
 
     static func lastFailure(_ failure: PortingFailure, reason: PortingFailureReason? = nil) -> String {
         if failure == .cancelled { return L10n.text("Last porting cancelled · Open log") }
-        return L10n.format("%@ · Open log", [String(describing: (reason?.title ?? L10n.text("Last porting failed")))])
+        return L10n.format("%@ · Open log", [String(describing: reason?.title ?? L10n.text("Last porting failed"))])
     }
 }
 

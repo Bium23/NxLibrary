@@ -69,7 +69,6 @@ public struct LibraryQuery: Equatable {
     }
 }
 
-
 private protocol LibraryQueryRecord {
     var id: UUID { get }
     var name: String { get }

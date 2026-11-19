@@ -24,8 +24,8 @@ public enum CheatCopy {
         switch decision {
         case .install, .confirmUnnamed: return nil
         case .otherBuild(let other):
-            return L10n.format("These cheats are for another version of %@ (build %@). Yours is build %@.", [String(describing: (gameName)), String(describing: (other)), String(describing: (buildID))])
-        case .otherTitle(let other): return L10n.format("These cheats are for another game (title ID %@).", [String(describing: (other))])
+            return L10n.format("These cheats are for another version of %@ (build %@). Yours is build %@.", [String(describing: gameName), String(describing: other), String(describing: buildID)])
+        case .otherTitle(let other): return L10n.format("These cheats are for another game (title ID %@).", [String(describing: other)])
         case .refused(let reason): return reason
         }
     }
@@ -43,8 +43,8 @@ public enum CheatCopy {
                                buildID: String) -> (title: String, message: String, confirm: String) {
         var parts: [String] = []
         if unnamed {
-            let target = version.map { L10n.format("version %@ (build %@)", [String(describing: ($0)), String(describing: (buildID))]) } ?? "build \(buildID)"
-            parts.append(L10n.format("Install as cheats for %@? Cheats made for another version can crash the game.", [String(describing: (target))]))
+            let target = version.map { L10n.format("version %@ (build %@)", [String(describing: $0), String(describing: buildID)]) } ?? "build \(buildID)"
+            parts.append(L10n.format("Install as cheats for %@? Cheats made for another version can crash the game.", [String(describing: target)]))
         }
         parts.append(file.summaryText)
         parts.append(replacing ? L10n.text("Cheats that were on and keep their name stay on; the rest start off.")
@@ -54,7 +54,7 @@ public enum CheatCopy {
     }
 
     public static func removal(build: String) -> (title: String, message: String, confirm: String) {
-        ("Remove cheats?", L10n.format("The cheat files for build %@ go to the Trash.", [String(describing: (build))]), "Remove")
+        ("Remove cheats?", L10n.format("The cheat files for build %@ go to the Trash.", [String(describing: build)]), "Remove")
     }
 
     /// A switch's name: an on / off pair shows its base name ("Moon Jump"), every other entry its key.
@@ -65,10 +65,10 @@ public enum CheatCopy {
         return split.base
     }
 
-    public static func otherBuild(_ build: String) -> String { L10n.format("Build %@ — not used by this version", [String(describing: (build))]) }
+    public static func otherBuild(_ build: String) -> String { L10n.format("Build %@ — not used by this version", [String(describing: build)]) }
 
     public static func running(gameName: String) -> String {
-        L10n.format("%@ is running: change cheats in its Cheats panel (⌘⇧C).", [String(describing: (gameName))])
+        L10n.format("%@ is running: change cheats in its Cheats panel (⌘⇧C).", [String(describing: gameName)])
     }
 
     public static var safeMode: String {

@@ -11,7 +11,7 @@ public enum SaveFailure: LocalizedError, Equatable {
         case .unsafePath: return L10n.text("This save location contains a link or an unsafe path. Manage it in Finder.")
         case .customSavePath: return L10n.text("This game uses a custom save location. Manage it outside this panel.")
         case .unreadableConfiguration: return L10n.text("The game's save configuration could not be read.")
-        case .cloudEnabled(let origin): return L10n.format("Cloud saves are enabled in %@. Turn them off there before importing or restoring.", [String(describing: (origin))])
+        case .cloudEnabled(let origin): return L10n.format("Cloud saves are enabled in %@. Turn them off there before importing or restoring.", [String(describing: origin)])
         case .running: return L10n.text("Close the game before managing its saves. Keep it closed until this operation finishes.")
         case .busy: return L10n.text("A save operation or app installation is in progress for this game.")
         case .changed: return L10n.text("The files changed since the preview. Choose the folder again.")

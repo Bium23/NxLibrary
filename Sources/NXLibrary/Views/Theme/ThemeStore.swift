@@ -3,13 +3,13 @@ import NXLibraryCore
 
 /// Holds the active Selene palette. Palettes ship in the app bundle at Resources/Selene/palettes.json;
 /// when absent (e.g. `swift run`) the built-in Selene palette is used.
-public final class ThemeStore: ObservableObject {
-    public static let shared = ThemeStore()
+final class ThemeStore: ObservableObject {
+    static let shared = ThemeStore()
 
-    @Published public private(set) var palette: SelenePalette
-    public private(set) var palettes: [SelenePalette]
+    @Published private(set) var palette: SelenePalette
+    private(set) var palettes: [SelenePalette]
 
-    public init(palettesURL: URL? = Bundle.main.resourceURL?.appendingPathComponent("Selene/palettes.json"),
+    init(palettesURL: URL? = Bundle.main.resourceURL?.appendingPathComponent("Selene/palettes.json"),
                 activeID: String = "selene") {
         let loaded = palettesURL.flatMap { try? SelenePaletteCatalog.load(from: $0) } ?? []
         palettes = SelenePaletteCatalog.pickerOrder(loaded)
@@ -18,17 +18,17 @@ public final class ThemeStore: ObservableObject {
     }
 
     /// Bundled wallpapers plus any imported from a Selene folder.
-    @Published public private(set) var wallpapers: [Wallpaper] = []
+    @Published private(set) var wallpapers: [Wallpaper] = []
     /// Who made each downloaded background (Wallpapers/credits.json).
-    @Published public private(set) var credits: [String: BackgroundCredit] = [:]
+    @Published private(set) var credits: [String: BackgroundCredit] = [:]
 
     /// Call on the main thread: `palette` drives every view.
-    public func apply(id: String) {
+    func apply(id: String) {
         guard id != palette.id else { return }
         palette = SelenePaletteCatalog.resolve(id, in: palettes)
     }
 
-    public func reloadWallpapers() {
+    func reloadWallpapers() {
         var roots: [URL] = []
         if let bundled = Bundle.main.resourceURL?.appendingPathComponent("Selene/Wallpapers") {
             roots.append(bundled)
@@ -40,7 +40,7 @@ public final class ThemeStore: ObservableObject {
     }
 
     /// The wallpaper to draw for the setting under the active palette.
-    public func wallpaper(for wallpaperID: String?) -> Wallpaper? {
+    func wallpaper(for wallpaperID: String?) -> Wallpaper? {
         WallpaperCatalog.resolve(wallpaperID, themeID: palette.id, in: wallpapers)
     }
 
@@ -99,7 +99,7 @@ public final class ThemeStore: ObservableObject {
     func wallpaperTitle(for wallpaperID: String?) -> String {
         switch wallpaperID {
         case nil:
-            return wallpaper(for: nil).map { L10n.format("Theme (%@)", [String(describing: ($0.title))]) } ?? L10n.text("Theme (none)")
+            return wallpaper(for: nil).map { L10n.format("Theme (%@)", [String(describing: $0.title)]) } ?? L10n.text("Theme (none)")
         case WallpaperCatalog.none?:
             return "None"
         case let id?:

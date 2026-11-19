@@ -268,7 +268,6 @@ final class CatalogSourcesModelTests: XCTestCase {
     }
 }
 
-
 private final class SourceCallCounter: @unchecked Sendable {
     private let lock = NSLock()
     private var stored = 0

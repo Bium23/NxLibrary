@@ -124,7 +124,7 @@ struct ModStoreSortBar: View {
                 .contentShape(Capsule())
                 .onTapGesture { onPick(index) }
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(L10n.format("Sort by %@", [String(describing: (choice.title))]))
+                .accessibilityLabel(L10n.format("Sort by %@", [String(describing: choice.title)]))
                 .accessibilityAddTraits(chosen ? [.isButton, .isSelected] : .isButton)
             }
         }
@@ -166,7 +166,7 @@ struct ModStoreFeatured<Chip: View>: View {
         .contentShape(shape)
         .onTapGesture(perform: onOpen)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(entry.map { L10n.format("Featured: %@, for %@, by %@", [String(describing: ($0.mod.name)), String(describing: ($0.gameName)), String(describing: ($0.mod.author))]) } ?? L10n.text("Featured"))
+        .accessibilityLabel(entry.map { L10n.format("Featured: %@, for %@, by %@", [String(describing: $0.mod.name), String(describing: $0.gameName), String(describing: $0.mod.author)]) } ?? L10n.text("Featured"))
         .accessibilityAddTraits(.isButton)
     }
 
@@ -181,7 +181,7 @@ struct ModStoreFeatured<Chip: View>: View {
                            startPoint: .leading, endPoint: .trailing)
             HStack(alignment: .center, spacing: canvas.u(48)) {
                 VStack(alignment: .leading, spacing: canvas.u(12)) {
-                    Text(L10n.format("FEATURED · %@", [String(describing: (entry.gameName.uppercased()))]))
+                    Text(L10n.format("FEATURED · %@", [String(describing: entry.gameName.uppercased())]))
                         .seleneFont(15, .semibold)
                         .foregroundColor(SeleneTheme.ink75)
                         .lineLimit(1)
@@ -190,7 +190,7 @@ struct ModStoreFeatured<Chip: View>: View {
                         .foregroundColor(SeleneTheme.ink)
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text(L10n.format("by %@", [String(describing: (entry.mod.author))]))
+                    Text(L10n.format("by %@", [String(describing: entry.mod.author)]))
                         .seleneFont(19, .medium)
                         .foregroundColor(SeleneTheme.ink82)
                     HStack(spacing: canvas.u(22)) {
@@ -276,7 +276,7 @@ struct ModStoreRow: View {
                         .iconOnCaps(of: Self.titleSize, .semibold)
                 }
                 DetailsBandTitle(text: section.title, size: Self.titleSize)
-                Text(section.entries.count == 1 ? L10n.text("1 mod") : L10n.format("%@ mods", [String(describing: (section.entries.count))]))
+                Text(section.entries.count == 1 ? L10n.text("1 mod") : L10n.format("%@ mods", [String(describing: section.entries.count)]))
                     .seleneFont(16, .medium)
                     .foregroundColor(SeleneTheme.ink60)
             }
@@ -329,7 +329,7 @@ struct ModStoreTile: View {
                     .seleneFont(19, .semibold)
                     .foregroundColor(SeleneTheme.ink)
                     .lineLimit(1)
-                Text(showsGame ? entry.gameName : L10n.format("by %@", [String(describing: (entry.mod.author))]))
+                Text(showsGame ? entry.gameName : L10n.format("by %@", [String(describing: entry.mod.author)]))
                     .seleneFont(14, .medium)
                     .foregroundColor(SeleneTheme.ink75)
                     .lineLimit(1)
@@ -349,7 +349,7 @@ struct ModStoreTile: View {
         .animation(reduceMotion ? nil : SpotlightScreenshotStrip.motion, value: focused)
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(L10n.format("%@, for %@, by %@", [String(describing: (entry.mod.name)), String(describing: (entry.gameName)), String(describing: (entry.mod.author))]))
+        .accessibilityLabel(L10n.format("%@, for %@, by %@", [String(describing: entry.mod.name), String(describing: entry.gameName), String(describing: entry.mod.author)]))
         .accessibilityAddTraits(focused ? [.isButton, .isSelected] : .isButton)
     }
 }

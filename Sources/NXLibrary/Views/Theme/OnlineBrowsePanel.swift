@@ -141,10 +141,10 @@ struct OnlineBrowsePanel: View {
 
     private var status: String {
         let source = state.source.title
-        if failed { return L10n.format("%@ IS UNAVAILABLE RIGHT NOW", [String(describing: (source.uppercased()))]) }
+        if failed { return L10n.format("%@ IS UNAVAILABLE RIGHT NOW", [String(describing: source.uppercased())]) }
         if state.category.isSearch && state.query.isEmpty { return L10n.text("TYPE WHAT YOU'RE LOOKING FOR, THEN RETURN") }
-        if state.items.isEmpty { return loading ? L10n.format("LOOKING ON %@…", [String(describing: (source.uppercased()))]) : L10n.text("NOTHING FOUND") }
-        return L10n.format("ONLINE · %@ · %@", [String(describing: (source.uppercased())), String(describing: (state.category.displayTitle.uppercased()))])
+        if state.items.isEmpty { return loading ? L10n.format("LOOKING ON %@…", [String(describing: source.uppercased())]) : L10n.text("NOTHING FOUND") }
+        return L10n.format("ONLINE · %@ · %@", [String(describing: source.uppercased()), String(describing: state.category.displayTitle.uppercased())])
     }
 
     private var chips: some View {
@@ -181,7 +181,7 @@ struct OnlineBrowsePanel: View {
     private var searchField: some View {
         HStack(spacing: canvas.u(10)) {
             MaterialIconView(.search, size: 22).foregroundColor(SeleneTheme.ink60)
-            TextField("", text: $searchText, prompt: Text(L10n.format("Search %@", [String(describing: (state.source.title))])).foregroundColor(SeleneTheme.ink60))
+            TextField("", text: $searchText, prompt: Text(L10n.format("Search %@", [String(describing: state.source.title)])).foregroundColor(SeleneTheme.ink60))
                 .textFieldStyle(.plain)
                 .seleneFont(18)
                 .foregroundColor(SeleneTheme.ink)
@@ -292,7 +292,7 @@ private struct OnlineTile: View {
         .padding(.bottom, canvas.u(14))
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(L10n.format("%@, %@ by %@", [String(describing: (item.title)), String(describing: (item.width)), String(describing: (item.height))]))
+        .accessibilityLabel(L10n.format("%@, %@ by %@", [String(describing: item.title), String(describing: item.width), String(describing: item.height)]))
         .accessibilityAddTraits(focused ? [.isButton, .isSelected] : .isButton)
     }
 }

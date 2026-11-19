@@ -120,7 +120,7 @@ struct SessionCardView: View {
         .shadow(color: .black.opacity(0.45), radius: canvas.u(18))
         .environment(\.seleneMinimumFont, 12)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(L10n.format("Session ended, %@: %@ this session, %@ total", [String(describing: (summary.gameName)), String(describing: (summary.thisSession.replacingOccurrences(of: "<1m", with: L10n.text("under a minute")))), String(describing: (summary.total.replacingOccurrences(of: "<1m", with: L10n.text("under a minute"))))]))
+        .accessibilityLabel(L10n.format("Session ended, %@: %@ this session, %@ total", [String(describing: summary.gameName), String(describing: summary.thisSession.replacingOccurrences(of: "<1m", with: L10n.text("under a minute"))), String(describing: summary.total.replacingOccurrences(of: "<1m", with: L10n.text("under a minute")))]))
         .task(id: summary.id) { await loadArt() }
     }
 

@@ -1,14 +1,14 @@
 import Foundation
 
-public enum GamepadBrand: String, CaseIterable, Identifiable {
+enum GamepadBrand: String, CaseIterable, Identifiable {
     case nintendoSwitch = "Nintendo Switch"
     case xbox = "Xbox Series / One"
     case playstation = "PlayStation DualShock / DualSense"
     case generic = "8BitDo / Generic Gamepad"
-    
-    public var id: String { rawValue }
-    
-    public var confirmButtonName: String {
+
+    var id: String { rawValue }
+
+    var confirmButtonName: String {
         switch self {
         case .nintendoSwitch: return "A (Confirm)"
         case .xbox: return "A (Confirm)"
@@ -16,8 +16,8 @@ public enum GamepadBrand: String, CaseIterable, Identifiable {
         case .generic: return "A (Confirm)"
         }
     }
-    
-    public var cancelButtonName: String {
+
+    var cancelButtonName: String {
         switch self {
         case .nintendoSwitch: return "B (Back)"
         case .xbox: return "B (Back)"
@@ -25,8 +25,8 @@ public enum GamepadBrand: String, CaseIterable, Identifiable {
         case .generic: return "B (Back)"
         }
     }
-    
-    public var secondaryButtonName: String {
+
+    var secondaryButtonName: String {
         switch self {
         case .nintendoSwitch: return "X (Settings)"
         case .xbox: return "X (Settings)"
@@ -34,8 +34,8 @@ public enum GamepadBrand: String, CaseIterable, Identifiable {
         case .generic: return "X (Settings)"
         }
     }
-    
-    public var contextButtonName: String {
+
+    var contextButtonName: String {
         switch self {
         case .nintendoSwitch: return "Y (Save Folder)"
         case .xbox: return "Y (Save Folder)"
@@ -43,8 +43,8 @@ public enum GamepadBrand: String, CaseIterable, Identifiable {
         case .generic: return "Y (Save Folder)"
         }
     }
-    
-    public var shoulderTabsPrompt: String {
+
+    var shoulderTabsPrompt: String {
         switch self {
         case .nintendoSwitch: return "L / R"
         case .xbox: return "LB / RB"
@@ -53,7 +53,7 @@ public enum GamepadBrand: String, CaseIterable, Identifiable {
         }
     }
 
-    public var menuButtonGlyph: String {
+    var menuButtonGlyph: String {
         switch self {
         case .nintendoSwitch: return "＋"
         case .playstation: return "☰"
@@ -62,7 +62,7 @@ public enum GamepadBrand: String, CaseIterable, Identifiable {
     }
 }
 
-public enum GamepadAction: Hashable {
+enum GamepadAction: Hashable {
     case navigateUp
     case navigateDown
     case navigateLeft

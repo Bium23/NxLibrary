@@ -229,7 +229,7 @@ final class AppUpdateTests: XCTestCase {
         let requirements = try String(contentsOf: root.appendingPathComponent("Sources/NXLibraryCore/Models/ToolchainRequirements.swift"), encoding: .utf8)
         XCTAssertNotNil(requirements.range(of: #"minimumXcode: "[0-9.]+""#, options: .regularExpression))
         let viewModel = try String(contentsOf: root.appendingPathComponent("Sources/NXLibrary/ViewModels/AppViewModel.swift"), encoding: .utf8)
-        XCTAssertNotNil(viewModel.range(of: #"public let pinnedEngineCommit = "[0-9a-f]{40}""#, options: .regularExpression))
+        XCTAssertNotNil(viewModel.range(of: #"let pinnedEngineCommit = "[0-9a-f]{40}""#, options: .regularExpression))
         let script = try String(contentsOf: root.appendingPathComponent("scripts/release.sh"), encoding: .utf8)
         XCTAssertTrue(script.contains("nxlibrary-requires"))
     }

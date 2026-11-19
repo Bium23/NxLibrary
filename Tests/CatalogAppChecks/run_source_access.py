@@ -144,10 +144,10 @@ final class SourceHost {
 }
 '''
 for marker, signature in (
-    ('// ACTUAL_FOLDER', '    @Published public var selectedGameFolder:'),
-    ('// ACTUAL_REMEMBERED_FOLDER', '    public var gameFilesFolder:'),
-    ('// ACTUAL_FOLDER_PICKER', '    public func selectGameFolder('),
-    ('// ACTUAL_FILE_PICKER', '    public func selectGameFiles('),
+    ('// ACTUAL_FOLDER', '    @Published var selectedGameFolder:'),
+    ('// ACTUAL_REMEMBERED_FOLDER', '    var gameFilesFolder:'),
+    ('// ACTUAL_FOLDER_PICKER', '    func selectGameFolder('),
+    ('// ACTUAL_FILE_PICKER', '    func selectGameFiles('),
 ):
     host = host.replace(marker + '\n', declaration(signature, porting_source) + '\n')
 host = host.replace('// ACTUAL_STARTUP', startup)

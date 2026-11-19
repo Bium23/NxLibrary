@@ -5,7 +5,7 @@ import NXLibraryCore
 /// restoring the new-game defaults and which settings the build supports. It keeps no state: the game's files are the
 /// truth (`NXNativeGameSettings`, or env.txt for a build from before saved choices). It reaches the rest of Arcane
 /// only through `app`: the log, the notice and the new-game defaults.
-public final class RuntimeSettingsModel {
+final class RuntimeSettingsModel {
     /// The coordinator: log, notices and the player's settings.
     unowned let app: AppViewModel
 
@@ -13,21 +13,21 @@ public final class RuntimeSettingsModel {
         self.app = app
     }
 
-    public func loadRuntimeConfig(for game: PortedGame) -> GameRuntimeConfig {
+    func loadRuntimeConfig(for game: PortedGame) -> GameRuntimeConfig {
         gameSettings(for: game)?.runtimeConfig() ?? GameRuntimeConfig.load(for: game)
     }
 
     /// The game's saved-choices store, or nil for a build from before saved choices (env.txt).
-    public func gameSettings(for game: PortedGame) -> NXNativeGameSettings? {
+    func gameSettings(for game: PortedGame) -> NXNativeGameSettings? {
         NXNativeGameSettings.forGame(game)
     }
 
-    public func settingsSnapshot(for game: PortedGame) -> GameSettingsSnapshot? {
+    func settingsSnapshot(for game: PortedGame) -> GameSettingsSnapshot? {
         gameSettings(for: game)?.snapshot()
     }
 
     /// One saved choice; false (with a notice) when it could not be kept.
-    @discardableResult public func setGameSetting(_ env: String, to value: String, for game: PortedGame) -> Bool {
+    @discardableResult func setGameSetting(_ env: String, to value: String, for game: PortedGame) -> Bool {
         guard let settings = gameSettings(for: game) else { return false }
         do {
             try settings.set(env, to: value)
@@ -39,7 +39,7 @@ public final class RuntimeSettingsModel {
     }
 
     /// Use new game defaults: every setting to the build's default, then NX Library's new-game defaults.
-    public func restoreGameDefaults(for game: PortedGame) {
+    func restoreGameDefaults(for game: PortedGame) {
         guard let settings = gameSettings(for: game) else { return }
         do {
             try settings.resetAll()
@@ -51,21 +51,21 @@ public final class RuntimeSettingsModel {
     }
 
     private func settingsNotSaved(_ game: PortedGame, _ error: Error) {
-        app.logs.append(LogEntry(level: .error, message: L10n.format("Could not save settings for %@: %@", [String(describing: (game.name)), String(describing: (error.localizedDescription))])))
+        app.logs.append(LogEntry(level: .error, message: L10n.format("Could not save settings for %@: %@", [String(describing: game.name), String(describing: error.localizedDescription)])))
         app.showSettingsNotice(title: L10n.text("Options not saved"), message: L10n.text("Your game options could not be saved. Try again."))
     }
 
-    public func supportsSetting(_ env: String, for game: PortedGame) -> Bool {
+    func supportsSetting(_ env: String, for game: PortedGame) -> Bool {
         LauncherSettingsReader.supports(env, for: game.url)
     }
 
-    @discardableResult public func saveRuntimeConfig(_ config: GameRuntimeConfig, for game: PortedGame) -> Bool {
+    @discardableResult func saveRuntimeConfig(_ config: GameRuntimeConfig, for game: PortedGame) -> Bool {
         do {
             try config.save(for: game)
-            app.logs.append(LogEntry(level: .success, message: L10n.format("Saved settings for %@", [String(describing: (game.name))])))
+            app.logs.append(LogEntry(level: .success, message: L10n.format("Saved settings for %@", [String(describing: game.name)])))
             return true
         } catch {
-            app.logs.append(LogEntry(level: .error, message: L10n.format("Could not save settings for %@: %@", [String(describing: (game.name)), String(describing: (error.localizedDescription))])))
+            app.logs.append(LogEntry(level: .error, message: L10n.format("Could not save settings for %@: %@", [String(describing: game.name), String(describing: error.localizedDescription)])))
             app.showSettingsNotice(title: L10n.text("Options not saved"), message: L10n.text("Your game options could not be saved. Try again.")) { [weak self] in
                 self?.saveRuntimeConfig(config, for: game)
             }

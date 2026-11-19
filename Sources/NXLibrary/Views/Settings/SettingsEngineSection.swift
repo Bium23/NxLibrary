@@ -281,8 +281,8 @@ struct SettingsEngineSection: View {
     private var newestSubtitle: String {
         if setup.isSwitchingEngine { return L10n.text("Switching the engine…") }
         if let choice = setup.newestEngineChoice {
-            var base = L10n.format("%@ In use: %@, ", [String(describing: (NewestEngineCopy.note)), String(describing: (choice.shortCommit))])
-                + L10n.format("%@ of the tested %@.", [String(describing: (NewestEngineCopy.ahead(choice.aheadBy))), String(describing: (seleneShort(viewModel.pinnedEngineCommit)))])
+            var base = L10n.format("%@ In use: %@, ", [String(describing: NewestEngineCopy.note), String(describing: choice.shortCommit)])
+                + L10n.format("%@ of the tested %@.", [String(describing: NewestEngineCopy.ahead(choice.aheadBy)), String(describing: seleneShort(viewModel.pinnedEngineCommit))])
             if setup.newestEngineActions.contains(.update), let offer = setup.newestEngineOffer {
                 base += " " + NewestEngineCopy.update(choice: choice, main: offer.upstreamCommit,
                                                       aheadBy: offer.newCommitsCount)
@@ -342,7 +342,7 @@ struct SettingsEngineSection: View {
         if !status.commits.isEmpty {
             let marks = NewestEngine.marks(status.commits, inUse: setup.newestEngineChoice?.commit)
             let shown = shownCommitCount(status, marks: marks)
-            SelenePanel(L10n.format("Upstream Commits (%@ newer)", [String(describing: (status.newCommitsCount))])) {
+            SelenePanel(L10n.format("Upstream Commits (%@ newer)", [String(describing: status.newCommitsCount)])) {
                 VStack(alignment: .leading, spacing: 10) {
                     ForEach(status.commits.prefix(shown)) { commit in
                         HStack(alignment: .top, spacing: 10) {
@@ -388,7 +388,7 @@ struct SettingsEngineSection: View {
 
                     if status.commits.count > shown {
                         HStack {
-                            Text(L10n.format("+ %@ more commits upstream", [String(describing: (status.commits.count - shown))]))
+                            Text(L10n.format("+ %@ more commits upstream", [String(describing: status.commits.count - shown)]))
                                 .seleneFont(14, .medium)
                                 .foregroundColor(SeleneTheme.ink60)
                             Spacer()
@@ -419,7 +419,7 @@ struct SettingsEngineSection: View {
         if check.id == "metal" {
             let installed = setup.installedMetalVersion ?? "unknown"
             let required = setup.requiredMetalVersion ?? "unknown"
-            return L10n.format("installed %@ · required %@", [String(describing: (installed)), String(describing: (required))])
+            return L10n.format("installed %@ · required %@", [String(describing: installed), String(describing: required)])
         }
         return check.detail
     }
@@ -461,7 +461,7 @@ struct SettingsEngineSection: View {
         if setup.engineToolchain.isBundled {
             return BundledRuntime.locate()?.versionSummary() ?? L10n.text("Included in Arcane")
         }
-        return L10n.format("Developer build: %@", [String(describing: (python.path))])
+        return L10n.format("Developer build: %@", [String(describing: python.path)])
     }
 
     private func buildRow(_ title: String, ok: Bool, detail: String) -> some View {

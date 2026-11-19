@@ -85,7 +85,6 @@ final class SourceCatalogTests: XCTestCase {
         XCTAssertEqual(source.version, 0)
     }
 
-
     func testCleanNameStripsSiteTagAndVersion() {
         let url = URL(fileURLWithPath: "/tmp/Neon Inferno (axekin.com) [01008DD0249BC000][v0].nsp")
         XCTAssertEqual(SourceCatalog.cleanName(url), "Neon Inferno")

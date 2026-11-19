@@ -32,7 +32,7 @@ public struct CloudSavesPreferences {
             case .iCloudDriveOff:
                 return L10n.text("iCloud Drive is not on for this Mac. Turn it on in System Settings › Apple Account › iCloud, or choose a folder.")
             case .folderUnavailable(let path):
-                return L10n.format("Could not use %@ for cloud saves.", [String(describing: (path))])
+                return L10n.format("Could not use %@ for cloud saves.", [String(describing: path)])
             }
         }
     }

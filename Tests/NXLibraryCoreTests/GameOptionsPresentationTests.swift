@@ -251,7 +251,6 @@ final class GameOptionsPresentationTests: XCTestCase {
         }
     }
 
-
     // MARK: - Settings from the build's list
 
     private func setting(_ env: String, _ kind: String, _ def: String, extra: String = "") -> LauncherSetting {

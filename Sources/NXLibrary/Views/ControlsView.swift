@@ -7,7 +7,7 @@ extension Notification.Name {
 }
 
 /// Library navigation and the pinned engine's default game inputs are separate guides.
-public struct ControlsView: View {
+struct ControlsView: View {
     let onClose: () -> Void
     let canHandleInput: () -> Bool
     @ObservedObject private var controller = GameControllerService.shared
@@ -17,7 +17,7 @@ public struct ControlsView: View {
     @State private var focus = 0
     @State private var keyMonitor: Any?
 
-    public init(canHandleInput: @escaping () -> Bool, onClose: @escaping () -> Void) {
+    init(canHandleInput: @escaping () -> Bool, onClose: @escaping () -> Void) {
         self.canHandleInput = canHandleInput
         self.onClose = onClose
     }
@@ -52,7 +52,7 @@ public struct ControlsView: View {
         ]
     }
 
-    public var body: some View {
+    var body: some View {
         VStack(spacing: 0) {
             ScrollViewReader { proxy in
                 ScrollView {

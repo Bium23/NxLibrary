@@ -7,27 +7,27 @@ import NXLibraryCore
 /// how the last porting ended. Add Game observes it on its own, so a stage or progress change redraws only those
 /// screens. What the rest of Arcane reads of a porting stays on `AppViewModel`: `isBuilding`, `currentBuildGameID`
 /// and `portingProgress` (the home's tile).
-public final class PortingModel: ObservableObject {
+final class PortingModel: ObservableObject {
     // MARK: - Wizard
-    @Published public var buildWizardStep: Int = 1 // 1: Select Game, 2: Configure & Output, 3: Porting
-    @Published public var showLiveLogsInBuild: Bool = true
+    @Published var buildWizardStep: Int = 1 // 1: Select Game, 2: Configure & Output, 3: Porting
+    @Published var showLiveLogsInBuild: Bool = true
 
     // MARK: - Live build
-    @Published public var buildState: BuildState = .idle
-    @Published public var isCancellingBuild: Bool = false
-    @Published public var currentStageName: String = ""
-    @Published public var currentStepName: String = ""
-    @Published public var stageIndex: Int = 0
-    @Published public var totalStages: Int = 0
-    @Published public var progressFraction: Double = 0.0
-    @Published public var etaSeconds: Double? = nil
-    @Published public var buildStages: [BuildStageItem] = []
+    @Published var buildState: BuildState = .idle
+    @Published var isCancellingBuild: Bool = false
+    @Published var currentStageName: String = ""
+    @Published var currentStepName: String = ""
+    @Published var stageIndex: Int = 0
+    @Published var totalStages: Int = 0
+    @Published var progressFraction: Double = 0.0
+    @Published var etaSeconds: Double? = nil
+    @Published var buildStages: [BuildStageItem] = []
 
     // MARK: - Outcome
-    @Published public var buildError: String? = nil
+    @Published var buildError: String? = nil
     /// Why the porting on the Porting step failed, when recognised; nil otherwise.
-    @Published public var portingFailureReason: PortingFailureReason? = nil
-    @Published public var buildSuccessPath: String? = nil
+    @Published var portingFailureReason: PortingFailureReason? = nil
+    @Published var buildSuccessPath: String? = nil
     /// The game whose finished build waits for it to quit (`PendingInstall`).
     @Published var buildHeldGameID: UUID? = nil
 
@@ -57,7 +57,7 @@ public final class PortingModel: ObservableObject {
     var reviewsFailureOnAddGame = false
 
     // MARK: - Game Selection
-    @Published public var selectedGameFolder: URL? {
+    @Published var selectedGameFolder: URL? {
         didSet {
             if let folder = selectedGameFolder {
                 if !keepsRememberedGameFolder {
@@ -86,13 +86,13 @@ public final class PortingModel: ObservableObject {
     /// Explicit file picks must not silently include other packages in their parent folder.
     var selectedPackageURLs: [URL]?
     /// The global source-folder preference is independent of the current Add Game draft.
-    public var gameFilesFolder: URL? {
+    var gameFilesFolder: URL? {
         guard let path = AppData.preferences.string(forKey: Self.savedGameFolderKey),
               !path.isEmpty, path != "/" else { return nil }
         return URL(fileURLWithPath: path)
     }
-    @Published public var detectedGames: [SelectableGame] = []
-    @Published public var selectedGame: SelectableGame? = nil {
+    @Published var detectedGames: [SelectableGame] = []
+    @Published var selectedGame: SelectableGame? = nil {
         didSet {
             if let game = selectedGame {
                 self.appName = selectedLibraryGame?.name ?? game.name
@@ -110,18 +110,18 @@ public final class PortingModel: ObservableObject {
         guard let titleID = selectedGame?.titleId else { return nil }
         return app.libraryGames.first { $0.titleId?.caseInsensitiveCompare(titleID) == .orderedSame }
     }
-    @Published public var selectedSourceIDs: Set<UUID> = [] {
+    @Published var selectedSourceIDs: Set<UUID> = [] {
         didSet { refreshKeyCheck() }
     }
     /// The imported keys against the selected sources (`refreshKeyCheck`); nil while it runs.
-    @Published public var keyCheck: KeyCheck.Outcome? = nil
+    @Published var keyCheck: KeyCheck.Outcome? = nil
     /// What `keyCheck` was computed for; a result for an older token is dropped.
     var keyCheckToken: String? = nil
 
-    @Published public var isScanningGameFolder: Bool = false
-    @Published public var scanError: String? = nil
+    @Published var isScanningGameFolder: Bool = false
+    @Published var scanError: String? = nil
 
-    public var availableDiskBytes: Int64? {
+    var availableDiskBytes: Int64? {
         freeBytes(at: selectedGameFolder
             ?? URL(fileURLWithPath: app.defaultInstallPath.isEmpty
                 ? NSHomeDirectory() : app.defaultInstallPath))
@@ -144,43 +144,43 @@ public final class PortingModel: ObservableObject {
 
     /// The wizard reserves space for both the extracted cache and the temporary
     /// app: the tightest of the folders the build writes to (`BuildScratch`).
-    public var availableBuildDiskBytes: Int64? {
+    var availableBuildDiskBytes: Int64? {
         buildFolders(appFolder: selectedBuildAppURL.deletingLastPathComponent(),
                      workspace: selectedLibraryGame?.workspacePath).compactMap(freeBytes(at:)).min()
     }
 
-    public var selectedSources: [GameFileItem] {
+    var selectedSources: [GameFileItem] {
         guard let game = selectedGame else { return [] }
         return game.files.filter { selectedSourceIDs.contains($0.id) }
     }
-    
-    public var selectedSourcesSizeBytes: Int64 {
+
+    var selectedSourcesSizeBytes: Int64 {
         SourceSelection.uniqueSize(selectedSources)
     }
 
-    public var selectedSourcesRequireKeys: Bool { SourceSelection.requiresKeys(selectedSources) }
+    var selectedSourcesRequireKeys: Bool { SourceSelection.requiresKeys(selectedSources) }
 
-    public var formattedSelectedSourcesSize: String {
+    var formattedSelectedSourcesSize: String {
         selectedSourcesSizeBytes.formatted(.byteCount(style: .file).locale(L10n.context.formatLocale))
     }
-    
+
     /// The build keeps an extracted copy and writes a temporary app before the
     /// atomic install, so plan for roughly twice the source size plus 10 GB.
-    public var requiredBuildDiskBytes: Int64 {
+    var requiredBuildDiskBytes: Int64 {
         selectedSourcesSizeBytes * 2 + 10_000_000_000
     }
-    
-    public var isAddDiskSpaceLow: Bool {
+
+    var isAddDiskSpaceLow: Bool {
         guard let avail = availableDiskBytes, selectedSourcesSizeBytes > 0 else { return false }
         return avail < requiredBuildDiskBytes
     }
 
-    public var isDiskSpaceLow: Bool {
+    var isDiskSpaceLow: Bool {
         guard let avail = availableBuildDiskBytes, selectedSourcesSizeBytes > 0 else { return false }
         return avail < requiredBuildDiskBytes
     }
-    
-    public var diskSpaceWarningMessage: String? {
+
+    var diskSpaceWarningMessage: String? {
         guard isDiskSpaceLow, let avail = availableBuildDiskBytes else { return nil }
         let needed = requiredBuildDiskBytes - avail
         let availStr = AppViewModel.formatBytes(avail)
@@ -188,33 +188,33 @@ public final class PortingModel: ObservableObject {
         let neededStr = AppViewModel.formatBytes(needed)
         return L10n.format("Storage warning: this build needs ~%@ free (twice the selected sources plus 10 GB), but only %@ is available. Free at least %@ before adding it.", [requiredStr, availStr, neededStr])
     }
-    
-    public var canAddSelectedGame: Bool {
+
+    var canAddSelectedGame: Bool {
         guard !app.isBuilding, !isScanningGameFolder, let game = selectedGame else { return false }
         return game.hasGame
             && SourceSelection.hasGame(selectedSources)
             && selectedSourcesSizeBytes > 0
             && !isAddDiskSpaceLow
     }
-    
-    public func resetSourceSelection(for game: SelectableGame) {
+
+    func resetSourceSelection(for game: SelectableGame) {
         selectedSourceIDs = SourceSelection.initial(in: game.files)
     }
-    
-    public func toggleSource(_ item: GameFileItem) {
+
+    func toggleSource(_ item: GameFileItem) {
         guard let game = selectedGame else { return }
         selectedSourceIDs = SourceSelection.toggling(item.id, in: game.files, selected: selectedSourceIDs)
     }
 
     /// The Add Game draft's choices for the game's first launch; a rebuild starts from the game's saved ones.
-    @Published public var pendingRuntimeConfig = GameRuntimeConfig()
+    @Published var pendingRuntimeConfig = GameRuntimeConfig()
     var lastAddGameDefaults = GameRuntimeConfig()
     var preparedSourceReview = FirstRunSetup.ReviewEntry()
     var addGameSessionActive = false
 
     // MARK: - Advanced Options
-    @Published public var appName: String = ""
-    @Published public var bundleId: String = ""
+    @Published var appName: String = ""
+    @Published var bundleId: String = ""
 
     var scanGeneration = UUID()
 
@@ -274,7 +274,7 @@ public final class PortingModel: ObservableObject {
                     self.app.logs.append(LogEntry(level: .warning, message: self.scanError!))
                 } else {
                     self.app.logs.append(LogEntry(level: .info,
-                        message: L10n.count("Detected %lld games in %@.", games.count, arguments: [String(describing: (folder.lastPathComponent))])))
+                        message: L10n.count("Detected %lld games in %@.", games.count, arguments: [String(describing: folder.lastPathComponent)])))
                 }
             }
         }
@@ -337,7 +337,7 @@ public final class PortingModel: ObservableObject {
         }
         return ScannedSources(games: detected, skipped: skipped)
     }
-    
+
     static func sourceFileURLs(in folder: URL) -> [URL] {
         let allowed = Set(["nsp", "nsz", "xci", "xcz"])
         let fm = FileManager.default
@@ -366,7 +366,7 @@ public final class PortingModel: ObservableObject {
             $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending
         }
     }
-    
+
     static func selectableGame(from game: DetectedGame) -> SelectableGame {
         var ordered = [game.base].compactMap { $0 }
         ordered += game.updates.sorted {
@@ -393,7 +393,7 @@ public final class PortingModel: ObservableObject {
     }
 
     @discardableResult
-    public func selectGameFolder(startingNewGameWith defaults: GameRuntimeConfig? = nil) -> Bool {
+    func selectGameFolder(startingNewGameWith defaults: GameRuntimeConfig? = nil) -> Bool {
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
@@ -401,7 +401,7 @@ public final class PortingModel: ObservableObject {
         panel.directoryURL = selectedGameFolder ?? gameFilesFolder
         panel.prompt = "Choose folder"
         panel.message = GameFoldersCopy.sourcesPickerMessage(extractedFolders: app.setup.engineSourceCapabilities.extractedFolders)
-        
+
         if panel.runModal() == .OK, let url = panel.url {
             if let defaults { startNewAddGame(defaults: defaults) }
             self.selectedGameFolder = url
@@ -411,7 +411,7 @@ public final class PortingModel: ObservableObject {
     }
 
     @discardableResult
-    public func selectGameFiles(startingNewGameWith defaults: GameRuntimeConfig? = nil) -> Bool {
+    func selectGameFiles(startingNewGameWith defaults: GameRuntimeConfig? = nil) -> Bool {
         let panel = NSOpenPanel()
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
@@ -432,13 +432,13 @@ public final class PortingModel: ObservableObject {
         return true
     }
 
-    public func goToWizardStep(_ step: Int) {
+    func goToWizardStep(_ step: Int) {
         guard step >= 1 && step <= 3 else { return }
         if step == 2 && selectedGame == nil { return }
         self.buildWizardStep = step
     }
 
-    public func resetWizard() {
+    func resetWizard() {
         self.buildWizardStep = 1
         self.buildError = nil
         self.portingFailureReason = nil
@@ -455,7 +455,7 @@ public final class PortingModel: ObservableObject {
         return preparedSourceReview.consume(id, isReady: canAddSelectedGame, titleCount: detectedGames.count)
     }
 
-    public func addGameDidBecomeVisible(defaults: GameRuntimeConfig, returningFromBack: Bool,
+    func addGameDidBecomeVisible(defaults: GameRuntimeConfig, returningFromBack: Bool,
                                         preservingSelection: Bool = false) {
         app.setup.prepareBuildEnvironmentIfNeeded()
         if app.isBuilding {
@@ -472,13 +472,13 @@ public final class PortingModel: ObservableObject {
     }
 
     /// Ends the draft when the user leaves Add Game for a non-overlay route.
-    public func addGameDidLeave() {
+    func addGameDidLeave() {
         guard !app.isBuilding else { return }
         addGameSessionActive = false
     }
 
     /// Starts a clean wizard while remembering the folder preference for next launch.
-    public func startNewAddGame(defaults: GameRuntimeConfig? = nil) {
+    func startNewAddGame(defaults: GameRuntimeConfig? = nil) {
         guard !app.isBuilding else {
             self.buildWizardStep = 3
             addGameSessionActive = true
@@ -533,7 +533,7 @@ public final class PortingModel: ObservableObject {
     }
 
     // MARK: - Build run
-    public var canStartBuild: Bool {
+    var canStartBuild: Bool {
         !app.isBuilding
             && !app.isCleaningStorage
             && !app.isUpdatingApp
@@ -561,7 +561,7 @@ public final class PortingModel: ObservableObject {
     #if DEBUG
     /// Feeds sample events through the same reducer as a real build, for
     /// SwiftUI previews and UI work without running nxnative.
-    public func previewBuild() {
+    func previewBuild() {
         app.isBuilding = true
         self.buildState = .running
         self.buildWizardStep = 3
@@ -580,7 +580,7 @@ public final class PortingModel: ObservableObject {
     }
     #endif
 
-    public func addSelectedGame(buildNow: Bool = false) {
+    func addSelectedGame(buildNow: Bool = false) {
         guard let selection = self.selectedGame else {
             presentBuildError(NXLibraryError.noSelectedGame)
             return
@@ -624,7 +624,7 @@ public final class PortingModel: ObservableObject {
                 try pendingRuntimeConfig.save(for: game)
             }
             app.librarySelection.selectedGameID = game.id
-            app.logs.append(LogEntry(level: .success, message: L10n.format("Added %@ to the library.", [String(describing: (game.name))])))
+            app.logs.append(LogEntry(level: .success, message: L10n.format("Added %@ to the library.", [String(describing: game.name)])))
             if buildNow, canStartBuild {
                 startBuild(for: game)
             } else {
@@ -636,7 +636,7 @@ public final class PortingModel: ObservableObject {
     }
 
     @discardableResult
-    public func addGame(detected: DetectedGame, selected: [DetectedSource],
+    func addGame(detected: DetectedGame, selected: [DetectedSource],
                         folder: URL?, bundleId: String? = nil) throws -> PortedGame {
         let selectedGame = DetectedGame(
             baseTitleId: detected.baseTitleId,
@@ -681,7 +681,7 @@ public final class PortingModel: ObservableObject {
         return catalog.nxnativeGames.first(where: { $0.titleId == titleId }) ?? game
     }
 
-    public func startBuild(for game: PortedGame, extraArguments: [String] = []) {
+    func startBuild(for game: PortedGame, extraArguments: [String] = []) {
         do {
             try beginBuild(for: game, extraArguments: extraArguments)
         } catch {
@@ -827,7 +827,7 @@ public final class PortingModel: ObservableObject {
                     ? L10n.text(" The Game apps folder's drive can't hold build files (it needs APFS or Mac OS Extended), so the build uses this Mac's disk.")
                     : ""
                 throw NXLibraryError.environmentBlocked(
-                    L10n.format("Not enough free space at %@: %@ available, %@ needed.%@", [String(describing: (volume.path)), String(describing: (freeText)), String(describing: (requiredText)), String(describing: (why))]))
+                    L10n.format("Not enough free space at %@: %@ available, %@ needed.%@", [String(describing: volume.path), String(describing: freeText), String(describing: requiredText), String(describing: why)]))
             }
         }
 
@@ -893,9 +893,9 @@ public final class PortingModel: ObservableObject {
         app.portingProgress = PortingProgress()
         app.frontGameID = target.id
         app.logs.append(LogEntry(level: .info,
-                             message: L10n.format("Build started for %@ (%@).", [String(describing: (target.name)), String(describing: (titleId))])))
+                             message: L10n.format("Build started for %@ (%@).", [String(describing: target.name), String(describing: titleId)])))
         app.logs.append(LogEntry(level: .info,
-                             message: L10n.format("Workspace: %@", [String(describing: (workspace.directory.path))])))
+                             message: L10n.format("Workspace: %@", [String(describing: workspace.directory.path)])))
         app.logs.append(LogEntry(
             level: .info,
             message: report?.ok == true
@@ -925,7 +925,7 @@ public final class PortingModel: ObservableObject {
         )
     }
 
-    public func cancelBuild() {
+    func cancelBuild() {
         guard app.isBuilding, let buildService else { return }
         stopStageElapsedTimer()
         self.isCancellingBuild = true
@@ -934,12 +934,12 @@ public final class PortingModel: ObservableObject {
         buildService.cancel()
     }
 
-    public func openOutputInFinder() {
+    func openOutputInFinder() {
         guard let path = self.buildSuccessPath else { return }
         NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
     }
 
-    public func openBuildLog() {
+    func openBuildLog() {
         guard let url = app.buildLogURL else {
             app.lastError = "No build log is available yet."
             app.logs.append(LogEntry(level: .warning, message: app.lastError!))
@@ -954,7 +954,7 @@ public final class PortingModel: ObservableObject {
         }
     }
 
-    public func retryLastBuild() {
+    func retryLastBuild() {
         guard let id = app.lastBuildGameID,
               let game = app.libraryGames.first(where: { $0.id == id }) else {
             app.lastError = "The last built game is no longer in the library."
@@ -1161,8 +1161,8 @@ public final class PortingModel: ObservableObject {
                     self.buildError = nil
                     app.lastError = nil
                     app.logs.append(LogEntry(level: .success, message: result.heldApp == nil
-                        ? L10n.format("Build succeeded: %@", [String(describing: (finalApp.path))])
-                        : L10n.format("Build succeeded while %@ is open: it installs when the game quits.", [String(describing: (game.name))])))
+                        ? L10n.format("Build succeeded: %@", [String(describing: finalApp.path)])
+                        : L10n.format("Build succeeded while %@ is open: it installs when the game quits.", [String(describing: game.name)])))
                     SoundEffectService.shared.play(.launch)
                     notifyPortingEnded(game, success: true, held: result.heldApp != nil)
                 }
@@ -1191,7 +1191,7 @@ public final class PortingModel: ObservableObject {
                 self.portingFailureReason = reason
                 app.lastError = message
                 app.logs.append(LogEntry(level: .error,
-                                     message: result.error ?? L10n.format("Build failed (exit code %@).", [String(describing: (result.exitCode))])))
+                                     message: result.error ?? L10n.format("Build failed (exit code %@).", [String(describing: result.exitCode)])))
                 app.logs.append(LogEntry(level: .error, message: "\(reason.title). \(message) \(reason.next)"))
                 SoundEffectService.shared.play(.error)
                 notifyPortingEnded(game, success: false)
@@ -1328,7 +1328,7 @@ public final class PortingModel: ObservableObject {
     }
 
     // MARK: - Folders, space and timing
-    public func freeBytes(at url: URL) -> Int64? {
+    func freeBytes(at url: URL) -> Int64? {
         let fm = FileManager.default
         // A folder not made yet (a build's staging folder) is on its nearest existing parent's volume.
         var target = url.standardizedFileURL
@@ -1358,7 +1358,7 @@ public final class PortingModel: ObservableObject {
     func finalAppURL(for game: PortedGame) -> URL {
         GameAppDestination.url(for: game, in: app.gameAppsFolder)
     }
-    public func supportsSources(_ sources: [GameFileItem]) -> Bool {
+    func supportsSources(_ sources: [GameFileItem]) -> Bool {
         let capabilities = app.setup.engineSourceCapabilities
         return SourceSelection.supported(sources, titleSelection: capabilities.titleSelection,
                                          extractedFolders: capabilities.extractedFolders,
@@ -1368,7 +1368,7 @@ public final class PortingModel: ObservableObject {
     private var didSeedFinishSeconds = false
     /// What the final stages took in the last successful porting on this Mac, for the ETA.
     /// Seeded once from the newest porting log when nothing is stored yet.
-    public var lastPortingFinishSeconds: Double? {
+    var lastPortingFinishSeconds: Double? {
         get {
             let stored = AppData.preferences.double(forKey: AppViewModel.StorageKeys.lastPortingFinishSeconds)
             if stored > 0 { return stored }

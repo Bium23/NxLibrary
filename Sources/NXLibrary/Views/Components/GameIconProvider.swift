@@ -4,10 +4,10 @@ import NXLibraryCore
 /// The installed app has the game's icon. Before a build succeeds, use the
 /// icon nxnative already extracted into the workspace instead of the generic
 /// folder icon.
-public enum GameIconProvider {
+enum GameIconProvider {
     private static let cache = NSCache<NSString, NSImage>()
 
-    public static func icon(for game: PortedGame) -> NSImage {
+    static func icon(for game: PortedGame) -> NSImage {
         let key = game.uniqueKey as NSString
         if let cached = cache.object(forKey: key) { return cached }
 
@@ -47,7 +47,7 @@ public enum GameIconProvider {
     }
 
     /// The app's icon changed (`AppIconWriter`): read it again.
-    public static func forget(_ game: PortedGame) {
+    static func forget(_ game: PortedGame) {
         cache.removeObject(forKey: game.uniqueKey as NSString)
         artCache.removeObject(forKey: game.uniqueKey as NSString)
         artMisses.removeObject(forKey: missKey(game))
@@ -56,7 +56,7 @@ public enum GameIconProvider {
     /// The game's own square icon art, full bleed: the built app's icon file
     /// (what Finder and the Dock show), else the icon nxnative extracted into
     /// the workspace. Nil when neither exists.
-    public static func squareArt(for game: PortedGame) -> NSImage? {
+    static func squareArt(for game: PortedGame) -> NSImage? {
         let key = game.uniqueKey as NSString
         if let cached = artCache.object(forKey: key) { return cached }
         let miss = missKey(game)

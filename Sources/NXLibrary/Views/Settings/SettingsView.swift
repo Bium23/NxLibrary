@@ -6,7 +6,7 @@ import os
 enum SettingsFocusArea { case sidebar, rows }
 
 /// Selene's settings screen (`SettingsScreen.cs`): groups on the left, the group's rows on the right.
-public struct SettingsView: View {
+struct SettingsView: View {
     private let initialSection: SettingsSection
     @ObservedObject var viewModel: AppViewModel
     @ObservedObject var settings: AppSettingsStore
@@ -42,7 +42,7 @@ public struct SettingsView: View {
     @ObservedObject private var igdb = IGDBSettings.shared
     @Environment(\.nxAppLocale) private var localization
 
-    public init(initialSection: SettingsSection,
+    init(initialSection: SettingsSection,
                 viewModel: AppViewModel,
                 settings: AppSettingsStore,
                 router: AppRouter,
@@ -55,7 +55,7 @@ public struct SettingsView: View {
         _section = State(initialValue: initialSection)
     }
 
-    public var body: some View {
+    var body: some View {
         VStack(spacing: 0) {
             HStack(alignment: .top, spacing: canvas.u(24)) {
                 SettingsSidebar(selection: $section, isFocused: focusArea == .sidebar, context: localization)

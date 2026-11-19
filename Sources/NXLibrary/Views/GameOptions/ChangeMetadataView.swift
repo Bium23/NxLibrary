@@ -289,7 +289,7 @@ struct ChangeMetadataView: View {
         case .retry(let source):
             return (L10n.format("Retry %@", [source.name]), L10n.text("Other sources and your saved choices remain available."))
         case .write:
-            return (L10n.text("Write your own…"), L10n.format("Type the %@ yourself.", [String(describing: (field.title.lowercased()))]))
+            return (L10n.text("Write your own…"), L10n.format("Type the %@ yourself.", [String(describing: field.title.lowercased())]))
         }
     }
 

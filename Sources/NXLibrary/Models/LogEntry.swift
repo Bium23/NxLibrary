@@ -1,13 +1,13 @@
 import Foundation
 
-public enum LogLevel {
+enum LogLevel {
     case info
     case step
     case success
     case warning
     case error
-    
-    public var sfSymbol: String {
+
+    var sfSymbol: String {
         switch self {
         case .info: return "info.circle.fill"
         case .step: return "gearshape.fill"
@@ -18,19 +18,19 @@ public enum LogLevel {
     }
 }
 
-public struct LogEntry: Identifiable {
-    public let id = UUID()
-    public let timestamp: Date
-    public let level: LogLevel
-    public let message: String
-    
-    public init(level: LogLevel = .info, message: String) {
+struct LogEntry: Identifiable {
+    let id = UUID()
+    let timestamp: Date
+    let level: LogLevel
+    let message: String
+
+    init(level: LogLevel = .info, message: String) {
         self.timestamp = Date()
         self.level = level
         self.message = message
     }
-    
-    public var formattedTimestamp: String {
+
+    var formattedTimestamp: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
         return formatter.string(from: timestamp)

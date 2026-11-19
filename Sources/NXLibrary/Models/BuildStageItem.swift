@@ -1,18 +1,18 @@
 import Foundation
 
-public struct BuildStageItem: Identifiable, Equatable {
-    public let id: Int // 1-based stage index
-    public let name: String
-    public var step: String
-    public var isRunning: Bool
-    public var isCompleted: Bool
-    public var isFailed: Bool
-    public var elapsedSeconds: Double?
-    public var summary: String?
+struct BuildStageItem: Identifiable, Equatable {
+    let id: Int // 1-based stage index
+    let name: String
+    var step: String
+    var isRunning: Bool
+    var isCompleted: Bool
+    var isFailed: Bool
+    var elapsedSeconds: Double?
+    var summary: String?
     /// Finished, but without what it makes (the engine's `warn`).
-    public var hasWarning = false
-    
-    public init(
+    var hasWarning = false
+
+    init(
         id: Int,
         name: String,
         step: String = "",

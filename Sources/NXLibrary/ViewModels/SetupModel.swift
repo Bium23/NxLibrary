@@ -6,17 +6,17 @@ import NXLibraryCore
 /// and the Metal gate. The screens that show any of it observe it on their own: Settings, Add Game, Game options, the
 /// home, the game page and the shell's update offer. It reaches the rest of Arcane only through `app`, the list of
 /// what the Porting module will ask of the base.
-public final class SetupModel: ObservableObject {
+final class SetupModel: ObservableObject {
     /// The coordinator: library, building state, alerts and the tested pin.
     unowned let app: AppViewModel
 
     // MARK: - Engine
-    @Published public var nxnativePath: String = ""
-    @Published public var isNxnativeValid: Bool = false
-    @Published public var currentEngineCommit: String? = nil
-    @Published public var upstreamState: UpstreamCheckState = .idle
+    @Published var nxnativePath: String = ""
+    @Published var isNxnativeValid: Bool = false
+    @Published var currentEngineCommit: String? = nil
+    @Published var upstreamState: UpstreamCheckState = .idle
     /// The newest nxnative the player chose in Settings → Setup and engine; nil while the tested engine is in use.
-    @Published public internal(set) var newestEngineChoice: NewestEngineChoice? = nil {
+    @Published var newestEngineChoice: NewestEngineChoice? = nil {
         didSet {
             if let choice = newestEngineChoice, let data = try? JSONEncoder().encode(choice) {
                 AppData.preferences.set(data, forKey: AppViewModel.StorageKeys.newestEngineChoice)
@@ -26,37 +26,37 @@ public final class SetupModel: ObservableObject {
         }
     }
     /// Whether upstream main can be used here, read from its lock after an Upstream check.
-    @Published public internal(set) var newestEngineReadiness: NewestEngineReadiness? = nil
-    @Published public internal(set) var isSwitchingEngine = false
+    @Published var newestEngineReadiness: NewestEngineReadiness? = nil
+    @Published var isSwitchingEngine = false
     /// Why the last switch did not happen, shown calmly in the Newest engine row.
-    @Published public internal(set) var newestEngineProblem: String? = nil
+    @Published var newestEngineProblem: String? = nil
     lazy var upstreamChecker = UpstreamChecker()
     let upstreamCacheKey = "NXLibrary_UpstreamStatus"
 
     /// What the engine in use can read: title selection, extracted folders and NUP containers or programs.
-    public var engineSourceCapabilities: EngineSourceCapabilities {
+    var engineSourceCapabilities: EngineSourceCapabilities {
         EngineSourceCapabilities(repo: URL(fileURLWithPath: nxnativePath))
     }
 
     // MARK: - Keys
-    @Published public var prodKeysPath: String = "" {
+    @Published var prodKeysPath: String = "" {
         didSet {
             if !prodKeysPath.isEmpty {
                 AppData.preferences.set(prodKeysPath, forKey: AppViewModel.StorageKeys.savedProdKeysPath)
             }
         }
     }
-    @Published public var prodKeysSource: String = ""
-    @Published public var isProdKeysValid: Bool = false
-    @Published public var keySummary: KeySummary? = nil
+    @Published var prodKeysSource: String = ""
+    @Published var isProdKeysValid: Bool = false
+    @Published var keySummary: KeySummary? = nil
     lazy var keyStore = KeyStore(directory: app.core.appendingPathComponent("keys"))
 
     // MARK: - Environment and the Metal gate
-    @Published public var environmentStatus: EnvironmentStatus? = nil
-    @Published public var compatibilityReport: CompatibilityReport? = nil
-    @Published public internal(set) var isCheckingEnvironment = false
+    @Published var environmentStatus: EnvironmentStatus? = nil
+    @Published var compatibilityReport: CompatibilityReport? = nil
+    @Published var isCheckingEnvironment = false
     var environmentCheckGeneration = UUID()
-    @Published public var allowUntestedToolchain: Bool = false {
+    @Published var allowUntestedToolchain: Bool = false {
         didSet {
             AppData.preferences.set(allowUntestedToolchain, forKey: AppViewModel.StorageKeys.allowUntestedToolchain)
         }
@@ -79,7 +79,7 @@ public final class SetupModel: ObservableObject {
     }
 
     // MARK: - Engine folder and upstream
-    public func checkUpstreamChangelog() {
+    func checkUpstreamChangelog() {
         if case .checking = upstreamState { return }
         // Always against the tested pin, so the newest engine stays measurable from the engine NX Library tested.
         let base = app.pinnedEngineCommit
@@ -100,7 +100,7 @@ public final class SetupModel: ObservableObject {
         }
     }
 
-    public func openUpstreamCompare() {
+    func openUpstreamCompare() {
         guard case .loaded(let status) = upstreamState else { return }
         NSWorkspace.shared.open(status.compareURL)
     }
@@ -115,7 +115,7 @@ public final class SetupModel: ObservableObject {
         return error.localizedDescription
     }
 
-    public func selectNxnativeFolder() {
+    func selectNxnativeFolder() {
         guard !app.isBuilding, !app.isUpdatingApp else { return }
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
@@ -157,7 +157,7 @@ public final class SetupModel: ObservableObject {
                 isProdKeysValid = false
                 prodKeysSource = "Invalid stored copy"
                 app.logs.append(LogEntry(level: .error,
-                                     message: L10n.format("Stored prod.keys is invalid: %@", [String(describing: (error.localizedDescription))])))
+                                     message: L10n.format("Stored prod.keys is invalid: %@", [String(describing: error.localizedDescription)])))
             }
             return
         }
@@ -176,7 +176,7 @@ public final class SetupModel: ObservableObject {
         importKeys(from: URL(fileURLWithPath: candidate))
     }
 
-    public func importKeys(from url: URL) {
+    func importKeys(from url: URL) {
         guard !app.isBuilding, !app.isUpdatingApp else {
             app.showSettingsNotice(title: L10n.text("Porting in progress"), message: L10n.text("Change keys after the porting finishes."))
             return
@@ -192,7 +192,7 @@ public final class SetupModel: ObservableObject {
             app.lastError = nil
             app.logs.append(LogEntry(
                 level: .success,
-                message: L10n.format("prod.keys imported: header key present, %@ application key generations.", [String(describing: (summary.applicationKeyGenerations.count))])
+                message: L10n.format("prod.keys imported: header key present, %@ application key generations.", [String(describing: summary.applicationKeyGenerations.count)])
             ))
         } catch {
             keySummary = try? keyStore.validate(at: keyStore.keyURL)
@@ -203,11 +203,11 @@ public final class SetupModel: ObservableObject {
                 ? L10n.text("The key file could not be imported. Your previous copy is kept.")
                 : L10n.text("The key file could not be imported. Choose a valid prod.keys file."))
             app.logs.append(LogEntry(level: .error,
-                                 message: L10n.format("Could not import prod.keys: %@", [String(describing: (error.localizedDescription))])))
+                                 message: L10n.format("Could not import prod.keys: %@", [String(describing: error.localizedDescription)])))
         }
     }
 
-    public func selectProdKeysFile() {
+    func selectProdKeysFile() {
         guard !app.isBuilding, !app.isUpdatingApp else { return }
         let panel = NSOpenPanel()
         panel.canChooseFiles = true
@@ -224,11 +224,11 @@ public final class SetupModel: ObservableObject {
 
     // MARK: - Environment check and the gate
     /// The Python and PATH every engine process runs with (bundled runtime, else the venv).
-    public var engineToolchain: EngineToolchain {
+    var engineToolchain: EngineToolchain {
         .resolve(runtime: .locate(), repo: URL(fileURLWithPath: self.nxnativePath))
     }
 
-    public func detectEnvironment(customRyujinxDir: String? = nil) {
+    func detectEnvironment(customRyujinxDir: String? = nil) {
         guard !app.isBuilding, !app.isUpdatingApp else { return }
         restoreBuildInputs(customRyujinxDir: customRyujinxDir)
         refreshCompatibility()
@@ -243,11 +243,11 @@ public final class SetupModel: ObservableObject {
     }
 
     /// With launch checks off, inspecting a build screen performs the check on demand.
-    public func prepareBuildEnvironmentIfNeeded() {
+    func prepareBuildEnvironmentIfNeeded() {
         if environmentStatus == nil, !isCheckingEnvironment { detectEnvironment() }
     }
 
-    public func refreshCompatibility() {
+    func refreshCompatibility() {
         guard !app.isBuilding, !app.isUpdatingApp else { return }
         let generation = UUID()
         environmentCheckGeneration = generation
@@ -296,7 +296,7 @@ public final class SetupModel: ObservableObject {
                 if let report, !report.ok {
                     let blocked = report.checks.filter { $0.status == .block }
                         .map { "\($0.title): \($0.detail)" }.joined(separator: " | ")
-                    self.app.logs.append(LogEntry(level: .warning, message: L10n.format("Toolchain gate: %@", [String(describing: (blocked))])))
+                    self.app.logs.append(LogEntry(level: .warning, message: L10n.format("Toolchain gate: %@", [String(describing: blocked)])))
                 }
             }
         }
@@ -334,7 +334,7 @@ public final class SetupModel: ObservableObject {
         return URL(fileURLWithPath: "/Library/Developer/CommandLineTools")
     }
 
-    public var requiredMetalVersion: String? {
+    var requiredMetalVersion: String? {
         let lock = URL(fileURLWithPath: self.nxnativePath)
             .appendingPathComponent("dm/gfx/tools/dmsh_chain.lock")
         guard let text = try? String(contentsOf: lock, encoding: .utf8) else { return nil }
@@ -345,20 +345,20 @@ public final class SetupModel: ObservableObject {
         return nil
     }
 
-    public var installedMetalVersion: String? { environmentStatus?.metalVersion }
+    var installedMetalVersion: String? { environmentStatus?.metalVersion }
 
-    public var canPassToolchainGate: Bool {
+    var canPassToolchainGate: Bool {
         compatibilityReport?.ok == true || allowUntestedToolchain
     }
 
     /// A profile in `dm/games/<title ID>` is the engine's verified support for
     /// a title. Without one the engine builds from a provisional profile and
     /// may fail in the rewrite or at run time.
-    public func hasVerifiedEngineProfile(for game: PortedGame) -> Bool {
+    func hasVerifiedEngineProfile(for game: PortedGame) -> Bool {
         hasVerifiedEngineProfile(titleId: game.titleId)
     }
 
-    public func hasVerifiedEngineProfile(titleId: String?) -> Bool {
+    func hasVerifiedEngineProfile(titleId: String?) -> Bool {
         guard let titleId, !titleId.isEmpty else { return true }
         guard !self.nxnativePath.isEmpty else { return true }
         var isDirectory: ObjCBool = false
