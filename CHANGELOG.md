@@ -14,10 +14,6 @@ See the [validation checklist](docs/validation.md) for the state of manual check
 
 - Updates keep working if the project's GitHub repository is later renamed to **Arcane**: this version also accepts releases served under `Bium23/Arcane`.
 
-### Fixed
-
-- The **Live output** icon in the build log shows again in languages that had translated its symbol name, such as Italian and German.
-
 ## 0.2.0 — 2026-11-18
 
 See the [validation checklist](docs/validation.md) for the state of manual checks.

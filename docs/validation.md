@@ -7,7 +7,14 @@ Come si aggiorna:
 - Ogni lavoro nuovo aggiunge la sua riga **in attesa**, con le prove manuali da fare.
 - Le guide ([architecture.md](architecture.md), [steam.md](steam.md)) descrivono come funziona; lo stato sta solo qui.
 
-## Lavoro non pubblicato (ramo `bium/library-manager`)
+## Non pubblicato (ramo `bium/0.2.1`)
+
+| Parte | Stato | Prove ancora da fare |
+|---|---|---|
+| Cinese semplificato (zh-Hans), issue #22 | in attesa | Settings → Start-up → Language: 简体中文 cambia subito testi e sidebar senza spostare il focus; Automatic con Mac in cinese semplificato sceglie 简体中文, con cinese tradizionale passa alla lingua successiva. Testi lunghi senza tagli in Settings, Spotlight, Add game e Setup; pagina Steam con descrizione e achievement in cinese; gioco nxnative con avviso della descrizione in inglese. La traduzione è una bozza: l'autore della issue #22 si è offerto per la revisione madrelingua |
+| Ponte dell'updater verso `Bium23/Arcane` | in attesa | Test automatici del percorso rinominato verdi. Prima della rinomina del repository: dalla 0.2.1 installata, Check for updates contro una release di prova; dopo la rinomina, l'updater segue il redirect di GitHub e accetta lo zip sotto `Bium23/Arcane` |
+
+## Pubblicato fino alla 0.2.0
 
 | Parte | Stato | Prove ancora da fare |
 |---|---|---|
@@ -58,8 +65,6 @@ Come si aggiorna:
 | IGDB in Change metadata | in attesa | Un gioco nxnative e uno Steam, scelta, Q/E e controller, Automatic, testo personale, persistenza, offline/retry, chiusura durante il caricamento |
 | LaunchBox e TheGamesDB in Change metadata (ambito approvato il 16 nov 2026) | in attesa | Source picker su Switch 2 e Steam, persistenza, righe uguali/assenti, controller, offline/retry, immagini TheGamesDB per Mac/PC |
 | Movimento del selettore dei metadati (`SeleneExpandableText`) | in attesa | Su/giù ripetuti fra descrizioni corte e lunghe, scroll fino alla fine, Q/E, Riduci movimento |
-| Cinese semplificato (zh-Hans), issue #22 | in attesa | Settings → Start-up → Language: 简体中文 cambia subito testi e sidebar senza spostare il focus; Automatic con Mac in cinese semplificato sceglie 简体中文, con cinese tradizionale passa alla lingua successiva. Testi lunghi senza tagli in Settings, Spotlight, Add game e Setup; pagina Steam con descrizione e achievement in cinese; gioco nxnative con avviso della descrizione in inglese. La traduzione è una bozza: l'autore della issue #22 si è offerto per la revisione madrelingua |
-| Ponte dell'updater verso `Bium23/Arcane` | in attesa | Test automatici del percorso rinominato verdi. Prima della rinomina del repository: dalla 0.2.1 installata, Check for updates contro una release di prova; dopo la rinomina, l'updater segue il redirect di GitHub e accetta lo zip sotto `Bium23/Arcane` |
 | Lingua e regione (sei lingue) | validato nella Dev, compreso il cambio immediato e la sidebar senza spostare il focus | Le traduzioni sono bozze, non revisioni madrelingua; issue #10 aperta |
 | Spazio per gioco in Settings → Storage | validato il 9 nov 2026 | — |
 | Profilo Dev isolato | avvio e libreria Dev validati il 9 nov 2026 | Non copre ogni azione su giochi, mod o salvataggi reali |

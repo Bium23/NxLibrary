@@ -86,7 +86,7 @@ The nested-bundle check creates tiny Mach-O fixtures with signed data bundles an
 
 The artwork-return check compiles the real tile views, loading tasks and retained Mods host with generated images and isolated preferences. It records which image the first body selects after view recreation, without rendering or opening a window, and checks pick removal, Steam app updates, Mods badges after external removal and changed GameBanana matches. Network is forbidden in the Mods fixture.
 
-The latest complete Swift verification on 2 November 2026 passed **774 tests**, including first-run skip/resume, setup navigation, explicit title choice, source-selection restoration, chosen-folder installation/discovery and preserving ready builds after destination disconnection. The earlier publication verification passed **15 Python checks**; the development-app bundle passed signature verification, and a headless check exercised a real public GitHub download, its redirect and rejection of a mismatched size. These checks do not establish that the interactive update or a game worked. This is dated evidence, not a promise about future changes. See the [test catalog](file-map.md#test-e-fixture).
+Passing checks do not establish that an interactive update or a game works. See the [test catalog](file-map.md#test-e-fixture).
 
 For manual setup checks on an existing account, use **Settings → Start-up → Open Setup**: Continue opens Your games without resetting the library. Check file-picker cancellation, Back, Open library and source review. A fresh account additionally verifies Skip persistence and resuming an interrupted first setup. Interactive checks remain the user's responsibility; agents do not launch the UI.
 

@@ -1,15 +1,12 @@
 # Steam in Arcane
 
-Riferimento unico dell’integrazione Steam: cosa legge, come decide, cosa mostra, e cosa resta da validare. È il
+Riferimento unico dell’integrazione Steam: cosa legge, come decide e cosa mostra. È il
 documento da leggere prima di toccare qualunque parte Steam. `architecture.md` ne tiene solo un riassunto;
-`file-map.md` elenca i file uno per uno.
-
-Ramo: `bium/library-manager` (rilascio grande, non pubblicato). Aggiornato al 17 novembre 2026.
+`file-map.md` elenca i file uno per uno. Lo stato delle prove manuali sta solo in [validation.md](validation.md).
 
 ## Indice
 
 - [Principi](#principi)
-- [Stato di validazione](#stato-di-validazione)
 - [File di Steam letti](#file-di-steam-letti)
 - [Rilevamento e catalogo](#rilevamento-e-catalogo)
 - [Stati di un gioco Steam](#stati-di-un-gioco-steam)
@@ -40,10 +37,6 @@ Ramo: `bium/library-manager` (rilascio grande, non pubblicato). Aggiornato al 17
 - **Nessun gioco nxnative finto.** `CatalogGame` porta il payload reale (`SteamCatalogGame`); i comandi Switch
   (build, salvataggi, mod) ricevono solo `PortedGame` e non possono partire da un gioco Steam.
 - **Fonte opzionale.** Con la fonte Steam spenta non partono scansioni o watcher del catalogo. La scoperta del primo avvio e l’offerta del benvenuto leggono soltanto per proporre la scelta, senza attivare la fonte; usano la cartella Steam salvata oppure quella standard. Una lettura incompleta nel primo avvio offre Retry, senza indicare che i giochi sono assenti.
-
-## Stato di validazione
-
-Lo stato di ogni parte Steam sta nell'elenco unico [validation.md](validation.md). Una parte conta come validata solo dopo la prova del maintainer in Arcane Dev.
 
 ## File di Steam letti
 
@@ -77,8 +70,7 @@ I lookup senza distinzione maiuscole/minuscole sono condivisi nell’estensione 
 I lettori decidono l’esito al proprio confine: i campi scalari non utilizzabili delle ore mantengono i ripieghi
 esistenti, mentre manifest e indici non validi producono una scansione parziale con un problema segnalato.
 Una prima stringa localizzata vuota negli achievement mantiene il ripiego inglese, senza scegliere un duplicato
-successivo. La pulizia del 16 novembre conserva questi risultati: sette prove aggiunte sui lettori reali passano
-prima e dopo l’estrazione. La verifica nella Dev resta da confermare; non è stata cambiata la semantica dei file.
+successivo. Sette prove sui lettori reali fissano questi esiti.
 
 ## Rilevamento e catalogo
 
@@ -240,22 +232,20 @@ come medaglione (`AchievementDetail`): icona grande con il cristallo sull’ango
 (Sinistra/Destra). «Your activity» non c’è: ore e ultima partita sono già nella testata. Schema: nomi e descrizioni
 nella lingua dell’app, poi inglese. Nessuna chiave Web API di Steam: non serve per questi dati.
 
-Correzione del 16 novembre, **validata dal maintainer nella Dev**: riaprire rapidamente la schermata durante la sua
-transizione poteva riusare la vista della lista con un nuovo `AchievementsScreenModel`, senza richiamare
-`onAppear` né cambiare altezza. La selezione avanzava, ma il nuovo modello non aveva geometria e lo scroll
-restava a zero. La lista riporta ora le misure con un `task(id:)` legato all’istanza corrente del modello
+Riaprire rapidamente la schermata durante la sua transizione può riusare la vista della lista con un nuovo
+`AchievementsScreenModel`, senza richiamare `onAppear` né cambiare altezza. Per questo la lista riporta le misure
+con un `task(id:)` legato all’istanza corrente del modello
 ([contratto SwiftUI](https://developer.apple.com/documentation/swiftui/view/task%28id%3Aname%3Apriority%3Afile%3Aline%3A_%3A%29)),
 conservando i controlli per altezza, scala e Riduci movimento. Nessun reset dell’identità della vista o dello stato.
-La sonda fuori schermo `run_achievement_scroll.py` riproduce il difetto con 41 righe sintetiche e verifica
-riaperture rapide e dopo la transizione, dettagli della prima riga, ridimensionamento e Riduci movimento.
+La sonda fuori schermo `run_achievement_scroll.py` verifica con 41 righe sintetiche riaperture rapide e dopo la
+transizione, dettagli della prima riga, ridimensionamento e Riduci movimento.
 
-Armonizzazione successiva del 16 novembre: `SteamCatalogGame.firstAvailableInstallation` è il lookup condiviso
+`SteamCatalogGame.firstAvailableInstallation` è il lookup condiviso
 per artwork, pagina, Opzioni, volume e osservazione dei processi. Restituisce la prima installazione con stato
 `available` nell’ordine del catalogo; non effettua I/O, non modifica i record e non decide se Play sia consentito.
 `CatalogGamePresentation` conserva i controlli di fonte, riconoscimento, review e unicità prima del lancio.
-I test di caratterizzazione di artwork e dettagli passano prima e dopo l’estrazione, compreso Play bloccato con
-più installazioni e assenza di app/dati installazione negli stati non disponibili. Questa pulizia non aggiunge
-funzionalità; la verifica nell’app dopo il refactor resta da confermare.
+I test di artwork e dettagli coprono anche Play bloccato con più installazioni e l'assenza di app e dati
+d'installazione negli stati non disponibili.
 
 ## Metadati, arte e personalizzazioni
 
@@ -287,16 +277,16 @@ Sotto `Application Support/NXLibrary` (Dev: `NXLibrary-Development`):
 
 ## Scelte del maintainer
 
-- Lucchetto solo per i fallimenti Switch; un download ha il suo aspetto (15 nov 2026).
+- Lucchetto solo per i fallimenti Switch; un download ha il suo aspetto.
 - Riquadri: solo icone vere, mai arte ritagliata; ordine scelta → icona dell’app → Square LaunchBox → neutro.
 - Download: bianco e nero pieno (non colori sbiaditi), simbolo che pulsa senza alone, cerchio sottile, pulsante
   «Downloading» come «Porting», nessuna nota sopra i pulsanti, gioco in testa alla riga fino all’uscita.
 - Nessuna etichetta «Steam» sulle tile.
 - Pagina: «Your activity» tolta, Achievements in cima alla colonna destra, in un pannello chiaro quasi trasparente
-  con contorno sottile (dopo aver provato senza riquadro e con un’ombra, 15 nov 2026).
+  con contorno sottile.
 - Logo Steam inalterato al posto del valore sotto PLATFORM, con lo spazio libero ridotto sopra.
 - Ore: base di Steam più le sessioni successive.
-- Achievement (16 nov 2026): Arcane al posto del Platino, cristalli e video dell’Arcane fatti dal maintainer, video a
+- Achievement: Arcane al posto del Platino, cristalli e video dell’Arcane fatti dal maintainer, video a
   1,5×, medaglione al 100% e nel dettaglio, percentuale e barra larga sotto i cristalli, lucchetto sfocato sui segreti.
 
 ## Limiti noti e punti rimandati
@@ -309,14 +299,13 @@ Decisi consapevolmente:
 - Un manifest rimasto a 1026 dopo un download annullato continua a mostrare «Downloading».
 - Un’assenza su LaunchBox (anche per rete assente) non si ricerca fino al prossimo avvio.
 
-Punti minori rimandati dalle revisioni, da decidere prima del rilascio:
+Punti minori rimandati dalle revisioni:
 - Watcher: se la scrittura della configurazione fallisce, resta fermo fino alla scansione successiva;
   il callback usa `unsafeBitCast` a `NSArray`. Il solo collegamento di un volume non avvia una scansione:
   serve Refresh o una modifica rilevante ai file Steam già osservati.
 - Un Refresh manuale non annulla una riscansione in attesa (una scansione in più).
 - `openDownloads` ignora gli errori di apertura.
-- Achievement: la freccia Su sparisce col focus sulla card; riepilogo ricalcolato a ogni disegno. (Risolti il 16 nov
-  2026: ordine «più rari» stabile a parità di percentuale, rarità `nan` scartata, lampo dell’icona allo scorrimento.)
+- Achievement: la freccia Su sparisce col focus sulla card; riepilogo ricalcolato a ogni disegno.
 - Il focus dei link Details non viene limitato quando una disinstallazione Steam ne riduce il numero.
 - Un errore Wikidata sospende per 60 s anche le richieste degli altri giochi.
 - In Change metadata, il nome canonico arrivato da IGDB riavvia le ricerche LaunchBox/TheGamesDB.
@@ -325,11 +314,9 @@ Punti minori rimandati dalle revisioni, da decidere prima del rilascio:
 - La prima conversione scrive il backup prima del principale: un errore del secondo può offrire «Restore backup»
   per il catalogo appena convertito, con dati corretti ma un messaggio poco chiaro.
 
-Revisione del 16 novembre 2026: corretti il focus della card durante lo scroll, il caricamento degli achievement
-richiesto prima della configurazione Steam e la disponibilità di Details sotto i pannelli. I lettori di statistiche,
-schema, account e ore usano ora `InstallationFileSnapshot`, con limite durante la lettura, rifiuto dei symlink finali
-e verifica della stabilità del file. Test Core e controlli delle vere funzioni dell’app con dati sintetici verificano
-le regressioni; nessuna finestra viene aperta. **In attesa di validazione umana nella Dev.**
+I lettori di statistiche, schema, account e ore usano `InstallationFileSnapshot`, con limite durante la lettura,
+rifiuto dei symlink finali e verifica della stabilità del file. Test Core e controlli delle vere funzioni dell’app
+con dati sintetici coprono le regressioni senza aprire finestre.
 
 ## Cambiare l’integrazione
 
