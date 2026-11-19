@@ -438,7 +438,7 @@ public struct ConsoleView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) { didCopyDiagnostics = false }
         case .reveal:
             SoundEffectService.shared.play(.click)
-            viewModel.openBuildLog()
+            viewModel.porting.openBuildLog()
         case .clear:
             confirmFocus = .cancel
             confirmClear = true

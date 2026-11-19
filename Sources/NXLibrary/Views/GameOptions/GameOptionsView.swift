@@ -845,7 +845,7 @@ struct GameOptionsView: View {
             return
         }
         SoundEffectService.shared.play(.click)
-        viewModel.startBuild(for: game)
+        viewModel.porting.startBuild(for: game)
         if viewModel.isBuilding {
             onClose()
             onShowBuild()

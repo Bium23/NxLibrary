@@ -87,12 +87,12 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
 - `startInFullscreen` sta in `AppSettings` (default false), compare in Search e Changed e torna al default con il reset di Start-up. `StartupWindowView` lo legge alla creazione e lo applica una sola volta alla finestra visibile e attiva, dopo `LaunchReveal.whenShown`. `isWindowSettling` tiene ferma l’entrata fino alla notifica di fine transizione, con ripiego a 4 s dall’aggancio alla finestra. Cambiare la preferenza non altera la finestra corrente.
 
 **Coordinatore.**
-- `AppViewModel.swift` coordina libreria, rilevamento dell'ambiente, selezione delle sorgenti, porting e lancio. Le estensioni `AppViewModel+…` collegano cheat, salvataggi, diagnostica, chiavi, toolchain, installazioni in attesa e fonti; sono parti dello stesso oggetto osservabile.
-- `PortingModel` tiene Add Game: la bozza (cartella o file scelti, scansione, titoli trovati, selezione delle sorgenti, nome, bundle ID, controllo delle chiavi, spazio su disco) e ciò che il passo Porting mostra di una build (passo del wizard, fasi, avanzamento, esito ed errore).
+- `AppViewModel.swift` coordina libreria, rilevamento dell'ambiente, Locate Sources e lancio, e tiene lo stato del porting che legge la home. Le estensioni `AppViewModel+…` collegano cheat, salvataggi, diagnostica, chiavi, toolchain, installazioni in attesa e fonti; sono parti dello stesso oggetto osservabile.
+- `PortingModel` tiene Add Game: la bozza (cartella o file scelti, scansione, titoli trovati, selezione delle sorgenti, nome, bundle ID, controllo delle chiavi, spazio su disco) e la build: avvio, eventi del motore, annullamento, fine, notifiche, azioni sugli errori riconosciuti e ciò che il passo Porting ne mostra (passo del wizard, fasi, avanzamento, esito ed errore).
   - Le viste di Add Game e la riga Game files di Impostazioni → Libreria lo osservano da sole, così un cambio di fase ridisegna solo quelle schermate.
   - Il resto di Arcane legge di un porting solo `isBuilding`, `currentBuildGameID` e `portingProgress` (la tile della home), che restano sul coordinatore.
   - Raggiunge il resto dell'app solo da `PortingModel.app`: libreria, chiavi, engine, catalogo e i valori di Game options. *Perché:* quell'elenco è ciò che il modulo Porting dovrà chiedere alla base.
-  - Avvio, eventi e fine della build sono ancora nel coordinatore.
+  - Le installazioni in attesa (`AppViewModel+PendingInstall`) restano sul coordinatore. *Perché:* le avviano anche Play, i salvataggi e la chiusura di un gioco, e il loro dialogo appartiene alla libreria.
 - Gli stati di un solo pannello hanno il loro modello: `SetupCheckModel`, `SavePanelModel` (anteprima, operazione in corso, errore, ultimo backup, importazione riuscita) e gli altri elencati in [conventions.md](../working-on-it/conventions.md#1-dove-va-il-codice). Gli aggiornamenti destinati alla UI si pubblicano sulla coda principale.
 
 **Primo avvio.**
@@ -335,7 +335,7 @@ Il percorso completo è in [flows.md](flows.md#5-costruire-un-gioco-switch-add-g
    - Una cartella `workspaces` spostata dal giocatore su quel volume resta dov'è, e un workspace gestito già su quel volume conserva la sua cache.
    - Un workspace gestito rimasto su un altro volume si cancella quando ne nasce uno nuovo, tranne se il gioco non è ancora costruito e punta ancora lì.
    - Il controllo dello spazio misura ogni volume usato una sola volta. La pulizia all'avvio guarda anche le `.nxlibrary-build/Temp`, e cancellare un gioco o le sue sorgenti tocca solo i workspace riconosciuti da `BuildScratch.isManaged`.
-4. **Ultimo controllo.** Il coordinatore ricontrolla requisiti, spazio, chiavi e destinazione. `BuildCommandBuilder` produce eseguibile, argomenti, cartella di lavoro e ambiente.
+4. **Ultimo controllo.** `PortingModel.beginBuild` ricontrolla requisiti, spazio, chiavi e destinazione. `BuildCommandBuilder` produce eseguibile, argomenti, cartella di lavoro e ambiente.
 5. **Processo.** `BuildService` avvia il processo del motore e gestisce il suo gruppo di processi. Raccoglie stdout e stderr, scrive il log e tiene attiva l'asserzione contro lo stop per inattività. Se il processo non parte, chiude subito log e pipe.
 6. **Avanzamento.** `BuildEventParser` decodifica il progresso JSON e `PortingProgress` lo aggrega per la UI: gli shader arrivano fino al 90%, le fasi finali occupano il restante 10%. Il modello alimenta wizard, tile, percentuale e stima del tempo.
 7. **Installazione.** `BuildOutputInstaller` valida il bundle temporaneo e pubblica il gioco con `renamex_np`: `RENAME_SWAP` scambia atomicamente due app esistenti, `RENAME_EXCL` installa la prima copia senza sovrascrivere una destinazione comparsa nel frattempo. Sullo stesso volume usa direttamente il bundle pronto; fra volumi diversi prepara prima una copia nascosta accanto alla destinazione, e l'app corrente resta disponibile fino allo scambio.
@@ -347,7 +347,7 @@ Il percorso completo è in [flows.md](flows.md#5-costruire-un-gioco-switch-add-g
 - La destinazione si fissa prima del porting e resta tale anche nelle installazioni differite. Le installazioni richiedono che la cartella esista ancora: se si scollega o non è più scrivibile, il risultato pronto si conserva per Retry. Il packaging del frontend può creare la propria cartella di installazione.
 
 **Installazione fallita.**
-- Se il motore termina bene con un bundle valido e fallisce solo l'installazione, `BuildResult.heldApp` conserva la build pronta, e `installationFailed` distingue questo caso dal porting fallito. Il coordinatore registra la stessa `PendingInstall` usata per i giochi aperti.
+- Se il motore termina bene con un bundle valido e fallisce solo l'installazione, `BuildResult.heldApp` conserva la build pronta, e `installationFailed` distingue questo caso dal porting fallito. `PortingModel` registra la stessa `PendingInstall` usata per i giochi aperti.
 - Un dialogo Selene offre Retry e Close: Retry installa quel bundle senza riavviare il motore, Close conserva la build. Anche gli errori delle installazioni differite passano da questo dialogo, e la schermata del porting offre Retry installation finché la build resta in attesa.
 - Un errore di scrittura del catalogo conserva lo stato in memoria e impedisce che una scansione immediata lo sostituisca con quello precedente.
 
@@ -364,7 +364,7 @@ Il percorso completo è in [flows.md](flows.md#5-costruire-un-gioco-switch-add-g
 
 **Esito.**
 - `BuildRecord` conserva esito e provenienza del build.
-- `PortingFailureClassifier` riconosce i messaggi del motore, compreso lo spazio richiesto da `pack_app.py`, e propone un'azione, presentata da `AppViewModel+Porting`. Il ripiego sulle chiavi vale solo per le sorgenti che le richiedono.
+- `PortingFailureClassifier` riconosce i messaggi del motore, compreso lo spazio richiesto da `pack_app.py`, e propone un'azione, presentata da `PortingModel.performFailureAction`. Il ripiego sulle chiavi vale solo per le sorgenti che le richiedono.
   - Alcuni casi restano del tipo `unknown` con un dettaglio, perché una versione precedente sappia ancora leggere il motivo salvato: la lingua che il gioco non ha (`missing-language:`) e le tabelle shader diverse da quelle del profilo del gioco (`shader-profile-mismatch`). Il secondo dice entrambe le cause possibili, file di un'altra versione o profilo non ancora rigenerato dall'engine, senza dare la colpa al giocatore.
 - `PortingNotice` decide se notificare l'esito mentre l'app è in background. `NotificationService` gestisce la notifica di sistema e la destinazione del clic. Il permesso si richiede quando un porting supera i controlli preliminari e parte, mai durante l’avvio o per la sola libreria Steam. Il delegate resta registrato all’avvio per aprire il gioco o l’errore da una notifica precedente.
 

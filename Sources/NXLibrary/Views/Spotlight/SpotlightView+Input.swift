@@ -333,7 +333,7 @@ extension SpotlightView {
             return
         case .failed:
             switch index {
-            case 0: viewModel.startBuild(for: game)
+            case 0: viewModel.porting.startBuild(for: game)
             case 1: viewModel.revealLog(for: game)
             default: viewModel.askRemoveGame(game)
             }
@@ -375,7 +375,7 @@ extension SpotlightView {
         case .play:
             viewModel.launchGame(game)
         case .build:
-            viewModel.startBuild(for: game)
+            viewModel.porting.startBuild(for: game)
             if viewModel.isBuilding { router.openAddGame() }
         case .refuse:
             SoundEffectService.shared.play(.error)

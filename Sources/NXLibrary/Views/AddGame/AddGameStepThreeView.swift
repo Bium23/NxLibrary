@@ -308,12 +308,12 @@ struct AddGameStepThreeView: View {
                            systemImage: "stop.circle.fill",
                            kind: .destructive,
                            isEnabled: !porting.isCancellingBuild) {
-                    viewModel.cancelBuild()
+                    porting.cancelBuild()
                 },
                 StepAction(id: "openLog", title: L10n.text("Open log"),
                            systemImage: "doc.text.magnifyingglass",
                            kind: .secondary, isEnabled: true) {
-                    viewModel.openBuildLog()
+                    porting.openBuildLog()
                 },
                 StepAction(id: "console", title: L10n.text("Open console"),
                            systemImage: nil, kind: .quiet, isEnabled: true) {
@@ -344,11 +344,11 @@ struct AddGameStepThreeView: View {
                 StepAction(id: "openLog", title: L10n.text("Open log"),
                            systemImage: "doc.text.magnifyingglass",
                            kind: .secondary, isEnabled: true) {
-                    viewModel.openBuildLog()
+                    porting.openBuildLog()
                 },
                 StepAction(id: "reveal", title: L10n.text("Reveal in Finder"),
                            systemImage: "folder", kind: .secondary, isEnabled: true) {
-                    viewModel.openOutputInFinder()
+                    porting.openOutputInFinder()
                 }
             ]
             if needsSave {
@@ -371,7 +371,7 @@ struct AddGameStepThreeView: View {
                 StepAction(id: "openLog", title: L10n.text("Open log"),
                            systemImage: "doc.text.magnifyingglass",
                            kind: .secondary, isEnabled: true) {
-                    viewModel.openBuildLog()
+                    porting.openBuildLog()
                 },
             ]
             if porting.buildError != nil {
@@ -386,7 +386,7 @@ struct AddGameStepThreeView: View {
                 StepAction(id: "retry", title: viewModel.canRetryReadyInstall ? L10n.text("Retry installation") : L10n.text("Try again"),
                            systemImage: "arrow.clockwise", kind: leadsWithAction ? .secondary : .primary,
                            isEnabled: !viewModel.isBuilding) {
-                    viewModel.retryLastBuild()
+                    porting.retryLastBuild()
                 },
                 StepAction(id: "options", title: L10n.text("Back to review"),
                            systemImage: "slider.horizontal.3",
@@ -416,7 +416,7 @@ struct AddGameStepThreeView: View {
 
     /// The failure's one next step as a row, first; nil when it has none.
     private func failureActionSpec(_ action: PortingFailureAction) -> StepAction? {
-        let perform = { viewModel.performFailureAction(action, router: router) }
+        let perform = { porting.performFailureAction(action, router: router) }
         switch action {
         case .portAnyway:
             return StepAction(id: "portAnyway", title: L10n.text("Port anyway"), systemImage: nil, kind: .primary,

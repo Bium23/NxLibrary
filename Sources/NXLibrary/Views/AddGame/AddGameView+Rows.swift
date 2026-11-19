@@ -16,7 +16,7 @@ extension AddGameView {
     func defaultRowID(for step: Int) -> String {
         switch step {
         case 1: return porting.canAddSelectedGame ? "continue" : "chooseFiles"
-        case 2: return viewModel.canStartBuild ? "build" : "library"
+        case 2: return porting.canStartBuild ? "build" : "library"
         default: return portingRows.first(where: \.focusable)?.id ?? ""
         }
     }
@@ -127,7 +127,7 @@ extension AddGameView {
     private var reviewRows: [AddGameRow] {
         var rows: [AddGameRow] = [
             AddGameRow(id: "build", kind: .action { addSelectedGame(buildNow: true) }, icon: .build,
-                       title: porting.selectedLibraryGame == nil ? L10n.text("Add and port") : L10n.text("Rebuild"), about: buildHint, enabled: viewModel.canStartBuild),
+                       title: porting.selectedLibraryGame == nil ? L10n.text("Add and port") : L10n.text("Rebuild"), about: buildHint, enabled: porting.canStartBuild),
             AddGameRow(id: "library", kind: .action { addSelectedGame(buildNow: false) }, icon: .add,
                        title: porting.selectedLibraryGame == nil ? L10n.text("Add to library only") : L10n.text("Save changes"),
                        about: porting.selectedLibraryGame == nil ? L10n.text("Port later") : L10n.text("Next launch"),
@@ -169,7 +169,7 @@ extension AddGameView {
     }
 
     private var buildHint: String {
-        if viewModel.canStartBuild { return L10n.text("Builds the Mac app now; you can keep using the library meanwhile.") }
+        if porting.canStartBuild { return L10n.text("Builds the Mac app now; you can keep using the library meanwhile.") }
         if !viewModel.supportsSources(porting.selectedSources) { return L10n.text("These sources need a newer engine.") }
         if porting.selectedSourcesRequireKeys && !viewModel.isProdKeysValid { return L10n.text("Import prod.keys first.") }
         if porting.keyCheckBlocks, let readiness = porting.keyCheck?.readiness { return "\(readiness.title)." }
@@ -189,7 +189,7 @@ extension AddGameView {
     }
 
     private func addSelectedGame(buildNow: Bool) {
-        viewModel.addSelectedGame(buildNow: buildNow)
+        porting.addSelectedGame(buildNow: buildNow)
         guard porting.buildError == nil, !viewModel.isBuilding else { return }
         router.showLibrary()
     }

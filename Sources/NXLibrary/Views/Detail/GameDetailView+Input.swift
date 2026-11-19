@@ -71,7 +71,7 @@ extension GameDetailView {
             SoundEffectService.shared.play(.click)
             switch index {
             case 0:
-                viewModel.startBuild(for: game)
+                viewModel.porting.startBuild(for: game)
             case 1:
                 viewModel.revealLog(for: game)
             default:
@@ -161,7 +161,7 @@ extension GameDetailView {
             return
         }
         SoundEffectService.shared.play(.click)
-        viewModel.startBuild(for: game)
+        viewModel.porting.startBuild(for: game)
         if viewModel.isBuilding {
             router.openAddGame()
         }

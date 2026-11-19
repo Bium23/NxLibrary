@@ -79,7 +79,7 @@ precondition(command.arguments[command.arguments.firstIndex(of: "--program")! + 
 print("NUP probe → real UI converters → persisted sources → rebuild program: PASS")
 '''
     methods = '\n'.join((declaration('    static func selectableGame(from game:', porting_source),
-                          declaration('    private static func detectedSource(from file:')))
+                          declaration('    static func detectedSource(from file:', source=porting_source)))
     main = scratch / 'main.swift'
     main.write_text(host.replace('// CONVERTERS', methods))
     library = ROOT / '.build/debug'
