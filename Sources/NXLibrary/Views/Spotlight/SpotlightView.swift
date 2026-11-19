@@ -15,6 +15,8 @@ import NXLibraryCore
 /// rises to the top) and keeps going section by section; Up comes back.
 public struct SpotlightView: View {
     @ObservedObject var viewModel: AppViewModel
+    /// The Setup (`SetupModel`): Rebuild follows the Metal gate.
+    @ObservedObject var setup: SetupModel
     @ObservedObject var router: AppRouter
     @ObservedObject var settings: AppSettingsStore
     @ObservedObject var playSessions: PlaySessionStore
@@ -109,6 +111,7 @@ public struct SpotlightView: View {
          playSessions: PlaySessionStore, runningGames: RunningGameMonitor,
          artwork: ArtworkStore, storeHost: ModStoreHost) {
         self.viewModel = viewModel
+        self.setup = viewModel.setup
         self.router = router
         self.settings = settings
         self.playSessions = playSessions
@@ -1102,7 +1105,7 @@ public struct SpotlightView: View {
             totalPlaytime: playSessions.totalDuration(for: game.id),
             lastPlayed: playSessions.lastPlayed(for: game.id),
             sessions: playSessions.sessions, libraryGames: library, playtimeByGame: playtimes)
-        let blocked = viewModel.compatibilityReport != nil && !viewModel.canPassToolchainGate
+        let blocked = setup.compatibilityReport != nil && !setup.canPassToolchainGate
         let facts = DetailsFacts.switchGame(game, metadata: viewModel.storeMetadata[game.id],
                                             folderName: DetailsLink.folderName(of: game.url))
         let links = DetailsLink.links(app: game.url, store: presentation.storeURL, hltb: presentation.hltbURL,

@@ -5,6 +5,8 @@ import NXLibraryCore
 
 public struct AppShellView: View {
     @StateObject private var viewModel: AppViewModel
+    /// The Setup (`SetupModel`): the update offer names the Xcode a release needs.
+    @ObservedObject private var setup: SetupModel
     @StateObject private var router: AppRouter
     @StateObject private var settings: AppSettingsStore
     @StateObject private var playSessions = PlaySessionStore()
@@ -35,6 +37,7 @@ public struct AppShellView: View {
         _sources = StateObject(wrappedValue: state.sources)
         _settings = StateObject(wrappedValue: state.settings)
         _viewModel = StateObject(wrappedValue: state.viewModel)
+        _setup = ObservedObject(wrappedValue: state.viewModel.setup)
         _router = StateObject(wrappedValue: state.router)
         modStoreHost = state.modStoreHost
         _showsWelcome = State(initialValue: state.opensWithWelcome)
@@ -642,6 +645,7 @@ public struct AppShellView: View {
             if let game = viewModel.libraryGames.first(where: { $0.id == id }) {
                 GameDetailView(
                     viewModel: viewModel,
+                    setup: viewModel.setup,
                     router: router,
                     settings: settings,
                     playSessions: playSessions,
@@ -1014,7 +1018,7 @@ public struct AppShellView: View {
                 .onTapGesture { updater.later() }
             AppUpdateDialog(updater: updater, requirementNotes: updater.dialogRelease.map {
                 AppUpdate.requirementNotes($0.requirements,
-                    installedXcode: viewModel.environmentStatus?.xcodeVersion,
+                    installedXcode: setup.environmentStatus?.xcodeVersion,
                     currentEngine: viewModel.pinnedEngineCommit)
             } ?? [], blockedReason: updater.blockedReason())
         }

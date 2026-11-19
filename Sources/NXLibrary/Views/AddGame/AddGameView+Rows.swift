@@ -73,7 +73,7 @@ extension AddGameView {
                                            : L10n.text("The selected update is played as the whole game. If the game stops on missing files, use a NUP that includes the base game.")))
             }
             // The same note for an NSP, a NUP or a folder: the engine makes a provisional profile for each.
-            if !viewModel.hasVerifiedEngineProfile(titleId: game.titleId) {
+            if !viewModel.setup.hasVerifiedEngineProfile(titleId: game.titleId) {
                 rows.append(AddGameRow(id: "noProfile", kind: .warning(action: nil), title: L10n.text("Not tested with this engine yet"),
                                        about: L10n.text("The engine has no profile for this game, so it makes a provisional one. ")
                                            + L10n.text("The porting may stop, or the game may not start.")))
@@ -174,8 +174,8 @@ extension AddGameView {
         if porting.selectedSourcesRequireKeys && !setup.isProdKeysValid { return L10n.text("Import prod.keys first.") }
         if porting.keyCheckBlocks, let readiness = porting.keyCheck?.readiness { return "\(readiness.title)." }
         if !setup.isNxnativeValid { return L10n.text("The nxnative checkout is missing.") }
-        if viewModel.environmentStatus?.canBuild != true { return L10n.text("The build environment is incomplete.") }
-        if !viewModel.canPassToolchainGate { return L10n.text("The toolchain is not certified; enable the override in Settings.") }
+        if setup.environmentStatus?.canBuild != true { return L10n.text("The build environment is incomplete.") }
+        if !setup.canPassToolchainGate { return L10n.text("The toolchain is not certified; enable the override in Settings.") }
         return L10n.text("Not available yet.")
     }
 
@@ -220,7 +220,7 @@ extension AddGameView {
                 rows.append(AddGameRow(id: "keyCheck", kind: .note, title: "\(readiness.title). \(readiness.about)"))
             }
         }
-        if let environment = viewModel.environmentStatus, environment.xcodeVersion == nil {
+        if let environment = setup.environmentStatus, environment.xcodeVersion == nil {
             rows.append(AddGameRow(id: "xcode", kind: .action { viewModel.reopenSetup() }, icon: .checklist,
                                    title: L10n.text("Open Setup"), about: L10n.text("Xcode is not ready; a porting needs it.")))
         }

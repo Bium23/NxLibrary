@@ -227,9 +227,9 @@ public final class PortingModel: ObservableObject {
         scanGeneration = generation
         let catalog = app.sourceCatalog
         let repo = URL(fileURLWithPath: app.setup.nxnativePath)
-        let toolchain = app.engineToolchain
+        let toolchain = app.setup.engineToolchain
         let keys = app.setup.isProdKeysValid ? app.setup.keyStore.keyURL : nil
-        let developer = app.resolvedDeveloperDir()
+        let developer = app.setup.resolvedDeveloperDir()
         let explicitFiles = selectedPackageURLs
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let urls = explicitFiles ?? (ExtractedSourceCatalog.recognizes(folder) ? [] : Self.sourceFileURLs(in: folder))
@@ -450,7 +450,7 @@ public final class PortingModel: ObservableObject {
 
     public func addGameDidBecomeVisible(defaults: GameRuntimeConfig, returningFromBack: Bool,
                                         preservingSelection: Bool = false) {
-        app.prepareBuildEnvironmentIfNeeded()
+        app.setup.prepareBuildEnvironmentIfNeeded()
         if app.isBuilding {
             self.buildWizardStep = 3
             addGameSessionActive = true
@@ -535,10 +535,10 @@ public final class PortingModel: ObservableObject {
             && (!self.selectedSourcesRequireKeys || app.setup.isProdKeysValid)
             && !self.keyCheckBlocks
             && app.setup.isNxnativeValid
-            && app.environmentStatus?.canBuild == true
+            && app.setup.environmentStatus?.canBuild == true
             && !self.isDiskSpaceLow
             && self.buildDestinationProblem == nil
-            && app.canPassToolchainGate
+            && app.setup.canPassToolchainGate
     }
 
     func buildLogTail(_ url: URL, maxBytes: Int = 64 * 1024) -> String {
@@ -725,7 +725,7 @@ public final class PortingModel: ObservableObject {
             throw NXLibraryError.environmentBlocked(L10n.text("This engine does not support extracted folders."))
         }
         guard app.setup.isNxnativeValid else { throw NXLibraryError.engineMissing }
-        guard let environmentStatus = app.environmentStatus else {
+        guard let environmentStatus = app.setup.environmentStatus else {
             throw NXLibraryError.environmentBlocked(L10n.text("the environment check is still running"))
         }
         guard environmentStatus.canBuild else {
@@ -736,20 +736,20 @@ public final class PortingModel: ObservableObject {
         // have changed since the last Settings/launch check.
         let checker = CompatibilityChecker(
             repoURL: URL(fileURLWithPath: app.setup.nxnativePath),
-            toolchain: app.engineToolchain,
-            developerDir: app.resolvedDeveloperDir()
+            toolchain: app.setup.engineToolchain,
+            developerDir: app.setup.resolvedDeveloperDir()
         )
         let report = try? checker.check(expectedEngineCommit: app.setup.activeEngineCommit)
-        app.compatibilityReport = report
-        if report?.ok != true && !app.allowUntestedToolchain {
+        app.setup.compatibilityReport = report
+        if report?.ok != true && !app.setup.allowUntestedToolchain {
             let reason = report?.checks.filter { $0.status == .block }
                 .map { "\($0.title): \($0.detail)" }.joined(separator: "; ")
                 ?? "the compatibility check is unavailable"
             throw NXLibraryError.incompatibleToolchain(reason)
         }
-        app.environmentCheckGeneration = UUID()
-        app.isCheckingEnvironment = false
-        let certified = report?.ok == true && !app.allowUntestedToolchain && !app.setup.usesNewestEngine
+        app.setup.environmentCheckGeneration = UUID()
+        app.setup.isCheckingEnvironment = false
+        let certified = report?.ok == true && !app.setup.allowUntestedToolchain && !app.setup.usesNewestEngine
         activeBuildToolchain = ToolchainInfo(engineCommit: app.setup.activeEngineCommit,
             metalVersion: environmentStatus.metalVersion, xcodeVersion: environmentStatus.xcodeVersion,
             verified: certified,
@@ -825,7 +825,7 @@ public final class PortingModel: ObservableObject {
         }
 
         let repo = URL(fileURLWithPath: app.setup.nxnativePath)
-        let toolchain = app.engineToolchain
+        let toolchain = app.setup.engineToolchain
         guard FileManager.default.isExecutableFile(atPath: toolchain.python.path) else {
             throw NXLibraryError.environmentBlocked(toolchain.isBundled
                 ? L10n.text("the bundled Python is missing; reinstall Arcane")
@@ -845,7 +845,7 @@ public final class PortingModel: ObservableObject {
             workspace: workspace.directory,
             keys: requiresKeys ? app.setup.keyStore.keyURL : nil,
             output: tempApp,
-            developerDir: app.resolvedDeveloperDir(),
+            developerDir: app.setup.resolvedDeveloperDir(),
             appName: target.name,
             bundleId: target.bundleId ?? "org.nxnative.\(titleId.lowercased())",
             language: app.loadRuntimeConfig(for: target).languageForBuild,
@@ -854,7 +854,7 @@ public final class PortingModel: ObservableObject {
                                                        nupPrograms: app.engineSourceCapabilities.nupPrograms),
             packageVersion: app.engineSourceCapabilities.titleSelection
                 ? SourceSelection.packageVersion(for: target.sources, stagedSelection: !workspace.links.isEmpty) : nil,
-            allowUntestedToolchain: app.allowUntestedToolchain,
+            allowUntestedToolchain: app.setup.allowUntestedToolchain,
             extraArguments: extraArguments
         )
         app.lastPortingCommand = [command.executable.path] + command.arguments

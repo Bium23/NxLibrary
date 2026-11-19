@@ -15,6 +15,8 @@ final class DetailsModelCache {
 /// it is focused. Input lives in GameDetailView+Input.swift.
 struct GameDetailView: View {
     @ObservedObject var viewModel: AppViewModel
+    /// The Setup (`SetupModel`): Rebuild follows the Metal gate.
+    @ObservedObject var setup: SetupModel
     @ObservedObject var router: AppRouter
     @ObservedObject var settings: AppSettingsStore
     @ObservedObject var playSessions: PlaySessionStore
@@ -93,7 +95,7 @@ struct GameDetailView: View {
     /// Blocked only once the compatibility report is known and does not pass;
     /// before it loads the build is not dimmed (the build path still explains a refusal).
     var toolchainBlocked: Bool {
-        viewModel.compatibilityReport != nil && !viewModel.canPassToolchainGate
+        setup.compatibilityReport != nil && !setup.canPassToolchainGate
     }
 
     var presentation: GameDetailPresentation {

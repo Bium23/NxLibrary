@@ -4,6 +4,8 @@ import NXLibraryCore
 
 struct SettingsAboutSection: View {
     @ObservedObject var viewModel: AppViewModel
+    /// The Setup (`SetupModel`): an available release names the Xcode it needs.
+    @ObservedObject var setup: SetupModel
     @EnvironmentObject private var updater: AppUpdater
     @Environment(\.seleneFocusedRowID) private var focusedRowTitle
     @Environment(\.seleneCanvas) private var canvas
@@ -277,7 +279,7 @@ struct SettingsAboutSection: View {
         case .checking: return "Checking for updates…"
         case .upToDate: return L10n.text("Arcane is up to date")
         case .available(let release):
-            let xcode = AppUpdate.neededXcode(release.requirements, installedXcode: viewModel.environmentStatus?.xcodeVersion)
+            let xcode = AppUpdate.neededXcode(release.requirements, installedXcode: setup.environmentStatus?.xcodeVersion)
                 .map { L10n.format(" · new portings need Xcode %@", [String(describing: ($0))]) } ?? ""
             return (updater.blockedReason().map { L10n.format("%@ is available · %@", [String(describing: (release.version)), String(describing: ($0))]) } ?? L10n.format("%@ is available", [String(describing: (release.version))])) + xcode
         case .downloading(let fraction): return L10n.format("Downloading %@%%", [String(describing: (Int((fraction * 100).rounded())))])

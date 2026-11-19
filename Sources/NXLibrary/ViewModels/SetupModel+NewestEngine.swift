@@ -63,8 +63,8 @@ extension SetupModel {
                 switch result {
                 case .success:
                     let previous = self.newestEngineChoice
-                    let turnedOn = !self.app.allowUntestedToolchain || previous?.turnedOnOverride == true
-                    self.app.allowUntestedToolchain = true
+                    let turnedOn = !self.allowUntestedToolchain || previous?.turnedOnOverride == true
+                    self.allowUntestedToolchain = true
                     self.newestEngineChoice = NewestEngineChoice(commit: commit, aheadBy: ahead, turnedOnOverride: turnedOn)
                     let message: String
                     if let previous {
@@ -82,7 +82,7 @@ extension SetupModel {
                     self.newestEngineProblem = error.localizedDescription
                     self.app.logs.append(LogEntry(level: .warning, message: L10n.format("Newest engine: %@", [String(describing: (error.localizedDescription))])))
                 }
-                self.app.refreshCompatibility()
+                self.refreshCompatibility()
             }
         }
     }
@@ -107,7 +107,7 @@ extension SetupModel {
                     self.newestEngineProblem = error.localizedDescription
                     self.app.logs.append(LogEntry(level: .warning, message: L10n.format("Back to tested: %@", [String(describing: (error.localizedDescription))])))
                 }
-                self.app.refreshCompatibility()
+                self.refreshCompatibility()
             }
         }
     }
@@ -116,6 +116,6 @@ extension SetupModel {
     func forgetNewestEngine() {
         guard let choice = newestEngineChoice else { return }
         newestEngineChoice = nil
-        if choice.turnedOnOverride { app.allowUntestedToolchain = false }
+        if choice.turnedOnOverride { self.allowUntestedToolchain = false }
     }
 }

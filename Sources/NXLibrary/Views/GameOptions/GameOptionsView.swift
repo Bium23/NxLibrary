@@ -120,8 +120,8 @@ struct GameOptionsView: View {
             isPlayable: game.isPlayableLocally,
             sourcesDetached: !GameResourceState.sourcesAvailable(for: game),
             // Mirrors GameDetailView.toolchainBlocked: a known report that does not pass, without the override.
-            toolchainBlocked: viewModel.isCheckingEnvironment || (viewModel.compatibilityReport != nil && !viewModel.canPassToolchainGate),
-            toolchainHint: viewModel.isCheckingEnvironment ? L10n.text("Checking environment") : viewModel.toolchainGateSummary?.buildHint,
+            toolchainBlocked: setup.isCheckingEnvironment || (setup.compatibilityReport != nil && !setup.canPassToolchainGate),
+            toolchainHint: setup.isCheckingEnvironment ? L10n.text("Checking environment") : setup.toolchainGateSummary?.buildHint,
             hasStorePage: viewModel.storeMetadata[game.id]?.storeURL != nil,
             offersStoreSearch: (viewModel.storeMetadata[game.id]?.description ?? "").isEmpty
                 && viewModel.nintendoStoreSearchURL(for: game) != nil,
@@ -227,7 +227,7 @@ struct GameOptionsView: View {
         .animation(reduceMotion ? nil : SeleneTheme.quick, value: panelOpen)
         .onAppear {
             installKeyMonitor()
-            viewModel.prepareBuildEnvironmentIfNeeded()
+            setup.prepareBuildEnvironmentIfNeeded()
         }
         .onDisappear(perform: removeKeyMonitor)
         .onReceive(NotificationCenter.default.publisher(for: .nxGameOptionsGamepadAction)) { note in

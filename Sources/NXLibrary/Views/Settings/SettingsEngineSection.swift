@@ -51,21 +51,21 @@ struct SettingsEngineSection: View {
                         .seleneFont(15, .semibold)
                         .foregroundColor(statusColor)
                     Spacer()
-                    Button(L10n.text("Re-check")) { viewModel.detectEnvironment() }
+                    Button(L10n.text("Re-check")) { setup.detectEnvironment() }
                         .buttonStyle(.plain)
                         .seleneFont(14, .semibold)
                         .foregroundColor(SeleneTheme.glyph)
                         .disabled(configurationLocked)
                 }
 
-                if let message = viewModel.toolchainGateSummary?.message {
+                if let message = setup.toolchainGateSummary?.message {
                     Text(message)
                         .seleneFont(14)
                         .foregroundColor(statusColor)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                if let report = viewModel.compatibilityReport {
+                if let report = setup.compatibilityReport {
                     ForEach(report.checks, id: \.id) { check in
                         checkRow(title: check.title, status: check.status, detail: detail(for: check),
                                  metal: check.id == "metal" ? report.metal : nil)
@@ -79,7 +79,7 @@ struct SettingsEngineSection: View {
                     }
                 }
 
-                if let environment = viewModel.environmentStatus {
+                if let environment = setup.environmentStatus {
                     Divider().overlay(SeleneTheme.ink15)
                     buildRow("Xcode", ok: environment.xcodeVersion != nil,
                              detail: environment.xcodeVersion ?? L10n.text("not found"))
@@ -113,7 +113,7 @@ struct SettingsEngineSection: View {
                     .labelsHidden()
                     .toggleStyle(SeleneToggleStyle())
                     .disabled(!canChangeOverride)
-                    .accessibilityValue(viewModel.allowUntestedToolchain ? L10n.text("On") : L10n.text("Off"))
+                    .accessibilityValue(setup.allowUntestedToolchain ? L10n.text("On") : L10n.text("Off"))
             }
 
             SeleneButtonRow("Upstream",
@@ -146,11 +146,11 @@ struct SettingsEngineSection: View {
             .disabled(configurationLocked)
         }
         .onAppear {
-            viewModel.prepareBuildEnvironmentIfNeeded()
+            setup.prepareBuildEnvironmentIfNeeded()
             publishActions()
         }
-        .onChange(of: viewModel.allowUntestedToolchain) { _ in publishActions() }
-        .onChange(of: viewModel.compatibilityReport?.ok) { _ in publishActions() }
+        .onChange(of: setup.allowUntestedToolchain) { _ in publishActions() }
+        .onChange(of: setup.compatibilityReport?.ok) { _ in publishActions() }
         .onChange(of: setup.upstreamState) { _ in publishActions() }
         .onChange(of: setup.newestEngineChoice) { _ in publishActions() }
         .onChange(of: setup.newestEngineReadiness) { _ in publishActions() }
@@ -164,49 +164,49 @@ struct SettingsEngineSection: View {
             message: L10n.text("The engine and compiler do not match the certified combination. Builds may fail or show incorrect graphics and will be marked as untested."),
             actionTitle: L10n.text("Enable"), cancelTitle: L10n.text("Cancel")) {
                 guard !configurationLocked else { return }
-                viewModel.allowUntestedToolchain = true
+                setup.allowUntestedToolchain = true
             }
     }
 
     private var overrideBinding: Binding<Bool> {
         Binding(
-            get: { viewModel.allowUntestedToolchain },
+            get: { setup.allowUntestedToolchain },
             set: { newValue in
                 if newValue {
                     confirmOverride()
                 } else {
-                    viewModel.allowUntestedToolchain = false
+                    setup.allowUntestedToolchain = false
                 }
             }
         )
     }
 
     private var canChangeOverride: Bool {
-        ToolchainGateCopy.canChangeOverride(certified: viewModel.compatibilityReport?.ok,
-            overrideOn: viewModel.allowUntestedToolchain, locked: configurationLocked,
+        ToolchainGateCopy.canChangeOverride(certified: setup.compatibilityReport?.ok,
+            overrideOn: setup.allowUntestedToolchain, locked: configurationLocked,
             newest: setup.usesNewestEngine)
     }
 
     private var overrideSubtitle: String {
         if setup.usesNewestEngine { return L10n.text("On while you use the newest engine.") }
-        guard let report = viewModel.compatibilityReport else {
+        guard let report = setup.compatibilityReport else {
             return L10n.text("Available when the compatibility gate blocks a build.")
         }
         if report.ok {
             return L10n.text("Not needed: the current toolchain is certified.")
         }
-        if viewModel.toolchainGateSummary?.tone == .info {
+        if setup.toolchainGateSummary?.tone == .info {
             return L10n.text("Recommended for your newer Metal compiler: builds are recorded as untested.")
         }
         return L10n.text("Build anyway, recorded as untested. Corrupted graphics are a known risk.")
     }
 
     private var statusText: String {
-        viewModel.toolchainGateSummary?.label ?? L10n.text("Checking")
+        setup.toolchainGateSummary?.label ?? L10n.text("Checking")
     }
 
     private var statusColor: Color {
-        guard let summary = viewModel.toolchainGateSummary else { return SeleneTheme.ink60 }
+        guard let summary = setup.toolchainGateSummary else { return SeleneTheme.ink60 }
         switch summary.tone {
         case .certified: return SeleneTheme.success
         case .info: return SeleneTheme.glyph
@@ -417,8 +417,8 @@ struct SettingsEngineSection: View {
 
     private func detail(for check: CompatibilityCheck) -> String {
         if check.id == "metal" {
-            let installed = viewModel.installedMetalVersion ?? "unknown"
-            let required = viewModel.requiredMetalVersion ?? "unknown"
+            let installed = setup.installedMetalVersion ?? "unknown"
+            let required = setup.requiredMetalVersion ?? "unknown"
             return L10n.format("installed %@ · required %@", [String(describing: (installed)), String(describing: (required))])
         }
         return check.detail
@@ -458,7 +458,7 @@ struct SettingsEngineSection: View {
 
     private func runtimeDetail(_ environment: EnvironmentStatus) -> String {
         guard let python = environment.pythonURL else { return "missing" }
-        if viewModel.engineToolchain.isBundled {
+        if setup.engineToolchain.isBundled {
             return BundledRuntime.locate()?.versionSummary() ?? L10n.text("Included in Arcane")
         }
         return L10n.format("Developer build: %@", [String(describing: (python.path))])
@@ -505,15 +505,15 @@ struct SettingsEngineSection: View {
                 setup.selectNxnativeFolder()
             },
             .init(id: "recheck", title: "Compatibility", isEnabled: !configurationLocked) {
-                viewModel.detectEnvironment()
+                setup.detectEnvironment()
             },
             .init(id: "engineAtLaunch", title: "Check engine at launch") {
                 settings.settings.checkEngineAtLaunch.toggle()
             },
             .init(id: "override", title: "Untested toolchain override",
                   isEnabled: canChangeOverride) {
-                if viewModel.allowUntestedToolchain {
-                    viewModel.allowUntestedToolchain = false
+                if setup.allowUntestedToolchain {
+                    setup.allowUntestedToolchain = false
                 } else {
                     confirmOverride()
                 }

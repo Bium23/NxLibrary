@@ -2,9 +2,10 @@ import AppKit
 import Foundation
 import NXLibraryCore
 
-/// The Switch Setup's state: the engine (folder, commit, upstream, newest engine) and the keys, and from the next
-/// step the environment and the Metal gate. Settings → Setup and engine, the Setup check and Add Game observe it on their
-/// own. It reaches the rest of Arcane only through `app`, the list of what the Porting module will ask of the base.
+/// The Switch Setup's state: the engine (folder, commit, upstream, newest engine), the keys, the environment check
+/// and the Metal gate. The screens that show any of it observe it on their own: Settings, Add Game, Game options, the
+/// home, the game page and the shell's update offer. It reaches the rest of Arcane only through `app`, the list of
+/// what the Porting module will ask of the base.
 public final class SetupModel: ObservableObject {
     /// The coordinator: library, building state, alerts and the tested pin.
     unowned let app: AppViewModel
@@ -45,9 +46,23 @@ public final class SetupModel: ObservableObject {
     @Published public var keySummary: KeySummary? = nil
     lazy var keyStore = KeyStore(directory: app.core.appendingPathComponent("keys"))
 
+    // MARK: - Environment and the Metal gate
+    @Published public var environmentStatus: EnvironmentStatus? = nil
+    @Published public var compatibilityReport: CompatibilityReport? = nil
+    @Published public internal(set) var isCheckingEnvironment = false
+    var environmentCheckGeneration = UUID()
+    @Published public var allowUntestedToolchain: Bool = false {
+        didSet {
+            AppData.preferences.set(allowUntestedToolchain, forKey: AppViewModel.StorageKeys.allowUntestedToolchain)
+        }
+    }
+
     init(app: AppViewModel) {
         self.app = app
         // Restored here, where they live; an initializer does not run their `didSet`, as before.
+        if AppData.preferences.object(forKey: AppViewModel.StorageKeys.allowUntestedToolchain) != nil {
+            allowUntestedToolchain = AppData.preferences.bool(forKey: AppViewModel.StorageKeys.allowUntestedToolchain)
+        }
         if let data = AppData.preferences.data(forKey: AppViewModel.StorageKeys.newestEngineChoice) {
             newestEngineChoice = try? JSONDecoder().decode(NewestEngineChoice.self, from: data)
         }
@@ -118,7 +133,7 @@ public final class SetupModel: ObservableObject {
             }
             self.nxnativePath = url.path
             self.isNxnativeValid = true
-            app.refreshCompatibility()
+            self.refreshCompatibility()
         }
     }
 
@@ -200,5 +215,156 @@ public final class SetupModel: ObservableObject {
         if panel.runModal() == .OK, let url = panel.url {
             importKeys(from: url)
         }
+    }
+
+    // MARK: - Environment check and the gate
+    /// The Python and PATH every engine process runs with (bundled runtime, else the venv).
+    public var engineToolchain: EngineToolchain {
+        .resolve(runtime: .locate(), repo: URL(fileURLWithPath: self.nxnativePath))
+    }
+
+    public func detectEnvironment(customRyujinxDir: String? = nil) {
+        guard !app.isBuilding, !app.isUpdatingApp else { return }
+        restoreBuildInputs(customRyujinxDir: customRyujinxDir)
+        refreshCompatibility()
+    }
+
+    func restoreBuildInputs(customRyujinxDir: String? = nil, automatic: Bool = false) {
+        let nxResult = SystemDetector.shared.detectNxnativeDirectory(
+            saved: AppData.preferences.string(forKey: AppViewModel.StorageKeys.savedEngineFolder))
+        self.nxnativePath = nxResult.path
+        self.isNxnativeValid = nxResult.isValid
+        if !automatic || !AppData.profile.isDevelopment { self.ensureKeysImported(customRyujinxDir: customRyujinxDir) }
+    }
+
+    /// With launch checks off, inspecting a build screen performs the check on demand.
+    public func prepareBuildEnvironmentIfNeeded() {
+        if environmentStatus == nil, !isCheckingEnvironment { detectEnvironment() }
+    }
+
+    public func refreshCompatibility() {
+        guard !app.isBuilding, !app.isUpdatingApp else { return }
+        let generation = UUID()
+        environmentCheckGeneration = generation
+        guard self.isNxnativeValid, !self.nxnativePath.isEmpty else {
+            compatibilityReport = nil
+            environmentStatus = nil
+            isCheckingEnvironment = false
+            return
+        }
+        isCheckingEnvironment = true
+        environmentStatus = nil
+        compatibilityReport = nil
+        let repo = URL(fileURLWithPath: self.nxnativePath)
+        let toolchain = engineToolchain
+        let developerDir = resolvedDeveloperDir()
+        let expected = self.activeEngineCommit
+        let pinned = app.pinnedEngineCommit
+        let choice = self.newestEngineChoice
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let environment = NXNativeEnvironment(repoURL: repo, toolchain: toolchain,
+                                                  developerDir: developerDir)
+            let status = environment.inspect()
+            let includedInPin = choice.flatMap { NewestEngineSwitcher(repo: repo).isIncluded($0.commit, in: pinned) }
+            let checker = CompatibilityChecker(repoURL: repo, toolchain: toolchain,
+                                               developerDir: developerDir)
+            let report = try? checker.check(expectedEngineCommit: expected)
+            let currentCommit = report?.checks.first(where: { $0.id == "commit" })?.detail
+                .components(separatedBy: ", expected").first?
+                .replacingOccurrences(of: "current ", with: "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            DispatchQueue.main.async {
+                guard let self, self.environmentCheckGeneration == generation,
+                      self.nxnativePath == repo.path else { return }
+                self.isCheckingEnvironment = false
+                self.environmentStatus = status
+                self.compatibilityReport = report
+                self.currentEngineCommit = (currentCommit?.isEmpty == false) ? currentCommit : nil
+                if let choice, !NewestEngine.keeps(choice, head: self.currentEngineCommit, pinned: pinned,
+                                                    includedInPin: includedInPin) {
+                    // The checkout moved (Setup, Back to tested, by hand) or an NX Library update tested this
+                    // commit: the tested engine is in charge again.
+                    self.forgetNewestEngine()
+                    self.refreshCompatibility()
+                    return
+                }
+                if let report, !report.ok {
+                    let blocked = report.checks.filter { $0.status == .block }
+                        .map { "\($0.title): \($0.detail)" }.joined(separator: " | ")
+                    self.app.logs.append(LogEntry(level: .warning, message: L10n.format("Toolchain gate: %@", [String(describing: (blocked))])))
+                }
+            }
+        }
+    }
+
+    func resolvedDeveloperDir() -> URL { Self.resolveDeveloperDir() }
+
+    /// Reads no state of the view model, so it can run off the main thread (it runs `xcode-select`).
+    static func resolveDeveloperDir() -> URL {
+        let fm = FileManager.default
+        // An explicit DEVELOPER_DIR always wins.
+        if let env = ProcessInfo.processInfo.environment["DEVELOPER_DIR"],
+           fm.fileExists(atPath: env) {
+            return URL(fileURLWithPath: env)
+        }
+        // Respect xcode-select when it points at a full Xcode, not the CLT.
+        if let selected = try? SystemCommandRunner().run(
+            URL(fileURLWithPath: "/usr/bin/xcode-select"), ["-p"],
+            environment: nil, currentDirectory: nil
+        ), selected.status == 0 {
+            let path = selected.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+            if path.contains(".app/Contents/Developer"), fm.fileExists(atPath: path) {
+                return URL(fileURLWithPath: path)
+            }
+        }
+        // Prefer a normal Xcode install over the beta when xcode-select is CLT.
+        let candidates = [
+            "/Applications/Xcode.app/Contents/Developer",
+            "/Applications/Xcode-beta.app/Contents/Developer",
+            "/Library/Developer/CommandLineTools",
+        ]
+        for path in candidates where fm.fileExists(atPath: path) {
+            return URL(fileURLWithPath: path)
+        }
+        return URL(fileURLWithPath: "/Library/Developer/CommandLineTools")
+    }
+
+    public var requiredMetalVersion: String? {
+        let lock = URL(fileURLWithPath: self.nxnativePath)
+            .appendingPathComponent("dm/gfx/tools/dmsh_chain.lock")
+        guard let text = try? String(contentsOf: lock, encoding: .utf8) else { return nil }
+        for line in text.split(separator: "\n") where line.hasPrefix("metal_macosx\t") {
+            guard let raw = line.split(separator: "\t").last.map(String.init) else { return nil }
+            return MetalVersion.parse(raw) ?? raw
+        }
+        return nil
+    }
+
+    public var installedMetalVersion: String? { environmentStatus?.metalVersion }
+
+    public var canPassToolchainGate: Bool {
+        compatibilityReport?.ok == true || allowUntestedToolchain
+    }
+
+    /// A profile in `dm/games/<title ID>` is the engine's verified support for
+    /// a title. Without one the engine builds from a provisional profile and
+    /// may fail in the rewrite or at run time.
+    public func hasVerifiedEngineProfile(for game: PortedGame) -> Bool {
+        hasVerifiedEngineProfile(titleId: game.titleId)
+    }
+
+    public func hasVerifiedEngineProfile(titleId: String?) -> Bool {
+        guard let titleId, !titleId.isEmpty else { return true }
+        guard !self.nxnativePath.isEmpty else { return true }
+        var isDirectory: ObjCBool = false
+        let path = URL(fileURLWithPath: self.nxnativePath)
+            .appendingPathComponent("dm/games/\(titleId.uppercased())").path
+        return FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory)
+            && isDirectory.boolValue
+    }
+
+    /// What the compatibility gate says now; nil until the first check has run.
+    var toolchainGateSummary: ToolchainGateCopy.Summary? {
+        compatibilityReport.map { ToolchainGateCopy.summary(report: $0, overrideOn: allowUntestedToolchain, newest: self.usesNewestEngine) }
     }
 }

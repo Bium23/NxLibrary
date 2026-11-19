@@ -23,7 +23,7 @@ def declaration(signature, source=source):
     return source[start:end]
 
 
-startup = source[source.index('        restoreBuildInputs(automatic: true)'):
+startup = source[source.index('        setup.restoreBuildInputs(automatic: true)'):
                  source.index('        recoverSavesAtStartup()')]
 host = r'''
 import Foundation
@@ -82,6 +82,7 @@ final class SourceHost {
     // The Add game draft lives in PortingModel, which reaches the coordinator through `app`.
     static let savedGameFolderKey = StorageKeys.savedGameFolder
     var app: SourceHost { self }
+    var setup: SourceHost { self }
     // ACTUAL_FOLDER
     // ACTUAL_REMEMBERED_FOLDER
     // ACTUAL_FOLDER_PICKER

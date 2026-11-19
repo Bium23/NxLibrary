@@ -59,7 +59,7 @@ struct SettingsSectionContent: View {
         case .console:
             SettingsConsoleSection(onActions: onActions, onOpenConsole: onOpenConsole)
         case .about:
-            SettingsAboutSection(viewModel: viewModel, onActions: onActions)
+            SettingsAboutSection(viewModel: viewModel, setup: viewModel.setup, onActions: onActions)
         }
     }
 }

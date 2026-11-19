@@ -31,12 +31,12 @@ final class SetupCheckModel: ObservableObject {
     // MARK: - Checking
 
     private static func makeProbe(_ viewModel: AppViewModel, runner: CommandRunning, developerDir: URL) -> SetupProbe {
-        SetupProbe(runner: runner, toolchain: viewModel.engineToolchain,
+        SetupProbe(runner: runner, toolchain: viewModel.setup.engineToolchain,
                    developerDir: developerDir,
                    engineFolder: URL(fileURLWithPath: viewModel.setup.nxnativePath),
                    pinnedCommit: viewModel.pinnedEngineCommit,
-                   certifiedMetal: viewModel.requiredMetalVersion ?? requirements.fallbackMetal,
-                   allowUntested: viewModel.allowUntestedToolchain,
+                   certifiedMetal: viewModel.setup.requiredMetalVersion ?? requirements.fallbackMetal,
+                   allowUntested: viewModel.setup.allowUntestedToolchain,
                    keyStore: viewModel.setup.keyStore, libraryFolder: viewModel.libraryFolder,
                    sourcesFolder: viewModel.porting.gameFilesFolder,
                    libraryNeedsConfirmation: viewModel.requiresGameAppsFolderChoice,
@@ -48,7 +48,7 @@ final class SetupCheckModel: ObservableObject {
         probing = true
         // Every recheck (4 s) asks xcode-select again, off the main thread; the probe reads the view model on main.
         queue.async { [weak self] in
-            let developerDir = AppViewModel.resolveDeveloperDir()
+            let developerDir = SetupModel.resolveDeveloperDir()
             DispatchQueue.main.async {
                 guard let self else { return }
                 let probe = Self.makeProbe(self.viewModel, runner: self.runner, developerDir: developerDir)
@@ -107,7 +107,7 @@ final class SetupCheckModel: ObservableObject {
         let enginePath = viewModel.setup.nxnativePath
         DispatchQueue.global(qos: .utility).async {
             // xcode-select runs here, not on the main thread at launch; the probe reads the view model on main.
-            let developerDir = AppViewModel.resolveDeveloperDir()
+            let developerDir = SetupModel.resolveDeveloperDir()
             let probe = DispatchQueue.main.sync { makeProbe(viewModel, runner: SystemCommandRunner(), developerDir: developerDir) }
             let current = SetupCheck.items(from: probe.facts())
             DispatchQueue.main.async {
@@ -144,7 +144,7 @@ final class SetupCheckModel: ObservableObject {
             if item.state == .missing || item.chip == "UPDATE XCODE" {
                 NSWorkspace.shared.open(URL(string: "macappstore://apps.apple.com/app/id497799835")!)
             } else if item.state == .needsYou {
-                let app = viewModel.resolvedDeveloperDir().deletingLastPathComponent().deletingLastPathComponent()
+                let app = viewModel.setup.resolvedDeveloperDir().deletingLastPathComponent().deletingLastPathComponent()
                 NSWorkspace.shared.open(app)
             }
         case .metal, .engine:
@@ -229,8 +229,8 @@ final class SetupCheckModel: ObservableObject {
     }
 
     private var environment: [String: String] {
-        viewModel.engineToolchain.environment(base: ProcessInfo.processInfo.environment,
-                                              developerDir: viewModel.resolvedDeveloperDir())
+        viewModel.setup.engineToolchain.environment(base: ProcessInfo.processInfo.environment,
+                                              developerDir: viewModel.setup.resolvedDeveloperDir())
     }
 
     private func stream(_ executable: String, _ arguments: [String], env: [String: String],
@@ -273,7 +273,7 @@ final class SetupCheckModel: ObservableObject {
                 }
             }
             DispatchQueue.main.async {
-                self.viewModel.detectEnvironment()
+                self.viewModel.setup.detectEnvironment()
                 self.finish(.metal, final, "Metal compiler", completion)
             }
         }
@@ -302,7 +302,7 @@ final class SetupCheckModel: ObservableObject {
                 if result.status != 0 { break }
             }
             DispatchQueue.main.async {
-                self.viewModel.detectEnvironment()
+                self.viewModel.setup.detectEnvironment()
                 self.finish(.engine, result, "nxnative engine", completion)
             }
         }
