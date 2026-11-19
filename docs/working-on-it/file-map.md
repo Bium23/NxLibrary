@@ -43,7 +43,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 
 ## Progetto e configurazione
 
-La pubblicazione comprende anche [CONTRIBUTING.md](../../CONTRIBUTING.md), [SECURITY.md](../../SECURITY.md), [la CI](../../.github/workflows/ci.yml) e [il modello di segnalazione](../../.github/ISSUE_TEMPLATE/bug_report.yml): istruzioni di contribuzione e aggiornamento del changelog, canale per vulnerabilità, controlli automatici su codice e contenuti e richieste di riproduzione senza allegati privati.
+La pubblicazione comprende anche [CONTRIBUTING.md](../../CONTRIBUTING.md), [SECURITY.md](../../SECURITY.md), [la CI](../../.github/workflows/ci.yml) e [il modello di segnalazione](../../.github/ISSUE_TEMPLATE/bug_report.yml). Descrivono come segnalare problemi e suggerimenti, le verifiche del maintainer, il canale per le vulnerabilità e i controlli automatici.
 
 | File | Responsabilità |
 |---|---|

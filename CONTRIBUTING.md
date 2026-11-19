@@ -1,6 +1,15 @@
-# Contributing
+# Reporting issues and suggestions
 
-NX Library is an early macOS front-end for a pinned upstream nxnative.
+Arcane is a macOS game library and launcher. Use [GitHub Issues](https://github.com/Bium23/NxLibrary/issues)
+for bug reports, feature suggestions and translation feedback. The maintainer
+implements and integrates code changes. Repository collaborators can open
+pull requests for maintainer work.
+
+Describe what you expected, what happened, and how to reproduce it. For translation
+feedback, include the language, the current wording and a suggested correction.
+
+## Maintainer workflow
+
 Start with [README](README.md), [AGENTS.md](AGENTS.md),
 [architecture](docs/how-it-works/architecture.md) and [conventions](docs/working-on-it/conventions.md).
 
@@ -15,7 +24,7 @@ python3 scripts/check_publication.py
 python3 -m unittest discover -s Tests/PublicationChecks
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 bash scripts/build_app.sh
-codesign --verify --deep --strict "$HOME/Applications/NXLibrary.app"
+codesign --verify --deep --strict "$HOME/Applications/Arcane Dev.app"
 ~~~
 
 Interactive app and game checks are performed manually. Describe which checks
@@ -36,6 +45,6 @@ must not appear as an already available release.
 
 ## Interface translations
 
-The shared source is `Sources/NXLibraryCore/Resources/Localizable.xcstrings`. It includes en, it, fr, de, es and pt-BR. Keep keys stable, preserve every typed placeholder, provide quantity variants, and leave product names, technical identifiers and user-provided content unchanged. Translation-only PRs should identify their language and whether a fluent speaker reviewed them.
+The shared source is `Sources/NXLibraryCore/Resources/Localizable.xcstrings`. It includes en, it, fr, de, es, pt-BR and zh-Hans. Keep keys stable, preserve every typed placeholder, provide quantity variants, and leave product names, technical identifiers and user-provided content unchanged. Record the language and whether a fluent speaker reviewed the change.
 
 Run `python3 scripts/check_localizations.py` and the publication regressions after editing the catalog. A development build also checks its compiled resources. The initial translations await maintainer validation; no external translation-hosting service is required.
