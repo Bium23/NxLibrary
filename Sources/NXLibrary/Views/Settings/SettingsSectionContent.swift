@@ -55,7 +55,7 @@ struct SettingsSectionContent: View {
         case .engine:
             SettingsEngineSection(viewModel: viewModel, setup: viewModel.setup, settings: settings, onActions: onActions)
         case .keys:
-            SettingsKeysSection(viewModel: viewModel, onActions: onActions)
+            SettingsKeysSection(viewModel: viewModel, setup: viewModel.setup, onActions: onActions)
         case .console:
             SettingsConsoleSection(onActions: onActions, onOpenConsole: onOpenConsole)
         case .about:

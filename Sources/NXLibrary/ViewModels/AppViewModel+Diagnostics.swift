@@ -32,9 +32,9 @@ extension AppViewModel {
         let tools = environmentStatus?.tools ?? []
         i.python = engineToolchain.python.path
         i.setupRows = tools.map { ($0.name, $0.ok) }
-        i.keysImported = FileManager.default.fileExists(atPath: keyStore.keyURL.path)
-        i.hasHeaderKey = keySummary?.hasHeaderKey ?? false
-        i.keyGenerations = keySummary?.applicationKeyGenerations.count ?? 0
+        i.keysImported = FileManager.default.fileExists(atPath: setup.keyStore.keyURL.path)
+        i.hasHeaderKey = setup.keySummary?.hasHeaderKey ?? false
+        i.keyGenerations = setup.keySummary?.applicationKeyGenerations.count ?? 0
         if let id = lastBuildGameID ?? frontGameID, let game = libraryGames.first(where: { $0.id == id }) {
             let failure = game.portingFailure.map { failure in
                 failure == .cancelled ? "cancelled" : "failed (\(game.portingFailureReason?.kind.rawValue ?? "unknown"))"

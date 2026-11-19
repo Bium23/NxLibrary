@@ -2,8 +2,8 @@ import AppKit
 import Foundation
 import NXLibraryCore
 
-/// The Switch Setup's state: the engine (folder, commit, upstream, newest engine), and from the next steps the keys,
-/// the environment and the Metal gate. Settings → Setup and engine, the Setup check and Add Game observe it on their
+/// The Switch Setup's state: the engine (folder, commit, upstream, newest engine) and the keys, and from the next
+/// step the environment and the Metal gate. Settings → Setup and engine, the Setup check and Add Game observe it on their
 /// own. It reaches the rest of Arcane only through `app`, the list of what the Porting module will ask of the base.
 public final class SetupModel: ObservableObject {
     /// The coordinator: library, building state, alerts and the tested pin.
@@ -31,6 +31,19 @@ public final class SetupModel: ObservableObject {
     @Published public internal(set) var newestEngineProblem: String? = nil
     lazy var upstreamChecker = UpstreamChecker()
     let upstreamCacheKey = "NXLibrary_UpstreamStatus"
+
+    // MARK: - Keys
+    @Published public var prodKeysPath: String = "" {
+        didSet {
+            if !prodKeysPath.isEmpty {
+                AppData.preferences.set(prodKeysPath, forKey: AppViewModel.StorageKeys.savedProdKeysPath)
+            }
+        }
+    }
+    @Published public var prodKeysSource: String = ""
+    @Published public var isProdKeysValid: Bool = false
+    @Published public var keySummary: KeySummary? = nil
+    lazy var keyStore = KeyStore(directory: app.core.appendingPathComponent("keys"))
 
     init(app: AppViewModel) {
         self.app = app
@@ -106,6 +119,86 @@ public final class SetupModel: ObservableObject {
             self.nxnativePath = url.path
             self.isNxnativeValid = true
             app.refreshCompatibility()
+        }
+    }
+
+    // MARK: - Keys import
+    func ensureKeysImported(customRyujinxDir: String? = nil) {
+        let fm = FileManager.default
+        if fm.fileExists(atPath: keyStore.keyURL.path) {
+            do {
+                let summary = try keyStore.validate(at: keyStore.keyURL)
+                keySummary = summary
+                isProdKeysValid = summary.hasHeaderKey
+                prodKeysPath = keyStore.keyURL.path
+                prodKeysSource = AppIdentity.name
+            } catch {
+                keySummary = nil
+                isProdKeysValid = false
+                prodKeysSource = "Invalid stored copy"
+                app.logs.append(LogEntry(level: .error,
+                                     message: L10n.format("Stored prod.keys is invalid: %@", [String(describing: (error.localizedDescription))])))
+            }
+            return
+        }
+        let saved = AppData.preferences.string(forKey: AppViewModel.StorageKeys.savedProdKeysPath)
+        let detected = SystemDetector.shared.detectProdKeys(additionalSearchDir: customRyujinxDir)
+        let candidate = [saved, detected?.path].compactMap { $0 }.first {
+            !$0.isEmpty && fm.fileExists(atPath: $0)
+        }
+        guard let candidate else {
+            keySummary = nil
+            isProdKeysValid = false
+            prodKeysSource = "Not Found"
+            prodKeysPath = ""
+            return
+        }
+        importKeys(from: URL(fileURLWithPath: candidate))
+    }
+
+    public func importKeys(from url: URL) {
+        guard !app.isBuilding, !app.isUpdatingApp else {
+            app.showSettingsNotice(title: L10n.text("Porting in progress"), message: L10n.text("Change keys after the porting finishes."))
+            return
+        }
+        do {
+            let summary = try keyStore.importKey(from: url)
+            keySummary = summary
+            isProdKeysValid = summary.hasHeaderKey
+            prodKeysPath = keyStore.keyURL.path
+            prodKeysSource = "Imported once"
+            app.porting.refreshKeyCheck()
+            if let folder = app.porting.selectedGameFolder { app.porting.scanGameFolder(folder) }
+            app.lastError = nil
+            app.logs.append(LogEntry(
+                level: .success,
+                message: L10n.format("prod.keys imported: header key present, %@ application key generations.", [String(describing: (summary.applicationKeyGenerations.count))])
+            ))
+        } catch {
+            keySummary = try? keyStore.validate(at: keyStore.keyURL)
+            isProdKeysValid = keySummary?.hasHeaderKey == true
+            prodKeysPath = isProdKeysValid ? keyStore.keyURL.path : ""
+            app.lastError = error.localizedDescription
+            app.showSettingsNotice(title: L10n.text("Keys not changed"), message: isProdKeysValid
+                ? L10n.text("The key file could not be imported. Your previous copy is kept.")
+                : L10n.text("The key file could not be imported. Choose a valid prod.keys file."))
+            app.logs.append(LogEntry(level: .error,
+                                 message: L10n.format("Could not import prod.keys: %@", [String(describing: (error.localizedDescription))])))
+        }
+    }
+
+    public func selectProdKeysFile() {
+        guard !app.isBuilding, !app.isUpdatingApp else { return }
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = []
+        panel.prompt = "Select prod.keys"
+        panel.message = "Choose your Nintendo Switch prod.keys file."
+
+        if panel.runModal() == .OK, let url = panel.url {
+            importKeys(from: url)
         }
     }
 }

@@ -171,7 +171,7 @@ extension AddGameView {
     private var buildHint: String {
         if porting.canStartBuild { return L10n.text("Builds the Mac app now; you can keep using the library meanwhile.") }
         if !viewModel.supportsSources(porting.selectedSources) { return L10n.text("These sources need a newer engine.") }
-        if porting.selectedSourcesRequireKeys && !viewModel.isProdKeysValid { return L10n.text("Import prod.keys first.") }
+        if porting.selectedSourcesRequireKeys && !setup.isProdKeysValid { return L10n.text("Import prod.keys first.") }
         if porting.keyCheckBlocks, let readiness = porting.keyCheck?.readiness { return "\(readiness.title)." }
         if !setup.isNxnativeValid { return L10n.text("The nxnative checkout is missing.") }
         if viewModel.environmentStatus?.canBuild != true { return L10n.text("The build environment is incomplete.") }
@@ -204,16 +204,16 @@ extension AddGameView {
                 porting.portingFailureReason = nil
             }), title: porting.portingFailureReason?.title ?? L10n.text("The last porting failed"), about: error))
         }
-        if porting.selectedSourcesRequireKeys && !viewModel.isProdKeysValid {
-            rows.append(AddGameRow(id: "keys", kind: .action { viewModel.selectProdKeysFile() }, icon: .key,
+        if porting.selectedSourcesRequireKeys && !setup.isProdKeysValid {
+            rows.append(AddGameRow(id: "keys", kind: .action { setup.selectProdKeysFile() }, icon: .key,
                                    title: L10n.text("Import prod.keys"),
                                    about: L10n.text("Copied once to Application Support, readable only by you.")))
         }
-        if viewModel.isProdKeysValid, let readiness = porting.keyCheck?.readiness {
+        if setup.isProdKeysValid, let readiness = porting.keyCheck?.readiness {
             if readiness.warning {
                 rows.append(AddGameRow(id: "keyCheck", kind: .warning(action: nil),
                                        title: readiness.title, about: readiness.about))
-                rows.append(AddGameRow(id: "keys", kind: .action { viewModel.selectProdKeysFile() }, icon: .key,
+                rows.append(AddGameRow(id: "keys", kind: .action { setup.selectProdKeysFile() }, icon: .key,
                                        title: L10n.text("Import prod.keys"),
                                        about: L10n.text("Copied once to Application Support, readable only by you.")))
             } else {

@@ -37,7 +37,7 @@ final class SetupCheckModel: ObservableObject {
                    pinnedCommit: viewModel.pinnedEngineCommit,
                    certifiedMetal: viewModel.requiredMetalVersion ?? requirements.fallbackMetal,
                    allowUntested: viewModel.allowUntestedToolchain,
-                   keyStore: viewModel.keyStore, libraryFolder: viewModel.libraryFolder,
+                   keyStore: viewModel.setup.keyStore, libraryFolder: viewModel.libraryFolder,
                    sourcesFolder: viewModel.porting.gameFilesFolder,
                    libraryNeedsConfirmation: viewModel.requiresGameAppsFolderChoice,
                    newestEngine: viewModel.setup.newestEngineChoice)
@@ -160,7 +160,7 @@ final class SetupCheckModel: ObservableObject {
             panel.prompt = L10n.text("Import")
             panel.message = "Choose your prod.keys file. It stays on this Mac."
             if panel.runModal() == .OK, let url = panel.url {
-                viewModel.importKeys(from: url)
+                viewModel.setup.importKeys(from: url)
             }
             refresh()
         case .library:

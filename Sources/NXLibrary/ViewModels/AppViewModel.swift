@@ -67,17 +67,6 @@ public final class AppViewModel: ObservableObject {
     // MARK: - Workspace & Paths
     @Published public var defaultInstallPath: String = ""
     
-    // MARK: - Keys
-    @Published public var prodKeysPath: String = "" {
-        didSet {
-            if !prodKeysPath.isEmpty {
-                AppData.preferences.set(prodKeysPath, forKey: StorageKeys.savedProdKeysPath)
-            }
-        }
-    }
-    @Published public var prodKeysSource: String = ""
-    @Published public var isProdKeysValid: Bool = false
-    
     /// The last porting's command line, for Copy diagnostics (its environment is never kept).
     var lastPortingCommand: [String] = []
     /// Set by a failed porting's notification: the next Add game opens on that failure.
@@ -184,7 +173,6 @@ public final class AppViewModel: ObservableObject {
     @Published public var importedApps: [ImportedApp] = []
     @Published public var environmentStatus: EnvironmentStatus? = nil
     @Published public var compatibilityReport: CompatibilityReport? = nil
-    @Published public var keySummary: KeySummary? = nil
     @Published public var storeMetadata: [UUID: NintendoStoreMetadata] = [:]
     @Published public var storeMetadataLoading: Set<UUID> = []
     @Published public var storeMetadataErrors: [UUID: String] = [:]
@@ -304,7 +292,6 @@ public final class AppViewModel: ObservableObject {
     public let pinnedEngineCommit = "461a5f9f95fc9fc40a690bb2a82eb23f1f03bdca"
     let core = AppData.supportRoot
     let catalogRepository: CatalogRepository
-    lazy var keyStore = KeyStore(directory: core.appendingPathComponent("keys"))
     /// Sizes of built apps are remembered between launches, so a scan walks only new or rebuilt apps.
     private lazy var importService = ImportService(sizeCache: AppSizeCache(file: core.appendingPathComponent("app-sizes.json")))
     private let launchService = LaunchService()
@@ -429,7 +416,7 @@ public final class AppViewModel: ObservableObject {
             saved: AppData.preferences.string(forKey: StorageKeys.savedEngineFolder))
         self.setup.nxnativePath = nxResult.path
         self.setup.isNxnativeValid = nxResult.isValid
-        if !automatic || !AppData.profile.isDevelopment { ensureKeysImported(customRyujinxDir: customRyujinxDir) }
+        if !automatic || !AppData.profile.isDevelopment { setup.ensureKeysImported(customRyujinxDir: customRyujinxDir) }
     }
 
     /// With launch checks off, inspecting a build screen performs the check on demand.
@@ -439,69 +426,7 @@ public final class AppViewModel: ObservableObject {
 
     @Published public internal(set) var isCheckingEnvironment = false
 
-    private func ensureKeysImported(customRyujinxDir: String? = nil) {
-        let fm = FileManager.default
-        if fm.fileExists(atPath: keyStore.keyURL.path) {
-            do {
-                let summary = try keyStore.validate(at: keyStore.keyURL)
-                keySummary = summary
-                isProdKeysValid = summary.hasHeaderKey
-                prodKeysPath = keyStore.keyURL.path
-                prodKeysSource = AppIdentity.name
-            } catch {
-                keySummary = nil
-                isProdKeysValid = false
-                prodKeysSource = "Invalid stored copy"
-                logs.append(LogEntry(level: .error,
-                                     message: L10n.format("Stored prod.keys is invalid: %@", [String(describing: (error.localizedDescription))])))
-            }
-            return
-        }
-        let saved = AppData.preferences.string(forKey: StorageKeys.savedProdKeysPath)
-        let detected = SystemDetector.shared.detectProdKeys(additionalSearchDir: customRyujinxDir)
-        let candidate = [saved, detected?.path].compactMap { $0 }.first {
-            !$0.isEmpty && fm.fileExists(atPath: $0)
-        }
-        guard let candidate else {
-            keySummary = nil
-            isProdKeysValid = false
-            prodKeysSource = "Not Found"
-            prodKeysPath = ""
-            return
-        }
-        importKeys(from: URL(fileURLWithPath: candidate))
-    }
 
-    public func importKeys(from url: URL) {
-        guard !isBuilding, !isUpdatingApp else {
-            showSettingsNotice(title: L10n.text("Porting in progress"), message: L10n.text("Change keys after the porting finishes."))
-            return
-        }
-        do {
-            let summary = try keyStore.importKey(from: url)
-            keySummary = summary
-            isProdKeysValid = summary.hasHeaderKey
-            prodKeysPath = keyStore.keyURL.path
-            prodKeysSource = "Imported once"
-            porting.refreshKeyCheck()
-            if let folder = porting.selectedGameFolder { porting.scanGameFolder(folder) }
-            lastError = nil
-            logs.append(LogEntry(
-                level: .success,
-                message: L10n.format("prod.keys imported: header key present, %@ application key generations.", [String(describing: (summary.applicationKeyGenerations.count))])
-            ))
-        } catch {
-            keySummary = try? keyStore.validate(at: keyStore.keyURL)
-            isProdKeysValid = keySummary?.hasHeaderKey == true
-            prodKeysPath = isProdKeysValid ? keyStore.keyURL.path : ""
-            lastError = error.localizedDescription
-            showSettingsNotice(title: L10n.text("Keys not changed"), message: isProdKeysValid
-                ? L10n.text("The key file could not be imported. Your previous copy is kept.")
-                : L10n.text("The key file could not be imported. Choose a valid prod.keys file."))
-            logs.append(LogEntry(level: .error,
-                                 message: L10n.format("Could not import prod.keys: %@", [String(describing: (error.localizedDescription))])))
-        }
-    }
 
     public func refreshCompatibility() {
         guard !isBuilding, !isUpdatingApp else { return }
@@ -839,7 +764,7 @@ public final class AppViewModel: ObservableObject {
 
     public var canCompleteSetup: Bool {
         setup.isNxnativeValid
-            && (isProdKeysValid || engineSourceCapabilities.extractedFolders)
+            && (setup.isProdKeysValid || engineSourceCapabilities.extractedFolders)
             && environmentStatus?.canBuild == true
     }
 
@@ -1140,7 +1065,7 @@ public final class AppViewModel: ObservableObject {
         let catalog = sourceCatalog
         let repo = URL(fileURLWithPath: setup.nxnativePath)
         let toolchain = engineToolchain
-        let keys = isProdKeysValid ? keyStore.keyURL : nil
+        let keys = setup.isProdKeysValid ? setup.keyStore.keyURL : nil
         let developer = resolvedDeveloperDir()
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let urls = ExtractedSourceCatalog.recognizes(folder) ? [] : PortingModel.sourceFileURLs(in: folder)
@@ -1765,20 +1690,6 @@ public final class AppViewModel: ObservableObject {
     // MARK: - File Pickers
     
     
-    public func selectProdKeysFile() {
-        guard !isBuilding, !isUpdatingApp else { return }
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = true
-        panel.canChooseDirectories = false
-        panel.allowsMultipleSelection = false
-        panel.allowedContentTypes = []
-        panel.prompt = "Select prod.keys"
-        panel.message = "Choose your Nintendo Switch prod.keys file."
-        
-        if panel.runModal() == .OK, let url = panel.url {
-            importKeys(from: url)
-        }
-    }
     
     public func selectRyujinxFolder() {
         guard !isBuilding, !isUpdatingApp else { return }
@@ -1799,7 +1710,7 @@ public final class AppViewModel: ObservableObject {
         guard !isBuilding,
               !isCleaningStorage,
               !isUpdatingApp,
-              (!SourceSelection.requiresKeys(game.sources) || isProdKeysValid),
+              (!SourceSelection.requiresKeys(game.sources) || setup.isProdKeysValid),
               supportsSources(game.sources),
               setup.isNxnativeValid,
               environmentStatus?.canBuild == true,

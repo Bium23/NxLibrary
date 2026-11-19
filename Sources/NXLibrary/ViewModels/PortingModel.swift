@@ -228,7 +228,7 @@ public final class PortingModel: ObservableObject {
         let catalog = app.sourceCatalog
         let repo = URL(fileURLWithPath: app.setup.nxnativePath)
         let toolchain = app.engineToolchain
-        let keys = app.isProdKeysValid ? app.keyStore.keyURL : nil
+        let keys = app.setup.isProdKeysValid ? app.setup.keyStore.keyURL : nil
         let developer = app.resolvedDeveloperDir()
         let explicitFiles = selectedPackageURLs
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
@@ -503,12 +503,12 @@ public final class PortingModel: ObservableObject {
     func refreshKeyCheck() {
         let sources = selectedSources
         let files = KeyCheck.parts(sources.map { ($0.kind, $0.url) })
-        guard SourceSelection.requiresKeys(sources), app.isProdKeysValid, !files.isEmpty else {
+        guard SourceSelection.requiresKeys(sources), app.setup.isProdKeysValid, !files.isEmpty else {
             keyCheck = nil
             keyCheckToken = nil
             return
         }
-        let keysURL = app.keyStore.keyURL
+        let keysURL = app.setup.keyStore.keyURL
         let modified = (try? FileManager.default.attributesOfItem(atPath: keysURL.path)[.modificationDate]) as? Date
         let token = ([String(modified?.timeIntervalSince1970 ?? 0)]
             + sources.map { "\($0.url.path)|\($0.sizeBytes)" }.sorted()).joined(separator: "\n")
@@ -532,7 +532,7 @@ public final class PortingModel: ObservableObject {
             && !app.isUpdatingApp
             && self.canAddSelectedGame
             && app.supportsSources(self.selectedSources)
-            && (!self.selectedSourcesRequireKeys || app.isProdKeysValid)
+            && (!self.selectedSourcesRequireKeys || app.setup.isProdKeysValid)
             && !self.keyCheckBlocks
             && app.setup.isNxnativeValid
             && app.environmentStatus?.canBuild == true
@@ -712,11 +712,11 @@ public final class PortingModel: ObservableObject {
             throw NXLibraryError.environmentBlocked(L10n.text("The selected NUP program no longer matches this game. Choose the source again."))
         }
         if requiresKeys {
-            guard app.isProdKeysValid, FileManager.default.fileExists(atPath: app.keyStore.keyURL.path) else {
+            guard app.setup.isProdKeysValid, FileManager.default.fileExists(atPath: app.setup.keyStore.keyURL.path) else {
                 throw NXLibraryError.missingKeys
             }
             // A few kilobytes per file: keys that cannot open the game stop here, not minutes into the extraction.
-            let keyOutcome = KeyCheck.run(keysURL: app.keyStore.keyURL,
+            let keyOutcome = KeyCheck.run(keysURL: app.setup.keyStore.keyURL,
                                           files: KeyCheck.parts(target.sources.map { ($0.kind, $0.url) }))
             if keyOutcome.blocks, let reason = PortingFailureReason.from(keyOutcome) {
                 throw NXLibraryError.keyCheck(reason, game: target.name)
@@ -843,7 +843,7 @@ public final class PortingModel: ObservableObject {
             repo: repo,
             toolchain: toolchain,
             workspace: workspace.directory,
-            keys: requiresKeys ? app.keyStore.keyURL : nil,
+            keys: requiresKeys ? app.setup.keyStore.keyURL : nil,
             output: tempApp,
             developerDir: app.resolvedDeveloperDir(),
             appName: target.name,
@@ -1172,7 +1172,7 @@ public final class PortingModel: ObservableObject {
             } else {
                 let reason = PortingFailureClassifier.classify(
                     log: buildLogTail(result.logURL),
-                    keysPath: SourceSelection.requiresKeys(game.sources) ? app.keyStore.keyURL.path : "",
+                    keysPath: SourceSelection.requiresKeys(game.sources) ? app.setup.keyStore.keyURL.path : "",
                     sourcePaths: game.sources.map(\.url.path)
                 )
                 let message = reason.what(game: game.name)
@@ -1314,7 +1314,7 @@ public final class PortingModel: ObservableObject {
         case .portAnyway: portAnyway()
         case .openEngineSettings: router.openSettings(.engine)
         case .openSetup: app.reopenSetup()
-        case .importKeys: app.selectProdKeysFile()
+        case .importKeys: app.setup.selectProdKeysFile()
         case .openStorage: router.openSettings(.portingStorage)
         case .none: break
         }
