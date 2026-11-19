@@ -118,6 +118,12 @@ public actor SteamMetadataService {
         return cached.flatMap { $0.appID == appID && $0.language == language ? $0 : nil }
     }
 
+    /// The newest entry in any language, for a page offline in a new language: shown with its language notice
+    /// (`GameDetailPresentation(steamRecord:)`) and asked again in the app language later.
+    public func cachedInAnyLanguage(appID: UInt32) -> SteamMetadata? {
+        Self.metadataLanguages.compactMap { cachedMetadata(appID: appID, language: $0) }.max { $0.fetchedAt < $1.fetchedAt }
+    }
+
     /// The game's related row needs only scoring traits. Read existing entries and leave other games off the network.
     public func cachedRelatedTraits(appIDs: Set<UInt32>, language: String) -> [UInt32: MoreLikeThis.Traits] {
         guard Self.metadataLanguages.contains(language) else { return [:] }

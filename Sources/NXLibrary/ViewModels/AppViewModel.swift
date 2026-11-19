@@ -794,29 +794,34 @@ public final class AppViewModel: ObservableObject {
     }
 
     /// Returns once `game` has metadata in the app language, or the request failed; a request already running for
-    /// it is not repeated. A language change while it runs discards the answer.
-    @MainActor private func fetchStoreMetadata(for game: PortedGame) async {
+    /// it is not repeated. A language change while it runs discards the answer. True when the app language's
+    /// description is settled (`languageResolved`), false after an outage.
+    @discardableResult
+    @MainActor private func fetchStoreMetadata(for game: PortedGame) async -> Bool {
         let locale = L10n.context
         let generation = metadataLocaleGeneration
-        guard let titleId = game.titleId, !titleId.isEmpty else { return }
-        if storeMetadataLoading.contains(game.id) { return }
+        guard let titleId = game.titleId, !titleId.isEmpty else { return true }
+        if storeMetadataLoading.contains(game.id) { return true }
         if let existing = storeMetadata[game.id], storeMetadataService.isFresh(existing, locale: locale) {
             loadFallbackScreenshots(for: game)
-            return
+            return storeMetadataService.languageResolved(existing, locale: locale)
         }
 
         storeMetadataLoading.insert(game.id)
         storeMetadataErrors[game.id] = nil
+        var resolved = false
         do {
             let metadata = try await storeMetadataService.metadata(for: game, locale: locale)
-            guard metadataLocaleGeneration == generation else { return }
+            guard metadataLocaleGeneration == generation else { return true }
             setStoreMetadata(metadata, for: game)
+            resolved = storeMetadataService.languageResolved(metadata, locale: locale)
         } catch {
-            guard metadataLocaleGeneration == generation else { return }
+            guard metadataLocaleGeneration == generation else { return true }
             storeMetadataErrors[game.id] = error.localizedDescription
         }
         storeMetadataLoading.remove(game.id)
         loadFallbackScreenshots(for: game)
+        return resolved
     }
 
     /// A language change only resets presentation metadata, never the library, personal picks or game settings.
@@ -843,24 +848,75 @@ public final class AppViewModel: ObservableObject {
             // Every game gets the new language without being opened, the focused one first.
             let focused = self.currentFocusedGame
             self.languageFetchQueue = []
+            self.languageFetchWaiting = []
+            self.languageFetchRounds = 0
+            self.languageFetchResume?.cancel()
             self.queueLanguageFetch((focused.map { [$0] } ?? []) + games.filter { $0.id != focused?.id })
         }
     }
 
     /// Games still to bring to the app language in the background, asked one request at a time.
     private var languageFetchQueue: [PortedGame] = []
+    /// Games whose request met an outage; asked again when the connection returns or after `languageFetchPause`.
+    private var languageFetchWaiting: [PortedGame] = []
     private var languageFetchTask: Task<Void, Never>?
+    private var languageFetchResume: Task<Void, Never>?
+    /// Timed retries since the last language change or reconnection: a game that always fails is not asked forever.
+    private var languageFetchRounds = 0
+    static let languageFetchRoundLimit = 3
+    /// Three outages in a row mean the provider or the network is down: the pass stops instead of asking every game.
+    static let languageFetchFailureLimit = 3
+    static let languageFetchPause: UInt64 = 300_000_000_000
+    private lazy var connectivity = ConnectivityWatcher { [weak self] in self?.connectionReturned() }
 
     /// Adds `games` to the background queue; one loop drains it and always asks in the current app language.
     private func queueLanguageFetch(_ games: [PortedGame]) {
         for game in games where !languageFetchQueue.contains(where: { $0.id == game.id }) { languageFetchQueue.append(game) }
         guard languageFetchTask == nil, !languageFetchQueue.isEmpty else { return }
+        connectivity.start()
         languageFetchTask = Task { @MainActor [weak self] in
+            var outages = 0
             while let self, !self.languageFetchQueue.isEmpty {
-                await self.fetchStoreMetadata(for: self.languageFetchQueue.removeFirst())
+                let game = self.languageFetchQueue.removeFirst()
+                if await self.fetchStoreMetadata(for: game) { outages = 0; continue }
+                if !self.languageFetchWaiting.contains(where: { $0.id == game.id }) { self.languageFetchWaiting.append(game) }
+                outages += 1
+                if outages >= Self.languageFetchFailureLimit {
+                    self.languageFetchWaiting += self.languageFetchQueue
+                    self.languageFetchQueue = []
+                }
             }
-            self?.languageFetchTask = nil
+            guard let self else { return }
+            self.languageFetchTask = nil
+            if !self.languageFetchWaiting.isEmpty, self.languageFetchRounds < Self.languageFetchRoundLimit {
+                self.languageFetchRounds += 1
+                self.scheduleLanguageResume()
+            }
         }
+    }
+
+    /// Asks the waiting games again after a pause, for a provider that was busy while the network stayed up.
+    private func scheduleLanguageResume() {
+        languageFetchResume?.cancel()
+        languageFetchResume = Task { @MainActor [weak self] in
+            do { try await Task.sleep(nanoseconds: Self.languageFetchPause) } catch { return }
+            self?.resumeLanguageFetch()
+        }
+    }
+
+    private func connectionReturned() {
+        guard !languageFetchWaiting.isEmpty else { return }
+        storeMetadataService.forgetDescriptionRetries()
+        languageFetchRounds = 0
+        resumeLanguageFetch()
+    }
+
+    private func resumeLanguageFetch() {
+        languageFetchResume?.cancel()
+        languageFetchResume = nil
+        let waiting = languageFetchWaiting
+        languageFetchWaiting = []
+        queueLanguageFetch(waiting)
     }
 
     /// Fills metadata from the disk cache without starting a network request, in

@@ -16,8 +16,20 @@ extension GameDetailPresentation {
         eyebrow = ""
         description = overrides[.description] ?? facts?.description ?? ""
         descriptionIsEnglishFallback = false
-        descriptionLanguageNote = nil
-        descriptionLanguage = overrides[.description] != nil ? "custom" : nil
+        // Steam answers in the asked language or English without saying which; only text cached for another
+        // asked language (an offline page) is named, as a Switch page names its store's language.
+        let shownLanguage = facts.flatMap { $0.language == SteamMetadata.language(L10n.context.language) ? nil : SteamMetadata.code($0.language) }
+        if overrides[.description] != nil {
+            descriptionLanguage = "custom"
+            descriptionLanguageNote = nil
+        } else if let shownLanguage, !description.isEmpty {
+            descriptionLanguage = shownLanguage
+            let name = L10n.context.formatLocale.localizedString(forLanguageCode: shownLanguage) ?? shownLanguage
+            descriptionLanguageNote = L10n.format("Description in %@.", [name])
+        } else {
+            descriptionLanguage = nil
+            descriptionLanguageNote = nil
+        }
         genres = Self.steamGenres(for: game, metadata: metadata, override: overrides[.genres])
         // Steam's dates are display text in the store's language: shown as given, never re-parsed.
         let release = (overrides[.releaseDate] ?? facts?.releaseDate)?.trimmingCharacters(in: .whitespaces)

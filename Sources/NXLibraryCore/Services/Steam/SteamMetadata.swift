@@ -12,6 +12,12 @@ public struct SteamMetadata: Codable, Equatable, Sendable {
     public let screenshots: [URL]
     public let fetchedAt: Date
 
+    /// The language code of a Steam language name ("italian" → "it"), for the description notice.
+    public static func code(_ steamLanguage: String) -> String? {
+        ["english": "en", "italian": "it", "french": "fr", "german": "de", "spanish": "es",
+         "brazilian": "pt", "schinese": "zh"][steamLanguage]
+    }
+
     public static func language(_ language: AppLanguage) -> String {
         switch language {
         case .italian: return "italian"

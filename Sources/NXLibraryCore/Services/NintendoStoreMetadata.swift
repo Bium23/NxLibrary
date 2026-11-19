@@ -201,6 +201,21 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         (metadata.localeKey ?? "en_US").hasPrefix(locale.language.rawValue + "_")
     }
 
+    /// Whether the app language's description was settled for `metadata`: found, confirmed missing (Nlib 404, the
+    /// daily check), or English. False after an outage, so a background pass asks again later.
+    public func languageResolved(_ metadata: NintendoStoreMetadata, locale: AppLocale) -> Bool {
+        guard isInLanguage(metadata, locale: locale) else { return false }
+        return locale.metadataLanguage == "en" || metadata.descriptionLanguage == locale.metadataLanguage
+            || metadata.descriptionCheckedAt != nil
+    }
+
+    /// Forgets the one-minute waits after network failures, when the connection returns.
+    public func forgetDescriptionRetries() {
+        refreshLock.lock()
+        descriptionRetryAfter.removeAll()
+        refreshLock.unlock()
+    }
+
     /// Synchronous so the lock is never held across a suspension point.
     private func markScreenshotRefreshTried(_ titleId: String) {
         refreshLock.lock()
@@ -225,9 +240,9 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         // A language switch reuses fresh artwork and credits; only the description needs a request.
         if locale.metadataLanguage != "en", var base = previous ?? cached(for: key),
            Date().timeIntervalSince(base.fetchedAt) < Self.ttl {
-            let item = await fetchTitleDBItem(titleId: key, language: locale.metadataLanguage)
-            applyDescription(item, to: &base, locale: locale)
-            if let item { Self.fill(&base, from: item) }
+            let lookup = await fetchTitleDBLookup(titleId: key, language: locale.metadataLanguage)
+            applyDescription(lookup, to: &base, locale: locale)
+            if case .found(let item) = lookup { Self.fill(&base, from: item) }
             markScreenshotRefreshTried(key + "/" + locale.metadataLanguage)
             base.localeKey = locale.cacheKey
             try? cache(base, for: key, locale: locale)
@@ -246,8 +261,8 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
                 metadata.descriptionCheckedAt = Date()
             }
             if locale.metadataLanguage != "en", metadata.descriptionLanguage != locale.metadataLanguage {
-                let item = await fetchTitleDBItem(titleId: key, language: locale.metadataLanguage)
-                applyDescription(item, to: &metadata, locale: locale)
+                applyDescription(await fetchTitleDBLookup(titleId: key, language: locale.metadataLanguage),
+                                 to: &metadata, locale: locale)
             }
             if metadata.descriptionLanguage != locale.metadataLanguage,
                let previous, previous.descriptionLanguage == locale.metadataLanguage,
@@ -268,8 +283,12 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         }
     }
 
-    private func applyDescription(_ item: TitleDBItem?, to metadata: inout NintendoStoreMetadata, locale: AppLocale) {
-        if let item {
+    private func applyDescription(_ lookup: TitleDBLookup, to metadata: inout NintendoStoreMetadata, locale: AppLocale) {
+        switch lookup {
+        case .missing:
+            // Nlib has no entry for this game (404): the store text stays, with its notice, until the daily check.
+            metadata.descriptionCheckedAt = Date()
+        case .found(let item):
             metadata.descriptionCheckedAt = Date()
             if let text = item.description?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty,
                text != metadata.description.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -277,7 +296,7 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
                 metadata.description = text
                 metadata.descriptionLanguage = locale.metadataLanguage
             }
-        } else {
+        case .unavailable:
             // A transient network failure is retried soon; it is not persisted as a missing translation.
             refreshLock.lock()
             descriptionRetryAfter[metadata.titleId + "/" + locale.metadataLanguage] = Date().addingTimeInterval(60)
@@ -417,19 +436,32 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         }
     }
 
+    /// Nlib's answer for one title: an entry, a 404 for a game it does not have, or no answer (offline, busy).
+    private enum TitleDBLookup {
+        case found(TitleDBItem)
+        case missing
+        case unavailable
+    }
+
     private func fetchTitleDBItem(titleId: String, language: String = "en") async -> TitleDBItem? {
+        if case .found(let item) = await fetchTitleDBLookup(titleId: titleId, language: language) { return item }
+        return nil
+    }
+
+    private func fetchTitleDBLookup(titleId: String, language: String) async -> TitleDBLookup {
         guard Self.looksLikeTitleDBID(titleId),
               let url = URL(string: "https://api.nlib.cc/nx/\(titleId)?fields=name,publisher,description,banner,icon,screens,releaseDate,developer,category&lang=\(language)") else {
-            return nil
+            return .missing
         }
         var request = URLRequest(url: url)
         request.timeoutInterval = 8
         do {
             let (data, response) = try await client.data(for: request)
-            guard (200..<300).contains(response.statusCode) else { return nil }
-            return try JSONDecoder().decode(TitleDBItem.self, from: data)
+            if response.statusCode == 404 { return .missing }
+            guard (200..<300).contains(response.statusCode) else { return .unavailable }
+            return .found(try JSONDecoder().decode(TitleDBItem.self, from: data))
         } catch {
-            return nil
+            return .unavailable
         }
     }
 

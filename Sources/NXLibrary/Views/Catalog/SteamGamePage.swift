@@ -28,12 +28,17 @@ final class SteamGameFacts: ObservableObject {
         guard let appID = game.steamGame?.appID else { return }
         let language = SteamMetadata.language(app)
         if language != self.language { self.language = language; facts = [:]; known = []; missedAt = [:] }
-        // An answer without facts (offline, store busy) is retried later; facts once found are kept.
-        let retry = facts[appID] == nil && missedAt[appID].map { Date().timeIntervalSince($0) > Self.retryAfter } == true
+        // An answer without facts in this language (offline, store busy) is retried later; facts once found are kept.
+        let retry = facts[appID]?.language != language && missedAt[appID].map { Date().timeIntervalSince($0) > Self.retryAfter } == true
         guard !known.contains(appID) || retry else { return }
         let result = await SteamMetadataService.shared.metadata(appID: appID, language: language)
         guard !Task.isCancelled, language == self.language else { return }
-        if let result { facts[appID] = result; missedAt[appID] = nil } else { missedAt[appID] = Date() }
+        if let result { facts[appID] = result; missedAt[appID] = nil } else {
+            // Offline in a new language: the last text in another language, with its notice, beats an empty page.
+            if facts[appID] == nil { facts[appID] = await SteamMetadataService.shared.cachedInAnyLanguage(appID: appID) }
+            guard !Task.isCancelled, language == self.language else { return }
+            missedAt[appID] = Date()
+        }
         known.insert(appID)
     }
 }

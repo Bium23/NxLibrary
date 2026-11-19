@@ -103,6 +103,21 @@ final class SharedGamePresentationTests: XCTestCase {
                                               .cheats, .mods, .attachSources, .openLog]))
     }
 
+    /// Offline, a Steam page can show the text of another language: it says which, as a Switch page does.
+    func testSteamTextInAnotherLanguageCarriesItsNotice() throws {
+        let body = Data(#"{"10":{"success":true,"data":{"steam_appid":10,"short_description":"中文的商店描述"}}}"#.utf8)
+        let facts = try SteamMetadata.decode(body, appID: 10, language: "schinese")
+        let record = CatalogGame(steam: SteamCatalogGame(appID: 10, name: "Fixture"))
+        try XCTSkipIf(SteamMetadata.language(L10n.context.language) == "schinese")
+        let page = GameDetailPresentation(steamRecord: record, metadata: facts, totalPlaytime: 0, lastPlayed: nil)
+        XCTAssertEqual(page.descriptionLanguage, "zh")
+        XCTAssertNotNil(page.descriptionLanguageNote)
+        let chosen = GameDetailPresentation(steamRecord: record, metadata: facts, overrides: [.description: "Mine"],
+                                            totalPlaytime: 0, lastPlayed: nil)
+        XCTAssertEqual(chosen.descriptionLanguage, "custom")
+        XCTAssertNil(chosen.descriptionLanguageNote)
+    }
+
     func testSteamPagePresentationClaimsNothingFromNxnative() throws {
         let body = Data("""
         {"10":{"success":true,"data":{"steam_appid":10,"short_description":"Store text","genres":[{"description":"Strategy"}],"developers":["Dev Studio"],"publishers":["Studio"],"release_date":{"date":"23 mag 2023"}}}}

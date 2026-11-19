@@ -259,7 +259,8 @@ d'installazione negli stati non disponibili.
   (sfondo 2560 px, logo 1600, copertina 900, icona 512): un `NSImage(contentsOf:)` si decodificava al primo disegno e
   costava a quel frame 40–60 ms.
 - `SteamGameFacts` condivide i dati store per AppID e lingua fra testata, pagina e input; un’assenza si richiede di
-  nuovo dopo un minuto.
+  nuovo dopo un minuto. Offline in una lingua nuova la pagina mostra il testo in cache di un'altra lingua
+  (`SteamMetadataService.cachedInAnyLanguage`) con l'avviso "Description in …", e lo sostituisce appena Steam risponde.
 - `SteamPersonalizationStore`: testo e immagini scelte in un solo manifest atomico; un errore conserva le scelte
   precedenti. SteamGridDB usa la chiave del giocatore, in `steamgriddb-api-key` con permessi `0600`, mai nei log.
 

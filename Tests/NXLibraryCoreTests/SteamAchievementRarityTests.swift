@@ -29,6 +29,19 @@ final class SteamAchievementRarityTests: XCTestCase {
         XCTAssertEqual(try SteamAchievementRarity.decode(body), ["C": 12.5])
     }
 
+    /// Offline in a new language, the page keeps the text Steam gave in another one.
+    func testAnotherLanguageIsKeptForAnOfflinePage() async throws {
+        let body = Data(#"{"10":{"success":true,"data":{"steam_appid":10,"short_description":"Testo italiano"}}}"#.utf8)
+        _ = await SteamMetadataService(directory: root, transport: { _ in body }).metadata(appID: 10, language: "italian")
+        let offline = SteamMetadataService(directory: root, transport: { _ in throw URLError(.notConnectedToInternet) })
+        let spanish = await offline.metadata(appID: 10, language: "spanish")
+        XCTAssertNil(spanish)
+        let shown = await offline.cachedInAnyLanguage(appID: 10)
+        XCTAssertEqual(shown?.description, "Testo italiano")
+        let none = await offline.cachedInAnyLanguage(appID: 11)
+        XCTAssertNil(none)
+    }
+
     /// A file that failed a moment ago fails at once, without waiting for a free download behind six others.
     func testARecentFailureDoesNotWaitForASlot() async throws {
         let png = try Self.png()

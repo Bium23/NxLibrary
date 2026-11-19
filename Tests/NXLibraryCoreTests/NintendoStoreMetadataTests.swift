@@ -5,10 +5,16 @@ final class NintendoStoreMetadataTests: XCTestCase {
     private final class FakeClient: NintendoStoreHTTPClient {
         var responses: [String: Data] = [:]
         var requested: [String] = []
+        /// URL fragments answered with 404, as Nlib answers a game it does not have.
+        var notFound: [String] = []
 
         func data(for request: URLRequest) async throws -> (Data, HTTPURLResponse) {
             let url = request.url?.absoluteString ?? ""
             requested.append(url)
+            if notFound.contains(where: { url.contains($0) }) {
+                return (Data(#"{"success":false,"error":"Game not found"}"#.utf8),
+                        HTTPURLResponse(url: request.url!, statusCode: 404, httpVersion: nil, headerFields: nil)!)
+            }
             guard let data = responses.first(where: { url.contains($0.key) })?.value else {
                 throw URLError(.badServerResponse)
             }
@@ -67,6 +73,29 @@ final class NintendoStoreMetadataTests: XCTestCase {
         XCTAssertFalse(service.isInLanguage(shown, locale: spanish), "it is queued for Spanish at launch")
         XCTAssertTrue(service.isInLanguage(shown, locale: AppLocale(language: .italian, region: "CH")))
         XCTAssertNil(service.cachedForDisplay(for: "0100000000020000", locale: spanish))
+    }
+
+    /// Nlib's 404 ("Game not found") is an answer: English with the notice, settled for a day. A network error is not.
+    func testMissingGameIsSettledButAnOutageIsNot() async throws {
+        let client = FakeClient()
+        client.responses["ncom_game_en_us/query"] = Data(#"{"hits":[{"title":"Game","nsuid":"1","platform":"Nintendo Switch","description":"English description.","url":"/games/detail/game-switch/"}]}"#.utf8)
+        let cache = cacheDirectory()
+        let spanish = AppLocale(language: .spanish, region: "IT")
+        let game = game(name: "Game", titleId: "0100000000010000")
+        _ = try await NintendoStoreMetadataService(client: client, cacheDirectory: cache).metadata(for: game)
+
+        let offline = NintendoStoreMetadataService(client: FakeClient(), cacheDirectory: cache)
+        let failed = try await offline.metadata(for: game, locale: spanish)
+        XCTAssertEqual(failed.description, "English description.")
+        XCTAssertNil(failed.descriptionCheckedAt)
+        XCTAssertFalse(offline.languageResolved(failed, locale: spanish), "an outage is asked again")
+
+        let missing = FakeClient()
+        missing.notFound = ["lang=es"]
+        let answered = try await NintendoStoreMetadataService(client: missing, cacheDirectory: cache).metadata(for: game, locale: spanish)
+        XCTAssertEqual(answered.description, "English description.")
+        XCTAssertNotNil(answered.descriptionCheckedAt)
+        XCTAssertTrue(offline.languageResolved(answered, locale: spanish), "a game Nlib does not have is settled")
     }
 
     func testSwitch2RequestsTheSelectedDescriptionLanguage() async throws {

@@ -17,7 +17,7 @@ See the [validation checklist](docs/validation.md) for the state of manual check
 
 ### Fixed
 
-- Changing the app language now brings every Switch game's description in the new language, not only the selected game's, and a game not read yet in that language shows its last description with the language notice instead of an empty page.
+- Changing the app language now brings every Switch game's description in the new language, not only the selected game's, and a game not read yet in that language shows its last description with the language notice instead of an empty page. This also happens at launch when the Mac's language changed while Arcane was closed. If the connection or the provider fails, Arcane stops after a few attempts and tries again when you are back online. Steam pages opened offline in a new language keep their text, with the notice. **Clear** for the metadata cache also clears the Wikipedia texts.
 - **Open project docs** in About opens the online guide on every Mac. It used to look for a source folder that only exists on the developer's Mac and showed "Docs unavailable".
 
 ## 0.2.0 — 2026-11-18
