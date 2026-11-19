@@ -181,7 +181,7 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
     /// is re-fetched once per app session (per service instance); offline, that
     /// one attempt fails and the cached entry is used for the rest of the session.
     public func isFresh(_ metadata: NintendoStoreMetadata, now: Date = Date(), locale: AppLocale = AppLocale(language: .english, region: "US")) -> Bool {
-        guard (metadata.localeKey ?? "en_US").hasPrefix(locale.language.rawValue + "_") else { return false }
+        guard isInLanguage(metadata, locale: locale) else { return false }
         guard now.timeIntervalSince(metadata.fetchedAt) < Self.ttl else { return false }
         if locale.metadataLanguage != "en", metadata.descriptionLanguage != locale.metadataLanguage {
             refreshLock.lock()
@@ -194,6 +194,11 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
         refreshLock.lock()
         defer { refreshLock.unlock() }
         return screenshotRefreshTried.contains(metadata.titleId + "/" + locale.metadataLanguage)
+    }
+
+    /// Whether `metadata` was saved for the app language of `locale` (any region), not shown from another language.
+    public func isInLanguage(_ metadata: NintendoStoreMetadata, locale: AppLocale) -> Bool {
+        (metadata.localeKey ?? "en_US").hasPrefix(locale.language.rawValue + "_")
     }
 
     /// Synchronous so the lock is never held across a suspension point.

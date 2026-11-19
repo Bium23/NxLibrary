@@ -129,6 +129,19 @@ public actor WikipediaDescriptionService {
         return result
     }
 
+    /// Bytes on disk, counted in Storage → Metadata cache with the store's descriptions.
+    public nonisolated func cacheSize() -> Int64 {
+        let files = FileManager.default.enumerator(at: directory, includingPropertiesForKeys: [.fileSizeKey])
+        return (files?.allObjects as? [URL] ?? []).reduce(0) { total, url in
+            total + Int64((try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0)
+        }
+    }
+
+    /// Forgets every saved introduction and "no article"; the next page asks Wikipedia again.
+    public nonisolated func clearCache() {
+        try? FileManager.default.removeItem(at: directory)
+    }
+
     static func key(_ query: CriticRatingQuery, _ language: AppLanguage) -> String {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]

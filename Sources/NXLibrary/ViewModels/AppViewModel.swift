@@ -840,12 +840,26 @@ public final class AppViewModel: ObservableObject {
             }.value
             guard let self, !Task.isCancelled, self.metadataLocaleGeneration == generation else { return }
             for (game, metadata) in entries { self.setStoreMetadata(metadata, for: game) }
-            // Every game gets the new language without being opened: the focused one first, one request at a time.
+            // Every game gets the new language without being opened, the focused one first.
             let focused = self.currentFocusedGame
-            for game in (focused.map { [$0] } ?? []) + games.filter({ $0.id != focused?.id }) {
-                guard !Task.isCancelled, self.metadataLocaleGeneration == generation else { return }
-                await self.fetchStoreMetadata(for: game)
+            self.languageFetchQueue = []
+            self.queueLanguageFetch((focused.map { [$0] } ?? []) + games.filter { $0.id != focused?.id })
+        }
+    }
+
+    /// Games still to bring to the app language in the background, asked one request at a time.
+    private var languageFetchQueue: [PortedGame] = []
+    private var languageFetchTask: Task<Void, Never>?
+
+    /// Adds `games` to the background queue; one loop drains it and always asks in the current app language.
+    private func queueLanguageFetch(_ games: [PortedGame]) {
+        for game in games where !languageFetchQueue.contains(where: { $0.id == game.id }) { languageFetchQueue.append(game) }
+        guard languageFetchTask == nil, !languageFetchQueue.isEmpty else { return }
+        languageFetchTask = Task { @MainActor [weak self] in
+            while let self, !self.languageFetchQueue.isEmpty {
+                await self.fetchStoreMetadata(for: self.languageFetchQueue.removeFirst())
             }
+            self?.languageFetchTask = nil
         }
     }
 
@@ -853,14 +867,20 @@ public final class AppViewModel: ObservableObject {
     /// another language when the app's is not cached yet (`cachedForDisplay`).
     /// The library uses this so a previously viewed game paints its title,
     /// description and hero immediately when selected.
+    /// A game shown in another language (the language changed while the app was closed) is
+    /// queued for the app's language in the background.
     public func preloadCachedStoreMetadata() {
+        let locale = L10n.context
+        var otherLanguage: [PortedGame] = []
         for game in libraryGames {
             guard storeMetadata[game.id] == nil,
                   let titleId = game.titleId,
                   !titleId.isEmpty,
-                  let metadata = storeMetadataService.cachedForDisplay(for: titleId, locale: L10n.context) else { continue }
+                  let metadata = storeMetadataService.cachedForDisplay(for: titleId, locale: locale) else { continue }
             setStoreMetadata(metadata, for: game)
+            if !storeMetadataService.isInLanguage(metadata, locale: locale) { otherLanguage.append(game) }
         }
+        queueLanguageFetch(otherLanguage)
     }
 
     /// The store's metadata as fetched, before the player's choices are laid over it.
@@ -918,11 +938,12 @@ public final class AppViewModel: ObservableObject {
     }
 
     public func metadataCacheSize() -> Int64 {
-        storeMetadataService.cacheSize()
+        storeMetadataService.cacheSize() + WikipediaDescriptionService.shared.cacheSize()
     }
 
     public func clearMetadataCache() {
         storeMetadataService.clearCache()
+        WikipediaDescriptionService.shared.clearCache()
         storeMetadata.removeAll()
         storeMetadataOriginals.removeAll()
     }

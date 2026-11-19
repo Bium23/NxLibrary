@@ -236,6 +236,53 @@
         }
       }
     },
+    "Store and Wikipedia descriptions and links.": {
+      "comment": "SettingsStorageSection.swift",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Store and Wikipedia descriptions and links."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descrizioni e link dello store e di Wikipedia."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descriptions et liens de la boutique et de Wikipédia."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beschreibungen und Links aus dem Store und von Wikipedia."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descripciones y enlaces de la tienda y de Wikipedia."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descrições e links da loja e da Wikipédia."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "商店和维基百科的描述与链接。"
+          }
+        }
+      }
+    },
     "\n\n--- Build log: %@ ---\n": {
       "comment": "ConsoleView.swift:481",
       "localizations": {
@@ -42641,53 +42688,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nintendo 商店数据"
-          }
-        }
-      }
-    },
-    "Nintendo Store descriptions and links.": {
-      "comment": "SettingsStorageSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nintendo Store descriptions and links."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Descrizioni e link del Nintendo Store."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Descriptions et liens du Nintendo Store."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Beschreibungen und Links aus dem Nintendo Store."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Descripciones y enlaces de Nintendo Store."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Descrições e links da Nintendo Store."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nintendo 商店的描述和链接。"
           }
         }
       }

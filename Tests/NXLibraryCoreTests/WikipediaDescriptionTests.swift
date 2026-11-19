@@ -123,6 +123,24 @@ final class WikipediaDescriptionTests: XCTestCase {
         XCTAssertEqual(after, made, "the second load reads the cache")
     }
 
+    /// Clear in Storage → Metadata cache also forgets Wikipedia's texts, so a wrong or old article is asked again.
+    func testCacheIsMeasuredAndCleared() async throws {
+        let dir = temporaryDirectory()
+        let entity = try entities(steam: "413150", links: ["itwiki": "Stardew Valley"])
+        let intro = Data("""
+        {"query":{"pages":[{"title":"Stardew Valley","fullurl":"https://it.wikipedia.org/wiki/Stardew_Valley","extract":"\(italian)"}]}}
+        """.utf8)
+        let service = WikipediaDescriptionService(directory: dir, transport: { url in
+            if url.host == "it.wikipedia.org" { return intro }
+            if url.query?.contains("wbgetentities") == true { return entity }
+            return Data(#"{"query":{"search":[{"title":"Q10","ns":0}]}}"#.utf8)
+        })
+        _ = await service.load(CriticRatingQuery(name: "Stardew Valley", platform: .mac, steamAppID: 413150), language: .italian)
+        XCTAssertGreaterThan(service.cacheSize(), 0)
+        service.clearCache()
+        XCTAssertEqual(service.cacheSize(), 0)
+    }
+
     func testANetworkErrorIsNotSavedAsNoArticle() async throws {
         let dir = temporaryDirectory()
         let failing = WikipediaDescriptionService(directory: dir, transport: { _ in throw URLError(.notConnectedToInternet) })

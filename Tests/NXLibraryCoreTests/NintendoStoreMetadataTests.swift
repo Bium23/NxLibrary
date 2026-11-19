@@ -64,6 +64,8 @@ final class NintendoStoreMetadataTests: XCTestCase {
         XCTAssertEqual(shown.description, "Descrizione italiana.")
         XCTAssertEqual(shown.descriptionLanguage, "it")
         XCTAssertFalse(service.isFresh(shown, locale: spanish), "the Spanish text is still asked for")
+        XCTAssertFalse(service.isInLanguage(shown, locale: spanish), "it is queued for Spanish at launch")
+        XCTAssertTrue(service.isInLanguage(shown, locale: AppLocale(language: .italian, region: "CH")))
         XCTAssertNil(service.cachedForDisplay(for: "0100000000020000", locale: spanish))
     }
 

@@ -62,7 +62,7 @@ struct SettingsStorageSection: View {
             .disabled(!viewModel.canCleanStorage)
 
             SeleneValueRow("Metadata cache",
-                           subtitle: "Nintendo Store descriptions and links.",
+                           subtitle: "Store and Wikipedia descriptions and links.",
                            value: seleneBytes(metadataBytes),
                            actionTitle: "Clear") {
                 viewModel.clearMetadataCache()
