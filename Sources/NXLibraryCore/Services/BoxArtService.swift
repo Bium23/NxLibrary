@@ -95,9 +95,9 @@ public actor BoxArtService {
         let pipe = Pipe()
         process.standardOutput = pipe
         process.standardError = FileHandle.nullDevice
-        try process.run()
+        let waitForExit = try process.runWithExitWait()
         let xml = pipe.fileHandleForReading.readDataToEndOfFile()
-        process.waitUntilExit()
+        waitForExit()
         guard process.terminationStatus == 0, !xml.isEmpty else { throw GameTDB.Failure.unreadable }
         return xml
     }

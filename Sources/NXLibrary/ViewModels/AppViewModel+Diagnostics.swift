@@ -71,9 +71,10 @@ extension AppViewModel {
         let pipe = Pipe()
         process.standardOutput = pipe
         process.standardError = FileHandle.nullDevice
-        guard (try? process.run()) != nil else { return nil }
-        process.waitUntilExit()
-        let out = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?
+        guard let waitForExit = try? process.runWithExitWait() else { return nil }
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        waitForExit()
+        let out = String(data: data, encoding: .utf8)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return process.terminationStatus == 0 && out?.isEmpty == false ? out : nil
     }

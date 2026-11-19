@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 19 novembre 2026. Copertura di **719 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 20 novembre 2026. Copertura di **720 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](../how-it-works/architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -186,7 +186,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../../CONTRIBUTING.md), [SECU
 | [Sources/NXLibraryCore/Services/InstallProgress.swift](../../Sources/NXLibraryCore/Services/InstallProgress.swift) | Interpreta avanzamento Git, percentuali, byte e righe parziali per le installazioni. |
 | [Sources/NXLibraryCore/Services/KeyStore.swift](../../Sources/NXLibraryCore/Services/KeyStore.swift) | Valida le chiavi, espone solo il riepilogo e pubblica atomicamente la copia gestita con permessi 0600. |
 | [Sources/NXLibraryCore/Services/KeyCheck.swift](../../Sources/NXLibraryCore/Services/KeyCheck.swift) | Legge intestazioni NCA e ticket e verifica se le chiavi possono aprire le sorgenti selezionate. |
-| [Sources/NXLibraryCore/Services/CommandRunner.swift](../../Sources/NXLibraryCore/Services/CommandRunner.swift) | Confine sostituibile per comandi e output, con esecuzione sincrona o streaming delle righe. |
+| [Sources/NXLibraryCore/Services/CommandRunner.swift](../../Sources/NXLibraryCore/Services/CommandRunner.swift) | Confine sostituibile per comandi e output, con esecuzione sincrona o streaming delle righe. `Process.runWithExitWait` aspetta la fine di un processo senza far girare il run loop. |
 | [Sources/NXLibraryCore/Services/UpstreamChecker.swift](../../Sources/NXLibraryCore/Services/UpstreamChecker.swift) | Consulta i commit upstream tramite HTTP e produce stato e collegamento di confronto. |
 
 ## Core · sorgenti, porting, installazione e lancio
@@ -643,6 +643,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Tests/NXLibraryCoreTests/BuildOutputInstallerTests.swift](../../Tests/NXLibraryCoreTests/BuildOutputInstallerTests.swift) | Pubblicazione atomica, interruzioni, tentativi ripetuti, copie fra volumi e conservazione dei bundle in caso di errore. |
 | [Tests/NXLibraryCoreTests/BuildScratchTests.swift](../../Tests/NXLibraryCoreTests/BuildScratchTests.swift) | Posto dei file di build per Mac, disco esterno, exFAT e workspaces spostati; workspace gestiti e cartelle temporanee. |
 | [Tests/NXLibraryCoreTests/BuildServiceTests.swift](../../Tests/NXLibraryCoreTests/BuildServiceTests.swift) | Processi, eventi, cancellazione, lease e conservazione della build dopo un errore d’installazione, con retry senza nuova esecuzione del motore; un avvio fallito non lascia file aperti. |
+| [Tests/NXLibraryCoreTests/SystemCommandRunnerTests.swift](../../Tests/NXLibraryCoreTests/SystemCommandRunnerTests.swift) | Un comando atteso, sincrono o in streaming, non fa girare il run loop mentre aspetta. |
 | [Tests/NXLibraryCoreTests/GameAppDestinationTests.swift](../../Tests/NXLibraryCoreTests/GameAppDestinationTests.swift) | Installazione e scoperta nella cartella scelta, rebuild dopo il cambio cartella, conflitti di nome, sorgenti protette e cartelle non disponibili o di sola lettura. |
 | [Tests/NXLibraryCoreTests/ButtonPromptsTests.swift](../../Tests/NXLibraryCoreTests/ButtonPromptsTests.swift) | Etichette e simboli per tastiera, controller e scelte esplicite dell’utente. |
 | [Tests/NXLibraryCoreTests/CheatCopyTests.swift](../../Tests/NXLibraryCoreTests/CheatCopyTests.swift) | Testi di intestazione, rifiuto, conferma e rimozione dei cheats. |

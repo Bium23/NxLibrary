@@ -162,7 +162,7 @@ public enum AppUpdate {
         process.arguments = ["--verify", "--deep", "--strict", app.path]
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
-        do { try process.run(); process.waitUntilExit(); return process.terminationStatus == 0 }
+        do { try process.runWithExitWait()(); return process.terminationStatus == 0 }
         catch { return false }
     }
 
@@ -375,7 +375,6 @@ public enum AppUpdate {
         x.arguments = ["-dr", "com.apple.quarantine", app.path]
         x.standardOutput = FileHandle.nullDevice
         x.standardError = FileHandle.nullDevice
-        try? x.run()
-        x.waitUntilExit()
+        (try? x.runWithExitWait())?()
     }
 }

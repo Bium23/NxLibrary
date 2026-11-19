@@ -33,10 +33,10 @@ public final class SystemCommandRunner: CommandRunning {
         let err = Pipe()
         process.standardOutput = out
         process.standardError = err
-        try process.run()
+        let waitForExit = try process.runWithExitWait()
         let outData = out.fileHandleForReading.readDataToEndOfFile()
         let errData = err.fileHandleForReading.readDataToEndOfFile()
-        process.waitUntilExit()
+        waitForExit()
         return CommandResult(
             status: process.terminationStatus,
             stdout: String(data: outData, encoding: .utf8) ?? "",
@@ -79,17 +79,35 @@ public final class SystemCommandRunner: CommandRunning {
                 buffer.append(chunk).forEach(onLine)
             }
         }
+        let waitForExit: () -> Void
         do {
-            try process.run()
+            waitForExit = try process.runWithExitWait()
         } catch {
             out.fileHandleForReading.readabilityHandler = nil
             err.fileHandleForReading.readabilityHandler = nil
             throw error
         }
-        process.waitUntilExit()
+        waitForExit()
         group.wait()
         return CommandResult(status: process.terminationStatus,
                              stdout: String(decoding: collected[0], as: UTF8.self),
                              stderr: String(decoding: collected[1], as: UTF8.self))
+    }
+}
+
+extension Process {
+    /// Starts the process and returns the wait for its end, which blocks without running the current run loop.
+    /// `waitUntilExit` runs it while it waits, so a command awaited inside a SwiftUI update (Game options reading the
+    /// engine's ancestry) let SwiftUI start another update inside the first and abort. Call the wait once.
+    public func runWithExitWait() throws -> () -> Void {
+        let exited = DispatchSemaphore(value: 0)
+        let previous = terminationHandler
+        // Set before `run`, so an end that comes at once is never missed.
+        terminationHandler = { process in
+            previous?(process)
+            exited.signal()
+        }
+        try run()
+        return { exited.wait() }
     }
 }

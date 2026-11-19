@@ -286,8 +286,8 @@ final class AppUpdater: ObservableObject {
         process.arguments = arguments
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
-        guard (try? process.run()) != nil else { return false }
-        process.waitUntilExit()
+        guard let waitForExit = try? process.runWithExitWait() else { return false }
+        waitForExit()
         return process.terminationStatus == 0
     }
 }
