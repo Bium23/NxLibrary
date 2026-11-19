@@ -30,6 +30,17 @@ class LocalizationChecks(unittest.TestCase):
             self.assertTrue(any('de' in error for error in errors))
             self.assertTrue(any('placeholder' in error.lower() for error in errors))
 
+    def test_symbol_names_never_go_through_translation(self):
+        module = self.module()
+        with tempfile.TemporaryDirectory() as root:
+            source = Path(root) / 'View.swift'
+            source.write_text('Label(L10n.text("Live output"), systemImage: "terminal")\n')
+            self.assertEqual(module.check_sources(Path(root)), [])
+            source.write_text('Label(L10n.text("Live output"), systemImage: L10n.text("terminal"))\n')
+            errors = module.check_sources(Path(root))
+            self.assertEqual(len(errors), 1)
+            self.assertIn('View.swift:1', errors[0])
+
     def test_empty_or_incomplete_bundle_is_rejected(self):
         module = self.module()
         with tempfile.TemporaryDirectory() as root:

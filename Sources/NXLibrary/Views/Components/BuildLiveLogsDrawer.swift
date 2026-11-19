@@ -11,7 +11,7 @@ public struct BuildLiveLogsDrawer: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Label(L10n.text("Live output"), systemImage: L10n.text("terminal"))
+                Label(L10n.text("Live output"), systemImage: "terminal")
                     .seleneFont(15, .semibold)
                     .foregroundColor(SeleneTheme.ink90)
                 Spacer()

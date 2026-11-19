@@ -11,6 +11,8 @@ from xml.parsers.expat import ExpatError
 LANGUAGES = ('en', 'it', 'fr', 'de', 'es', 'pt-BR', 'zh-Hans')
 BUNDLE = 'NXLibrary_NXLibraryCore.bundle'
 PLACEHOLDER = re.compile(r'%(?:(\d+)\$)?(lld|ld|d|@|(?:\.\d+)?f)')
+# SF Symbol names are identifiers: translated, they name no symbol and the icon disappears.
+TRANSLATED_SYMBOL = re.compile(r'\b(?:systemImage|systemName|systemSymbolName)\s*:\s*L10n\.')
 
 
 def placeholders(text):
@@ -42,6 +44,15 @@ def check_catalog(path):
                     errors.append(f'{language}: unfinished translation for {key!r}')
                 if placeholders(value) != placeholders(key):
                     errors.append(f'{language}: placeholder mismatch for {key!r}')
+    return errors
+
+
+def check_sources(root):
+    errors = []
+    for path in sorted(root.rglob('*.swift')):
+        for number, line in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
+            if TRANSLATED_SYMBOL.search(line):
+                errors.append(f'{path.relative_to(root)}:{number}: symbol name passed through L10n')
     return errors
 
 
@@ -83,15 +94,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--catalog', type=Path, default=Path(__file__).resolve().parents[1] / 'Sources/NXLibraryCore/Resources/Localizable.xcstrings')
     parser.add_argument('--app', type=Path)
+    parser.add_argument('--sources', type=Path, default=Path(__file__).resolve().parents[1] / 'Sources')
     args = parser.parse_args()
-    errors = check_catalog(args.catalog)
+    errors = check_catalog(args.catalog) + check_sources(args.sources)
     if args.app:
         errors += check_app(args.app)
     if errors:
         for error in errors:
             print(error)
         return 1
-    print(f'Localization checks passed ({len(LANGUAGES)} languages, placeholders and plurals).')
+    print(f'Localization checks passed ({len(LANGUAGES)} languages, placeholders, plurals and symbol names).')
     return 0
 
 
