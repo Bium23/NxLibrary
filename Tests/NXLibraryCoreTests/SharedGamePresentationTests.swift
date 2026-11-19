@@ -112,6 +112,7 @@ final class SharedGamePresentationTests: XCTestCase {
         let page = GameDetailPresentation(steamRecord: record, metadata: facts, totalPlaytime: 0, lastPlayed: nil)
         XCTAssertEqual(page.descriptionLanguage, "zh")
         XCTAssertNotNil(page.descriptionLanguageNote)
+        XCTAssertFalse(page.descriptionSettled, "Wikipedia waits for Steam's answer in the app language")
         let chosen = GameDetailPresentation(steamRecord: record, metadata: facts, overrides: [.description: "Mine"],
                                             totalPlaytime: 0, lastPlayed: nil)
         XCTAssertEqual(chosen.descriptionLanguage, "custom")

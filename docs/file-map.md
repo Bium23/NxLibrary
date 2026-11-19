@@ -530,7 +530,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibrary/Views/Components/WikipediaAbout.swift](../Sources/NXLibrary/Views/Components/WikipediaAbout.swift) | Richiesta dell'introduzione di Wikipedia per About this game (Spotlight e Details), risposta valida solo per lo stesso gioco e lingua, e credito con link alla voce. |
+| [Sources/NXLibrary/Views/Components/WikipediaAbout.swift](../Sources/NXLibrary/Views/Components/WikipediaAbout.swift) | Richiesta dell'introduzione di Wikipedia per About this game (Spotlight e Details), chiesta solo quando la risposta dello store nella lingua dell'app è definitiva, valida solo per lo stesso gioco e lingua, e credito con link alla voce. |
 | [Sources/NXLibrary/Views/Components/GameIconProvider.swift](../Sources/NXLibrary/Views/Components/GameIconProvider.swift) | Fornisce e conserva l’icona estratta dai bundle dei giochi; ricorda anche quando manca. |
 | [Sources/NXLibrary/Views/Components/PortingArtLook.swift](../Sources/NXLibrary/Views/Components/PortingArtLook.swift) | Applica alla tile desaturazione, riempimento e barra di avanzamento del porting. |
 | [Sources/NXLibrary/Views/Components/ScreenshotViewer.swift](../Sources/NXLibrary/Views/Components/ScreenshotViewer.swift) | Mostra screenshot a schermo pieno e navigazione fra le immagini. |

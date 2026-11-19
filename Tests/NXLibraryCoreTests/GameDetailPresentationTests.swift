@@ -15,6 +15,28 @@ final class GameDetailPresentationTests: XCTestCase {
         XCTAssertEqual(detail.descriptionLanguageNote, metadata.description.isEmpty ? nil : "Descrizione in inglese.")
     }
 
+    /// While the new language is still on its way the page shows the old text, and Wikipedia is not asked yet:
+    /// only a settled store answer (found, confirmed missing) lets Wikipedia stand in.
+    func testWikipediaWaitsForTheStoresAnswerInTheNewLanguage() {
+        let old = L10n.context
+        defer { L10n.setContext(old) }
+        let spanish = AppLocale(language: .spanish, region: "IT")
+        L10n.setContext(spanish)
+        var waiting = meta()
+        waiting.description = "Stardew Valley è un videogioco indipendente del 2016, sviluppato da ConcernedApe."
+        waiting.descriptionLanguage = "it"
+        waiting.localeKey = "it_IT"
+        XCTAssertFalse(waiting.languageResolved(for: spanish))
+        XCTAssertFalse(GameDetailPresentation(game: game("Game"), metadata: waiting, totalPlaytime: 0, lastPlayed: nil).descriptionSettled)
+        var settled = waiting
+        settled.description = "Stardew Valley is a farming simulation game where you inherit your grandfather's old farm."
+        settled.descriptionLanguage = "en"
+        settled.localeKey = "es_IT"
+        settled.descriptionCheckedAt = Date()
+        XCTAssertTrue(GameDetailPresentation(game: game("Game"), metadata: settled, totalPlaytime: 0, lastPlayed: nil).descriptionSettled)
+        XCTAssertTrue(GameDetailPresentation(game: game("Game"), metadata: nil, totalPlaytime: 0, lastPlayed: nil).descriptionSettled)
+    }
+
     func testRebuildIsUnavailableWhenRecordedSourceFilesAreMissing() {
         var missing = PortedGame(name: "Synthetic", url: URL(fileURLWithPath: "/Applications/Synthetic.app"),
                                  platform: .macApp, sizeBytes: 0, modificationDate: .distantPast)

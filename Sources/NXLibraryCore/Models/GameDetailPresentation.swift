@@ -11,6 +11,9 @@ public struct GameDetailPresentation: Equatable {
     /// The store's word on the description's language ("en", "it"), "custom" for the player's own choice, or nil when
     /// the store does not say (Steam). `WikipediaDescriptions.wanted` reads it with the text.
     public let descriptionLanguage: String?
+    /// The store's answer in the app language is final (`NintendoStoreMetadata.languageResolved`); until then the
+    /// page shows the old text and Wikipedia is not asked, so the text changes once, not twice.
+    public let descriptionSettled: Bool
     public let genres: [String]
     public let released: String?
     public let developerLine: String?
@@ -45,6 +48,7 @@ public struct GameDetailPresentation: Equatable {
         description = metadata?.description ?? ""
         descriptionIsEnglishFallback = L10n.context.metadataLanguage != "en" && metadata?.descriptionLanguage == "en" && !description.isEmpty
         descriptionLanguage = metadata?.descriptionLanguage
+        descriptionSettled = metadata?.languageResolved(for: L10n.context) ?? true
         if let language = metadata?.descriptionLanguage, language != "custom",
            language != L10n.context.metadataLanguage, !description.isEmpty {
             let name = L10n.context.formatLocale.localizedString(forLanguageCode: language) ?? language

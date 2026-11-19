@@ -22,6 +22,19 @@ public struct NintendoStoreMetadata: Codable, Equatable {
     /// The last successful response for the requested description language, including an empty translation.
     public var descriptionCheckedAt: Date?
 
+    /// Saved for the app language of `locale` (any region), not shown from another language's cache.
+    public func isInLanguage(_ locale: AppLocale) -> Bool {
+        (localeKey ?? "en_US").hasPrefix(locale.language.rawValue + "_")
+    }
+
+    /// Whether the store's answer for `locale`'s language is final: found, confirmed missing (Nlib 404, the
+    /// daily check), or English. False while that language is still on its way or after an outage.
+    public func languageResolved(for locale: AppLocale) -> Bool {
+        guard isInLanguage(locale) else { return false }
+        return locale.metadataLanguage == "en" || descriptionLanguage == locale.metadataLanguage
+            || descriptionCheckedAt != nil
+    }
+
     public init(titleId: String, name: String, description: String, developers: [String],
                 publishers: [String], genres: [String], releaseDate: String?, storeURL: URL,
                 imageURL: URL?, headerImageURL: URL?, logoURL: URL? = nil,
@@ -198,15 +211,13 @@ public final class NintendoStoreMetadataService: @unchecked Sendable {
 
     /// Whether `metadata` was saved for the app language of `locale` (any region), not shown from another language.
     public func isInLanguage(_ metadata: NintendoStoreMetadata, locale: AppLocale) -> Bool {
-        (metadata.localeKey ?? "en_US").hasPrefix(locale.language.rawValue + "_")
+        metadata.isInLanguage(locale)
     }
 
     /// Whether the app language's description was settled for `metadata`: found, confirmed missing (Nlib 404, the
     /// daily check), or English. False after an outage, so a background pass asks again later.
     public func languageResolved(_ metadata: NintendoStoreMetadata, locale: AppLocale) -> Bool {
-        guard isInLanguage(metadata, locale: locale) else { return false }
-        return locale.metadataLanguage == "en" || metadata.descriptionLanguage == locale.metadataLanguage
-            || metadata.descriptionCheckedAt != nil
+        metadata.languageResolved(for: locale)
     }
 
     /// Forgets the one-minute waits after network failures, when the connection returns.

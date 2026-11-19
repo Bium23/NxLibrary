@@ -8,9 +8,10 @@ struct WikipediaAboutLookup: Hashable {
     let query: CriticRatingQuery
     let language: AppLanguage
 
-    /// Nil when the store's text already reads in the app's language, or the player chose it.
+    /// Nil when the store's text already reads in the app's language, the player chose it, or the store's answer in
+    /// the app language has not arrived yet (`descriptionSettled`).
     init?(presentation: GameDetailPresentation, query: CriticRatingQuery?, language: AppLanguage = L10n.context.language) {
-        guard let query, WikipediaDescriptions.wanted(description: presentation.description,
+        guard let query, presentation.descriptionSettled, WikipediaDescriptions.wanted(description: presentation.description,
                                                       descriptionLanguage: presentation.descriptionLanguage,
                                                       language: language) else { return nil }
         self.query = query
