@@ -53,7 +53,7 @@ Il [README](../../README.md) è la guida d'uso; la [guida di sviluppo](../workin
 flowchart TD
     Entry["NXLibraryApp → MainView"] --> Shell["AppShellView"]
     Shell --> Router["AppRouter e schermate SwiftUI"]
-    Shell --> VM["AppViewModel e modelli dei pannelli"]
+    Shell --> VM["AppViewModel, modelli Switch e modelli dei pannelli"]
     Shell --> Stores["Settings, sessioni, artwork e monitor dei giochi"]
     VM --> Core["Servizi e modelli NXLibraryCore"]
     Core --> Disk["Application Support, app e log"]
@@ -87,7 +87,9 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
 - `startInFullscreen` sta in `AppSettings` (default false), compare in Search e Changed e torna al default con il reset di Start-up. `StartupWindowView` lo legge alla creazione e lo applica una sola volta alla finestra visibile e attiva, dopo `LaunchReveal.whenShown`. `isWindowSettling` tiene ferma l’entrata fino alla notifica di fine transizione, con ripiego a 4 s dall’aggancio alla finestra. Cambiare la preferenza non altera la finestra corrente.
 
 **Coordinatore.**
-- `AppViewModel.swift` coordina libreria, rilevamento dell'ambiente, Locate Sources e lancio, e tiene lo stato del porting che legge la home. Le estensioni `AppViewModel+…` collegano salvataggi, diagnostica, mod, installazioni in attesa e fonti; sono parti dello stesso oggetto osservabile.
+- `AppViewModel.swift` coordina libreria e catalogo, Locate Sources e rimozione delle sorgenti, lancio (con salvataggi cloud e mod), primo avvio, apertura di Game options, chiusura e rimozione dei giochi, spazio su disco, icona di Arcane nel Dock, avvisi e registro, e tiene lo stato del porting che legge la home.
+  - Crea i modelli Switch descritti qui sotto (`lazy var`, per esempio `app.porting`) e li dà alle schermate che li mostrano.
+  - Le estensioni `AppViewModel+…` collegano catalogo, fonti, controller, salvataggi, diagnostica, mod, installazioni in attesa, la tile del porting e la chiave SteamGridDB; sono parti dello stesso oggetto osservabile.
 - `PortingModel` tiene Add Game: la bozza (cartella o file scelti, scansione, titoli trovati, selezione delle sorgenti, nome, bundle ID, scelte per il primo avvio, controllo delle chiavi, spazio su disco) e la build: avvio, eventi del motore, annullamento, fine, notifiche, azioni sugli errori riconosciuti e ciò che il passo Porting ne mostra (passo del wizard, fasi, avanzamento, esito ed errore). Tiene anche le cartelle della build e quella finale dell'app, lo spazio libero, le sorgenti che l'engine accetta, l'ultimo comando (per la diagnostica), la durata delle fasi finali per la stima e la pulizia all'avvio dei temporanei vecchi di un giorno (`PortingModel.sweepStaleBuildTemp`, statica perché gira in background).
   - Le viste di Add Game e la riga Game files di Impostazioni → Libreria lo osservano da sole, così un cambio di fase ridisegna solo quelle schermate.
   - Il resto di Arcane legge di un porting solo `isBuilding`, `currentBuildGameID` e `portingProgress` (la tile della home), che restano sul coordinatore; la stima della tile prende da `PortingModel` la durata delle fasi finali.
