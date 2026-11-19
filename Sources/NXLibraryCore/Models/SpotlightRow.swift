@@ -172,7 +172,7 @@ public enum Surprise {
     }
 }
 
-/// The Steam games seen downloading since NX Library started. They lead Spotlight's row
+/// The Steam games seen downloading since Arcane started. They lead Spotlight's row
 /// (`SpotlightRow.leaders`) until quit, also once Steam has finished them, as a ported
 /// game does: the player finds the new game first, ready to play.
 public struct SessionDownloads: Equatable {

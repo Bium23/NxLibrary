@@ -13,7 +13,7 @@ public enum CatalogGameOptions {
     }
 }
 
-/// A Steam game's Options: only what NX Library can do for it. The shared rows keep
+/// A Steam game's Options: only what Arcane can do for it. The shared rows keep
 /// nxnative's order and look; nothing about engines, builds, saves or sources.
 public struct SteamOptionsPresentation: Equatable, Sendable {
     /// One available, recognized installation in an enabled source.

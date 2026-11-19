@@ -1,7 +1,7 @@
 import SwiftUI
 import NXLibraryCore
 
-/// "Let's get NX Library ready" (Selene's SetupScreen): a card per thing NX Library
+/// "Let's get Arcane ready" (Selene's SetupScreen): a card per thing Arcane
 /// needs, rising in one after another; the focused card's story in a fixed panel
 /// below; Install all and Continue. It checks again every few seconds, so a step
 /// finished elsewhere ticks over by itself.
@@ -273,7 +273,7 @@ private struct StatusChip: View {
         }
     }
 
-    /// Ready but untested by NX Library (the newest engine) reads orange, without an alarm.
+    /// Ready but untested by Arcane (the newest engine) reads orange, without an alarm.
     static func tone(_ item: SetupItem) -> Color {
         item.isUntested && item.state == .ready ? SeleneTheme.untested : tone(item.state)
     }

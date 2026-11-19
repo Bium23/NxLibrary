@@ -1,7 +1,7 @@
 import Foundation
 
 /// Where a game's cheats live and which build they are for, read the way the game's own launcher and host read them
-/// (nxnative dm/mac/launcher.c, dm/host/hle_cheats.c dm_cheats_init), so NX Library and the game see one folder.
+/// (nxnative dm/mac/launcher.c, dm/host/hle_cheats.c dm_cheats_init), so Arcane and the game see one folder.
 public enum CheatLocator {
     /// `# BUILD_ID` in Contents/Resources/dm/main.fixups.tsv (the host's dm_main_build()): its first 16 hex digits,
     /// upper case, as cheat files are named; nil when the line is missing or shorter.

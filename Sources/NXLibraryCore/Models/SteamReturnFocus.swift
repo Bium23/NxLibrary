@@ -1,7 +1,7 @@
 import Foundation
 
-/// Whether NX Library comes back to the front when a Steam game quits: the rule of `GameFocus` (the game was the
-/// app in front and no other library game is open), and only for a Play pressed in NX Library. A game started
+/// Whether Arcane comes back to the front when a Steam game quits: the rule of `GameFocus` (the game was the
+/// app in front and no other library game is open), and only for a Play pressed in Arcane. A game started
 /// from Steam leaves the player in Steam. Each Play counts for one session.
 public struct SteamReturnFocus: Equatable, Sendable {
     private var playedHere: Set<UUID> = []
@@ -23,8 +23,8 @@ public struct SteamReturnFocus: Equatable, Sendable {
 
     public var gameInFront: UUID? { inFront }
 
-    /// The game quit. True when NX Library should come forward.
-    /// What a game's quit means: whether NX Library comes back, and whether the player was still in the game.
+    /// The game quit. True when Arcane should come forward.
+    /// What a game's quit means: whether Arcane comes back, and whether the player was still in the game.
     public struct Ending: Equatable, Sendable {
         public let returnsToLibrary: Bool
         public let wasInFront: Bool

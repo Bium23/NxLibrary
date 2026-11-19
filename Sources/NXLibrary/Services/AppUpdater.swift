@@ -2,7 +2,7 @@ import AppKit
 import Combine
 import NXLibraryCore
 
-/// NX Library's own updates: the check against GitHub, the download, the checks of `AppUpdate`,
+/// Arcane's own updates: the check against GitHub, the download, the checks of `AppUpdate`,
 /// the swap and the relaunch. Hidden entirely while `AppUpdate.repository()` is nil.
 @MainActor
 final class AppUpdater: ObservableObject {

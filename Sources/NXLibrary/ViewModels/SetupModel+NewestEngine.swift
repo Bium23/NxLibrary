@@ -1,7 +1,7 @@
 import Foundation
 import NXLibraryCore
 
-/// Settings → Setup and engine, Newest engine: the player may build with nxnative main before NX Library has tested it.
+/// Settings → Setup and engine, Newest engine: the player may build with nxnative main before Arcane has tested it.
 /// Never automatic (AGENTS.md): only these two actions move the checkout away from, or back to, the tested pin.
 extension SetupModel {
     /// The commit the gate expects and builds record: the player's newest engine, else the tested pin.

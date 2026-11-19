@@ -1,6 +1,6 @@
 import Foundation
 
-/// What NX Library remembers about one mod of a game, in the game's records file (list order = overlay order).
+/// What Arcane remembers about one mod of a game, in the game's records file (list order = overlay order).
 public struct ModRecord: Codable, Equatable, Sendable {
     public var folderName: String
     public var isOn: Bool
@@ -45,7 +45,7 @@ public enum ModStoreError: Error, Equatable {
     case writeFailed(String)
 }
 
-/// One game's RomFS mods: the folders in `<support>/mods`, NX Library's record of their order and on/off state,
+/// One game's RomFS mods: the folders in `<support>/mods`, Arcane's record of their order and on/off state,
 /// and the `DM_ROMFS_OVERLAY` line of `<support>/env.txt` that makes the engine read the mods that are on, top first
 /// (dm/host/hle_fs.c). The folder is the truth for what exists; the record only orders it. Every change happens only
 /// while `canWrite` says the game is not running, and a removed mod goes to the Trash.
@@ -221,7 +221,7 @@ public struct ModStore {
     }
 
     /// Drops records whose folder is gone and brings the overlay line in line with the list. Does nothing while the
-    /// game runs, or before NX Library has managed this game's mods (no records yet: a hand-written overlay stays). A
+    /// game runs, or before Arcane has managed this game's mods (no records yet: a hand-written overlay stays). A
     /// failed read or overlong overlay leaves both the records and `env.txt` intact.
     public func sync(automatic: Bool = true) throws {
         guard !automatic || allowsAutomaticMaintenance else { return }

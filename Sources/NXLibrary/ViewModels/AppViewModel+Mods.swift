@@ -2,7 +2,7 @@ import AppKit
 import NXLibraryCore
 
 /// Mods: a game's RomFS mods in its data folder (`~/Library/Application Support/nxnative/<title ID>/mods`), the
-/// order and on/off state NX Library keeps for them, and the overlay line the game's launcher reads. Changes go
+/// order and on/off state Arcane keeps for them, and the overlay line the game's launcher reads. Changes go
 /// through `ModStore`, only while the game is not running.
 extension AppViewModel {
     /// Nil when the game's app has no valid title ID.

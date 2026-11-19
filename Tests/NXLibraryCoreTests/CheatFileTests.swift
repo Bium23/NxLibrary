@@ -91,7 +91,7 @@ final class CheatFileTests: XCTestCase {
         XCTAssertTrue(CheatFile.parse(huge).entries.isEmpty)
     }
 
-    // Review Focus 1: the engine reads a UTF-8 BOM as prose and loses the first header; NX Library writes files
+    // Review Focus 1: the engine reads a UTF-8 BOM as prose and loses the first header; Arcane writes files
     // without it (CheatFile.normalized), and CRLF needs nothing
     func testWindowsFileParsesLikeUnix() {
         let unix = "[A]\n04000000 00001000 00000001\n[B]\n04000000 00001004 00000001\n"

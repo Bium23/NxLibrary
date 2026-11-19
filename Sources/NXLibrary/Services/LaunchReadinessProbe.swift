@@ -12,7 +12,7 @@ final class LaunchReadinessProbe {
         await waitUntil(timeout: timeout) { Self.hasVisibleWindow(bundleID: bundleID) }
     }
 
-    /// The same for one process: a Steam game, which Steam starts and NX Library knows by its pid.
+    /// The same for one process: a Steam game, which Steam starts and Arcane knows by its pid.
     func waitUntilVisible(pid: pid_t, timeout: TimeInterval = 60) async -> Bool {
         await waitUntil(timeout: timeout) { Self.hasVisibleWindow(pids: [pid]) }
     }

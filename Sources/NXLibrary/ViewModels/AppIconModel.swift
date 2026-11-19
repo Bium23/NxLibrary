@@ -2,7 +2,7 @@ import AppKit
 import CoreServices
 import NXLibraryCore
 
-/// The Icon chosen in Change artwork can stay only inside NX Library or also appear in Finder and the Dock.
+/// The Icon chosen in Change artwork can stay only inside Arcane or also appear in Finder and the Dock.
 /// The explicit choice applies to every game, including apps with no original icon. Legacy libraries keep their
 /// previous automatic behavior until the player makes a choice. Automatic changes the source, preserving scope.
 /// Written after every build that installs (a rebuild replaces the whole app), and only while the game is not

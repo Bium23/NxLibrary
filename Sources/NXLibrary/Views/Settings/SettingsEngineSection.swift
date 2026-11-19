@@ -230,7 +230,7 @@ struct SettingsEngineSection: View {
 
     // MARK: - Newest engine
 
-    /// The player's way to build with nxnative main before NX Library has tested it: an orange dot and one
+    /// The player's way to build with nxnative main before Arcane has tested it: an orange dot and one
     /// sentence, no alarm. Setup's engine card says the same.
     private var newestEngineRow: some View {
         SeleneRow("Newest engine", subtitle: newestSubtitle, info: NewestEngineCopy.info) {

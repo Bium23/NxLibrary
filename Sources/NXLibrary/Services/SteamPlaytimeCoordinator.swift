@@ -3,7 +3,7 @@ import NXLibraryCore
 
 /// Steam's own playtime for the catalog's Steam games, handed to `PlaySessionStore` as external totals.
 /// Steam's file is read off the main thread (`SteamPlaytimeReading.take`) when the catalog or its sources
-/// change, when NX Library becomes active and after a Steam session ends, and parsed only when its
+/// change, when Arcane becomes active and after a Steam session ends, and parsed only when its
 /// modification date moved. `SteamPlaytimeReadQueue` keeps one read at a time; `SteamPlaytimeSync` decides
 /// what each reading does. Baselines are written off the main thread, in order. Steam's files are never written.
 @MainActor

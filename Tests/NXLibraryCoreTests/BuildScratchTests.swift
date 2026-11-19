@@ -7,7 +7,7 @@ final class BuildScratchTests: XCTestCase {
     private let externalApps = URL(fileURLWithPath: "/Volumes/NVMe/Games")
     private let exFATApps = URL(fileURLWithPath: "/Volumes/STICK/Games")
 
-    /// The Mac's disk is device 1, an APFS external drive 2, an exFAT stick 3. `moved` puts NX Library's workspaces
+    /// The Mac's disk is device 1, an APFS external drive 2, an exFAT stick 3. `moved` puts Arcane's workspaces
     /// folder on the external drive, as a player who linked it there has.
     private func volumes(moved: Bool = false) -> (URL) -> BuildScratch.Volume? {
         { url in

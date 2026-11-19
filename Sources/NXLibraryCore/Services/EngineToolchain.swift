@@ -1,6 +1,6 @@
 import Foundation
 
-/// The Python and build tools a released NX Library carries in
+/// The Python and build tools a released Arcane carries in
 /// `Contents/Resources/Runtime` (scripts/bundle_runtime.sh). Read-only: a broken
 /// one is fixed by reinstalling the app, never with pip.
 public struct BundledRuntime: Equatable {

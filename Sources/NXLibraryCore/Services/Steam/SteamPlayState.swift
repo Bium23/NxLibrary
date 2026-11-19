@@ -66,7 +66,7 @@ public struct SteamPlayState: Equatable, Sendable {
 
     public init() {}
 
-    /// Steam's Downloads page, for a game Steam is still installing. With `launchURL`, the only URLs NX Library sends.
+    /// Steam's Downloads page, for a game Steam is still installing. With `launchURL`, the only URLs Arcane sends.
     public static let downloadsURL = URL(string: "steam://open/downloads")!
 
     /// Built from a validated numeric AppID, nothing else.

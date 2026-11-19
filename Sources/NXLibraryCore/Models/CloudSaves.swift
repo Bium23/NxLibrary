@@ -1,7 +1,7 @@
 import Foundation
 
 /// nxnative's cloud saves (engine af616f5+, docs/settings.md "Cloud saves"): a game's
-/// Mac and iPhone apps share one save through a folder in iCloud Drive. NX Library
+/// Mac and iPhone apps share one save through a folder in iCloud Drive. Arcane
 /// is the front end that chooses the folder for its whole library, through the key
 /// the engine's Mac launcher reads at every start (docs/frontends.md).
 public enum CloudSaves: Codable, Equatable {

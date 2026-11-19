@@ -3,12 +3,12 @@ import CoreGraphics
 import ImageIO
 import UniformTypeIdentifiers
 
-/// Writes the player's icon into a game app NX Library built, and puts the game's own icon back.
+/// Writes the player's icon into a game app Arcane built, and puts the game's own icon back.
 ///
 /// The engine packs the app with the game's icon (`Resources/AppIcon.icns`, `CFBundleIconFile`) and signs it ad hoc;
 /// a NUP (Switch 2) or a dump carries no icon, so its app has none. This writes the icon the same way, marks
 /// `Info.plist` with `NXLibraryAppIcon`, signs the bundle again ad hoc as the engine does and verifies it. The game's
-/// own icon (or its absence) is kept beside NX Library's data the first time, so Restore needs no rebuild. A rebuild
+/// own icon (or its absence) is kept beside Arcane's data the first time, so Restore needs no rebuild. A rebuild
 /// replaces the whole app: its new Info.plist has no mark, so the next write keeps the new build's icon as the original.
 /// Any failure puts back every file it touched, leaving the app as it was.
 public struct AppIconWriter {
@@ -28,7 +28,7 @@ public struct AppIconWriter {
         }
     }
 
-    /// The Info.plist key that marks an icon NX Library wrote.
+    /// The Info.plist key that marks an icon Arcane wrote.
     public static let markKey = "NXLibraryAppIcon"
     static let iconName = "AppIcon"
 
@@ -55,13 +55,13 @@ public struct AppIconWriter {
 
     // MARK: - Reading
 
-    /// The app has an icon of its own: one the engine packed (not one NX Library wrote).
+    /// The app has an icon of its own: one the engine packed (not one Arcane wrote).
     public func hasOwnIcon(_ app: URL) -> Bool {
         guard let info = try? plist(app), info[Self.markKey] as? Bool != true else { return false }
         return iconFile(app, info: info).map { fileManager.fileExists(atPath: $0.path) } ?? false
     }
 
-    /// The game has an icon of its own, shown now or kept aside while NX Library's is shown: the choice to show the
+    /// The game has an icon of its own, shown now or kept aside while Arcane's is shown: the choice to show the
     /// player's icon instead is worth asking. Without one there is nothing to lose.
     public func hasOriginalIcon(_ app: URL, key: String) -> Bool {
         if hasOwnIcon(app) { return true }
@@ -76,7 +76,7 @@ public struct AppIconWriter {
         return showsWrittenIcon(app) && fileManager.fileExists(atPath: saved.path) ? saved : nil
     }
 
-    /// The app shows an icon NX Library wrote.
+    /// The app shows an icon Arcane wrote.
     public func showsWrittenIcon(_ app: URL) -> Bool {
         (try? plist(app))?[Self.markKey] as? Bool == true
     }

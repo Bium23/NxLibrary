@@ -9,7 +9,7 @@ import NXLibraryCore
 /// closes the menu. B
 /// steps back (from the colors: to the menu). The background step has two tabs,
 /// Wallpapers and Live, switched with LB/RB (Q/E); it adds your own pictures or
-/// videos (copied into NX Library) and removes them again with Y (Delete). An
+/// videos (copied into Arcane) and removes them again with Y (Delete). An
 /// online source's tile opens its grid: chips of categories, a search, and A
 /// downloads the full picture (B cancels) before applying it.
 struct ThemePickerView: View {

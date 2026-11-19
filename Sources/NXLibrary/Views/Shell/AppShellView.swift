@@ -436,7 +436,7 @@ struct AppShellView: View {
             }
         }
         .onChange(of: viewModel.launchOverlay?.game.id) { shown in
-            // The screen faded, the player dismissed it or another game's took its place: NX Library stops holding
+            // The screen faded, the player dismissed it or another game's took its place: Arcane stops holding
             // the front for the Steam game.
             if let screen = SteamPlayCoordinator.shared.launchScreen, shown != screen.gameID {
                 SteamPlayCoordinator.shared.launchScreenClosed(screen.gameID)

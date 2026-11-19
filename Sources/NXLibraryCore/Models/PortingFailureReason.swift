@@ -1,7 +1,7 @@
 import Foundation
 
 /// Why a porting stopped, in words a player can act on: recognised from the engine's own messages
-/// (the table idea is NX2Apple's, MIT; see NOTICE) or from what NX Library checked itself. Saved with
+/// (the table idea is NX2Apple's, MIT; see NOTICE) or from what Arcane checked itself. Saved with
 /// the game, so the home still explains a failure after a relaunch.
 public struct PortingFailureReason: Codable, Equatable, Sendable {
     public enum Kind: String, Codable, CaseIterable, Sendable {

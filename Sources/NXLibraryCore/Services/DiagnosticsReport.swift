@@ -26,7 +26,7 @@ public enum DiagnosticsReport {
         public var hasHeaderKey = false
         public var keyGenerations = 0
         public var game: (name: String, titleID: String?, built: Bool, toolchainVerified: Bool?, failure: String?)? = nil
-        /// The selected game's cheats; nil when it has none NX Library can read. Never names or codes.
+        /// The selected game's cheats; nil when it has none Arcane can read. Never names or codes.
         public var cheats: (buildID: String, filePresent: Bool, total: Int, on: Int, broken: Int, masterOn: Bool, safeMode: Bool)? = nil
         public var lastCommand: [String] = []
         public var log: [String] = []

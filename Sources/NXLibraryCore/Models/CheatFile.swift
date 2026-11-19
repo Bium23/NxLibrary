@@ -48,7 +48,7 @@ public struct CheatFile: Equatable, Sendable {
         return file
     }
 
-    /// The bytes NX Library writes as `<build ID>.txt`: without a UTF-8 byte order mark, which the engine would read as
+    /// The bytes Arcane writes as `<build ID>.txt`: without a UTF-8 byte order mark, which the engine would read as
     /// prose in front of the first header (losing that cheat).
     public static func normalized(_ data: Data) -> Data {
         data.starts(with: [0xEF, 0xBB, 0xBF]) ? data.dropFirst(3) : data

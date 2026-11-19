@@ -38,7 +38,7 @@ final class RuntimeSettingsModel {
         }
     }
 
-    /// Use new game defaults: every setting to the build's default, then NX Library's new-game defaults.
+    /// Use new game defaults: every setting to the build's default, then Arcane's new-game defaults.
     func restoreGameDefaults(for game: PortedGame) {
         guard let settings = gameSettings(for: game) else { return }
         do {

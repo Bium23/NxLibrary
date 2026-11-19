@@ -1,7 +1,7 @@
 import Foundation
 import CoreServices
 
-/// Tells NX Library when Steam rewrites a manifest (a download starts, pauses or finishes, a game is installed,
+/// Tells Arcane when Steam rewrites a manifest (a download starts, pauses or finishes, a game is installed,
 /// removed or launched) or the library index, so the Steam source can rescan without a Refresh. One FSEvents
 /// stream over the `steamapps` folders of the libraries the last scan read. FSEvents is recursive, so a download's
 /// writes under `downloading/` reach the callback too: its 2 s latency batches them and only the paths are

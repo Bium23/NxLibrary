@@ -130,7 +130,7 @@ final class AppIconWriterTests: XCTestCase {
         XCTAssertTrue(writer.hasOwnIcon(app))
 
         try writer.apply(image: png, to: app, key: "0100")
-        // A second choice keeps the first backup: the game's own icon, not NX Library's.
+        // A second choice keeps the first backup: the game's own icon, not Arcane's.
         try writer.apply(image: png, to: app, key: "0100")
         XCTAssertEqual(icon(app), "icns")
 

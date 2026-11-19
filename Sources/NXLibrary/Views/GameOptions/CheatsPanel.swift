@@ -184,7 +184,7 @@ struct CheatsPanel: View {
             guard let action = note.object as? GamepadAction else { return }
             handleGamepad(action)
         }
-        // The host owns the files while the game runs; a quit, a launch or a return to NX Library re-reads them.
+        // The host owns the files while the game runs; a quit, a launch or a return to Arcane re-reads them.
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didTerminateApplicationNotification)) { _ in reload() }
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didLaunchApplicationNotification)) { _ in reload() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in reload() }

@@ -377,7 +377,7 @@ final class BuildServiceTests: XCTestCase {
         XCTAssertEqual(kill(pid, 0), -1, "the tool is still running", file: file, line: line)
     }
 
-    /// Quitting NX Library mid-build sends the same SIGTERM as a cancel, so the engine stops its tools itself, at once.
+    /// Quitting Arcane mid-build sends the same SIGTERM as a cancel, so the engine stops its tools itself, at once.
     func testQuitLetsTheEngineStopItsTools() throws {
         let (command, root, pidFile) = try sessionToolBuild(stops: true)
         defer { try? FileManager.default.removeItem(at: root) }

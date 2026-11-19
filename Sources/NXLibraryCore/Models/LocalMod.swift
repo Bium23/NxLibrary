@@ -1,6 +1,6 @@
 import Foundation
 
-/// One folder in a game's `mods` folder, as NX Library shows it.
+/// One folder in a game's `mods` folder, as Arcane shows it.
 public struct LocalMod: Equatable, Sendable {
     /// The folder's name: the mod's identity inside the game's mods folder.
     public let folderName: String

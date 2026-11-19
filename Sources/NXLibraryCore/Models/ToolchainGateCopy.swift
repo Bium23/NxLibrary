@@ -17,7 +17,7 @@ public enum ToolchainGateCopy {
         case warning
         case override
         case blocked
-        /// The player chose nxnative main: it builds, untested by NX Library (orange, no alarm).
+        /// The player chose nxnative main: it builds, untested by Arcane (orange, no alarm).
         case newest
     }
 

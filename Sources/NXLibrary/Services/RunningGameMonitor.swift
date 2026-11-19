@@ -5,9 +5,9 @@ import NXLibraryCore
 /// Which library games are running, and Resume and Close Game for them. The running set is
 /// read from the system's process list (`RunningAppsTracker`) whenever it may have changed: on
 /// launch and terminate notifications, on changes to `NSWorkspace.runningApplications`, and when
-/// NX Library comes forward. Notifications alone miss a game whose launcher quits from its settings
+/// Arcane comes forward. Notifications alone miss a game whose launcher quits from its settings
 /// window (it becomes a background process before it exits). A game that stops ends its play session, and when it
-/// quit in front with no other library game open, NX Library comes back to the front (`GameFocus`).
+/// quit in front with no other library game open, Arcane comes back to the front (`GameFocus`).
 @MainActor
 final class RunningGameMonitor: ObservableObject {
     /// Time a game gets to quit after Close Game, in nanoseconds (5 s) before it is force-quit.
@@ -180,7 +180,7 @@ final class RunningGameMonitor: ObservableObject {
         }
     }
 
-    /// NX Library back in front after the game in front quit (`LibraryWindow`), never over a library game.
+    /// Arcane back in front after the game in front quit (`LibraryWindow`), never over a library game.
     private func comeForward() {
         LibraryWindow.comeForward { [weak self] app in
             self?.isLibraryGame(app) == true

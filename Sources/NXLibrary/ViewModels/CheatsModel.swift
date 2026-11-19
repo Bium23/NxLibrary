@@ -23,7 +23,7 @@ final class CheatsModel {
         self.app = app
     }
 
-    /// Engine ancestry answers and states read from disk, per launch of NX Library. The state is read again whenever
+    /// Engine ancestry answers and states read from disk, per launch of Arcane. The state is read again whenever
     /// the files' fingerprint changes, so the panel, the host and a hand edit are all seen.
     private final class CheatCache {
         var ancestry: (path: String, value: EngineAncestry)?

@@ -10,7 +10,7 @@ import NXLibraryCore
 ///
 /// Play shows the launch screen (`launchScreen`) while the game is on its way, as for an nxnative game. The screen
 /// has its own window over every app (`LaunchCoverWindow`), so Steam coming forward, or macOS changing Space,
-/// happens behind it and NX Library never takes the front back. The screen leaves once the game's window is up (the
+/// happens behind it and Arcane never takes the front back. The screen leaves once the game's window is up (the
 /// game is brought forward), when Play ends, as soon as Steam's log says the launch waits on a question for the
 /// player (`SteamLaunchQuestionWatch`), or past the wait's patience (`SteamBackgroundLaunch`: 15 s with Steam open,
 /// 45 s when Play starts it); in those last two cases Steam is brought forward and the head says to check it.
@@ -20,7 +20,7 @@ import NXLibraryCore
 /// out of view when the game ends in front.
 ///
 /// When a game whose Play was pressed here quits while it was the app in front and no other library game is
-/// open, NX Library comes back to the front (`SteamReturnFocus`, `LibraryWindow`); a game started from Steam
+/// open, Arcane comes back to the front (`SteamReturnFocus`, `LibraryWindow`); a game started from Steam
 /// leaves the player in Steam.
 @MainActor
 final class SteamPlayCoordinator: ObservableObject {
@@ -69,7 +69,7 @@ final class SteamPlayCoordinator: ObservableObject {
     private var handOffDeadline: Task<Void, Never>?
     /// The normal path is a callback from the ordered panel. Keep Play usable when there is no panel.
     private static let coverWait: UInt64 = 1_000_000_000
-    /// The library's nxnative games, set by the shell: one that is open keeps NX Library from coming forward.
+    /// The library's nxnative games, set by the shell: one that is open keeps Arcane from coming forward.
     weak var nativeGames: RunningGameMonitor?
     /// Whether a launch screen (any game's) is on screen, set by the shell: Play waits until it has gone.
     var isLaunchScreenShowing: () -> Bool = { false }
@@ -220,7 +220,7 @@ final class SteamPlayCoordinator: ObservableObject {
             guard let client else { return }
             returnFocus.playPressed(game.id)
             hideAgain?.cancel(); hideAgain = nil
-            // Steam gets the request in the background: NX Library stays in front until the game's
+            // Steam gets the request in the background: Arcane stays in front until the game's
             // own window appears, instead of Steam's library flashing up in between.
             let configuration = NSWorkspace.OpenConfiguration()
             configuration.activates = false
@@ -324,7 +324,7 @@ final class SteamPlayCoordinator: ObservableObject {
             switch state.observe(processes, application: app, now: now) {
             case .started(let pid):
                 if let appID = game?.steamGame?.appID {
-                    // A game already running when NX Library began watching (a relaunch) keeps its Spotlight place.
+                    // A game already running when Arcane began watching (a relaunch) keeps its Spotlight place.
                     let launched = NSRunningApplication(processIdentifier: pid)?.launchDate
                     let isNew = launched.map { $0 >= watchingSince } ?? true
                     sessions?.start(gameID: id, sourceID: "steam-\(appID)", announces: isNew)
@@ -355,9 +355,9 @@ final class SteamPlayCoordinator: ObservableObject {
         followBackground()
     }
 
-    // MARK: - Back to NX Library
+    // MARK: - Back to Arcane
 
-    /// NX Library comes back for a game played from it that was in front with no other library game open. A Steam
+    /// Arcane comes back for a game played from it that was in front with no other library game open. A Steam
     /// that was out of view before Play goes back out of view, unless the player had left the game (for Steam
     /// itself, say).
     private func gameEnded(_ id: UUID) {
@@ -417,14 +417,14 @@ final class SteamPlayCoordinator: ObservableObject {
     }
 
     private static func showSteam() {
-        // Shown, not brought forward: NX Library or the game keeps the focus.
+        // Shown, not brought forward: Arcane or the game keeps the focus.
         if let steam = steamApplication, steam.isHidden { steam.unhide() }
     }
 
     // MARK: - Launch screen
 
     /// The launch screen for `gameID` closed (it faded, the player dismissed it, or it never showed). One the player
-    /// dismissed while the game was still on its way may have covered a Space change to Steam: NX Library comes
+    /// dismissed while the game was still on its way may have covered a Space change to Steam: Arcane comes
     /// forward, unless a game is in front. Applied after the current publish: a value set while `launchScreen` is
     /// being published is overwritten by it.
     func launchScreenClosed(_ gameID: UUID) {
@@ -493,7 +493,7 @@ final class SteamPlayCoordinator: ObservableObject {
     }
 
     /// Moves the launch screen on: the game started (it leaves once the window is up), Steam is late (Steam is
-    /// shown and, while the player waits in NX Library, brought forward) or Play ended.
+    /// shown and, while the player waits in Arcane, brought forward) or Play ended.
     private func followLaunchScreen(now: Date) {
         guard var screen = launchScreen, !screen.ready else { return }
         let id = screen.gameID

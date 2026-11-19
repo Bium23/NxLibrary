@@ -4,7 +4,7 @@ import NXLibraryCore
 
 /// Game options → Edit details → Change metadata: field by field (description,
 /// genres, developer, publisher, release date), Automatic (the store's value, as
-/// NX Library reads it), platform-appropriate public databases and optional IGDB, or the player's
+/// Arcane reads it), platform-appropriate public databases and optional IGDB, or the player's
 /// own text. A choice is kept in `MetadataPicks` and laid over the store's data.
 /// A Steam game's Automatic is the Steam store's text; it has no Switch databases to offer,
 /// and its choices go to the Steam personal store.

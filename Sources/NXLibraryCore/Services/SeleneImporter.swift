@@ -63,7 +63,7 @@ public struct SeleneImportReport: Equatable {
 }
 
 /// Copies Selene's optional sounds and wallpapers from a checkout the user owns into
-/// NX Library's support folder. Nothing from Selene ships in the repository except the
+/// Arcane's support folder. Nothing from Selene ships in the repository except the
 /// MIT sounds and public-domain wallpapers already bundled.
 public struct SeleneImporter {
     public static let soundFiles = ["OpenPanel", "LoginSelect", "GameStarting", "GameReady",

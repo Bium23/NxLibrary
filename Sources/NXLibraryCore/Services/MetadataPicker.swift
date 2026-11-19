@@ -31,7 +31,7 @@ public struct MetadataOption: Equatable, Hashable, Sendable {
 }
 
 public enum MetadataOptions {
-    /// What the store (as NX Library already reads it), Title DB and GameTDB offer
+    /// What the store (as Arcane already reads it), Title DB and GameTDB offer
     /// for `field`, in that order. A value already offered is not repeated.
     public static func list(for field: MetadataField, store: NintendoStoreMetadata?, titleDB: TitleDBInfo?,
                             gameTDB: [GameTDBEntry]) -> [MetadataOption] {

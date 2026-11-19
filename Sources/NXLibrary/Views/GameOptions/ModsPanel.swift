@@ -104,7 +104,7 @@ struct ModsPanel: View {
             guard let action = note.object as? GamepadAction else { return }
             handleGamepad(action)
         }
-        // A mod added or removed in Finder, or the game quitting, shows when NX Library comes back.
+        // A mod added or removed in Finder, or the game quitting, shows when Arcane comes back.
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didTerminateApplicationNotification)) { _ in sync() }
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didLaunchApplicationNotification)) { _ in reload() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in sync() }

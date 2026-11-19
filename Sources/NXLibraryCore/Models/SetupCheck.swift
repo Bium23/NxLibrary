@@ -24,7 +24,7 @@ public struct SetupItem: Identifiable, Equatable {
     public var progress: Double? = nil
     /// Optional choices stay visible without counting as unfinished Setup steps.
     public var isRequired: Bool = true
-    /// Ready, but with something NX Library has not tested (the newest engine): an orange chip, no alarm.
+    /// Ready, but with something Arcane has not tested (the newest engine): an orange chip, no alarm.
     public var isUntested: Bool = false
 }
 
@@ -62,7 +62,7 @@ public struct SetupFacts: Equatable {
     /// "27.1"; nil when xcodebuild did not say.
     public var xcodeVersion: String?
     public var requirements: ToolchainRequirements
-    /// The checkout's HEAD is an ancestor of the pin (an NX Library update brought a newer engine); false when it
+    /// The checkout's HEAD is an ancestor of the pin (an Arcane update brought a newer engine); false when it
     /// is ahead or elsewhere; nil when git cannot tell (the pin is not fetched yet, so it is newer).
     public var engineBehind: Bool?
     /// The newest nxnative the player chose in Settings → Setup and engine; nil while the tested engine is in use.
@@ -129,7 +129,7 @@ public enum SetupCheck {
         }
     }
 
-    /// The cards NX Library fixes by itself, in card order: anything missing it can
+    /// The cards Arcane fixes by itself, in card order: anything missing it can
     /// install, the certified Metal compiler and the pinned engine commit. Since nxnative 641636e2 the
     /// engine's tools are native executables, so there is no .NET to install or update.
     public static func automatic(_ items: [SetupItem]) -> [SetupItemID] {

@@ -4,7 +4,7 @@ import Darwin
 /// Where a build's working files go: the workspace (links to the sources, the extracted game and the shader cache)
 /// and the staged app, about twice the game's size together. They go on the drive the app goes to, so a game built
 /// to an external drive needs no room on the Mac's own disk and the finished app is renamed into place instead of
-/// copied. NX Library's own folders are used when they are already on that drive (the Mac's disk, or a workspaces
+/// copied. Arcane's own folders are used when they are already on that drive (the Mac's disk, or a workspaces
 /// folder the player moved there) and when the drive can't hold builds: it must be a local APFS or Mac OS Extended
 /// drive, not exFAT or a network share. Elsewhere the files go in a hidden folder beside the apps, where the
 /// installer already keeps its own.
@@ -57,7 +57,7 @@ public struct BuildScratch: Equatable {
     /// The app's drive can't hold builds, so they stay on the Mac's disk.
     public let appDriveUnsupported: Bool
 
-    /// `core`: NX Library's Application Support folder. `appFolder`: the folder the app goes to. A managed
+    /// `core`: Arcane's Application Support folder. `appFolder`: the folder the app goes to. A managed
     /// `existingWorkspace` already on the app's drive keeps its place, and its cache.
     public static func choose(core: URL, appFolder: URL, existingWorkspace: URL? = nil,
                               volume: (URL) -> Volume? = Volume.of) -> BuildScratch {
@@ -80,7 +80,7 @@ public struct BuildScratch: Equatable {
         return BuildScratch(workspaces: workspaces, temp: place(ownTemp, "Temp"), appDriveUnsupported: unsupported)
     }
 
-    /// A workspace NX Library made and may delete: one under `<core>/workspaces`, or
+    /// A workspace Arcane made and may delete: one under `<core>/workspaces`, or
     /// `<folder>/.nxlibrary-build/workspaces/<title ID>`. Never a folder of the player's.
     public static func isManaged(_ workspace: URL, core: URL) -> Bool {
         let path = workspace.standardizedFileURL
@@ -94,7 +94,7 @@ public struct BuildScratch: Equatable {
             && parent.deletingLastPathComponent().lastPathComponent == folderName
     }
 
-    /// The folders of staged apps the launch sweep looks in: NX Library's own, and the one beside each app folder.
+    /// The folders of staged apps the launch sweep looks in: Arcane's own, and the one beside each app folder.
     public static func tempFolders(core: URL, appFolders: [URL]) -> [URL] {
         var seen = Set<String>()
         let all = [core.appendingPathComponent("Temp")]

@@ -9,7 +9,7 @@ import Foundation
 public struct SteamLaunchQuestions: Equatable, Sendable {
     public static let grace: TimeInterval = 1
 
-    /// Games whose launch waits on a question, with when NX Library first read it.
+    /// Games whose launch waits on a question, with when Arcane first read it.
     private var pending: [UInt32: Date] = [:]
 
     public init() {}

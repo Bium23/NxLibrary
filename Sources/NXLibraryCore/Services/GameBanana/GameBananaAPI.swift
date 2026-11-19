@@ -115,7 +115,7 @@ private extension KeyedDecodingContainer where Key == AnyKey {
         optional(key).map { (seconds: Int) in Date(timeIntervalSince1970: TimeInterval(seconds)) }
     }
     /// A GameBanana link: anything that is not https on a GameBanana host is dropped, so nothing from the API can
-    /// make NX Library open or fetch somewhere else.
+    /// make Arcane open or fetch somewhere else.
     func url(_ key: String) -> URL? {
         optional(key).flatMap { (string: String) in URL(string: string) }.flatMap { GameBananaAPI.trusted($0) ? $0 : nil }
     }

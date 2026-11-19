@@ -81,7 +81,7 @@ final class SetupModel: ObservableObject {
     // MARK: - Engine folder and upstream
     func checkUpstreamChangelog() {
         if case .checking = upstreamState { return }
-        // Always against the tested pin, so the newest engine stays measurable from the engine NX Library tested.
+        // Always against the tested pin, so the newest engine stays measurable from the engine Arcane tested.
         let base = app.pinnedEngineCommit
         upstreamState = .checking
         let checker = upstreamChecker
@@ -287,7 +287,7 @@ final class SetupModel: ObservableObject {
                 self.currentEngineCommit = (currentCommit?.isEmpty == false) ? currentCommit : nil
                 if let choice, !NewestEngine.keeps(choice, head: self.currentEngineCommit, pinned: pinned,
                                                     includedInPin: includedInPin) {
-                    // The checkout moved (Setup, Back to tested, by hand) or an NX Library update tested this
+                    // The checkout moved (Setup, Back to tested, by hand) or an Arcane update tested this
                     // commit: the tested engine is in charge again.
                     self.forgetNewestEngine()
                     self.refreshCompatibility()

@@ -6,7 +6,7 @@ import SwiftUI
 
 /// The launch screen's own window, as Selene's launch cover: borderless and see-through (the screen fades in over
 /// the library), over every app, the Dock and the menu bar, on whichever Space is in front, and never activated. The
-/// game starts behind it, and Steam coming forward or macOS changing Space happens behind it, so NX Library never has
+/// game starts behind it, and Steam coming forward or macOS changing Space happens behind it, so Arcane never has
 /// to take the front back. Shown on the screen of the window that hosts it while `state` is set; the content's
 /// own fade-out runs before `state` clears.
 struct LaunchCoverWindow<Content: View>: NSViewRepresentable {
@@ -82,7 +82,7 @@ enum LaunchCoverTrace {
     }
 }
 
-/// A click on the screen dismisses it at once: the first click counts although NX Library may not be active.
+/// A click on the screen dismisses it at once: the first click counts although Arcane may not be active.
 final class LaunchCoverHostingView: NSHostingView<AnyView> {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 }
@@ -94,9 +94,9 @@ final class LaunchCoverPanel: NSPanel {
         level = .statusBar
         // Every Space, full-screen ones included, and left in place by Mission Control. When a game opens full screen
         // the screen rides along into the game's Space and covers it until the game draws, instead of the desktop
-        // picture showing there: the maintainer's choice over a screen that stays on NX Library's Space.
+        // picture showing there: the maintainer's choice over a screen that stays on Arcane's Space.
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
-        // A panel hides when its app is not active by default; NX Library rarely is while a game starts.
+        // A panel hides when its app is not active by default; Arcane rarely is while a game starts.
         hidesOnDeactivate = false
         isOpaque = false
         backgroundColor = .clear

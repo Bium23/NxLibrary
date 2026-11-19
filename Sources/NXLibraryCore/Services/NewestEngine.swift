@@ -1,7 +1,7 @@
 import Foundation
 
-/// The player's choice to build with nxnative main before NX Library has tested it (Settings → Setup and engine,
-/// Newest engine). NX Library never follows main by itself: the choice is explicit, turns the untested-toolchain
+/// The player's choice to build with nxnative main before Arcane has tested it (Settings → Setup and engine,
+/// Newest engine). Arcane never follows main by itself: the choice is explicit, turns the untested-toolchain
 /// override on, and records every build it makes as untested.
 public struct NewestEngineChoice: Codable, Equatable, Sendable {
     /// The commit the engine was switched to.
@@ -20,11 +20,11 @@ public struct NewestEngineChoice: Codable, Equatable, Sendable {
     public var shortCommit: String { String(commit.prefix(7)) }
 }
 
-/// Whether the newest nxnative can be used by this NX Library.
+/// Whether the newest nxnative can be used by this Arcane.
 public enum NewestEngineReadiness: Equatable, Sendable {
     /// Same certified Metal compiler as the tested engine.
     case usable
-    /// main certifies another Metal compiler: Setup cannot provide it, so it waits for an NX Library update.
+    /// main certifies another Metal compiler: Setup cannot provide it, so it waits for an Arcane update.
     case needsNewerApp(metal: String)
     /// The lock could not be read yet; the switch reads it again before changing anything.
     case unknown
@@ -110,7 +110,7 @@ public enum NewestEngine {
     }
 
     /// Usable only when main certifies the same Metal compiler as the tested engine: a different compiler is a
-    /// Setup change this NX Library cannot make. Xcode follows the compiler.
+    /// Setup change this Arcane cannot make. Xcode follows the compiler.
     public static func readiness(newestLock: String?, testedMetal: String?) -> NewestEngineReadiness {
         guard let newestLock, let metal = lockMetal(newestLock),
               let tested = testedMetal.flatMap(CompatibilityChecker.metalNumber) else { return .unknown }
@@ -165,7 +165,7 @@ public enum NewestEngine {
     }
 
     /// A choice holds while the checkout is still at its commit and the tested pin has not caught up with it.
-    /// `includedInPin`: the commit is an ancestor of the pin (an NX Library update tested it); nil when unknown.
+    /// `includedInPin`: the commit is an ancestor of the pin (an Arcane update tested it); nil when unknown.
     public static func keeps(_ choice: NewestEngineChoice, head: String?, pinned: String, includedInPin: Bool?) -> Bool {
         guard let head, head == choice.commit, choice.commit != pinned else { return false }
         return includedInPin != true

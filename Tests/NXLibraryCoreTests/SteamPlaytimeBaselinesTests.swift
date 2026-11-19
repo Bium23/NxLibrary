@@ -90,7 +90,7 @@ final class SteamPlaytimeBaselinesTests: XCTestCase {
                        [steam.id: ExternalPlaytime(duration: 75 * 60, lastPlayed: date(500), since: date(1_000))])
     }
 
-    // Steam keeps whole minutes: when its value rises, up to a minute NX Library already showed is kept.
+    // Steam keeps whole minutes: when its value rises, up to a minute Arcane already showed is kept.
     func testRisingMinutesKeepUpToAMinuteAlreadyShown() {
         var baselines = SteamPlaytimeBaselines(fileURL: url)
         baselines.apply(snapshot([440: (75, nil)]), now: date(1_000))

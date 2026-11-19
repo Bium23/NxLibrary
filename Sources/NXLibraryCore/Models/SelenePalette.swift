@@ -50,7 +50,7 @@ public struct SelenePalette: Codable, Equatable, Identifiable {
 }
 
 public enum SelenePaletteCatalog {
-    /// The theme NX Library starts in, first in the picker.
+    /// The theme Arcane starts in, first in the picker.
     public static let defaultID = "selene"
 
     /// The picker's order: the default first, then the rest by name.

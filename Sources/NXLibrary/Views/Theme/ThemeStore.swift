@@ -69,7 +69,7 @@ final class ThemeStore: ObservableObject {
             .contains { wallpaperID.hasPrefix($0 + "/") }
     }
 
-    /// Moves one of the player's own wallpapers or a download (NX Library's copy) to the Trash.
+    /// Moves one of the player's own wallpapers or a download (Arcane's copy) to the Trash.
     func removeWallpaper(id: String) throws {
         guard Self.isRemovable(id), let wallpaper = wallpapers.first(where: { $0.id == id }) else { return }
         try FileManager.default.trashItem(at: wallpaper.url, resultingItemURL: nil)

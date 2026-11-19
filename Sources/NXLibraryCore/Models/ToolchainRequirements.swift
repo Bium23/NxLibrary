@@ -1,13 +1,13 @@
 import Foundation
 
-/// What this NX Library is tested with, in one place. An upgrade edits this
+/// What this Arcane is tested with, in one place. An upgrade edits this
 /// table (and `AppViewModel.pinnedEngineCommit`), never the Setup check's code.
 public struct ToolchainRequirements: Equatable {
     /// The oldest Xcode the engine's Metal toolchain runs with.
     public var minimumXcode: String
     /// The certified Metal compiler before an engine exists to name one in its lock.
     public var fallbackMetal: String
-    /// Metal compiler version → Apple's MetalToolchain asset build, so NX Library can
+    /// Metal compiler version → Apple's MetalToolchain asset build, so Arcane can
     /// download exactly the compiler the engine certifies, not just the newest one.
     public var metalAssets: [String: String]
 

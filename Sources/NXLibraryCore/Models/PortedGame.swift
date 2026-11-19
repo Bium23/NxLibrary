@@ -21,14 +21,14 @@ public struct PortedGame: Identifiable, Codable, Equatable {
     public var isHidden: Bool = false
     /// The last porting failed or was cancelled; cleared by a successful one.
     public var portingFailure: PortingFailure?
-    /// Why the last porting failed, when NX Library recognised it; cleared with `portingFailure`.
+    /// Why the last porting failed, when Arcane recognised it; cleared with `portingFailure`.
     public var portingFailureReason: PortingFailureReason?
     /// A finished build waiting for the game to quit before it replaces the running app.
     public var pendingInstall: PendingInstall?
-    /// The player chose to show NX Library's Icon pick as the game app's icon in Finder and the Dock
+    /// The player chose to show Arcane's Icon pick as the game app's icon in Finder and the Dock
     /// (`AppIconWriter`); written again after every build.
     public var usesPickedAppIcon = false
-    /// Explicit scope chosen in Change artwork: false means only in NX Library, even without an original app icon.
+    /// Explicit scope chosen in Change artwork: false means only in Arcane, even without an original app icon.
     /// Nil preserves the behavior of libraries saved before 0.1.4.2 until the player makes a choice.
     public var appIconOnMac: Bool? = nil
     /// The app's icon still has to be written or put back: the game was running. Done when it quits.

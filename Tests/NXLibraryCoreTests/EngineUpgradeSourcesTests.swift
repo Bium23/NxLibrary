@@ -287,7 +287,7 @@ final class EngineUpgradeSourcesTests: XCTestCase {
         XCTAssertEqual(SourceSelection.versionForBuild([GameFileItem(url: file, kind: .base, sizeBytes: 1)]), "v0")
     }
 
-    /// A workspace NX Library staged holds only the selected files, so the engine's own choice (the newest there, by
+    /// A workspace Arcane staged holds only the selected files, so the engine's own choice (the newest there, by
     /// content meta) is the selection: no `-p`, which a version stored from an older scan could get wrong.
     func testStagedWorkspaceLeavesTheVersionToTheEngine() {
         let file = URL(fileURLWithPath: "/tmp/update [v65536].nsz")

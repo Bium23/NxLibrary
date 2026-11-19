@@ -1,7 +1,7 @@
 import Foundation
 
 /// The player's SteamGridDB API key (generated in their SteamGridDB profile), kept on this Mac in a private file
-/// (mode 0600) beside NX Library's other data. Never logged and never sent anywhere but SteamGridDB's API.
+/// (mode 0600) beside Arcane's other data. Never logged and never sent anywhere but SteamGridDB's API.
 public struct SteamGridDBKey {
     public let url: URL
     private let fm = FileManager.default

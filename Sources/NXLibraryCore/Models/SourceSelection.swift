@@ -103,7 +103,7 @@ public enum SourceSelection {
         files.contains { $0.layout == .package }
     }
 
-    /// The `-p` to pass. A workspace NX Library staged with only the selected packages leaves the engine's default (the
+    /// The `-p` to pass. A workspace Arcane staged with only the selected packages leaves the engine's default (the
     /// newest version there, by content meta) equal to the selection, and no `-p` keeps a version stored by an older scan
     /// from being refused. The selection is named when the workspace holds other versions too: a merged package, a NUP
     /// (every version in one file), a dump, or a folder used as it is.

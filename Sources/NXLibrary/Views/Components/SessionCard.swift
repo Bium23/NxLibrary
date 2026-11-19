@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 import NXLibraryCore
 
-/// Holds the session card: the latest ended session waits until NX Library is in front, shows 1.8 s later for 8 s,
+/// Holds the session card: the latest ended session waits until Arcane is in front, shows 1.8 s later for 8 s,
 /// then leaves. A newer session replaces one still waiting or showing.
 @MainActor
 final class SessionCardPresenter: ObservableObject {
@@ -20,7 +20,7 @@ final class SessionCardPresenter: ObservableObject {
         if NSApp.isActive { schedule() }
     }
 
-    /// NX Library came forward: a waiting card shows.
+    /// Arcane came forward: a waiting card shows.
     func becameActive() {
         if pending != nil { schedule() }
     }

@@ -159,9 +159,9 @@ public struct AppSettings: Codable, Equatable {
     public var launchStyle: LaunchStyle
     public var launchMotion: Bool
     public var launchShade: LaunchShade
-    /// A notification when a porting ends while NX Library is in the background.
+    /// A notification when a porting ends while Arcane is in the background.
     public var notifyPortingEnds: Bool
-    /// Look for a newer NX Library release at launch, at most once a day.
+    /// Look for a newer Arcane release at launch, at most once a day.
     public var checkAppUpdatesAtLaunch: Bool
     /// The Settings screen's own wallpaper: nil is the same as the app's, `WallpaperCatalog.themeOwn` the theme's.
     public var settingsWallpaperID: String? = nil

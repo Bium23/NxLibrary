@@ -281,7 +281,7 @@ struct SpotlightView: View {
             syncPage()
             startModsOnline(focus)
         }
-        // Game options (its Mods panel) closing, or NX Library coming back from Finder, re-reads the mods.
+        // Game options (its Mods panel) closing, or Arcane coming back from Finder, re-reads the mods.
         .onChange(of: !viewModel.isGameOptionsOpen) { closed in if closed { reloadMods() } }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in reloadMods() }
         .onChange(of: blocks) { _ in syncPage() }

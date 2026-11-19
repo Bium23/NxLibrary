@@ -5,7 +5,7 @@ import Foundation
 import CryptoKit
 import Darwin
 
-/// The rules of NX Library's self-update: which release, what may be installed, which copy may
+/// The rules of Arcane's self-update: which release, what may be installed, which copy may
 /// replace itself, and the swap. Everything works on paths it is given, so the tests run it on
 /// bundles in a temporary folder, never on the running app or the network.
 ///
@@ -237,7 +237,7 @@ public enum AppUpdate {
         return try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
     }
 
-    /// Whether `app` is NX Library `version` as a release copy that opens on `runningOS`.
+    /// Whether `app` is Arcane `version` as a release copy that opens on `runningOS`.
     public static func bundleProblem(_ app: URL, expectedID: String, version: String,
                                      runningOS: OperatingSystemVersion) -> BundleProblem? {
         guard let info = info(app) else { return .noInfo }

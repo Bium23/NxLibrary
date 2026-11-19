@@ -798,7 +798,7 @@ final class PortingModel: ObservableObject {
         } else {
             let detected = try detectedGame(from: target)
             workspace = try WorkspaceManager(root: scratch.workspaces).makeWorkspace(for: detected, mode: .staged)
-            // A workspace NX Library left on another drive is only a cache now: that drive gets its room back.
+            // A workspace Arcane left on another drive is only a cache now: that drive gets its room back.
             // A game not built yet still points at its workspace, which then stays.
             if let old = existingDirectory, managed,
                old.resolvingSymlinksInPath() != workspace.directory.resolvingSymlinksInPath(),

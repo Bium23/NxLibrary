@@ -69,7 +69,7 @@ final class LaunchServiceTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: env), invalid)
     }
 
-    /// NX Library's Game options are the game's settings window: a game it starts skips the engine's own
+    /// Arcane's Game options are the game's settings window: a game it starts skips the engine's own
     /// (dm/mac/launcher.c, DM_LAUNCHER=0), which would ask again and, on Quit, leave a process macOS never reports ended.
     func testLaunchSkipsTheEnginesSettingsWindow() {
         let launcher = FakeLauncher()

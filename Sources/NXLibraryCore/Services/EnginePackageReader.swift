@@ -86,7 +86,7 @@ public struct EnginePackageReader {
     /// Every package's content metas, read the way the engine reads them for the build, so the title IDs and versions NX
     /// Library shows and packs (`-p`) are the engine's. nxnative 5c4dc18f reads all packages in one `package_reader` run and
     /// never trusts a file name; older engines read one package at a time, and only merged or unidentified ones (an
-    /// identified one comes back with no rows: NX Library's own reading stands). A package the engine cannot read comes
+    /// identified one comes back with no rows: Arcane's own reading stands). A package the engine cannot read comes
     /// back unreadable with its reason; a run that stops (keys that cannot open the packages) throws the engine's line.
     public func contents(of packages: [(url: URL, alreadyIdentified: Bool)]) throws -> [URL: PackageReading] {
         guard !packages.isEmpty else { return [:] }

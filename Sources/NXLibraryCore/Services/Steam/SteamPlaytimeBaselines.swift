@@ -1,6 +1,6 @@
 import Foundation
 
-/// Steam's total for one game and when NX Library first saw that value. `carry` is time NX Library had
+/// Steam's total for one game and when Arcane first saw that value. `carry` is time Arcane had
 /// already shown beyond Steam's new whole minutes (at most `maximumCarry`), so a rising value never
 /// makes the total step back.
 public struct SteamPlaytimeBaseline: Codable, Equatable, Sendable {
@@ -25,7 +25,7 @@ public struct SteamPlaytimeBaseline: Codable, Equatable, Sendable {
     }
 }
 
-/// The current account's Steam totals, each with when its value was first seen. NX Library adds only
+/// The current account's Steam totals, each with when its value was first seen. Arcane adds only
 /// its own play after `seenAt`: Steam's value already counts what came before. A new value (up or down)
 /// or another account starts over; Steam is the source of truth.
 public struct SteamPlaytimeBaselines: Equatable, Sendable {

@@ -245,7 +245,7 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
     }
 }
 
-/// A game's total as another launcher keeps it, and when NX Library first saw that value.
+/// A game's total as another launcher keeps it, and when Arcane first saw that value.
 public struct ExternalPlaytime: Equatable, Sendable {
     public let duration: TimeInterval
     public let lastPlayed: Date?
