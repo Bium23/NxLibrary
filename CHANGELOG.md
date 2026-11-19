@@ -14,6 +14,10 @@ See the [validation checklist](docs/validation.md) for the state of manual check
 
 - Updates keep working if the project's GitHub repository is later renamed to **Arcane**: this version also accepts releases served under `Bium23/Arcane`.
 
+### Fixed
+
+- **Open project docs** in About opens the online guide on every Mac. It used to look for a source folder that only exists on the developer's Mac and showed "Docs unavailable".
+
 ## 0.2.0 — 2026-11-18
 
 See the [validation checklist](docs/validation.md) for the state of manual checks.

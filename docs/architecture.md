@@ -237,6 +237,7 @@ Regole della barra:
 - I testi upstream noti di `launcher.json` si localizzano solo nella presentazione; valori e note sconosciute tengono il testo upstream.
 - Il nome dell'app, "Arcane", sta in `AppIdentity.name` e non si traduce: le viste che mostrano solo il nome lo leggono da lì, e il catalogo non contiene più il vecchio nome. Bundle ID, cartelle dei dati, chiavi delle preferenze e segni `.nxlibrary-*` tengono il nome storico, perché cambiarli separerebbe i dati di chi aggiorna.
 - Ogni richiesta di rete si presenta con `AppIdentity.userAgent()`, cioè `Arcane/<versione> (macOS; +https://github.com/Bium23/NxLibrary)`.
+- **Open project docs** in About apre `AppIdentity.documentationPage`, il README online, nel browser predefinito: è la guida per i giocatori e si apre su ogni Mac, senza dipendere da dove sta il codice sorgente.
 
 **Start-up.**
 - Start-up ospita lingua e regione. `LocalePicker` offre la scelta diretta delle lingue e cerca i nomi localizzati delle regioni per codice stabile, con input da tastiera e controller distinto da Settings.

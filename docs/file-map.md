@@ -400,7 +400,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Models/AppIdentity.swift](../Sources/NXLibraryCore/Models/AppIdentity.swift) | Nome visibile dell'app ("Arcane", non tradotto), il vecchio nome detto solo dal benvenuto, il nome del modulo Porting, pagina del progetto e User-Agent unico delle richieste di rete. |
+| [Sources/NXLibraryCore/Models/AppIdentity.swift](../Sources/NXLibraryCore/Models/AppIdentity.swift) | Nome visibile dell'app ("Arcane", non tradotto), il vecchio nome detto solo dal benvenuto, il nome del modulo Porting, pagina del progetto, guida online aperta da About e User-Agent unico delle richieste di rete. |
 | [Sources/NXLibraryCore/Models/AppLocale.swift](../Sources/NXLibraryCore/Models/AppLocale.swift) | Sette lingue, risoluzione delle preferenze e regione indipendente; nomi e ricerca delle regioni. |
 | [Sources/NXLibraryCore/Models/GameGenre.swift](../Sources/NXLibraryCore/Models/GameGenre.swift) | Generi noti tradotti alla presentazione; dati originali e generi personali conservati. |
 | [Sources/NXLibraryCore/Services/AppLocalization.swift](../Sources/NXLibraryCore/Services/AppLocalization.swift) | Contesto osservabile, lookup portabile delle risorse e interpolazioni/plurali. |
@@ -503,7 +503,7 @@ Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downlo
 | [Sources/NXLibrary/Views/Settings/SettingsConsoleSection.swift](../Sources/NXLibrary/Views/Settings/SettingsConsoleSection.swift) | System → Console: apre la console dei log di build e avvio. |
 | [Sources/NXLibrary/Views/Settings/SettingsEngineSection.swift](../Sources/NXLibrary/Views/Settings/SettingsEngineSection.swift) | Porting → Setup and engine: checkout, pin, gate, toolchain, runtime, changelog upstream e Setup. |
 | [Sources/NXLibrary/Views/Settings/SettingsKeysSection.swift](../Sources/NXLibrary/Views/Settings/SettingsKeysSection.swift) | Porting → Keys: stato, importazione, sostituzione e rilevamento di prod.keys. |
-| [Sources/NXLibrary/Views/Settings/SettingsAboutSection.swift](../Sources/NXLibrary/Views/Settings/SettingsAboutSection.swift) | Mostra versione, diagnostica, aggiornamenti, pulsante di sostegno volontario, crediti e documentazione. |
+| [Sources/NXLibrary/Views/Settings/SettingsAboutSection.swift](../Sources/NXLibrary/Views/Settings/SettingsAboutSection.swift) | Mostra versione, diagnostica, aggiornamenti, pulsante di sostegno volontario, crediti e il link alla guida online. |
 | [Sources/NXLibrary/Views/Settings/LocalePicker.swift](../Sources/NXLibrary/Views/Settings/LocalePicker.swift) | Scelta diretta della lingua e ricerca dei formati regionali, con focus tastiera/controller e codici stabili. |
 
 ## UI · Setup, avvio, ricerca e console

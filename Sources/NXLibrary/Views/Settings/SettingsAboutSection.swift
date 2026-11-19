@@ -144,7 +144,7 @@ struct SettingsAboutSection: View {
                 } label: {
                     HStack(spacing: 4) {
                         Text(L10n.text("Open project docs"))
-                        Image(systemName: "folder")
+                        Image(systemName: "arrow.up.right")
                     }
                     .seleneFont(14, .semibold)
                     .foregroundColor(SeleneTheme.glyph)
@@ -323,12 +323,6 @@ struct SettingsAboutSection: View {
     }
 
     private func openProjectDocs() {
-        let docs = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Developer/NXLibrary/docs")
-        if FileManager.default.fileExists(atPath: docs.path) {
-            NSWorkspace.shared.open(docs)
-        } else {
-            viewModel.showSettingsNotice(title: L10n.text("Docs unavailable"), message: L10n.text("Project documentation is not installed on this Mac."))
-        }
+        NSWorkspace.shared.open(AppIdentity.documentationPage)
     }
 }

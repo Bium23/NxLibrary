@@ -27,6 +27,10 @@ final class ArcaneNameTests: XCTestCase {
         XCTAssertEqual(AppIdentity.userAgent(version: "0.2"), "Arcane/0.2 (macOS; +https://github.com/Bium23/NxLibrary)")
     }
 
+    func testProjectDocsOpenTheReadmeOnlineOnEveryMac() {
+        XCTAssertEqual(AppIdentity.documentationPage.absoluteString, "https://github.com/Bium23/NxLibrary#readme")
+    }
+
     func testNoSourceSendsTheOldUserAgent() throws {
         let sources = repository.appendingPathComponent("Sources")
         let files = FileManager.default.enumerator(at: sources, includingPropertiesForKeys: nil)?

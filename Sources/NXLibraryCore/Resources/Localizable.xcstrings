@@ -23143,53 +23143,6 @@
         }
       }
     },
-    "Docs unavailable": {
-      "comment": "SettingsAboutSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Docs unavailable"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Documentazione non disponibile"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Documentation indisponible"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dokumentation nicht verfügbar"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Documentación no disponible"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Documentação indisponível"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "文档不可用"
-          }
-        }
-      }
-    },
     "Done": {
       "comment": "ThemePickerView.swift",
       "localizations": {
@@ -50770,53 +50723,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "上一个%@"
-          }
-        }
-      }
-    },
-    "Project documentation is not installed on this Mac.": {
-      "comment": "SettingsAboutSection.swift",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Project documentation is not installed on this Mac."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La documentazione del progetto non è installata su questo Mac."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La documentation du projet n’est pas installée sur ce Mac."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Projektdokumentation ist auf diesem Mac nicht installiert."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La documentación del proyecto no está instalada en este Mac."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A documentação do projeto não está instalada neste Mac."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "这台 Mac 上未安装项目文档。"
           }
         }
       }
