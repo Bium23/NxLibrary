@@ -36,7 +36,7 @@ public struct AppLocale: Equatable {
         else {
             self.language = preferredLanguages.lazy.compactMap(Self.supported).first ?? .english
         }
-        self.region = Self.validRegion(region) ?? Self.validRegion(systemLocale.regionCode) ?? "US"
+        self.region = Self.validRegion(region) ?? Self.validRegion(systemLocale.region?.identifier) ?? "US"
     }
 
     /// The offered language for one of the Mac's preferred languages, if any. Chinese means Simplified unless the
@@ -54,9 +54,13 @@ public struct AppLocale: Equatable {
     }
 
     public static func validRegion(_ value: String?) -> String? {
-        guard let value = value?.uppercased(), Locale.isoRegionCodes.contains(value) else { return nil }
+        guard let value = value?.uppercased(), countryCodes.contains(value) else { return nil }
         return value
     }
+
+    /// The ISO countries and territories, without groupings such as the world ("001"), Europe ("150") or the EU,
+    /// which have regions of their own inside them: the same 257 codes `Locale.isoRegionCodes` listed.
+    static let countryCodes: Set<String> = Set(Locale.Region.isoRegions.filter { $0.subRegions.isEmpty }.map(\.identifier))
 }
 
 public struct AppRegionOption: Identifiable, Equatable {
@@ -66,7 +70,7 @@ public struct AppRegionOption: Identifiable, Equatable {
     public static func matching(_ query: String, context: AppLocale) -> [AppRegionOption] {
         let locale = context.formatLocale
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        return Locale.isoRegionCodes.map { code in
+        return AppLocale.countryCodes.map { code in
             AppRegionOption(id: code, name: locale.localizedString(forRegionCode: code) ?? code)
         }.filter {
             needle.isEmpty || $0.id.localizedCaseInsensitiveContains(needle)

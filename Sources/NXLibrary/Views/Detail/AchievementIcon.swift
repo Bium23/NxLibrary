@@ -64,17 +64,17 @@ struct AchievementIcon: View {
                   !Task.isCancelled else { return }
             // Read and decoded off the main thread; at most 2 MiB, already validated as an image.
             guard let decoded = await Task.detached(priority: .utility, operation: { Self.decode(url) }).value else { return }
-            Self.memory.setObject(decoded, forKey: Self.key(appID, file))
+            let image = NSImage(cgImage: decoded, size: NSSize(width: decoded.width, height: decoded.height))
+            Self.memory.setObject(image, forKey: Self.key(appID, file))
             guard !Task.isCancelled else { return }
             withAnimation(SeleneTheme.quick) { loaded = file }
         }
     }
 
     /// The file's pixels decoded now, not at the first draw: NSImage(contentsOf:) leaves that to the main thread.
-    private nonisolated static func decode(_ url: URL) -> NSImage? {
-        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
-              let cgImage = CGImageSourceCreateImageAtIndex(source, 0, [kCGImageSourceShouldCacheImmediately: true] as CFDictionary)
-        else { return nil }
-        return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+    /// A CGImage crosses back to the main actor safely; the NSImage wrapping it is made there.
+    private nonisolated static func decode(_ url: URL) -> CGImage? {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+        return CGImageSourceCreateImageAtIndex(source, 0, [kCGImageSourceShouldCacheImmediately: true] as CFDictionary)
     }
 }

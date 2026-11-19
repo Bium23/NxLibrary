@@ -24,12 +24,15 @@ enum GameBananaBlur {
         let key = key(url, radius)
         if let image = cache.object(forKey: key) { return image }
         guard let file = await GameBananaServices.shared.images.file(for: url) else { return nil }
-        let image = await Task.detached(priority: .utility) { render(file, radius: radius) }.value
-        if let image { cache.setObject(image, forKey: key) }
+        guard let output = await Task.detached(priority: .utility, operation: { render(file, radius: radius) }).value
+        else { return nil }
+        let image = NSImage(cgImage: output, size: NSSize(width: output.width, height: output.height))
+        cache.setObject(image, forKey: key)
         return image
     }
 
-    nonisolated private static func render(_ file: URL, radius: CGFloat) -> NSImage? {
+    /// A CGImage crosses back from the background task safely; the NSImage wrapping it is made by the caller.
+    nonisolated private static func render(_ file: URL, radius: CGFloat) -> CGImage? {
         guard let source = CGImageSourceCreateWithURL(file as CFURL, nil),
               let small = CGImageSourceCreateThumbnailAtIndex(source, 0, [
                   kCGImageSourceCreateThumbnailFromImageAlways: true,
@@ -40,8 +43,7 @@ enum GameBananaBlur {
         let blurred = input.clampedToExtent()
             .applyingGaussianBlur(sigma: Double(radius))
             .cropped(to: input.extent)
-        guard let output = context.createCGImage(blurred, from: input.extent) else { return nil }
-        return NSImage(cgImage: output, size: NSSize(width: output.width, height: output.height))
+        return context.createCGImage(blurred, from: input.extent)
     }
 }
 

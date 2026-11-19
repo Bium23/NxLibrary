@@ -126,24 +126,20 @@ final class GameArtLoader {
     }
 
     nonisolated static func decode(at url: URL, maxPixelSize: Int) async -> NSImage? {
-        let box = await Task.detached(priority: .utility) { () -> ImageBox? in
+        guard let image = await thumbnail(at: url, maxPixelSize: maxPixelSize) else { return nil }
+        return NSImage(cgImage: image, size: NSSize(width: CGFloat(image.width), height: CGFloat(image.height)))
+    }
+
+    /// The pixels decoded off the main thread. A CGImage crosses between tasks safely, unlike the NSImage made from it.
+    nonisolated static func thumbnail(at url: URL, maxPixelSize: Int) async -> CGImage? {
+        await Task.detached(priority: .utility) { () -> CGImage? in
             guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
             let options: [CFString: Any] = [
                 kCGImageSourceCreateThumbnailFromImageAlways: true,
                 kCGImageSourceCreateThumbnailWithTransform: true,
                 kCGImageSourceThumbnailMaxPixelSize: maxPixelSize
             ]
-            guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
-                return nil
-            }
-            return ImageBox(image: NSImage(cgImage: image,
-                                           size: NSSize(width: CGFloat(image.width),
-                                                        height: CGFloat(image.height))))
+            return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
         }.value
-        return box?.image
     }
-}
-
-private struct ImageBox: @unchecked Sendable {
-    let image: NSImage
 }

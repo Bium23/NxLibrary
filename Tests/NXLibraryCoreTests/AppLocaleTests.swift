@@ -141,6 +141,15 @@ final class AppLocaleTests: XCTestCase {
         XCTAssertTrue(AppRegionOption.matching("zzzznotacountry", context: context).isEmpty)
     }
 
+    func testRegionsAreCountriesNotGroupings() {
+        let ids = Set(AppRegionOption.matching("", context: AppLocale(language: .english, region: "US")).map(\.id))
+        XCTAssertTrue(ids.isSuperset(of: ["IT", "US", "CH", "JP", "HK"]))
+        XCTAssertTrue(ids.isDisjoint(with: ["001", "150", "419", "EU", "EZ", "UN", "QO"]))
+        XCTAssertEqual(AppLocale.validRegion("it"), "IT")
+        XCTAssertNil(AppLocale.validRegion("EU"))
+        XCTAssertNil(AppLocale.validRegion("001"))
+    }
+
     func testTechnicalClassificationAndUserTitlesStayIndependentOfUILanguage() {
         let original = L10n.context
         defer { L10n.setContext(original) }

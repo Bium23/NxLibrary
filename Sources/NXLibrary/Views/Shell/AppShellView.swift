@@ -372,7 +372,7 @@ public struct AppShellView: View {
         .environment(\.seleneButtonNames, settings.settings.buttonNames)
         .environmentObject(updater)
         .environmentObject(sources)
-        .onAppear {
+        .onAppear { [sources] in
             steamWatcher.onChange = { [weak sources] in sources?.steamFilesChanged() }
             sources.startIfEnabled()
         }

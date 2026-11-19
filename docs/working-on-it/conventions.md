@@ -110,6 +110,7 @@ Esempi: `BoundedDownload`, `GameBananaClient`, `IGDBClient`, `SteamMetadataServi
 ## 8. Lavoro in background e stato
 
 - Il lavoro su file e rete gira fuori dal thread principale; ciò che cambia l'interfaccia si pubblica sul main actor.
+- Un'immagine decodificata in background torna come `CGImage` e diventa `NSImage` dove si usa (`GameArtLoader.thumbnail`): sul target macOS 13 `NSImage` non è `Sendable`.
 - Un `body` e l'initializer di una vista non leggono file: si ridisegnano a ogni cambio della shell. Ciò che viene dal disco si legge quando la pagina si apre o quando può cambiare (`GameOptionsFiles`, `GameDetailView.reloadCheats`), e un'assenza si ricorda (`GameIconProvider`).
 - Ogni lavoro annullabile porta un'identità (generazione, ticket, UUID del gioco). Il risultato si applica solo se l'identità è ancora quella attuale.
 - Le operazioni su un gioco che si escludono a vicenda (salvataggi, Play, installazioni, aggiornamento dell'app) passano da `SaveOperationGate`.
@@ -120,6 +121,7 @@ Esempi: `BoundedDownload`, `GameBananaClient`, `IGDBClient`, `SteamMetadataServi
 - Prima il test che fallisce, poi il codice (TDD). Per un bug: prima la causa, poi un test che la riproduce.
 - I dati sono sintetici, in cartelle temporanee, con dipendenze sostituibili: `CommandRunner`, trasporti di rete iniettati, `SaveTestHome`, `SteamTestSupport`, `CatalogTestSupport`. Niente file reali dell'utente, niente chiavi o ROM.
 - Si prova il comportamento, non il mock.
+- La build di release compila senza warning: un warning nuovo si risolve nello stesso commit che lo introduce.
 - Comandi in [development.md](development.md#verification). I test non sostituiscono la validazione del maintainer.
 
 ## 10. Documentazione

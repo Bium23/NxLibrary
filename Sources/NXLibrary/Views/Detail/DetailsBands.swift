@@ -390,16 +390,18 @@ struct GameBananaImageView: View {
         let missing = urls.filter { decoded.object(forKey: key($0, maxPixelSize)) == nil }
         guard !missing.isEmpty else { return }
         let images = GameBananaServices.shared.images
-        await withTaskGroup(of: (URL, NSImage)?.self) { group in
+        await withTaskGroup(of: (URL, CGImage)?.self) { group in
             for url in missing {
                 group.addTask {
                     guard let file = await images.file(for: url),
-                          let image = await GameArtLoader.decode(at: file, maxPixelSize: maxPixelSize) else { return nil }
+                          let image = await GameArtLoader.thumbnail(at: file, maxPixelSize: maxPixelSize) else { return nil }
                     return (url, image)
                 }
             }
             for await result in group {
-                if let (url, image) = result { store(image, for: key(url, maxPixelSize)) }
+                guard let (url, image) = result else { continue }
+                store(NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height)),
+                      for: key(url, maxPixelSize))
             }
         }
     }

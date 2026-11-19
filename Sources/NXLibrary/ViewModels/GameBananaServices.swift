@@ -13,7 +13,6 @@ final class GameBananaServices: @unchecked Sendable {
     let matches: GameBananaMatchStore
 
     private init() {
-        let fm = FileManager.default
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
         userAgent = GameBananaClient.userAgent(version: version)
         let caches = AppData.cacheRoot.appendingPathComponent("gamebanana")

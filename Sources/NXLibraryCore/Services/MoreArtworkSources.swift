@@ -39,7 +39,7 @@ public enum OnlineArtwork {
     /// Asks every source that has art for `slot` (all of them for nil) at once.
     public static func find(names: [String], slot: ArtworkSlot? = nil, platform: CriticRatingQuery.Platform = .switch,
                             client: ArtworkHTTPClient = URLSessionArtworkClient()) async -> [ArtworkCandidate] {
-        func wants(_ slots: Set<ArtworkSlot>) -> Bool { slot.map(slots.contains) ?? true }
+        @Sendable func wants(_ slots: Set<ArtworkSlot>) -> Bool { slot.map(slots.contains) ?? true }
         async let wikidata = wants([.logo, .cover, .background]) ? WikidataArt.find(names: names, client: client)
                                                                   : WikidataArt.Found(logos: [], steamAppID: nil)
         async let steamSearch = wants([.logo, .cover, .background]) ? SteamStoreArt.findAppID(names: names, client: client)
