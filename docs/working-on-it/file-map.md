@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 20 novembre 2026. Copertura di **771 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 20 novembre 2026. Copertura di **773 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](../how-it-works/architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le cartelle del Core, una per area, con lo Switch in `Porting/`; quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -25,6 +25,8 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 - [Core · impostazioni, lingua e testi](#core--impostazioni-lingua-e-testi)
 - [Core · Steam](#core--steam)
 - [Core · Porting: gioco Switch e libreria nxnative](#core--porting-gioco-switch-e-libreria-nxnative)
+- [Core · Porting: catalogo nxnative](#core--porting-catalogo-nxnative)
+- [Core · Porting: libreria, sessioni e spazio](#core--porting-libreria-sessioni-e-spazio)
 - [Core · Porting: Setup, motore e chiavi](#core--porting-setup-motore-e-chiavi)
 - [Core · Porting: sorgenti, build e installazione](#core--porting-sorgenti-build-e-installazione)
 - [Core · Porting: avvio e icona del gioco](#core--porting-avvio-e-icona-del-gioco)
@@ -206,7 +208,7 @@ Cartella `Sources/NXLibraryCore/Library/`.
 | File | Responsabilità |
 |---|---|
 | [Sources/NXLibraryCore/Library/GameStorageUsage.swift](../../Sources/NXLibraryCore/Library/GameStorageUsage.swift) | Dimensioni per gioco e totali: distingue assenza e indisponibilità, segnala cache condivise e conserva identità stabili per il focus. |
-| [Sources/NXLibraryCore/Library/LibraryFilter.swift](../../Sources/NXLibraryCore/Library/LibraryFilter.swift) | Definisce filtri, PlayHistory e query condivisa per ricerca/ordine del catalogo misto, conservando l’API nxnative. |
+| [Sources/NXLibraryCore/Library/LibraryFilter.swift](../../Sources/NXLibraryCore/Library/LibraryFilter.swift) | Definisce filtri, PlayHistory e query condivisa per ricerca/ordine del catalogo misto; `LibraryQueryRecord` è ciò che filtro, ricerca e Surprise leggono da un gioco di qualunque fonte. |
 | [Sources/NXLibraryCore/Library/LibrarySelectionState.swift](../../Sources/NXLibraryCore/Library/LibrarySelectionState.swift) | Mantiene selezione e spostamento nel risultato filtrato della Collection. |
 | [Sources/NXLibraryCore/Library/LibraryPresentation.swift](../../Sources/NXLibraryCore/Library/LibraryPresentation.swift) | Formatta metadati e statistiche temporali per le schermate della libreria. |
 | [Sources/NXLibraryCore/Library/PlaySession.swift](../../Sources/NXLibraryCore/Library/PlaySession.swift) | Descrive una sessione persistibile con gioco e riferimenti temporali. |
@@ -242,7 +244,7 @@ Cartella `Sources/NXLibraryCore/Selene/`.
 | [Sources/NXLibraryCore/Selene/SeleneCanvas.swift](../../Sources/NXLibraryCore/Selene/SeleneCanvas.swift) | Calcola scala uniforme, stage centrato e conversione delle unità del canvas 1920×1080. |
 | [Sources/NXLibraryCore/Selene/SelenePalette.swift](../../Sources/NXLibraryCore/Selene/SelenePalette.swift) | Decodifica palette e metadato opzionale moonlight, ordine del selettore e fallback Arcane con ID selene. |
 | [Sources/NXLibraryCore/Selene/SpotlightPage.swift](../../Sources/NXLibraryCore/Selene/SpotlightPage.swift) | Calcola estratti delle descrizioni e stati dello scorrimento della pagina Spotlight. |
-| [Sources/NXLibraryCore/Selene/SpotlightRow.swift](../../Sources/NXLibraryCore/Selene/SpotlightRow.swift) | Costruisce la sequenza per UUID e salva riordini conservando giochi/fonti/card temporaneamente nascosti; Surprise mantiene il proprio contratto nxnative. |
+| [Sources/NXLibraryCore/Selene/SpotlightRow.swift](../../Sources/NXLibraryCore/Selene/SpotlightRow.swift) | Costruisce la sequenza per UUID e salva riordini conservando giochi/fonti/card temporaneamente nascosti; Surprise sceglie fra i giochi visibili di un pool (installati, mai giocati, tutti). |
 | [Sources/NXLibraryCore/Selene/SpotlightRowGeometry.swift](../../Sources/NXLibraryCore/Selene/SpotlightRowGeometry.swift) | Posti delle tessere nella riga, camera unica che la fa scorrere e finestra delle tessere create; posto, scala e camera lungo lo scorrimento dalla posizione continua della selezione. |
 | [Sources/NXLibraryCore/Selene/SpotlightState.swift](../../Sources/NXLibraryCore/Selene/SpotlightState.swift) | Gestisce selezione, focus (anche la card Achievements), azioni e spostamento delle tile su Spotlight. |
 | [Sources/NXLibraryCore/Selene/SpotlightEntrance.swift](../../Sources/NXLibraryCore/Selene/SpotlightEntrance.swift) | Tempi e partenze del volo delle tessere, dissolvenza oltre il bordo, sfondo, informazioni, hint e fasi della prima entrata di Spotlight, compreso quando accetta input. |
@@ -409,6 +411,15 @@ Cartella `Sources/NXLibraryCore/Porting/Catalog/`.
 | [Sources/NXLibraryCore/Porting/Catalog/CatalogStore+Porting.swift](../../Sources/NXLibraryCore/Porting/Catalog/CatalogStore+Porting.swift) | Lo store dell’app con tutti i tipi noti e l’import di `library.json`: `CatalogStore(directory:)`, `CatalogStore.decode(_:)`, `CatalogLegacyImport.nxnative` e `CatalogDocument.converting`. |
 | [Sources/NXLibraryCore/Porting/Catalog/CatalogRepository+Porting.swift](../../Sources/NXLibraryCore/Porting/Catalog/CatalogRepository+Porting.swift) | Modifiche nxnative del catalogo: un gioco portato, tutti, la fusione di una scansione della libreria e l’esito di una build; proiezione `nxnativeGames`. |
 | [Sources/NXLibraryCore/Porting/Catalog/CatalogBuildRecoveries.swift](../../Sources/NXLibraryCore/Porting/Catalog/CatalogBuildRecoveries.swift) | Generazioni di build non ancora salvate, selezione del retry e conferma della sola generazione persistita. |
+
+## Core · Porting: libreria, sessioni e spazio
+
+Cartella `Sources/NXLibraryCore/Porting/Library/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Porting/Library/LibraryQuery+Porting.swift](../../Sources/NXLibraryCore/Porting/Library/LibraryQuery+Porting.swift) | Filtro, ricerca e selezione della home per i giochi Switch: `PortedGame` come `LibraryQueryRecord`, `LibraryQuery.apply(to:history:)`, `reconcile`, `move` e `jump` di `LibrarySelectionState`. |
+| [Sources/NXLibraryCore/Porting/Library/Surprise+Porting.swift](../../Sources/NXLibraryCore/Porting/Library/Surprise+Porting.swift) | Surprise me sui giochi Switch, sopra la scelta generica di `Surprise`. |
 
 ## Core · Porting: Setup, motore e chiavi
 

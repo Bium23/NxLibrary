@@ -25,9 +25,7 @@ ALLOWED = {
     'Details/GameDetailPresentation.swift',
     'Details/GameOptionsPresentation.swift',
     'Details/MoreLikeThis.swift',
-    'Library/LibraryFilter.swift',
     'Library/LibraryPresentation.swift',
-    'Library/LibrarySelectionState.swift',
     'Library/PlaySessionStore.swift',
     'Library/RunningGames.swift',
     'Library/SessionSummary.swift',
@@ -41,7 +39,6 @@ ALLOWED = {
     'Saves/SaveSnapshot.swift',
     'Saves/SaveSnapshotStore.swift',
     'Saves/SaveTransaction.swift',
-    'Selene/SpotlightRow.swift',
     'Settings/AppSettings.swift',
     'Settings/SettingsCatalog.swift',
 }
