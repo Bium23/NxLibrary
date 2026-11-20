@@ -226,7 +226,7 @@ final class AppUpdateTests: XCTestCase {
     /// scripts/release.sh reads these two values from the sources with sed; a reformat must not break it.
     func testReleaseScriptCanReadTheRequirements() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        let requirements = try String(contentsOf: root.appendingPathComponent("Sources/NXLibraryCore/Models/ToolchainRequirements.swift"), encoding: .utf8)
+        let requirements = try String(contentsOf: root.appendingPathComponent("Sources/NXLibraryCore/Porting/Setup/ToolchainRequirements.swift"), encoding: .utf8)
         XCTAssertNotNil(requirements.range(of: #"minimumXcode: "[0-9.]+""#, options: .regularExpression))
         let viewModel = try String(contentsOf: root.appendingPathComponent("Sources/NXLibrary/ViewModels/AppViewModel.swift"), encoding: .utf8)
         XCTAssertNotNil(viewModel.range(of: #"let pinnedEngineCommit = "[0-9a-f]{40}""#, options: .regularExpression))

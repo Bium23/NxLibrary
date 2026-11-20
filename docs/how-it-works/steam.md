@@ -321,7 +321,7 @@ con dati sintetici coprono le regressioni senza aprire finestre.
 
 ## Cambiare l’integrazione
 
-- Un nuovo file di Steam da leggere: un lettore in `Sources/NXLibraryCore/Services/Steam/` che estrae solo i campi
+- Un nuovo file di Steam da leggere: un lettore in `Sources/NXLibraryCore/Steam/` che estrae solo i campi
   necessari, con limiti di dimensione, test con fixture sintetiche (`SteamTestSupport`) e una riga nella tabella
   [File di Steam letti](#file-di-steam-letti).
 - Un nuovo stato o campo nel catalogo: decodifica tollerante (`decodeIfPresent`) e nessun nuovo caso persistito che una

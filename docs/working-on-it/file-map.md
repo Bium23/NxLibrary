@@ -2,7 +2,7 @@
 
 Aggiornato il 20 novembre 2026. Copertura di **720 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
-La [guida tecnica](../how-it-works/architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le funzionalità, quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
+La [guida tecnica](../how-it-works/architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le cartelle del Core, una per area, con lo Switch in `Porting/`; quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
 Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Application Support sono descritti nella guida.
 
@@ -13,18 +13,26 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 - [Coordinamento applicativo](#coordinamento-applicativo)
 - [Modelli dello stato applicativo](#modelli-dello-stato-applicativo)
 - [Integrazione con macOS e servizi applicativi](#integrazione-con-macos-e-servizi-applicativi)
-- [Core · libreria, stato e sessioni](#core--libreria-stato-e-sessioni)
-- [Core · Setup, motore e chiavi](#core--setup-motore-e-chiavi)
-- [Core · sorgenti, porting, installazione e lancio](#core--sorgenti-porting-installazione-e-lancio)
-- [Core · cheat e mod](#core--cheat-e-mod)
-- [Core · salvataggi e cloud](#core--salvataggi-e-cloud)
-- [Core · artwork, metadati e sfondi online](#core--artwork-metadati-e-sfondi-online)
-- [Core · presentazione Selene, focus e impostazioni](#core--presentazione-selene-focus-e-impostazioni)
+- [Core · app: aggiornamento, primo avvio, diagnostica e comandi](#core--app-aggiornamento-primo-avvio-diagnostica-e-comandi)
 - [Core · catalogo comune e fonti](#core--catalogo-comune-e-fonti)
-- [Core · Steam](#core--steam)
+- [Core · libreria, sessioni e spazio](#core--libreria-sessioni-e-spazio)
+- [Core · Selene: Spotlight, focus, temi e sfondi](#core--selene-spotlight-focus-temi-e-sfondi)
+- [Core · pagina del gioco](#core--pagina-del-gioco)
+- [Core · artwork e metadati](#core--artwork-e-metadati)
 - [Core · achievement](#core--achievement)
-- [Core · lingua e testi](#core--lingua-e-testi)
-- [Core · profilo dei dati](#core--profilo-dei-dati)
+- [Core · salvataggi](#core--salvataggi)
+- [Core · mod e GameBanana](#core--mod-e-gamebanana)
+- [Core · impostazioni, lingua e testi](#core--impostazioni-lingua-e-testi)
+- [Core · Steam](#core--steam)
+- [Core · Porting: gioco Switch e libreria nxnative](#core--porting-gioco-switch-e-libreria-nxnative)
+- [Core · Porting: Setup, motore e chiavi](#core--porting-setup-motore-e-chiavi)
+- [Core · Porting: sorgenti, build e installazione](#core--porting-sorgenti-build-e-installazione)
+- [Core · Porting: avvio e icona del gioco](#core--porting-avvio-e-icona-del-gioco)
+- [Core · Porting: impostazioni del gioco](#core--porting-impostazioni-del-gioco)
+- [Core · Porting: cheat](#core--porting-cheat)
+- [Core · Porting: store Nintendo e copertine](#core--porting-store-nintendo-e-copertine)
+- [Core · Porting: salvataggi e cloud](#core--porting-salvataggi-e-cloud)
+- [Core · Porting: mod RomFS](#core--porting-mod-romfs)
 - [UI · Add Game e porting](#ui--add-game-e-porting)
 - [UI · Spotlight](#ui--spotlight)
 - [UI · Collection e Details](#ui--collection-e-details)
@@ -126,297 +134,375 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../../CONTRIBUTING.md), [SECU
 | [Sources/NXLibrary/Services/SoundEffectService.swift](../../Sources/NXLibrary/Services/SoundEffectService.swift) | Riproduce i cue Selene e applica attivazione, volume e file importati. |
 | [Sources/NXLibrary/Services/SystemDetector.swift](../../Sources/NXLibrary/Services/SystemDetector.swift) | Individua checkout nxnative, root personale e possibili percorsi delle chiavi. |
 
-## Core · libreria, stato e sessioni
+## Core · app: aggiornamento, primo avvio, diagnostica e comandi
+
+Cartella `Sources/NXLibraryCore/App/`.
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Models/PortedGame.swift](../../Sources/NXLibraryCore/Models/PortedGame.swift) | Modello persistente del gioco con bundle, sorgenti, impostazioni, build e installazione in attesa. |
-| [Sources/NXLibraryCore/Models/GameStorageUsage.swift](../../Sources/NXLibraryCore/Models/GameStorageUsage.swift) | Dimensioni per gioco e totali: distingue assenza e indisponibilità, segnala cache condivise e conserva identità stabili per il focus. |
-| [Sources/NXLibraryCore/Models/LibraryFile.swift](../../Sources/NXLibraryCore/Models/LibraryFile.swift) | Contenitore versionato del catalogo della libreria. |
-| [Sources/NXLibraryCore/Models/GameStatus.swift](../../Sources/NXLibraryCore/Models/GameStatus.swift) | Enumera disponibilità e stato del gioco rispetto ad app, sorgenti e porting. |
-| [Sources/NXLibraryCore/Models/GameResourceState.swift](../../Sources/NXLibraryCore/Models/GameResourceState.swift) | Distingue app mancanti, sorgenti assenti e workspace non compilati, riconcilia gli stati e conserva Play per una build esistente. |
-| [Sources/NXLibraryCore/Models/BackdropArt.swift](../../Sources/NXLibraryCore/Models/BackdropArt.swift) | Regola che tiene l’arte del gioco precedente sullo sfondo Spotlight (`BackdropArtRule`) dissolvenza di un layer calcolata sull’orologio (`OpacityFade`) e livelli ormai coperti da togliere (`ArtStack`). |
-| [Sources/NXLibraryCore/Models/TileMotion.swift](../../Sources/NXLibraryCore/Models/TileMotion.swift) | Curve e campioni dei loop di ring, bagliore e riflesso della tile selezionata, sull'orologio condiviso. |
-| [Sources/NXLibraryCore/Models/TextScroll.swift](../../Sources/NXLibraryCore/Models/TextScroll.swift) | Scorrimento della colonna del pannello della mod: altezza della descrizione dopo Read more, limiti, riga a fuoco mostrata intera e passo Su/Giù che legge prima della riga seguente. |
-| [Sources/NXLibraryCore/Models/AppSettings.swift](../../Sources/NXLibraryCore/Models/AppSettings.swift) | Definisce impostazioni globali, default e decodifica compatibile; ignora la scelta storica delle particelle. |
-| [Sources/NXLibraryCore/Models/LibraryFilter.swift](../../Sources/NXLibraryCore/Models/LibraryFilter.swift) | Definisce filtri, PlayHistory e query condivisa per ricerca/ordine del catalogo misto, conservando l’API nxnative. |
-| [Sources/NXLibraryCore/Models/LibrarySelectionState.swift](../../Sources/NXLibraryCore/Models/LibrarySelectionState.swift) | Mantiene selezione e spostamento nel risultato filtrato della Collection. |
-| [Sources/NXLibraryCore/Models/LibraryPresentation.swift](../../Sources/NXLibraryCore/Models/LibraryPresentation.swift) | Formatta metadati e statistiche temporali per le schermate della libreria. |
-| [Sources/NXLibraryCore/Models/GameDetailPresentation.swift](../../Sources/NXLibraryCore/Models/GameDetailPresentation.swift) | Prepara badge, disponibilità delle azioni, date e dati della pagina Details. |
-| [Sources/NXLibraryCore/Models/PlaySession.swift](../../Sources/NXLibraryCore/Models/PlaySession.swift) | Descrive una sessione persistibile con gioco e riferimenti temporali. |
-| [Sources/NXLibraryCore/Models/ActivitySummary.swift](../../Sources/NXLibraryCore/Models/ActivitySummary.swift) | Aggrega sessioni, giorni e tempi della settimana per la scheda Activity. |
-| [Sources/NXLibraryCore/Models/MoreLikeThis.swift](../../Sources/NXLibraryCore/Models/MoreLikeThis.swift) | Ordina i giochi correlati per generi, sviluppatore ed editore, con precedenza alla stessa fonte e ripiego facoltativo. |
-| [Sources/NXLibraryCore/Services/ImportService.swift](../../Sources/NXLibraryCore/Services/ImportService.swift) | Scansiona bundle nxnative e ne ricava identità, versione, percorso e dimensioni. |
-| [Sources/NXLibraryCore/Models/CursorIdleState.swift](../../Sources/NXLibraryCore/Models/CursorIdleState.swift) | Politica del ritardo di visibilità del puntatore e reset su mouse o perdita di eleggibilità. |
-| [Sources/NXLibraryCore/Services/AppSizeCache.swift](../../Sources/NXLibraryCore/Services/AppSizeCache.swift) | Conserva dimensioni per percorso e data del bundle e decide lo stato vuoto della libreria. |
-| [Sources/NXLibraryCore/Services/AppSettingsStore.swift](../../Sources/NXLibraryCore/Services/AppSettingsStore.swift) | Pubblica impostazioni ed errori, preserva i file illeggibili e salva settings.json in modo atomico. Tiene l'ultima selezione fuori dalle notifiche e la scrive in background. |
-| [Sources/NXLibraryCore/Services/PlaySessionStore.swift](../../Sources/NXLibraryCore/Services/PlaySessionStore.swift) | Registra avvio, heartbeat, fine e riconciliazione delle sessioni di gioco; unisce i totali esterni (Steam) con le sessioni successive. |
-| [Sources/NXLibraryCore/Navigation/AppRouter.swift](../../Sources/NXLibraryCore/Navigation/AppRouter.swift) | Gestisce route, ritorno, menu, ricerca e richieste Spotlight; ShellBackdropCover definisce quali strati sono coperti da Setup, benvenuto e scelta tema. |
-| [Sources/NXLibraryCore/Models/GameFocus.swift](../../Sources/NXLibraryCore/Models/GameFocus.swift) | Quando un gioco che esce riporta Arcane davanti: solo se era l’app in primo piano e nessun altro gioco della libreria è aperto. |
-| [Sources/NXLibraryCore/Models/SessionSummary.swift](../../Sources/NXLibraryCore/Models/SessionSummary.swift) | Cosa dice la card di fine sessione: gioco, durata di questa sessione e totale scritto come nelle info del gioco; niente card sotto i dieci secondi. |
-
-## Core · Setup, motore e chiavi
-
-| File | Responsabilità |
-|---|---|
-| [Sources/NXLibraryCore/Models/ToolchainRequirements.swift](../../Sources/NXLibraryCore/Models/ToolchainRequirements.swift) | Centralizza requisiti Xcode e asset Metal e confronta versioni numeriche. |
-| [Sources/NXLibraryCore/Models/ToolchainInfo.swift](../../Sources/NXLibraryCore/Models/ToolchainInfo.swift) | Registra provenienza e verifica della toolchain associata a un build. |
-| [Sources/NXLibraryCore/Models/ToolchainGateCopy.swift](../../Sources/NXLibraryCore/Models/ToolchainGateCopy.swift) | Traduce il gate in testi distinguendo Metal certificato, precedente e successivo. |
-| [Sources/NXLibraryCore/Models/SetupCheck.swift](../../Sources/NXLibraryCore/Models/SetupCheck.swift) | Converte fatti e override del Setup in schede, stati, azioni e condizioni di riapertura. |
-| [Sources/NXLibraryCore/Models/FirstRunSetup.swift](../../Sources/NXLibraryCore/Models/FirstRunSetup.swift) | Coordina pagina e completamento del Setup, scelta Steam persistente fino alla fine, ripresa, focus e consumo unico delle selezioni da Your games. |
-| [Sources/NXLibraryCore/Models/FirstRunFindings.swift](../../Sources/NXLibraryCore/Models/FirstRunFindings.swift) | Conta giochi Steam e app portate senza modifiche; distingue lettura incompleta da assenza e permette nuove letture annullabili. |
-| [Sources/NXLibraryCore/Models/ArcaneWelcome.swift](../../Sources/NXLibraryCore/Models/ArcaneWelcome.swift) | Decide quando compare il benvenuto in Arcane, l'offerta di Steam, il focus e come ogni uscita lo segna visto. |
-| [Sources/NXLibraryCore/Models/GameFoldersCopy.swift](../../Sources/NXLibraryCore/Models/GameFoldersCopy.swift) | Condivide nomi delle cartelle, formati e descrizioni tra Setup, Settings e selettori dei percorsi. |
-| [Sources/NXLibraryCore/Models/SetupGrid.swift](../../Sources/NXLibraryCore/Models/SetupGrid.swift) | Calcola disposizione, centratura e navigazione del focus nella griglia del Setup. |
-| [Sources/NXLibraryCore/Models/UpstreamCopy.swift](../../Sources/NXLibraryCore/Models/UpstreamCopy.swift) | Prepara i testi del changelog upstream e dell’adozione degli aggiornamenti tramite Arcane. |
-| [Sources/NXLibraryCore/Services/NXNativeEnvironment.swift](../../Sources/NXLibraryCore/Services/NXNativeEnvironment.swift) | Ispeziona strumenti, Python, Xcode e Metal e restituisce uno stato dell’ambiente. |
-| [Sources/NXLibraryCore/Services/EngineLocation.swift](../../Sources/NXLibraryCore/Services/EngineLocation.swift) | Risolve checkout predefinito o scelto e produce i candidati per prod.keys. |
-| [Sources/NXLibraryCore/Services/EngineToolchain.swift](../../Sources/NXLibraryCore/Services/EngineToolchain.swift) | Individua runtime incluso o venv del checkout e prepara ambiente e PATH dei processi. |
-| [Sources/NXLibraryCore/Services/EnginePackageReader.swift](../../Sources/NXLibraryCore/Services/EnginePackageReader.swift) | Legge content meta e capacità del checkout, compresa selezione NUP multiprogramma, senza esporre chiavi. |
-| [Sources/NXLibraryCore/Models/BuildWarningCopy.swift](../../Sources/NXLibraryCore/Models/BuildWarningCopy.swift) | Testo mostrato a fine build per `warn` dell’engine: archivio mancante o pipeline da preparare al primo avvio. |
-| [Sources/NXLibraryCore/Models/ReleaseNotesLayout.swift](../../Sources/NXLibraryCore/Models/ReleaseNotesLayout.swift) | Divide le note di release in titoli, voci e testo, una riga per volta, per il dialogo degli aggiornamenti. |
-| [Sources/NXLibraryCore/Services/NewestEngine.swift](../../Sources/NXLibraryCore/Services/NewestEngine.swift) | Scelta dell’engine più nuovo: testi condivisi, lettura del Metal dal lock di main, cambio di commit con git senza toccare file modificati. |
-| [Sources/NXLibraryCore/Services/NUPSourceCatalog.swift](../../Sources/NXLibraryCore/Services/NUPSourceCatalog.swift) | Legge NUP con base o soli update; tiene distinti programma, applicazione e base DLC tramite il lettore upstream e conserva il default selezionato. |
-| [Sources/NXLibraryCore/Services/DirectorySize.swift](../../Sources/NXLibraryCore/Services/DirectorySize.swift) | Misura le cartelle con fts come du, così il refresh non resta bloccato su app grandi in dischi esterni (issue #2). |
-| [Sources/NXLibraryCore/Services/NXNativeGameSettings.swift](../../Sources/NXLibraryCore/Services/NXNativeGameSettings.swift) | Legge l’elenco impostazioni del build, i valori attuali e le chiavi fissate da env.txt. |
-| [Sources/NXLibraryCore/Services/SavedChoicesStore.swift](../../Sources/NXLibraryCore/Services/SavedChoicesStore.swift) | Legge e scrive le scelte salvate launcher.<env> nel dominio preferenze dell’app gioco. |
-| [Sources/NXLibraryCore/Services/CompatibilityChecker.swift](../../Sources/NXLibraryCore/Services/CompatibilityChecker.swift) | Controlla commit, modifiche del checkout, Metal e opzioni CLI richieste dal frontend. |
-| [Sources/NXLibraryCore/Services/SetupProbe.swift](../../Sources/NXLibraryCore/Services/SetupProbe.swift) | Raccoglie i fatti mostrati dal Setup usando comandi e controlli mirati. |
-| [Sources/NXLibraryCore/Services/SetupActions.swift](../../Sources/NXLibraryCore/Services/SetupActions.swift) | Costruisce le operazioni Git ammesse per installare o allineare il motore al pin. |
-| [Sources/NXLibraryCore/Services/InstallProgress.swift](../../Sources/NXLibraryCore/Services/InstallProgress.swift) | Interpreta avanzamento Git, percentuali, byte e righe parziali per le installazioni. |
-| [Sources/NXLibraryCore/Services/KeyStore.swift](../../Sources/NXLibraryCore/Services/KeyStore.swift) | Valida le chiavi, espone solo il riepilogo e pubblica atomicamente la copia gestita con permessi 0600. |
-| [Sources/NXLibraryCore/Services/KeyCheck.swift](../../Sources/NXLibraryCore/Services/KeyCheck.swift) | Legge intestazioni NCA e ticket e verifica se le chiavi possono aprire le sorgenti selezionate. |
-| [Sources/NXLibraryCore/Services/CommandRunner.swift](../../Sources/NXLibraryCore/Services/CommandRunner.swift) | Confine sostituibile per comandi e output, con esecuzione sincrona o streaming delle righe. `Process.runWithExitWait` aspetta la fine di un processo senza far girare il run loop. |
-| [Sources/NXLibraryCore/Services/UpstreamChecker.swift](../../Sources/NXLibraryCore/Services/UpstreamChecker.swift) | Consulta i commit upstream tramite HTTP e produce stato e collegamento di confronto. |
-
-## Core · sorgenti, porting, installazione e lancio
-
-| File | Responsabilità |
-|---|---|
-| [Sources/NXLibraryCore/Models/GameFileItem.swift](../../Sources/NXLibraryCore/Models/GameFileItem.swift) | Sorgenti salvate con layout, requisiti e selezione NUP facoltativa, compatibile con i vecchi record. |
-| [NUPProgramSelection.swift](../../Sources/NXLibraryCore/Models/NUPProgramSelection.swift) | Identità tipizzata del programma NUP, applicazione e base add-on; indice ricavato dal programma, persistito con i sorgenti. |
-| [Sources/NXLibraryCore/Models/SourceSelection.swift](../../Sources/NXLibraryCore/Models/SourceSelection.swift) | Scelte dei contenuti, dimensioni e versione di build; verifica coerenza e supporto del programma NUP e ne vincola l’indice nel rebuild. |
-| [Sources/NXLibraryCore/Models/BuildRecord.swift](../../Sources/NXLibraryCore/Models/BuildRecord.swift) | Conserva esito, tempi, log e provenienza di un porting. |
-| [Sources/NXLibraryCore/Models/TargetPlatform.swift](../../Sources/NXLibraryCore/Models/TargetPlatform.swift) | Definisce il target mac-app e le sue etichette per l’interfaccia. |
-| [Sources/NXLibraryCore/Models/GameRuntimeConfig.swift](../../Sources/NXLibraryCore/Models/GameRuntimeConfig.swift) | Persiste opzioni per titolo, prepara Review e lingua del rebuild, mappa DM_* e unisce env.txt. |
-| [Sources/NXLibraryCore/Models/LauncherSettings.swift](../../Sources/NXLibraryCore/Models/LauncherSettings.swift) | Legge launcher.json e verifica i controlli supportati, con fallback per le build precedenti. |
-| [Sources/NXLibraryCore/Models/AppIconProgress.swift](../../Sources/NXLibraryCore/Models/AppIconProgress.swift) | Stati e testi della preparazione icona, con esito informativo aggiunto al log della build conclusa. |
-| [Sources/NXLibraryCore/Models/IconLaunchWait.swift](../../Sources/NXLibraryCore/Models/IconLaunchWait.swift) | Conserva una richiesta Play durante la firma dell'icona e la revoca su annullamento, errore o chiusura del dialogo. |
-| [Sources/NXLibraryCore/Services/PipelineArchiveProgress.swift](../../Sources/NXLibraryCore/Services/PipelineArchiveProgress.swift) | Legge il log pipeline della build corrente e conta solo i gruppi confermati pronti dal motore. |
-| [Sources/NXLibraryCore/Models/PortingProgress.swift](../../Sources/NXLibraryCore/Models/PortingProgress.swift) | Aggrega eventi del motore in fasi e percentuale complessiva; identifica archivio e prewarm senza dedurre conteggi dal tempo trascorso. |
-| [Sources/NXLibraryCore/Models/PortingPresentation.swift](../../Sources/NXLibraryCore/Models/PortingPresentation.swift) | Definisce fallimento persistito, ETA, attività senza stima del prewarm, aspetto della tile e pill del porting. |
-| [Sources/NXLibraryCore/Models/PortingFailureReason.swift](../../Sources/NXLibraryCore/Models/PortingFailureReason.swift) | Classifica messaggi del motore e rifiuti preliminari in motivazioni e azioni spiegabili, comprese le tabelle shader diverse dal profilo del gioco. |
-| [Sources/NXLibraryCore/Models/PortingNotice.swift](../../Sources/NXLibraryCore/Models/PortingNotice.swift) | Decide quando notificare l’esito di un porting e prepara il relativo messaggio. |
-| [Sources/NXLibraryCore/Models/PendingInstall.swift](../../Sources/NXLibraryCore/Models/PendingInstall.swift) | Conserva un bundle pronto in attesa e ne gestisce installazione, scarto e aggiornamento del record, anche dopo una pubblicazione interrotta. |
-| [Sources/NXLibraryCore/Models/RunningGames.swift](../../Sources/NXLibraryCore/Models/RunningGames.swift) | Confronta bundle ID e mantiene uno snapshot delle applicazioni in esecuzione. |
-| [Sources/NXLibraryCore/Services/SourceCatalog.swift](../../Sources/NXLibraryCore/Services/SourceCatalog.swift) | Riconosce sorgenti NSP/XCI/NSZ/XCZ e raggruppa titoli, update e DLC; DetectedSource conserva la selezione NUP tipizzata. |
-| [Sources/NXLibraryCore/Services/ExtractedSourceCatalog.swift](../../Sources/NXLibraryCore/Services/ExtractedSourceCatalog.swift) | Verifica il layout di un gioco estratto, legge NPDM e profilo registrato e rileva update e DLC. |
-| [Sources/NXLibraryCore/Services/WorkspaceManager.swift](../../Sources/NXLibraryCore/Services/WorkspaceManager.swift) | Prepara collegamenti simbolici lasciando intatta la cache di build e verifica i link interrotti. |
-| [Sources/NXLibraryCore/Services/BuildScratch.swift](../../Sources/NXLibraryCore/Services/BuildScratch.swift) | Sceglie dove stanno workspace e app temporanea (sul volume dell'app quando può ospitarli), riconosce i workspace gestiti e le cartelle temporanee da pulire. |
-| [Sources/NXLibraryCore/Services/BuildCommand.swift](../../Sources/NXLibraryCore/Services/BuildCommand.swift) | Valore con eseguibile, argomenti, ambiente e directory di lavoro del processo di porting. |
-| [Sources/NXLibraryCore/Services/BuildCommandBuilder.swift](../../Sources/NXLibraryCore/Services/BuildCommandBuilder.swift) | Contratto CLI nxnative: Mac, JSON, versione pacchetto, selezione --program esplicita e override toolchain. |
-| [Sources/NXLibraryCore/Services/BuildEvent.swift](../../Sources/NXLibraryCore/Services/BuildEvent.swift) | Definisce gli eventi di fase, step, avanzamento e log ricevuti dal motore. |
-| [Sources/NXLibraryCore/Services/BuildEventParser.swift](../../Sources/NXLibraryCore/Services/BuildEventParser.swift) | Decodifica eventi JSON e tratta le altre righe come log. |
-| [Sources/NXLibraryCore/Services/BuildService.swift](../../Sources/NXLibraryCore/Services/BuildService.swift) | Avvia il porting, gestisce processi, cancellazione, log ed eventi; conserva il bundle valido quando fallisce solo l’installazione. |
-| [Sources/NXLibraryCore/Services/BuildOutputInstaller.swift](../../Sources/NXLibraryCore/Services/BuildOutputInstaller.swift) | Pubblica il bundle con rinomina o scambio atomico, prepara copie fra volumi e riconosce i tentativi già completati tramite ricevuta. |
-| [Sources/NXLibraryCore/Services/GameAppDestination.swift](../../Sources/NXLibraryCore/Services/GameAppDestination.swift) | Risolve la destinazione condivisa da review e porting, conserva i percorsi dei rebuild, evita conflitti di nome e verifica la cartella di destinazione. |
-| [Sources/NXLibraryCore/Services/LaunchService.swift](../../Sources/NXLibraryCore/Services/LaunchService.swift) | Scrive l’ambiente runtime e avvia il bundle del gioco tramite NSWorkspace. |
-| [Sources/NXLibraryCore/Services/StorageManager.swift](../../Sources/NXLibraryCore/Services/StorageManager.swift) | Misura app, cache e log per gioco e totali senza duplicare percorsi condivisi; verifica cartelle e sorgenti prima della pulizia selettiva. I backup appartengono al flusso Saves. |
-| [Sources/NXLibraryCore/Services/DiagnosticsReport.swift](../../Sources/NXLibraryCore/Services/DiagnosticsReport.swift) | Genera il rapporto diagnostico e rimuove percorso home e valori riconosciuti come chiavi. |
-| [Sources/NXLibraryCore/Services/AppUpdate.swift](../../Sources/NXLibraryCore/Services/AppUpdate.swift) | Definisce repository, versioni, verifica del download e sostituzione atomica dell’app in staging esclusivo, con conservazione della vecchia copia se il Cestino fallisce; riconosce la copia temporanea di App Translocation. |
-| [Sources/NXLibraryCore/Services/AppBundleRename.swift](../../Sources/NXLibraryCore/Services/AppBundleRename.swift) | Decide se una copia release che si chiama ancora `NX Library.app` diventa `Arcane.app` alla chiusura, e fa lo spostamento nella stessa cartella. |
-| [Sources/NXLibraryCore/Models/AppUpdatePresentation.swift](../../Sources/NXLibraryCore/Models/AppUpdatePresentation.swift) | Definisce gli stati dell’updater e il gate di installazione per versione e tipo di copia. |
-| [Sources/NXLibraryCore/Services/AppUpdateDownload.swift](../../Sources/NXLibraryCore/Services/AppUpdateDownload.swift) | Scarica gli aggiornamenti con limiti di dimensione, redirect HTTPS vincolati a GitHub e gestione del file temporaneo. |
-
-## Core · cheat e mod
-
-| File | Responsabilità |
-|---|---|
-| [Sources/NXLibraryCore/Models/CheatFile.swift](../../Sources/NXLibraryCore/Models/CheatFile.swift) | Decodifica cheats, sezioni, metadati e collegamenti dei codici secondo il parser del motore. |
-| [Sources/NXLibraryCore/Models/CheatInstall.swift](../../Sources/NXLibraryCore/Models/CheatInstall.swift) | Valuta file e cartelle in ingresso rispetto a title ID, build ID e necessità di conferma. |
-| [Sources/NXLibraryCore/Models/CheatLocator.swift](../../Sources/NXLibraryCore/Models/CheatLocator.swift) | Risolve build ID, title ID e cartella cheats seguendo i file e l’ambiente del launcher. |
-| [Sources/NXLibraryCore/Models/CheatStatus.swift](../../Sources/NXLibraryCore/Models/CheatStatus.swift) | Valuta il supporto del motore tramite ancestry (git in un task staccato, risposta tenuta per l'avvio) e prepara stato della riga e indicatore attivo. |
-| [Sources/NXLibraryCore/Models/CheatCopy.swift](../../Sources/NXLibraryCore/Models/CheatCopy.swift) | Centralizza testi di stato, rifiuto, importazione, sostituzione e rimozione dei cheats. |
-| [Sources/NXLibraryCore/Services/CheatStore.swift](../../Sources/NXLibraryCore/Services/CheatStore.swift) | Legge e modifica cheats, file enabled, master switch e metadati della build corrente. |
-| [Sources/NXLibraryCore/Services/ModStore.swift](../../Sources/NXLibraryCore/Services/ModStore.swift) | Ordine, interruttori, conflitti, Cestino e overlay delle mod RomFS. Ferma la riconciliazione se cartella o record non si leggono. |
-| [Sources/NXLibraryCore/Services/ModFolderScanner.swift](../../Sources/NXLibraryCore/Services/ModFolderScanner.swift) | Elenca cartelle, archivi e file RomFS. La lettura stretta distingue una cartella vuota da una scansione fallita durante la riconciliazione. |
-| [Sources/NXLibraryCore/Services/GameBanana/GameBananaAPI.swift](../../Sources/NXLibraryCore/Services/GameBanana/GameBananaAPI.swift) | URL, host fidati, modelli delle risposte di GameBanana e testo semplice dalle descrizioni HTML. |
-| [Sources/NXLibraryCore/Services/GameBanana/GameBananaClient.swift](../../Sources/NXLibraryCore/Services/GameBanana/GameBananaClient.swift) | Richieste a GameBanana con User-Agent, limite di 4 alla volta e cache su disco. |
-| [Sources/NXLibraryCore/Services/GameBanana/GameBananaImageCache.swift](../../Sources/NXLibraryCore/Services/GameBanana/GameBananaImageCache.swift) | Cache su disco delle immagini delle mod dal CDN di GameBanana. |
-| [Sources/NXLibraryCore/Services/GameBanana/GameBananaMatch.swift](../../Sources/NXLibraryCore/Services/GameBanana/GameBananaMatch.swift) | Abbina un gioco alla sua pagina GameBanana per nome e ricorda la scelta. |
-| [Sources/NXLibraryCore/Services/GameBanana/ModSupport.swift](../../Sources/NXLibraryCore/Services/GameBanana/ModSupport.swift) | Quali file di mod funzionano (solo RomFS), dov'è la loro cartella `romfs`, nomi di cartella sicuri. |
-| [Sources/NXLibraryCore/Services/GameBanana/AvailableModsFinder.swift](../../Sources/NXLibraryCore/Services/GameBanana/AvailableModsFinder.swift) | Cerca le mod di un gioco che funzionano e capisce quando una mod installata ha un aggiornamento. |
-| [Sources/NXLibraryCore/Services/GameBanana/ModInstaller.swift](../../Sources/NXLibraryCore/Services/GameBanana/ModInstaller.swift) | Controlla, estrae con `bsdtar` e installa una mod scaricata nella cartella del gioco. |
-| [Sources/NXLibraryCore/Services/GameBanana/GameBananaBandModel.swift](../../Sources/NXLibraryCore/Services/GameBanana/GameBananaBandModel.swift) | Stato della fascia Mods di un gioco: abbinamento, mod che funzionano, installazioni. |
-| [Sources/NXLibraryCore/Services/GameBanana/ModCatalog.swift](../../Sources/NXLibraryCore/Services/GameBanana/ModCatalog.swift) | Categorie nostre, ordinamenti e sezioni della pagina dello store (altezze fisse). |
-| [Sources/NXLibraryCore/Services/GameBanana/ModCatalogSnapshots.swift](../../Sources/NXLibraryCore/Services/GameBanana/ModCatalogSnapshots.swift) | Le mod di ogni gioco salvate su disco, per aprire lo store subito; solo link GameBanana. |
-| [Sources/NXLibraryCore/Services/GameBanana/ModStoreModel.swift](../../Sources/NXLibraryCore/Services/GameBanana/ModStoreModel.swift) | Dati dello store: apre dalle copie su disco, aggiorna in background due giochi alla volta, abbina solo se sicuro. |
-| [Sources/NXLibraryCore/Models/ModStoreFocus.swift](../../Sources/NXLibraryCore/Models/ModStoreFocus.swift) | Focus nella pagina dello store, ancorato al tipo di sezione; ogni sezione ricorda la sua tessera. |
-| [Sources/NXLibraryCore/Services/GameBanana/GameBananaFindModel.swift](../../Sources/NXLibraryCore/Services/GameBanana/GameBananaFindModel.swift) | Stato della ricerca per nome: campo, risultati, None of these. |
-| [Sources/NXLibraryCore/Services/GameBanana/ModDownload.swift](../../Sources/NXLibraryCore/Services/GameBanana/ModDownload.swift) | Scarica un file di GameBanana con avanzamento e Cancel, solo da host fidati. |
-| [Sources/NXLibraryCore/Models/ModsBandLayout.swift](../../Sources/NXLibraryCore/Models/ModsBandLayout.swift) | Ordine delle tessere della fascia Mods e movimento nella sua griglia (sei per riga). |
-| [Sources/NXLibraryCore/Services/EnvFileEditor.swift](../../Sources/NXLibraryCore/Services/EnvFileEditor.swift) | Cambia una sola variabile di un `env.txt` lasciando intatte le altre righe. |
-| [Sources/NXLibraryCore/Models/LocalMod.swift](../../Sources/NXLibraryCore/Models/LocalMod.swift) | Una cartella della cartella mods di un gioco, con il suo `romfs` e lo stato. |
-
-## Core · salvataggi e cloud
-
-| File | Responsabilità |
-|---|---|
-| [Sources/NXLibraryCore/Models/SaveLocation.swift](../../Sources/NXLibraryCore/Models/SaveLocation.swift) | Percorsi e identità dei salvataggi; account/device, utenti locali aggiuntivi e file registro; cloud effettivo e percorsi sicuri. |
-| [Sources/NXLibraryCore/Models/SaveSnapshot.swift](../../Sources/NXLibraryCore/Models/SaveSnapshot.swift) | Identità, inventario, manifest schema 1/2 e anteprime; rifiuta dichiarazioni storiche con componenti nuovi. |
-| [Sources/NXLibraryCore/Models/SavePresentation.swift](../../Sources/NXLibraryCore/Models/SavePresentation.swift) | Riepiloghi e ambito dei restore storici/multiutente, nomi dei componenti e limite cloud a primario/device. |
-| [Sources/NXLibraryCore/Models/CloudSaves.swift](../../Sources/NXLibraryCore/Models/CloudSaves.swift) | Descrive scelta cloud, cartelle iCloud o personalizzate e passaggi fra le opzioni. |
-| [Sources/NXLibraryCore/Services/CloudSavesPreferences.swift](../../Sources/NXLibraryCore/Services/CloudSavesPreferences.swift) | Prepara la cartella e riapplica la scelta cloud ai domini dei giochi prima di ogni avvio, anche Off. |
-| [Sources/NXLibraryCore/Services/RyujinxSaveFolder.swift](../../Sources/NXLibraryCore/Services/RyujinxSaveFolder.swift) | Riconosce contenitori Ryujinx, controlla il title ID e seleziona l’intero albero committed 0. |
-| [Sources/NXLibraryCore/Services/SaveFileIO.swift](../../Sources/NXLibraryCore/Services/SaveFileIO.swift) | Copie, hash e xattr portabili; inventario di directory e registro regolare limitato, controlli dei percorsi e scritture durevoli. |
-| [Sources/NXLibraryCore/Services/SaveSnapshotStore.swift](../../Sources/NXLibraryCore/Services/SaveSnapshotStore.swift) | Backup completi degli utenti locali e registro, formati storici compatibili, staging e import User/Device. |
-| [Sources/NXLibraryCore/Services/SaveRestorePreview.swift](../../Sources/NXLibraryCore/Services/SaveRestorePreview.swift) | Staging e validazione dei pezzi registrati nel backup, compreso il file utenti, con rilevamento dei cambiamenti concorrenti. |
-| [Sources/NXLibraryCore/Services/SaveTransaction.swift](../../Sources/NXLibraryCore/Services/SaveTransaction.swift) | Sostituzioni con ambito esplicito, backup completo e journal 1/2; verifica originali, recovery e pulizia parziale riprendibili con intento durevole. |
-| [Sources/NXLibraryCore/Services/SaveOperationGate.swift](../../Sources/NXLibraryCore/Services/SaveOperationGate.swift) | Assegna lease per titolo e un’esclusione globale per l’updater; coordina salvataggi, Play, installazioni e recuperi. |
-
-## Core · artwork, metadati e sfondi online
-
-| File | Responsabilità |
-|---|---|
-| [Sources/NXLibraryCore/Models/OnlineBackgrounds.swift](../../Sources/NXLibraryCore/Models/OnlineBackgrounds.swift) | Modella sorgenti e risultati e interpreta le risposte dei provider di sfondi fissi e video. |
-| [Sources/NXLibraryCore/Services/AutomaticIconResolver.swift](../../Sources/NXLibraryCore/Services/AutomaticIconResolver.swift) | Risolve icone automatiche con cache, abbinamento prudente e rispetto delle restrizioni del provider. |
-| [Sources/NXLibraryCore/Services/ArtworkStore.swift](../../Sources/NXLibraryCore/Services/ArtworkStore.swift) | Scarica, ridimensiona e conserva immagini e screenshot nella cache per titolo e tipo. |
-| [Sources/NXLibraryCore/Services/AppIconWriter.swift](../../Sources/NXLibraryCore/Services/AppIconWriter.swift) | Scrive l’icona scelta nell’app del gioco, conserva l’originale, rifirma e verifica, e annulla tutto in caso di errore. |
-| [Sources/NXLibraryCore/Services/ArtworkPicker.swift](../../Sources/NXLibraryCore/Services/ArtworkPicker.swift) | Aggrega candidati per cover, sfondo, icona e logo e conserva le scelte manuali. |
-| [Sources/NXLibraryCore/Services/MetadataPicker.swift](../../Sources/NXLibraryCore/Services/MetadataPicker.swift) | Aggrega valori alternativi dei metadati e conserva gli override dell’utente per campo. |
-| [Sources/NXLibraryCore/Services/BoxArtService.swift](../../Sources/NXLibraryCore/Services/BoxArtService.swift) | Trova copertine Switch in GameTDB e ricorda copertine e ricerche senza risultato. |
-| [Sources/NXLibraryCore/Services/GameTDB.swift](../../Sources/NXLibraryCore/Services/GameTDB.swift) | Decodifica il database GameTDB, abbina nomi e regioni e conserva l’indice locale. |
-| [Sources/NXLibraryCore/Services/NintendoStoreMetadata.swift](../../Sources/NXLibraryCore/Services/NintendoStoreMetadata.swift) | Consulta i cataloghi pubblici dello store e Title DB e conserva descrizioni, immagini e screenshot per lingua; finché la nuova lingua arriva, la pagina mostra l'ultima descrizione letta in un'altra. |
-| [Sources/NXLibraryCore/Services/OnlineArtworkSources.swift](../../Sources/NXLibraryCore/Services/OnlineArtworkSources.swift) | Ricava artwork Steam e loghi da MediaWiki e Wikimedia Commons. |
-| [Sources/NXLibraryCore/Services/SeleneImporter.swift](../../Sources/NXLibraryCore/Services/SeleneImporter.swift) | Importa suoni e wallpaper dalla cartella Selene dell’utente e risolve cue e fallback. |
-| [Sources/NXLibraryCore/Services/MoreArtworkSources.swift](../../Sources/NXLibraryCore/Services/MoreArtworkSources.swift) | Aggiunge matching dei nomi e sorgenti Xbox, GOG, Nintendo Europe, wiki e altri cataloghi. |
-| [Sources/NXLibraryCore/Services/ArtworkBrowse.swift](../../Sources/NXLibraryCore/Services/ArtworkBrowse.swift) | Sorgenti sfogliabili da Change artwork (LaunchBox, SteamGridDB): nomi cercati e risultati per tutti gli slot. |
-| [Sources/NXLibraryCore/Services/LaunchBoxArt.swift](../../Sources/NXLibraryCore/Services/LaunchBoxArt.swift) | Legge ricerca e pagina gioco di LaunchBox; dal payload Nuxt ricava anteprime, file pieni, tipo, regione e dimensioni; screenshot Gameplay. |
-| [Sources/NXLibraryCore/Services/SteamGridDBArt.swift](../../Sources/NXLibraryCore/Services/SteamGridDBArt.swift) | Conserva la chiave SteamGridDB in un file 0600 e interroga l’API v2 per griglie, hero, loghi e icone statiche accreditate. |
-| [Sources/NXLibraryCore/Services/ScreenshotFallback.swift](../../Sources/NXLibraryCore/Services/ScreenshotFallback.swift) | Conserva per 30 giorni gli screenshot LaunchBox dei giochi senza screenshot Title DB e li sovrappone ai metadati. |
-| [Sources/NXLibraryCore/Models/LibraryArtworkRole.swift](../../Sources/NXLibraryCore/Models/LibraryArtworkRole.swift) | Ruoli di layout delle immagini (copertina, quadrato, sfondo…) separati dal fornitore: un quadrato non chiede né ritaglia mai la copertina verticale. |
-
-## Core · presentazione Selene, focus e impostazioni
-
-| File | Responsabilità |
-|---|---|
-| [Sources/NXLibraryCore/Models/ButtonPrompts.swift](../../Sources/NXLibraryCore/Models/ButtonPrompts.swift) | Traduce azioni in simboli o etichette per tastiera e controller Switch, Xbox e PlayStation. |
-| [Sources/NXLibraryCore/Models/CollectionRow.swift](../../Sources/NXLibraryCore/Models/CollectionRow.swift) | Definisce proporzioni delle copertine e geometria della riga Collection. |
-| [Sources/NXLibraryCore/Models/DetailsFacts.swift](../../Sources/NXLibraryCore/Models/DetailsFacts.swift) | Sceglie le righe del pannello Details per Switch e Steam: solo i valori presenti, niente di tecnico. |
-| [Sources/NXLibraryCore/Models/CriticRating.swift](../../Sources/NXLibraryCore/Models/CriticRating.swift) | Identità pubblica del gioco e console (Mac, Switch, Switch 2), voto originale /100, provenienza e riempimento proporzionale delle cinque stelle. |
-| [Sources/NXLibraryCore/Services/WikidataRatings.swift](../../Sources/NXLibraryCore/Services/WikidataRatings.swift) | Abbina titoli esatti e ID Steam; seleziona medie della critica documentate, senza confondere piattaforme o raccomandazioni. L'identità del gioco (`entity`) serve anche alle descrizioni di Wikipedia. |
-| [Sources/NXLibraryCore/Services/BoundedDownload.swift](../../Sources/NXLibraryCore/Services/BoundedDownload.swift) | Lettura HTTP limitata a blocchi, senza redirect né byte per byte: usata da Wikidata, IGDB, LaunchBox/TheGamesDB e Steam. |
-| [Sources/NXLibraryCore/Services/ConnectivityWatcher.swift](../../Sources/NXLibraryCore/Services/ConnectivityWatcher.swift) | Avvisa sul main thread quando il Mac torna online, perché il giro delle descrizioni riprenda da solo; la prima lettura non conta. |
-| [Sources/NXLibraryCore/Services/WikipediaDescription.swift](../../Sources/NXLibraryCore/Services/WikipediaDescription.swift) | Quando una descrizione non è nella lingua dell'app, sitelink Wikidata e introduzione di Wikipedia in quella lingua (cinese in semplificato); servizio con cache misurabile e svuotabile, host fissi e nessun errore salvato come assenza. |
-| [Sources/NXLibraryCore/Services/CriticRatingService.swift](../../Sources/NXLibraryCore/Services/CriticRatingService.swift) | Preferenza IGDB personale → Wikidata pubblico, cache Wikidata, ripiego offline e pausa dopo errori. |
-| [Sources/NXLibraryCore/Services/IGDBCredentials.swift](../../Sources/NXLibraryCore/Services/IGDBCredentials.swift) | Credenziali Twitch personali in file 0600, validazione e messaggi sicuri senza segreti nei log. |
-| [Sources/NXLibraryCore/Services/IGDBRatings.swift](../../Sources/NXLibraryCore/Services/IGDBRatings.swift) | Abbinamento IGDB esatto o tramite ID Steam, critica preferita e ripiego utenti esplicito, con provenienza distinta da Wikidata. |
-| [Sources/NXLibraryCore/Services/IGDBRatingService.swift](../../Sources/NXLibraryCore/Services/IGDBRatingService.swift) | Cache dei voti, richieste coalescenti e verifica credenziali tramite il client IGDB condiviso. |
-| [Sources/NXLibraryCore/Services/IGDBClient.swift](../../Sources/NXLibraryCore/Services/IGDBClient.swift) | Unico accesso Twitch/IGDB per voti e metadati: token in memoria, coda limitata seriale, host vincolati, rinnovo 401 e annullamento. |
-| [Sources/NXLibraryCore/Services/IGDBMetadata.swift](../../Sources/NXLibraryCore/Services/IGDBMetadata.swift) | Proposte IGDB per campo: identità esatta, ruoli delle aziende e date complete della piattaforma corretta. |
-| [Sources/NXLibraryCore/Services/IGDBMetadataService.swift](../../Sources/NXLibraryCore/Services/IGDBMetadataService.swift) | Ricerca metadati su richiesta, ID Steam verificato, cache separata e ripiego offline; nessuna scrittura delle scelte personali. |
-| [Sources/NXLibraryCore/Services/DatabaseMetadata.swift](../../Sources/NXLibraryCore/Services/DatabaseMetadata.swift) | Proposte LaunchBox/TheGamesDB: identità e piattaforma verificate, campi separati, fonte esplicita e date della versione corretta. |
-| [Sources/NXLibraryCore/Services/DatabaseMetadataService.swift](../../Sources/NXLibraryCore/Services/DatabaseMetadataService.swift) | Letture pubbliche limitate e annullabili, richieste condivise, cache testuale per gioco/piattaforma e recupero offline. |
-| [Sources/NXLibraryCore/Models/DetailsFocus.swift](../../Sources/NXLibraryCore/Models/DetailsFocus.swift) | Gestisce zone e spostamenti del focus nei link e nelle bande di Details. |
-| [Sources/NXLibraryCore/Models/FocusIndex.swift](../../Sources/NXLibraryCore/Models/FocusIndex.swift) | Mantiene un indice di focus entro i limiti di una lista. |
-| [Sources/NXLibraryCore/Models/SettingsRowAction.swift](../../Sources/NXLibraryCore/Models/SettingsRowAction.swift) | Identifica azioni e righe Settings, mantenendo una sola azione primaria per riga senza accorpare giochi omonimi. |
-| [Sources/NXLibraryCore/Models/GameOptionsPresentation.swift](../../Sources/NXLibraryCore/Models/GameOptionsPresentation.swift) | Definisce righe, livelli, etichette, scelte runtime e focus di Game Options. |
-| [Sources/NXLibraryCore/Models/HoldDetector.swift](../../Sources/NXLibraryCore/Models/HoldDetector.swift) | Distingue pressione breve e prolungata usando un tempo fornito dal chiamante. |
-| [Sources/NXLibraryCore/Models/MaterialIcon.swift](../../Sources/NXLibraryCore/Models/MaterialIcon.swift) | Elenca i glifi del font Material Icons incluso nel bundle. |
-| [Sources/NXLibraryCore/Models/MenuSelectionModel.swift](../../Sources/NXLibraryCore/Models/MenuSelectionModel.swift) | Gestisce azioni selezionate nel control center e nelle scelte Power. |
-| [Sources/NXLibraryCore/Models/MoonlightField.swift](../../Sources/NXLibraryCore/Models/MoonlightField.swift) | Genera in modo deterministico i dati delle particelle per lo sfondo Metal. |
-| [MoonlightAppearance.swift](../../Sources/NXLibraryCore/Models/MoonlightAppearance.swift) | Identità delle superfici classica/Arcane/Flow e campionamento dei colori locali condiviso fra shader e fallback. |
-| [Sources/NXLibraryCore/Models/ScreenshotViewerState.swift](../../Sources/NXLibraryCore/Models/ScreenshotViewerState.swift) | Mantiene indice e limiti della navigazione nel visualizzatore screenshot. |
-| [Sources/NXLibraryCore/Models/SeleneCanvas.swift](../../Sources/NXLibraryCore/Models/SeleneCanvas.swift) | Calcola scala uniforme, stage centrato e conversione delle unità del canvas 1920×1080. |
-| [Sources/NXLibraryCore/Models/SelenePalette.swift](../../Sources/NXLibraryCore/Models/SelenePalette.swift) | Decodifica palette e metadato opzionale moonlight, ordine del selettore e fallback Arcane con ID selene. |
-| [Sources/NXLibraryCore/Models/SettingsCatalog.swift](../../Sources/NXLibraryCore/Models/SettingsCatalog.swift) | Descrive righe, ricerca e valori modificati; ogni riga tiene il suo `rowID` e sta in una sola sezione, vibrazione compresa tra i default dei nuovi giochi. |
-| [Sources/NXLibraryCore/Models/SettingsSection.swift](../../Sources/NXLibraryCore/Models/SettingsSection.swift) | Sezioni di Settings con titoli e icone, dichiarate in ordine di sidebar, e `SettingsSidebarGroup`: General, Library, Porting (il gruppo di piattaforma) e System. |
-| [Sources/NXLibraryCore/Models/SettingsReset.swift](../../Sources/NXLibraryCore/Models/SettingsReset.swift) | Reset group per sezione: quali sezioni si azzerano e quali valori di `AppSettings` tornano ai default. |
-| [Sources/NXLibraryCore/Models/SpotlightPage.swift](../../Sources/NXLibraryCore/Models/SpotlightPage.swift) | Calcola estratti delle descrizioni e stati dello scorrimento della pagina Spotlight. |
-| [Sources/NXLibraryCore/Models/SpotlightRow.swift](../../Sources/NXLibraryCore/Models/SpotlightRow.swift) | Costruisce la sequenza per UUID e salva riordini conservando giochi/fonti/card temporaneamente nascosti; Surprise mantiene il proprio contratto nxnative. |
-| [Sources/NXLibraryCore/Models/SpotlightRowGeometry.swift](../../Sources/NXLibraryCore/Models/SpotlightRowGeometry.swift) | Posti delle tessere nella riga, camera unica che la fa scorrere e finestra delle tessere create; posto, scala e camera lungo lo scorrimento dalla posizione continua della selezione. |
-| [Sources/NXLibraryCore/Models/SpotlightState.swift](../../Sources/NXLibraryCore/Models/SpotlightState.swift) | Gestisce selezione, focus (anche la card Achievements), azioni e spostamento delle tile su Spotlight. |
-| [Sources/NXLibraryCore/Models/SpotlightEntrance.swift](../../Sources/NXLibraryCore/Models/SpotlightEntrance.swift) | Tempi e partenze del volo delle tessere, dissolvenza oltre il bordo, sfondo, informazioni, hint e fasi della prima entrata di Spotlight, compreso quando accetta input. |
-| [Sources/NXLibraryCore/Models/ThemePicker.swift](../../Sources/NXLibraryCore/Models/ThemePicker.swift) | Gestisce il focus nella griglia colori, tab Wallpapers/Live e scelta dello sfondo successivo. |
-| [Sources/NXLibraryCore/Models/WallpaperCatalog.swift](../../Sources/NXLibraryCore/Models/WallpaperCatalog.swift) | Elenca wallpaper e video, gruppi, nomi e file delle risorse incluse o importate. |
-| [Sources/NXLibraryCore/Models/WallpaperPlacement.swift](../../Sources/NXLibraryCore/Models/WallpaperPlacement.swift) | Decide dove applicare uno sfondo scelto fra schermi principali e Settings. |
-| [Sources/NXLibraryCore/Models/DisplayNameCache.swift](../../Sources/NXLibraryCore/Models/DisplayNameCache.swift) | Nomi visualizzati di cartelle e volumi letti una volta per URL: la pagina si ricostruisce a ogni disegno e un disco esterno in stop bloccherebbe ogni volta. |
+| [Sources/NXLibraryCore/App/AppRouter.swift](../../Sources/NXLibraryCore/App/AppRouter.swift) | Gestisce route, ritorno, menu, ricerca e richieste Spotlight; ShellBackdropCover definisce quali strati sono coperti da Setup, benvenuto e scelta tema. | |
+| [Sources/NXLibraryCore/App/FirstRunSetup.swift](../../Sources/NXLibraryCore/App/FirstRunSetup.swift) | Coordina pagina e completamento del Setup, scelta Steam persistente fino alla fine, ripresa, focus e consumo unico delle selezioni da Your games. | |
+| [Sources/NXLibraryCore/App/FirstRunFindings.swift](../../Sources/NXLibraryCore/App/FirstRunFindings.swift) | Conta giochi Steam e app portate senza modifiche; distingue lettura incompleta da assenza e permette nuove letture annullabili. | |
+| [Sources/NXLibraryCore/App/ArcaneWelcome.swift](../../Sources/NXLibraryCore/App/ArcaneWelcome.swift) | Decide quando compare il benvenuto in Arcane, l'offerta di Steam, il focus e come ogni uscita lo segna visto. | |
+| [Sources/NXLibraryCore/App/ReleaseNotesLayout.swift](../../Sources/NXLibraryCore/App/ReleaseNotesLayout.swift) | Divide le note di release in titoli, voci e testo, una riga per volta, per il dialogo degli aggiornamenti. | |
+| [Sources/NXLibraryCore/App/CommandRunner.swift](../../Sources/NXLibraryCore/App/CommandRunner.swift) | Confine sostituibile per comandi e output, con esecuzione sincrona o streaming delle righe. `Process.runWithExitWait` aspetta la fine di un processo senza far girare il run loop. | |
+| [Sources/NXLibraryCore/App/DiagnosticsReport.swift](../../Sources/NXLibraryCore/App/DiagnosticsReport.swift) | Genera il rapporto diagnostico e rimuove percorso home e valori riconosciuti come chiavi. | |
+| [Sources/NXLibraryCore/App/AppUpdate.swift](../../Sources/NXLibraryCore/App/AppUpdate.swift) | Definisce repository, versioni, verifica del download e sostituzione atomica dell’app in staging esclusivo, con conservazione della vecchia copia se il Cestino fallisce; riconosce la copia temporanea di App Translocation. | |
+| [Sources/NXLibraryCore/App/AppBundleRename.swift](../../Sources/NXLibraryCore/App/AppBundleRename.swift) | Decide se una copia release che si chiama ancora `NX Library.app` diventa `Arcane.app` alla chiusura, e fa lo spostamento nella stessa cartella. | |
+| [Sources/NXLibraryCore/App/AppUpdatePresentation.swift](../../Sources/NXLibraryCore/App/AppUpdatePresentation.swift) | Definisce gli stati dell’updater e il gate di installazione per versione e tipo di copia. | |
+| [Sources/NXLibraryCore/App/AppUpdateDownload.swift](../../Sources/NXLibraryCore/App/AppUpdateDownload.swift) | Scarica gli aggiornamenti con limiti di dimensione, redirect HTTPS vincolati a GitHub e gestione del file temporaneo. | |
+| [Sources/NXLibraryCore/App/BoundedDownload.swift](../../Sources/NXLibraryCore/App/BoundedDownload.swift) | Lettura HTTP limitata a blocchi, senza redirect né byte per byte: usata da Wikidata, IGDB, LaunchBox/TheGamesDB e Steam. | |
+| [Sources/NXLibraryCore/App/ConnectivityWatcher.swift](../../Sources/NXLibraryCore/App/ConnectivityWatcher.swift) | Avvisa sul main thread quando il Mac torna online, perché il giro delle descrizioni riprenda da solo; la prima lettura non conta. | |
+| [Sources/NXLibraryCore/App/DisplayNameCache.swift](../../Sources/NXLibraryCore/App/DisplayNameCache.swift) | Nomi visualizzati di cartelle e volumi letti una volta per URL: la pagina si ricostruisce a ogni disegno e un disco esterno in stop bloccherebbe ogni volta. | |
+| [Sources/NXLibraryCore/App/AppIdentity.swift](../../Sources/NXLibraryCore/App/AppIdentity.swift) | Nome visibile dell'app ("Arcane", non tradotto), il vecchio nome detto solo dal benvenuto, il nome del modulo Porting, pagina del progetto, guida online aperta da About e User-Agent unico delle richieste di rete. | |
+| [Sources/NXLibraryCore/App/AppDataProfile.swift](../../Sources/NXLibraryCore/App/AppDataProfile.swift) | Policy di percorsi, cache, preferenze e staging del profilo. | |
+| [Sources/NXLibraryCore/App/DevelopmentProfileImporter.swift](../../Sources/NXLibraryCore/App/DevelopmentProfileImporter.swift) | Copia iniziale selettiva (compresa la scelta Steam del Setup), hash, validazione e ripresa senza modificare la sorgente. | |
+| [Sources/NXLibraryCore/App/DevelopmentOperationStore.swift](../../Sources/NXLibraryCore/App/DevelopmentOperationStore.swift) | Autorizzazioni persistenti per le operazioni richieste nella Dev, distinte da quelle importate. | |
 
 ## Core · catalogo comune e fonti
 
-| File | Responsabilità |
-|---|---|
-| [CatalogGame.swift](../../Sources/NXLibraryCore/Models/CatalogGame.swift) | Record tipizzato nxnative/Steam, identità e personalizzazioni con namespace, osservazioni delle installazioni; lookup condiviso della prima installazione disponibile, separato dal gate di Play. |
-| [CatalogDocument.swift](../../Sources/NXLibraryCore/Models/CatalogDocument.swift) | Schema, revisione, base legacy riconosciuta, configurazione delle fonti e validazione delle identità. |
-| [CatalogGamePresentation.swift](../../Sources/NXLibraryCore/Models/CatalogGamePresentation.swift) | Contratto comune per presentazione, operazioni supportate e target di avvio; nessuna operazione I/O. |
-| [CatalogStore.swift](../../Sources/NXLibraryCore/Services/Catalog/CatalogStore.swift) | Conversione conservativa, letture limitate, revisioni attese, lock e archiviazione esplicita del conflitto legacy senza fusione. |
-| [CatalogPublication.swift](../../Sources/NXLibraryCore/Services/Catalog/CatalogPublication.swift) | Staging verificato, creazione esclusiva e sostituzione atomica, con confine di errore controllabile. |
-| [CatalogRepository.swift](../../Sources/NXLibraryCore/Services/Catalog/CatalogRepository.swift) | Modifiche tipizzate sull'ultimo catalogo, senza replay di effetti esterni; risultati build limitati ai propri campi. |
-| [NXNativeLibraryMerge.swift](../../Sources/NXLibraryCore/Services/NXNativeLibraryMerge.swift) | Algoritmo di merge nxnative usato dal repository del catalogo comune. |
-| [CatalogRecovery.swift](../../Sources/NXLibraryCore/Models/CatalogRecovery.swift) | Offerte di recupero e conflitto legacy con impronte degli input, rivalidate all’accettazione. |
-| [CatalogPersonalizations.swift](../../Sources/NXLibraryCore/Models/CatalogPersonalizations.swift) | Lookup personali immutabili per identità e radici distinte per integrazione. |
-| [CatalogErrorCopy.swift](../../Sources/NXLibraryCore/Services/Catalog/CatalogErrorCopy.swift) | Errori recuperabili del catalogo nelle sei lingue. |
-| [CatalogBuildRecoveries.swift](../../Sources/NXLibraryCore/Models/CatalogBuildRecoveries.swift) | Generazioni di build non ancora salvate, selezione del retry e conferma della sola generazione persistita. |
-| [CatalogGameOptions.swift](../../Sources/NXLibraryCore/Models/CatalogGameOptions.swift) | Ordine unico delle operazioni comuni della libreria; ciò che una fonte può fare dipende dal suo record (nessuna modifica nxnative su un gioco Steam). |
-| [CatalogSourcesModel.swift](../../Sources/NXLibraryCore/Services/Catalog/CatalogSourcesModel.swift) | Opt-in, worker annullabile e stato Steam; discoveryRoot conserva la cartella scelta anche con fonte spenta; pubblica solo documenti salvati dal repository. |
-| [CatalogLibraryProjection.swift](../../Sources/NXLibraryCore/Models/CatalogLibraryProjection.swift) | Visibilità comune per fonti attive e giochi riconosciuti; nessuna scansione. |
-
-## Core · Steam
+Cartella `Sources/NXLibraryCore/Catalog/`.
 
 | File | Responsabilità |
 |---|---|
-| [SteamBackgroundLaunch.swift](../../Sources/NXLibraryCore/Services/Steam/SteamBackgroundLaunch.swift) | Attesa di un gioco Steam avviato da Play: pazienza (15 s, 45 s se Play avvia Steam), stato della schermata di lancio, regole di «Keep Steam in the background». |
-| [SteamKeyValues.swift](../../Sources/NXLibraryCore/Services/Steam/SteamKeyValues.swift) | Parser testuale limitato e lookup condivisi dei lettori: prima chiave, primo valore tipizzato o campo unico, con regole esplicite sui duplicati; nessuna direttiva eseguita. |
-| [SteamPlaytimeReader.swift](../../Sources/NXLibraryCore/Services/Steam/SteamPlaytimeReader.swift) | Ore e ultima partita dell’account Steam più recente da `localconfig.vdf`; nient’altro del file esce dal tipo. |
-| [SteamPlaytimeBaselines.swift](../../Sources/NXLibraryCore/Services/Steam/SteamPlaytimeBaselines.swift) | Totali Steam con il momento in cui sono stati visti; nuovo valore o account ripartono; mappa ai giochi del catalogo. |
-| [SteamReturnFocus.swift](../../Sources/NXLibraryCore/Models/SteamReturnFocus.swift) | Quando un gioco Steam che esce riporta Arcane davanti: Play premuto qui, gioco in primo piano, nessun altro gioco aperto. |
-| [SteamLaunchQuestions.swift](../../Sources/NXLibraryCore/Services/Steam/SteamLaunchQuestions.swift) | Domande con cui Steam ferma un avvio, dalle righe `GameAction` di `logs/console_log.txt`. `ShowInterstitials` è avanzamento; le domande contano dopo 1 s. |
-| [SteamPlaytimeSync.swift](../../Sources/NXLibraryCore/Services/Steam/SteamPlaytimeSync.swift) | Una lettura dei file Steam e cosa fa (pubblica, conserva gli ultimi totali buoni dello stesso account o azzera); coda di una lettura alla volta. |
-| [InstallationFileSnapshot.swift](../../Sources/NXLibraryCore/Services/Steam/InstallationFileSnapshot.swift) | Letture limitate e non bloccanti di file regolari; verifica dell'identità prima della pubblicazione. |
-| [InstallationDirectorySnapshot.swift](../../Sources/NXLibraryCore/Services/Steam/InstallationDirectorySnapshot.swift) | Lettura incrementale delle cartelle, budget anche sulle voci nascoste e annullamento durante l'enumerazione. |
-| [NativeMacApplication.swift](../../Sources/NXLibraryCore/Services/Steam/NativeMacApplication.swift) | Evidenze del bundle Mac e degli header eseguibili, architetture e categoria dichiarata, senza avvio. |
-| [SteamLibrarySource.swift](../../Sources/NXLibraryCore/Services/Steam/SteamLibrarySource.swift) | Snapshot delle librerie/manifest dichiarati, disponibilità, ambiguità, limiti e annullamento; non modifica il catalogo. |
-| [SteamPlayState.swift](../../Sources/NXLibraryCore/Services/Steam/SteamPlayState.swift) | Stato di Play per un gioco Steam: processi osservati con i percorsi risolti, passaggio a Steam, sessione solo quando gira l’app di questa installazione, attese e rifiuti. |
-| [SteamBinaryKeyValues.swift](../../Sources/NXLibraryCore/Services/Steam/SteamBinaryKeyValues.swift) | Lettura limitata del formato KeyValues binario di Steam (`appcache/stats`): tipi noti, profondità, voci e dimensione; qualunque altro byte è un errore. |
-| [SteamAchievementReader.swift](../../Sources/NXLibraryCore/Services/Steam/SteamAchievementReader.swift) | Achievement di un gioco per l’account corrente: schema (nomi nella lingua dell’app, poi inglese; nascosti; icone) e soli `AchievementTimes` del file delle statistiche; nessun file, account o statistiche: nessun dato. |
-| [SteamAchievementRarity.swift](../../Sources/NXLibraryCore/Services/Steam/SteamAchievementRarity.swift) | Rarità pubblica (`GetGlobalAchievementPercentagesForApp`, senza chiave) (una percentuale non numerica, «nan» o «inf», si scarta) e indirizzi delle icone sull’host community-assets del CDN di Steam, solo per nomi di file semplici. |
-| [SteamManifestWatcher.swift](../../Sources/NXLibraryCore/Services/Steam/SteamManifestWatcher.swift) | Uno stream FSEvents sulle cartelle `steamapps` delle librerie dell’ultima scansione; segnala solo i manifest `appmanifest_<AppID>.acf` e l’indice `libraryfolders.vdf` della radice, una volta per gruppo di eventi. |
-| [SteamCatalogReconciler.swift](../../Sources/NXLibraryCore/Services/Catalog/SteamCatalogReconciler.swift) | Ticket e fusione pura degli snapshot Steam, identità conservate e assenza trattata secondo completezza. |
-| [SteamMetadata.swift](../../Sources/NXLibraryCore/Services/Steam/SteamMetadata.swift) | Dati store Steam tipizzati, lingua e URL immagini verificati. |
-| [SteamMetadataService.swift](../../Sources/NXLibraryCore/Services/Steam/SteamMetadataService.swift) | Fino a sei download coalescenti, cache per lingua, ripiego offline (anche in un'altra lingua) e immagini ridimensionate. Legge i tratti dei giochi correlati solo da cache. |
-| [SteamPersonalizationStore.swift](../../Sources/NXLibraryCore/Services/Steam/SteamPersonalizationStore.swift) | Pubblicazione unica di metadati e riferimenti artwork; fallimenti e Automatic conservano le scelte coerenti. |
-| [GameDetailPresentation+Steam.swift](../../Sources/NXLibraryCore/Models/GameDetailPresentation+Steam.swift) | Dati della pagina Steam e generi della testata Spotlight; ignora i dati di altri AppID e dà precedenza ai campi personali. |
-| [SteamArtworkRequest.swift](../../Sources/NXLibraryCore/Services/Steam/SteamArtworkRequest.swift) | Cosa chiede la tile di un gioco Steam per ogni ruolo: prima la scelta personale, poi per il quadrato l’icona dell’app installata, mai la copertina; gli altri ruoli vanno all’arte dello store. |
-| [SteamBackdropChoice.swift](../../Sources/NXLibraryCore/Services/Steam/SteamBackdropChoice.swift) | Sfondo automatico di un gioco Steam: arte 16:9 pulita (Xbox, GOG, TheGamesDB, fan art LaunchBox), poi il primo screenshot, per ultimo il banner della libreria ritagliato. |
+| [Sources/NXLibraryCore/Catalog/CatalogGame.swift](../../Sources/NXLibraryCore/Catalog/CatalogGame.swift) | Record tipizzato nxnative/Steam, identità e personalizzazioni con namespace, osservazioni delle installazioni; lookup condiviso della prima installazione disponibile, separato dal gate di Play. | |
+| [Sources/NXLibraryCore/Catalog/CatalogDocument.swift](../../Sources/NXLibraryCore/Catalog/CatalogDocument.swift) | Schema, revisione, base legacy riconosciuta, configurazione delle fonti e validazione delle identità. | |
+| [Sources/NXLibraryCore/Catalog/CatalogGamePresentation.swift](../../Sources/NXLibraryCore/Catalog/CatalogGamePresentation.swift) | Contratto comune per presentazione, operazioni supportate e target di avvio; nessuna operazione I/O. | |
+| [Sources/NXLibraryCore/Catalog/CatalogStore.swift](../../Sources/NXLibraryCore/Catalog/CatalogStore.swift) | Conversione conservativa, letture limitate, revisioni attese, lock e archiviazione esplicita del conflitto legacy senza fusione. | |
+| [Sources/NXLibraryCore/Catalog/CatalogPublication.swift](../../Sources/NXLibraryCore/Catalog/CatalogPublication.swift) | Staging verificato, creazione esclusiva e sostituzione atomica, con confine di errore controllabile. | |
+| [Sources/NXLibraryCore/Catalog/CatalogRepository.swift](../../Sources/NXLibraryCore/Catalog/CatalogRepository.swift) | Modifiche tipizzate sull'ultimo catalogo, senza replay di effetti esterni; risultati build limitati ai propri campi. | |
+| [Sources/NXLibraryCore/Catalog/CatalogRecovery.swift](../../Sources/NXLibraryCore/Catalog/CatalogRecovery.swift) | Offerte di recupero e conflitto legacy con impronte degli input, rivalidate all’accettazione. | |
+| [Sources/NXLibraryCore/Catalog/CatalogPersonalizations.swift](../../Sources/NXLibraryCore/Catalog/CatalogPersonalizations.swift) | Lookup personali immutabili per identità e radici distinte per integrazione. | |
+| [Sources/NXLibraryCore/Catalog/CatalogErrorCopy.swift](../../Sources/NXLibraryCore/Catalog/CatalogErrorCopy.swift) | Errori recuperabili del catalogo nelle sei lingue. | |
+| [Sources/NXLibraryCore/Catalog/CatalogBuildRecoveries.swift](../../Sources/NXLibraryCore/Catalog/CatalogBuildRecoveries.swift) | Generazioni di build non ancora salvate, selezione del retry e conferma della sola generazione persistita. | |
+| [Sources/NXLibraryCore/Catalog/CatalogGameOptions.swift](../../Sources/NXLibraryCore/Catalog/CatalogGameOptions.swift) | Ordine unico delle operazioni comuni della libreria; ciò che una fonte può fare dipende dal suo record (nessuna modifica nxnative su un gioco Steam). | |
+| [Sources/NXLibraryCore/Catalog/CatalogSourcesModel.swift](../../Sources/NXLibraryCore/Catalog/CatalogSourcesModel.swift) | Opt-in, worker annullabile e stato Steam; discoveryRoot conserva la cartella scelta anche con fonte spenta; pubblica solo documenti salvati dal repository. | |
+| [Sources/NXLibraryCore/Catalog/CatalogLibraryProjection.swift](../../Sources/NXLibraryCore/Catalog/CatalogLibraryProjection.swift) | Visibilità comune per fonti attive e giochi riconosciuti; nessuna scansione. | |
+| [Sources/NXLibraryCore/Catalog/SteamCatalogReconciler.swift](../../Sources/NXLibraryCore/Catalog/SteamCatalogReconciler.swift) | Ticket e fusione pura degli snapshot Steam, identità conservate e assenza trattata secondo completezza. | |
 
-Giochi in download: `SteamLibrarySource` (StateFlags senza il bit 4 → `.downloading`, cartella non letta), `SteamCatalogInstallation.isDownloading` e `SteamCatalogGame.isDownloading`/`needsReview`, `CatalogGamePresentation.isDownloading`, `PortingTileLook.downloading` con `PortingArtLook` (la scritta) e `PortingDownloadMark` → `DownloadMarkLayers` in `TileMotionLayers.swift` (il simbolo che pulsa, fuori dal `drawingGroup`), `SteamPlayCoordinator.openDownloads`, `CatalogSteamInfo` e `GamePrimaryActions.primaryWaveDots` (pulsante «Downloading» con i puntini, come «Porting»), il ritmo delle riscansioni in `CatalogSourcesModel.steamFilesChanged`..
+## Core · libreria, sessioni e spazio
+
+Cartella `Sources/NXLibraryCore/Library/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Library/GameStorageUsage.swift](../../Sources/NXLibraryCore/Library/GameStorageUsage.swift) | Dimensioni per gioco e totali: distingue assenza e indisponibilità, segnala cache condivise e conserva identità stabili per il focus. | |
+| [Sources/NXLibraryCore/Library/LibraryFilter.swift](../../Sources/NXLibraryCore/Library/LibraryFilter.swift) | Definisce filtri, PlayHistory e query condivisa per ricerca/ordine del catalogo misto, conservando l’API nxnative. | |
+| [Sources/NXLibraryCore/Library/LibrarySelectionState.swift](../../Sources/NXLibraryCore/Library/LibrarySelectionState.swift) | Mantiene selezione e spostamento nel risultato filtrato della Collection. | |
+| [Sources/NXLibraryCore/Library/LibraryPresentation.swift](../../Sources/NXLibraryCore/Library/LibraryPresentation.swift) | Formatta metadati e statistiche temporali per le schermate della libreria. | |
+| [Sources/NXLibraryCore/Library/PlaySession.swift](../../Sources/NXLibraryCore/Library/PlaySession.swift) | Descrive una sessione persistibile con gioco e riferimenti temporali. | |
+| [Sources/NXLibraryCore/Library/ActivitySummary.swift](../../Sources/NXLibraryCore/Library/ActivitySummary.swift) | Aggrega sessioni, giorni e tempi della settimana per la scheda Activity. | |
+| [Sources/NXLibraryCore/Library/PlaySessionStore.swift](../../Sources/NXLibraryCore/Library/PlaySessionStore.swift) | Registra avvio, heartbeat, fine e riconciliazione delle sessioni di gioco; unisce i totali esterni (Steam) con le sessioni successive. | |
+| [Sources/NXLibraryCore/Library/GameFocus.swift](../../Sources/NXLibraryCore/Library/GameFocus.swift) | Quando un gioco che esce riporta Arcane davanti: solo se era l’app in primo piano e nessun altro gioco della libreria è aperto. | |
+| [Sources/NXLibraryCore/Library/SessionSummary.swift](../../Sources/NXLibraryCore/Library/SessionSummary.swift) | Cosa dice la card di fine sessione: gioco, durata di questa sessione e totale scritto come nelle info del gioco; niente card sotto i dieci secondi. | |
+| [Sources/NXLibraryCore/Library/DirectorySize.swift](../../Sources/NXLibraryCore/Library/DirectorySize.swift) | Misura le cartelle con fts come du, così il refresh non resta bloccato su app grandi in dischi esterni (issue #2). | |
+| [Sources/NXLibraryCore/Library/RunningGames.swift](../../Sources/NXLibraryCore/Library/RunningGames.swift) | Confronta bundle ID e mantiene uno snapshot delle applicazioni in esecuzione. | |
+| [Sources/NXLibraryCore/Library/StorageManager.swift](../../Sources/NXLibraryCore/Library/StorageManager.swift) | Misura app, cache e log per gioco e totali senza duplicare percorsi condivisi; verifica cartelle e sorgenti prima della pulizia selettiva. I backup appartengono al flusso Saves. | |
+| [Sources/NXLibraryCore/Library/CollectionRow.swift](../../Sources/NXLibraryCore/Library/CollectionRow.swift) | Definisce proporzioni delle copertine e geometria della riga Collection. | |
+
+## Core · Selene: Spotlight, focus, temi e sfondi
+
+Cartella `Sources/NXLibraryCore/Selene/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Selene/BackdropArt.swift](../../Sources/NXLibraryCore/Selene/BackdropArt.swift) | Regola che tiene l’arte del gioco precedente sullo sfondo Spotlight (`BackdropArtRule`) dissolvenza di un layer calcolata sull’orologio (`OpacityFade`) e livelli ormai coperti da togliere (`ArtStack`). | |
+| [Sources/NXLibraryCore/Selene/TileMotion.swift](../../Sources/NXLibraryCore/Selene/TileMotion.swift) | Curve e campioni dei loop di ring, bagliore e riflesso della tile selezionata, sull'orologio condiviso. | |
+| [Sources/NXLibraryCore/Selene/TextScroll.swift](../../Sources/NXLibraryCore/Selene/TextScroll.swift) | Scorrimento della colonna del pannello della mod: altezza della descrizione dopo Read more, limiti, riga a fuoco mostrata intera e passo Su/Giù che legge prima della riga seguente. | |
+| [Sources/NXLibraryCore/Selene/CursorIdleState.swift](../../Sources/NXLibraryCore/Selene/CursorIdleState.swift) | Politica del ritardo di visibilità del puntatore e reset su mouse o perdita di eleggibilità. | |
+| [Sources/NXLibraryCore/Selene/OnlineBackgrounds.swift](../../Sources/NXLibraryCore/Selene/OnlineBackgrounds.swift) | Modella sorgenti e risultati e interpreta le risposte dei provider di sfondi fissi e video. | |
+| [Sources/NXLibraryCore/Selene/SeleneImporter.swift](../../Sources/NXLibraryCore/Selene/SeleneImporter.swift) | Importa suoni e wallpaper dalla cartella Selene dell’utente e risolve cue e fallback. | |
+| [Sources/NXLibraryCore/Selene/ButtonPrompts.swift](../../Sources/NXLibraryCore/Selene/ButtonPrompts.swift) | Traduce azioni in simboli o etichette per tastiera e controller Switch, Xbox e PlayStation. | |
+| [Sources/NXLibraryCore/Selene/FocusIndex.swift](../../Sources/NXLibraryCore/Selene/FocusIndex.swift) | Mantiene un indice di focus entro i limiti di una lista. | |
+| [Sources/NXLibraryCore/Selene/HoldDetector.swift](../../Sources/NXLibraryCore/Selene/HoldDetector.swift) | Distingue pressione breve e prolungata usando un tempo fornito dal chiamante. | |
+| [Sources/NXLibraryCore/Selene/MaterialIcon.swift](../../Sources/NXLibraryCore/Selene/MaterialIcon.swift) | Elenca i glifi del font Material Icons incluso nel bundle. | |
+| [Sources/NXLibraryCore/Selene/MenuSelectionModel.swift](../../Sources/NXLibraryCore/Selene/MenuSelectionModel.swift) | Gestisce azioni selezionate nel control center e nelle scelte Power. | |
+| [Sources/NXLibraryCore/Selene/MoonlightField.swift](../../Sources/NXLibraryCore/Selene/MoonlightField.swift) | Genera in modo deterministico i dati delle particelle per lo sfondo Metal. | |
+| [Sources/NXLibraryCore/Selene/MoonlightAppearance.swift](../../Sources/NXLibraryCore/Selene/MoonlightAppearance.swift) | Identità delle superfici classica/Arcane/Flow e campionamento dei colori locali condiviso fra shader e fallback. | |
+| [Sources/NXLibraryCore/Selene/ScreenshotViewerState.swift](../../Sources/NXLibraryCore/Selene/ScreenshotViewerState.swift) | Mantiene indice e limiti della navigazione nel visualizzatore screenshot. | |
+| [Sources/NXLibraryCore/Selene/SeleneCanvas.swift](../../Sources/NXLibraryCore/Selene/SeleneCanvas.swift) | Calcola scala uniforme, stage centrato e conversione delle unità del canvas 1920×1080. | |
+| [Sources/NXLibraryCore/Selene/SelenePalette.swift](../../Sources/NXLibraryCore/Selene/SelenePalette.swift) | Decodifica palette e metadato opzionale moonlight, ordine del selettore e fallback Arcane con ID selene. | |
+| [Sources/NXLibraryCore/Selene/SpotlightPage.swift](../../Sources/NXLibraryCore/Selene/SpotlightPage.swift) | Calcola estratti delle descrizioni e stati dello scorrimento della pagina Spotlight. | |
+| [Sources/NXLibraryCore/Selene/SpotlightRow.swift](../../Sources/NXLibraryCore/Selene/SpotlightRow.swift) | Costruisce la sequenza per UUID e salva riordini conservando giochi/fonti/card temporaneamente nascosti; Surprise mantiene il proprio contratto nxnative. | |
+| [Sources/NXLibraryCore/Selene/SpotlightRowGeometry.swift](../../Sources/NXLibraryCore/Selene/SpotlightRowGeometry.swift) | Posti delle tessere nella riga, camera unica che la fa scorrere e finestra delle tessere create; posto, scala e camera lungo lo scorrimento dalla posizione continua della selezione. | |
+| [Sources/NXLibraryCore/Selene/SpotlightState.swift](../../Sources/NXLibraryCore/Selene/SpotlightState.swift) | Gestisce selezione, focus (anche la card Achievements), azioni e spostamento delle tile su Spotlight. | |
+| [Sources/NXLibraryCore/Selene/SpotlightEntrance.swift](../../Sources/NXLibraryCore/Selene/SpotlightEntrance.swift) | Tempi e partenze del volo delle tessere, dissolvenza oltre il bordo, sfondo, informazioni, hint e fasi della prima entrata di Spotlight, compreso quando accetta input. | |
+| [Sources/NXLibraryCore/Selene/ThemePicker.swift](../../Sources/NXLibraryCore/Selene/ThemePicker.swift) | Gestisce il focus nella griglia colori, tab Wallpapers/Live e scelta dello sfondo successivo. | |
+| [Sources/NXLibraryCore/Selene/WallpaperCatalog.swift](../../Sources/NXLibraryCore/Selene/WallpaperCatalog.swift) | Elenca wallpaper e video, gruppi, nomi e file delle risorse incluse o importate. | |
+| [Sources/NXLibraryCore/Selene/WallpaperPlacement.swift](../../Sources/NXLibraryCore/Selene/WallpaperPlacement.swift) | Decide dove applicare uno sfondo scelto fra schermi principali e Settings. | |
+| [Sources/NXLibraryCore/Selene/GridListLayout.swift](../../Sources/NXLibraryCore/Selene/GridListLayout.swift) | Geometria di una lista a colonne di righe uguali: altezza, posizione di ogni riga, linee da disegnare, riga da mostrare e riga in vista più vicina. | |
+
+## Core · pagina del gioco
+
+Cartella `Sources/NXLibraryCore/Details/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Details/GameDetailPresentation.swift](../../Sources/NXLibraryCore/Details/GameDetailPresentation.swift) | Prepara badge, disponibilità delle azioni, date e dati della pagina Details. | |
+| [Sources/NXLibraryCore/Details/MoreLikeThis.swift](../../Sources/NXLibraryCore/Details/MoreLikeThis.swift) | Ordina i giochi correlati per generi, sviluppatore ed editore, con precedenza alla stessa fonte e ripiego facoltativo. | |
+| [Sources/NXLibraryCore/Details/DetailsFacts.swift](../../Sources/NXLibraryCore/Details/DetailsFacts.swift) | Sceglie le righe del pannello Details per Switch e Steam: solo i valori presenti, niente di tecnico. | |
+| [Sources/NXLibraryCore/Details/DetailsFocus.swift](../../Sources/NXLibraryCore/Details/DetailsFocus.swift) | Gestisce zone e spostamenti del focus nei link e nelle bande di Details. | |
+| [Sources/NXLibraryCore/Details/GameOptionsPresentation.swift](../../Sources/NXLibraryCore/Details/GameOptionsPresentation.swift) | Definisce righe, livelli, etichette, scelte runtime e focus di Game Options. | |
+| [Sources/NXLibraryCore/Details/GameDetailPresentation+Steam.swift](../../Sources/NXLibraryCore/Details/GameDetailPresentation+Steam.swift) | Dati della pagina Steam e generi della testata Spotlight; ignora i dati di altri AppID e dà precedenza ai campi personali. | |
+
+## Core · artwork e metadati
+
+Cartella `Sources/NXLibraryCore/Artwork/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Artwork/AutomaticIconResolver.swift](../../Sources/NXLibraryCore/Artwork/AutomaticIconResolver.swift) | Risolve icone automatiche con cache, abbinamento prudente e rispetto delle restrizioni del provider. | |
+| [Sources/NXLibraryCore/Artwork/ArtworkStore.swift](../../Sources/NXLibraryCore/Artwork/ArtworkStore.swift) | Scarica, ridimensiona e conserva immagini e screenshot nella cache per titolo e tipo. | |
+| [Sources/NXLibraryCore/Artwork/ArtworkPicker.swift](../../Sources/NXLibraryCore/Artwork/ArtworkPicker.swift) | Aggrega candidati per cover, sfondo, icona e logo e conserva le scelte manuali. | |
+| [Sources/NXLibraryCore/Artwork/MetadataPicker.swift](../../Sources/NXLibraryCore/Artwork/MetadataPicker.swift) | Aggrega valori alternativi dei metadati e conserva gli override dell’utente per campo. | |
+| [Sources/NXLibraryCore/Artwork/OnlineArtworkSources.swift](../../Sources/NXLibraryCore/Artwork/OnlineArtworkSources.swift) | Ricava artwork Steam e loghi da MediaWiki e Wikimedia Commons. | |
+| [Sources/NXLibraryCore/Artwork/MoreArtworkSources.swift](../../Sources/NXLibraryCore/Artwork/MoreArtworkSources.swift) | Aggiunge matching dei nomi e sorgenti Xbox, GOG, Nintendo Europe, wiki e altri cataloghi. | |
+| [Sources/NXLibraryCore/Artwork/ArtworkBrowse.swift](../../Sources/NXLibraryCore/Artwork/ArtworkBrowse.swift) | Sorgenti sfogliabili da Change artwork (LaunchBox, SteamGridDB): nomi cercati e risultati per tutti gli slot. | |
+| [Sources/NXLibraryCore/Artwork/LaunchBoxArt.swift](../../Sources/NXLibraryCore/Artwork/LaunchBoxArt.swift) | Legge ricerca e pagina gioco di LaunchBox; dal payload Nuxt ricava anteprime, file pieni, tipo, regione e dimensioni; screenshot Gameplay. | |
+| [Sources/NXLibraryCore/Artwork/SteamGridDBArt.swift](../../Sources/NXLibraryCore/Artwork/SteamGridDBArt.swift) | Conserva la chiave SteamGridDB in un file 0600 e interroga l’API v2 per griglie, hero, loghi e icone statiche accreditate. | |
+| [Sources/NXLibraryCore/Artwork/LibraryArtworkRole.swift](../../Sources/NXLibraryCore/Artwork/LibraryArtworkRole.swift) | Ruoli di layout delle immagini (copertina, quadrato, sfondo…) separati dal fornitore: un quadrato non chiede né ritaglia mai la copertina verticale. | |
+| [Sources/NXLibraryCore/Artwork/CriticRating.swift](../../Sources/NXLibraryCore/Artwork/CriticRating.swift) | Identità pubblica del gioco e console (Mac, Switch, Switch 2), voto originale /100, provenienza e riempimento proporzionale delle cinque stelle. | |
+| [Sources/NXLibraryCore/Artwork/WikidataRatings.swift](../../Sources/NXLibraryCore/Artwork/WikidataRatings.swift) | Abbina titoli esatti e ID Steam; seleziona medie della critica documentate, senza confondere piattaforme o raccomandazioni. L'identità del gioco (`entity`) serve anche alle descrizioni di Wikipedia. | |
+| [Sources/NXLibraryCore/Artwork/WikipediaDescription.swift](../../Sources/NXLibraryCore/Artwork/WikipediaDescription.swift) | Quando una descrizione non è nella lingua dell'app, sitelink Wikidata e introduzione di Wikipedia in quella lingua (cinese in semplificato); servizio con cache misurabile e svuotabile, host fissi e nessun errore salvato come assenza. | |
+| [Sources/NXLibraryCore/Artwork/CriticRatingService.swift](../../Sources/NXLibraryCore/Artwork/CriticRatingService.swift) | Preferenza IGDB personale → Wikidata pubblico, cache Wikidata, ripiego offline e pausa dopo errori. | |
+| [Sources/NXLibraryCore/Artwork/IGDBCredentials.swift](../../Sources/NXLibraryCore/Artwork/IGDBCredentials.swift) | Credenziali Twitch personali in file 0600, validazione e messaggi sicuri senza segreti nei log. | |
+| [Sources/NXLibraryCore/Artwork/IGDBRatings.swift](../../Sources/NXLibraryCore/Artwork/IGDBRatings.swift) | Abbinamento IGDB esatto o tramite ID Steam, critica preferita e ripiego utenti esplicito, con provenienza distinta da Wikidata. | |
+| [Sources/NXLibraryCore/Artwork/IGDBRatingService.swift](../../Sources/NXLibraryCore/Artwork/IGDBRatingService.swift) | Cache dei voti, richieste coalescenti e verifica credenziali tramite il client IGDB condiviso. | |
+| [Sources/NXLibraryCore/Artwork/IGDBClient.swift](../../Sources/NXLibraryCore/Artwork/IGDBClient.swift) | Unico accesso Twitch/IGDB per voti e metadati: token in memoria, coda limitata seriale, host vincolati, rinnovo 401 e annullamento. | |
+| [Sources/NXLibraryCore/Artwork/IGDBMetadata.swift](../../Sources/NXLibraryCore/Artwork/IGDBMetadata.swift) | Proposte IGDB per campo: identità esatta, ruoli delle aziende e date complete della piattaforma corretta. | |
+| [Sources/NXLibraryCore/Artwork/IGDBMetadataService.swift](../../Sources/NXLibraryCore/Artwork/IGDBMetadataService.swift) | Ricerca metadati su richiesta, ID Steam verificato, cache separata e ripiego offline; nessuna scrittura delle scelte personali. | |
+| [Sources/NXLibraryCore/Artwork/DatabaseMetadata.swift](../../Sources/NXLibraryCore/Artwork/DatabaseMetadata.swift) | Proposte LaunchBox/TheGamesDB: identità e piattaforma verificate, campi separati, fonte esplicita e date della versione corretta. | |
+| [Sources/NXLibraryCore/Artwork/DatabaseMetadataService.swift](../../Sources/NXLibraryCore/Artwork/DatabaseMetadataService.swift) | Letture pubbliche limitate e annullabili, richieste condivise, cache testuale per gioco/piattaforma e recupero offline. | |
+| [Sources/NXLibraryCore/Artwork/GameGenre.swift](../../Sources/NXLibraryCore/Artwork/GameGenre.swift) | Generi noti tradotti alla presentazione; dati originali e generi personali conservati. | |
 
 ## Core · achievement
 
-| File | Responsabilità |
-|---|---|
-| [AchievementSummary.swift](../../Sources/NXLibraryCore/Models/AchievementSummary.swift) | Riepilogo puro per la tile e la schermata: conteggi, percentuale, gioco completato (`isComplete`), righe recenti con icona, conteggi per tier, sbloccati di recente, ultimo sblocco, filtri e ordini; maschera i nascosti ancora bloccati. |
-| [AchievementTier.swift](../../Sources/NXLibraryCore/Models/AchievementTier.swift) | Tier a cristallo come i trofei PS5: Arcano (viola, al posto del Platino) per il gioco completato, Oro / Argento / Bronzo per rarità Steam (<10%, <30%, il resto); nomi tradotti e PNG nelle risorse del Core; `videoURL` dà il video in loop dell'Arcane (`crystal-arcane.mov`, HEVC con alpha a 384 px). |
-| [AchievementsScreenState.swift](../../Sources/NXLibraryCore/Models/AchievementsScreenState.swift) | Filtro e selezione della schermata Achievements: due colonne, bordi fermi, LB/RB che girano i filtri. |
-| [GridListLayout.swift](../../Sources/NXLibraryCore/Models/GridListLayout.swift) | Geometria di una lista a colonne di righe uguali: altezza, posizione di ogni riga, linee da disegnare, riga da mostrare e riga in vista più vicina. |
-
-## Core · lingua e testi
+Cartella `Sources/NXLibraryCore/Achievements/`.
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Models/AppIdentity.swift](../../Sources/NXLibraryCore/Models/AppIdentity.swift) | Nome visibile dell'app ("Arcane", non tradotto), il vecchio nome detto solo dal benvenuto, il nome del modulo Porting, pagina del progetto, guida online aperta da About e User-Agent unico delle richieste di rete. |
-| [Sources/NXLibraryCore/Models/AppLocale.swift](../../Sources/NXLibraryCore/Models/AppLocale.swift) | Sette lingue, risoluzione delle preferenze e regione indipendente; nomi e ricerca delle regioni. |
-| [Sources/NXLibraryCore/Models/GameGenre.swift](../../Sources/NXLibraryCore/Models/GameGenre.swift) | Generi noti tradotti alla presentazione; dati originali e generi personali conservati. |
-| [Sources/NXLibraryCore/Services/AppLocalization.swift](../../Sources/NXLibraryCore/Services/AppLocalization.swift) | Contesto osservabile, lookup portabile delle risorse e interpolazioni/plurali. |
-| [Sources/NXLibraryCore/Resources/Localizable.xcstrings](../../Sources/NXLibraryCore/Resources/Localizable.xcstrings) | Testi condivisi e traduzioni en/it/fr/de/es/pt-BR/zh-Hans. |
+| [Sources/NXLibraryCore/Achievements/AchievementSummary.swift](../../Sources/NXLibraryCore/Achievements/AchievementSummary.swift) | Riepilogo puro per la tile e la schermata: conteggi, percentuale, gioco completato (`isComplete`), righe recenti con icona, conteggi per tier, sbloccati di recente, ultimo sblocco, filtri e ordini; maschera i nascosti ancora bloccati. | |
+| [Sources/NXLibraryCore/Achievements/AchievementTier.swift](../../Sources/NXLibraryCore/Achievements/AchievementTier.swift) | Tier a cristallo come i trofei PS5: Arcano (viola, al posto del Platino) per il gioco completato, Oro / Argento / Bronzo per rarità Steam (<10%, <30%, il resto); nomi tradotti e PNG nelle risorse del Core; `videoURL` dà il video in loop dell'Arcane (`crystal-arcane.mov`, HEVC con alpha a 384 px). | |
+| [Sources/NXLibraryCore/Achievements/AchievementsScreenState.swift](../../Sources/NXLibraryCore/Achievements/AchievementsScreenState.swift) | Filtro e selezione della schermata Achievements: due colonne, bordi fermi, LB/RB che girano i filtri. | |
 
-## Core · profilo dei dati
+## Core · salvataggi
+
+Cartella `Sources/NXLibraryCore/Saves/`.
 
 | File | Responsabilità |
 |---|---|
-| [AppDataProfile.swift](../../Sources/NXLibraryCore/Services/AppDataProfile.swift) | Policy di percorsi, cache, preferenze e staging del profilo. |
-| [DevelopmentProfileImporter.swift](../../Sources/NXLibraryCore/Services/DevelopmentProfileImporter.swift) | Copia iniziale selettiva (compresa la scelta Steam del Setup), hash, validazione e ripresa senza modificare la sorgente. |
-| [DevelopmentOperationStore.swift](../../Sources/NXLibraryCore/Services/DevelopmentOperationStore.swift) | Autorizzazioni persistenti per le operazioni richieste nella Dev, distinte da quelle importate. |
+| [Sources/NXLibraryCore/Saves/SaveSnapshot.swift](../../Sources/NXLibraryCore/Saves/SaveSnapshot.swift) | Identità, inventario, manifest schema 1/2 e anteprime; rifiuta dichiarazioni storiche con componenti nuovi. | |
+| [Sources/NXLibraryCore/Saves/SavePresentation.swift](../../Sources/NXLibraryCore/Saves/SavePresentation.swift) | Riepiloghi e ambito dei restore storici/multiutente, nomi dei componenti e limite cloud a primario/device. | |
+| [Sources/NXLibraryCore/Saves/SaveFileIO.swift](../../Sources/NXLibraryCore/Saves/SaveFileIO.swift) | Copie, hash e xattr portabili; inventario di directory e registro regolare limitato, controlli dei percorsi e scritture durevoli. | |
+| [Sources/NXLibraryCore/Saves/SaveSnapshotStore.swift](../../Sources/NXLibraryCore/Saves/SaveSnapshotStore.swift) | Backup completi degli utenti locali e registro, formati storici compatibili, staging e import User/Device. | |
+| [Sources/NXLibraryCore/Saves/SaveRestorePreview.swift](../../Sources/NXLibraryCore/Saves/SaveRestorePreview.swift) | Staging e validazione dei pezzi registrati nel backup, compreso il file utenti, con rilevamento dei cambiamenti concorrenti. | |
+| [Sources/NXLibraryCore/Saves/SaveTransaction.swift](../../Sources/NXLibraryCore/Saves/SaveTransaction.swift) | Sostituzioni con ambito esplicito, backup completo e journal 1/2; verifica originali, recovery e pulizia parziale riprendibili con intento durevole. | |
+| [Sources/NXLibraryCore/Saves/SaveOperationGate.swift](../../Sources/NXLibraryCore/Saves/SaveOperationGate.swift) | Assegna lease per titolo e un’esclusione globale per l’updater; coordina salvataggi, Play, installazioni e recuperi. | |
+
+## Core · mod e GameBanana
+
+Cartella `Sources/NXLibraryCore/Mods/` e `Mods/GameBanana/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Mods/GameBanana/GameBananaAPI.swift](../../Sources/NXLibraryCore/Mods/GameBanana/GameBananaAPI.swift) | URL, host fidati, modelli delle risposte di GameBanana e testo semplice dalle descrizioni HTML. | |
+| [Sources/NXLibraryCore/Mods/GameBanana/GameBananaClient.swift](../../Sources/NXLibraryCore/Mods/GameBanana/GameBananaClient.swift) | Richieste a GameBanana con User-Agent, limite di 4 alla volta e cache su disco. | |
+| [Sources/NXLibraryCore/Mods/GameBanana/GameBananaImageCache.swift](../../Sources/NXLibraryCore/Mods/GameBanana/GameBananaImageCache.swift) | Cache su disco delle immagini delle mod dal CDN di GameBanana. | |
+| [Sources/NXLibraryCore/Mods/GameBanana/GameBananaMatch.swift](../../Sources/NXLibraryCore/Mods/GameBanana/GameBananaMatch.swift) | Abbina un gioco alla sua pagina GameBanana per nome e ricorda la scelta. | |
+| [Sources/NXLibraryCore/Mods/GameBanana/AvailableModsFinder.swift](../../Sources/NXLibraryCore/Mods/GameBanana/AvailableModsFinder.swift) | Cerca le mod di un gioco che funzionano e capisce quando una mod installata ha un aggiornamento. | |
+| [Sources/NXLibraryCore/Mods/GameBanana/ModInstaller.swift](../../Sources/NXLibraryCore/Mods/GameBanana/ModInstaller.swift) | Controlla, estrae con `bsdtar` e installa una mod scaricata nella cartella del gioco. | |
+| [Sources/NXLibraryCore/Mods/GameBanana/GameBananaBandModel.swift](../../Sources/NXLibraryCore/Mods/GameBanana/GameBananaBandModel.swift) | Stato della fascia Mods di un gioco: abbinamento, mod che funzionano, installazioni. | |
+| [Sources/NXLibraryCore/Mods/GameBanana/ModCatalog.swift](../../Sources/NXLibraryCore/Mods/GameBanana/ModCatalog.swift) | Categorie nostre, ordinamenti e sezioni della pagina dello store (altezze fisse). | |
+| [Sources/NXLibraryCore/Mods/GameBanana/ModCatalogSnapshots.swift](../../Sources/NXLibraryCore/Mods/GameBanana/ModCatalogSnapshots.swift) | Le mod di ogni gioco salvate su disco, per aprire lo store subito; solo link GameBanana. | |
+| [Sources/NXLibraryCore/Mods/GameBanana/ModStoreModel.swift](../../Sources/NXLibraryCore/Mods/GameBanana/ModStoreModel.swift) | Dati dello store: apre dalle copie su disco, aggiorna in background due giochi alla volta, abbina solo se sicuro. | |
+| [Sources/NXLibraryCore/Mods/ModStoreFocus.swift](../../Sources/NXLibraryCore/Mods/ModStoreFocus.swift) | Focus nella pagina dello store, ancorato al tipo di sezione; ogni sezione ricorda la sua tessera. | |
+| [Sources/NXLibraryCore/Mods/GameBanana/GameBananaFindModel.swift](../../Sources/NXLibraryCore/Mods/GameBanana/GameBananaFindModel.swift) | Stato della ricerca per nome: campo, risultati, None of these. | |
+| [Sources/NXLibraryCore/Mods/GameBanana/ModDownload.swift](../../Sources/NXLibraryCore/Mods/GameBanana/ModDownload.swift) | Scarica un file di GameBanana con avanzamento e Cancel, solo da host fidati. | |
+| [Sources/NXLibraryCore/Mods/ModsBandLayout.swift](../../Sources/NXLibraryCore/Mods/ModsBandLayout.swift) | Ordine delle tessere della fascia Mods e movimento nella sua griglia (sei per riga). | |
+| [Sources/NXLibraryCore/Mods/LocalMod.swift](../../Sources/NXLibraryCore/Mods/LocalMod.swift) | Una cartella della cartella mods di un gioco, con il suo `romfs` e lo stato. | |
+
+## Core · impostazioni, lingua e testi
+
+Cartella `Sources/NXLibraryCore/Settings/`. Il catalogo dei testi sta in `Resources/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Settings/AppSettings.swift](../../Sources/NXLibraryCore/Settings/AppSettings.swift) | Definisce impostazioni globali, default e decodifica compatibile; ignora la scelta storica delle particelle. | |
+| [Sources/NXLibraryCore/Settings/AppSettingsStore.swift](../../Sources/NXLibraryCore/Settings/AppSettingsStore.swift) | Pubblica impostazioni ed errori, preserva i file illeggibili e salva settings.json in modo atomico. Tiene l'ultima selezione fuori dalle notifiche e la scrive in background. | |
+| [Sources/NXLibraryCore/Settings/SettingsRowAction.swift](../../Sources/NXLibraryCore/Settings/SettingsRowAction.swift) | Identifica azioni e righe Settings, mantenendo una sola azione primaria per riga senza accorpare giochi omonimi. | |
+| [Sources/NXLibraryCore/Settings/SettingsCatalog.swift](../../Sources/NXLibraryCore/Settings/SettingsCatalog.swift) | Descrive righe, ricerca e valori modificati; ogni riga tiene il suo `rowID` e sta in una sola sezione, vibrazione compresa tra i default dei nuovi giochi. | |
+| [Sources/NXLibraryCore/Settings/SettingsSection.swift](../../Sources/NXLibraryCore/Settings/SettingsSection.swift) | Sezioni di Settings con titoli e icone, dichiarate in ordine di sidebar, e `SettingsSidebarGroup`: General, Library, Porting (il gruppo di piattaforma) e System. | |
+| [Sources/NXLibraryCore/Settings/SettingsReset.swift](../../Sources/NXLibraryCore/Settings/SettingsReset.swift) | Reset group per sezione: quali sezioni si azzerano e quali valori di `AppSettings` tornano ai default. | |
+| [Sources/NXLibraryCore/Settings/AppLocale.swift](../../Sources/NXLibraryCore/Settings/AppLocale.swift) | Sette lingue, risoluzione delle preferenze e regione indipendente; nomi e ricerca delle regioni. | |
+| [Sources/NXLibraryCore/Settings/AppLocalization.swift](../../Sources/NXLibraryCore/Settings/AppLocalization.swift) | Contesto osservabile, lookup portabile delle risorse e interpolazioni/plurali. | |
+| [Sources/NXLibraryCore/Resources/Localizable.xcstrings](../../Sources/NXLibraryCore/Resources/Localizable.xcstrings) | Testi condivisi e traduzioni en/it/fr/de/es/pt-BR/zh-Hans. | |
+
+## Core · Steam
+
+Cartella `Sources/NXLibraryCore/Steam/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Steam/SteamBackgroundLaunch.swift](../../Sources/NXLibraryCore/Steam/SteamBackgroundLaunch.swift) | Attesa di un gioco Steam avviato da Play: pazienza (15 s, 45 s se Play avvia Steam), stato della schermata di lancio, regole di «Keep Steam in the background». | |
+| [Sources/NXLibraryCore/Steam/SteamKeyValues.swift](../../Sources/NXLibraryCore/Steam/SteamKeyValues.swift) | Parser testuale limitato e lookup condivisi dei lettori: prima chiave, primo valore tipizzato o campo unico, con regole esplicite sui duplicati; nessuna direttiva eseguita. | |
+| [Sources/NXLibraryCore/Steam/SteamPlaytimeReader.swift](../../Sources/NXLibraryCore/Steam/SteamPlaytimeReader.swift) | Ore e ultima partita dell’account Steam più recente da `localconfig.vdf`; nient’altro del file esce dal tipo. | |
+| [Sources/NXLibraryCore/Steam/SteamPlaytimeBaselines.swift](../../Sources/NXLibraryCore/Steam/SteamPlaytimeBaselines.swift) | Totali Steam con il momento in cui sono stati visti; nuovo valore o account ripartono; mappa ai giochi del catalogo. | |
+| [Sources/NXLibraryCore/Steam/SteamReturnFocus.swift](../../Sources/NXLibraryCore/Steam/SteamReturnFocus.swift) | Quando un gioco Steam che esce riporta Arcane davanti: Play premuto qui, gioco in primo piano, nessun altro gioco aperto. | |
+| [Sources/NXLibraryCore/Steam/SteamLaunchQuestions.swift](../../Sources/NXLibraryCore/Steam/SteamLaunchQuestions.swift) | Domande con cui Steam ferma un avvio, dalle righe `GameAction` di `logs/console_log.txt`. `ShowInterstitials` è avanzamento; le domande contano dopo 1 s. | |
+| [Sources/NXLibraryCore/Steam/SteamPlaytimeSync.swift](../../Sources/NXLibraryCore/Steam/SteamPlaytimeSync.swift) | Una lettura dei file Steam e cosa fa (pubblica, conserva gli ultimi totali buoni dello stesso account o azzera); coda di una lettura alla volta. | |
+| [Sources/NXLibraryCore/Steam/InstallationFileSnapshot.swift](../../Sources/NXLibraryCore/Steam/InstallationFileSnapshot.swift) | Letture limitate e non bloccanti di file regolari; verifica dell'identità prima della pubblicazione. | |
+| [Sources/NXLibraryCore/Steam/InstallationDirectorySnapshot.swift](../../Sources/NXLibraryCore/Steam/InstallationDirectorySnapshot.swift) | Lettura incrementale delle cartelle, budget anche sulle voci nascoste e annullamento durante l'enumerazione. | |
+| [Sources/NXLibraryCore/Steam/NativeMacApplication.swift](../../Sources/NXLibraryCore/Steam/NativeMacApplication.swift) | Evidenze del bundle Mac e degli header eseguibili, architetture e categoria dichiarata, senza avvio. | |
+| [Sources/NXLibraryCore/Steam/SteamLibrarySource.swift](../../Sources/NXLibraryCore/Steam/SteamLibrarySource.swift) | Snapshot delle librerie/manifest dichiarati, disponibilità, ambiguità, limiti e annullamento; non modifica il catalogo. | |
+| [Sources/NXLibraryCore/Steam/SteamPlayState.swift](../../Sources/NXLibraryCore/Steam/SteamPlayState.swift) | Stato di Play per un gioco Steam: processi osservati con i percorsi risolti, passaggio a Steam, sessione solo quando gira l’app di questa installazione, attese e rifiuti. | |
+| [Sources/NXLibraryCore/Steam/SteamBinaryKeyValues.swift](../../Sources/NXLibraryCore/Steam/SteamBinaryKeyValues.swift) | Lettura limitata del formato KeyValues binario di Steam (`appcache/stats`): tipi noti, profondità, voci e dimensione; qualunque altro byte è un errore. | |
+| [Sources/NXLibraryCore/Steam/SteamAchievementReader.swift](../../Sources/NXLibraryCore/Steam/SteamAchievementReader.swift) | Achievement di un gioco per l’account corrente: schema (nomi nella lingua dell’app, poi inglese; nascosti; icone) e soli `AchievementTimes` del file delle statistiche; nessun file, account o statistiche: nessun dato. | |
+| [Sources/NXLibraryCore/Steam/SteamAchievementRarity.swift](../../Sources/NXLibraryCore/Steam/SteamAchievementRarity.swift) | Rarità pubblica (`GetGlobalAchievementPercentagesForApp`, senza chiave) (una percentuale non numerica, «nan» o «inf», si scarta) e indirizzi delle icone sull’host community-assets del CDN di Steam, solo per nomi di file semplici. | |
+| [Sources/NXLibraryCore/Steam/SteamManifestWatcher.swift](../../Sources/NXLibraryCore/Steam/SteamManifestWatcher.swift) | Uno stream FSEvents sulle cartelle `steamapps` delle librerie dell’ultima scansione; segnala solo i manifest `appmanifest_<AppID>.acf` e l’indice `libraryfolders.vdf` della radice, una volta per gruppo di eventi. | |
+| [Sources/NXLibraryCore/Steam/SteamMetadata.swift](../../Sources/NXLibraryCore/Steam/SteamMetadata.swift) | Dati store Steam tipizzati, lingua e URL immagini verificati. | |
+| [Sources/NXLibraryCore/Steam/SteamMetadataService.swift](../../Sources/NXLibraryCore/Steam/SteamMetadataService.swift) | Fino a sei download coalescenti, cache per lingua, ripiego offline (anche in un'altra lingua) e immagini ridimensionate. Legge i tratti dei giochi correlati solo da cache. | |
+| [Sources/NXLibraryCore/Steam/SteamPersonalizationStore.swift](../../Sources/NXLibraryCore/Steam/SteamPersonalizationStore.swift) | Pubblicazione unica di metadati e riferimenti artwork; fallimenti e Automatic conservano le scelte coerenti. | |
+| [Sources/NXLibraryCore/Steam/SteamArtworkRequest.swift](../../Sources/NXLibraryCore/Steam/SteamArtworkRequest.swift) | Cosa chiede la tile di un gioco Steam per ogni ruolo: prima la scelta personale, poi per il quadrato l’icona dell’app installata, mai la copertina; gli altri ruoli vanno all’arte dello store. | |
+| [Sources/NXLibraryCore/Steam/SteamBackdropChoice.swift](../../Sources/NXLibraryCore/Steam/SteamBackdropChoice.swift) | Sfondo automatico di un gioco Steam: arte 16:9 pulita (Xbox, GOG, TheGamesDB, fan art LaunchBox), poi il primo screenshot, per ultimo il banner della libreria ritagliato. | |
+
+## Core · Porting: gioco Switch e libreria nxnative
+
+Cartella `Sources/NXLibraryCore/Porting/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Porting/PortedGame.swift](../../Sources/NXLibraryCore/Porting/PortedGame.swift) | Modello persistente del gioco con bundle, sorgenti, impostazioni, build e installazione in attesa. | |
+| [Sources/NXLibraryCore/Porting/LibraryFile.swift](../../Sources/NXLibraryCore/Porting/LibraryFile.swift) | Contenitore versionato del catalogo della libreria. | |
+| [Sources/NXLibraryCore/Porting/GameStatus.swift](../../Sources/NXLibraryCore/Porting/GameStatus.swift) | Enumera disponibilità e stato del gioco rispetto ad app, sorgenti e porting. | |
+| [Sources/NXLibraryCore/Porting/TargetPlatform.swift](../../Sources/NXLibraryCore/Porting/TargetPlatform.swift) | Definisce il target mac-app e le sue etichette per l’interfaccia. | |
+
+## Core · Porting: Setup, motore e chiavi
+
+Cartella `Sources/NXLibraryCore/Porting/Setup/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Porting/Setup/ToolchainRequirements.swift](../../Sources/NXLibraryCore/Porting/Setup/ToolchainRequirements.swift) | Centralizza requisiti Xcode e asset Metal e confronta versioni numeriche. | |
+| [Sources/NXLibraryCore/Porting/Setup/ToolchainInfo.swift](../../Sources/NXLibraryCore/Porting/Setup/ToolchainInfo.swift) | Registra provenienza e verifica della toolchain associata a un build. | |
+| [Sources/NXLibraryCore/Porting/Setup/ToolchainGateCopy.swift](../../Sources/NXLibraryCore/Porting/Setup/ToolchainGateCopy.swift) | Traduce il gate in testi distinguendo Metal certificato, precedente e successivo. | |
+| [Sources/NXLibraryCore/Porting/Setup/SetupCheck.swift](../../Sources/NXLibraryCore/Porting/Setup/SetupCheck.swift) | Converte fatti e override del Setup in schede, stati, azioni e condizioni di riapertura. | |
+| [Sources/NXLibraryCore/Porting/Setup/GameFoldersCopy.swift](../../Sources/NXLibraryCore/Porting/Setup/GameFoldersCopy.swift) | Condivide nomi delle cartelle, formati e descrizioni tra Setup, Settings e selettori dei percorsi. | |
+| [Sources/NXLibraryCore/Porting/Setup/SetupGrid.swift](../../Sources/NXLibraryCore/Porting/Setup/SetupGrid.swift) | Calcola disposizione, centratura e navigazione del focus nella griglia del Setup. | |
+| [Sources/NXLibraryCore/Porting/Setup/UpstreamCopy.swift](../../Sources/NXLibraryCore/Porting/Setup/UpstreamCopy.swift) | Prepara i testi del changelog upstream e dell’adozione degli aggiornamenti tramite Arcane. | |
+| [Sources/NXLibraryCore/Porting/Setup/NXNativeEnvironment.swift](../../Sources/NXLibraryCore/Porting/Setup/NXNativeEnvironment.swift) | Ispeziona strumenti, Python, Xcode e Metal e restituisce uno stato dell’ambiente. | |
+| [Sources/NXLibraryCore/Porting/Setup/EngineLocation.swift](../../Sources/NXLibraryCore/Porting/Setup/EngineLocation.swift) | Risolve checkout predefinito o scelto e produce i candidati per prod.keys. | |
+| [Sources/NXLibraryCore/Porting/Setup/EngineToolchain.swift](../../Sources/NXLibraryCore/Porting/Setup/EngineToolchain.swift) | Individua runtime incluso o venv del checkout e prepara ambiente e PATH dei processi. | |
+| [Sources/NXLibraryCore/Porting/Setup/EnginePackageReader.swift](../../Sources/NXLibraryCore/Porting/Setup/EnginePackageReader.swift) | Legge content meta e capacità del checkout, compresa selezione NUP multiprogramma, senza esporre chiavi. | |
+| [Sources/NXLibraryCore/Porting/Setup/NewestEngine.swift](../../Sources/NXLibraryCore/Porting/Setup/NewestEngine.swift) | Scelta dell’engine più nuovo: testi condivisi, lettura del Metal dal lock di main, cambio di commit con git senza toccare file modificati. | |
+| [Sources/NXLibraryCore/Porting/Setup/CompatibilityChecker.swift](../../Sources/NXLibraryCore/Porting/Setup/CompatibilityChecker.swift) | Controlla commit, modifiche del checkout, Metal e opzioni CLI richieste dal frontend. | |
+| [Sources/NXLibraryCore/Porting/Setup/SetupProbe.swift](../../Sources/NXLibraryCore/Porting/Setup/SetupProbe.swift) | Raccoglie i fatti mostrati dal Setup usando comandi e controlli mirati. | |
+| [Sources/NXLibraryCore/Porting/Setup/SetupActions.swift](../../Sources/NXLibraryCore/Porting/Setup/SetupActions.swift) | Costruisce le operazioni Git ammesse per installare o allineare il motore al pin. | |
+| [Sources/NXLibraryCore/Porting/Setup/KeyStore.swift](../../Sources/NXLibraryCore/Porting/Setup/KeyStore.swift) | Valida le chiavi, espone solo il riepilogo e pubblica atomicamente la copia gestita con permessi 0600. | |
+| [Sources/NXLibraryCore/Porting/Setup/KeyCheck.swift](../../Sources/NXLibraryCore/Porting/Setup/KeyCheck.swift) | Legge intestazioni NCA e ticket e verifica se le chiavi possono aprire le sorgenti selezionate. | |
+| [Sources/NXLibraryCore/Porting/Setup/UpstreamChecker.swift](../../Sources/NXLibraryCore/Porting/Setup/UpstreamChecker.swift) | Consulta i commit upstream tramite HTTP e produce stato e collegamento di confronto. | |
+
+## Core · Porting: sorgenti, build e installazione
+
+Cartella `Sources/NXLibraryCore/Porting/Build/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Porting/Build/GameResourceState.swift](../../Sources/NXLibraryCore/Porting/Build/GameResourceState.swift) | Distingue app mancanti, sorgenti assenti e workspace non compilati, riconcilia gli stati e conserva Play per una build esistente. | |
+| [Sources/NXLibraryCore/Porting/Build/AppSizeCache.swift](../../Sources/NXLibraryCore/Porting/Build/AppSizeCache.swift) | Conserva dimensioni per percorso e data del bundle e decide lo stato vuoto della libreria. | |
+| [Sources/NXLibraryCore/Porting/Build/BuildWarningCopy.swift](../../Sources/NXLibraryCore/Porting/Build/BuildWarningCopy.swift) | Testo mostrato a fine build per `warn` dell’engine: archivio mancante o pipeline da preparare al primo avvio. | |
+| [Sources/NXLibraryCore/Porting/Build/NUPSourceCatalog.swift](../../Sources/NXLibraryCore/Porting/Build/NUPSourceCatalog.swift) | Legge NUP con base o soli update; tiene distinti programma, applicazione e base DLC tramite il lettore upstream e conserva il default selezionato. | |
+| [Sources/NXLibraryCore/Porting/Build/InstallProgress.swift](../../Sources/NXLibraryCore/Porting/Build/InstallProgress.swift) | Interpreta avanzamento Git, percentuali, byte e righe parziali per le installazioni. | |
+| [Sources/NXLibraryCore/Porting/Build/GameFileItem.swift](../../Sources/NXLibraryCore/Porting/Build/GameFileItem.swift) | Sorgenti salvate con layout, requisiti e selezione NUP facoltativa, compatibile con i vecchi record. | |
+| [Sources/NXLibraryCore/Porting/Build/NUPProgramSelection.swift](../../Sources/NXLibraryCore/Porting/Build/NUPProgramSelection.swift) | Identità tipizzata del programma NUP, applicazione e base add-on; indice ricavato dal programma, persistito con i sorgenti. | |
+| [Sources/NXLibraryCore/Porting/Build/SourceSelection.swift](../../Sources/NXLibraryCore/Porting/Build/SourceSelection.swift) | Scelte dei contenuti, dimensioni e versione di build; verifica coerenza e supporto del programma NUP e ne vincola l’indice nel rebuild. | |
+| [Sources/NXLibraryCore/Porting/Build/BuildRecord.swift](../../Sources/NXLibraryCore/Porting/Build/BuildRecord.swift) | Conserva esito, tempi, log e provenienza di un porting. | |
+| [Sources/NXLibraryCore/Porting/Build/PipelineArchiveProgress.swift](../../Sources/NXLibraryCore/Porting/Build/PipelineArchiveProgress.swift) | Legge il log pipeline della build corrente e conta solo i gruppi confermati pronti dal motore. | |
+| [Sources/NXLibraryCore/Porting/Build/PortingProgress.swift](../../Sources/NXLibraryCore/Porting/Build/PortingProgress.swift) | Aggrega eventi del motore in fasi e percentuale complessiva; identifica archivio e prewarm senza dedurre conteggi dal tempo trascorso. | |
+| [Sources/NXLibraryCore/Porting/Build/PortingPresentation.swift](../../Sources/NXLibraryCore/Porting/Build/PortingPresentation.swift) | Definisce fallimento persistito, ETA, attività senza stima del prewarm, aspetto della tile e pill del porting. | |
+| [Sources/NXLibraryCore/Porting/Build/PortingFailureReason.swift](../../Sources/NXLibraryCore/Porting/Build/PortingFailureReason.swift) | Classifica messaggi del motore e rifiuti preliminari in motivazioni e azioni spiegabili, comprese le tabelle shader diverse dal profilo del gioco. | |
+| [Sources/NXLibraryCore/Porting/Build/PortingNotice.swift](../../Sources/NXLibraryCore/Porting/Build/PortingNotice.swift) | Decide quando notificare l’esito di un porting e prepara il relativo messaggio. | |
+| [Sources/NXLibraryCore/Porting/Build/PendingInstall.swift](../../Sources/NXLibraryCore/Porting/Build/PendingInstall.swift) | Conserva un bundle pronto in attesa e ne gestisce installazione, scarto e aggiornamento del record, anche dopo una pubblicazione interrotta. | |
+| [Sources/NXLibraryCore/Porting/Build/SourceCatalog.swift](../../Sources/NXLibraryCore/Porting/Build/SourceCatalog.swift) | Riconosce sorgenti NSP/XCI/NSZ/XCZ e raggruppa titoli, update e DLC; DetectedSource conserva la selezione NUP tipizzata. | |
+| [Sources/NXLibraryCore/Porting/Build/ExtractedSourceCatalog.swift](../../Sources/NXLibraryCore/Porting/Build/ExtractedSourceCatalog.swift) | Verifica il layout di un gioco estratto, legge NPDM e profilo registrato e rileva update e DLC. | |
+| [Sources/NXLibraryCore/Porting/Build/WorkspaceManager.swift](../../Sources/NXLibraryCore/Porting/Build/WorkspaceManager.swift) | Prepara collegamenti simbolici lasciando intatta la cache di build e verifica i link interrotti. | |
+| [Sources/NXLibraryCore/Porting/Build/BuildScratch.swift](../../Sources/NXLibraryCore/Porting/Build/BuildScratch.swift) | Sceglie dove stanno workspace e app temporanea (sul volume dell'app quando può ospitarli), riconosce i workspace gestiti e le cartelle temporanee da pulire. | |
+| [Sources/NXLibraryCore/Porting/Build/BuildCommand.swift](../../Sources/NXLibraryCore/Porting/Build/BuildCommand.swift) | Valore con eseguibile, argomenti, ambiente e directory di lavoro del processo di porting. | |
+| [Sources/NXLibraryCore/Porting/Build/BuildCommandBuilder.swift](../../Sources/NXLibraryCore/Porting/Build/BuildCommandBuilder.swift) | Contratto CLI nxnative: Mac, JSON, versione pacchetto, selezione --program esplicita e override toolchain. | |
+| [Sources/NXLibraryCore/Porting/Build/BuildEvent.swift](../../Sources/NXLibraryCore/Porting/Build/BuildEvent.swift) | Definisce gli eventi di fase, step, avanzamento e log ricevuti dal motore. | |
+| [Sources/NXLibraryCore/Porting/Build/BuildEventParser.swift](../../Sources/NXLibraryCore/Porting/Build/BuildEventParser.swift) | Decodifica eventi JSON e tratta le altre righe come log. | |
+| [Sources/NXLibraryCore/Porting/Build/BuildService.swift](../../Sources/NXLibraryCore/Porting/Build/BuildService.swift) | Avvia il porting, gestisce processi, cancellazione, log ed eventi; conserva il bundle valido quando fallisce solo l’installazione. | |
+| [Sources/NXLibraryCore/Porting/Build/BuildOutputInstaller.swift](../../Sources/NXLibraryCore/Porting/Build/BuildOutputInstaller.swift) | Pubblica il bundle con rinomina o scambio atomico, prepara copie fra volumi e riconosce i tentativi già completati tramite ricevuta. | |
+| [Sources/NXLibraryCore/Porting/Build/GameAppDestination.swift](../../Sources/NXLibraryCore/Porting/Build/GameAppDestination.swift) | Risolve la destinazione condivisa da review e porting, conserva i percorsi dei rebuild, evita conflitti di nome e verifica la cartella di destinazione. | |
+
+## Core · Porting: avvio e icona del gioco
+
+Cartella `Sources/NXLibraryCore/Porting/Launch/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Porting/Launch/ImportService.swift](../../Sources/NXLibraryCore/Porting/Launch/ImportService.swift) | Scansiona bundle nxnative e ne ricava identità, versione, percorso e dimensioni. | |
+| [Sources/NXLibraryCore/Porting/Launch/AppIconProgress.swift](../../Sources/NXLibraryCore/Porting/Launch/AppIconProgress.swift) | Stati e testi della preparazione icona, con esito informativo aggiunto al log della build conclusa. | |
+| [Sources/NXLibraryCore/Porting/Launch/IconLaunchWait.swift](../../Sources/NXLibraryCore/Porting/Launch/IconLaunchWait.swift) | Conserva una richiesta Play durante la firma dell'icona e la revoca su annullamento, errore o chiusura del dialogo. | |
+| [Sources/NXLibraryCore/Porting/Launch/LaunchService.swift](../../Sources/NXLibraryCore/Porting/Launch/LaunchService.swift) | Scrive l’ambiente runtime e avvia il bundle del gioco tramite NSWorkspace. | |
+| [Sources/NXLibraryCore/Porting/Launch/AppIconWriter.swift](../../Sources/NXLibraryCore/Porting/Launch/AppIconWriter.swift) | Scrive l’icona scelta nell’app del gioco, conserva l’originale, rifirma e verifica, e annulla tutto in caso di errore. | |
+| [Sources/NXLibraryCore/Porting/Launch/NXNativeLibraryMerge.swift](../../Sources/NXLibraryCore/Porting/Launch/NXNativeLibraryMerge.swift) | Algoritmo di merge nxnative usato dal repository del catalogo comune. | |
+
+## Core · Porting: impostazioni del gioco
+
+Cartella `Sources/NXLibraryCore/Porting/GameSettings/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Porting/GameSettings/NXNativeGameSettings.swift](../../Sources/NXLibraryCore/Porting/GameSettings/NXNativeGameSettings.swift) | Legge l’elenco impostazioni del build, i valori attuali e le chiavi fissate da env.txt. | |
+| [Sources/NXLibraryCore/Porting/GameSettings/SavedChoicesStore.swift](../../Sources/NXLibraryCore/Porting/GameSettings/SavedChoicesStore.swift) | Legge e scrive le scelte salvate launcher.<env> nel dominio preferenze dell’app gioco. | |
+| [Sources/NXLibraryCore/Porting/GameSettings/GameRuntimeConfig.swift](../../Sources/NXLibraryCore/Porting/GameSettings/GameRuntimeConfig.swift) | Persiste opzioni per titolo, prepara Review e lingua del rebuild, mappa DM_* e unisce env.txt. | |
+| [Sources/NXLibraryCore/Porting/GameSettings/LauncherSettings.swift](../../Sources/NXLibraryCore/Porting/GameSettings/LauncherSettings.swift) | Legge launcher.json e verifica i controlli supportati, con fallback per le build precedenti. | |
+| [Sources/NXLibraryCore/Porting/GameSettings/EnvFileEditor.swift](../../Sources/NXLibraryCore/Porting/GameSettings/EnvFileEditor.swift) | Cambia una sola variabile di un `env.txt` lasciando intatte le altre righe. | |
+
+## Core · Porting: cheat
+
+Cartella `Sources/NXLibraryCore/Porting/Cheats/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Porting/Cheats/CheatFile.swift](../../Sources/NXLibraryCore/Porting/Cheats/CheatFile.swift) | Decodifica cheats, sezioni, metadati e collegamenti dei codici secondo il parser del motore. | |
+| [Sources/NXLibraryCore/Porting/Cheats/CheatInstall.swift](../../Sources/NXLibraryCore/Porting/Cheats/CheatInstall.swift) | Valuta file e cartelle in ingresso rispetto a title ID, build ID e necessità di conferma. | |
+| [Sources/NXLibraryCore/Porting/Cheats/CheatLocator.swift](../../Sources/NXLibraryCore/Porting/Cheats/CheatLocator.swift) | Risolve build ID, title ID e cartella cheats seguendo i file e l’ambiente del launcher. | |
+| [Sources/NXLibraryCore/Porting/Cheats/CheatStatus.swift](../../Sources/NXLibraryCore/Porting/Cheats/CheatStatus.swift) | Valuta il supporto del motore tramite ancestry (git in un task staccato, risposta tenuta per l'avvio) e prepara stato della riga e indicatore attivo. | |
+| [Sources/NXLibraryCore/Porting/Cheats/CheatCopy.swift](../../Sources/NXLibraryCore/Porting/Cheats/CheatCopy.swift) | Centralizza testi di stato, rifiuto, importazione, sostituzione e rimozione dei cheats. | |
+| [Sources/NXLibraryCore/Porting/Cheats/CheatStore.swift](../../Sources/NXLibraryCore/Porting/Cheats/CheatStore.swift) | Legge e modifica cheats, file enabled, master switch e metadati della build corrente. | |
+
+## Core · Porting: store Nintendo e copertine
+
+Cartella `Sources/NXLibraryCore/Porting/Store/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Porting/Store/BoxArtService.swift](../../Sources/NXLibraryCore/Porting/Store/BoxArtService.swift) | Trova copertine Switch in GameTDB e ricorda copertine e ricerche senza risultato. | |
+| [Sources/NXLibraryCore/Porting/Store/GameTDB.swift](../../Sources/NXLibraryCore/Porting/Store/GameTDB.swift) | Decodifica il database GameTDB, abbina nomi e regioni e conserva l’indice locale. | |
+| [Sources/NXLibraryCore/Porting/Store/NintendoStoreMetadata.swift](../../Sources/NXLibraryCore/Porting/Store/NintendoStoreMetadata.swift) | Consulta i cataloghi pubblici dello store e Title DB e conserva descrizioni, immagini e screenshot per lingua; finché la nuova lingua arriva, la pagina mostra l'ultima descrizione letta in un'altra. | |
+| [Sources/NXLibraryCore/Porting/Store/ScreenshotFallback.swift](../../Sources/NXLibraryCore/Porting/Store/ScreenshotFallback.swift) | Conserva per 30 giorni gli screenshot LaunchBox dei giochi senza screenshot Title DB e li sovrappone ai metadati. | |
+
+## Core · Porting: salvataggi e cloud
+
+Cartella `Sources/NXLibraryCore/Porting/Saves/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Porting/Saves/SaveLocation.swift](../../Sources/NXLibraryCore/Porting/Saves/SaveLocation.swift) | Percorsi e identità dei salvataggi; account/device, utenti locali aggiuntivi e file registro; cloud effettivo e percorsi sicuri. | |
+| [Sources/NXLibraryCore/Porting/Saves/CloudSaves.swift](../../Sources/NXLibraryCore/Porting/Saves/CloudSaves.swift) | Descrive scelta cloud, cartelle iCloud o personalizzate e passaggi fra le opzioni. | |
+| [Sources/NXLibraryCore/Porting/Saves/CloudSavesPreferences.swift](../../Sources/NXLibraryCore/Porting/Saves/CloudSavesPreferences.swift) | Prepara la cartella e riapplica la scelta cloud ai domini dei giochi prima di ogni avvio, anche Off. | |
+| [Sources/NXLibraryCore/Porting/Saves/RyujinxSaveFolder.swift](../../Sources/NXLibraryCore/Porting/Saves/RyujinxSaveFolder.swift) | Riconosce contenitori Ryujinx, controlla il title ID e seleziona l’intero albero committed 0. | |
+
+## Core · Porting: mod RomFS
+
+Cartella `Sources/NXLibraryCore/Porting/Mods/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Porting/Mods/ModStore.swift](../../Sources/NXLibraryCore/Porting/Mods/ModStore.swift) | Ordine, interruttori, conflitti, Cestino e overlay delle mod RomFS. Ferma la riconciliazione se cartella o record non si leggono. | |
+| [Sources/NXLibraryCore/Porting/Mods/ModFolderScanner.swift](../../Sources/NXLibraryCore/Porting/Mods/ModFolderScanner.swift) | Elenca cartelle, archivi e file RomFS. La lettura stretta distingue una cartella vuota da una scansione fallita durante la riconciliazione. | |
+| [Sources/NXLibraryCore/Porting/Mods/ModSupport.swift](../../Sources/NXLibraryCore/Porting/Mods/ModSupport.swift) | Quali file di mod funzionano (solo RomFS), dov'è la loro cartella `romfs`, nomi di cartella sicuri. | |
 
 ## UI · Add Game e porting
 

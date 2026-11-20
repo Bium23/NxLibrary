@@ -33,7 +33,7 @@ with tempfile.TemporaryDirectory(prefix='arcane-nup-check-') as scratch:
     scratch = Path(scratch)
     output = 'title 0400F00000010001\napplication 0100F00000010000\naoc_base 0100F00000011000\nbase 272\ndlc 0100F00000011001 2\n'
     if args.engine_snapshot:
-        bridge = (ROOT / 'Sources/NXLibraryCore/Services/NUPSourceCatalog.swift').read_text()
+        bridge = (ROOT / 'Sources/NXLibraryCore/Porting/Build/NUPSourceCatalog.swift').read_text()
         probe = bridge.split('let script = #"""', 1)[1].split('"""#', 1)[0]
         generator = """
 import pathlib,sys

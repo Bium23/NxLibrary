@@ -47,6 +47,8 @@ Il [README](../../README.md) è la guida d'uso; la [guida di sviluppo](../workin
 | `NXLibraryCore` | Modelli, persistenza, parsing, gestione file, contratti del motore, processi e logica delle funzionalità. |
 | `NXLibraryCoreTests` | Test XCTest del Core, con dati sintetici e dipendenze sostituibili. |
 
+Il Core ha una cartella per area: `App`, `Catalog`, `Library`, `Selene`, `Details`, `Artwork`, `Achievements`, `Saves`, `Mods`, `Settings`, `Steam`. Tutto ciò che è Switch (Setup, build, avvio, impostazioni del gioco, cheat, store Nintendo, formato di salvataggi e mod) sta in `Porting/`, con una sottocartella per parte. *Perché:* il confine fra la base e il modulo Porting si vede dal percorso; i file della base che usano ancora tipi di `Porting/` sono i legami che il contratto della fonte dovrà tagliare.
+
 `NXLibrary` dipende da `NXLibraryCore`. Il Core usa anche framework macOS, fra cui Combine, AppKit, ImageIO, CommonCrypto e IOKit. Il package non dichiara dipendenze SwiftPM esterne.
 
 ```mermaid
@@ -449,7 +451,7 @@ I percorsi completi sono in [flows.md](flows.md#3-play-di-un-gioco-switch-nxnati
 - All'apertura della pagina e del pannello, `sync()` toglie dalla riga le mod sparite. Finché Arcane non ha mai gestito le mod di un gioco, non tocca una riga `DM_ROMFS_OVERLAY` scritta a mano.
 - `AppViewModel+Mods` crea lo store e traduce gli errori; `ModsPanel` (Game options → Mods; `GameOptionsFiles` legge configurazione, impostazioni, cheat e mod una volta per apertura) e la fascia Mods della pagina (`DetailsModsBand`) presentano lo stato. Le mod che modificano il codice (exefs) non funzionano con il motore.
 
-**GameBanana** (`Services/GameBanana/`).
+**GameBanana** (`Mods/GameBanana/`).
 - `GameBananaClient` parla con l'API pubblica (apiv11 e, per il contenuto degli archivi, la vecchia Core API). Usa un solo User-Agent, al massimo 4 richieste insieme, e una cache su disco in `~/Library/Caches/NXLibrary/gamebanana`:
   - ricerche 1 giorno, pagine delle mod 6 ore;
   - contenuto degli archivi per sempre, tranne un elenco vuoto, perché GameBanana può ancora leggere un file nuovo;

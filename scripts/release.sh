@@ -35,7 +35,7 @@ TAG="v$VERSION"
 if [ "$PUBLISH" = "1" ]; then
   [ -n "$NOTES" ] && [ -f "$NOTES" ] || fail "--publish needs --notes <file> with the release notes"
   command -v gh >/dev/null || fail "--publish needs the GitHub CLI (gh)"
-  REPOSITORY="$(sed -n 's/.*defaultRepository: String? = "\([^"]*\)".*/\1/p' "$ROOT/Sources/NXLibraryCore/Services/AppUpdate.swift")"
+  REPOSITORY="$(sed -n 's/.*defaultRepository: String? = "\([^"]*\)".*/\1/p' "$ROOT/Sources/NXLibraryCore/App/AppUpdate.swift")"
   [ -n "$REPOSITORY" ] || fail "no public update repository is configured"
   [ "$(gh api "repos/$REPOSITORY" --jq .private)" = "false" ] \
     || fail "the update repository must be publicly accessible before publishing"
@@ -63,7 +63,7 @@ python3 "$ROOT/scripts/check_publication.py" --runtime "$ROOT/work/Runtime"
 
 # What this release needs on a player's Mac, as a hidden line in its notes (AppUpdate.requirements(in:)): the
 # update dialog warns about an Xcode to update first and the engine Setup downloads after the restart.
-MIN_XCODE="$(sed -n 's/.*minimumXcode: "\([0-9.]*\)".*/\1/p' "$ROOT/Sources/NXLibraryCore/Models/ToolchainRequirements.swift" | head -1)"
+MIN_XCODE="$(sed -n 's/.*minimumXcode: "\([0-9.]*\)".*/\1/p' "$ROOT/Sources/NXLibraryCore/Porting/Setup/ToolchainRequirements.swift" | head -1)"
 ENGINE="$(sed -n 's/.*let pinnedEngineCommit = "\([0-9a-f]\{40\}\)".*/\1/p' "$ROOT/Sources/NXLibrary/ViewModels/AppViewModel.swift" | head -1)"
 [ -n "$MIN_XCODE" ] && [ -n "$ENGINE" ] || fail "could not read minimumXcode or pinnedEngineCommit from the sources"
 REQUIRES="<!-- nxlibrary-requires xcode=$MIN_XCODE engine=$ENGINE -->"

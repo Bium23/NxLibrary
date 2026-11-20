@@ -13,6 +13,8 @@ Gli altri documenti:
 | Cosa | Dove | Perché |
 |---|---|---|
 | Modelli, regole, parsing, persistenza, rete, processi, decisioni di focus e di layout calcolabili | `Sources/NXLibraryCore` | Si prova con XCTest senza finestre. |
+| Codice del Core di un'area | La cartella dell'area: `App`, `Catalog`, `Library`, `Selene`, `Details`, `Artwork`, `Achievements`, `Saves`, `Mods`, `Settings`, `Steam` | Ogni area si trova da un solo posto. |
+| Codice del Core che è Switch (nxnative, chiavi, store Nintendo, RomFS, `env.txt`) | `Sources/NXLibraryCore/Porting/` e la sottocartella della parte: `Setup`, `Build`, `Launch`, `GameSettings`, `Cheats`, `Store`, `Saves`, `Mods` | Il confine fra base e modulo si vede dal percorso. |
 | Viste SwiftUI, integrazione AppKit, controller, coordinamento degli store | `Sources/NXLibrary` | Dipende dal Core, mai il contrario. |
 | Testi mostrati all'utente | `NXLibraryCore/Resources/Localizable.xcstrings` | Un solo catalogo per le sette lingue. |
 | Test | `Tests/NXLibraryCoreTests`; prove senza finestre dei corpi reali delle viste in `Tests/CatalogAppChecks`; controlli del pacchetto in `Tests/PublicationChecks` | — |
@@ -24,6 +26,7 @@ Regole:
   - la geometria di una riga: `SpotlightRowGeometry`, `GridListLayout`.
 
   La vista disegna e traduce l'input.
+- **Un file fuori da `Porting/` che usa un tipo di `Porting/` è un legame da tagliare, non un esempio da seguire.** Il codice nuovo della base non aggiunge legami di questo tipo.
 - **`public` solo nel Core**, per ciò che l'app usa. Il target app è un eseguibile che nessuno importa: i suoi tipi restano interni.
 - **Non far crescere `AppViewModel`.** Uno stato che appartiene a una sola schermata o a un solo pannello ha il suo modello. Esempi: `SavePanelModel`, `SetupCheckModel`, `ModStoreHost`, `AchievementsScreenModel`, `CatalogSourcesModel`. Le estensioni `AppViewModel+…` servono solo a collegare il coordinatore a un servizio del Core.
 - **Una parte del modulo Switch ha il suo modello di area.** Esempi: `PortingModel`, `SetupModel`, `RuntimeSettingsModel`, `CheatsModel`, `AppIconModel`, `StoreMetadataModel`.
