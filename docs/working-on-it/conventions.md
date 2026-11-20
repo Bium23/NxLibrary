@@ -13,8 +13,8 @@ Gli altri documenti:
 | Cosa | Dove | Perché |
 |---|---|---|
 | Modelli, regole, parsing, persistenza, rete, processi, decisioni di focus e di layout calcolabili | `Sources/NXLibraryCore` | Si prova con XCTest senza finestre. |
-| Codice del Core di un'area | La cartella dell'area: `App`, `Catalog`, `Library`, `Selene`, `Details`, `Artwork`, `Achievements`, `Saves`, `Mods`, `Settings`, `Steam` | Ogni area si trova da un solo posto. |
-| Codice del Core che è Switch (nxnative, chiavi, store Nintendo, RomFS, `env.txt`) | `Sources/NXLibraryCore/Porting/` e la sottocartella della parte: `Setup`, `Build`, `Launch`, `GameSettings`, `Cheats`, `Store`, `Saves`, `Mods` | Il confine fra base e modulo si vede dal percorso. |
+| Codice del Core di un'area | La cartella dell'area: `App`, `Catalog`, `Library`, `Selene`, `Details`, `Artwork`, `Achievements`, `Mods`, `Settings`, `Steam` | Ogni area si trova da un solo posto. |
+| Codice del Core che è Switch (nxnative, chiavi, store Nintendo, RomFS, `env.txt`) | `Sources/NXLibraryCore/Porting/` e la sottocartella della parte: `Setup`, `Build`, `Launch`, `GameSettings`, `Cheats`, `Store`, `Saves`, `Mods` (con `Mods/GameBanana`), `Catalog`, `Library`, `Details` | Il confine fra base e modulo si vede dal percorso. |
 | Viste SwiftUI, integrazione AppKit, controller, coordinamento degli store | `Sources/NXLibrary` | Dipende dal Core, mai il contrario. |
 | Testi mostrati all'utente | `NXLibraryCore/Resources/Localizable.xcstrings` | Un solo catalogo per le sette lingue. |
 | Test | `Tests/NXLibraryCoreTests`; prove senza finestre dei corpi reali delle viste in `Tests/CatalogAppChecks`; controlli del pacchetto in `Tests/PublicationChecks` | — |

@@ -151,7 +151,7 @@ These are distribution decisions. Do not bypass the dirty-tree check, change the
 
 | Path | Responsibility |
 |---|---|
-| `Sources/NXLibraryCore/` | Models, rules and services without SwiftUI, one folder per area (`App`, `Catalog`, `Library`, `Selene`, `Details`, `Artwork`, `Achievements`, `Saves`, `Mods`, `Settings`, `Steam`); everything Switch is in `Porting/`. |
+| `Sources/NXLibraryCore/` | Models, rules and services without SwiftUI, one folder per area (`App`, `Catalog`, `Library`, `Selene`, `Details`, `Artwork`, `Achievements`, `Mods`, `Settings`, `Steam`); everything Switch, saves and GameBanana included, is in `Porting/`. |
 | `Sources/NXLibrary/` | App entry, coordination, SwiftUI screens, theme and macOS integration. |
 | `Tests/NXLibraryCoreTests/` | Automated application/core regressions and synthetic fixtures. |
 | `Tests/PublicationChecks/` | Publication-guard regressions. |
