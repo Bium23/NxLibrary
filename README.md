@@ -16,7 +16,10 @@
   <a href="#requirements"><img src="https://img.shields.io/badge/macOS-26%2B-3D4754?style=flat" alt="macOS 26 or later"></a>
   <a href="#requirements"><img src="https://img.shields.io/badge/Apple-silicon-3D4754?style=flat" alt="Apple silicon"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-64816C?style=flat" alt="MIT license"></a>
-  <a href="https://buymeacoffee.com/bium"><img src="https://img.shields.io/badge/support-buy%20me%20a%20coffee-C9A227?style=flat" alt="Support Arcane: buy me a coffee"></a>
+</p>
+
+<p align="center">
+  <a href="https://buymeacoffee.com/bium"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="40"></a>
 </p>
 
 <p align="center">
