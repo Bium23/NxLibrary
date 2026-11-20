@@ -21,8 +21,6 @@ ALLOWED = {
     'Artwork/MetadataPicker.swift',
     'Artwork/MoreArtworkSources.swift',
     'Artwork/OnlineArtworkSources.swift',
-    'Catalog/CatalogDocument.swift',
-    'Catalog/CatalogStore.swift',
     'Details/DetailsFacts.swift',
     'Details/GameDetailPresentation.swift',
     'Details/GameOptionsPresentation.swift',

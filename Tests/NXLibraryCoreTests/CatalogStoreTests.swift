@@ -234,4 +234,24 @@ final class CatalogStoreTests: XCTestCase {
         }
     }
 
+
+    /// A store made without the Porting module's import never reads or touches nxnative's `library.json`.
+    func testStoreWithoutLegacyImportIgnoresLibraryJSON() throws {
+        let root = try fixture().root
+        let bytes = try CatalogTestSupport.writeLegacy([CatalogTestSupport.completeLegacyGame()], to: root)
+        let store = CatalogStore(directory: root, kinds: .standard, legacy: nil)
+        let created = try store.loadOrMigrate()
+        XCTAssertTrue(created.games.isEmpty)
+        XCTAssertEqual(created.legacyOrigin, .absent)
+        XCTAssertEqual(try store.loadOrMigrate(), created)
+        XCTAssertNil(try store.legacyConflictCandidate())
+        XCTAssertEqual(try Data(contentsOf: url(root, "library.json")), bytes)
+    }
+
+    func testNewDocumentListsTheStoresKinds() throws {
+        let root = try fixture().root
+        let created = try CatalogStore(directory: root, kinds: .base, legacy: nil).loadOrMigrate()
+        XCTAssertEqual(created.sources.map(\.integration), [.steam])
+        XCTAssertTrue(created.sources.allSatisfy { !$0.isEnabled })
+    }
 }

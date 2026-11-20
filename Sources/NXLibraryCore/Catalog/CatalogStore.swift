@@ -8,6 +8,17 @@ public enum CatalogStoreError: Error, Equatable {
     case commitUncertain
 }
 
+/// The older library file a source converts into a first catalog: its main file and backup, next to `catalog.json`,
+/// and the conversion. The store keeps the converted bytes' fingerprint and refuses to load once they change.
+public struct CatalogLegacyImport {
+    public let primary: String
+    public let backup: String
+    public let convert: (Data, CatalogLegacyOrigin) throws -> CatalogDocument
+    public init(primary: String, backup: String, convert: @escaping (Data, CatalogLegacyOrigin) throws -> CatalogDocument) {
+        self.primary = primary; self.backup = backup; self.convert = convert
+    }
+}
+
 /// Versioned persistence for the generalization branch. CatalogRepository owns
 /// all app game-record mutations; legacy files remain recovery inputs.
 public struct CatalogStore {
@@ -17,12 +28,17 @@ public struct CatalogStore {
 
     /// The record kinds this store reads; a record of any other kind is kept as it is (`CatalogDocument.preservedGames`).
     public let kinds: CatalogRecordKinds
+    /// The older library a first catalog is converted from, and whose bytes later loads verify; nil when there is none.
+    public let legacy: CatalogLegacyImport?
 
-    public init(directory: URL, kinds: CatalogRecordKinds) { self.init(directory: directory, publication: .atomic, kinds: kinds) }
-    init(directory: URL, publication: CatalogPublication, kinds: CatalogRecordKinds) {
+    public init(directory: URL, kinds: CatalogRecordKinds, legacy: CatalogLegacyImport?) {
+        self.init(directory: directory, publication: .atomic, kinds: kinds, legacy: legacy)
+    }
+    init(directory: URL, publication: CatalogPublication, kinds: CatalogRecordKinds, legacy: CatalogLegacyImport?) {
         self.directory = directory.standardizedFileURL
         self.publication = publication
         self.kinds = kinds
+        self.legacy = legacy
     }
     private func file(_ name: String) -> URL { directory.appendingPathComponent(name) }
 
@@ -107,36 +123,38 @@ public struct CatalogStore {
     }
 
     private static func digest(_ data: Data) -> String { SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined() }
+    /// A first catalog lists one source, switched off, for each kind the store reads.
+    private func newDocument() -> CatalogDocument { CatalogDocument(sources: kinds.integrations.map { .init(integration: $0) }) }
     private func convertedLegacy() throws -> (CatalogDocument, [InstallationFileObservation]) {
+        guard let legacy else { return (newDocument(), []) }
         do {
-            let main = try read("library.json")
+            let main = try read(legacy.primary)
             let selected: FileState, origin: CatalogLegacyOrigin
             if let data = main.data {
                 selected = main; origin = .init(kind: .primary, sha256: Self.digest(data))
             } else {
-                let backup = try read("library.json.bak")
+                let backup = try read(legacy.backup)
                 guard let bytes = backup.data else {
-                    return (CatalogDocument(), [main.observation, backup.observation])
+                    return (newDocument(), [main.observation, backup.observation])
                 }
                 selected = backup; origin = .init(kind: .backup, sha256: Self.digest(bytes))
             }
-            let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
-            let legacy = try decoder.decode(LibraryFile.self, from: selected.data!)
-            return (try CatalogDocument.converting(legacy, origin: origin), [main.observation, selected.observation])
+            return (try legacy.convert(selected.data!, origin), [main.observation, selected.observation])
         } catch { throw CatalogStoreError.invalidLegacy }
     }
 
     private func verifyLegacy(_ origin: CatalogLegacyOrigin) throws {
+        guard let legacy else { return }
         do {
-            let main = try read("library.json")
+            let main = try read(legacy.primary)
             switch origin.kind {
             case .primary:
                 guard let data = main.data, Self.digest(data) == origin.sha256 else { throw CatalogStoreError.legacyChanged }
             case .backup:
-                guard main.data == nil, let backup = try read("library.json.bak").data,
+                guard main.data == nil, let backup = try read(legacy.backup).data,
                       Self.digest(backup) == origin.sha256 else { throw CatalogStoreError.legacyChanged }
             case .absent:
-                guard main.data == nil, try read("library.json.bak").data == nil else { throw CatalogStoreError.legacyChanged }
+                guard main.data == nil, try read(legacy.backup).data == nil else { throw CatalogStoreError.legacyChanged }
             }
         } catch { throw CatalogStoreError.legacyChanged }
     }
@@ -187,7 +205,10 @@ public struct CatalogStore {
 }
 
 extension CatalogStore {
-    private static let conflictNames = ["catalog.json", "catalog.json.bak", "library.json", "library.json.bak"]
+    /// The catalog, its backup and the legacy library's two files; without a legacy import there is no conflict.
+    private var conflictNames: [String]? {
+        legacy.map { ["catalog.json", "catalog.json.bak", $0.primary, $0.backup] }
+    }
 
     private func legacyBaseline(_ states: [FileState]) -> CatalogLegacyOrigin {
         if let data = states[2].data { return .init(kind: .primary, sha256: Self.digest(data)) }
@@ -199,7 +220,8 @@ extension CatalogStore {
     /// from restoring a damaged catalog. Reading this offer does not modify inputs.
     public func legacyConflictCandidate() throws -> CatalogLegacyConflictCandidate? {
         try locked {
-            let states = try Self.conflictNames.map(read)
+            guard let names = conflictNames else { return nil }
+            let states = try names.map(read)
             guard let bytes = states[0].data else { return nil }
             let document = try decode(bytes)
             guard legacyBaseline(states) != document.legacyOrigin else { return nil }
@@ -212,7 +234,8 @@ extension CatalogStore {
     public func keepCurrentLibrary(_ candidate: CatalogLegacyConflictCandidate) throws -> CatalogDocument {
         try locked {
             guard candidate.directory == directory else { throw CatalogStoreError.staleRevision }
-            let states = try Self.conflictNames.map(read)
+            guard let names = conflictNames else { throw CatalogStoreError.staleRevision }
+            let states = try names.map(read)
             guard states.map({ $0.data.map(Self.digest) }) == candidate.digests,
                   let bytes = states[0].data else { throw CatalogStoreError.staleRevision }
             let document = try decode(bytes)
@@ -231,7 +254,7 @@ extension CatalogStore {
                 return URL(fileURLWithPath: String(cString: path), isDirectory: true)
             }
             // Archives, even partial ones after an error, are deliberately kept.
-            for (name, state) in zip(Self.conflictNames, states) {
+            for (name, state) in zip(names, states) {
                 guard let bytes = state.data else { continue }
                 let staged = try CatalogPublication.stage(bytes, in: archive)
                 defer { try? FileManager.default.removeItem(at: staged) }

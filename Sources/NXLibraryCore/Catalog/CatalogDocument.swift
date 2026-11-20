@@ -45,7 +45,7 @@ public struct CatalogDocument: Codable, Equatable {
     public internal(set) var preservedSources: [CatalogJSON]
 
     public init(schemaVersion: Int = 1, revision: UUID = UUID(), legacyOrigin: CatalogLegacyOrigin = .absent,
-                sources: [CatalogSourceConfiguration] = [.init(integration: .nxnative), .init(integration: .steam)],
+                sources: [CatalogSourceConfiguration] = [],
                 games: [CatalogGame] = [], preservedGames: [CatalogJSON] = [], preservedSources: [CatalogJSON] = []) {
         self.schemaVersion = schemaVersion; self.revision = revision; self.legacyOrigin = legacyOrigin
         self.sources = sources; self.games = games
@@ -95,14 +95,6 @@ public struct CatalogDocument: Codable, Equatable {
 
     public func source(_ integration: CatalogIntegration) -> CatalogSourceConfiguration? {
         sources.first { $0.integration == integration }
-    }
-
-    public static func converting(_ legacy: LibraryFile, origin: CatalogLegacyOrigin = .absent) throws -> Self {
-        guard legacy.schemaVersion == 1 else { throw CatalogModelError.unsupportedSchema(legacy.schemaVersion) }
-        let result = Self(legacyOrigin: origin, sources: [.init(integration: .nxnative, isEnabled: true), .init(integration: .steam)],
-                          games: legacy.games.map { .init(nxnative: $0) })
-        try result.validate()
-        return result
     }
 
     public func validate() throws {
