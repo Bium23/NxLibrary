@@ -10,7 +10,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 source = (ROOT / 'Sources/NXLibrary/ViewModels/AppViewModel.swift').read_text()
-porting_source = (ROOT / 'Sources/NXLibrary/ViewModels/PortingModel.swift').read_text()
+porting_source = ''.join(p.read_text() for p in sorted((ROOT / 'Sources/NXLibrary/ViewModels').glob('PortingModel*.swift')))
 
 
 def declaration(signature, source=source):

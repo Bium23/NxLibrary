@@ -16,9 +16,22 @@ ROOT = Path(__file__).resolve().parents[2]
 BIN = ROOT / '.build/debug'
 
 
+def type_source(path):
+    """A type's source split over `Name.swift` and its `Name+Part.swift` extensions (conventions.md)."""
+    main = ROOT / path
+    return ''.join(p.read_text() for p in [main] + sorted(main.parent.glob(main.stem + '+*.swift')))
+
+
+def find(source, signature):
+    """A member's start; a member made internal by a split is found without its old `private `."""
+    if signature in source:
+        return source.index(signature)
+    return source.index(signature.replace('private ', '', 1))
+
+
 def declaration(path, signature):
-    source = (ROOT / path).read_text()
-    start = source.index(signature)
+    source = type_source(path)
+    start = find(source, signature)
     opening = source.index('{', start)
     depth, end = 1, opening + 1
     while depth:

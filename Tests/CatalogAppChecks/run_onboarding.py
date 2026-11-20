@@ -30,7 +30,7 @@ startup_requests = '\n'.join(line for line in initial.splitlines() if 'Notificat
 porting_source = ''.join(p.read_text() for p in sorted((ROOT / 'Sources/NXLibrary/ViewModels').glob('PortingModel*.swift')))
 build = declaration('    func beginBuild(for game:', porting_source)
 accepted = build[build.index('        app.isBuilding = true'):build.index('        self.buildState = .running')]
-shell = (ROOT / 'Sources/NXLibrary/Views/Shell/AppShellView.swift').read_text()
+shell = ''.join(p.read_text() for p in sorted((ROOT / 'Sources/NXLibrary/Views/Shell').glob('AppShellView*.swift')))
 start = shell.index('.onChange(of: viewModel.setupCompleted)')
 opening = shell.index('{ _, done in', start)
 depth, end = 1, opening + 1

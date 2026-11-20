@@ -13,7 +13,8 @@ ROOT = Path(__file__).resolve().parents[2]
 BIN = ROOT / '.build/debug'
 
 def method(source, signature):
-    start = source.index(signature)
+    # A member made internal by a split is found without its old `private `.
+    start = source.index(signature) if signature in source else source.index(signature.replace('private ', '', 1))
     opening = source.index('{', start)
     depth = 1
     end = opening + 1
@@ -24,7 +25,7 @@ def method(source, signature):
 
 with tempfile.TemporaryDirectory(prefix='catalog-notice-check-') as scratch:
     scratch = Path(scratch)
-    view = (ROOT / 'Sources/NXLibrary/Views/Shell/AppShellView.swift').read_text()
+    view = ''.join(p.read_text() for p in sorted((ROOT / 'Sources/NXLibrary/Views/Shell').glob('AppShellView*.swift')))
     bridge = '\n'.join(method(view, signature) for signature in (
         '    private func finishSettingsNotice(choice: Int)', '    private func presentLegacyNotice()'))
     host = (ROOT / 'Tests/CatalogAppChecks/NoticeHost.swift').read_text()
