@@ -56,9 +56,9 @@ Esempio completo: Steam, documentato in [steam.md](../how-it-works/steam.md).
 
 Esempi: `AchievementsScreen` con `AchievementsScreenModel` (schermata intera), `SavesPanel` con `SavePanelModel` (pannello), `ModStorePage` con `ModStoreHost` (pagina che scorre).
 
-- **Misure in unità del canvas** 1920×1080: `canvas.u(…)` da `SeleneCanvasEnvironment`, mai punti fissi. Colori, curve e font vengono da `SeleneTheme` e `SeleneFonts`, le icone da `MaterialIcon`.
+- **Misure in unità del canvas** 1920×1080: `canvas.u(…)` da `seleneCanvas` (`SeleneCanvasEnvironment.swift`), mai punti fissi. Colori, curve e font vengono da `SeleneTheme` e `SeleneFonts`, le icone da `MaterialIcon`.
 - **Componenti condivisi prima di tutto** (`Views/Components`):
-  - `SeleneOptionRow`, `SeleneSettingsRow`;
+  - `SeleneOptionRow`, `SeleneRow`, `SeleneToggleRow`, `SeleneValueRow`, `SeleneCycleRow` (in `SeleneSettingsRow.swift`);
   - `SelenePillButton`, `SeleneSwitch`, `SeleneValueChip`;
   - `SeleneConfirmDialog`, `SeleneSuccessNotice`;
   - `SeleneHintsBar`, `GamePrimaryActions`, `DetailsPanel`.
@@ -126,7 +126,7 @@ Esempi: `BoundedDownload`, `GameBananaClient`, `IGDBClient`, `SteamMetadataServi
 ## 9. Test
 
 - Prima il test che fallisce, poi il codice (TDD). Per un bug: prima la causa, poi un test che la riproduce.
-- I dati sono sintetici, in cartelle temporanee, con dipendenze sostituibili: `CommandRunner`, trasporti di rete iniettati, `SaveTestHome`, `SteamTestSupport`, `CatalogTestSupport`. Niente file reali dell'utente, niente chiavi o ROM.
+- I dati sono sintetici, in cartelle temporanee, con dipendenze sostituibili: `CommandRunning`, trasporti di rete iniettati, `SaveTestHome`, `SteamTestSupport`, `CatalogTestSupport`. Niente file reali dell'utente, niente chiavi o ROM.
 - Si prova il comportamento, non il mock.
 - La build di release compila senza warning: un warning nuovo si risolve nello stesso commit che lo introduce.
 - Comandi in [development.md](development.md#verification). I test non sostituiscono la validazione del maintainer.

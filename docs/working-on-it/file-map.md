@@ -188,12 +188,12 @@ Cartella `Sources/NXLibraryCore/Catalog/`.
 | [Sources/NXLibraryCore/Catalog/CatalogGame.swift](../../Sources/NXLibraryCore/Catalog/CatalogGame.swift) | Voce del catalogo attorno al record della sua fonte (`any CatalogSourceRecord`), identità e personalizzazioni con namespace, uguaglianza per tipo e valore; osservazioni delle installazioni Steam; lookup condiviso della prima installazione disponibile, separato dal gate di Play. |
 | [Sources/NXLibraryCore/Catalog/CatalogSourceRecord.swift](../../Sources/NXLibraryCore/Catalog/CatalogSourceRecord.swift) | Contratto del record di una fonte (identità, preferito, nascosto, validazione, presenza, termini di ricerca), integrazione aperta come stringa e tipi noti a un lettore (`CatalogRecordKinds`, passati in `userInfo`). |
 | [Sources/NXLibraryCore/Catalog/SteamCatalogGame+Record.swift](../../Sources/NXLibraryCore/Catalog/SteamCatalogGame+Record.swift) | Record Steam nel contratto: validazione delle installazioni, presenza, gate di Play e termini di ricerca. |
-| [Sources/NXLibraryCore/Catalog/CatalogDocument.swift](../../Sources/NXLibraryCore/Catalog/CatalogDocument.swift) | Schema, revisione, base legacy riconosciuta, configurazione delle fonti e validazione delle identità; conserva e riscrive intatti giochi e fonti di un’integrazione sconosciuta. La conversione da `library.json` sta in `Porting/Catalog/CatalogStore+Porting.swift`. |
+| [Sources/NXLibraryCore/Catalog/CatalogDocument.swift](../../Sources/NXLibraryCore/Catalog/CatalogDocument.swift) | Schema, revisione, base legacy riconosciuta, configurazione delle fonti e validazione delle identità; conserva e riscrive intatti giochi e fonti di un’integrazione sconosciuta. La conversione da `library.json` sta in `ArcanePorting/Catalog/CatalogStore+Porting.swift`. |
 | [Sources/NXLibraryCore/Catalog/CatalogJSON.swift](../../Sources/NXLibraryCore/Catalog/CatalogJSON.swift) | Valore JSON tenuto com’è stato letto (numeri `Decimal`), per i record e le fonti che il catalogo non conosce e le impostazioni dei moduli; si converte da e verso un tipo `Codable`. |
 | [Sources/NXLibraryCore/Catalog/CatalogGamePresentation.swift](../../Sources/NXLibraryCore/Catalog/CatalogGamePresentation.swift) | Contratto comune per presentazione, operazioni supportate e target di avvio; nessuna operazione I/O. |
 | [Sources/NXLibraryCore/Catalog/CatalogStore.swift](../../Sources/NXLibraryCore/Catalog/CatalogStore.swift) | Conversione conservativa attraverso l’import legacy ricevuto (`CatalogLegacyImport`), letture limitate, revisioni attese, lock e archiviazione esplicita del conflitto legacy senza fusione. |
 | [Sources/NXLibraryCore/Catalog/CatalogPublication.swift](../../Sources/NXLibraryCore/Catalog/CatalogPublication.swift) | Staging verificato, creazione esclusiva e sostituzione atomica, con confine di errore controllabile. |
-| [Sources/NXLibraryCore/Catalog/CatalogRepository.swift](../../Sources/NXLibraryCore/Catalog/CatalogRepository.swift) | Modifiche tipizzate sull'ultimo catalogo, senza replay di effetti esterni: fonti, preferiti, nascosti, Steam; le modifiche nxnative sono in `Porting/Catalog/`. |
+| [Sources/NXLibraryCore/Catalog/CatalogRepository.swift](../../Sources/NXLibraryCore/Catalog/CatalogRepository.swift) | Modifiche tipizzate sull'ultimo catalogo, senza replay di effetti esterni: fonti, preferiti, nascosti, Steam; le modifiche nxnative sono in `ArcanePorting/Catalog/`. |
 | [Sources/NXLibraryCore/Catalog/CatalogRecovery.swift](../../Sources/NXLibraryCore/Catalog/CatalogRecovery.swift) | Offerte di recupero e conflitto legacy con impronte degli input, rivalidate all’accettazione. |
 | [Sources/NXLibraryCore/Catalog/CatalogPersonalizations.swift](../../Sources/NXLibraryCore/Catalog/CatalogPersonalizations.swift) | Lookup personali immutabili per identità. |
 | [Sources/NXLibraryCore/Catalog/CatalogErrorCopy.swift](../../Sources/NXLibraryCore/Catalog/CatalogErrorCopy.swift) | Errori recuperabili del catalogo nelle sei lingue. |
@@ -210,7 +210,7 @@ Cartella `Sources/NXLibraryCore/Library/`.
 |---|---|
 | [Sources/NXLibraryCore/Library/LibraryFilter.swift](../../Sources/NXLibraryCore/Library/LibraryFilter.swift) | Definisce filtri, PlayHistory e query condivisa per ricerca/ordine del catalogo misto; `LibraryQueryRecord` è ciò che filtro, ricerca e Surprise leggono da un gioco di qualunque fonte. |
 | [Sources/NXLibraryCore/Library/LibrarySelectionState.swift](../../Sources/NXLibraryCore/Library/LibrarySelectionState.swift) | Mantiene selezione e spostamento nel risultato filtrato della Collection. |
-| [Sources/NXLibraryCore/Library/LibraryPresentation.swift](../../Sources/NXLibraryCore/Library/LibraryPresentation.swift) | Formatta metadati e statistiche temporali per le schermate della libreria: i valori pronti e la strada Steam; quella Switch sta in `Porting/Library/LibraryPresentation+Porting.swift`. |
+| [Sources/NXLibraryCore/Library/LibraryPresentation.swift](../../Sources/NXLibraryCore/Library/LibraryPresentation.swift) | Formatta metadati e statistiche temporali per le schermate della libreria: i valori pronti e la strada Steam; quella Switch sta in `ArcanePorting/Library/LibraryPresentation+Porting.swift`. |
 | [Sources/NXLibraryCore/Library/PlaySession.swift](../../Sources/NXLibraryCore/Library/PlaySession.swift) | Descrive una sessione persistibile con gioco e riferimenti temporali. |
 | [Sources/NXLibraryCore/Library/ActivitySummary.swift](../../Sources/NXLibraryCore/Library/ActivitySummary.swift) | Aggrega sessioni, giorni e tempi della settimana per la scheda Activity. |
 | [Sources/NXLibraryCore/Library/PlaySessionStore.swift](../../Sources/NXLibraryCore/Library/PlaySessionStore.swift) | Registra avvio (per id, identità della fonte e bundle ID facoltativo), heartbeat, fine e riconciliazione delle sessioni di gioco; unisce i totali esterni (Steam) con le sessioni successive. |
@@ -259,9 +259,9 @@ Cartella `Sources/NXLibraryCore/Details/`.
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Details/GameDetailPresentation.swift](../../Sources/NXLibraryCore/Details/GameDetailPresentation.swift) | Prepara badge, disponibilità delle azioni, date e dati della pagina Details; la pagina Steam è in `GameDetailPresentation+Steam.swift`, quella Switch in `Porting/Details/`. |
+| [Sources/NXLibraryCore/Details/GameDetailPresentation.swift](../../Sources/NXLibraryCore/Details/GameDetailPresentation.swift) | Prepara badge, disponibilità delle azioni, date e dati della pagina Details; la pagina Steam è in `GameDetailPresentation+Steam.swift`, quella Switch in `ArcanePorting/Details/`. |
 | [Sources/NXLibraryCore/Details/MoreLikeThis.swift](../../Sources/NXLibraryCore/Details/MoreLikeThis.swift) | Ordina i giochi correlati per generi, sviluppatore ed editore, con precedenza alla stessa fonte e ripiego facoltativo. |
-| [Sources/NXLibraryCore/Details/DetailsFacts.swift](../../Sources/NXLibraryCore/Details/DetailsFacts.swift) | Sceglie le righe del pannello Details (Steam qui, Switch in `Porting/Details/DetailsFacts+Porting.swift`): solo i valori presenti, niente di tecnico. |
+| [Sources/NXLibraryCore/Details/DetailsFacts.swift](../../Sources/NXLibraryCore/Details/DetailsFacts.swift) | Sceglie le righe del pannello Details (Steam qui, Switch in `ArcanePorting/Details/DetailsFacts+Porting.swift`): solo i valori presenti, niente di tecnico. |
 | [Sources/NXLibraryCore/Details/DetailsFocus.swift](../../Sources/NXLibraryCore/Details/DetailsFocus.swift) | Gestisce zone e spostamenti del focus nei link e nelle bande di Details. |
 | [Sources/NXLibraryCore/Details/GameOptionsPresentation.swift](../../Sources/NXLibraryCore/Details/GameOptionsPresentation.swift) | Definisce righe, livelli, etichette, scelte runtime e focus di Game Options; dalla build riceve solo `GameOptionsBuildSettings` (chiavi fisse e visibili, scala di rendering, altre impostazioni). |
 | [Sources/NXLibraryCore/Details/GameDetailPresentation+Steam.swift](../../Sources/NXLibraryCore/Details/GameDetailPresentation+Steam.swift) | Dati della pagina Steam e generi della testata Spotlight; ignora i dati di altri AppID e dà precedenza ai campi personali. |
@@ -274,7 +274,7 @@ Cartella `Sources/NXLibraryCore/Artwork/`.
 |---|---|
 | [Sources/NXLibraryCore/Artwork/AutomaticIconResolver.swift](../../Sources/NXLibraryCore/Artwork/AutomaticIconResolver.swift) | Risolve icone automatiche con cache, abbinamento prudente e rispetto delle restrizioni del provider. |
 | [Sources/NXLibraryCore/Artwork/ArtworkStore.swift](../../Sources/NXLibraryCore/Artwork/ArtworkStore.swift) | Scarica, ridimensiona e conserva immagini e screenshot nella cache per titolo e tipo. |
-| [Sources/NXLibraryCore/Artwork/ArtworkPicker.swift](../../Sources/NXLibraryCore/Artwork/ArtworkPicker.swift) | Aggrega candidati per cover, sfondo, icona e logo (quelli Steam qui, quelli Switch in `Porting/Store/ArtworkCandidates+Porting.swift`) e conserva le scelte manuali. |
+| [Sources/NXLibraryCore/Artwork/ArtworkPicker.swift](../../Sources/NXLibraryCore/Artwork/ArtworkPicker.swift) | Aggrega candidati per cover, sfondo, icona e logo (quelli Steam qui, quelli Switch in `ArcanePorting/Store/ArtworkCandidates+Porting.swift`) e conserva le scelte manuali. |
 | [Sources/NXLibraryCore/Artwork/MetadataPicker.swift](../../Sources/NXLibraryCore/Artwork/MetadataPicker.swift) | Campi e valori alternativi dei metadati; conserva gli override dell’utente per campo (`MetadataPicks`). |
 | [Sources/NXLibraryCore/Artwork/GameTitleKey.swift](../../Sources/NXLibraryCore/Artwork/GameTitleKey.swift) | Un titolo come parole da confrontare (minuscole, senza ™ ® © né punteggiatura, "&" come "and"), per le ricerche di artwork online e GameTDB. |
 | [Sources/NXLibraryCore/Artwork/HTMLPlainText.swift](../../Sources/NXLibraryCore/Artwork/HTMLPlainText.swift) | Una descrizione HTML (store, Steam, database, mod) come testo semplice: righe ed elenchi tenuti, altri tag tolti, entità decodificate. |
@@ -412,7 +412,7 @@ Cartella `Sources/ArcanePorting/Details/`.
 
 ## Porting · impostazioni e app
 
-Cartelle `Sources/ArcanePorting/Settings/` e `Porting/App/`.
+Cartelle `Sources/ArcanePorting/Settings/` e `ArcanePorting/App/`.
 
 | File | Responsabilità |
 |---|---|
@@ -557,7 +557,7 @@ Cartella `Sources/ArcanePorting/Saves/`.
 
 ## Porting · mod RomFS e GameBanana
 
-Cartelle `Sources/ArcanePorting/Mods/` e `Porting/Mods/GameBanana/`.
+Cartelle `Sources/ArcanePorting/Mods/` e `ArcanePorting/Mods/GameBanana/`.
 
 | File | Responsabilità |
 |---|---|

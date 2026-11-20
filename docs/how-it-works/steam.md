@@ -54,7 +54,7 @@ documento da leggere prima di toccare qualunque parte Steam. `architecture.md` n
 | `<Steam>/appcache/stats/UserGameStats_<account>_<AppID>.bin` | `SteamAchievementReader` | solo `AchievementTimes` |
 | `<Steam>/logs/console_log.txt` | `SteamLaunchQuestionWatch` | solo righe `GameAction [AppID …]`, durante un Play |
 
-Formati: `SteamKeyValues` (testo, campi duplicati conservati, nessuna direttiva eseguita), `SteamBinaryKeyValues`
+Formati: `KeyValuesDocument` in `SteamKeyValues.swift` (testo, campi duplicati conservati, nessuna direttiva eseguita), `SteamBinaryKeyValues`
 (binario). Le letture di file e cartelle hanno limiti di dimensione e di voci (`InstallationFileSnapshot`,
 `InstallationDirectorySnapshot`) e si possono annullare.
 
