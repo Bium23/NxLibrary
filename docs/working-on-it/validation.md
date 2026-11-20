@@ -7,7 +7,7 @@ Come si aggiorna:
 - Ogni lavoro nuovo aggiunge la sua riga **in attesa**, con le prove manuali da fare.
 - Le guide ([architecture.md](../how-it-works/architecture.md), [steam.md](../how-it-works/steam.md)) descrivono come funziona; lo stato sta solo qui.
 
-## Non pubblicato (ramo `bium/0.2.1`)
+## Non pubblicato (ramo `bium/cleanup`)
 
 | Parte | Stato | Prove ancora da fare |
 |---|---|---|
