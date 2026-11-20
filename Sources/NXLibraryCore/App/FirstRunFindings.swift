@@ -18,10 +18,12 @@ public struct FirstRunFindings: Equatable, Sendable {
     public var isEmpty: Bool { !steamReadFailed && steamGameCount == nil && portedAppCount == 0 }
 
     /// Blocking; run it on a worker. A failed/partial Steam scan can be retried without changing sources.
-    public static func read(steamRoot: URL, appsFolder: URL, cancelled: @escaping () -> Bool) -> FirstRunFindings {
+    /// `portedAppCount` counts the module's apps (Porting: `read(steamRoot:appsFolder:cancelled:)`).
+    public static func read(steamRoot: URL, portedAppCount: () -> Int,
+                            cancelled: @escaping () -> Bool) -> FirstRunFindings {
         let steam = readSteam(root: steamRoot, cancelled: cancelled)
         guard !cancelled() else { return FirstRunFindings(steamGameCount: nil, portedAppCount: 0) }
-        let ported = ImportService().scan(directories: [appsFolder]).count
+        let ported = portedAppCount()
         guard !cancelled() else { return FirstRunFindings(steamGameCount: nil, portedAppCount: 0) }
         return FirstRunFindings(steamGameCount: steam.count, portedAppCount: ported, steamReadFailed: steam.failed)
     }
@@ -53,12 +55,12 @@ public final class FirstRunFindingsReader: ObservableObject {
 
     public var isReading: Bool { task != nil }
 
-    public func start(steamRoot: URL, appsFolder: URL) {
+    public func start(steamRoot: URL, portedAppCount: @escaping @Sendable () -> Int) {
         cancel()
         findings = nil
         let id = requestID
         let worker = Task.detached(priority: .userInitiated) {
-            FirstRunFindings.read(steamRoot: steamRoot, appsFolder: appsFolder, cancelled: { Task.isCancelled })
+            FirstRunFindings.read(steamRoot: steamRoot, portedAppCount: portedAppCount, cancelled: { Task.isCancelled })
         }
         task = Task { [weak self] in
             let result = await withTaskCancellationHandler(operation: { await worker.value },

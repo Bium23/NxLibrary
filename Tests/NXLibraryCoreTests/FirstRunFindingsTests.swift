@@ -110,4 +110,12 @@ final class FirstRunFindingsTests: XCTestCase {
         XCTAssertEqual(findings.portedAppCount, 1)
         XCTAssertFalse(findings.isEmpty)
     }
+
+    func testPortedCountComesFromTheGivenCount() {
+        let absent = FileManager.default.temporaryDirectory.appendingPathComponent("NoSteam-\(UUID().uuidString)")
+        XCTAssertEqual(FirstRunFindings.read(steamRoot: absent, portedAppCount: { 3 }, cancelled: { false }).portedAppCount, 3)
+        let cancelled = FirstRunFindings.read(steamRoot: absent, portedAppCount: { XCTFail("counted after cancel"); return 3 },
+                                              cancelled: { true })
+        XCTAssertEqual(cancelled.portedAppCount, 0)
+    }
 }

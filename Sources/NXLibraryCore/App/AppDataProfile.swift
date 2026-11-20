@@ -15,9 +15,6 @@ public struct AppDataProfile: Sendable {
         isDevelopment ? home.appendingPathComponent("Library/Application Support/NXLibrary-Development", isDirectory: true) : stableSupportRoot
     }
     public var cacheRoot: URL { home.appendingPathComponent("Library/Caches/" + (isDevelopment ? "NXLibrary-Development" : "NXLibrary"), isDirectory: true) }
-    public func automaticStagingFolders(appFolders: [URL]) -> [URL] {
-        BuildScratch.tempFolders(core: supportRoot, appFolders: isDevelopment ? [] : appFolders)
-    }
     public var preferencesDomain: String { isDevelopment ? "local.nxlibrary.development" : "local.nxlibrary" }
 }
 
@@ -39,12 +36,13 @@ public enum AppData {
             throw DevelopmentProfileError.invalidConfiguration
         }
     }
-    public static func prepare() throws {
+    /// `checks` validate the module's own files in the copy (Porting: `prepare()`).
+    public static func prepare(checks: [String: DevelopmentProfileImporter.Check]) throws {
         // An unmarked/mispackaged executable must not silently open the live profile.
         try validateBuildIdentity(Bundle.main.infoDictionary ?? [:])
         guard profile.isDevelopment else { return }
         let defaults = preferences
-        _ = try DevelopmentProfileImporter().prepare(profile: profile, sourcePreferences: {
+        _ = try DevelopmentProfileImporter(checks: checks).prepare(profile: profile, sourcePreferences: {
             UserDefaults.standard.persistentDomain(forName: "local.nxlibrary") ?? [:]
         }, savePreferences: { values in
             defaults.setPersistentDomain(values, forName: profile.preferencesDomain)

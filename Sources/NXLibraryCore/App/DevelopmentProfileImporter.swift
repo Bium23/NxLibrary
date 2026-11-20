@@ -20,8 +20,16 @@ public enum DevelopmentProfileError: Error, LocalizedError {
 
 /// An allowlisted, one-time snapshot. Reads source bytes directly: source-store load/recovery hooks never run.
 public struct DevelopmentProfileImporter {
+    /// Reads a copied file (its bytes, and the copy's folder) and throws when it is not what its owner wrote.
+    public typealias Check = @Sendable (_ data: Data, _ copy: URL) throws -> Void
     private let fm: FileManager
-    public init(fileManager: FileManager = .default) { fm = fileManager }
+    /// The files whose check needs a module, by name: the library and the catalog with their record kinds and
+    /// legacy import (Porting: `portingChecks`, and `DevelopmentProfileImporter()` with them).
+    private let checks: [String: Check]
+    public init(fileManager: FileManager = .default, checks: [String: Check]) {
+        fm = fileManager
+        self.checks = checks
+    }
     private static let files = ["library.json", "library.json.bak", "catalog.json", "catalog.json.bak", "settings.json", "play-sessions.json", "play-sessions-totals.json", "metadata-picks.json", "integrations/steam/metadata-picks.json", "app-sizes.json"]
     private static let folders = ["artwork-picks", "integrations/steam/artwork-picks", "artwork", "metadata", "SeleneImports", "app-icons", "mods", "gamebanana"]
     private static let marker = ".development-import.json"
@@ -113,19 +121,13 @@ public struct DevelopmentProfileImporter {
         preferenceKeys.contains(key) || key.hasPrefix("NXNative_GameConfig_")
     }
     private func validateRequiredData(_ root: URL) throws {
-        for name in ["library.json", "catalog.json", "catalog.json.bak", "settings.json", "play-sessions.json"] {
+        for name in checks.keys.sorted() + ["settings.json", "play-sessions.json"] {
             let file = root.appendingPathComponent(name)
             guard fm.fileExists(atPath: file.path) else { continue }
             let data = try Data(contentsOf: file)
             do {
+                if let check = checks[name] { try check(data, root); continue }
                 switch name {
-                case "library.json":
-                    let decoder = JSONDecoder()
-                    decoder.dateDecodingStrategy = .iso8601
-                    _ = try decoder.decode(LibraryFile.self, from: data)
-                case "catalog.json", "catalog.json.bak":
-                    let document = try CatalogStore.decode(data)
-                    try CatalogStore(directory: root).validateImportedOrigin(document)
                 case "settings.json": _ = try JSONDecoder().decode(AppSettings.self, from: data)
                 default: _ = try JSONDecoder().decode([PlaySession].self, from: data)
                 }

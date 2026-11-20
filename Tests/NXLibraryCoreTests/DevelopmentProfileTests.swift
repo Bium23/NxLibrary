@@ -71,6 +71,16 @@ final class DevelopmentProfileTests: XCTestCase {
         XCTAssertFalse(try importer.prepare(profile: profile, sourcePreferences: { XCTFail("must not reread source preferences"); return [:] }, savePreferences: { _ in XCTFail("must not reimport preferences") }))
         XCTAssertEqual(try String(contentsOf: file, encoding: .utf8), #"{"showClock":false}"#)
     }
+    func testPortingCheckRejectsAMisshapenLibrary() throws {
+        let (_, profile) = try fixture()
+        try put(#"{"games":"x"}"#, "library.json", profile: profile)
+        let importer = DevelopmentProfileImporter(checks: DevelopmentProfileImporter.portingChecks)
+        XCTAssertThrowsError(try importer.prepare(profile: profile, sourcePreferences: { [:] }, savePreferences: { _ in XCTFail() })) {
+            guard case DevelopmentProfileError.unreadableFile("library.json") = $0 else { return XCTFail("\($0)") }
+        }
+        XCTAssertEqual(try String(contentsOf: profile.stableSupportRoot.appendingPathComponent("library.json"), encoding: .utf8), #"{"games":"x"}"#)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: profile.supportRoot.path))
+    }
     func testMalformedSourceIsNotRepairedOrActivated() throws {
         let (_, profile) = try fixture()
         try put("broken", "library.json", profile: profile)

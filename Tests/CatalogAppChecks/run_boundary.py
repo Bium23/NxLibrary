@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """The base Core (everything in Sources/NXLibraryCore outside Porting/) must not grow new uses of Porting types.
 
-A base file that names, in code, a type declared under Porting/ is a link still to cut. ALLOWED lists the links
-left; the check fails when a file outside it gains one, and when a listed file has none left (shorten the list).
+A base file that names, in code, a type declared under Porting/ is a link to the module. ALLOWED lists the links
+accepted (none); the check fails when a file outside it gains one, and when a listed file has none left.
 """
 import re
 import sys
@@ -12,11 +12,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CORE = ROOT / 'Sources/NXLibraryCore'
 PORTING = CORE / 'Porting'
 
-ALLOWED = {
-    'App/AppDataProfile.swift',
-    'App/DevelopmentProfileImporter.swift',
-    'App/FirstRunFindings.swift',
-}
+ALLOWED = set()
 
 DECLARATION = re.compile(r'^(?:public |internal |final |indirect |fileprivate |private )*'
                          r'(?:struct|class|enum|protocol|actor|typealias)\s+(\w+)', re.M)
