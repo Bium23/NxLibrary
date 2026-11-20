@@ -16,6 +16,7 @@
   <a href="#requirements"><img src="https://img.shields.io/badge/macOS-26%2B-3D4754?style=flat" alt="macOS 26 or later"></a>
   <a href="#requirements"><img src="https://img.shields.io/badge/Apple-silicon-3D4754?style=flat" alt="Apple silicon"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-64816C?style=flat" alt="MIT license"></a>
+  <a href="https://buymeacoffee.com/bium"><img src="https://img.shields.io/badge/support-buy%20me%20a%20coffee-C9A227?style=flat" alt="Support Arcane: buy me a coffee"></a>
 </p>
 
 <p align="center">
@@ -342,7 +343,7 @@ Storage can also clear all build caches or logs and open the shared backups fold
 | [Steam](docs/how-it-works/steam.md) | Steam integration: files read, game states, launch, playtime, achievements, limits; in Italian. |
 | [Engine upgrade notes](docs/history/engine-upgrades/README.md) | Pin changes and their evidence. |
 
-If you’d like to support Arcane’s development and maintenance, you can [buy me a coffee](https://buymeacoffee.com/bium).
+Arcane is free and open source. If you like the project and want to support it, you can [buy me a coffee](https://buymeacoffee.com/bium).
 
 ## Credits and licences
 
