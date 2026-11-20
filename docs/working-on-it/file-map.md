@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 20 novembre 2026. Copertura di **746 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 20 novembre 2026. Copertura di **751 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](../how-it-works/architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le cartelle del Core, una per area, con lo Switch in `Porting/`; quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -581,7 +581,12 @@ Cartella `Sources/NXLibraryCore/Porting/Mods/`.
 | File | Responsabilità |
 |---|---|
 | [Sources/NXLibrary/Views/GameOptions/GameOptionsView.swift](../../Sources/NXLibrary/Views/GameOptions/GameOptionsView.swift) | Presenta opzioni del gioco, Edit details, impostazioni runtime e conferme delle azioni; `GameOptionsFiles` legge i file una volta per apertura. |
-| [Sources/NXLibrary/Views/GameOptions/ChangeArtworkView.swift](../../Sources/NXLibrary/Views/GameOptions/ChangeArtworkView.swift) | Seleziona artwork per titolo da rete o file e indica dove viene usato, con stato ad altezza stabile. |
+| [Sources/NXLibrary/Views/GameOptions/ChangeArtworkView.swift](../../Sources/NXLibrary/Views/GameOptions/ChangeArtworkView.swift) | Seleziona artwork per titolo da rete o file e indica dove viene usato, con stato ad altezza stabile. Il file tiene stato, geometria, `body`, schede, ricerca, stato e griglia; il resto sta nelle estensioni qui sotto. |
+| [Sources/NXLibrary/Views/GameOptions/ChangeArtworkView+Tiles.swift](../../Sources/NXLibrary/Views/GameOptions/ChangeArtworkView+Tiles.swift) | Tile della griglia: anteprima, didascalia e segno dell’artwork in uso. |
+| [Sources/NXLibrary/Views/GameOptions/ChangeArtworkView+Loading.swift](../../Sources/NXLibrary/Views/GameOptions/ChangeArtworkView+Loading.swift) | Caricamento: candidati e anteprime della scheda, risultati di una fonte, scelta del giocatore e icona automatica. |
+| [Sources/NXLibrary/Views/GameOptions/ChangeArtworkView+Choosing.swift](../../Sources/NXLibrary/Views/GameOptions/ChangeArtworkView+Choosing.swift) | Scelta di una tile, di un’immagine sfogliata o di un file, salvata come scelta del giocatore. |
+| [Sources/NXLibrary/Views/GameOptions/ChangeArtworkView+Browse.swift](../../Sources/NXLibrary/Views/GameOptions/ChangeArtworkView+Browse.swift) | Sfoglia una fonte: apertura, ricerca, chiusura e pagina della fonte. |
+| [Sources/NXLibrary/Views/GameOptions/ChangeArtworkView+Input.swift](../../Sources/NXLibrary/Views/GameOptions/ChangeArtworkView+Input.swift) | Input: schede, focus, indietro e chiusura, scelta, controller e monitor dei tasti. |
 | [Sources/NXLibrary/Views/GameOptions/ChangeMetadataView.swift](../../Sources/NXLibrary/Views/GameOptions/ChangeMetadataView.swift) | Offre alternative per campo da store, Title DB, GameTDB e IGDB, oppure testo personale; anteprima, scelta, annullamento e retry con lo stesso input. |
 | [Sources/NXLibrary/Views/GameOptions/CheatsPanel.swift](../../Sources/NXLibrary/Views/GameOptions/CheatsPanel.swift) | Presenta file, master switch, codici, importazione, rimozione e stato di scrittura dei cheats. |
 | [Sources/NXLibrary/Views/GameOptions/ModsPanel.swift](../../Sources/NXLibrary/Views/GameOptions/ModsPanel.swift) | Game options → Mods: accende, ordina e sposta nel Cestino le mod RomFS, apre la cartella mods. |
