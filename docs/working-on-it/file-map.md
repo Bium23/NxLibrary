@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 20 novembre 2026. Copertura di **735 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 20 novembre 2026. Copertura di **741 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](../how-it-works/architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le cartelle del Core, una per area, con lo Switch in `Porting/`; quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -534,6 +534,12 @@ Cartella `Sources/NXLibraryCore/Porting/Mods/`.
 | File | Responsabilità |
 |---|---|
 | [Sources/NXLibrary/Views/Spotlight/SpotlightView.swift](../../Sources/NXLibrary/Views/Spotlight/SpotlightView.swift) | Compone home e tessere da una lista filtrata per render. Monta Dettagli, Mods e correlati quando sale la pagina. |
+| [Sources/NXLibrary/Views/Spotlight/SpotlightView+Stage.swift](../../Sources/NXLibrary/Views/Spotlight/SpotlightView+Stage.swift) | Palco di Spotlight: riga, informazioni del gioco, overlay sopra di esse e arte hero dietro. |
+| [Sources/NXLibrary/Views/Spotlight/SpotlightView+Hints.swift](../../Sources/NXLibrary/Views/Spotlight/SpotlightView+Hints.swift) | Barra dei suggerimenti: cosa fanno i tasti per il focus e lo stato sullo schermo. |
+| [Sources/NXLibrary/Views/Spotlight/SpotlightView+Selection.swift](../../Sources/NXLibrary/Views/Spotlight/SpotlightView+Selection.swift) | Selezione: comparsa, cambi di filtro e di libreria, gioco selezionato tenuto nella riga. |
+| [Sources/NXLibrary/Views/Spotlight/SpotlightView+Mods.swift](../../Sources/NXLibrary/Views/Spotlight/SpotlightView+Mods.swift) | Fascia Mods e store delle mod che si apre da lì. |
+| [Sources/NXLibrary/Views/Spotlight/SpotlightView+PageLayout.swift](../../Sources/NXLibrary/Views/Spotlight/SpotlightView+PageLayout.swift) | Pagina sotto la riga: offset, dissolvenze, maschera e cosa mostra About. |
+| [Sources/NXLibrary/Views/Spotlight/SpotlightView+PageContent.swift](../../Sources/NXLibrary/Views/Spotlight/SpotlightView+PageContent.swift) | Cosa contiene la pagina per un gioco Switch o Steam: About, Details, screenshot e giochi correlati. |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightView+Input.swift](../../Sources/NXLibrary/Views/Spotlight/SpotlightView+Input.swift) | Traduce input, card, azioni, screenshot e riordino. Le frecce sulla riga usano solo le tessere, prima di costruire i dati della pagina. |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightView+Entrance.swift](../../Sources/NXLibrary/Views/Spotlight/SpotlightView+Entrance.swift) | Coordina l’entrata su moonlight condiviso: coperture e fullscreen, pausa, attesa dell’arte, effetti di volo e dissolvenza, barra in alto e hint per ultimi, atterraggio di sicurezza; nessun input salta l’entrata. |
 | [Sources/NXLibrary/Views/Spotlight/SpotlightRowView.swift](../../Sources/NXLibrary/Views/Spotlight/SpotlightRowView.swift) | Disegna la riga di tile con finestra visibile, focus e titoli; la faccia della card Mods (`ModsCardCover`). |
