@@ -176,6 +176,35 @@ final class AppSettingsStoreTests: XCTestCase {
         XCTAssertEqual(settings.gameDefaults.renderScale, 1)
     }
 
+    func testModuleKeysRoundTripUnchanged() throws {
+        let kept = #"""
+        {"gameDefaults":{"fullscreen":true,"language":"it","renderScale":0.75,"rumbleGain":2},
+         "cloudSaves":{"folder":{"_0":"/x"}},"cloudSavesPickedFolder":"/x",
+         "future":{"n":1},"showClock":false}
+        """#
+        let settings = try JSONDecoder().decode(AppSettings.self, from: Data(kept.utf8))
+        XCTAssertEqual(Set(settings.moduleValues.keys), AppSettings.moduleKeys)
+        XCTAssertFalse(settings.showClock)
+        let input = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(kept.utf8)) as? NSDictionary)
+        let output = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(settings)) as? NSDictionary)
+        for key in AppSettings.moduleKeys {
+            XCTAssertEqual(output[key] as? NSObject, input[key] as? NSObject, key)
+        }
+        XCTAssertNil(output["future"], "a key nobody reads is dropped, as before")
+        XCTAssertEqual(settings.cloudSaves, .folder("/x"))
+        XCTAssertEqual(settings.gameDefaults.renderScale, 0.75)
+    }
+
+    func testEveryBaseKeyIsWritten() throws {
+        var settings = AppSettings()
+        settings.appRegion = "IT"
+        settings.lastSelectedGameID = UUID()
+        settings.wallpaperID = "moon"
+        settings.settingsWallpaperID = "moon"
+        let output = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(settings)) as? [String: Any])
+        XCTAssertEqual(Set(output.keys), Set(AppSettings.CodingKeys.allCases.map(\.stringValue)))
+    }
+
     func testOldJSONWithoutSpotlightFieldsDecodesDefaults() throws {
         let old = Data(#"{"backgroundShade":"deep","colorThemeID":"selene"}"#.utf8)
         let s = try JSONDecoder().decode(AppSettings.self, from: old)

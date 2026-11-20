@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 20 novembre 2026. Copertura di **788 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 20 novembre 2026. Copertura di **790 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](../how-it-works/architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le cartelle del Core, una per area, con lo Switch in `Porting/`; quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -27,6 +27,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 - [Core · Porting: catalogo nxnative](#core--porting-catalogo-nxnative)
 - [Core · Porting: libreria, sessioni e spazio](#core--porting-libreria-sessioni-e-spazio)
 - [Core · Porting: pagina del gioco](#core--porting-pagina-del-gioco)
+- [Core · Porting: impostazioni e app](#core--porting-impostazioni-e-app)
 - [Core · Porting: Setup, motore e chiavi](#core--porting-setup-motore-e-chiavi)
 - [Core · Porting: sorgenti, build e installazione](#core--porting-sorgenti-build-e-installazione)
 - [Core · Porting: avvio e icona del gioco](#core--porting-avvio-e-icona-del-gioco)
@@ -188,7 +189,7 @@ Cartella `Sources/NXLibraryCore/Catalog/`.
 | [Sources/NXLibraryCore/Catalog/CatalogSourceRecord.swift](../../Sources/NXLibraryCore/Catalog/CatalogSourceRecord.swift) | Contratto del record di una fonte (identità, preferito, nascosto, validazione, presenza, termini di ricerca), integrazione aperta come stringa e tipi noti a un lettore (`CatalogRecordKinds`, passati in `userInfo`). |
 | [Sources/NXLibraryCore/Catalog/SteamCatalogGame+Record.swift](../../Sources/NXLibraryCore/Catalog/SteamCatalogGame+Record.swift) | Record Steam nel contratto: validazione delle installazioni, presenza, gate di Play e termini di ricerca. |
 | [Sources/NXLibraryCore/Catalog/CatalogDocument.swift](../../Sources/NXLibraryCore/Catalog/CatalogDocument.swift) | Schema, revisione, base legacy riconosciuta, configurazione delle fonti e validazione delle identità; conserva e riscrive intatti giochi e fonti di un’integrazione sconosciuta. La conversione da `library.json` sta in `Porting/Catalog/CatalogStore+Porting.swift`. |
-| [Sources/NXLibraryCore/Catalog/CatalogJSON.swift](../../Sources/NXLibraryCore/Catalog/CatalogJSON.swift) | Valore JSON tenuto com’è stato letto (numeri `Decimal`), per i record e le fonti che il catalogo non conosce. |
+| [Sources/NXLibraryCore/Catalog/CatalogJSON.swift](../../Sources/NXLibraryCore/Catalog/CatalogJSON.swift) | Valore JSON tenuto com’è stato letto (numeri `Decimal`), per i record e le fonti che il catalogo non conosce e le impostazioni dei moduli; si converte da e verso un tipo `Codable`. |
 | [Sources/NXLibraryCore/Catalog/CatalogGamePresentation.swift](../../Sources/NXLibraryCore/Catalog/CatalogGamePresentation.swift) | Contratto comune per presentazione, operazioni supportate e target di avvio; nessuna operazione I/O. |
 | [Sources/NXLibraryCore/Catalog/CatalogStore.swift](../../Sources/NXLibraryCore/Catalog/CatalogStore.swift) | Conversione conservativa attraverso l’import legacy ricevuto (`CatalogLegacyImport`), letture limitate, revisioni attese, lock e archiviazione esplicita del conflitto legacy senza fusione. |
 | [Sources/NXLibraryCore/Catalog/CatalogPublication.swift](../../Sources/NXLibraryCore/Catalog/CatalogPublication.swift) | Staging verificato, creazione esclusiva e sostituzione atomica, con confine di errore controllabile. |
@@ -322,12 +323,12 @@ Cartella `Sources/NXLibraryCore/Settings/`. Il catalogo dei testi sta in `Resour
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Settings/AppSettings.swift](../../Sources/NXLibraryCore/Settings/AppSettings.swift) | Definisce impostazioni globali, default e decodifica compatibile; ignora la scelta storica delle particelle. |
+| [Sources/NXLibraryCore/Settings/AppSettings.swift](../../Sources/NXLibraryCore/Settings/AppSettings.swift) | Definisce impostazioni globali, default e decodifica compatibile; ignora la scelta storica delle particelle. Tiene le chiavi del modulo (`moduleKeys`) come JSON intatto in `moduleValues` e scarta le altre chiavi sconosciute. |
 | [Sources/NXLibraryCore/Settings/AppSettingsStore.swift](../../Sources/NXLibraryCore/Settings/AppSettingsStore.swift) | Pubblica impostazioni ed errori, preserva i file illeggibili e salva settings.json in modo atomico. Tiene l'ultima selezione fuori dalle notifiche e la scrive in background. |
 | [Sources/NXLibraryCore/Settings/SettingsRowAction.swift](../../Sources/NXLibraryCore/Settings/SettingsRowAction.swift) | Identifica azioni e righe Settings, mantenendo una sola azione primaria per riga senza accorpare giochi omonimi. |
 | [Sources/NXLibraryCore/Settings/SettingsCatalog.swift](../../Sources/NXLibraryCore/Settings/SettingsCatalog.swift) | Descrive righe, ricerca e valori modificati; ogni riga tiene il suo `rowID` e sta in una sola sezione, vibrazione compresa tra i default dei nuovi giochi. |
 | [Sources/NXLibraryCore/Settings/SettingsSection.swift](../../Sources/NXLibraryCore/Settings/SettingsSection.swift) | Sezioni di Settings con titoli e icone, dichiarate in ordine di sidebar, e `SettingsSidebarGroup`: General, Library, Porting (il gruppo di piattaforma) e System. |
-| [Sources/NXLibraryCore/Settings/SettingsReset.swift](../../Sources/NXLibraryCore/Settings/SettingsReset.swift) | Reset group per sezione: quali sezioni si azzerano e quali valori di `AppSettings` tornano ai default. |
+| [Sources/NXLibraryCore/Settings/SettingsReset.swift](../../Sources/NXLibraryCore/Settings/SettingsReset.swift) | Reset group per sezione: quali sezioni si azzerano e quali valori della base tornano ai default (`resetShared`). |
 | [Sources/NXLibraryCore/Settings/AppLocale.swift](../../Sources/NXLibraryCore/Settings/AppLocale.swift) | Sette lingue, risoluzione delle preferenze e regione indipendente; nomi e ricerca delle regioni. |
 | [Sources/NXLibraryCore/Settings/AppLocalization.swift](../../Sources/NXLibraryCore/Settings/AppLocalization.swift) | Contesto osservabile, lookup portabile delle risorse e interpolazioni/plurali. |
 | [Sources/NXLibraryCore/Resources/Localizable.xcstrings](../../Sources/NXLibraryCore/Resources/Localizable.xcstrings) | Testi condivisi e traduzioni en/it/fr/de/es/pt-BR/zh-Hans. |
@@ -408,6 +409,15 @@ Cartella `Sources/NXLibraryCore/Porting/Details/`.
 | [Sources/NXLibraryCore/Porting/Details/DetailsFacts+Porting.swift](../../Sources/NXLibraryCore/Porting/Details/DetailsFacts+Porting.swift) | Le righe Details di un gioco portato: crediti dello store, versione e dimensione della build, cartella dell’app. |
 | [Sources/NXLibraryCore/Porting/Details/GameOptionsPresentation+Porting.swift](../../Sources/NXLibraryCore/Porting/Details/GameOptionsPresentation+Porting.swift) | Game Options di un gioco portato: converte le scelte salvate della build (`GameSettingsSnapshot`) in `GameOptionsBuildSettings`. |
 | [Sources/NXLibraryCore/Porting/Details/MoreLikeThis+Porting.swift](../../Sources/NXLibraryCore/Porting/Details/MoreLikeThis+Porting.swift) | More like this fra giochi portati, con autori e generi dello store Nintendo. |
+
+## Core · Porting: impostazioni e app
+
+Cartelle `Sources/NXLibraryCore/Porting/Settings/` e `Porting/App/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Porting/Settings/AppSettings+Porting.swift](../../Sources/NXLibraryCore/Porting/Settings/AppSettings+Porting.swift) | Game defaults, Cloud saves e la cartella scelta, letti e scritti nelle chiavi di sempre di `settings.json`; un valore assente o illeggibile è il suo default. |
+| [Sources/NXLibraryCore/Porting/Settings/SettingsReset+Porting.swift](../../Sources/NXLibraryCore/Porting/Settings/SettingsReset+Porting.swift) | Reset group completo: quello della base più New games (`gameDefaults`). |
 
 ## Core · Porting: Setup, motore e chiavi
 

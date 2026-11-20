@@ -120,7 +120,6 @@ public struct AppSettings: Codable, Equatable {
     public var checkEngineAtLaunch: Bool
     public var refreshLibraryAtLaunch: Bool
     public var lastSelectedGameID: UUID?
-    public var gameDefaults: GameRuntimeConfig
     public var colorThemeID: String
     public var buttonNames: ButtonNameStyle
     /// The cards the released app knows too; the Mods card is kept apart (`showsModsCard`), so a version that does
@@ -139,10 +138,6 @@ public struct AppSettings: Codable, Equatable {
     public var spotlightOrder: [String]
     public var startingTab: LibraryFilter.RawValue
     public var surprisePool: SurprisePool
-    /// The library's cloud saves folder, written into each game's preferences.
-    public var cloudSaves: CloudSaves
-    /// The last folder picked for cloud saves, so stepping back to Folder finds it.
-    public var cloudSavesPickedFolder: String
     public var startOn: StartScreen
     /// The home screen last shown: `.spotlight` or `.collection`.
     public var lastHome: StartScreen
@@ -173,6 +168,12 @@ public struct AppSettings: Codable, Equatable {
     public var steamInBackground = true
     /// The one-time "Welcome to Arcane" screen was shown, or a first setup finished (new installs never see it).
     public var welcomeArcaneShown = false
+    /// The modules' own settings, kept as written under `moduleKeys` (Porting reads them in
+    /// `AppSettings+Porting.swift`).
+    public var moduleValues: [String: CatalogJSON] = [:]
+    /// The top-level keys the base keeps for the modules. Any other key it does not read is dropped, as a retired key
+    /// may hold a secret (the old SteamGridDB key).
+    public static let moduleKeys: Set<String> = ["gameDefaults", "cloudSaves", "cloudSavesPickedFolder"]
 
     public init(backgroundShade: BackgroundShade = .balanced,
                 readableText: Bool = true,
@@ -184,7 +185,6 @@ public struct AppSettings: Codable, Equatable {
                 checkEngineAtLaunch: Bool = true,
                 refreshLibraryAtLaunch: Bool = true,
                 lastSelectedGameID: UUID? = nil,
-                gameDefaults: GameRuntimeConfig = GameRuntimeConfig(),
                 colorThemeID: String = "selene",
                 buttonNames: ButtonNameStyle = .automatic,
                 spotlightCards: [SpotlightCard] = [.surprise, .activity, .addGame],
@@ -192,8 +192,6 @@ public struct AppSettings: Codable, Equatable {
                 spotlightOrder: [String] = [],
                 startingTab: LibraryFilter.RawValue = "All games",
                 surprisePool: SurprisePool = .installed,
-                cloudSaves: CloudSaves = .off,
-                cloudSavesPickedFolder: String = "",
                 startOn: StartScreen = .spotlight,
                 lastHome: StartScreen = .spotlight,
                 introAnimation: Bool = true,
@@ -220,7 +218,6 @@ public struct AppSettings: Codable, Equatable {
         self.checkEngineAtLaunch = checkEngineAtLaunch
         self.refreshLibraryAtLaunch = refreshLibraryAtLaunch
         self.lastSelectedGameID = lastSelectedGameID
-        self.gameDefaults = gameDefaults
         self.colorThemeID = colorThemeID
         self.buttonNames = buttonNames
         self.spotlightCards = spotlightCards.filter { $0 != .mods }
@@ -228,8 +225,6 @@ public struct AppSettings: Codable, Equatable {
         self.spotlightOrder = spotlightOrder
         self.startingTab = startingTab
         self.surprisePool = surprisePool
-        self.cloudSaves = cloudSaves
-        self.cloudSavesPickedFolder = cloudSavesPickedFolder
         self.startOn = startOn
         self.lastHome = lastHome
         self.introAnimation = introAnimation
@@ -248,13 +243,13 @@ public struct AppSettings: Codable, Equatable {
         self.checkAppUpdatesAtLaunch = checkAppUpdatesAtLaunch
     }
 
-    enum CodingKeys: String, CodingKey {
+    enum CodingKeys: String, CodingKey, CaseIterable {
         case appLanguage, appRegion
         case backgroundShade, readableText, reduceMotion, showButtonHints, showClock
         case restoreLastGame, checkEngineAtLaunch, refreshLibraryAtLaunch, lastSelectedGameID
         case startInFullscreen
-        case gameDefaults, colorThemeID, buttonNames
-        case spotlightCards, showsModsCard, spotlightOrder, startingTab, surprisePool, cloudSaves, cloudSavesPickedFolder
+        case colorThemeID, buttonNames
+        case spotlightCards, showsModsCard, spotlightOrder, startingTab, surprisePool
         case startOn, lastHome
         case introAnimation, viewButtonSwitches, interfaceSounds, soundVolume, quietLaunch
         case wallpaperID, backgroundSizing, animatedBackground, wallpaperBrightness, launchStyle, launchMotion, launchShade
@@ -278,7 +273,6 @@ public struct AppSettings: Codable, Equatable {
         self.checkEngineAtLaunch = try container.decodeIfPresent(Bool.self, forKey: .checkEngineAtLaunch) ?? true
         self.refreshLibraryAtLaunch = try container.decodeIfPresent(Bool.self, forKey: .refreshLibraryAtLaunch) ?? true
         self.lastSelectedGameID = try container.decodeIfPresent(UUID.self, forKey: .lastSelectedGameID)
-        self.gameDefaults = try container.decodeIfPresent(GameRuntimeConfig.self, forKey: .gameDefaults) ?? GameRuntimeConfig()
         self.colorThemeID = try container.decodeIfPresent(String.self, forKey: .colorThemeID) ?? "selene"
         self.buttonNames = try container.decodeIfPresent(ButtonNameStyle.self, forKey: .buttonNames) ?? .automatic
         let cards = try container.decodeIfPresent([SpotlightCard].self, forKey: .spotlightCards) ?? [.surprise, .activity, .addGame]
@@ -287,8 +281,6 @@ public struct AppSettings: Codable, Equatable {
         self.spotlightOrder = try container.decodeIfPresent([String].self, forKey: .spotlightOrder) ?? []
         self.startingTab = try container.decodeIfPresent(String.self, forKey: .startingTab) ?? "All games"
         self.surprisePool = try container.decodeIfPresent(SurprisePool.self, forKey: .surprisePool) ?? .installed
-        self.cloudSaves = try container.decodeIfPresent(CloudSaves.self, forKey: .cloudSaves) ?? .off
-        self.cloudSavesPickedFolder = try container.decodeIfPresent(String.self, forKey: .cloudSavesPickedFolder) ?? ""
         self.startOn = try container.decodeIfPresent(StartScreen.self, forKey: .startOn) ?? .spotlight
         self.lastHome = try container.decodeIfPresent(StartScreen.self, forKey: .lastHome) ?? .spotlight
         self.introAnimation = try container.decodeIfPresent(Bool.self, forKey: .introAnimation) ?? true
@@ -311,5 +303,65 @@ public struct AppSettings: Codable, Equatable {
         self.showsSessionCard = try container.decodeIfPresent(Bool.self, forKey: .showsSessionCard) ?? true
         self.steamInBackground = try container.decodeIfPresent(Bool.self, forKey: .steamInBackground) ?? true
         self.welcomeArcaneShown = try container.decodeIfPresent(Bool.self, forKey: .welcomeArcaneShown) ?? false
+        let others = try decoder.container(keyedBy: ModuleKey.self)
+        for key in others.allKeys where Self.moduleKeys.contains(key.stringValue) {
+            moduleValues[key.stringValue] = try others.decode(CatalogJSON.self, forKey: key)
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(appLanguage, forKey: .appLanguage)
+        try c.encodeIfPresent(appRegion, forKey: .appRegion)
+        try c.encode(backgroundShade, forKey: .backgroundShade)
+        try c.encode(readableText, forKey: .readableText)
+        try c.encode(reduceMotion, forKey: .reduceMotion)
+        try c.encode(showButtonHints, forKey: .showButtonHints)
+        try c.encode(showClock, forKey: .showClock)
+        try c.encode(restoreLastGame, forKey: .restoreLastGame)
+        try c.encode(checkEngineAtLaunch, forKey: .checkEngineAtLaunch)
+        try c.encode(refreshLibraryAtLaunch, forKey: .refreshLibraryAtLaunch)
+        try c.encodeIfPresent(lastSelectedGameID, forKey: .lastSelectedGameID)
+        try c.encode(startInFullscreen, forKey: .startInFullscreen)
+        try c.encode(colorThemeID, forKey: .colorThemeID)
+        try c.encode(buttonNames, forKey: .buttonNames)
+        try c.encode(spotlightCards, forKey: .spotlightCards)
+        try c.encode(showsModsCard, forKey: .showsModsCard)
+        try c.encode(spotlightOrder, forKey: .spotlightOrder)
+        try c.encode(startingTab, forKey: .startingTab)
+        try c.encode(surprisePool, forKey: .surprisePool)
+        try c.encode(startOn, forKey: .startOn)
+        try c.encode(lastHome, forKey: .lastHome)
+        try c.encode(introAnimation, forKey: .introAnimation)
+        try c.encode(viewButtonSwitches, forKey: .viewButtonSwitches)
+        try c.encode(interfaceSounds, forKey: .interfaceSounds)
+        try c.encode(soundVolume, forKey: .soundVolume)
+        try c.encode(quietLaunch, forKey: .quietLaunch)
+        try c.encodeIfPresent(wallpaperID, forKey: .wallpaperID)
+        try c.encode(backgroundSizing, forKey: .backgroundSizing)
+        try c.encode(animatedBackground, forKey: .animatedBackground)
+        try c.encode(wallpaperBrightness, forKey: .wallpaperBrightness)
+        try c.encode(launchStyle, forKey: .launchStyle)
+        try c.encode(launchMotion, forKey: .launchMotion)
+        try c.encode(launchShade, forKey: .launchShade)
+        try c.encode(notifyPortingEnds, forKey: .notifyPortingEnds)
+        try c.encode(checkAppUpdatesAtLaunch, forKey: .checkAppUpdatesAtLaunch)
+        try c.encodeIfPresent(settingsWallpaperID, forKey: .settingsWallpaperID)
+        try c.encode(keepWallpaperOnGames, forKey: .keepWallpaperOnGames)
+        try c.encode(showsSessionCard, forKey: .showsSessionCard)
+        try c.encode(steamInBackground, forKey: .steamInBackground)
+        try c.encode(welcomeArcaneShown, forKey: .welcomeArcaneShown)
+        var others = encoder.container(keyedBy: ModuleKey.self)
+        for (key, value) in moduleValues.sorted(by: { $0.key < $1.key }) where Self.moduleKeys.contains(key) {
+            try others.encode(value, forKey: ModuleKey(key))
+        }
+    }
+
+    private struct ModuleKey: CodingKey {
+        let stringValue: String
+        init(_ name: String) { stringValue = name }
+        init?(stringValue: String) { self.stringValue = stringValue }
+        var intValue: Int? { nil }
+        init?(intValue: Int) { nil }
     }
 }

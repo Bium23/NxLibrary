@@ -43,4 +43,14 @@ public indirect enum CatalogJSON: Codable, Equatable, Sendable {
         if case .string(let value) = self { return value }
         return nil
     }
+
+    /// `value` as JSON, the way `JSONEncoder` writes it.
+    public init(encoding value: some Encodable) throws {
+        self = try JSONDecoder().decode(CatalogJSON.self, from: JSONEncoder().encode(value))
+    }
+
+    /// The value read back as `type`, the way `JSONDecoder` reads it.
+    public func decoded<Value: Decodable>(as type: Value.Type) throws -> Value {
+        try JSONDecoder().decode(type, from: JSONEncoder().encode(self))
+    }
 }

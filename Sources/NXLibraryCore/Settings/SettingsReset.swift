@@ -14,8 +14,9 @@ public enum SettingsReset {
         }
     }
 
-    /// `settings` with the section's values back at their defaults; everything else unchanged.
-    public static func reset(_ section: SettingsSection, in settings: AppSettings) -> AppSettings {
+    /// `settings` with the base's values of the section back at their defaults; everything else unchanged.
+    /// Porting adds New games (`SettingsReset+Porting.swift`).
+    public static func resetShared(_ section: SettingsSection, in settings: AppSettings) -> AppSettings {
         let defaults = AppSettings()
         var next = settings
         switch section {
@@ -57,12 +58,10 @@ public enum SettingsReset {
             next.launchShade = defaults.launchShade
             next.showsSessionCard = defaults.showsSessionCard
             next.surprisePool = defaults.surprisePool
-        case .games:
-            next.gameDefaults = defaults.gameDefaults
         case .library:
             next.refreshLibraryAtLaunch = defaults.refreshLibraryAtLaunch
             next.notifyPortingEnds = defaults.notifyPortingEnds
-        case .controllers, .search, .changed, .apiServices, .sources, .storage, .engine, .keys, .cloudSaves,
+        case .games, .controllers, .search, .changed, .apiServices, .sources, .storage, .engine, .keys, .cloudSaves,
              .portingStorage, .about, .console:
             break
         }

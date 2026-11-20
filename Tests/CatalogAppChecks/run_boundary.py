@@ -16,7 +16,6 @@ ALLOWED = {
     'App/AppDataProfile.swift',
     'App/DevelopmentProfileImporter.swift',
     'App/FirstRunFindings.swift',
-    'Settings/AppSettings.swift',
     'Settings/SettingsCatalog.swift',
 }
 
