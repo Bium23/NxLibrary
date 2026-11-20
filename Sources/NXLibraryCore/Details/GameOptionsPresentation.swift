@@ -214,7 +214,7 @@ public struct GameOptionsPresentation: Equatable {
         self.gameName = gameName
         self.appPath = appPath
         self.canDeleteBundle = canDeleteBundle
-        self.resolutionNote = L10n.text("Output follows the window/display. Render scale changes the internal 3D resolution only; native 1440p/4K is not available in this engine pin.")
+        self.resolutionNote = L10n.text("Output follows the window or display. This build has no 3D render scale; the game keeps its own internal resolution.")
     }
 
     // MARK: - Derived copy and state

@@ -12,7 +12,7 @@ Ordine di lettura per chi lavora sul codice:
 
 Il [README](../../README.md) è la guida d'uso; la [guida di sviluppo](../working-on-it/development.md) raccoglie build, runtime, CI e release.
 
-**Engine attuale:** pin `461a5f9f95fc9fc40a690bb2a82eb23f1f03bdca`, definito in `AppViewModel.pinnedEngineCommit`. Il suo lock certifica Metal `32023.922`, asset Apple `27B47`, con Xcode minimo `27.2`. Le revisioni di ogni pin sono in [upstream-upgrades](../history/engine-upgrades/README.md).
+**Engine attuale:** pin `e59c910ad5c36937e6bc6df9e3406fdc06645b38`, definito in `AppViewModel.pinnedEngineCommit`. Il suo lock certifica Metal `32023.922`, asset Apple `27B47`, con Xcode minimo `27.2`. Le revisioni di ogni pin sono in [upstream-upgrades](../history/engine-upgrades/README.md).
 
 ## Indice
 

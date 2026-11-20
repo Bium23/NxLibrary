@@ -48708,49 +48708,49 @@
         }
       }
     },
-    "Output follows the window/display. Render scale changes the internal 3D resolution only; native 1440p/4K is not available in this engine pin.": {
+    "Output follows the window or display. This build has no 3D render scale; the game keeps its own internal resolution.": {
       "comment": "GameOptionsPresentation.swift",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Output follows the window/display. Render scale changes the internal 3D resolution only; native 1440p/4K is not available in this engine pin."
+            "value": "Output follows the window or display. This build has no 3D render scale; the game keeps its own internal resolution."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "L’output segue la finestra o lo schermo. La scala di rendering modifica solo la risoluzione 3D interna; il 1440p/4K nativo non è disponibile nella versione fissata del motore."
+            "value": "L’output segue la finestra o lo schermo. Questa build non ha una scala di rendering 3D: il gioco mantiene la sua risoluzione interna."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La sortie s’adapte à la fenêtre ou à l’écran. L’échelle de rendu modifie uniquement la résolution 3D interne ; le rendu natif 1440p/4K n’est pas disponible avec cette version épinglée du moteur."
+            "value": "La sortie s’adapte à la fenêtre ou à l’écran. Cette build n’a pas d’échelle de rendu 3D : le jeu garde sa propre résolution interne."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Ausgabe richtet sich nach Fenster oder Bildschirm. Die Render-Skalierung ändert nur die interne 3D-Auflösung; natives 1440p/4K ist mit dieser festgelegten Engine-Version nicht verfügbar."
+            "value": "Die Ausgabe richtet sich nach Fenster oder Bildschirm. Dieser Build hat keine 3D-Render-Skalierung; das Spiel behält seine eigene interne Auflösung."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La salida se adapta a la ventana o pantalla. La escala de renderizado solo cambia la resolución 3D interna; la versión fijada del motor no admite 1440p/4K nativo."
+            "value": "La salida se adapta a la ventana o pantalla. Esta compilación no tiene escala de renderizado 3D: el juego mantiene su propia resolución interna."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A saída acompanha a janela ou a tela. A escala de renderização altera apenas a resolução 3D interna; 1440p/4K nativo não está disponível nesta versão fixada da engine."
+            "value": "A saída acompanha a janela ou a tela. Esta build não tem escala de renderização 3D: o jogo mantém sua própria resolução interna."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "输出跟随窗口或显示器。渲染比例只更改内部 3D 分辨率；当前锁定的引擎不支持原生 1440p/4K。"
+            "value": "输出跟随窗口或显示器。此版本没有 3D 渲染比例，游戏保持其自身的内部分辨率。"
           }
         }
       }

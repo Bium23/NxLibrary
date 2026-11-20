@@ -18,7 +18,9 @@ final class GameOptionsPresentationTests: XCTestCase {
         XCTAssertFalse(p.showRenderScale)
         XCTAssertFalse(p.canPlay)
         XCTAssertTrue(p.sourcesDetached)
-        XCTAssertTrue(p.resolutionNote.contains("window/display"))
+        // The note blames the build, which has no render scale stub, never the engine pin.
+        XCTAssertTrue(p.resolutionNote.contains("no 3D render scale"))
+        XCTAssertFalse(p.resolutionNote.contains("engine pin"))
     }
 
     // MARK: - Layout

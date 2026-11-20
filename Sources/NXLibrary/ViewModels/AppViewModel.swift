@@ -226,7 +226,7 @@ final class AppViewModel: ObservableObject {
         ("ko", "Korean")
     ]
 
-    let pinnedEngineCommit = "461a5f9f95fc9fc40a690bb2a82eb23f1f03bdca"
+    let pinnedEngineCommit = "e59c910ad5c36937e6bc6df9e3406fdc06645b38"
     let core = AppData.supportRoot
     let catalogRepository: CatalogRepository
     /// Sizes of built apps are remembered between launches, so a scan walks only new or rebuilt apps.
