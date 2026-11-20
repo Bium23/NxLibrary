@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class SteamCatalogReconcilerTests: XCTestCase {
     private let root = URL(fileURLWithPath: "/tmp/catalog-steam")

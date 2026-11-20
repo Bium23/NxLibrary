@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class SettingsCatalogTests: XCTestCase {
     private static let english = AppLocale(language: .english, region: nil, preferredLanguages: ["en"])

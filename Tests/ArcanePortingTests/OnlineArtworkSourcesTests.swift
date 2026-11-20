@@ -1,6 +1,7 @@
 import XCTest
 import AppKit
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class OnlineArtworkSourcesTests: XCTestCase {
     private final class RoutedClient: ArtworkHTTPClient {

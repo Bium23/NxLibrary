@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class MoonlightAppearanceTests: XCTestCase {
     func testRemovedParticlePreferenceIsIgnoredWithoutLosingOtherSettings() throws {

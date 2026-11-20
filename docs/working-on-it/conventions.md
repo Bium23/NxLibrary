@@ -17,7 +17,7 @@ Gli altri documenti:
 | Codice che è Switch (nxnative, chiavi, store Nintendo, RomFS, `env.txt`), senza SwiftUI | il target `ArcanePorting`, `Sources/ArcanePorting/`, e la sottocartella della parte: `Setup`, `Build`, `Launch`, `GameSettings`, `Cheats`, `Store`, `Saves`, `Mods` (con `Mods/GameBanana`), `Catalog`, `Library`, `Details`, `Settings`, `App` | La base non importa il modulo: il compilatore tiene il confine. |
 | Viste SwiftUI, integrazione AppKit, controller, coordinamento degli store | `Sources/NXLibrary` | Dipende dal Core, mai il contrario. |
 | Testi mostrati all'utente | `NXLibraryCore/Resources/Localizable.xcstrings` | Un solo catalogo per le sette lingue. |
-| Test | `Tests/NXLibraryCoreTests`; prove senza finestre dei corpi reali delle viste in `Tests/CatalogAppChecks`; controlli del pacchetto in `Tests/PublicationChecks` | — |
+| Test | `Tests/NXLibraryCoreTests` per un file che compila con la sola base, altrimenti `Tests/ArcanePortingTests`, il file intero; la fixture Steam è un solo file, collegato nel secondo; prove senza finestre dei corpi reali delle viste in `Tests/CatalogAppChecks`; controlli del pacchetto in `Tests/PublicationChecks` | — |
 
 Regole:
 - **Una decisione sta nel Core se si può scrivere senza SwiftUI.** Esempi:

@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class FirstRunFindingsTests: XCTestCase {
     private func emptyApps() throws -> URL {

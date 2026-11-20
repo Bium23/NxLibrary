@@ -20,8 +20,13 @@ let package = Package(
         ),
         .testTarget(
             name: "NXLibraryCoreTests",
-            dependencies: ["NXLibraryCore", "ArcanePorting"],
+            dependencies: ["NXLibraryCore"],
             path: "Tests/NXLibraryCoreTests"
+        ),
+        .testTarget(
+            name: "ArcanePortingTests",
+            dependencies: ["NXLibraryCore", "ArcanePorting"],
+            path: "Tests/ArcanePortingTests"
         ),
     ]
 )

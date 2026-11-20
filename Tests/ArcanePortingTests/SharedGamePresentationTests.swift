@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class SharedGamePresentationTests: XCTestCase {
     private func installation(_ name: String, availability: CatalogInstallationAvailability,
