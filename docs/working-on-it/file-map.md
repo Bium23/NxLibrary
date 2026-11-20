@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 20 novembre 2026. Copertura di **751 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 20 novembre 2026. Copertura di **757 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](../how-it-works/architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le cartelle del Core, una per area, con lo Switch in `Porting/`; quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -692,7 +692,13 @@ Cartella `Sources/NXLibraryCore/Porting/Mods/`.
 | [Sources/NXLibrary/Views/Theme/MoonlightShaders.swift](../../Sources/NXLibrary/Views/Theme/MoonlightShaders.swift) | Contiene gli shader Metal del Moonlight, superfici analitiche Arcane/Flow, filamenti sottili antialias piegati da onde viaggianti e particelle morbide, compilati a runtime. |
 | [Sources/NXLibrary/Views/Theme/LiveBackdrop.swift](../../Sources/NXLibrary/Views/Theme/LiveBackdrop.swift) | Integra video AVFoundation in loop e adatta riproduzione e frame alla visibilità della finestra. |
 | [Sources/NXLibrary/Views/Theme/OnlineBrowsePanel.swift](../../Sources/NXLibrary/Views/Theme/OnlineBrowsePanel.swift) | Mantiene stato di ricerca e download e presenta griglia e miniature degli sfondi online. |
-| [Sources/NXLibrary/Views/Theme/ThemePickerView.swift](../../Sources/NXLibrary/Views/Theme/ThemePickerView.swift) | Presenta i colori con anteprima viva nel primo passo; sfondi, provider e destinazione nel passo successivo. |
+| [Sources/NXLibrary/Views/Theme/ThemePickerView.swift](../../Sources/NXLibrary/Views/Theme/ThemePickerView.swift) | Presenta i colori con anteprima viva nel primo passo; sfondi, provider e destinazione nel passo successivo. Il file tiene stato, `body`, transizioni, intestazione, griglia, `TileFocus` e `WallpaperThumb`; il resto sta nelle estensioni qui sotto. |
+| [Sources/NXLibrary/Views/Theme/ThemePickerView+ThemeStep.swift](../../Sources/NXLibrary/Views/Theme/ThemePickerView+ThemeStep.swift) | Passo dei temi: campioni delle palette, loro colori e sfondo di anteprima. |
+| [Sources/NXLibrary/Views/Theme/ThemePickerView+BackgroundStep.swift](../../Sources/NXLibrary/Views/Theme/ThemePickerView+BackgroundStep.swift) | Passo degli sfondi: schede, tile degli sfondi e delle fonti, anteprime, crediti ed etichette. |
+| [Sources/NXLibrary/Views/Theme/ThemePickerView+Input.swift](../../Sources/NXLibrary/Views/Theme/ThemePickerView+Input.swift) | Input: apertura, schede, controller, focus, tocchi, conferma e indietro. |
+| [Sources/NXLibrary/Views/Theme/ThemePickerView+Online.swift](../../Sources/NXLibrary/Views/Theme/ThemePickerView+Online.swift) | Sfondi online: apertura di una fonte, suo input, categorie, ricerca e uso dell’immagine scelta. |
+| [Sources/NXLibrary/Views/Theme/ThemePickerView+Placement.swift](../../Sources/NXLibrary/Views/Theme/ThemePickerView+Placement.swift) | Collocazione: chiede come lo sfondo scelto riempie lo schermo e applica la risposta. |
+| [Sources/NXLibrary/Views/Theme/ThemePickerView+OwnWallpapers.swift](../../Sources/NXLibrary/Views/Theme/ThemePickerView+OwnWallpapers.swift) | Sfondi del giocatore: aggiunta da file e rimozione dopo conferma. |
 | [Sources/NXLibrary/Views/Theme/ThemePreview.swift](../../Sources/NXLibrary/Views/Theme/ThemePreview.swift) | Disegna un’anteprima della home con palette, sfondo e particelle morbide; il movimento segue le preferenze. |
 | [Sources/NXLibrary/Views/Theme/AppLocaleEnvironment.swift](../../Sources/NXLibrary/Views/Theme/AppLocaleEnvironment.swift) | Contesto della lingua reattivo per le viste; conserva identità, selezione e focus. |
 
