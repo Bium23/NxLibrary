@@ -62,7 +62,7 @@ public enum DatabaseMetadataParser {
               let range = Range(match.range(at: 1), in: html) else { return nil }
         return String(html[range])
     }
-    static func text(_ html: String) -> String { GameBananaAPI.plainText(fromHTML: html) }
+    static func text(_ html: String) -> String { HTMLPlainText.text(fromHTML: html) }
     static func sameName(_ name: String, query: CriticRatingQuery) -> Bool { IGDBRatings.normalized(name) == IGDBRatings.normalized(query.name) }
 
     public static func launchBoxCandidates(in html: String, query: CriticRatingQuery) -> [DatabaseMetadataCandidate] {

@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 20 novembre 2026. Copertura di **787 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 20 novembre 2026. Copertura di **788 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](../how-it-works/architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le cartelle del Core, una per area, con lo Switch in `Porting/`; quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -21,7 +21,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 - [Core · artwork e metadati](#core--artwork-e-metadati)
 - [Core · achievement](#core--achievement)
 - [Core · salvataggi](#core--salvataggi)
-- [Core · mod e GameBanana](#core--mod-e-gamebanana)
+- [Core · mod](#core--mod)
 - [Core · impostazioni, lingua e testi](#core--impostazioni-lingua-e-testi)
 - [Core · Steam](#core--steam)
 - [Core · Porting: gioco Switch e libreria nxnative](#core--porting-gioco-switch-e-libreria-nxnative)
@@ -35,7 +35,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 - [Core · Porting: cheat](#core--porting-cheat)
 - [Core · Porting: store Nintendo e copertine](#core--porting-store-nintendo-e-copertine)
 - [Core · Porting: salvataggi e cloud](#core--porting-salvataggi-e-cloud)
-- [Core · Porting: mod RomFS](#core--porting-mod-romfs)
+- [Core · Porting: mod RomFS e GameBanana](#core--porting-mod-romfs-e-gamebanana)
 - [UI · Add Game e porting](#ui--add-game-e-porting)
 - [UI · Spotlight](#ui--spotlight)
 - [UI · Collection e Details](#ui--collection-e-details)
@@ -277,6 +277,7 @@ Cartella `Sources/NXLibraryCore/Artwork/`.
 | [Sources/NXLibraryCore/Artwork/ArtworkPicker.swift](../../Sources/NXLibraryCore/Artwork/ArtworkPicker.swift) | Aggrega candidati per cover, sfondo, icona e logo (quelli Steam qui, quelli Switch in `Porting/Store/ArtworkCandidates+Porting.swift`) e conserva le scelte manuali. |
 | [Sources/NXLibraryCore/Artwork/MetadataPicker.swift](../../Sources/NXLibraryCore/Artwork/MetadataPicker.swift) | Campi e valori alternativi dei metadati; conserva gli override dell’utente per campo (`MetadataPicks`). |
 | [Sources/NXLibraryCore/Artwork/GameTitleKey.swift](../../Sources/NXLibraryCore/Artwork/GameTitleKey.swift) | Un titolo come parole da confrontare (minuscole, senza ™ ® © né punteggiatura, "&" come "and"), per le ricerche di artwork online e GameTDB. |
+| [Sources/NXLibraryCore/Artwork/HTMLPlainText.swift](../../Sources/NXLibraryCore/Artwork/HTMLPlainText.swift) | Una descrizione HTML (store, Steam, database, mod) come testo semplice: righe ed elenchi tenuti, altri tag tolti, entità decodificate. |
 | [Sources/NXLibraryCore/Artwork/OnlineArtworkSources.swift](../../Sources/NXLibraryCore/Artwork/OnlineArtworkSources.swift) | Ricava artwork Steam e loghi da MediaWiki e Wikimedia Commons. |
 | [Sources/NXLibraryCore/Artwork/MoreArtworkSources.swift](../../Sources/NXLibraryCore/Artwork/MoreArtworkSources.swift) | Aggiunge matching dei nomi e sorgenti Xbox, GOG, Nintendo Europe, wiki e altri cataloghi. |
 | [Sources/NXLibraryCore/Artwork/ArtworkBrowse.swift](../../Sources/NXLibraryCore/Artwork/ArtworkBrowse.swift) | Sorgenti sfogliabili da Change artwork (LaunchBox, SteamGridDB): nomi cercati e risultati per tutti gli slot. |
@@ -323,25 +324,12 @@ Cartella `Sources/NXLibraryCore/Saves/`.
 | [Sources/NXLibraryCore/Saves/SaveFailure.swift](../../Sources/NXLibraryCore/Saves/SaveFailure.swift) | Errori delle operazioni sui salvataggi, con i testi per il giocatore. |
 | [Sources/NXLibraryCore/Saves/SaveFiles.swift](../../Sources/NXLibraryCore/Saves/SaveFiles.swift) | Controlli dei percorsi dei salvataggi con lstat: nessun link sostituito e solo cartelle e file normali. |
 
-## Core · mod e GameBanana
+## Core · mod
 
-Cartella `Sources/NXLibraryCore/Mods/` e `Mods/GameBanana/`.
+Cartella `Sources/NXLibraryCore/Mods/`.
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Mods/GameBanana/GameBananaAPI.swift](../../Sources/NXLibraryCore/Mods/GameBanana/GameBananaAPI.swift) | URL, host fidati, modelli delle risposte di GameBanana e testo semplice dalle descrizioni HTML. |
-| [Sources/NXLibraryCore/Mods/GameBanana/GameBananaClient.swift](../../Sources/NXLibraryCore/Mods/GameBanana/GameBananaClient.swift) | Richieste a GameBanana con User-Agent, limite di 4 alla volta e cache su disco. |
-| [Sources/NXLibraryCore/Mods/GameBanana/GameBananaImageCache.swift](../../Sources/NXLibraryCore/Mods/GameBanana/GameBananaImageCache.swift) | Cache su disco delle immagini delle mod dal CDN di GameBanana. |
-| [Sources/NXLibraryCore/Mods/GameBanana/GameBananaMatch.swift](../../Sources/NXLibraryCore/Mods/GameBanana/GameBananaMatch.swift) | Abbina un gioco alla sua pagina GameBanana per nome e ricorda la scelta. |
-| [Sources/NXLibraryCore/Mods/GameBanana/AvailableModsFinder.swift](../../Sources/NXLibraryCore/Mods/GameBanana/AvailableModsFinder.swift) | Cerca le mod di un gioco che funzionano e capisce quando una mod installata ha un aggiornamento. |
-| [Sources/NXLibraryCore/Mods/GameBanana/ModInstaller.swift](../../Sources/NXLibraryCore/Mods/GameBanana/ModInstaller.swift) | Controlla, estrae con `bsdtar` e installa una mod scaricata nella cartella del gioco. |
-| [Sources/NXLibraryCore/Mods/GameBanana/GameBananaBandModel.swift](../../Sources/NXLibraryCore/Mods/GameBanana/GameBananaBandModel.swift) | Stato della fascia Mods di un gioco: abbinamento, mod che funzionano, installazioni. |
-| [Sources/NXLibraryCore/Mods/GameBanana/ModCatalog.swift](../../Sources/NXLibraryCore/Mods/GameBanana/ModCatalog.swift) | Categorie nostre, ordinamenti e sezioni della pagina dello store (altezze fisse). |
-| [Sources/NXLibraryCore/Mods/GameBanana/ModCatalogSnapshots.swift](../../Sources/NXLibraryCore/Mods/GameBanana/ModCatalogSnapshots.swift) | Le mod di ogni gioco salvate su disco, per aprire lo store subito; solo link GameBanana. |
-| [Sources/NXLibraryCore/Mods/GameBanana/ModStoreModel.swift](../../Sources/NXLibraryCore/Mods/GameBanana/ModStoreModel.swift) | Dati dello store: apre dalle copie su disco, aggiorna in background due giochi alla volta, abbina solo se sicuro. |
-| [Sources/NXLibraryCore/Mods/ModStoreFocus.swift](../../Sources/NXLibraryCore/Mods/ModStoreFocus.swift) | Focus nella pagina dello store, ancorato al tipo di sezione; ogni sezione ricorda la sua tessera. |
-| [Sources/NXLibraryCore/Mods/GameBanana/GameBananaFindModel.swift](../../Sources/NXLibraryCore/Mods/GameBanana/GameBananaFindModel.swift) | Stato della ricerca per nome: campo, risultati, None of these. |
-| [Sources/NXLibraryCore/Mods/GameBanana/ModDownload.swift](../../Sources/NXLibraryCore/Mods/GameBanana/ModDownload.swift) | Scarica un file di GameBanana con avanzamento e Cancel, solo da host fidati. |
 | [Sources/NXLibraryCore/Mods/ModsBandLayout.swift](../../Sources/NXLibraryCore/Mods/ModsBandLayout.swift) | Ordine delle tessere della fascia Mods e movimento nella sua griglia (sei per riga). |
 | [Sources/NXLibraryCore/Mods/LocalMod.swift](../../Sources/NXLibraryCore/Mods/LocalMod.swift) | Una cartella della cartella mods di un gioco, con il suo `romfs` e lo stato. |
 
@@ -561,15 +549,28 @@ Cartella `Sources/NXLibraryCore/Porting/Saves/`.
 | [Sources/NXLibraryCore/Porting/Saves/CloudSavesPreferences.swift](../../Sources/NXLibraryCore/Porting/Saves/CloudSavesPreferences.swift) | Prepara la cartella e riapplica la scelta cloud ai domini dei giochi prima di ogni avvio, anche Off. |
 | [Sources/NXLibraryCore/Porting/Saves/RyujinxSaveFolder.swift](../../Sources/NXLibraryCore/Porting/Saves/RyujinxSaveFolder.swift) | Riconosce contenitori Ryujinx, controlla il title ID e seleziona l’intero albero committed 0. |
 
-## Core · Porting: mod RomFS
+## Core · Porting: mod RomFS e GameBanana
 
-Cartella `Sources/NXLibraryCore/Porting/Mods/`.
+Cartelle `Sources/NXLibraryCore/Porting/Mods/` e `Porting/Mods/GameBanana/`.
 
 | File | Responsabilità |
 |---|---|
 | [Sources/NXLibraryCore/Porting/Mods/ModStore.swift](../../Sources/NXLibraryCore/Porting/Mods/ModStore.swift) | Ordine, interruttori, conflitti, Cestino e overlay delle mod RomFS. Ferma la riconciliazione se cartella o record non si leggono. |
 | [Sources/NXLibraryCore/Porting/Mods/ModFolderScanner.swift](../../Sources/NXLibraryCore/Porting/Mods/ModFolderScanner.swift) | Elenca cartelle, archivi e file RomFS. La lettura stretta distingue una cartella vuota da una scansione fallita durante la riconciliazione. |
 | [Sources/NXLibraryCore/Porting/Mods/ModSupport.swift](../../Sources/NXLibraryCore/Porting/Mods/ModSupport.swift) | Quali file di mod funzionano (solo RomFS), dov'è la loro cartella `romfs`, nomi di cartella sicuri. |
+| [Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaAPI.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaAPI.swift) | URL, host fidati, modelli delle risposte di GameBanana e testo semplice dalle descrizioni HTML. |
+| [Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaClient.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaClient.swift) | Richieste a GameBanana con User-Agent, limite di 4 alla volta e cache su disco. |
+| [Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaImageCache.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaImageCache.swift) | Cache su disco delle immagini delle mod dal CDN di GameBanana. |
+| [Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaMatch.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaMatch.swift) | Abbina un gioco alla sua pagina GameBanana per nome e ricorda la scelta. |
+| [Sources/NXLibraryCore/Porting/Mods/GameBanana/AvailableModsFinder.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/AvailableModsFinder.swift) | Cerca le mod di un gioco che funzionano e capisce quando una mod installata ha un aggiornamento. |
+| [Sources/NXLibraryCore/Porting/Mods/GameBanana/ModInstaller.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/ModInstaller.swift) | Controlla, estrae con `bsdtar` e installa una mod scaricata nella cartella del gioco. |
+| [Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaBandModel.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaBandModel.swift) | Stato della fascia Mods di un gioco: abbinamento, mod che funzionano, installazioni. |
+| [Sources/NXLibraryCore/Porting/Mods/GameBanana/ModCatalog.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/ModCatalog.swift) | Categorie nostre, ordinamenti e sezioni della pagina dello store (altezze fisse). |
+| [Sources/NXLibraryCore/Porting/Mods/GameBanana/ModCatalogSnapshots.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/ModCatalogSnapshots.swift) | Le mod di ogni gioco salvate su disco, per aprire lo store subito; solo link GameBanana. |
+| [Sources/NXLibraryCore/Porting/Mods/GameBanana/ModStoreModel.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/ModStoreModel.swift) | Dati dello store: apre dalle copie su disco, aggiorna in background due giochi alla volta, abbina solo se sicuro. |
+| [Sources/NXLibraryCore/Porting/Mods/GameBanana/ModStoreFocus.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/ModStoreFocus.swift) | Focus nella pagina dello store, ancorato al tipo di sezione; ogni sezione ricorda la sua tessera. |
+| [Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaFindModel.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaFindModel.swift) | Stato della ricerca per nome: campo, risultati, None of these. |
+| [Sources/NXLibraryCore/Porting/Mods/GameBanana/ModDownload.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/ModDownload.swift) | Scarica un file di GameBanana con avanzamento e Cancel, solo da host fidati. |
 
 ## UI · Add Game e porting
 

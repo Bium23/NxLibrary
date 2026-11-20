@@ -456,7 +456,7 @@ I percorsi completi sono in [flows.md](flows.md#3-play-di-un-gioco-switch-nxnati
 - All'apertura della pagina e del pannello, `sync()` toglie dalla riga le mod sparite. Finché Arcane non ha mai gestito le mod di un gioco, non tocca una riga `DM_ROMFS_OVERLAY` scritta a mano.
 - `AppViewModel+Mods` crea lo store e traduce gli errori; `ModsPanel` (Game options → Mods; `GameOptionsFiles` legge configurazione, impostazioni, cheat e mod una volta per apertura) e la fascia Mods della pagina (`DetailsModsBand`) presentano lo stato. Le mod che modificano il codice (exefs) non funzionano con il motore.
 
-**GameBanana** (`Mods/GameBanana/`).
+**GameBanana** (`Porting/Mods/GameBanana/`: installa mod RomFS, formato Switch; la bottega e il suo focus `ModStoreFocus` stanno lì). Le descrizioni passano da `HTMLPlainText` della base, come quelle di Steam e dei database.
 - `GameBananaClient` parla con l'API pubblica (apiv11 e, per il contenuto degli archivi, la vecchia Core API). Usa un solo User-Agent, al massimo 4 richieste insieme, e una cache su disco in `~/Library/Caches/NXLibrary/gamebanana`:
   - ricerche 1 giorno, pagine delle mod 6 ore;
   - contenuto degli archivi per sempre, tranne un elenco vuoto, perché GameBanana può ancora leggere un file nuovo;

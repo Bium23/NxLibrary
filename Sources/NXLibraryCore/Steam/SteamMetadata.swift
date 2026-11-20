@@ -56,7 +56,7 @@ public struct SteamMetadata: Codable, Equatable, Sendable {
               let envelope = try JSONDecoder().decode([String: Envelope].self, from: data)[String(appID)],
               envelope.success, let body = envelope.data, body.steam_appid == appID else { throw URLError(.cannotParseResponse) }
         return Self(appID: appID, language: language,
-                    description: GameBananaAPI.plainText(fromHTML: body.short_description ?? ""),
+                    description: HTMLPlainText.text(fromHTML: body.short_description ?? ""),
                     genres: Array((body.genres ?? []).prefix(24)).map(\.description),
                     developers: Array((body.developers ?? []).prefix(12)), publishers: Array((body.publishers ?? []).prefix(12)),
                     releaseDate: body.release_date?.date,

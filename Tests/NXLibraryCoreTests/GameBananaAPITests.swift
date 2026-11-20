@@ -148,4 +148,9 @@ final class GameBananaAPITests: XCTestCase {
         XCTAssertEqual(GameBananaAPI.plainText(fromHTML: "&quot;a&#39;b&lt;c&gt;&nbsp;d"), "\"a'b<c> d")
         XCTAssertEqual(GameBananaAPI.plainText(fromHTML: "a<br><br><br><br>b"), "a\n\nb")
     }
+
+    func testHTMLPlainTextKeepsLinesAndDecodesEntities() {
+        XCTAssertEqual(HTMLPlainText.text(fromHTML: "&quot;a&#39;b&lt;c&gt;&nbsp;d"), "\"a'b<c> d")
+        XCTAssertEqual(HTMLPlainText.text(fromHTML: "a<br><br><br><br>b"), "a\n\nb")
+    }
 }
