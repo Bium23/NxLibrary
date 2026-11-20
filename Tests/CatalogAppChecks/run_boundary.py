@@ -25,8 +25,6 @@ ALLOWED = {
     'Details/GameDetailPresentation.swift',
     'Details/GameOptionsPresentation.swift',
     'Details/MoreLikeThis.swift',
-    'Library/RunningGames.swift',
-    'Library/StorageManager.swift',
     'Mods/GameBanana/AvailableModsFinder.swift',
     'Mods/GameBanana/GameBananaBandModel.swift',
     'Mods/GameBanana/ModInstaller.swift',

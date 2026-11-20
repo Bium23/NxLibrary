@@ -47,7 +47,7 @@ Il [README](../../README.md) è la guida d'uso; la [guida di sviluppo](../workin
 | `NXLibraryCore` | Modelli, persistenza, parsing, gestione file, contratti del motore, processi e logica delle funzionalità. |
 | `NXLibraryCoreTests` | Test XCTest del Core, con dati sintetici e dipendenze sostituibili. |
 
-Il Core ha una cartella per area: `App`, `Catalog`, `Library`, `Selene`, `Details`, `Artwork`, `Achievements`, `Saves`, `Mods`, `Settings`, `Steam`. Tutto ciò che è Switch (Setup, build, avvio, impostazioni del gioco, cheat, store Nintendo, formato di salvataggi e mod) sta in `Porting/`, con una sottocartella per parte. *Perché:* il confine fra la base e il modulo Porting si vede dal percorso; i file della base che usano ancora tipi di `Porting/` sono i legami che il contratto della fonte dovrà tagliare.
+Il Core ha una cartella per area: `App`, `Catalog`, `Library`, `Selene`, `Details`, `Artwork`, `Achievements`, `Saves`, `Mods`, `Settings`, `Steam`. Tutto ciò che è Switch (Setup, build, avvio, impostazioni del gioco, cheat, store Nintendo, formato di salvataggi e mod, la parte nxnative del catalogo e della libreria, lo spazio delle app portate) sta in `Porting/`, con una sottocartella per parte. *Perché:* il confine fra la base e il modulo Porting si vede dal percorso; i file della base che usano ancora tipi di `Porting/` sono i legami che il contratto della fonte dovrà tagliare.
 
 `NXLibrary` dipende da `NXLibraryCore`. Il Core usa anche framework macOS, fra cui Combine, AppKit, ImageIO, CommonCrypto e IOKit. Il package non dichiara dipendenze SwiftPM esterne.
 
@@ -406,7 +406,7 @@ I percorsi completi sono in [flows.md](flows.md#3-play-di-un-gioco-switch-nxnati
 - Cancel lascia finire la firma, che serve a mantenere valido il bundle. L'attesa usa `launchingGameId` e blocca anche l'aggiornamento del frontend.
 
 **Schermata di lancio.**
-- `RunningGameMonitor` confronta i bundle ID della libreria con le applicazioni in esecuzione e offre Resume e Close Game. `LaunchReadinessProbe` aspetta una finestra visibile del processo per chiudere la schermata di lancio.
+- `RunningGameMonitor` confronta i bundle ID della libreria con le applicazioni in esecuzione (`RunningAppsTracker` nella base, `RunningGames.matchingIDs` per i giochi portati in `Porting/Library/`) e offre Resume e Close Game. `LaunchReadinessProbe` aspetta una finestra visibile del processo per chiudere la schermata di lancio.
 - La schermata ha una finestra propria, come la "launch cover" di Selene (`LaunchCoverWindow`). È senza bordi e trasparente (appare sfumando sopra la libreria), sta sopra ogni app, il Dock e la barra dei menu, su ogni Space compresi quelli a schermo intero, e non viene mai attivata.
 - Quando un gioco si apre a schermo intero, la schermata scorre via con la libreria e rientra con lo Space del gioco, coprendolo finché il gioco non disegna. *Perché:* tenuta nel solo Space di Arcane, lì si vedeva lo sfondo della scrivania; il maintainer preferisce la schermata (prova con MTGA, 15 nov 2026).
 - Il gioco parte dietro di lei; Steam che prende il primo piano o macOS che cambia Space restano dietro, quindi Arcane non deve mai riprendersi il primo piano.
@@ -553,7 +553,7 @@ Il percorso completo è in [flows.md](flows.md#6-importare-o-ripristinare-un-sal
 ## Spazio su disco
 
 **Misura.**
-- Settings → Storage e Porting → Storage usano `StorageManager.snapshot`. `GameStorageUsage` distingue app, cache e log per voce, compresi i giochi nascosti, e ordina le cache dalla più grande.
+- Settings → Storage e Porting → Storage usano `StorageManager.snapshot` (`Porting/Library/`: misura le app portate, le loro cache e i loro log). `GameStorageUsage` distingue app, cache e log per voce, compresi i giochi nascosti, e ordina le cache dalla più grande.
 - `StorageSize` distingue file assenti da percorsi non leggibili o volumi scollegati.
 - Le misure sono dimensioni logiche dei file, compresi quelli nascosti. La visita fisica fts non segue i collegamenti interni e scarta le misure incomplete in caso di errore. I percorsi canonici condivisi si misurano e si contano una sola volta nei totali.
 - Lo spazio libero è quello della cartella Game apps corrente, senza ripiegare sul disco interno se questa manca.
