@@ -15,26 +15,32 @@ public struct CatalogStore {
     private let publication: CatalogPublication
     private static let maximumBytes = 16 * 1024 * 1024
 
-    public init(directory: URL) { self.init(directory: directory, publication: .atomic) }
-    init(directory: URL, publication: CatalogPublication) {
+    /// The record kinds this store reads; a record of any other kind is kept as it is (`CatalogDocument.preservedGames`).
+    public let kinds: CatalogRecordKinds
+
+    public init(directory: URL, kinds: CatalogRecordKinds) { self.init(directory: directory, publication: .atomic, kinds: kinds) }
+    init(directory: URL, publication: CatalogPublication, kinds: CatalogRecordKinds) {
         self.directory = directory.standardizedFileURL
         self.publication = publication
+        self.kinds = kinds
     }
     private func file(_ name: String) -> URL { directory.appendingPathComponent(name) }
 
-    static func decode(_ data: Data) throws -> CatalogDocument {
+    public static func decode(_ data: Data, kinds: CatalogRecordKinds) throws -> CatalogDocument {
         // Deferred-to-Date keeps the exact Date value; the legacy decoder below
         // alone uses ISO8601. This is part of catalog schema 1.
-        let document = try JSONDecoder().decode(CatalogDocument.self, from: data)
+        let document = try kinds.decoder().decode(CatalogDocument.self, from: data)
         try document.validate()
         return document
     }
-    private static func encode(_ document: CatalogDocument) throws -> Data {
+    private func decode(_ data: Data) throws -> CatalogDocument { try Self.decode(data, kinds: kinds) }
+    /// Read back with the store's own kinds before publication: what is written must read as the same document.
+    private func encode(_ document: CatalogDocument) throws -> Data {
         try document.validate()
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys, .prettyPrinted]
         let data = try encoder.encode(document)
-        guard data.count <= maximumBytes else { throw InstallationFileReadError.tooLarge }
+        guard data.count <= Self.maximumBytes else { throw InstallationFileReadError.tooLarge }
         guard try decode(data) == document else { throw CatalogModelError.invalidRecord }
         return data
     }
@@ -47,7 +53,7 @@ public struct CatalogStore {
                 return document
             }
             let (document, observations) = try convertedLegacy()
-            let data = try Self.encode(document)
+            let data = try encode(document)
             try commit(data, previous: nil, current: current.state) {
                 for observation in observations { try observation.verifyUnchanged() }
                 try self.verifyLegacy(document.legacyOrigin)
@@ -64,7 +70,7 @@ public struct CatalogStore {
             try verifyLegacy(old.legacyOrigin)
             var committed = draft
             committed.revision = UUID()
-            let data = try Self.encode(committed)
+            let data = try encode(committed)
             try commit(data, previous: current.state.data, current: current.state) { try self.verifyLegacy(old.legacyOrigin) }
             return committed
         }
@@ -87,10 +93,10 @@ public struct CatalogStore {
 
     private func currentCatalog() throws -> (document: CatalogDocument?, state: FileState) {
         let backup = try? read("catalog.json.bak")
-        let backupAvailable = backup?.data.flatMap { try? Self.decode($0) } != nil
+        let backupAvailable = backup?.data.flatMap { try? decode($0) } != nil
         do {
             let main = try read("catalog.json")
-            if let data = main.data { return (try Self.decode(data), main) }
+            if let data = main.data { return (try decode(data), main) }
             // An existing backup, valid or damaged, is evidence of an older
             // catalog. Never interpret a missing main as a fresh profile.
             guard backup?.data == nil else { throw CatalogStoreError.invalidCatalog(backupAvailable: backupAvailable) }
@@ -141,7 +147,7 @@ public struct CatalogStore {
         let candidate = try CatalogPublication.stage(data, in: directory)
         defer { try? FileManager.default.removeItem(at: candidate) }
         // Re-read the actual staged bytes, not just the in-memory draft.
-        _ = try Self.decode(InstallationFileSnapshot.read(at: candidate, maximumBytes: Self.maximumBytes).data)
+        _ = try decode(InstallationFileSnapshot.read(at: candidate, maximumBytes: Self.maximumBytes).data)
         try current.verify(); try validate()
         let backup = try read("catalog.json.bak")
         try expectedBackup?.verify()
@@ -195,7 +201,7 @@ extension CatalogStore {
         try locked {
             let states = try Self.conflictNames.map(read)
             guard let bytes = states[0].data else { return nil }
-            let document = try Self.decode(bytes)
+            let document = try decode(bytes)
             guard legacyBaseline(states) != document.legacyOrigin else { return nil }
             return .init(directory: directory, digests: states.map { $0.data.map(Self.digest) })
         }
@@ -209,13 +215,13 @@ extension CatalogStore {
             let states = try Self.conflictNames.map(read)
             guard states.map({ $0.data.map(Self.digest) }) == candidate.digests,
                   let bytes = states[0].data else { throw CatalogStoreError.staleRevision }
-            let document = try Self.decode(bytes)
+            let document = try decode(bytes)
             let origin = legacyBaseline(states)
             guard origin != document.legacyOrigin else { throw CatalogStoreError.staleRevision }
             let kept = CatalogDocument(schemaVersion: document.schemaVersion, legacyOrigin: origin,
                                        sources: document.sources, games: document.games,
                                        preservedGames: document.preservedGames, preservedSources: document.preservedSources)
-            let data = try Self.encode(kept)
+            let data = try encode(kept)
             func validateAll() throws { for state in states { try state.verify() } }
             try validateAll()
 
@@ -247,10 +253,10 @@ extension CatalogStore {
     public func recoveryCandidate() throws -> CatalogRecoveryCandidate? {
         try locked {
             let main = try read("catalog.json")
-            if let bytes = main.data, (try? Self.decode(bytes)) != nil { return nil }
+            if let bytes = main.data, (try? decode(bytes)) != nil { return nil }
             let backup = try read("catalog.json.bak")
             guard let bytes = backup.data else { return nil }
-            let document = try Self.decode(bytes)
+            let document = try decode(bytes)
             try verifyLegacy(document.legacyOrigin)
             return .init(gameCount: document.games.count, directory: directory,
                          primaryDigest: main.data.map(Self.digest), backupDigest: Self.digest(bytes))
@@ -263,12 +269,12 @@ extension CatalogStore {
             let main = try read("catalog.json"), backup = try read("catalog.json.bak")
             guard main.data.map(Self.digest) == candidate.primaryDigest,
                   let bytes = backup.data, Self.digest(bytes) == candidate.backupDigest else { throw CatalogStoreError.staleRevision }
-            var restored = try Self.decode(bytes)
+            var restored = try decode(bytes)
             try verifyLegacy(restored.legacyOrigin)
             restored.revision = UUID() // A restore never revives an old writer's revision.
-            let staged = try CatalogPublication.stage(Self.encode(restored), in: directory)
+            let staged = try CatalogPublication.stage(encode(restored), in: directory)
             defer { try? FileManager.default.removeItem(at: staged) }
-            _ = try Self.decode(InstallationFileSnapshot.read(at: staged, maximumBytes: Self.maximumBytes).data)
+            _ = try decode(InstallationFileSnapshot.read(at: staged, maximumBytes: Self.maximumBytes).data)
             func validate() throws {
                 try main.verify(); try backup.verify(); try verifyLegacy(restored.legacyOrigin)
             }

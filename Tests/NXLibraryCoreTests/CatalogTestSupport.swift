@@ -3,6 +3,9 @@ import XCTest
 @testable import NXLibraryCore
 
 enum CatalogTestSupport {
+    /// Reads every kind the app knows, as `CatalogStore(directory:)` does.
+    static func decoder() -> JSONDecoder { CatalogRecordKinds.standard.decoder() }
+
     static func completeLegacyGame(id: UUID = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!) -> PortedGame {
         var game = PortedGame(id: id, name: "Fixture Switch game", url: URL(fileURLWithPath: "/tmp/catalog-fixture/Game.app"),
                               platform: .macApp, sizeBytes: 1234, modificationDate: Date(timeIntervalSince1970: 100),

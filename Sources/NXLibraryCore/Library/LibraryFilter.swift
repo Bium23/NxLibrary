@@ -77,20 +77,8 @@ private protocol LibraryQueryRecord {
     var isInstalledForLibrary: Bool { get }
     var librarySearchTerms: [String] { get }
 }
-extension PortedGame: LibraryQueryRecord {
-    fileprivate var isInstalledForLibrary: Bool { isPlayableLocally }
-    fileprivate var librarySearchTerms: [String] { [titleId, bundleId].compactMap { $0 } }
-}
+extension PortedGame: LibraryQueryRecord {}
 extension CatalogGame: LibraryQueryRecord {
-    fileprivate var isInstalledForLibrary: Bool {
-        if let game = nxnativeGame { return game.isPlayableLocally }
-        guard let game = steamGame, game.hasBeenRecognized else { return false }
-        return game.installations.contains { $0.availability == .available || ($0.availability == .requiresReview && $0.primaryApplication != nil) }
-    }
-    fileprivate var librarySearchTerms: [String] {
-        switch payload {
-        case .nxnative(let game): return game.librarySearchTerms
-        case .steam(let game): return ["Steam", String(game.appID)] + game.installations.flatMap { $0.applications.compactMap(\.bundleIdentifier) }
-        }
-    }
+    fileprivate var isInstalledForLibrary: Bool { record.isInstalledForLibrary }
+    fileprivate var librarySearchTerms: [String] { record.librarySearchTerms }
 }

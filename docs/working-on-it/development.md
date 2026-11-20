@@ -66,6 +66,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAp
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_nested_bundles.py
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_artwork_return.py
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_source_access.py
+python3 Tests/CatalogAppChecks/run_boundary.py
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_entrance.py
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_achievement_scroll.py
 bash scripts/build_app.sh

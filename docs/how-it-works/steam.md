@@ -34,7 +34,7 @@ documento da leggere prima di toccare qualunque parte Steam. `architecture.md` n
   lettore ha limiti di dimensione, rifiuta l’input malformato e degrada a un comportamento sicuro.
 - **Solo giochi Mac nativi.** Un gioco conta se nella sua cartella c’è esattamente un’app Mac che si dichiara gioco.
   Niente Windows, CrossOver o Proton.
-- **Nessun gioco nxnative finto.** `CatalogGame` porta il payload reale (`SteamCatalogGame`); i comandi Switch
+- **Nessun gioco nxnative finto.** `CatalogGame` porta il record reale (`SteamCatalogGame`); i comandi Switch
   (build, salvataggi, mod) ricevono solo `PortedGame` e non possono partire da un gioco Steam.
 - **Fonte opzionale.** Con la fonte Steam spenta non partono scansioni o watcher del catalogo. La scoperta del primo avvio e l’offerta del benvenuto leggono soltanto per proporre la scelta, senza attivare la fonte; usano la cartella Steam salvata oppure quella standard. Una lettura incompleta nel primo avvio offre Retry, senza indicare che i giochi sono assenti.
 

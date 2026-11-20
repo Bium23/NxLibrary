@@ -53,7 +53,7 @@ final class CatalogPreservationTests: XCTestCase {
     }
 
     func testUnknownGameAndSourceAreKeptAndWrittenBack() throws {
-        let document = try JSONDecoder().decode(CatalogDocument.self, from: catalogWithUnknownRecords())
+        let document = try CatalogTestSupport.decoder().decode(CatalogDocument.self, from: catalogWithUnknownRecords())
         XCTAssertNoThrow(try document.validate())
         XCTAssertEqual(document.games.count, 1)
         XCTAssertEqual(document.sources.count, 2)
@@ -62,7 +62,30 @@ final class CatalogPreservationTests: XCTestCase {
         let data = try sortedEncoder().encode(document)
         XCTAssertEqual(try written(data, integration: "crossover", in: "games"), try object(unknownGame))
         XCTAssertEqual(try written(data, integration: "crossover", in: "sources"), try object(unknownSource))
-        XCTAssertEqual(try JSONDecoder().decode(CatalogDocument.self, from: data), document)
+        XCTAssertEqual(try CatalogTestSupport.decoder().decode(CatalogDocument.self, from: data), document)
+    }
+
+    /// Without the Porting module's kind, a ported game is kept like any unknown record and written back the same.
+    func testBaseKindsKeepSwitchGamesAsPreserved() throws {
+        var document = todaysDocument()
+        document.games.append(.init(steam: SteamCatalogGame(appID: 10, name: "Steam game")))
+        let data = try sortedEncoder().encode(document)
+        let base = try CatalogRecordKinds.base.decoder().decode(CatalogDocument.self, from: data)
+        XCTAssertNoThrow(try base.validate())
+        XCTAssertEqual(base.games.map(\.integration), [.steam])
+        XCTAssertEqual(base.preservedGames.count, 1)
+        XCTAssertEqual(base.preservedSources.count, 1)
+        let again = try sortedEncoder().encode(base)
+        XCTAssertEqual(try written(again, integration: "nxnative", in: "games"), try written(data, integration: "nxnative", in: "games"))
+        XCTAssertEqual(try written(again, integration: "nxnative", in: "sources"), try written(data, integration: "nxnative", in: "sources"))
+    }
+
+    func testRecordsOfDifferentKindsAreNotEqual() {
+        let ported = CatalogTestSupport.completeLegacyGame()
+        var steam = SteamCatalogGame(id: ported.id, appID: 10, name: ported.name)
+        steam.isFavorite = ported.isFavorite
+        XCTAssertNotEqual(CatalogGame(nxnative: ported), CatalogGame(steam: steam))
+        XCTAssertEqual(CatalogGame(nxnative: ported), CatalogGame(nxnative: ported))
     }
 
     func testStoreKeepsUnknownRecordsAcrossAChange() throws {
@@ -87,21 +110,21 @@ final class CatalogPreservationTests: XCTestCase {
         game["data"] = data
         var json = try XCTUnwrap(JSONSerialization.jsonObject(with: catalogWithUnknownRecords()) as? [String: Any])
         json["games"] = Array((json["games"] as? [Any] ?? []).dropLast()) + [game]
-        let document = try JSONDecoder().decode(CatalogDocument.self, from: JSONSerialization.data(withJSONObject: json))
+        let document = try CatalogTestSupport.decoder().decode(CatalogDocument.self, from: JSONSerialization.data(withJSONObject: json))
         XCTAssertThrowsError(try document.validate()) { XCTAssertEqual($0 as? CatalogModelError, .duplicateGameID) }
     }
 
     func testDuplicateUnknownSourceIsInvalid() throws {
         var json = try XCTUnwrap(JSONSerialization.jsonObject(with: catalogWithUnknownRecords()) as? [String: Any])
         json["sources"] = (json["sources"] as? [Any] ?? []) + [unknownSource]
-        let document = try JSONDecoder().decode(CatalogDocument.self, from: JSONSerialization.data(withJSONObject: json))
+        let document = try CatalogTestSupport.decoder().decode(CatalogDocument.self, from: JSONSerialization.data(withJSONObject: json))
         XCTAssertThrowsError(try document.validate()) { XCTAssertEqual($0 as? CatalogModelError, .invalidRecord) }
     }
 
     func testPreservedGameMustBeAnObjectWithData() throws {
         var json = try XCTUnwrap(JSONSerialization.jsonObject(with: catalogWithUnknownRecords()) as? [String: Any])
         json["games"] = Array((json["games"] as? [Any] ?? []).dropLast()) + [["integration": "crossover", "data": "text"]]
-        let document = try JSONDecoder().decode(CatalogDocument.self, from: JSONSerialization.data(withJSONObject: json))
+        let document = try CatalogTestSupport.decoder().decode(CatalogDocument.self, from: JSONSerialization.data(withJSONObject: json))
         XCTAssertThrowsError(try document.validate()) { XCTAssertEqual($0 as? CatalogModelError, .invalidRecord) }
     }
 

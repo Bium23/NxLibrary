@@ -55,24 +55,26 @@ public struct CatalogDocument: Codable, Equatable {
     private enum CodingKeys: String, CodingKey { case schemaVersion, revision, legacyOrigin, sources, games }
     private enum IntegrationKey: String, CodingKey { case integration }
 
-    /// Reads each game and source as known only when its `integration` names one this version has; any other is kept.
+    /// Reads each game and source as known only when its `integration` is one of the decoder's `CatalogRecordKinds`;
+    /// any other is kept.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         schemaVersion = try c.decode(Int.self, forKey: .schemaVersion)
         revision = try c.decode(UUID.self, forKey: .revision)
         legacyOrigin = try c.decode(CatalogLegacyOrigin.self, forKey: .legacyOrigin)
-        (sources, preservedSources) = try Self.split(c, .sources, CatalogSourceConfiguration.init(from:))
-        (games, preservedGames) = try Self.split(c, .games, CatalogGame.init(from:))
+        let known = Set(CatalogRecordKinds.of(decoder).integrations)
+        (sources, preservedSources) = try Self.split(c, .sources, known, CatalogSourceConfiguration.init(from:))
+        (games, preservedGames) = try Self.split(c, .games, known, CatalogGame.init(from:))
     }
 
-    private static func split<Known>(_ c: KeyedDecodingContainer<CodingKeys>, _ key: CodingKeys,
+    private static func split<Known>(_ c: KeyedDecodingContainer<CodingKeys>, _ key: CodingKeys, _ integrations: Set<CatalogIntegration>,
                                      _ known: (Decoder) throws -> Known) throws -> ([Known], [CatalogJSON]) {
         var list = try c.nestedUnkeyedContainer(forKey: key)
         var kept: [Known] = [], preserved: [CatalogJSON] = []
         while !list.isAtEnd {
             let element = try list.superDecoder()
             let tag = try? element.container(keyedBy: IntegrationKey.self).decode(String.self, forKey: .integration)
-            if let tag, CatalogIntegration(rawValue: tag) != nil { kept.append(try known(element)) }
+            if let tag, integrations.contains(CatalogIntegration(rawValue: tag)) { kept.append(try known(element)) }
             else { preserved.append(try CatalogJSON(from: element)) }
         }
         return (kept, preserved)

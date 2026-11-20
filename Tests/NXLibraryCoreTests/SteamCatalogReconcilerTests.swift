@@ -184,7 +184,7 @@ final class SteamCatalogReconcilerTests: XCTestCase {
         XCTAssertTrue(shown.requiresReview)
         XCTAssertNil(shown.launchTarget)
         XCTAssertEqual(partial.games[1].steamGame?.installations.first { $0.libraryURL == external }?.availability, .sourceUnavailable)
-        let reloaded = try JSONDecoder().decode(CatalogDocument.self, from: JSONEncoder().encode(partial))
+        let reloaded = try CatalogTestSupport.decoder().decode(CatalogDocument.self, from: JSONEncoder().encode(partial))
         XCTAssertTrue(CatalogGamePresentation(game: reloaded.games[1], sourceEnabled: true).requiresReview)
         let reconnected = try apply(both, to: reloaded)
         XCTAssertTrue(CatalogGamePresentation(game: reconnected.games[1], sourceEnabled: true).requiresReview)

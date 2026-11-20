@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 20 novembre 2026. Copertura di **764 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 20 novembre 2026. Copertura di **770 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](../how-it-works/architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le cartelle del Core, una per area, con lo Switch in `Porting/`; quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -182,7 +182,9 @@ Cartella `Sources/NXLibraryCore/Catalog/`.
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Catalog/CatalogGame.swift](../../Sources/NXLibraryCore/Catalog/CatalogGame.swift) | Record tipizzato nxnative/Steam, identità e personalizzazioni con namespace, osservazioni delle installazioni; lookup condiviso della prima installazione disponibile, separato dal gate di Play. |
+| [Sources/NXLibraryCore/Catalog/CatalogGame.swift](../../Sources/NXLibraryCore/Catalog/CatalogGame.swift) | Voce del catalogo attorno al record della sua fonte (`any CatalogSourceRecord`), identità e personalizzazioni con namespace, uguaglianza per tipo e valore; osservazioni delle installazioni Steam; lookup condiviso della prima installazione disponibile, separato dal gate di Play. |
+| [Sources/NXLibraryCore/Catalog/CatalogSourceRecord.swift](../../Sources/NXLibraryCore/Catalog/CatalogSourceRecord.swift) | Contratto del record di una fonte (identità, preferito, nascosto, validazione, presenza, termini di ricerca), integrazione aperta come stringa e tipi noti a un lettore (`CatalogRecordKinds`, passati in `userInfo`). |
+| [Sources/NXLibraryCore/Catalog/SteamCatalogGame+Record.swift](../../Sources/NXLibraryCore/Catalog/SteamCatalogGame+Record.swift) | Record Steam nel contratto: validazione delle installazioni, presenza, gate di Play e termini di ricerca. |
 | [Sources/NXLibraryCore/Catalog/CatalogDocument.swift](../../Sources/NXLibraryCore/Catalog/CatalogDocument.swift) | Schema, revisione, base legacy riconosciuta, configurazione delle fonti e validazione delle identità; conserva e riscrive intatti giochi e fonti di un’integrazione sconosciuta. |
 | [Sources/NXLibraryCore/Catalog/CatalogJSON.swift](../../Sources/NXLibraryCore/Catalog/CatalogJSON.swift) | Valore JSON tenuto com’è stato letto (numeri `Decimal`), per i record e le fonti che il catalogo non conosce. |
 | [Sources/NXLibraryCore/Catalog/CatalogGamePresentation.swift](../../Sources/NXLibraryCore/Catalog/CatalogGamePresentation.swift) | Contratto comune per presentazione, operazioni supportate e target di avvio; nessuna operazione I/O. |
@@ -190,7 +192,7 @@ Cartella `Sources/NXLibraryCore/Catalog/`.
 | [Sources/NXLibraryCore/Catalog/CatalogPublication.swift](../../Sources/NXLibraryCore/Catalog/CatalogPublication.swift) | Staging verificato, creazione esclusiva e sostituzione atomica, con confine di errore controllabile. |
 | [Sources/NXLibraryCore/Catalog/CatalogRepository.swift](../../Sources/NXLibraryCore/Catalog/CatalogRepository.swift) | Modifiche tipizzate sull'ultimo catalogo, senza replay di effetti esterni; risultati build limitati ai propri campi. |
 | [Sources/NXLibraryCore/Catalog/CatalogRecovery.swift](../../Sources/NXLibraryCore/Catalog/CatalogRecovery.swift) | Offerte di recupero e conflitto legacy con impronte degli input, rivalidate all’accettazione. |
-| [Sources/NXLibraryCore/Catalog/CatalogPersonalizations.swift](../../Sources/NXLibraryCore/Catalog/CatalogPersonalizations.swift) | Lookup personali immutabili per identità e radici distinte per integrazione. |
+| [Sources/NXLibraryCore/Catalog/CatalogPersonalizations.swift](../../Sources/NXLibraryCore/Catalog/CatalogPersonalizations.swift) | Lookup personali immutabili per identità. |
 | [Sources/NXLibraryCore/Catalog/CatalogErrorCopy.swift](../../Sources/NXLibraryCore/Catalog/CatalogErrorCopy.swift) | Errori recuperabili del catalogo nelle sei lingue. |
 | [Sources/NXLibraryCore/Catalog/CatalogBuildRecoveries.swift](../../Sources/NXLibraryCore/Catalog/CatalogBuildRecoveries.swift) | Generazioni di build non ancora salvate, selezione del retry e conferma della sola generazione persistita. |
 | [Sources/NXLibraryCore/Catalog/CatalogGameOptions.swift](../../Sources/NXLibraryCore/Catalog/CatalogGameOptions.swift) | Ordine unico delle operazioni comuni della libreria; ciò che una fonte può fare dipende dal suo record (nessuna modifica nxnative su un gioco Steam). |
@@ -396,6 +398,16 @@ Cartella `Sources/NXLibraryCore/Porting/`.
 | [Sources/NXLibraryCore/Porting/LibraryFile.swift](../../Sources/NXLibraryCore/Porting/LibraryFile.swift) | Contenitore versionato del catalogo della libreria. |
 | [Sources/NXLibraryCore/Porting/GameStatus.swift](../../Sources/NXLibraryCore/Porting/GameStatus.swift) | Enumera disponibilità e stato del gioco rispetto ad app, sorgenti e porting. |
 | [Sources/NXLibraryCore/Porting/TargetPlatform.swift](../../Sources/NXLibraryCore/Porting/TargetPlatform.swift) | Definisce il target mac-app e le sue etichette per l’interfaccia. |
+
+## Core · Porting: catalogo nxnative
+
+Cartella `Sources/NXLibraryCore/Porting/Catalog/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/NXLibraryCore/Porting/Catalog/PortedGame+Catalog.swift](../../Sources/NXLibraryCore/Porting/Catalog/PortedGame+Catalog.swift) | `PortedGame` nel contratto del catalogo (validazione, presenza, avvio, ricerca), integrazione `.nxnative`, tipi noti dell’app (`CatalogRecordKinds.standard`) ed entrate `nxnativeGame`, `init(nxnative:)`, `updateNXNative`. |
+| [Sources/NXLibraryCore/Porting/Catalog/CatalogPersonalizations+Porting.swift](../../Sources/NXLibraryCore/Porting/Catalog/CatalogPersonalizations+Porting.swift) | Chiave personale nxnative (title ID o chiave storica) e radice dei dati personali: nxnative alla radice, ogni altra integrazione in `integrations/<nome>`. |
+| [Sources/NXLibraryCore/Porting/Catalog/CatalogStore+Porting.swift](../../Sources/NXLibraryCore/Porting/Catalog/CatalogStore+Porting.swift) | Lo store dell’app con tutti i tipi noti: `CatalogStore(directory:)` e `CatalogStore.decode(_:)`. |
 
 ## Core · Porting: Setup, motore e chiavi
 
@@ -936,6 +948,7 @@ Cartella `Sources/NXLibraryCore/Porting/Mods/`.
 | [run_startup_recovery.py](../../Tests/CatalogAppChecks/run_startup_recovery.py) | Coordinatore di avvio reale su profili sintetici: conflitto, scelta esplicita, offerta obsoleta, Retry e fallimento della preparazione; nessuna finestra. |
 | [run_source_access.py](../../Tests/CatalogAppChecks/run_source_access.py) | Esegue il ripristino di avvio, l'observer e i selettori reali: nessuna scansione automatica dei sorgenti, cartella ricordata, annullamento e lettura dei soli file scelti; nessuna finestra o dato personale. |
 | [run_onboarding.py](../../Tests/CatalogAppChecks/run_onboarding.py) | Esegue observer e ripristino del Setup, uscita durante lettura pendente con annullamento, input sotto modali, scelte acceso/spento/nil, radice della fonte, focus dopo Retry e richiesta notifiche su dati sintetici; nessuna finestra. |
+| [run_boundary.py](../../Tests/CatalogAppChecks/run_boundary.py) | Confine tra base e Porting: i file della base che usano nel codice un tipo di `Porting/` stanno in un elenco ammesso che può solo accorciarsi. |
 | [run_artwork_return.py](../../Tests/CatalogAppChecks/run_artwork_return.py) | Viste, task e host Mods reali su fixture: primo body con arte warm, scelte personali, aggiornamenti Steam nello stesso percorso, badge dopo rimozione, cambi abbinamento e snapshot completato fuori ordine; nessuna finestra o rendering. |
 | [run_nested_bundles.py](../../Tests/CatalogAppChecks/run_nested_bundles.py) | App sintetiche con bundle dati annidati e firme reali: installazione, icona, rollback, copia forzata, ripresa e rifiuto di dati alterati; nessuna UI. |
 | [run_nup_programs.py](../../Tests/CatalogAppChecks/run_nup_programs.py) | Esegue il probe NUP opzionale su snapshot sintetico, convertitori UI reali, persistenza e argv del rebuild. |

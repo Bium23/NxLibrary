@@ -1,7 +1,5 @@
 import Foundation
 
-public enum CatalogIntegration: String, Codable, Hashable, Sendable { case nxnative, steam }
-
 /// Namespace and key travel together: a legacy free-form key cannot collide with Steam storage.
 public struct CatalogPersonalizationReference: Codable, Equatable, Sendable {
     public let namespace: CatalogIntegration
@@ -116,98 +114,64 @@ public struct SteamCatalogGame: Codable, Equatable, Identifiable, Sendable {
     public var needsReview: Bool { !isDownloading && (!hasBeenRecognized || needsInstallationReview) }
 }
 
-/// One catalog entry, with one owner for each field. The old record remains a
-/// lossless nxnative payload; a Steam entry never needs its build/settings defaults.
+/// One catalog entry, with one owner for each field. The record is the source's own value, kept whole: the complete
+/// nxnative record for a ported game, `SteamCatalogGame` for Steam; a Steam entry never needs build or settings defaults.
 public struct CatalogGame: Identifiable, Codable, Equatable {
-    enum Payload: Equatable { case nxnative(PortedGame), steam(SteamCatalogGame) }
-    private(set) var payload: Payload
+    public private(set) var record: any CatalogSourceRecord
     public let personalizationReference: CatalogPersonalizationReference
 
-    public init(nxnative game: PortedGame) {
-        payload = .nxnative(game)
-        personalizationReference = .init(namespace: .nxnative, key: game.titleId ?? game.uniqueKey)
+    public init(record: some CatalogSourceRecord, personalizationKey: String) {
+        self.record = record
+        personalizationReference = .init(namespace: type(of: record).integration, key: personalizationKey)
     }
 
-    public init(steam game: SteamCatalogGame) {
-        payload = .steam(game)
-        personalizationReference = .init(namespace: .steam, key: "steam-\(game.appID)")
-    }
+    public init(steam game: SteamCatalogGame) { self.init(record: game, personalizationKey: "steam-\(game.appID)") }
 
-    public var integration: CatalogIntegration { if case .nxnative = payload { return .nxnative }; return .steam }
-    public var id: UUID { switch payload { case .nxnative(let g): return g.id; case .steam(let g): return g.id } }
-    public var name: String { switch payload { case .nxnative(let g): return g.name; case .steam(let g): return g.name } }
-    public var isFavorite: Bool { switch payload { case .nxnative(let g): return g.isFavorite; case .steam(let g): return g.isFavorite } }
-    public var isHidden: Bool { switch payload { case .nxnative(let g): return g.isHidden; case .steam(let g): return g.isHidden } }
+    public var integration: CatalogIntegration { type(of: record).integration }
+    public var id: UUID { record.id }
+    public var name: String { record.name }
+    public var isFavorite: Bool { record.isFavorite }
+    public var isHidden: Bool { record.isHidden }
     public var personalizationKey: String { personalizationReference.key }
-    public var nxnativeGame: PortedGame? { if case .nxnative(let g) = payload { return g }; return nil }
-    public var steamGame: SteamCatalogGame? { if case .steam(let g) = payload { return g }; return nil }
+    public var steamGame: SteamCatalogGame? { record as? SteamCatalogGame }
 
-    public mutating func setFavorite(_ value: Bool) {
-        switch payload {
-        case .nxnative(var game): game.isFavorite = value; payload = .nxnative(game)
-        case .steam(var game): game.isFavorite = value; payload = .steam(game)
-        }
-    }
+    public mutating func setFavorite(_ value: Bool) { record.isFavorite = value }
+    public mutating func setHidden(_ value: Bool) { record.isHidden = value }
 
-    public mutating func setHidden(_ value: Bool) {
-        switch payload {
-        case .nxnative(var game): game.isHidden = value; payload = .nxnative(game)
-        case .steam(var game): game.isHidden = value; payload = .steam(game)
-        }
-    }
-
-    public mutating func updateNXNative(_ game: PortedGame) throws {
-        guard integration == .nxnative else { throw CatalogModelError.wrongIntegration }
-        guard id == game.id else { throw CatalogModelError.identityMismatch }
-        payload = .nxnative(game)
+    /// Replaces the record with a newer one of the same source and game.
+    public mutating func replaceRecord<Record: CatalogSourceRecord>(_ updated: Record) throws {
+        guard record is Record else { throw CatalogModelError.wrongIntegration }
+        guard id == updated.id else { throw CatalogModelError.identityMismatch }
+        record = updated
     }
 
     mutating func updateSteam(_ game: SteamCatalogGame) throws {
         guard let old = steamGame else { throw CatalogModelError.wrongIntegration }
-        guard old.id == game.id, old.appID == game.appID else { throw CatalogModelError.identityMismatch }
-        payload = .steam(game)
+        guard old.appID == game.appID else { throw CatalogModelError.identityMismatch }
+        try replaceRecord(game)
     }
 
     func validateRecord() throws {
         guard personalizationReference.namespace == integration, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw CatalogModelError.invalidRecord
         }
-        switch payload {
-        case .nxnative(let game):
-            guard game.url.isFileURL, game.sizeBytes >= 0 else { throw CatalogModelError.invalidRecord }
-        case .steam(let game):
-            guard game.appID > 0, personalizationKey == "steam-\(game.appID)" else { throw CatalogModelError.invalidRecord }
-            var contentsByLibrary: [URL: Set<URL>] = [:]
-            for installation in game.installations {
-                guard contentsByLibrary[installation.libraryURL.standardizedFileURL, default: []]
-                    .insert(installation.contentURL.standardizedFileURL).inserted else { throw CatalogModelError.invalidRecord }
-                guard installation.libraryURL.isFileURL, installation.contentURL.isFileURL,
-                      installation.reportedSizeBytes.map({ $0 >= 0 }) != false,
-                      installation.applications.allSatisfy({ $0.url.isFileURL && $0.executableURL.isFileURL }) else {
-                    throw CatalogModelError.invalidRecord
-                }
-                let common = installation.libraryURL.appendingPathComponent("steamapps/common").standardizedFileURL
-                guard NativeMacApplication.isWithin(installation.contentURL.standardizedFileURL, root: common),
-                      installation.contentURL.standardizedFileURL != common,
-                      installation.applications.allSatisfy({
-                          $0.url.pathExtension.lowercased() == "app" && !$0.architectures.isEmpty &&
-                          NativeMacApplication.isWithin($0.url.standardizedFileURL, root: installation.contentURL.standardizedFileURL) &&
-                          NativeMacApplication.isWithin($0.executableURL.standardizedFileURL, root: $0.url.standardizedFileURL)
-                      }) else { throw CatalogModelError.invalidRecord }
-                if installation.availability == .available, installation.primaryApplication == nil {
-                    throw CatalogModelError.invalidRecord
-                }
-            }
-        }
+        try record.validateRecord(personalizationKey: personalizationKey)
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.personalizationReference == rhs.personalizationReference && lhs.record.isEqual(to: rhs.record)
     }
 
     private enum CodingKeys: String, CodingKey { case integration, data, personalization }
+    /// Reads a record of a kind the decoder knows (`CatalogRecordKinds`); any other integration is refused here and
+    /// kept by `CatalogDocument`.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        switch try c.decode(CatalogIntegration.self, forKey: .integration) {
-        case .nxnative: payload = .nxnative(try c.decode(PortedGame.self, forKey: .data))
-        case .steam: payload = .steam(try c.decode(SteamCatalogGame.self, forKey: .data))
+        let integration = try c.decode(CatalogIntegration.self, forKey: .integration)
+        guard let kind = CatalogRecordKinds.of(decoder).type(for: integration) else {
+            throw DecodingError.dataCorruptedError(forKey: .integration, in: c, debugDescription: "Unknown integration \(integration)")
         }
+        record = try c.decode(kind, forKey: .data)
         personalizationReference = try c.decode(CatalogPersonalizationReference.self, forKey: .personalization)
         try validateRecord()
     }
@@ -216,9 +180,6 @@ public struct CatalogGame: Identifiable, Codable, Equatable {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(integration, forKey: .integration)
         try c.encode(personalizationReference, forKey: .personalization)
-        switch payload {
-        case .nxnative(let game): try c.encode(game, forKey: .data)
-        case .steam(let game): try c.encode(game, forKey: .data)
-        }
+        try c.encode(record, forKey: .data)
     }
 }

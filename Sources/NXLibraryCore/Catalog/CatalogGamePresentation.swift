@@ -37,33 +37,11 @@ public struct CatalogGamePresentation {
         personalizationReference = game.personalizationReference
         isFavorite = game.isFavorite
         isHidden = game.isHidden
-        switch game.payload {
-        case .nxnative(let legacy):
-            requiresReview = false
-            isDownloading = false
-            isListedNormally = sourceEnabled && !legacy.isHidden
-            launchTarget = sourceEnabled && legacy.isPlayableLocally ? .nxnative(appURL: legacy.url) : nil
-            installations = legacy.url.pathExtension.lowercased() == "app" ? [
-                .init(id: "nxnative-\(legacy.id.uuidString.lowercased())", contentURL: legacy.url, applicationURL: legacy.url,
-                      executableURL: nil, bundleIdentifier: legacy.effectiveBundleId,
-                      availability: legacy.isPlayableLocally ? .available : (legacy.status == .appMissing ? .notDetected : .unavailable),
-                      size: .cached(legacy.sizeBytes))
-            ] : []
-        case .steam(let steam):
-            requiresReview = !steam.isDownloading && (!steam.hasBeenRecognized || steam.needsInstallationReview
-                || steam.installations.contains { $0.availability == .requiresReview }
-                || steam.installations.filter { $0.availability == .available }.count > 1)
-            isDownloading = sourceEnabled && !steam.isHidden && steam.isDownloading
-            isListedNormally = sourceEnabled && !steam.isHidden && (steam.hasBeenRecognized || steam.isDownloading)
-            let available = steam.installations.filter { $0.availability == .available && $0.primaryApplication != nil }
-            launchTarget = sourceEnabled && steam.appID > 0 && steam.hasBeenRecognized && available.count == 1 && !requiresReview ? .steam(appID: steam.appID) : nil
-            installations = steam.installations.map { installation in
-                let app = installation.primaryApplication
-                return .init(id: "steam-\(installation.id.uuidString.lowercased())", contentURL: installation.contentURL,
-                             applicationURL: app?.url, executableURL: app?.executableURL, bundleIdentifier: app?.bundleIdentifier,
-                             availability: installation.availability,
-                             size: installation.reportedSizeBytes.map(CatalogInstallationSize.steamReported) ?? .unknown)
-            }
-        }
+        let presence = game.record.presence(sourceEnabled: sourceEnabled)
+        requiresReview = presence.requiresReview
+        isDownloading = presence.isDownloading
+        isListedNormally = presence.isListedNormally
+        launchTarget = presence.launchTarget
+        installations = presence.installations
     }
 }

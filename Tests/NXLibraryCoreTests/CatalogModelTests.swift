@@ -9,7 +9,7 @@ final class CatalogModelTests: XCTestCase {
         XCTAssertEqual(game.nxnativeGame, original)
         XCTAssertEqual(game.personalizationKey, "0100000000000001")
         let data = try JSONEncoder().encode(game)
-        let loaded = try JSONDecoder().decode(CatalogGame.self, from: data)
+        let loaded = try CatalogTestSupport.decoder().decode(CatalogGame.self, from: data)
         XCTAssertEqual(loaded, game)
         XCTAssertEqual(loaded.nxnativeGame, original)
         XCTAssertNil(loaded.steamGame)
@@ -35,7 +35,7 @@ final class CatalogModelTests: XCTestCase {
         var steam = CatalogGame(steam: SteamCatalogGame(appID: 10, name: "G"))
         steam.setFavorite(true)
         steam.setHidden(true)
-        let result = try JSONDecoder().decode(CatalogGame.self, from: JSONEncoder().encode(steam))
+        let result = try CatalogTestSupport.decoder().decode(CatalogGame.self, from: JSONEncoder().encode(steam))
         XCTAssertTrue(result.isFavorite)
         XCTAssertTrue(result.isHidden)
         XCTAssertEqual(result.id, steam.id)
@@ -86,7 +86,7 @@ final class CatalogModelTests: XCTestCase {
         var json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(game)) as? [String: Any])
         json["integration"] = "unknown-future-source"
         let data = try JSONSerialization.data(withJSONObject: json)
-        XCTAssertThrowsError(try JSONDecoder().decode(CatalogGame.self, from: data))
+        XCTAssertThrowsError(try CatalogTestSupport.decoder().decode(CatalogGame.self, from: data))
     }
 
     func testDownloadingSteamGameIsListedWithoutLaunchOrReview() throws {

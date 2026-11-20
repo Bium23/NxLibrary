@@ -26,7 +26,8 @@ Regole:
   - la geometria di una riga: `SpotlightRowGeometry`, `GridListLayout`.
 
   La vista disegna e traduce l'input.
-- **Un file fuori da `Porting/` che usa un tipo di `Porting/` è un legame da tagliare, non un esempio da seguire.** Il codice nuovo della base non aggiunge legami di questo tipo.
+- **Un file fuori da `Porting/` che usa un tipo di `Porting/` è un legame da tagliare, non un esempio da seguire.** Il codice nuovo della base non aggiunge legami di questo tipo; `Tests/CatalogAppChecks/run_boundary.py` tiene l'elenco di quelli rimasti, che può solo accorciarsi.
+- **Un'entrata della base per un tipo di `Porting/` sta in un'estensione dentro `Porting/`** (`Tipo+Porting.swift`, o `Tipo+Catalog.swift` per la conformità di un tipo del modulo) e chiama l'entrata generica della base. Esempio: `Porting/Catalog/CatalogStore+Porting.swift` dà `CatalogStore(directory:)` con tutti i tipi noti sopra `CatalogStore(directory:kinds:)`.
 - **Un file oltre circa 800 righe si divide per compito** in estensioni `Tipo+Compito.swift` nella stessa cartella. Esempi: `PortingModel+Build.swift`, `SpotlightView+Input.swift`. Le proprietà memorizzate restano nel file del tipo; un membro `private` che serve da un altro file diventa interno, mai `public`. Un controllo senza finestre che legge il sorgente di un tipo legge tutti i suoi file (`PortingModel*.swift`).
 - **`public` solo nel Core**, per ciò che l'app usa. Il target app è un eseguibile che nessuno importa: i suoi tipi restano interni.
 - **Non far crescere `AppViewModel`.** Uno stato che appartiene a una sola schermata o a un solo pannello ha il suo modello. Esempi: `SavePanelModel`, `SetupCheckModel`, `ModStoreHost`, `AchievementsScreenModel`, `CatalogSourcesModel`. Le estensioni `AppViewModel+…` servono solo a collegare il coordinatore a un servizio del Core.
@@ -42,9 +43,9 @@ Regole:
 
 Esempio completo: Steam, documentato in [steam.md](../how-it-works/steam.md).
 
-- Il gioco entra nel catalogo comune come `CatalogGame` con il **suo payload reale** (`SteamCatalogGame`, `PortedGame`). Non si costruisce mai un gioco di un'altra fonte finto.
-- Cosa offre la pagina lo dice `CatalogGamePresentation`: installazioni, operazioni supportate, `CatalogLaunchTarget`. L'ordine delle Opzioni comuni sta in `CatalogGameOptions`. Una fonte dichiara cosa sa fare; non aggiunge schermate parallele.
-- I comandi di una fonte ricevono solo il suo payload: i comandi Switch prendono `PortedGame`, quindi non possono partire da un gioco Steam.
+- Il gioco entra nel catalogo comune come `CatalogGame` con il **suo record reale**, un tipo che rispetta `CatalogSourceRecord` (`SteamCatalogGame` nella base, `PortedGame` nel modulo). Non si costruisce mai un gioco di un'altra fonte finto. Chi crea lo store o il decoder gli passa i tipi noti (`CatalogRecordKinds`); un record di un altro tipo resta conservato.
+- Cosa offre la pagina lo dice `CatalogGamePresentation`, dalla presenza del record (`CatalogRecordPresence`): installazioni, operazioni supportate, `CatalogLaunchTarget`. L'ordine delle Opzioni comuni sta in `CatalogGameOptions`. Una fonte dichiara cosa sa fare; non aggiunge schermate parallele.
+- I comandi di una fonte ricevono solo il suo record: i comandi Switch prendono `PortedGame`, quindi non possono partire da un gioco Steam.
 - La lettura avviene su un worker annullabile, con limiti di dimensione e di cartelle. Il risultato porta una generazione o un ticket, e un risultato superato non si pubblica (`SteamCatalogReconciler`, `CatalogSourcesModel`).
 - Un'assenza non è una cancellazione. Un disco scollegato, una scansione parziale o un titolo ambiguo conservano la voce, gli UUID e le scelte personali.
 - I file di altre applicazioni si leggono e non si scrivono mai. Le letture protette passano da `InstallationFileSnapshot` e `InstallationDirectorySnapshot`.

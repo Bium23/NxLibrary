@@ -135,7 +135,8 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
 ## Catalogo, fonti e libreria
 
 **Il catalogo comune.**
-- `CatalogGame` conserva un payload tipizzato: il `PortedGame` completo per nxnative oppure `SteamCatalogGame`. Nome, UUID e scelte personali hanno un solo proprietario; il riferimento alle personalizzazioni conserva chiave e namespace dell'integrazione. Non si costruisce mai un falso gioco nxnative per Steam.
+- `CatalogGame` conserva il record della sua fonte, un `any CatalogSourceRecord`: il `PortedGame` completo per nxnative (conformità in `Porting/Catalog/PortedGame+Catalog.swift`) oppure `SteamCatalogGame` (`SteamCatalogGame+Record.swift`). Il protocollo porta identità, preferito e nascosto, validazione, presenza (`CatalogRecordPresence`) e termini di ricerca; due voci sono uguali solo con record dello stesso tipo e valore. Nome, UUID e scelte personali hanno un solo proprietario; il riferimento alle personalizzazioni conserva chiave e namespace dell'integrazione. Non si costruisce mai un falso gioco nxnative per Steam.
+  - `CatalogIntegration` è un nome aperto (`"steam"` nella base, `"nxnative"` dichiarato dal modulo). I tipi che un lettore conosce (`CatalogRecordKinds`) arrivano al decoder in `userInfo`; senza, conosce solo Steam. `CatalogStore` li riceve alla creazione: `CatalogStore(directory:)` del modulo passa `CatalogRecordKinds.standard`. *Perché:* la base legge il catalogo senza conoscere il formato Switch, e senza il modulo i giochi Switch restano conservati.
 - `CatalogGamePresentation` espone installazioni, operazioni supportate e un target di avvio tipizzato, senza avviare servizi o consultare il disco. La disponibilità dell'avvio resta distinta dal supporto dell'operazione, e una fonte disattivata non produce un target utilizzabile.
 - `CatalogDocument` (versione 1) contiene revisioni, fonti abilitate e fingerprint della base legacy riconosciuta alla conversione o dopo una scelta esplicita di conservare il catalogo.
   - Un gioco o una fonte la cui `integration` non è nota (scritti da una versione più nuova, o da una con un modulo di fonte in più) si legge come `CatalogJSON` in `preservedGames` / `preservedSources` e si riscrive intatto dopo quelli noti; nessuna proiezione, ricerca o schermata lo vede e nessuno lo modifica. `validate()` ne controlla solo la forma (`integration` stringa, `data` oggetto), l'unicità della fonte e dell'`id`. I numeri restano `Decimal`. *Perché:* un catalogo con una fonte in più non deve diventare illeggibile né perdere giochi. `CatalogGame` da solo continua a rifiutare un'integrazione sconosciuta.
@@ -168,7 +169,7 @@ Il checkout nxnative fornisce estrattore, rewriter, shader, profili dei giochi e
 - Tutto il resto di Steam è in [steam.md](steam.md).
 
 **La libreria mostrata.**
-- `CatalogLibraryProjection` seleziona le voci delle fonti attive. Spotlight, Collection e ricerca usano gli stessi record, UUID, filtri e ordine salvato; le viste specifiche ricevono il payload reale.
+- `CatalogLibraryProjection` seleziona le voci delle fonti attive. Spotlight, Collection e ricerca usano gli stessi record, UUID, filtri e ordine salvato; le viste specifiche ricevono il record reale.
 - I giochi Steam mostrano l'icona della propria app Mac e la fonte, senza interrogare servizi Nintendo né riscrivere bundle. Hanno la stessa testata, pagina e Opzioni dei giochi nxnative. I titoli nascosti restano recuperabili dalle fonti.
 - Menu e comandi specifici nxnative ricevono soltanto `PortedGame`: selezionare un gioco Steam non può avviare una build né aprire salvataggi o mod Switch.
 
