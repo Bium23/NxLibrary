@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 20 novembre 2026. Copertura di **773 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 20 novembre 2026. Copertura di **776 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](../how-it-works/architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le cartelle del Core, una per area, con lo Switch in `Porting/`; quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -210,10 +210,10 @@ Cartella `Sources/NXLibraryCore/Library/`.
 | [Sources/NXLibraryCore/Library/GameStorageUsage.swift](../../Sources/NXLibraryCore/Library/GameStorageUsage.swift) | Dimensioni per gioco e totali: distingue assenza e indisponibilità, segnala cache condivise e conserva identità stabili per il focus. |
 | [Sources/NXLibraryCore/Library/LibraryFilter.swift](../../Sources/NXLibraryCore/Library/LibraryFilter.swift) | Definisce filtri, PlayHistory e query condivisa per ricerca/ordine del catalogo misto; `LibraryQueryRecord` è ciò che filtro, ricerca e Surprise leggono da un gioco di qualunque fonte. |
 | [Sources/NXLibraryCore/Library/LibrarySelectionState.swift](../../Sources/NXLibraryCore/Library/LibrarySelectionState.swift) | Mantiene selezione e spostamento nel risultato filtrato della Collection. |
-| [Sources/NXLibraryCore/Library/LibraryPresentation.swift](../../Sources/NXLibraryCore/Library/LibraryPresentation.swift) | Formatta metadati e statistiche temporali per le schermate della libreria. |
+| [Sources/NXLibraryCore/Library/LibraryPresentation.swift](../../Sources/NXLibraryCore/Library/LibraryPresentation.swift) | Formatta metadati e statistiche temporali per le schermate della libreria: i valori pronti e la strada Steam; quella Switch sta in `Porting/Library/LibraryPresentation+Porting.swift`. |
 | [Sources/NXLibraryCore/Library/PlaySession.swift](../../Sources/NXLibraryCore/Library/PlaySession.swift) | Descrive una sessione persistibile con gioco e riferimenti temporali. |
 | [Sources/NXLibraryCore/Library/ActivitySummary.swift](../../Sources/NXLibraryCore/Library/ActivitySummary.swift) | Aggrega sessioni, giorni e tempi della settimana per la scheda Activity. |
-| [Sources/NXLibraryCore/Library/PlaySessionStore.swift](../../Sources/NXLibraryCore/Library/PlaySessionStore.swift) | Registra avvio, heartbeat, fine e riconciliazione delle sessioni di gioco; unisce i totali esterni (Steam) con le sessioni successive. |
+| [Sources/NXLibraryCore/Library/PlaySessionStore.swift](../../Sources/NXLibraryCore/Library/PlaySessionStore.swift) | Registra avvio (per id, identità della fonte e bundle ID facoltativo), heartbeat, fine e riconciliazione delle sessioni di gioco; unisce i totali esterni (Steam) con le sessioni successive. |
 | [Sources/NXLibraryCore/Library/GameFocus.swift](../../Sources/NXLibraryCore/Library/GameFocus.swift) | Quando un gioco che esce riporta Arcane davanti: solo se era l’app in primo piano e nessun altro gioco della libreria è aperto. |
 | [Sources/NXLibraryCore/Library/SessionSummary.swift](../../Sources/NXLibraryCore/Library/SessionSummary.swift) | Cosa dice la card di fine sessione: gioco, durata di questa sessione e totale scritto come nelle info del gioco; niente card sotto i dieci secondi. |
 | [Sources/NXLibraryCore/Library/DirectorySize.swift](../../Sources/NXLibraryCore/Library/DirectorySize.swift) | Misura le cartelle con fts come du, così il refresh non resta bloccato su app grandi in dischi esterni (issue #2). |
@@ -420,6 +420,9 @@ Cartella `Sources/NXLibraryCore/Porting/Library/`.
 |---|---|
 | [Sources/NXLibraryCore/Porting/Library/LibraryQuery+Porting.swift](../../Sources/NXLibraryCore/Porting/Library/LibraryQuery+Porting.swift) | Filtro, ricerca e selezione della home per i giochi Switch: `PortedGame` come `LibraryQueryRecord`, `LibraryQuery.apply(to:history:)`, `reconcile`, `move` e `jump` di `LibrarySelectionState`. |
 | [Sources/NXLibraryCore/Porting/Library/Surprise+Porting.swift](../../Sources/NXLibraryCore/Porting/Library/Surprise+Porting.swift) | Surprise me sui giochi Switch, sopra la scelta generica di `Surprise`. |
+| [Sources/NXLibraryCore/Porting/Library/PlaySessionStore+Porting.swift](../../Sources/NXLibraryCore/Porting/Library/PlaySessionStore+Porting.swift) | Avvio della sessione di un gioco portato: title ID (o chiave unica) e bundle ID dell’app. |
+| [Sources/NXLibraryCore/Porting/Library/SessionSummary+Porting.swift](../../Sources/NXLibraryCore/Porting/Library/SessionSummary+Porting.swift) | Card di fine sessione per un gioco portato. |
+| [Sources/NXLibraryCore/Porting/Library/LibraryPresentation+Porting.swift](../../Sources/NXLibraryCore/Porting/Library/LibraryPresentation+Porting.swift) | Valori della libreria per un gioco portato (fatti dello store Nintendo, console, sorgenti staccate) e l’entrata per `CatalogGame`, che sceglie la strada Switch o Steam. |
 
 ## Core · Porting: Setup, motore e chiavi
 
@@ -858,7 +861,7 @@ Cartella `Sources/NXLibraryCore/Porting/Mods/`.
 | [Tests/NXLibraryCoreTests/OnlineBackgroundsTests.swift](../../Tests/NXLibraryCoreTests/OnlineBackgroundsTests.swift) | Parser degli sfondi fissi, risoluzioni, crediti e nomi dei download. |
 | [Tests/NXLibraryCoreTests/OnlineLiveSourcesTests.swift](../../Tests/NXLibraryCoreTests/OnlineLiveSourcesTests.swift) | Parser e indirizzi dei provider di sfondi video. |
 | [Tests/NXLibraryCoreTests/PendingInstallTests.swift](../../Tests/NXLibraryCoreTests/PendingInstallTests.swift) | Staging, installazione e cartelle da conservare; riapertura e scansione prima di completare un’installazione già pubblicata. |
-| [Tests/NXLibraryCoreTests/PlaySessionStoreTests.swift](../../Tests/NXLibraryCoreTests/PlaySessionStoreTests.swift) | Persistenza, durata, heartbeat e riconciliazione delle sessioni. |
+| [Tests/NXLibraryCoreTests/PlaySessionStoreTests.swift](../../Tests/NXLibraryCoreTests/PlaySessionStoreTests.swift) | Persistenza, durata, heartbeat, riconciliazione delle sessioni e bundle ID di un avvio generico. |
 | [Tests/NXLibraryCoreTests/PortedGameTests.swift](../../Tests/NXLibraryCoreTests/PortedGameTests.swift) | Modello del gioco, compatibilità dei record e condizioni di disponibilità dell’app. |
 | [Tests/NXLibraryCoreTests/PortingFailureReasonTests.swift](../../Tests/NXLibraryCoreTests/PortingFailureReasonTests.swift) | Classificazione dei fallimenti e corrispondenza con i messaggi del pin, anche da un checkout separato scelto con NX_TEST_ENGINE_REPO. |
 | [Tests/NXLibraryCoreTests/PortingNoticeTests.swift](../../Tests/NXLibraryCoreTests/PortingNoticeTests.swift) | Condizioni e testi delle notifiche di esito del porting. |

@@ -41,33 +41,15 @@ public final class PlaySessionStore: ObservableObject, PlayHistory {
         AppData.supportRoot.appendingPathComponent("play-sessions.json")
     }
 
+    /// A session for a game of any integration. `sourceID` is the source's identity (a Switch title ID, or a
+    /// qualified one such as "steam-570", never a made-up Nintendo title ID); `bundleID` is the app that runs it, when
+    /// there is one. A restart closes an open session at its last heartbeat. A game found already running when its
+    /// owner starts watching is not a new start: `announces: false` keeps it off `starts`.
     @discardableResult
-    public func start(for game: PortedGame) -> Bool {
-        if isRunning(gameID: game.id) { return false }
-        let date = now()
-        let session = PlaySession(
-            gameID: game.id,
-            titleID: game.titleId ?? game.uniqueKey,
-            bundleID: game.effectiveBundleId,
-            startedAt: date,
-            lastHeartbeatAt: date
-        )
-        sessions.append(session)
-        let folded = trim()
-        save(totals: folded)
-        starts.send(game.id)
-        return true
-    }
-
-    /// A session for a game of another integration, which observes its own process. `sourceID` is the
-    /// qualified identity ("steam-570"), never a made-up Nintendo title ID. The session is ended by its
-    /// owner, and a restart closes it at its last heartbeat. A game found already
-    /// running when its owner starts watching is not a new start: `announces: false` keeps it off `starts`.
-    @discardableResult
-    public func start(gameID: UUID, sourceID: String, announces: Bool = true) -> Bool {
+    public func start(gameID: UUID, sourceID: String, bundleID: String? = nil, announces: Bool = true) -> Bool {
         if isRunning(gameID: gameID) { return false }
         let date = now()
-        sessions.append(PlaySession(gameID: gameID, titleID: sourceID, bundleID: nil,
+        sessions.append(PlaySession(gameID: gameID, titleID: sourceID, bundleID: bundleID,
                                     startedAt: date, lastHeartbeatAt: date))
         let folded = trim()
         save(totals: folded)

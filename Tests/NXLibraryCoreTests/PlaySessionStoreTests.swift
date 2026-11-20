@@ -41,6 +41,17 @@ final class PlaySessionStoreTests: XCTestCase {
         XCTAssertEqual(store.lastPlayed(for: game.id), Date(timeIntervalSince1970: 1_000))
     }
 
+    func testStartWithBundleIDRecordsIt() throws {
+        let store = store()
+        let id = UUID()
+        XCTAssertTrue(store.start(gameID: id, sourceID: "steam-570", bundleID: "com.example.game"))
+        let session = try XCTUnwrap(store.sessions.last)
+        XCTAssertEqual(session.gameID, id)
+        XCTAssertEqual(session.titleID, "steam-570")
+        XCTAssertEqual(session.bundleID, "com.example.game")
+        XCTAssertTrue(session.isActive)
+    }
+
     func testDuplicateStartIsRejected() {
         let store = store()
         let game = game()

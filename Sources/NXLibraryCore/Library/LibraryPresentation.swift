@@ -14,38 +14,17 @@ public struct LibraryPresentation: Equatable {
     public let sourcesDetached: Bool
     public let summary: String
 
-    public init(game: PortedGame, metadata: NintendoStoreMetadata?,
-                totalPlaytime: TimeInterval, lastPlayed: Date?, now: Date = Date()) {
-        title = game.name
-        eyebrow = metadata.map { Self.eyebrow(from: $0.name) } ?? ""
-        genres = Array(GameGenre.list(metadata?.genres ?? []).prefix(3))
-        publisher = metadata?.publishers.first
-        releaseYear = metadata?.releaseYear
-        playtime = Self.duration(totalPlaytime)
-        self.lastPlayed = Self.relative(lastPlayed, now: now)
-        platform = "nxnative"
-        console = game.consoleName
-        sourcesDetached = !SourceSelection.hasGame(game.sources)
-        summary = (metadata?.description ?? "")
-            .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+    /// The values as the screens show them; each source's entry fills them from its own facts.
+    init(title: String, eyebrow: String, genres: [String], publisher: String?, releaseYear: String?, playtime: String,
+         lastPlayed: String, platform: String, console: String, sourcesDetached: Bool, summary: String) {
+        self.title = title; self.eyebrow = eyebrow; self.genres = genres; self.publisher = publisher
+        self.releaseYear = releaseYear; self.playtime = playtime; self.lastPlayed = lastPlayed
+        self.platform = platform; self.console = console; self.sourcesDetached = sourcesDetached; self.summary = summary
     }
 
-    /// Common display boundary; provider facts never become a fabricated NX game.
-    public init(game: CatalogGame, steamMetadata: SteamMetadata?,
-                nxnativeMetadata: NintendoStoreMetadata? = nil,
-                overrides: [MetadataField: String] = [:], totalPlaytime: TimeInterval,
-                lastPlayed: Date?, now: Date = Date()) {
-        if let native = game.nxnativeGame {
-            self = Self(game: native, metadata: nxnativeMetadata, totalPlaytime: totalPlaytime, lastPlayed: lastPlayed, now: now)
-            return
-        }
-        self = Self(steamRecord: game, metadata: steamMetadata, overrides: overrides,
-                    totalPlaytime: totalPlaytime, lastPlayed: lastPlayed, now: now)
-    }
-
-    private init(steamRecord game: CatalogGame, metadata steamMetadata: SteamMetadata?,
-                 overrides: [MetadataField: String], totalPlaytime: TimeInterval, lastPlayed: Date?, now: Date) {
+    /// A Steam game (the base's own source).
+    init(steamRecord game: CatalogGame, metadata steamMetadata: SteamMetadata?,
+         overrides: [MetadataField: String], totalPlaytime: TimeInterval, lastPlayed: Date?, now: Date) {
         // Reject facts accidentally delivered for another external identity.
         let facts = steamMetadata.flatMap { $0.appID == game.steamGame?.appID ? $0 : nil }
         title = game.name
@@ -65,7 +44,7 @@ public struct LibraryPresentation: Equatable {
         summary = overrides[.description] ?? facts?.description ?? ""
     }
 
-    private static func eyebrow(from name: String) -> String {
+    static func eyebrow(from name: String) -> String {
         let separators = [":", " – "]
         for separator in separators {
             if let range = name.range(of: separator) {
