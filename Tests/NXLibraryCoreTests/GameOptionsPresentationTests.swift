@@ -259,7 +259,7 @@ final class GameOptionsPresentationTests: XCTestCase {
     }
 
     /// Bananza's list; `full` adds the rows a newer build offers.
-    private func savedChoices(full: Bool = false, rumble: String = "1", fixed: Set<String> = []) -> GameOptionsPresentation {
+    private func savedSnapshot(full: Bool = false, rumble: String = "1", fixed: Set<String> = []) -> GameSettingsSnapshot {
         var settings = [
             setting("DM_OPMODE", "choice", "1", extra: #","options":[["1","Docked"],["0","Handheld"]]"#),
             setting("DM_PRESENT_UPSCALE", "choice", "off", extra: #","options":[["off","Standard"],["metalfx","MetalFX"]]"#),
@@ -279,8 +279,28 @@ final class GameOptionsPresentationTests: XCTestCase {
         }
         var values = Dictionary(uniqueKeysWithValues: settings.map { ($0.env, $0.defaultValue ?? "") })
         values["DM_RUMBLE"] = rumble
-        return GameOptionsPresentation(supportsRenderScale: full, isPlayable: true, sourcesDetached: false,
-                                       settings: GameSettingsSnapshot(settings: settings, values: values, fixed: fixed))
+        return GameSettingsSnapshot(settings: settings, values: values, fixed: fixed)
+    }
+
+    private func savedChoices(full: Bool = false, rumble: String = "1", fixed: Set<String> = []) -> GameOptionsPresentation {
+        GameOptionsPresentation(supportsRenderScale: full, isPlayable: true, sourcesDetached: false,
+                                settings: savedSnapshot(full: full, rumble: rumble, fixed: fixed))
+    }
+
+    func testBuildSettingsDecideTheRows() {
+        let build = GameOptionsBuildSettings(fixed: ["DM_RUMBLE"], visible: ["DM_FULLSCREEN", "DM_RUMBLE"],
+                                             offersRenderScale: false, hasMoreSettings: true)
+        let presentation = GameOptionsPresentation(supportsRenderScale: false, isPlayable: true, sourcesDetached: false,
+                                                   buildSettings: build)
+        let rows = presentation.focusableRows(level: .main, origin: .collection)
+        for present: GameOptionsRow in [.fullscreen, .rumble, .moreSettings] { XCTAssertTrue(rows.contains(present), "\(present)") }
+        for absent: GameOptionsRow in [.metalFX, .renderScale, .fps60] { XCTAssertFalse(rows.contains(absent), "\(absent)") }
+        XCTAssertTrue(presentation.entries(level: .main, origin: .collection).contains {
+            if case .note(let title, _) = $0 { return title == L10n.text("Internal resolution") }
+            return false
+        })
+        XCTAssertTrue(presentation.isFixed(.rumble))
+        XCTAssertFalse(presentation.isFixed(.fullscreen))
     }
 
     func testSavedChoicesShowOnlyWhatTheBuildOffers() {
@@ -291,7 +311,7 @@ final class GameOptionsPresentationTests: XCTestCase {
         for present: GameOptionsRow in [.fullscreen, .metalFX, .metalHUD, .consoleMode, .rumble, .rumbleStrength, .moreSettings] {
             XCTAssertTrue(rows.contains(present), "\(present)")
         }
-        XCTAssertEqual(savedChoices().settings?.extraSettings.map(\.env), ["DM_PSO_MTL4"])
+        XCTAssertEqual(savedSnapshot().extraSettings.map(\.env), ["DM_PSO_MTL4"])
     }
 
     func testNewerBuildGetsFrameRateAndUpscalerRows() {

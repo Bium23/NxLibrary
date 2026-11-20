@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 20 novembre 2026. Copertura di **785 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 20 novembre 2026. Copertura di **787 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](../how-it-works/architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le cartelle del Core, una per area, con lo Switch in `Porting/`; quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -263,7 +263,7 @@ Cartella `Sources/NXLibraryCore/Details/`.
 | [Sources/NXLibraryCore/Details/MoreLikeThis.swift](../../Sources/NXLibraryCore/Details/MoreLikeThis.swift) | Ordina i giochi correlati per generi, sviluppatore ed editore, con precedenza alla stessa fonte e ripiego facoltativo. |
 | [Sources/NXLibraryCore/Details/DetailsFacts.swift](../../Sources/NXLibraryCore/Details/DetailsFacts.swift) | Sceglie le righe del pannello Details (Steam qui, Switch in `Porting/Details/DetailsFacts+Porting.swift`): solo i valori presenti, niente di tecnico. |
 | [Sources/NXLibraryCore/Details/DetailsFocus.swift](../../Sources/NXLibraryCore/Details/DetailsFocus.swift) | Gestisce zone e spostamenti del focus nei link e nelle bande di Details. |
-| [Sources/NXLibraryCore/Details/GameOptionsPresentation.swift](../../Sources/NXLibraryCore/Details/GameOptionsPresentation.swift) | Definisce righe, livelli, etichette, scelte runtime e focus di Game Options. |
+| [Sources/NXLibraryCore/Details/GameOptionsPresentation.swift](../../Sources/NXLibraryCore/Details/GameOptionsPresentation.swift) | Definisce righe, livelli, etichette, scelte runtime e focus di Game Options; dalla build riceve solo `GameOptionsBuildSettings` (chiavi fisse e visibili, scala di rendering, altre impostazioni). |
 | [Sources/NXLibraryCore/Details/GameDetailPresentation+Steam.swift](../../Sources/NXLibraryCore/Details/GameDetailPresentation+Steam.swift) | Dati della pagina Steam e generi della testata Spotlight; ignora i dati di altri AppID e dà precedenza ai campi personali. |
 
 ## Core · artwork e metadati
@@ -435,6 +435,7 @@ Cartella `Sources/NXLibraryCore/Porting/Details/`.
 |---|---|
 | [Sources/NXLibraryCore/Porting/Details/GameDetailPresentation+Porting.swift](../../Sources/NXLibraryCore/Porting/Details/GameDetailPresentation+Porting.swift) | La pagina di un gioco portato: fatti dello store Nintendo, motore e toolchain della build, sorgenti, Rebuild e cartella dei salvataggi. |
 | [Sources/NXLibraryCore/Porting/Details/DetailsFacts+Porting.swift](../../Sources/NXLibraryCore/Porting/Details/DetailsFacts+Porting.swift) | Le righe Details di un gioco portato: crediti dello store, versione e dimensione della build, cartella dell’app. |
+| [Sources/NXLibraryCore/Porting/Details/GameOptionsPresentation+Porting.swift](../../Sources/NXLibraryCore/Porting/Details/GameOptionsPresentation+Porting.swift) | Game Options di un gioco portato: converte le scelte salvate della build (`GameSettingsSnapshot`) in `GameOptionsBuildSettings`. |
 | [Sources/NXLibraryCore/Porting/Details/MoreLikeThis+Porting.swift](../../Sources/NXLibraryCore/Porting/Details/MoreLikeThis+Porting.swift) | More like this fra giochi portati, con autori e generi dello store Nintendo. |
 
 ## Core · Porting: Setup, motore e chiavi
@@ -515,6 +516,7 @@ Cartella `Sources/NXLibraryCore/Porting/GameSettings/`.
 | File | Responsabilità |
 |---|---|
 | [Sources/NXLibraryCore/Porting/GameSettings/NXNativeGameSettings.swift](../../Sources/NXLibraryCore/Porting/GameSettings/NXNativeGameSettings.swift) | Legge l’elenco impostazioni del build, i valori attuali e le chiavi fissate da env.txt. |
+| [Sources/NXLibraryCore/Porting/GameSettings/GameSettingValues.swift](../../Sources/NXLibraryCore/Porting/GameSettings/GameSettingValues.swift) | Le impostazioni della build per More settings (`extraSettings`) ed etichette e passi di un valore (`GameSettingValues`). |
 | [Sources/NXLibraryCore/Porting/GameSettings/SavedChoicesStore.swift](../../Sources/NXLibraryCore/Porting/GameSettings/SavedChoicesStore.swift) | Legge e scrive le scelte salvate launcher.<env> nel dominio preferenze dell’app gioco. |
 | [Sources/NXLibraryCore/Porting/GameSettings/GameRuntimeConfig.swift](../../Sources/NXLibraryCore/Porting/GameSettings/GameRuntimeConfig.swift) | Persiste opzioni per titolo, prepara Review e lingua del rebuild, mappa DM_* e unisce env.txt. |
 | [Sources/NXLibraryCore/Porting/GameSettings/LauncherSettings.swift](../../Sources/NXLibraryCore/Porting/GameSettings/LauncherSettings.swift) | Legge launcher.json e verifica i controlli supportati, con fallback per le build precedenti. |
@@ -848,7 +850,7 @@ Cartella `Sources/NXLibraryCore/Porting/Mods/`.
 | [Tests/NXLibraryCoreTests/FocusIndexTests.swift](../../Tests/NXLibraryCoreTests/FocusIndexTests.swift) | Movimento limitato agli elementi della lista e liste vuote. |
 | [Tests/NXLibraryCoreTests/GameDetailPresentationTests.swift](../../Tests/NXLibraryCoreTests/GameDetailPresentationTests.swift) | Disponibilità di build e sorgenti e formattazione di metadati e azioni Details. |
 | [Tests/NXLibraryCoreTests/GameResourceStateTests.swift](../../Tests/NXLibraryCoreTests/GameResourceStateTests.swift) | App spostata e ripristinata, input assenti, Play senza sorgenti e conservazione di workspace e build attive durante Refresh. |
-| [Tests/NXLibraryCoreTests/GameOptionsPresentationTests.swift](../../Tests/NXLibraryCoreTests/GameOptionsPresentationTests.swift) | Ordine delle righe, focus, visibilità dei controlli e valori runtime. |
+| [Tests/NXLibraryCoreTests/GameOptionsPresentationTests.swift](../../Tests/NXLibraryCoreTests/GameOptionsPresentationTests.swift) | Ordine delle righe, focus, visibilità dei controlli, righe decise dalle impostazioni della build e valori runtime. |
 | [Tests/NXLibraryCoreTests/GameRuntimeConfigTests.swift](../../Tests/NXLibraryCoreTests/GameRuntimeConfigTests.swift) | Review di giochi nuovi ed esistenti, persistenza, lingua del rebuild e conversione DM_* con merge di env.txt. |
 | [Tests/NXLibraryCoreTests/GameTDBTests.swift](../../Tests/NXLibraryCoreTests/GameTDBTests.swift) | Database, normalizzazione dei nomi, regioni e matching delle copertine. |
 | [Tests/NXLibraryCoreTests/HoldDetectorTests.swift](../../Tests/NXLibraryCoreTests/HoldDetectorTests.swift) | Soglia temporale e distinzione fra pressione breve e prolungata. |

@@ -16,7 +16,6 @@ ALLOWED = {
     'App/AppDataProfile.swift',
     'App/DevelopmentProfileImporter.swift',
     'App/FirstRunFindings.swift',
-    'Details/GameOptionsPresentation.swift',
     'Mods/GameBanana/AvailableModsFinder.swift',
     'Mods/GameBanana/GameBananaBandModel.swift',
     'Mods/GameBanana/ModInstaller.swift',
