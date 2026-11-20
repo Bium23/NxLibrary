@@ -115,6 +115,34 @@ final class SettingsCatalogTests: XCTestCase {
         }
     }
 
+    /// The rows in screen order, as before the Porting rows moved to their module.
+    func testRowsKeepTheirScreenOrder() {
+        XCTAssertEqual(SettingsCatalog.all.map(\.id), [
+        "appLanguage", "appRegion", "startOn", "restoreLastGame", "startInFullscreen", "checkAppUpdatesAtLaunch",
+        "introAnimation", "showButtonHints", "buttonNames", "viewButtonSwitches", "spotlightCards", "startingTab",
+        "spotlightOrder", "interfaceSounds", "soundVolume", "quietLaunch", "importSeleneSounds", "colorThemeID",
+        "wallpaperID", "settingsWallpaperID", "backgroundSizing", "wallpaperBrightness", "animatedBackground",
+        "keepWallpaperOnGames", "backgroundShade", "readableText", "showClock", "reduceMotion", "iconAppearance",
+        "controllerStatus", "buttonLayout", "controllerDeadzone", "igdb", "steamGridDB", "steamSource",
+        "steamRefresh", "steamFolder", "steamInBackground", "launchStyle", "launchMotion", "launchShade",
+        "surprisePool", "showsSessionCard", "hiddenGames", "storageUsage", "logs", "metadataCache", "artworkCache",
+        "saveBackups", "checkEngineAtLaunch", "engineFolder", "engineStatus", "toolchainOverride", "upstream",
+        "newestEngine", "compare", "setup", "keys", "refreshLibraryAtLaunch", "boxCovers", "gameFolder",
+        "libraryFolder", "libraryRefresh", "notifyPortingEnds", "gameDefaults.fullscreen",
+        "gameDefaults.enable60FPS", "gameDefaults.isDockedMode", "gameDefaults.enableMetalFXUpscale",
+        "gameDefaults.enableMetalHUD", "gameDefaults.language", "gameDefaults.renderScale", "gameDefaults.rumble",
+        "gameDefaults.rumbleGain", "cloudSaves", "cloudSavesPickedFolder", "buildCaches", "diagnostics",
+        "appUpdates", "projectDocs", "console"
+        ])
+    }
+
+    func testBaseRowsHoldNoPortingGroup() throws {
+        let porting = try XCTUnwrap(SettingsSidebarGroup.all.first { $0.heading == "Settings group: Porting" }).sections
+        XCTAssertFalse(SettingsCatalog.baseRows.contains { porting.contains($0.group) })
+        XCTAssertEqual(SettingsCatalog.all.count,
+                       SettingsCatalog.baseRows.count + SettingsCatalog.all.filter { porting.contains($0.group) }.count)
+    }
+
     func testSwitchOnlyRowsLiveInTheSwitchSections() {
         let groups = Dictionary(uniqueKeysWithValues: SettingsCatalog.all.map { ($0.id, $0.group) })
         XCTAssertEqual(groups["checkEngineAtLaunch"], .engine)

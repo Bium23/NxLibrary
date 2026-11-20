@@ -16,7 +16,6 @@ ALLOWED = {
     'App/AppDataProfile.swift',
     'App/DevelopmentProfileImporter.swift',
     'App/FirstRunFindings.swift',
-    'Settings/SettingsCatalog.swift',
 }
 
 DECLARATION = re.compile(r'^(?:public |internal |final |indirect |fileprivate |private )*'

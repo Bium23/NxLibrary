@@ -19,31 +19,33 @@ public struct SettingDescriptor: Identifiable {
     }
 }
 
-/// Every Settings row (spec §5.7), in screen order.
+/// The Settings rows of the base, and the rules that order, compare and search any list of rows. The whole list,
+/// with the Porting rows, is `SettingsCatalog.all` (`SettingsCatalog+Porting.swift`).
 public enum SettingsCatalog {
-    private static let defaults = AppSettings()
+    static let defaults = AppSettings()
 
-    private static func row<Value: Equatable>(_ id: String, _ group: SettingsSection, _ title: String,
-                                              _ about: String,
-                                              _ value: @escaping (AppSettings) -> Value) -> SettingDescriptor {
+    static func row<Value: Equatable>(_ id: String, _ group: SettingsSection, _ title: String,
+                                      _ about: String,
+                                      _ value: @escaping (AppSettings) -> Value) -> SettingDescriptor {
         SettingDescriptor(id: id, group: group, title: title, about: about) { value($0) != value(defaults) }
     }
 
-    private static func action(_ id: String, _ group: SettingsSection, _ title: String,
-                               _ about: String) -> SettingDescriptor {
+    static func action(_ id: String, _ group: SettingsSection, _ title: String,
+                       _ about: String) -> SettingDescriptor {
         SettingDescriptor(id: id, group: group, title: title, about: about)
     }
 
-    /// In sidebar order (`SettingsSidebarGroup`), each section's rows as listed.
-    public static let all: [SettingDescriptor] = {
+    /// `rows` in sidebar order (`SettingsSidebarGroup`), each section's rows as listed.
+    public static func ordered(_ rows: [SettingDescriptor]) -> [SettingDescriptor] {
         let order = SettingsSidebarGroup.all.flatMap(\.sections)
-        return listed.enumerated().sorted {
+        return rows.enumerated().sorted {
             (order.firstIndex(of: $0.element.group) ?? order.count, $0.offset)
                 < (order.firstIndex(of: $1.element.group) ?? order.count, $1.offset)
         }.map(\.element)
-    }()
+    }
 
-    private static let listed: [SettingDescriptor] = [
+    /// The rows of every section outside the Porting group, in screen order.
+    public static let baseRows: [SettingDescriptor] = [
         // Start-up
         row("appLanguage", .startUp, "App language", "Menus, genres and available game descriptions. The games’ own language stays separate.") { $0.appLanguage },
         row("appRegion", .startUp, "Regional formats", "Dates, numbers and sizes only. Game descriptions follow the app language.") { $0.appRegion },
@@ -53,10 +55,6 @@ public enum SettingsCatalog {
             "Opens with the game you had selected last time.") { $0.restoreLastGame },
         row("startInFullscreen", .startUp, "Start in fullscreen",
             "Open Arcane in fullscreen. Applies at the next launch.") { $0.startInFullscreen },
-        row("checkEngineAtLaunch", .engine, "Check engine at launch",
-            "Checks the engine and toolchain each time Arcane starts.") { $0.checkEngineAtLaunch },
-        row("refreshLibraryAtLaunch", .library, "Refresh library at launch",
-            "Scans your library folders for new or removed games at start.") { $0.refreshLibraryAtLaunch },
         row("checkAppUpdatesAtLaunch", .startUp, "Check for app updates",
             "Looks for a newer Arcane release at launch, at most once a day.") { $0.checkAppUpdatesAtLaunch },
         row("introAnimation", .startUp, "Entrance animation",
@@ -112,12 +110,11 @@ public enum SettingsCatalog {
         row("reduceMotion", .look, "Reduce motion",
             "Replaces slides and zooms with fades.") { $0.reduceMotion },
         action("iconAppearance", .look, "App icon", "The icon appearance in the Dock."),
-        action("boxCovers", .library, "Box covers", "Open GameTDB for box covers."),
         // Optional connections shared by all library platforms.
         action("igdb", .apiServices, "IGDB", "Personal IGDB credentials for critic scores. Wikidata remains available without a key."),
         action("steamGridDB", .apiServices, "SteamGridDB", "Add your API key to find covers, backgrounds, logos and icons in Change artwork."),
 
-        // Games (Library) and New games (Porting)
+        // Games (Library)
         row("launchStyle", .libraryGames, "Launch screen style",
             "What shows while a game starts: art and logo, art only, logo on black, or minimal.") { $0.launchStyle },
         row("launchMotion", .libraryGames, "Launch screen motion",
@@ -126,28 +123,10 @@ public enum SettingsCatalog {
             "How much the launch art is darkened.") { $0.launchShade },
         row("surprisePool", .libraryGames, "Surprise me pool",
             "Which games Surprise me picks from.") { $0.surprisePool },
-        row("cloudSaves", .cloudSaves, "Cloud saves",
-            "One sync choice for all games, applied at next launch: Off, iCloud Drive or a folder you choose. Only the primary user and device save sync.") { $0.cloudSaves },
-        row("cloudSavesPickedFolder", .cloudSaves, "Cloud saves folder",
-            "The chosen folder for save sync; choosing a folder enables it.") { $0.cloudSavesPickedFolder },
         row("showsSessionCard", .libraryGames, "Session card",
             "When you close a game, a card shows how long you played this time and in total.") { $0.showsSessionCard },
         action("hiddenGames", .libraryGames, "Hidden games",
                "Games you hid from Game options; Show puts one back in your lists."),
-        row("gameDefaults.fullscreen", .games, "Fullscreen",
-            "New games: start in fullscreen or a window.") { $0.gameDefaults.fullscreen },
-        row("gameDefaults.enable60FPS", .games, "60 FPS",
-            "New games: frame-rate target of 30 or 60 FPS.") { $0.gameDefaults.enable60FPS },
-        row("gameDefaults.isDockedMode", .games, "Docked mode",
-            "New games: console profile or handheld mode.") { $0.gameDefaults.isDockedMode },
-        row("gameDefaults.enableMetalFXUpscale", .games, "MetalFX upscaling",
-            "New games: MetalFX enlarges the finished picture to your screen.") { $0.gameDefaults.enableMetalFXUpscale },
-        row("gameDefaults.enableMetalHUD", .games, "Metal HUD",
-            "New games: Metal performance overlay.") { $0.gameDefaults.enableMetalHUD },
-        row("gameDefaults.language", .games, "Game language",
-            "New games: starting language; Game Default uses the build's language.") { $0.gameDefaults.language },
-        row("gameDefaults.renderScale", .games, "Render scale",
-            "New games: internal 3D resolution, from 50% to 100% when supported.") { $0.gameDefaults.renderScale },
 
         // Controllers
         action("controllerStatus", .controllers, "Gamepad",
@@ -155,17 +134,7 @@ public enum SettingsCatalog {
         action("buttonLayout", .controllers, "Button layout", "View the library controls."),
         action("controllerDeadzone", .controllers, "Stick navigation deadzone",
                "Thumbstick threshold for library navigation; does not alter game input."),
-        row("gameDefaults.rumble", .games, "Rumble",
-            "New games: default controller vibration for new ported games.") { $0.gameDefaults.rumble },
-        row("gameDefaults.rumbleGain", .games, "Rumble strength",
-            "New games: default vibration strength for new ported games.") { $0.gameDefaults.rumbleGain },
 
-        // Library
-        action("gameFolder", .library, GameFoldersCopy.sourcesTitle, "Game sources: NSP, XCI, NSZ and XCZ files, or Switch 2 NUP files and extracted folders, for builds. Optional for existing apps."),
-        action("libraryFolder", .library, GameFoldersCopy.appsTitle, "Choose where to find existing nxnative game apps and install new builds."),
-        action("libraryRefresh", .library, "Scan game apps", "Find existing nxnative builds and refresh the library."),
-        row("notifyPortingEnds", .library, "Notify when a porting ends",
-            "A notification when a porting finishes while Arcane is in the background.") { $0.notifyPortingEnds },
         // Steam
         action("steamSource", .sources, "Steam", "Find installed native Mac games in your Steam libraries."),
         action("steamRefresh", .sources, "Refresh Steam", "Check enabled Steam libraries without changing your game files."),
@@ -175,37 +144,29 @@ public enum SettingsCatalog {
 
         // Storage
         action("storageUsage", .storage, "Storage usage", "See per-game app, cache and log sizes and free disk space."),
-        action("buildCaches", .portingStorage, "Build caches", "Delete a game's build cache or clear all caches after confirmation; rebuilds may take longer."),
         action("logs", .storage, "Logs", "Delete build and launch logs after confirmation."),
         action("metadataCache", .storage, "Metadata cache", "Clear cached store descriptions and links."),
         action("artworkCache", .storage, "Artwork cache", "Clear downloaded images; manual picks are kept."),
         action("saveBackups", .storage, "Save backups", "Open the folder of verified per-game backups."),
         action("console", .console, "Console", "View, search and copy logs."),
 
-        // Engine
-        action("engineFolder", .engine, "Engine repository", "The upstream checkout used for porting; updates stay manual."),
-        action("engineStatus", .engine, "Compatibility", "Engine commit, Metal compiler, build environment, toolchain gate and required flags."),
-        action("toolchainOverride", .engine, "Untested toolchain override", "Explicitly allow unverified new portings."),
-        action("upstream", .engine, "Upstream", "Check newer engine commits without installing them."),
-        action("newestEngine", .engine, "Newest engine", "Build with nxnative main before Arcane has tested it, or go back to the tested engine."),
-        action("compare", .engine, "Compare", "Open the commit comparison on GitHub."),
-        action("keys", .keys, "prod.keys", "Import, replace or detect private keys."),
-        action("setup", .engine, "Setup", "Open the setup checklist."),
+        // About
         action("diagnostics", .about, "Copy diagnostics", "Copy a scrubbed support report."),
         action("appUpdates", .about, "App updates", "Check now, update or read release notes."),
         action("projectDocs", .about, "Open project docs", "Open the project documentation."),
     ]
 
-    public static func changed(in settings: AppSettings, externalChanges: Set<String> = []) -> [SettingDescriptor] {
-        all.filter { $0.isChanged(settings) || externalChanges.contains($0.id) }
+    public static func changed(in settings: AppSettings, externalChanges: Set<String> = [],
+                               rows: [SettingDescriptor]) -> [SettingDescriptor] {
+        rows.filter { $0.isChanged(settings) || externalChanges.contains($0.id) }
     }
 
     /// Case- and diacritic-insensitive match over title and about.
-    public static func search(_ query: String) -> [SettingDescriptor] {
+    public static func search(_ query: String, in rows: [SettingDescriptor]) -> [SettingDescriptor] {
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !needle.isEmpty else { return [] }
         let options: String.CompareOptions = [.caseInsensitive, .diacriticInsensitive]
-        return all.filter {
+        return rows.filter {
             $0.title.range(of: needle, options: options) != nil
                 || L10n.text($0.title).range(of: needle, options: options) != nil
                 || L10n.text($0.about).range(of: needle, options: options) != nil
