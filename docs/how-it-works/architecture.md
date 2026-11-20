@@ -577,7 +577,7 @@ Il percorso completo è in [flows.md](flows.md#6-importare-o-ripristinare-un-sal
 
 **Fonti dell'artwork.**
 - `NintendoStoreMetadataService`, `GameTDBStore`, Title DB e le sorgenti di artwork raccolgono descrizioni, date, generi, copertine, loghi, sfondi e screenshot.
-- `ArtworkNames` confronta i nomi per limitare i candidati al gioco o alle sue edizioni. `ArtworkPicker` e `MetadataOptions` aggregano i risultati per i selettori; `ArtworkPicks` e `MetadataPicks` conservano le scelte manuali.
+- `ArtworkNames` confronta i nomi per limitare i candidati al gioco o alle sue edizioni. `ArtworkPicker` e `MetadataOptions` aggregano i risultati per i selettori; `ArtworkPicks` e `MetadataPicks` conservano le scelte manuali. Le proposte di un gioco Switch (`ArtworkCandidates.list(for:entries:…)`, `MetadataOptions`, `MetadataPicks.applied`) stanno in `Porting/Store/`; `GameTitleKey` confronta i nomi per le ricerche online e per GameTDB.
 - `ArtworkStore` tiene la cache delle immagini. `BoxArtService` risolve le copertine Switch di GameTDB. `GameArtLoader` e `SeleneHeroArt` alimentano sfondo e logo delle schermate.
 
 **Change artwork.**

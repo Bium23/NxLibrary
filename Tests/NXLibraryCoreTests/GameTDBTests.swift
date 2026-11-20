@@ -55,6 +55,11 @@ final class GameTDBTests: XCTestCase {
         XCTAssertEqual(GameTDB.normalize("Pokémon™ Sword & Shield"), "pokémon sword and shield")
     }
 
+    func testTitleKeyDropsMarksAndPunctuation() {
+        XCTAssertEqual(GameTitleKey.normalize("The Legend of Zelda™: Breath of the Wild"), "the legend of zelda breath of the wild")
+        XCTAssertEqual(GameTitleKey.normalize("Pokémon™ Sword & Shield"), "pokémon sword and shield")
+    }
+
     func testExactMatchPrefersWideRegions() throws {
         let all = try entries()
         XCTAssertEqual(GameTDB.exactMatch(for: "The Legend of Zelda™: Breath of the Wild", in: all)?.id, "AAAAA")

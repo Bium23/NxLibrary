@@ -51,13 +51,7 @@ public enum GameTDB {
     }
 
     /// Lowercased, without ™ ® © and punctuation, "&" read as "and", single spaces.
-    public static func normalize(_ name: String) -> String {
-        var text = name.lowercased()
-        for mark in ["™", "®", "©"] { text = text.replacingOccurrences(of: mark, with: "") }
-        text = text.replacingOccurrences(of: "&", with: " and ")
-        let words = text.split { !($0.isLetter || $0.isNumber) }
-        return words.joined(separator: " ")
-    }
+    public static func normalize(_ name: String) -> String { GameTitleKey.normalize(name) }
 
     /// The one entry whose normalised title equals `name`'s; the widest region wins a tie.
     public static func exactMatch(for name: String, in entries: [GameTDBEntry]) -> GameTDBEntry? {

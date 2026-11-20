@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 20 novembre 2026. Copertura di **777 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 20 novembre 2026. Copertura di **782 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](../how-it-works/architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le cartelle del Core, una per area, con lo Switch in `Porting/`; quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -273,8 +273,9 @@ Cartella `Sources/NXLibraryCore/Artwork/`.
 |---|---|
 | [Sources/NXLibraryCore/Artwork/AutomaticIconResolver.swift](../../Sources/NXLibraryCore/Artwork/AutomaticIconResolver.swift) | Risolve icone automatiche con cache, abbinamento prudente e rispetto delle restrizioni del provider. |
 | [Sources/NXLibraryCore/Artwork/ArtworkStore.swift](../../Sources/NXLibraryCore/Artwork/ArtworkStore.swift) | Scarica, ridimensiona e conserva immagini e screenshot nella cache per titolo e tipo. |
-| [Sources/NXLibraryCore/Artwork/ArtworkPicker.swift](../../Sources/NXLibraryCore/Artwork/ArtworkPicker.swift) | Aggrega candidati per cover, sfondo, icona e logo e conserva le scelte manuali. |
-| [Sources/NXLibraryCore/Artwork/MetadataPicker.swift](../../Sources/NXLibraryCore/Artwork/MetadataPicker.swift) | Aggrega valori alternativi dei metadati e conserva gli override dell’utente per campo. |
+| [Sources/NXLibraryCore/Artwork/ArtworkPicker.swift](../../Sources/NXLibraryCore/Artwork/ArtworkPicker.swift) | Aggrega candidati per cover, sfondo, icona e logo (quelli Steam qui, quelli Switch in `Porting/Store/ArtworkCandidates+Porting.swift`) e conserva le scelte manuali. |
+| [Sources/NXLibraryCore/Artwork/MetadataPicker.swift](../../Sources/NXLibraryCore/Artwork/MetadataPicker.swift) | Campi e valori alternativi dei metadati; conserva gli override dell’utente per campo (`MetadataPicks`). |
+| [Sources/NXLibraryCore/Artwork/GameTitleKey.swift](../../Sources/NXLibraryCore/Artwork/GameTitleKey.swift) | Un titolo come parole da confrontare (minuscole, senza ™ ® © né punteggiatura, "&" come "and"), per le ricerche di artwork online e GameTDB. |
 | [Sources/NXLibraryCore/Artwork/OnlineArtworkSources.swift](../../Sources/NXLibraryCore/Artwork/OnlineArtworkSources.swift) | Ricava artwork Steam e loghi da MediaWiki e Wikimedia Commons. |
 | [Sources/NXLibraryCore/Artwork/MoreArtworkSources.swift](../../Sources/NXLibraryCore/Artwork/MoreArtworkSources.swift) | Aggiunge matching dei nomi e sorgenti Xbox, GOG, Nintendo Europe, wiki e altri cataloghi. |
 | [Sources/NXLibraryCore/Artwork/ArtworkBrowse.swift](../../Sources/NXLibraryCore/Artwork/ArtworkBrowse.swift) | Sorgenti sfogliabili da Change artwork (LaunchBox, SteamGridDB): nomi cercati e risultati per tutti gli slot. |
@@ -529,6 +530,10 @@ Cartella `Sources/NXLibraryCore/Porting/Store/`.
 |---|---|
 | [Sources/NXLibraryCore/Porting/Store/BoxArtService.swift](../../Sources/NXLibraryCore/Porting/Store/BoxArtService.swift) | Trova copertine Switch in GameTDB e ricorda copertine e ricerche senza risultato. |
 | [Sources/NXLibraryCore/Porting/Store/GameTDB.swift](../../Sources/NXLibraryCore/Porting/Store/GameTDB.swift) | Decodifica il database GameTDB, abbina nomi e regioni e conserva l’indice locale. |
+| [Sources/NXLibraryCore/Porting/Store/ArtworkCandidates+Porting.swift](../../Sources/NXLibraryCore/Porting/Store/ArtworkCandidates+Porting.swift) | Le immagini del picker per un gioco Switch: GameTDB per regione, Title DB, store Nintendo, poi quelle trovate online. |
+| [Sources/NXLibraryCore/Porting/Store/MetadataOptions.swift](../../Sources/NXLibraryCore/Porting/Store/MetadataOptions.swift) | I valori di Change metadata per un gioco Switch: store Nintendo, Title DB e GameTDB, senza ripetizioni. |
+| [Sources/NXLibraryCore/Porting/Store/MetadataPicks+Porting.swift](../../Sources/NXLibraryCore/Porting/Store/MetadataPicks+Porting.swift) | Le scelte del giocatore applicate ai metadati dello store Nintendo. |
+| [Sources/NXLibraryCore/Porting/Store/CriticRatingQuery+Porting.swift](../../Sources/NXLibraryCore/Porting/Store/CriticRatingQuery+Porting.swift) | La ricerca dei voti per un gioco portato, con la console di Details (Switch o Switch 2). |
 | [Sources/NXLibraryCore/Porting/Store/NintendoStoreMetadata.swift](../../Sources/NXLibraryCore/Porting/Store/NintendoStoreMetadata.swift) | Consulta i cataloghi pubblici dello store e Title DB e conserva descrizioni, immagini e screenshot per lingua; finché la nuova lingua arriva, la pagina mostra l'ultima descrizione letta in un'altra. |
 | [Sources/NXLibraryCore/Porting/Store/ScreenshotFallback.swift](../../Sources/NXLibraryCore/Porting/Store/ScreenshotFallback.swift) | Conserva per 30 giorni gli screenshot LaunchBox dei giochi senza screenshot Title DB e li sovrappone ai metadati. |
 

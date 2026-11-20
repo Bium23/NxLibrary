@@ -28,11 +28,6 @@ public struct CriticRatingQuery: Hashable, Codable, Sendable {
         self.platform = platform
         self.steamAppID = steamAppID
     }
-
-    /// Use the same console identity as the game's Details, including Switch 2 titles.
-    public init(game: PortedGame, name: String? = nil) {
-        self.init(name: name ?? game.name, platform: game.isSwitch2 ? .switch2 : .switch)
-    }
 }
 
 /// One attributed average; community scores are explicit fallbacks, never mixed with critics.

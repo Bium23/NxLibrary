@@ -20,7 +20,7 @@ public enum ArtworkNames {
     }
 
     private static func words(_ name: String) -> [String] {
-        var list = GameTDB.normalize(name).split(separator: " ").map(String.init)
+        var list = GameTitleKey.normalize(name).split(separator: " ").map(String.init)
         for tail in platformTails where list.count > tail.count && list.suffix(tail.count).elementsEqual(tail) {
             list.removeLast(tail.count)
             break

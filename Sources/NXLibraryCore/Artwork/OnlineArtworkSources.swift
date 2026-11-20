@@ -30,7 +30,7 @@ public enum SteamStoreArt {
     public static func findAppID(names: [String], client: ArtworkHTTPClient = URLSessionArtworkClient()) async -> Int? {
         var searched: Set<String> = []
         for name in names {
-            let key = GameTDB.normalize(name)
+            let key = GameTitleKey.normalize(name)
             guard !key.isEmpty, searched.insert(key).inserted, let url = searchURL(for: name) else { continue }
             guard let data = await OnlineArtworkRequest.data(url, client: client) else { continue }
             if let id = appID(in: data, matching: names) { return id }
@@ -124,7 +124,7 @@ public struct MediaWikiLogos: Sendable {
             var query: Query?
         }
         guard let pages = (try? JSONDecoder().decode(Wire.self, from: data))?.query?.pages else { return [] }
-        let keys = gameNames.map(GameTDB.normalize).filter { !$0.isEmpty }
+        let keys = gameNames.map(GameTitleKey.normalize).filter { !$0.isEmpty }
         var urls: [URL] = []
         for page in pages.sorted(by: { ($0.index ?? 0) < ($1.index ?? 0) }) {
             guard let info = page.imageinfo?.first, ["image/png", "image/svg+xml"].contains(info.mime),
@@ -155,7 +155,7 @@ public struct MediaWikiLogos: Sendable {
     private static func isLogo(title: String, keys: [String]) -> Bool {
         var name = title.hasPrefix("File:") ? String(title.dropFirst(5)) : title
         if let dot = name.lastIndex(of: ".") { name = String(name[..<dot]) }
-        let words = GameTDB.normalize(name).split(separator: " ").map(String.init)
+        let words = GameTitleKey.normalize(name).split(separator: " ").map(String.init)
         return keys.contains { key in
             let game = key.split(separator: " ").map(String.init)
             guard words.starts(with: game) else { return false }
