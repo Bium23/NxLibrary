@@ -1,29 +1,6 @@
 import Foundation
 import Darwin
 
-public enum SaveFailure: LocalizedError, Equatable {
-    case invalidTitleID, unsafePath, customSavePath, unreadableConfiguration
-    case cloudEnabled(String), running, busy, changed, emptyImport, invalidSnapshot, recoveryRequired, cloudPullPending
-    case io(String)
-    public var errorDescription: String? {
-        switch self {
-        case .invalidTitleID: return L10n.text("This game needs a valid title ID to manage saves.")
-        case .unsafePath: return L10n.text("This save location contains a link or an unsafe path. Manage it in Finder.")
-        case .customSavePath: return L10n.text("This game uses a custom save location. Manage it outside this panel.")
-        case .unreadableConfiguration: return L10n.text("The game's save configuration could not be read.")
-        case .cloudEnabled(let origin): return L10n.format("Cloud saves are enabled in %@. Turn them off there before importing or restoring.", [String(describing: origin)])
-        case .running: return L10n.text("Close the game before managing its saves. Keep it closed until this operation finishes.")
-        case .busy: return L10n.text("A save operation or app installation is in progress for this game.")
-        case .changed: return L10n.text("The files changed since the preview. Choose the folder again.")
-        case .emptyImport: return L10n.text("Choose a folder containing this game's actual save files.")
-        case .invalidSnapshot: return L10n.text("This backup is incomplete, changed, or belongs to another game.")
-        case .recoveryRequired: return L10n.text("Save recovery is required before Play. Your backup has been kept.")
-        case .cloudPullPending: return L10n.text("A cloud save download did not finish. Play the game once so it can put this Mac's save back, then try again.")
-        case .io(let message): return message
-        }
-    }
-}
-
 public enum SaveSlot: String, Codable, CaseIterable, Hashable {
     case account, device, user2, user3, user4, user5, user6, user7, user8, users
 
@@ -103,29 +80,5 @@ public struct SaveLocation: Equatable {
         guard Self.validID(titleID), root.lastPathComponent == titleID else { throw SaveFailure.unsafePath }
         try SaveFiles.safePath(root)
         for slot in SaveSlot.allCases { try SaveFiles.safePath(directory(slot)) }
-    }
-}
-
-/// Filesystem checks shared by saves; lstat never follows a substituted link.
-internal enum SaveFiles {
-    static func exists(_ url: URL) -> Bool {
-        var s = stat(); return lstat(url.path, &s) == 0
-    }
-    static func safePath(_ url: URL) throws {
-        // Foundation canonicalizes /private/var back to /var. Permit only Apple's
-        // system aliases; links anywhere in the user-controlled tree remain refused.
-        var path = url.path
-        if path == "/var" || path.hasPrefix("/var/") || path == "/tmp" || path.hasPrefix("/tmp/") { path = "/private" + path }
-        let standardized = URL(fileURLWithPath: path)
-        guard !standardized.pathComponents.contains("..") else { throw SaveFailure.unsafePath }
-        var current = URL(fileURLWithPath: "/")
-        for component in standardized.pathComponents.dropFirst() {
-            current.appendPathComponent(component)
-            var s = stat()
-            if lstat(current.path, &s) == 0 {
-                guard (s.st_mode & S_IFMT) == S_IFDIR || (s.st_mode & S_IFMT) == S_IFREG else { throw SaveFailure.unsafePath }
-                if current.path != standardized.path && (s.st_mode & S_IFMT) != S_IFDIR { throw SaveFailure.unsafePath }
-            } else if errno != ENOENT { throw SaveFailure.io("Could not inspect the save location.") }
-        }
     }
 }

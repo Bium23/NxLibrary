@@ -1,9 +1,5 @@
 import Foundation
 
-public enum MoveDirection {
-    case left, right, up, down
-}
-
 /// The Setup check's card grid (Selene's SetupScreen): rows as even as possible,
 /// each centred, so a short last row sits in the middle.
 public enum SetupGrid {
