@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 20 novembre 2026. Copertura di **770 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 20 novembre 2026. Copertura di **771 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](../how-it-works/architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le cartelle del Core, una per area, con lo Switch in `Porting/`; quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -190,11 +190,10 @@ Cartella `Sources/NXLibraryCore/Catalog/`.
 | [Sources/NXLibraryCore/Catalog/CatalogGamePresentation.swift](../../Sources/NXLibraryCore/Catalog/CatalogGamePresentation.swift) | Contratto comune per presentazione, operazioni supportate e target di avvio; nessuna operazione I/O. |
 | [Sources/NXLibraryCore/Catalog/CatalogStore.swift](../../Sources/NXLibraryCore/Catalog/CatalogStore.swift) | Conversione conservativa, letture limitate, revisioni attese, lock e archiviazione esplicita del conflitto legacy senza fusione. |
 | [Sources/NXLibraryCore/Catalog/CatalogPublication.swift](../../Sources/NXLibraryCore/Catalog/CatalogPublication.swift) | Staging verificato, creazione esclusiva e sostituzione atomica, con confine di errore controllabile. |
-| [Sources/NXLibraryCore/Catalog/CatalogRepository.swift](../../Sources/NXLibraryCore/Catalog/CatalogRepository.swift) | Modifiche tipizzate sull'ultimo catalogo, senza replay di effetti esterni; risultati build limitati ai propri campi. |
+| [Sources/NXLibraryCore/Catalog/CatalogRepository.swift](../../Sources/NXLibraryCore/Catalog/CatalogRepository.swift) | Modifiche tipizzate sull'ultimo catalogo, senza replay di effetti esterni: fonti, preferiti, nascosti, Steam; le modifiche nxnative sono in `Porting/Catalog/`. |
 | [Sources/NXLibraryCore/Catalog/CatalogRecovery.swift](../../Sources/NXLibraryCore/Catalog/CatalogRecovery.swift) | Offerte di recupero e conflitto legacy con impronte degli input, rivalidate all’accettazione. |
 | [Sources/NXLibraryCore/Catalog/CatalogPersonalizations.swift](../../Sources/NXLibraryCore/Catalog/CatalogPersonalizations.swift) | Lookup personali immutabili per identità. |
 | [Sources/NXLibraryCore/Catalog/CatalogErrorCopy.swift](../../Sources/NXLibraryCore/Catalog/CatalogErrorCopy.swift) | Errori recuperabili del catalogo nelle sei lingue. |
-| [Sources/NXLibraryCore/Catalog/CatalogBuildRecoveries.swift](../../Sources/NXLibraryCore/Catalog/CatalogBuildRecoveries.swift) | Generazioni di build non ancora salvate, selezione del retry e conferma della sola generazione persistita. |
 | [Sources/NXLibraryCore/Catalog/CatalogGameOptions.swift](../../Sources/NXLibraryCore/Catalog/CatalogGameOptions.swift) | Ordine unico delle operazioni comuni della libreria; ciò che una fonte può fare dipende dal suo record (nessuna modifica nxnative su un gioco Steam). |
 | [Sources/NXLibraryCore/Catalog/CatalogSourcesModel.swift](../../Sources/NXLibraryCore/Catalog/CatalogSourcesModel.swift) | Opt-in, worker annullabile e stato Steam; discoveryRoot conserva la cartella scelta anche con fonte spenta; pubblica solo documenti salvati dal repository. |
 | [Sources/NXLibraryCore/Catalog/CatalogLibraryProjection.swift](../../Sources/NXLibraryCore/Catalog/CatalogLibraryProjection.swift) | Visibilità comune per fonti attive e giochi riconosciuti; nessuna scansione. |
@@ -408,6 +407,8 @@ Cartella `Sources/NXLibraryCore/Porting/Catalog/`.
 | [Sources/NXLibraryCore/Porting/Catalog/PortedGame+Catalog.swift](../../Sources/NXLibraryCore/Porting/Catalog/PortedGame+Catalog.swift) | `PortedGame` nel contratto del catalogo (validazione, presenza, avvio, ricerca), integrazione `.nxnative`, tipi noti dell’app (`CatalogRecordKinds.standard`) ed entrate `nxnativeGame`, `init(nxnative:)`, `updateNXNative`. |
 | [Sources/NXLibraryCore/Porting/Catalog/CatalogPersonalizations+Porting.swift](../../Sources/NXLibraryCore/Porting/Catalog/CatalogPersonalizations+Porting.swift) | Chiave personale nxnative (title ID o chiave storica) e radice dei dati personali: nxnative alla radice, ogni altra integrazione in `integrations/<nome>`. |
 | [Sources/NXLibraryCore/Porting/Catalog/CatalogStore+Porting.swift](../../Sources/NXLibraryCore/Porting/Catalog/CatalogStore+Porting.swift) | Lo store dell’app con tutti i tipi noti: `CatalogStore(directory:)` e `CatalogStore.decode(_:)`. |
+| [Sources/NXLibraryCore/Porting/Catalog/CatalogRepository+Porting.swift](../../Sources/NXLibraryCore/Porting/Catalog/CatalogRepository+Porting.swift) | Modifiche nxnative del catalogo: un gioco portato, tutti, la fusione di una scansione della libreria e l’esito di una build; proiezione `nxnativeGames`. |
+| [Sources/NXLibraryCore/Porting/Catalog/CatalogBuildRecoveries.swift](../../Sources/NXLibraryCore/Porting/Catalog/CatalogBuildRecoveries.swift) | Generazioni di build non ancora salvate, selezione del retry e conferma della sola generazione persistita. |
 
 ## Core · Porting: Setup, motore e chiavi
 
