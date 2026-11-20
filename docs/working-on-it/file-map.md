@@ -1,6 +1,6 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 20 novembre 2026. Copertura di **757 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 20 novembre 2026. Copertura di **762 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
 La [guida tecnica](../how-it-works/architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le cartelle del Core, una per area, con lo Switch in `Porting/`; quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
@@ -580,7 +580,12 @@ Cartella `Sources/NXLibraryCore/Porting/Mods/`.
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibrary/Views/GameOptions/GameOptionsView.swift](../../Sources/NXLibrary/Views/GameOptions/GameOptionsView.swift) | Presenta opzioni del gioco, Edit details, impostazioni runtime e conferme delle azioni; `GameOptionsFiles` legge i file una volta per apertura. |
+| [Sources/NXLibrary/Views/GameOptions/GameOptionsView.swift](../../Sources/NXLibrary/Views/GameOptions/GameOptionsView.swift) | Presenta opzioni del gioco, Edit details, impostazioni runtime e conferme delle azioni; `GameOptionsFiles` legge i file una volta per apertura. Il file tiene stato, modello, `body`, `GameOptionsFiles` e la contabilità dello scorrimento; il resto sta nelle estensioni qui sotto. |
+| [Sources/NXLibrary/Views/GameOptions/GameOptionsView+Rows.swift](../../Sources/NXLibrary/Views/GameOptions/GameOptionsView+Rows.swift) | Colonna e righe: voci, suggerimenti, riga informativa, valori per l’accessibilità e valore a destra di ogni riga. |
+| [Sources/NXLibrary/Views/GameOptions/GameOptionsView+Confirmation.swift](../../Sources/NXLibrary/Views/GameOptions/GameOptionsView+Confirmation.swift) | Conferma: overlay, testi, richiesta, annullamento ed esecuzione dell’azione confermata. |
+| [Sources/NXLibrary/Views/GameOptions/GameOptionsView+Focus.swift](../../Sources/NXLibrary/Views/GameOptions/GameOptionsView+Focus.swift) | Focus: impostazione, spostamento, ingresso e uscita da Edit details. |
+| [Sources/NXLibrary/Views/GameOptions/GameOptionsView+Input.swift](../../Sources/NXLibrary/Views/GameOptions/GameOptionsView+Input.swift) | Input: monitor dei tasti, rotella, controller, navigazione, indietro e attivazione di una riga. |
+| [Sources/NXLibrary/Views/GameOptions/GameOptionsView+Actions.swift](../../Sources/NXLibrary/Views/GameOptions/GameOptionsView+Actions.swift) | Azioni: cambio di un’impostazione o della lingua, azione di ogni riga e Rebuild. |
 | [Sources/NXLibrary/Views/GameOptions/ChangeArtworkView.swift](../../Sources/NXLibrary/Views/GameOptions/ChangeArtworkView.swift) | Seleziona artwork per titolo da rete o file e indica dove viene usato, con stato ad altezza stabile. Il file tiene stato, geometria, `body`, schede, ricerca, stato e griglia; il resto sta nelle estensioni qui sotto. |
 | [Sources/NXLibrary/Views/GameOptions/ChangeArtworkView+Tiles.swift](../../Sources/NXLibrary/Views/GameOptions/ChangeArtworkView+Tiles.swift) | Tile della griglia: anteprima, didascalia e segno dell’artwork in uso. |
 | [Sources/NXLibrary/Views/GameOptions/ChangeArtworkView+Loading.swift](../../Sources/NXLibrary/Views/GameOptions/ChangeArtworkView+Loading.swift) | Caricamento: candidati e anteprime della scheda, risultati di una fonte, scelta del giocatore e icona automatica. |
