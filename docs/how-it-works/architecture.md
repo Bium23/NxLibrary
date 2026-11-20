@@ -47,7 +47,7 @@ Il [README](../../README.md) è la guida d'uso; la [guida di sviluppo](../workin
 | `NXLibraryCore` | Modelli, persistenza, parsing, gestione file, contratti del motore, processi e logica delle funzionalità. |
 | `NXLibraryCoreTests` | Test XCTest del Core, con dati sintetici e dipendenze sostituibili. |
 
-Il Core ha una cartella per area: `App`, `Catalog`, `Library`, `Selene`, `Details`, `Artwork`, `Achievements`, `Saves`, `Mods`, `Settings`, `Steam`. Tutto ciò che è Switch (Setup, build, avvio, impostazioni del gioco, cheat, store Nintendo, formato di salvataggi e mod, la parte nxnative del catalogo e della libreria, lo spazio delle app portate) sta in `Porting/`, con una sottocartella per parte. *Perché:* il confine fra la base e il modulo Porting si vede dal percorso; i file della base che usano ancora tipi di `Porting/` sono i legami che il contratto della fonte dovrà tagliare.
+Il Core ha una cartella per area: `App`, `Catalog`, `Library`, `Selene`, `Details`, `Artwork`, `Achievements`, `Mods`, `Settings`, `Steam`. Tutto ciò che è Switch (Setup, build, avvio, impostazioni del gioco, cheat, store Nintendo, salvataggi e i loro backup, mod RomFS e GameBanana, la parte nxnative del catalogo e della libreria, lo spazio delle app portate) sta in `Porting/`, con una sottocartella per parte. *Perché:* il confine fra la base e il modulo Porting si vede dal percorso; i file della base che usano ancora tipi di `Porting/` sono i legami che il contratto della fonte dovrà tagliare.
 
 `NXLibrary` dipende da `NXLibraryCore`. Il Core usa anche framework macOS, fra cui Combine, AppKit, ImageIO, CommonCrypto e IOKit. Il package non dichiara dipendenze SwiftPM esterne.
 
@@ -506,7 +506,7 @@ I percorsi completi sono in [flows.md](flows.md#3-play-di-un-gioco-switch-nxnati
 
 ## Salvataggi, backup e recupero
 
-Il percorso completo è in [flows.md](flows.md#6-importare-o-ripristinare-un-salvataggio).
+Il percorso completo è in [flows.md](flows.md#6-importare-o-ripristinare-un-salvataggio). Tutto il motore sta in `Porting/Saves/`. *Perché:* backup, ripristino e import hanno la forma dei salvataggi nxnative (componenti `account`, `device`, `user2`…`user8`, registro `save.users`, journal del pull cloud, Title ID); un motore comune si estrae quando un'altra fonte ha salvataggi.
 
 **Riconoscimento e anteprima.**
 - Il flusso usa il title ID e conserva i percorsi interni del salvataggio per ogni gioco. `SaveLocation` ammette l'ID esadecimale di 16 caratteri, risolve il percorso predefinito e legge la configurazione cloud effettiva. `AppViewModel+Saves` verifica anche l'identità nel bundle installato e le preferenze del gioco.

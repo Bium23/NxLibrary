@@ -20,7 +20,6 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 - [Core · pagina del gioco](#core--pagina-del-gioco)
 - [Core · artwork e metadati](#core--artwork-e-metadati)
 - [Core · achievement](#core--achievement)
-- [Core · salvataggi](#core--salvataggi)
 - [Core · mod](#core--mod)
 - [Core · impostazioni, lingua e testi](#core--impostazioni-lingua-e-testi)
 - [Core · Steam](#core--steam)
@@ -34,7 +33,7 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 - [Core · Porting: impostazioni del gioco](#core--porting-impostazioni-del-gioco)
 - [Core · Porting: cheat](#core--porting-cheat)
 - [Core · Porting: store Nintendo e copertine](#core--porting-store-nintendo-e-copertine)
-- [Core · Porting: salvataggi e cloud](#core--porting-salvataggi-e-cloud)
+- [Core · Porting: salvataggi, backup e cloud](#core--porting-salvataggi-backup-e-cloud)
 - [Core · Porting: mod RomFS e GameBanana](#core--porting-mod-romfs-e-gamebanana)
 - [UI · Add Game e porting](#ui--add-game-e-porting)
 - [UI · Spotlight](#ui--spotlight)
@@ -308,22 +307,6 @@ Cartella `Sources/NXLibraryCore/Achievements/`.
 | [Sources/NXLibraryCore/Achievements/AchievementTier.swift](../../Sources/NXLibraryCore/Achievements/AchievementTier.swift) | Tier a cristallo come i trofei PS5: Arcano (viola, al posto del Platino) per il gioco completato, Oro / Argento / Bronzo per rarità Steam (<10%, <30%, il resto); nomi tradotti e PNG nelle risorse del Core; `videoURL` dà il video in loop dell'Arcane (`crystal-arcane.mov`, HEVC con alpha a 384 px). |
 | [Sources/NXLibraryCore/Achievements/AchievementsScreenState.swift](../../Sources/NXLibraryCore/Achievements/AchievementsScreenState.swift) | Filtro e selezione della schermata Achievements: due colonne, bordi fermi, LB/RB che girano i filtri. |
 
-## Core · salvataggi
-
-Cartella `Sources/NXLibraryCore/Saves/`.
-
-| File | Responsabilità |
-|---|---|
-| [Sources/NXLibraryCore/Saves/SaveSnapshot.swift](../../Sources/NXLibraryCore/Saves/SaveSnapshot.swift) | Identità, inventario, manifest schema 1/2 e anteprime; rifiuta dichiarazioni storiche con componenti nuovi. |
-| [Sources/NXLibraryCore/Saves/SavePresentation.swift](../../Sources/NXLibraryCore/Saves/SavePresentation.swift) | Riepiloghi e ambito dei restore storici/multiutente, nomi dei componenti e limite cloud a primario/device. |
-| [Sources/NXLibraryCore/Saves/SaveFileIO.swift](../../Sources/NXLibraryCore/Saves/SaveFileIO.swift) | Copie, hash e xattr portabili; inventario di directory e registro regolare limitato, controlli dei percorsi e scritture durevoli. |
-| [Sources/NXLibraryCore/Saves/SaveSnapshotStore.swift](../../Sources/NXLibraryCore/Saves/SaveSnapshotStore.swift) | Backup completi degli utenti locali e registro, formati storici compatibili, staging e import User/Device. |
-| [Sources/NXLibraryCore/Saves/SaveRestorePreview.swift](../../Sources/NXLibraryCore/Saves/SaveRestorePreview.swift) | Staging e validazione dei pezzi registrati nel backup, compreso il file utenti, con rilevamento dei cambiamenti concorrenti. |
-| [Sources/NXLibraryCore/Saves/SaveTransaction.swift](../../Sources/NXLibraryCore/Saves/SaveTransaction.swift) | Sostituzioni con ambito esplicito, backup completo e journal 1/2; verifica originali, recovery e pulizia parziale riprendibili con intento durevole. |
-| [Sources/NXLibraryCore/Saves/SaveOperationGate.swift](../../Sources/NXLibraryCore/Saves/SaveOperationGate.swift) | Assegna lease per titolo e un’esclusione globale per l’updater; coordina salvataggi, Play, installazioni e recuperi. |
-| [Sources/NXLibraryCore/Saves/SaveFailure.swift](../../Sources/NXLibraryCore/Saves/SaveFailure.swift) | Errori delle operazioni sui salvataggi, con i testi per il giocatore. |
-| [Sources/NXLibraryCore/Saves/SaveFiles.swift](../../Sources/NXLibraryCore/Saves/SaveFiles.swift) | Controlli dei percorsi dei salvataggi con lstat: nessun link sostituito e solo cartelle e file normali. |
-
 ## Core · mod
 
 Cartella `Sources/NXLibraryCore/Mods/`.
@@ -538,7 +521,7 @@ Cartella `Sources/NXLibraryCore/Porting/Store/`.
 | [Sources/NXLibraryCore/Porting/Store/NintendoStoreMetadata.swift](../../Sources/NXLibraryCore/Porting/Store/NintendoStoreMetadata.swift) | Consulta i cataloghi pubblici dello store e Title DB e conserva descrizioni, immagini e screenshot per lingua; finché la nuova lingua arriva, la pagina mostra l'ultima descrizione letta in un'altra. |
 | [Sources/NXLibraryCore/Porting/Store/ScreenshotFallback.swift](../../Sources/NXLibraryCore/Porting/Store/ScreenshotFallback.swift) | Conserva per 30 giorni gli screenshot LaunchBox dei giochi senza screenshot Title DB e li sovrappone ai metadati. |
 
-## Core · Porting: salvataggi e cloud
+## Core · Porting: salvataggi, backup e cloud
 
 Cartella `Sources/NXLibraryCore/Porting/Saves/`.
 
@@ -548,6 +531,15 @@ Cartella `Sources/NXLibraryCore/Porting/Saves/`.
 | [Sources/NXLibraryCore/Porting/Saves/CloudSaves.swift](../../Sources/NXLibraryCore/Porting/Saves/CloudSaves.swift) | Descrive scelta cloud, cartelle iCloud o personalizzate e passaggi fra le opzioni. |
 | [Sources/NXLibraryCore/Porting/Saves/CloudSavesPreferences.swift](../../Sources/NXLibraryCore/Porting/Saves/CloudSavesPreferences.swift) | Prepara la cartella e riapplica la scelta cloud ai domini dei giochi prima di ogni avvio, anche Off. |
 | [Sources/NXLibraryCore/Porting/Saves/RyujinxSaveFolder.swift](../../Sources/NXLibraryCore/Porting/Saves/RyujinxSaveFolder.swift) | Riconosce contenitori Ryujinx, controlla il title ID e seleziona l’intero albero committed 0. |
+| [Sources/NXLibraryCore/Porting/Saves/SaveSnapshot.swift](../../Sources/NXLibraryCore/Porting/Saves/SaveSnapshot.swift) | Identità, inventario, manifest schema 1/2 e anteprime; rifiuta dichiarazioni storiche con componenti nuovi. |
+| [Sources/NXLibraryCore/Porting/Saves/SavePresentation.swift](../../Sources/NXLibraryCore/Porting/Saves/SavePresentation.swift) | Riepiloghi e ambito dei restore storici/multiutente, nomi dei componenti e limite cloud a primario/device. |
+| [Sources/NXLibraryCore/Porting/Saves/SaveFileIO.swift](../../Sources/NXLibraryCore/Porting/Saves/SaveFileIO.swift) | Copie, hash e xattr portabili; inventario di directory e registro regolare limitato, controlli dei percorsi e scritture durevoli. |
+| [Sources/NXLibraryCore/Porting/Saves/SaveSnapshotStore.swift](../../Sources/NXLibraryCore/Porting/Saves/SaveSnapshotStore.swift) | Backup completi degli utenti locali e registro, formati storici compatibili, staging e import User/Device. |
+| [Sources/NXLibraryCore/Porting/Saves/SaveRestorePreview.swift](../../Sources/NXLibraryCore/Porting/Saves/SaveRestorePreview.swift) | Staging e validazione dei pezzi registrati nel backup, compreso il file utenti, con rilevamento dei cambiamenti concorrenti. |
+| [Sources/NXLibraryCore/Porting/Saves/SaveTransaction.swift](../../Sources/NXLibraryCore/Porting/Saves/SaveTransaction.swift) | Sostituzioni con ambito esplicito, backup completo e journal 1/2; verifica originali, recovery e pulizia parziale riprendibili con intento durevole. |
+| [Sources/NXLibraryCore/Porting/Saves/SaveOperationGate.swift](../../Sources/NXLibraryCore/Porting/Saves/SaveOperationGate.swift) | Assegna lease per titolo e un’esclusione globale per l’updater; coordina salvataggi, Play, installazioni e recuperi. |
+| [Sources/NXLibraryCore/Porting/Saves/SaveFailure.swift](../../Sources/NXLibraryCore/Porting/Saves/SaveFailure.swift) | Errori delle operazioni sui salvataggi, con i testi per il giocatore. |
+| [Sources/NXLibraryCore/Porting/Saves/SaveFiles.swift](../../Sources/NXLibraryCore/Porting/Saves/SaveFiles.swift) | Controlli dei percorsi dei salvataggi con lstat: nessun link sostituito e solo cartelle e file normali. |
 
 ## Core · Porting: mod RomFS e GameBanana
 

@@ -16,12 +16,6 @@ ALLOWED = {
     'App/AppDataProfile.swift',
     'App/DevelopmentProfileImporter.swift',
     'App/FirstRunFindings.swift',
-    'Saves/SaveFileIO.swift',
-    'Saves/SavePresentation.swift',
-    'Saves/SaveRestorePreview.swift',
-    'Saves/SaveSnapshot.swift',
-    'Saves/SaveSnapshotStore.swift',
-    'Saves/SaveTransaction.swift',
     'Settings/AppSettings.swift',
     'Settings/SettingsCatalog.swift',
 }
