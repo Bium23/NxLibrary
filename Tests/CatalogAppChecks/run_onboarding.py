@@ -27,7 +27,7 @@ def declaration(signature, text=None):
 initial = declaration('    init(settingsStore:')
 restore = initial[initial.index('        let didCompleteSetup = '):initial.index('        // 1. Resolve safe root')]
 startup_requests = '\n'.join(line for line in initial.splitlines() if 'NotificationService.shared' in line)
-porting_source = (ROOT / 'Sources/NXLibrary/ViewModels/PortingModel.swift').read_text()
+porting_source = ''.join(p.read_text() for p in sorted((ROOT / 'Sources/NXLibrary/ViewModels').glob('PortingModel*.swift')))
 build = declaration('    func beginBuild(for game:', porting_source)
 accepted = build[build.index('        app.isBuilding = true'):build.index('        self.buildState = .running')]
 shell = (ROOT / 'Sources/NXLibrary/Views/Shell/AppShellView.swift').read_text()

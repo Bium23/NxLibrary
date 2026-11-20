@@ -27,6 +27,7 @@ Regole:
 
   La vista disegna e traduce l'input.
 - **Un file fuori da `Porting/` che usa un tipo di `Porting/` è un legame da tagliare, non un esempio da seguire.** Il codice nuovo della base non aggiunge legami di questo tipo.
+- **Un file oltre circa 800 righe si divide per compito** in estensioni `Tipo+Compito.swift` nella stessa cartella. Esempi: `PortingModel+Build.swift`, `SpotlightView+Input.swift`. Le proprietà memorizzate restano nel file del tipo; un membro `private` che serve da un altro file diventa interno, mai `public`. Un controllo senza finestre che legge il sorgente di un tipo legge tutti i suoi file (`PortingModel*.swift`).
 - **`public` solo nel Core**, per ciò che l'app usa. Il target app è un eseguibile che nessuno importa: i suoi tipi restano interni.
 - **Non far crescere `AppViewModel`.** Uno stato che appartiene a una sola schermata o a un solo pannello ha il suo modello. Esempi: `SavePanelModel`, `SetupCheckModel`, `ModStoreHost`, `AchievementsScreenModel`, `CatalogSourcesModel`. Le estensioni `AppViewModel+…` servono solo a collegare il coordinatore a un servizio del Core.
 - **Una parte del modulo Switch ha il suo modello di area.** Esempi: `PortingModel`, `SetupModel`, `RuntimeSettingsModel`, `CheatsModel`, `AppIconModel`, `StoreMetadataModel`.

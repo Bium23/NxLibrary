@@ -16,7 +16,7 @@ parser.add_argument('--engine-snapshot', type=Path)
 parser.add_argument('--python', default='python3')
 args = parser.parse_args()
 source = (ROOT / 'Sources/NXLibrary/ViewModels/AppViewModel.swift').read_text()
-porting_source = (ROOT / 'Sources/NXLibrary/ViewModels/PortingModel.swift').read_text()
+porting_source = ''.join(p.read_text() for p in sorted((ROOT / 'Sources/NXLibrary/ViewModels').glob('PortingModel*.swift')))
 
 
 def declaration(signature, source=source):
