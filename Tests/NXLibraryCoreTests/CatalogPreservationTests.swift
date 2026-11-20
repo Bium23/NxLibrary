@@ -48,6 +48,8 @@ final class CatalogPreservationTests: XCTestCase {
         XCTAssertTrue(String(decoding: again, as: UTF8.self).contains("9223372036854775807"))
         XCTAssertTrue(String(decoding: again, as: UTF8.self).contains("3.25"))
         XCTAssertEqual(value["integration"]?.stringValue, "crossover")
+        XCTAssertEqual(try JSONDecoder().decode(CatalogJSON.self, from: Data("[0, 1, true, \"1\"]".utf8)),
+                       .array([.number(0), .number(1), .bool(true), .string("1")]))
     }
 
     func testUnknownGameAndSourceAreKeptAndWrittenBack() throws {
