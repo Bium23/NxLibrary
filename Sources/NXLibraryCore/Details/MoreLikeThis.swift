@@ -19,13 +19,6 @@ public enum MoreLikeThis {
         }
     }
 
-    public static func pick(for game: PortedGame, in games: [PortedGame],
-                            metadata: (UUID) -> NintendoStoreMetadata?, limit: Int = 6) -> [UUID] {
-        rank(for: game, in: games, name: \.name, hidden: \.isHidden, limit: limit) { record in
-            metadata(record.id).map { Traits(developers: $0.developers, publishers: $0.publishers, genres: $0.genres) }
-        }
-    }
-
     /// Prefer the current source. A caller can opt into matching across the library when that source has no match.
     public static func pick(for game: CatalogGame, in games: [CatalogGame],
                             fallbackToOtherSources: Bool = false, traits: (CatalogGame) -> Traits?, limit: Int = 6) -> [UUID] {
@@ -36,9 +29,9 @@ public enum MoreLikeThis {
                     hidden: { $0.isHidden || $0.integration == game.integration }, limit: limit, traits: traits)
     }
 
-    private static func rank<Game: Identifiable>(for game: Game, in games: [Game],
-                                                  name: (Game) -> String, hidden: (Game) -> Bool,
-                                                  limit: Int, traits: (Game) -> Traits?) -> [UUID] where Game.ID == UUID {
+    static func rank<Game: Identifiable>(for game: Game, in games: [Game],
+                                          name: (Game) -> String, hidden: (Game) -> Bool,
+                                          limit: Int, traits: (Game) -> Traits?) -> [UUID] where Game.ID == UUID {
         guard limit > 0, let mine = traits(game) else { return [] }
         let makers = Set((mine.developers + mine.publishers).map(normalized).filter { !$0.isEmpty })
         let genres = Set(mine.genres.map(normalized).filter { !$0.isEmpty && $0 != "other" })

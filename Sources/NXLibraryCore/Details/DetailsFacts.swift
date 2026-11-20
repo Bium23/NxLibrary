@@ -39,15 +39,6 @@ public struct DetailsFact: Equatable, Identifiable, Sendable {
 /// Nothing technical: no engine, build, sources or Steam build ID. The two display names that need the
 /// file system (the app's folder, the Steam library's volume) come from the caller.
 public enum DetailsFacts {
-    public static func switchGame(_ game: PortedGame, metadata: NintendoStoreMetadata?,
-                                  folderName: String?, locale: Locale = L10n.context.formatLocale) -> [DetailsFact] {
-        rows([.developer: names(metadata?.developers),
-              .publisher: names(metadata?.publishers),
-              .version: text(game.versionString),
-              .size: size(game.sizeBytes, locale: locale),
-              .location: text(folderName)])
-    }
-
     /// A Steam game without an available installation (still downloading, not detected) shows only its credits.
     public static func steamGame(_ game: CatalogGame, metadata: SteamMetadata?,
                                  overrides: [MetadataField: String] = [:], volumeName: String?,
@@ -61,23 +52,23 @@ public enum DetailsFacts {
                      .location: installation.map { _ in text(volumeName).map { "Steam · " + $0 } ?? "Steam" }])
     }
 
-    private static func rows(_ values: [DetailsFact.Kind: String?]) -> [DetailsFact] {
+    static func rows(_ values: [DetailsFact.Kind: String?]) -> [DetailsFact] {
         DetailsFact.Kind.allCases.compactMap { kind in
             (values[kind] ?? nil).map { DetailsFact(kind: kind, value: $0) }
         }
     }
 
-    private static func names(_ list: [String]?) -> String? {
+    static func names(_ list: [String]?) -> String? {
         let names = (list ?? []).compactMap(text)
         return names.isEmpty ? nil : names.joined(separator: ", ")
     }
 
-    private static func text(_ raw: String?) -> String? {
+    static func text(_ raw: String?) -> String? {
         guard let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines), !trimmed.isEmpty else { return nil }
         return trimmed
     }
 
-    private static func size(_ bytes: Int64?, locale: Locale) -> String? {
+    static func size(_ bytes: Int64?, locale: Locale) -> String? {
         guard let bytes, bytes > 0 else { return nil }
         return bytes.formatted(.byteCount(style: .file).locale(locale))
     }
