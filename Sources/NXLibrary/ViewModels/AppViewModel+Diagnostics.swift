@@ -4,11 +4,21 @@ import NXLibraryCore
 /// Copy diagnostics: what an issue needs, scrubbed by `DiagnosticsReport` (no key values, no
 /// environment, the home folder as `~`).
 extension AppViewModel {
+    /// The game's Cheats line needs git's answer about its engine, asked off the main thread before the report is read.
     func copyDiagnostics() {
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-        pasteboard.setString(DiagnosticsReport.markdown(diagnosticsInputs()), forType: .string)
-        SoundEffectService.shared.play(.success)
+        Task { @MainActor in
+            if let game = diagnosticsGame { await cheats.prepare(for: game) }
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.setString(DiagnosticsReport.markdown(diagnosticsInputs()), forType: .string)
+            SoundEffectService.shared.play(.success)
+        }
+    }
+
+    /// The game the report is about: the last build's, else the one in front.
+    private var diagnosticsGame: PortedGame? {
+        guard let id = lastBuildGameID ?? frontGameID else { return nil }
+        return libraryGames.first { $0.id == id }
     }
 
     private func diagnosticsInputs() -> DiagnosticsReport.Inputs {
@@ -35,7 +45,7 @@ extension AppViewModel {
         i.keysImported = FileManager.default.fileExists(atPath: setup.keyStore.keyURL.path)
         i.hasHeaderKey = setup.keySummary?.hasHeaderKey ?? false
         i.keyGenerations = setup.keySummary?.applicationKeyGenerations.count ?? 0
-        if let id = lastBuildGameID ?? frontGameID, let game = libraryGames.first(where: { $0.id == id }) {
+        if let game = diagnosticsGame {
             let failure = game.portingFailure.map { failure in
                 failure == .cancelled ? "cancelled" : "failed (\(game.portingFailureReason?.kind.rawValue ?? "unknown"))"
             }

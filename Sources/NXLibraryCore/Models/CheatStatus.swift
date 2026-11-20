@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// Whether a game's installed app can use cheats, and the short words the UI shows for them.
 public enum CheatStatus: Equatable, Sendable {
@@ -35,31 +36,44 @@ public enum CheatStatus: Equatable, Sendable {
 }
 
 /// Whether an engine commit contains another, from the engine checkout (`git merge-base --is-ancestor`), cached per
-/// commit: build records name the commit an app was built with.
-public final class EngineAncestry {
-    private let runner: CommandRunning
+/// commit: build records name the commit an app was built with. Git runs only in `answer`, off the caller's thread,
+/// because the Cheats row and panel open inside a SwiftUI update; views read `keptAnswer`, which never runs it.
+public final class EngineAncestry: Sendable {
+    private let runner: any CommandRunning & Sendable
     private let engineFolder: URL
-    private var cache: [String: Bool?] = [:]
+    private let cache = OSAllocatedUnfairLock<[String: Bool?]>(initialState: [:])
 
-    public init(runner: CommandRunning, engineFolder: URL) {
+    public init(runner: any CommandRunning & Sendable, engineFolder: URL) {
         self.runner = runner
         self.engineFolder = engineFolder
     }
 
+    /// The answer kept from an earlier `answer`, without running git: nil when this pair was not asked yet,
+    /// `.some(nil)` when git could not tell.
+    public func keptAnswer(_ ancestor: String, in commit: String) -> Bool?? {
+        let key = Self.key(ancestor, commit)
+        return cache.withLock { $0[key] }
+    }
+
     /// True when `commit` contains `ancestor`, false when it does not, nil when git cannot tell (unknown commit, no
-    /// checkout).
-    public func contains(_ ancestor: String, in commit: String) -> Bool? {
-        let key = ancestor + " " + commit
-        if let known = cache[key] { return known }
-        let result = try? runner.run(URL(fileURLWithPath: "/usr/bin/git"),
-                                     ["-C", engineFolder.path, "merge-base", "--is-ancestor", ancestor, commit],
-                                     environment: nil, currentDirectory: nil)
-        let answer: Bool? = switch result?.status {
-        case 0: true
-        case 1: false
-        default: nil
-        }
-        cache[key] = answer
+    /// checkout). Git runs in a detached task, once per pair; the answer is kept for `keptAnswer`.
+    public func answer(_ ancestor: String, in commit: String) async -> Bool? {
+        if let known = keptAnswer(ancestor, in: commit) { return known }
+        let answer = await Task.detached { [runner, engineFolder] in
+            let result = try? runner.run(URL(fileURLWithPath: "/usr/bin/git"),
+                                         ["-C", engineFolder.path, "merge-base", "--is-ancestor", ancestor, commit],
+                                         environment: nil, currentDirectory: nil)
+            let answer: Bool? = switch result?.status {
+            case 0: true
+            case 1: false
+            default: nil
+            }
+            return answer
+        }.value
+        let key = Self.key(ancestor, commit)
+        cache.withLock { $0[key] = .some(answer) }
         return answer
     }
+
+    private static func key(_ ancestor: String, _ commit: String) -> String { ancestor + " " + commit }
 }

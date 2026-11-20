@@ -15,7 +15,8 @@ struct CheatsPanel: View {
     let onRebuild: () -> Void
     let onClose: () -> Void
 
-    @State private var context: CheatContext
+    /// Nil until the engine's answer is kept (`CheatsModel.prepare`, asked by the panel's task): no rows meanwhile.
+    @State private var context: CheatContext?
     @State private var cheatState: CheatState?
     @State private var running: Bool
     @State private var focus = 0
@@ -59,13 +60,14 @@ struct CheatsPanel: View {
         self.onClose = onClose
         let context = viewModel.cheats.cheatContext(for: game)
         _context = State(initialValue: context)
-        _cheatState = State(initialValue: viewModel.cheats.cheatState(in: context, gameID: game.id))
+        _cheatState = State(initialValue: context.flatMap { viewModel.cheats.cheatState(in: $0, gameID: game.id) })
         _running = State(initialValue: RunningGameMonitor.runningApplication(for: game) != nil)
     }
 
     // MARK: - Model
 
     private var lines: [Line] {
+        guard let context else { return [] }
         guard context.status == .ready, let state = cheatState else { return [.row(.rebuild)] }
         var lines: [Line] = [.row(.master)]
         var section: String?
@@ -106,7 +108,7 @@ struct CheatsPanel: View {
 
     private var notices: [String] {
         var notices: [String] = []
-        if case .needsRebuild(let why) = context.status { notices.append(why + L10n.text(" Rebuild to use cheats.")) }
+        if case .needsRebuild(let why)? = context?.status { notices.append(why + L10n.text(" Rebuild to use cheats.")) }
         if running { notices.append(CheatCopy.running(gameName: game.name)) }
         else if cheatState?.safeModePending == true { notices.append(CheatCopy.safeMode) }
         return notices
@@ -138,7 +140,7 @@ struct CheatsPanel: View {
                         .foregroundColor(SeleneTheme.ink)
                         .lineLimit(1)
                         .padding(.leading, canvas.u(6))
-                    Text(CheatCopy.header(version: context.version, buildID: context.buildID))
+                    Text(CheatCopy.header(version: context?.version ?? game.versionString, buildID: context?.buildID))
                         .seleneFont(15)
                         .foregroundColor(SeleneTheme.ink60)
                         .padding(.leading, canvas.u(8))
@@ -180,6 +182,11 @@ struct CheatsPanel: View {
         .onDrop(of: [.fileURL], isTargeted: $dropTargeted, perform: drop)
         .onAppear(perform: installKeyMonitor)
         .onDisappear(perform: removeKeyMonitor)
+        .task {
+            guard context == nil else { return }
+            await viewModel.cheats.prepare(for: game)
+            reload()
+        }
         .onReceive(NotificationCenter.default.publisher(for: .nxGameOptionsGamepadAction)) { note in
             guard let action = note.object as? GamepadAction else { return }
             handleGamepad(action)
@@ -316,8 +323,8 @@ struct CheatsPanel: View {
     private func confirmCopy(_ target: Confirm) -> (title: String, message: String, confirm: String) {
         switch target {
         case .install(_, let file, let unnamed, let replacing):
-            return CheatCopy.confirm(file: file, unnamed: unnamed, replacing: replacing, version: context.version,
-                                     buildID: context.buildID ?? "")
+            return CheatCopy.confirm(file: file, unnamed: unnamed, replacing: replacing, version: context?.version,
+                                     buildID: context?.buildID ?? "")
         case .remove(let build):
             return CheatCopy.removal(build: build)
         }
@@ -327,7 +334,7 @@ struct CheatsPanel: View {
 
     private func reload() {
         context = viewModel.cheats.cheatContext(for: game)
-        cheatState = viewModel.cheats.cheatState(in: context, gameID: game.id)
+        cheatState = context.flatMap { viewModel.cheats.cheatState(in: $0, gameID: game.id) }
         running = RunningGameMonitor.runningApplication(for: game) != nil
         focus = min(focus, max(rows.count - 1, 0))
     }
@@ -352,7 +359,7 @@ struct CheatsPanel: View {
         case .showInFinder:
             showInFinder()
         case .remove:
-            guard ensureWritable(), let build = context.buildID else { return }
+            guard ensureWritable(), let build = context?.buildID else { return }
             askConfirm(.remove(build: build))
         case .otherBuild(let build):
             guard ensureWritable() else { return }
@@ -371,7 +378,7 @@ struct CheatsPanel: View {
     /// True when the change is on disk.
     @discardableResult
     private func write(click: Bool, _ change: (CheatStore) throws -> Void) -> Bool {
-        guard let store = context.store, ensureWritable() else { return false }
+        guard let store = context?.store, ensureWritable() else { return false }
         defer { reload() }
         do {
             try change(store)
@@ -391,14 +398,14 @@ struct CheatsPanel: View {
     }
 
     private func showInFinder() {
-        guard let folder = context.store?.folder else {
+        guard let folder = context?.store?.folder else {
             SoundEffectService.shared.play(.error)
             return
         }
         SoundEffectService.shared.play(.click)
         // A folder that does not exist yet is made, so cheat files can be put there by hand.
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let file = folder.appendingPathComponent("\(context.buildID ?? "").txt")
+        let file = folder.appendingPathComponent("\(context?.buildID ?? "").txt")
         viewModel.revealInFinder(url: FileManager.default.fileExists(atPath: file.path) ? file : folder)
     }
 
@@ -442,6 +449,7 @@ struct CheatsPanel: View {
     /// Every added file goes through CheatInstall: the one to install is confirmed with its summary, or the reason it
     /// is not is said in one sentence.
     private func add(_ urls: [URL]) {
+        guard let context else { return }
         let found = viewModel.cheats.cheatCandidates(urls)
         let decisions = found.map { viewModel.cheats.cheatDecision(for: $0.url, titleIDInPath: $0.titleIDInPath, context: context) }
         switch CheatInstall.pick(decisions) {

@@ -44,6 +44,8 @@ struct GameDetailView: View {
     @State var cache = DetailsModelCache()
     /// "Cheats on" under the title, read from the app's files where they can change (`reloadCheats`), never per draw.
     @State var cheatsOn = false
+    /// The latest `reloadCheats()`: a newer one cancels it, so a slower answer for the previous game never lands.
+    @State var cheatsReload: Task<Void, Never>?
     /// The Mods band: the game's mods (read when the page appears and when Game options or the app comes back),
     /// GameBanana's, and their panels. Shared with Spotlight's page.
     @StateObject var modsHost = ModsBandHost()

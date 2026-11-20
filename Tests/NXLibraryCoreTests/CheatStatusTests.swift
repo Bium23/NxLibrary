@@ -40,28 +40,55 @@ final class CheatStatusTests: XCTestCase {
         XCTAssertFalse(CheatStatus.showsDetailLabel(.needsRebuild("x"), state: state(on: ["A"])))
     }
 
-    private final class FakeGit: CommandRunning {
+    /// Called from the ancestry's background task; the test reads it only after that task ends.
+    private final class FakeGit: CommandRunning, @unchecked Sendable {
         var status: Int32 = 0
         var calls = 0
+        var ranOnMainThread = false
         func run(_ executable: URL, _ arguments: [String], environment: [String: String]?,
                  currentDirectory: URL?) throws -> CommandResult {
             calls += 1
+            ranOnMainThread = ranOnMainThread || Thread.isMainThread
             XCTAssertEqual(executable.path, "/usr/bin/git")
             XCTAssertEqual(Array(arguments.suffix(3)), ["--is-ancestor", "ef9", "c1"])
             return CommandResult(status: status, stdout: "", stderr: "")
         }
     }
 
-    func testEngineAncestryParsesStatusAndCaches() {
+    func testEngineAncestryParsesStatusAndCaches() async {
         let git = FakeGit()
         let ancestry = EngineAncestry(runner: git, engineFolder: URL(fileURLWithPath: "/tmp/nxnative"))
-        XCTAssertEqual(ancestry.contains("ef9", in: "c1"), true)
-        XCTAssertEqual(ancestry.contains("ef9", in: "c1"), true)
+        let first = await ancestry.answer("ef9", in: "c1")
+        let second = await ancestry.answer("ef9", in: "c1")
+        XCTAssertEqual(first, true)
+        XCTAssertEqual(second, true)
         XCTAssertEqual(git.calls, 1, "cached per commit")
-        for (code, answer) in [(Int32(1), false as Bool?), (128, nil)] {
+        for (code, expected) in [(Int32(1), false as Bool?), (128, nil)] {
             let other = FakeGit(); other.status = code
-            XCTAssertEqual(EngineAncestry(runner: other, engineFolder: URL(fileURLWithPath: "/tmp")).contains("ef9", in: "c1"), answer)
+            let answer = await EngineAncestry(runner: other, engineFolder: URL(fileURLWithPath: "/tmp")).answer("ef9", in: "c1")
+            XCTAssertEqual(answer, expected)
         }
+    }
+
+    /// Game options and the Cheats panel open inside a SwiftUI update: git must not run on the main thread there.
+    @MainActor
+    func testEngineAncestryAsksGitOffTheMainThread() async {
+        let git = FakeGit()
+        let ancestry = EngineAncestry(runner: git, engineFolder: URL(fileURLWithPath: "/tmp/nxnative"))
+        let answer = await ancestry.answer("ef9", in: "c1")
+        XCTAssertEqual(answer, true)
+        XCTAssertEqual(git.calls, 1)
+        XCTAssertFalse(git.ranOnMainThread)
+    }
+
+    func testEngineAncestryKeptAnswerNeverRunsGit() async {
+        let git = FakeGit(); git.status = 128
+        let ancestry = EngineAncestry(runner: git, engineFolder: URL(fileURLWithPath: "/tmp/nxnative"))
+        XCTAssertTrue(ancestry.keptAnswer("ef9", in: "c1") == nil, "not asked yet")
+        XCTAssertEqual(git.calls, 0)
+        _ = await ancestry.answer("ef9", in: "c1")
+        XCTAssertEqual(ancestry.keptAnswer("ef9", in: "c1"), .some(nil), "asked; git could not tell")
+        XCTAssertEqual(git.calls, 1)
     }
 
     func testCheatsCommitIsTheEngineFeature() {

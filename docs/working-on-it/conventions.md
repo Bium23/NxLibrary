@@ -112,6 +112,7 @@ Esempi: `BoundedDownload`, `GameBananaClient`, `IGDBClient`, `SteamMetadataServi
 
 - Il lavoro su file e rete gira fuori dal thread principale; ciò che cambia l'interfaccia si pubblica sul main actor.
 - Un processo si aspetta con `Process.runWithExitWait` (o `CommandRunning`), mai con `waitUntilExit`: quello fa girare il run loop mentre aspetta, e un comando atteso dentro un aggiornamento di SwiftUI lo fa ripartire a metà e chiudere l'app.
+- Un comando di cui una vista ha bisogno gira in un task fuori dal thread principale prima che la vista lo legga; la vista legge solo la risposta tenuta. Esempio: `EngineAncestry.answer` e `keptAnswer`, chiesti da `CheatsModel.prepare(for:)`.
 - Un `body` e l'initializer di una vista non leggono file: si ridisegnano a ogni cambio della shell. Ciò che viene dal disco si legge quando la pagina si apre o quando può cambiare (`GameOptionsFiles`, `GameDetailView.reloadCheats`), e un'assenza si ricorda (`GameIconProvider`).
 - Ogni lavoro annullabile porta un'identità (generazione, ticket, UUID del gioco). Il risultato si applica solo se l'identità è ancora quella attuale.
 - Le operazioni su un gioco che si escludono a vicenda (salvataggi, Play, installazioni, aggiornamento dell'app) passano da `SaveOperationGate`.

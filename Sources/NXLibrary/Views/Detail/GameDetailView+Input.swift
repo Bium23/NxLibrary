@@ -192,7 +192,16 @@ extension GameDetailView {
     func reloadMods() { modsHost.reload(game, viewModel: viewModel) }
 
     /// Game options (its Cheats panel), a rebuild or a hand edit in Finder can change it.
-    func reloadCheats() { cheatsOn = viewModel.cheats.cheatsOn(for: game) }
+    /// Asks git off the main thread the first time (`CheatsModel.prepare`), then reads the kept answer.
+    func reloadCheats() {
+        let shown = game
+        cheatsReload?.cancel()
+        cheatsReload = Task { @MainActor in
+            await viewModel.cheats.prepare(for: shown)
+            guard !Task.isCancelled else { return }
+            cheatsOn = viewModel.cheats.cheatsOn(for: shown)
+        }
+    }
 
     /// GameBanana's mods for this game.
     func startGameBanana() { modsHost.startOnline(game, viewModel: viewModel) }

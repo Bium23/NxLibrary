@@ -20,8 +20,9 @@ final class GameOptionsFiles: ObservableObject {
     @Published var config: GameRuntimeConfig
     /// The build's settings and their values, for a build with saved choices; nil for an older build (`config`).
     @Published var snapshot: GameSettingsSnapshot?
-    /// The Cheats row's value: read when Game options opens and when the panel closes, not on every draw.
-    @Published var cheatsValue: String
+    /// The Cheats row's value: read when Game options opens and when the panel closes, not on every draw. Nil (no chip)
+    /// until the engine's answer is kept: the view's task asks for it off the main thread.
+    @Published var cheatsValue: String?
     @Published var modsValue: String
 
     init(viewModel: AppViewModel, game: PortedGame) {
@@ -72,7 +73,7 @@ struct GameOptionsView: View {
         nonmutating set { files.modsValue = newValue }
     }
     @State private var moreOpen = false
-    private var cheatsValue: String {
+    private var cheatsValue: String? {
         get { files.cheatsValue }
         nonmutating set { files.cheatsValue = newValue }
     }
@@ -131,7 +132,7 @@ struct GameOptionsView: View {
             gameName: game.name,
             appPath: game.url.path,
             canDeleteBundle: game.canDeleteAppBundle(),
-            cheatsValue: cheatsValue,
+            cheatsValue: cheatsValue ?? "",
             modsValue: modsValue,
             settings: snapshot
         )
@@ -233,6 +234,11 @@ struct GameOptionsView: View {
             setup.prepareBuildEnvironmentIfNeeded()
         }
         .onDisappear(perform: removeKeyMonitor)
+        .task {
+            guard cheatsValue == nil else { return }
+            await viewModel.cheats.prepare(for: current)
+            cheatsValue = viewModel.cheats.cheatRowValue(for: current)
+        }
         .onReceive(NotificationCenter.default.publisher(for: .nxGameOptionsGamepadAction)) { note in
             guard let action = note.object as? GamepadAction else { return }
             handleGamepad(action)
@@ -383,7 +389,7 @@ struct GameOptionsView: View {
     private func accessibilityValue(_ row: GameOptionsRow) -> String? {
         if row.isToggle { return toggleValue(row) ? "On" : "Off" }
         if row.isChoice { return choiceText(row) }
-        if row == .cheats { return presentation.cheatsValue }
+        if row == .cheats { return cheatsValue }
         if row == .mods { return presentation.modsValue }
         return nil
     }
@@ -397,7 +403,9 @@ struct GameOptionsView: View {
             SeleneValueChip(text: choiceText(row))
         } else if row == .cheats || row == .mods {
             HStack(spacing: canvas.u(10)) {
-                SeleneValueChip(text: row == .cheats ? presentation.cheatsValue : presentation.modsValue)
+                if row == .mods || cheatsValue != nil {
+                    SeleneValueChip(text: row == .cheats ? presentation.cheatsValue : presentation.modsValue)
+                }
                 MaterialIconView(.chevron, size: 24)
                     .foregroundColor(SeleneTheme.ink60)
             }

@@ -18,7 +18,8 @@ public protocol CommandRunning {
              currentDirectory: URL?) throws -> CommandResult
 }
 
-public final class SystemCommandRunner: CommandRunning {
+/// Keeps no state, so the background tasks that run commands can share it.
+public final class SystemCommandRunner: CommandRunning, Sendable {
     public init() {}
 
     public func run(_ executable: URL, _ arguments: [String],
