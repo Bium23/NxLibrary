@@ -38,12 +38,57 @@ public struct CatalogDocument: Codable, Equatable {
     public let legacyOrigin: CatalogLegacyOrigin
     public var sources: [CatalogSourceConfiguration]
     public var games: [CatalogGame]
+    /// Games and sources of an integration this version does not know (written by a newer Arcane, or by one with a
+    /// source module this one lacks), kept as read and written back after the known ones. No projection, search or
+    /// screen sees them, and nothing edits them.
+    public internal(set) var preservedGames: [CatalogJSON]
+    public internal(set) var preservedSources: [CatalogJSON]
 
     public init(schemaVersion: Int = 1, revision: UUID = UUID(), legacyOrigin: CatalogLegacyOrigin = .absent,
                 sources: [CatalogSourceConfiguration] = [.init(integration: .nxnative), .init(integration: .steam)],
-                games: [CatalogGame] = []) {
+                games: [CatalogGame] = [], preservedGames: [CatalogJSON] = [], preservedSources: [CatalogJSON] = []) {
         self.schemaVersion = schemaVersion; self.revision = revision; self.legacyOrigin = legacyOrigin
         self.sources = sources; self.games = games
+        self.preservedGames = preservedGames; self.preservedSources = preservedSources
+    }
+
+    private enum CodingKeys: String, CodingKey { case schemaVersion, revision, legacyOrigin, sources, games }
+    private enum IntegrationKey: String, CodingKey { case integration }
+
+    /// Reads each game and source as known only when its `integration` names one this version has; any other is kept.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try c.decode(Int.self, forKey: .schemaVersion)
+        revision = try c.decode(UUID.self, forKey: .revision)
+        legacyOrigin = try c.decode(CatalogLegacyOrigin.self, forKey: .legacyOrigin)
+        (sources, preservedSources) = try Self.split(c, .sources, CatalogSourceConfiguration.init(from:))
+        (games, preservedGames) = try Self.split(c, .games, CatalogGame.init(from:))
+    }
+
+    private static func split<Known>(_ c: KeyedDecodingContainer<CodingKeys>, _ key: CodingKeys,
+                                     _ known: (Decoder) throws -> Known) throws -> ([Known], [CatalogJSON]) {
+        var list = try c.nestedUnkeyedContainer(forKey: key)
+        var kept: [Known] = [], preserved: [CatalogJSON] = []
+        while !list.isAtEnd {
+            let element = try list.superDecoder()
+            let tag = try? element.container(keyedBy: IntegrationKey.self).decode(String.self, forKey: .integration)
+            if let tag, CatalogIntegration(rawValue: tag) != nil { kept.append(try known(element)) }
+            else { preserved.append(try CatalogJSON(from: element)) }
+        }
+        return (kept, preserved)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(schemaVersion, forKey: .schemaVersion)
+        try c.encode(revision, forKey: .revision)
+        try c.encode(legacyOrigin, forKey: .legacyOrigin)
+        var sourceList = c.nestedUnkeyedContainer(forKey: .sources)
+        for source in sources { try sourceList.encode(source) }
+        for source in preservedSources { try sourceList.encode(source) }
+        var gameList = c.nestedUnkeyedContainer(forKey: .games)
+        for game in games { try gameList.encode(game) }
+        for game in preservedGames { try gameList.encode(game) }
     }
 
     public func source(_ integration: CatalogIntegration) -> CatalogSourceConfiguration? {
@@ -60,7 +105,12 @@ public struct CatalogDocument: Codable, Equatable {
 
     public func validate() throws {
         guard schemaVersion == 1 else { throw CatalogModelError.unsupportedSchema(schemaVersion) }
-        guard Set(sources.map(\.integration)).count == sources.count else { throw CatalogModelError.invalidRecord }
+        let preservedIntegrations = try preservedSources.map { source -> String in
+            guard let integration = source["integration"]?.stringValue else { throw CatalogModelError.invalidRecord }
+            return integration
+        }
+        let integrations = sources.map(\.integration.rawValue) + preservedIntegrations
+        guard Set(integrations).count == integrations.count else { throw CatalogModelError.invalidRecord }
         switch legacyOrigin.kind {
         case .absent: guard legacyOrigin.sha256 == nil else { throw CatalogModelError.invalidRecord }
         case .primary, .backup:
@@ -80,6 +130,12 @@ public struct CatalogDocument: Codable, Equatable {
                 for installation in steam.installations {
                     guard installationIDs.insert(installation.id).inserted else { throw CatalogModelError.duplicateInstallationID }
                 }
+            }
+        }
+        for game in preservedGames {
+            guard game["integration"]?.stringValue != nil, case .object = game["data"] else { throw CatalogModelError.invalidRecord }
+            if let id = game["data"]?["id"]?.stringValue.flatMap(UUID.init(uuidString:)) {
+                guard ids.insert(id).inserted else { throw CatalogModelError.duplicateGameID }
             }
         }
     }

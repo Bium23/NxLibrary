@@ -213,7 +213,8 @@ extension CatalogStore {
             let origin = legacyBaseline(states)
             guard origin != document.legacyOrigin else { throw CatalogStoreError.staleRevision }
             let kept = CatalogDocument(schemaVersion: document.schemaVersion, legacyOrigin: origin,
-                                       sources: document.sources, games: document.games)
+                                       sources: document.sources, games: document.games,
+                                       preservedGames: document.preservedGames, preservedSources: document.preservedSources)
             let data = try Self.encode(kept)
             func validateAll() throws { for state in states { try state.verify() } }
             try validateAll()
