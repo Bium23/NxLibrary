@@ -155,7 +155,7 @@ public enum SurprisePool: String, Codable, CaseIterable {
 public enum Surprise {
     /// Hidden games are never picked. If excluding `excluding` would empty a
     /// pool that held only that game, returns nil.
-    static func pickRecord<Game: LibraryQueryRecord>(from games: [Game],
+    package static func pickRecord<Game: LibraryQueryRecord>(from games: [Game],
                                                      pool: SurprisePool,
                                                      history: PlayHistory,
                                                      excluding: UUID?,

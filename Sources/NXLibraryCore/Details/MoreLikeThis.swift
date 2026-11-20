@@ -29,7 +29,7 @@ public enum MoreLikeThis {
                     hidden: { $0.isHidden || $0.integration == game.integration }, limit: limit, traits: traits)
     }
 
-    static func rank<Game: Identifiable>(for game: Game, in games: [Game],
+    package static func rank<Game: Identifiable>(for game: Game, in games: [Game],
                                           name: (Game) -> String, hidden: (Game) -> Bool,
                                           limit: Int, traits: (Game) -> Traits?) -> [UUID] where Game.ID == UUID {
         guard limit > 0, let mine = traits(game) else { return [] }

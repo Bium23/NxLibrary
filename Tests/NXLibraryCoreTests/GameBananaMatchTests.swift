@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class GameBananaMatchTests: XCTestCase {
     private func game(_ id: Int, _ name: String) -> GameBananaGame { GameBananaGame(id: id, name: name) }

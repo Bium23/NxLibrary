@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class PortingFailureReasonTests: XCTestCase {
     /// One real line per table row, as the pinned engine prints it ("[RED] " + its BuildError text).

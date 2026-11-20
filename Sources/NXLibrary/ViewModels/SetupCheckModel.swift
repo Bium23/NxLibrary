@@ -1,5 +1,6 @@
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// Drives the Setup check: probes off the main thread, runs each card's action
 /// with live progress, and fixes what it can by itself each time the screen

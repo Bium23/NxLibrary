@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class MoreLikeThisTests: XCTestCase {
     private func game(_ name: String, hidden: Bool = false) -> PortedGame {

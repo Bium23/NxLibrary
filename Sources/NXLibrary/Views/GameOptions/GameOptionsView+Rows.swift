@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// The column and its rows: entries, hints, the info line, accessibility values and each row's trailing value.
 extension GameOptionsView {

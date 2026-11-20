@@ -1,5 +1,6 @@
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// Copy diagnostics: what an issue needs, scrubbed by `DiagnosticsReport` (no key values, no
 /// environment, the home folder as `~`).

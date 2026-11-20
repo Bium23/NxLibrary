@@ -8,6 +8,7 @@ files=[ROOT/'Sources/NXLibrary/Views/Components/GameLogoArea.swift', ROOT/'Sourc
 actual='\n'.join(p.read_text() for p in files)
 host='''import SwiftUI
 import NXLibraryCore
+import ArcanePorting
 struct HeaderCanvas { func u(_ value: CGFloat) -> CGFloat { value } }
 private struct CanvasKey: EnvironmentKey { static let defaultValue = HeaderCanvas() }
 extension EnvironmentValues { var seleneCanvas: HeaderCanvas { get { self[CanvasKey.self] } set { self[CanvasKey.self] = newValue } } }
@@ -34,5 +35,5 @@ struct SelenePillButton: View {
 '''
 with tempfile.TemporaryDirectory(prefix='game-header-check-') as folder:
  folder=Path(folder);swift=folder/'check.swift';swift.write_text(host);binary=folder/'check'
- subprocess.run(['xcrun','swiftc','-parse-as-library','-I',str(BIN),str(swift),str(BIN/'NXLibraryCore.o'),'-o',str(binary)],check=True)
+ subprocess.run(['xcrun','swiftc','-parse-as-library','-I',str(BIN),str(swift),str(BIN/'NXLibraryCore.o'), str(BIN / 'ArcanePorting.o'),'-o',str(binary)],check=True)
  subprocess.run([str(binary)],check=True,env=dict(os.environ,PACKAGE_RESOURCE_BUNDLE_PATH=str(BIN)))

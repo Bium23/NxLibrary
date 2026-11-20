@@ -22,15 +22,15 @@ public struct SettingDescriptor: Identifiable {
 /// The Settings rows of the base, and the rules that order, compare and search any list of rows. The whole list,
 /// with the Porting rows, is `SettingsCatalog.all` (`SettingsCatalog+Porting.swift`).
 public enum SettingsCatalog {
-    static let defaults = AppSettings()
+    package static let defaults = AppSettings()
 
-    static func row<Value: Equatable>(_ id: String, _ group: SettingsSection, _ title: String,
+    package static func row<Value: Equatable>(_ id: String, _ group: SettingsSection, _ title: String,
                                       _ about: String,
                                       _ value: @escaping (AppSettings) -> Value) -> SettingDescriptor {
         SettingDescriptor(id: id, group: group, title: title, about: about) { value($0) != value(defaults) }
     }
 
-    static func action(_ id: String, _ group: SettingsSection, _ title: String,
+    package static func action(_ id: String, _ group: SettingsSection, _ title: String,
                        _ about: String) -> SettingDescriptor {
         SettingDescriptor(id: id, group: group, title: title, about: about)
     }

@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 struct SavesPanel: View {
     @ObservedObject var viewModel: AppViewModel

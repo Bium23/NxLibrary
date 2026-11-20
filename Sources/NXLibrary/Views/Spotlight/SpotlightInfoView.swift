@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// The selected game under the row (Main.xaml SeleneInfoIntro): logo area 195
 /// high (logo up to 700 × 240, bottom-left, may rise 45 above; a touch larger

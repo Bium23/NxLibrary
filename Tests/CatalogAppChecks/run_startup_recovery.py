@@ -21,6 +21,7 @@ import Foundation
 import AppKit
 import Combine
 import NXLibraryCore
+import ArcanePorting
 import os
 
 enum AppData {
@@ -100,6 +101,6 @@ with tempfile.TemporaryDirectory(prefix='catalog-startup-recovery-') as folder:
     swift.write_text(host)
     executable = scratch / 'check'
     subprocess.run(['xcrun', 'swiftc', '-parse-as-library', '-I', str(BIN), str(swift),
-                    str(BIN / 'NXLibraryCore.o'), '-o', str(executable)], cwd=ROOT, check=True)
+                    str(BIN / 'NXLibraryCore.o'), str(BIN / 'ArcanePorting.o'), '-o', str(executable)], cwd=ROOT, check=True)
     subprocess.run([str(executable), str(scratch / 'profile')], check=True,
                    env=dict(os.environ, PACKAGE_RESOURCE_BUNDLE_PATH=str(BIN)))

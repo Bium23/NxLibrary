@@ -1,6 +1,7 @@
 import AppKit
 import Combine
 import NXLibraryCore
+import ArcanePorting
 
 /// Arcane's own updates: the check against GitHub, the download, the checks of `AppUpdate`,
 /// the swap and the relaunch. Hidden entirely while `AppUpdate.repository()` is nil.

@@ -1,6 +1,7 @@
 import Foundation
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 struct GameDLCItem: Identifiable, Hashable {
     let id: String

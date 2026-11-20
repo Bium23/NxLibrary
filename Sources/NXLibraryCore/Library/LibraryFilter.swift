@@ -30,7 +30,7 @@ public struct LibraryQuery: Equatable {
 
     public func applyCatalog(to games: [CatalogGame], history: PlayHistory) -> [CatalogGame] { applyRecords(games, history: history) }
 
-    func applyRecords<Game: LibraryQueryRecord>(_ games: [Game], history: PlayHistory) -> [Game] {
+    package func applyRecords<Game: LibraryQueryRecord>(_ games: [Game], history: PlayHistory) -> [Game] {
         let visible = games.filter { !$0.isHidden }
         let dates = Dictionary(uniqueKeysWithValues: visible.map { ($0.id, history.lastPlayed(for: $0.id)) })
         func played(_ game: Game) -> Date? { dates[game.id] ?? nil }
@@ -69,7 +69,7 @@ public struct LibraryQuery: Equatable {
 }
 
 /// What the library's filter, search and Surprise read from a game of any source.
-protocol LibraryQueryRecord {
+package protocol LibraryQueryRecord {
     var id: UUID { get }
     var name: String { get }
     var isFavorite: Bool { get }
@@ -78,6 +78,6 @@ protocol LibraryQueryRecord {
     var librarySearchTerms: [String] { get }
 }
 extension CatalogGame: LibraryQueryRecord {
-    var isInstalledForLibrary: Bool { record.isInstalledForLibrary }
-    var librarySearchTerms: [String] { record.librarySearchTerms }
+    package var isInstalledForLibrary: Bool { record.isInstalledForLibrary }
+    package var librarySearchTerms: [String] { record.librarySearchTerms }
 }

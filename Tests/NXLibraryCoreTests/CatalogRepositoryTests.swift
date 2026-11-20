@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class CatalogRepositoryTests: XCTestCase {
     private func mixed() throws -> (SteamTestFixture, CatalogStore, CatalogDocument) {

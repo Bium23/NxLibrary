@@ -2,6 +2,7 @@ import AppKit
 import Foundation
 import UniformTypeIdentifiers
 import NXLibraryCore
+import ArcanePorting
 
 /// A running porting: the engine's events, the stage timer, the end of the build and its errors.
 extension PortingModel {

@@ -15,6 +15,7 @@ BIN = ROOT / '.build/debug'
 host = r'''
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 @main struct Check {
     static func main() throws {
@@ -66,5 +67,5 @@ with tempfile.TemporaryDirectory(prefix='icon-cache-check-') as folder:
     executable = scratch / 'check'
     subprocess.run(['xcrun', 'swiftc', '-parse-as-library', '-I', str(BIN), str(swift),
                     str(ROOT / 'Sources/NXLibrary/Views/Components/GameIconProvider.swift'),
-                    str(BIN / 'NXLibraryCore.o'), '-o', str(executable)], cwd=ROOT, check=True)
+                    str(BIN / 'NXLibraryCore.o'), str(BIN / 'ArcanePorting.o'), '-o', str(executable)], cwd=ROOT, check=True)
     subprocess.run([str(executable)], env=dict(os.environ, PACKAGE_RESOURCE_BUNDLE_PATH=str(BIN)), check=True)

@@ -93,6 +93,7 @@ with tempfile.TemporaryDirectory(prefix='arcane-nested-check-') as temporary:
 import Foundation
 import CryptoKit
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 struct CheckFailure: Error {}
 func require(_ condition: @autoclosure () throws -> Bool) throws {
@@ -218,6 +219,6 @@ try verify(destination)
 print("Deep verification rejects changed nested payloads: PASS")
 ''')
     host = scratch / 'check'
-    run('xcrun', 'swiftc', '-I', BIN, main, BIN / 'NXLibraryCore.o', '-o', host)
+    run('xcrun', 'swiftc', '-I', BIN, main, BIN / 'NXLibraryCore.o', BIN / 'ArcanePorting.o', '-o', host)
     result = run(host, scratch)
     print(result.stdout, end='')

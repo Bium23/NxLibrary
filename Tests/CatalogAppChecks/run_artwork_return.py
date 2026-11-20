@@ -70,6 +70,7 @@ with tempfile.TemporaryDirectory(prefix='arcane-artwork-return-') as temporary:
 import SwiftUI
 import AppKit
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 @MainActor enum Fixture {
     static let root = URL(fileURLWithPath: CommandLine.arguments[1])
@@ -193,7 +194,7 @@ extension EnvironmentValues {
                     str(scratch / 'Native.swift'), str(scratch / 'Steam.swift'),
                     str(ROOT / 'Sources/NXLibrary/Views/Spotlight/GameArtLoader.swift'),
                     str(ROOT / 'Sources/NXLibrary/Views/Theme/CatalogPersonalizationsEnvironment.swift'),
-                    str(BIN / 'NXLibraryCore.o'), '-o', str(executable)], check=True)
+                    str(BIN / 'NXLibraryCore.o'), str(BIN / 'ArcanePorting.o'), '-o', str(executable)], check=True)
     view_result = subprocess.run([str(executable), str(scratch)],
                                  env=dict(os.environ, PACKAGE_RESOURCE_BUNDLE_PATH=str(BIN)))
 
@@ -203,6 +204,7 @@ import Foundation
 import AppKit
 import Combine
 import NXLibraryCore
+import ArcanePorting
 
 enum AppData { static let cacheRoot = URL(fileURLWithPath: CommandLine.arguments[1]) }
 struct NoHTTP: ArtworkHTTPClient {
@@ -365,7 +367,7 @@ enum CoverReadGate {
     subprocess.run(['xcrun', 'swiftc', '-parse-as-library', '-I', str(BIN), str(mods),
                     str(controlled_host),
                     str(ROOT / 'Sources/NXLibrary/Models/GamepadType.swift'),
-                    str(BIN / 'NXLibraryCore.o'), '-o', str(mods_executable)], check=True)
+                    str(BIN / 'NXLibraryCore.o'), str(BIN / 'ArcanePorting.o'), '-o', str(mods_executable)], check=True)
     mods_result = subprocess.run([str(mods_executable), str(scratch)],
                                  env=dict(os.environ, PACKAGE_RESOURCE_BUNDLE_PATH=str(BIN)))
     raise SystemExit(view_result.returncode or mods_result.returncode)

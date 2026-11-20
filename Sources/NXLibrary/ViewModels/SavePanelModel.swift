@@ -1,6 +1,7 @@
 import AppKit
 import Combine
 import NXLibraryCore
+import ArcanePorting
 
 /// One panel's state; filesystem work runs on the library's serial save queue.
 final class SavePanelModel: ObservableObject {

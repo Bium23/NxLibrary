@@ -1,5 +1,6 @@
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// Art for a `PlayedGame`: an nxnative game's through the loader's own lookups, a Steam game's through the same
 /// picks and automatic choices its pages use, decoded at the same sizes. Steam art is cached under the player's

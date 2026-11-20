@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// One GameBanana mod over the game's page: its images, author, version beside the game's, likes and downloads, the
 /// description as plain text with Read more under it, then its files, one row each (Install / Update / Installed,

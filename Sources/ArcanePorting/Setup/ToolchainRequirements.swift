@@ -1,0 +1,39 @@
+import Foundation
+import NXLibraryCore
+
+/// What this Arcane is tested with, in one place. An upgrade edits this
+/// table (and `AppViewModel.pinnedEngineCommit`), never the Setup check's code.
+public struct ToolchainRequirements: Equatable {
+    /// The oldest Xcode the engine's Metal toolchain runs with.
+    public var minimumXcode: String
+    /// The certified Metal compiler before an engine exists to name one in its lock.
+    public var fallbackMetal: String
+    /// Metal compiler version → Apple's MetalToolchain asset build, so Arcane can
+    /// download exactly the compiler the engine certifies, not just the newest one.
+    public var metalAssets: [String: String]
+
+    public init(minimumXcode: String, fallbackMetal: String, metalAssets: [String: String]) {
+        self.minimumXcode = minimumXcode
+        self.fallbackMetal = fallbackMetal
+        self.metalAssets = metalAssets
+    }
+
+    public static let current = ToolchainRequirements(
+        minimumXcode: "27.2",
+        fallbackMetal: "32023.922",
+        metalAssets: ["32023.921": "27A266a", "32023.922": "27B47"])
+
+    /// For /usr/bin/xcodebuild: whatever Metal toolchain matches this Xcode.
+    public static let anyMetalDownload = ["-downloadComponent", "MetalToolchain"]
+
+    /// For /usr/bin/xcodebuild: the asset that carries `metal`; nil when the table does not know it.
+    public func metalDownload(for metal: String) -> [String]? {
+        metalAssets[metal].map { Self.anyMetalDownload + ["-buildVersion", $0] }
+    }
+
+    /// "Xcode 27.1\nBuild version …" → "27.1".
+    public static func xcodeVersion(from text: String) -> String? {
+        guard let line = text.split(separator: "\n").first, line.hasPrefix("Xcode ") else { return nil }
+        return String(line.dropFirst("Xcode ".count)).trimmingCharacters(in: .whitespaces)
+    }
+}

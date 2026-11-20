@@ -1,5 +1,6 @@
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// What the home shows of the porting: the tile look, the pills and the time line.
 extension AppViewModel {

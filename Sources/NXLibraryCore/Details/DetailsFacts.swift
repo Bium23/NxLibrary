@@ -52,23 +52,23 @@ public enum DetailsFacts {
                      .location: installation.map { _ in text(volumeName).map { "Steam · " + $0 } ?? "Steam" }])
     }
 
-    static func rows(_ values: [DetailsFact.Kind: String?]) -> [DetailsFact] {
+    package static func rows(_ values: [DetailsFact.Kind: String?]) -> [DetailsFact] {
         DetailsFact.Kind.allCases.compactMap { kind in
             (values[kind] ?? nil).map { DetailsFact(kind: kind, value: $0) }
         }
     }
 
-    static func names(_ list: [String]?) -> String? {
+    package static func names(_ list: [String]?) -> String? {
         let names = (list ?? []).compactMap(text)
         return names.isEmpty ? nil : names.joined(separator: ", ")
     }
 
-    static func text(_ raw: String?) -> String? {
+    package static func text(_ raw: String?) -> String? {
         guard let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines), !trimmed.isEmpty else { return nil }
         return trimmed
     }
 
-    static func size(_ bytes: Int64?, locale: Locale) -> String? {
+    package static func size(_ bytes: Int64?, locale: Locale) -> String? {
         guard let bytes, bytes > 0 else { return nil }
         return bytes.formatted(.byteCount(style: .file).locale(locale))
     }

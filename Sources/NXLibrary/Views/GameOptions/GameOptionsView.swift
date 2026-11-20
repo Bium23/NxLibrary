@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// Selene's Game options: the current screen dimmed, then a centred column (1040u)
 /// with the game's name and glass rows. Edit details opens its own list and a

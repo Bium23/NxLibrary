@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class EngineToolchainTests: XCTestCase {
     private var resources: URL!

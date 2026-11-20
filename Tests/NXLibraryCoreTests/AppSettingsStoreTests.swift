@@ -1,6 +1,7 @@
 import XCTest
 import Combine
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class AppSettingsStoreTests: XCTestCase {
     func testFullscreenStartupSurvivesSavingAndOldSettingsStayWindowed() throws {

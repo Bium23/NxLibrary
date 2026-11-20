@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class LauncherSettingsTests: XCTestCase {
     private func makeApp(_ body: (URL) throws -> Void) throws -> URL {

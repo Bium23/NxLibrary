@@ -1,6 +1,7 @@
 import AppKit
 import Combine
 import NXLibraryCore
+import ArcanePorting
 
 /// Which library games are running, and Resume and Close Game for them. The running set is
 /// read from the system's process list (`RunningAppsTracker`) whenever it may have changed: on

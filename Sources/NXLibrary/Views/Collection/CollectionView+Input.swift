@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// Collection's controller, keyboard and pointer input.
 extension CollectionView {

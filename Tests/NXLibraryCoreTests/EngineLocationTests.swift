@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class EngineLocationTests: XCTestCase {
     private var root: URL!

@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class BuildScratchTests: XCTestCase {
     private let core = URL(fileURLWithPath: "/Users/me/Library/Application Support/NXLibrary")

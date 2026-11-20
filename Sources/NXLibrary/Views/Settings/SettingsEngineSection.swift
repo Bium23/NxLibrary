@@ -1,5 +1,6 @@
 import SwiftUI
 import NXLibraryCore
+import ArcanePorting
 
 struct SettingsEngineSection: View {
     @ObservedObject var viewModel: AppViewModel

@@ -40,6 +40,7 @@ def declaration(path, signature):
 host = r'''
 import Foundation
 import NXLibraryCore
+import ArcanePorting
 
 typealias CFTimeInterval = Double
 func CACurrentMediaTime() -> Double { 0 }
@@ -177,5 +178,5 @@ with tempfile.TemporaryDirectory(prefix='entrance-check-') as folder:
     executable = scratch / 'check'
     subprocess.run(['xcrun', 'swiftc', '-parse-as-library', '-I', str(BIN), str(swift),
                     str(ROOT / 'Sources/NXLibrary/Models/GamepadType.swift'),
-                    str(BIN / 'NXLibraryCore.o'), '-o', str(executable)], cwd=ROOT, check=True)
+                    str(BIN / 'NXLibraryCore.o'), str(BIN / 'ArcanePorting.o'), '-o', str(executable)], cwd=ROOT, check=True)
     subprocess.run([str(executable)], env=dict(os.environ, PACKAGE_RESOURCE_BUNDLE_PATH=str(BIN)), check=True)

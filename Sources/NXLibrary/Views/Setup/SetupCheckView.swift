@@ -1,5 +1,6 @@
 import SwiftUI
 import NXLibraryCore
+import ArcanePorting
 
 /// "Let's get Arcane ready" (Selene's SetupScreen): a card per thing Arcane
 /// needs, rising in one after another; the focused card's story in a fixed panel

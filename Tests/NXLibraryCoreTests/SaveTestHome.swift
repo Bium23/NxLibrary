@@ -1,5 +1,6 @@
 import Foundation
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class SaveTestHome {
     let base: URL

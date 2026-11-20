@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// Spotlight, the home screen (spec §5.2, Selene Main.xaml HOME): one row of
 /// square tiles under the filter tabs, the selected game's logo, pills and

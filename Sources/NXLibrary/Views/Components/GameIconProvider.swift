@@ -1,5 +1,6 @@
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// The installed app has the game's icon. Before a build succeeds, use the
 /// icon nxnative already extracted into the workspace instead of the generic

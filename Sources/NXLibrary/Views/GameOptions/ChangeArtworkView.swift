@@ -3,6 +3,7 @@ import AppKit
 import ImageIO
 import UniformTypeIdentifiers
 import NXLibraryCore
+import ArcanePorting
 
 /// Game options → Edit details → Change artwork, after Playnite's artwork picker.
 /// Tabs for Cover, Background, Icon and Logo; each shows Automatic, the player's

@@ -1,6 +1,7 @@
 import AppKit
 import ImageIO
 import NXLibraryCore
+import ArcanePorting
 
 /// Loads and caches a game's hero art and logo for Spotlight (and, until it is
 /// replaced, the legacy library). Every lookup goes through the shared

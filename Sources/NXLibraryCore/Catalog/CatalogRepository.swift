@@ -9,7 +9,7 @@ public struct CatalogRepository {
     public init(store: CatalogStore) { self.store = store }
     public func load() throws -> CatalogDocument { try store.loadOrMigrate() }
 
-    func transaction(_ change: (inout CatalogDocument) throws -> Void) throws -> CatalogDocument {
+    package func transaction(_ change: (inout CatalogDocument) throws -> Void) throws -> CatalogDocument {
         let current = try load()
         var draft = current
         try change(&draft)

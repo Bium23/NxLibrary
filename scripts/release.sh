@@ -63,7 +63,7 @@ python3 "$ROOT/scripts/check_publication.py" --runtime "$ROOT/work/Runtime"
 
 # What this release needs on a player's Mac, as a hidden line in its notes (AppUpdate.requirements(in:)): the
 # update dialog warns about an Xcode to update first and the engine Setup downloads after the restart.
-MIN_XCODE="$(sed -n 's/.*minimumXcode: "\([0-9.]*\)".*/\1/p' "$ROOT/Sources/NXLibraryCore/Porting/Setup/ToolchainRequirements.swift" | head -1)"
+MIN_XCODE="$(sed -n 's/.*minimumXcode: "\([0-9.]*\)".*/\1/p' "$ROOT/Sources/ArcanePorting/Setup/ToolchainRequirements.swift" | head -1)"
 ENGINE="$(sed -n 's/.*let pinnedEngineCommit = "\([0-9a-f]\{40\}\)".*/\1/p' "$ROOT/Sources/NXLibrary/ViewModels/AppViewModel.swift" | head -1)"
 [ -n "$MIN_XCODE" ] && [ -n "$ENGINE" ] || fail "could not read minimumXcode or pinnedEngineCommit from the sources"
 REQUIRES="<!-- nxlibrary-requires xcode=$MIN_XCODE engine=$ENGINE -->"

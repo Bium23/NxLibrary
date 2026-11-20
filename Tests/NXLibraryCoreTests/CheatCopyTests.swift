@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class CheatCopyTests: XCTestCase {
     private let build = "B424BE150A8E7D78"

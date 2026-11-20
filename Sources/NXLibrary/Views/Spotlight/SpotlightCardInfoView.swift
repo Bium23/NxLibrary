@@ -1,5 +1,6 @@
 import SwiftUI
 import NXLibraryCore
+import ArcanePorting
 
 /// What a selected card shows under the row: headline (28 SemiBold), body
 /// (19, ink82), its numbers, and the "A" action. Activity adds this week's

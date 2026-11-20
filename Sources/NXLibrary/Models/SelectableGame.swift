@@ -1,5 +1,6 @@
 import Foundation
 import NXLibraryCore
+import ArcanePorting
 
 struct SelectableGame: Identifiable, Equatable {
     let id: String

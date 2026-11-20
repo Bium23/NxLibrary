@@ -2,6 +2,7 @@ import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
 import NXLibraryCore
+import ArcanePorting
 
 /// Game options → Cheats: this game's cheat files as the host reads them, switched here while the game is not running.
 /// Top to bottom: the header, notices, the master

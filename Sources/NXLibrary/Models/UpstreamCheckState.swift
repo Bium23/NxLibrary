@@ -1,5 +1,6 @@
 import Foundation
 import NXLibraryCore
+import ArcanePorting
 
 enum UpstreamCheckState: Equatable {
     case idle

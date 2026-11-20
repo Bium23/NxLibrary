@@ -66,7 +66,6 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAp
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_nested_bundles.py
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_artwork_return.py
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_source_access.py
-python3 Tests/CatalogAppChecks/run_boundary.py
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_entrance.py
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer python3 Tests/CatalogAppChecks/run_achievement_scroll.py
 bash scripts/build_app.sh
@@ -151,7 +150,8 @@ These are distribution decisions. Do not bypass the dirty-tree check, change the
 
 | Path | Responsibility |
 |---|---|
-| `Sources/NXLibraryCore/` | Models, rules and services without SwiftUI, one folder per area (`App`, `Catalog`, `Library`, `Selene`, `Details`, `Artwork`, `Achievements`, `Mods`, `Settings`, `Steam`); everything Switch, saves and GameBanana included, is in `Porting/`. |
+| `Sources/NXLibraryCore/` | Models, rules and services without SwiftUI, one folder per area (`App`, `Catalog`, `Library`, `Selene`, `Details`, `Artwork`, `Achievements`, `Mods`, `Settings`, `Steam`); nothing Switch. |
+| `Sources/ArcanePorting/` | The `ArcanePorting` target: everything Switch (Setup, build, launch, game settings, cheats, Nintendo store, saves, RomFS mods and GameBanana, the nxnative part of catalog and library), one folder per part; it depends on `NXLibraryCore`. |
 | `Sources/NXLibrary/` | App entry, coordination, SwiftUI screens, theme and macOS integration. |
 | `Tests/NXLibraryCoreTests/` | Automated application/core regressions and synthetic fixtures. |
 | `Tests/PublicationChecks/` | Publication-guard regressions. |

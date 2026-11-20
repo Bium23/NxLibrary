@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// Details' controller, keyboard, scroll-wheel and pointer input. The guards
 /// match Spotlight's and Collection's: no key or wheel event goes to the page

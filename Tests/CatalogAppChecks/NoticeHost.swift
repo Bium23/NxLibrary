@@ -1,5 +1,6 @@
 import Foundation
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 struct SettingsNotice { var retry: (() -> Void)?; var onDismiss: (() -> Void)? = nil }
 final class AppViewModel {

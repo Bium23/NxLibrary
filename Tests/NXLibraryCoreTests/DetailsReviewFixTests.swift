@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class DetailsReviewFixTests: XCTestCase {
     /// Play on a game not built yet builds it when its sources are there; the page has no Build button any more.

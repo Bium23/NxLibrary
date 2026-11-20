@@ -1,4 +1,5 @@
 import NXLibraryCore
+import ArcanePorting
 
 extension AppViewModel {
     func personalizationKey(for game: PortedGame) -> String { personalizations.nxnativeKey(for: game) }

@@ -1,5 +1,6 @@
 import Foundation
 import NXLibraryCore
+import ArcanePorting
 
 extension AppViewModel {
     /// The game the menu-bar Play / Details / Options commands act on. On

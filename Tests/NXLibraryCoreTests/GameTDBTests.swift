@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class GameTDBTests: XCTestCase {
     // Trimmed from switchtdb.xml (LANG=EN): the shapes the parser must read and skip.

@@ -18,6 +18,7 @@ HOST = r'''
 import Foundation
 import Darwin
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 let fm = FileManager.default
 let slots: [SaveSlot] = [.account, .device, .user2, .user3, .user4,
@@ -139,7 +140,7 @@ def main():
         source, binary = scratch / 'main.swift', scratch / 'save-restart'
         source.write_text(HOST)
         subprocess.run(['xcrun', 'swiftc', '-I', str(LIBRARY), str(source),
-                        str(LIBRARY / 'NXLibraryCore.o'), '-o', str(binary)],
+                        str(LIBRARY / 'NXLibraryCore.o'), str(LIBRARY / 'ArcanePorting.o'), '-o', str(binary)],
                        cwd=ROOT, check=True, timeout=60)
         env = dict(os.environ, PACKAGE_RESOURCE_BUNDLE_PATH=str(LIBRARY))
 

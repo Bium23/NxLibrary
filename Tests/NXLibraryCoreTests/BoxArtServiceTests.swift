@@ -1,6 +1,7 @@
 import XCTest
 import AppKit
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class BoxArtServiceTests: XCTestCase {
     /// Answers by URL; anything unknown is a 404.

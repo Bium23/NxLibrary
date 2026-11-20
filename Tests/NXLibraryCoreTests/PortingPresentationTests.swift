@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class PortingPresentationTests: XCTestCase {
     private func progress(_ events: [BuildEvent]) -> PortingProgress {

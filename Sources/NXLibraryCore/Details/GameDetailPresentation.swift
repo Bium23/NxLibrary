@@ -37,7 +37,48 @@ public struct GameDetailPresentation: Equatable {
     public let appPath: String
     public let savePath: String
 
-    static func released(_ raw: String?, locale: Locale) -> String? {
+    /// Every value of the page, for a source's own entry (`GameDetailPresentation+Porting.swift`).
+    package init(title: String, console: String, eyebrow: String, description: String,
+                 descriptionIsEnglishFallback: Bool, descriptionLanguageNote: String?, descriptionLanguage: String?,
+                 descriptionSettled: Bool, genres: [String], released: String?, developerLine: String?,
+                 thisWeek: String, rank: String?, publisher: String?, releaseYear: String?, playtime: String,
+                 lastPlayed: String, version: String, size: String, engineCommitShort: String,
+                 toolchainVerified: Bool, toolchainNote: String?, canPlay: Bool, canRebuild: Bool,
+                 sourcesDetached: Bool, hasBaseSource: Bool, storeURL: URL?, hltbURL: URL?, appPath: String,
+                 savePath: String) {
+        self.title = title
+        self.console = console
+        self.eyebrow = eyebrow
+        self.description = description
+        self.descriptionIsEnglishFallback = descriptionIsEnglishFallback
+        self.descriptionLanguageNote = descriptionLanguageNote
+        self.descriptionLanguage = descriptionLanguage
+        self.descriptionSettled = descriptionSettled
+        self.genres = genres
+        self.released = released
+        self.developerLine = developerLine
+        self.thisWeek = thisWeek
+        self.rank = rank
+        self.publisher = publisher
+        self.releaseYear = releaseYear
+        self.playtime = playtime
+        self.lastPlayed = lastPlayed
+        self.version = version
+        self.size = size
+        self.engineCommitShort = engineCommitShort
+        self.toolchainVerified = toolchainVerified
+        self.toolchainNote = toolchainNote
+        self.canPlay = canPlay
+        self.canRebuild = canRebuild
+        self.sourcesDetached = sourcesDetached
+        self.hasBaseSource = hasBaseSource
+        self.storeURL = storeURL
+        self.hltbURL = hltbURL
+        self.appPath = appPath
+        self.savePath = savePath
+    }
+
+    package static func released(_ raw: String?, locale: Locale) -> String? {
         // Release dates are timezone-neutral: parse and format in UTC.
         guard let raw else { return nil }
         let parser = DateFormatter()
@@ -54,7 +95,7 @@ public struct GameDetailPresentation: Equatable {
     }
 
     /// "#2 of 5" among the visible games with play time, whatever their source.
-    static func rank(id: UUID, name: String, total: TimeInterval, others: [(id: UUID, name: String)],
+    package static func rank(id: UUID, name: String, total: TimeInterval, others: [(id: UUID, name: String)],
                      playtimes: [UUID: TimeInterval]) -> String? {
         guard total > 0 else { return nil }
         var entries: [(id: UUID, name: String, time: TimeInterval)] = [(id, name, total)]
@@ -71,7 +112,7 @@ public struct GameDetailPresentation: Equatable {
         return "#\(position) of \(entries.count)"
     }
 
-    static func eyebrow(from name: String) -> String {
+    package static func eyebrow(from name: String) -> String {
         guard !name.isEmpty else { return "" }
         let separators = [":", "™", " – "]
         for separator in separators {
@@ -86,7 +127,7 @@ public struct GameDetailPresentation: Equatable {
         return ""
     }
 
-    static func hltbURL(for name: String) -> URL? {
+    package static func hltbURL(for name: String) -> URL? {
         var components = URLComponents(string: "https://howlongtobeat.com/")
         components?.queryItems = [URLQueryItem(name: "q", value: name)]
         return components?.url

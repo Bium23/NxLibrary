@@ -15,7 +15,7 @@ public struct LibraryPresentation: Equatable {
     public let summary: String
 
     /// The values as the screens show them; each source's entry fills them from its own facts.
-    init(title: String, eyebrow: String, genres: [String], publisher: String?, releaseYear: String?, playtime: String,
+    package init(title: String, eyebrow: String, genres: [String], publisher: String?, releaseYear: String?, playtime: String,
          lastPlayed: String, platform: String, console: String, sourcesDetached: Bool, summary: String) {
         self.title = title; self.eyebrow = eyebrow; self.genres = genres; self.publisher = publisher
         self.releaseYear = releaseYear; self.playtime = playtime; self.lastPlayed = lastPlayed
@@ -23,7 +23,7 @@ public struct LibraryPresentation: Equatable {
     }
 
     /// A Steam game (the base's own source).
-    init(steamRecord game: CatalogGame, metadata steamMetadata: SteamMetadata?,
+    package init(steamRecord game: CatalogGame, metadata steamMetadata: SteamMetadata?,
          overrides: [MetadataField: String], totalPlaytime: TimeInterval, lastPlayed: Date?, now: Date) {
         // Reject facts accidentally delivered for another external identity.
         let facts = steamMetadata.flatMap { $0.appID == game.steamGame?.appID ? $0 : nil }
@@ -44,7 +44,7 @@ public struct LibraryPresentation: Equatable {
         summary = overrides[.description] ?? facts?.description ?? ""
     }
 
-    static func eyebrow(from name: String) -> String {
+    package static func eyebrow(from name: String) -> String {
         let separators = [":", " – "]
         for separator in separators {
             if let range = name.range(of: separator) {
@@ -58,7 +58,7 @@ public struct LibraryPresentation: Equatable {
         return ""
     }
 
-    static func duration(_ interval: TimeInterval) -> String {
+    package static func duration(_ interval: TimeInterval) -> String {
         guard interval > 0 else { return "—" }
         let totalMinutes = Int(interval / 60)
         let hours = totalMinutes / 60
@@ -67,7 +67,7 @@ public struct LibraryPresentation: Equatable {
         return L10n.format("%@h %@m", [hours.formatted(.number.locale(L10n.context.formatLocale)), minutes.formatted(.number.locale(L10n.context.formatLocale))])
     }
 
-    static func relative(_ date: Date?, now: Date) -> String {
+    package static func relative(_ date: Date?, now: Date) -> String {
         guard let date else { return L10n.text("Never") }
         let seconds = max(0, now.timeIntervalSince(date))
         if seconds < 60 { return L10n.text("Just now") }

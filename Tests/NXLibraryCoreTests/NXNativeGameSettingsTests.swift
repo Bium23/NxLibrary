@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class NXNativeGameSettingsTests: XCTestCase {
     private let titleID = "040074A01BF12000"

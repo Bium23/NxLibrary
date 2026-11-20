@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 private struct SplitMix64: RandomNumberGenerator {
     var state: UInt64

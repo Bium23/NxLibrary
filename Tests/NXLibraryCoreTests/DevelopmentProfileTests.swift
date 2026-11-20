@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class DevelopmentProfileTests: XCTestCase {
     private func fixture() throws -> (URL, AppDataProfile) {

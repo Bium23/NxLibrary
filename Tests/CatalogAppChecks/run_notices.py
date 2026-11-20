@@ -38,7 +38,7 @@ with tempfile.TemporaryDirectory(prefix='catalog-notice-check-') as scratch:
     command = ['xcrun', 'swiftc', '-I', str(BIN), str(main),
                str(ROOT / 'Sources/NXLibrary/Models/LogEntry.swift'),
                str(ROOT / 'Sources/NXLibrary/ViewModels/AppViewModel+Catalog.swift'),
-               str(BIN / 'NXLibraryCore.o'), '-o', str(executable)]
+               str(BIN / 'NXLibraryCore.o'), str(BIN / 'ArcanePorting.o'), '-o', str(executable)]
     subprocess.run(command, cwd=ROOT, check=True)
     env = dict(os.environ, PACKAGE_RESOURCE_BUNDLE_PATH=str(BIN))
     subprocess.run([str(executable)], env=env, check=True)

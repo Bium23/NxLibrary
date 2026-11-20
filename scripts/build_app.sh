@@ -112,6 +112,6 @@ python3 "$ROOT/scripts/check_localizations.py" --app "$APP"
 codesign --force --deep --sign - "$APP"
 codesign --verify --deep --strict "$APP"
 swiftc -I "$ROOT/.build/$CONFIG" "$ROOT/scripts/install_built_app.swift" \
-  "$ROOT/.build/$CONFIG/NXLibraryCore.o" -o "$STAGE/install-app"
+  "$ROOT/.build/$CONFIG/NXLibraryCore.o" "$ROOT/.build/$CONFIG/ArcanePorting.o" -o "$STAGE/install-app"
 "$STAGE/install-app" "$APP" "$DESTINATION"
 echo "Built $DESTINATION"

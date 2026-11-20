@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class DetailsFactsTests: XCTestCase {
     private let en = Locale(identifier: "en_US")

@@ -4,7 +4,7 @@ public struct CatalogSourceConfiguration: Codable, Equatable, Sendable {
     public let integration: CatalogIntegration
     public var isEnabled: Bool
     public var rootURL: URL?
-    public internal(set) var generation: UUID
+    public package(set) var generation: UUID
 
     public init(integration: CatalogIntegration, isEnabled: Bool = false, rootURL: URL? = nil, generation: UUID = UUID()) {
         self.integration = integration; self.isEnabled = isEnabled; self.rootURL = rootURL; self.generation = generation

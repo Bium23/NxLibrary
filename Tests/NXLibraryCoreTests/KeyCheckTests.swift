@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class KeyCheckTests: XCTestCase {
     /// A random header key, generated per run: no real key material in the repository.

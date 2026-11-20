@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class RunningGamesTests: XCTestCase {
     private func game(_ name: String, bundleId: String? = nil, titleId: String? = nil) -> PortedGame {

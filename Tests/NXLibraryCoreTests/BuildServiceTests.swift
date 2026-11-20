@@ -1,6 +1,7 @@
 import XCTest
 import Darwin
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class BuildServiceTests: XCTestCase {
     /// A build that cannot even start (here: its working folder is gone) closes its log and its output pipes.

@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class NewestEngineTests: XCTestCase {
     private let pin = "4a0551e4b9abc75ea736006e4dbd30fcac0d03a4"

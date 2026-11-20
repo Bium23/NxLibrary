@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class ModStoreLayoutTests: XCTestCase {
     private func mod(_ id: Int, downloads: Int = 0, likes: Int = 0, added: TimeInterval = 0, updated: TimeInterval = 0,

@@ -1,5 +1,6 @@
 import SwiftUI
 import NXLibraryCore
+import ArcanePorting
 
 /// Library → Games: how every game launches and closes, Surprise me and the hidden games.
 struct SettingsLibraryGamesSection: View {

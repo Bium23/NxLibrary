@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// Collection (spec §5.3, Selene Main.xaml SeleneLibrary, `library.png`): the
 /// whole library as one row of portrait covers over the selected game's art.

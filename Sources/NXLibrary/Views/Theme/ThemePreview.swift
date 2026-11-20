@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// The Theme screen's preview (Selene's ProfileSteps.Preview): a small home in
 /// a palette that need not be active yet, over its wallpaper or, without one,

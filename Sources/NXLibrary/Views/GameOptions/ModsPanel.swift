@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// Game options → Mods: this game's RomFS mods (`<data folder>/mods`), switched and ordered here while the game is
 /// not running; the next launch reads the ones that are on, top first (ModStore). Top to bottom: the header, notices,

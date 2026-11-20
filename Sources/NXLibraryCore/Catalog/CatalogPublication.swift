@@ -3,8 +3,8 @@ import Darwin
 
 /// Only the commit boundary is replaceable; staging, decoding, locking and
 /// source/revision checks remain real in failure and concurrency tests.
-struct CatalogPublication {
-    let publish: (_ staged: URL, _ destination: URL, _ replacing: Bool, _ validate: () throws -> Void) throws -> Void
+package struct CatalogPublication {
+    package let publish: (_ staged: URL, _ destination: URL, _ replacing: Bool, _ validate: () throws -> Void) throws -> Void
 
     let syncDirectory: (URL) throws -> Void
 

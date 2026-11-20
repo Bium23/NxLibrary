@@ -1,5 +1,6 @@
 import SwiftUI
 import NXLibraryCore
+import ArcanePorting
 
 /// Porting → Storage: the build caches of each game and of all games, largest first.
 struct SettingsPortingStorageSection: View {

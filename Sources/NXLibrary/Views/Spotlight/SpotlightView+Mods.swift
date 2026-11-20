@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// The Mods band and the mod store that opens from it.
 extension SpotlightView {

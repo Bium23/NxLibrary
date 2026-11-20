@@ -1,8 +1,8 @@
 # Arcane — catalogo dei file
 
-Aggiornato il 20 novembre 2026. Copertura di **794 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
+Aggiornato il 20 novembre 2026. Copertura di **793 file** del progetto, compresi i controlli di pubblicazione, la CI con regressioni app senza UI, il master dell’icona, le guide per sviluppo e media, gli screenshot del README, l'integrazione di nxnative, il canale di aggiornamento e il primo avvio che parte da ciò che è già sul Mac, il setup del porting con cartella unica per scoperta e installazione dei giochi. Le cartelle personali, gli output generati e gli appunti non versionati sono esclusi.
 
-La [guida tecnica](../how-it-works/architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le cartelle del Core, una per area, con lo Switch in `Porting/`; quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
+La [guida tecnica](../how-it-works/architecture.md) spiega come collaborano i componenti. Qui ogni riga identifica un file e la sua responsabilità. Le sezioni Core seguono le cartelle del Core, una per area; le sezioni Porting seguono le cartelle del target `ArcanePorting`, con lo Switch; quelle UI seguono schermate e componenti. Le viste usano i modelli e i servizi del Core attraverso il coordinamento applicativo.
 
 Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Application Support sono descritti nella guida.
 
@@ -23,19 +23,19 @@ Le cartelle generate `.build/`, `work/` e `dist/` e i dati personali in Applicat
 - [Core · mod](#core--mod)
 - [Core · impostazioni, lingua e testi](#core--impostazioni-lingua-e-testi)
 - [Core · Steam](#core--steam)
-- [Core · Porting: gioco Switch e libreria nxnative](#core--porting-gioco-switch-e-libreria-nxnative)
-- [Core · Porting: catalogo nxnative](#core--porting-catalogo-nxnative)
-- [Core · Porting: libreria, sessioni e spazio](#core--porting-libreria-sessioni-e-spazio)
-- [Core · Porting: pagina del gioco](#core--porting-pagina-del-gioco)
-- [Core · Porting: impostazioni e app](#core--porting-impostazioni-e-app)
-- [Core · Porting: Setup, motore e chiavi](#core--porting-setup-motore-e-chiavi)
-- [Core · Porting: sorgenti, build e installazione](#core--porting-sorgenti-build-e-installazione)
-- [Core · Porting: avvio e icona del gioco](#core--porting-avvio-e-icona-del-gioco)
-- [Core · Porting: impostazioni del gioco](#core--porting-impostazioni-del-gioco)
-- [Core · Porting: cheat](#core--porting-cheat)
-- [Core · Porting: store Nintendo e copertine](#core--porting-store-nintendo-e-copertine)
-- [Core · Porting: salvataggi, backup e cloud](#core--porting-salvataggi-backup-e-cloud)
-- [Core · Porting: mod RomFS e GameBanana](#core--porting-mod-romfs-e-gamebanana)
+- [Porting · gioco Switch e libreria nxnative](#porting--gioco-switch-e-libreria-nxnative)
+- [Porting · catalogo nxnative](#porting--catalogo-nxnative)
+- [Porting · libreria, sessioni e spazio](#porting--libreria-sessioni-e-spazio)
+- [Porting · pagina del gioco](#porting--pagina-del-gioco)
+- [Porting · impostazioni e app](#porting--impostazioni-e-app)
+- [Porting · Setup, motore e chiavi](#porting--setup-motore-e-chiavi)
+- [Porting · sorgenti, build e installazione](#porting--sorgenti-build-e-installazione)
+- [Porting · avvio e icona del gioco](#porting--avvio-e-icona-del-gioco)
+- [Porting · impostazioni del gioco](#porting--impostazioni-del-gioco)
+- [Porting · cheat](#porting--cheat)
+- [Porting · store Nintendo e copertine](#porting--store-nintendo-e-copertine)
+- [Porting · salvataggi, backup e cloud](#porting--salvataggi-backup-e-cloud)
+- [Porting · mod RomFS e GameBanana](#porting--mod-romfs-e-gamebanana)
 - [UI · Add Game e porting](#ui--add-game-e-porting)
 - [UI · Spotlight](#ui--spotlight)
 - [UI · Collection e Details](#ui--collection-e-details)
@@ -64,7 +64,7 @@ La pubblicazione comprende anche [CONTRIBUTING.md](../../CONTRIBUTING.md), [SECU
 | [CHANGELOG.md](../../CHANGELOG.md) | Registra le modifiche visibili all'utente per versione. |
 | [LICENSE](../../LICENSE) | Contiene la licenza MIT di Arcane. |
 | [NOTICE](../../NOTICE) | Conserva attribuzioni del motore al pin corrente, dei componenti, dei loghi e delle altre risorse riutilizzate. |
-| [Package.swift](../../Package.swift) | Dichiara i target SwiftPM, le loro dipendenze e il deployment macOS minimo. |
+| [Package.swift](../../Package.swift) | Dichiara i target SwiftPM (`NXLibraryCore`, il modulo `ArcanePorting` che dipende dalla base, l'app che li importa entrambi, i test), le loro dipendenze e il deployment macOS minimo. |
 | [README.md](../../README.md) | Presenta Arcane come libreria e launcher Mac, con guide, requisiti, sostegno volontario, crediti e note legali. |
 | [runtime.lock](../../runtime.lock) | Fissa versioni, download e hash del runtime Python e degli strumenti inclusi nel bundle. |
 | [VERSION](../../VERSION) | Versione in sviluppo usata dal packaging e verificata dalla procedura di release. |
@@ -361,222 +361,222 @@ Cartella `Sources/NXLibraryCore/Steam/`.
 | [Sources/NXLibraryCore/Steam/SteamArtworkRequest.swift](../../Sources/NXLibraryCore/Steam/SteamArtworkRequest.swift) | Cosa chiede la tile di un gioco Steam per ogni ruolo: prima la scelta personale, poi per il quadrato l’icona dell’app installata, mai la copertina; gli altri ruoli vanno all’arte dello store. |
 | [Sources/NXLibraryCore/Steam/SteamBackdropChoice.swift](../../Sources/NXLibraryCore/Steam/SteamBackdropChoice.swift) | Sfondo automatico di un gioco Steam: arte 16:9 pulita (Xbox, GOG, TheGamesDB, fan art LaunchBox), poi il primo screenshot, per ultimo il banner della libreria ritagliato. |
 
-## Core · Porting: gioco Switch e libreria nxnative
+## Porting · gioco Switch e libreria nxnative
 
-Cartella `Sources/NXLibraryCore/Porting/`.
-
-| File | Responsabilità |
-|---|---|
-| [Sources/NXLibraryCore/Porting/PortedGame.swift](../../Sources/NXLibraryCore/Porting/PortedGame.swift) | Modello persistente del gioco con bundle, sorgenti, impostazioni, build e installazione in attesa. |
-| [Sources/NXLibraryCore/Porting/LibraryFile.swift](../../Sources/NXLibraryCore/Porting/LibraryFile.swift) | Contenitore versionato del catalogo della libreria. |
-| [Sources/NXLibraryCore/Porting/GameStatus.swift](../../Sources/NXLibraryCore/Porting/GameStatus.swift) | Enumera disponibilità e stato del gioco rispetto ad app, sorgenti e porting. |
-| [Sources/NXLibraryCore/Porting/TargetPlatform.swift](../../Sources/NXLibraryCore/Porting/TargetPlatform.swift) | Definisce il target mac-app e le sue etichette per l’interfaccia. |
-
-## Core · Porting: catalogo nxnative
-
-Cartella `Sources/NXLibraryCore/Porting/Catalog/`.
+Cartella `Sources/ArcanePorting/`.
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Porting/Catalog/PortedGame+Catalog.swift](../../Sources/NXLibraryCore/Porting/Catalog/PortedGame+Catalog.swift) | `PortedGame` nel contratto del catalogo (validazione, presenza, avvio, ricerca), integrazione `.nxnative`, tipi noti dell’app (`CatalogRecordKinds.standard`) ed entrate `nxnativeGame`, `init(nxnative:)`, `updateNXNative`. |
-| [Sources/NXLibraryCore/Porting/Catalog/CatalogPersonalizations+Porting.swift](../../Sources/NXLibraryCore/Porting/Catalog/CatalogPersonalizations+Porting.swift) | Chiave personale nxnative (title ID o chiave storica) e radice dei dati personali: nxnative alla radice, ogni altra integrazione in `integrations/<nome>`. |
-| [Sources/NXLibraryCore/Porting/Catalog/CatalogStore+Porting.swift](../../Sources/NXLibraryCore/Porting/Catalog/CatalogStore+Porting.swift) | Lo store dell’app con tutti i tipi noti e l’import di `library.json`: `CatalogStore(directory:)`, `CatalogStore.decode(_:)`, `CatalogLegacyImport.nxnative` e `CatalogDocument.converting`. |
-| [Sources/NXLibraryCore/Porting/Catalog/CatalogRepository+Porting.swift](../../Sources/NXLibraryCore/Porting/Catalog/CatalogRepository+Porting.swift) | Modifiche nxnative del catalogo: un gioco portato, tutti, la fusione di una scansione della libreria e l’esito di una build; proiezione `nxnativeGames`. |
-| [Sources/NXLibraryCore/Porting/Catalog/CatalogBuildRecoveries.swift](../../Sources/NXLibraryCore/Porting/Catalog/CatalogBuildRecoveries.swift) | Generazioni di build non ancora salvate, selezione del retry e conferma della sola generazione persistita. |
+| [Sources/ArcanePorting/PortedGame.swift](../../Sources/ArcanePorting/PortedGame.swift) | Modello persistente del gioco con bundle, sorgenti, impostazioni, build e installazione in attesa. |
+| [Sources/ArcanePorting/LibraryFile.swift](../../Sources/ArcanePorting/LibraryFile.swift) | Contenitore versionato del catalogo della libreria. |
+| [Sources/ArcanePorting/GameStatus.swift](../../Sources/ArcanePorting/GameStatus.swift) | Enumera disponibilità e stato del gioco rispetto ad app, sorgenti e porting. |
+| [Sources/ArcanePorting/TargetPlatform.swift](../../Sources/ArcanePorting/TargetPlatform.swift) | Definisce il target mac-app e le sue etichette per l’interfaccia. |
 
-## Core · Porting: libreria, sessioni e spazio
+## Porting · catalogo nxnative
 
-Cartella `Sources/NXLibraryCore/Porting/Library/`.
-
-| File | Responsabilità |
-|---|---|
-| [Sources/NXLibraryCore/Porting/Library/LibraryQuery+Porting.swift](../../Sources/NXLibraryCore/Porting/Library/LibraryQuery+Porting.swift) | Filtro, ricerca e selezione della home per i giochi Switch: `PortedGame` come `LibraryQueryRecord`, `LibraryQuery.apply(to:history:)`, `reconcile`, `move` e `jump` di `LibrarySelectionState`. |
-| [Sources/NXLibraryCore/Porting/Library/Surprise+Porting.swift](../../Sources/NXLibraryCore/Porting/Library/Surprise+Porting.swift) | Surprise me sui giochi Switch, sopra la scelta generica di `Surprise`. |
-| [Sources/NXLibraryCore/Porting/Library/PlaySessionStore+Porting.swift](../../Sources/NXLibraryCore/Porting/Library/PlaySessionStore+Porting.swift) | Avvio della sessione di un gioco portato: title ID (o chiave unica) e bundle ID dell’app. |
-| [Sources/NXLibraryCore/Porting/Library/SessionSummary+Porting.swift](../../Sources/NXLibraryCore/Porting/Library/SessionSummary+Porting.swift) | Card di fine sessione per un gioco portato. |
-| [Sources/NXLibraryCore/Porting/Library/LibraryPresentation+Porting.swift](../../Sources/NXLibraryCore/Porting/Library/LibraryPresentation+Porting.swift) | Valori della libreria per un gioco portato (fatti dello store Nintendo, console, sorgenti staccate) e l’entrata per `CatalogGame`, che sceglie la strada Switch o Steam. |
-| [Sources/NXLibraryCore/Porting/Library/RunningGames.swift](../../Sources/NXLibraryCore/Porting/Library/RunningGames.swift) | Quali giochi portati sono in esecuzione: confronta il bundle ID effettivo con quelli delle app aperte. |
-| [Sources/NXLibraryCore/Porting/Library/StorageManager.swift](../../Sources/NXLibraryCore/Porting/Library/StorageManager.swift) | Misura app, cache e log per gioco e totali senza duplicare percorsi condivisi; verifica cartelle e sorgenti prima della pulizia selettiva. I backup appartengono al flusso Saves. |
-| [Sources/NXLibraryCore/Porting/Library/GameStorageUsage.swift](../../Sources/NXLibraryCore/Porting/Library/GameStorageUsage.swift) | Dimensioni per gioco e totali: distingue assenza e indisponibilità, segnala cache condivise e conserva identità stabili per il focus. |
-
-## Core · Porting: pagina del gioco
-
-Cartella `Sources/NXLibraryCore/Porting/Details/`.
+Cartella `Sources/ArcanePorting/Catalog/`.
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Porting/Details/GameDetailPresentation+Porting.swift](../../Sources/NXLibraryCore/Porting/Details/GameDetailPresentation+Porting.swift) | La pagina di un gioco portato: fatti dello store Nintendo, motore e toolchain della build, sorgenti, Rebuild e cartella dei salvataggi. |
-| [Sources/NXLibraryCore/Porting/Details/DetailsFacts+Porting.swift](../../Sources/NXLibraryCore/Porting/Details/DetailsFacts+Porting.swift) | Le righe Details di un gioco portato: crediti dello store, versione e dimensione della build, cartella dell’app. |
-| [Sources/NXLibraryCore/Porting/Details/GameOptionsPresentation+Porting.swift](../../Sources/NXLibraryCore/Porting/Details/GameOptionsPresentation+Porting.swift) | Game Options di un gioco portato: converte le scelte salvate della build (`GameSettingsSnapshot`) in `GameOptionsBuildSettings`. |
-| [Sources/NXLibraryCore/Porting/Details/MoreLikeThis+Porting.swift](../../Sources/NXLibraryCore/Porting/Details/MoreLikeThis+Porting.swift) | More like this fra giochi portati, con autori e generi dello store Nintendo. |
+| [Sources/ArcanePorting/Catalog/PortedGame+Catalog.swift](../../Sources/ArcanePorting/Catalog/PortedGame+Catalog.swift) | `PortedGame` nel contratto del catalogo (validazione, presenza, avvio, ricerca), integrazione `.nxnative`, tipi noti dell’app (`CatalogRecordKinds.standard`) ed entrate `nxnativeGame`, `init(nxnative:)`, `updateNXNative`. |
+| [Sources/ArcanePorting/Catalog/CatalogPersonalizations+Porting.swift](../../Sources/ArcanePorting/Catalog/CatalogPersonalizations+Porting.swift) | Chiave personale nxnative (title ID o chiave storica) e radice dei dati personali: nxnative alla radice, ogni altra integrazione in `integrations/<nome>`. |
+| [Sources/ArcanePorting/Catalog/CatalogStore+Porting.swift](../../Sources/ArcanePorting/Catalog/CatalogStore+Porting.swift) | Lo store dell’app con tutti i tipi noti e l’import di `library.json`: `CatalogStore(directory:)`, `CatalogStore.decode(_:)`, `CatalogLegacyImport.nxnative` e `CatalogDocument.converting`. |
+| [Sources/ArcanePorting/Catalog/CatalogRepository+Porting.swift](../../Sources/ArcanePorting/Catalog/CatalogRepository+Porting.swift) | Modifiche nxnative del catalogo: un gioco portato, tutti, la fusione di una scansione della libreria e l’esito di una build; proiezione `nxnativeGames`. |
+| [Sources/ArcanePorting/Catalog/CatalogBuildRecoveries.swift](../../Sources/ArcanePorting/Catalog/CatalogBuildRecoveries.swift) | Generazioni di build non ancora salvate, selezione del retry e conferma della sola generazione persistita. |
 
-## Core · Porting: impostazioni e app
+## Porting · libreria, sessioni e spazio
 
-Cartelle `Sources/NXLibraryCore/Porting/Settings/` e `Porting/App/`.
-
-| File | Responsabilità |
-|---|---|
-| [Sources/NXLibraryCore/Porting/Settings/AppSettings+Porting.swift](../../Sources/NXLibraryCore/Porting/Settings/AppSettings+Porting.swift) | Game defaults, Cloud saves e la cartella scelta, letti e scritti nelle chiavi di sempre di `settings.json`; un valore assente o illeggibile è il suo default. |
-| [Sources/NXLibraryCore/Porting/Settings/SettingsReset+Porting.swift](../../Sources/NXLibraryCore/Porting/Settings/SettingsReset+Porting.swift) | Reset group completo: quello della base più New games (`gameDefaults`). |
-| [Sources/NXLibraryCore/Porting/App/AppDataProfile+Porting.swift](../../Sources/NXLibraryCore/Porting/App/AppDataProfile+Porting.swift) | Dove le build mettono i file temporanei: la cartella del profilo e, nel profilo stabile, accanto a ogni cartella Game apps. |
-| [Sources/NXLibraryCore/Porting/App/FirstRunFindings+Porting.swift](../../Sources/NXLibraryCore/Porting/App/FirstRunFindings+Porting.swift) | Il primo avvio conta le app nxnative della cartella Game apps, nella lettura e nel lettore annullabile. |
-| [Sources/NXLibraryCore/Porting/App/DevelopmentProfileImporter+Porting.swift](../../Sources/NXLibraryCore/Porting/App/DevelopmentProfileImporter+Porting.swift) | I controlli Porting della copia di sviluppo (`library.json`, catalogo con i tipi noti e l’import legacy) e `DevelopmentProfileImporter()` e `AppData.prepare()` con questi. |
-| [Sources/NXLibraryCore/Porting/Settings/SettingsCatalog+Porting.swift](../../Sources/NXLibraryCore/Porting/Settings/SettingsCatalog+Porting.swift) | Le righe del gruppo Porting (Engine, Keys, Library, New games con la vibrazione, Cloud saves, Porting storage) e l’elenco completo `all` in ordine di schermata, con `changed` e `search`. |
-
-## Core · Porting: Setup, motore e chiavi
-
-Cartella `Sources/NXLibraryCore/Porting/Setup/`.
+Cartella `Sources/ArcanePorting/Library/`.
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Porting/Setup/ToolchainRequirements.swift](../../Sources/NXLibraryCore/Porting/Setup/ToolchainRequirements.swift) | Centralizza requisiti Xcode e asset Metal. |
-| [Sources/NXLibraryCore/Porting/Setup/ToolchainInfo.swift](../../Sources/NXLibraryCore/Porting/Setup/ToolchainInfo.swift) | Registra provenienza e verifica della toolchain associata a un build. |
-| [Sources/NXLibraryCore/Porting/Setup/ToolchainGateCopy.swift](../../Sources/NXLibraryCore/Porting/Setup/ToolchainGateCopy.swift) | Traduce il gate in testi distinguendo Metal certificato, precedente e successivo. |
-| [Sources/NXLibraryCore/Porting/Setup/SetupCheck.swift](../../Sources/NXLibraryCore/Porting/Setup/SetupCheck.swift) | Converte fatti e override del Setup in schede, stati, azioni e condizioni di riapertura. |
-| [Sources/NXLibraryCore/Porting/Setup/GameFoldersCopy.swift](../../Sources/NXLibraryCore/Porting/Setup/GameFoldersCopy.swift) | Condivide nomi delle cartelle, formati e descrizioni tra Setup, Settings e selettori dei percorsi. |
-| [Sources/NXLibraryCore/Porting/Setup/SetupGrid.swift](../../Sources/NXLibraryCore/Porting/Setup/SetupGrid.swift) | Calcola disposizione, centratura e navigazione del focus nella griglia del Setup. |
-| [Sources/NXLibraryCore/Porting/Setup/UpstreamCopy.swift](../../Sources/NXLibraryCore/Porting/Setup/UpstreamCopy.swift) | Prepara i testi del changelog upstream e dell’adozione degli aggiornamenti tramite Arcane. |
-| [Sources/NXLibraryCore/Porting/Setup/NXNativeEnvironment.swift](../../Sources/NXLibraryCore/Porting/Setup/NXNativeEnvironment.swift) | Ispeziona strumenti, Python, Xcode e Metal e restituisce uno stato dell’ambiente. |
-| [Sources/NXLibraryCore/Porting/Setup/EngineLocation.swift](../../Sources/NXLibraryCore/Porting/Setup/EngineLocation.swift) | Risolve checkout predefinito o scelto e produce i candidati per prod.keys. |
-| [Sources/NXLibraryCore/Porting/Setup/EngineToolchain.swift](../../Sources/NXLibraryCore/Porting/Setup/EngineToolchain.swift) | Individua runtime incluso o venv del checkout e prepara ambiente e PATH dei processi. |
-| [Sources/NXLibraryCore/Porting/Setup/EnginePackageReader.swift](../../Sources/NXLibraryCore/Porting/Setup/EnginePackageReader.swift) | Legge content meta e capacità del checkout, compresa selezione NUP multiprogramma, senza esporre chiavi. |
-| [Sources/NXLibraryCore/Porting/Setup/NewestEngine.swift](../../Sources/NXLibraryCore/Porting/Setup/NewestEngine.swift) | Scelta dell’engine più nuovo: testi condivisi, lettura del Metal dal lock di main, cambio di commit con git senza toccare file modificati. |
-| [Sources/NXLibraryCore/Porting/Setup/CompatibilityChecker.swift](../../Sources/NXLibraryCore/Porting/Setup/CompatibilityChecker.swift) | Controlla commit, modifiche del checkout, Metal e opzioni CLI richieste dal frontend. |
-| [Sources/NXLibraryCore/Porting/Setup/SetupProbe.swift](../../Sources/NXLibraryCore/Porting/Setup/SetupProbe.swift) | Raccoglie i fatti mostrati dal Setup usando comandi e controlli mirati. |
-| [Sources/NXLibraryCore/Porting/Setup/SetupActions.swift](../../Sources/NXLibraryCore/Porting/Setup/SetupActions.swift) | Costruisce le operazioni Git ammesse per installare o allineare il motore al pin. |
-| [Sources/NXLibraryCore/Porting/Setup/KeyStore.swift](../../Sources/NXLibraryCore/Porting/Setup/KeyStore.swift) | Valida le chiavi, espone solo il riepilogo e pubblica atomicamente la copia gestita con permessi 0600. |
-| [Sources/NXLibraryCore/Porting/Setup/KeyCheck.swift](../../Sources/NXLibraryCore/Porting/Setup/KeyCheck.swift) | Legge intestazioni NCA e ticket e verifica se le chiavi possono aprire le sorgenti selezionate. |
-| [Sources/NXLibraryCore/Porting/Setup/UpstreamChecker.swift](../../Sources/NXLibraryCore/Porting/Setup/UpstreamChecker.swift) | Consulta i commit upstream tramite HTTP e produce stato e collegamento di confronto. |
+| [Sources/ArcanePorting/Library/LibraryQuery+Porting.swift](../../Sources/ArcanePorting/Library/LibraryQuery+Porting.swift) | Filtro, ricerca e selezione della home per i giochi Switch: `PortedGame` come `LibraryQueryRecord`, `LibraryQuery.apply(to:history:)`, `reconcile`, `move` e `jump` di `LibrarySelectionState`. |
+| [Sources/ArcanePorting/Library/Surprise+Porting.swift](../../Sources/ArcanePorting/Library/Surprise+Porting.swift) | Surprise me sui giochi Switch, sopra la scelta generica di `Surprise`. |
+| [Sources/ArcanePorting/Library/PlaySessionStore+Porting.swift](../../Sources/ArcanePorting/Library/PlaySessionStore+Porting.swift) | Avvio della sessione di un gioco portato: title ID (o chiave unica) e bundle ID dell’app. |
+| [Sources/ArcanePorting/Library/SessionSummary+Porting.swift](../../Sources/ArcanePorting/Library/SessionSummary+Porting.swift) | Card di fine sessione per un gioco portato. |
+| [Sources/ArcanePorting/Library/LibraryPresentation+Porting.swift](../../Sources/ArcanePorting/Library/LibraryPresentation+Porting.swift) | Valori della libreria per un gioco portato (fatti dello store Nintendo, console, sorgenti staccate) e l’entrata per `CatalogGame`, che sceglie la strada Switch o Steam. |
+| [Sources/ArcanePorting/Library/RunningGames.swift](../../Sources/ArcanePorting/Library/RunningGames.swift) | Quali giochi portati sono in esecuzione: confronta il bundle ID effettivo con quelli delle app aperte. |
+| [Sources/ArcanePorting/Library/StorageManager.swift](../../Sources/ArcanePorting/Library/StorageManager.swift) | Misura app, cache e log per gioco e totali senza duplicare percorsi condivisi; verifica cartelle e sorgenti prima della pulizia selettiva. I backup appartengono al flusso Saves. |
+| [Sources/ArcanePorting/Library/GameStorageUsage.swift](../../Sources/ArcanePorting/Library/GameStorageUsage.swift) | Dimensioni per gioco e totali: distingue assenza e indisponibilità, segnala cache condivise e conserva identità stabili per il focus. |
 
-## Core · Porting: sorgenti, build e installazione
+## Porting · pagina del gioco
 
-Cartella `Sources/NXLibraryCore/Porting/Build/`.
+Cartella `Sources/ArcanePorting/Details/`.
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Porting/Build/GameResourceState.swift](../../Sources/NXLibraryCore/Porting/Build/GameResourceState.swift) | Distingue app mancanti, sorgenti assenti e workspace non compilati, riconcilia gli stati e conserva Play per una build esistente. |
-| [Sources/NXLibraryCore/Porting/Build/AppSizeCache.swift](../../Sources/NXLibraryCore/Porting/Build/AppSizeCache.swift) | Conserva dimensioni per percorso e data del bundle e decide lo stato vuoto della libreria. |
-| [Sources/NXLibraryCore/Porting/Build/BuildWarningCopy.swift](../../Sources/NXLibraryCore/Porting/Build/BuildWarningCopy.swift) | Testo mostrato a fine build per `warn` dell’engine: archivio mancante o pipeline da preparare al primo avvio. |
-| [Sources/NXLibraryCore/Porting/Build/NUPSourceCatalog.swift](../../Sources/NXLibraryCore/Porting/Build/NUPSourceCatalog.swift) | Legge NUP con base o soli update; tiene distinti programma, applicazione e base DLC tramite il lettore upstream e conserva il default selezionato. |
-| [Sources/NXLibraryCore/Porting/Build/InstallProgress.swift](../../Sources/NXLibraryCore/Porting/Build/InstallProgress.swift) | Interpreta avanzamento Git, percentuali e byte per le installazioni. |
-| [Sources/NXLibraryCore/Porting/Build/GameFileItem.swift](../../Sources/NXLibraryCore/Porting/Build/GameFileItem.swift) | Sorgenti salvate con layout, requisiti e selezione NUP facoltativa, compatibile con i vecchi record. |
-| [Sources/NXLibraryCore/Porting/Build/NUPProgramSelection.swift](../../Sources/NXLibraryCore/Porting/Build/NUPProgramSelection.swift) | Identità tipizzata del programma NUP, applicazione e base add-on; indice ricavato dal programma, persistito con i sorgenti. |
-| [Sources/NXLibraryCore/Porting/Build/SourceSelection.swift](../../Sources/NXLibraryCore/Porting/Build/SourceSelection.swift) | Scelte dei contenuti, dimensioni e versione di build; verifica coerenza e supporto del programma NUP e ne vincola l’indice nel rebuild. |
-| [Sources/NXLibraryCore/Porting/Build/BuildRecord.swift](../../Sources/NXLibraryCore/Porting/Build/BuildRecord.swift) | Conserva esito, tempi, log e provenienza di un porting. |
-| [Sources/NXLibraryCore/Porting/Build/PipelineArchiveProgress.swift](../../Sources/NXLibraryCore/Porting/Build/PipelineArchiveProgress.swift) | Legge il log pipeline della build corrente e conta solo i gruppi confermati pronti dal motore. |
-| [Sources/NXLibraryCore/Porting/Build/PortingProgress.swift](../../Sources/NXLibraryCore/Porting/Build/PortingProgress.swift) | Aggrega eventi del motore in fasi e percentuale complessiva; identifica archivio e prewarm senza dedurre conteggi dal tempo trascorso. |
-| [Sources/NXLibraryCore/Porting/Build/PortingPresentation.swift](../../Sources/NXLibraryCore/Porting/Build/PortingPresentation.swift) | Definisce fallimento persistito, ETA, attività senza stima del prewarm, aspetto della tile e pill del porting. |
-| [Sources/NXLibraryCore/Porting/Build/PortingFailureReason.swift](../../Sources/NXLibraryCore/Porting/Build/PortingFailureReason.swift) | Classifica messaggi del motore e rifiuti preliminari in motivazioni e azioni spiegabili, comprese le tabelle shader diverse dal profilo del gioco. |
-| [Sources/NXLibraryCore/Porting/Build/PortingNotice.swift](../../Sources/NXLibraryCore/Porting/Build/PortingNotice.swift) | Decide quando notificare l’esito di un porting e prepara il relativo messaggio. |
-| [Sources/NXLibraryCore/Porting/Build/PendingInstall.swift](../../Sources/NXLibraryCore/Porting/Build/PendingInstall.swift) | Conserva un bundle pronto in attesa e ne gestisce installazione, scarto e aggiornamento del record, anche dopo una pubblicazione interrotta. |
-| [Sources/NXLibraryCore/Porting/Build/SourceCatalog.swift](../../Sources/NXLibraryCore/Porting/Build/SourceCatalog.swift) | Riconosce sorgenti NSP/XCI/NSZ/XCZ e raggruppa titoli, update e DLC; DetectedSource conserva la selezione NUP tipizzata. |
-| [Sources/NXLibraryCore/Porting/Build/ExtractedSourceCatalog.swift](../../Sources/NXLibraryCore/Porting/Build/ExtractedSourceCatalog.swift) | Verifica il layout di un gioco estratto, legge NPDM e profilo registrato e rileva update e DLC. |
-| [Sources/NXLibraryCore/Porting/Build/WorkspaceManager.swift](../../Sources/NXLibraryCore/Porting/Build/WorkspaceManager.swift) | Prepara collegamenti simbolici lasciando intatta la cache di build e verifica i link interrotti. |
-| [Sources/NXLibraryCore/Porting/Build/BuildScratch.swift](../../Sources/NXLibraryCore/Porting/Build/BuildScratch.swift) | Sceglie dove stanno workspace e app temporanea (sul volume dell'app quando può ospitarli), riconosce i workspace gestiti e le cartelle temporanee da pulire. |
-| [Sources/NXLibraryCore/Porting/Build/BuildCommand.swift](../../Sources/NXLibraryCore/Porting/Build/BuildCommand.swift) | Valore con eseguibile, argomenti, ambiente e directory di lavoro del processo di porting. |
-| [Sources/NXLibraryCore/Porting/Build/BuildCommandBuilder.swift](../../Sources/NXLibraryCore/Porting/Build/BuildCommandBuilder.swift) | Contratto CLI nxnative: Mac, JSON, versione pacchetto, selezione --program esplicita e override toolchain. |
-| [Sources/NXLibraryCore/Porting/Build/BuildEvent.swift](../../Sources/NXLibraryCore/Porting/Build/BuildEvent.swift) | Definisce gli eventi di fase, step, avanzamento e log ricevuti dal motore. |
-| [Sources/NXLibraryCore/Porting/Build/BuildEventParser.swift](../../Sources/NXLibraryCore/Porting/Build/BuildEventParser.swift) | Decodifica eventi JSON e tratta le altre righe come log. |
-| [Sources/NXLibraryCore/Porting/Build/BuildService.swift](../../Sources/NXLibraryCore/Porting/Build/BuildService.swift) | Avvia il porting, gestisce processi, cancellazione, log ed eventi; conserva il bundle valido quando fallisce solo l’installazione. |
-| [Sources/NXLibraryCore/Porting/Build/BuildOutputInstaller.swift](../../Sources/NXLibraryCore/Porting/Build/BuildOutputInstaller.swift) | Pubblica il bundle con rinomina o scambio atomico, prepara copie fra volumi e riconosce i tentativi già completati tramite ricevuta. |
-| [Sources/NXLibraryCore/Porting/Build/GameAppDestination.swift](../../Sources/NXLibraryCore/Porting/Build/GameAppDestination.swift) | Risolve la destinazione condivisa da review e porting, conserva i percorsi dei rebuild, evita conflitti di nome e verifica la cartella di destinazione. |
+| [Sources/ArcanePorting/Details/GameDetailPresentation+Porting.swift](../../Sources/ArcanePorting/Details/GameDetailPresentation+Porting.swift) | La pagina di un gioco portato: fatti dello store Nintendo, motore e toolchain della build, sorgenti, Rebuild e cartella dei salvataggi. |
+| [Sources/ArcanePorting/Details/DetailsFacts+Porting.swift](../../Sources/ArcanePorting/Details/DetailsFacts+Porting.swift) | Le righe Details di un gioco portato: crediti dello store, versione e dimensione della build, cartella dell’app. |
+| [Sources/ArcanePorting/Details/GameOptionsPresentation+Porting.swift](../../Sources/ArcanePorting/Details/GameOptionsPresentation+Porting.swift) | Game Options di un gioco portato: converte le scelte salvate della build (`GameSettingsSnapshot`) in `GameOptionsBuildSettings`. |
+| [Sources/ArcanePorting/Details/MoreLikeThis+Porting.swift](../../Sources/ArcanePorting/Details/MoreLikeThis+Porting.swift) | More like this fra giochi portati, con autori e generi dello store Nintendo. |
 
-## Core · Porting: avvio e icona del gioco
+## Porting · impostazioni e app
 
-Cartella `Sources/NXLibraryCore/Porting/Launch/`.
+Cartelle `Sources/ArcanePorting/Settings/` e `Porting/App/`.
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Porting/Launch/ImportService.swift](../../Sources/NXLibraryCore/Porting/Launch/ImportService.swift) | Scansiona bundle nxnative e ne ricava identità, versione, percorso e dimensioni. |
-| [Sources/NXLibraryCore/Porting/Launch/AppIconProgress.swift](../../Sources/NXLibraryCore/Porting/Launch/AppIconProgress.swift) | Stati e testi della preparazione icona, con esito informativo aggiunto al log della build conclusa. |
-| [Sources/NXLibraryCore/Porting/Launch/IconLaunchWait.swift](../../Sources/NXLibraryCore/Porting/Launch/IconLaunchWait.swift) | Conserva una richiesta Play durante la firma dell'icona e la revoca su annullamento, errore o chiusura del dialogo. |
-| [Sources/NXLibraryCore/Porting/Launch/LaunchService.swift](../../Sources/NXLibraryCore/Porting/Launch/LaunchService.swift) | Scrive l’ambiente runtime e avvia il bundle del gioco tramite NSWorkspace. |
-| [Sources/NXLibraryCore/Porting/Launch/AppIconWriter.swift](../../Sources/NXLibraryCore/Porting/Launch/AppIconWriter.swift) | Scrive l’icona scelta nell’app del gioco, conserva l’originale, rifirma e verifica, e annulla tutto in caso di errore. |
-| [Sources/NXLibraryCore/Porting/Launch/NXNativeLibraryMerge.swift](../../Sources/NXLibraryCore/Porting/Launch/NXNativeLibraryMerge.swift) | Algoritmo di merge nxnative usato dal repository del catalogo comune. |
+| [Sources/ArcanePorting/Settings/AppSettings+Porting.swift](../../Sources/ArcanePorting/Settings/AppSettings+Porting.swift) | Game defaults, Cloud saves e la cartella scelta, letti e scritti nelle chiavi di sempre di `settings.json`; un valore assente o illeggibile è il suo default. |
+| [Sources/ArcanePorting/Settings/SettingsReset+Porting.swift](../../Sources/ArcanePorting/Settings/SettingsReset+Porting.swift) | Reset group completo: quello della base più New games (`gameDefaults`). |
+| [Sources/ArcanePorting/App/AppDataProfile+Porting.swift](../../Sources/ArcanePorting/App/AppDataProfile+Porting.swift) | Dove le build mettono i file temporanei: la cartella del profilo e, nel profilo stabile, accanto a ogni cartella Game apps. |
+| [Sources/ArcanePorting/App/FirstRunFindings+Porting.swift](../../Sources/ArcanePorting/App/FirstRunFindings+Porting.swift) | Il primo avvio conta le app nxnative della cartella Game apps, nella lettura e nel lettore annullabile. |
+| [Sources/ArcanePorting/App/DevelopmentProfileImporter+Porting.swift](../../Sources/ArcanePorting/App/DevelopmentProfileImporter+Porting.swift) | I controlli Porting della copia di sviluppo (`library.json`, catalogo con i tipi noti e l’import legacy) e `DevelopmentProfileImporter()` e `AppData.prepare()` con questi. |
+| [Sources/ArcanePorting/Settings/SettingsCatalog+Porting.swift](../../Sources/ArcanePorting/Settings/SettingsCatalog+Porting.swift) | Le righe del gruppo Porting (Engine, Keys, Library, New games con la vibrazione, Cloud saves, Porting storage) e l’elenco completo `all` in ordine di schermata, con `changed` e `search`. |
 
-## Core · Porting: impostazioni del gioco
+## Porting · Setup, motore e chiavi
 
-Cartella `Sources/NXLibraryCore/Porting/GameSettings/`.
-
-| File | Responsabilità |
-|---|---|
-| [Sources/NXLibraryCore/Porting/GameSettings/NXNativeGameSettings.swift](../../Sources/NXLibraryCore/Porting/GameSettings/NXNativeGameSettings.swift) | Legge l’elenco impostazioni del build, i valori attuali e le chiavi fissate da env.txt. |
-| [Sources/NXLibraryCore/Porting/GameSettings/GameSettingValues.swift](../../Sources/NXLibraryCore/Porting/GameSettings/GameSettingValues.swift) | Le impostazioni della build per More settings (`extraSettings`) ed etichette e passi di un valore (`GameSettingValues`). |
-| [Sources/NXLibraryCore/Porting/GameSettings/SavedChoicesStore.swift](../../Sources/NXLibraryCore/Porting/GameSettings/SavedChoicesStore.swift) | Legge e scrive le scelte salvate launcher.<env> nel dominio preferenze dell’app gioco. |
-| [Sources/NXLibraryCore/Porting/GameSettings/GameRuntimeConfig.swift](../../Sources/NXLibraryCore/Porting/GameSettings/GameRuntimeConfig.swift) | Persiste opzioni per titolo, prepara Review e lingua del rebuild, mappa DM_* e unisce env.txt. |
-| [Sources/NXLibraryCore/Porting/GameSettings/LauncherSettings.swift](../../Sources/NXLibraryCore/Porting/GameSettings/LauncherSettings.swift) | Legge launcher.json e verifica i controlli supportati, con fallback per le build precedenti. |
-| [Sources/NXLibraryCore/Porting/GameSettings/EnvFileEditor.swift](../../Sources/NXLibraryCore/Porting/GameSettings/EnvFileEditor.swift) | Cambia una sola variabile di un `env.txt` lasciando intatte le altre righe. |
-
-## Core · Porting: cheat
-
-Cartella `Sources/NXLibraryCore/Porting/Cheats/`.
+Cartella `Sources/ArcanePorting/Setup/`.
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Porting/Cheats/CheatFile.swift](../../Sources/NXLibraryCore/Porting/Cheats/CheatFile.swift) | Decodifica cheats, sezioni, metadati e collegamenti dei codici secondo il parser del motore. |
-| [Sources/NXLibraryCore/Porting/Cheats/CheatInstall.swift](../../Sources/NXLibraryCore/Porting/Cheats/CheatInstall.swift) | Valuta file e cartelle in ingresso rispetto a title ID, build ID e necessità di conferma. |
-| [Sources/NXLibraryCore/Porting/Cheats/CheatLocator.swift](../../Sources/NXLibraryCore/Porting/Cheats/CheatLocator.swift) | Risolve build ID, title ID e cartella cheats seguendo i file e l’ambiente del launcher. |
-| [Sources/NXLibraryCore/Porting/Cheats/CheatStatus.swift](../../Sources/NXLibraryCore/Porting/Cheats/CheatStatus.swift) | Valuta il supporto del motore tramite ancestry (git in un task staccato, risposta tenuta per l'avvio) e prepara stato della riga e indicatore attivo. |
-| [Sources/NXLibraryCore/Porting/Cheats/CheatCopy.swift](../../Sources/NXLibraryCore/Porting/Cheats/CheatCopy.swift) | Centralizza testi di stato, rifiuto, importazione, sostituzione e rimozione dei cheats. |
-| [Sources/NXLibraryCore/Porting/Cheats/CheatStore.swift](../../Sources/NXLibraryCore/Porting/Cheats/CheatStore.swift) | Legge e modifica cheats, file enabled, master switch e metadati della build corrente. |
+| [Sources/ArcanePorting/Setup/ToolchainRequirements.swift](../../Sources/ArcanePorting/Setup/ToolchainRequirements.swift) | Centralizza requisiti Xcode e asset Metal. |
+| [Sources/ArcanePorting/Setup/ToolchainInfo.swift](../../Sources/ArcanePorting/Setup/ToolchainInfo.swift) | Registra provenienza e verifica della toolchain associata a un build. |
+| [Sources/ArcanePorting/Setup/ToolchainGateCopy.swift](../../Sources/ArcanePorting/Setup/ToolchainGateCopy.swift) | Traduce il gate in testi distinguendo Metal certificato, precedente e successivo. |
+| [Sources/ArcanePorting/Setup/SetupCheck.swift](../../Sources/ArcanePorting/Setup/SetupCheck.swift) | Converte fatti e override del Setup in schede, stati, azioni e condizioni di riapertura. |
+| [Sources/ArcanePorting/Setup/GameFoldersCopy.swift](../../Sources/ArcanePorting/Setup/GameFoldersCopy.swift) | Condivide nomi delle cartelle, formati e descrizioni tra Setup, Settings e selettori dei percorsi. |
+| [Sources/ArcanePorting/Setup/SetupGrid.swift](../../Sources/ArcanePorting/Setup/SetupGrid.swift) | Calcola disposizione, centratura e navigazione del focus nella griglia del Setup. |
+| [Sources/ArcanePorting/Setup/UpstreamCopy.swift](../../Sources/ArcanePorting/Setup/UpstreamCopy.swift) | Prepara i testi del changelog upstream e dell’adozione degli aggiornamenti tramite Arcane. |
+| [Sources/ArcanePorting/Setup/NXNativeEnvironment.swift](../../Sources/ArcanePorting/Setup/NXNativeEnvironment.swift) | Ispeziona strumenti, Python, Xcode e Metal e restituisce uno stato dell’ambiente. |
+| [Sources/ArcanePorting/Setup/EngineLocation.swift](../../Sources/ArcanePorting/Setup/EngineLocation.swift) | Risolve checkout predefinito o scelto e produce i candidati per prod.keys. |
+| [Sources/ArcanePorting/Setup/EngineToolchain.swift](../../Sources/ArcanePorting/Setup/EngineToolchain.swift) | Individua runtime incluso o venv del checkout e prepara ambiente e PATH dei processi. |
+| [Sources/ArcanePorting/Setup/EnginePackageReader.swift](../../Sources/ArcanePorting/Setup/EnginePackageReader.swift) | Legge content meta e capacità del checkout, compresa selezione NUP multiprogramma, senza esporre chiavi. |
+| [Sources/ArcanePorting/Setup/NewestEngine.swift](../../Sources/ArcanePorting/Setup/NewestEngine.swift) | Scelta dell’engine più nuovo: testi condivisi, lettura del Metal dal lock di main, cambio di commit con git senza toccare file modificati. |
+| [Sources/ArcanePorting/Setup/CompatibilityChecker.swift](../../Sources/ArcanePorting/Setup/CompatibilityChecker.swift) | Controlla commit, modifiche del checkout, Metal e opzioni CLI richieste dal frontend. |
+| [Sources/ArcanePorting/Setup/SetupProbe.swift](../../Sources/ArcanePorting/Setup/SetupProbe.swift) | Raccoglie i fatti mostrati dal Setup usando comandi e controlli mirati. |
+| [Sources/ArcanePorting/Setup/SetupActions.swift](../../Sources/ArcanePorting/Setup/SetupActions.swift) | Costruisce le operazioni Git ammesse per installare o allineare il motore al pin. |
+| [Sources/ArcanePorting/Setup/KeyStore.swift](../../Sources/ArcanePorting/Setup/KeyStore.swift) | Valida le chiavi, espone solo il riepilogo e pubblica atomicamente la copia gestita con permessi 0600. |
+| [Sources/ArcanePorting/Setup/KeyCheck.swift](../../Sources/ArcanePorting/Setup/KeyCheck.swift) | Legge intestazioni NCA e ticket e verifica se le chiavi possono aprire le sorgenti selezionate. |
+| [Sources/ArcanePorting/Setup/UpstreamChecker.swift](../../Sources/ArcanePorting/Setup/UpstreamChecker.swift) | Consulta i commit upstream tramite HTTP e produce stato e collegamento di confronto. |
 
-## Core · Porting: store Nintendo e copertine
+## Porting · sorgenti, build e installazione
 
-Cartella `Sources/NXLibraryCore/Porting/Store/`.
-
-| File | Responsabilità |
-|---|---|
-| [Sources/NXLibraryCore/Porting/Store/BoxArtService.swift](../../Sources/NXLibraryCore/Porting/Store/BoxArtService.swift) | Trova copertine Switch in GameTDB e ricorda copertine e ricerche senza risultato. |
-| [Sources/NXLibraryCore/Porting/Store/GameTDB.swift](../../Sources/NXLibraryCore/Porting/Store/GameTDB.swift) | Decodifica il database GameTDB, abbina nomi e regioni e conserva l’indice locale. |
-| [Sources/NXLibraryCore/Porting/Store/ArtworkCandidates+Porting.swift](../../Sources/NXLibraryCore/Porting/Store/ArtworkCandidates+Porting.swift) | Le immagini del picker per un gioco Switch: GameTDB per regione, Title DB, store Nintendo, poi quelle trovate online. |
-| [Sources/NXLibraryCore/Porting/Store/MetadataOptions.swift](../../Sources/NXLibraryCore/Porting/Store/MetadataOptions.swift) | I valori di Change metadata per un gioco Switch: store Nintendo, Title DB e GameTDB, senza ripetizioni. |
-| [Sources/NXLibraryCore/Porting/Store/MetadataPicks+Porting.swift](../../Sources/NXLibraryCore/Porting/Store/MetadataPicks+Porting.swift) | Le scelte del giocatore applicate ai metadati dello store Nintendo. |
-| [Sources/NXLibraryCore/Porting/Store/CriticRatingQuery+Porting.swift](../../Sources/NXLibraryCore/Porting/Store/CriticRatingQuery+Porting.swift) | La ricerca dei voti per un gioco portato, con la console di Details (Switch o Switch 2). |
-| [Sources/NXLibraryCore/Porting/Store/NintendoStoreMetadata.swift](../../Sources/NXLibraryCore/Porting/Store/NintendoStoreMetadata.swift) | Consulta i cataloghi pubblici dello store e Title DB e conserva descrizioni, immagini e screenshot per lingua; finché la nuova lingua arriva, la pagina mostra l'ultima descrizione letta in un'altra. |
-| [Sources/NXLibraryCore/Porting/Store/ScreenshotFallback.swift](../../Sources/NXLibraryCore/Porting/Store/ScreenshotFallback.swift) | Conserva per 30 giorni gli screenshot LaunchBox dei giochi senza screenshot Title DB e li sovrappone ai metadati. |
-
-## Core · Porting: salvataggi, backup e cloud
-
-Cartella `Sources/NXLibraryCore/Porting/Saves/`.
+Cartella `Sources/ArcanePorting/Build/`.
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Porting/Saves/SaveLocation.swift](../../Sources/NXLibraryCore/Porting/Saves/SaveLocation.swift) | Percorsi e identità dei salvataggi; account/device, utenti locali aggiuntivi e file registro; cloud effettivo. |
-| [Sources/NXLibraryCore/Porting/Saves/CloudSaves.swift](../../Sources/NXLibraryCore/Porting/Saves/CloudSaves.swift) | Descrive scelta cloud, cartelle iCloud o personalizzate e passaggi fra le opzioni. |
-| [Sources/NXLibraryCore/Porting/Saves/CloudSavesPreferences.swift](../../Sources/NXLibraryCore/Porting/Saves/CloudSavesPreferences.swift) | Prepara la cartella e riapplica la scelta cloud ai domini dei giochi prima di ogni avvio, anche Off. |
-| [Sources/NXLibraryCore/Porting/Saves/RyujinxSaveFolder.swift](../../Sources/NXLibraryCore/Porting/Saves/RyujinxSaveFolder.swift) | Riconosce contenitori Ryujinx, controlla il title ID e seleziona l’intero albero committed 0. |
-| [Sources/NXLibraryCore/Porting/Saves/SaveSnapshot.swift](../../Sources/NXLibraryCore/Porting/Saves/SaveSnapshot.swift) | Identità, inventario, manifest schema 1/2 e anteprime; rifiuta dichiarazioni storiche con componenti nuovi. |
-| [Sources/NXLibraryCore/Porting/Saves/SavePresentation.swift](../../Sources/NXLibraryCore/Porting/Saves/SavePresentation.swift) | Riepiloghi e ambito dei restore storici/multiutente, nomi dei componenti e limite cloud a primario/device. |
-| [Sources/NXLibraryCore/Porting/Saves/SaveFileIO.swift](../../Sources/NXLibraryCore/Porting/Saves/SaveFileIO.swift) | Copie, hash e xattr portabili; inventario di directory e registro regolare limitato, controlli dei percorsi e scritture durevoli. |
-| [Sources/NXLibraryCore/Porting/Saves/SaveSnapshotStore.swift](../../Sources/NXLibraryCore/Porting/Saves/SaveSnapshotStore.swift) | Backup completi degli utenti locali e registro, formati storici compatibili, staging e import User/Device. |
-| [Sources/NXLibraryCore/Porting/Saves/SaveRestorePreview.swift](../../Sources/NXLibraryCore/Porting/Saves/SaveRestorePreview.swift) | Staging e validazione dei pezzi registrati nel backup, compreso il file utenti, con rilevamento dei cambiamenti concorrenti. |
-| [Sources/NXLibraryCore/Porting/Saves/SaveTransaction.swift](../../Sources/NXLibraryCore/Porting/Saves/SaveTransaction.swift) | Sostituzioni con ambito esplicito, backup completo e journal 1/2; verifica originali, recovery e pulizia parziale riprendibili con intento durevole. |
-| [Sources/NXLibraryCore/Porting/Saves/SaveOperationGate.swift](../../Sources/NXLibraryCore/Porting/Saves/SaveOperationGate.swift) | Assegna lease per titolo e un’esclusione globale per l’updater; coordina salvataggi, Play, installazioni e recuperi. |
-| [Sources/NXLibraryCore/Porting/Saves/SaveFailure.swift](../../Sources/NXLibraryCore/Porting/Saves/SaveFailure.swift) | Errori delle operazioni sui salvataggi, con i testi per il giocatore. |
-| [Sources/NXLibraryCore/Porting/Saves/SaveFiles.swift](../../Sources/NXLibraryCore/Porting/Saves/SaveFiles.swift) | Controlli dei percorsi dei salvataggi con lstat: nessun link sostituito e solo cartelle e file normali. |
+| [Sources/ArcanePorting/Build/GameResourceState.swift](../../Sources/ArcanePorting/Build/GameResourceState.swift) | Distingue app mancanti, sorgenti assenti e workspace non compilati, riconcilia gli stati e conserva Play per una build esistente. |
+| [Sources/ArcanePorting/Build/AppSizeCache.swift](../../Sources/ArcanePorting/Build/AppSizeCache.swift) | Conserva dimensioni per percorso e data del bundle e decide lo stato vuoto della libreria. |
+| [Sources/ArcanePorting/Build/BuildWarningCopy.swift](../../Sources/ArcanePorting/Build/BuildWarningCopy.swift) | Testo mostrato a fine build per `warn` dell’engine: archivio mancante o pipeline da preparare al primo avvio. |
+| [Sources/ArcanePorting/Build/NUPSourceCatalog.swift](../../Sources/ArcanePorting/Build/NUPSourceCatalog.swift) | Legge NUP con base o soli update; tiene distinti programma, applicazione e base DLC tramite il lettore upstream e conserva il default selezionato. |
+| [Sources/ArcanePorting/Build/InstallProgress.swift](../../Sources/ArcanePorting/Build/InstallProgress.swift) | Interpreta avanzamento Git, percentuali e byte per le installazioni. |
+| [Sources/ArcanePorting/Build/GameFileItem.swift](../../Sources/ArcanePorting/Build/GameFileItem.swift) | Sorgenti salvate con layout, requisiti e selezione NUP facoltativa, compatibile con i vecchi record. |
+| [Sources/ArcanePorting/Build/NUPProgramSelection.swift](../../Sources/ArcanePorting/Build/NUPProgramSelection.swift) | Identità tipizzata del programma NUP, applicazione e base add-on; indice ricavato dal programma, persistito con i sorgenti. |
+| [Sources/ArcanePorting/Build/SourceSelection.swift](../../Sources/ArcanePorting/Build/SourceSelection.swift) | Scelte dei contenuti, dimensioni e versione di build; verifica coerenza e supporto del programma NUP e ne vincola l’indice nel rebuild. |
+| [Sources/ArcanePorting/Build/BuildRecord.swift](../../Sources/ArcanePorting/Build/BuildRecord.swift) | Conserva esito, tempi, log e provenienza di un porting. |
+| [Sources/ArcanePorting/Build/PipelineArchiveProgress.swift](../../Sources/ArcanePorting/Build/PipelineArchiveProgress.swift) | Legge il log pipeline della build corrente e conta solo i gruppi confermati pronti dal motore. |
+| [Sources/ArcanePorting/Build/PortingProgress.swift](../../Sources/ArcanePorting/Build/PortingProgress.swift) | Aggrega eventi del motore in fasi e percentuale complessiva; identifica archivio e prewarm senza dedurre conteggi dal tempo trascorso. |
+| [Sources/ArcanePorting/Build/PortingPresentation.swift](../../Sources/ArcanePorting/Build/PortingPresentation.swift) | Definisce fallimento persistito, ETA, attività senza stima del prewarm, aspetto della tile e pill del porting. |
+| [Sources/ArcanePorting/Build/PortingFailureReason.swift](../../Sources/ArcanePorting/Build/PortingFailureReason.swift) | Classifica messaggi del motore e rifiuti preliminari in motivazioni e azioni spiegabili, comprese le tabelle shader diverse dal profilo del gioco. |
+| [Sources/ArcanePorting/Build/PortingNotice.swift](../../Sources/ArcanePorting/Build/PortingNotice.swift) | Decide quando notificare l’esito di un porting e prepara il relativo messaggio. |
+| [Sources/ArcanePorting/Build/PendingInstall.swift](../../Sources/ArcanePorting/Build/PendingInstall.swift) | Conserva un bundle pronto in attesa e ne gestisce installazione, scarto e aggiornamento del record, anche dopo una pubblicazione interrotta. |
+| [Sources/ArcanePorting/Build/SourceCatalog.swift](../../Sources/ArcanePorting/Build/SourceCatalog.swift) | Riconosce sorgenti NSP/XCI/NSZ/XCZ e raggruppa titoli, update e DLC; DetectedSource conserva la selezione NUP tipizzata. |
+| [Sources/ArcanePorting/Build/ExtractedSourceCatalog.swift](../../Sources/ArcanePorting/Build/ExtractedSourceCatalog.swift) | Verifica il layout di un gioco estratto, legge NPDM e profilo registrato e rileva update e DLC. |
+| [Sources/ArcanePorting/Build/WorkspaceManager.swift](../../Sources/ArcanePorting/Build/WorkspaceManager.swift) | Prepara collegamenti simbolici lasciando intatta la cache di build e verifica i link interrotti. |
+| [Sources/ArcanePorting/Build/BuildScratch.swift](../../Sources/ArcanePorting/Build/BuildScratch.swift) | Sceglie dove stanno workspace e app temporanea (sul volume dell'app quando può ospitarli), riconosce i workspace gestiti e le cartelle temporanee da pulire. |
+| [Sources/ArcanePorting/Build/BuildCommand.swift](../../Sources/ArcanePorting/Build/BuildCommand.swift) | Valore con eseguibile, argomenti, ambiente e directory di lavoro del processo di porting. |
+| [Sources/ArcanePorting/Build/BuildCommandBuilder.swift](../../Sources/ArcanePorting/Build/BuildCommandBuilder.swift) | Contratto CLI nxnative: Mac, JSON, versione pacchetto, selezione --program esplicita e override toolchain. |
+| [Sources/ArcanePorting/Build/BuildEvent.swift](../../Sources/ArcanePorting/Build/BuildEvent.swift) | Definisce gli eventi di fase, step, avanzamento e log ricevuti dal motore. |
+| [Sources/ArcanePorting/Build/BuildEventParser.swift](../../Sources/ArcanePorting/Build/BuildEventParser.swift) | Decodifica eventi JSON e tratta le altre righe come log. |
+| [Sources/ArcanePorting/Build/BuildService.swift](../../Sources/ArcanePorting/Build/BuildService.swift) | Avvia il porting, gestisce processi, cancellazione, log ed eventi; conserva il bundle valido quando fallisce solo l’installazione. |
+| [Sources/ArcanePorting/Build/BuildOutputInstaller.swift](../../Sources/ArcanePorting/Build/BuildOutputInstaller.swift) | Pubblica il bundle con rinomina o scambio atomico, prepara copie fra volumi e riconosce i tentativi già completati tramite ricevuta. |
+| [Sources/ArcanePorting/Build/GameAppDestination.swift](../../Sources/ArcanePorting/Build/GameAppDestination.swift) | Risolve la destinazione condivisa da review e porting, conserva i percorsi dei rebuild, evita conflitti di nome e verifica la cartella di destinazione. |
 
-## Core · Porting: mod RomFS e GameBanana
+## Porting · avvio e icona del gioco
 
-Cartelle `Sources/NXLibraryCore/Porting/Mods/` e `Porting/Mods/GameBanana/`.
+Cartella `Sources/ArcanePorting/Launch/`.
 
 | File | Responsabilità |
 |---|---|
-| [Sources/NXLibraryCore/Porting/Mods/ModStore.swift](../../Sources/NXLibraryCore/Porting/Mods/ModStore.swift) | Ordine, interruttori, conflitti, Cestino e overlay delle mod RomFS. Ferma la riconciliazione se cartella o record non si leggono. |
-| [Sources/NXLibraryCore/Porting/Mods/ModFolderScanner.swift](../../Sources/NXLibraryCore/Porting/Mods/ModFolderScanner.swift) | Elenca cartelle, archivi e file RomFS. La lettura stretta distingue una cartella vuota da una scansione fallita durante la riconciliazione. |
-| [Sources/NXLibraryCore/Porting/Mods/ModSupport.swift](../../Sources/NXLibraryCore/Porting/Mods/ModSupport.swift) | Quali file di mod funzionano (solo RomFS), dov'è la loro cartella `romfs`, nomi di cartella sicuri. |
-| [Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaAPI.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaAPI.swift) | URL, host fidati, modelli delle risposte di GameBanana e testo semplice dalle descrizioni HTML. |
-| [Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaClient.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaClient.swift) | Richieste a GameBanana con User-Agent, limite di 4 alla volta e cache su disco. |
-| [Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaImageCache.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaImageCache.swift) | Cache su disco delle immagini delle mod dal CDN di GameBanana. |
-| [Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaMatch.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaMatch.swift) | Abbina un gioco alla sua pagina GameBanana per nome e ricorda la scelta. |
-| [Sources/NXLibraryCore/Porting/Mods/GameBanana/AvailableModsFinder.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/AvailableModsFinder.swift) | Cerca le mod di un gioco che funzionano e capisce quando una mod installata ha un aggiornamento. |
-| [Sources/NXLibraryCore/Porting/Mods/GameBanana/ModInstaller.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/ModInstaller.swift) | Controlla, estrae con `bsdtar` e installa una mod scaricata nella cartella del gioco. |
-| [Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaBandModel.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaBandModel.swift) | Stato della fascia Mods di un gioco: abbinamento, mod che funzionano, installazioni. |
-| [Sources/NXLibraryCore/Porting/Mods/GameBanana/ModCatalog.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/ModCatalog.swift) | Categorie nostre, ordinamenti e sezioni della pagina dello store (altezze fisse). |
-| [Sources/NXLibraryCore/Porting/Mods/GameBanana/ModCatalogSnapshots.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/ModCatalogSnapshots.swift) | Le mod di ogni gioco salvate su disco, per aprire lo store subito; solo link GameBanana. |
-| [Sources/NXLibraryCore/Porting/Mods/GameBanana/ModStoreModel.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/ModStoreModel.swift) | Dati dello store: apre dalle copie su disco, aggiorna in background due giochi alla volta, abbina solo se sicuro. |
-| [Sources/NXLibraryCore/Porting/Mods/GameBanana/ModStoreFocus.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/ModStoreFocus.swift) | Focus nella pagina dello store, ancorato al tipo di sezione; ogni sezione ricorda la sua tessera. |
-| [Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaFindModel.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/GameBananaFindModel.swift) | Stato della ricerca per nome: campo, risultati, None of these. |
-| [Sources/NXLibraryCore/Porting/Mods/GameBanana/ModDownload.swift](../../Sources/NXLibraryCore/Porting/Mods/GameBanana/ModDownload.swift) | Scarica un file di GameBanana con avanzamento e Cancel, solo da host fidati. |
+| [Sources/ArcanePorting/Launch/ImportService.swift](../../Sources/ArcanePorting/Launch/ImportService.swift) | Scansiona bundle nxnative e ne ricava identità, versione, percorso e dimensioni. |
+| [Sources/ArcanePorting/Launch/AppIconProgress.swift](../../Sources/ArcanePorting/Launch/AppIconProgress.swift) | Stati e testi della preparazione icona, con esito informativo aggiunto al log della build conclusa. |
+| [Sources/ArcanePorting/Launch/IconLaunchWait.swift](../../Sources/ArcanePorting/Launch/IconLaunchWait.swift) | Conserva una richiesta Play durante la firma dell'icona e la revoca su annullamento, errore o chiusura del dialogo. |
+| [Sources/ArcanePorting/Launch/LaunchService.swift](../../Sources/ArcanePorting/Launch/LaunchService.swift) | Scrive l’ambiente runtime e avvia il bundle del gioco tramite NSWorkspace. |
+| [Sources/ArcanePorting/Launch/AppIconWriter.swift](../../Sources/ArcanePorting/Launch/AppIconWriter.swift) | Scrive l’icona scelta nell’app del gioco, conserva l’originale, rifirma e verifica, e annulla tutto in caso di errore. |
+| [Sources/ArcanePorting/Launch/NXNativeLibraryMerge.swift](../../Sources/ArcanePorting/Launch/NXNativeLibraryMerge.swift) | Algoritmo di merge nxnative usato dal repository del catalogo comune. |
+
+## Porting · impostazioni del gioco
+
+Cartella `Sources/ArcanePorting/GameSettings/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/ArcanePorting/GameSettings/NXNativeGameSettings.swift](../../Sources/ArcanePorting/GameSettings/NXNativeGameSettings.swift) | Legge l’elenco impostazioni del build, i valori attuali e le chiavi fissate da env.txt. |
+| [Sources/ArcanePorting/GameSettings/GameSettingValues.swift](../../Sources/ArcanePorting/GameSettings/GameSettingValues.swift) | Le impostazioni della build per More settings (`extraSettings`) ed etichette e passi di un valore (`GameSettingValues`). |
+| [Sources/ArcanePorting/GameSettings/SavedChoicesStore.swift](../../Sources/ArcanePorting/GameSettings/SavedChoicesStore.swift) | Legge e scrive le scelte salvate launcher.<env> nel dominio preferenze dell’app gioco. |
+| [Sources/ArcanePorting/GameSettings/GameRuntimeConfig.swift](../../Sources/ArcanePorting/GameSettings/GameRuntimeConfig.swift) | Persiste opzioni per titolo, prepara Review e lingua del rebuild, mappa DM_* e unisce env.txt. |
+| [Sources/ArcanePorting/GameSettings/LauncherSettings.swift](../../Sources/ArcanePorting/GameSettings/LauncherSettings.swift) | Legge launcher.json e verifica i controlli supportati, con fallback per le build precedenti. |
+| [Sources/ArcanePorting/GameSettings/EnvFileEditor.swift](../../Sources/ArcanePorting/GameSettings/EnvFileEditor.swift) | Cambia una sola variabile di un `env.txt` lasciando intatte le altre righe. |
+
+## Porting · cheat
+
+Cartella `Sources/ArcanePorting/Cheats/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/ArcanePorting/Cheats/CheatFile.swift](../../Sources/ArcanePorting/Cheats/CheatFile.swift) | Decodifica cheats, sezioni, metadati e collegamenti dei codici secondo il parser del motore. |
+| [Sources/ArcanePorting/Cheats/CheatInstall.swift](../../Sources/ArcanePorting/Cheats/CheatInstall.swift) | Valuta file e cartelle in ingresso rispetto a title ID, build ID e necessità di conferma. |
+| [Sources/ArcanePorting/Cheats/CheatLocator.swift](../../Sources/ArcanePorting/Cheats/CheatLocator.swift) | Risolve build ID, title ID e cartella cheats seguendo i file e l’ambiente del launcher. |
+| [Sources/ArcanePorting/Cheats/CheatStatus.swift](../../Sources/ArcanePorting/Cheats/CheatStatus.swift) | Valuta il supporto del motore tramite ancestry (git in un task staccato, risposta tenuta per l'avvio) e prepara stato della riga e indicatore attivo. |
+| [Sources/ArcanePorting/Cheats/CheatCopy.swift](../../Sources/ArcanePorting/Cheats/CheatCopy.swift) | Centralizza testi di stato, rifiuto, importazione, sostituzione e rimozione dei cheats. |
+| [Sources/ArcanePorting/Cheats/CheatStore.swift](../../Sources/ArcanePorting/Cheats/CheatStore.swift) | Legge e modifica cheats, file enabled, master switch e metadati della build corrente. |
+
+## Porting · store Nintendo e copertine
+
+Cartella `Sources/ArcanePorting/Store/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/ArcanePorting/Store/BoxArtService.swift](../../Sources/ArcanePorting/Store/BoxArtService.swift) | Trova copertine Switch in GameTDB e ricorda copertine e ricerche senza risultato. |
+| [Sources/ArcanePorting/Store/GameTDB.swift](../../Sources/ArcanePorting/Store/GameTDB.swift) | Decodifica il database GameTDB, abbina nomi e regioni e conserva l’indice locale. |
+| [Sources/ArcanePorting/Store/ArtworkCandidates+Porting.swift](../../Sources/ArcanePorting/Store/ArtworkCandidates+Porting.swift) | Le immagini del picker per un gioco Switch: GameTDB per regione, Title DB, store Nintendo, poi quelle trovate online. |
+| [Sources/ArcanePorting/Store/MetadataOptions.swift](../../Sources/ArcanePorting/Store/MetadataOptions.swift) | I valori di Change metadata per un gioco Switch: store Nintendo, Title DB e GameTDB, senza ripetizioni. |
+| [Sources/ArcanePorting/Store/MetadataPicks+Porting.swift](../../Sources/ArcanePorting/Store/MetadataPicks+Porting.swift) | Le scelte del giocatore applicate ai metadati dello store Nintendo. |
+| [Sources/ArcanePorting/Store/CriticRatingQuery+Porting.swift](../../Sources/ArcanePorting/Store/CriticRatingQuery+Porting.swift) | La ricerca dei voti per un gioco portato, con la console di Details (Switch o Switch 2). |
+| [Sources/ArcanePorting/Store/NintendoStoreMetadata.swift](../../Sources/ArcanePorting/Store/NintendoStoreMetadata.swift) | Consulta i cataloghi pubblici dello store e Title DB e conserva descrizioni, immagini e screenshot per lingua; finché la nuova lingua arriva, la pagina mostra l'ultima descrizione letta in un'altra. |
+| [Sources/ArcanePorting/Store/ScreenshotFallback.swift](../../Sources/ArcanePorting/Store/ScreenshotFallback.swift) | Conserva per 30 giorni gli screenshot LaunchBox dei giochi senza screenshot Title DB e li sovrappone ai metadati. |
+
+## Porting · salvataggi, backup e cloud
+
+Cartella `Sources/ArcanePorting/Saves/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/ArcanePorting/Saves/SaveLocation.swift](../../Sources/ArcanePorting/Saves/SaveLocation.swift) | Percorsi e identità dei salvataggi; account/device, utenti locali aggiuntivi e file registro; cloud effettivo. |
+| [Sources/ArcanePorting/Saves/CloudSaves.swift](../../Sources/ArcanePorting/Saves/CloudSaves.swift) | Descrive scelta cloud, cartelle iCloud o personalizzate e passaggi fra le opzioni. |
+| [Sources/ArcanePorting/Saves/CloudSavesPreferences.swift](../../Sources/ArcanePorting/Saves/CloudSavesPreferences.swift) | Prepara la cartella e riapplica la scelta cloud ai domini dei giochi prima di ogni avvio, anche Off. |
+| [Sources/ArcanePorting/Saves/RyujinxSaveFolder.swift](../../Sources/ArcanePorting/Saves/RyujinxSaveFolder.swift) | Riconosce contenitori Ryujinx, controlla il title ID e seleziona l’intero albero committed 0. |
+| [Sources/ArcanePorting/Saves/SaveSnapshot.swift](../../Sources/ArcanePorting/Saves/SaveSnapshot.swift) | Identità, inventario, manifest schema 1/2 e anteprime; rifiuta dichiarazioni storiche con componenti nuovi. |
+| [Sources/ArcanePorting/Saves/SavePresentation.swift](../../Sources/ArcanePorting/Saves/SavePresentation.swift) | Riepiloghi e ambito dei restore storici/multiutente, nomi dei componenti e limite cloud a primario/device. |
+| [Sources/ArcanePorting/Saves/SaveFileIO.swift](../../Sources/ArcanePorting/Saves/SaveFileIO.swift) | Copie, hash e xattr portabili; inventario di directory e registro regolare limitato, controlli dei percorsi e scritture durevoli. |
+| [Sources/ArcanePorting/Saves/SaveSnapshotStore.swift](../../Sources/ArcanePorting/Saves/SaveSnapshotStore.swift) | Backup completi degli utenti locali e registro, formati storici compatibili, staging e import User/Device. |
+| [Sources/ArcanePorting/Saves/SaveRestorePreview.swift](../../Sources/ArcanePorting/Saves/SaveRestorePreview.swift) | Staging e validazione dei pezzi registrati nel backup, compreso il file utenti, con rilevamento dei cambiamenti concorrenti. |
+| [Sources/ArcanePorting/Saves/SaveTransaction.swift](../../Sources/ArcanePorting/Saves/SaveTransaction.swift) | Sostituzioni con ambito esplicito, backup completo e journal 1/2; verifica originali, recovery e pulizia parziale riprendibili con intento durevole. |
+| [Sources/ArcanePorting/Saves/SaveOperationGate.swift](../../Sources/ArcanePorting/Saves/SaveOperationGate.swift) | Assegna lease per titolo e un’esclusione globale per l’updater; coordina salvataggi, Play, installazioni e recuperi. |
+| [Sources/ArcanePorting/Saves/SaveFailure.swift](../../Sources/ArcanePorting/Saves/SaveFailure.swift) | Errori delle operazioni sui salvataggi, con i testi per il giocatore. |
+| [Sources/ArcanePorting/Saves/SaveFiles.swift](../../Sources/ArcanePorting/Saves/SaveFiles.swift) | Controlli dei percorsi dei salvataggi con lstat: nessun link sostituito e solo cartelle e file normali. |
+
+## Porting · mod RomFS e GameBanana
+
+Cartelle `Sources/ArcanePorting/Mods/` e `Porting/Mods/GameBanana/`.
+
+| File | Responsabilità |
+|---|---|
+| [Sources/ArcanePorting/Mods/ModStore.swift](../../Sources/ArcanePorting/Mods/ModStore.swift) | Ordine, interruttori, conflitti, Cestino e overlay delle mod RomFS. Ferma la riconciliazione se cartella o record non si leggono. |
+| [Sources/ArcanePorting/Mods/ModFolderScanner.swift](../../Sources/ArcanePorting/Mods/ModFolderScanner.swift) | Elenca cartelle, archivi e file RomFS. La lettura stretta distingue una cartella vuota da una scansione fallita durante la riconciliazione. |
+| [Sources/ArcanePorting/Mods/ModSupport.swift](../../Sources/ArcanePorting/Mods/ModSupport.swift) | Quali file di mod funzionano (solo RomFS), dov'è la loro cartella `romfs`, nomi di cartella sicuri. |
+| [Sources/ArcanePorting/Mods/GameBanana/GameBananaAPI.swift](../../Sources/ArcanePorting/Mods/GameBanana/GameBananaAPI.swift) | URL, host fidati, modelli delle risposte di GameBanana e testo semplice dalle descrizioni HTML. |
+| [Sources/ArcanePorting/Mods/GameBanana/GameBananaClient.swift](../../Sources/ArcanePorting/Mods/GameBanana/GameBananaClient.swift) | Richieste a GameBanana con User-Agent, limite di 4 alla volta e cache su disco. |
+| [Sources/ArcanePorting/Mods/GameBanana/GameBananaImageCache.swift](../../Sources/ArcanePorting/Mods/GameBanana/GameBananaImageCache.swift) | Cache su disco delle immagini delle mod dal CDN di GameBanana. |
+| [Sources/ArcanePorting/Mods/GameBanana/GameBananaMatch.swift](../../Sources/ArcanePorting/Mods/GameBanana/GameBananaMatch.swift) | Abbina un gioco alla sua pagina GameBanana per nome e ricorda la scelta. |
+| [Sources/ArcanePorting/Mods/GameBanana/AvailableModsFinder.swift](../../Sources/ArcanePorting/Mods/GameBanana/AvailableModsFinder.swift) | Cerca le mod di un gioco che funzionano e capisce quando una mod installata ha un aggiornamento. |
+| [Sources/ArcanePorting/Mods/GameBanana/ModInstaller.swift](../../Sources/ArcanePorting/Mods/GameBanana/ModInstaller.swift) | Controlla, estrae con `bsdtar` e installa una mod scaricata nella cartella del gioco. |
+| [Sources/ArcanePorting/Mods/GameBanana/GameBananaBandModel.swift](../../Sources/ArcanePorting/Mods/GameBanana/GameBananaBandModel.swift) | Stato della fascia Mods di un gioco: abbinamento, mod che funzionano, installazioni. |
+| [Sources/ArcanePorting/Mods/GameBanana/ModCatalog.swift](../../Sources/ArcanePorting/Mods/GameBanana/ModCatalog.swift) | Categorie nostre, ordinamenti e sezioni della pagina dello store (altezze fisse). |
+| [Sources/ArcanePorting/Mods/GameBanana/ModCatalogSnapshots.swift](../../Sources/ArcanePorting/Mods/GameBanana/ModCatalogSnapshots.swift) | Le mod di ogni gioco salvate su disco, per aprire lo store subito; solo link GameBanana. |
+| [Sources/ArcanePorting/Mods/GameBanana/ModStoreModel.swift](../../Sources/ArcanePorting/Mods/GameBanana/ModStoreModel.swift) | Dati dello store: apre dalle copie su disco, aggiorna in background due giochi alla volta, abbina solo se sicuro. |
+| [Sources/ArcanePorting/Mods/GameBanana/ModStoreFocus.swift](../../Sources/ArcanePorting/Mods/GameBanana/ModStoreFocus.swift) | Focus nella pagina dello store, ancorato al tipo di sezione; ogni sezione ricorda la sua tessera. |
+| [Sources/ArcanePorting/Mods/GameBanana/GameBananaFindModel.swift](../../Sources/ArcanePorting/Mods/GameBanana/GameBananaFindModel.swift) | Stato della ricerca per nome: campo, risultati, None of these. |
+| [Sources/ArcanePorting/Mods/GameBanana/ModDownload.swift](../../Sources/ArcanePorting/Mods/GameBanana/ModDownload.swift) | Scarica un file di GameBanana con avanzamento e Cancel, solo da host fidati. |
 
 ## UI · Add Game e porting
 
@@ -989,7 +989,6 @@ Cartelle `Sources/NXLibraryCore/Porting/Mods/` e `Porting/Mods/GameBanana/`.
 | [run_startup_recovery.py](../../Tests/CatalogAppChecks/run_startup_recovery.py) | Coordinatore di avvio reale su profili sintetici: conflitto, scelta esplicita, offerta obsoleta, Retry e fallimento della preparazione; nessuna finestra. |
 | [run_source_access.py](../../Tests/CatalogAppChecks/run_source_access.py) | Esegue il ripristino di avvio, l'observer e i selettori reali: nessuna scansione automatica dei sorgenti, cartella ricordata, annullamento e lettura dei soli file scelti; nessuna finestra o dato personale. |
 | [run_onboarding.py](../../Tests/CatalogAppChecks/run_onboarding.py) | Esegue observer e ripristino del Setup, uscita durante lettura pendente con annullamento, input sotto modali, scelte acceso/spento/nil, radice della fonte, focus dopo Retry e richiesta notifiche su dati sintetici; nessuna finestra. |
-| [run_boundary.py](../../Tests/CatalogAppChecks/run_boundary.py) | Confine tra base e Porting: nessun file della base usa nel codice un tipo di `Porting/`; l’elenco ammesso è vuoto e un legame nuovo fa fallire il controllo. |
 | [run_artwork_return.py](../../Tests/CatalogAppChecks/run_artwork_return.py) | Viste, task e host Mods reali su fixture: primo body con arte warm, scelte personali, aggiornamenti Steam nello stesso percorso, badge dopo rimozione, cambi abbinamento e snapshot completato fuori ordine; nessuna finestra o rendering. |
 | [run_nested_bundles.py](../../Tests/CatalogAppChecks/run_nested_bundles.py) | App sintetiche con bundle dati annidati e firme reali: installazione, icona, rollback, copia forzata, ripresa e rifiuto di dati alterati; nessuna UI. |
 | [run_nup_programs.py](../../Tests/CatalogAppChecks/run_nup_programs.py) | Esegue il probe NUP opzionale su snapshot sintetico, convertitori UI reali, persistenza e argv del rebuild. |

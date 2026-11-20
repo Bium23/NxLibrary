@@ -20,6 +20,7 @@ host = r'''
 import AppKit
 import SwiftUI
 import NXLibraryCore
+import ArcanePorting
 
 struct ProbeCanvas {
     var scale: CGFloat = 1
@@ -161,6 +162,6 @@ with tempfile.TemporaryDirectory(prefix='achievement-scroll-check-') as folder:
                     str(ROOT / 'Sources/NXLibrary/ViewModels/AchievementsScreenModel.swift'),
                     str(ROOT / 'Sources/NXLibrary/ViewModels/ListScroll.swift'),
                     str(ROOT / 'Sources/NXLibrary/Views/Components/GlideGroup.swift'),
-                    str(BIN / 'NXLibraryCore.o'), '-o', str(executable)], cwd=ROOT, check=True)
+                    str(BIN / 'NXLibraryCore.o'), str(BIN / 'ArcanePorting.o'), '-o', str(executable)], cwd=ROOT, check=True)
     subprocess.run([str(executable)], check=True,
                    env=dict(os.environ, PACKAGE_RESOURCE_BUNDLE_PATH=str(BIN)))

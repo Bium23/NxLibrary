@@ -13,19 +13,20 @@ public enum BuildInstallError: Error, LocalizedError {
 }
 
 /// Filesystem boundary for failure and cross-volume tests.
-internal struct BuildInstallIO {
-    var sameVolume: (URL, URL) throws -> Bool = { source, parent in
+package struct BuildInstallIO {
+    package init() {}
+    package var sameVolume: (URL, URL) throws -> Bool = { source, parent in
         var sourceInfo = stat(), parentInfo = stat()
         guard stat(source.path, &sourceInfo) == 0, stat(parent.path, &parentInfo) == 0 else {
             throw BuildInstallError.replaceFailed("Could not inspect the destination volume.")
         }
         return sourceInfo.st_dev == parentInfo.st_dev
     }
-    var publish: (URL, URL, Bool) throws -> Void = { source, destination, replacing in
+    package var publish: (URL, URL, Bool) throws -> Void = { source, destination, replacing in
         let flags = replacing ? RENAME_SWAP : RENAME_EXCL
         guard renamex_np(source.path, destination.path, UInt32(flags)) == 0 else {
             throw BuildInstallError.replaceFailed(String(cString: strerror(errno)))
         }
     }
-    var afterPublish: () throws -> Void = {}
+    package var afterPublish: () throws -> Void = {}
 }

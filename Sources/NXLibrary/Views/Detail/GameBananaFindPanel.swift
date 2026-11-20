@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 struct GameBananaFindPanel: View {
     @ObservedObject var model: GameBananaFindModel

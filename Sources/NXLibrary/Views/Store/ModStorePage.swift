@@ -1,5 +1,6 @@
 import SwiftUI
 import NXLibraryCore
+import ArcanePorting
 
 /// The mod store under the Mods card, top to bottom: the sort bar, Featured, the mods across your games, a row per
 /// category, a row per game, then GameBanana's credit. Every section has a fixed height (`ModStoreLayout`), so the

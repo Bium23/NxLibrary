@@ -1,5 +1,6 @@
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// Mods: a game's RomFS mods in its data folder (`~/Library/Application Support/nxnative/<title ID>/mods`), the
 /// order and on/off state Arcane keeps for them, and the overlay line the game's launcher reads. Changes go

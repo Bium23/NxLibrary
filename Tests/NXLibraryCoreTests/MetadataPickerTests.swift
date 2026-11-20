@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class MetadataPickerTests: XCTestCase {
     private func tempDir() -> URL {

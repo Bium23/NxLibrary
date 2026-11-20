@@ -3,6 +3,7 @@ import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
 import NXLibraryCore
+import ArcanePorting
 
 struct SettingsNotice: Identifiable {
     let id = UUID()

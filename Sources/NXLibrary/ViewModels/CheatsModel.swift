@@ -1,5 +1,6 @@
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// What the Cheats row, panel, detail label and diagnostics know about one game's cheats.
 struct CheatContext {

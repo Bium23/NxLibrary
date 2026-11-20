@@ -1,5 +1,6 @@
 import Foundation
 import NXLibraryCore
+import ArcanePorting
 
 struct ProdKeysDetectionResult {
     let path: String

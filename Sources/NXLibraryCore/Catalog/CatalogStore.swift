@@ -34,7 +34,7 @@ public struct CatalogStore {
     public init(directory: URL, kinds: CatalogRecordKinds, legacy: CatalogLegacyImport?) {
         self.init(directory: directory, publication: .atomic, kinds: kinds, legacy: legacy)
     }
-    init(directory: URL, publication: CatalogPublication, kinds: CatalogRecordKinds, legacy: CatalogLegacyImport?) {
+    package init(directory: URL, publication: CatalogPublication, kinds: CatalogRecordKinds, legacy: CatalogLegacyImport?) {
         self.directory = directory.standardizedFileURL
         self.publication = publication
         self.kinds = kinds
@@ -271,7 +271,7 @@ extension CatalogStore {
     }
 
     /// Read-only validation used on an import stage, before making it visible.
-    func validateImportedOrigin(_ document: CatalogDocument) throws { try verifyLegacy(document.legacyOrigin) }
+    package func validateImportedOrigin(_ document: CatalogDocument) throws { try verifyLegacy(document.legacyOrigin) }
 
     public func recoveryCandidate() throws -> CatalogRecoveryCandidate? {
         try locked {

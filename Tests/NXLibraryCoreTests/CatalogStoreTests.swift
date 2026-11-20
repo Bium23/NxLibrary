@@ -1,6 +1,7 @@
 import XCTest
 import Darwin
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class CatalogStoreTests: XCTestCase {
     private func fixture() throws -> SteamTestFixture { try .temporary(in: self) }

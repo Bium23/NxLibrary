@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// The latest render's model. The key monitor and the input handlers run
 /// outside `body`, so they read it from here instead of recomputing it per key.

@@ -3,6 +3,7 @@ import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
 import NXLibraryCore
+import ArcanePorting
 
 /// The library: dropped files, loading and scanning, importing existing builds, finding sources and the library folder (`applyCatalog`, which writes the published library, stays in the type).
 extension AppViewModel {

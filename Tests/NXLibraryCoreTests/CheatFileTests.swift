@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 /// The parser mirrors nxnative's dm/host/hle_cheats.c (parse_file, ins_dec, meta_load, pairs_link) at the pin; the
 /// cases come from dm/host/tests/t_cheats.c where it has one. Words are made-up stores, never a real game's cheat.

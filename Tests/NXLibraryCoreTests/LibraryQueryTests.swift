@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class LibraryQueryTests: XCTestCase {
     private func game(_ name: String, status: GameStatus = .built,

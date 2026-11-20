@@ -54,6 +54,7 @@ import AppKit
 import SwiftUI
 import Metal
 import NXLibraryCore
+import ArcanePorting
 
 @MainActor enum LaunchReveal { static func moonlightShown() {} }
 @MainActor final class SoundEffectService {
@@ -315,6 +316,6 @@ with tempfile.TemporaryDirectory(prefix='arcane-theme-check-') as folder:
     subprocess.run(['xcrun', 'swiftc', '-parse-as-library', '-I', str(BIN), str(swift),
                     str(ROOT / 'Sources/NXLibrary/Views/Theme/MoonlightRenderer.swift'),
                     str(ROOT / 'Sources/NXLibrary/Views/Theme/MoonlightShaders.swift'),
-                    str(BIN / 'NXLibraryCore.o'), '-o', str(executable)], cwd=ROOT, check=True)
+                    str(BIN / 'NXLibraryCore.o'), str(BIN / 'ArcanePorting.o'), '-o', str(executable)], cwd=ROOT, check=True)
     subprocess.run([str(executable), str(scratch)], cwd=ROOT, check=True,
                    env=dict(os.environ, PACKAGE_RESOURCE_BUNDLE_PATH=str(BIN)))

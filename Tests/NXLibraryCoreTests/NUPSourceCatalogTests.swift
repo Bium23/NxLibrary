@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class NUPSourceCatalogTests: XCTestCase {
     private let editionProbe = "title 0400F00000010001\napplication 0100F00000010000\naoc_base 0100F00000011000\nname 546573742047616d65\nbase 272\nupdate 5 280\ndlc 0100F00000011001 2\n"

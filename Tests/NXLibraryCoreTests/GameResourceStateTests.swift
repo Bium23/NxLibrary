@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class GameResourceStateTests: XCTestCase {
     private func game(_ status: GameStatus, app: Bool = true) -> PortedGame {

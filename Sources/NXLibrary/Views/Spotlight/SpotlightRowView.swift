@@ -1,5 +1,6 @@
 import SwiftUI
 import NXLibraryCore
+import ArcanePorting
 
 /// Spotlight's single row of square tiles (Main.xaml SeleneGameRow + SeleneTileStyle).
 ///

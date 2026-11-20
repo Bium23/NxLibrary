@@ -33,7 +33,7 @@ with tempfile.TemporaryDirectory(prefix='arcane-nup-check-') as scratch:
     scratch = Path(scratch)
     output = 'title 0400F00000010001\napplication 0100F00000010000\naoc_base 0100F00000011000\nbase 272\ndlc 0100F00000011001 2\n'
     if args.engine_snapshot:
-        bridge = (ROOT / 'Sources/NXLibraryCore/Porting/Build/NUPSourceCatalog.swift').read_text()
+        bridge = (ROOT / 'Sources/ArcanePorting/Build/NUPSourceCatalog.swift').read_text()
         probe = bridge.split('let script = #"""', 1)[1].split('"""#', 1)[0]
         generator = """
 import pathlib,sys
@@ -52,6 +52,7 @@ fixture.write_nup(pathlib.Path(sys.argv[2]),fixture.edition())
     host = '''
 import Foundation
 @testable import NXLibraryCore
+@testable import ArcanePorting
 struct Host {
     // CONVERTERS
 }
@@ -86,5 +87,5 @@ print("NUP probe → real UI converters → persisted sources → rebuild progra
     executable = scratch / 'nup-check'
     subprocess.run(['xcrun', 'swiftc', '-I', str(library), str(main),
                     str(ROOT / 'Sources/NXLibrary/Models/SelectableGame.swift'),
-                    str(library / 'NXLibraryCore.o'), '-o', str(executable)], check=True)
+                    str(library / 'NXLibraryCore.o'), str(library / 'ArcanePorting.o'), '-o', str(executable)], check=True)
     subprocess.run([str(executable), str(scratch)], env=dict(os.environ, PACKAGE_RESOURCE_BUNDLE_PATH=str(library)), check=True)

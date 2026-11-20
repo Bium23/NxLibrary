@@ -1,5 +1,6 @@
 import SwiftUI
 import NXLibraryCore
+import ArcanePorting
 
 /// The rows of each Add game step. The first rows are the step's next move (as
 /// Play leads Game options); details and settings follow under small headings.

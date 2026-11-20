@@ -2,6 +2,7 @@ import AppKit
 import Foundation
 import UniformTypeIdentifiers
 import NXLibraryCore
+import ArcanePorting
 
 /// Starting a porting: the keys against the selection, adding the game, the build and its controls.
 extension PortingModel {

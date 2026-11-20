@@ -38,7 +38,7 @@ public final class MetadataPicks: ObservableObject {
     public let directory: URL
     /// Bumps on every change, so screens redraw.
     @Published public private(set) var revision = 0
-    private(set) var table: [String: [String: String]]
+    package private(set) var table: [String: [String: String]]
 
     private var fileURL: URL { directory.appendingPathComponent("metadata-picks.json") }
 

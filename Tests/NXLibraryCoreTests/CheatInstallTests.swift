@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class CheatInstallTests: XCTestCase {
     private let tid = "0100000000010000"

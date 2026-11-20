@@ -17,7 +17,7 @@ public struct SessionSummary: Equatable, Identifiable {
         self.init(session: session, gameID: game.id, gameName: game.name, total: total)
     }
 
-    init?(session: PlaySession, gameID: UUID, gameName: String, total: TimeInterval) {
+    package init?(session: PlaySession, gameID: UUID, gameName: String, total: TimeInterval) {
         guard session.gameID == gameID, let length = session.duration,
               length >= Self.minimumDuration else { return nil }
         id = session.id
@@ -27,7 +27,7 @@ public struct SessionSummary: Equatable, Identifiable {
         self.total = Self.duration(max(total, length))
     }
 
-    static func duration(_ interval: TimeInterval) -> String {
+    package static func duration(_ interval: TimeInterval) -> String {
         interval < 60 ? "<1m" : LibraryPresentation.duration(interval)
     }
 }

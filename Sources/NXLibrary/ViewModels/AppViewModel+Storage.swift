@@ -3,6 +3,7 @@ import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
 import NXLibraryCore
+import ArcanePorting
 
 /// Settings → Storage: measuring the library's space and asking to delete caches and logs (the deletion itself, which writes the shown state, stays in the type).
 extension AppViewModel {

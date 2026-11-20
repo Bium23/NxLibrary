@@ -1,5 +1,6 @@
 import Foundation
 import NXLibraryCore
+import ArcanePorting
 
 enum NXLibraryError: Error, LocalizedError {
     case baseRequired

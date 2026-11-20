@@ -12,6 +12,17 @@ public struct CatalogInstallationPresentation: Identifiable, Equatable, Sendable
     public let bundleIdentifier: String?
     public let availability: CatalogInstallationAvailability
     public let size: CatalogInstallationSize
+
+    package init(id: String, contentURL: URL, applicationURL: URL?, executableURL: URL?, bundleIdentifier: String?,
+                 availability: CatalogInstallationAvailability, size: CatalogInstallationSize) {
+        self.id = id
+        self.contentURL = contentURL
+        self.applicationURL = applicationURL
+        self.executableURL = executableURL
+        self.bundleIdentifier = bundleIdentifier
+        self.availability = availability
+        self.size = size
+    }
 }
 
 /// A value projection. No engine service, filesystem probe or view initialization

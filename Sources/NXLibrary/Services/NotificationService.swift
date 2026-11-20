@@ -2,6 +2,7 @@ import Foundation
 import UserNotifications
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 import os
 
 extension Notification.Name {

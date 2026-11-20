@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class CatalogRecoveryTests: XCTestCase {
     private func prepared() throws -> (URL, CatalogStore, CatalogDocument, Data) {

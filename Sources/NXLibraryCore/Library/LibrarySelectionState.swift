@@ -21,17 +21,17 @@ public struct LibrarySelectionState: Equatable {
     public mutating func jumpCatalog(toEnd: Bool, in games: [CatalogGame], history: PlayHistory) -> UUID? {
         jumpIDs(query.applyCatalog(to: games, history: history).map(\.id), toEnd: toEnd)
     }
-    mutating func reconcileIDs(_ ids: [UUID], preferred: UUID?) {
+    package mutating func reconcileIDs(_ ids: [UUID], preferred: UUID?) {
         if let selectedGameID, ids.contains(selectedGameID) { return }
         selectedGameID = preferred.flatMap { ids.contains($0) ? $0 : nil } ?? ids.first
     }
-    mutating func moveIDs(_ ids: [UUID], by delta: Int) -> UUID? {
+    package mutating func moveIDs(_ ids: [UUID], by delta: Int) -> UUID? {
         guard !ids.isEmpty else { selectedGameID = nil; return nil }
         let current = ids.firstIndex { $0 == selectedGameID } ?? 0
         selectedGameID = ids[min(max(current + delta, 0), ids.count - 1)]
         return selectedGameID
     }
-    mutating func jumpIDs(_ ids: [UUID], toEnd: Bool) -> UUID? {
+    package mutating func jumpIDs(_ ids: [UUID], toEnd: Bool) -> UUID? {
         selectedGameID = toEnd ? ids.last : ids.first
         return selectedGameID
     }

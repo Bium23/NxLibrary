@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// Spotlight's controller, keyboard and pointer input.
 extension SpotlightView {

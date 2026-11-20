@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import NXLibraryCore
+import ArcanePorting
 
 /// The settings a build offers that Game options has no row of its own for, drawn from the build's
 /// `launcher.json`: a switch for a toggle, a value for a choice or a range. Up/Down move, Left/Right change a value,

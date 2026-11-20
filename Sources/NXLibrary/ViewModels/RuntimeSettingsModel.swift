@@ -1,5 +1,6 @@
 import Foundation
 import NXLibraryCore
+import ArcanePorting
 
 /// A built game's saved choices for its next launch, as Game options and More settings show them: reading, writing,
 /// restoring the new-game defaults and which settings the build supports. It keeps no state: the game's files are the

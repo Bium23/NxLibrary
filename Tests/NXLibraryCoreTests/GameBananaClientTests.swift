@@ -1,5 +1,6 @@
 import XCTest
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 /// Serves canned bodies by URL (exact string, else by substring), records requests, and can fail or suspend.
 final class FakeGameBananaHTTP: ArtworkHTTPClient, @unchecked Sendable {

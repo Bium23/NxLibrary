@@ -1,6 +1,7 @@
 import XCTest
 import Darwin
 @testable import NXLibraryCore
+@testable import ArcanePorting
 
 final class SaveSnapshotStoreTests: XCTestCase {
     func testSystemCopyAndAccessLabelsAreExcludedButGuestNamesAndQuarantineRemainVerified() {

@@ -3,6 +3,7 @@ import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
 import NXLibraryCore
+import ArcanePorting
 
 /// What a game's page and Game options ask of the library: options, Favorite, Hidden, cloud saves, Close Game and removal.
 extension AppViewModel {

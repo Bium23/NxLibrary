@@ -3,6 +3,7 @@ import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
 import NXLibraryCore
+import ArcanePorting
 
 /// A game's files: removing its sources, deleting it, the file pickers and its porting log.
 extension AppViewModel {
