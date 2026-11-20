@@ -414,24 +414,22 @@ struct AddGameView: View {
 
     private func handleBack() {
         if confirmDiscard { return dismissDiscard() }
-        if viewModel.isBuilding { return requestClose() }
-        if porting.buildWizardStep > 1 {
+        if let step = PortingModel.stepBack(from: porting.buildWizardStep, isBuilding: viewModel.isBuilding,
+                                            succeeded: porting.buildSuccessPath != nil,
+                                            hasSelectedGame: porting.selectedGame != nil) {
             SoundEffectService.shared.play(.back)
             withAnimation(reduceMotion ? nil : SeleneTheme.standard) {
-                porting.goToWizardStep(porting.buildWizardStep - 1)
+                porting.goToWizardStep(step)
             }
         } else {
             requestClose()
         }
     }
 
+    /// A running porting goes on and the home shows its tile.
     private func requestClose() {
-        if viewModel.isBuilding {
-            // The porting goes on; the home shows its tile.
-            close { leave() }
-            return
-        }
-        if porting.selectedGameFolder != nil || !porting.selectedSources.isEmpty {
+        if PortingModel.closingAsks(isBuilding: viewModel.isBuilding, succeeded: porting.buildSuccessPath != nil,
+                                    hasDraft: porting.selectedGameFolder != nil || !porting.selectedSources.isEmpty) {
             confirmFocus = .cancel
             confirmDiscard = true
             SoundEffectService.shared.play(.alert)

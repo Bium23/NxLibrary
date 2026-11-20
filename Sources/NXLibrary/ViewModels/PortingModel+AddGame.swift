@@ -221,9 +221,28 @@ extension PortingModel {
     }
 
     func goToWizardStep(_ step: Int) {
-        guard step >= 1 && step <= 3 else { return }
-        if step == 2 && selectedGame == nil { return }
+        guard Self.wizardStepReachable(step, hasSelectedGame: selectedGame != nil) else { return }
         self.buildWizardStep = step
+    }
+
+    /// Options need a chosen game; Files and Porting are always reachable.
+    static func wizardStepReachable(_ step: Int, hasSelectedGame: Bool) -> Bool {
+        (1...3).contains(step) && (step != 2 || hasSelectedGame)
+    }
+
+    /// The step Back (Esc, B) returns to, or nil when Back closes Add Game. A running porting goes on
+    /// behind the home; a finished one has spent its choices; a Rebuild never filled the steps before Porting.
+    static func stepBack(from step: Int, isBuilding: Bool, succeeded: Bool, hasSelectedGame: Bool) -> Int? {
+        guard !isBuilding, !succeeded, step > 1, wizardStepReachable(step - 1, hasSelectedGame: hasSelectedGame) else {
+            return nil
+        }
+        return step - 1
+    }
+
+    /// Whether closing Add Game asks before dropping the chosen files: never while a porting runs
+    /// or after it succeeded, since nothing is lost then.
+    static func closingAsks(isBuilding: Bool, succeeded: Bool, hasDraft: Bool) -> Bool {
+        !isBuilding && !succeeded && hasDraft
     }
 
     func resetWizard() {
